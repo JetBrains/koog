@@ -22,6 +22,7 @@ import ai.koog.agents.testing.tools.mockLLMAnswer
 import ai.koog.agents.utils.HiddenString
 import ai.koog.agents.utils.use
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.message.Message
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.opentelemetry.sdk.OpenTelemetrySdk
 import io.opentelemetry.sdk.trace.SdkTracerProvider
@@ -227,11 +228,12 @@ class OpenTelemetryTest {
                             "gen_ai.conversation.id" to mockExporter.lastRunId,
                             "gen_ai.request.temperature" to temperature,
                             "gen_ai.request.model" to model.id,
+                            "gen_ai.response.finish_reasons" to listOf(FinishReasonType.Stop.id)
                         ),
                         "events" to mapOf(
                             "gen_ai.user.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "role" to "user",
+                                "role" to Message.Role.User.name.lowercase(),
                                 "content" to userPrompt
                             )
                         ),
@@ -239,17 +241,17 @@ class OpenTelemetryTest {
                         "events" to mapOf(
                             "gen_ai.system.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "role" to "system",
+                                "role" to Message.Role.System.name.lowercase(),
                                 "content" to systemPrompt,
                             ),
                             "gen_ai.user.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "role" to "user",
+                                "role" to Message.Role.User.name.lowercase(),
                                 "content" to userPrompt,
                             ),
                             "gen_ai.assistant.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "role" to "assistant",
+                                "role" to Message.Role.Assistant.name.lowercase(),
                                 "content" to mockResponse,
                             )
                         )
@@ -382,21 +384,22 @@ class OpenTelemetryTest {
                             "gen_ai.conversation.id" to mockExporter.runIds[1],
                             "gen_ai.request.temperature" to temperature,
                             "gen_ai.request.model" to model.id,
+                            "gen_ai.response.finish_reasons" to listOf(FinishReasonType.Stop.id),
                         ),
                         "events" to mapOf(
                             "gen_ai.system.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "role" to "system",
+                                "role" to Message.Role.System.name.lowercase(),
                                 "content" to systemPrompt,
                             ),
                             "gen_ai.user.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "role" to "user",
+                                "role" to Message.Role.User.name.lowercase(),
                                 "content" to userPrompt1,
                             ),
                             "gen_ai.assistant.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "role" to "assistant",
+                                "role" to Message.Role.Assistant.name.lowercase(),
                                 "content" to mockResponse1,
                             )
                         )
@@ -455,21 +458,22 @@ class OpenTelemetryTest {
                             "gen_ai.conversation.id" to mockExporter.runIds[0],
                             "gen_ai.request.temperature" to temperature,
                             "gen_ai.request.model" to model.id,
+                            "gen_ai.response.finish_reasons" to listOf(FinishReasonType.Stop.id),
                         ),
                         "events" to mapOf(
                             "gen_ai.system.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "role" to "system",
+                                "role" to Message.Role.System.name.lowercase(),
                                 "content" to systemPrompt,
                             ),
                             "gen_ai.user.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "role" to "user",
+                                "role" to Message.Role.User.name.lowercase(),
                                 "content" to userPrompt0,
                             ),
                             "gen_ai.assistant.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "role" to "assistant",
+                                "role" to Message.Role.Assistant.name.lowercase(),
                                 "content" to mockResponse0,
                             )
                         )
@@ -603,26 +607,27 @@ class OpenTelemetryTest {
                             "gen_ai.conversation.id" to mockExporter.lastRunId,
                             "gen_ai.operation.name" to "chat",
                             "gen_ai.request.temperature" to temperature,
+                            "gen_ai.response.finish_reasons" to listOf(FinishReasonType.Stop.id),
                         ),
                         "events" to mapOf(
                             "gen_ai.system.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "role" to "system",
+                                "role" to Message.Role.System.name.lowercase(),
                                 "content" to systemPrompt,
                             ),
                             "gen_ai.user.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "role" to "user",
+                                "role" to Message.Role.User.name.lowercase(),
                                 "content" to userPrompt,
                             ),
                             "gen_ai.tool.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "role" to "tool",
+                                "role" to Message.Role.Tool.name.lowercase(),
                                 "content" to TestGetWeatherTool.DEFAULT_PARIS_RESULT,
                             ),
                             "gen_ai.assistant.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "role" to "assistant",
+                                "role" to Message.Role.Assistant.name.lowercase(),
                                 "content" to mockResponse,
                             ),
                         )
@@ -665,23 +670,25 @@ class OpenTelemetryTest {
                             "gen_ai.conversation.id" to mockExporter.lastRunId,
                             "gen_ai.operation.name" to "chat",
                             "gen_ai.request.temperature" to temperature,
+                            "gen_ai.response.finish_reasons" to listOf(FinishReasonType.ToolCalls.id),
                         ),
                         "events" to mapOf(
                             "gen_ai.system.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "role" to "system",
+                                "role" to Message.Role.System.name.lowercase(),
                                 "content" to systemPrompt,
                             ),
                             "gen_ai.user.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "role" to "user",
+                                "role" to Message.Role.User.name.lowercase(),
                                 "content" to userPrompt,
                             ),
                             "gen_ai.choice" to mapOf(
                                 "gen_ai.system" to model.provider.id,
                                 "index" to 0L,
-                                "role" to "tool",
-                                "tool_calls" to "[{\"function\":{\"name\":\"${TestGetWeatherTool.name}\",\"arguments\":\"${TestGetWeatherTool.encodeArgsToString(TestGetWeatherTool.Args("Paris"))}\"},\"id\":\"\",\"type\":\"function\"}]"
+                                "role" to Message.Role.Tool.name.lowercase(),
+                                "tool_calls" to "[{\"function\":{\"name\":\"${TestGetWeatherTool.name}\",\"arguments\":\"${TestGetWeatherTool.encodeArgsToString(TestGetWeatherTool.Args("Paris"))}\"},\"id\":\"\",\"type\":\"function\"}]",
+                                "finish_reason" to FinishReasonType.ToolCalls.id,
                             ),
                         )
                     )
@@ -813,26 +820,27 @@ class OpenTelemetryTest {
                             "gen_ai.conversation.id" to mockExporter.lastRunId,
                             "gen_ai.operation.name" to "chat",
                             "gen_ai.request.temperature" to temperature,
+                            "gen_ai.response.finish_reasons" to listOf(FinishReasonType.Stop.id),
                         ),
                         "events" to mapOf(
                             "gen_ai.system.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "role" to "system",
+                                "role" to Message.Role.System.name.lowercase(),
                                 "content" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
                             ),
                             "gen_ai.user.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "role" to "user",
+                                "role" to Message.Role.User.name.lowercase(),
                                 "content" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
                             ),
                             "gen_ai.tool.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "role" to "tool",
+                                "role" to Message.Role.Tool.name.lowercase(),
                                 "content" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
                             ),
                             "gen_ai.assistant.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "role" to "assistant",
+                                "role" to Message.Role.Assistant.name.lowercase(),
                                 "content" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
                             ),
                         )
@@ -875,23 +883,25 @@ class OpenTelemetryTest {
                             "gen_ai.conversation.id" to mockExporter.lastRunId,
                             "gen_ai.operation.name" to "chat",
                             "gen_ai.request.temperature" to temperature,
+                            "gen_ai.response.finish_reasons" to listOf(FinishReasonType.ToolCalls.id),
                         ),
                         "events" to mapOf(
                             "gen_ai.system.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "role" to "system",
+                                "role" to Message.Role.System.name.lowercase(),
                                 "content" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
                             ),
                             "gen_ai.user.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "role" to "user",
+                                "role" to Message.Role.User.name.lowercase(),
                                 "content" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
                             ),
                             "gen_ai.choice" to mapOf(
                                 "gen_ai.system" to model.provider.id,
                                 "index" to 0L,
-                                "role" to "tool",
-                                "tool_calls" to "[{\"function\":{\"name\":\"${HiddenString.HIDDEN_STRING_PLACEHOLDER}\",\"arguments\":\"${HiddenString.HIDDEN_STRING_PLACEHOLDER}\"},\"id\":\"\",\"type\":\"function\"}]"
+                                "role" to Message.Role.Tool.name.lowercase(),
+                                "tool_calls" to "[{\"function\":{\"name\":\"${HiddenString.HIDDEN_STRING_PLACEHOLDER}\",\"arguments\":\"${HiddenString.HIDDEN_STRING_PLACEHOLDER}\"},\"id\":\"\",\"type\":\"function\"}]",
+                                "finish_reason" to FinishReasonType.ToolCalls.id,
                             ),
                         )
                     )

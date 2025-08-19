@@ -11,6 +11,7 @@ import ai.koog.agents.core.dsl.extension.onToolCall
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.assertMapsEqual
+import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfig
 import ai.koog.agents.features.opentelemetry.mock.MockSpanExporter
@@ -92,6 +93,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
                 "gen_ai.operation.name" to "chat",
                 "gen_ai.request.model" to model.id,
                 "gen_ai.request.temperature" to 0.4,
+                "gen_ai.response.finish_reasons" to listOf(SpanAttributes.Response.FinishReasonType.Stop.id),
 
                 // Langfuse/Weave specific attributes
                 "gen_ai.prompt.0.role" to "system",
@@ -180,6 +182,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
                 "gen_ai.operation.name" to "chat",
                 "gen_ai.request.temperature" to temperature,
                 "gen_ai.request.model" to model.id,
+                "gen_ai.response.finish_reasons" to listOf(SpanAttributes.Response.FinishReasonType.ToolCalls.id),
 
                 "gen_ai.prompt.0.role" to Message.Role.System.name.lowercase(),
                 "gen_ai.prompt.0.content" to systemPrompt,
@@ -187,6 +190,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
                 "gen_ai.prompt.1.content" to userPrompt,
                 "gen_ai.completion.0.role" to Message.Role.Assistant.name.lowercase(),
                 "gen_ai.completion.0.content" to "[{\"function\":{\"name\":\"${TestGetWeatherTool.name}\",\"arguments\":\"{\"location\":\"Paris\"}\"},\"id\":\"\",\"type\":\"function\"}]",
+                "gen_ai.completion.0.finish_reason" to SpanAttributes.Response.FinishReasonType.ToolCalls.id,
             )
 
             assertEquals(expectedInitialLLMCallSpansAttributes.size, actualInitialLLMCallSpanAttributes.size)
@@ -205,6 +209,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
                 "gen_ai.operation.name" to "chat",
                 "gen_ai.request.temperature" to temperature,
                 "gen_ai.request.model" to model.id,
+                "gen_ai.response.finish_reasons" to listOf(SpanAttributes.Response.FinishReasonType.Stop.id),
 
                 "gen_ai.prompt.0.role" to Message.Role.System.name.lowercase(),
                 "gen_ai.prompt.0.content" to systemPrompt,

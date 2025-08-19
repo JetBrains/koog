@@ -78,6 +78,11 @@ internal class WeaveSpanAdapter(private val verbose: Boolean) : SpanAdapter() {
                                 CustomAttribute("gen_ai.completion.$index.content", toolCalls.valueString(verbose))
                             }
 
+                            // Finish Reason
+                            span.bodyFieldsToCustomAttribute<EventBodyFields.FinishReason>(event) { finishReason ->
+                                CustomAttribute("gen_ai.completion.$index.finish_reason", finishReason.value)
+                            }
+
                             // Delete event from the span
                             span.removeEvent(event)
                         }
@@ -86,7 +91,7 @@ internal class WeaveSpanAdapter(private val verbose: Boolean) : SpanAdapter() {
                             // Convert event data fields into the span attributes
                             span.bodyFieldsToCustomAttribute<EventBodyFields.Role>(event) { role ->
                                 // Weave expects to have an assistant message for correct displaying the responses from LLM.
-                                // Set role explicitly to Assistant (even for LLM Tool Calls response).
+                                // Set a role explicitly to Assistant (even for LLM Tool Calls response).
                                 CustomAttribute("gen_ai.completion.$index.${role.key}", Message.Role.Assistant.name.lowercase())
                             }
 
@@ -96,6 +101,10 @@ internal class WeaveSpanAdapter(private val verbose: Boolean) : SpanAdapter() {
 
                             span.bodyFieldsToCustomAttribute<EventBodyFields.ToolCalls>(event) { toolCalls ->
                                 CustomAttribute("gen_ai.completion.$index.content", toolCalls.valueString(verbose))
+                            }
+
+                            span.bodyFieldsToCustomAttribute<EventBodyFields.FinishReason>(event) { finishReason ->
+                                CustomAttribute("gen_ai.completion.$index.finish_reason", finishReason.value)
                             }
 
                             // Delete event from the span

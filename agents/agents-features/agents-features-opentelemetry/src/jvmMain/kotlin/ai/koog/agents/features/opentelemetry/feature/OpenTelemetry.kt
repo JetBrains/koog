@@ -338,6 +338,22 @@ public class OpenTelemetry {
 
                 inferenceSpan.addEvents(eventsToAdd)
 
+                // Add attributes to InferenceSpan
+
+                // Finish Reasons Attribute
+                eventContext.responses.lastOrNull()?.let { message ->
+                    val finishReasonsAttribute = when (message) {
+                        is Message.Assistant -> {
+                            SpanAttributes.Response.FinishReasons(reasons = listOf(SpanAttributes.Response.FinishReasonType.Stop))
+                        }
+                        is Message.Tool.Call -> {
+                            SpanAttributes.Response.FinishReasons(reasons = listOf(SpanAttributes.Response.FinishReasonType.ToolCalls))
+                        }
+                    }
+
+                    inferenceSpan.addAttribute(finishReasonsAttribute)
+                }
+
                 // Stop InferenceSpan
                 spanAdapter?.onBeforeSpanFinished(inferenceSpan)
                 spanProcessor.endSpan(inferenceSpan)
