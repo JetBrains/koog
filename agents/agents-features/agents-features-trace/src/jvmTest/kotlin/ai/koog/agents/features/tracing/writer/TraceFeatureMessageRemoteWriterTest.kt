@@ -230,7 +230,7 @@ class TraceFeatureMessageRemoteWriterTest {
             FeatureMessageRemoteClient(connectionConfig = clientConfig, scope = this).use { client ->
 
                 var runId = ""
-                val expectedEventsCount = 18
+                val expectedEventsCount = 20
 
                 val collectEventsJob = launch {
                     client.receivedMessages.consumeAsFlow().collect { event ->
@@ -343,6 +343,17 @@ class TraceFeatureMessageRemoteWriterTest {
                         nodeName = "test-node-llm-send-tool-result",
                         input = toolResult("0", dummyTool.name, dummyTool.result, dummyTool.result).toString(),
                         output = assistantMessage(mockResponse).toString()
+                    ),
+                    AIAgentNodeExecutionStartEvent(
+                        runId = runId,
+                        nodeName = "__finish__",
+                        input = mockResponse
+                    ),
+                    AIAgentNodeExecutionEndEvent(
+                        runId = runId,
+                        nodeName = "__finish__",
+                        input = mockResponse,
+                        output = mockResponse
                     ),
                     AIAgentStrategyFinishedEvent(
                         runId = runId,

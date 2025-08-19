@@ -237,6 +237,8 @@ class TraceFeatureMessageFileWriterTest {
                         dummyTool.result
                     )
                 }, output: $expectedResponse)",
+                "${AIAgentNodeExecutionStartEvent::class.simpleName} (run id: $runId, node: __finish__, input: $mockResponse)",
+                "${AIAgentNodeExecutionEndEvent::class.simpleName} (run id: $runId, node: __finish__, input: $mockResponse, output: $mockResponse)",
                 "${AIAgentStrategyFinishedEvent::class.simpleName} (run id: $runId, strategy: $strategyName, result: $mockResponse)",
                 "${AIAgentFinishedEvent::class.simpleName} (agent id: $agentId, run id: $runId, result: $mockResponse)",
                 "${AIAgentBeforeCloseEvent::class.simpleName} (agent id: $agentId)",
@@ -309,6 +311,8 @@ class TraceFeatureMessageFileWriterTest {
             "CUSTOM. ${AIAgentNodeExecutionStartEvent::class.simpleName}",
             "CUSTOM. ${BeforeLLMCallEvent::class.simpleName}",
             "CUSTOM. ${AfterLLMCallEvent::class.simpleName}",
+            "CUSTOM. ${AIAgentNodeExecutionEndEvent::class.simpleName}",
+            "CUSTOM. ${AIAgentNodeExecutionStartEvent::class.simpleName}",
             "CUSTOM. ${AIAgentNodeExecutionEndEvent::class.simpleName}",
             "CUSTOM. ${AIAgentStrategyFinishedEvent::class.simpleName}",
             "CUSTOM. ${AIAgentFinishedEvent::class.simpleName}",

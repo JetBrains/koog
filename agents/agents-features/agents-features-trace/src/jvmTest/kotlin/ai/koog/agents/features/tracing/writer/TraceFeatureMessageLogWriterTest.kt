@@ -226,6 +226,8 @@ class TraceFeatureMessageLogWriterTest {
                         dummyTool.result
                     )
                 }, output: $expectedResponse)",
+                "[INFO] Received feature message [event]: ${AIAgentNodeExecutionStartEvent::class.simpleName} (run id: $runId, node: __finish__, input: $mockResponse)",
+                "[INFO] Received feature message [event]: ${AIAgentNodeExecutionEndEvent::class.simpleName} (run id: $runId, node: __finish__, input: $mockResponse, output: $mockResponse)",
                 "[INFO] Received feature message [event]: ${AIAgentStrategyFinishedEvent::class.simpleName} (run id: $runId, strategy: $strategyName, result: $mockResponse)",
                 "[INFO] Received feature message [event]: ${AIAgentFinishedEvent::class.simpleName} (agent id: $agentId, run id: $runId, result: $mockResponse)",
                 "[INFO] Received feature message [event]: ${AIAgentBeforeCloseEvent::class.simpleName} (agent id: $agentId)",
@@ -290,6 +292,8 @@ class TraceFeatureMessageLogWriterTest {
             "[INFO] Received feature message [event]: CUSTOM. ${AIAgentNodeExecutionStartEvent::class.simpleName}",
             "[INFO] Received feature message [event]: CUSTOM. ${BeforeLLMCallEvent::class.simpleName}",
             "[INFO] Received feature message [event]: CUSTOM. ${AfterLLMCallEvent::class.simpleName}",
+            "[INFO] Received feature message [event]: CUSTOM. ${AIAgentNodeExecutionEndEvent::class.simpleName}",
+            "[INFO] Received feature message [event]: CUSTOM. ${AIAgentNodeExecutionStartEvent::class.simpleName}",
             "[INFO] Received feature message [event]: CUSTOM. ${AIAgentNodeExecutionEndEvent::class.simpleName}",
             "[INFO] Received feature message [event]: CUSTOM. ${AIAgentStrategyFinishedEvent::class.simpleName}",
             "[INFO] Received feature message [event]: CUSTOM. ${AIAgentFinishedEvent::class.simpleName}",

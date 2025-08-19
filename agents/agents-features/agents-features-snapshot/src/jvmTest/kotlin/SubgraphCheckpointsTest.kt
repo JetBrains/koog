@@ -21,7 +21,7 @@ class SubgraphCheckpointsTest {
             system(systemPrompt)
         },
         model = OllamaModels.Meta.LLAMA_3_2,
-        maxAgentIterations = 20
+        maxAgentIterations = 30
     )
     val toolRegistry = ToolRegistry {
         tool(SayToUser)
