@@ -7,8 +7,8 @@ import kotlinx.serialization.Serializable
 @InternalLLMClientApi
 @Serializable
 public data class UsageInfo(
-    @SerialName("prompt_tokens") val inputTokens: Int,
-    @SerialName("completion_tokens") val outputTokens: Int,
+    val promptTokens: Int,
+    val completionTokens: Int,
     val totalTokens: Int? = null
 )
 
@@ -16,26 +16,44 @@ public data class UsageInfo(
 @Serializable
 public data class MistralChatCompletionsResponse(
     val id: String,
-    val `object`: String,
     val model: String,
     val usage: UsageInfo,
     val created: Long,
-    val choices: List<MistralChatCompletionsResponseChoice>
+    val choices: List<MistralAIChoice>
 )
 
 @InternalLLMClientApi
 @Serializable
-public data class MistralChatCompletionsResponseChoice(
+public data class MistralAIChoice(
     val index: Long,
-    val message: MistralChatCompletionsResponseChoiceMessage,
-    val finishReason: String
+    val message: MistralAIAssistantMessage,
+    val finishReason: FinishReason
 )
 
 @InternalLLMClientApi
 @Serializable
-public data class MistralChatCompletionsResponseChoiceMessage(
+public enum class FinishReason {
+    @SerialName("stop")
+    STOP,
+
+    @SerialName("length")
+    LENGTH,
+
+    @SerialName("model_length")
+    MODEL_LENGTH,
+
+    @SerialName("error")
+    ERROR,
+
+    @SerialName("tool_calls")
+    TOOL_CALLS
+}
+
+@InternalLLMClientApi
+@Serializable
+public data class MistralAIAssistantMessage(
     val content: String? = null,
-    val toolCalls: List<ToolCall>? = null,
+    val toolCalls: List<MistralAIToolCall>? = null,
     val prefix: Boolean = false,
-    val role: String
+    val role: String = "assistant"
 )

@@ -2,12 +2,11 @@ package ai.koog.prompt.executor.clients.mistralai.model
 
 import ai.koog.prompt.executor.clients.InternalLLMClientApi
 import ai.koog.prompt.executor.clients.mistralai.serialization.StopSerializer
-import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.Serializable
 
 @InternalLLMClientApi
 @Serializable
-public data class MistralAIChatCompletionRequest(
+public data class MistralAIChatCompletionsRequest(
     val model: String,
     val temperature: Double? = null,
     val topP: Double? = 1.0,
@@ -16,8 +15,7 @@ public data class MistralAIChatCompletionRequest(
     @Serializable(with = StopSerializer::class)
     val stop: Stop? = null,
     val messages: List<MistralAIMessage>,
-    val tools: List<MistralAITool>? = null,
-    @EncodeDefault(EncodeDefault.Mode.ALWAYS) val toolChoice: String = "auto", // TODO: MAKE IT AN OBJECT
+    val tools: List<MistralAITool>? = null
 ) {
     init {
         if (maxTokens != null) {

@@ -1,11 +1,12 @@
 package ai.koog.prompt.executor.clients.mistralai.mapper
 
+import ai.koog.prompt.executor.clients.mistralai.model.FunctionCall
+import ai.koog.prompt.executor.clients.mistralai.model.FunctionCallArguments
 import ai.koog.prompt.executor.clients.mistralai.model.MistralAIContent
 import ai.koog.prompt.executor.clients.mistralai.model.MistralAIMessage
 import ai.koog.prompt.executor.clients.mistralai.model.MistralAIMessage.*
+import ai.koog.prompt.executor.clients.mistralai.model.MistralAIToolCall
 import ai.koog.prompt.message.Message
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 internal object MistralAIMessageMapper {
 
@@ -18,35 +19,43 @@ internal object MistralAIMessageMapper {
             is Message.Tool.Call -> message.toMistralAIMessage()
         }
     }
+}
 
-    private fun Message.User.toMistralAIMessage(): MistralAIMessage.MistralAIUserMessage {
-        val listOfContent = buildList {
-            if (content.isNotEmpty()) {
-                add(MistralAIContent.ContentChunk.TextChunk(content))
-            }
-        }
-        return MistralAIUserMessage(content = listOfContent)
-    }
+private fun createTextContent(text: String): List<MistralAIContent.ContentChunk.TextChunk> =
+    if (text.isNotEmpty()) listOf(MistralAIContent.ContentChunk.TextChunk(text)) else emptyList()
 
-    private fun Message.Assistant.toMistralAIMessage(): MistralAIAssistantMessage {
-        return MistralAIAssistantMessage(
-            content = listOf(MistralAIContent.ContentChunk.TextChunk(content))
-        )
-    }
 
-    private fun Message.System.toMistralAIMessage(): MistralAIMessage.MistralAISystemMessage {
-        return MistralAISystemMessage(content = listOf(MistralAIContent.TextChunk(content)))
-    }
+private fun Message.User.toMistralAIMessage(): MistralAIUserMessage {
+    return MistralAIUserMessage(content = createTextContent(content))
+}
 
-    private fun Message.Tool.Result.toMistralAIMessage(): MistralAIToolMessage {
-        return MistralAIToolMessage()
-    }
+private fun Message.Assistant.toMistralAIMessage(): MistralAIAssistantMessage {
+    return MistralAIAssistantMessage(content = createTextContent(content))
+}
 
-    @OptIn(ExperimentalUuidApi::class)
-    private fun Message.Tool.Call.toMistralAIMessage(): MistralAIToolMessage {
-        return MistralAIToolMessage(
-            toolCallId = id ?: Uuid.random().toString(),
-            name = tool,
-        )
-    }
+private fun Message.System.toMistralAIMessage(): MistralAISystemMessage {
+    return MistralAISystemMessage(content = listOf(MistralAIContent.TextChunk(content)))
+}
+
+private fun Message.Tool.Result.toMistralAIMessage(): MistralAIMessage {
+    return MistralAIToolMessage(
+        toolCallId = id,
+        name = tool,
+        content = createTextContent(content)
+    )
+}
+
+private fun Message.Tool.Call.toMistralAIMessage(): MistralAIMessage {
+    return MistralAIAssistantMessage(
+        toolCalls = listOf(
+            MistralAIToolCall(
+                id = id,
+                function = FunctionCall(
+                    name = tool,
+                    arguments = FunctionCallArguments.StringFunctionCallArguments(content)
+                )
+            )
+        ),
+        content = createTextContent(content)
+    )
 }

@@ -12,87 +12,109 @@ import kotlinx.serialization.json.JsonPrimitive
 
 internal object MistralAIToolMapper {
 
-    fun createMistralAITools(tools: List<ToolDescriptor>): List<MistralAITool> {
-        return tools.map { tool ->
-            val properties = mutableMapOf<String, JsonElement>()
-            (tool.requiredParameters + tool.optionalParameters).forEach { param ->
-                val typeMap = getTypeMapForParameter(param.type)
+    private object JsonSchemaKeys {
+        const val TYPE = "type"
+        const val DESCRIPTION = "description"
+        const val ENUM = "enum"
+        const val ITEMS = "items"
+        const val PROPERTIES = "properties"
+        const val REQUIRED = "required"
+        const val ADDITIONAL_PROPERTIES = "additionalProperties"
+    }
 
-                properties[param.name] = JsonObject(
-                    mapOf("description" to JsonPrimitive(param.description)) + typeMap
-                )
-            }
+    private object JsonSchemaTypes {
+        const val BOOLEAN = "boolean"
+        const val NUMBER = "number"
+        const val INTEGER = "integer"
+        const val STRING = "string"
+        const val ARRAY = "array"
+        const val OBJECT = "object"
+    }
+
+    fun createMistralAITools(toolDescriptors: List<ToolDescriptor>): List<MistralAITool> {
+        return toolDescriptors.map { descriptor ->
+            val parameterSchemas = buildParameterSchemas(descriptor)
 
             MistralAITool(
                 function = MistralAIFunction(
-                    name = tool.name,
-                    description = tool.description,
+                    name = descriptor.name,
+                    description = descriptor.description,
                     parameters = MistralAIToolParamsSpecification(
-                        properties = JsonObject(properties),
-                        required = tool.requiredParameters.map { it.name }
+                        properties = JsonObject(parameterSchemas),
+                        required = descriptor.requiredParameters.map { it.name }
                     )
                 )
             )
         }
     }
 
-    /**
-     * Helper function to get the type map for a parameter type without using smart casting
-     */
-    private fun getTypeMapForParameter(type: ToolParameterType): JsonObject {
-        return when (type) {
-            ToolParameterType.Boolean -> JsonObject(mapOf("type" to JsonPrimitive("boolean")))
-            ToolParameterType.Float -> JsonObject(mapOf("type" to JsonPrimitive("number")))
-            ToolParameterType.Integer -> JsonObject(mapOf("type" to JsonPrimitive("integer")))
-            ToolParameterType.String -> JsonObject(mapOf("type" to JsonPrimitive("string")))
-            is ToolParameterType.Enum -> JsonObject(
-                mapOf(
-                    "type" to JsonPrimitive("string"),
-                    "enum" to JsonArray(type.entries.map { JsonPrimitive(it.lowercase()) })
-                )
-            )
-
-            is ToolParameterType.List -> JsonObject(
-                mapOf(
-                    "type" to JsonPrimitive("array"),
-                    "items" to getTypeMapForParameter(type.itemsType)
-                )
-            )
-
-            is ToolParameterType.Object -> {
-                // Create properties map with proper type information
-                val propertiesMap = mutableMapOf<String, JsonElement>()
-
-                for (prop in type.properties) {
-                    // Get type information for the property
-                    val typeInfo = getTypeMapForParameter(prop.type)
-
-                    // Create a map with all type properties and description
-                    val propMap = mutableMapOf<String, JsonElement>()
-                    for (entry in typeInfo.entries) {
-                        propMap[entry.key] = entry.value
-                    }
-                    propMap["description"] = JsonPrimitive(prop.description)
-
-                    // Add to properties map
-                    propertiesMap[prop.name] = JsonObject(propMap)
-                }
-
-                // Create the final object schema
-                val objectMap = mutableMapOf<String, JsonElement>()
-                objectMap["type"] = JsonPrimitive("object")
-                objectMap["properties"] = JsonObject(propertiesMap)
-
-                // Add required field if requiredProperties is not empty
-                if (type.requiredProperties.isNotEmpty()) {
-                    objectMap["required"] = JsonArray(type.requiredProperties.map { JsonPrimitive(it) })
-                }
-
-                // Add additionalProperties for strict validation
-                objectMap["additionalProperties"] = JsonPrimitive(type.additionalProperties ?: false)
-
-                JsonObject(objectMap)
+    private fun buildParameterSchemas(descriptor: ToolDescriptor): Map<String, JsonElement> {
+        val allParameters = descriptor.requiredParameters + descriptor.optionalParameters
+        return allParameters.associate { parameter ->
+            val schema = convertToJsonSchema(parameter.type)
+            val schemaWithDescription = schema.toMutableMap().apply {
+                put(JsonSchemaKeys.DESCRIPTION, JsonPrimitive(parameter.description))
             }
+            parameter.name to JsonObject(schemaWithDescription)
         }
+    }
+
+    /**
+     * Converts a ToolParameterType to its corresponding JSON Schema representation
+     */
+    private fun convertToJsonSchema(parameterType: ToolParameterType): JsonObject {
+        return when (parameterType) {
+            ToolParameterType.Boolean -> createPrimitiveSchema(JsonSchemaTypes.BOOLEAN)
+            ToolParameterType.Float -> createPrimitiveSchema(JsonSchemaTypes.NUMBER)
+            ToolParameterType.Integer -> createPrimitiveSchema(JsonSchemaTypes.INTEGER)
+            ToolParameterType.String -> createPrimitiveSchema(JsonSchemaTypes.STRING)
+
+            is ToolParameterType.Enum -> createEnumSchema(parameterType.entries)
+            is ToolParameterType.List -> createArraySchema(parameterType.itemsType)
+            is ToolParameterType.Object -> createObjectSchema(parameterType)
+        }
+    }
+
+    private fun createPrimitiveSchema(type: String): JsonObject {
+        return JsonObject(mapOf(JsonSchemaKeys.TYPE to JsonPrimitive(type)))
+    }
+
+    private fun createEnumSchema(enumEntries: Array<String>): JsonObject {
+        return JsonObject(
+            mapOf(
+                JsonSchemaKeys.TYPE to JsonPrimitive(JsonSchemaTypes.STRING),
+                JsonSchemaKeys.ENUM to JsonArray(enumEntries.map { JsonPrimitive(it.lowercase()) })
+            )
+        )
+    }
+
+    private fun createArraySchema(itemsType: ToolParameterType): JsonObject {
+        return JsonObject(
+            mapOf(
+                JsonSchemaKeys.TYPE to JsonPrimitive(JsonSchemaTypes.ARRAY),
+                JsonSchemaKeys.ITEMS to convertToJsonSchema(itemsType)
+            )
+        )
+    }
+
+    private fun createObjectSchema(objectType: ToolParameterType.Object): JsonObject {
+        val propertySchemas = objectType.properties.associate { property ->
+            val propertySchema = convertToJsonSchema(property.type).toMutableMap()
+            propertySchema[JsonSchemaKeys.DESCRIPTION] = JsonPrimitive(property.description)
+            property.name to JsonObject(propertySchema)
+        }
+
+        val schemaMap = mutableMapOf<String, JsonElement>().apply {
+            put(JsonSchemaKeys.TYPE, JsonPrimitive(JsonSchemaTypes.OBJECT))
+            put(JsonSchemaKeys.PROPERTIES, JsonObject(propertySchemas))
+
+            if (objectType.requiredProperties.isNotEmpty()) {
+                put(JsonSchemaKeys.REQUIRED, JsonArray(objectType.requiredProperties.map(::JsonPrimitive)))
+            }
+
+            put(JsonSchemaKeys.ADDITIONAL_PROPERTIES, JsonPrimitive(objectType.additionalProperties ?: false))
+        }
+
+        return JsonObject(schemaMap)
     }
 }

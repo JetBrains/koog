@@ -8,9 +8,11 @@ import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.mistralai.mapper.MistralAIMessageMapper.mapToMistralAIMessage
 import ai.koog.prompt.executor.clients.mistralai.mapper.MistralAIToolMapper.createMistralAITools
-import ai.koog.prompt.executor.clients.mistralai.model.MistralAIChatCompletionRequest
+import ai.koog.prompt.executor.clients.mistralai.model.MistralAIChatCompletionsRequest
 import ai.koog.prompt.executor.clients.mistralai.model.MistralChatCompletionsResponse
-import ai.koog.prompt.executor.clients.mistralai.model.MistralChatCompletionsResponseChoice
+import ai.koog.prompt.executor.clients.mistralai.model.MistralAIChoice
+import ai.koog.prompt.executor.clients.mistralai.model.asString
+import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
@@ -77,7 +79,7 @@ public open class MistralAILLMClient(
         }
     }
 
-    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
+    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): LLMChoice {
         return processMistralAiResponse(getMistralAIResponse(prompt, model, tools))
     }
 
@@ -113,20 +115,18 @@ public open class MistralAILLMClient(
         }
     }
 
-    override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> = flow {
-        TODO()
-    }
+    override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> = throw NotImplementedError()
 
-    @OptIn(ExperimentalUuidApi::class) // todo:make private
-    public fun createMistralAIRequest(
+    @OptIn(ExperimentalUuidApi::class)
+    private fun createMistralAIRequest(
         prompt: Prompt,
         tools: List<ToolDescriptor>,
         model: LLModel
-    ): MistralAIChatCompletionRequest {
+    ): MistralAIChatCompletionsRequest {
         val mistralAIMessages = prompt.messages.map { message -> mapToMistralAIMessage(message) }
         val mistralAITools = createMistralAITools(tools)
 
-        return MistralAIChatCompletionRequest(
+        return MistralAIChatCompletionsRequest(
             model = settings.modelVersionsMap[model]
                 ?: throw IllegalArgumentException("Unsupported model: $model"),
             messages = mistralAIMessages,
@@ -137,50 +137,57 @@ public open class MistralAILLMClient(
         )
     }
 
-    private fun processMistralAiResponse(response: MistralChatCompletionsResponse): List<Message.Response> {
-        val inputTokensCount = response.usage.inputTokens
-        val outputTokensCount = response.usage.outputTokens
-        val totalTokensCount = response.usage.let { it.inputTokens + it.outputTokens }
+    private fun processMistralAiResponse(response: MistralChatCompletionsResponse): LLMChoice {
+        if (response.choices.isEmpty()) {
+            logger.error { "Empty choices in MistralAI response" }
+            error("Empty choices in MistralAI response")
+        }
 
-        val responses: List<Message.Response> =
-            response.choices.mapNotNull { choice: MistralChatCompletionsResponseChoice ->
-                when {
-                    choice.message.role == "assistant" -> {
-                        Message.Assistant(
-                            content = choice.message.content ?: "",
-                            finishReason = choice.finishReason,
-                            metaInfo = ResponseMetaInfo.create(
-                                clock,
-                                totalTokensCount = totalTokensCount,
-                                inputTokensCount = inputTokensCount,
-                                outputTokensCount = outputTokensCount,
-                            )
-                        )
-                    }
+        val inputTokensCount = response.usage.promptTokens
+        val outputTokensCount = response.usage.completionTokens
+        val totalTokensCount = response.usage.totalTokens
 
-                    else -> null
-                }
-            }
+        val metaInfo = ResponseMetaInfo.create(
+            clock,
+            totalTokensCount = totalTokensCount,
+            inputTokensCount = inputTokensCount,
+            outputTokensCount = outputTokensCount
+        )
+
+        return response.choices.map { processMistralAIChoice(it, metaInfo) }.first()
+    }
+
+    private fun processMistralAIChoice(choice: MistralAIChoice, metaInfo: ResponseMetaInfo): LLMChoice {
+        val message = choice.message
 
         return when {
-            responses.any { it is Message.Tool.Call } -> responses.filterIsInstance<Message.Tool.Call>()
-            responses.isEmpty() -> listOf(
-                Message.Assistant(
-                    content = "",
-                    finishReason = response.choices.takeIf { it.isNotEmpty() }?.get(0)?.finishReason ?: "error",
-                    metaInfo = ResponseMetaInfo.create(
-                        clock,
-                        totalTokensCount = totalTokensCount,
-                        inputTokensCount = inputTokensCount,
-                        outputTokensCount = outputTokensCount,
+            message.toolCalls != null && message.toolCalls.isNotEmpty() ->
+                message.toolCalls.map { toolCall ->
+                    Message.Tool.Call(
+                        id = toolCall.id,
+                        tool = toolCall.function.name,
+                        content = toolCall.function.arguments.asString(),
+                        metaInfo = metaInfo
+                    )
+                }
+
+            message.content != null -> {
+                listOf(
+                    Message.Assistant(
+                        content = message.content,
+                        finishReason = choice.finishReason.name.lowercase(),
+                        metaInfo = metaInfo
                     )
                 )
-            )
+            }
 
-            else -> responses
+            else -> {
+                logger.error { "Unexpected response from MistralAI: no tool calls and no content" }
+                error("Unexpected response from MistralAI: no tool calls and no content")
+            }
         }
     }
 
-    public override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult = TODO()
+    public override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult = throw NotImplementedError()
 }
 

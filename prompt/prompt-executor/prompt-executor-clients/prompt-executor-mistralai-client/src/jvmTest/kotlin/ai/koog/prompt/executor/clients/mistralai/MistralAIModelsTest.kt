@@ -1,7 +1,7 @@
 package ai.koog.prompt.executor.clients.mistralai
 
 import ai.koog.prompt.executor.clients.list
-import ai.koog.prompt.executor.clients.mistralai.model.MistralAIChatCompletionRequest
+import ai.koog.prompt.executor.clients.mistralai.model.MistralAIChatCompletionsRequest
 import ai.koog.prompt.llm.LLMProvider
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -26,7 +26,7 @@ class MistralAIModelsTest {
     @Test
     fun `MistralAIChatCompletionRequest should reject negative maxTokens`() {
         val exception = assertFailsWith<IllegalArgumentException> {
-            MistralAIChatCompletionRequest(
+            MistralAIChatCompletionsRequest(
                 model = MistralAIModels.MISTRAL_MEDIUM_3_1.id,
                 messages = emptyList(),
                 maxTokens = -1

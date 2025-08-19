@@ -14,14 +14,14 @@ public sealed class MistralAIMessage {
     @InternalLLMClientApi
     @Serializable
     public data class MistralAISystemMessage(
-        @EncodeDefault(EncodeDefault.Mode.ALWAYS) override val role: String = "system",
+        @EncodeDefault(ALWAYS) override val role: String = "system",
         override val content: List<MistralAIContent.TextChunk>
     ) : MistralAIMessage()
 
     @InternalLLMClientApi
     @Serializable
     public data class MistralAIUserMessage(
-        @EncodeDefault(EncodeDefault.Mode.ALWAYS) override val role: String = "user",
+        @EncodeDefault(ALWAYS) override val role: String = "user",
         override val content: List<MistralAIContent.ContentChunk>? = null,
     ) : MistralAIMessage()
 
@@ -29,9 +29,9 @@ public sealed class MistralAIMessage {
     @Serializable
     public data class MistralAIAssistantMessage(
         override val content: List<MistralAIContent.ContentChunk>? = null,
-        val toolCalls: List<ToolCall>? = null,
+        val toolCalls: List<MistralAIToolCall>? = null,
         val prefix: Boolean = false,
-        @EncodeDefault(EncodeDefault.Mode.ALWAYS) override val role: String = "assistant"
+        @EncodeDefault(ALWAYS) override val role: String = "assistant"
     ) : MistralAIMessage()
 
     @InternalLLMClientApi
@@ -40,7 +40,7 @@ public sealed class MistralAIMessage {
         override val content: List<MistralAIContent.ContentChunk>? = null,
         val toolCallId: String? = null,
         val name: String? = null,
-        @EncodeDefault(EncodeDefault.Mode.ALWAYS) override val role: String = "tool"
+        @EncodeDefault(ALWAYS) override val role: String = "tool"
     ) : MistralAIMessage()
 }
 

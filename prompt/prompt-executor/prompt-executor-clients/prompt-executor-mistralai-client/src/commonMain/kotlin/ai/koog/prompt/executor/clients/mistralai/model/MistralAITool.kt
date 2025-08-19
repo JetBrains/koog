@@ -9,7 +9,7 @@ import kotlinx.serialization.json.JsonObject
 @InternalLLMClientApi
 @Serializable
 public data class MistralAITool(
-    @EncodeDefault(EncodeDefault.Mode.ALWAYS) val type: String = "function",
+    @EncodeDefault(ALWAYS) val type: String = "function",
     val function: MistralAIFunction
 )
 
