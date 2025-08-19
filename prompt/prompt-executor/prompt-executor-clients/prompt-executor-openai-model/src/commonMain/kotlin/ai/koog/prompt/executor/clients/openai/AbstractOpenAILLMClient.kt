@@ -72,12 +72,28 @@ import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
+/**
+ * Base settings class for OpenAI-based API clients.
+ *
+ * @property baseUrl The base URL for the API endpoint.
+ * @property chatCompletionsPath The path for chat completions API endpoints.
+ * @property timeoutConfig Configuration for connection timeouts, including request, connect, and socket timeouts.
+ */
 public abstract class OpenAIBasedSettings(
     public val baseUrl: String,
     public val chatCompletionsPath: String,
     public val timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig()
 )
 
+/**
+ * Abstract base class for OpenAI-compatible LLM clients.
+ * Provides common functionality for communicating with OpenAI and OpenAI-compatible APIs.
+ *
+ * @param apiKey The API key for authentication with the OpenAI-compatible API.
+ * @param settings Configuration settings including base URL, API paths, and timeout configuration.
+ * @param baseClient The HTTP client to use for API requests. Defaults to a new HttpClient instance.
+ * @param clock Clock instance used for tracking response metadata timestamps. Defaults to Clock.System.
+ */
 public abstract class AbstractOpenAILLMClient(
     private val apiKey: String,
     settings: OpenAIBasedSettings,
