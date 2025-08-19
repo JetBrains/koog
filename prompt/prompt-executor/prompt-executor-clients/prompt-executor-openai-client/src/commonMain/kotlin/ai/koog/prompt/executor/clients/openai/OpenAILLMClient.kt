@@ -10,6 +10,8 @@ import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import ai.koog.prompt.executor.clients.openai.models.Content
 import ai.koog.prompt.executor.clients.openai.models.ContentPart
+import ai.koog.prompt.executor.clients.openai.models.OpenAIEmbeddingRequest
+import ai.koog.prompt.executor.clients.openai.models.OpenAIEmbeddingResponse
 import ai.koog.prompt.executor.clients.openai.structure.OpenAIBasicJsonSchemaGenerator
 import ai.koog.prompt.executor.clients.openai.structure.OpenAIStandardJsonSchemaGenerator
 import ai.koog.prompt.llm.LLMCapability

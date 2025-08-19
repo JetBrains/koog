@@ -1,6 +1,5 @@
-package ai.koog.prompt.executor.clients.openai
+package ai.koog.prompt.executor.clients.openai.models
 
-import ai.koog.prompt.executor.clients.openai.models.OpenAIUsage
 import kotlinx.serialization.Serializable
 
 @Serializable
