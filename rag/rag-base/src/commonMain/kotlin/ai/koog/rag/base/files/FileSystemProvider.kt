@@ -133,6 +133,8 @@ public object FileSystemProvider {
          * @return The file content as a byte array.
          * @throws IllegalArgumentException if the path doesn't exist or isn't a regular file.
          * @throws IOException if an I/O error occurs during reading.
+         *
+         * @see [readText]
          */
         public suspend fun readBytes(path: Path): ByteArray
 
@@ -172,6 +174,9 @@ public object FileSystemProvider {
          * @param type The type (file or directory) to create.
          * @throws IOException or its inheritor if the [path] already exists,
          *   or [path] is invalid (e.g., contains reserved characters), or if any other I/O error occurs.
+         *
+         * @see [createDirectory]
+         * @see [createFile]
          */
         public suspend fun create(path: Path, type: FileMetadata.FileType)
 
@@ -208,6 +213,8 @@ public object FileSystemProvider {
          * @param path The path to write to.
          * @param data The data to write as a byte array.
          * @throws IOException if the path is a directory or any other I/O error occurs during writing.
+         *
+         * @see [writeText]
          */
         public suspend fun writeBytes(path: Path, data: ByteArray)
 
