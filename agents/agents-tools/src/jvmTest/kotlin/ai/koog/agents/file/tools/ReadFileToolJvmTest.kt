@@ -290,7 +290,7 @@ class ReadFileToolJvmTest {
     fun `descriptor has correct configuration`() {
         val descriptor = ReadFileTool.descriptor
 
-        assertEquals("read-file", descriptor.name)
+        assertEquals("__read_file__", descriptor.name)
         assertTrue(descriptor.description.isNotEmpty())
 
         assertEquals(1, descriptor.requiredParameters.size)

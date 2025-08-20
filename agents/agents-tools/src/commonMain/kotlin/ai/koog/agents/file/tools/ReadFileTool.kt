@@ -131,7 +131,7 @@ public class ReadFileTool<Path>(private val fs: FileSystemProvider.ReadOnly<Path
          * - `endLine`: First line to exclude, 0-based, -1 for the end of file, defaults to -1
          */
         public val descriptor: ToolDescriptor = ToolDescriptor(
-            name = "read-file",
+            name = "__read_file__",
             description = text {
                 +"Reads text file with optional line range selection."
                 +"Returns formatted content with metadata."
