@@ -18,7 +18,6 @@ import kotlin.time.Duration.Companion.seconds
  * @param langfuseSecretKey if not set is retrieved from `LANGFUSE_SECRET_KEY` environment variable.
  * @param timeout OpenTelemetry SpanExporter timeout.
  *        See [io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporterBuilder.setTimeout].
- * @param verbose flag to enable verbose logging for the Langfuse span adapter. Defaults to 'false'.
  *
  * @see <a href="https://langfuse.com/docs/get-started#create-new-project-in-langfuse">How to create a new project in Langfuse</a>
  * @see <a href="https://langfuse.com/faq/all/where-are-langfuse-api-keys">How to set up API keys in Langfuse</a>
@@ -29,7 +28,6 @@ public fun OpenTelemetryConfig.addLangfuseExporter(
     langfusePublicKey: String? = null,
     langfuseSecretKey: String? = null,
     timeout: Duration = 10.seconds,
-    verbose: Boolean = false,
 ) {
     val url = langfuseUrl ?: System.getenv()["LANGFUSE_HOST"] ?: "https://cloud.langfuse.com"
 
@@ -51,7 +49,7 @@ public fun OpenTelemetryConfig.addLangfuseExporter(
             .build()
     )
 
-    addSpanAdapter(LangfuseSpanAdapter(verbose))
+    addSpanAdapter(LangfuseSpanAdapter(this))
 }
 
 private val logger = KotlinLogging.logger { }

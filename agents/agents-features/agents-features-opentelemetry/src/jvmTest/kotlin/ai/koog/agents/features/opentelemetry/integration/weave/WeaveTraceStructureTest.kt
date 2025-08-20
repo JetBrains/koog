@@ -12,4 +12,4 @@ import kotlin.test.Ignore
 //   - WEAVE_API_KEY
 @Ignore
 class WeaveTraceStructureTest :
-    TraceStructureTestBase(openTelemetryConfigurator = { addWeaveExporter(verbose = this.isVerbose) })
+    TraceStructureTestBase(openTelemetryConfigurator = { addWeaveExporter() })

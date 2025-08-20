@@ -7,6 +7,7 @@ import ai.koog.agents.features.opentelemetry.event.EventBodyFields
 import ai.koog.agents.features.opentelemetry.event.SystemMessageEvent
 import ai.koog.agents.features.opentelemetry.event.ToolMessageEvent
 import ai.koog.agents.features.opentelemetry.event.UserMessageEvent
+import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfig
 import ai.koog.agents.features.opentelemetry.integration.SpanAdapter
 import ai.koog.agents.features.opentelemetry.integration.bodyFieldsToCustomAttribute
 import ai.koog.agents.features.opentelemetry.span.GenAIAgentSpan
@@ -25,7 +26,7 @@ import java.util.concurrent.atomic.AtomicInteger
  * their data into custom attributes. Additionally, it ensures that the converted events
  * are removed from the span's event list after conversion.
  */
-internal class LangfuseSpanAdapter(private val verbose: Boolean) : SpanAdapter() {
+internal class LangfuseSpanAdapter(private val openTelemetryConfig: OpenTelemetryConfig) : SpanAdapter() {
 
     private val stepKey = AtomicInteger(0)
 
@@ -95,7 +96,7 @@ internal class LangfuseSpanAdapter(private val verbose: Boolean) : SpanAdapter()
                             }
 
                             span.bodyFieldsToCustomAttribute<EventBodyFields.ToolCalls>(event) { toolCalls ->
-                                CustomAttribute("gen_ai.completion.$index.content", toolCalls.valueString(verbose))
+                                CustomAttribute("gen_ai.completion.$index.content", toolCalls.valueString(openTelemetryConfig.isVerbose))
                             }
 
                             span.bodyFieldsToCustomAttribute<EventBodyFields.FinishReason>(event) { finishReason ->
@@ -119,7 +120,7 @@ internal class LangfuseSpanAdapter(private val verbose: Boolean) : SpanAdapter()
                             }
 
                             span.bodyFieldsToCustomAttribute<EventBodyFields.ToolCalls>(event) { toolCalls ->
-                                CustomAttribute("gen_ai.completion.$index.content", toolCalls.valueString(verbose))
+                                CustomAttribute("gen_ai.completion.$index.content", toolCalls.valueString(openTelemetryConfig.isVerbose))
                             }
 
                             span.bodyFieldsToCustomAttribute<EventBodyFields.FinishReason>(event) { finishReason ->

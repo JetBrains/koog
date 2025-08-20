@@ -23,7 +23,6 @@ import kotlin.time.Duration.Companion.seconds
  *        If not set is retrieved from `WEAVE_API_KEY` environment variable.
  * @param timeout OpenTelemetry SpanExporter timeout.
  *        See [io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporterBuilder.setTimeout].
- * @param verbose flag to enable verbose logging for the Weave span adapter. Defaults to 'false'.
  *
  * @see <a href="https://weave-docs.wandb.ai/guides/tracking/otel/">Weave OpenTelemetry Docs</a>
  */
@@ -33,7 +32,6 @@ public fun OpenTelemetryConfig.addWeaveExporter(
     weaveProjectName: String? = null,
     weaveApiKey: String? = null,
     timeout: Duration = 10.seconds,
-    verbose: Boolean = false,
 ) {
     val url = weaveOtelBaseUrl ?: System.getenv()["WEAVE_URL"] ?: "https://trace.wandb.ai"
 
@@ -54,7 +52,7 @@ public fun OpenTelemetryConfig.addWeaveExporter(
             .build()
     )
 
-    addSpanAdapter(WeaveSpanAdapter(verbose))
+    addSpanAdapter(WeaveSpanAdapter(this))
 }
 
 private val logger = KotlinLogging.logger { }

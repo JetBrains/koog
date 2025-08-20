@@ -13,4 +13,4 @@ import kotlin.test.Ignore
 //   - LANGFUSE_HOST
 @Ignore
 class LangfuseTraceStructureTest :
-    TraceStructureTestBase(openTelemetryConfigurator = { addLangfuseExporter(verbose = this.isVerbose) })
+    TraceStructureTestBase(openTelemetryConfigurator = { addLangfuseExporter() })

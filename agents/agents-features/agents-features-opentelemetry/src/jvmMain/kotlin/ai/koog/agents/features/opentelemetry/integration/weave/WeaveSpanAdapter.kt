@@ -7,6 +7,7 @@ import ai.koog.agents.features.opentelemetry.event.EventBodyFields
 import ai.koog.agents.features.opentelemetry.event.SystemMessageEvent
 import ai.koog.agents.features.opentelemetry.event.ToolMessageEvent
 import ai.koog.agents.features.opentelemetry.event.UserMessageEvent
+import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfig
 import ai.koog.agents.features.opentelemetry.integration.SpanAdapter
 import ai.koog.agents.features.opentelemetry.integration.bodyFieldsToCustomAttribute
 import ai.koog.agents.features.opentelemetry.span.GenAIAgentSpan
@@ -22,10 +23,10 @@ import ai.koog.prompt.message.Message
  * [SystemMessageEvent], [UserMessageEvent], [AssistantMessageEvent], and [ToolMessageEvent].
  * Events are converted into custom span attributes for better traceability and observability.
  *
- * @param verbose A flag to control the verbosity of the processing.
+ * @param openTelemetryConfig A flag to control the verbosity of the processing.
  *        When set to true, additional details may be added to span attributes during processing.
  */
-internal class WeaveSpanAdapter(private val verbose: Boolean) : SpanAdapter() {
+internal class WeaveSpanAdapter(private val openTelemetryConfig: OpenTelemetryConfig) : SpanAdapter() {
 
     override fun onBeforeSpanStarted(span: GenAIAgentSpan) {
         when (span) {
@@ -75,7 +76,7 @@ internal class WeaveSpanAdapter(private val verbose: Boolean) : SpanAdapter() {
                             }
 
                             span.bodyFieldsToCustomAttribute<EventBodyFields.ToolCalls>(event) { toolCalls ->
-                                CustomAttribute("gen_ai.completion.$index.content", toolCalls.valueString(verbose))
+                                CustomAttribute("gen_ai.completion.$index.content", toolCalls.valueString(openTelemetryConfig.isVerbose))
                             }
 
                             // Finish Reason
@@ -100,7 +101,7 @@ internal class WeaveSpanAdapter(private val verbose: Boolean) : SpanAdapter() {
                             }
 
                             span.bodyFieldsToCustomAttribute<EventBodyFields.ToolCalls>(event) { toolCalls ->
-                                CustomAttribute("gen_ai.completion.$index.content", toolCalls.valueString(verbose))
+                                CustomAttribute("gen_ai.completion.$index.content", toolCalls.valueString(openTelemetryConfig.isVerbose))
                             }
 
                             span.bodyFieldsToCustomAttribute<EventBodyFields.FinishReason>(event) { finishReason ->
