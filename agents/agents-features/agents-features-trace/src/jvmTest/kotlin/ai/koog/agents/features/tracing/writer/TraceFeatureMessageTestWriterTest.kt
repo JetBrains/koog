@@ -19,7 +19,6 @@ import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.utils.use
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Instant
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -38,7 +37,7 @@ class TraceFeatureMessageTestWriterTest {
     }
 
     @Test
-    fun `test subsequent LLM calls`() = runBlocking {
+    fun `test subsequent LLM calls`() = runTest {
         val strategy = strategy("tracing-test-strategy") {
             val setPrompt by nodeUpdatePrompt<String>("Set prompt") {
                 system("System 1")
@@ -89,7 +88,7 @@ class TraceFeatureMessageTestWriterTest {
     }
 
     @Test
-    fun `test nonexistent tool call`() = runBlocking {
+    fun `test nonexistent tool call`() = runTest {
         val strategy = strategy<String, String>("tracing-tool-call-test") {
             val callTool by nodeExecuteTool("Tool call")
             edge(
@@ -115,7 +114,10 @@ class TraceFeatureMessageTestWriterTest {
             }
         }
 
-        val throwable = assertFails { agent.run("") }
+        val throwable = assertFails {
+            agent.run("")
+            agent.close()
+        }
         assertEquals(
             "Tool \"there is no tool with this name\" is not defined",
             throwable.message
@@ -123,7 +125,7 @@ class TraceFeatureMessageTestWriterTest {
     }
 
     @Test
-    fun `test existing tool call`() = runBlocking {
+    fun `test existing tool call`() = runTest {
         val strategy = strategy<String, String>("tracing-tool-call-test") {
             val callTool by nodeExecuteTool("Tool call")
             edge(
@@ -159,7 +161,7 @@ class TraceFeatureMessageTestWriterTest {
     }
 
     @Test
-    fun `test recursive tool call`() = runBlocking {
+    fun `test recursive tool call`() = runTest {
         val strategy = strategy<String, String>("recursive-tool-call-test") {
             val callTool by nodeExecuteTool("Tool call")
             edge(
@@ -194,7 +196,7 @@ class TraceFeatureMessageTestWriterTest {
     }
 
     @Test
-    fun `test llm tool call`() = runBlocking {
+    fun `test llm tool call`() = runTest {
         val dummyTool = DummyTool()
 
         val strategy = strategy<String, String>("llm-tool-call-test") {
