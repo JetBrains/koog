@@ -17,6 +17,7 @@ object RetryUtils {
     private const val ANTHROPIC_502_ERROR = "Error from Anthropic API: 502 Bad Gateway"
     private const val OPENAI_500_ERROR = "Error from OpenAI API: 500 Internal Server Error"
     private const val OPENAI_503_ERROR = "Error from OpenAI API: 503 Service Unavailable"
+    private const val OPENAI_LLM_CLIENT_500_ERROR = "Error from OpenAILLMClient API: 500 Internal Server Error"
 
     private fun isThirdPartyError(e: Throwable): Boolean {
         val errorMessages = listOf(
@@ -27,7 +28,8 @@ object RetryUtils {
             ANTHROPIC_429_ERROR,
             ANTHROPIC_502_ERROR,
             OPENAI_500_ERROR,
-            OPENAI_503_ERROR
+            OPENAI_503_ERROR,
+            OPENAI_LLM_CLIENT_500_ERROR,
         )
 
         val message = e.message

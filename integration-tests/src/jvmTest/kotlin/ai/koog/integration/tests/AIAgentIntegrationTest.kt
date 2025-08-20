@@ -47,8 +47,6 @@ import ai.koog.prompt.params.LLMParams.ToolChoice
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.io.TempDir
@@ -61,6 +59,9 @@ import java.util.stream.Stream
 import kotlin.io.path.readBytes
 import kotlin.reflect.typeOf
 import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
@@ -303,15 +304,24 @@ class AIAgentIntegrationTest {
     val results = mutableListOf<Any?>()
     val toolExecutionCounter = mutableListOf<String>()
 
-    @AfterTest
-    fun teardown() {
+    fun cleanUp() {
         toolExecutionCounter.clear()
         actualToolCalls.clear()
+        singleToolCalls.clear()
         errors.clear()
         results.clear()
         parallelToolCalls.clear()
-        singleToolCalls.clear()
         reasoningCallsCount = 0
+    }
+
+    @BeforeTest
+    fun setupTest() = runBlocking {
+        cleanUp()
+    }
+
+    @AfterTest
+    fun teardownTest() = runBlocking {
+        cleanUp()
     }
 
     private fun runMultipleToolsTest(model: LLModel, runMode: ToolCalls) = runBlocking {
@@ -550,12 +560,14 @@ class AIAgentIntegrationTest {
                 parallelToolCalls.isEmpty(),
                 "There should be no parallel tool calls in a Sequential single run scenario"
             )
-            assertTrue(
-                singleToolCalls.size == 2,
+            assertEquals(
+                2,
+                singleToolCalls.size,
                 "There should be exactly 2 single tool calls in a Sequential single run scenario"
             )
-            assertTrue(
-                singleToolCalls.first().tool == CalculatorTool.name,
+            assertEquals(
+                CalculatorTool.name,
+                singleToolCalls.first().tool,
                 "First tool call should be ${CalculatorTool.name}"
             )
         }
@@ -581,7 +593,7 @@ class AIAgentIntegrationTest {
                         )
                     ) {},
                     model = model,
-                    maxAgentIterations = 10,
+                    maxAgentIterations = 20,
                 ),
                 toolRegistry = bankingToolsRegistry,
                 installFeatures = { install(EventHandler.Feature, eventHandlerConfig) },

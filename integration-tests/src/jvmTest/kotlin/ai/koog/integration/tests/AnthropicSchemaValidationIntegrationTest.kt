@@ -9,6 +9,7 @@ import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
+import ai.koog.integration.tests.utils.annotations.Retry
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.llms.all.simpleAnthropicExecutor
 import kotlinx.coroutines.runBlocking
@@ -204,12 +205,13 @@ class AnthropicSchemaValidationIntegrationTest {
      * Note: This test requires a valid Anthropic API key to be set in the environment variable
      * ANTHROPIC_API_TEST_KEY. If the key is not available, the test will be skipped.
      */
+    @Retry
     @Test
     fun integration_testAnthropicComplexNestedStructures() {
         // Skip the test if the Anthropic API key is not available
         assumeTrue(apiKeyAvailable, "Anthropic API key is not available")
 
-        runBlocking<Unit> {
+        runBlocking {
             // Create an agent with the Anthropic API and the complex nested tool
             val agent = AIAgent(
                 executor = simpleAnthropicExecutor(anthropicApiKey!!),
@@ -225,7 +227,6 @@ class AnthropicSchemaValidationIntegrationTest {
                                 "ERROR: ${eventContext.throwable.javaClass.simpleName}(${eventContext.throwable.message})"
                             )
                             println(eventContext.throwable.stackTraceToString())
-                            true
                         }
                         onToolCall { eventContext ->
                             println("Calling tool: ${eventContext.tool.name}")
