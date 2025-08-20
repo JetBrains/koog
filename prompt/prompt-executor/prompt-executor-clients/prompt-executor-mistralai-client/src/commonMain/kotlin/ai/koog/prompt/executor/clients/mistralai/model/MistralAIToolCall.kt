@@ -36,7 +36,7 @@ public sealed class FunctionCallArguments {
 }
 
 internal fun FunctionCallArguments.asString(): String {
-    return when(this) {
+    return when (this) {
         is FunctionCallArguments.StringFunctionCallArguments -> this.args
         else -> ""
     }

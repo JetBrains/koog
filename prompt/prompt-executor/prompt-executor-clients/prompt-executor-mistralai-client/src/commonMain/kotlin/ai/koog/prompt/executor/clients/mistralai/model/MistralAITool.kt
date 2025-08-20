@@ -29,4 +29,3 @@ public data class MistralAIFunction(
     @EncodeDefault(ALWAYS) val strict: Boolean = false,
     val parameters: MistralAIToolParamsSpecification
 )
-

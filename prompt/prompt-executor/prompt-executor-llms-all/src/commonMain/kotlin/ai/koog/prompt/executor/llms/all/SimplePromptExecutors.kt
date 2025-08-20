@@ -91,7 +91,6 @@ public fun simpleOllamaAIExecutor(
     baseUrl: String = "http://localhost:11434"
 ): SingleLLMPromptExecutor = SingleLLMPromptExecutor(OllamaClient(baseUrl))
 
-
 public fun simpleMistralAIExecutor(
     apiKey: String
 ): SingleLLMPromptExecutor = SingleLLMPromptExecutor(MistralAILLMClient(apiKey))

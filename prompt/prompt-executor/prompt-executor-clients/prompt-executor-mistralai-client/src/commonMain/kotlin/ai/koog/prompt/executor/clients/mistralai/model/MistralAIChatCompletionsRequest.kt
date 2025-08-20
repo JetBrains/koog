@@ -38,5 +38,4 @@ public sealed class Stop {
     @InternalLLMClientApi
     @Serializable
     public data class Multiple(val values: List<String>) : Stop()
-
 }

@@ -41,6 +41,4 @@ public class FunctionCallArgumentsSerializer : KSerializer<FunctionCallArguments
             is FunctionCallArguments.StringFunctionCallArguments -> encoder.encodeString(value.args)
         }
     }
-
-
 }

@@ -18,7 +18,6 @@ public object MistralAIModels : LLModelDefinitions {
         ),
         contextLength = 131_072
     )
-
 }
 
 internal val DEFAULT_MISTRAL_AI_MODEL_VERSIONS_MAP: Map<LLModel, String> = mapOf(

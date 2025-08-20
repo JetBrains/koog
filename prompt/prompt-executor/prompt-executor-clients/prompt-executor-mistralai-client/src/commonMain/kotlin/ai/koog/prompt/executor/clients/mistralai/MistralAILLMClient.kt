@@ -9,8 +9,8 @@ import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.mistralai.mapper.MistralAIMessageMapper.mapToMistralAIMessage
 import ai.koog.prompt.executor.clients.mistralai.mapper.MistralAIToolMapper.createMistralAITools
 import ai.koog.prompt.executor.clients.mistralai.model.MistralAIChatCompletionsRequest
-import ai.koog.prompt.executor.clients.mistralai.model.MistralChatCompletionsResponse
 import ai.koog.prompt.executor.clients.mistralai.model.MistralAIChoice
+import ai.koog.prompt.executor.clients.mistralai.model.MistralChatCompletionsResponse
 import ai.koog.prompt.executor.clients.mistralai.model.asString
 import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.llm.LLMCapability
@@ -18,17 +18,21 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.ktor.client.*
-import io.ktor.client.call.*
-import io.ktor.client.plugins.*
-import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.defaultRequest
+import io.ktor.client.request.header
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
+import io.ktor.http.isSuccess
+import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.ClassDiscriminatorMode
@@ -190,4 +194,3 @@ public open class MistralAILLMClient(
 
     public override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult = throw NotImplementedError()
 }
-

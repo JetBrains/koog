@@ -44,7 +44,6 @@ public sealed class MistralAIMessage {
     ) : MistralAIMessage()
 }
 
-
 @InternalLLMClientApi
 @Serializable
 public sealed interface MistralAIContent {
@@ -60,6 +59,5 @@ public sealed interface MistralAIContent {
             val text: String,
             @EncodeDefault(ALWAYS) val type: String = "text"
         ) : ContentChunk
-
     }
 }

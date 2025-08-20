@@ -27,5 +27,4 @@ internal object ApiKeyService {
 
     val mistralAIApiKey: String
         get() = System.getenv("MISTRALAI_API_KEY") ?: throw IllegalArgumentException("MISTRALAI_API_KEY env is not set")
-
 }

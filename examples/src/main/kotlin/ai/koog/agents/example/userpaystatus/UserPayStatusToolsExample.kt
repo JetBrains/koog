@@ -8,7 +8,6 @@ import ai.koog.prompt.executor.llms.all.simpleMistralAIExecutor
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-
     val toolRegistry = ToolRegistry {
         tools(listOf(PaymentStatusTool()))
     }

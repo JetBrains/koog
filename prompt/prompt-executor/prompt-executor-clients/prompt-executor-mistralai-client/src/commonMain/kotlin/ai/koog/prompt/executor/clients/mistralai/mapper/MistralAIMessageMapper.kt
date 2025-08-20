@@ -4,7 +4,10 @@ import ai.koog.prompt.executor.clients.mistralai.model.FunctionCall
 import ai.koog.prompt.executor.clients.mistralai.model.FunctionCallArguments
 import ai.koog.prompt.executor.clients.mistralai.model.MistralAIContent
 import ai.koog.prompt.executor.clients.mistralai.model.MistralAIMessage
-import ai.koog.prompt.executor.clients.mistralai.model.MistralAIMessage.*
+import ai.koog.prompt.executor.clients.mistralai.model.MistralAIMessage.MistralAIAssistantMessage
+import ai.koog.prompt.executor.clients.mistralai.model.MistralAIMessage.MistralAISystemMessage
+import ai.koog.prompt.executor.clients.mistralai.model.MistralAIMessage.MistralAIToolMessage
+import ai.koog.prompt.executor.clients.mistralai.model.MistralAIMessage.MistralAIUserMessage
 import ai.koog.prompt.executor.clients.mistralai.model.MistralAIToolCall
 import ai.koog.prompt.message.Message
 
@@ -23,7 +26,6 @@ internal object MistralAIMessageMapper {
 
 private fun createTextContent(text: String): List<MistralAIContent.ContentChunk.TextChunk> =
     if (text.isNotEmpty()) listOf(MistralAIContent.ContentChunk.TextChunk(text)) else emptyList()
-
 
 private fun Message.User.toMistralAIMessage(): MistralAIUserMessage {
     return MistralAIUserMessage(content = createTextContent(content))
