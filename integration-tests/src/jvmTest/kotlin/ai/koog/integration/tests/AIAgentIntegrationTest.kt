@@ -44,7 +44,6 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.ToolChoice
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.Assumptions.assumeTrue
@@ -315,16 +314,16 @@ class AIAgentIntegrationTest {
     }
 
     @BeforeTest
-    fun setupTest() = runBlocking {
+    fun setupTest() = runTest {
         cleanUp()
     }
 
     @AfterTest
-    fun teardownTest() = runBlocking {
+    fun teardownTest() = runTest {
         cleanUp()
     }
 
-    private fun runMultipleToolsTest(model: LLModel, runMode: ToolCalls) = runBlocking {
+    private fun runMultipleToolsTest(model: LLModel, runMode: ToolCalls) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
@@ -337,8 +336,9 @@ class AIAgentIntegrationTest {
                 getSingleRunAgentWithRunMode(model, runMode, eventHandlerConfig = eventHandlerConfig)
             multiToolAgent.run(twoToolsPrompt)
 
-            assertTrue(
-                parallelToolCalls.size == 2,
+            assertEquals(
+                2,
+                parallelToolCalls.size,
                 "There should be exactly 2 tool calls in a Multiple tool calls scenario"
             )
             assertTrue(
@@ -359,14 +359,14 @@ class AIAgentIntegrationTest {
                 )
             }
 
-            assertTrue(firstCall.tool == CalculatorTool.name, "First tool call should be ${CalculatorTool.name}")
-            assertTrue(secondCall.tool == DelayTool.name, "Second tool call should be ${DelayTool.name}")
+            assertEquals(CalculatorTool.name, firstCall.tool, "First tool call should be ${CalculatorTool.name}")
+            assertEquals(DelayTool.name, secondCall.tool, "Second tool call should be ${DelayTool.name}")
         }
     }
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
-    fun integration_AIAgentShouldNotCallToolsByDefault(model: LLModel) = runBlocking {
+    fun integration_AIAgentShouldNotCallToolsByDefault(model: LLModel) = runTest {
         Models.assumeAvailable(model.provider)
         withRetry {
             val executor = getExecutor(model)
@@ -387,7 +387,7 @@ class AIAgentIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
-    fun integration_AIAgentShouldCallCustomTool(model: LLModel) = runBlocking {
+    fun integration_AIAgentShouldCallCustomTool(model: LLModel) = runTest {
         Models.assumeAvailable(model.provider)
         val systemPromptForSmallLLM = systemPrompt + "You MUST use tools."
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
@@ -426,7 +426,7 @@ class AIAgentIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("modelsWithVisionCapability")
-    fun integration_AIAgentWithImageCapabilityTest(model: LLModel) = runTest(timeout = 120.seconds) {
+    fun integration_AIAgentWithImageCapabilityTest(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.capabilities.contains(LLMCapability.Vision.Image), "Model must support vision capability")
 
@@ -477,7 +477,7 @@ class AIAgentIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
-    fun integration_testRequestLLMWithoutToolsTest(model: LLModel) = runTest(timeout = 120.seconds) {
+    fun integration_testRequestLLMWithoutToolsTest(model: LLModel) = runTest(timeout = 180.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
@@ -632,8 +632,9 @@ class AIAgentIntegrationTest {
                 }
             }
 
-            assertTrue(
-                reasoningCallsCount == expectedReasoningCalls,
+            assertEquals(
+                expectedReasoningCalls,
+                reasoningCallsCount,
                 "With reasoningInterval=$interval and ${toolExecutionCounter.size} tool calls, " +
                     "expected $expectedReasoningCalls reasoning calls but got $reasoningCallsCount"
             )
@@ -642,7 +643,7 @@ class AIAgentIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
-    fun integration_AgentCreateAndRestoreTest(model: LLModel) = runTest(timeout = 120.seconds) {
+    fun integration_AgentCreateAndRestoreTest(model: LLModel) = runTest(timeout = 180.seconds) {
         val checkpointStorageProvider = InMemoryPersistencyStorageProvider("integration_AgentCreateAndRestoreTest")
         val sayHello = "Hello World!"
         val hello = "Hello"
@@ -730,7 +731,7 @@ class AIAgentIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
-    fun integration_AgentCheckpointRollbackTest(model: LLModel) = runTest(timeout = 120.seconds) {
+    fun integration_AgentCheckpointRollbackTest(model: LLModel) = runTest(timeout = 180.seconds) {
         val checkpointStorageProvider = InMemoryPersistencyStorageProvider("integration_AgentCheckpointRollbackTest")
 
         val hello = "Hello"
@@ -845,7 +846,7 @@ class AIAgentIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
-    fun integration_AgentCheckpointContinuousPersistenceTest(model: LLModel) = runTest(timeout = 120.seconds) {
+    fun integration_AgentCheckpointContinuousPersistenceTest(model: LLModel) = runTest(timeout = 180.seconds) {
         val checkpointStorageProvider =
             InMemoryPersistencyStorageProvider("integration_AgentCheckpointContinuousPersistenceTest")
 
@@ -922,7 +923,7 @@ class AIAgentIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
-    fun integration_AgentCheckpointStorageProvidersTest(model: LLModel) = runTest(timeout = 120.seconds) {
+    fun integration_AgentCheckpointStorageProvidersTest(model: LLModel) = runTest(timeout = 180.seconds) {
         val strategyName = "storage-providers-strategy"
 
         val hello = "Hello"
@@ -991,7 +992,7 @@ class AIAgentIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
-    fun integration_AgentWithToolsWithoutParamsTest(model: LLModel) = runTest(timeout = 120.seconds) {
+    fun integration_AgentWithToolsWithoutParamsTest(model: LLModel) = runTest(timeout = 180.seconds) {
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
         val flakyModels = listOf(
             GoogleModels.Gemini2_0Flash.id,
@@ -1045,7 +1046,7 @@ class AIAgentIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
-    fun integration_ParallelNodesExecutionTest(model: LLModel) = runTest(timeout = 120.seconds) {
+    fun integration_ParallelNodesExecutionTest(model: LLModel) = runTest(timeout = 180.seconds) {
         Models.assumeAvailable(model.provider)
 
         val parallelStrategy = strategy<String, String>("parallel-nodes-strategy") {
@@ -1120,7 +1121,7 @@ class AIAgentIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
-    fun integration_ParallelNodesWithSelectionTest(model: LLModel) = runTest(timeout = 120.seconds) {
+    fun integration_ParallelNodesWithSelectionTest(model: LLModel) = runTest(timeout = 180.seconds) {
         Models.assumeAvailable(model.provider)
 
         val selectionStrategy = strategy<String, String>("parallel-selection-strategy") {
