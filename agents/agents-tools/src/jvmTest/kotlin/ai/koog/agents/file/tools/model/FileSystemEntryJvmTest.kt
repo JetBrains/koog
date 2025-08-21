@@ -9,6 +9,8 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.condition.DisabledOnOs
+import org.junit.jupiter.api.condition.OS
 import org.junit.jupiter.api.io.TempDir
 import java.nio.file.Path
 import kotlin.io.path.createDirectories
@@ -74,6 +76,7 @@ class FileSystemEntryJvmTest {
     }
 
     @Test
+    @DisabledOnOs(OS.WINDOWS)
     fun `File_of - creation with hidden leading-dot file`() = runBlocking {
         val hiddenFile = tempDir.resolve(".hidden").apply {
             createFile()
@@ -85,6 +88,7 @@ class FileSystemEntryJvmTest {
         assertNotNull(fileEntry)
         assertEquals(".hidden", fileEntry!!.name)
         assertEquals("hidden", fileEntry.extension)
+        assertTrue(fileEntry.hidden)
     }
 
     @Test

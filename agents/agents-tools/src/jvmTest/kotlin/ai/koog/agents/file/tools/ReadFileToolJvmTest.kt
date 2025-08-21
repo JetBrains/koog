@@ -8,6 +8,8 @@ import ai.koog.rag.base.files.JVMFileSystemProvider
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.condition.DisabledOnOs
+import org.junit.jupiter.api.condition.OS
 import org.junit.jupiter.api.io.TempDir
 import java.nio.file.Path
 import kotlin.io.path.createDirectories
@@ -68,6 +70,7 @@ class ReadFileToolJvmTest {
     }
 
     @Test
+    @DisabledOnOs(OS.WINDOWS)
     fun `identifies hidden files correctly`() = runBlocking {
         val file = createTestFile(".hidden", "secret content")
 
