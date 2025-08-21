@@ -368,6 +368,55 @@ class TextTest {
     }
 
     @Test
+    fun `file - renders code block for uppercase extension and maps language id`() {
+        val file = FileSystemEntry.File(
+            name = "README.MD",
+            extension = "MD",
+            path = "/README.MD",
+            hidden = false,
+            size = listOf(FileSize.Bytes(42)),
+            contentType = FileMetadata.FileContentType.Text,
+            content = FileSystemEntry.File.Content.Text("Content in markdown")
+        )
+
+        val actual = text { file(file) }
+
+        val expected = listOf(
+            "/README.MD (<0.1 KiB)",
+            "Content:",
+            "```markdown",
+            "Content in markdown",
+            "```"
+        ).joinToString("\n")
+
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun `file - renders empty code block when content is whitespace and extension is code`() {
+        val file = FileSystemEntry.File(
+            name = "Empty.kt",
+            extension = "KT",
+            path = "/Empty.kt",
+            hidden = false,
+            size = listOf(FileSize.Bytes(0)),
+            contentType = FileMetadata.FileContentType.Text,
+            content = FileSystemEntry.File.Content.Text("   \n\n   ")
+        )
+
+        val actual = text { file(file) }
+
+        val expected = listOf(
+            "/Empty.kt (0 bytes)",
+            "Content:",
+            "```kotlin",
+            "```"
+        ).joinToString("\n")
+
+        assertEquals(expected, actual)
+    }
+
+    @Test
     fun `file - renders JavaScript with correct language ID`() {
         val file = FileSystemEntry.File(
             name = "app.js",
@@ -514,6 +563,29 @@ class TextTest {
             "/notes.unknown (<0.1 KiB)",
             "Content:",
             "Just some text"
+        ).joinToString("\n")
+
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun `file - renders with null extension as plain text`() {
+        val file = FileSystemEntry.File(
+            name = "noext",
+            extension = null,
+            path = "/noext",
+            hidden = false,
+            size = listOf(FileSize.Bytes(100)),
+            contentType = FileMetadata.FileContentType.Text,
+            content = FileSystemEntry.File.Content.Text("Plain text content")
+        )
+
+        val actual = text { file(file) }
+
+        val expected = listOf(
+            "/noext (<0.1 KiB)",
+            "Content:",
+            "Plain text content"
         ).joinToString("\n")
 
         assertEquals(expected, actual)
