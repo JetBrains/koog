@@ -6,30 +6,6 @@ import kotlin.test.assertEquals
 
 class JsonRpcSerializationTest {
     @Test
-    fun testRequestIdStringId() {
-        val requestId = RequestId.StringId("test-id")
-        val requestIdJson = """"test-id""""
-
-        val serialized = JSONRPCJson.encodeToString<RequestId>(requestId)
-        assertEquals(requestIdJson, serialized)
-
-        val deserialized = JSONRPCJson.decodeFromString<RequestId>(requestIdJson)
-        assertEquals(requestId, deserialized)
-    }
-
-    @Test
-    fun testRequestIdNumberId() {
-        val requestId = RequestId.NumberId(123L)
-        val requestIdJson = """123"""
-
-        val serialized = JSONRPCJson.encodeToString<RequestId>(requestId)
-        assertEquals(requestIdJson, serialized)
-
-        val deserialized = JSONRPCJson.decodeFromString<RequestId>(requestIdJson)
-        assertEquals(requestId, deserialized)
-    }
-
-    @Test
     fun testJSONRPCError() {
         val error = JSONRPCError(code = -32700, message = "Parse error", data = JsonPrimitive("some data"))
         //language=JSON

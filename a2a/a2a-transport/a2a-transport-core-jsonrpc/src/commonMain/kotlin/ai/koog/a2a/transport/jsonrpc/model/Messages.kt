@@ -2,6 +2,7 @@
 
 package ai.koog.a2a.transport.jsonrpc.model
 
+import ai.koog.a2a.model.RequestId
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
@@ -10,18 +11,6 @@ import kotlinx.serialization.json.JsonElement
  * Default JSON-RPC version.
  */
 public const val JSONRPC_VERSION: String = "2.0"
-
-/**
- * A uniquely identifying ID for a request in JSON-RPC.
- */
-@Serializable(with = RequestIdSerializer::class)
-public sealed interface RequestId {
-    @Serializable
-    public data class StringId(val value: String) : RequestId
-
-    @Serializable
-    public data class NumberId(val value: Long) : RequestId
-}
 
 @Serializable
 public data class JSONRPCError(
