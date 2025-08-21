@@ -5,8 +5,10 @@ import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
+import ai.koog.agents.core.tools.annotations.LLMDescription
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 object TestUtils {
@@ -46,6 +48,20 @@ object TestUtils {
                 println("WARNING: environment variable `AWS_SESSION_TOKEN` is not set, using default session token")
             }
     }
+
+    @Serializable
+    @SerialName("WeatherReport")
+    @LLMDescription("Weather report for a specific location")
+    data class WeatherReport(
+        @property:LLMDescription("Name of the city")
+        val city: String,
+        @property:LLMDescription("Temperature in Celsius")
+        val temperature: Int,
+        @property:LLMDescription("Brief weather description")
+        val description: String,
+        @property:LLMDescription("Humidity percentage")
+        val humidity: Int
+    )
 
     @Serializable
     enum class CalculatorOperation {

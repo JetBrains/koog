@@ -13,7 +13,12 @@ import ai.koog.integration.tests.utils.MediaTestUtils.checkExecutorMediaResponse
 import ai.koog.integration.tests.utils.MediaTestUtils.checkResponseBasic
 import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.RetryUtils.withRetry
-import ai.koog.integration.tests.utils.TestUtils
+import ai.koog.integration.tests.utils.TestUtils.CalculatorOperation
+import ai.koog.integration.tests.utils.TestUtils.Colors
+import ai.koog.integration.tests.utils.TestUtils.Country
+import ai.koog.integration.tests.utils.TestUtils.WeatherReport
+import ai.koog.integration.tests.utils.TestUtils.markdownCountryDefinition
+import ai.koog.integration.tests.utils.TestUtils.parseMarkdownStreamToCountries
 import ai.koog.integration.tests.utils.TestUtils.readAwsAccessKeyIdFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readAwsSecretAccessKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readAwsSessionTokenFromEnv
@@ -39,6 +44,12 @@ import ai.koog.prompt.message.Attachment
 import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams.ToolChoice
+import ai.koog.prompt.structure.StructureFixingParser
+import ai.koog.prompt.structure.StructuredOutput
+import ai.koog.prompt.structure.StructuredOutputConfig
+import ai.koog.prompt.structure.executeStructured
+import ai.koog.prompt.structure.json.JsonStructuredData
+import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -129,6 +140,53 @@ class SingleLLMPromptExecutorIntegrationTest {
         }
     }
 
+    private fun getClient(model: LLModel): LLMClient {
+        return when (model.provider) {
+            LLMProvider.Anthropic -> AnthropicLLMClient(
+                readTestAnthropicKeyFromEnv()
+            )
+
+            LLMProvider.OpenAI -> OpenAILLMClient(
+                readTestOpenAIKeyFromEnv()
+            )
+
+            else -> GoogleLLMClient(
+                readTestGoogleAIKeyFromEnv()
+            )
+        }
+    }
+
+    private fun createCalculatorTool(): ToolDescriptor {
+        return ToolDescriptor(
+            name = "calculator",
+            description = "A simple calculator that can add, subtract, multiply, and divide two numbers.",
+            requiredParameters = listOf(
+                ToolParameterDescriptor(
+                    name = "operation",
+                    description = "The operation to perform.",
+                    type = ToolParameterType.Enum(CalculatorOperation.entries.map { it.name }.toTypedArray())
+                ),
+                ToolParameterDescriptor(
+                    name = "a",
+                    description = "The first argument (number)",
+                    type = ToolParameterType.Integer
+                ),
+                ToolParameterDescriptor(
+                    name = "b",
+                    description = "The second argument (number)",
+                    type = ToolParameterType.Integer
+                )
+            )
+        )
+    }
+
+    private fun createCalculatorPrompt() = Prompt.build("test-tools") {
+        system(
+            "You are a helpful assistant with access to a calculator tool. When asked to perform calculations, use the calculator tool instead of calculating the answer yourself."
+        )
+        user("What is 123 + 456?")
+    }
+
     @ParameterizedTest
     @MethodSource("modelClientCombinations")
     fun integration_testExecute(model: LLModel, client: LLMClient) = runTest(timeout = 300.seconds) {
@@ -202,7 +260,7 @@ class SingleLLMPromptExecutorIntegrationTest {
                 ToolParameterDescriptor(
                     name = "operation",
                     description = "The operation to perform.",
-                    type = ToolParameterType.Enum(TestUtils.CalculatorOperation.entries.map { it.name }.toTypedArray())
+                    type = ToolParameterType.Enum(CalculatorOperation.entries.map { it.name }.toTypedArray())
                 ),
                 ToolParameterDescriptor(
                     name = "a",
@@ -244,7 +302,7 @@ class SingleLLMPromptExecutorIntegrationTest {
                         name = "operation",
                         description = "The operation to perform.",
                         type = ToolParameterType.Enum(
-                            TestUtils.CalculatorOperation.entries.map { it.name }
+                            CalculatorOperation.entries.map { it.name }
                                 .toTypedArray()
                         )
                     ),
@@ -296,7 +354,7 @@ class SingleLLMPromptExecutorIntegrationTest {
                 ToolParameterDescriptor(
                     name = "operation",
                     description = "The operation to perform.",
-                    type = ToolParameterType.Enum(TestUtils.CalculatorOperation.entries.map { it.name }.toTypedArray())
+                    type = ToolParameterType.Enum(CalculatorOperation.entries.map { it.name }.toTypedArray())
                 ),
                 ToolParameterDescriptor(
                     name = "a",
@@ -375,7 +433,7 @@ class SingleLLMPromptExecutorIntegrationTest {
                     description = "The color to be picked.",
                     type = ToolParameterType.List(
                         ToolParameterType.Enum(
-                            TestUtils.Colors.entries.map { it.name }
+                            Colors.entries.map { it.name }
                                 .toTypedArray()
                         )
                     )
@@ -469,8 +527,8 @@ class SingleLLMPromptExecutorIntegrationTest {
             assumeTrue(false, "https://github.com/JetBrains/koog/issues/231")
         }
 
-        val countries = mutableListOf<TestUtils.Country>()
-        val countryDefinition = TestUtils.markdownCountryDefinition()
+        val countries = mutableListOf<Country>()
+        val countryDefinition = markdownCountryDefinition()
 
         val prompt = Prompt.build("test-structured-streaming") {
             system("You are a helpful assistant.")
@@ -488,43 +546,12 @@ class SingleLLMPromptExecutorIntegrationTest {
         withRetry(times = 3, testName = "integration_testStructuredDataStreaming[${model.id}]") {
             val markdownStream = client.executeStreaming(prompt, model)
 
-            TestUtils.parseMarkdownStreamToCountries(markdownStream).collect { country ->
+            parseMarkdownStreamToCountries(markdownStream).collect { country ->
                 countries.add(country)
             }
 
             assertTrue(countries.isNotEmpty(), "Countries list should not be empty")
         }
-    }
-
-    private fun createCalculatorTool(): ToolDescriptor {
-        return ToolDescriptor(
-            name = "calculator",
-            description = "A simple calculator that can add, subtract, multiply, and divide two numbers.",
-            requiredParameters = listOf(
-                ToolParameterDescriptor(
-                    name = "operation",
-                    description = "The operation to perform.",
-                    type = ToolParameterType.Enum(TestUtils.CalculatorOperation.entries.map { it.name }.toTypedArray())
-                ),
-                ToolParameterDescriptor(
-                    name = "a",
-                    description = "The first argument (number)",
-                    type = ToolParameterType.Integer
-                ),
-                ToolParameterDescriptor(
-                    name = "b",
-                    description = "The second argument (number)",
-                    type = ToolParameterType.Integer
-                )
-            )
-        )
-    }
-
-    private fun createCalculatorPrompt() = Prompt.build("test-tools") {
-        system(
-            "You are a helpful assistant with access to a calculator tool. When asked to perform calculations, use the calculator tool instead of calculating the answer yourself."
-        )
-        user("What is 123 + 456?")
     }
 
     @ParameterizedTest
@@ -621,24 +648,6 @@ class SingleLLMPromptExecutorIntegrationTest {
      * The compatibility of each LLM profile with the media processing is covered in the E2E agents tests.
      * Therefore, in the scope of the executor tests, we'll check one executor of each provider
      * to decrease the number of possible combinations and to avoid redundant checks.*/
-
-    // ToDo add video & pdf specific scenarios
-
-    private fun getClient(model: LLModel): LLMClient {
-        return when (model.provider) {
-            LLMProvider.Anthropic -> AnthropicLLMClient(
-                readTestAnthropicKeyFromEnv()
-            )
-
-            LLMProvider.OpenAI -> OpenAILLMClient(
-                readTestOpenAIKeyFromEnv()
-            )
-
-            else -> GoogleLLMClient(
-                readTestGoogleAIKeyFromEnv()
-            )
-        }
-    }
 
     @ParameterizedTest
     @MethodSource("markdownScenarioModelCombinations")
@@ -1088,6 +1097,70 @@ class SingleLLMPromptExecutorIntegrationTest {
             assertNotNull(message.metaInfo.inputTokensCount, "Input tokens count should not be null")
             assertNotNull(message.metaInfo.outputTokensCount, "Output tokens count should not be null")
             assertNotNull(message.metaInfo.totalTokensCount, "Total tokens count should not be null")
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("modelClientCombinations")
+    fun integration_testOpenAIStructuredOutputNative(model: LLModel, client: LLMClient) = runTest {
+        assumeTrue(
+            model.capabilities.contains(LLMCapability.Schema.JSON.Standard),
+            "Model does not support Standard JSON Schema"
+        )
+        val executor = SingleLLMPromptExecutor(client)
+
+        val structure = JsonStructuredData.createJsonStructure<WeatherReport>(
+            schemaGenerator = StandardJsonSchemaGenerator,
+            descriptionOverrides = mapOf(
+                "WeatherReport.city" to "Name of the city or location",
+                "WeatherReport.temperature" to "Current temperature in Celsius degrees"
+            ),
+            examples = listOf(
+                WeatherReport("Moscow", 20, "Rainy", 50)
+            )
+        )
+        val config = StructuredOutputConfig(
+            default = StructuredOutput.Native(structure),
+            fixingParser = StructureFixingParser(
+                fixingModel = model,
+                retries = 3
+            )
+        )
+
+        val prompt = Prompt.build("test-structured-json") {
+            system(
+                """
+                You are a weather forecasting assistant.
+                When asked for a weather forecast, provide a realistic but fictional forecast.
+                """.trimIndent()
+            )
+            user(
+                "What is the weather forecast for London? Please provide temperature, description, and humidity if available."
+            )
+        }
+
+        withRetry {
+            val result = executor.executeStructured(
+                prompt = prompt,
+                model = model,
+                config = config
+            )
+
+            assertTrue(result.isSuccess, "Structured output should succeed: ${result.exceptionOrNull()}")
+            val response = result.getOrThrow()
+
+            assertNotNull(response.structure)
+
+            assertEquals("London", response.structure.city, "City should be London, got: ${response.structure.city}")
+            assertTrue(
+                response.structure.temperature in -50..60,
+                "Temperature should be realistic, got: ${response.structure.temperature}"
+            )
+            assertTrue(response.structure.description.isNotBlank(), "Description should not be empty")
+            assertTrue(
+                response.structure.humidity >= 0,
+                "Humidity should be a valid percentage, got: ${response.structure.humidity}"
+            )
         }
     }
 }

@@ -13,12 +13,18 @@ import ai.koog.integration.tests.utils.MediaTestUtils.checkExecutorMediaResponse
 import ai.koog.integration.tests.utils.MediaTestUtils.checkResponseBasic
 import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.RetryUtils.withRetry
-import ai.koog.integration.tests.utils.TestUtils
+import ai.koog.integration.tests.utils.TestUtils.CalculatorOperation
+import ai.koog.integration.tests.utils.TestUtils.Colors
+import ai.koog.integration.tests.utils.TestUtils.Country
+import ai.koog.integration.tests.utils.TestUtils.WeatherReport
+import ai.koog.integration.tests.utils.TestUtils.markdownCountryDefinition
+import ai.koog.integration.tests.utils.TestUtils.parseMarkdownStreamToCountries
 import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestGoogleAIKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
 import ai.koog.integration.tests.utils.annotations.Retry
 import ai.koog.prompt.dsl.ModerationCategory
+import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
@@ -36,6 +42,12 @@ import ai.koog.prompt.message.Attachment
 import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams.ToolChoice
+import ai.koog.prompt.structure.StructureFixingParser
+import ai.koog.prompt.structure.StructuredOutput
+import ai.koog.prompt.structure.StructuredOutputConfig
+import ai.koog.prompt.structure.executeStructured
+import ai.koog.prompt.structure.json.JsonStructuredData
+import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
@@ -126,7 +138,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
                 ToolParameterDescriptor(
                     name = "operation",
                     description = "The operation to perform.",
-                    type = ToolParameterType.Enum(TestUtils.CalculatorOperation.entries.map { it.name }.toTypedArray())
+                    type = ToolParameterType.Enum(CalculatorOperation.entries.map { it.name }.toTypedArray())
                 ),
                 ToolParameterDescriptor(
                     name = "a",
@@ -223,7 +235,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
                 ToolParameterDescriptor(
                     name = "operation",
                     description = "The operation to perform.",
-                    type = ToolParameterType.Enum(TestUtils.CalculatorOperation.entries.map { it.name }.toTypedArray())
+                    type = ToolParameterType.Enum(CalculatorOperation.entries.map { it.name }.toTypedArray())
                 ),
                 ToolParameterDescriptor(
                     name = "a",
@@ -269,7 +281,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
                 ToolParameterDescriptor(
                     name = "operation",
                     description = "The operation to perform.",
-                    type = ToolParameterType.Enum(TestUtils.CalculatorOperation.entries.map { it.name }.toTypedArray())
+                    type = ToolParameterType.Enum(CalculatorOperation.entries.map { it.name }.toTypedArray())
                 ),
                 ToolParameterDescriptor(
                     name = "a",
@@ -323,7 +335,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
                 ToolParameterDescriptor(
                     name = "operation",
                     description = "The operation to perform.",
-                    type = ToolParameterType.Enum(TestUtils.CalculatorOperation.entries.map { it.name }.toTypedArray())
+                    type = ToolParameterType.Enum(CalculatorOperation.entries.map { it.name }.toTypedArray())
                 ),
                 ToolParameterDescriptor(
                     name = "a",
@@ -410,7 +422,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
                     description = "The color to be picked.",
                     type = ToolParameterType.List(
                         ToolParameterType.Enum(
-                            TestUtils.Colors.entries.map { it.name }
+                            Colors.entries.map { it.name }
                                 .toTypedArray()
                         )
                     )
@@ -516,8 +528,8 @@ class MultipleLLMPromptExecutorIntegrationTest {
         if (model.id == OpenAIModels.Audio.GPT4oAudio.id || model.id == OpenAIModels.Audio.GPT4oMiniAudio.id) {
             assumeTrue(false, "There is no text response for audio models.")
         }
-        val countries = mutableListOf<TestUtils.Country>()
-        val countryDefinition = TestUtils.markdownCountryDefinition()
+        val countries = mutableListOf<Country>()
+        val countryDefinition = markdownCountryDefinition()
 
         val prompt = prompt("test-structured-streaming") {
             system("You are a helpful assistant.")
@@ -540,7 +552,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
         withRetry(times = 3, testName = "integration_testStructuredDataStreaming[${model.id}]") {
             val markdownStream = client.executeStreaming(prompt, model)
-            TestUtils.parseMarkdownStreamToCountries(markdownStream).collect { country ->
+            parseMarkdownStreamToCountries(markdownStream).collect { country ->
                 countries.add(country)
             }
 
@@ -1155,5 +1167,68 @@ class MultipleLLMPromptExecutorIntegrationTest {
         println("OpenAI Response: ${responseOpenAI.content}")
         println("Anthropic Response: ${responseAnthropic.content}")
         println("Gemini Response: ${responseGemini.content}")
+    }
+
+    @ParameterizedTest
+    @MethodSource("openAIModels", "anthropicModels", "googleModels")
+    fun integration_testOpenAIStructuredOutputNative(model: LLModel) = runTest {
+        assumeTrue(
+            model.capabilities.contains(LLMCapability.Schema.JSON.Standard),
+            "Model does not support Standard JSON Schema"
+        )
+
+        val structure = JsonStructuredData.createJsonStructure<WeatherReport>(
+            schemaGenerator = StandardJsonSchemaGenerator,
+            descriptionOverrides = mapOf(
+                "WeatherReport.city" to "Name of the city or location",
+                "WeatherReport.temperature" to "Current temperature in Celsius degrees"
+            ),
+            examples = listOf(
+                WeatherReport("Moscow", 20, "Sunny", 50)
+            )
+        )
+        val config = StructuredOutputConfig(
+            default = StructuredOutput.Native(structure),
+            fixingParser = StructureFixingParser(
+                fixingModel = model,
+                retries = 3
+            )
+        )
+
+        val prompt = Prompt.build("test-structured-json") {
+            system(
+                """
+                You are a weather forecasting assistant.
+                When asked for a weather forecast, provide a realistic but fictional forecast.
+                """.trimIndent()
+            )
+            user(
+                "What is the weather forecast for London? Please provide temperature, description, and humidity if available."
+            )
+        }
+
+        withRetry {
+            val result = executor.executeStructured(
+                prompt = prompt,
+                model = model,
+                config = config
+            )
+
+            assertTrue(result.isSuccess, "Structured output should succeed: ${result.exceptionOrNull()}")
+            val response = result.getOrThrow()
+
+            assertNotNull(response.structure)
+
+            assertEquals("London", response.structure.city, "City should be London, got: ${response.structure.city}")
+            assertTrue(
+                response.structure.temperature in -50..60,
+                "Temperature should be realistic, got: ${response.structure.temperature}"
+            )
+            assertTrue(response.structure.description.isNotBlank(), "Description should not be empty")
+            assertTrue(
+                response.structure.humidity >= 0,
+                "Humidity should be a valid percentage, got: ${response.structure.humidity}"
+            )
+        }
     }
 }
