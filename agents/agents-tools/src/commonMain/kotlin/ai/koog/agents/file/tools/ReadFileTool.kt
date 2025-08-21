@@ -47,30 +47,23 @@ public class ReadFileTool<Path>(private val fs: FileSystemProvider.ReadOnly<Path
      * Contains the successfully read file with its metadata and extracted content.
      *
      * The result encapsulates a [FileSystemEntry.File] which includes:
-     * - File metadata (path, name, extension, size, content type)
+     * - File metadata (path, name, extension, size, content type, hidden status)
      * - Content as either full text or line-range excerpt
-     * - File attributes (hidden status, file type)
      *
      * @property file the file entry containing metadata and content
-     * @constructor creates a new Result instance with the specified file entry
      */
     @Serializable
     public data class Result(val file: FileSystemEntry.File) : ToolResult.JSONSerializable<Result> {
-        /**
-         * Returns the Kotlin serialization serializer for this result type.
-         *
-         * @return serializer instance for Result
-         */
         override fun getSerializer(): KSerializer<Result> = serializer()
 
         /**
          * Converts the result to a structured text representation.
          *
          * Renders the file information in the following format:
-         * - File path with metadata in parentheses (content type, size, visibility)
+         * - File path with metadata in parentheses (size, line count if available, "hidden" if the file is hidden)
          * - Content section with either:
-         *     - Full text in a code block for complete file reads
-         *     - Excerpt with line ranges and code blocks for partial reads
+         *     - Full text for complete file reads
+         *     - Excerpt with line ranges for partial reads
          *     - No content section if content is [FileSystemEntry.File.Content.None]
          *
          * @return formatted text representation of the file
@@ -82,18 +75,17 @@ public class ReadFileTool<Path>(private val fs: FileSystemProvider.ReadOnly<Path
     override val descriptor: ToolDescriptor = Companion.descriptor
 
     /**
-     * Executes the file reading operation with the specified arguments.
+     * Reads file content from the filesystem with optional line range filtering.
      *
      * Performs validation before reading:
      * - Verifies the path exists in the filesystem
      * - Confirms the path points to a file (not a directory)
-     * - Ensures the file can be successfully read
      *
      * @param args arguments specifying the file path and optional line range
-     * @return Result containing the file with its content and metadata
+     * @return [Result] containing the file with its content and metadata
      * @throws [ToolException.ValidationFailure] if the file doesn't exist, is a directory, or
      *   cannot be read
-     * @throws IllegalArgumentException if line range parameters are invalid
+     * @throws [IllegalArgumentException] if line range parameters are invalid
      */
     override suspend fun execute(args: Args): Result {
         val path = fs.fromAbsolutePathString(args.path)
@@ -118,23 +110,16 @@ public class ReadFileTool<Path>(private val fs: FileSystemProvider.ReadOnly<Path
 
     public companion object {
         /**
-         * Tool descriptor defining name, description, and parameters.
+         * Tool descriptor for the read file operation.
          *
-         * Configures the tool as "read-file" with absolute path requirement and optional line range
-         * parameters using 0-based indexing.
-         *
-         * Required parameters:
-         * - `path`: Absolute path to the target file
-         *
-         * Optional parameters:
-         * - `startLine`: First line to include, 0-based, defaults to 0
-         * - `endLine`: First line to exclude, 0-based, -1 for the end of file, defaults to -1
+         * Configures the tool to read text files with optional line range selection
+         * using 0-based indexing.
          */
         public val descriptor: ToolDescriptor = ToolDescriptor(
             name = "__read_file__",
             description = text {
-                +"Reads text file with optional line range selection."
-                +"Returns formatted content with metadata."
+                +"Reads text file content with optional line range selection."
+                +"Returns file content along with metadata (path, size, line count, hidden status)."
                 newline()
                 +"Uses 0-based line indexing."
             },
