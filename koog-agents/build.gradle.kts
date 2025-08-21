@@ -16,8 +16,17 @@ val excluded = setOf(
     ":koog-ktor",
     ":koog-cli",
     ":docs",
-    ":agents:agents-a2a:agents-a2a-core",
-    ":agents:agents-a2a:agents-a2a-client",
+
+    ":a2a:a2a-core",
+    ":a2a:a2a-server",
+    ":a2a:a2a-client",
+    ":a2a:a2a-transport:a2a-transport-core-jsonrpc",
+    ":a2a:a2a-transport:a2a-transport-server-jsonrpc-http",
+    ":a2a:a2a-transport:a2a-transport-client-jsonrpc-http",
+    ":a2a:a2a-transport:a2a-transport-core-rest",
+    ":a2a:a2a-transport:a2a-transport-server-rest",
+    ":a2a:a2a-transport:a2a-transport-client-rest",
+
     project.path, // the current project should not depend on itself
 )
 

@@ -22,9 +22,6 @@ include(":agents:agents-test")
 include(":agents:agents-tools")
 include(":agents:agents-utils")
 
-include(":agents:agents-a2a:agents-a2a-core")
-include(":agents:agents-a2a:agents-a2a-client")
-
 include(":examples")
 
 include(":integration-tests")
@@ -63,6 +60,16 @@ include(":embeddings:embeddings-llm")
 
 include(":rag:rag-base")
 include(":rag:vector-storage")
+
+include(":a2a:a2a-core")
+include(":a2a:a2a-server")
+include(":a2a:a2a-client")
+include(":a2a:a2a-transport:a2a-transport-core-jsonrpc")
+include(":a2a:a2a-transport:a2a-transport-server-jsonrpc-http")
+include(":a2a:a2a-transport:a2a-transport-client-jsonrpc-http")
+include(":a2a:a2a-transport:a2a-transport-core-rest")
+include(":a2a:a2a-transport:a2a-transport-server-rest")
+include(":a2a:a2a-transport:a2a-transport-client-rest")
 
 include(":koog-spring-boot-starter")
 
