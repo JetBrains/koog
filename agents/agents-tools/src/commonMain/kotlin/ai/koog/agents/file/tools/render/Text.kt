@@ -21,14 +21,33 @@ private val LANGUAGE_ID_MAPPINGS = mapOf(
     "cs" to "csharp", "ps1" to "powershell", "md" to "markdown"
 )
 
-public fun TextContentBuilder.entry(entry: FileSystemEntry, parent: FileSystemEntry? = null) {
+/**
+ * Renders a generic [FileSystemEntry] by delegating to [file] or [folder].
+ *
+ * @param entry the entry to render
+ * @param parent optional parent entry used to compute a relative display path
+ */
+internal fun TextContentBuilder.entry(entry: FileSystemEntry, parent: FileSystemEntry? = null) {
     when (entry) {
         is FileSystemEntry.File -> file(entry, parent)
         is FileSystemEntry.Folder -> folder(entry, parent)
     }
 }
 
-public fun TextContentBuilder.folder(folder: FileSystemEntry.Folder, parent: FileSystemEntry? = null) {
+/**
+ * Renders a folder as a single line with an optional "(hidden)" suffix, followed by its nested entries with indentation.
+ *
+ * Special behavior for single-entry folders: If the folder contains exactly one entry, that entry is rendered
+ * directly instead of the folder itself to avoid unnecessary nesting levels in the output.
+ *
+ * The folder line shows the path ending with "/" and "(hidden)" if the folder is hidden.
+ * Child entries are rendered with 2-space indentation, recursively maintaining the folder hierarchy.
+ * Folders with a null or empty entries list show only the folder line with no children.
+ *
+ * @param folder the folder to render
+ * @param parent optional parent entry used to compute a relative display path
+ */
+internal fun TextContentBuilder.folder(folder: FileSystemEntry.Folder, parent: FileSystemEntry? = null) {
     folder.entries?.singleOrNull()?.let { singleEntry ->
         entry(singleEntry, parent)
         return
@@ -42,7 +61,23 @@ public fun TextContentBuilder.folder(folder: FileSystemEntry.Folder, parent: Fil
     renderFolderEntries(folder)
 }
 
-public fun TextContentBuilder.file(file: FileSystemEntry.File, parent: FileSystemEntry? = null) {
+/**
+ * Renders a file as a single line with metadata, followed by its content if present.
+ *
+ * The metadata line shows the file path and a parenthesized list containing:
+ * - Content type (only for non-text files like "binary")
+ * - File size(s) (e.g., "1.5 MiB", "12 lines")
+ * - "hidden" flag if the file is hidden
+ *
+ * When file content is available, it's rendered below the metadata line:
+ * - Text content becomes a Markdown code block if the file extension is recognized
+ * - Excerpt content shows line ranges and creates code blocks for each snippet
+ * - All content text is trimmed of leading/trailing whitespace
+ *
+ * @param file the file to render
+ * @param parent optional parent entry used to compute a relative display path
+ */
+internal fun TextContentBuilder.file(file: FileSystemEntry.File, parent: FileSystemEntry? = null) {
     val displayPath = calculateDisplayPath(file.path, file.name, parent)
     val metadata = buildFileMetadata(file)
 

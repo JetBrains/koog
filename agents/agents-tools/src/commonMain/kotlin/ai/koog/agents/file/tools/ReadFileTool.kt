@@ -110,7 +110,7 @@ public class ReadFileTool<Path>(private val fs: FileSystemProvider.ReadOnly<Path
 
     public companion object {
         /**
-         * Tool descriptor for the read file operation.
+         * Provides a tool descriptor for the read file operation.
          *
          * Configures the tool to read text files with optional line range selection
          * using 0-based indexing.
