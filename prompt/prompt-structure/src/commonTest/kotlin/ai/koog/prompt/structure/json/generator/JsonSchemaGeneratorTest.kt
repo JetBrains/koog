@@ -268,6 +268,64 @@ class JsonSchemaGeneratorTest {
     }
 
     @Test
+    fun testGenerateBasicSchemaExcludingProperties() {
+        val result = basicGenerator.generate(json, "TestClass", serializer<TestClass>(), emptyMap(), setOf("TestClass.nullableProperty"))
+        val schema = json.encodeToString(result.schema)
+
+        val expectedSchema = """
+            {
+              "type": "object",
+              "properties": {
+                "stringProperty": {
+                  "type": "string",
+                  "description": "A string property"
+                },
+                "intProperty": {
+                  "type": "integer"
+                },
+                "booleanProperty": {
+                  "type": "boolean"
+                },
+                "listProperty": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "mapProperty": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "required": [
+                "stringProperty",
+                "intProperty",
+                "booleanProperty"
+              ],
+              "additionalProperties": false
+            }
+        """.trimIndent()
+
+        assertEquals(expectedSchema, schema)
+    }
+
+    @Test
+    fun testGenerateBasicSchemaExcludingRequiredProperties() {
+        val exception = assertFailsWith<IllegalArgumentException> {
+            basicGenerator.generate(
+                json,
+                "TestClass",
+                serializer<TestClass>(),
+                emptyMap(),
+                setOf("TestClass.stringProperty")
+            )
+        }
+        assertEquals("Property 'TestClass.stringProperty' is marked as excluded, but it is required in the schema.", exception.message)
+    }
+
+    @Test
     fun testGenerateStandardSchemaWithDescriptions() {
         val descriptions = mapOf(
             "TestClass" to "A test class (override)",
