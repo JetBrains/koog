@@ -141,7 +141,7 @@ class EventBodyFieldTest {
             value = list,
             verbose = true,
             expectedKey = "body",
-            expectedValue = "{\"testKey\":${list.joinToString(separator = ",", prefix = "[", postfix = "]") { "$it"}}}",
+            expectedValue = "{\"testKey\":${list.joinToString(separator = ",", prefix = "[", postfix = "]") { "\"$it\""}}}",
         )
     }
 
@@ -169,7 +169,7 @@ class EventBodyFieldTest {
             value = unsupportedType,
             verbose = true,
             expectedKey = "body",
-            expectedValue = "{\"testKey\":$unsupportedType}",
+            expectedValue = "{\"testKey\":\"$unsupportedType\"}",
         )
     }
 

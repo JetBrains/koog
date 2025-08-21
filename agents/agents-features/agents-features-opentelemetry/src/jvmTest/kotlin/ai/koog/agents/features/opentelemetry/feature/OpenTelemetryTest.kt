@@ -687,7 +687,7 @@ class OpenTelemetryTest {
                                 "gen_ai.system" to model.provider.id,
                                 "index" to 0L,
                                 "role" to Message.Role.Tool.name.lowercase(),
-                                "tool_calls" to "[{\"function\":{\"name\":\"${TestGetWeatherTool.name}\",\"arguments\":\"${TestGetWeatherTool.encodeArgsToString(TestGetWeatherTool.Args("Paris"))}\"},\"id\":\"\",\"type\":\"function\"}]",
+                                "tool_calls" to """[{"function":{"name":"${TestGetWeatherTool.name}","arguments":"{\"location\":\"Paris\"}"},"id":"","type":"function"}]""",
                                 "finish_reason" to FinishReasonType.ToolCalls.id,
                             ),
                         )
