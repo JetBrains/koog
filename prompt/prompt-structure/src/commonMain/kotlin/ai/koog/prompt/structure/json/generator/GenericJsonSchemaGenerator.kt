@@ -153,8 +153,9 @@ public abstract class GenericJsonSchemaGenerator : JsonSchemaGenerator() {
                     // Check if the property is excluded
                     val lookupKey = "${context.descriptor.serialName}.$propertyName"
                     if (context.excludedProperties.contains(lookupKey)) {
-                        if (!context.descriptor.isElementOptional(i))
+                        if (!context.descriptor.isElementOptional(i)) {
                             throw IllegalArgumentException("Property '$lookupKey' is marked as excluded, but it is required in the schema.")
+                        }
                         continue
                     }
 
