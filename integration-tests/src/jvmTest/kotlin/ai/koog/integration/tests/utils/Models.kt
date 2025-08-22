@@ -5,6 +5,7 @@ import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.bedrock.BedrockModels
+import ai.koog.prompt.executor.clients.deepseek.DeepSeekModels
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
@@ -61,6 +62,14 @@ object Models {
             GoogleModels.Gemini2_0FlashLite,
             GoogleModels.Gemini2_0FlashLite001,
             GoogleModels.Gemini2_5Flash,
+        )
+    }
+
+    @JvmStatic
+    fun deepSeekModels(): Stream<LLModel> {
+        return Stream.of(
+            DeepSeekModels.DeepSeekChat,
+            DeepSeekModels.DeepSeekReasoner,
         )
     }
 

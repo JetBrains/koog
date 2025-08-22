@@ -7,7 +7,7 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
 import org.jetbrains.kotlin.gradle.targets.js.ir.KotlinJsIrLink
 import org.jetbrains.kotlin.gradle.tasks.BaseKotlinCompile
 import org.jlleitschuh.gradle.ktlint.KtlintExtension
-import java.util.*
+import java.util.Base64
 
 group = "ai.koog"
 version = run {
@@ -30,6 +30,7 @@ version = run {
                         throw GradleException("Custom version is not allowed during release from the main branch")
                     }
                 }
+
                 "develop" -> {
                     if (!customVersion.isNullOrBlank()) {
                         throw GradleException("Custom version is not allowed during release from the develop branch")
@@ -39,6 +40,7 @@ version = run {
                         ".$tcCounter"
                     }
                 }
+
                 else -> {
                     if (!customVersion.isNullOrBlank()) {
                         "-feat-$customVersion"
@@ -102,6 +104,7 @@ subprojects {
                 "OPEN_ROUTER_API_TEST_KEY" to System.getenv("OPEN_ROUTER_API_TEST_KEY"),
                 "AWS_SECRET_ACCESS_KEY" to System.getenv("AWS_SECRET_ACCESS_KEY"),
                 "AWS_ACCESS_KEY_ID" to System.getenv("AWS_ACCESS_KEY_ID"),
+                "DEEPSEEK_API_TEST_KEY" to System.getenv("DEEPSEEK_API_TEST_KEY"),
             )
         )
     }
