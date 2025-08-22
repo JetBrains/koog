@@ -26,20 +26,20 @@ import ai.koog.integration.tests.utils.TestUtils.readAwsAccessKeyIdFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readAwsSecretAccessKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readAwsSessionTokenFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
-import ai.koog.integration.tests.utils.TestUtils.readTestDeepSeekKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestGoogleAIKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
+import ai.koog.integration.tests.utils.TestUtils.readTestOpenRouterKeyFromEnv
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.bedrock.BedrockClientSettings
 import ai.koog.prompt.executor.clients.bedrock.BedrockLLMClient
-import ai.koog.prompt.executor.clients.deepseek.DeepSeekLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.clients.openrouter.OpenRouterLLMClient
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 import ai.koog.prompt.executor.llms.all.simpleBedrockExecutor
 import ai.koog.prompt.llm.LLMCapability
@@ -89,14 +89,13 @@ class SingleLLMPromptExecutorIntegrationTest {
             val openAIClientInstance = OpenAILLMClient(readTestOpenAIKeyFromEnv())
             val anthropicClientInstance = AnthropicLLMClient(readTestAnthropicKeyFromEnv())
             val googleClientInstance = GoogleLLMClient(readTestGoogleAIKeyFromEnv())
-            val deepSeekClientInstance = DeepSeekLLMClient(readTestDeepSeekKeyFromEnv())
+            val openRouterClientInstance = OpenRouterLLMClient(readTestOpenRouterKeyFromEnv())
             /*val bedrockClientInstance = BedrockLLMClient(
                 readAwsAccessKeyIdFromEnv(),
                 readAwsSecretAccessKeyFromEnv(),
                 readAwsSessionTokenFromEnv(),
                 BedrockClientSettings()
             )*/
-            // val openRouterClientInstance = OpenRouterLLMClient(readTestOpenRouterKeyFromEnv())
 
             return Stream.concat(
                 Stream.concat(
@@ -105,11 +104,10 @@ class SingleLLMPromptExecutorIntegrationTest {
                 ),
                 Stream.concat(
                     Models.googleModels().map { model -> Arguments.of(model, googleClientInstance) },
-                    Models.deepSeekModels().map { model -> Arguments.of(model, deepSeekClientInstance) }
+                    Models.openRouterModels().map { model -> Arguments.of(model, openRouterClientInstance) }
                 )
             )
             // Models.bedrockModels().map { model -> Arguments.of(model, bedrockClientInstance) }
-            // Models.openRouterModels().map { model -> Arguments.of(model, openRouterClientInstance) }
         }
 
         @JvmStatic
@@ -616,7 +614,8 @@ class SingleLLMPromptExecutorIntegrationTest {
     @MethodSource("modelClientCombinations")
     fun integration_testToolChoiceNamed(model: LLModel, client: LLMClient) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
-        assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
+        assumeTrue(!(model.provider == LLMProvider.OpenRouter && model.id.contains("anthropic")), "KG-282")
+        assumeTrue(model.capabilities.contains(LLMCapability.ToolChoice), "Model $model does not support tools")
 
         val calculatorTool = createCalculatorTool()
         val prompt = createCalculatorPrompt()
@@ -639,7 +638,10 @@ class SingleLLMPromptExecutorIntegrationTest {
 
             assertNotNull(response, "Response should not be null")
             assertTrue(response.isNotEmpty(), "Response should not be empty")
-            assertTrue(response.first() is Message.Tool.Call)
+            assertTrue(
+                response.first() is Message.Tool.Call,
+                "First message should be a tool call, but was ${response.first().role}"
+            )
             val toolCall = response.first() as Message.Tool.Call
             assertEquals("nothing", toolCall.tool, "Tool name should be 'nothing'")
         }
