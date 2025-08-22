@@ -89,20 +89,25 @@ theme:
       primary: black
       accent: blue
 
-extra_javascript:
-  - https://cdn.jsdelivr.net/npm/cookieconsent@3/build/cookieconsent.min.js
-  - js/cookie.js
-
-extra_css:
-  - stylesheets/extra.css
-  - https://cdn.jsdelivr.net/npm/cookieconsent@3/build/cookieconsent.min.css
-
 repo_url: https://github.com/JetBrains/koog
 repo_name: "Koog on GitHub"
 edit_uri: edit/develop/docs/docs/
 copyright: Copyright © 2000-2025 JetBrains s.r.o.
 
+extra_css:
+  - stylesheets/extra.css
+
 extra:
+  analytics:
+    provider: google
+    property: GTM-5P98
+  consent:
+    title: Cookie consent
+    description: >- 
+      We use cookies to recognize your repeated visits and preferences, as well
+      as to measure the effectiveness of our documentation and whether users
+      find what they're searching for. With your consent, you're helping us to
+      make our documentation better.
   social:
     - icon: fontawesome/brands/slack
       link: https://kotlinlang.slack.com/messages/koog-agentic-framework/
