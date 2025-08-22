@@ -8,14 +8,14 @@ import kotlinx.serialization.json.JsonObject
 
 @InternalLLMClientApi
 @Serializable
-public data class MistralAITool(
+internal data class MistralAITool(
     @EncodeDefault(ALWAYS) val type: String = "function",
     val function: MistralAIFunction
 )
 
 @InternalLLMClientApi
 @Serializable
-public data class MistralAIToolParamsSpecification(
+internal data class MistralAIToolParamsSpecification(
     @EncodeDefault(ALWAYS) val type: String = "object",
     val properties: JsonObject,
     val required: List<String>
@@ -23,7 +23,7 @@ public data class MistralAIToolParamsSpecification(
 
 @InternalLLMClientApi
 @Serializable
-public data class MistralAIFunction(
+internal data class MistralAIFunction(
     val name: String,
     val description: String,
     @EncodeDefault(ALWAYS) val strict: Boolean = false,

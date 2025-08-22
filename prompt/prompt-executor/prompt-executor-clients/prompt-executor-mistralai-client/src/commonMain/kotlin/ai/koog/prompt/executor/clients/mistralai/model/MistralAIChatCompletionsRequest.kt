@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 
 @InternalLLMClientApi
 @Serializable
-public data class MistralAIChatCompletionsRequest(
+internal data class MistralAIChatCompletionsRequest(
     val model: String,
     val temperature: Double? = null,
     val topP: Double? = 1.0,
@@ -29,13 +29,13 @@ public data class MistralAIChatCompletionsRequest(
 
 @InternalLLMClientApi
 @Serializable
-public sealed class Stop {
+internal sealed class Stop {
 
     @InternalLLMClientApi
     @Serializable
-    public data class Single(val value: String) : Stop()
+    internal data class Single(val value: String) : Stop()
 
     @InternalLLMClientApi
     @Serializable
-    public data class Multiple(val values: List<String>) : Stop()
+    internal data class Multiple(val values: List<String>) : Stop()
 }

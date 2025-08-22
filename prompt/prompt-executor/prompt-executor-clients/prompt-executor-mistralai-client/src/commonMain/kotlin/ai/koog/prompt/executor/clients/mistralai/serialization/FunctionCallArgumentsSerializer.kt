@@ -12,7 +12,7 @@ import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonPrimitive
 
 @InternalLLMClientApi
-public class FunctionCallArgumentsSerializer : KSerializer<FunctionCallArguments> {
+internal class FunctionCallArgumentsSerializer : KSerializer<FunctionCallArguments> {
 
     override val descriptor: SerialDescriptor = JsonElement.serializer().descriptor
 

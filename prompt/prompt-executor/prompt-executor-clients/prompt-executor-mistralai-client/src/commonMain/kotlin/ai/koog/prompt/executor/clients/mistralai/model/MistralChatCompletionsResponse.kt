@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 
 @InternalLLMClientApi
 @Serializable
-public data class UsageInfo(
+internal data class UsageInfo(
     val promptTokens: Int,
     val completionTokens: Int,
     val totalTokens: Int? = null
@@ -14,7 +14,7 @@ public data class UsageInfo(
 
 @InternalLLMClientApi
 @Serializable
-public data class MistralChatCompletionsResponse(
+internal data class MistralChatCompletionsResponse(
     val id: String,
     val model: String,
     val usage: UsageInfo,
@@ -24,7 +24,7 @@ public data class MistralChatCompletionsResponse(
 
 @InternalLLMClientApi
 @Serializable
-public data class MistralAIChoice(
+internal data class MistralAIChoice(
     val index: Long,
     val message: MistralAIAssistantMessage,
     val finishReason: FinishReason
@@ -32,7 +32,7 @@ public data class MistralAIChoice(
 
 @InternalLLMClientApi
 @Serializable
-public enum class FinishReason {
+internal enum class FinishReason {
     @SerialName("stop")
     STOP,
 
@@ -51,7 +51,7 @@ public enum class FinishReason {
 
 @InternalLLMClientApi
 @Serializable
-public data class MistralAIAssistantMessage(
+internal data class MistralAIAssistantMessage(
     val content: String? = null,
     val toolCalls: List<MistralAIToolCall>? = null,
     val prefix: Boolean = false,

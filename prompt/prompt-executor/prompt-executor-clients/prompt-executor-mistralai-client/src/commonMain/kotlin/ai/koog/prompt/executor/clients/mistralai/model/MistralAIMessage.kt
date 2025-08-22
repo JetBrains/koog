@@ -7,27 +7,27 @@ import kotlinx.serialization.Serializable
 
 @InternalLLMClientApi
 @Serializable
-public sealed class MistralAIMessage {
-    public abstract val role: String
-    public abstract val content: List<MistralAIContent>?
+internal sealed class MistralAIMessage {
+    internal abstract val role: String
+    internal abstract val content: List<MistralAIContent>?
 
     @InternalLLMClientApi
     @Serializable
-    public data class MistralAISystemMessage(
+    internal data class MistralAISystemMessage(
         @EncodeDefault(ALWAYS) override val role: String = "system",
         override val content: List<MistralAIContent.TextChunk>
     ) : MistralAIMessage()
 
     @InternalLLMClientApi
     @Serializable
-    public data class MistralAIUserMessage(
+    internal data class MistralAIUserMessage(
         @EncodeDefault(ALWAYS) override val role: String = "user",
         override val content: List<MistralAIContent.ContentChunk>? = null,
     ) : MistralAIMessage()
 
     @InternalLLMClientApi
     @Serializable
-    public data class MistralAIAssistantMessage(
+    internal data class MistralAIAssistantMessage(
         override val content: List<MistralAIContent.ContentChunk>? = null,
         val toolCalls: List<MistralAIToolCall>? = null,
         val prefix: Boolean = false,
@@ -36,7 +36,7 @@ public sealed class MistralAIMessage {
 
     @InternalLLMClientApi
     @Serializable
-    public data class MistralAIToolMessage(
+    internal data class MistralAIToolMessage(
         override val content: List<MistralAIContent.ContentChunk>? = null,
         val toolCallId: String? = null,
         val name: String? = null,
@@ -46,16 +46,16 @@ public sealed class MistralAIMessage {
 
 @InternalLLMClientApi
 @Serializable
-public sealed interface MistralAIContent {
+internal sealed interface MistralAIContent {
     @Serializable
-    public data class TextChunk(val text: String, val type: String = "text") : MistralAIContent
+    data class TextChunk(val text: String, val type: String = "text") : MistralAIContent
 
     @InternalLLMClientApi
     @Serializable
-    public sealed interface ContentChunk : MistralAIContent {
+    sealed interface ContentChunk : MistralAIContent {
 
         @Serializable
-        public data class TextChunk(
+        data class TextChunk(
             val text: String,
             @EncodeDefault(ALWAYS) val type: String = "text"
         ) : ContentChunk

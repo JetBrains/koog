@@ -15,7 +15,7 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonPrimitive
 
 @InternalLLMClientApi
-public object StopSerializer : KSerializer<Stop> {
+internal object StopSerializer : KSerializer<Stop> {
 
     override val descriptor: SerialDescriptor = JsonElement.serializer().descriptor
 

@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 
 @InternalLLMClientApi
 @Serializable
-public data class MistralAIToolCall(
+internal data class MistralAIToolCall(
     val id: String? = null,
     val type: String = "function",
     val function: FunctionCall,
@@ -15,7 +15,7 @@ public data class MistralAIToolCall(
 
 @InternalLLMClientApi
 @Serializable
-public data class FunctionCall(
+internal data class FunctionCall(
     val name: String,
 
     @Serializable(with = FunctionCallArgumentsSerializer::class)
@@ -24,15 +24,15 @@ public data class FunctionCall(
 
 @Serializable
 @InternalLLMClientApi
-public sealed class FunctionCallArguments {
+internal sealed class FunctionCallArguments {
 
     @InternalLLMClientApi
     @Serializable
-    public data class StringFunctionCallArguments(val args: String) : FunctionCallArguments()
+    internal data class StringFunctionCallArguments(val args: String) : FunctionCallArguments()
 
     @InternalLLMClientApi
     @Serializable
-    public data object NullFunctionCallArguments : FunctionCallArguments()
+    internal data object NullFunctionCallArguments : FunctionCallArguments()
 }
 
 internal fun FunctionCallArguments.asString(): String {
