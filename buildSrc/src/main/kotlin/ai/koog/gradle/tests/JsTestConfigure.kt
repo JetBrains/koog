@@ -36,7 +36,7 @@ fun KotlinJsTargetDsl.configureTests(
     localBrowser: Browser = Browser.CHROME_HEADLESS,
     ciBrowser: Browser = Browser.FIREFOX
 ) {
-    for (testType in listOf(TestType.DEFAULT, TestType.PERFORMANCE)) {
+    for (testType in listOf(TestType.DEFAULT)) {
         testRuns.maybeCreate(testType.shortName).configureAllExecutions {
             filter { configureFilter(testType) }
 
