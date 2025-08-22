@@ -11,6 +11,8 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 import kotlinx.datetime.Clock
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 internal object OpenTelemetryTestAPI {
 
@@ -28,12 +30,11 @@ internal object OpenTelemetryTestAPI {
         assistantPrompt: String? = null,
         installFeatures: AIAgent.FeatureContext.() -> Unit = { }
     ): AIAgent<String, String> {
-
         val agentConfig = AIAgentConfig(
             prompt = prompt(promptId ?: "Test prompt", clock = clock, params = LLMParams(temperature = temperature)) {
-                system(systemPrompt ?: "Test system message")
-                user(userPrompt ?: "Test user message")
-                assistant(assistantPrompt ?: "Test assistant response")
+                systemPrompt?.let { system(systemPrompt) }
+                userPrompt?.let { user(userPrompt) }
+                assistantPrompt?.let { assistant(assistantPrompt) }
             },
             model = model ?: OpenAIModels.Chat.GPT4o,
             maxAgentIterations = 10,
@@ -48,5 +49,22 @@ internal object OpenTelemetryTestAPI {
             clock = clock,
             installFeatures = installFeatures,
         )
+    }
+
+    fun assertMapsEqual(expected: Map<*, *>, actual: Map<*, *>, message: String = "") {
+        assertEquals(expected.size, actual.size, "$message - Map sizes should be equal")
+
+        expected.forEach { (key, value) ->
+            assertTrue(actual.containsKey(key), "$message - Key '$key' should exist in actual map")
+
+            val actualValue = actual[key]
+            assertEquals(
+                value,
+                actualValue,
+                "$message - Value for key '$key' should match. " +
+                    "Expected: <$value: ${value?.javaClass?.simpleName}>, " +
+                    "Actual: <$actualValue: ${actualValue?.javaClass?.simpleName}>."
+            )
+        }
     }
 }

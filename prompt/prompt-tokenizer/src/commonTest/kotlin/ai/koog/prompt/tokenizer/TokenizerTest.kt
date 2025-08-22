@@ -24,7 +24,10 @@ class TokenizerTest {
         assertEquals(0, tokenizer.countTokens("Hello, world!"))
 
         // Test with longer text
-        assertEquals(0, tokenizer.countTokens("This is a longer text with multiple sentences. It should still return 0 tokens."))
+        assertEquals(
+            0,
+            tokenizer.countTokens("This is a longer text with multiple sentences. It should still return 0 tokens.")
+        )
     }
 
     /**
@@ -44,7 +47,7 @@ class TokenizerTest {
 
         // Test with more complex text
         val complexText = "This is a test. It has multiple sentences, punctuation, and numbers like 123."
-        // Count tokens manually: "This", "is", "a", "test", "It", "has", "multiple", "sentences", 
+        // Count tokens manually: "This", "is", "a", "test", "It", "has", "multiple", "sentences",
         // "punctuation", "and", "numbers", "like", "123" = 13 tokens
         // With 1.1 overhead = 14.3, rounded to 14
         assertEquals(14, tokenizer.countTokens(complexText))

@@ -45,11 +45,18 @@ class RetryExtension : InvocationInterceptor {
         }
 
         var lastException: Throwable? = null
+        var attempt = 0
 
-        for (attempt in 1..retry.times) {
+        while
+            (attempt < retry.times) {
+            attempt++
             try {
                 println("[DEBUG_LOG] Test '${extensionContext.displayName}' - attempt $attempt of ${retry.times}")
-                invocation.proceed()
+                if (attempt == 1) {
+                    invocation.proceed()
+                } else {
+                    invokeTestMethodDirectly(invocationContext, extensionContext)
+                }
                 println("[DEBUG_LOG] Test '${extensionContext.displayName}' succeeded on attempt $attempt")
                 return
             } catch (throwable: Throwable) {
@@ -66,10 +73,14 @@ class RetryExtension : InvocationInterceptor {
                     return
                 }
 
-                println("[DEBUG_LOG] Test '${extensionContext.displayName}' failed on attempt $attempt: ${throwable.message}")
+                println(
+                    "[DEBUG_LOG] Test '${extensionContext.displayName}' failed on attempt $attempt: ${throwable.message}"
+                )
 
                 if (attempt < retry.times) {
-                    println("[DEBUG_LOG] Retrying test '${extensionContext.displayName}' (attempt ${attempt + 1} of ${retry.times})")
+                    println(
+                        "[DEBUG_LOG] Retrying test '${extensionContext.displayName}' (attempt ${attempt + 1} of ${retry.times})"
+                    )
 
                     if (retry.delayMs > 0) {
                         try {
@@ -80,11 +91,24 @@ class RetryExtension : InvocationInterceptor {
                         }
                     }
                 } else {
-                    println("[DEBUG_LOG] Maximum retry attempts (${retry.times}) reached for test '${extensionContext.displayName}'")
+                    println(
+                        "[DEBUG_LOG] Maximum retry attempts (${retry.times}) reached for test '${extensionContext.displayName}'"
+                    )
                 }
             }
         }
 
         throw lastException!!
+    }
+
+    private fun invokeTestMethodDirectly(
+        invocationContext: ReflectiveInvocationContext<Method>,
+        extensionContext: ExtensionContext
+    ) {
+        val testInstance = extensionContext.requiredTestInstance
+        val testMethod = invocationContext.executable
+        val arguments = invocationContext.arguments
+
+        testMethod.invoke(testInstance, *arguments.toTypedArray())
     }
 }

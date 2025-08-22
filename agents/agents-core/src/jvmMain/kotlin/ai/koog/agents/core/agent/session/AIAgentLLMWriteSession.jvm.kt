@@ -16,7 +16,9 @@ import kotlin.reflect.full.memberProperties
  * @return A safe representation of the tool associated with the provided function.
  * @throws IllegalArgumentException If the tool corresponding to the given function is not found in the tool registry.
  */
-public inline fun <reified TResult> AIAgentLLMWriteSession.findTool(toolFunction: KFunction<TResult>): SafeToolFromCallable<TResult> {
+public inline fun <reified TResult> AIAgentLLMWriteSession.findTool(
+    toolFunction: KFunction<TResult>
+): SafeToolFromCallable<TResult> {
     val toolFromCallable = toolFunction.asTool()
 
     toolRegistry.tools.filterIsInstance<ToolFromCallable>()

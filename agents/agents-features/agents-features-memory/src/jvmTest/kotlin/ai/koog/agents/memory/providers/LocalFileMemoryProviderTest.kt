@@ -1,6 +1,10 @@
 package ai.koog.agents.memory.providers
 
-import ai.koog.agents.memory.model.*
+import ai.koog.agents.memory.model.Concept
+import ai.koog.agents.memory.model.FactType
+import ai.koog.agents.memory.model.MemoryScope
+import ai.koog.agents.memory.model.MemorySubject
+import ai.koog.agents.memory.model.SingleFact
 import ai.koog.agents.memory.storage.Aes256GCMEncryptor
 import ai.koog.agents.memory.storage.EncryptedStorage
 import ai.koog.rag.base.files.FileSystemProvider

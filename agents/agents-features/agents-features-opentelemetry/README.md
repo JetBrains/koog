@@ -82,6 +82,7 @@ Configuration API:
 | `addResourceAttributes` | `attributes: Map<AttributeKey<T>, T> where T : Any` | Adds resource attributes to provide additional context about the service.         |
 | `setSampler`            | `sampler: Sampler`                                  | Sets the sampling strategy to control which spans are collected.                  |
 | `setVerbose`            | `verbose: Boolean`                                  | Enables or disables verbose logging for debugging OpenTelemetry configuration.    |
+| `setSdk`                | `sdk: OpenTelemetrySdk`                             | Injects a custom OpenTelemetry SDK instance for advanced configuration control.   |
 
 
 ### Advanced configuration
@@ -101,6 +102,18 @@ install(OpenTelemetry) {
         AttributeKey.stringKey("deployment.environment") to "production",
         AttributeKey.stringKey("custom.attribute") to "custom-value"
     ))
+}
+```
+
+### Sdk configuration
+
+If you already have an initialized OpenTelemetrySdk-for example, configured elsewhere in your application or provided by a framework-you can pass it directly using `setSdk`
+When using `setSdk` any other configuration methods like `addSpanExporter`, `addSpanProcessor`, `addResourceAttributes` or `setSample` will be ignored, since the SDK is assumed to be fully configured.
+```kotlin
+val sdk: OpenTelemetrySdk = createPreconfiguredSdk() // Your preconfigured sdk
+
+install(OpenTelemetry) {
+    setSdk(sdk) // Use your existing OpenTelemetrySdk instance
 }
 ```
 

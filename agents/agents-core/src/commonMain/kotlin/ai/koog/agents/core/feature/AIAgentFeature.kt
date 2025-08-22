@@ -1,8 +1,8 @@
 package ai.koog.agents.core.feature
 
-import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
-import ai.koog.agents.features.common.config.FeatureConfig
+import ai.koog.agents.core.annotation.InternalAgentsApi
+import ai.koog.agents.core.feature.config.FeatureConfig
 
 /**
  * A class for Agent Feature that can be added to an agent pipeline,

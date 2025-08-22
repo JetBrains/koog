@@ -37,7 +37,7 @@ class BedrockToolSerializationTest {
             val addressPropertyDesc = "User address"
 
             return Stream.of(
-                // String 
+                // String
                 Arguments.of(
                     ToolParameterDescriptor(
                         name = "query",
@@ -50,7 +50,7 @@ class BedrockToolSerializationTest {
                     )
                 ),
 
-                // Integer 
+                // Integer
                 Arguments.of(
                     ToolParameterDescriptor(
                         name = "count",
@@ -63,7 +63,7 @@ class BedrockToolSerializationTest {
                     )
                 ),
 
-                // Float 
+                // Float
                 Arguments.of(
                     ToolParameterDescriptor(
                         name = "temperature",
@@ -76,7 +76,7 @@ class BedrockToolSerializationTest {
                     )
                 ),
 
-                // Boolean 
+                // Boolean
                 Arguments.of(
                     ToolParameterDescriptor(
                         name = "enabled",
@@ -89,7 +89,7 @@ class BedrockToolSerializationTest {
                     )
                 ),
 
-                // Enum 
+                // Enum
                 Arguments.of(
                     ToolParameterDescriptor(
                         name = "format",
@@ -117,7 +117,7 @@ class BedrockToolSerializationTest {
                     )
                 ),
 
-                // List of Integer 
+                // List of Integer
                 Arguments.of(
                     ToolParameterDescriptor(
                         name = "List",

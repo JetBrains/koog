@@ -1,5 +1,7 @@
 package ai.koog.prompt.structure
 
+import kotlinx.serialization.SerializationException
+
 /**
  * Exception indicating an error during the parsing of structured output from a language model.
  *
@@ -8,5 +10,6 @@ package ai.koog.prompt.structure
  *
  * @constructor Creates a new instance of [LLMStructuredParsingError].
  * @param message A detailed message describing the cause of the parsing error.
+ * @param cause [SerializationException] that caused parsing exception.
  */
-public class LLMStructuredParsingError(message: String) : Exception(message)
+public class LLMStructuredParsingError(message: String, cause: SerializationException?) : Exception(message, cause)

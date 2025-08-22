@@ -28,13 +28,13 @@ import kotlinx.serialization.json.JsonObject
  * 3. Converting MCP tool results back to agent framework tool results
  */
 public class McpTool(
-    private val mcpClient: Client, override val descriptor: ToolDescriptor
+    private val mcpClient: Client,
+    override val descriptor: ToolDescriptor
 ) : Tool<McpTool.Args, McpTool.Result>() {
 
     private companion object {
-        private val logger = KotlinLogging.logger {  }
+        private val logger = KotlinLogging.logger { }
     }
-
 
     /**
      * Arguments for an MCP tool call.
@@ -135,7 +135,8 @@ public class McpTool(
      */
     override suspend fun execute(args: Args): Result {
         val result = mcpClient.callTool(
-            name = descriptor.name, arguments = args.arguments
+            name = descriptor.name,
+            arguments = args.arguments
         )
         return Result(result?.content ?: emptyList())
     }

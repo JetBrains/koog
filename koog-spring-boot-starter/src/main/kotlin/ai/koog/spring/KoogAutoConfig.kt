@@ -2,6 +2,8 @@ package ai.koog.spring
 
 import ai.koog.prompt.executor.clients.anthropic.AnthropicClientSettings
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
+import ai.koog.prompt.executor.clients.deepseek.DeepSeekClientSettings
+import ai.koog.prompt.executor.clients.deepseek.DeepSeekLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleClientSettings
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIClientSettings
@@ -20,7 +22,7 @@ import org.springframework.context.annotation.Bean
  * for various LLM (Large Language Model) provider clients. It ensures that the beans are only
  * created if the corresponding properties are defined in the application's configuration.
  *
- * This configuration includes support for Anthropic, Google, Ollama, OpenAI, and OpenRouter providers.
+ * This configuration includes support for Anthropic, Google, Ollama, OpenAI, DeepSeek, and OpenRouter providers.
  * Each provider is configured with specific settings and logic encapsulated within a
  * [SingleLLMPromptExecutor] instance backed by a respective client implementation.
  */
@@ -120,6 +122,27 @@ public class KoogAutoConfiguration {
             OpenRouterLLMClient(
                 props.apiKey,
                 settings = OpenRouterClientSettings(baseUrl = props.baseUrl)
+            )
+        )
+    }
+
+    /**
+     * Creates a [SingleLLMPromptExecutor] bean configured to use the DeepSeek LLM client.
+     *
+     * This method is only executed if the `deepseek.api-key` property is defined in the application's configuration.
+     * It initializes the DeepSeek client using the provided API key and base URL from the application's properties.
+     *
+     * @param properties The configuration properties for the application, including the DeepSeek client settings.
+     * @return A [SingleLLMPromptExecutor] initialized with an DeepSeek LLM client.
+     */
+    @Bean
+    @ConditionalOnProperty(prefix = KoogProperties.PREFIX, name = ["deepseek.api-key"])
+    public fun deepSeekExecutor(properties: KoogProperties): SingleLLMPromptExecutor {
+        val props = properties.deepSeekClientProperties
+        return SingleLLMPromptExecutor(
+            DeepSeekLLMClient(
+                props.apiKey,
+                settings = DeepSeekClientSettings(baseUrl = props.baseUrl)
             )
         )
     }

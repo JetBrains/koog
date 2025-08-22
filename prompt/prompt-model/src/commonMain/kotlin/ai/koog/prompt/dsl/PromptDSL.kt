@@ -62,7 +62,7 @@ public fun prompt(
  * @return A new Prompt object based on the existing one
  */
 public fun prompt(
-    existing: Prompt, 
+    existing: Prompt,
     clock: Clock = Clock.System,
     build: PromptBuilder.() -> Unit
 ): Prompt {

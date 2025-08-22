@@ -22,7 +22,7 @@ fun main() = runBlocking {
 
     val transferAgent = AIAgent(
         executor = openAIExecutor,
-        llmModel = OpenAIModels.Reasoning.GPT4oMini,
+        llmModel = OpenAIModels.CostOptimized.GPT4oMini,
         systemPrompt = bankingAssistantSystemPrompt,
         temperature = 0.0,
         toolRegistry = ToolRegistry { tools(MoneyTransferTools().asTools()) }
@@ -30,7 +30,7 @@ fun main() = runBlocking {
 
     val analysisAgent = AIAgent(
         executor = openAIExecutor,
-        llmModel = OpenAIModels.Reasoning.GPT4oMini,
+        llmModel = OpenAIModels.CostOptimized.GPT4oMini,
         systemPrompt = bankingAssistantSystemPrompt + transactionAnalysisPrompt,
         temperature = 0.0,
         toolRegistry = ToolRegistry { tools(TransactionAnalysisTools().asTools()) }
@@ -38,7 +38,7 @@ fun main() = runBlocking {
 
     val classifierAgent = AIAgent(
         executor = openAIExecutor,
-        llmModel = OpenAIModels.Reasoning.GPT4oMini,
+        llmModel = OpenAIModels.CostOptimized.GPT4oMini,
         toolRegistry = ToolRegistry {
             tool(AskUser)
             tool(
@@ -52,7 +52,11 @@ fun main() = runBlocking {
                 analysisAgent.asTool(
                     agentName = "analyzeTransactions",
                     agentDescription = "Performs analytics for user transactions",
-                    inputDescriptor = ToolParameterDescriptor("request", "Transaction analytics request", ToolParameterType.String)
+                    inputDescriptor = ToolParameterDescriptor(
+                        "request",
+                        "Transaction analytics request",
+                        ToolParameterType.String
+                    )
                 )
             )
         },

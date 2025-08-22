@@ -13,13 +13,14 @@ val excluded = setOf(
     ":integration-tests",
     ":koog-spring-boot-starter",
     ":koog-ktor",
+    ":docs",
     project.path, // the current project should not depend on itself
 )
 
 val included = setOf(
     ":agents:agents-core",
     ":agents:agents-ext",
-    ":agents:agents-features:agents-features-common",
+    ":agents:agents-features:agents-features-debugger",
     ":agents:agents-features:agents-features-event-handler",
     ":agents:agents-features:agents-features-memory",
     ":agents:agents-features:agents-features-opentelemetry",
@@ -37,11 +38,13 @@ val included = setOf(
     ":prompt:prompt-executor:prompt-executor-cached",
     ":prompt:prompt-executor:prompt-executor-clients",
     ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-anthropic-client",
-    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-google-client",
-    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client",
-    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openrouter-client",
-    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-ollama-client",
     ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-bedrock-client",
+    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-deepseek-client",
+    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-google-client",
+    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-ollama-client",
+    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client",
+    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-model",
+    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openrouter-client",
     ":prompt:prompt-executor:prompt-executor-llms",
     ":prompt:prompt-executor:prompt-executor-llms-all",
     ":prompt:prompt-executor:prompt-executor-model",
@@ -67,14 +70,17 @@ kotlin {
 
                 val obsoleteIncluded = included - projectsPaths
                 require(obsoleteIncluded.isEmpty()) {
-                    "There are obsolete modules that are used for '${project.name}' main jar dependencies but no longer exist, please remove them from 'included' in ${project.name}/build.gradle.kts:\n" +
-                            obsoleteIncluded.joinToString(",\n") { "\"$it\"" }
+                    "There are obsolete modules that are used for '${project.name}' main jar dependencies" +
+                        "but no longer exist," +
+                        "please remove them from 'included' in ${project.name}/build.gradle.kts:\n" +
+                        obsoleteIncluded.joinToString(",\n") { "\"$it\"" }
                 }
 
                 val notIncluded = projectsPaths - included
                 require(notIncluded.isEmpty()) {
-                    "There are modules that are not listed for '${project.name}' main jar dependencies, please add them to 'included' or 'excluded' in ${project.name}/build.gradle.kts:\n" +
-                            notIncluded.joinToString(",\n") { "\"$it\"" }
+                    "There are modules that are not listed for '${project.name}' main jar dependencies," +
+                        "please add them to 'included' or 'excluded' in ${project.name}/build.gradle.kts:\n" +
+                        notIncluded.joinToString(",\n") { "\"$it\"" }
                 }
 
                 projects.forEach {

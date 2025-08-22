@@ -15,21 +15,38 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.ktor.client.*
-import io.ktor.client.call.*
-import io.ktor.client.plugins.*
-import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.plugins.sse.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.defaultRequest
+import io.ktor.client.plugins.sse.SSE
+import io.ktor.client.plugins.sse.SSEClientException
+import io.ktor.client.plugins.sse.sse
+import io.ktor.client.request.accept
+import io.ktor.client.request.header
+import io.ktor.client.request.headers
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
+import io.ktor.http.contentType
+import io.ktor.http.isSuccess
+import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
-import kotlinx.serialization.json.*
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNamingStrategy
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonObject
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -256,14 +273,17 @@ public open class AnthropicLLMClient(
             null -> null
         }
 
+        require(prompt.params.schema == null) {
+            "Anthropic does not currently support native structured output."
+        }
+
         // Always include max_tokens as it's required by the API
         return AnthropicMessageRequest(
             model = settings.modelVersionsMap[model]
                 ?: throw IllegalArgumentException("Unsupported model: $model"),
             messages = messages,
-            maxTokens = 2048, // This is required by the API
-            // TODO why 0.7 and not 0.0?
-            temperature = prompt.params.temperature ?: 0.7, // Default temperature if not provided
+            maxTokens = prompt.params.maxTokens ?: AnthropicMessageRequest.MAX_TOKENS_DEFAULT,
+            temperature = prompt.params.temperature,
             system = systemMessage,
             tools = if (tools.isNotEmpty()) anthropicTools else emptyList(), // Always provide a list for tools
             stream = stream,
@@ -287,7 +307,9 @@ public open class AnthropicLLMClient(
                         val imageSource: ImageSource = when (val content = attachment.content) {
                             is AttachmentContent.URL -> ImageSource.Url(content.url)
                             is AttachmentContent.Binary -> ImageSource.Base64(content.base64, attachment.mimeType)
-                            else -> throw IllegalArgumentException("Unsupported image attachment content: ${content::class}")
+                            else -> throw IllegalArgumentException(
+                                "Unsupported image attachment content: ${content::class}"
+                            )
                         }
 
                         add(AnthropicContent.Image(imageSource))
@@ -402,35 +424,35 @@ public open class AnthropicLLMClient(
             is ToolParameterType.Object -> {
                 // Create properties map with proper type information
                 val propertiesMap = mutableMapOf<String, JsonElement>()
-                
+
                 for (prop in type.properties) {
                     // Get type information for the property
                     val typeInfo = getTypeMapForParameter(prop.type)
-                    
+
                     // Create a map with all type properties and description
                     val propMap = mutableMapOf<String, JsonElement>()
                     for (entry in typeInfo.entries) {
                         propMap[entry.key] = entry.value
                     }
                     propMap["description"] = JsonPrimitive(prop.description)
-                    
+
                     // Add to properties map
                     propertiesMap[prop.name] = JsonObject(propMap)
                 }
-                
+
                 // Create the final object schema
                 val objectMap = mutableMapOf<String, JsonElement>()
                 objectMap["type"] = JsonPrimitive("object")
                 objectMap["properties"] = JsonObject(propertiesMap)
-                
+
                 // Add required field if requiredProperties is not empty
                 if (type.requiredProperties.isNotEmpty()) {
                     objectMap["required"] = JsonArray(type.requiredProperties.map { JsonPrimitive(it) })
                 }
-                
+
                 // Add additionalProperties for strict validation
                 objectMap["additionalProperties"] = JsonPrimitive(type.additionalProperties ?: false)
-                
+
                 JsonObject(objectMap)
             }
         }

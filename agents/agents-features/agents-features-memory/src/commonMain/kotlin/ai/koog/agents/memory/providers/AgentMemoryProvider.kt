@@ -73,7 +73,7 @@ public interface AgentMemoryProvider {
      * @param scope Visibility boundary to consider
      * @return List of matching facts, empty if none found
      */
-    public  suspend fun load(concept: Concept, subject: MemorySubject, scope: MemoryScope): List<Fact>
+    public suspend fun load(concept: Concept, subject: MemorySubject, scope: MemoryScope): List<Fact>
 
     /**
      * Retrieves all facts within a specific context.
@@ -86,7 +86,7 @@ public interface AgentMemoryProvider {
      * @param scope Visibility boundary to consider
      * @return All available facts in the context
      */
-    public  suspend fun loadAll(subject: MemorySubject, scope: MemoryScope): List<Fact>
+    public suspend fun loadAll(subject: MemorySubject, scope: MemoryScope): List<Fact>
 
     /**
      * Performs semantic search across stored facts.
@@ -105,7 +105,7 @@ public interface AgentMemoryProvider {
      * @param scope Visibility boundary to consider
      * @return Facts matching the semantic query
      */
-    public  suspend fun loadByDescription(description: String, subject: MemorySubject, scope: MemoryScope): List<Fact>
+    public suspend fun loadByDescription(description: String, subject: MemorySubject, scope: MemoryScope): List<Fact>
 }
 
 /**

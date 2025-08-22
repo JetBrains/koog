@@ -7,7 +7,14 @@ import ai.koog.agents.core.agent.AIAgent.FeatureContext
 import ai.koog.agents.core.agent.config.AIAgentConfigBase
 import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.agent.context.AIAgentLLMContext
-import ai.koog.agents.core.agent.entity.*
+import ai.koog.agents.core.agent.entity.AIAgentNodeBase
+import ai.koog.agents.core.agent.entity.AIAgentStateManager
+import ai.koog.agents.core.agent.entity.AIAgentStorage
+import ai.koog.agents.core.agent.entity.AIAgentStorageKey
+import ai.koog.agents.core.agent.entity.AIAgentStrategy
+import ai.koog.agents.core.agent.entity.AIAgentSubgraph
+import ai.koog.agents.core.agent.entity.FinishNode
+import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.environment.ReceivedToolResult
@@ -15,11 +22,11 @@ import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentPipeline
 import ai.koog.agents.core.feature.InterceptContext
 import ai.koog.agents.core.feature.PromptExecutorProxy
+import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolResult
-import ai.koog.agents.features.common.config.FeatureConfig
 import ai.koog.agents.testing.tools.AIAgentContextMockBuilder
 import ai.koog.agents.testing.tools.AIAgentContextMockBuilderBase
 import ai.koog.agents.testing.tools.DummyAIAgentContext
@@ -31,7 +38,6 @@ import kotlinx.datetime.Clock
 import org.jetbrains.annotations.TestOnly
 import kotlin.reflect.KType
 import kotlin.uuid.ExperimentalUuidApi
-
 
 /**
  * Represents a reference to a specific type of node within an AI agent subgraph. This sealed class
@@ -506,9 +512,16 @@ public class Testing {
          * @param name The name of the strategy to be verified.
          * @param buildAssertions A lambda defining the assertions to be built for the strategy.
          */
-        public fun <Input, Output> verifyStrategy(name: String, buildAssertions: SubgraphAssertionsBuilder<Input, Output>.() -> Unit) {
+        public fun <Input, Output> verifyStrategy(
+            name: String,
+            buildAssertions: SubgraphAssertionsBuilder<Input, Output>.() -> Unit
+        ) {
             assertions =
-                SubgraphAssertionsBuilder(NodeReference.Strategy<Input, Output>(name), clock, tokenizer).apply(buildAssertions).build()
+                SubgraphAssertionsBuilder(
+                    NodeReference.Strategy<Input, Output>(name),
+                    clock,
+                    tokenizer
+                ).apply(buildAssertions).build()
         }
 
         /**
@@ -528,7 +541,6 @@ public class Testing {
             private val start: NodeReference.Start<Input> = NodeReference.Start<Input>()
 
             private val finish: NodeReference.Finish<Output> = NodeReference.Finish<Output>()
-
 
             /**
              * Stores a mapping of node names to their corresponding references.
@@ -746,7 +758,7 @@ public class Testing {
                     stateManager: AIAgentStateManager?,
                     storage: AIAgentStorage?,
                     runId: String?,
-                    strategyId: String?,
+                    strategyName: String?,
                 ): NodeOutputAssertionsBuilder =
                     NodeOutputAssertionsBuilder(stageBuilder, context.copy())
 
@@ -854,7 +866,7 @@ public class Testing {
                     stateManager: AIAgentStateManager?,
                     storage: AIAgentStorage?,
                     runId: String?,
-                    strategyId: String?,
+                    strategyName: String?,
                 ): EdgeAssertionsBuilder = EdgeAssertionsBuilder(stageBuilder, context.copy())
 
                 /**
@@ -996,10 +1008,11 @@ public class Testing {
             for (assertion in graphAssertions.nodeOutputAssertions) {
                 val fromNode = assertion.node.resolve(graph)
 
-                val environment = if (assertion.context.isEnvironmentDefined)
+                val environment = if (assertion.context.isEnvironmentDefined) {
                     assertion.context.environment
-                else
+                } else {
                     MockEnvironment(agent.toolRegistry, agent.promptExecutor)
+                }
 
                 val llm = if (assertion.context.isLLMDefined) {
                     assertion.context.llm
@@ -1026,7 +1039,7 @@ public class Testing {
                         assertion.input
                     ),
                     "Unexpected output for node ${fromNode.name} with input ${assertion.input} " +
-                            "in graph '${graph.name}'"
+                        "in graph '${graph.name}'"
                 )
             }
 
@@ -1045,7 +1058,7 @@ public class Testing {
                     toNode,
                     resolvedEdge!!.edge.toNode,
                     "Expected `${fromNode.name}` with output ${assertion.output} to go to `${toNode.name}`, " +
-                            "but it goes to ${resolvedEdge.edge.toNode.name} instead"
+                        "but it goes to ${resolvedEdge.edge.toNode.name} instead"
                 )
             }
 
@@ -1055,17 +1068,19 @@ public class Testing {
                 val toNode = assertion.expectedNode.resolve(graph)
 
                 config.assertEquals(
-                    1, fromNode.edges.size,
+                    1,
+                    fromNode.edges.size,
                     "Expected node ${fromNode.name} to have exactly one edge, " +
-                            "but it has ${fromNode.edges.size} edges instead"
+                        "but it has ${fromNode.edges.size} edges instead"
                 )
 
                 val actualToNode = fromNode.edges.single().toNode
 
                 config.assertEquals(
-                    toNode, actualToNode,
-                    "Expected that from node ${fromNode.name} the only edge is going to ${toNode}, " +
-                            "but it goes to ${actualToNode} instead"
+                    toNode,
+                    actualToNode,
+                    "Expected that from node ${fromNode.name} the only edge is going to $toNode, " +
+                        "but it goes to $actualToNode instead"
                 )
             }
 

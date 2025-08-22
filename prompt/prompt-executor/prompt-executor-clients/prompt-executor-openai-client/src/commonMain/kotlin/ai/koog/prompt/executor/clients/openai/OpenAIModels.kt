@@ -1,6 +1,8 @@
 package ai.koog.prompt.executor.clients.openai
 
 import ai.koog.prompt.executor.clients.LLModelDefinitions
+import ai.koog.prompt.executor.clients.openai.OpenAIModels.Embeddings.TextEmbedding3Large
+import ai.koog.prompt.executor.clients.openai.OpenAIModels.Embeddings.TextEmbedding3Small
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -11,28 +13,32 @@ import ai.koog.prompt.llm.LLModel
  *
  * Note: All models with vision (image) capabilities also support sending PDF files.
  *
- * | Name                                | Speed     | Price              | Input              | Output             |
- * |-------------------------------------|-----------|--------------------|--------------------|--------------------|
- * | [Reasoning.GPT4oMini]               | Medium    | $1.1-$4.4          | Text, Image, Tools | Text, Tools        |
- * | [Reasoning.O3Mini]                  | Medium    | $1.1-$4.4          | Text, Tools        | Text, Tools        |
- * | [Reasoning.O1Mini]                  | Slow      | $1.1-$4.4          | Text               | Text               |
- * | [Reasoning.O3]                      | Slowest   | $10-$40            | Text, Image, Tools | Text, Tools        |
- * | [Reasoning.O1]                      | Slowest   | $15-$60            | Text, Image, Tools | Text, Tools        |
- * | [Chat.GPT4o]                        | Medium    | $2.5-$10           | Text, Image, Tools | Text, Tools        |
- * | [Chat.GPT4_1]                       | Medium    | $2-$8              | Text, Image, Tools | Text, Tools        |
- * | [Audio.GPT4oMiniAudio]              | Fast      | $0.15-$0.6/$10-$20 | Text, Audio, Tools | Text, Audio, Tools |
- * | [Audio.GPT4oAudio]                  | Medium    | $2.5-$10/$40-$80   | Text, Audio, Tools | Text, Audio, Tools |
- * | [CostOptimized.O4Mini]              | Medium    | $1.1-$4.4          | Text, Image, Tools | Text, Tools        |
- * | [CostOptimized.GPT4_1Nano]          | Very fast | $0.1-$0.4          | Text, Image, Tools | Text, Tools        |
- * | [CostOptimized.GPT4_1Mini]          | Fast      | $0.4-$1.6          | Text, Image, Tools | Text, Tools        |
- * | [CostOptimized.GPT4oMini]           | Fast      | $0.15-$0.6         | Text, Image, Tools | Text, Tools        |
- * | [CostOptimized.O1Mini]              | Slow      | $1.1-$4.4          | Text               | Text               |
- * | [CostOptimized.O3Mini]              | Medium    | $1.1-$4.4          | Text, Tools        | Text, Tools        |
- * | [Embeddings.TextEmbedding3Small]    | Medium    | $0.02              | Text               | Text               |
- * | [Embeddings.TextEmbedding3Large]    | Slow      | $0.13              | Text               | Text               |
- * | [Embeddings.TextEmbeddingAda002]    | Slow      | $0.1               | Text               | Text               |
- * | [Moderation.Text]                   | Medium    | -                  | Text               | Moderation Result  |
- * | [Moderation.Omni]                   | Medium    | $4.40              | Text               | Moderation Result  |
+ * | Name                             | Speed     | Price              | Input                        | Output             |
+ * |----------------------------------|-----------|--------------------|------------------------------|--------------------|
+ * | [Reasoning.O4Mini]               | Medium    | $1.1-$4.4          | Text, Image, Tools, Document | Text, Tools        |
+ * | [Reasoning.O3Mini]               | Medium    | $1.1-$4.4          | Text, Tools                  | Text, Tools        |
+ * | [Reasoning.O1Mini]               | Slow      | $1.1-$4.4          | Text                         | Text               |
+ * | [Reasoning.O3]                   | Slowest   | $10-$40            | Text, Image, Tools, Document | Text, Tools        |
+ * | [Reasoning.O1]                   | Slowest   | $15-$60            | Text, Image, Tools, Document | Text, Tools        |
+ * | [Chat.GPT4o]                     | Medium    | $2.5-$10           | Text, Image, Tools, Document | Text, Tools        |
+ * | [Chat.GPT4_1]                    | Medium    | $2-$8              | Text, Image, Tools, Document | Text, Tools        |
+ * | [Chat.GPT5]                      | Medium    | $1.25-$10          | Text, Image, Tools, Document | Text, Tools        |
+ * | [Chat.GPT5Mini]                  | Fast      | $0.25-$2           | Text, Image, Tools, Document | Text, Tools        |
+ * | [Chat.GPT5Nano]                  | Very fast | $0.05-$0.4         | Text, Image, Tools, Document | Text, Tools        |
+ * | [Audio.GPT4oMiniAudio]           | Fast      | $0.15-$0.6/$10-$20 | Text, Audio, Tools           | Text, Audio, Tools |
+ * | [Audio.GPT4oAudio]               | Medium    | $2.5-$10/$40-$80   | Text, Audio, Tools           | Text, Audio, Tools |
+ * | [CostOptimized.O4Mini]           | Medium    | $1.1-$4.4          | Text, Image, Tools, Document | Text, Tools        |
+ * | [CostOptimized.GPT4_1Nano]       | Very fast | $0.1-$0.4          | Text, Image, Tools, Document | Text, Tools        |
+ * | [CostOptimized.GPT4_1Mini]       | Fast      | $0.4-$1.6          | Text, Image, Tools, Document | Text, Tools        |
+ * | [CostOptimized.GPT4oMini]        | Fast      | $0.15-$0.6         | Text, Image, Tools           | Text, Tools        |
+ * | [CostOptimized.O1Mini]           | Slow      | $1.1-$4.4          | Text                         | Text               |
+ * | [CostOptimized.O3Mini]           | Medium    | $1.1-$4.4          | Text, Tools                  | Text, Tools        |
+ * | [Embeddings.TextEmbedding3Small] | Medium    | $0.02              | Text                         | Text               |
+ * | [Embeddings.TextEmbedding3Large] | Slow      | $0.13              | Text                         | Text               |
+ * | [Embeddings.TextEmbeddingAda002] | Slow      | $0.1               | Text                         | Text               |
+ * | [Moderation.Text]                | Medium    | -                  | Text                         | Moderation Result  |
+ * | [Moderation.Omni]                | Medium    | $4.40              | Text                         | Moderation Result  |
+ *
  */
 public object OpenAIModels : LLModelDefinitions {
     // TODO: support thinking tokens
@@ -54,7 +60,8 @@ public object OpenAIModels : LLModelDefinitions {
             provider = LLMProvider.OpenAI,
             id = "omni-moderation-latest",
             capabilities = listOf(
-                LLMCapability.Moderation, LLMCapability.Vision.Image
+                LLMCapability.Moderation,
+                LLMCapability.Vision.Image
             ),
             contextLength = 32_768,
         )
@@ -88,25 +95,34 @@ public object OpenAIModels : LLModelDefinitions {
      */
     public object Reasoning {
         /**
-         * GPT-4o mini is a smaller, more affordable version of GPT-4o that maintains high quality while being
-         * more cost-effective. It's designed for tasks that don't require the full capabilities of GPT-4o.
+         * o4-mini is a smaller, more affordable version of o4 that maintains high quality while being
+         * more cost-effective. It's optimized for fast, effective reasoning with exceptionally efficient
+         * performance in coding and visual tasks.
          *
-         * 128K context window.
-         * 16,384 max output tokens
-         * Oct 01, 2023 knowledge cutoff
+         * 200,000 context window
+         * 100,000 max output tokens
+         * Jun 01, 2024 knowledge cutoff
+         * Reasoning token support
          *
-         * @see <a href="https://platform.openai.com/docs/models/gpt-4o-mini">
+         *
+         * @see <a href="https://platform.openai.com/docs/models/o4-mini">
          */
-        public val GPT4oMini: LLModel = LLModel(
+        public val O4Mini: LLModel = LLModel(
             provider = LLMProvider.OpenAI,
-            id = "gpt-4o-mini",
+            id = "o4-mini",
             capabilities = listOf(
-                LLMCapability.Temperature, LLMCapability.Schema.JSON.Full, LLMCapability.Speculation,
-                LLMCapability.Tools, LLMCapability.ToolChoice, LLMCapability.Vision.Image, LLMCapability.Completion,
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Schema.JSON.Standard,
+                LLMCapability.Speculation,
+                LLMCapability.Tools,
+                LLMCapability.ToolChoice,
+                LLMCapability.Vision.Image,
+                LLMCapability.Document,
+                LLMCapability.Completion,
                 LLMCapability.MultipleChoices
             ),
-            contextLength = 128_000,
-            maxOutputTokens = 16_384,
+            contextLength = 200_000,
+            maxOutputTokens = 100_000,
         )
 
         /**
@@ -126,8 +142,13 @@ public object OpenAIModels : LLModelDefinitions {
             provider = LLMProvider.OpenAI,
             id = "o3-mini",
             capabilities = listOf(
-                LLMCapability.Tools, LLMCapability.ToolChoice, LLMCapability.Speculation,
-                LLMCapability.Schema.JSON.Full, LLMCapability.Completion, LLMCapability.MultipleChoices
+                LLMCapability.Tools,
+                LLMCapability.ToolChoice,
+                LLMCapability.Speculation,
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Schema.JSON.Standard,
+                LLMCapability.Completion,
+                LLMCapability.MultipleChoices
             ),
             contextLength = 200_000,
             maxOutputTokens = 100_000,
@@ -150,7 +171,10 @@ public object OpenAIModels : LLModelDefinitions {
             provider = LLMProvider.OpenAI,
             id = "o1-mini",
             capabilities = listOf(
-                LLMCapability.Speculation, LLMCapability.Schema.JSON.Full, LLMCapability.Completion,
+                LLMCapability.Speculation,
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Schema.JSON.Standard,
+                LLMCapability.Completion,
                 LLMCapability.MultipleChoices
             ),
             contextLength = 128_000,
@@ -174,8 +198,14 @@ public object OpenAIModels : LLModelDefinitions {
             provider = LLMProvider.OpenAI,
             id = "o3",
             capabilities = listOf(
-                LLMCapability.Tools, LLMCapability.ToolChoice, LLMCapability.Speculation,
-                LLMCapability.Schema.JSON.Full, LLMCapability.Vision.Image, LLMCapability.Completion,
+                LLMCapability.Tools,
+                LLMCapability.ToolChoice,
+                LLMCapability.Speculation,
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Schema.JSON.Standard,
+                LLMCapability.Vision.Image,
+                LLMCapability.Document,
+                LLMCapability.Completion,
                 LLMCapability.MultipleChoices
             ),
             contextLength = 200_000,
@@ -198,8 +228,14 @@ public object OpenAIModels : LLModelDefinitions {
             provider = LLMProvider.OpenAI,
             id = "o1",
             capabilities = listOf(
-                LLMCapability.Tools, LLMCapability.ToolChoice, LLMCapability.Speculation,
-                LLMCapability.Schema.JSON.Full, LLMCapability.Vision.Image, LLMCapability.Completion,
+                LLMCapability.Tools,
+                LLMCapability.ToolChoice,
+                LLMCapability.Speculation,
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Schema.JSON.Standard,
+                LLMCapability.Vision.Image,
+                LLMCapability.Document,
+                LLMCapability.Completion,
                 LLMCapability.MultipleChoices
             ),
             contextLength = 200_000,
@@ -230,8 +266,15 @@ public object OpenAIModels : LLModelDefinitions {
             provider = LLMProvider.OpenAI,
             id = "gpt-4o",
             capabilities = listOf(
-                LLMCapability.Temperature, LLMCapability.ToolChoice, LLMCapability.Schema.JSON.Full,
-                LLMCapability.Speculation, LLMCapability.Tools, LLMCapability.Vision.Image, LLMCapability.Completion,
+                LLMCapability.Temperature,
+                LLMCapability.ToolChoice,
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Schema.JSON.Standard,
+                LLMCapability.Speculation,
+                LLMCapability.Tools,
+                LLMCapability.Vision.Image,
+                LLMCapability.Document,
+                LLMCapability.Completion,
                 LLMCapability.MultipleChoices
             ),
             contextLength = 128_000,
@@ -239,13 +282,12 @@ public object OpenAIModels : LLModelDefinitions {
         )
 
         /**
-         * GPT-4.1 is a flagship model for complex tasks.
+         * GPT-4.1 is a model for complex tasks.
          * It is well suited for problem solving across domains.
          *
          * 1,047,576 context window
          * 32,768 max output tokens
          * Jun 01, 2024 knowledge cutoff
-         *
          *
          * @see <a href="https://platform.openai.com/docs/models/gpt-4.1">
          */
@@ -253,12 +295,107 @@ public object OpenAIModels : LLModelDefinitions {
             provider = LLMProvider.OpenAI,
             id = "gpt-4.1",
             capabilities = listOf(
-                LLMCapability.Temperature, LLMCapability.Schema.JSON.Full, LLMCapability.Speculation,
-                LLMCapability.Tools, LLMCapability.ToolChoice, LLMCapability.Vision.Image, LLMCapability.Completion,
+                LLMCapability.Temperature,
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Schema.JSON.Standard,
+                LLMCapability.Speculation,
+                LLMCapability.Tools,
+                LLMCapability.ToolChoice,
+                LLMCapability.Vision.Image,
+                LLMCapability.Document,
+                LLMCapability.Completion,
                 LLMCapability.MultipleChoices
             ),
             contextLength = 1_047_576,
             maxOutputTokens = 32_768,
+        )
+
+        /**
+         * GPT-5 is a flagship model for coding, reasoning, and agentic tasks across domains.
+         *
+         * 400,000 context window
+         * 128,000 max output tokens
+         * Sep 30, 2024 knowledge cutoff
+         * Reasoning token support
+         *
+         * @see <a href="https://platform.openai.com/docs/models/gpt-5">
+         */
+        public val GPT5: LLModel = LLModel(
+            provider = LLMProvider.OpenAI,
+            id = "gpt-5",
+            capabilities = listOf(
+                LLMCapability.Temperature,
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Schema.JSON.Standard,
+                LLMCapability.Speculation,
+                LLMCapability.Tools,
+                LLMCapability.ToolChoice,
+                LLMCapability.Vision.Image,
+                LLMCapability.Document,
+                LLMCapability.Completion,
+                LLMCapability.MultipleChoices
+            ),
+            contextLength = 400_000,
+            maxOutputTokens = 128_000,
+        )
+
+        /**
+         * GPT-5 mini is a faster, cost-efficient version of GPT-5 for well-defined tasks.
+         *
+         * 400,000 context window
+         * 128,000 max output tokens
+         * May 31, 2024 knowledge cutoff
+         * Reasoning token support
+         *
+         * @see <a href="https://platform.openai.com/docs/models/gpt-5-mini">
+         */
+        public val GPT5Mini: LLModel = LLModel(
+            provider = LLMProvider.OpenAI,
+            id = "gpt-5-mini",
+            capabilities = listOf(
+                LLMCapability.Temperature,
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Schema.JSON.Standard,
+                LLMCapability.Speculation,
+                LLMCapability.Tools,
+                LLMCapability.ToolChoice,
+                LLMCapability.Vision.Image,
+                LLMCapability.Document,
+                LLMCapability.Completion,
+                LLMCapability.MultipleChoices
+            ),
+            contextLength = 400_000,
+            maxOutputTokens = 128_000,
+        )
+
+        /**
+         * GPT-5 nano is the fastest, most cost-efficient version of GPT-5.
+         * Great for summarization and classification tasks.
+         *
+         * 400,000 context window
+         * 128,000 max output tokens
+         * May 31, 2024 knowledge cutoff
+         * Reasoning token support
+         *
+         * @see <a href="https://platform.openai.com/docs/models/gpt-5-nano">
+         */
+        public val GPT5Nano: LLModel = LLModel(
+            provider = LLMProvider.OpenAI,
+            id = "gpt-5-nano",
+            capabilities = listOf(
+                LLMCapability.Temperature,
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Schema.JSON.Standard,
+                LLMCapability.Speculation,
+                LLMCapability.Tools,
+                LLMCapability.ToolChoice,
+                LLMCapability.Vision.Image,
+                LLMCapability.Document,
+                LLMCapability.Completion,
+                LLMCapability.MultipleChoices
+            ),
+            contextLength = 400_000,
+            maxOutputTokens = 128_000,
         )
     }
 
@@ -283,7 +420,10 @@ public object OpenAIModels : LLModelDefinitions {
             provider = LLMProvider.OpenAI,
             id = "gpt-4o-mini-audio-preview",
             capabilities = listOf(
-                LLMCapability.Temperature, LLMCapability.Completion, LLMCapability.Tools, LLMCapability.ToolChoice,
+                LLMCapability.Temperature,
+                LLMCapability.Completion,
+                LLMCapability.Tools,
+                LLMCapability.ToolChoice,
                 LLMCapability.Audio
             ),
             contextLength = 128_000,
@@ -303,7 +443,10 @@ public object OpenAIModels : LLModelDefinitions {
             provider = LLMProvider.OpenAI,
             id = "gpt-4o-audio-preview",
             capabilities = listOf(
-                LLMCapability.Temperature, LLMCapability.Completion, LLMCapability.Tools, LLMCapability.ToolChoice,
+                LLMCapability.Temperature,
+                LLMCapability.Completion,
+                LLMCapability.Tools,
+                LLMCapability.ToolChoice,
                 LLMCapability.Audio
             ),
             contextLength = 128_000,
@@ -317,30 +460,6 @@ public object OpenAIModels : LLModelDefinitions {
      * and affordability, catering to various tasks like reasoning, speculation, and tools integration.
      */
     public object CostOptimized {
-        /**
-         * o4-mini is a smaller, more affordable version of o4 that maintains high quality while being
-         * more cost-effective. It's optimized for fast, effective reasoning with exceptionally efficient
-         * performance in coding and visual tasks..
-         *
-         * 200,000 context window
-         * 100,000 max output tokens
-         * Jun 01, 2024 knowledge cutoff
-         * Reasoning token support
-         *
-         *
-         * @see <a href="https://platform.openai.com/docs/models/o4-mini">
-         */
-        public val O4Mini: LLModel = LLModel(
-            provider = LLMProvider.OpenAI,
-            id = "o4-mini",
-            capabilities = listOf(
-                LLMCapability.Schema.JSON.Full, LLMCapability.Speculation,
-                LLMCapability.Tools, LLMCapability.ToolChoice, LLMCapability.Vision.Image, LLMCapability.Completion,
-                LLMCapability.MultipleChoices
-            ),
-            contextLength = 200_000,
-            maxOutputTokens = 100_000,
-        )
 
         /**
          * GPT-4.1-nano is the smallest and most affordable model in the GPT-4.1 family.
@@ -356,8 +475,15 @@ public object OpenAIModels : LLModelDefinitions {
             provider = LLMProvider.OpenAI,
             id = "gpt-4.1-nano",
             capabilities = listOf(
-                LLMCapability.Temperature, LLMCapability.Schema.JSON.Full, LLMCapability.Speculation,
-                LLMCapability.Tools, LLMCapability.ToolChoice, LLMCapability.Vision.Image, LLMCapability.Completion,
+                LLMCapability.Temperature,
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Schema.JSON.Standard,
+                LLMCapability.Speculation,
+                LLMCapability.Tools,
+                LLMCapability.ToolChoice,
+                LLMCapability.Vision.Image,
+                LLMCapability.Document,
+                LLMCapability.Completion,
                 LLMCapability.MultipleChoices
             ),
             contextLength = 1_047_576,
@@ -379,8 +505,15 @@ public object OpenAIModels : LLModelDefinitions {
             provider = LLMProvider.OpenAI,
             id = "gpt-4.1-mini",
             capabilities = listOf(
-                LLMCapability.Temperature, LLMCapability.Schema.JSON.Full, LLMCapability.Speculation,
-                LLMCapability.Tools, LLMCapability.ToolChoice, LLMCapability.Vision.Image, LLMCapability.Completion,
+                LLMCapability.Temperature,
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Schema.JSON.Standard,
+                LLMCapability.Speculation,
+                LLMCapability.Tools,
+                LLMCapability.ToolChoice,
+                LLMCapability.Vision.Image,
+                LLMCapability.Document,
+                LLMCapability.Completion,
                 LLMCapability.MultipleChoices
             ),
             contextLength = 1_047_576,
@@ -388,9 +521,38 @@ public object OpenAIModels : LLModelDefinitions {
         )
 
         /**
-         * See [Reasoning.GPT4oMini]
+         * GPT-4o mini is a smaller, more affordable version of GPT-4o that maintains high quality while being
+         * more cost-effective. It's designed for tasks that don't require the full capabilities of GPT-4o.
+         *
+         * 128K context window.
+         * 16,384 max output tokens
+         * Oct 01, 2023 knowledge cutoff
+         *
+         * @see <a href="https://platform.openai.com/docs/models/gpt-4o-mini">
          */
-        public val GPT4oMini: LLModel get() = Reasoning.GPT4oMini
+        public val GPT4oMini: LLModel = LLModel(
+            provider = LLMProvider.OpenAI,
+            id = "gpt-4o-mini",
+            capabilities = listOf(
+                LLMCapability.Temperature,
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Schema.JSON.Standard,
+                LLMCapability.Speculation,
+                LLMCapability.Tools,
+                LLMCapability.ToolChoice,
+                LLMCapability.Vision.Image,
+                LLMCapability.Document,
+                LLMCapability.Completion,
+                LLMCapability.MultipleChoices
+            ),
+            contextLength = 128_000,
+            maxOutputTokens = 16_384,
+        )
+
+        /**
+         * See [Reasoning.O4Mini]
+         */
+        public val O4Mini: LLModel get() = Reasoning.O4Mini
 
         /**
          * See [Reasoning.O1Mini]
@@ -429,7 +591,7 @@ public object OpenAIModels : LLModelDefinitions {
             provider = LLMProvider.OpenAI,
             id = "text-embedding-3-small",
             capabilities = listOf(
-                LLMCapability.Schema.JSON.Full, LLMCapability.Embed
+                LLMCapability.Embed
             ),
             contextLength = 8_191,
         )
@@ -457,7 +619,7 @@ public object OpenAIModels : LLModelDefinitions {
             provider = LLMProvider.OpenAI,
             id = "text-embedding-3-large",
             capabilities = listOf(
-                LLMCapability.Schema.JSON.Full, LLMCapability.Embed
+                LLMCapability.Embed
             ),
             contextLength = 8_191,
         )
@@ -483,7 +645,7 @@ public object OpenAIModels : LLModelDefinitions {
             provider = LLMProvider.OpenAI,
             id = "text-embedding-ada-002",
             capabilities = listOf(
-                LLMCapability.Schema.JSON.Full, LLMCapability.Embed
+                LLMCapability.Embed
             ),
             contextLength = 8_191,
         )

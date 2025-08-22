@@ -18,10 +18,10 @@ import kotlin.uuid.ExperimentalUuidApi
 
 /**
  * This example demonstrates how to use the file-based checkpoint provider with a persistent agent.
- * 
+ *
  * The JVMFileAgentCheckpointStorageProvider stores agent checkpoints in a file system,
  * allowing the agent's state to persist across multiple runs.
- * 
+ *
  * This example shows:
  * 1. How to create a file-based checkpoint provider
  * 2. How to configure an agent with the file-based checkpoint provider
@@ -36,13 +36,13 @@ fun main() = runBlocking {
     // Create a temporary directory for storing checkpoints
     val checkpointDir = Files.createTempDirectory("agent-checkpoints")
     println("Checkpoint directory: $checkpointDir")
-    
+
     // Create the file-based checkpoint provider
     val provider = JVMFilePersistencyStorageProvider(checkpointDir, "persistent-agent-example")
-    
+
     // Create a unique agent ID to identify this agent's checkpoints
     val agentId = "persistent-agent-example"
-    
+
     // Create tool registry with basic tools
     val toolRegistry = ToolRegistry {
         tool(AskUser)
@@ -59,7 +59,7 @@ fun main() = runBlocking {
     )
 
     println("Creating and running agent with continuous persistence...")
-    
+
     // Create the agent with the file-based checkpoint provider and continuous persistence
     val agent = AIAgent(
         promptExecutor = executor,
@@ -98,7 +98,7 @@ fun main() = runBlocking {
     }
 
     println("\nNow creating a new agent instance with the same ID to demonstrate restoration...")
-    
+
     // Create a new agent instance with the same ID
     // It will automatically restore from the latest checkpoint
     val restoredAgent = AIAgent(
@@ -113,12 +113,12 @@ fun main() = runBlocking {
             enableAutomaticPersistency = true // Enable automatic checkpoint creation
         }
     }
-    
+
     // Run the restored agent with a new input
     // The agent will continue the conversation from where it left off
     val restoredResult = restoredAgent.run("Now I need help with my project.")
     println("Restored agent result: $restoredResult")
-    
+
     // Get the latest checkpoint after the second run
     val latestCheckpoint = provider.getLatestCheckpoint()
     println("\nLatest checkpoint after restoration:")

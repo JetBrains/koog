@@ -23,7 +23,6 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-
 /**
  * Tests for the CustomerSupportAgent.
  * These tests verify that the agent correctly assists support staff and stores information in memory.
@@ -67,7 +66,6 @@ class CustomerSupportTest {
         }
     }
 
-
     /**
      * Test memory provider that stores facts in memory for testing.
      */
@@ -75,17 +73,17 @@ class CustomerSupportTest {
         val facts = mutableMapOf<String, MutableList<Fact>>()
 
         override suspend fun save(fact: Fact, subject: MemorySubject, scope: MemoryScope) {
-            val key = "${subject}_${scope}"
+            val key = "${subject}_$scope"
             facts.getOrPut(key) { mutableListOf() }.add(fact)
         }
 
         override suspend fun load(concept: Concept, subject: MemorySubject, scope: MemoryScope): List<Fact> {
-            val key = "${subject}_${scope}"
+            val key = "${subject}_$scope"
             return facts[key]?.filter { it.concept == concept } ?: emptyList()
         }
 
         override suspend fun loadAll(subject: MemorySubject, scope: MemoryScope): List<Fact> {
-            val key = "${subject}_${scope}"
+            val key = "${subject}_$scope"
             return facts[key] ?: emptyList()
         }
 
@@ -94,7 +92,7 @@ class CustomerSupportTest {
             subject: MemorySubject,
             scope: MemoryScope
         ): List<Fact> {
-            val key = "${subject}_${scope}"
+            val key = "${subject}_$scope"
             return facts[key]?.filter { it.concept.description.contains(description) } ?: emptyList()
         }
 
@@ -102,7 +100,6 @@ class CustomerSupportTest {
             facts.clear()
         }
     }
-
 
     data class ToolCallStats(var toolCallsCount: Int = 0)
 
@@ -201,8 +198,12 @@ class CustomerSupportTest {
         ): String {
             stats.toolCallsCount++
             return when {
-                query.contains("ERR-1001") -> "Query: $query\nResult: Error ERR-1001 indicates a network timeout. Solution: Reset network adapter and update firmware."
-                query.contains("connectivity") -> "Query: $query\nResult: Connectivity issues may be caused by outdated firmware, network congestion, or hardware failure."
+                query.contains(
+                    "ERR-1001"
+                ) -> "Query: $query\nResult: Error ERR-1001 indicates a network timeout. Solution: Reset network adapter and update firmware."
+                query.contains(
+                    "connectivity"
+                ) -> "Query: $query\nResult: Connectivity issues may be caused by outdated firmware, network congestion, or hardware failure."
                 else -> "Query: $query\nNo specific information found."
             }
         }
@@ -270,38 +271,76 @@ class CustomerSupportTest {
         mockExecutor = getMockExecutor(toolRegistry) {
             // Mock responses for memory-related queries
             // Diagnostic tool calls
-            mockLLMToolCall(MockDiagnosticToolSet()::runDiagnosticTest, "device-123", "connectivity") onRequestContains "I need to check the connectivity of device-123"
-            mockLLMToolCall(MockDiagnosticToolSet()::runDiagnostic, "device-456", "ERR-1001") onRequestContains "I need to diagnose error ERR-1001 on device-456"
-            mockLLMToolCall(MockDiagnosticToolSet()::analyzeError, "ERR-1001") onRequestContains "I need to analyze error code ERR-1001"
+            mockLLMToolCall(MockDiagnosticToolSet()::runDiagnosticTest, "device-123", "connectivity") onRequestContains
+                "I need to check the connectivity of device-123"
+            mockLLMToolCall(MockDiagnosticToolSet()::runDiagnostic, "device-456", "ERR-1001") onRequestContains
+                "I need to diagnose error ERR-1001 on device-456"
+            mockLLMToolCall(MockDiagnosticToolSet()::analyzeError, "ERR-1001") onRequestContains
+                "I need to analyze error code ERR-1001"
 
             // User info tool calls
-            mockLLMToolCall(MockUserInfoToolSet()::getUserContactInfo, "user-789") onRequestContains "I need contact information for user-789"
-            mockLLMToolCall(MockUserInfoToolSet()::getUserIssueHistory, "user-789") onRequestContains "I need issue history for user-789"
-            mockLLMToolCall(MockUserInfoToolSet()::getUserPreferences, "user-789") onRequestContains "I need preferences for user-789"
+            mockLLMToolCall(MockUserInfoToolSet()::getUserContactInfo, "user-789") onRequestContains
+                "I need contact information for user-789"
+            mockLLMToolCall(MockUserInfoToolSet()::getUserIssueHistory, "user-789") onRequestContains
+                "I need issue history for user-789"
+            mockLLMToolCall(MockUserInfoToolSet()::getUserPreferences, "user-789") onRequestContains
+                "I need preferences for user-789"
 
             // Knowledge base tool calls
-            mockLLMToolCall(MockKnowledgeBaseToolSet()::getProductInfo, "prod-101") onRequestContains "I need information about product prod-101"
-            mockLLMToolCall(MockKnowledgeBaseToolSet()::searchSolutions, "connectivity issues ERR-1001") onRequestContains "I need solutions for connectivity issues with error ERR-1001"
-            mockLLMToolCall(MockKnowledgeBaseToolSet()::getOrganizationSolutions, "org-202") onRequestContains "I need solutions for organization org-202"
+            mockLLMToolCall(MockKnowledgeBaseToolSet()::getProductInfo, "prod-101") onRequestContains
+                "I need information about product prod-101"
+            mockLLMToolCall(
+                MockKnowledgeBaseToolSet()::searchSolutions,
+                "connectivity issues ERR-1001"
+            ) onRequestContains
+                "I need solutions for connectivity issues with error ERR-1001"
+            mockLLMToolCall(MockKnowledgeBaseToolSet()::getOrganizationSolutions, "org-202") onRequestContains
+                "I need solutions for organization org-202"
 
             // Final result
-            mockLLMToolCall(ProvideStringSubgraphResult, StringSubgraphResult("I've analyzed the information and stored it in memory for future reference.")) onRequestContains "I need to provide a summary of my findings"
+            mockLLMToolCall(
+                ProvideStringSubgraphResult,
+                StringSubgraphResult("I've analyzed the information and stored it in memory for future reference.")
+            ) onRequestContains
+                "I need to provide a summary of my findings"
 
             // Instead of text responses, mock tool calls directly
-            mockLLMToolCall(ProvideStringSubgraphResult, StringSubgraphResult("I've analyzed your device issue and here are the diagnostic results...")) onRequestContains "I'm getting error ERR-1001 on my device"
-            mockLLMToolCall(ProvideStringSubgraphResult, StringSubgraphResult("I've analyzed your product issue and here is the product information...")) onRequestContains "I'm from Acme Corp and we're having issues with product prod789"
+            mockLLMToolCall(
+                ProvideStringSubgraphResult,
+                StringSubgraphResult("I've analyzed your device issue and here are the diagnostic results...")
+            ) onRequestContains
+                "I'm getting error ERR-1001 on my device"
+            mockLLMToolCall(
+                ProvideStringSubgraphResult,
+                StringSubgraphResult("I've analyzed your product issue and here is the product information...")
+            ) onRequestContains
+                "I'm from Acme Corp and we're having issues with product prod789"
 
             // For the first agent, we'll make multiple tool calls
-            mockLLMToolCall(MockUserInfoToolSet()::getUserContactInfo, "user-789") onRequestContains "I need to get user contact info for the first time"
-            mockLLMToolCall(MockUserInfoToolSet()::getUserIssueHistory, "user-789") onRequestContains "I need to get user issue history for the first time"
-            mockLLMToolCall(MockDiagnosticToolSet()::runDiagnosticTest, "device-123", "connectivity") onRequestContains "I need to run a diagnostic test for the first time"
-            mockLLMToolCall(MockKnowledgeBaseToolSet()::searchSolutions, "connectivity issues") onRequestContains "I need to search for solutions for the first time"
-            mockLLMToolCall(ProvideStringSubgraphResult, StringSubgraphResult("I've analyzed your issue and here's what I found...")) onRequestContains "I'm having trouble with my device"
+            mockLLMToolCall(MockUserInfoToolSet()::getUserContactInfo, "user-789") onRequestContains
+                "I need to get user contact info for the first time"
+            mockLLMToolCall(MockUserInfoToolSet()::getUserIssueHistory, "user-789") onRequestContains
+                "I need to get user issue history for the first time"
+            mockLLMToolCall(MockDiagnosticToolSet()::runDiagnosticTest, "device-123", "connectivity") onRequestContains
+                "I need to run a diagnostic test for the first time"
+            mockLLMToolCall(MockKnowledgeBaseToolSet()::searchSolutions, "connectivity issues") onRequestContains
+                "I need to search for solutions for the first time"
+            mockLLMToolCall(
+                ProvideStringSubgraphResult,
+                StringSubgraphResult("I've analyzed your issue and here's what I found...")
+            ) onRequestContains
+                "I'm having trouble with my device"
 
             // For the second agent, we'll make fewer tool calls since it should use memory
-            mockLLMToolCall(MockUserInfoToolSet()::getUserContactInfo, "user-789") onRequestContains "I need to get user contact info again"
-            mockLLMToolCall(ProvideStringSubgraphResult, StringSubgraphResult("I've analyzed your issue again and here's what I found using the information from memory...")) onRequestContains "I'm having the same issue again"
-
+            mockLLMToolCall(MockUserInfoToolSet()::getUserContactInfo, "user-789") onRequestContains
+                "I need to get user contact info again"
+            mockLLMToolCall(
+                ProvideStringSubgraphResult,
+                StringSubgraphResult(
+                    "I've analyzed your issue again and here's what I found using the information from memory..."
+                )
+            ) onRequestContains
+                "I'm having the same issue again"
         }
     }
 
@@ -448,28 +487,60 @@ class CustomerSupportTest {
         val customMockExecutor = getMockExecutor(toolRegistry) {
             // Mock responses for memory-related queries
             // Diagnostic tool calls
-            mockLLMToolCall(MockDiagnosticToolSet()::runDiagnosticTest, "device-123", "connectivity") onRequestContains "I need to check the connectivity of device-123"
-            mockLLMToolCall(MockDiagnosticToolSet()::runDiagnostic, "device-456", "ERR-1001") onRequestContains "I need to diagnose error ERR-1001 on device-456"
-            mockLLMToolCall(MockDiagnosticToolSet()::analyzeError, "ERR-1001") onRequestContains "I need to analyze error code ERR-1001"
+            mockLLMToolCall(MockDiagnosticToolSet()::runDiagnosticTest, "device-123", "connectivity") onRequestContains
+                "I need to check the connectivity of device-123"
+            mockLLMToolCall(MockDiagnosticToolSet()::runDiagnostic, "device-456", "ERR-1001") onRequestContains
+                "I need to diagnose error ERR-1001 on device-456"
+            mockLLMToolCall(MockDiagnosticToolSet()::analyzeError, "ERR-1001") onRequestContains
+                "I need to analyze error code ERR-1001"
 
             // User info tool calls
-            mockLLMToolCall(MockUserInfoToolSet()::getUserContactInfo, "user-789") onRequestContains "I need contact information for user-789"
-            mockLLMToolCall(MockUserInfoToolSet()::getUserIssueHistory, "user-789") onRequestContains "I need issue history for user-789"
-            mockLLMToolCall(MockUserInfoToolSet()::getUserPreferences, "user-789") onRequestContains "I need preferences for user-789"
+            mockLLMToolCall(MockUserInfoToolSet()::getUserContactInfo, "user-789") onRequestContains
+                "I need contact information for user-789"
+            mockLLMToolCall(MockUserInfoToolSet()::getUserIssueHistory, "user-789") onRequestContains
+                "I need issue history for user-789"
+            mockLLMToolCall(MockUserInfoToolSet()::getUserPreferences, "user-789") onRequestContains
+                "I need preferences for user-789"
 
             // Knowledge base tool calls
-            mockLLMToolCall(MockKnowledgeBaseToolSet()::getProductInfo, "prod-101") onRequestContains "I need information about product prod-101"
-            mockLLMToolCall(MockKnowledgeBaseToolSet()::searchSolutions, "connectivity issues ERR-1001") onRequestContains "I need solutions for connectivity issues with error ERR-1001"
-            mockLLMToolCall(MockKnowledgeBaseToolSet()::getOrganizationSolutions, "org-202") onRequestContains "I need solutions for organization org-202"
+            mockLLMToolCall(MockKnowledgeBaseToolSet()::getProductInfo, "prod-101") onRequestContains
+                "I need information about product prod-101"
+            mockLLMToolCall(
+                MockKnowledgeBaseToolSet()::searchSolutions,
+                "connectivity issues ERR-1001"
+            ) onRequestContains
+                "I need solutions for connectivity issues with error ERR-1001"
+            mockLLMToolCall(MockKnowledgeBaseToolSet()::getOrganizationSolutions, "org-202") onRequestContains
+                "I need solutions for organization org-202"
 
             // Final result
-            mockLLMToolCall(ProvideStringSubgraphResult, StringSubgraphResult("I've analyzed the information and stored it in memory for future reference.")) onRequestContains "I need to provide a summary of my findings"
+            mockLLMToolCall(
+                ProvideStringSubgraphResult,
+                StringSubgraphResult("I've analyzed the information and stored it in memory for future reference.")
+            ) onRequestContains
+                "I need to provide a summary of my findings"
 
             // Instead of text responses, mock tool calls directly
-            mockLLMToolCall(ProvideStringSubgraphResult, StringSubgraphResult("I've analyzed your device issue and here are the diagnostic results...")) onRequestContains "I'm getting error ERR-1001 on my device"
-            mockLLMToolCall(ProvideStringSubgraphResult, StringSubgraphResult("I've analyzed your product issue and here is the product information...")) onRequestContains "I'm from Acme Corp and we're having issues with product prod789"
-            mockLLMToolCall(ProvideStringSubgraphResult, StringSubgraphResult("I've analyzed your issue and here's what I found...")) onRequestContains "I'm having trouble with my device"
-            mockLLMToolCall(ProvideStringSubgraphResult, StringSubgraphResult("I've analyzed your issue again and here's what I found...")) onRequestContains "I'm having the same issue again"
+            mockLLMToolCall(
+                ProvideStringSubgraphResult,
+                StringSubgraphResult("I've analyzed your device issue and here are the diagnostic results...")
+            ) onRequestContains
+                "I'm getting error ERR-1001 on my device"
+            mockLLMToolCall(
+                ProvideStringSubgraphResult,
+                StringSubgraphResult("I've analyzed your product issue and here is the product information...")
+            ) onRequestContains
+                "I'm from Acme Corp and we're having issues with product prod789"
+            mockLLMToolCall(
+                ProvideStringSubgraphResult,
+                StringSubgraphResult("I've analyzed your issue and here's what I found...")
+            ) onRequestContains
+                "I'm having trouble with my device"
+            mockLLMToolCall(
+                ProvideStringSubgraphResult,
+                StringSubgraphResult("I've analyzed your issue again and here's what I found...")
+            ) onRequestContains
+                "I'm having the same issue again"
 
             mockTool(MockUserInfoToolSet()::getUserContactInfo).does {
                 userInfoToolCallsCount++

@@ -9,18 +9,27 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.extension.dropTrailingToolCalls
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentPipeline
+import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.tools.annotations.LLMDescription
-import ai.koog.agents.features.common.config.FeatureConfig
 import ai.koog.agents.memory.config.MemoryScopeType
 import ai.koog.agents.memory.config.MemoryScopesProfile
-import ai.koog.agents.memory.model.*
+import ai.koog.agents.memory.model.Concept
+import ai.koog.agents.memory.model.DefaultTimeProvider
 import ai.koog.agents.memory.model.DefaultTimeProvider.getCurrentTimestamp
+import ai.koog.agents.memory.model.Fact
+import ai.koog.agents.memory.model.FactType
+import ai.koog.agents.memory.model.MemoryScope
+import ai.koog.agents.memory.model.MemorySubject
+import ai.koog.agents.memory.model.MultipleFacts
+import ai.koog.agents.memory.model.SingleFact
 import ai.koog.agents.memory.prompts.MemoryPrompts
 import ai.koog.agents.memory.providers.AgentMemoryProvider
 import ai.koog.agents.memory.providers.NoMemory
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.structure.StructuredOutput
+import ai.koog.prompt.structure.StructuredOutputConfig
 import ai.koog.prompt.structure.json.JsonStructuredData
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.Serializable
@@ -410,10 +419,14 @@ public class AgentMemory(
                     when (fact) {
                         is SingleFact -> {
                             val existingFact = singleFactsByKeyword[fact.concept.keyword]
-                            logger.info { "Processing single fact: ${fact.value}, existing: ${existingFact?.second?.value}" }
+                            logger.info {
+                                "Processing single fact: ${fact.value}, existing: ${existingFact?.second?.value}"
+                            }
                             // Replace fact only if current subject is more specific (lower ordinal)
                             if (existingFact == null || subject.priorityLevel < existingFact.first.priorityLevel) {
-                                logger.info { "Using fact from subject $subject (priorityLevel: ${subject.priorityLevel})" }
+                                logger.info {
+                                    "Using fact from subject $subject (priorityLevel: ${subject.priorityLevel})"
+                                }
                                 singleFactsByKeyword[fact.concept.keyword] = subject to fact
                             }
                         }
@@ -440,7 +453,9 @@ public class AgentMemory(
             factsByConcept.forEach { (concept, facts) ->
                 llm.writeSession {
                     val message = buildString {
-                        appendLine("Here are the relevant facts from memory about [${concept.keyword}](${concept.description.shortened()}):")
+                        appendLine(
+                            "Here are the relevant facts from memory about [${concept.keyword}](${concept.description.shortened()}):"
+                        )
                         facts.forEach { fact ->
                             when (fact) {
                                 is SingleFact -> appendLine(
@@ -517,8 +532,12 @@ internal suspend fun AIAgentLLMWriteSession.retrieveFactsFromHistory(
                     is Message.System -> append("<user>\n${message.content}\n</user>\n")
                     is Message.User -> append("<user>\n${message.content}\n</user>\n")
                     is Message.Assistant -> append("<assistant>\n${message.content}\n</assistant>\n")
-                    is Message.Tool.Call -> append("<tool_call tool=${message.tool}>\n${message.content}\n</tool_call>\n")
-                    is Message.Tool.Result -> append("<tool_result tool=${message.tool}>\n${message.content}\n</tool_result>\n")
+                    is Message.Tool.Call -> append(
+                        "<tool_call tool=${message.tool}>\n${message.content}\n</tool_call>\n"
+                    )
+                    is Message.Tool.Result -> append(
+                        "<tool_result tool=${message.tool}>\n${message.content}\n</tool_result>\n"
+                    )
                 }
             }
             append("</${MemoryPrompts.historyWrapperTag}>\n")
@@ -526,8 +545,8 @@ internal suspend fun AIAgentLLMWriteSession.retrieveFactsFromHistory(
 
         // Put Compression prompt as a System instruction
         val newPrompt = Prompt.build(id = oldPrompt.id) {
-            system (promptForCompression)
-            user (combinedMessage)
+            system(promptForCompression)
+            user(combinedMessage)
         }
 
         return@rewritePrompt newPrompt
@@ -537,12 +556,21 @@ internal suspend fun AIAgentLLMWriteSession.retrieveFactsFromHistory(
 
     val facts = when (concept.factType) {
         FactType.SINGLE -> {
-            val response = requestLLMStructured(JsonStructuredData.createJsonStructure<FactStructure>())
-            SingleFact(concept = concept, value = response.getOrNull()?.structure?.fact ?: "No facts extracted", timestamp = timestamp)
+            val response = requestLLMStructured(
+                config = StructuredOutputConfig(default = StructuredOutput.Manual(JsonStructuredData.createJsonStructure<FactStructure>()))
+            )
+
+            SingleFact(
+                concept = concept,
+                value = response.getOrNull()?.structure?.fact ?: "No facts extracted",
+                timestamp = timestamp
+            )
         }
 
         FactType.MULTIPLE -> {
-            val response = requestLLMStructured(JsonStructuredData.createJsonStructure<FactListStructure>())
+            val response = requestLLMStructured(
+                config = StructuredOutputConfig(default = StructuredOutput.Manual(JsonStructuredData.createJsonStructure<FactListStructure>()))
+            )
             val factsList = response.getOrNull()?.structure?.facts ?: emptyList()
             MultipleFacts(concept = concept, values = factsList.map { it.fact }, timestamp = timestamp)
         }
@@ -601,5 +629,3 @@ public fun AIAgentContextBase.memory(): AgentMemory = featureOrThrow(AgentMemory
  * @return The result of the action
  */
 public suspend fun <T> AIAgentContextBase.withMemory(action: suspend AgentMemory.() -> T): T = memory().action()
-
-

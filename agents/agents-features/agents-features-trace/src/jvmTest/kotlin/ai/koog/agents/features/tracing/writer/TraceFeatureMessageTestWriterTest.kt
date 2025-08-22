@@ -10,22 +10,21 @@ import ai.koog.agents.core.feature.model.AIAgentNodeExecutionErrorEvent
 import ai.koog.agents.core.feature.model.BeforeLLMCallEvent
 import ai.koog.agents.core.feature.model.ToolCallEvent
 import ai.koog.agents.core.feature.model.ToolCallResultEvent
-import ai.koog.agents.features.tracing.mock.createAgent
 import ai.koog.agents.features.tracing.feature.Tracing
+import ai.koog.agents.features.tracing.mock.RecursiveTool
 import ai.koog.agents.features.tracing.mock.TestFeatureMessageWriter
 import ai.koog.agents.features.tracing.mock.TestLogger
-import ai.koog.agents.features.tracing.mock.RecursiveTool
+import ai.koog.agents.features.tracing.mock.createAgent
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.utils.use
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Instant
+import org.junit.jupiter.api.Assertions.assertEquals
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
-import kotlin.test.assertEquals
 import kotlin.test.assertFails
 
 class TraceFeatureMessageTestWriterTest {
@@ -38,10 +37,8 @@ class TraceFeatureMessageTestWriterTest {
     }
 
     @Test
-    fun `test subsequent LLM calls`() = runBlocking {
-
+    fun `test subsequent LLM calls`() = runTest {
         val strategy = strategy("tracing-test-strategy") {
-
             val setPrompt by nodeUpdatePrompt<String>("Set prompt") {
                 system("System 1")
                 user("User 1")
@@ -82,25 +79,28 @@ class TraceFeatureMessageTestWriterTest {
         assertEquals(2, llmStartEvents.size)
         assertEquals(
             listOf("User 0", "User 1", ""),
-            llmStartEvents[0].prompt.messages.filter { it.role == Message.Role.User }.map { it.content })
+            llmStartEvents[0].prompt.messages.filter { it.role == Message.Role.User }.map { it.content }
+        )
         assertEquals(
             listOf("User 0", "User 1", "", "User 2", ""),
-            llmStartEvents[1].prompt.messages.filter { it.role == Message.Role.User }.map { it.content })
+            llmStartEvents[1].prompt.messages.filter { it.role == Message.Role.User }.map { it.content }
+        )
     }
 
     @Test
-    fun `test nonexistent tool call`() = runBlocking {
-
+    fun `test nonexistent tool call`() = runTest {
         val strategy = strategy<String, String>("tracing-tool-call-test") {
             val callTool by nodeExecuteTool("Tool call")
-            edge(nodeStart forwardTo callTool transformed { _ ->
-                Message.Tool.Call(
-                    id = "0",
-                    tool = "there is no tool with this name",
-                    content = "{}",
-                    metaInfo = ResponseMetaInfo(timestamp = Instant.parse("2023-01-01T00:00:00Z"))
-                )
-            })
+            edge(
+                nodeStart forwardTo callTool transformed { _ ->
+                    Message.Tool.Call(
+                        id = "0",
+                        tool = "there is no tool with this name",
+                        content = "{}",
+                        metaInfo = ResponseMetaInfo(timestamp = Instant.parse("2023-01-01T00:00:00Z"))
+                    )
+                }
+            )
             edge(callTool forwardTo nodeFinish transformed { input -> input.content })
         }
 
@@ -114,7 +114,10 @@ class TraceFeatureMessageTestWriterTest {
             }
         }
 
-        val throwable = assertFails { agent.run("") }
+        val throwable = assertFails {
+            agent.run("")
+            agent.close()
+        }
         assertEquals(
             "Tool \"there is no tool with this name\" is not defined",
             throwable.message
@@ -122,18 +125,19 @@ class TraceFeatureMessageTestWriterTest {
     }
 
     @Test
-    fun `test existing tool call`() = runBlocking {
-
+    fun `test existing tool call`() = runTest {
         val strategy = strategy<String, String>("tracing-tool-call-test") {
             val callTool by nodeExecuteTool("Tool call")
-            edge(nodeStart forwardTo callTool transformed { _ ->
-                Message.Tool.Call(
-                    id = "0",
-                    tool = DummyTool().name,
-                    content = "{}",
-                    metaInfo = ResponseMetaInfo(timestamp = Instant.parse("2023-01-01T00:00:00Z"))
-                )
-            })
+            edge(
+                nodeStart forwardTo callTool transformed { _ ->
+                    Message.Tool.Call(
+                        id = "0",
+                        tool = DummyTool().name,
+                        content = "{}",
+                        metaInfo = ResponseMetaInfo(timestamp = Instant.parse("2023-01-01T00:00:00Z"))
+                    )
+                }
+            )
             edge(callTool forwardTo nodeFinish transformed { input -> input.content })
         }
 
@@ -157,18 +161,19 @@ class TraceFeatureMessageTestWriterTest {
     }
 
     @Test
-    fun `test recursive tool call`() = runBlocking {
-
+    fun `test recursive tool call`() = runTest {
         val strategy = strategy<String, String>("recursive-tool-call-test") {
             val callTool by nodeExecuteTool("Tool call")
-            edge(nodeStart forwardTo callTool transformed { _ ->
-                Message.Tool.Call(
-                    id = "0",
-                    tool = RecursiveTool().name,
-                    content = "{}",
-                    metaInfo = ResponseMetaInfo(timestamp = Instant.parse("2023-01-01T00:00:00Z"))
-                )
-            })
+            edge(
+                nodeStart forwardTo callTool transformed { _ ->
+                    Message.Tool.Call(
+                        id = "0",
+                        tool = RecursiveTool().name,
+                        content = "{}",
+                        metaInfo = ResponseMetaInfo(timestamp = Instant.parse("2023-01-01T00:00:00Z"))
+                    )
+                }
+            )
             edge(callTool forwardTo nodeFinish transformed { input -> input.content })
         }
 
@@ -191,20 +196,21 @@ class TraceFeatureMessageTestWriterTest {
     }
 
     @Test
-    fun `test llm tool call`() = runBlocking {
-
+    fun `test llm tool call`() = runTest {
         val dummyTool = DummyTool()
 
         val strategy = strategy<String, String>("llm-tool-call-test") {
             val callTool by nodeExecuteTool("Tool call")
-            edge(nodeStart forwardTo callTool transformed { _ ->
-                Message.Tool.Call(
-                    id = "0",
-                    tool = dummyTool.name,
-                    content = "{}",
-                    metaInfo = ResponseMetaInfo(timestamp = Instant.parse("2023-01-01T00:00:00Z"))
-                )
-            })
+            edge(
+                nodeStart forwardTo callTool transformed { _ ->
+                    Message.Tool.Call(
+                        id = "0",
+                        tool = dummyTool.name,
+                        content = "{}",
+                        metaInfo = ResponseMetaInfo(timestamp = Instant.parse("2023-01-01T00:00:00Z"))
+                    )
+                }
+            )
             edge(callTool forwardTo nodeFinish transformed { input -> input.content })
         }
 
@@ -231,7 +237,6 @@ class TraceFeatureMessageTestWriterTest {
 
     @Test
     fun `test agent with node execution error`() = runTest {
-
         val agentId = "test-agent-id"
         val nodeWithErrorName = "node-with-error"
         val testErrorMessage = "Test error"
@@ -243,8 +248,7 @@ class TraceFeatureMessageTestWriterTest {
                 // Get expected stack trace before throwing exception
                 try {
                     throw IllegalStateException(testErrorMessage)
-                }
-                catch (t: IllegalStateException) {
+                } catch (t: IllegalStateException) {
                     expectedStackTrace = t.stackTraceToString()
                     throw t
                 }

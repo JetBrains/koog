@@ -68,7 +68,6 @@ private fun ToolParameterDescriptor.toToolParameterModel(): ToolParameterModel =
     itemType = (type as? ToolParameterType.List)?.toToolArrayItemType(),
 )
 
-
 private fun <T : Enum<T>> ToolParameterType.Enum.toToolEnumValues(): List<String> = entries.asList()
 
 private fun ToolParameterType.List.toToolArrayItemType(): ToolArrayItemTypeModel = ToolArrayItemTypeModel(
@@ -76,4 +75,3 @@ private fun ToolParameterType.List.toToolArrayItemType(): ToolArrayItemTypeModel
     enum = (itemsType as? ToolParameterType.Enum)?.toToolEnumValues(),
     items = (itemsType as? ToolParameterType.List)?.toToolArrayItemType()
 )
-

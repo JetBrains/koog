@@ -4,16 +4,20 @@ import ai.koog.embeddings.base.Vector
 import ai.koog.rag.vector.mocks.MockDocument
 import ai.koog.rag.vector.mocks.MockDocumentProvider
 import ai.koog.rag.vector.mocks.MockFileSystem
-import ai.koog.rag.vector.mocks.MockFileSystemProvicer
+import ai.koog.rag.vector.mocks.MockFileSystemProvider
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class FileVectorStorageTest {
     private fun createTestStorage(): FileVectorStorage<MockDocument, String> {
         val mockFileSystem = MockFileSystem()
         val mockDocumentProvider = MockDocumentProvider(mockFileSystem)
-        val mockFileSystemProvider = MockFileSystemProvicer(mockFileSystem)
+        val mockFileSystemProvider = MockFileSystemProvider(mockFileSystem)
 
         val storage = FileVectorStorage(mockDocumentProvider, mockFileSystemProvider, "test-root")
         return storage

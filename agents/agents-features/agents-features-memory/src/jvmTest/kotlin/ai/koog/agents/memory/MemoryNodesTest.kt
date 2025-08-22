@@ -11,7 +11,12 @@ import ai.koog.agents.memory.feature.AgentMemory
 import ai.koog.agents.memory.feature.nodes.nodeSaveToMemory
 import ai.koog.agents.memory.feature.nodes.nodeSaveToMemoryAutoDetectFacts
 import ai.koog.agents.memory.feature.withMemory
-import ai.koog.agents.memory.model.*
+import ai.koog.agents.memory.model.Concept
+import ai.koog.agents.memory.model.Fact
+import ai.koog.agents.memory.model.FactType
+import ai.koog.agents.memory.model.MemoryScope
+import ai.koog.agents.memory.model.MemorySubject
+import ai.koog.agents.memory.model.SingleFact
 import ai.koog.agents.memory.providers.AgentMemoryProvider
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
@@ -31,19 +36,19 @@ internal class TestMemoryProvider : AgentMemoryProvider {
     val facts = mutableMapOf<String, MutableList<Fact>>()
 
     override suspend fun save(fact: Fact, subject: MemorySubject, scope: MemoryScope) {
-        val key = "${subject}_${scope}"
+        val key = "${subject}_$scope"
         println("[DEBUG_LOG] Saving fact: $fact for key: $key")
         facts.getOrPut(key) { mutableListOf() }.add(fact)
         println("[DEBUG_LOG] Current facts: ${facts[key]}")
     }
 
     override suspend fun load(concept: Concept, subject: MemorySubject, scope: MemoryScope): List<Fact> {
-        val key = "${subject}_${scope}"
+        val key = "${subject}_$scope"
         return facts[key]?.filter { it.concept == concept } ?: emptyList()
     }
 
     override suspend fun loadAll(subject: MemorySubject, scope: MemoryScope): List<Fact> {
-        val key = "${subject}_${scope}"
+        val key = "${subject}_$scope"
         return facts[key] ?: emptyList()
     }
 
@@ -52,7 +57,7 @@ internal class TestMemoryProvider : AgentMemoryProvider {
         subject: MemorySubject,
         scope: MemoryScope
     ): List<Fact> {
-        val key = "${subject}_${scope}"
+        val key = "${subject}_$scope"
         return facts[key]?.filter { it.concept.description.contains(description) } ?: emptyList()
     }
 }
@@ -86,7 +91,10 @@ class MemoryNodesTest {
     }
 
     private fun createMockExecutor() = getMockExecutor {
-        mockLLMAnswer("Here's a summary of the conversation: Test user asked questions and received responses.") onRequestContains "Summarize all the main achievements"
+        mockLLMAnswer(
+            "Here's a summary of the conversation: Test user asked questions and received responses."
+        ) onRequestContains
+            "Summarize all the main achievements"
         mockLLMAnswer(
             """
             [
@@ -181,9 +189,7 @@ class MemoryNodesTest {
             }
         }
 
-
         agent.run("")
-
 
         // Verify that the fact was saved and loaded correctly with timestamp
         assertEquals(1, result.size)
@@ -240,14 +246,18 @@ class MemoryNodesTest {
         assertTrue(facts.isNotEmpty())
 
         // Verify facts have proper concepts and timestamps
-        assertTrue(facts.any { fact ->
-            fact.concept.keyword.contains("user-preference") &&
+        assertTrue(
+            facts.any { fact ->
+                fact.concept.keyword.contains("user-preference") &&
                     fact.timestamp > 0 // Verify timestamp is set
-        })
-        assertTrue(facts.any { fact ->
-            fact.concept.keyword.contains("project-requirement") &&
+            }
+        )
+        assertTrue(
+            facts.any { fact ->
+                fact.concept.keyword.contains("project-requirement") &&
                     fact.timestamp > 0 // Verify timestamp is set
-        })
+            }
+        )
     }
 
     @Test
@@ -385,16 +395,22 @@ class MemoryNodesTest {
 
         val savedFacts = memory.facts.values.flatten()
         assertTrue(savedFacts.size == 2, "There should be exactly 2 saved facts")
-        assertTrue(savedFacts.any { fact ->
-            fact.concept.keyword.contains("user-preference") &&
+        assertTrue(
+            savedFacts.any { fact ->
+                fact.concept.keyword.contains("user-preference") &&
                     fact.timestamp > 0 &&
                     fact is SingleFact
-        }, "User preference facts should be detected")
+            },
+            "User preference facts should be detected"
+        )
 
-        assertTrue(savedFacts.any { fact ->
-            fact.concept.keyword.contains("project") &&
+        assertTrue(
+            savedFacts.any { fact ->
+                fact.concept.keyword.contains("project") &&
                     fact.timestamp > 0 &&
                     fact is SingleFact
-        }, "Project facts should be detected")
+            },
+            "Project facts should be detected"
+        )
     }
 }

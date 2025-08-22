@@ -13,7 +13,7 @@ import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.agents.testing.tools.mockLLMAnswer
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.llm.OllamaModels
-import io.ktor.util.reflect.*
+import io.ktor.util.reflect.instanceOf
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Ignore
 import kotlin.test.Test
@@ -85,7 +85,9 @@ class ParallelNodesTest {
             }
 
             val parallelNode by parallel(
-                node1, node2, node3,
+                node1,
+                node2,
+                node3,
                 name = "parallelNode",
             ) {
                 val output = results.map {
@@ -100,30 +102,30 @@ class ParallelNodesTest {
                     }
 
                     if (it.nodeName == NODE_1 && value2 == val2) {
-                        return@map "Incorrect: $NODE_1 sees changes of $NODE_2 (value2=${val2})"
+                        return@map "Incorrect: $NODE_1 sees changes of $NODE_2 (value2=$val2)"
                     }
                     if (it.nodeName == NODE_1 && value3 == val3) {
-                        return@map "Incorrect: $NODE_1 sees changes of $NODE_3 (value3=${val3})"
+                        return@map "Incorrect: $NODE_1 sees changes of $NODE_3 (value3=$val3)"
                     }
                     if (it.nodeName == NODE_1 && promptModified) {
                         return@map "Incorrect: $NODE_1 sees prompt changes of $NODE_2"
                     }
 
                     if (it.nodeName == NODE_2 && value1 == val1) {
-                        return@map "Incorrect: $NODE_2 sees changes of $NODE_1 (value1=${val1})"
+                        return@map "Incorrect: $NODE_2 sees changes of $NODE_1 (value1=$val1)"
                     }
                     if (it.nodeName == NODE_2 && value3 == val3) {
-                        return@map "Incorrect: $NODE_2 sees changes of $NODE_3 (value3=${val3})"
+                        return@map "Incorrect: $NODE_2 sees changes of $NODE_3 (value3=$val3)"
                     }
                     if (it.nodeName == NODE_2 && !promptModified) {
                         return@map "Incorrect: $NODE_2 does not see its own prompt changes"
                     }
 
                     if (it.nodeName == NODE_3 && value1 == val1) {
-                        return@map "Incorrect: $NODE_3 sees changes of $NODE_1 (value1=${val1})"
+                        return@map "Incorrect: $NODE_3 sees changes of $NODE_1 (value1=$val1)"
                     }
                     if (it.nodeName == NODE_3 && value2 == val2) {
-                        return@map "Incorrect: $NODE_3 sees changes of $NODE_2 (value2=${val2})"
+                        return@map "Incorrect: $NODE_3 sees changes of $NODE_2 (value2=$val2)"
                     }
                     if (it.nodeName == NODE_3 && promptModified) {
                         return@map "Incorrect: $NODE_3 sees prompt changes of $NODE_2"
@@ -152,7 +154,9 @@ class ParallelNodesTest {
             val node3 by node<Unit, String>(NODE_3) { "15" }
 
             val parallelNode by parallel(
-                node1, node2, node3,
+                node1,
+                node2,
+                node3,
                 name = "selectByParallel"
             ) {
                 val selected = selectBy { output -> output.contains("2") }
@@ -177,7 +181,9 @@ class ParallelNodesTest {
             val node3 by node<Unit, String>(NODE_3) { "banana" }
 
             val parallelNode by parallel(
-                node1, node2, node3,
+                node1,
+                node2,
+                node3,
                 name = "selectByMaxParallel"
             ) {
                 val selected = selectByMax { output -> output.length }
@@ -202,7 +208,9 @@ class ParallelNodesTest {
             val node3 by node<Unit, String>(NODE_3) { "third" }
 
             val parallelNode by parallel(
-                node1, node2, node3,
+                node1,
+                node2,
+                node3,
                 name = "selectByIndexParallel"
             ) {
                 val selected = selectByIndex { outputs -> 1 }
@@ -227,7 +235,9 @@ class ParallelNodesTest {
             val node3 by node<Unit, String>(NODE_3) { "World" }
 
             val parallelNode by parallel(
-                node1, node2, node3,
+                node1,
+                node2,
+                node3,
                 name = "foldParallel"
             ) {
                 val folded = fold("") { acc, result -> acc + result }
@@ -255,7 +265,9 @@ class ParallelNodesTest {
             val anotherSuccessNode by node<Unit, String>("another-success-node") { "Another success" }
 
             val parallelNode by parallel(
-                successNode, failureNode, anotherSuccessNode,
+                successNode,
+                failureNode,
+                anotherSuccessNode,
                 name = "failureHandlingParallel"
             ) {
                 val combinedResults = fold("") { initial, result ->
@@ -295,7 +307,8 @@ class ParallelNodesTest {
             }
 
             val parallelNode by parallel(
-                failureNode1, failureNode2,
+                failureNode1,
+                failureNode2,
                 name = "failureHandlingParallel"
             ) {
                 val combinedResults = fold("") { initial, result ->
@@ -319,13 +332,13 @@ class ParallelNodesTest {
             // not sure if it's intended to work like this, leaving OR until figured out
             assertTrue(
                 e.message?.contains(exceptionMessages[0]) == true ||
-                        e.message?.contains(exceptionMessages[1]) == true,
+                    e.message?.contains(exceptionMessages[1]) == true,
                 "Expected exception message to contain '${exceptionMessages[0]}' or '${exceptionMessages[0]}'" +
-                        ", but got: ${e.message}"
+                    ", but got: ${e.message}"
             )
             assertTrue(
                 e.instanceOf(IllegalArgumentException::class) ||
-                        e.instanceOf(RuntimeException::class),
+                    e.instanceOf(RuntimeException::class),
                 "Expected IllegalArgumentException or RuntimeException, but got: ${e::class}"
             )
         }
@@ -345,7 +358,9 @@ class ParallelNodesTest {
             val anotherSuccessNode by node<Unit, String>("another-success-node") { "Another $successMessage" }
 
             val parallelNode by parallel(
-                successNode, failureNode, anotherSuccessNode,
+                successNode,
+                failureNode,
+                anotherSuccessNode,
                 name = "failureHandlingParallel"
             ) {
                 // a failure of not selected node causes the entire parallel operation to fail.
@@ -375,7 +390,9 @@ class ParallelNodesTest {
             val anotherSuccessNode by node<Unit, String>("another-success-node") { "Another $successMessage" }
 
             val parallelNode by parallel(
-                successNode, failureNode, anotherSuccessNode,
+                successNode,
+                failureNode,
+                anotherSuccessNode,
                 name = "failureHandlingParallel"
             ) {
                 // a failure of the selected node should cause the entire parallel operation to fail.
@@ -417,7 +434,8 @@ class ParallelNodesTest {
             }
 
             val parallelNode by parallel(
-                successfulNode, failureHandlingNode,
+                successfulNode,
+                failureHandlingNode,
                 name = "partialFailureParallel"
             ) {
                 val combinedResults = fold("") { initial, result ->

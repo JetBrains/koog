@@ -26,10 +26,16 @@ class LlamaDataModelsTest {
 
         assertNotNull(serialized)
         assert(serialized.contains("\"prompt\"")) { "Serialized JSON should contain 'prompt' field: $serialized" }
-        assert(serialized.contains("\"Tell me about Paris\"")) { "Serialized JSON should contain the prompt text: $serialized" }
-        assert(serialized.contains("\"max_gen_len\"")) { "Serialized JSON should contain 'max_gen_len' field: $serialized" }
+        assert(serialized.contains("\"Tell me about Paris\"")) {
+            "Serialized JSON should contain the prompt text: $serialized"
+        }
+        assert(serialized.contains("\"max_gen_len\"")) {
+            "Serialized JSON should contain 'max_gen_len' field: $serialized"
+        }
         assert(serialized.contains("1000")) { "Serialized JSON should contain the maxGenLen value: $serialized" }
-        assert(serialized.contains("\"temperature\"")) { "Serialized JSON should contain 'temperature' field: $serialized" }
+        assert(serialized.contains("\"temperature\"")) {
+            "Serialized JSON should contain 'temperature' field: $serialized"
+        }
         assert(serialized.contains("0.7")) { "Serialized JSON should contain the temperature value: $serialized" }
     }
 
@@ -45,10 +51,16 @@ class LlamaDataModelsTest {
 
         assertNotNull(serialized)
         assert(serialized.contains("\"prompt\"")) { "Serialized JSON should contain 'prompt' field: $serialized" }
-        assert(serialized.contains("\"Tell me about Paris\"")) { "Serialized JSON should contain the prompt text: $serialized" }
-        assert(serialized.contains("\"max_gen_len\"")) { "Serialized JSON should contain 'max_gen_len' field: $serialized" }
+        assert(serialized.contains("\"Tell me about Paris\"")) {
+            "Serialized JSON should contain the prompt text: $serialized"
+        }
+        assert(serialized.contains("\"max_gen_len\"")) {
+            "Serialized JSON should contain 'max_gen_len' field: $serialized"
+        }
         assert(serialized.contains("1000")) { "Serialized JSON should contain the maxGenLen value: $serialized" }
-        assert(!serialized.contains("\"temperature\"")) { "Serialized JSON should not contain 'temperature' field when it's null: $serialized" }
+        assert(!serialized.contains("\"temperature\"")) {
+            "Serialized JSON should not contain 'temperature' field when it's null: $serialized"
+        }
     }
 
     @Test

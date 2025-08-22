@@ -70,7 +70,9 @@ fun main() {
 
             val agentConfig = AIAgentConfig(
                 prompt = prompt("cook_agent_system_prompt") {
-                    system { "Your are a unity assistant. You can exucute different tasks by interacting with the tools from Unity3d engine." }
+                    system {
+                        "Your are a unity assistant. You can exucute different tasks by interacting with the tools from Unity3d engine."
+                    }
                 },
                 model = OpenAIModels.Chat.GPT4o,
                 maxAgentIterations = 1000
@@ -79,20 +81,23 @@ fun main() {
             val token = System.getenv("OPENAI_API_KEY") ?: error("OPENAI_API_KEY environment variable not set")
             val executor = simpleOpenAIExecutor(token)
 
-
             val strategy = strategy<String, String>("unity_interaction") {
                 val nodePlanIngredients by nodeLLMRequest(allowToolCalls = false)
                 val interactionWithUnity by subgraphWithTask<String>(
-                    //work with plan 
+                    // work with plan
                     tools = toolRegistry.tools,
                 ) { input ->
                     "Start interact with Unity according to the plan: $input"
                 }
 
-                edge(nodeStart forwardTo nodePlanIngredients transformed {
-                    "Create detailed plan for " + agentInput + "" +
-                            "unsing next tools: ${toolRegistry.tools.joinToString("\n") { it.name + "\ndescription:" + it.descriptor }}"
-                })
+                edge(
+                    nodeStart forwardTo nodePlanIngredients transformed {
+                        "Create detailed plan for " + agentInput + "" +
+                            "unsing next tools: ${toolRegistry.tools.joinToString("\n") {
+                                it.name + "\ndescription:" + it.descriptor
+                            }}"
+                    }
+                )
                 edge(nodePlanIngredients forwardTo interactionWithUnity onAssistantMessage { true })
                 edge(interactionWithUnity forwardTo nodeFinish transformed { it.result })
             }
@@ -115,7 +120,9 @@ fun main() {
                         }
 
                         onAgentFinished { eventContext ->
-                            println("OnAgentFinished (agent id: ${eventContext.agentId}, result: ${eventContext.result})")
+                            println(
+                                "OnAgentFinished (agent id: ${eventContext.agentId}, result: ${eventContext.result})"
+                            )
                         }
                     }
                 }
@@ -123,11 +130,9 @@ fun main() {
 
             val run = agent.run(
                 " extend current opened scene for the towerdefence game. " +
-                        "Add more placements for the towers, change the path for the enemies"
+                    "Add more placements for the towers, change the path for the enemies"
             )
             println(run)
-
-
         }
     } finally {
         // Shutdown the Docker container

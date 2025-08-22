@@ -23,15 +23,15 @@ object Models {
             OpenAIModels.Chat.GPT4o,
             OpenAIModels.Chat.GPT4_1,
 
-            OpenAIModels.Reasoning.GPT4oMini,
+            OpenAIModels.Reasoning.O4Mini,
             OpenAIModels.Reasoning.O3Mini,
             OpenAIModels.Reasoning.O1Mini,
             OpenAIModels.Reasoning.O3,
             OpenAIModels.Reasoning.O1,
 
-            OpenAIModels.CostOptimized.O4Mini,
             OpenAIModels.CostOptimized.GPT4_1Nano,
             OpenAIModels.CostOptimized.GPT4_1Mini,
+            OpenAIModels.CostOptimized.GPT4oMini,
 
             OpenAIModels.Audio.GPT4oMiniAudio,
             OpenAIModels.Audio.GPT4oAudio,
@@ -56,20 +56,11 @@ object Models {
     @JvmStatic
     fun googleModels(): Stream<LLModel> {
         return Stream.of(
-            GoogleModels.Gemini1_5Pro,
-            GoogleModels.Gemini1_5ProLatest,
             GoogleModels.Gemini2_5Pro,
-
             GoogleModels.Gemini2_0Flash,
             GoogleModels.Gemini2_0Flash001,
             GoogleModels.Gemini2_0FlashLite,
             GoogleModels.Gemini2_0FlashLite001,
-            GoogleModels.Gemini1_5Flash,
-            GoogleModels.Gemini1_5FlashLatest,
-            GoogleModels.Gemini1_5Flash002,
-            GoogleModels.Gemini1_5Flash8B,
-            GoogleModels.Gemini1_5Flash8B001,
-            GoogleModels.Gemini1_5Flash8BLatest,
             GoogleModels.Gemini2_5Flash,
         )
     }
@@ -115,7 +106,6 @@ object Models {
      * to signal one does not have an API key for this or that provider
      *
      * @param provider The LLM provider to check
-     * @param skipProvidersOverride Optional override for the skip providers list, used for testing
      */
     @JvmStatic
     fun assumeAvailable(provider: LLMProvider) {
@@ -124,8 +114,11 @@ object Models {
             .split(",")
             .map { it.trim().lowercase() }
             .filter { it.isNotEmpty() }
-        
+
         val shouldSkip = skipProviders.contains(provider.id.lowercase())
-        assumeTrue(!shouldSkip, "Test skipped because provider ${provider.display} is in the skip list (${skipProvidersRaw})")
+        assumeTrue(
+            !shouldSkip,
+            "Test skipped because provider ${provider.display} is in the skip list ($skipProvidersRaw)"
+        )
     }
 }

@@ -39,7 +39,7 @@ private fun List<OllamaShowModelResponseDTO.Capability>.toLLMCapabilities(): Lis
         }
     } + listOf(
         LLMCapability.Temperature,
-        LLMCapability.Schema.JSON.Simple,
-        LLMCapability.Schema.JSON.Full,
+        LLMCapability.Schema.JSON.Basic,
+        LLMCapability.Schema.JSON.Standard,
     )
 }

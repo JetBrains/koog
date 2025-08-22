@@ -251,7 +251,11 @@ class XmlTest {
     fun testComplexXml() {
         val result = xml {
             xmlDeclaration()
-            doctype("html", "-//W3C//DTD XHTML 1.0 Transitional//EN", "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd")
+            doctype(
+                "html",
+                "-//W3C//DTD XHTML 1.0 Transitional//EN",
+                "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"
+            )
             tag("html", linkedMapOf("xmlns" to "http://www.w3.org/1999/xhtml")) {
                 tag("head") {
                     tag("title") {
@@ -292,7 +296,7 @@ class XmlTest {
                 }
             }
         }
-        
+
         // We don't need to check the exact output, just that it doesn't throw exceptions
         // and produces a non-empty string
         assertTrue(result.isNotEmpty())

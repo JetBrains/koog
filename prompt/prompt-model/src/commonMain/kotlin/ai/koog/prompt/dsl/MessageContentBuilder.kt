@@ -1,8 +1,8 @@
 package ai.koog.prompt.dsl
 
 import ai.koog.prompt.message.Attachment
-import ai.koog.prompt.text.TextContentBuilderBase
 import ai.koog.prompt.text.TextContentBuilder
+import ai.koog.prompt.text.TextContentBuilderBase
 
 /**
  * A message content builder class to support both text and attachments.

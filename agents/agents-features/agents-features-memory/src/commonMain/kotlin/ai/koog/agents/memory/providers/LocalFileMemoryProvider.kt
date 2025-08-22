@@ -10,7 +10,6 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.Json
 
-
 /**
  * File-based implementation of [AgentMemoryProvider] that provides persistent storage of agent memory
  * using a hierarchical file system structure. This implementation is designed for durability,
@@ -134,7 +133,7 @@ public data class LocalFileMemoryProvider<Path>(
             is MemoryScope.Product -> listOf("product", scope.name, "subject", subject.name)
             MemoryScope.CrossProduct -> listOf("organization", "subject", subject.name)
         }
-        return segments.fold(root) { acc, segment -> fs.fromRelativeString(acc, segment) }
+        return segments.fold(root) { acc, segment -> fs.joinPath(acc, segment) }
     }
 
     /**
@@ -203,7 +202,7 @@ public data class LocalFileMemoryProvider<Path>(
      */
     override suspend fun save(fact: Fact, subject: MemorySubject, scope: MemoryScope) {
         val path = getStoragePath(subject, scope)
-        storage.createDirectories(fs.fromRelativeString(root, config.storageDirectory))
+        storage.createDirectories(fs.joinPath(root, config.storageDirectory))
 
         val facts = loadFacts(path).toMutableMap()
         val key = fact.concept.keyword
@@ -293,7 +292,11 @@ public data class LocalFileMemoryProvider<Path>(
      * @param scope Visibility scope to search in (e.g., Agent, Feature)
      * @return List of facts whose concepts match the description
      */
-    override suspend fun loadByDescription(description: String, subject: MemorySubject, scope: MemoryScope): List<Fact> {
+    override suspend fun loadByDescription(
+        description: String,
+        subject: MemorySubject,
+        scope: MemoryScope
+    ): List<Fact> {
         val path = getStoragePath(subject, scope)
         val facts = loadFacts(path)
 

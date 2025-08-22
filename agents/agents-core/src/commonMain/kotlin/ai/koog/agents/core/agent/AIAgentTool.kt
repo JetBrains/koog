@@ -2,7 +2,11 @@ package ai.koog.agents.core.agent
 
 import ai.koog.agents.core.agent.AIAgentTool.AgentToolArgs
 import ai.koog.agents.core.agent.AIAgentTool.AgentToolResult
-import ai.koog.agents.core.tools.*
+import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.ToolArgs
+import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.agents.core.tools.ToolParameterDescriptor
+import ai.koog.agents.core.tools.ToolResult
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.SerialDescriptor
@@ -120,7 +124,9 @@ public class AIAgentTool<Input, Output>(
         } catch (e: Throwable) {
             AgentToolResult(
                 successful = false,
-                errorMessage = "Error happened: ${e::class.simpleName}(${e.message})\n${e.stackTraceToString().take(100)}"
+                errorMessage = "Error happened: ${e::class.simpleName}(${e.message})\n${e.stackTraceToString().take(
+                    100
+                )}"
             )
         }
     }

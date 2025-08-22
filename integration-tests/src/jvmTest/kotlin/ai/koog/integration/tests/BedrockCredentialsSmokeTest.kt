@@ -3,9 +3,7 @@ package ai.koog.integration.tests
 import aws.sdk.kotlin.services.bedrock.BedrockClient
 import aws.sdk.kotlin.services.bedrock.listFoundationModels
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.condition.DisabledOnOs
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable
-import org.junit.jupiter.api.condition.OS
 import kotlin.test.Test
 import kotlin.test.assertTrue
 

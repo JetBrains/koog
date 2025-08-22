@@ -35,7 +35,8 @@ public data class AIAgentError(
     public constructor(throwable: Throwable) : this(
         message = throwable.message ?: "Unknown error",
         stackTrace = throwable.stackTraceToString(),
-        cause = throwable.cause?.stackTraceToString())
+        cause = throwable.cause?.stackTraceToString()
+    )
 }
 
 /**

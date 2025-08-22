@@ -13,7 +13,6 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import kotlinx.coroutines.runBlocking
 
-
 /**
  * - Asks the user to input a topic for a joke.
  * - Uses a chat agent with OpenAI's GPT-4 model to generate jokes based on user input.
@@ -24,7 +23,10 @@ fun main() = runBlocking {
     val moderatingStrategy = strategy<String, String>("sage-joke-gen") {
         val callLLM by nodeLLMRequest()
         val moderateInput by nodeLLMModerateMessage(moderatingModel = OpenAIModels.Moderation.Omni)
-        val moderateJoke by nodeLLMModerateMessage(moderatingModel = OpenAIModels.Moderation.Omni, includeCurrentPrompt = true)
+        val moderateJoke by nodeLLMModerateMessage(
+            moderatingModel = OpenAIModels.Moderation.Omni,
+            includeCurrentPrompt = true
+        )
 
         // Moderate user input
         edge(nodeStart forwardTo moderateInput transformed { Message.User(it, metaInfo = RequestMetaInfo.Empty) })
@@ -36,7 +38,7 @@ fun main() = runBlocking {
         )
 
         edge(
-             moderateInput forwardTo nodeFinish
+            moderateInput forwardTo nodeFinish
                 onCondition { it.moderationResult.isHarmful }
                 transformed { "You have requested harmful content. Sorry, I can't generate a joke for you." }
         )
@@ -64,7 +66,6 @@ fun main() = runBlocking {
                                 item(category.name)
                             }
                         }
-
                     }
                 }
         )
@@ -73,7 +74,7 @@ fun main() = runBlocking {
     // Create a chat agent with a system prompt for joke generation
     val agent = AIAgent(
         executor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey),
-        llmModel = OpenAIModels.Reasoning.GPT4oMini,
+        llmModel = OpenAIModels.CostOptimized.GPT4oMini,
         strategy = moderatingStrategy,
         systemPrompt = """
             You are professional joke generator. Generate a funny joke based on the user's input.

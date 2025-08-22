@@ -6,7 +6,6 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.ToolResult
 import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.executor.model.PromptExecutorExt.execute
 import ai.koog.prompt.llm.OllamaModels
 import ai.koog.prompt.message.Message
 import kotlinx.coroutines.test.runTest
@@ -51,7 +50,7 @@ class MockLLMBuilderTests {
             user("Say hello to me")
         }
 
-        val response = mockExecutor.execute(prompt, OllamaModels.Meta.LLAMA_3_2)
+        val response = mockExecutor.execute(prompt, OllamaModels.Meta.LLAMA_3_2).single()
         assertEquals("Hello, world!", response.content)
 
         // Test default response
@@ -59,7 +58,7 @@ class MockLLMBuilderTests {
             user("Something unrelated")
         }
 
-        val response2 = mockExecutor.execute(prompt2, OllamaModels.Meta.LLAMA_3_2)
+        val response2 = mockExecutor.execute(prompt2, OllamaModels.Meta.LLAMA_3_2).single()
         assertEquals("Default response", response2.content)
     }
 
@@ -74,7 +73,7 @@ class MockLLMBuilderTests {
             user("exact match query")
         }
 
-        val response = mockExecutor.execute(prompt, OllamaModels.Meta.LLAMA_3_2)
+        val response = mockExecutor.execute(prompt, OllamaModels.Meta.LLAMA_3_2).single()
         assertEquals("Exact match response", response.content)
 
         // Test that partial match doesn't work for exact matching
@@ -82,7 +81,7 @@ class MockLLMBuilderTests {
             user("This contains exact match query somewhere")
         }
 
-        val response2 = mockExecutor.execute(prompt2, OllamaModels.Meta.LLAMA_3_2)
+        val response2 = mockExecutor.execute(prompt2, OllamaModels.Meta.LLAMA_3_2).single()
         assertEquals("Default response", response2.content)
     }
 
@@ -98,7 +97,7 @@ class MockLLMBuilderTests {
             user("This contains partial match somewhere")
         }
 
-        val response = mockExecutor.execute(prompt, OllamaModels.Meta.LLAMA_3_2)
+        val response = mockExecutor.execute(prompt, OllamaModels.Meta.LLAMA_3_2).single()
         assertEquals("Partial match response", response.content)
     }
 
@@ -114,7 +113,7 @@ class MockLLMBuilderTests {
             user("This is a long message that should match the condition")
         }
 
-        val response = mockExecutor.execute(prompt, OllamaModels.Meta.LLAMA_3_2)
+        val response = mockExecutor.execute(prompt, OllamaModels.Meta.LLAMA_3_2).single()
         assertEquals("Conditional response", response.content)
 
         // Test that condition not matching returns default
@@ -122,7 +121,7 @@ class MockLLMBuilderTests {
             user("Short message")
         }
 
-        val response2 = mockExecutor.execute(prompt2, OllamaModels.Meta.LLAMA_3_2)
+        val response2 = mockExecutor.execute(prompt2, OllamaModels.Meta.LLAMA_3_2).single()
         assertEquals("Default response", response2.content)
     }
 
@@ -141,7 +140,7 @@ class MockLLMBuilderTests {
             user("Please use tool to do something")
         }
 
-        val response = mockExecutor.execute(prompt, OllamaModels.Meta.LLAMA_3_2)
+        val response = mockExecutor.execute(prompt, OllamaModels.Meta.LLAMA_3_2).single()
         assertTrue(response is Message.Tool.Call)
         val toolCall = response as Message.Tool.Call
         assertEquals("test_tool", toolCall.tool)
@@ -231,15 +230,15 @@ class MockLLMBuilderTests {
         }
 
         // Execute the prompt to get a tool call
-        val response = mockExecutor.execute(prompt, OllamaModels.Meta.LLAMA_3_2)
+        val response = mockExecutor.execute(prompt, OllamaModels.Meta.LLAMA_3_2).single()
         assertTrue(response is Message.Tool.Call)
 
         // Now simulate executing the tool
         val toolCall = response as Message.Tool.Call
 
         // Find the tool condition that matches this call
-        val toolCondition = (mockExecutor as MockLLMExecutor).toolActions.firstOrNull { 
-            it.tool.name == toolCall.tool 
+        val toolCondition = (mockExecutor as MockLLMExecutor).toolActions.firstOrNull {
+            it.tool.name == toolCall.tool
         }
 
         assertNotNull(toolCondition)
@@ -271,11 +270,11 @@ class MockLLMBuilderTests {
             user("Please use tool with specific input")
         }
 
-        val specificResponse = mockExecutor.execute(specificPrompt, OllamaModels.Meta.LLAMA_3_2)
+        val specificResponse = mockExecutor.execute(specificPrompt, OllamaModels.Meta.LLAMA_3_2).single()
         assertTrue(specificResponse is Message.Tool.Call)
 
         val specificToolCall = specificResponse as Message.Tool.Call
-        val specificToolCondition = (mockExecutor as MockLLMExecutor).toolActions.first { 
+        val specificToolCondition = (mockExecutor as MockLLMExecutor).toolActions.first {
             it.satisfies(specificToolCall)
         }
 
@@ -288,11 +287,11 @@ class MockLLMBuilderTests {
             user("Please use tool with other input")
         }
 
-        val otherResponse = mockExecutor.execute(otherPrompt, OllamaModels.Meta.LLAMA_3_2)
+        val otherResponse = mockExecutor.execute(otherPrompt, OllamaModels.Meta.LLAMA_3_2).single()
         assertTrue(otherResponse is Message.Tool.Call)
 
         val otherToolCall = otherResponse as Message.Tool.Call
-        val otherToolCondition = (mockExecutor as MockLLMExecutor).toolActions.first { 
+        val otherToolCondition = (mockExecutor as MockLLMExecutor).toolActions.first {
             it.satisfies(otherToolCall)
         }
 
@@ -324,11 +323,11 @@ class MockLLMBuilderTests {
             user("Please use tool to do something")
         }
 
-        val response = mockExecutor.execute(prompt, OllamaModels.Meta.LLAMA_3_2)
+        val response = mockExecutor.execute(prompt, OllamaModels.Meta.LLAMA_3_2).single()
         assertTrue(response is Message.Tool.Call)
 
         val toolCall = response
-        val toolCondition = (mockExecutor as MockLLMExecutor).toolActions.first { 
+        val toolCondition = (mockExecutor as MockLLMExecutor).toolActions.first {
             it.satisfies(toolCall)
         }
 

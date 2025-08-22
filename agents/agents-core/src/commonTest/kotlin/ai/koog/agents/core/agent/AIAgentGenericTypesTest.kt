@@ -61,7 +61,7 @@ class AIAgentGenericTypesTest {
 
             val parseResponse = { output: Message.Response ->
                 output.content.contains("yes", ignoreCase = true) ||
-                        output.content.contains("even", ignoreCase = true)
+                    output.content.contains("even", ignoreCase = true)
             }
 
             val callLLM by nodeLLMRequest()

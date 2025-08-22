@@ -31,10 +31,9 @@ import kotlinx.coroutines.runBlocking
  * ```
  */
 fun main() = runBlocking {
-
     val agent = AIAgent(
         executor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey),
-        llmModel = OpenAIModels.Reasoning.GPT4oMini,
+        llmModel = OpenAIModels.Reasoning.O4Mini,
         systemPrompt = "You are a code assistant. Provide concise code examples."
     ) {
         install(OpenTelemetry) {
@@ -55,8 +54,9 @@ fun main() = runBlocking {
 
         val result = agent.run("Tell me a joke about programming")
 
-        println("Agent run completed with result: '$result'." +
-            "\nCheck Jaeger UI at http://localhost:16686 to view traces")
+        println(
+            "Agent run completed with result: '$result'." +
+                "\nCheck Jaeger UI at http://localhost:16686 to view traces"
+        )
     }
 }
-

@@ -2,8 +2,8 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.tool.SayToUser
-import ai.koog.agents.snapshot.feature.Persistency
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
+import ai.koog.agents.snapshot.feature.Persistency
 import ai.koog.agents.snapshot.providers.InMemoryPersistencyStorageProvider
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
@@ -47,11 +47,12 @@ class CheckpointsTests {
         val output = agent.run("Start the test")
         assertEquals(
             "History: You are a test agent.\n" +
-                    "Node 1 output\n" +
-                    "Checkpoint created with ID: checkpointId\n" +
-                    "Node 2 output\n" +
-                    "Skipped rollback because it was already performed",
-            output)
+                "Node 1 output\n" +
+                "Checkpoint created with ID: checkpointId\n" +
+                "Node 2 output\n" +
+                "Skipped rollback because it was already performed",
+            output
+        )
     }
 
     @Test
@@ -70,9 +71,10 @@ class CheckpointsTests {
         val output = agent.run("Start the test")
         assertEquals(
             "History: You are a test agent.\n" +
-                    "Node 1 output\n" +
-                    "Node 2 output",
-            output)
+                "Node 1 output\n" +
+                "Node 2 output",
+            output
+        )
     }
 
     @Test
@@ -110,8 +112,8 @@ class CheckpointsTests {
 
         assertEquals(
             "History: User message\n" +
-                    "Assistant message\n" +
-                    "Node 2 output",
+                "Assistant message\n" +
+                "Node 2 output",
             output
         )
     }
@@ -163,8 +165,9 @@ class CheckpointsTests {
 
         assertEquals(
             "History: User message\n" +
-                    "Assistant message\n" +
-                    "Node 2 output",
-            output)
+                "Assistant message\n" +
+                "Node 2 output",
+            output
+        )
     }
 }

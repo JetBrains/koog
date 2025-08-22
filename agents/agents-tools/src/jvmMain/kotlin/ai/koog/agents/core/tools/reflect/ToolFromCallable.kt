@@ -5,7 +5,9 @@ import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
-import kotlinx.serialization.*
+import kotlinx.serialization.InternalSerializationApi
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.builtins.NothingSerializer
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildClassSerialDescriptor
@@ -13,6 +15,8 @@ import kotlinx.serialization.encoding.CompositeDecoder
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.serializer
+import kotlinx.serialization.serializerOrNull
 import kotlin.reflect.KCallable
 import kotlin.reflect.KParameter
 import kotlin.reflect.KType
@@ -55,7 +59,12 @@ public class ToolFromCallable(
          *
          * @return a list of pairs containing parameter names and their values. If a parameter has no name, it is ignored.
          */
-        public fun asNamedValues(): List<Pair<String, Any?>> = args.mapNotNull { (parameter, value) -> parameter.name?.let { it to value } }
+        public fun asNamedValues(): List<Pair<String, Any?>> = args.mapNotNull { (parameter, value) ->
+            parameter.name?.let {
+                it to
+                    value
+            }
+        }
     }
 
     /**
@@ -85,18 +94,27 @@ public class ToolFromCallable(
         for (parameter in callable.parameters) {
             when (parameter.kind) {
                 KParameter.Kind.VALUE -> {
-                    serializerOrNull(parameter.type) ?: throw IllegalArgumentException("Parameter '${parameter.name}' of type '${parameter.type}' is not serializable")
+                    serializerOrNull(parameter.type)
+                        ?: throw IllegalArgumentException(
+                            "Parameter '${parameter.name}' of type '${parameter.type}' is not serializable"
+                        )
                 }
 
                 KParameter.Kind.INSTANCE -> {
-                    if (thisRef == null) throw IllegalArgumentException("Instance parameter is null for a non-static callable")
+                    if (thisRef ==
+                        null
+                    ) {
+                        throw IllegalArgumentException("Instance parameter is null for a non-static callable")
+                    }
                 }
+
                 KParameter.Kind.EXTENSION_RECEIVER -> {
                     throw IllegalArgumentException("Extension functions are not allowed")
                 }
             }
         }
-        serializerOrNull(callable.returnType) ?: throw SerializationException("Return type '${callable.returnType}' is not serializable")
+        serializerOrNull(callable.returnType)
+            ?: throw SerializationException("Return type '${callable.returnType}' is not serializable")
     }
 
     override suspend fun execute(args: VarArgs): Result {
@@ -104,8 +122,7 @@ public class ToolFromCallable(
         val argsMap = if (instanceParameter != null) {
             val thisRefToCall = thisRef ?: error("Instance parameter is null")
             args.args + (instanceParameter to thisRefToCall)
-        }
-        else {
+        } else {
             args.args
         }
         val result = callable.callSuspendBy(argsMap)
@@ -128,7 +145,8 @@ public class ToolFromCallable(
         override val descriptor: SerialDescriptor
             get() = buildClassSerialDescriptor(VarArgs::class.jvmName) {
                 for ((i, parameter) in kCallable.parameters.withIndex()) {
-                    val missingParameterName = "$nonSerializableParameterPrefix#$i" // `this` parameter or other non-serializable, keep name as missing
+                    val missingParameterName =
+                        "$nonSerializableParameterPrefix#$i" // `this` parameter or other non-serializable, keep name as missing
                     val name = parameter.name ?: missingParameterName
                     val parameterSerializer = serializerOrNull(parameter.type) ?: NothingSerializer()
                     element(

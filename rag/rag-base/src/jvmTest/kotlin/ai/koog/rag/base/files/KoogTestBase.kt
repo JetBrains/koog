@@ -5,7 +5,11 @@ import org.junit.jupiter.api.io.TempDir
 import java.io.InputStream
 import java.nio.charset.Charset
 import java.nio.file.Path
-import kotlin.io.path.*
+import kotlin.io.path.absolute
+import kotlin.io.path.createDirectories
+import kotlin.io.path.createFile
+import kotlin.io.path.writeBytes
+import kotlin.io.path.writeText
 
 open class KoogTestBase {
     @TempDir
@@ -30,7 +34,7 @@ open class KoogTestBase {
     │   └── src(Exl)
     │       └── fileExl
     └── dirEmpty
-    */
+     */
 
     lateinit var dir1: Path
     lateinit var src1: Path
@@ -50,7 +54,6 @@ open class KoogTestBase {
     lateinit var resource1xml: Path
     lateinit var zip1: Path
     lateinit var image1: Path
-
 
     val testCode = loadTextFromResource("/testCode.kt")
     private val testCode2 = loadTextFromResource("files/testCode2.kt")

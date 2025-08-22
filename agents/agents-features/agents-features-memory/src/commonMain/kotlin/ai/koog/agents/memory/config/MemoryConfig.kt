@@ -40,7 +40,7 @@ public enum class MemoryScopeType {
  */
 @Serializable
 public data class MemoryScopesProfile(
-    val names: MutableMap<MemoryScopeType, String> =  mutableMapOf()
+    val names: MutableMap<MemoryScopeType, String> = mutableMapOf()
 ) {
     /**
      * Secondary constructor for `MemoryScopesProfile` that initializes the profile with a variable

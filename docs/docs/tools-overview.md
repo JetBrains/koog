@@ -17,8 +17,8 @@ There are three types of tools in the Koog framework:
 
 - Built-in tools that provide functionality for agent-user interaction and conversation management. For details, see [Built-in tools](built-in-tools.md).
 - Annotation-based custom tools that let you expose functions as tools to LLMs. For details, see [Annotation-based tools](annotation-based-tools.md).
-- Custom tools that are created using the advanced API and let you control tool parameters, metadata, execution logic, and how it is registered and invoked. For details, see [Advanced
-  implementation](advanced-tool-implementation.md).
+- Custom tools that let you control tool parameters, metadata, execution logic, and how it is registered and invoked. For details, see [Class-based
+  tools](class-based-tools.md).
 
 ### Tool registry
 
@@ -35,30 +35,50 @@ To learn more, see [ToolRegistry](https://api.koog.ai/agents/agents-tools/ai.koo
 
 Here is an example of how to create the tool registry and add the tool to it:
 
+<!--- INCLUDE
+import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.ext.tool.SayToUser
+-->
 ```kotlin
 val toolRegistry = ToolRegistry {
     tool(SayToUser)
 }
 ```
+<!--- KNIT example-tools-overview-01.kt -->
 
 To merge multiple tool registries, do the following:
 
+<!--- INCLUDE
+import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.ext.tool.AskUser
+import ai.koog.agents.ext.tool.SayToUser
+
+typealias FirstSampleTool = AskUser
+typealias SecondSampleTool = SayToUser
+-->
 ```kotlin
 val firstToolRegistry = ToolRegistry {
-    tool(FirstSampleTool())
+    tool(FirstSampleTool)
 }
 
 val secondToolRegistry = ToolRegistry {
-    tool(SecondSampleTool())
+    tool(SecondSampleTool)
 }
 
 val newRegistry = firstToolRegistry + secondToolRegistry
 ```
+<!--- KNIT example-tools-overview-02.kt -->
 
 ### Passing tools to an agent
 
 To enable an agent to use a tool, you need to provide a tool registry that contains this tool as an argument when creating the agent:
 
+<!--- INCLUDE
+import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.example.exampleToolsOverview01.toolRegistry
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+-->
 ```kotlin
 // Agent initialization
 val agent = AIAgent(
@@ -69,6 +89,7 @@ val agent = AIAgent(
     toolRegistry = toolRegistry
 )
 ```
+<!--- KNIT example-tools-overview-03.kt -->
 
 ### Calling tools
 
@@ -94,24 +115,61 @@ For more details, see [API reference](https://api.koog.ai/agents/agents-core/ai.
 
 You can also call tools in parallel using the `toParallelToolCallsRaw` extension. For example:
 
+<!--- INCLUDE
+import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.tools.SimpleTool
+import ai.koog.agents.core.tools.ToolArgs
+import ai.koog.agents.core.tools.ToolDescriptor
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.flow
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Serializable
+-->
 ```kotlin
 @Serializable
 data class Book(
-    val bookName: String,
+    val title: String,
     val author: String,
     val description: String
 ) : ToolArgs
 
-/*...*/
+class BookTool() : SimpleTool<Book>() {
+    companion object {
+        const val NAME = "book"
+    }
 
-val myNode by node<Unit, Unit> { _ ->
-    llm.writeSession {
-        flow {
-            emit(Book("Book 1", "Author 1", "Description 1"))
-        }.toParallelToolCallsRaw(BookTool::class).collect()
+    override suspend fun doExecute(args: Book): String {
+        println("${args.title} by ${args.author}:\n ${args.description}")
+        return "Done"
+    }
+
+    override val argsSerializer: KSerializer<Book>
+        get() = Book.serializer()
+
+    override val descriptor: ToolDescriptor
+        get() = ToolDescriptor(
+            name = NAME,
+            description = "A tool to parse book information from Markdown",
+            requiredParameters = listOf(),
+            optionalParameters = listOf()
+        )
+}
+
+val strategy = strategy<Unit, Unit>("strategy-name") {
+
+    /*...*/
+
+    val myNode by node<Unit, Unit> { _ ->
+        llm.writeSession {
+            flow {
+                emit(Book("Book 1", "Author 1", "Description 1"))
+            }.toParallelToolCallsRaw(BookTool::class).collect()
+        }
     }
 }
+
 ```
+<!--- KNIT example-tools-overview-04.kt -->
 
 #### Calling tools from nodes
 

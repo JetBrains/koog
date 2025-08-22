@@ -24,7 +24,6 @@ public abstract class AIAgentNodeBase<Input, Output> internal constructor() {
      */
     public abstract val name: String
 
-
     /**
      * The [KType] of the [Input]
      */
@@ -227,4 +226,3 @@ public class FinishNode<Output> internal constructor(
         throw IllegalStateException("${this::class.simpleName} cannot have outgoing edges")
     }
 }
-

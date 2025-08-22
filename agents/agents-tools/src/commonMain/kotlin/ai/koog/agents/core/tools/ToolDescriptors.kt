@@ -1,6 +1,5 @@
 package ai.koog.agents.core.tools
 
-
 import kotlin.enums.EnumEntries
 
 /**
@@ -35,7 +34,9 @@ public data class ToolDescriptor(
  * @property type The data type of the tool parameter.
  */
 public data class ToolParameterDescriptor(
-    val name: String, val description: String, val type: ToolParameterType
+    val name: String,
+    val description: String,
+    val type: ToolParameterType
 )
 
 /**
@@ -75,7 +76,6 @@ public sealed class ToolParameterType(public val name: kotlin.String) {
      */
     public data class Enum(val entries: Array<kotlin.String>) : ToolParameterType("ENUM")
 
-
     /**
      * Represents an array type parameter.
      *
@@ -95,7 +95,6 @@ public sealed class ToolParameterType(public val name: kotlin.String) {
         val additionalPropertiesType: ToolParameterType? = null,
     ) : ToolParameterType("OBJECT")
 
-
     /**
      * Companion object for the enclosing class. Provides utility functions for creating instances
      * of the `Enum` type parameter from different kinds of inputs.
@@ -108,6 +107,7 @@ public sealed class ToolParameterType(public val name: kotlin.String) {
          * @return A new Enum instance populated with the names of the provided entries.
          */
         public fun Enum(entries: EnumEntries<*>): Enum = Enum(entries.map { it.name }.toTypedArray())
+
         /**
          * Constructs an Enum parameter type from an array of Enum entries.
          *
@@ -118,4 +118,3 @@ public sealed class ToolParameterType(public val name: kotlin.String) {
         public fun Enum(entries: Array<kotlin.Enum<*>>): Enum = Enum(entries.map { it.name }.toTypedArray())
     }
 }
-

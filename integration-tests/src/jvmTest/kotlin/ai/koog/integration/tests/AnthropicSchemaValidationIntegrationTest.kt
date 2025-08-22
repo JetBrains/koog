@@ -9,13 +9,14 @@ import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
+import ai.koog.integration.tests.utils.annotations.Retry
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.llms.all.simpleAnthropicExecutor
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.Assumptions.assumeTrue
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -65,7 +66,9 @@ class AnthropicSchemaValidationIntegrationTest {
      */
     @Serializable
     enum class AddressType {
-        HOME, WORK, OTHER
+        HOME,
+        WORK,
+        OTHER
     }
 
     /**
@@ -134,7 +137,11 @@ class AnthropicSchemaValidationIntegrationTest {
                                             ToolParameterDescriptor(
                                                 name = "type",
                                                 description = "The type of address (HOME, WORK, or OTHER)",
-                                                type = ToolParameterType.Enum(AddressType.entries.map { it.name }.toTypedArray())
+                                                type = ToolParameterType.Enum(
+                                                    AddressType.entries.map {
+                                                        it.name
+                                                    }.toTypedArray()
+                                                )
                                             ),
                                             ToolParameterDescriptor(
                                                 name = "street",
@@ -174,7 +181,7 @@ class AnthropicSchemaValidationIntegrationTest {
             val addressesInfo = profile.addresses.joinToString("\n") { address ->
                 "- ${address.type} Address: ${address.street}, ${address.city}, ${address.state} ${address.zipCode}"
             }
-            
+
             return """
                 Successfully processed user profile:
                 Name: ${profile.name}
@@ -194,16 +201,17 @@ class AnthropicSchemaValidationIntegrationTest {
      *
      * After the fix, the test should pass, demonstrating that the Anthropic API
      * can now correctly handle complex nested structures in tool parameters.
-     * 
+     *
      * Note: This test requires a valid Anthropic API key to be set in the environment variable
      * ANTHROPIC_API_TEST_KEY. If the key is not available, the test will be skipped.
      */
+    @Retry
     @Test
     fun integration_testAnthropicComplexNestedStructures() {
         // Skip the test if the Anthropic API key is not available
         assumeTrue(apiKeyAvailable, "Anthropic API key is not available")
-        
-        runBlocking<Unit> {
+
+        runBlocking {
             // Create an agent with the Anthropic API and the complex nested tool
             val agent = AIAgent(
                 executor = simpleAnthropicExecutor(anthropicApiKey!!),
@@ -215,9 +223,10 @@ class AnthropicSchemaValidationIntegrationTest {
                 installFeatures = {
                     install(EventHandler) {
                         onAgentRunError { eventContext ->
-                            println("ERROR: ${eventContext.throwable.javaClass.simpleName}(${eventContext.throwable.message})")
+                            println(
+                                "ERROR: ${eventContext.throwable.javaClass.simpleName}(${eventContext.throwable.message})"
+                            )
                             println(eventContext.throwable.stackTraceToString())
-                            true
                         }
                         onToolCall { eventContext ->
                             println("Calling tool: ${eventContext.tool.name}")
@@ -228,7 +237,8 @@ class AnthropicSchemaValidationIntegrationTest {
             )
 
             // Run the agent with a request to process a user profile
-            val result = agent.run("""
+            val result = agent.run(
+                """
                 Please process this user profile:
                 
                 Name: John Doe
@@ -236,13 +246,14 @@ class AnthropicSchemaValidationIntegrationTest {
                 Addresses:
                 1. HOME: 123 Main St, Springfield, IL 62701
                 2. WORK: 456 Business Ave, Springfield, IL 62701
-            """.trimIndent())
+                """.trimIndent()
+            )
 
             // Verify the result
             println("\nResult: $result")
             assertNotNull(result, "Result should not be null")
             assertTrue(result.isNotBlank(), "Result should not be empty or blank")
-            
+
             // Check that the result contains expected information
             assertTrue(result.lowercase().contains("john doe"), "Result should contain the user's name")
             assertTrue(result.lowercase().contains("john.doe@example.com"), "Result should contain the user's email")

@@ -3,6 +3,7 @@ package ai.koog.agents.core.agent
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase
 
 // TODO: how it differs from AgentRuntimeException?
+
 /**
  * Represents a custom exception class for use in AI Agent-related processes.
  *
@@ -29,7 +30,7 @@ public open class AIAgentException(problem: String, throwable: Throwable? = null
 internal class AIAgentStuckInTheNodeException(node: AIAgentNodeBase<*, *>, output: Any?) :
     AIAgentException(
         "When executing agent graph, stuck in node ${node.name} " +
-                "because output $output doesn't match any condition on available edges."
+            "because output $output doesn't match any condition on available edges."
     )
 
 /**
@@ -46,7 +47,7 @@ internal class AIAgentStuckInTheNodeException(node: AIAgentNodeBase<*, *>, outpu
 internal class AIAgentMaxNumberOfIterationsReachedException(maxNumberOfIterations: Int) :
     AIAgentException(
         "Agent couldn't finish in given number of steps ($maxNumberOfIterations). " +
-                "Please, consider increasing `maxAgentIterations` value in agent's configuration"
+            "Please, consider increasing `maxAgentIterations` value in agent's configuration"
     )
 
 /**

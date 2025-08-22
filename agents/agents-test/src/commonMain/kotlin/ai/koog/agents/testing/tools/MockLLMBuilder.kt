@@ -159,7 +159,12 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      * @param tool The tool to be called when the input matches
      * @param args The arguments to pass to the tool
      */
-    public fun <Args : ToolArgs> addLLMAnswerExactPattern(pattern: String, tool: Tool<Args, *>, args: Args, toolCallId: String?) {
+    public fun <Args : ToolArgs> addLLMAnswerExactPattern(
+        pattern: String,
+        tool: Tool<Args, *>,
+        args: Args,
+        toolCallId: String?
+    ) {
         toolCallExactMatches[pattern] = tool.encodeArgsToString(args).let { toolContent ->
             listOf(
                 Message.Tool.Call(
@@ -332,8 +337,12 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      * @param args The arguments to pass to the tool
      * @return A [ToolCallReceiver] for further configuration
      */
-    public fun <Args : ToolArgs> mockLLMToolCall(tool: Tool<Args, *>, args: Args, toolCallId: String? = null): ToolCallReceiver<Args> =
-        ToolCallReceiver(tool, args, toolCallId,  this)
+    public fun <Args : ToolArgs> mockLLMToolCall(
+        tool: Tool<Args, *>,
+        args: Args,
+        toolCallId: String? = null
+    ): ToolCallReceiver<Args> =
+        ToolCallReceiver(tool, args, toolCallId, this)
 
     /**
      * Creates a mock for a list of LLM tool calls.
@@ -345,7 +354,9 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      *                  These define the mock calls to be returned by the LLM.
      * @return A [MultiToolCallReceiver] to configure further mock behavior for the provided tool calls.
      */
-    public fun <Args : ToolArgs> mockLLMToolCall(toolCalls: List<Pair<Tool<Args, *>, Args>>): MultiToolCallReceiver<Args> =
+    public fun <Args : ToolArgs> mockLLMToolCall(
+        toolCalls: List<Pair<Tool<Args, *>, Args>>
+    ): MultiToolCallReceiver<Args> =
         MultiToolCallReceiver(toolCalls, this)
 
     /**
@@ -374,7 +385,9 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      * @param tool The tool to be mocked
      * @return A [MockToolReceiver] for further configuration
      */
-    public fun <Args : ToolArgs, Result : ToolResult> mockTool(tool: Tool<Args, Result>): MockToolReceiver<Args, Result> {
+    public fun <Args : ToolArgs, Result : ToolResult> mockTool(
+        tool: Tool<Args, Result>
+    ): MockToolReceiver<Args, Result> {
         return MockToolReceiver(tool, this)
     }
 
@@ -639,7 +652,9 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      * @param action A function that produces the string result
      * @return The result of the alwaysDoes call
      */
-    public infix fun <Args : ToolArgs> MockToolReceiver<Args, ToolResult.Text>.alwaysTells(action: suspend () -> String): Unit =
+    public infix fun <Args : ToolArgs> MockToolReceiver<Args, ToolResult.Text>.alwaysTells(
+        action: suspend () -> String
+    ): Unit =
         alwaysDoes { ToolResult.Text(action()) }
 
     /**
@@ -649,7 +664,9 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      * @param action A function that produces the string result
      * @return The result of the does call
      */
-    public infix fun <Args : ToolArgs> MockToolReceiver<Args, ToolResult.Text>.doesStr(action: suspend () -> String): MockToolReceiver.MockToolResponseBuilder<Args, ToolResult.Text> =
+    public infix fun <Args : ToolArgs> MockToolReceiver<Args, ToolResult.Text>.doesStr(
+        action: suspend () -> String
+    ): MockToolReceiver.MockToolResponseBuilder<Args, ToolResult.Text> =
         does { ToolResult.Text(action()) }
 
     /**
@@ -897,7 +914,6 @@ public fun getMockExecutor(
     handleLastAssistantMessage: Boolean = false,
     init: MockLLMBuilder.() -> Unit
 ): PromptExecutor {
-
     // Clear previous matches
     DefaultResponseReceiver.clearMatches()
 

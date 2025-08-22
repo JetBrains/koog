@@ -61,12 +61,14 @@ class SimpleGraphCheckpointTest {
 
         // Verify that the result contains the expected output from the teleported node
         assertEquals(
-                "Start the test\n" +
+            "Start the test\n" +
                 "Node 1 output\n" +
                 "Teleported\n" +
                 "Node 1 output\n" +
                 "Already teleported, passing by\n" +
-                "Node 2 output", result)
+                "Node 2 output",
+            result
+        )
     }
 
     /**
@@ -156,8 +158,9 @@ class SimpleGraphCheckpointTest {
 
         // Verify that a checkpoint was created and saved
         val checkpoint = checkpointStorageProvider.getCheckpoints().firstOrNull()
-        if (checkpoint == null)
+        if (checkpoint == null) {
             error("checkpoint is null")
+        }
 
         assertNotNull(checkpoint, "No checkpoint was created")
         assertEquals("checkpointNode", checkpoint.nodeId, "Checkpoint has incorrect node ID")

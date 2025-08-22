@@ -1,10 +1,14 @@
 package ai.koog.prompt.executor.clients.bedrock.modelfamilies.ai21
 
+import ai.koog.prompt.executor.clients.anthropic.AnthropicMessageRequest
+import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
+import ai.koog.prompt.executor.clients.bedrock.modelfamilies.ai21.JambaRequest.Companion.MAX_TOKENS_DEFAULT
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
@@ -31,16 +35,48 @@ class JambaDataModelsTest {
 
         assertNotNull(serialized)
         assert(serialized.contains("\"model\"")) { "Serialized JSON should contain 'model' field: $serialized" }
-        assert(serialized.contains("\"ai21.jamba-1-5-large-v1:0\"")) { "Serialized JSON should contain the model ID: $serialized" }
+        assert(serialized.contains("\"ai21.jamba-1-5-large-v1:0\"")) {
+            "Serialized JSON should contain the model ID: $serialized"
+        }
         assert(serialized.contains("\"messages\"")) { "Serialized JSON should contain 'messages' field: $serialized" }
         assert(serialized.contains("\"role\"")) { "Serialized JSON should contain 'role' field: $serialized" }
         assert(serialized.contains("\"user\"")) { "Serialized JSON should contain 'user' role: $serialized" }
         assert(serialized.contains("\"content\"")) { "Serialized JSON should contain 'content' field: $serialized" }
-        assert(serialized.contains("\"Tell me about Paris\"")) { "Serialized JSON should contain the message content: $serialized" }
-        assert(serialized.contains("\"max_tokens\"")) { "Serialized JSON should contain 'max_tokens' field: $serialized" }
+        assert(serialized.contains("\"Tell me about Paris\"")) {
+            "Serialized JSON should contain the message content: $serialized"
+        }
+        assert(serialized.contains("\"max_tokens\"")) {
+            "Serialized JSON should contain 'max_tokens' field: $serialized"
+        }
         assert(serialized.contains("1000")) { "Serialized JSON should contain the maxTokens value: $serialized" }
-        assert(serialized.contains("\"temperature\"")) { "Serialized JSON should contain 'temperature' field: $serialized" }
+        assert(serialized.contains("\"temperature\"")) {
+            "Serialized JSON should contain 'temperature' field: $serialized"
+        }
         assert(serialized.contains("0.7")) { "Serialized JSON should contain the temperature value: $serialized" }
+    }
+
+    @Test
+    fun `JambaRequest serialization with default maxTokens`() {
+        val request = JambaRequest(
+            model = "ai21.jamba-1-5-large-v1:0",
+            messages = listOf(
+                JambaMessage(role = "user", content = "Tell me about Paris")
+            ),
+            temperature = 0.7
+        )
+        assertEquals(MAX_TOKENS_DEFAULT, request.maxTokens)
+    }
+
+    @Test
+    fun `JambaRequest serialization with maxTokens less than 1`() {
+        val exception = assertFailsWith<IllegalArgumentException> {
+            AnthropicMessageRequest(
+                model = AnthropicModels.Opus_3.id,
+                messages = emptyList(),
+                maxTokens = 0
+            )
+        }
+        assertEquals("maxTokens must be greater than 0, but was 0", exception.message)
     }
 
     @Test
@@ -59,8 +95,12 @@ class JambaDataModelsTest {
         assertNotNull(serialized)
         assert(serialized.contains("\"model\"")) { "Serialized JSON should contain 'model' field: $serialized" }
         assert(serialized.contains("\"messages\"")) { "Serialized JSON should contain 'messages' field: $serialized" }
-        assert(!serialized.contains("\"max_tokens\"")) { "Serialized JSON should not contain 'max_tokens' field when it's null: $serialized" }
-        assert(!serialized.contains("\"temperature\"")) { "Serialized JSON should not contain 'temperature' field when it's null: $serialized" }
+        assert(!serialized.contains("\"max_tokens\"")) {
+            "Serialized JSON should not contain 'max_tokens' field when it's null: $serialized"
+        }
+        assert(!serialized.contains("\"temperature\"")) {
+            "Serialized JSON should not contain 'temperature' field when it's null: $serialized"
+        }
     }
 
     @Test
@@ -109,7 +149,7 @@ class JambaDataModelsTest {
         assertEquals(1, request.messages.size)
         assertEquals("user", request.messages[0].role)
         assertEquals("Tell me about Paris", request.messages[0].content)
-        assertNull(request.maxTokens)
+        assertEquals(MAX_TOKENS_DEFAULT, request.maxTokens)
         assertNull(request.temperature)
     }
 
@@ -209,15 +249,24 @@ class JambaDataModelsTest {
                 description = "Get current weather for a city",
                 parameters = buildJsonObject {
                     put("type", "object")
-                    put("properties", buildJsonObject {
-                        put("city", buildJsonObject {
-                            put("type", "string")
-                            put("description", "The city name")
-                        })
-                    })
-                    put("required", buildJsonObject {
-                        put("0", "city")
-                    })
+                    put(
+                        "properties",
+                        buildJsonObject {
+                            put(
+                                "city",
+                                buildJsonObject {
+                                    put("type", "string")
+                                    put("description", "The city name")
+                                }
+                            )
+                        }
+                    )
+                    put(
+                        "required",
+                        buildJsonObject {
+                            put("0", "city")
+                        }
+                    )
                 }
             )
         )

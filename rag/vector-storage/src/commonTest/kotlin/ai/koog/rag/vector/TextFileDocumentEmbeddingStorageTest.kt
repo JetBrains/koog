@@ -5,7 +5,7 @@ import ai.koog.embeddings.base.Vector
 import ai.koog.rag.vector.mocks.MockDocument
 import ai.koog.rag.vector.mocks.MockDocumentProvider
 import ai.koog.rag.vector.mocks.MockFileSystem
-import ai.koog.rag.vector.mocks.MockFileSystemProvicer
+import ai.koog.rag.vector.mocks.MockFileSystemProvider
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -26,17 +26,17 @@ class TextFileDocumentEmbeddingStorageTest {
             // Number of intersecting elements (words) in 2 texts
             val intersectionsSize = embedding1.values.count { it in embedding2.values }
             val totalSize = embedding1.values.size + embedding2.values.size
-            return 1.0 - 2.0 * intersectionsSize / totalSize;
+            return 1.0 - 2.0 * intersectionsSize / totalSize
         }
     }
 
     private suspend fun createTestStorage(): TextFileDocumentEmbeddingStorage<MockDocument, String> {
         val mockFileSystem = MockFileSystem()
         val mockDocumentProvider = MockDocumentProvider(mockFileSystem)
-        val mockFileSystemProvicer = MockFileSystemProvicer(mockFileSystem)
+        val mockFileSystemProvider = MockFileSystemProvider(mockFileSystem)
         val mockEmbedder = MockEmbedder()
 
-        return TextFileDocumentEmbeddingStorage(mockEmbedder, mockDocumentProvider, mockFileSystemProvicer, "test-root")
+        return TextFileDocumentEmbeddingStorage(mockEmbedder, mockDocumentProvider, mockFileSystemProvider, "test-root")
     }
 
     @Test
@@ -77,7 +77,6 @@ class TextFileDocumentEmbeddingStorageTest {
         val storage = createTestStorage()
         val documents = listOf(MockDocument("doc1"), MockDocument("doc2"), MockDocument("doc3"))
         val documentIds = mutableListOf<String>()
-
 
         // Store multiple documents
         documents.forEach { doc ->

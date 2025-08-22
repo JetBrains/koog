@@ -1,7 +1,7 @@
 package ai.koog.prompt.xml
 
-import ai.koog.prompt.text.TextContentBuilderBase
 import ai.koog.prompt.text.TextContentBuilder
+import ai.koog.prompt.text.TextContentBuilderBase
 
 /**
  * A dedicated builder for creating XML content.

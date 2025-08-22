@@ -20,7 +20,7 @@ fun main() = runBlocking {
     // Create a single-run agent with a system prompt
     val agent = AIAgent(
         executor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey),
-        llmModel = OpenAIModels.Reasoning.GPT4oMini,
+        llmModel = OpenAIModels.CostOptimized.GPT4oMini,
         systemPrompt = "You are a code assistant. Provide concise code examples.",
         installFeatures = { install(EventHandler, eventHandlerConfig) }
     )

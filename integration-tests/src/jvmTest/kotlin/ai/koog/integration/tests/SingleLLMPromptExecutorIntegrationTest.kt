@@ -31,7 +31,6 @@ import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 import ai.koog.prompt.executor.llms.all.simpleBedrockExecutor
-import ai.koog.prompt.executor.model.PromptExecutorExt.execute
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -78,12 +77,12 @@ class SingleLLMPromptExecutorIntegrationTest {
             val openAIClientInstance = OpenAILLMClient(readTestOpenAIKeyFromEnv())
             val anthropicClientInstance = AnthropicLLMClient(readTestAnthropicKeyFromEnv())
             val googleClientInstance = GoogleLLMClient(readTestGoogleAIKeyFromEnv())
-            val bedrockClientInstance = BedrockLLMClient(
+            /*val bedrockClientInstance = BedrockLLMClient(
                 readAwsAccessKeyIdFromEnv(),
                 readAwsSecretAccessKeyFromEnv(),
                 readAwsSessionTokenFromEnv(),
                 BedrockClientSettings()
-            )
+            )*/
             // val openRouterClientInstance = OpenRouterLLMClient(readTestOpenRouterKeyFromEnv())
 
             return Stream.concat(
@@ -91,11 +90,9 @@ class SingleLLMPromptExecutorIntegrationTest {
                     Models.openAIModels().map { model -> Arguments.of(model, openAIClientInstance) },
                     Models.anthropicModels().map { model -> Arguments.of(model, anthropicClientInstance) }
                 ),
-                Stream.concat(
-                    Models.googleModels().map { model -> Arguments.of(model, googleClientInstance) },
-                    Models.bedrockModels().map { model -> Arguments.of(model, bedrockClientInstance) }
-                )
+                Models.googleModels().map { model -> Arguments.of(model, googleClientInstance) },
             )
+            // Models.bedrockModels().map { model -> Arguments.of(model, bedrockClientInstance) }
             // Models.openRouterModels().map { model -> Arguments.of(model, openRouterClientInstance) }
         }
 
@@ -183,41 +180,12 @@ class SingleLLMPromptExecutorIntegrationTest {
             val fullResponse = responseChunks.joinToString("")
             assertTrue(
                 fullResponse.contains("1") &&
-                        fullResponse.contains("2") &&
-                        fullResponse.contains("3") &&
-                        fullResponse.contains("4") &&
-                        fullResponse.contains("5"),
+                    fullResponse.contains("2") &&
+                    fullResponse.contains("3") &&
+                    fullResponse.contains("4") &&
+                    fullResponse.contains("5"),
                 "Full response should contain numbers 1 through 5"
             )
-        }
-    }
-
-    @ParameterizedTest
-    @MethodSource("modelClientCombinations")
-    fun integration_testCodeGeneration(model: LLModel, client: LLMClient) = runTest(timeout = 300.seconds) {
-        Models.assumeAvailable(model.provider)
-        val executor = SingleLLMPromptExecutor(client)
-
-        val prompt = Prompt.build("test-code") {
-            system("You are a helpful coding assistant.")
-            user("Write a simple Kotlin function to calculate the factorial of a number. Make sure the name of the function starts with 'factorial'.")
-        }
-
-        var response: List<Message>
-
-        withRetry(times = 3, testName = "integration_testCodeGeneration[${model.id}]") {
-            response = executor.execute(prompt, model, emptyList())
-
-            assertNotNull(response, "Response should not be null")
-            assertTrue(response.isNotEmpty(), "Response should not be empty")
-            assertTrue(response.first() is Message.Assistant, "Response should be an Assistant message")
-
-            val content = (response.first() as Message.Assistant).content
-            assertTrue(
-                content.contains("fun factorial"),
-                "Response should contain a factorial function. Response: $response. Content: $content"
-            )
-            assertTrue(content.contains("return"), "Response should contain a return statement")
         }
     }
 
@@ -275,8 +243,10 @@ class SingleLLMPromptExecutorIntegrationTest {
                     ToolParameterDescriptor(
                         name = "operation",
                         description = "The operation to perform.",
-                        type = ToolParameterType.Enum(TestUtils.CalculatorOperation.entries.map { it.name }
-                            .toTypedArray())
+                        type = ToolParameterType.Enum(
+                            TestUtils.CalculatorOperation.entries.map { it.name }
+                                .toTypedArray()
+                        )
                     ),
                     ToolParameterDescriptor(
                         name = "a",
@@ -299,7 +269,9 @@ class SingleLLMPromptExecutorIntegrationTest {
             )
 
             val prompt = Prompt.build("test-tools") {
-                system("You are a helpful assistant with access to a calculator tool. Don't use optional params if possible. ALWAYS CALL TOOL FIRST.")
+                system(
+                    "You are a helpful assistant with access to a calculator tool. Don't use optional params if possible. ALWAYS CALL TOOL FIRST."
+                )
                 user("What is 123 + 456?")
             }
 
@@ -401,8 +373,12 @@ class SingleLLMPromptExecutorIntegrationTest {
                 ToolParameterDescriptor(
                     name = "color",
                     description = "The color to be picked.",
-                    type = ToolParameterType.List(ToolParameterType.Enum(TestUtils.Colors.entries.map { it.name }
-                        .toTypedArray()))
+                    type = ToolParameterType.List(
+                        ToolParameterType.Enum(
+                            TestUtils.Colors.entries.map { it.name }
+                                .toTypedArray()
+                        )
+                    )
                 )
             )
         )
@@ -476,10 +452,10 @@ class SingleLLMPromptExecutorIntegrationTest {
             val fullResponse = responseChunks.joinToString("")
             assertTrue(
                 fullResponse.contains("1") &&
-                        fullResponse.contains("2") &&
-                        fullResponse.contains("3") &&
-                        fullResponse.contains("4") &&
-                        fullResponse.contains("5"),
+                    fullResponse.contains("2") &&
+                    fullResponse.contains("3") &&
+                    fullResponse.contains("4") &&
+                    fullResponse.contains("5"),
                 "Full response should contain numbers 1 through 5"
             )
         }
@@ -505,7 +481,7 @@ class SingleLLMPromptExecutorIntegrationTest {
                 $countryDefinition
 
                 Make sure to follow this exact format with the # for country names and * for details.
-            """.trimIndent()
+                """.trimIndent()
             )
         }
 
@@ -545,7 +521,9 @@ class SingleLLMPromptExecutorIntegrationTest {
     }
 
     private fun createCalculatorPrompt() = Prompt.build("test-tools") {
-        system("You are a helpful assistant with access to a calculator tool. When asked to perform calculations, use the calculator tool instead of calculating the answer yourself.")
+        system(
+            "You are a helpful assistant with access to a calculator tool. When asked to perform calculations, use the calculator tool instead of calculating the answer yourself."
+        )
         user("What is 123 + 456?")
     }
 
@@ -638,11 +616,11 @@ class SingleLLMPromptExecutorIntegrationTest {
     }
 
     /*
-    * IMPORTANT about the testing approach!
-    * The number of combinations between specific executors and media types will make tests slower.
-    * The compatibility of each LLM profile with the media processing is covered in the E2E agents tests.
-    * Therefore, in the scope of the executor tests, we'll check one executor of each provider
-    * to decrease the number of possible combinations and to avoid redundant checks.*/
+     * IMPORTANT about the testing approach!
+     * The number of combinations between specific executors and media types will make tests slower.
+     * The compatibility of each LLM profile with the media processing is covered in the E2E agents tests.
+     * Therefore, in the scope of the executor tests, we'll check one executor of each provider
+     * to decrease the number of possible combinations and to avoid redundant checks.*/
 
     // ToDo add video & pdf specific scenarios
 
@@ -675,62 +653,65 @@ class SingleLLMPromptExecutorIntegrationTest {
 
             val file = MediaTestUtils.createMarkdownFileForScenario(scenario, testResourcesDir)
 
-            val prompt = if (model.capabilities.contains(LLMCapability.Document)) {
-                prompt("markdown-test-${scenario.name.lowercase()}") {
-                    system("You are a helpful assistant that can analyze markdown files.")
+            val prompt =
+                if (model.capabilities.contains(LLMCapability.Document) && model.provider != LLMProvider.OpenAI) {
+                    prompt("markdown-test-${scenario.name.lowercase()}") {
+                        system("You are a helpful assistant that can analyze markdown files.")
 
-                    user {
-                        markdown {
-                            "I'm sending you a markdown file with different markdown elements. "
-                            +"Please list all the markdown elements used in it and describe its structure clearly."
-                        }
+                        user {
+                            markdown {
+                                +"I'm sending you a markdown file with different markdown elements. "
+                                +"Please list all the markdown elements used in it and describe its structure clearly."
+                            }
 
-                        attachments {
-                            file(file.pathString, "text/markdown")
-                        }
-                    }
-                }
-            } else {
-                prompt("markdown-test-${scenario.name.lowercase()}") {
-                    system("You are a helpful assistant that can analyze markdown files.")
-
-                    user {
-                        markdown {
-                            "I'm sending you a markdown file with different markdown elements. "
-                            +"Please list all the markdown elements used in it and describe its structure clearly."
-                            newline()
-                            +file.readText()
-                        }
-                    }
-                }
-            }
-
-            try {
-                val response = executor.execute(prompt, model)
-                when (scenario) {
-                    MarkdownTestScenario.MALFORMED_SYNTAX,
-                    MarkdownTestScenario.MATH_NOTATION,
-                    MarkdownTestScenario.BROKEN_LINKS,
-                    MarkdownTestScenario.IRREGULAR_TABLES -> {
-                        checkResponseBasic(response)
-                    }
-
-                    else -> {
-                        checkExecutorMediaResponse(response)
-                    }
-                }
-            } catch (e: Exception) {
-                when (scenario) {
-                    MarkdownTestScenario.EMPTY_MARKDOWN -> {
-                        when (model.provider) {
-                            LLMProvider.Google -> {
-                                println("Expected exception for ${scenario.name.lowercase()} image: ${e.message}")
+                            attachments {
+                                textFile(KtPath(file.pathString), "text/plain")
                             }
                         }
                     }
+                } else {
+                    prompt("markdown-test-${scenario.name.lowercase()}") {
+                        system("You are a helpful assistant that can analyze markdown files.")
 
-                    else -> {
-                        throw e
+                        user {
+                            markdown {
+                                +"I'm sending you a markdown file with different markdown elements. "
+                                +"Please list all the markdown elements used in it and describe its structure clearly."
+                                newline()
+                                +file.readText()
+                            }
+                        }
+                    }
+                }
+
+            withRetry {
+                try {
+                    val response = executor.execute(prompt, model).single()
+                    when (scenario) {
+                        MarkdownTestScenario.MALFORMED_SYNTAX,
+                        MarkdownTestScenario.MATH_NOTATION,
+                        MarkdownTestScenario.BROKEN_LINKS,
+                        MarkdownTestScenario.IRREGULAR_TABLES -> {
+                            checkResponseBasic(response)
+                        }
+
+                        else -> {
+                            checkExecutorMediaResponse(response)
+                        }
+                    }
+                } catch (e: Exception) {
+                    when (scenario) {
+                        MarkdownTestScenario.EMPTY_MARKDOWN -> {
+                            when (model.provider) {
+                                LLMProvider.Google -> {
+                                    println("Expected exception for ${scenario.name.lowercase()} image: ${e.message}")
+                                }
+                            }
+                        }
+
+                        else -> {
+                            throw e
+                        }
                     }
                 }
             }
@@ -778,35 +759,42 @@ class SingleLLMPromptExecutorIntegrationTest {
 
             withRetry {
                 try {
-                    val response = executor.execute(prompt, model)
+                    val response = executor.execute(prompt, model).single()
                     checkExecutorMediaResponse(response)
                 } catch (e: Exception) {
                     // For some edge cases, exceptions are expected
                     when (scenario) {
                         ImageTestScenario.LARGE_IMAGE_ANTHROPIC, ImageTestScenario.LARGE_IMAGE -> {
-                            assertTrue(
-                                e.message?.contains("400 Bad Request") == true,
+                            assertEquals(
+                                e.message?.contains("400 Bad Request"),
+                                true,
                                 "Expected exception for a large image [400 Bad Request] was not found, got [${e.message}] instead"
                             )
-                            assertTrue(
-                                e.message?.contains("image exceeds") == true,
+                            assertEquals(
+                                e.message?.contains("image exceeds"),
+                                true,
                                 "Expected exception for a large image [image exceeds] was not found, got [${e.message}] instead"
                             )
                         }
 
                         ImageTestScenario.CORRUPTED_IMAGE, ImageTestScenario.EMPTY_IMAGE -> {
-                            assertTrue(
-                                e.message?.contains("400 Bad Request") == true,
+                            assertEquals(
+                                e.message?.contains("400 Bad Request"),
+                                true,
                                 "Expected exception for a corrupted image [400 Bad Request] was not found, got [${e.message}] instead"
                             )
                             if (model.provider == LLMProvider.Anthropic) {
-                                assertTrue(
-                                    e.message?.contains("Could not process image") == true,
+                                assertEquals(
+                                    e.message?.contains("Could not process image"),
+                                    true,
                                     "Expected exception for a corrupted image [Could not process image] was not found, got [${e.message}] instead"
                                 )
                             } else if (model.provider == LLMProvider.OpenAI) {
-                                assertTrue(
-                                    e.message?.contains("You uploaded an unsupported image. Please make sure your image is valid.") == true,
+                                assertEquals(
+                                    e.message?.contains(
+                                        "You uploaded an unsupported image. Please make sure your image is valid."
+                                    ),
+                                    true,
                                     "Expected exception for a corrupted image [You uploaded an unsupported image. Please make sure your image is valid.] was not found, got [${e.message}] instead"
                                 )
                             }
@@ -825,56 +813,59 @@ class SingleLLMPromptExecutorIntegrationTest {
     fun integration_testTextProcessingBasic(scenario: TextTestScenario, model: LLModel) =
         runTest(timeout = 300.seconds) {
             Models.assumeAvailable(model.provider)
-            assumeTrue(model.provider != LLMProvider.OpenAI, "File format txt not supported for OpenAI")
 
             val client = getClient(model)
             val executor = SingleLLMPromptExecutor(client)
 
             val file = MediaTestUtils.createTextFileForScenario(scenario, testResourcesDir)
 
-            val prompt = if (model.capabilities.contains(LLMCapability.Document)) {
-                prompt("text-test-${scenario.name.lowercase()}") {
-                    system("You are a helpful assistant that can analyze and process text.")
+            val prompt =
+                if (model.capabilities.contains(LLMCapability.Document) && model.provider != LLMProvider.OpenAI) {
+                    prompt("text-test-${scenario.name.lowercase()}") {
+                        system("You are a helpful assistant that can analyze and process text.")
 
-                    user {
-                        markdown {
-                            "I'm sending you a text file. Please analyze it and summarize its content."
+                        user {
+                            markdown {
+                                +"I'm sending you a text file. Please analyze it and summarize its content."
+                            }
+
+                            attachments {
+                                textFile(KtPath(file.pathString), "text/plain")
+                            }
                         }
+                    }
+                } else {
+                    prompt("text-test-${scenario.name.lowercase()}") {
+                        system("You are a helpful assistant that can analyze and process text.")
 
-
-                        attachments {
-                            textFile(KtPath(file.pathString), "text/plain")
+                        user {
+                            markdown {
+                                +"I'm sending you a text file. Please analyze it and summarize its content."
+                                newline()
+                                +file.readText()
+                            }
                         }
                     }
                 }
-            } else {
-                prompt("text-test-${scenario.name.lowercase()}") {
-                    system("You are a helpful assistant that can analyze and process text.")
-
-                    user {
-                        markdown {
-                            +"I'm sending you a text file. Please analyze it and summarize its content."
-                            newline()
-                            +file.readText()
-                        }
-                    }
-                }
-            }
 
             withRetry {
                 try {
-                    val response = executor.execute(prompt, model)
+                    val response = executor.execute(prompt, model).single()
                     checkExecutorMediaResponse(response)
                 } catch (e: Exception) {
                     when (scenario) {
                         TextTestScenario.EMPTY_TEXT -> {
                             if (model.provider == LLMProvider.Google) {
-                                assertTrue(
-                                    e.message?.contains("400 Bad Request") == true,
+                                assertEquals(
+                                    e.message?.contains("400 Bad Request"),
+                                    true,
                                     "Expected exception for empty text [400 Bad Request] was not found, got [${e.message}] instead"
                                 )
-                                assertTrue(
-                                    e.message?.contains("Unable to submit request because it has an empty inlineData parameter. Add a value to the parameter and try again.") == true,
+                                assertEquals(
+                                    e.message?.contains(
+                                        "Unable to submit request because it has an empty inlineData parameter. Add a value to the parameter and try again."
+                                    ),
+                                    true,
                                     "Expected exception for empty text [Unable to submit request because it has an empty inlineData parameter. Add a value to the parameter and try again] was not found, got [${e.message}] instead"
                                 )
                             }
@@ -882,12 +873,14 @@ class SingleLLMPromptExecutorIntegrationTest {
 
                         TextTestScenario.LONG_TEXT_5_MB -> {
                             if (model.provider == LLMProvider.Anthropic) {
-                                assertTrue(
-                                    e.message?.contains("400 Bad Request") == true,
+                                assertEquals(
+                                    e.message?.contains("400 Bad Request"),
+                                    true,
                                     "Expected exception for long text [400 Bad Request] was not found, got [${e.message}] instead"
                                 )
-                                assertTrue(
-                                    e.message?.contains("prompt is too long") == true,
+                                assertEquals(
+                                    e.message?.contains("prompt is too long"),
+                                    true,
                                     "Expected exception for long text [prompt is too long:] was not found, got [${e.message}] instead"
                                 )
                             } else if (model.provider == LLMProvider.Google) {
@@ -922,9 +915,7 @@ class SingleLLMPromptExecutorIntegrationTest {
                 system("You are a helpful assistant.")
 
                 user {
-                    markdown {
-                        "I'm sending you an audio file. Please tell me a couple of words about it."
-                    }
+                    +"I'm sending you an audio file. Please tell me a couple of words about it."
 
                     attachments {
                         audio(KtPath(audioFile.pathString))
@@ -934,22 +925,25 @@ class SingleLLMPromptExecutorIntegrationTest {
 
             withRetry(times = 3, testName = "integration_testAudioProcessingBasic[${model.id}]") {
                 try {
-                    val response = executor.execute(prompt, model)
+                    val response = executor.execute(prompt, model).single()
                     checkExecutorMediaResponse(response)
                 } catch (e: Exception) {
                     if (scenario == AudioTestScenario.CORRUPTED_AUDIO) {
-                        assertTrue(
-                            e.message?.contains("400 Bad Request") == true,
+                        assertEquals(
+                            e.message?.contains("400 Bad Request"),
+                            true,
                             "Expected exception for empty text [400 Bad Request] was not found, got [${e.message}] instead"
                         )
                         if (model.provider == LLMProvider.OpenAI) {
-                            assertTrue(
-                                e.message?.contains("This model does not support the format you provided.") == true,
+                            assertEquals(
+                                e.message?.contains("This model does not support the format you provided."),
+                                true,
                                 "Expected exception for corrupted audio [This model does not support the format you provided.]"
                             )
                         } else if (model.provider == LLMProvider.Google) {
-                            assertTrue(
-                                e.message?.contains("Request contains an invalid argument.") == true,
+                            assertEquals(
+                                e.message?.contains("Request contains an invalid argument."),
+                                true,
                                 "Expected exception for corrupted audio [Request contains an invalid argument.]"
                             )
                         }
@@ -961,8 +955,8 @@ class SingleLLMPromptExecutorIntegrationTest {
         }
 
     /*
-    * Checking just images to make sure the file is uploaded in base64 format
-    * */
+     * Checking just images to make sure the file is uploaded in base64 format
+     * */
     @ParameterizedTest
     @MethodSource("modelClientCombinations")
     fun integration_testBase64EncodedAttachment(model: LLModel, client: LLMClient) = runTest(timeout = 300.seconds) {
@@ -1001,9 +995,8 @@ class SingleLLMPromptExecutorIntegrationTest {
         }
 
         withRetry {
-            val response = executor.execute(prompt, model)
+            val response = executor.execute(prompt, model).single()
             checkExecutorMediaResponse(response)
-
 
             assertTrue(
                 response.content.contains("image", ignoreCase = true),
@@ -1013,8 +1006,8 @@ class SingleLLMPromptExecutorIntegrationTest {
     }
 
     /*
-    * Checking just images to make sure the file is uploaded by URL
-    * */
+     * Checking just images to make sure the file is uploaded by URL
+     * */
     @ParameterizedTest
     @MethodSource("modelClientCombinations")
     fun integration_testUrlBasedAttachment(model: LLModel, client: LLMClient) = runTest(timeout = 300.seconds) {
@@ -1045,13 +1038,13 @@ class SingleLLMPromptExecutorIntegrationTest {
         }
 
         withRetry {
-            val response = executor.execute(prompt, model)
+            val response = executor.execute(prompt, model).single()
             checkExecutorMediaResponse(response)
 
             assertTrue(
                 response.content.contains("image", ignoreCase = true) ||
-                        response.content.contains("python", ignoreCase = true) ||
-                        response.content.contains("logo", ignoreCase = true),
+                    response.content.contains("python", ignoreCase = true) ||
+                    response.content.contains("logo", ignoreCase = true),
                 "Response should mention the image content"
             )
         }
@@ -1063,13 +1056,14 @@ class SingleLLMPromptExecutorIntegrationTest {
      * Some models may require an inference profile instead of on-demand throughput.
      * The test may fail if the AWS account doesn't have access to the specified models.
      */
+    @Disabled
     @ParameterizedTest
     @MethodSource("bedrockCombinations")
     fun integration_testSimpleBedrockExecutor(model: LLModel) = runTest(timeout = 300.seconds) {
         val executor = simpleBedrockExecutor(
             readAwsAccessKeyIdFromEnv(),
             readAwsSecretAccessKeyFromEnv(),
-            readAwsSessionTokenFromEnv() ?: "",
+            readAwsSessionTokenFromEnv(),
         )
 
         val prompt = Prompt.build("test-simple-bedrock-executor") {

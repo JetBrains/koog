@@ -16,33 +16,13 @@ class ModerationResponseEventTest {
     //region Attributes
 
     @Test
-    fun `test moderation response attributes verbose false`() {
+    fun `test moderation response attributes`() {
         val moderationResult = createTestModerationResult()
         val llmProvider = MockLLMProvider()
 
         val moderationResponseEvent = ModerationResponseEvent(
             provider = llmProvider,
             moderationResult = moderationResult,
-            verbose = false,
-        )
-
-        val expectedAttributes = listOf(
-            CommonAttributes.System(llmProvider)
-        )
-
-        assertEquals(expectedAttributes.size, moderationResponseEvent.attributes.size)
-        assertContentEquals(expectedAttributes, moderationResponseEvent.attributes)
-    }
-
-    @Test
-    fun `test moderation response attributes verbose true`() {
-        val moderationResult = createTestModerationResult()
-        val llmProvider = MockLLMProvider()
-
-        val moderationResponseEvent = ModerationResponseEvent(
-            provider = llmProvider,
-            moderationResult = moderationResult,
-            verbose = true,
         )
 
         val expectedAttributes = listOf(
@@ -58,31 +38,12 @@ class ModerationResponseEventTest {
     //region Body Fields
 
     @Test
-    fun `test moderation response body fields verbose false`() {
+    fun `test moderation response body fields`() {
         val moderationResult = createTestModerationResult()
 
         val moderationResponseEvent = ModerationResponseEvent(
             provider = MockLLMProvider(),
             moderationResult = moderationResult,
-            verbose = false,
-        )
-
-        val expectedBodyFields = listOf(
-            EventBodyFields.Role(role = Message.Role.Assistant)
-        )
-
-        assertEquals(expectedBodyFields.size, moderationResponseEvent.bodyFields.size)
-        assertContentEquals(expectedBodyFields, moderationResponseEvent.bodyFields)
-    }
-
-    @Test
-    fun `test moderation response body fields verbose true`() {
-        val moderationResult = createTestModerationResult()
-
-        val moderationResponseEvent = ModerationResponseEvent(
-            provider = MockLLMProvider(),
-            moderationResult = moderationResult,
-            verbose = true,
         )
 
         val json = Json { allowStructuredMapKeys = true }

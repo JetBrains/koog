@@ -4,8 +4,10 @@ import ai.koog.embeddings.base.Embedder
 import ai.koog.embeddings.base.Vector
 import ai.koog.rag.base.DocumentWithPayload
 import ai.koog.rag.base.files.DocumentProvider
-import ai.koog.rag.base.files.FileMetadata
 import ai.koog.rag.base.files.FileSystemProvider
+import ai.koog.rag.base.files.createDirectory
+import ai.koog.rag.base.files.readText
+import ai.koog.rag.base.files.writeText
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.json.Json
@@ -34,9 +36,9 @@ public open class FileVectorStorage<Document, Path>(
      * Directory where document metadata is stored
      */
     private suspend fun documentsDir(): Path {
-        val dir = fs.fromRelativeString(root, "documents")
+        val dir = fs.joinPath(root, "documents")
         if (!fs.exists(dir)) {
-            fs.create(root, "documents", FileMetadata.FileType.Directory)
+            fs.createDirectory(dir)
         }
         return dir
     }
@@ -45,9 +47,9 @@ public open class FileVectorStorage<Document, Path>(
      * Directory where vector payloads are stored
      */
     private suspend fun vectorsDir(): Path {
-        val dir = fs.fromRelativeString(root, "vectors")
+        val dir = fs.joinPath(root, "vectors")
         if (!fs.exists(dir)) {
-            fs.create(root, "vectors", FileMetadata.FileType.Directory)
+            fs.createDirectory(dir)
         }
         return dir
     }
@@ -56,14 +58,14 @@ public open class FileVectorStorage<Document, Path>(
      * Get the path to the document file for a given document ID
      */
     private suspend fun documentPath(documentId: String): Path {
-        return fs.fromRelativeString(documentsDir(), documentId)
+        return fs.joinPath(documentsDir(), documentId)
     }
 
     /**
      * Get the path to the vector file for a given document ID
      */
     private suspend fun vectorPath(documentId: String): Path {
-        return fs.fromRelativeString(vectorsDir(), documentId)
+        return fs.joinPath(vectorsDir(), documentId)
     }
 
     @OptIn(ExperimentalUuidApi::class)
@@ -76,18 +78,18 @@ public open class FileVectorStorage<Document, Path>(
         val documentId = Uuid.random().toString()
 
         // Create a temporary file path for the document
-        val docPath = fs.fromRelativeString(docsDir, documentId)
+        val docPath = fs.joinPath(docsDir, documentId)
 
         // Write the document to the file system
         val docText = documentReader.text(document).toString()
-        fs.write(docPath, docText.encodeToByteArray())
+        fs.writeText(docPath, docText)
 
         // Create a temporary file path for the vector
-        val vecPath = fs.fromRelativeString(vecsDir, documentId)
+        val vecPath = fs.joinPath(vecsDir, documentId)
 
         // Serialize the vector to JSON and write it to the file system
         val vectorJson = json.encodeToString(data)
-        fs.write(vecPath, vectorJson.encodeToByteArray())
+        fs.writeText(vecPath, vectorJson)
 
         return documentId
     }
@@ -103,7 +105,7 @@ public open class FileVectorStorage<Document, Path>(
             val docParent = fs.parent(docPath)
             val docName = fs.name(docPath)
             if (docParent != null) {
-                fs.delete(docParent, docName)
+                fs.delete(fs.joinPath(docParent, docName))
             } else {
                 success = false
             }
@@ -116,7 +118,7 @@ public open class FileVectorStorage<Document, Path>(
             val vecParent = fs.parent(vecPath)
             val vecName = fs.name(vecPath)
             if (vecParent != null) {
-                fs.delete(vecParent, vecName)
+                fs.delete(fs.joinPath(vecParent, vecName))
             } else {
                 success = false
             }
@@ -142,7 +144,7 @@ public open class FileVectorStorage<Document, Path>(
             return null
         }
 
-        val vectorJson = fs.read(vecPath).decodeToString()
+        val vectorJson = fs.readText(vecPath)
         return json.decodeFromString<Vector>(vectorJson)
     }
 

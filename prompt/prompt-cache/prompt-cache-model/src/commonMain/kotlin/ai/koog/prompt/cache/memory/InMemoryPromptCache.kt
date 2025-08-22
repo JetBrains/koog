@@ -25,7 +25,9 @@ public class InMemoryPromptCache(private val maxEntries: Int?) : PromptCache {
             val limit = when {
                 parts.size == 1 || parts[1].isEmpty() -> null
                 parts[1].equals("unlimited", ignoreCase = true) -> null
-                parts[1].startsWith("-") -> error("Invalid memory cache size limit: ${parts[1]}. Expected a positive number or 'unlimited'.")
+                parts[1].startsWith(
+                    "-"
+                ) -> error("Invalid memory cache size limit: ${parts[1]}. Expected a positive number or 'unlimited'.")
                 else -> parts[1].toIntOrNull()?.takeIf { it > 0 }
                     ?: error("Invalid memory cache size limit: ${parts[1]}. Expected a positive number or 'unlimited'.")
             }

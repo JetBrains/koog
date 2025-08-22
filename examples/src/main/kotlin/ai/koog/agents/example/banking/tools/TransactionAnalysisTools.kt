@@ -1,10 +1,10 @@
 package ai.koog.agents.example.banking.tools
 
 import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.tools.reflect.ToolSet
-import ai.koog.agents.core.tools.annotations.Tool
-import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.agents.core.tools.annotations.Tool
+import ai.koog.agents.core.tools.reflect.ToolSet
 import ai.koog.agents.core.tools.reflect.asTools
 import ai.koog.agents.example.ApiKeyService
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
@@ -12,14 +12,6 @@ import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
-import kotlin.collections.filter
-import kotlin.collections.joinToString
-import kotlin.collections.map
-import kotlin.collections.sum
-import kotlin.text.split
-import kotlin.text.toDoubleOrNull
-import kotlin.text.toInt
-import kotlin.text.trim
 
 @Serializable
 enum class TransactionCategory(val title: String) {
@@ -60,8 +52,8 @@ class TransactionAnalysisTools : ToolSet {
     @Tool
     @LLMDescription(
         "Retrieves transactions filtered by userId, category, start date, and end date. All parameters are optional. " +
-                "If no parameters are provided, all transactions are returned. " +
-                "Dates should be in the format YYYY-MM-DD."
+            "If no parameters are provided, all transactions are returned. " +
+            "Dates should be in the format YYYY-MM-DD."
     )
     fun getTransactions(
         @LLMDescription("The ID of the user whose transactions to retrieve.")
@@ -143,7 +135,7 @@ fun main() = runBlocking {
 
     val agent = AIAgent(
         executor = simpleOpenAIExecutor(apiKey),
-        llmModel = OpenAIModels.Reasoning.GPT4oMini,
+        llmModel = OpenAIModels.CostOptimized.GPT4oMini,
         systemPrompt = bankingAssistantSystemPrompt + transactionAnalysisPrompt,
         temperature = 0.0,
         toolRegistry = toolRegistry

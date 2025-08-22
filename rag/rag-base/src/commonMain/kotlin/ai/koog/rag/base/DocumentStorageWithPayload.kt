@@ -67,7 +67,6 @@ public interface DocumentStorageWithPayload<Document, Payload> {
      */
     public suspend fun readWithPayload(documentId: String): DocumentWithPayload<Document, Payload>?
 
-
     /**
      * Iterates over the documents
      *

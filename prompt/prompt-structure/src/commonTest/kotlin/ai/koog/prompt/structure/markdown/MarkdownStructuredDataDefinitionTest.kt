@@ -29,7 +29,7 @@ class MarkdownStructuredDataDefinitionTest {
         assertTrue(content.contains("You must adhere to the following Markdown schema:"))
         assertTrue(content.contains("# Header"))
         assertTrue(content.contains("Some content"))
-        
+
         // Verify that examples section is not included
         assertTrue(!content.contains("Here are some examples"))
     }
@@ -60,7 +60,7 @@ class MarkdownStructuredDataDefinitionTest {
         assertTrue(content.contains("You must adhere to the following Markdown schema:"))
         assertTrue(content.contains("# Header"))
         assertTrue(content.contains("Some content"))
-        
+
         // Verify that examples section is included
         assertTrue(content.contains("Here are some examples of the test_format format:"))
         assertTrue(content.contains("# Example"))
@@ -86,7 +86,6 @@ class MarkdownStructuredDataDefinitionTest {
         val builder = TextContentBuilder()
         definition.definition(builder)
         val content = builder.build()
-
 
         assertEquals(
             """

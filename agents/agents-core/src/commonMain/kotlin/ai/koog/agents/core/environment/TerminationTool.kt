@@ -14,6 +14,7 @@ public object TerminationTool {
      * for halting processes, sessions, or operations in an explicit manner.
      */
     public const val NAME: String = "__terminate__"
+
     /**
      * The key name used to represent the result of an operation or tool execution in various contexts.
      *

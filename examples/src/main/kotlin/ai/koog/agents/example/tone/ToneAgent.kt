@@ -67,7 +67,9 @@ fun main() {
                 }
 
                 onAgentRunError { eventContext ->
-                    println("An error occurred: ${eventContext.throwable.message}\n${eventContext.throwable.stackTraceToString()}")
+                    println(
+                        "An error occurred: ${eventContext.throwable.message}\n${eventContext.throwable.stackTraceToString()}"
+                    )
                 }
 
                 onAgentFinished { eventContext ->

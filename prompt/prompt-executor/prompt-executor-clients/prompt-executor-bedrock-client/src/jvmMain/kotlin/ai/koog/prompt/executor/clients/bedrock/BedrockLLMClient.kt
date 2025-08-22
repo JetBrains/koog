@@ -25,8 +25,19 @@ import ai.koog.prompt.message.Message
 import aws.sdk.kotlin.runtime.auth.credentials.StaticCredentialsProvider
 import aws.sdk.kotlin.services.bedrockruntime.BedrockRuntimeClient
 import aws.sdk.kotlin.services.bedrockruntime.applyGuardrail
-import aws.sdk.kotlin.services.bedrockruntime.model.*
+import aws.sdk.kotlin.services.bedrockruntime.model.ApplyGuardrailResponse
+import aws.sdk.kotlin.services.bedrockruntime.model.GuardrailAction
+import aws.sdk.kotlin.services.bedrockruntime.model.GuardrailContentBlock
+import aws.sdk.kotlin.services.bedrockruntime.model.GuardrailContentFilterType
+import aws.sdk.kotlin.services.bedrockruntime.model.GuardrailContentSource
+import aws.sdk.kotlin.services.bedrockruntime.model.GuardrailImageBlock
+import aws.sdk.kotlin.services.bedrockruntime.model.GuardrailImageFormat
 import aws.sdk.kotlin.services.bedrockruntime.model.GuardrailImageSource.Bytes
+import aws.sdk.kotlin.services.bedrockruntime.model.GuardrailTextBlock
+import aws.sdk.kotlin.services.bedrockruntime.model.InvokeModelRequest
+import aws.sdk.kotlin.services.bedrockruntime.model.InvokeModelWithResponseStreamRequest
+import aws.sdk.kotlin.services.bedrockruntime.model.InvokeModelWithResponseStreamResponse
+import aws.sdk.kotlin.services.bedrockruntime.model.ResponseStream
 import aws.smithy.kotlin.runtime.net.url.Url
 import aws.smithy.kotlin.runtime.retries.StandardRetryStrategy
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -51,7 +62,7 @@ import kotlinx.serialization.json.Json
  * @property moderationGuardrailsSettings Optional settings of the AWS bedrock Guardrails (see [AWS documentation](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-use-independent-api.html) ) that would be used for the [LLMClient.moderate] request
  */
 public class BedrockClientSettings(
-    internal val region: String = "us-east-1",
+    internal val region: String = BedrockRegions.US_WEST_2.regionCode,
     internal val timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig(),
     internal val endpointUrl: String? = null,
     internal val maxRetries: Int = 3,
@@ -113,7 +124,7 @@ public class BedrockLLMClient(
                 awsSessionToken?.let { this.sessionToken = it }
             }
 
-            // Configure custom endpoint if provided
+            // Configure a custom endpoint if provided
             settings.endpointUrl?.let { url ->
                 this.endpointUrl = Url.parse(url)
             }
@@ -136,10 +147,10 @@ public class BedrockLLMClient(
     internal fun getBedrockModelFamily(model: LLModel): BedrockModelFamilies {
         require(model.provider == LLMProvider.Bedrock) { "Model ${model.id} is not a Bedrock model" }
         return when {
-            model.id.startsWith("anthropic.claude") -> BedrockModelFamilies.AnthropicClaude
-            model.id.startsWith("amazon.nova") -> BedrockModelFamilies.AmazonNova
-            model.id.startsWith("ai21.jamba") -> BedrockModelFamilies.AI21Jamba
-            model.id.startsWith("meta.llama") -> BedrockModelFamilies.Meta
+            model.id.contains("anthropic.claude") -> BedrockModelFamilies.AnthropicClaude
+            model.id.contains("amazon.nova") -> BedrockModelFamilies.AmazonNova
+            model.id.contains("ai21.jamba") -> BedrockModelFamilies.AI21Jamba
+            model.id.contains("meta.llama") -> BedrockModelFamilies.Meta
             else -> throw IllegalArgumentException("Model ${model.id} is not a supported Bedrock model")
         }
     }
@@ -268,7 +279,9 @@ public class BedrockLLMClient(
         return channelFlow {
             try {
                 withContext(Dispatchers.SuitableForIO) {
-                    bedrockClient.invokeModelWithResponseStream(streamRequest) { response: InvokeModelWithResponseStreamResponse ->
+                    bedrockClient.invokeModelWithResponseStream(
+                        streamRequest
+                    ) { response: InvokeModelWithResponseStreamResponse ->
                         response.body?.collect { event: ResponseStream ->
                             val chunkBytes = event.asChunk().bytes
                             if (chunkBytes != null) {
@@ -333,8 +346,8 @@ public class BedrockLLMClient(
         if (moderationGuardrailsSettings == null) {
             throw IllegalArgumentException(
                 "Moderation Guardrails settings are not provided to the Bedrock client. " +
-                        "Please provide them to the BedrockClientSettings when creating the Bedrock client. " +
-                        "See https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-use-independent-api.html for more information."
+                    "Please provide them to the BedrockClientSettings when creating the Bedrock client. " +
+                    "See https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-use-independent-api.html for more information."
             )
         }
 
@@ -355,15 +368,14 @@ public class BedrockLLMClient(
         )
 
         val inputIsHarmful = inputGuardrailResponse.action is GuardrailAction.GuardrailIntervened
-        val outputputIsHarmful = inputGuardrailResponse.action is GuardrailAction.GuardrailIntervened
+        val outputIsHarmful = inputGuardrailResponse.action is GuardrailAction.GuardrailIntervened
 
         val categories = buildMap {
             fillCategoriesMap(inputGuardrailResponse)
             fillCategoriesMap(outputGuardrailResponse)
         }
 
-        return ModerationResult(inputIsHarmful || outputputIsHarmful, categories)
-
+        return ModerationResult(inputIsHarmful || outputIsHarmful, categories)
     }
 
     private fun MutableMap<ModerationCategory, ModerationCategoryResult>.fillCategoriesMap(
@@ -424,24 +436,29 @@ public class BedrockLLMClient(
                 add(GuardrailContentBlock.Text(GuardrailTextBlock { text = message.content }))
                 if (message is Message.WithAttachments) {
                     message.attachments.filterIsInstance<Attachment.Image>().forEach { image ->
-                        add(GuardrailContentBlock.Image(GuardrailImageBlock {
-                            format = when (image.format) {
-                                "jpg", "jpeg", "JPG", "JPEG" -> GuardrailImageFormat.Jpeg
-                                "png", "PNG" -> GuardrailImageFormat.Png
-                                else -> GuardrailImageFormat.SdkUnknown(image.format)
-                            }
+                        add(
+                            GuardrailContentBlock.Image(
+                                GuardrailImageBlock {
+                                    format = when (image.format) {
+                                        "jpg", "jpeg", "JPG", "JPEG" -> GuardrailImageFormat.Jpeg
+                                        "png", "PNG" -> GuardrailImageFormat.Png
+                                        else -> GuardrailImageFormat.SdkUnknown(image.format)
+                                    }
 
-                            val imageContent = image.content
+                                    val imageContent = image.content
 
-                            when (imageContent) {
-                                is AttachmentContent.Binary.Base64 -> source = Bytes(imageContent.toBytes())
-                                is AttachmentContent.Binary.Bytes -> source = Bytes(imageContent.data)
-                                is AttachmentContent.PlainText -> source =
-                                    Bytes(imageContent.text.encodeToByteArray())
+                                    when (imageContent) {
+                                        is AttachmentContent.Binary.Base64 -> source = Bytes(imageContent.toBytes())
+                                        is AttachmentContent.Binary.Bytes -> source = Bytes(imageContent.data)
+                                        is AttachmentContent.PlainText ->
+                                            source =
+                                                Bytes(imageContent.text.encodeToByteArray())
 
-                                else -> {}
-                            }
-                        }))
+                                        else -> {}
+                                    }
+                                }
+                            )
+                        )
                     }
                 }
             }

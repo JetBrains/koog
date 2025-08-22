@@ -1,6 +1,11 @@
 package ai.koog.agents.core
 
-import ai.koog.agents.core.tools.*
+import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.ToolArgs
+import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.agents.core.tools.ToolParameterDescriptor
+import ai.koog.agents.core.tools.ToolParameterType
+import ai.koog.agents.core.tools.ToolResult
 import kotlinx.serialization.Serializable
 import kotlin.jvm.JvmInline
 

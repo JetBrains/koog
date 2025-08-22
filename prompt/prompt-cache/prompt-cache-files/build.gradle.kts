@@ -17,7 +17,7 @@ kotlin {
                 api(libs.kotlinx.serialization.json)
             }
         }
-        
+
         jvmTest {
             dependencies {
                 implementation(kotlin("test-junit5"))

@@ -1,9 +1,13 @@
 package ai.koog.agents.example.tone
 
-import ai.koog.agents.core.tools.*
+import ai.koog.agents.core.tools.SimpleTool
+import ai.koog.agents.core.tools.ToolArgs
+import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.agents.core.tools.ToolParameterDescriptor
+import ai.koog.agents.core.tools.ToolParameterType
+import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.example.ApiKeyService
 import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.executor.model.PromptExecutorExt.execute
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
@@ -42,8 +46,8 @@ object ToneTools {
             val prompt = prompt("analyze_tone") {
                 system(
                     "You are a helpful assistant that analyzes the tone of text. " +
-                            "Determine if the text has a $toneType tone. " +
-                            "Respond with only 'yes' if the text has a $toneType tone, or 'no' if it doesn't."
+                        "Determine if the text has a $toneType tone. " +
+                        "Respond with only 'yes' if the text has a $toneType tone, or 'no' if it doesn't."
                 )
                 user("Please analyze the tone of the following text: ${args.text}")
             }
@@ -52,7 +56,7 @@ object ToneTools {
             val response = executor.execute(prompt = prompt, model = OpenAIModels.Chat.GPT4o)
 
             // Process the response
-            val answer = response.content.trim().lowercase()
+            val answer = response.single().content.trim().lowercase()
 
             // Return a formatted response based on the LLM's answer
             return if (answer == "yes") {

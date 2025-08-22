@@ -1,7 +1,7 @@
 package ai.koog.agents.memory.storage
 
 import java.security.SecureRandom
-import java.util.*
+import java.util.Base64
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
@@ -75,8 +75,8 @@ public class Aes256GCMEncryptor(secretKey: String) : Encryption {
         return String(plaintext)
     }
 
-    override fun encrypt(text: String): String {
-        val (nonce, ciphertext) = encryptImpl(text)
+    override fun encrypt(value: String): String {
+        val (nonce, ciphertext) = encryptImpl(value)
         return Base64.getEncoder().encodeToString(nonce + ciphertext)
     }
 

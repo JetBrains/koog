@@ -41,5 +41,4 @@ public sealed class BedrockModelFamilies(
      */
     @Serializable
     public data object Meta : BedrockModelFamilies("bedrock.meta", "AWS Bedrock (Meta Llama)")
-
 }

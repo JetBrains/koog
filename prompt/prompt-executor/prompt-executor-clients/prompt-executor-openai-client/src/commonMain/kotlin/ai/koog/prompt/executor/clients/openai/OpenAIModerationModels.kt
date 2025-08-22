@@ -1,5 +1,6 @@
 package ai.koog.prompt.executor.clients.openai
 
+import ai.koog.prompt.executor.clients.openai.models.Content
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -11,7 +12,6 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 internal data class OpenAIModerationRequest(
-    @Serializable(with = ContentSerializer::class)
     val input: Content?,
     val model: String? = null
 )
@@ -42,8 +42,10 @@ internal data class OpenAIModerationResponse(
 internal data class OpenAIModerationResult(
     val flagged: Boolean,
     val categories: OpenAIModerationCategories,
-    @SerialName("category_scores") val categoryScores: OpenAIModerationCategoryScores,
-    @SerialName("category_applied_input_types") val categoryAppliedInputTypes: OpenAIModerationCategoryAppliedInputTypes? = null
+    @SerialName("category_scores")
+    val categoryScores: OpenAIModerationCategoryScores,
+    @SerialName("category_applied_input_types")
+    val categoryAppliedInputTypes: OpenAIModerationCategoryAppliedInputTypes? = null
 )
 
 /**

@@ -8,23 +8,43 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
-import ai.koog.prompt.executor.ollama.client.dto.*
+import ai.koog.prompt.executor.ollama.client.dto.EmbeddingRequestDTO
+import ai.koog.prompt.executor.ollama.client.dto.EmbeddingResponseDTO
+import ai.koog.prompt.executor.ollama.client.dto.OllamaChatRequestDTO
+import ai.koog.prompt.executor.ollama.client.dto.OllamaChatResponseDTO
+import ai.koog.prompt.executor.ollama.client.dto.OllamaErrorResponseDTO
+import ai.koog.prompt.executor.ollama.client.dto.OllamaModelsListResponseDTO
+import ai.koog.prompt.executor.ollama.client.dto.OllamaPullModelRequestDTO
+import ai.koog.prompt.executor.ollama.client.dto.OllamaPullModelResponseDTO
+import ai.koog.prompt.executor.ollama.client.dto.OllamaShowModelRequestDTO
+import ai.koog.prompt.executor.ollama.client.dto.OllamaShowModelResponseDTO
+import ai.koog.prompt.executor.ollama.client.dto.extractOllamaJsonFormat
+import ai.koog.prompt.executor.ollama.client.dto.extractOllamaOptions
+import ai.koog.prompt.executor.ollama.client.dto.getToolCalls
+import ai.koog.prompt.executor.ollama.client.dto.toOllamaChatMessages
+import ai.koog.prompt.executor.ollama.client.dto.toOllamaModelCard
+import ai.koog.prompt.executor.ollama.client.dto.toOllamaTool
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.ktor.client.*
-import io.ktor.client.call.*
-import io.ktor.client.engine.*
-import io.ktor.client.plugins.*
-import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
-import io.ktor.utils.io.*
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.engine.HttpClientEngineFactory
+import io.ktor.client.plugins.HttpTimeout
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.defaultRequest
+import io.ktor.client.request.get
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsChannel
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
+import io.ktor.http.isSuccess
+import io.ktor.serialization.kotlinx.json.json
+import io.ktor.utils.io.readUTF8Line
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.datetime.Clock
@@ -99,7 +119,6 @@ public class OllamaClient(
         )
 
         private val possibleModerationCategories = moderationCategoriesMapping.values.flatten().distinct()
-
     }
 
     private val ollamaJson = Json {
@@ -123,7 +142,9 @@ public class OllamaClient(
     }
 
     override suspend fun execute(
-        prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>
     ): List<Message.Response> {
         require(model.provider == LLMProvider.Ollama) { "Model not supported by Ollama" }
 
@@ -131,12 +152,13 @@ public class OllamaClient(
             setBody(
                 OllamaChatRequestDTO(
                     model = model.id,
-                messages = prompt.toOllamaChatMessages(model),
-                tools = if (tools.isNotEmpty()) tools.map { it.toOllamaTool() } else null,
-                format = prompt.extractOllamaJsonFormat(),
-                options = prompt.extractOllamaOptions(),
-                stream = false,
-            ))
+                    messages = prompt.toOllamaChatMessages(model),
+                    tools = if (tools.isNotEmpty()) tools.map { it.toOllamaTool() } else null,
+                    format = prompt.extractOllamaJsonFormat(),
+                    options = prompt.extractOllamaOptions(),
+                    stream = false,
+                )
+            )
         }
 
         if (response.status.isSuccess()) {
@@ -176,7 +198,8 @@ public class OllamaClient(
             content.isNotEmpty() && toolCalls.isEmpty() -> {
                 listOf(
                     Message.Assistant(
-                        content = content, metaInfo = responseMetadata
+                        content = content,
+                        metaInfo = responseMetadata
                     )
                 )
             }
@@ -188,7 +211,8 @@ public class OllamaClient(
             else -> {
                 val toolCallMessages = messages.getToolCalls(responseMetadata)
                 val assistantMessage = Message.Assistant(
-                    content = content, metaInfo = responseMetadata
+                    content = content,
+                    metaInfo = responseMetadata
                 )
                 listOf(assistantMessage) + toolCallMessages
             }
@@ -196,7 +220,8 @@ public class OllamaClient(
     }
 
     override fun executeStreaming(
-        prompt: Prompt, model: LLModel
+        prompt: Prompt,
+        model: LLModel
     ): Flow<String> = flow {
         require(model.provider == LLMProvider.Ollama) { "Model not supported by Ollama" }
 
@@ -289,7 +314,6 @@ public class OllamaClient(
         return modelCard
     }
 
-
     public override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
         if (!model.capabilities.contains(LLMCapability.Moderation)) {
             throw IllegalArgumentException("Model ${model.id} does not support moderation")
@@ -304,7 +328,8 @@ public class OllamaClient(
         check(responses.size == 1) { "Moderation model from Ollama must return a single response" }
         val singleResponse = responses.single()
         check(singleResponse is Message.Assistant) {
-            "Moderation model from Ollama must return an assistant message" + " (actual response: ${singleResponse::class.simpleName})"
+            "Moderation model from Ollama must return an assistant message" +
+                " (actual response: ${singleResponse::class.simpleName})"
         }
         val contentLines = singleResponse.content.lines()
         val moderationResult = contentLines.first()

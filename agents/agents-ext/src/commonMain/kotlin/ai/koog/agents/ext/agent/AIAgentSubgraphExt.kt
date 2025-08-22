@@ -6,12 +6,21 @@ import ai.koog.agents.core.dsl.builder.AIAgentBuilderDslMarker
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphDelegate
 import ai.koog.agents.core.dsl.builder.forwardTo
-import ai.koog.agents.core.dsl.extension.*
+import ai.koog.agents.core.dsl.extension.nodeExecuteTool
+import ai.koog.agents.core.dsl.extension.nodeLLMRequest
+import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
+import ai.koog.agents.core.dsl.extension.onToolCall
+import ai.koog.agents.core.dsl.extension.setToolChoiceRequired
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.environment.SafeTool
 import ai.koog.agents.core.environment.result
 import ai.koog.agents.core.environment.toSafeResult
-import ai.koog.agents.core.tools.*
+import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.ToolArgs
+import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.agents.core.tools.ToolParameterDescriptor
+import ai.koog.agents.core.tools.ToolParameterType
+import ai.koog.agents.core.tools.ToolResult
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
@@ -27,7 +36,9 @@ public interface SubgraphResult : ToolArgs, ToolResult
 /**
  * The result which subgraphs can return.
  */
-public interface SerializableSubgraphResult<T : SerializableSubgraphResult<T>> : ToolArgs, ToolResult.JSONSerializable<T>
+public interface SerializableSubgraphResult<T : SerializableSubgraphResult<T>> :
+    ToolArgs,
+    ToolResult.JSONSerializable<T>
 
 /**
  * Represents the result of a verified subgraph execution.
@@ -201,7 +212,6 @@ public inline fun <reified Input, reified ProvidedResult : SubgraphResult> AIAge
 ) {
     val setupTask by node<Input, String> { input ->
         llm.writeSession {
-
             // Append finish tool to tools if it's not present yet
             if (finishTool.descriptor !in tools) {
                 this.tools = tools + finishTool.descriptor
@@ -240,7 +250,7 @@ public inline fun <reified Input, reified ProvidedResult : SubgraphResult> AIAge
 
     nodeStart then setupTask then nodeCallLLM then nodeDecide
 
-    edge(nodeDecide forwardTo callTool onToolCall { true } )
+    edge(nodeDecide forwardTo callTool onToolCall { true })
     // throw to terminate the agent early with exception
     edge(
         nodeDecide forwardTo nodeFinish

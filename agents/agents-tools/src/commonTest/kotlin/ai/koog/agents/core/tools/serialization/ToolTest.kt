@@ -1,6 +1,13 @@
 package ai.koog.agents.core.tools.serialization
 
-import ai.koog.agents.core.tools.*
+import ai.koog.agents.core.tools.DirectToolCallsEnabler
+import ai.koog.agents.core.tools.SimpleTool
+import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.ToolArgs
+import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.agents.core.tools.ToolParameterDescriptor
+import ai.koog.agents.core.tools.ToolParameterType
+import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.KSerializer
@@ -16,7 +23,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 @OptIn(InternalAgentToolsApi::class)
-object Enabler: DirectToolCallsEnabler
+object Enabler : DirectToolCallsEnabler
 
 @OptIn(InternalAgentToolsApi::class)
 class ToolTest {
@@ -43,7 +50,7 @@ class ToolTest {
 
     // Structured tool
 
-    private object SampleStructuredTool : Tool<SampleStructuredTool.Args, SampleStructuredTool.Result>(){
+    private object SampleStructuredTool : Tool<SampleStructuredTool.Args, SampleStructuredTool.Result>() {
         @Serializable
         data class Args(val arg1: String, val arg2: Int) : ToolArgs
 

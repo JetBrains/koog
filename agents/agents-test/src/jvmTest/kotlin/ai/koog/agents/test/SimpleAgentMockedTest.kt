@@ -1,7 +1,13 @@
 package ai.koog.agents.test
 
 import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.tools.*
+import ai.koog.agents.core.tools.SimpleTool
+import ai.koog.agents.core.tools.ToolArgs
+import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.agents.core.tools.ToolException
+import ai.koog.agents.core.tools.ToolParameterDescriptor
+import ai.koog.agents.core.tools.ToolParameterType
+import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.tool.ExitTool
 import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.agents.features.eventHandler.feature.EventHandler
@@ -39,7 +45,7 @@ class SimpleAgentMockedTest {
             You are a helpful assistant. 
             You MUST use tools to communicate to the user.
             You MUST NOT communicate to the user without tools.
-        """.trimIndent()
+    """.trimIndent()
 
     val testExecutor = getMockExecutor {
         mockLLMToolCall(ExitTool, ExitTool.Args("Bye-bye.")) onRequestEquals "Please exit."
@@ -80,7 +86,9 @@ class SimpleAgentMockedTest {
         }
 
         onToolCallFailure { eventContext ->
-            println("Tool call failure: tool ${eventContext.tool.name}, args ${eventContext.toolArgs}, error=${eventContext.throwable.message}")
+            println(
+                "Tool call failure: tool ${eventContext.tool.name}, args ${eventContext.toolArgs}, error=${eventContext.throwable.message}"
+            )
             errors.add(eventContext.throwable)
         }
 
@@ -155,7 +163,7 @@ class SimpleAgentMockedTest {
     fun ` test AIAgent doesn't call tools by default`() = runBlocking {
         val agent = AIAgent(
             systemPrompt = systemPrompt,
-            llmModel = OpenAIModels.Reasoning.GPT4oMini,
+            llmModel = OpenAIModels.CostOptimized.GPT4oMini,
             temperature = 1.0,
             maxIterations = 10,
             executor = testExecutor,
@@ -181,7 +189,7 @@ class SimpleAgentMockedTest {
 
         val agent = AIAgent(
             systemPrompt = systemPrompt,
-            llmModel = OpenAIModels.Reasoning.GPT4oMini,
+            llmModel = OpenAIModels.CostOptimized.GPT4oMini,
             temperature = 1.0,
             toolRegistry = toolRegistry,
             maxIterations = 10,
@@ -205,7 +213,7 @@ class SimpleAgentMockedTest {
     fun `test simpleSingleRunAgent handles non-registered tools`(toolRegistry: ToolRegistry) = runBlocking {
         val agent = AIAgent(
             systemPrompt = systemPrompt,
-            llmModel = OpenAIModels.Reasoning.GPT4oMini,
+            llmModel = OpenAIModels.CostOptimized.GPT4oMini,
             temperature = 1.0,
             toolRegistry = toolRegistry,
             maxIterations = 10,
@@ -231,7 +239,7 @@ class SimpleAgentMockedTest {
 
         val agent = AIAgent(
             systemPrompt = systemPrompt,
-            llmModel = OpenAIModels.Reasoning.GPT4oMini,
+            llmModel = OpenAIModels.CostOptimized.GPT4oMini,
             temperature = 1.0,
             toolRegistry = toolRegistry,
             maxIterations = 10,
@@ -261,7 +269,7 @@ class SimpleAgentMockedTest {
 
         val successAgent = AIAgent(
             systemPrompt = systemPrompt,
-            llmModel = OpenAIModels.Reasoning.GPT4oMini,
+            llmModel = OpenAIModels.CostOptimized.GPT4oMini,
             temperature = 1.0,
             toolRegistry = toolRegistry,
             maxIterations = 10,
@@ -289,7 +297,7 @@ class SimpleAgentMockedTest {
 
         val agent = AIAgent(
             systemPrompt = systemPrompt,
-            llmModel = OpenAIModels.Reasoning.GPT4oMini,
+            llmModel = OpenAIModels.CostOptimized.GPT4oMini,
             temperature = 1.0,
             toolRegistry = toolRegistry,
             maxIterations = 2,
@@ -307,7 +315,7 @@ class SimpleAgentMockedTest {
         assertTrue(
             errors.any {
                 it.message?.contains("Maximum number of iterations") == true ||
-                        it.message?.contains("Agent couldn't finish in given number of steps") == true
+                    it.message?.contains("Agent couldn't finish in given number of steps") == true
             },
             "Expected error about maximum iterations"
         )

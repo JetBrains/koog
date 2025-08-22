@@ -16,9 +16,7 @@ kotlin {
         commonMain {
             dependencies {
                 api(project(":agents:agents-core"))
-                api(project(":agents:agents-features:agents-features-common"))
-                api(project(":agents:agents-features:agents-features-trace"))
-
+                api(project(":agents:agents-utils"))
                 api(libs.kotlinx.serialization.json)
             }
         }
@@ -65,19 +63,16 @@ val generateProductProperties = tasks.register("generateProductProperties") {
         val group = inputs.properties["group"] as String
 
         propertiesFile.asFile.parentFile.mkdirs()
-        propertiesFile.asFile.writeText("""
-            version=$rootProjectVersion
-            name=$rootProjectGroup
-            version=$version
-            name=$group
-        """.trimIndent())
+        propertiesFile.asFile.writeText(
+            """
+                version=$version
+                name=$group
+            """.trimIndent())
     }
 }
-
 
 tasks.named("jvmProcessResources") {
     dependsOn(generateProductProperties)
 }
-
 
 publishToMaven()

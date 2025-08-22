@@ -4,10 +4,16 @@ import ai.koog.agents.core.agent.entity.AIAgentStrategy
 import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.*
+import ai.koog.agents.core.dsl.extension.nodeExecuteTool
+import ai.koog.agents.core.dsl.extension.nodeLLMRequest
+import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
+import ai.koog.agents.core.dsl.extension.onAssistantMessage
+import ai.koog.agents.core.dsl.extension.onToolCall
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.environment.result
 import ai.koog.prompt.message.Message
+
+// FIXME improve this strategy to use Message.Assistant to chat, it works better than tools
 
 /**
  * Creates and configures a [ai.koog.agents.core.agent.entity.AIAgentStrategy] for executing a chat interaction process.
@@ -15,7 +21,6 @@ import ai.koog.prompt.message.Message
  * handle user input, execute tools, and provide responses.
  * Allows the agent to interact with the user in a chat-like manner.
  */
-// FIXME improve this strategy to use Message.Assistant to chat, it works better than tools
 public fun chatAgentStrategy(): AIAgentStrategy<String, String> = strategy("chat") {
     val nodeCallLLM by nodeLLMRequest("sendInput")
     val nodeExecuteTool by nodeExecuteTool("nodeExecuteTool")
@@ -24,7 +29,11 @@ public fun chatAgentStrategy(): AIAgentStrategy<String, String> = strategy("chat
     val giveFeedbackToCallTools by node<String, Message.Response> { input ->
         llm.writeSession {
             updatePrompt {
-                user("Don't chat with plain text! Call one of the available tools, instead: ${tools.joinToString(", ") { it.name }}")
+                user(
+                    "Don't chat with plain text! Call one of the available tools, instead: ${tools.joinToString(", ") {
+                        it.name
+                    }}"
+                )
             }
 
             requestLLM()
@@ -42,7 +51,10 @@ public fun chatAgentStrategy(): AIAgentStrategy<String, String> = strategy("chat
     edge(nodeExecuteTool forwardTo nodeSendToolResult)
 
     edge(nodeSendToolResult forwardTo nodeFinish onAssistantMessage { true })
-    edge(nodeSendToolResult forwardTo nodeFinish onToolCall { tc -> tc.tool == "__exit__" } transformed { "Chat finished" })
+    edge(
+        nodeSendToolResult forwardTo nodeFinish onToolCall { tc -> tc.tool == "__exit__" } transformed
+            { "Chat finished" }
+    )
     edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCall { true })
 }
 
@@ -97,7 +109,10 @@ public fun chatAgentStrategy(): AIAgentStrategy<String, String> = strategy("chat
  *
  * 7. Finish: Execution complete
  */
-public fun reActStrategy(reasoningInterval: Int = 1, name: String = "re_act"): AIAgentStrategy<String, String> = strategy(name) {
+public fun reActStrategy(
+    reasoningInterval: Int = 1,
+    name: String = "re_act"
+): AIAgentStrategy<String, String> = strategy(name) {
     require(reasoningInterval > 0) { "Reasoning interval must be greater than 0" }
     val reasoningStepKey = createStorageKey<Int>("reasoning_step")
     val nodeSetup by node<String, String> {
