@@ -33,7 +33,7 @@ public open class LLMParams(
     public val maxTokens: Int? = null,
     public val numberOfChoices: Int? = null,
     public val speculation: String? = null,
-    public val schema: Schema? = null, // TODO pass schema for OpenAI
+    public val schema: Schema? = null,
     public val toolChoice: ToolChoice? = null,
     public val user: String? = null,
     public val includeThoughts: Boolean? = null,
