@@ -1102,7 +1102,7 @@ class SingleLLMPromptExecutorIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("modelClientCombinations")
-    fun integration_testOpenAIStructuredOutputNative(model: LLModel, client: LLMClient) = runTest {
+    fun integration_testStructuredOutputNative(model: LLModel, client: LLMClient) = runTest {
         assumeTrue(
             model.capabilities.contains(LLMCapability.Schema.JSON.Standard),
             "Model does not support Standard JSON Schema"
@@ -1121,6 +1121,70 @@ class SingleLLMPromptExecutorIntegrationTest {
         )
         val config = StructuredOutputConfig(
             default = StructuredOutput.Native(structure),
+            fixingParser = StructureFixingParser(
+                fixingModel = model,
+                retries = 3
+            )
+        )
+
+        val prompt = Prompt.build("test-structured-json") {
+            system(
+                """
+                You are a weather forecasting assistant.
+                When asked for a weather forecast, provide a realistic but fictional forecast.
+                """.trimIndent()
+            )
+            user(
+                "What is the weather forecast for London? Please provide temperature, description, and humidity if available."
+            )
+        }
+
+        withRetry {
+            val result = executor.executeStructured(
+                prompt = prompt,
+                model = model,
+                config = config
+            )
+
+            assertTrue(result.isSuccess, "Structured output should succeed: ${result.exceptionOrNull()}")
+            val response = result.getOrThrow()
+
+            assertNotNull(response.structure)
+
+            assertEquals("London", response.structure.city, "City should be London, got: ${response.structure.city}")
+            assertTrue(
+                response.structure.temperature in -50..60,
+                "Temperature should be realistic, got: ${response.structure.temperature}"
+            )
+            assertTrue(response.structure.description.isNotBlank(), "Description should not be empty")
+            assertTrue(
+                response.structure.humidity >= 0,
+                "Humidity should be a valid percentage, got: ${response.structure.humidity}"
+            )
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("modelClientCombinations")
+    fun integration_testStructuredOutputManual(model: LLModel, client: LLMClient) = runTest {
+        assumeTrue(
+            model.provider !== LLMProvider.Google,
+            "Google models fail to return manually requested structured output"
+        )
+        val executor = SingleLLMPromptExecutor(client)
+
+        val structure = JsonStructuredData.createJsonStructure<WeatherReport>(
+            schemaGenerator = StandardJsonSchemaGenerator,
+            descriptionOverrides = mapOf(
+                "WeatherReport.city" to "Name of the city or location",
+                "WeatherReport.temperature" to "Current temperature in Celsius degrees"
+            ),
+            examples = listOf(
+                WeatherReport("Moscow", 20, "Rainy", 50)
+            )
+        )
+        val config = StructuredOutputConfig(
+            default = StructuredOutput.Manual(structure),
             fixingParser = StructureFixingParser(
                 fixingModel = model,
                 retries = 3
