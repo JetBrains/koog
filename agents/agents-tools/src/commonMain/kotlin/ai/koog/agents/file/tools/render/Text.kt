@@ -18,7 +18,9 @@ private val LANGUAGE_ID_MAPPINGS = mapOf(
     "kt" to "kotlin", "js" to "javascript", "ts" to "typescript",
     "py" to "python", "sh" to "bash", "yml" to "yaml",
     "cpp" to "cpp", "cxx" to "cpp", "cc" to "cpp", "hpp" to "cpp",
-    "cs" to "csharp", "ps1" to "powershell", "md" to "markdown"
+    "cs" to "csharp", "ps1" to "powershell", "md" to "markdown",
+    "rb" to "ruby", "dockerfile" to "docker", "gradle" to "groovy",
+    "bat" to "batch", "cmd" to "batch"
 )
 
 /**
