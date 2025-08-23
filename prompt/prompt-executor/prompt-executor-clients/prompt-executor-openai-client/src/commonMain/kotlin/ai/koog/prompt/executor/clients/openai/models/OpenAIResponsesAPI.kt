@@ -132,7 +132,7 @@ internal class OpenAIResponsesAPIRequest(
     val tools: List<OpenAIResponsesTool>? = null,
     override val topLogprobs: Int? = null,
     override val topP: Double? = null,
-    val truncation: String? = null,
+    val truncation: Truncation? = null,
     @Deprecated("Use safetyIdentifier and promptCacheKey instead")
     val user: String? = null
 ) : OpenAIBaseLLMRequest
@@ -1216,6 +1216,15 @@ internal sealed interface OpenAIResponsesTool {
             class Grammar(val definition: String, val syntax: String) : Format
         }
     }
+}
+
+@Serializable
+public enum class Truncation {
+    @SerialName("auto")
+    AUTO,
+
+    @SerialName("disabled")
+    DISABLED
 }
 
 /**
