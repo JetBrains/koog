@@ -2,7 +2,6 @@ package ai.koog.agents.test
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.tools.SimpleTool
-import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolException
 import ai.koog.agents.core.tools.ToolParameterDescriptor
@@ -112,7 +111,7 @@ class SimpleAgentMockedTest {
 
     object ErrorTool : SimpleTool<ErrorTool.Args>() {
         @Serializable
-        data class Args(val message: String) : ToolArgs
+        data class Args(val message: String)
 
         override val argsSerializer: KSerializer<Args> = Args.serializer()
 
@@ -135,7 +134,7 @@ class SimpleAgentMockedTest {
 
     object ConditionalTool : SimpleTool<ConditionalTool.Args>() {
         @Serializable
-        data class Args(val condition: String) : ToolArgs
+        data class Args(val condition: String)
 
         override val argsSerializer: KSerializer<Args> = Args.serializer()
 

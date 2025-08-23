@@ -1,7 +1,6 @@
 package ai.koog.agents.example.structuredoutput.markdown
 
 import ai.koog.agents.core.tools.SimpleTool
-import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.structure.markdown.MarkdownStructuredDataDefinition
@@ -19,7 +18,7 @@ data class Book(
     val bookName: String,
     val author: String,
     val description: String
-) : ToolArgs
+)
 
 class BookTool() : SimpleTool<Book>() {
     companion object {

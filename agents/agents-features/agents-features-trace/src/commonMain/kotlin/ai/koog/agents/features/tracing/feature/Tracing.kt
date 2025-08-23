@@ -27,8 +27,6 @@ import ai.koog.agents.core.feature.model.events.ToolValidationFailedEvent
 import ai.koog.agents.core.feature.model.events.startNodeToGraph
 import ai.koog.agents.core.feature.model.toAgentError
 import ai.koog.agents.core.tools.Tool
-import ai.koog.agents.core.tools.ToolArgs
-import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.features.tracing.eventString
 import io.github.oshai.kotlinlogging.KotlinLogging
 
@@ -262,7 +260,7 @@ public class Tracing {
             pipeline.interceptToolExecutionStarting(interceptContext) intercept@{ eventContext ->
 
                 @Suppress("UNCHECKED_CAST")
-                val tool = eventContext.tool as Tool<ToolArgs, ToolResult>
+                val tool = eventContext.tool as Tool<Any?, Any?>
 
                 val event = ToolExecutionStartingEvent(
                     runId = eventContext.runId,
@@ -277,7 +275,7 @@ public class Tracing {
             pipeline.interceptToolValidationFailed(interceptContext) intercept@{ eventContext ->
 
                 @Suppress("UNCHECKED_CAST")
-                val tool = eventContext.tool as Tool<ToolArgs, ToolResult>
+                val tool = eventContext.tool as Tool<Any?, Any?>
 
                 val event = ToolValidationFailedEvent(
                     runId = eventContext.runId,
@@ -293,7 +291,7 @@ public class Tracing {
             pipeline.interceptToolExecutionFailed(interceptContext) intercept@{ eventContext ->
 
                 @Suppress("UNCHECKED_CAST")
-                val tool = eventContext.tool as Tool<ToolArgs, ToolResult>
+                val tool = eventContext.tool as Tool<Any?, Any?>
 
                 val event = ToolExecutionFailedEvent(
                     runId = eventContext.runId,
@@ -309,7 +307,7 @@ public class Tracing {
             pipeline.interceptToolExecutionCompleted(interceptContext) intercept@{ eventContext ->
 
                 @Suppress("UNCHECKED_CAST")
-                val tool = eventContext.tool as Tool<ToolArgs, ToolResult>
+                val tool = eventContext.tool as Tool<Any?, Any?>
 
                 val event = ToolExecutionCompletedEvent(
                     runId = eventContext.runId,

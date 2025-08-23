@@ -82,7 +82,7 @@ fun toolResult(toolCallId: String?, toolName: String, content: String, result: S
         id = toolCallId,
         tool = toolName,
         content = content,
-        result = ToolResult.Text(result)
+        result = result
     )
 
 /**

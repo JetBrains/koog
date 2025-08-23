@@ -1,13 +1,10 @@
 package ai.koog.agents.core.environment
 
 import ai.koog.agents.core.CalculatorChatExecutor.testClock
-import ai.koog.agents.core.tools.reflect.ToolFromCallable
 import ai.koog.prompt.message.Message
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.assertThrows
-import kotlin.reflect.typeOf
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -76,11 +73,7 @@ class SafeToolTest {
                         id = toolCall.id,
                         tool = toolCall.tool,
                         content = resultContent,
-                        result = ToolFromCallable.Result(
-                            result = TEST_RESULT,
-                            type = typeOf<String>(),
-                            json = Json,
-                        )
+                        result = TEST_RESULT
                     )
                 } else {
                     ReceivedToolResult(
@@ -197,11 +190,7 @@ class SafeToolTest {
                             id = toolCall.id,
                             tool = toolCall.tool,
                             content = "Success: $result",
-                            result = ToolFromCallable.Result(
-                                result = result,
-                                type = typeOf<String>(),
-                                json = Json,
-                            )
+                            result = result
                         )
                     } catch (e: Exception) {
                         ReceivedToolResult(
@@ -293,11 +282,7 @@ class SafeToolTest {
                             id = toolCall.id,
                             tool = toolCall.tool,
                             content = "Success: $result",
-                            result = ToolFromCallable.Result(
-                                result = result,
-                                type = typeOf<String>(),
-                                json = Json,
-                            )
+                            result = result
                         )
                     } catch (e: Exception) {
                         ReceivedToolResult(

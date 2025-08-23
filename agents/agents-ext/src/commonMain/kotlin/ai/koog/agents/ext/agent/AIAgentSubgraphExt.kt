@@ -21,21 +21,26 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.ToolResult
+import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
+import ai.koog.agents.core.tools.toolDescription
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
+import kotlinx.serialization.serializer
+import kotlin.jvm.JvmName
 
 /**
  * The result which subgraphs can return.
  */
-public interface SubgraphResult : ToolArgs, ToolResult
+@Deprecated("TODO")
+public interface SubgraphResult : ToolResult
 
 /**
  * The result which subgraphs can return.
  */
+@Deprecated("TODO")
 public interface SerializableSubgraphResult<T : SerializableSubgraphResult<T>> :
     ToolArgs,
     ToolResult.JSONSerializable<T>
@@ -54,14 +59,7 @@ public interface SerializableSubgraphResult<T : SerializableSubgraphResult<T>> :
 public data class VerifiedSubgraphResult(
     val correct: Boolean,
     val message: String,
-) : SubgraphResult {
-    /**
-     * Returns the string representation of this object in JSON format.
-     *
-     * @return JSON string representation of the object.
-     */
-    override fun toStringDefault(): String = Json.encodeToString(serializer(), this)
-}
+)
 
 /**
  * Represents the result of a subgraph operation encapsulated as a string.
@@ -71,15 +69,9 @@ public data class VerifiedSubgraphResult(
  *
  * @property result The string representation of the execution result produced by the subgraph.
  */
+@Deprecated("You can use String directly instead inside subgraphWithTask")
 @Serializable
-public data class StringSubgraphResult(public val result: String) : SubgraphResult {
-    /**
-     * Converts the current object to its JSON string representation using the default serializer.
-     *
-     * @return The JSON string representation of the object.
-     */
-    override fun toStringDefault(): String = Json.encodeToString(serializer(), this)
-}
+public data class StringSubgraphResult(public val result: String)
 
 /**
  * Represents an abstract result type for subgraph provisioning tools.
@@ -90,7 +82,19 @@ public data class StringSubgraphResult(public val result: String) : SubgraphResu
  *
  * @param FinalResult The type of the final result, which must extend `SubgraphResult`.
  */
-public abstract class ProvideSubgraphResult<FinalResult : SubgraphResult> : Tool<FinalResult, FinalResult>()
+public abstract class ProvideSubgraphResult<FinalResult> : Tool<FinalResult, FinalResult>()
+
+@PublishedApi
+internal class SerializationProvideSubgraphResult<FinalResult>(override val argsSerializer: KSerializer<FinalResult>) :
+    ProvideSubgraphResult<FinalResult>() {
+    override val resultSerializer: KSerializer<FinalResult> = argsSerializer
+
+    @OptIn(InternalAgentToolsApi::class)
+    override val descriptor: ToolDescriptor = // TODO snake case serialName?
+        argsSerializer.descriptor.toolDescription("finish_task_execution_${argsSerializer.descriptor.serialName.lowercase()}")
+
+    override suspend fun execute(args: FinalResult): FinalResult = args
+}
 
 /**
  * Represents a concrete implementation of [ProvideSubgraphResult] specialized to handle verified subgraph results.
@@ -118,6 +122,7 @@ public abstract class ProvideSubgraphResult<FinalResult : SubgraphResult> : Tool
  */
 public object ProvideVerifiedSubgraphResult : ProvideSubgraphResult<VerifiedSubgraphResult>() {
     override val argsSerializer: KSerializer<VerifiedSubgraphResult> = VerifiedSubgraphResult.serializer()
+    override val resultSerializer: KSerializer<VerifiedSubgraphResult> = VerifiedSubgraphResult.serializer()
 
     override val descriptor: ToolDescriptor = ToolDescriptor(
         name = "finish_task_execution_verified",
@@ -160,6 +165,7 @@ public object ProvideVerifiedSubgraphResult : ProvideSubgraphResult<VerifiedSubg
  */
 public object ProvideStringSubgraphResult : ProvideSubgraphResult<StringSubgraphResult>() {
     override val argsSerializer: KSerializer<StringSubgraphResult> = StringSubgraphResult.serializer()
+    override val resultSerializer: KSerializer<StringSubgraphResult> = StringSubgraphResult.serializer()
 
     override val descriptor: ToolDescriptor = ToolDescriptor(
         name = "finish_task_execution_string",
@@ -198,8 +204,12 @@ public object ProvideStringSubgraphResult : ProvideSubgraphResult<StringSubgraph
  * @property defineTask A block which defines the task. It may just return a system prompt for the task,
  * but may also alter agent context, prompt, storage, etc.
  */
+@Deprecated(
+    "Custom finishTool: ProvideSubgraphResult is no longer required.",
+    replaceWith = ReplaceWith("subgraphWithTask<Input, ProvidedResult>(toolSelectionStrategy, llmModel, llmParams, defineTask)")
+)
 @AIAgentBuilderDslMarker
-public inline fun <reified Input, reified ProvidedResult : SubgraphResult> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
+public inline fun <reified Input, reified ProvidedResult> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
     toolSelectionStrategy: ToolSelectionStrategy,
     finishTool: ProvideSubgraphResult<ProvidedResult>,
     llmModel: LLModel? = null,
@@ -281,6 +291,10 @@ public inline fun <reified Input, reified ProvidedResult : SubgraphResult> AIAge
  * @return A delegate representing the subgraph that processes the input and produces a result through the finish tool.
  */
 @Suppress("unused")
+@Deprecated(
+    "Custom finishTool: ProvideSubgraphResult is no longer required.",
+    replaceWith = ReplaceWith("subgraphWithTask<Input, ProvidedResult>(toolSelectionStrategy, llmModel, llmParams, defineTask)")
+)
 @AIAgentBuilderDslMarker
 public inline fun <reified Input, reified ProvidedResult : SubgraphResult> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
     tools: List<Tool<*, *>>,
@@ -297,10 +311,65 @@ public inline fun <reified Input, reified ProvidedResult : SubgraphResult> AIAge
 )
 
 /**
+ * Creates a subgraph with a task definition and specified tools. The subgraph uses the provided tools to process
+ * input and execute the defined task, eventually producing a result through the provided finish tool.
+ *
+ * @param tools The list of tools that are available for use within the subgraph.
+ * @param llmModel An optional language model to be used in the subgraph. If not specified, a default model may be used.
+ * @param llmParams Optional parameters to customize the behavior of the language model in the subgraph.
+ * @param defineTask A suspend function that defines the task to be executed by the subgraph based on the given input.
+ * @return A delegate representing the subgraph that processes the input and produces a result through the finish tool.
+ */
+@Suppress("unused")
+@AIAgentBuilderDslMarker
+public inline fun <reified Input, reified ProvidedResult> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
+    tools: List<Tool<*, *>>,
+    llmModel: LLModel? = null,
+    llmParams: LLMParams? = null,
+    noinline defineTask: suspend AIAgentContextBase.(input: Input) -> String
+): AIAgentSubgraphDelegate<Input, ProvidedResult> = subgraphWithTask(
+    toolSelectionStrategy = ToolSelectionStrategy.Tools(tools.map { it.descriptor }),
+    finishTool = SerializationProvideSubgraphResult(serializer()),
+    llmModel = llmModel,
+    llmParams = llmParams,
+    defineTask = defineTask
+)
+
+/**
+ * Creates a subgraph with a task definition and specified tools. The subgraph uses the provided tools to process
+ * input and execute the defined task, eventually producing a result through the provided finish tool.
+ *
+ * @property toolSelectionStrategy Strategy to select tools available to the LLM during this task
+ * @param llmModel An optional language model to be used in the subgraph. If not specified, a default model may be used.
+ * @param llmParams Optional parameters to customize the behavior of the language model in the subgraph.
+ * @param defineTask A suspend function that defines the task to be executed by the subgraph based on the given input.
+ * @return A delegate representing the subgraph that processes the input and produces a result through the finish tool.
+ */
+@Suppress("unused")
+@AIAgentBuilderDslMarker
+public inline fun <reified Input, reified ProvidedResult> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
+    toolSelectionStrategy: ToolSelectionStrategy,
+    llmModel: LLModel? = null,
+    llmParams: LLMParams? = null,
+    noinline defineTask: suspend AIAgentContextBase.(input: Input) -> String
+): AIAgentSubgraphDelegate<Input, ProvidedResult> = subgraphWithTask(
+    toolSelectionStrategy = toolSelectionStrategy,
+    finishTool = SerializationProvideSubgraphResult(serializer()),
+    llmModel = llmModel,
+    llmParams = llmParams,
+    defineTask = defineTask
+)
+
+/**
  * [subgraphWithTask] with [StringSubgraphResult] result.
  */
 @Suppress("unused")
 @AIAgentBuilderDslMarker
+@Deprecated(
+    "You can use String directly with subgraphWithTask instead of using StringSubgraphResult",
+    replaceWith = ReplaceWith("subgraphWithTask<Input, String>(toolSelectionStrategy, llmModel, llmParams, defineTask)")
+)
+@JvmName("subgraphWithTaskString")
 public inline fun <reified Input> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
     toolSelectionStrategy: ToolSelectionStrategy,
     llmModel: LLModel? = null,
@@ -329,12 +398,17 @@ public inline fun <reified Input> AIAgentSubgraphBuilderBase<*, *>.subgraphWithT
  */
 @Suppress("unused")
 @AIAgentBuilderDslMarker
+@Deprecated(
+    "You can use String directly with subgraphWithTask instead of using StringSubgraphResult",
+    replaceWith = ReplaceWith("subgraphWithTask<Input, String>(tools, llmModel, llmParams, defineTask)")
+)
+@JvmName("subgraphWithTaskString")
 public inline fun <reified Input> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
     tools: List<Tool<*, *>>,
     llmModel: LLModel? = null,
     llmParams: LLMParams? = null,
     noinline defineTask: suspend AIAgentGraphContextBase.(input: Input) -> String
-): AIAgentSubgraphDelegate<Input, StringSubgraphResult> = subgraphWithTask(
+): AIAgentSubgraphDelegate<Input, StringSubgraphResult> = subgraphWithTask<Input, StringSubgraphResult>(
     toolSelectionStrategy = ToolSelectionStrategy.Tools(tools.map { it.descriptor }),
     llmModel = llmModel,
     llmParams = llmParams,

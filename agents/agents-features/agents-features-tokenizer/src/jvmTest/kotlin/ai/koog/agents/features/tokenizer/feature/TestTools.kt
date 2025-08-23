@@ -1,7 +1,6 @@
 package ai.koog.agents.features.tokenizer.feature
 
 import ai.koog.agents.core.tools.SimpleTool
-import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
@@ -10,7 +9,7 @@ import kotlinx.serialization.Serializable
 
 abstract class TestTool(toolName: String) : SimpleTool<TestTool.Args>() {
     @Serializable
-    data class Args(val question: String) : ToolArgs
+    data class Args(val question: String)
 
     override val argsSerializer: KSerializer<Args> = Args.serializer()
 

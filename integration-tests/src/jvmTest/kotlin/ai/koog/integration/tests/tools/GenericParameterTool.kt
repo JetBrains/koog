@@ -1,7 +1,6 @@
 package ai.koog.integration.tests.tools
 
 import ai.koog.agents.core.tools.SimpleTool
-import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
@@ -12,7 +11,7 @@ object GenericParameterTool : SimpleTool<GenericParameterTool.Args>() {
     data class Args(
         val requiredArg: String,
         val optionalArg: String? = null
-    ) : ToolArgs
+    )
 
     override val argsSerializer = Args.serializer()
 

@@ -1,7 +1,6 @@
 package ai.koog.agents.testing.tools
 
 import ai.koog.agents.core.tools.SimpleTool
-import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
@@ -25,7 +24,7 @@ public class DummyTool : SimpleTool<DummyTool.Args>() {
      * @property dummy A placeholder string parameter that can be optionally specified.
      */
     @Serializable
-    public data class Args(val dummy: String = "") : ToolArgs
+    public data class Args(val dummy: String = "")
 
     override val argsSerializer: KSerializer<Args> = Args.serializer()
 

@@ -1,7 +1,6 @@
 package ai.koog.agents.features.opentelemetry.mock
 
 import ai.koog.agents.core.tools.SimpleTool
-import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
@@ -14,7 +13,7 @@ internal object TestGetWeatherTool : SimpleTool<TestGetWeatherTool.Args>() {
     const val DEFAULT_LONDON_RESULT: String = "cloudy, 62°F"
 
     @Serializable
-    data class Args(val location: String) : ToolArgs
+    data class Args(val location: String)
 
     override val argsSerializer: KSerializer<Args> = Args.serializer()
 

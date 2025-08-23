@@ -1,7 +1,6 @@
 package ai.koog.agents.ext.tool.file
 
 import ai.koog.agents.core.tools.Tool
-import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolException
 import ai.koog.agents.core.tools.ToolParameterDescriptor
@@ -16,6 +15,7 @@ import ai.koog.rag.base.files.FileMetadata
 import ai.koog.rag.base.files.FileSystemProvider
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.serializer
 
 /**
  * Provides functionality to read file contents with configurable start and end line parameters,
@@ -40,7 +40,7 @@ public class ReadFileTool<Path>(private val fs: FileSystemProvider.ReadOnly<Path
         val path: String,
         val startLine: Int = 0,
         val endLine: Int = -1,
-    ) : ToolArgs
+    )
 
     /**
      * Contains the successfully read file with its metadata and extracted content.
@@ -71,6 +71,7 @@ public class ReadFileTool<Path>(private val fs: FileSystemProvider.ReadOnly<Path
     }
 
     override val argsSerializer: KSerializer<Args> = Args.serializer()
+    override val resultSerializer: KSerializer<Result> = Result.serializer()
     override val descriptor: ToolDescriptor = Companion.descriptor
 
     /**

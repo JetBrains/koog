@@ -200,7 +200,6 @@ The sections below provide step-by-step instructions and code samples related to
 First, define a data class to represent your structured data:
 
 <!--- INCLUDE
-import ai.koog.agents.core.tools.ToolArgs
 import kotlinx.serialization.Serializable
 -->
 ```kotlin
@@ -209,7 +208,7 @@ data class Book(
     val title: String,
     val author: String,
     val description: String
-): ToolArgs
+)
 ```
 <!--- KNIT example-streaming-api-03.kt -->
 
@@ -381,6 +380,13 @@ import kotlinx.serialization.KSerializer
 
 -->
 ```kotlin
+@Serializable
+data class Book(
+   val title: String,
+   val author: String,
+   val description: String
+)
+
 class BookTool(): SimpleTool<Book>() {
     
     companion object { const val NAME = "book" }
@@ -409,7 +415,6 @@ class BookTool(): SimpleTool<Book>() {
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.example.exampleStreamingApi04.markdownBookDefinition
 import ai.koog.agents.example.exampleStreamingApi06.parseMarkdownStreamToBooks
 import ai.koog.agents.example.exampleStreamingApi08.BookTool
@@ -425,7 +430,7 @@ val agentStrategy = strategy<String, Unit>("library-assistant") {
          val markdownStream = requestLLMStreaming(mdDefinition)
 
          parseMarkdownStreamToBooks(markdownStream).collect { book ->
-            callToolRaw(BookTool.NAME, book as ToolArgs)
+            callToolRaw(BookTool.NAME, book)
             /* Other possible options:
                 callTool(BookTool::class, book)
                 callTool<BookTool>(book)

@@ -1,7 +1,6 @@
 package ai.koog.agents.example.guesser
 
 import ai.koog.agents.core.tools.SimpleTool
-import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
@@ -12,7 +11,7 @@ abstract class GuesserTool(
     description: String,
 ) : SimpleTool<GuesserTool.Args>() {
     @Serializable
-    data class Args(val value: Int) : ToolArgs
+    data class Args(val value: Int)
 
     final override val argsSerializer = Args.serializer()
 

@@ -13,12 +13,10 @@ import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
 import ai.koog.agents.core.dsl.extension.onAssistantMessage
 import ai.koog.agents.core.dsl.extension.onToolCall
 import ai.koog.agents.core.tools.Tool
-import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.ext.agent.ProvideStringSubgraphResult
 import ai.koog.agents.ext.agent.StringSubgraphResult
 import ai.koog.agents.ext.agent.subgraphWithTask
@@ -55,7 +53,9 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.serializer
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.parallel.Execution
@@ -180,11 +180,12 @@ class AIAgentMultipleLLMIntegrationTest {
         DIVIDE
     }
 
-    object CalculatorTool : Tool<CalculatorTool.Args, ToolResult.Number>() {
+    object CalculatorTool : Tool<CalculatorTool.Args, Int>() {
         @Serializable
-        data class Args(val operation: CalculatorOperation, val a: Int, val b: Int) : ToolArgs
+        data class Args(val operation: CalculatorOperation, val a: Int, val b: Int)
 
         override val argsSerializer = Args.serializer()
+        override val resultSerializer: KSerializer<Int> = Int.serializer()
 
         override val descriptor: ToolDescriptor = ToolDescriptor(
             name = "calculator",
@@ -208,12 +209,12 @@ class AIAgentMultipleLLMIntegrationTest {
             )
         )
 
-        override suspend fun execute(args: Args): ToolResult.Number = when (args.operation) {
+        override suspend fun execute(args: Args): Int = when (args.operation) {
             CalculatorOperation.ADD -> args.a + args.b
             CalculatorOperation.SUBTRACT -> args.a - args.b
             CalculatorOperation.MULTIPLY -> args.a * args.b
             CalculatorOperation.DIVIDE -> args.a / args.b
-        }.let(ToolResult::Number)
+        }
     }
 
     sealed interface OperationResult<T> {
@@ -260,17 +261,16 @@ class AIAgentMultipleLLMIntegrationTest {
 
     class CreateFile(private val fs: MockFileSystem) : Tool<CreateFile.Args, CreateFile.Result>() {
         @Serializable
-        data class Args(val path: String, val content: String) : ToolArgs
+        data class Args(val path: String, val content: String)
 
         @Serializable
         data class Result(
             val successful: Boolean,
             val message: String? = null
-        ) : ToolResult.JSONSerializable<Result> {
-            override fun getSerializer() = serializer()
-        }
+        )
 
         override val argsSerializer = Args.serializer()
+        override val resultSerializer: KSerializer<Result> = Result.serializer()
 
         override val descriptor: ToolDescriptor = ToolDescriptor(
             name = "create_file",
@@ -300,17 +300,16 @@ class AIAgentMultipleLLMIntegrationTest {
 
     class DeleteFile(private val fs: MockFileSystem) : Tool<DeleteFile.Args, DeleteFile.Result>() {
         @Serializable
-        data class Args(val path: String) : ToolArgs
+        data class Args(val path: String)
 
         @Serializable
         data class Result(
             val successful: Boolean,
             val message: String? = null
-        ) : ToolResult {
-            override fun toStringDefault(): String = "successful: $successful, message: \"$message\""
-        }
+        )
 
         override val argsSerializer = Args.serializer()
+        override val resultSerializer: KSerializer<Result> = Result.serializer()
 
         override val descriptor: ToolDescriptor = ToolDescriptor(
             name = "delete_file",
@@ -335,18 +334,17 @@ class AIAgentMultipleLLMIntegrationTest {
 
     class ReadFile(private val fs: MockFileSystem) : Tool<ReadFile.Args, ReadFile.Result>() {
         @Serializable
-        data class Args(val path: String) : ToolArgs
+        data class Args(val path: String)
 
         @Serializable
         data class Result(
             val successful: Boolean,
             val message: String? = null,
             val content: String? = null
-        ) : ToolResult.JSONSerializable<Result> {
-            override fun getSerializer() = serializer()
-        }
+        )
 
         override val argsSerializer = Args.serializer()
+        override val resultSerializer: KSerializer<Result> = Result.serializer()
 
         override val descriptor: ToolDescriptor = ToolDescriptor(
             name = "read_file",
@@ -371,19 +369,17 @@ class AIAgentMultipleLLMIntegrationTest {
 
     class ListFiles(private val fs: MockFileSystem) : Tool<ListFiles.Args, ListFiles.Result>() {
         @Serializable
-        data class Args(val path: String) : ToolArgs
+        data class Args(val path: String)
 
         @Serializable
         data class Result(
             val successful: Boolean,
             val message: String? = null,
             val children: List<String>? = null
-        ) : ToolResult {
-            override fun toStringDefault(): String =
-                "successful: $successful, message: \"$message\", children: ${children?.joinToString()}"
-        }
+        )
 
         override val argsSerializer = Args.serializer()
+        override val resultSerializer: KSerializer<Result> = Result.serializer()
 
         override val descriptor: ToolDescriptor = ToolDescriptor(
             name = "list_files",

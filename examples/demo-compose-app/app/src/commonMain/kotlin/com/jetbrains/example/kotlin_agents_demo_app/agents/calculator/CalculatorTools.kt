@@ -14,7 +14,7 @@ object CalculatorTools {
         description: String,
     ) : Tool<CalculatorTool.Args, CalculatorTool.Result>() {
         @Serializable
-        data class Args(val a: Float, val b: Float) : ToolArgs
+        data class Args(val a: Float, val b: Float)
 
         @Serializable
         class Result(val result: Float) : ToolResult {

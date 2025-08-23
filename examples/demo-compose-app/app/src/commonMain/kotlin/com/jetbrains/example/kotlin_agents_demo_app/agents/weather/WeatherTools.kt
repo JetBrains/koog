@@ -45,7 +45,7 @@ object WeatherTools {
         @Serializable
         data class Args(
             val timezone: String = "UTC"
-        ) : ToolArgs
+        )
 
         @Serializable
         data class Result(
@@ -108,7 +108,7 @@ object WeatherTools {
             val days: Int,
             val hours: Int,
             val minutes: Int
-        ) : ToolArgs
+        )
 
         @Serializable
         data class Result(
@@ -222,7 +222,7 @@ object WeatherTools {
             val date: String = "",
             val days: Int = 1,
             val granularity: Granularity = Granularity.DAILY
-        ) : ToolArgs
+        )
 
         @Serializable
         data class Result(

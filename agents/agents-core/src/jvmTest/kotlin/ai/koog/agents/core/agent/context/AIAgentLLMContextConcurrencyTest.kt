@@ -7,7 +7,6 @@ import ai.koog.agents.core.agent.config.ToolCallDescriber
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.tools.SimpleTool
-import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
@@ -141,7 +140,7 @@ class AIAgentLLMContextConcurrencyTest {
     }
 
     @Serializable
-    private data class TestToolArgs(val input: String) : ToolArgs
+    private data class TestToolArgs(val input: String)
 
     private class TestTool : SimpleTool<TestToolArgs>() {
         override val argsSerializer = TestToolArgs.serializer()

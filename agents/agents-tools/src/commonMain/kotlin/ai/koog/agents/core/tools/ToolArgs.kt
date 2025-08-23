@@ -7,6 +7,7 @@ import kotlinx.serialization.Serializable
  * Args should be serializable, serializer should be presented in the Tool the arguments belong to.
  *
  */
+@Deprecated("Extending ToolArgs is no longer required. Tool arguments  are entirely handled by KotlinX Serialization.")
 public interface ToolArgs {
 
     /**

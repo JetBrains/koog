@@ -1,12 +1,12 @@
 package ai.koog.agents.core
 
 import ai.koog.agents.core.tools.Tool
-import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
-import ai.koog.agents.core.tools.ToolResult
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.serializer
 import kotlin.jvm.JvmInline
 
 object CalculatorTools {
@@ -16,15 +16,14 @@ object CalculatorTools {
         description: String,
     ) : Tool<CalculatorTool.Args, CalculatorTool.Result>() {
         @Serializable
-        data class Args(val a: Float, val b: Float) : ToolArgs
+        data class Args(val a: Float, val b: Float)
 
         @Serializable
         @JvmInline
-        value class Result(val result: Float) : ToolResult {
-            override fun toStringDefault(): String = result.toString()
-        }
+        value class Result(val result: Float)
 
         final override val argsSerializer = Args.serializer()
+        override val resultSerializer: KSerializer<Result> = Result.serializer()
 
         final override val descriptor = ToolDescriptor(
             name = name,

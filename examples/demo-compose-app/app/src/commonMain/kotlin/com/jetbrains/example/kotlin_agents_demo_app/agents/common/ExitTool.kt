@@ -9,8 +9,7 @@ import kotlinx.serialization.Serializable
 
 object ExitTool : SimpleTool<ExitTool.Args>() {
     @Serializable
-    data class Args(val result: String = "") : ToolArgs
-
+    data class Args(val result: String = "")
     override val argsSerializer = Args.serializer()
 
     override val descriptor = ToolDescriptor(

@@ -69,22 +69,19 @@ import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.agents.testing.tools.getMockExecutor
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.serializer
 
-public object CreateTool : Tool<CreateTool.Args, CreateTool.Result>() {
+public object CreateTool : Tool<CreateTool.Args, String>() {
 /**
 * Represents the arguments for the [AskUser] tool
 *
 * @property message The message to be used as an argument for the tool's execution.
 */
 @Serializable
-public data class Args(val message: String) : ToolArgs
-
-    @Serializable
-    public data class Result(val message: String) : ToolResult {
-        override fun toStringDefault() = message
-    }
+public data class Args(val message: String)
 
     override val argsSerializer: KSerializer<Args> = Args.serializer()
+    override val resultSerializer: KSerializer<String> = String.serializer()
 
     override val descriptor: ToolDescriptor = ToolDescriptor(
         name = "message",
@@ -96,26 +93,20 @@ public data class Args(val message: String) : ToolArgs
         )
     )
 
-    override suspend fun execute(args: Args): Result {
-        return Result(args.message)
-    }
+    override suspend fun execute(args: Args): String = args.message
 }
 
-public object SearchTool : Tool<SearchTool.Args, SearchTool.Result>() {
+public object SearchTool : Tool<SearchTool.Args, String>() {
 /**
 * Represents the arguments for the [AskUser] tool
 *
 * @property message The message to be used as an argument for the tool's execution.
 */
 @Serializable
-public data class Args(val query: String) : ToolArgs
-
-    @Serializable
-    public data class Result(val message: String) : ToolResult {
-        override fun toStringDefault() = message
-    }
+public data class Args(val query: String)
 
     override val argsSerializer: KSerializer<Args> = Args.serializer()
+    override val resultSerializer: KSerializer<String> = String.serializer()
 
     override val descriptor: ToolDescriptor = ToolDescriptor(
         name = "message",
@@ -127,27 +118,21 @@ public data class Args(val query: String) : ToolArgs
         )
     )
 
-    override suspend fun execute(args: Args): Result {
-        return Result(args.query)
-    }
+    override suspend fun execute(args: Args): String = args.query
 }
 
 
-public object AnalyzeTool : Tool<AnalyzeTool.Args, AnalyzeTool.Result>() {
+public object AnalyzeTool : Tool<AnalyzeTool.Args, String>() {
 /**
 * Represents the arguments for the [AskUser] tool
 *
 * @property message The message to be used as an argument for the tool's execution.
 */
 @Serializable
-public data class Args(val message: String) : ToolArgs
-
-    @Serializable
-    public data class Result(val message: String) : ToolResult {
-        override fun toStringDefault() = message
-    }
+public data class Args(val message: String)
 
     override val argsSerializer: KSerializer<Args> = Args.serializer()
+    override val resultSerializer: KSerializer<String> = String.serializer()
 
     override val descriptor: ToolDescriptor = ToolDescriptor(
         name = "message",
@@ -159,9 +144,7 @@ public data class Args(val message: String) : ToolArgs
         )
     )
 
-    override suspend fun execute(args: Args): Result {
-        return Result(args.message)
-    }
+    override suspend fun execute(args: Args): String = args.message
 }
 
 typealias PositiveToneTool = SayToUser
@@ -189,10 +172,10 @@ mockTool(NegativeToneTool) alwaysTells {
 }
 
 // Mock tool behavior based on specific arguments
-mockTool(AnalyzeTool) returns AnalyzeTool.Result("Detailed analysis") onArguments AnalyzeTool.Args("analyze deeply")
+mockTool(AnalyzeTool) returns "Detailed analysis" onArguments AnalyzeTool.Args("analyze deeply")
 
 // Mock tool behavior with conditional argument matching
-mockTool(SearchTool) returns SearchTool.Result("Found results") onArgumentsMatching { args ->
+mockTool(SearchTool) returns "Found results" onArgumentsMatching { args ->
   args.query.contains("important")
 }
 ```
@@ -384,12 +367,7 @@ import kotlinx.serialization.Serializable
 
 object SolveTool : SimpleTool<SolveTool.Args>() {
     @Serializable
-    data class Args(val message: String) : ToolArgs
-
-    @Serializable
-    data class Result(val message: String) : ToolResult {
-        override fun toStringDefault() = message
-    }
+    data class Args(val message: String)
 
     override val argsSerializer: KSerializer<Args> = Args.serializer()
 
@@ -458,18 +436,15 @@ import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.message.Message
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.serializer
 
-object AnalyzeTool : Tool<AnalyzeTool.Args, AnalyzeTool.Result>() {
-
-    @Serializable
-    data class Args(val query: String, val depth: Int) : ToolArgs
+object AnalyzeTool : Tool<AnalyzeTool.Args, String>() {
 
     @Serializable
-    data class Result(val message: String) : ToolResult {
-        override fun toStringDefault() = message
-    }
+    data class Args(val query: String, val depth: Int)
 
     override val argsSerializer: KSerializer<Args> = Args.serializer()
+    override val resultSerializer: KSerializer<String> = String.serializer()
 
     override val descriptor: ToolDescriptor = ToolDescriptor(
         name = "message",
@@ -481,9 +456,7 @@ object AnalyzeTool : Tool<AnalyzeTool.Args, AnalyzeTool.Result>() {
         )
     )
 
-    override suspend fun execute(args: Args): Result {
-        return Result(args.query)
-    }
+    override suspend fun execute(args: Args): String = args.query
 }
 
 
@@ -539,15 +512,13 @@ import kotlinx.serialization.Serializable
 
 object AnalyzeTool : Tool<AnalyzeTool.Args, AnalyzeTool.Result>() {
     @Serializable
-    data class Args(val query: String, val depth: Int) : ToolArgs
+    data class Args(val query: String, val depth: Int)
 
     @Serializable
-    data class Result(val analysis: String, val confidence: Double, val metadata: Map<String, String> = emptyMap()) :
-        ToolResult {
-        override fun toStringDefault() = serializer().toString()
-    }
+    data class Result(val analysis: String, val confidence: Double, val metadata: Map<String, String> = emptyMap())
 
     override val argsSerializer: KSerializer<Args> = Args.serializer()
+    override val resultSerializer: KSerializer<Result> = Result.serializer()
 
     override val descriptor: ToolDescriptor = ToolDescriptor(
         name = "message",

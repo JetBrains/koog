@@ -44,23 +44,22 @@ Here is an example of a custom tool implementation using the `Tool` class that r
 
 <!--- INCLUDE
 import ai.koog.agents.core.tools.Tool
-import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
-import ai.koog.agents.core.tools.ToolResult
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.serializer
 -->
 ```kotlin
 // Implement a simple calculator tool that adds two digits
-object CalculatorTool : Tool<CalculatorTool.Args, ToolResult.Number>() {
+object CalculatorTool : Tool<CalculatorTool.Args, Int>() {
     
     // Arguments for the calculator tool
     @Serializable
     data class Args(
         val digit1: Int,
         val digit2: Int
-    ) : ToolArgs {
+    ) {
         init {
             require(digit1 in 0..9) { "digit1 must be a single digit (0-9)" }
             require(digit2 in 0..9) { "digit2 must be a single digit (0-9)" }
@@ -69,6 +68,7 @@ object CalculatorTool : Tool<CalculatorTool.Args, ToolResult.Number>() {
 
     // Serializer for the Args class
     override val argsSerializer = Args.serializer()
+    override val resultSerializer = Int.serializer()
 
     // Tool descriptor
     override val descriptor: ToolDescriptor = ToolDescriptor(
@@ -89,10 +89,7 @@ object CalculatorTool : Tool<CalculatorTool.Args, ToolResult.Number>() {
     )
 
     // Function to add two digits
-    override suspend fun execute(args: Args): ToolResult.Number {
-        val sum = args.digit1 + args.digit2
-        return ToolResult.Number(sum)
-    }
+    override suspend fun execute(args: Args): Int = args.digit1 + args.digit2
 }
 ```
 <!--- KNIT example-class-based-tools-01.kt --> 
@@ -135,7 +132,7 @@ import kotlinx.serialization.Serializable
 object CastToDoubleTool : SimpleTool<CastToDoubleTool.Args>() {
     // Define tool arguments
     @Serializable
-    data class Args(val expression: String, val comment: String) : ToolArgs
+    data class Args(val expression: String, val comment: String)
 
     // Serializer for the Args class
     override val argsSerializer = Args.serializer()

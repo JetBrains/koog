@@ -5,7 +5,6 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
-import io.modelcontextprotocol.kotlin.sdk.TextContent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
@@ -86,8 +85,7 @@ class McpToolTest {
             }
         }
 
-        val content = result.promptMessageContents.first() as TextContent
-        assertEquals("Hello, Test!", content.text)
+        assertEquals("Hello, Test!", result)
 
         val argsWithTitle = McpTool.Args(
             buildJsonObject {
@@ -101,7 +99,6 @@ class McpToolTest {
             }
         }
 
-        val contentWithTitle = resultWithTitle.promptMessageContents.first() as TextContent
-        assertEquals("Hello, Mr. Test!", contentWithTitle.text)
+        assertEquals("Hello, Mr. Test!", resultWithTitle)
     }
 }

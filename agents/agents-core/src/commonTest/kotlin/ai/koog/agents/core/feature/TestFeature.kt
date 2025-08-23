@@ -76,7 +76,7 @@ class TestFeature(val events: MutableList<String>, val runIds: MutableList<Strin
 
             pipeline.interceptToolExecutionCompleted(context) { event ->
                 feature.events +=
-                    "Tool: finish tool call with result (tool: ${event.tool.name}, result: ${event.result?.toStringDefault() ?: "null"})"
+                    "Tool: finish tool call with result (tool: ${event.tool.name}, result: ${event.result?.let(event.tool::encodeResultToStringUnsafe) ?: "null"})"
             }
         }
     }

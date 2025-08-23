@@ -27,8 +27,6 @@ import ai.koog.agents.core.feature.PromptExecutorProxy
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.Tool
-import ai.koog.agents.core.tools.ToolArgs
-import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.testing.tools.AIAgentContextMockBuilder
 import ai.koog.agents.testing.tools.AIAgentContextMockBuilderBase
 import ai.koog.agents.testing.tools.DummyAIAgentContext
@@ -1198,7 +1196,7 @@ public class Testing {
  * }
  * ```
  */
-public fun <Args : ToolArgs> Testing.Config.SubgraphAssertionsBuilder<*, *>.toolCallMessage(
+public fun <Args> Testing.Config.SubgraphAssertionsBuilder<*, *>.toolCallMessage(
     tool: Tool<Args, *>,
     args: Args
 ): Message.Tool.Call {
@@ -1254,7 +1252,7 @@ public fun Testing.Config.SubgraphAssertionsBuilder<*, *>.assistantMessage(
  * }
  * ```
  */
-public fun <Result : ToolResult> toolResult(tool: Tool<*, Result>, result: Result): ReceivedToolResult =
+public fun <Result> toolResult(tool: Tool<*, Result>, result: Result): ReceivedToolResult =
     ReceivedToolResult(null, tool.name, tool.encodeResultToString(result), result)
 
 /**
@@ -1279,7 +1277,7 @@ public fun <Result : ToolResult> toolResult(tool: Tool<*, Result>, result: Resul
  * ```
  */
 public fun toolResult(tool: SimpleTool<*>, result: String): ReceivedToolResult =
-    toolResult(tool, ToolResult.Text(result))
+    toolResult(tool, result)
 
 /**
  * Enables and configures the Testing feature for a Kotlin AI Agent instance.

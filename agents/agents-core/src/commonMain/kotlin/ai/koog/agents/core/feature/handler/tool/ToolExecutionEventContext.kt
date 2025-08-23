@@ -3,8 +3,6 @@ package ai.koog.agents.core.feature.handler.tool
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventContext
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventType
 import ai.koog.agents.core.tools.Tool
-import ai.koog.agents.core.tools.ToolArgs
-import ai.koog.agents.core.tools.ToolResult
 
 /**
  * Represents the context for handling tool-specific events within the framework.
@@ -21,7 +19,7 @@ public data class ToolExecutionStartingContext(
     val runId: String,
     val toolCallId: String?,
     val tool: Tool<*, *>,
-    val toolArgs: ToolArgs
+    val toolArgs: Any?
 ) : ToolExecutionEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.ToolExecutionStarting
 }
@@ -37,7 +35,7 @@ public data class ToolValidationFailedContext(
     val runId: String,
     val toolCallId: String?,
     val tool: Tool<*, *>,
-    val toolArgs: ToolArgs,
+    val toolArgs: Any?,
     val error: String
 ) : ToolExecutionEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.ToolValidationFailed
@@ -54,7 +52,7 @@ public data class ToolExecutionFailedContext(
     val runId: String,
     val toolCallId: String?,
     val tool: Tool<*, *>,
-    val toolArgs: ToolArgs,
+    val toolArgs: Any?,
     val throwable: Throwable
 ) : ToolExecutionEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.ToolExecutionFailed
@@ -71,8 +69,8 @@ public data class ToolExecutionCompletedContext(
     val runId: String,
     val toolCallId: String?,
     val tool: Tool<*, *>,
-    val toolArgs: ToolArgs,
-    val result: ToolResult?
+    val toolArgs: Any?,
+    val result: Any?
 ) : ToolExecutionEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.ToolExecutionCompleted
 }

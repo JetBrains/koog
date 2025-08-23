@@ -2,13 +2,12 @@ package ai.koog.agents.core.tools.serialization
 
 import ai.koog.agents.core.tools.DirectToolCallsEnabler
 import ai.koog.agents.core.tools.Tool
-import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
-import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.add
@@ -443,14 +442,13 @@ class ToolComplexParameterTypesTest {
 
     private object NestedListsTool : Tool<NestedListsTool.Args, NestedListsTool.Result>() {
         @Serializable
-        data class Args(val nestedList: List<List<Int>>) : ToolArgs
+        data class Args(val nestedList: List<List<Int>>)
 
         @Serializable
-        data class Result(val nestedList: List<List<Int>>) : ToolResult {
-            override fun toStringDefault(): String = "Nested list: $nestedList"
-        }
+        data class Result(val nestedList: List<List<Int>>)
 
         override val argsSerializer = Args.serializer()
+        override val resultSerializer: KSerializer<Result> = Result.serializer()
 
         override val descriptor = ToolDescriptor(
             name = "nested_lists_tool",
@@ -479,14 +477,13 @@ class ToolComplexParameterTypesTest {
         enum class Name { JANE, JOHN }
 
         @Serializable
-        data class Args(val colors: List<Color>, val names: List<Name>, val optional: List<Color>?) : ToolArgs
+        data class Args(val colors: List<Color>, val names: List<Name>, val optional: List<Color>?)
 
         @Serializable
-        data class Result(val colors: List<Color>, val names: List<Name>, val optional: List<Color>?) : ToolResult {
-            override fun toStringDefault(): String = "Colors: $colors, names: $names"
-        }
+        data class Result(val colors: List<Color>, val names: List<Name>, val optional: List<Color>?)
 
         override val argsSerializer = Args.serializer()
+        override val resultSerializer: KSerializer<Result> = Result.serializer()
 
         override val descriptor = ToolDescriptor(
             name = "list_of_enums_tool",
@@ -527,15 +524,13 @@ class ToolComplexParameterTypesTest {
         data class Person(val name: String, val age: Int, val address: Address)
 
         @Serializable
-        data class Args(val person: Person) : ToolArgs
+        data class Args(val person: Person)
 
         @Serializable
-        data class Result(val person: Person) : ToolResult {
-            override fun toStringDefault(): String =
-                "Person: ${person.name}, ${person.age}, Address: ${person.address.street}, ${person.address.city}"
-        }
+        data class Result(val person: Person)
 
         override val argsSerializer = Args.serializer()
+        override val resultSerializer: KSerializer<Result> = Result.serializer()
 
         override val descriptor = ToolDescriptor(
             name = "object_tool",
@@ -590,15 +585,13 @@ class ToolComplexParameterTypesTest {
         data class Person(val name: String, val age: Int)
 
         @Serializable
-        data class Args(val people: List<Person>) : ToolArgs
+        data class Args(val people: List<Person>)
 
         @Serializable
-        data class Result(val people: List<Person>) : ToolResult {
-            override fun toStringDefault(): String =
-                "People: [${people.joinToString(", ") { "${it.name} (${it.age})" }}]"
-        }
+        data class Result(val people: List<Person>)
 
         override val argsSerializer = Args.serializer()
+        override val resultSerializer: KSerializer<Result> = Result.serializer()
 
         override val descriptor = ToolDescriptor(
             name = "list_of_objects_tool",
@@ -649,15 +642,13 @@ class ToolComplexParameterTypesTest {
         }
 
         @Serializable
-        data class Args(val config: Config) : ToolArgs
+        data class Args(val config: Config)
 
         @Serializable
-        data class Result(val config: Config) : ToolResult {
-            override fun toStringDefault(): String =
-                "Config: ${config.name}, Additional: ${config.getAdditionalProperties()}"
-        }
+        data class Result(val config: Config)
 
         override val argsSerializer = Args.serializer()
+        override val resultSerializer: KSerializer<Result> = Result.serializer()
 
         override val descriptor = ToolDescriptor(
             name = "object_with_additional_properties_tool",

@@ -1,7 +1,6 @@
 package ai.koog.agents.example.tone
 
 import ai.koog.agents.core.tools.SimpleTool
-import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
@@ -23,7 +22,7 @@ object ToneTools {
         private val toneType: String
     ) : SimpleTool<ToneTool.Args>() {
         @Serializable
-        data class Args(val text: String) : ToolArgs
+        data class Args(val text: String)
 
         override val argsSerializer = Args.serializer()
 

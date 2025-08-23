@@ -261,7 +261,7 @@ import kotlinx.serialization.Serializable
 
 class WebSearchTool: SimpleTool<WebSearchTool.Args>() {
     @Serializable
-    class Args(val query: String) : ToolArgs
+    class Args(val query: String)
 
     override val argsSerializer: KSerializer<Args> = Args.serializer()
 
@@ -274,7 +274,7 @@ class WebSearchTool: SimpleTool<WebSearchTool.Args>() {
 
 class DoAction: SimpleTool<DoAction.Args>() {
     @Serializable
-    class Args(val action: String) : ToolArgs
+    class Args(val action: String)
 
     override val argsSerializer: KSerializer<Args> = Args.serializer()
 
@@ -287,7 +287,7 @@ class DoAction: SimpleTool<DoAction.Args>() {
 
 class DoAnotherAction: SimpleTool<DoAnotherAction.Args>() {
     @Serializable
-    class Args(val action: String) : ToolArgs
+    class Args(val action: String)
 
     override val argsSerializer: KSerializer<Args> = Args.serializer()
 

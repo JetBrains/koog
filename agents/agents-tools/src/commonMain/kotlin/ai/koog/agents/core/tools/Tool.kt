@@ -4,6 +4,8 @@ import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.core.tools.serialization.ToolJson
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.StringFormat
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 
@@ -32,7 +34,7 @@ public interface DirectToolCallsEnabler
  * Represents a tool that, when executed, makes changes to the environment.
  */
 @Suppress("UNCHECKED_CAST", "unused")
-public abstract class Tool<TArgs : ToolArgs, TResult : ToolResult> {
+public abstract class Tool<TArgs, TResult> {
     /**
      * Serializer responsible for encoding and decoding the arguments required for the tool execution.
      * This abstract property is used to define the specific [KSerializer] corresponding to the type of arguments
@@ -42,6 +44,22 @@ public abstract class Tool<TArgs : ToolArgs, TResult : ToolResult> {
      * proper serialization and deserialization of the tool arguments.
      */
     public abstract val argsSerializer: KSerializer<TArgs>
+
+    /**
+     * Serializer responsible for encoding the result of the tool execution.
+     * This abstract property is used to define the specific [KSerializer] corresponding to the type of arguments
+     * expected by the tool.
+     *
+     * The implementation must provide a concrete serializer for the `TResult` type parameter, which ensures
+     * proper serialization and deserialization of the tool arguments.
+     */
+    public abstract val resultSerializer: KSerializer<TResult>
+
+    /**
+     * The [StringFormat] used to encode and decode the arguments and results of the tool.
+     * This property is used to serialize and deserialize the tool arguments and results.
+     */
+    protected open val format: StringFormat = ToolJson
 
     /**
      * Provides a descriptor detailing the tool's metadata, including its name,
@@ -160,7 +178,7 @@ public abstract class Tool<TArgs : ToolArgs, TResult : ToolResult> {
      * @param result The result object of type TResult to be encoded into a string.
      * @return The string representation of the given result.
      */
-    public open fun encodeResultToString(result: TResult): String = result.toStringDefault()
+    public open fun encodeResultToString(result: TResult): String = format.encodeToString(resultSerializer, result)
 
     /**
      * Encodes the provided result object into a JSON string representation without type safety checks.
@@ -172,7 +190,7 @@ public abstract class Tool<TArgs : ToolArgs, TResult : ToolResult> {
      * @param result The result object of type `Tool.Result` to be encoded.
      * @return A JSON string representation of the provided result.
      */
-    public fun encodeResultToStringUnsafe(result: ToolResult): String = encodeResultToString(result as TResult)
+    public fun encodeResultToStringUnsafe(result: Any?): String = encodeResultToString(result as TResult)
 
     /**
      * Base type, representing tool arguments.

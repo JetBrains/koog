@@ -131,7 +131,7 @@ data class Book(
     val title: String,
     val author: String,
     val description: String
-) : ToolArgs
+)
 
 class BookTool() : SimpleTool<Book>() {
     companion object {

@@ -10,7 +10,6 @@ import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.onAssistantMessage
 import ai.koog.agents.core.tools.SimpleTool
-import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
@@ -51,6 +50,7 @@ import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.ToolChoice
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.serializer
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.io.TempDir
@@ -79,15 +79,15 @@ class AIAgentIntegrationTest {
     val systemPrompt = "You are a helpful assistant."
 
     @Serializable
-    private object CalculatorToolNoArgs : SimpleTool<ToolArgs.Empty>() {
-        override val argsSerializer = ToolArgs.Empty.serializer()
+    private object CalculatorToolNoArgs : SimpleTool<Unit>() {
+        override val argsSerializer = Unit.serializer()
 
         override val descriptor = ToolDescriptor(
             name = "calculator",
             description = "A simple calculator that performs basic calculations. No parameters needed.",
         )
 
-        override suspend fun doExecute(args: ToolArgs.Empty): String {
+        override suspend fun doExecute(args: Unit): String {
             return "The result of 123 + 456 is 579"
         }
     }
@@ -96,7 +96,7 @@ class AIAgentIntegrationTest {
     data class GetTransactionsArgs(
         val startDate: String,
         val endDate: String
-    ) : ToolArgs
+    )
 
     object GetTransactionsTool : SimpleTool<GetTransactionsArgs>() {
         override val argsSerializer = GetTransactionsArgs.serializer()
@@ -134,7 +134,7 @@ class AIAgentIntegrationTest {
     @Serializable
     data class CalculateSumArgs(
         val amounts: List<Double>
-    ) : ToolArgs
+    )
 
     object CalculateSumTool : SimpleTool<CalculateSumArgs>() {
         override val argsSerializer = CalculateSumArgs.serializer()

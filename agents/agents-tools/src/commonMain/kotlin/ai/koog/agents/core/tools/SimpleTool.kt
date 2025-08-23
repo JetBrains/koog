@@ -1,14 +1,24 @@
 package ai.koog.agents.core.tools
 
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.builtins.serializer
+
 /**
  * Represents a simplified tool base class that processes specific arguments and produces a textual result.
  *
- * @param TArgs The type of arguments the tool accepts, which must be a subtype of `ToolArgs`.
+ * @param TArgs The type of arguments the tool accepts.
  */
-public abstract class SimpleTool<TArgs : ToolArgs> : Tool<TArgs, ToolResult.Text>() {
-    override fun encodeResultToString(result: ToolResult.Text): String = result.text
+public abstract class SimpleTool<TArgs> : Tool<TArgs, String>() {
+    override fun encodeResultToString(result: String): String = result
 
-    final override suspend fun execute(args: TArgs): ToolResult.Text = ToolResult.Text(doExecute(args))
+    /**
+     * Deprecated in favor of `String`.
+     */
+    @Deprecated("String directly")
+    public fun encodeResultToString(result: ToolResult.Text): String = result.text
+    override val resultSerializer: KSerializer<String> = String.serializer()
+
+    final override suspend fun execute(args: TArgs): String = doExecute(args)
 
     /**
      * Executes the tool's main functionality using the provided arguments and produces a textual result.

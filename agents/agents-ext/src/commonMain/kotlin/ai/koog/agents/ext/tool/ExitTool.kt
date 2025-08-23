@@ -1,7 +1,6 @@
 package ai.koog.agents.ext.tool
 
 import ai.koog.agents.core.tools.SimpleTool
-import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
@@ -25,7 +24,7 @@ public object ExitTool : SimpleTool<ExitTool.Args>() {
      * @property message The input message provided as an argument for the tool.
      */
     @Serializable
-    public data class Args(val message: String) : ToolArgs
+    public data class Args(val message: String)
 
     override suspend fun doExecute(args: Args): String {
         return "DONE"

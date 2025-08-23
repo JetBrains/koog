@@ -1,7 +1,6 @@
 package ai.koog.agents.core.tools.serialization
 
 import ai.koog.agents.core.tools.SimpleTool
-import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
@@ -9,7 +8,7 @@ import kotlinx.serialization.Serializable
 
 internal class SampleTool(name: String) : SimpleTool<SampleTool.Args>() {
     @Serializable
-    data class Args(val arg1: String, val arg2: Int) : ToolArgs
+    data class Args(val arg1: String, val arg2: Int)
 
     override val argsSerializer = Args.serializer()
 

@@ -7,7 +7,6 @@ import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.tools.DirectToolCallsEnabler
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.Tool
-import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
@@ -65,7 +64,7 @@ class AIAgentLLMWriteSessionTest {
 
     class TestTool : SimpleTool<TestTool.Args>() {
         @Serializable
-        data class Args(val input: String) : ToolArgs
+        data class Args(val input: String)
 
         override val argsSerializer: KSerializer<Args> = Args.serializer()
 
@@ -88,13 +87,13 @@ class AIAgentLLMWriteSessionTest {
 
     class CustomTool : Tool<CustomTool.Args, CustomTool.Result>() {
         @Serializable
-        data class Args(val input: String) : ToolArgs
+        data class Args(val input: String)
 
-        data class Result(val output: String) : ToolResult {
-            override fun toStringDefault(): String = output
-        }
+        @Serializable
+        data class Result(val output: String)
 
         override val argsSerializer: KSerializer<Args> = Args.serializer()
+        override val resultSerializer: KSerializer<Result> = Result.serializer()
 
         override val descriptor: ToolDescriptor = ToolDescriptor(
             name = "custom-tool",
@@ -217,7 +216,7 @@ class AIAgentLLMWriteSessionTest {
         val result = session.callTool(testTool, TestTool.Args("test input"))
 
         assertTrue(result.isSuccessful())
-        assertEquals("Processed: test input", result.asSuccessful().result.text)
+        assertEquals("Processed: test input", result.asSuccessful().result)
     }
 
     @Test
@@ -258,12 +257,12 @@ class AIAgentLLMWriteSessionTest {
         val testTool = TestTool()
         val session = createSession(mockExecutor, listOf(testTool))
 
-        val safeTool = session.findTool<TestTool.Args, ToolResult.Text>(TestTool::class)
+        val safeTool = session.findTool<TestTool.Args, String>(TestTool::class)
         assertNotNull(safeTool)
 
         val result = safeTool.execute(TestTool.Args("test input"))
         assertTrue(result.isSuccessful())
-        assertEquals("Processed: test input", result.asSuccessful().result.text)
+        assertEquals("Processed: test input", result.asSuccessful().result)
     }
 
     @Test

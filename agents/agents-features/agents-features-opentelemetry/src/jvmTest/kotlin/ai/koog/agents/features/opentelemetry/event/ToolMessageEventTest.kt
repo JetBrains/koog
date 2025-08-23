@@ -1,6 +1,5 @@
 package ai.koog.agents.features.opentelemetry.event
 
-import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.features.opentelemetry.attribute.CommonAttributes
 import ai.koog.agents.features.opentelemetry.mock.MockLLMProvider
 import ai.koog.prompt.message.Message
@@ -15,13 +14,12 @@ class ToolMessageEventTest {
     @Test
     fun `test tool message attributes`() {
         val toolCallId = "test-id"
-        val toolResult = createTestToolResult("Test result")
         val llmProvider = MockLLMProvider()
 
         val toolMessageEvent = ToolMessageEvent(
             provider = llmProvider,
             toolCallId = toolCallId,
-            content = toolResult.toStringDefault(),
+            content = "Test result"
         )
 
         val expectedAttributes = listOf(
@@ -39,17 +37,16 @@ class ToolMessageEventTest {
     @Test
     fun `test tool message body fields with id`() {
         val toolCallId = "test-id"
-        val toolResult = createTestToolResult("Test result")
 
         val toolMessageEvent = ToolMessageEvent(
             provider = MockLLMProvider(),
             toolCallId = toolCallId,
-            content = toolResult.toStringDefault(),
+            content = "Test result"
         )
 
         val expectedBodyFields = listOf(
             EventBodyFields.Role(role = Message.Role.Tool),
-            EventBodyFields.Content(content = toolResult.toStringDefault()),
+            EventBodyFields.Content(content = "Test result"),
             EventBodyFields.Id(id = toolCallId)
         )
 
@@ -60,17 +57,16 @@ class ToolMessageEventTest {
     @Test
     fun `test tool message body fields without id`() {
         val toolCallId = null
-        val toolResult = createTestToolResult("Test result")
 
         val toolMessageEvent = ToolMessageEvent(
             provider = MockLLMProvider(),
             toolCallId = toolCallId,
-            content = toolResult.toStringDefault(),
+            content = "Test result",
         )
 
         val expectedBodyFields = listOf(
             EventBodyFields.Role(role = Message.Role.Tool),
-            EventBodyFields.Content(content = toolResult.toStringDefault())
+            EventBodyFields.Content(content ="Test result")
         )
 
         assertEquals(expectedBodyFields.size, toolMessageEvent.bodyFields.size)
@@ -78,12 +74,4 @@ class ToolMessageEventTest {
     }
 
     //endregion Body Fields
-
-    //region Private Methods
-
-    private fun createTestToolResult(content: String): ToolResult = object : ToolResult {
-        override fun toStringDefault(): String = content
-    }
-
-    //endregion Private Methods
 }

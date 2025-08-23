@@ -51,9 +51,7 @@ import ai.koog.agents.core.feature.handler.tool.ToolExecutionStartingContext
 import ai.koog.agents.core.feature.handler.tool.ToolValidationErrorHandler
 import ai.koog.agents.core.feature.handler.tool.ToolValidationFailedContext
 import ai.koog.agents.core.tools.Tool
-import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.agents.core.tools.ToolResult
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.LLModel
@@ -370,7 +368,7 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
      * @param tool The tool that is being called
      * @param toolArgs The arguments provided to the tool
      */
-    public suspend fun onToolExecutionStarting(runId: String, toolCallId: String?, tool: Tool<*, *>, toolArgs: ToolArgs) {
+    public suspend fun onToolExecutionStarting(runId: String, toolCallId: String?, tool: Tool<*, *>, toolArgs: Any?) {
         val eventContext = ToolExecutionStartingContext(runId, toolCallId, tool, toolArgs)
         toolExecutionEventHandlers.values.forEach { handler -> handler.toolCallHandler.handle(eventContext) }
     }
@@ -387,7 +385,7 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
         runId: String,
         toolCallId: String?,
         tool: Tool<*, *>,
-        toolArgs: ToolArgs,
+        toolArgs: Any?,
         error: String
     ) {
         val eventContext =
@@ -407,7 +405,7 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
         runId: String,
         toolCallId: String?,
         tool: Tool<*, *>,
-        toolArgs: ToolArgs,
+        toolArgs: Any?,
         throwable: Throwable
     ) {
         val eventContext = ToolExecutionFailedContext(runId, toolCallId, tool, toolArgs, throwable)
@@ -426,8 +424,8 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
         runId: String,
         toolCallId: String?,
         tool: Tool<*, *>,
-        toolArgs: ToolArgs,
-        result: ToolResult?
+        toolArgs: Any?,
+        result: Any?
     ) {
         val eventContext = ToolExecutionCompletedContext(runId, toolCallId, tool, toolArgs, result)
         toolExecutionEventHandlers.values.forEach { handler -> handler.toolCallResultHandler.handle(eventContext) }

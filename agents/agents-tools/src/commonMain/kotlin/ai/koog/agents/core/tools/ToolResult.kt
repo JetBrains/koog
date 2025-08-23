@@ -8,6 +8,7 @@ import kotlin.jvm.JvmInline
 /**
  * Represents a result produced by a tool operation. This is a marker interface implemented by various result types.
  */
+@Deprecated("Extending ToolResult is no longer required. Tool results are entirely handled by KotlinX Serialization.")
 public interface ToolResult {
     private companion object {
         private val json = Json {
@@ -90,6 +91,7 @@ public interface ToolResult {
              */
             public val FALSE: Boolean = Boolean(false)
         }
+
         override fun toStringDefault(): String = result.toString()
     }
 
