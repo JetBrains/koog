@@ -9,6 +9,7 @@ import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.openai.models.Content
 import ai.koog.prompt.executor.clients.openai.models.ContentPart
+import ai.koog.prompt.executor.clients.openai.models.JsonSchemaObject
 import ai.koog.prompt.executor.clients.openai.models.OpenAIAudioConfig
 import ai.koog.prompt.executor.clients.openai.models.OpenAIAudioFormat
 import ai.koog.prompt.executor.clients.openai.models.OpenAIAudioVoice
@@ -19,6 +20,7 @@ import ai.koog.prompt.executor.clients.openai.models.OpenAIChoice
 import ai.koog.prompt.executor.clients.openai.models.OpenAIFunction
 import ai.koog.prompt.executor.clients.openai.models.OpenAIMessage
 import ai.koog.prompt.executor.clients.openai.models.OpenAIModalities
+import ai.koog.prompt.executor.clients.openai.models.OpenAIResponseFormat
 import ai.koog.prompt.executor.clients.openai.models.OpenAITool
 import ai.koog.prompt.executor.clients.openai.models.OpenAIToolCall
 import ai.koog.prompt.executor.clients.openai.models.OpenAIToolChoice
@@ -240,6 +242,7 @@ public abstract class AbstractOpenAILLMClient(
         val openAITools = tools.takeIf { it.isNotEmpty() }?.map { it.toOpenAITool() }
         val toolChoice = prompt.params.toolChoice?.toOpenAIToolChoice()
         val (modalities, audio) = buildAudionConfig(model, stream)
+        val responseFormat = prompt.params.schema?.toOpenAIResponseFormat(model)
 
         return OpenAIChatCompletionRequest(
             messages = messages,
@@ -253,6 +256,7 @@ public abstract class AbstractOpenAILLMClient(
                 ?.let { prompt.params.temperature },
             toolChoice = toolChoice,
             tools = openAITools,
+            responseFormat = responseFormat,
             user = prompt.params.user,
         )
     }
@@ -441,6 +445,27 @@ public abstract class AbstractOpenAILLMClient(
             voice = OpenAIAudioVoice.Alloy,
         )
         return modalities to audio
+    }
+
+    private fun LLMParams.Schema.toOpenAIResponseFormat(model: LLModel): OpenAIResponseFormat {
+        require(capability in model.capabilities) {
+            "Model ${model.id} does not support structured output schema $name"
+        }
+
+        @Suppress("REDUNDANT_ELSE_IN_WHEN") // if more formats are added later
+        return when (this) {
+            is LLMParams.Schema.JSON -> {
+                OpenAIResponseFormat.JsonSchema(
+                    JsonSchemaObject(
+                        name = name,
+                        schema = schema,
+                        strict = true,
+                    )
+                )
+            }
+
+            else -> throw IllegalArgumentException("Unsupported schema type: $this")
+        }
     }
 
     @OptIn(ExperimentalEncodingApi::class)
