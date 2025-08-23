@@ -717,8 +717,7 @@ internal sealed interface InputContent {
      */
     @Serializable
     @SerialName("input_image")
-    class Image(val detail: String = "auto", val fileId: String? = null, val imageUrl: String? = null) :
-        InputContent
+    class Image(val detail: String = "auto", val fileId: String? = null, val imageUrl: String? = null) : InputContent
 
     /**
      * A file input to the model
@@ -751,7 +750,7 @@ internal sealed interface OutputContent {
     class Text(
         val annotations: List<OpenAIAnnotations>,
         val text: String,
-        val logprobs: OpenAIChoiceLogProbs.ContentLogProbs? = null
+        val logprobs: List<OpenAIChoiceLogProbs.ContentLogProbs>? = null
     ) : OutputContent
 
     /**
@@ -933,7 +932,7 @@ internal sealed interface OpenAIOutputFormat {
      */
     @Serializable
     @SerialName("text")
-    class Text()
+    class Text(): OpenAIOutputFormat
 
     /**
      * JSON Schema response format. Used to generate structured JSON responses
@@ -950,7 +949,7 @@ internal sealed interface OpenAIOutputFormat {
     @SerialName("json_schema")
     class JsonSchema(
         val name: String,
-        val schema: JsonObject,
+        val schema: kotlinx.serialization.json.JsonObject,
         val description: String? = null,
         val strict: Boolean? = null
     ) : OpenAIOutputFormat
@@ -963,7 +962,7 @@ internal sealed interface OpenAIOutputFormat {
      */
     @Serializable
     @SerialName("json_object")
-    class JsonObject()
+    class JsonObject(): OpenAIOutputFormat
 }
 
 @Serializable
@@ -1357,7 +1356,7 @@ internal class OpenAIResponsesAPIResponse(
     val prompt: OpenAIPromptReference? = null,
     val promptCacheKey: String? = null,
     val reasoning: ReasoningConfig? = null,
-    val safetyIdentifier: String,
+    val safetyIdentifier: String? = null,
     val serviceTier: ServiceTier? = null,
     val status: OpenAIInputStatus,
     val temperature: Double? = null,
