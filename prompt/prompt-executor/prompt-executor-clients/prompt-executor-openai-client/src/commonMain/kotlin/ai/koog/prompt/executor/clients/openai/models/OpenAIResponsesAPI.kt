@@ -1,18 +1,22 @@
 package ai.koog.prompt.executor.clients.openai.models
 
+import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
-import kotlinx.serialization.descriptors.PolymorphicKind
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.SerialKind
 import kotlinx.serialization.descriptors.buildSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonClassDiscriminator
+import kotlinx.serialization.json.JsonContentPolymorphicSerializer
 import kotlinx.serialization.json.JsonDecoder
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonPrimitive
@@ -138,15 +142,14 @@ internal class OpenAIResponsesAPIRequest(
 ) : OpenAIBaseLLMRequest
 
 
-@Serializable(with = ItemSerializer::class)
-@JsonClassDiscriminator("type")
+@Serializable(with = ItemPolymorphicSerializer::class)
 internal sealed interface Item {
 
     /**
      * A text input to the model, equivalent to a text input with the `user` role.
      */
     @JvmInline
-    @Serializable
+    @Serializable(with = ItemTextSerializer::class)
     value class Text(val value: String) : Item
 
     /**
@@ -160,8 +163,11 @@ internal sealed interface Item {
      * One of `in_progress`, `completed`, or `incomplete`. Populated when items are returned via API.
      */
     @Serializable
-    @SerialName("message")
-    class InputMessage(val content: List<InputContent>, val role: String, val status: OpenAIInputStatus? = null) : Item
+    class InputMessage(
+        val content: List<InputContent>, val role: String, val status: OpenAIInputStatus? = null
+    ) : Item {
+        val type: String = "message"
+    }
 
     /**
      * An output message from the model.
@@ -172,10 +178,11 @@ internal sealed interface Item {
      * Populated when input items are returned via API.
      */
     @Serializable
-    @SerialName("message")
     class OutputMessage(
         val content: List<OutputContent>, val id: String, val role: String = "assistant", val status: OpenAIInputStatus
-    ) : Item
+    ) : Item {
+        val type: String = "message"
+    }
 
     /**
      * The results of a file search tool call
@@ -185,13 +192,14 @@ internal sealed interface Item {
      * @property results The results of the file search tool call.
      */
     @Serializable
-    @SerialName("file_search_call")
     class FileSearchToolCall(
         val id: String,
         val queries: List<String>,
         val status: String,
         val results: List<FileSearchToolResult>? = null
     ) : Item {
+        val type: String = "file_search_call"
+
         /**
          * The results of the file search tool call.
          * @property attributes Set of 16 key-value pairs that can be attached to an object.
@@ -224,7 +232,6 @@ internal sealed interface Item {
      * Populated when items are returned via API.
      */
     @Serializable
-    @SerialName("computer_call")
     class ComputerToolCall(
         val action: Action,
         val callId: String,
@@ -232,6 +239,8 @@ internal sealed interface Item {
         val pendingSafetyChecks: List<PendingSafetyCheck>,
         val status: String
     ) : Item {
+        val type: String = "computer_call"
+
         @Serializable
         @JsonClassDiscriminator("type")
         internal sealed interface Action {
@@ -341,7 +350,6 @@ internal sealed interface Item {
      * One of `in_progress`, `completed`, or `incomplete`. Populated when input items are returned via API.
      */
     @Serializable
-    @SerialName("computer_call_output")
     class ComputerToolCallOutput(
         val callId: String,
         val output: Output,
@@ -349,6 +357,8 @@ internal sealed interface Item {
         val id: String? = null,
         val status: OpenAIInputStatus? = null,
     ) : Item {
+        val type: String = "computer_call_output"
+
         /**
          * A computer screenshot image used with the computer use tool.
          * @property type Specifies the event type.
@@ -379,8 +389,9 @@ internal sealed interface Item {
      * @property status The status of the web search tool call.
      */
     @Serializable
-    @SerialName("web_search_call")
     class WebSearchToolCall(val action: Action, val id: String, val status: String) : Item {
+        val type: String = "web_search_call"
+
         @Serializable
         @JsonClassDiscriminator("type")
         internal sealed interface Action {
@@ -420,14 +431,15 @@ internal sealed interface Item {
      * @property status The status of the item. One of `in_progress`, `completed`, or `incomplete`
      */
     @Serializable
-    @SerialName("function_call")
     class FunctionToolCall(
         val arguments: String,
         val callId: String,
         val name: String,
         val id: String? = null,
         val status: OpenAIInputStatus? = null,
-    ) : Item
+    ) : Item {
+        val type: String = "function_call"
+    }
 
     /**
      * The output of a function tool call.
@@ -437,13 +449,14 @@ internal sealed interface Item {
      * @property status The status of the item. One of in_progress, completed, or incomplete
      */
     @Serializable
-    @SerialName("function_call_output")
     class FunctionToolCallOutput(
         val callId: String,
         val output: String,
         val id: String? = null,
         val status: OpenAIInputStatus? = null,
-    ) : Item
+    ) : Item {
+        val type: String = "function_call_output"
+    }
 
     /**
      * A description of the chain of thought used by a reasoning model while generating a response.
@@ -457,7 +470,6 @@ internal sealed interface Item {
      * @property status The status of the item. One of `in_progress`, `completed`, or `incomplete`
      */
     @Serializable
-    @SerialName("reasoning")
     class Reasoning(
         val id: String,
         val summary: List<Summary>,
@@ -465,6 +477,8 @@ internal sealed interface Item {
         val encryptedContent: String? = null,
         val status: OpenAIInputStatus? = null,
     ) : Item {
+        val type: String = "reasoning"
+
         /**
          * Reasoning summary content.
          * @property text A summary of the reasoning output from the model so far.
@@ -493,8 +507,9 @@ internal sealed interface Item {
      * @property status The status of the image generation call.
      */
     @Serializable
-    @SerialName("image_generation_call")
-    class ImageGenerationCall(val id: String, val result: String?, val status: String) : Item
+    class ImageGenerationCall(val id: String, val result: String?, val status: String) : Item {
+        val type: String = "image_generation_call"
+    }
 
     /**
      * A tool call to run code.
@@ -507,7 +522,6 @@ internal sealed interface Item {
      * Valid values are `in_progress`, `completed`, `incomplete`, `interpreting`, and `failed`.
      */
     @Serializable
-    @SerialName("code_interpreter_call")
     class CodeInterpreterToolCall(
         val code: String?,
         val containerId: String,
@@ -515,6 +529,8 @@ internal sealed interface Item {
         val outputs: List<Output>?,
         val status: OpenAIInputStatus,
     ) : Item {
+        val type: String = "code_interpreter_call"
+
         @Serializable
         @JsonClassDiscriminator("type")
         sealed interface Output {
@@ -544,8 +560,9 @@ internal sealed interface Item {
      * @property status The status of the local shell call.
      */
     @Serializable
-    @SerialName("local_shell_call")
     class LocalShellCall(val action: Action, val callId: String, val id: String, val status: String) : Item {
+        val type: String = "local_shell_call"
+
         /**
          * Execute a shell command on the server.
          * @property command The command to run.
@@ -574,8 +591,9 @@ internal sealed interface Item {
      * @property status The status of the item. One of `in_progress`, `completed`, or `incomplete`.
      */
     @Serializable
-    @SerialName("local_shell_call_output")
-    class LocalShellCallOutput(val id: String, val output: String, val status: OpenAIInputStatus? = null) : Item
+    class LocalShellCallOutput(val id: String, val output: String, val status: OpenAIInputStatus? = null) : Item {
+        val type: String = "local_shell_call_output"
+    }
 
     /**
      * A list of tools available on an MCP server.
@@ -585,9 +603,11 @@ internal sealed interface Item {
      * @property error Error message if the server could not list tools.
      */
     @Serializable
-    @SerialName("mcp_list_tools")
-    class McpListTools(val id: String, val serverLabel: String, val tools: List<McpTool>, val error: String? = null) :
-        Item
+    class McpListTools(
+        val id: String, val serverLabel: String, val tools: List<McpTool>, val error: String? = null
+    ) : Item {
+        val type: String = "mcp_list_tools"
+    }
 
     /**
      * A request for human approval of a tool invocation.
@@ -597,8 +617,9 @@ internal sealed interface Item {
      * @property serverLabel The label of the MCP server making the request.
      */
     @Serializable
-    @SerialName("mcp_approval_request")
-    class McpApprovalRequest(val arguments: String, val id: String, val name: String, val serverLabel: String) : Item
+    class McpApprovalRequest(val arguments: String, val id: String, val name: String, val serverLabel: String) : Item {
+        val type: String = "mcp_approval_request"
+    }
 
     /**
      * A response to an MCP approval request.
@@ -608,13 +629,14 @@ internal sealed interface Item {
      * @property reason Optional reason for the decision.
      */
     @Serializable
-    @SerialName("mcp_approval_response")
     class McpApprovalResponse(
         val approvalRequestId: String,
         val approve: Boolean,
         val id: String? = null,
         val reason: String? = null,
-    ) : Item
+    ) : Item {
+        val type: String = "mcp_approval_response"
+    }
 
     /**
      * An invocation of a tool on an MCP server.
@@ -626,7 +648,6 @@ internal sealed interface Item {
      * @property output The output from the tool call.
      */
     @Serializable
-    @SerialName("mcp_call")
     class McpToolCall(
         val arguments: String,
         val id: String,
@@ -634,7 +655,9 @@ internal sealed interface Item {
         val serverLabel: String,
         val error: String? = null,
         val output: String? = null,
-    ) : Item
+    ) : Item {
+        val type: String = "mcp_call"
+    }
 
     /**
      * The output of a custom tool call from your code, being sent back to the model.
@@ -643,8 +666,9 @@ internal sealed interface Item {
      * @property id The unique ID of the custom tool call output in the OpenAI platform.
      */
     @Serializable
-    @SerialName("custom_tool_call_output")
-    class CustomToolCallOutput(val callId: String, val output: String, val id: String? = null) : Item
+    class CustomToolCallOutput(val callId: String, val output: String, val id: String? = null) : Item {
+        val type: String = "custom_tool_call_output"
+    }
 
     /**
      * A call to a custom tool created by the model.
@@ -654,8 +678,9 @@ internal sealed interface Item {
      * @property id The unique ID of the custom tool call in the OpenAI platform.
      */
     @Serializable
-    @SerialName("custom_tool_call")
-    class CustomToolCall(val callId: String, val input: String, val name: String, val id: String? = null) : Item
+    class CustomToolCall(val callId: String, val input: String, val name: String, val id: String? = null) : Item {
+        val type: String = "custom_tool_call"
+    }
 
     /**
      * An internal identifier for an item to reference.
@@ -663,8 +688,9 @@ internal sealed interface Item {
      * @property id The ID of the item to reference.
      */
     @Serializable
-    @SerialName("item_reference")
-    class ItemReference(val id: String) : Item
+    class ItemReference(val id: String) : Item {
+        val type: String = "item_reference"
+    }
 }
 
 @Serializable
@@ -678,7 +704,7 @@ internal sealed interface InputContent {
      */
     @Serializable
     @SerialName("input_text")
-    class InputText(val text: String) : InputContent
+    class Text(val text: String) : InputContent
 
     /**
      * An image input to the model
@@ -691,7 +717,7 @@ internal sealed interface InputContent {
      */
     @Serializable
     @SerialName("input_image")
-    class InputImage(val detail: String = "auto", val fileId: String? = null, val imageUrl: String? = null) :
+    class Image(val detail: String = "auto", val fileId: String? = null, val imageUrl: String? = null) :
         InputContent
 
     /**
@@ -704,7 +730,7 @@ internal sealed interface InputContent {
      */
     @Serializable
     @SerialName("input_file")
-    class InputFile(
+    class File(
         val fileData: String? = null, val fileId: String? = null,
         val fileUrl: String? = null, val filename: String? = null
     ) : InputContent
@@ -722,7 +748,7 @@ internal sealed interface OutputContent {
      */
     @Serializable
     @SerialName("output_text")
-    class OutputText(
+    class Text(
         val annotations: List<OpenAIAnnotations>,
         val text: String,
         val logprobs: OpenAIChoiceLogProbs.ContentLogProbs? = null
@@ -1401,7 +1427,7 @@ internal sealed interface OpenAIStreamEvent {
     class ResponseCreated(
         val response: OpenAIResponsesAPIResponse,
         val sequenceNumber: Int,
-    )
+    ) : OpenAIStreamEvent
 
     /**
      * Emitted when the response is in progress.
@@ -1413,7 +1439,7 @@ internal sealed interface OpenAIStreamEvent {
     class ResponseInProgress(
         val response: OpenAIResponsesAPIResponse,
         val sequenceNumber: Int,
-    )
+    ) : OpenAIStreamEvent
 
     /**
      * Emitted when the model response is complete.
@@ -1425,7 +1451,7 @@ internal sealed interface OpenAIStreamEvent {
     class ResponseCompleted(
         val response: OpenAIResponsesAPIResponse,
         val sequenceNumber: Int,
-    )
+    ) : OpenAIStreamEvent
 
     /**
      * An event that is emitted when a response fails.
@@ -1437,7 +1463,7 @@ internal sealed interface OpenAIStreamEvent {
     class ResponseFailed(
         val response: OpenAIResponsesAPIResponse,
         val sequenceNumber: Int,
-    )
+    ) : OpenAIStreamEvent
 
     /**
      * An event that is emitted when a response finishes as incomplete.
@@ -1449,7 +1475,7 @@ internal sealed interface OpenAIStreamEvent {
     class ResponseIncomplete(
         val response: OpenAIResponsesAPIResponse,
         val sequenceNumber: Int,
-    )
+    ) : OpenAIStreamEvent
 
     /**
      * An event that is emitted when a response finishes as incomplete.
@@ -1463,7 +1489,7 @@ internal sealed interface OpenAIStreamEvent {
         val item: Item,
         val outputIndex: Int,
         val sequenceNumber: Int,
-    )
+    ) : OpenAIStreamEvent
 
     /**
      * An event that is emitted when a response finishes as incomplete.
@@ -1477,7 +1503,7 @@ internal sealed interface OpenAIStreamEvent {
         val item: Item,
         val outputIndex: Int,
         val sequenceNumber: Int,
-    )
+    ) : OpenAIStreamEvent
 
     /**
      * Emitted when a new content part is added.
@@ -1495,7 +1521,7 @@ internal sealed interface OpenAIStreamEvent {
         val contentIndex: Int,
         val part: OutputContent,
         val sequenceNumber: Int,
-    )
+    ) : OpenAIStreamEvent
 
     /**
      * Emitted when a content part is done.
@@ -1513,7 +1539,7 @@ internal sealed interface OpenAIStreamEvent {
         val contentIndex: Int,
         val part: OutputContent,
         val sequenceNumber: Int,
-    )
+    ) : OpenAIStreamEvent
 
     /**
      * Emitted when there is an additional text delta.
@@ -1533,7 +1559,7 @@ internal sealed interface OpenAIStreamEvent {
         val delta: String,
         val logprobs: List<LogProbWithTop>? = null,
         val sequenceNumber: Int,
-    )
+    ) : OpenAIStreamEvent
 
     /**
      * Emitted when text content is finalized.
@@ -1553,7 +1579,7 @@ internal sealed interface OpenAIStreamEvent {
         val text: String,
         val logprobs: List<LogProbWithTop>? = null,
         val sequenceNumber: Int,
-    )
+    ) : OpenAIStreamEvent
 
     /**
      * Emitted when there is a partial refusal text.
@@ -1571,7 +1597,7 @@ internal sealed interface OpenAIStreamEvent {
         val contentIndex: Int,
         val delta: String,
         val sequenceNumber: Int,
-    )
+    ) : OpenAIStreamEvent
 
     /**
      * Emitted when refusal text is finalized.
@@ -1589,7 +1615,7 @@ internal sealed interface OpenAIStreamEvent {
         val contentIndex: Int,
         val refusal: String,
         val sequenceNumber: Int,
-    )
+    ) : OpenAIStreamEvent
 
     /**
      * Emitted when there is a partial function-call arguments delta.
@@ -1605,7 +1631,7 @@ internal sealed interface OpenAIStreamEvent {
         val outputIndex: Int,
         val delta: String,
         val sequenceNumber: Int,
-    )
+    ) : OpenAIStreamEvent
 
     /**
      * Emitted when function-call arguments are finalized.
@@ -1621,7 +1647,7 @@ internal sealed interface OpenAIStreamEvent {
         val outputIndex: Int,
         val arguments: String,
         val sequenceNumber: Int,
-    )
+    ) : OpenAIStreamEvent
 
     /**
      * Emitted when a file search call is initiated.
@@ -1635,7 +1661,7 @@ internal sealed interface OpenAIStreamEvent {
         val itemId: String,
         val outputIndex: Int,
         val sequenceNumber: Int,
-    )
+    ) : OpenAIStreamEvent
 
     /**
      * Emitted when a file search is currently searching.
@@ -1649,7 +1675,7 @@ internal sealed interface OpenAIStreamEvent {
         val itemId: String,
         val outputIndex: Int,
         val sequenceNumber: Int,
-    )
+    ) : OpenAIStreamEvent
 
     /**
      * Emitted when a file search call is completed (results found).
@@ -1663,7 +1689,7 @@ internal sealed interface OpenAIStreamEvent {
         val itemId: String,
         val outputIndex: Int,
         val sequenceNumber: Int,
-    )
+    ) : OpenAIStreamEvent
 
     /**
      * Emitted when a web search call is initiated.
@@ -1677,7 +1703,7 @@ internal sealed interface OpenAIStreamEvent {
         val itemId: String,
         val outputIndex: Int,
         val sequenceNumber: Int,
-    )
+    ) : OpenAIStreamEvent
 
     /**
      * Emitted when a web search call is executing.
@@ -1691,7 +1717,7 @@ internal sealed interface OpenAIStreamEvent {
         val itemId: String,
         val outputIndex: Int,
         val sequenceNumber: Int,
-    )
+    ) : OpenAIStreamEvent
 
     /**
      * Emitted when a web search call is completed.
@@ -1705,7 +1731,7 @@ internal sealed interface OpenAIStreamEvent {
         val itemId: String,
         val outputIndex: Int,
         val sequenceNumber: Int,
-    )
+    ) : OpenAIStreamEvent
 
     /**
      * Emitted when a new reasoning summary part is added.
@@ -1723,7 +1749,7 @@ internal sealed interface OpenAIStreamEvent {
         val summaryIndex: Int,
         val part: SummaryPart,
         val sequenceNumber: Int,
-    )
+    ) : OpenAIStreamEvent
 
     /**
      * Emitted when a reasoning summary part is completed.
@@ -1741,7 +1767,7 @@ internal sealed interface OpenAIStreamEvent {
         val summaryIndex: Int,
         val part: SummaryPart,
         val sequenceNumber: Int,
-    )
+    ) : OpenAIStreamEvent
 
     /**
      * Emitted when a delta is added to a reasoning summary text.
@@ -1759,7 +1785,7 @@ internal sealed interface OpenAIStreamEvent {
         val summaryIndex: Int,
         val delta: String,
         val sequenceNumber: Int,
-    )
+    ) : OpenAIStreamEvent
 
     /**
      * Emitted when a reasoning summary text is completed.
@@ -1777,7 +1803,7 @@ internal sealed interface OpenAIStreamEvent {
         val summaryIndex: Int,
         val text: String,
         val sequenceNumber: Int,
-    )
+    ) : OpenAIStreamEvent
 
     /**
      * Emitted when a delta is added to a reasoning text.
@@ -1795,7 +1821,7 @@ internal sealed interface OpenAIStreamEvent {
         val contentIndex: Int,
         val delta: String,
         val sequenceNumber: Int,
-    )
+    ) : OpenAIStreamEvent
 
     /**
      * Emitted when a reasoning text is completed.
@@ -1813,7 +1839,7 @@ internal sealed interface OpenAIStreamEvent {
         val contentIndex: Int,
         val text: String,
         val sequenceNumber: Int,
-    )
+    ) : OpenAIStreamEvent
 
     /**
      * Emitted when an image generation tool call has completed and the final image is available.
@@ -1827,7 +1853,7 @@ internal sealed interface OpenAIStreamEvent {
         val itemId: String,
         val outputIndex: Int,
         val sequenceNumber: Int,
-    )
+    ) : OpenAIStreamEvent
 
     /**
      * Emitted when an image generation tool call is actively generating an image (intermediate state).
@@ -1841,7 +1867,7 @@ internal sealed interface OpenAIStreamEvent {
         val itemId: String,
         val outputIndex: Int,
         val sequenceNumber: Int,
-    )
+    ) : OpenAIStreamEvent
 
     /**
      * Emitted when an image generation tool call is in progress.
@@ -1855,7 +1881,7 @@ internal sealed interface OpenAIStreamEvent {
         val itemId: String,
         val outputIndex: Int,
         val sequenceNumber: Int,
-    )
+    ) : OpenAIStreamEvent
 
     /**
      * Emitted when a partial image is available during image generation streaming.
@@ -1873,7 +1899,7 @@ internal sealed interface OpenAIStreamEvent {
         val partialImageIndex: Int,
         val partialImageB64: String,
         val sequenceNumber: Int,
-    )
+    ) : OpenAIStreamEvent
 
     /**
      * Emitted when there is a delta (partial update) to the arguments of an MCP tool call.
@@ -1889,7 +1915,7 @@ internal sealed interface OpenAIStreamEvent {
         val outputIndex: Int,
         val delta: String,
         val sequenceNumber: Int,
-    )
+    ) : OpenAIStreamEvent
 
     /**
      * Emitted when the arguments for an MCP tool call are finalized.
@@ -1905,7 +1931,7 @@ internal sealed interface OpenAIStreamEvent {
         val outputIndex: Int,
         val arguments: String,
         val sequenceNumber: Int,
-    )
+    ) : OpenAIStreamEvent
 
     /**
      * Emitted when an MCP tool call has completed successfully.
@@ -1919,7 +1945,7 @@ internal sealed interface OpenAIStreamEvent {
         val itemId: String,
         val outputIndex: Int,
         val sequenceNumber: Int,
-    )
+    ) : OpenAIStreamEvent
 
     /**
      * Emitted when an MCP tool call has failed.
@@ -1933,7 +1959,7 @@ internal sealed interface OpenAIStreamEvent {
         val itemId: String,
         val outputIndex: Int,
         val sequenceNumber: Int,
-    )
+    ) : OpenAIStreamEvent
 
     /**
      * Emitted when an MCP tool call is in progress.
@@ -1947,7 +1973,7 @@ internal sealed interface OpenAIStreamEvent {
         val itemId: String,
         val outputIndex: Int,
         val sequenceNumber: Int,
-    )
+    ) : OpenAIStreamEvent
 
     /**
      * Emitted when the list of available MCP tools has been successfully retrieved.
@@ -1961,7 +1987,7 @@ internal sealed interface OpenAIStreamEvent {
         val itemId: String,
         val outputIndex: Int,
         val sequenceNumber: Int,
-    )
+    ) : OpenAIStreamEvent
 
     /**
      * Emitted when the attempt to list available MCP tools has failed.
@@ -1975,7 +2001,7 @@ internal sealed interface OpenAIStreamEvent {
         val itemId: String,
         val outputIndex: Int,
         val sequenceNumber: Int,
-    )
+    ) : OpenAIStreamEvent
 
     /**
      * Emitted when the system is in the process of retrieving the list of available MCP tools.
@@ -1989,7 +2015,7 @@ internal sealed interface OpenAIStreamEvent {
         val itemId: String,
         val outputIndex: Int,
         val sequenceNumber: Int,
-    )
+    ) : OpenAIStreamEvent
 
     /**
      * Emitted when a code interpreter call is in progress.
@@ -2003,7 +2029,7 @@ internal sealed interface OpenAIStreamEvent {
         val itemId: String,
         val outputIndex: Int,
         val sequenceNumber: Int,
-    )
+    ) : OpenAIStreamEvent
 
     /**
      * Emitted when the code interpreter is actively interpreting the code snippet.
@@ -2017,7 +2043,7 @@ internal sealed interface OpenAIStreamEvent {
         val itemId: String,
         val outputIndex: Int,
         val sequenceNumber: Int,
-    )
+    ) : OpenAIStreamEvent
 
     /**
      * Emitted when the code interpreter call is completed.
@@ -2031,7 +2057,7 @@ internal sealed interface OpenAIStreamEvent {
         val itemId: String,
         val outputIndex: Int,
         val sequenceNumber: Int,
-    )
+    ) : OpenAIStreamEvent
 
     /**
      * Emitted when a partial code snippet is streamed by the code interpreter.
@@ -2047,7 +2073,7 @@ internal sealed interface OpenAIStreamEvent {
         val outputIndex: Int,
         val delta: String,
         val sequenceNumber: Int,
-    )
+    ) : OpenAIStreamEvent
 
     /**
      * Emitted when the code snippet is finalized by the code interpreter.
@@ -2063,7 +2089,7 @@ internal sealed interface OpenAIStreamEvent {
         val outputIndex: Int,
         val code: String,
         val sequenceNumber: Int,
-    )
+    ) : OpenAIStreamEvent
 
     /**
      * Emitted when an annotation is added to output text content.
@@ -2083,7 +2109,7 @@ internal sealed interface OpenAIStreamEvent {
         val annotationIndex: Int,
         val annotation: JsonObject,
         val sequenceNumber: Int,
-    )
+    ) : OpenAIStreamEvent
 
     /**
      * Emitted when a response is queued and waiting to be processed.
@@ -2095,7 +2121,7 @@ internal sealed interface OpenAIStreamEvent {
     class ResponseQueued(
         val response: OpenAIResponsesAPIResponse,
         val sequenceNumber: Int,
-    )
+    ) : OpenAIStreamEvent
 
     /**
      * Event representing a delta (partial update) to the input of a custom tool call.
@@ -2111,7 +2137,7 @@ internal sealed interface OpenAIStreamEvent {
         val outputIndex: Int,
         val delta: String,
         val sequenceNumber: Int,
-    )
+    ) : OpenAIStreamEvent
 
     /**
      * Event indicating that input for a custom tool call is complete.
@@ -2127,7 +2153,7 @@ internal sealed interface OpenAIStreamEvent {
         val outputIndex: Int,
         val input: String,
         val sequenceNumber: Int,
-    )
+    ) : OpenAIStreamEvent
 
     /**
      * Emitted when an error occurs.
@@ -2143,7 +2169,7 @@ internal sealed interface OpenAIStreamEvent {
         val message: String,
         val param: String? = null,
         val sequenceNumber: Int,
-    )
+    ) : OpenAIStreamEvent
 
     @Serializable
     class LogProbWithTop(val logprob: Double, val token: String, val topLogprobs: List<LogProb>)
@@ -2157,94 +2183,52 @@ internal sealed interface OpenAIStreamEvent {
     }
 }
 
-internal object ItemSerializer : KSerializer<Item> {
-    @OptIn(InternalSerializationApi::class)
-    override val descriptor: SerialDescriptor = buildSerialDescriptor("Item", PolymorphicKind.SEALED)
+internal object ItemTextSerializer : KSerializer<Item.Text> {
+    override val descriptor: SerialDescriptor =
+        PrimitiveSerialDescriptor("ai.koog.prompt.executor.clients.openai.models.Item.Text", PrimitiveKind.STRING)
 
-    override fun serialize(encoder: Encoder, value: Item) {
-        when (value) {
-            is Item.Text -> encoder.encodeString(value.value)
-            is Item.InputMessage -> encoder.encodeSerializableValue(Item.InputMessage.serializer(), value)
-            is Item.OutputMessage -> encoder.encodeSerializableValue(Item.OutputMessage.serializer(), value)
-            is Item.FileSearchToolCall -> encoder.encodeSerializableValue(Item.FileSearchToolCall.serializer(), value)
-            is Item.ComputerToolCall -> encoder.encodeSerializableValue(Item.ComputerToolCall.serializer(), value)
-            is Item.ComputerToolCallOutput ->
-                encoder.encodeSerializableValue(Item.ComputerToolCallOutput.serializer(), value)
-
-            is Item.WebSearchToolCall -> encoder.encodeSerializableValue(Item.WebSearchToolCall.serializer(), value)
-            is Item.FunctionToolCall -> encoder.encodeSerializableValue(Item.FunctionToolCall.serializer(), value)
-            is Item.FunctionToolCallOutput ->
-                encoder.encodeSerializableValue(Item.FunctionToolCallOutput.serializer(), value)
-
-            is Item.Reasoning -> encoder.encodeSerializableValue(Item.Reasoning.serializer(), value)
-            is Item.ImageGenerationCall -> encoder.encodeSerializableValue(Item.ImageGenerationCall.serializer(), value)
-            is Item.CodeInterpreterToolCall ->
-                encoder.encodeSerializableValue(Item.CodeInterpreterToolCall.serializer(), value)
-
-            is Item.LocalShellCall -> encoder.encodeSerializableValue(Item.LocalShellCall.serializer(), value)
-            is Item.LocalShellCallOutput ->
-                encoder.encodeSerializableValue(Item.LocalShellCallOutput.serializer(), value)
-
-            is Item.McpListTools -> encoder.encodeSerializableValue(Item.McpListTools.serializer(), value)
-            is Item.McpApprovalRequest -> encoder.encodeSerializableValue(Item.McpApprovalRequest.serializer(), value)
-            is Item.McpApprovalResponse -> encoder.encodeSerializableValue(Item.McpApprovalResponse.serializer(), value)
-            is Item.McpToolCall -> encoder.encodeSerializableValue(Item.McpToolCall.serializer(), value)
-            is Item.CustomToolCallOutput ->
-                encoder.encodeSerializableValue(Item.CustomToolCallOutput.serializer(), value)
-
-            is Item.CustomToolCall -> encoder.encodeSerializableValue(Item.CustomToolCall.serializer(), value)
-            is Item.ItemReference -> encoder.encodeSerializableValue(Item.ItemReference.serializer(), value)
-        }
+    override fun serialize(encoder: Encoder, value: Item.Text) {
+        encoder.encodeString(value.value)
     }
 
-    override fun deserialize(decoder: Decoder): Item {
-        val jsonDecoder = decoder as? JsonDecoder
-            ?: throw SerializationException("Item can only be deserialized from JSON")
-        val json = jsonDecoder.json
-        return when (val element = jsonDecoder.decodeJsonElement()) {
-            is JsonPrimitive -> Item.Text(element.content)
+    override fun deserialize(decoder: Decoder): Item.Text {
+        return Item.Text(decoder.decodeString())
+    }
+
+}
+
+internal object ItemPolymorphicSerializer : JsonContentPolymorphicSerializer<Item>(Item::class) {
+    override fun selectDeserializer(element: JsonElement): DeserializationStrategy<Item> {
+        return when (element) {
+            is JsonPrimitive -> Item.Text.serializer()
             is JsonObject -> {
                 when (val type = element["type"]?.jsonPrimitive?.content) {
                     "message" -> {
                         if (element.containsKey("id")) {
-                            json.decodeFromJsonElement(Item.OutputMessage.serializer(), element)
+                            Item.OutputMessage.serializer()
                         } else {
-                            json.decodeFromJsonElement(Item.InputMessage.serializer(), element)
+                            Item.InputMessage.serializer()
                         }
                     }
 
-                    "file_search_call" -> json.decodeFromJsonElement(Item.FileSearchToolCall.serializer(), element)
-                    "computer_call" -> json.decodeFromJsonElement(Item.ComputerToolCall.serializer(), element)
-                    "computer_call_output" ->
-                        json.decodeFromJsonElement(Item.ComputerToolCallOutput.serializer(), element)
-
-                    "web_search_call" -> json.decodeFromJsonElement(Item.WebSearchToolCall.serializer(), element)
-                    "function_call" -> json.decodeFromJsonElement(Item.FunctionToolCall.serializer(), element)
-                    "function_call_output" ->
-                        json.decodeFromJsonElement(Item.FunctionToolCallOutput.serializer(), element)
-
-                    "reasoning" -> json.decodeFromJsonElement(Item.Reasoning.serializer(), element)
-                    "image_generation_call" ->
-                        json.decodeFromJsonElement(Item.ImageGenerationCall.serializer(), element)
-
-                    "code_interpreter_call" ->
-                        json.decodeFromJsonElement(Item.CodeInterpreterToolCall.serializer(), element)
-
-                    "local_shell_call" -> json.decodeFromJsonElement(Item.LocalShellCall.serializer(), element)
-                    "local_shell_call_output" ->
-                        json.decodeFromJsonElement(Item.LocalShellCallOutput.serializer(), element)
-
-                    "mcp_list_tools" -> json.decodeFromJsonElement(Item.McpListTools.serializer(), element)
-                    "mcp_approval_request" -> json.decodeFromJsonElement(Item.McpApprovalRequest.serializer(), element)
-                    "mcp_approval_response" ->
-                        json.decodeFromJsonElement(Item.McpApprovalResponse.serializer(), element)
-
-                    "mcp_call" -> json.decodeFromJsonElement(Item.McpToolCall.serializer(), element)
-                    "custom_tool_call_output" ->
-                        json.decodeFromJsonElement(Item.CustomToolCallOutput.serializer(), element)
-
-                    "custom_tool_call" -> json.decodeFromJsonElement(Item.CustomToolCall.serializer(), element)
-                    "item_reference" -> json.decodeFromJsonElement(Item.ItemReference.serializer(), element)
+                    "file_search_call" -> Item.FileSearchToolCall.serializer()
+                    "computer_call" -> Item.ComputerToolCall.serializer()
+                    "computer_call_output" -> Item.ComputerToolCallOutput.serializer()
+                    "web_search_call" -> Item.WebSearchToolCall.serializer()
+                    "function_call" -> Item.FunctionToolCall.serializer()
+                    "function_call_output" -> Item.FunctionToolCallOutput.serializer()
+                    "reasoning" -> Item.Reasoning.serializer()
+                    "image_generation_call" -> Item.ImageGenerationCall.serializer()
+                    "code_interpreter_call" -> Item.CodeInterpreterToolCall.serializer()
+                    "local_shell_call" -> Item.LocalShellCall.serializer()
+                    "local_shell_call_output" -> Item.LocalShellCallOutput.serializer()
+                    "mcp_list_tools" -> Item.McpListTools.serializer()
+                    "mcp_approval_request" -> Item.McpApprovalRequest.serializer()
+                    "mcp_approval_response" -> Item.McpApprovalResponse.serializer()
+                    "mcp_call" -> Item.McpToolCall.serializer()
+                    "custom_tool_call_output" -> Item.CustomToolCallOutput.serializer()
+                    "custom_tool_call" -> Item.CustomToolCall.serializer()
+                    "item_reference" -> Item.ItemReference.serializer()
                     else -> throw SerializationException("Unknown Item type: $type")
                 }
             }
@@ -2252,7 +2236,6 @@ internal object ItemSerializer : KSerializer<Item> {
             else -> throw SerializationException("Invalid Item format")
         }
     }
-
 }
 
 internal object OpenAIResponsesToolChoiceSerializer : KSerializer<OpenAIResponsesToolChoice> {
