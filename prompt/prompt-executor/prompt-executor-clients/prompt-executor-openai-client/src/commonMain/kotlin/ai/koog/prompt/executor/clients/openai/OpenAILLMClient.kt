@@ -693,6 +693,7 @@ public open class OpenAILLMClient(
     }
 
     private fun determineParams(params: LLMParams, model: LLModel): OpenAIParams = when {
+        "openai.azure.com" in settings.baseUrl -> params.toOpenAIChatParams() // TODO: create a separate Azure Client
         params is OpenAIResponsesParams && model.supports(LLMCapability.OpenAIEndpoint.Responses) -> params
         params is OpenAIChatParams && model.supports(LLMCapability.OpenAIEndpoint.Completions) -> params
         model.supports(LLMCapability.OpenAIEndpoint.Responses) -> params.toOpenAIResponsesParams()
