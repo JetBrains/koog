@@ -1,6 +1,7 @@
 package ai.koog.ktor.utils
 
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
+import ai.koog.prompt.executor.clients.deepseek.DeepSeekModels
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterModels
@@ -31,6 +32,7 @@ internal fun getModelFromIdentifier(identifier: String): LLModel? {
         "anthropic" -> anthropic(parts, identifier)
         "google" -> google(parts, identifier)
         "openrouter" -> openrouter(parts, identifier)
+        "deepseek" -> deepSeek(parts, identifier)
         "ollama" -> ollama(parts, identifier)
 
         else -> {
@@ -90,6 +92,27 @@ private fun openrouter(parts: List<String>, identifier: String): LLModel? {
     val model = openRouterModels[normalizedModelName]
     if (model == null) {
         println("Model '$modelName' not found in OpenRouterModels")
+        return null
+    }
+
+    return model
+}
+
+private fun deepSeek(parts: List<String>, identifier: String): LLModel? {
+    if (parts.size < 2) {
+        logger.debug("DeepSeek model identifier must be in format 'deepseek.model', got: $identifier")
+        return null
+    }
+
+    val modelName = parts[1].lowercase()
+
+    // Map for DeepSeek models by name
+    val deepSeekModels = DEEPSEEK_MODELS_MAP
+
+    val normalizedModelName = modelName.lowercase()
+    val model = deepSeekModels[normalizedModelName]
+    if (model == null) {
+        println("Model '$modelName' not found in DeepSeekModels")
         return null
     }
 
@@ -162,7 +185,7 @@ private val OPENAI_MODELS_MAP = mapOf(
         "gpt4_1" to OpenAIModels.Chat.GPT4_1
     ),
     "reasoning" to mapOf(
-        "gpt4omini" to OpenAIModels.Reasoning.GPT4oMini,
+        "o4mini" to OpenAIModels.Reasoning.O4Mini,
         "o3mini" to OpenAIModels.Reasoning.O3Mini,
         "o1mini" to OpenAIModels.Reasoning.O1Mini,
         "o3" to OpenAIModels.Reasoning.O3,
@@ -202,18 +225,12 @@ private val ANTHROPIC_MODELS_MAP = mapOf(
 )
 
 private val GOOGLE_MODELS_MAP = mapOf(
-    "gemini1_5pro" to GoogleModels.Gemini1_5Pro,
-    "gemini1_5prolatest" to GoogleModels.Gemini1_5ProLatest,
     "gemini2_0flash" to GoogleModels.Gemini2_0Flash,
     "gemini2_0flash001" to GoogleModels.Gemini2_0Flash001,
     "gemini2_0flashlite" to GoogleModels.Gemini2_0FlashLite,
     "gemini2_0flashlite001" to GoogleModels.Gemini2_0FlashLite001,
-    "gemini1_5flash" to GoogleModels.Gemini1_5Flash,
-    "gemini1_5flashlatest" to GoogleModels.Gemini1_5FlashLatest,
-    "gemini1_5flash002" to GoogleModels.Gemini1_5Flash002,
-    "gemini1_5flash8b" to GoogleModels.Gemini1_5Flash8B,
-    "gemini1_5flash8b001" to GoogleModels.Gemini1_5Flash8B001,
-    "gemini1_5flash8blatest" to GoogleModels.Gemini1_5Flash8BLatest,
+    "gemini2_5pro" to GoogleModels.Gemini2_5Pro,
+    "gemini2_5flash" to GoogleModels.Gemini2_5Flash,
 )
 
 private val OPENROUTER_MODELS_MAP = mapOf(
@@ -223,6 +240,11 @@ private val OPENROUTER_MODELS_MAP = mapOf(
     "gpt4o" to OpenRouterModels.GPT4o,
     "gpt4turbo" to OpenRouterModels.GPT4Turbo,
     "gpt35turbo" to OpenRouterModels.GPT35Turbo
+)
+
+private val DEEPSEEK_MODELS_MAP = mapOf(
+    "deepseek-chat" to DeepSeekModels.DeepSeekChat,
+    "deepseek-reasoner" to DeepSeekModels.DeepSeekReasoner,
 )
 
 private val OLLAMA_GROQ_MODELS_MAP = mapOf(

@@ -14,6 +14,8 @@ import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicClientSettings
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
+import ai.koog.prompt.executor.clients.deepseek.DeepSeekClientSettings
+import ai.koog.prompt.executor.clients.deepseek.DeepSeekLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleClientSettings
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIClientSettings
@@ -155,7 +157,8 @@ public class KoogAgentsConfig(private val scope: CoroutineScope) {
 
     /**
      * Configuration class for managing various Language Learning Model (LLM) providers and their settings.
-     * This class allows integration with different LLM services such as OpenAI, Anthropic, Google, OpenRouter, and Ollama.
+     * This class allows integration with different LLM services such as OpenAI,
+     * Anthropic, Google, OpenRouter, DeepSeek, and Ollama.
      * Users can also define fallback configurations and custom LLM clients.
      */
     public inner class LLMConfig {
@@ -198,6 +201,16 @@ public class KoogAgentsConfig(private val scope: CoroutineScope) {
          */
         public fun openRouter(apiKey: String, configure: OpenRouterConfig.() -> Unit = {}) {
             this@KoogAgentsConfig.openRouter(apiKey, configure)
+        }
+
+        /**
+         * Configures and initializes the DeepSeek API with the provided API key and optional configuration.
+         *
+         * @param apiKey The API key used to authenticate with the DeepSeek API.
+         * @param configure An optional lambda function used to customize the DeepSeek configuration.
+         */
+        public fun deepSeek(apiKey: String, configure: DeepSeekConfig.() -> Unit = {}) {
+            this@KoogAgentsConfig.deepSeek(apiKey, configure)
         }
 
         /**
@@ -706,6 +719,59 @@ public class KoogAgentsConfig(private val scope: CoroutineScope) {
     }
 
     /**
+     * DeepSeekConfig is a configuration class for setting up the DeepSeek client.
+     * It manages essential parameters such as API key, base URL, connection timeout settings,
+     * and the HTTP client used for requests.
+     */
+    public class DeepSeekConfig {
+        /**
+         * Defines the base URL used for configuring the target endpoint of the DeepSeek API.
+         * This property allows customization of the API's base endpoint to interact with different server environments
+         * or instances beyond the default URL.
+         *
+         * The default value is `[DeepSeekClientSettings.baseUrl]`.
+         */
+        public var baseUrl: String? = null
+
+        /**
+         * Represents the configuration for connection timeouts used in network requests.
+         * This configuration specifies the timeout durations in milliseconds for requests,
+         * connection establishment, and socket operations.
+         *
+         * By default, it is initialized with the default timeout values provided by the
+         * `ConnectionTimeoutConfig` class. It can be modified using the `timeouts` function
+         * in the containing [DeepSeekConfig] class, or directly assigned with a new instance
+         * of [ConnectionTimeoutConfig].
+         */
+        public var timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig()
+
+        /**
+         * Represents the HTTP client used to handle network requests within the configuration.
+         * This client can be customized or replaced to adapt to specific use cases, such as
+         * modifying headers, interceptors, or other client-level configurations.
+         *
+         * By default, it is initialized with a standard instance of `HttpClient`.
+         */
+        public var httpClient: HttpClient = HttpClient()
+
+        /**
+         * Configures timeout settings to be applied to the client.
+         *
+         * @param configure A lambda receiver that configures an instance of TimeoutConfiguration.
+         */
+        public fun timeouts(configure: TimeoutConfiguration.() -> Unit) {
+            timeoutConfig = with(TimeoutConfiguration()) {
+                configure()
+                ConnectionTimeoutConfig(
+                    requestTimeout.inWholeMilliseconds,
+                    connectTimeout.inWholeMilliseconds,
+                    socketTimeout.inWholeMilliseconds
+                )
+            }
+        }
+    }
+
+    /**
      * OllamaConfig is a configuration class for managing the settings required to connect
      * and interact with an Ollama-based language model server. It includes properties for setting
      * the server's base URL, connection timeouts, and an HTTP client for underlying network communication.
@@ -855,6 +921,29 @@ public class KoogAgentsConfig(private val scope: CoroutineScope) {
             )
         }
         addLLMClient(LLMProvider.OpenRouter, client)
+    }
+
+    /**
+     * Configures and integrates a DeepSeek client into the system using the provided API key and configuration.
+     *
+     * @param apiKey The API key for authenticating with the DeepSeek service.
+     * @param configure A lambda to set up additional configurations for the DeepSeek client.
+     */
+    internal fun deepSeek(apiKey: String, configure: DeepSeekConfig.() -> Unit) {
+        val client = with(DeepSeekConfig()) {
+            configure()
+            val defaults = DeepSeekClientSettings()
+
+            DeepSeekLLMClient(
+                apiKey = apiKey,
+                settings = DeepSeekClientSettings(
+                    baseUrl = baseUrl ?: defaults.baseUrl,
+                    timeoutConfig = timeoutConfig
+                ),
+                baseClient = httpClient
+            )
+        }
+        addLLMClient(LLMProvider.DeepSeek, client)
     }
 
     /**

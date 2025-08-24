@@ -8,7 +8,7 @@ The `koog-ktor` module provides seamless integration between the Koog AI agents 
 It includes:
 
 - A Ktor plugin for easy installation and configuration
-- Support for multiple LLM providers (OpenAI, Anthropic, Google, OpenRouter, Ollama)
+- Support for multiple LLM providers (OpenAI, Anthropic, Google, OpenRouter, DeepSeek, Ollama)
 - Agent configuration with tools, features, and prompt customization
 - Extension functions for routes to interact with LLMs and agents
 - JVM-specific support for Model Context Protocol (MCP) integration
@@ -34,6 +34,7 @@ koog:
   anthropic.apikey: "$ANTHROPIC_API_KEY:your-anthropic-api-key"
   google.apikey: "$GOOGLE_API_KEY:your-google-api-key"
   openrouter.apikey: "$OPENROUTER_API_KEY:your-openrouter-api-key"
+  deepseek.apikey: "$DEEPSEEK_API_KEY:your-deepseek-api-key"
   ollama.enabled: "$DEBUG:false"
 ```
 
@@ -51,6 +52,7 @@ fun Application.module() {
             ollama { baseUrl = "http://localhost:11434" }
             google(apiKey = "your-google-api-key")
             openRouter(apiKey = "your-openrouter-api-key")
+            deepSeek(apiKey = "your-deepseek-api-key")
         }
     }
 
@@ -174,6 +176,10 @@ koog:
   openrouter:
     apikey: "your-openrouter-api-key"
     baseUrl: "https://openrouter.ai"
+    
+  deepseek:
+    apikey: "your-deepseek-api-key"
+    baseUrl: "https://api.deepseek.com"
 
   ollama:
     baseUrl: "http://localhost:11434"

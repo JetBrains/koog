@@ -18,4 +18,6 @@ public data class LLModel(
     val capabilities: List<LLMCapability>,
     val contextLength: Long,
     val maxOutputTokens: Long? = null,
-)
+) {
+    public fun supports(capability: LLMCapability): Boolean = capabilities.contains(capability)
+}

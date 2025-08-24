@@ -7,7 +7,6 @@ import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.model.PromptExecutorExt.execute
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
@@ -99,7 +98,7 @@ class LLMPromptExecutorMockTest {
             user("What is the capital of France?")
         }
 
-        val response = executor.execute(prompt = prompt, model = model)
+        val response = executor.execute(prompt = prompt, model = model).single()
 
         assertEquals("OpenAI response", response.content)
     }
@@ -118,7 +117,7 @@ class LLMPromptExecutorMockTest {
             user("What is the capital of France?")
         }
 
-        val response = executor.execute(prompt = prompt, model = model)
+        val response = executor.execute(prompt = prompt, model = model).single()
 
         assertEquals("Anthropic response", response.content)
     }
@@ -137,7 +136,7 @@ class LLMPromptExecutorMockTest {
             user("What is the capital of France?")
         }
 
-        val response = executor.execute(prompt = prompt, model = model)
+        val response = executor.execute(prompt = prompt, model = model).single()
 
         assertEquals("Gemini response", response.content)
     }

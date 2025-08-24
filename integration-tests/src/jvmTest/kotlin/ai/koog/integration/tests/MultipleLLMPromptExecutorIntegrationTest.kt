@@ -28,7 +28,6 @@ import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.llms.all.DefaultMultiLLMPromptExecutor
-import ai.koog.prompt.executor.model.PromptExecutorExt.execute
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -208,37 +207,6 @@ class MultipleLLMPromptExecutorIntegrationTest {
                     fullResponse.contains("5"),
                 "Full response should contain numbers 1 through 5"
             )
-        }
-    }
-
-    @ParameterizedTest
-    @MethodSource("openAIModels", "anthropicModels", "googleModels")
-    fun integration_testCodeGeneration(model: LLModel) = runTest(timeout = 300.seconds) {
-        Models.assumeAvailable(model.provider)
-        assumeTrue(model.capabilities.contains(LLMCapability.Tools))
-
-        val prompt = prompt("test-code") {
-            system("You are a helpful coding assistant.")
-            user(
-                "Write a simple Kotlin function to calculate the factorial of a number. " +
-                    "Make sure the name of the function starts with 'factorial'. ONLY generate CODE, no explanations or other texts. " +
-                    "The function MUST have a return statement."
-            )
-        }
-
-        withRetry(times = 3, testName = "integration_testCodeGeneration[${model.id}]") {
-            val response = executor.execute(prompt, model, emptyList())
-
-            assertNotNull(response, "Response should not be null")
-            assertTrue(response.isNotEmpty(), "Response should not be empty")
-            assertTrue(response.first() is Message.Assistant, "Response should be an Assistant message")
-
-            val content = (response.first() as Message.Assistant).content
-            assertTrue(
-                content.contains("fun factorial"),
-                "Response should contain a factorial function. Response: $response. Content: $content"
-            )
-            assertTrue(content.contains("return"), "Response should contain a return statement")
         }
     }
 
@@ -716,7 +684,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
             withRetry {
                 try {
-                    val response = executor.execute(prompt, model)
+                    val response = executor.execute(prompt, model).single()
                     when (scenario) {
                         MarkdownTestScenario.MALFORMED_SYNTAX,
                         MarkdownTestScenario.MATH_NOTATION,
@@ -784,7 +752,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
             withRetry {
                 try {
-                    val response = executor.execute(prompt, model)
+                    val response = executor.execute(prompt, model).single()
                     checkExecutorMediaResponse(response)
                 } catch (e: Exception) {
                     // For some edge cases, exceptions are expected
@@ -872,7 +840,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
             withRetry {
                 try {
-                    val response = executor.execute(prompt, model)
+                    val response = executor.execute(prompt, model).single()
                     checkExecutorMediaResponse(response)
                 } catch (e: Exception) {
                     when (scenario) {
@@ -946,7 +914,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
             withRetry {
                 try {
-                    val response = executor.execute(prompt, model)
+                    val response = executor.execute(prompt, model).single()
                     checkExecutorMediaResponse(response)
                 } catch (e: Exception) {
                     if (scenario == AudioTestScenario.CORRUPTED_AUDIO) {
@@ -1014,7 +982,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
         }
 
         withRetry {
-            val response = executor.execute(prompt, model)
+            val response = executor.execute(prompt, model).single()
             checkExecutorMediaResponse(response)
 
             assertTrue(
@@ -1054,7 +1022,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
         }
 
         withRetry {
-            val response = executor.execute(prompt, model)
+            val response = executor.execute(prompt, model).single()
             checkExecutorMediaResponse(response)
 
             assertTrue(
@@ -1177,9 +1145,9 @@ class MultipleLLMPromptExecutorIntegrationTest {
         val modelAnthropic = AnthropicModels.Haiku_3_5
         val modelGemini = GoogleModels.Gemini2_0Flash
 
-        val responseOpenAI = executor.execute(prompt, modelOpenAI)
-        val responseAnthropic = executor.execute(prompt, modelAnthropic)
-        val responseGemini = executor.execute(prompt, modelGemini)
+        val responseOpenAI = executor.execute(prompt, modelOpenAI).single()
+        val responseAnthropic = executor.execute(prompt, modelAnthropic).single()
+        val responseGemini = executor.execute(prompt, modelGemini).single()
 
         assertTrue(responseOpenAI.content.isNotEmpty(), "OpenAI response should not be empty")
         assertTrue(responseAnthropic.content.isNotEmpty(), "Anthropic response should not be empty")

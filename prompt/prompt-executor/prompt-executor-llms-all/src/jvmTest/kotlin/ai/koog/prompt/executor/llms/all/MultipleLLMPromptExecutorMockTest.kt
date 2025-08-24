@@ -8,7 +8,6 @@ import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.model.PromptExecutorExt.execute
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
@@ -95,7 +94,7 @@ class MultipleLLMPromptExecutorMockTest {
             user("What is the capital of France?")
         }
 
-        val response = executor.execute(prompt = prompt, model = OpenAIModels.Chat.GPT4o)
+        val response = executor.execute(prompt = prompt, model = OpenAIModels.Chat.GPT4o).single()
 
         assertEquals(
             "OpenAI response",
@@ -111,7 +110,7 @@ class MultipleLLMPromptExecutorMockTest {
             user("What is the capital of France?")
         }
 
-        val response = executor.execute(prompt = prompt, model = AnthropicModels.Sonnet_3_7)
+        val response = executor.execute(prompt = prompt, model = AnthropicModels.Sonnet_3_7).single()
 
         assertEquals(
             "Anthropic response",
@@ -127,7 +126,7 @@ class MultipleLLMPromptExecutorMockTest {
             user("What is the capital of France?")
         }
 
-        val response = executor.execute(prompt = prompt, model = GoogleModels.Gemini2_0Flash)
+        val response = executor.execute(prompt = prompt, model = GoogleModels.Gemini2_0Flash).single()
 
         assertEquals(
             "Gemini response",

@@ -283,6 +283,17 @@ class DebuggerTest {
                         input = toolResult("0", dummyTool.name, dummyTool.result, dummyTool.result).toString(),
                         output = assistantMessage(mockResponse).toString()
                     ),
+                    AIAgentNodeExecutionStartEvent(
+                        runId = clientEventsCollector.runId,
+                        nodeName = "__finish__",
+                        input = mockResponse
+                    ),
+                    AIAgentNodeExecutionEndEvent(
+                        runId = clientEventsCollector.runId,
+                        nodeName = "__finish__",
+                        input = mockResponse,
+                        output = mockResponse
+                    ),
                     AIAgentStrategyFinishedEvent(
                         runId = clientEventsCollector.runId,
                         strategyName = strategyName,
@@ -498,6 +509,17 @@ class DebuggerTest {
                     AIAgentNodeExecutionEndEvent(
                         runId = clientEventsCollector.runId,
                         nodeName = "__start__",
+                        input = userPrompt,
+                        output = userPrompt
+                    ),
+                    AIAgentNodeExecutionStartEvent(
+                        runId = clientEventsCollector.runId,
+                        nodeName = "__finish__",
+                        input = userPrompt
+                    ),
+                    AIAgentNodeExecutionEndEvent(
+                        runId = clientEventsCollector.runId,
+                        nodeName = "__finish__",
                         input = userPrompt,
                         output = userPrompt
                     ),

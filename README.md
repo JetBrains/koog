@@ -98,7 +98,7 @@ Please check the [libs.versions.toml](gradle/libs.versions.toml) to know more ab
     ```
     <dependency>
         <groupId>ai.koog</groupId>
-        <artifactId>koog-agents</artifactId>
+        <artifactId>koog-agents-jvm</artifactId>
         <version>0.3.0</version>
     </dependency>
     ```

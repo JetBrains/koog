@@ -1,23 +1,15 @@
 package ai.koog.agents.features.opentelemetry.event
 
-import ai.koog.agents.features.opentelemetry.attribute.Attribute
 import ai.koog.agents.features.opentelemetry.mock.MockAttribute
 import ai.koog.agents.features.opentelemetry.mock.MockGenAIAgentEvent
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
 
 class GenAIAgentEventTest {
 
     @Test
     fun `default name should be gen_ai`() {
-        val event = object : GenAIAgentEvent {
-            override val verbose: Boolean = false
-            override val attributes: List<Attribute> = emptyList()
-            override val bodyFields: List<EventBodyField> = emptyList()
-        }
-
+        val event = object : GenAIAgentEvent() { }
         assertEquals("gen_ai", event.name)
     }
 
@@ -37,7 +29,8 @@ class GenAIAgentEventTest {
             MockAttribute("key3", true)
         )
 
-        val event = MockGenAIAgentEvent(attributes = attributes)
+        val event = MockGenAIAgentEvent()
+        event.addAttributes(attributes)
 
         assertEquals(attributes, event.attributes)
         assertEquals(3, event.attributes.size)
@@ -47,15 +40,6 @@ class GenAIAgentEventTest {
         assertEquals(42, event.attributes[1].value)
         assertEquals("key3", event.attributes[2].key)
         assertEquals(true, event.attributes[2].value)
-    }
-
-    @Test
-    fun `verbose flag should be accessible`() {
-        val verboseEvent = MockGenAIAgentEvent(verbose = true)
-        val nonVerboseEvent = MockGenAIAgentEvent(verbose = false)
-
-        assertTrue(verboseEvent.verbose)
-        assertFalse(nonVerboseEvent.verbose)
     }
 
     @Test

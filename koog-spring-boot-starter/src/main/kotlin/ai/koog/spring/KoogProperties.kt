@@ -7,7 +7,7 @@ import org.springframework.boot.context.properties.NestedConfigurationProperty
  * Configuration properties for the Koog library used for integrating with various large language model (LLM) providers.
  *
  * This class centralizes the configuration settings for multiple LLM providers, such as Anthropic,
- * Google, Ollama, OpenAI, and OpenRouter, making them accessible via a unified configuration prefix.
+ * Google, Ollama, OpenAI, DeepSeek, and OpenRouter, making them accessible via a unified configuration prefix.
  * The properties for each provider are nested and configurable independently using specific keys.
  *
  * The default base URLs and settings for the providers are preconfigured but can be overridden
@@ -103,6 +103,17 @@ public class KoogProperties {
     @NestedConfigurationProperty
     public var openRouterClientProperties: ProviderKoogProperties =
         ProviderKoogProperties(baseUrl = "https://openrouter.ai")
+
+    /**
+     * Represents the configuration properties for the DeepSeek LLM client integration.
+     *
+     * Contains settings such as the base URL and API key for accessing the DeepSeek
+     * platform. This property is nested within the main application configuration and
+     * used to initialize the corresponding DeepSeek client.
+     */
+    @NestedConfigurationProperty
+    public var deepSeekClientProperties: ProviderKoogProperties =
+        ProviderKoogProperties(baseUrl = "https://api.deepseek.com")
 }
 
 /**

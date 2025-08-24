@@ -22,10 +22,13 @@ requirements.
 
 #### Chat Models
 
-| Model   | Speed  | Context | Input Support       | Output Support | Pricing (per 1M tokens) |
-|---------|--------|---------|---------------------|----------------|-------------------------|
-| GPT-4o  | Medium | 128K    | Text, Images, Tools | Text, Tools    | $2.5-$10                |
-| GPT-4.1 | Medium | 1M      | Text, Images, Tools | Text, Tools    | $2-$8                   |
+| Model     | Speed     | Context | Input Support         | Output Support | Pricing (per 1M tokens) |
+|-----------|-----------|---------|-----------------------|----------------|-------------------------|
+| GPT-4o    | Medium    | 128K    | Text, Images, Tools   | Text, Tools    | $2.5-$10                |
+| GPT-4.1   | Medium    | 1M      | Text, Images, Tools   | Text, Tools    | $2-$8                   |
+| GPT5      | Medium    | 400K    | Text, Image, Document | Text, Tools    | $1.25-$10               |
+| GPT5 Mini | Fast      | 400K    | Text, Image, Document | Text, Tools    | $0.25-$2                |
+| GPT5 Nano | Very fast | 400K    | Text, Image, Document | Text, Tools    | $0.05-$0.4              |
 
 #### Audio Models
 

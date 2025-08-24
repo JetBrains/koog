@@ -74,7 +74,7 @@ To use Koog, you need to include all necessary dependencies in your build config
     ```
     <dependency>
         <groupId>ai.koog</groupId>
-        <artifactId>koog-agents</artifactId>
+        <artifactId>koog-agents-jvm</artifactId>
         <version>LATEST_VERSION</version>
     </dependency>
     ```

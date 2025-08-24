@@ -12,7 +12,7 @@ import io.opentelemetry.api.trace.SpanKind
 internal class NodeExecuteSpan(
     parent: InvokeAgentSpan,
     runId: String,
-    nodeName: String,
+    val nodeName: String,
 ) : GenAIAgentSpan(parent) {
 
     companion object {

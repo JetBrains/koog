@@ -179,7 +179,7 @@ public open class AIAgentSubgraph<Input, Output>(
             logger.info { formatLog(context, "No enforced execution point, starting from ${currentNode.name}") }
         }
 
-        while (currentNode != finish) {
+        while (true) {
             context.stateManager.withStateLock { state ->
                 if (++state.iterations > context.config.maxAgentIterations) {
                     logger.error {
@@ -206,8 +206,14 @@ public open class AIAgentSubgraph<Input, Output>(
             val resolvedEdge = currentNode.resolveEdgeUnsafe(context, nodeOutput)
 
             if (resolvedEdge == null) {
-                logger.error { formatLog(context, "Agent stuck in node ${currentNode.name}") }
-                throw AIAgentStuckInTheNodeException(currentNode, nodeOutput)
+                // In we are in the finish node, we need to exit, otherwise we stuck in the node
+                if (currentNode == finish) {
+                    currentInput = nodeOutput
+                    break
+                } else {
+                    logger.error { formatLog(context, "Agent stuck in node ${currentNode.name}") }
+                    throw AIAgentStuckInTheNodeException(currentNode, nodeOutput)
+                }
             }
 
             currentNode = resolvedEdge.edge.toNode
@@ -271,7 +277,10 @@ public sealed interface ToolSelectionStrategy {
      * @property subtaskDescription A description of the subtask for which the relevant tools should be selected.
      * @property fixingParser Optional [StructureFixingParser] to attempt fixes when malformed structured response with tool list is received.
      */
-    public data class AutoSelectForTask(val subtaskDescription: String, val fixingParser: StructureFixingParser? = null) : ToolSelectionStrategy
+    public data class AutoSelectForTask(
+        val subtaskDescription: String,
+        val fixingParser: StructureFixingParser? = null
+    ) : ToolSelectionStrategy
 
     /**
      * Represents a subset of tools to be utilized within a subgraph or task.

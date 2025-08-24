@@ -9,9 +9,6 @@ enum class TestType(
     internal val maxHeapForJvm: String? = null
 ) {
     DEFAULT("", "test"),
-    PERFORMANCE("*.prf_*", "prf", parallelism = false),
-    GPU("*.gpu_*", "gpu", maxHeapForJvm = "2g"),
-    CLIENT("*.client_*", "client"),
     INTEGRATION("*.integration_*", "integration"),
     OLLAMA("*.ollama_*", "ollama");
 

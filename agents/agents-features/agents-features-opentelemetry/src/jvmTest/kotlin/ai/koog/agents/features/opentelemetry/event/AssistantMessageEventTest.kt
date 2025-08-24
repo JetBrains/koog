@@ -9,7 +9,6 @@ import kotlinx.serialization.json.put
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 import kotlin.time.Clock
 
 class AssistantMessageEventTest {
@@ -17,35 +16,13 @@ class AssistantMessageEventTest {
     //region Attributes
 
     @Test
-    fun `test assistant message attributes verbose false`() {
-        val expectedContent = "Test message"
-        val expectedMessage = createTestAssistantMessage(expectedContent)
+    fun `test assistant message attributes`() {
+        val expectedMessage = createTestAssistantMessage("Test message")
         val llmProvider = MockLLMProvider()
 
         val assistantMessageEvent = AssistantMessageEvent(
             provider = llmProvider,
-            message = expectedMessage,
-            verbose = false,
-        )
-
-        val expectedAttributes = listOf(
-            CommonAttributes.System(llmProvider)
-        )
-
-        assertEquals(expectedAttributes.size, assistantMessageEvent.attributes.size)
-        assertContentEquals(expectedAttributes, assistantMessageEvent.attributes)
-    }
-
-    @Test
-    fun `test assistant message attributes verbose true`() {
-        val expectedContent = "Test message"
-        val expectedMessage = createTestAssistantMessage(expectedContent)
-        val llmProvider = MockLLMProvider()
-
-        val assistantMessageEvent = AssistantMessageEvent(
-            provider = llmProvider,
-            message = expectedMessage,
-            verbose = false,
+            message = expectedMessage
         )
 
         val expectedAttributes = listOf(
@@ -61,74 +38,35 @@ class AssistantMessageEventTest {
     //region Body Fields
 
     @Test
-    fun `test assistant message with verbose false`() {
-        val expectedContent = "Test message"
-        val expectedMessage = createTestAssistantMessage(expectedContent)
+    fun `test tool call message`() {
+        val expectedMessage = createTestToolCallMessage("test-id", "test-tool", "Test message")
 
         val assistantMessageEvent = AssistantMessageEvent(
             provider = MockLLMProvider(),
             message = expectedMessage,
-            verbose = false,
-        )
-
-        assertTrue(
-            assistantMessageEvent.bodyFields.isEmpty(),
-            "No content message should be added with verbose set to 'false'"
-        )
-    }
-
-    @Test
-    fun `test tool call message verbose false`() {
-        val expectedContent = "Test message"
-        val expectedMessage = createTestToolCallMessage("test-id", "test-tool", expectedContent)
-
-        val assistantMessageEvent = AssistantMessageEvent(
-            provider = MockLLMProvider(),
-            message = expectedMessage,
-            verbose = false,
-        )
-
-        val expectedBodyFields = listOf(
-            EventBodyFields.Role(role = Message.Role.Tool)
-        )
-
-        assertEquals(expectedBodyFields.size, assistantMessageEvent.bodyFields.size)
-        assertContentEquals(expectedBodyFields, assistantMessageEvent.bodyFields)
-    }
-
-    @Test
-    fun `test assistant message verbose true`() {
-        val expectedContent = "Test message"
-        val expectedMessage = createTestAssistantMessage(expectedContent)
-
-        val assistantMessageEvent = AssistantMessageEvent(
-            provider = MockLLMProvider(),
-            message = expectedMessage,
-            verbose = true,
-        )
-
-        val expectedBodyFields = listOf(
-            EventBodyFields.Content(content = expectedContent)
-        )
-
-        assertEquals(expectedBodyFields.size, assistantMessageEvent.bodyFields.size)
-        assertContentEquals(expectedBodyFields, assistantMessageEvent.bodyFields)
-    }
-
-    @Test
-    fun `test tool call message verbose true`() {
-        val expectedContent = "Test message"
-        val expectedMessage = createTestToolCallMessage("test-id", "test-tool", expectedContent)
-
-        val assistantMessageEvent = AssistantMessageEvent(
-            provider = MockLLMProvider(),
-            message = expectedMessage,
-            verbose = true,
         )
 
         val expectedBodyFields = listOf(
             EventBodyFields.Role(role = Message.Role.Tool),
             EventBodyFields.ToolCalls(tools = listOf(expectedMessage))
+        )
+
+        assertEquals(expectedBodyFields.size, assistantMessageEvent.bodyFields.size)
+        assertContentEquals(expectedBodyFields, assistantMessageEvent.bodyFields)
+    }
+
+    @Test
+    fun `test assistant message`() {
+        val expectedMessage = createTestAssistantMessage("Test message")
+
+        val assistantMessageEvent = AssistantMessageEvent(
+            provider = MockLLMProvider(),
+            message = expectedMessage,
+        )
+
+        val expectedBodyFields = listOf(
+            EventBodyFields.Role(role = expectedMessage.role),
+            EventBodyFields.Content(content = expectedMessage.content)
         )
 
         assertEquals(expectedBodyFields.size, assistantMessageEvent.bodyFields.size)
@@ -140,9 +78,8 @@ class AssistantMessageEventTest {
     //region Arguments Tests
 
     @Test
-    fun `test assistant message verbose true with arguments`() {
-        val expectedContent = "Test message"
-        val expectedMessage = createTestAssistantMessage(expectedContent)
+    fun `test assistant message with arguments`() {
+        val expectedMessage = createTestAssistantMessage("Test message")
         val args = buildJsonObject {
             put("string", "value")
             put("integer", 42)
@@ -152,11 +89,11 @@ class AssistantMessageEventTest {
             provider = MockLLMProvider(),
             message = expectedMessage,
             arguments = args,
-            verbose = true,
         )
 
         val expectedBodyFields = listOf(
-            EventBodyFields.Content(content = expectedContent),
+            EventBodyFields.Role(role = expectedMessage.role),
+            EventBodyFields.Content(content = expectedMessage.content),
             EventBodyFields.Arguments(args)
         )
 
@@ -165,61 +102,19 @@ class AssistantMessageEventTest {
     }
 
     @Test
-    fun `test assistant message verbose false with arguments`() {
-        val expectedContent = "Test message"
-        val expectedMessage = createTestAssistantMessage(expectedContent)
-        val args = buildJsonObject { put("x", "y") }
-
-        val assistantMessageEvent = AssistantMessageEvent(
-            provider = MockLLMProvider(),
-            message = expectedMessage,
-            arguments = args,
-            verbose = false,
-        )
-
-        assertTrue(
-            assistantMessageEvent.bodyFields.isEmpty(),
-            "No body fields should be added with verbose set to 'false' even if arguments are provided"
-        )
-    }
-
-    @Test
-    fun `test tool call message verbose true ignores arguments`() {
-        val expectedContent = "Test message"
-        val expectedMessage = createTestToolCallMessage("test-id", "test-tool", expectedContent)
+    fun `test tool call message ignores arguments`() {
+        val expectedMessage = createTestToolCallMessage("test-id", "test-tool", "Test message")
         val args = buildJsonObject { put("ignored", true) }
 
         val assistantMessageEvent = AssistantMessageEvent(
             provider = MockLLMProvider(),
             message = expectedMessage,
             arguments = args,
-            verbose = true,
         )
 
         val expectedBodyFields = listOf(
             EventBodyFields.Role(role = Message.Role.Tool),
             EventBodyFields.ToolCalls(tools = listOf(expectedMessage))
-        )
-
-        assertEquals(expectedBodyFields.size, assistantMessageEvent.bodyFields.size)
-        assertContentEquals(expectedBodyFields, assistantMessageEvent.bodyFields)
-    }
-
-    @Test
-    fun `test tool call message verbose false ignores arguments`() {
-        val expectedContent = "Test message"
-        val expectedMessage = createTestToolCallMessage("test-id", "test-tool", expectedContent)
-        val args = buildJsonObject { put("ignored", true) }
-
-        val assistantMessageEvent = AssistantMessageEvent(
-            provider = MockLLMProvider(),
-            message = expectedMessage,
-            arguments = args,
-            verbose = false,
-        )
-
-        val expectedBodyFields = listOf(
-            EventBodyFields.Role(role = Message.Role.Tool)
         )
 
         assertEquals(expectedBodyFields.size, assistantMessageEvent.bodyFields.size)

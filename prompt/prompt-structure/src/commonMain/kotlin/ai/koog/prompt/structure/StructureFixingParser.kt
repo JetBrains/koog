@@ -3,7 +3,6 @@ package ai.koog.prompt.structure
 import ai.koog.prompt.dsl.PromptBuilder
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
-import ai.koog.prompt.executor.model.PromptExecutorExt.execute
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.message.Message
@@ -82,7 +81,7 @@ public class StructureFixingParser(
             fixingPrompt(this, content, structure, exception)
         }
 
-        val response = executor.execute(prompt = prompt, model = fixingModel)
+        val response = executor.execute(prompt = prompt, model = fixingModel).single()
         require(response is Message.Assistant) { "Response for fixing structure must be an assistant message, got ${response::class.simpleName} instead" }
 
         return response.content

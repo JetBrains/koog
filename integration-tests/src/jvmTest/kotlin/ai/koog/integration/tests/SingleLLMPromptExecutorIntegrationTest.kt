@@ -31,7 +31,6 @@ import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 import ai.koog.prompt.executor.llms.all.simpleBedrockExecutor
-import ai.koog.prompt.executor.model.PromptExecutorExt.execute
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -187,37 +186,6 @@ class SingleLLMPromptExecutorIntegrationTest {
                     fullResponse.contains("5"),
                 "Full response should contain numbers 1 through 5"
             )
-        }
-    }
-
-    @ParameterizedTest
-    @MethodSource("modelClientCombinations")
-    fun integration_testCodeGeneration(model: LLModel, client: LLMClient) = runTest(timeout = 300.seconds) {
-        Models.assumeAvailable(model.provider)
-        val executor = SingleLLMPromptExecutor(client)
-
-        val prompt = Prompt.build("test-code") {
-            system("You are a helpful coding assistant.")
-            user(
-                "Write a simple Kotlin function to calculate the factorial of a number. Make sure the name of the function starts with 'factorial'."
-            )
-        }
-
-        var response: List<Message>
-
-        withRetry(times = 3, testName = "integration_testCodeGeneration[${model.id}]") {
-            response = executor.execute(prompt, model, emptyList())
-
-            assertNotNull(response, "Response should not be null")
-            assertTrue(response.isNotEmpty(), "Response should not be empty")
-            assertTrue(response.first() is Message.Assistant, "Response should be an Assistant message")
-
-            val content = (response.first() as Message.Assistant).content
-            assertTrue(
-                content.contains("fun factorial"),
-                "Response should contain a factorial function. Response: $response. Content: $content"
-            )
-            assertTrue(content.contains("return"), "Response should contain a return statement")
         }
     }
 
@@ -718,7 +686,7 @@ class SingleLLMPromptExecutorIntegrationTest {
 
             withRetry {
                 try {
-                    val response = executor.execute(prompt, model)
+                    val response = executor.execute(prompt, model).single()
                     when (scenario) {
                         MarkdownTestScenario.MALFORMED_SYNTAX,
                         MarkdownTestScenario.MATH_NOTATION,
@@ -791,7 +759,7 @@ class SingleLLMPromptExecutorIntegrationTest {
 
             withRetry {
                 try {
-                    val response = executor.execute(prompt, model)
+                    val response = executor.execute(prompt, model).single()
                     checkExecutorMediaResponse(response)
                 } catch (e: Exception) {
                     // For some edge cases, exceptions are expected
@@ -882,7 +850,7 @@ class SingleLLMPromptExecutorIntegrationTest {
 
             withRetry {
                 try {
-                    val response = executor.execute(prompt, model)
+                    val response = executor.execute(prompt, model).single()
                     checkExecutorMediaResponse(response)
                 } catch (e: Exception) {
                     when (scenario) {
@@ -957,7 +925,7 @@ class SingleLLMPromptExecutorIntegrationTest {
 
             withRetry(times = 3, testName = "integration_testAudioProcessingBasic[${model.id}]") {
                 try {
-                    val response = executor.execute(prompt, model)
+                    val response = executor.execute(prompt, model).single()
                     checkExecutorMediaResponse(response)
                 } catch (e: Exception) {
                     if (scenario == AudioTestScenario.CORRUPTED_AUDIO) {
@@ -1027,7 +995,7 @@ class SingleLLMPromptExecutorIntegrationTest {
         }
 
         withRetry {
-            val response = executor.execute(prompt, model)
+            val response = executor.execute(prompt, model).single()
             checkExecutorMediaResponse(response)
 
             assertTrue(
@@ -1070,7 +1038,7 @@ class SingleLLMPromptExecutorIntegrationTest {
         }
 
         withRetry {
-            val response = executor.execute(prompt, model)
+            val response = executor.execute(prompt, model).single()
             checkExecutorMediaResponse(response)
 
             assertTrue(

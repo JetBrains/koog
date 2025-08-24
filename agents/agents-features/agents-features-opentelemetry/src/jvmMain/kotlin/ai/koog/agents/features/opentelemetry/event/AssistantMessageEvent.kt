@@ -1,6 +1,5 @@
 package ai.koog.agents.features.opentelemetry.event
 
-import ai.koog.agents.features.opentelemetry.attribute.Attribute
 import ai.koog.agents.features.opentelemetry.attribute.CommonAttributes
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.message.Message
@@ -10,33 +9,26 @@ internal class AssistantMessageEvent(
     provider: LLMProvider,
     private val message: Message.Response,
     private val arguments: JsonObject? = null,
-    override val verbose: Boolean = false
-) : GenAIAgentEvent {
+) : GenAIAgentEvent() {
 
-    override val name: String = super.name.concatName("assistant.message")
+    init {
+        // Attributes
+        addAttribute(CommonAttributes.System(provider))
 
-    override val attributes: List<Attribute> = buildList {
-        add(CommonAttributes.System(provider))
-    }
-
-    override val bodyFields: List<EventBodyField> = buildList {
-        if (message.role != Message.Role.Assistant) {
-            add(EventBodyFields.Role(role = message.role))
-        }
+        // Body Fields
+        addBodyField(EventBodyFields.Role(role = message.role))
 
         when (message) {
             is Message.Assistant -> {
-                if (verbose) {
-                    add(EventBodyFields.Content(content = message.content))
-                    arguments?.let { add(EventBodyFields.Arguments(it)) }
-                }
+                addBodyField(EventBodyFields.Content(content = message.content))
+                arguments?.let { addBodyField(EventBodyFields.Arguments(it)) }
             }
 
             is Message.Tool.Call -> {
-                if (verbose) {
-                    add(EventBodyFields.ToolCalls(tools = listOf(message)))
-                }
+                addBodyField(EventBodyFields.ToolCalls(tools = listOf(message)))
             }
         }
     }
+
+    override val name: String = super.name.concatName("assistant.message")
 }

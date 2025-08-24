@@ -3,7 +3,6 @@ package ai.koog.prompt.structure
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
-import ai.koog.prompt.executor.model.PromptExecutorExt.execute
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -129,7 +128,7 @@ public suspend fun <T> PromptExecutor.executeStructured(
         }
     }
 
-    val response = this.execute(prompt = updatedPrompt, model = model)
+    val response = this.execute(prompt = updatedPrompt, model = model).single()
 
     return runCatching {
         require(response is Message.Assistant) { "Response for structured output must be an assistant message, got ${response::class.simpleName} instead" }
