@@ -57,7 +57,7 @@ public class DeepSeekLLMClient(
 
     override val logger: KLogger = staticLogger
 
-    override fun serializeProviderRequest(
+    override fun serializeProviderChatRequest(
         messages: List<OpenAIMessage>,
         model: LLModel,
         tools: List<OpenAITool>?,
@@ -101,7 +101,7 @@ public class DeepSeekLLMClient(
         return json.encodeToString(request)
     }
 
-    override fun processProviderResponse(response: DeepSeekChatCompletionResponse): List<LLMChoice> {
+    override fun processProviderChatResponse(response: DeepSeekChatCompletionResponse): List<LLMChoice> {
         if (response.choices.isEmpty()) {
             logger.error { "Empty choices in response" }
             error("Empty choices in response")

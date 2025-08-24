@@ -60,7 +60,7 @@ public class OpenRouterLLMClient(
 
     override val logger: KLogger = staticLogger
 
-    override fun serializeProviderRequest(
+    override fun serializeProviderChatRequest(
         messages: List<OpenAIMessage>,
         model: LLModel,
         tools: List<OpenAITool>?,
@@ -115,7 +115,7 @@ public class OpenRouterLLMClient(
         return json.encodeToString(request)
     }
 
-    override fun processProviderResponse(response: OpenRouterChatCompletionResponse): List<LLMChoice> {
+    override fun processProviderChatResponse(response: OpenRouterChatCompletionResponse): List<LLMChoice> {
         if (response.choices.isEmpty()) {
             logger.error { "Empty choices in response" }
             error("Empty choices in response")

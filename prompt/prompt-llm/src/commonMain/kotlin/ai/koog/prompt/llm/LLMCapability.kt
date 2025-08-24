@@ -186,4 +186,13 @@ public sealed class LLMCapability(public val id: String) {
             public data object Standard : JSON("standard")
         }
     }
+
+    @Serializable
+    public sealed class OpenAIEndpoint(public val endpoint: String) : LLMCapability(endpoint) {
+        @Serializable
+        public data object Completions : OpenAIEndpoint("openai-endpoint-chat-completions")
+
+        @Serializable
+        public data object Responses : OpenAIEndpoint("openai-endpoint-responses")
+    }
 }

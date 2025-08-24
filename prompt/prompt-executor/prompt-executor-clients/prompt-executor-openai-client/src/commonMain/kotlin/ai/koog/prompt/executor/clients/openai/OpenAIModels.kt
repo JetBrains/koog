@@ -17,7 +17,6 @@ import ai.koog.prompt.llm.LLModel
  * |----------------------------------|-----------|--------------------|------------------------------|--------------------|
  * | [Reasoning.O4Mini]               | Medium    | $1.1-$4.4          | Text, Image, Tools, Document | Text, Tools        |
  * | [Reasoning.O3Mini]               | Medium    | $1.1-$4.4          | Text, Tools                  | Text, Tools        |
- * | [Reasoning.O1Mini]               | Slow      | $1.1-$4.4          | Text                         | Text               |
  * | [Reasoning.O3]                   | Slowest   | $10-$40            | Text, Image, Tools, Document | Text, Tools        |
  * | [Reasoning.O1]                   | Slowest   | $15-$60            | Text, Image, Tools, Document | Text, Tools        |
  * | [Chat.GPT4o]                     | Medium    | $2.5-$10           | Text, Image, Tools, Document | Text, Tools        |
@@ -31,12 +30,10 @@ import ai.koog.prompt.llm.LLModel
  * | [CostOptimized.GPT4_1Nano]       | Very fast | $0.1-$0.4          | Text, Image, Tools, Document | Text, Tools        |
  * | [CostOptimized.GPT4_1Mini]       | Fast      | $0.4-$1.6          | Text, Image, Tools, Document | Text, Tools        |
  * | [CostOptimized.GPT4oMini]        | Fast      | $0.15-$0.6         | Text, Image, Tools           | Text, Tools        |
- * | [CostOptimized.O1Mini]           | Slow      | $1.1-$4.4          | Text                         | Text               |
  * | [CostOptimized.O3Mini]           | Medium    | $1.1-$4.4          | Text, Tools                  | Text, Tools        |
  * | [Embeddings.TextEmbedding3Small] | Medium    | $0.02              | Text                         | Text               |
  * | [Embeddings.TextEmbedding3Large] | Slow      | $0.13              | Text                         | Text               |
  * | [Embeddings.TextEmbeddingAda002] | Slow      | $0.1               | Text                         | Text               |
- * | [Moderation.Text]                | Medium    | -                  | Text                         | Moderation Result  |
  * | [Moderation.Omni]                | Medium    | $4.40              | Text                         | Moderation Result  |
  *
  */
@@ -62,27 +59,6 @@ public object OpenAIModels : LLModelDefinitions {
             capabilities = listOf(
                 LLMCapability.Moderation,
                 LLMCapability.Vision.Image
-            ),
-            contextLength = 32_768,
-        )
-
-        /**
-         * Text-moderation is a previous generation text-only moderation model.
-         * It can identify potentially harmful content in text across multiple categories.
-         *
-         * Performance: Average
-         * Speed: Medium
-         * Input: Text
-         * Output: Text
-         *
-         * 32,768 max output tokens
-         * Sep 01, 2021 knowledge cutoff
-         */
-        public val Text: LLModel = LLModel(
-            provider = LLMProvider.OpenAI,
-            id = "text-moderation-latest",
-            capabilities = listOf(
-                LLMCapability.Moderation
             ),
             contextLength = 32_768,
         )
@@ -119,7 +95,9 @@ public object OpenAIModels : LLModelDefinitions {
                 LLMCapability.Vision.Image,
                 LLMCapability.Document,
                 LLMCapability.Completion,
-                LLMCapability.MultipleChoices
+                LLMCapability.MultipleChoices,
+                LLMCapability.OpenAIEndpoint.Completions,
+                LLMCapability.OpenAIEndpoint.Responses,
             ),
             contextLength = 200_000,
             maxOutputTokens = 100_000,
@@ -148,37 +126,12 @@ public object OpenAIModels : LLModelDefinitions {
                 LLMCapability.Schema.JSON.Basic,
                 LLMCapability.Schema.JSON.Standard,
                 LLMCapability.Completion,
-                LLMCapability.MultipleChoices
+                LLMCapability.MultipleChoices,
+                LLMCapability.OpenAIEndpoint.Completions,
+                LLMCapability.OpenAIEndpoint.Responses,
             ),
             contextLength = 200_000,
             maxOutputTokens = 100_000,
-        )
-
-        /**
-         * o1-mini is designed to solve hard problems across domains.
-         * o1-mini is a faster and more affordable reasoning model,
-         * but we recommend using the newer o3-mini model that features higher intelligence
-         * at the same latency and price as o1-mini.
-         *
-         * 128,000 context window
-         * 65,536 max output tokens
-         * Oct 01, 2023 knowledge cutoff
-         * Reasoning token support
-         *
-         * @see <a href="https://platform.openai.com/docs/models/o1-mini">
-         */
-        public val O1Mini: LLModel = LLModel(
-            provider = LLMProvider.OpenAI,
-            id = "o1-mini",
-            capabilities = listOf(
-                LLMCapability.Speculation,
-                LLMCapability.Schema.JSON.Basic,
-                LLMCapability.Schema.JSON.Standard,
-                LLMCapability.Completion,
-                LLMCapability.MultipleChoices
-            ),
-            contextLength = 128_000,
-            maxOutputTokens = 65_536,
         )
 
         /**
@@ -206,7 +159,9 @@ public object OpenAIModels : LLModelDefinitions {
                 LLMCapability.Vision.Image,
                 LLMCapability.Document,
                 LLMCapability.Completion,
-                LLMCapability.MultipleChoices
+                LLMCapability.MultipleChoices,
+                LLMCapability.OpenAIEndpoint.Completions,
+                LLMCapability.OpenAIEndpoint.Responses,
             ),
             contextLength = 200_000,
             maxOutputTokens = 100_000,
@@ -236,7 +191,9 @@ public object OpenAIModels : LLModelDefinitions {
                 LLMCapability.Vision.Image,
                 LLMCapability.Document,
                 LLMCapability.Completion,
-                LLMCapability.MultipleChoices
+                LLMCapability.MultipleChoices,
+                LLMCapability.OpenAIEndpoint.Completions,
+                LLMCapability.OpenAIEndpoint.Responses,
             ),
             contextLength = 200_000,
             maxOutputTokens = 100_000,
@@ -275,7 +232,9 @@ public object OpenAIModels : LLModelDefinitions {
                 LLMCapability.Vision.Image,
                 LLMCapability.Document,
                 LLMCapability.Completion,
-                LLMCapability.MultipleChoices
+                LLMCapability.MultipleChoices,
+                LLMCapability.OpenAIEndpoint.Completions,
+                LLMCapability.OpenAIEndpoint.Responses,
             ),
             contextLength = 128_000,
             maxOutputTokens = 16_384,
@@ -304,7 +263,9 @@ public object OpenAIModels : LLModelDefinitions {
                 LLMCapability.Vision.Image,
                 LLMCapability.Document,
                 LLMCapability.Completion,
-                LLMCapability.MultipleChoices
+                LLMCapability.MultipleChoices,
+                LLMCapability.OpenAIEndpoint.Completions,
+                LLMCapability.OpenAIEndpoint.Responses,
             ),
             contextLength = 1_047_576,
             maxOutputTokens = 32_768,
@@ -333,7 +294,9 @@ public object OpenAIModels : LLModelDefinitions {
                 LLMCapability.Vision.Image,
                 LLMCapability.Document,
                 LLMCapability.Completion,
-                LLMCapability.MultipleChoices
+                LLMCapability.MultipleChoices,
+                LLMCapability.OpenAIEndpoint.Completions,
+                LLMCapability.OpenAIEndpoint.Responses,
             ),
             contextLength = 400_000,
             maxOutputTokens = 128_000,
@@ -362,7 +325,9 @@ public object OpenAIModels : LLModelDefinitions {
                 LLMCapability.Vision.Image,
                 LLMCapability.Document,
                 LLMCapability.Completion,
-                LLMCapability.MultipleChoices
+                LLMCapability.MultipleChoices,
+                LLMCapability.OpenAIEndpoint.Completions,
+                LLMCapability.OpenAIEndpoint.Responses,
             ),
             contextLength = 400_000,
             maxOutputTokens = 128_000,
@@ -392,7 +357,9 @@ public object OpenAIModels : LLModelDefinitions {
                 LLMCapability.Vision.Image,
                 LLMCapability.Document,
                 LLMCapability.Completion,
-                LLMCapability.MultipleChoices
+                LLMCapability.MultipleChoices,
+                LLMCapability.OpenAIEndpoint.Completions,
+                LLMCapability.OpenAIEndpoint.Responses,
             ),
             contextLength = 400_000,
             maxOutputTokens = 128_000,
@@ -424,7 +391,8 @@ public object OpenAIModels : LLModelDefinitions {
                 LLMCapability.Completion,
                 LLMCapability.Tools,
                 LLMCapability.ToolChoice,
-                LLMCapability.Audio
+                LLMCapability.Audio,
+                LLMCapability.OpenAIEndpoint.Completions,
             ),
             contextLength = 128_000,
             maxOutputTokens = 16_384,
@@ -447,7 +415,8 @@ public object OpenAIModels : LLModelDefinitions {
                 LLMCapability.Completion,
                 LLMCapability.Tools,
                 LLMCapability.ToolChoice,
-                LLMCapability.Audio
+                LLMCapability.Audio,
+                LLMCapability.OpenAIEndpoint.Completions,
             ),
             contextLength = 128_000,
             maxOutputTokens = 16_384,
@@ -484,7 +453,9 @@ public object OpenAIModels : LLModelDefinitions {
                 LLMCapability.Vision.Image,
                 LLMCapability.Document,
                 LLMCapability.Completion,
-                LLMCapability.MultipleChoices
+                LLMCapability.MultipleChoices,
+                LLMCapability.OpenAIEndpoint.Completions,
+                LLMCapability.OpenAIEndpoint.Responses,
             ),
             contextLength = 1_047_576,
             maxOutputTokens = 32_768,
@@ -514,7 +485,9 @@ public object OpenAIModels : LLModelDefinitions {
                 LLMCapability.Vision.Image,
                 LLMCapability.Document,
                 LLMCapability.Completion,
-                LLMCapability.MultipleChoices
+                LLMCapability.MultipleChoices,
+                LLMCapability.OpenAIEndpoint.Completions,
+                LLMCapability.OpenAIEndpoint.Responses,
             ),
             contextLength = 1_047_576,
             maxOutputTokens = 32_768,
@@ -543,7 +516,9 @@ public object OpenAIModels : LLModelDefinitions {
                 LLMCapability.Vision.Image,
                 LLMCapability.Document,
                 LLMCapability.Completion,
-                LLMCapability.MultipleChoices
+                LLMCapability.MultipleChoices,
+                LLMCapability.OpenAIEndpoint.Completions,
+                LLMCapability.OpenAIEndpoint.Responses,
             ),
             contextLength = 128_000,
             maxOutputTokens = 16_384,
@@ -553,11 +528,6 @@ public object OpenAIModels : LLModelDefinitions {
          * See [Reasoning.O4Mini]
          */
         public val O4Mini: LLModel get() = Reasoning.O4Mini
-
-        /**
-         * See [Reasoning.O1Mini]
-         */
-        public val O1Mini: LLModel get() = Reasoning.O1Mini
 
         /**
          * See [Reasoning.O3Mini]
