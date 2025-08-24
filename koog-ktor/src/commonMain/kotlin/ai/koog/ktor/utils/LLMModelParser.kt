@@ -238,6 +238,10 @@ private val OPENROUTER_MODELS_MAP = mapOf(
     "claude3haiku" to OpenRouterModels.Claude3Haiku,
     "gpt4" to OpenRouterModels.GPT4,
     "gpt4o" to OpenRouterModels.GPT4o,
+    "gpt5" to OpenRouterModels.GPT5,
+    "gpt5mini" to OpenRouterModels.GPT5Mini,
+    "gpt5nano" to OpenRouterModels.GPT5Nano,
+    "gptoss120b" to OpenRouterModels.GPT_OSS_120b,
     "gpt4turbo" to OpenRouterModels.GPT4Turbo,
     "gpt35turbo" to OpenRouterModels.GPT35Turbo
 )

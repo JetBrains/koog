@@ -77,6 +77,62 @@ public object OpenRouterModels : LLModelDefinitions {
     )
 
     /**
+     * Represents the GPT-5 model hosted on OpenRouter.
+     *
+     * This variable defines an instance of the `LLModel` type,
+     * specifying the OpenRouter provider and using the identifier `"openai/gpt-5"`.
+     * It leverages a standard set of capabilities for interaction.
+     */
+    public val GPT5: LLModel = LLModel(
+        provider = LLMProvider.OpenRouter,
+        id = "openai/gpt-5",
+        capabilities = standardCapabilities,
+        contextLength = 400_000,
+    )
+
+    /**
+     * Represents the GPT-5 Mini model hosted on OpenRouter.
+     *
+     * This variable defines an instance of the `LLModel` type,
+     * specifying the OpenRouter provider and using the identifier `"openai/gpt-5-mini"`.
+     * It leverages a standard set of capabilities for interaction.
+     */
+    public val GPT5Mini: LLModel = LLModel(
+        provider = LLMProvider.OpenRouter,
+        id = "openai/gpt-5-mini",
+        capabilities = standardCapabilities,
+        contextLength = 400_000,
+    )
+
+    /**
+     * Represents the GPT-5 Nano model hosted on OpenRouter.
+     *
+     * This variable defines an instance of the `LLModel` type,
+     * specifying the OpenRouter provider and using the identifier `"openai/gpt-5-nano"`.
+     * It leverages a standard set of capabilities for interaction.
+     */
+    public val GPT5Nano: LLModel = LLModel(
+        provider = LLMProvider.OpenRouter,
+        id = "openai/gpt-5-nano",
+        capabilities = standardCapabilities,
+        contextLength = 400_000,
+    )
+
+    /**
+     * Represents the gpt-oss-120b model hosted on OpenRouter.
+     *
+     * This variable defines an instance of the `LLModel` type,
+     * specifying the OpenRouter provider and using the identifier `"openai/gpt-oss-120b"`.
+     * It leverages a standard set of capabilities for interaction.
+     */
+    public val GPT_OSS_120b: LLModel = LLModel(
+        provider = LLMProvider.OpenRouter,
+        id = "openai/gpt-oss-120b",
+        capabilities = standardCapabilities,
+        contextLength = 400_000,
+    )
+
+    /**
      * Represents the GPT-4 model hosted on OpenRouter.
      *
      * This variable defines an instance of the `LLModel` type,
