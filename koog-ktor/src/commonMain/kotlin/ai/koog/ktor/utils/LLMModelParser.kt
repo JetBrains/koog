@@ -187,7 +187,6 @@ private val OPENAI_MODELS_MAP = mapOf(
     "reasoning" to mapOf(
         "o4mini" to OpenAIModels.Reasoning.O4Mini,
         "o3mini" to OpenAIModels.Reasoning.O3Mini,
-        "o1mini" to OpenAIModels.Reasoning.O1Mini,
         "o3" to OpenAIModels.Reasoning.O3,
         "o1" to OpenAIModels.Reasoning.O1
     ),
@@ -196,7 +195,6 @@ private val OPENAI_MODELS_MAP = mapOf(
         "gpt4_1nano" to OpenAIModels.CostOptimized.GPT4_1Nano,
         "gpt4_1mini" to OpenAIModels.CostOptimized.GPT4_1Mini,
         "gpt4omini" to OpenAIModels.CostOptimized.GPT4oMini,
-        "o1mini" to OpenAIModels.CostOptimized.O1Mini,
         "o3mini" to OpenAIModels.CostOptimized.O3Mini
     ),
     "audio" to mapOf(
@@ -209,7 +207,6 @@ private val OPENAI_MODELS_MAP = mapOf(
         "textembeddingada002" to OpenAIModels.Embeddings.TextEmbeddingAda002
     ),
     "moderation" to mapOf(
-        "text" to OpenAIModels.Moderation.Text,
         "omni" to OpenAIModels.Moderation.Omni
     )
 )
