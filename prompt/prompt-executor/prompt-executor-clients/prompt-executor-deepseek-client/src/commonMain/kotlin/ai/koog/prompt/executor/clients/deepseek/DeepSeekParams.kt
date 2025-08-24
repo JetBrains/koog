@@ -128,21 +128,22 @@ public open class DeepSeekParams(
     override fun equals(other: Any?): Boolean = when {
         this === other -> true
         other !is DeepSeekParams -> false
-        else -> temperature == other.temperature &&
-            maxTokens == other.maxTokens &&
-            numberOfChoices == other.numberOfChoices &&
-            speculation == other.speculation &&
-            schema == other.schema &&
-            toolChoice == other.toolChoice &&
-            user == other.user &&
-            includeThoughts == other.includeThoughts &&
-            thinkingBudget == other.thinkingBudget &&
-            frequencyPenalty == other.frequencyPenalty &&
-            presencePenalty == other.presencePenalty &&
-            logprobs == other.logprobs &&
-            stop == other.stop &&
-            topLogprobs == other.topLogprobs &&
-            topP == other.topP
+        else ->
+            temperature == other.temperature &&
+                maxTokens == other.maxTokens &&
+                numberOfChoices == other.numberOfChoices &&
+                speculation == other.speculation &&
+                schema == other.schema &&
+                toolChoice == other.toolChoice &&
+                user == other.user &&
+                includeThoughts == other.includeThoughts &&
+                thinkingBudget == other.thinkingBudget &&
+                frequencyPenalty == other.frequencyPenalty &&
+                presencePenalty == other.presencePenalty &&
+                logprobs == other.logprobs &&
+                stop == other.stop &&
+                topLogprobs == other.topLogprobs &&
+                topP == other.topP
     }
 
     override fun hashCode(): Int = listOf(

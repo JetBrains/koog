@@ -10,7 +10,6 @@ import ai.koog.prompt.params.LLMParams
 
 internal sealed interface OpenAIParams
 
-
 internal fun LLMParams.toOpenAIChatParams(): OpenAIChatParams {
     if (this is OpenAIChatParams) return this
     return OpenAIChatParams(
@@ -101,7 +100,8 @@ public open class OpenAIChatParams(
     temperature, maxTokens, numberOfChoices,
     speculation, schema, toolChoice,
     user, includeThoughts, thinkingBudget
-), OpenAIParams {
+),
+    OpenAIParams {
     init {
         require(topP == null || topP in 0.0..1.0) {
             "topP must be in (0.0, 1.0], but was $topP"
@@ -189,29 +189,30 @@ public open class OpenAIChatParams(
     override fun equals(other: Any?): Boolean = when {
         this === other -> true
         other !is OpenAIChatParams -> false
-        else -> temperature == other.temperature &&
-            maxTokens == other.maxTokens &&
-            numberOfChoices == other.numberOfChoices &&
-            speculation == other.speculation &&
-            schema == other.schema &&
-            toolChoice == other.toolChoice &&
-            user == other.user &&
-            includeThoughts == other.includeThoughts &&
-            thinkingBudget == other.thinkingBudget &&
-            frequencyPenalty == other.frequencyPenalty &&
-            presencePenalty == other.presencePenalty &&
-            parallelToolCalls == other.parallelToolCalls &&
-            promptCacheKey == other.promptCacheKey &&
-            safetyIdentifier == other.safetyIdentifier &&
-            serviceTier == other.serviceTier &&
-            store == other.store &&
-            audio == other.audio &&
-            logprobs == other.logprobs &&
-            reasoningEffort == other.reasoningEffort &&
-            stop == other.stop &&
-            topLogprobs == other.topLogprobs &&
-            topP == other.topP &&
-            webSearchOptions == other.webSearchOptions
+        else ->
+            temperature == other.temperature &&
+                maxTokens == other.maxTokens &&
+                numberOfChoices == other.numberOfChoices &&
+                speculation == other.speculation &&
+                schema == other.schema &&
+                toolChoice == other.toolChoice &&
+                user == other.user &&
+                includeThoughts == other.includeThoughts &&
+                thinkingBudget == other.thinkingBudget &&
+                frequencyPenalty == other.frequencyPenalty &&
+                presencePenalty == other.presencePenalty &&
+                parallelToolCalls == other.parallelToolCalls &&
+                promptCacheKey == other.promptCacheKey &&
+                safetyIdentifier == other.safetyIdentifier &&
+                serviceTier == other.serviceTier &&
+                store == other.store &&
+                audio == other.audio &&
+                logprobs == other.logprobs &&
+                reasoningEffort == other.reasoningEffort &&
+                stop == other.stop &&
+                topLogprobs == other.topLogprobs &&
+                topP == other.topP &&
+                webSearchOptions == other.webSearchOptions
     }
 
     override fun hashCode(): Int = listOf(
@@ -317,7 +318,8 @@ public open class OpenAIResponsesParams(
     temperature, maxTokens, numberOfChoices,
     speculation, schema, toolChoice,
     user, includeThoughts, thinkingBudget
-), OpenAIParams {
+),
+    OpenAIParams {
     init {
         require(topP == null || topP in 0.0..1.0) {
             "topP must be in (0.0, 1.0], but was $topP"
@@ -381,28 +383,29 @@ public open class OpenAIResponsesParams(
     override fun equals(other: Any?): Boolean = when {
         this === other -> true
         other !is OpenAIResponsesParams -> false
-        else -> temperature == other.temperature &&
-            maxTokens == other.maxTokens &&
-            numberOfChoices == other.numberOfChoices &&
-            speculation == other.speculation &&
-            schema == other.schema &&
-            toolChoice == other.toolChoice &&
-            user == other.user &&
-            includeThoughts == other.includeThoughts &&
-            thinkingBudget == other.thinkingBudget &&
-            background == other.background &&
-            include == other.include &&
-            maxToolCalls == other.maxToolCalls &&
-            parallelToolCalls == other.parallelToolCalls &&
-            reasoning == other.reasoning &&
-            truncation == other.truncation &&
-            promptCacheKey == other.promptCacheKey &&
-            safetyIdentifier == other.safetyIdentifier &&
-            serviceTier == other.serviceTier &&
-            store == other.store &&
-            logprobs == other.logprobs &&
-            topLogprobs == other.topLogprobs &&
-            topP == other.topP
+        else ->
+            temperature == other.temperature &&
+                maxTokens == other.maxTokens &&
+                numberOfChoices == other.numberOfChoices &&
+                speculation == other.speculation &&
+                schema == other.schema &&
+                toolChoice == other.toolChoice &&
+                user == other.user &&
+                includeThoughts == other.includeThoughts &&
+                thinkingBudget == other.thinkingBudget &&
+                background == other.background &&
+                include == other.include &&
+                maxToolCalls == other.maxToolCalls &&
+                parallelToolCalls == other.parallelToolCalls &&
+                reasoning == other.reasoning &&
+                truncation == other.truncation &&
+                promptCacheKey == other.promptCacheKey &&
+                safetyIdentifier == other.safetyIdentifier &&
+                serviceTier == other.serviceTier &&
+                store == other.store &&
+                logprobs == other.logprobs &&
+                topLogprobs == other.topLogprobs &&
+                topP == other.topP
     }
 
     override fun hashCode(): Int = listOf(

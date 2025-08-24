@@ -131,8 +131,11 @@ public open class OpenAILLMClient(
         stream: Boolean
     ): String {
         val chatParams = params.toOpenAIChatParams()
-        val modalities = if (chatParams.audio != null && model.supports(LLMCapability.Audio))
-            listOf(OpenAIModalities.Text, OpenAIModalities.Audio) else null
+        val modalities = if (chatParams.audio != null && model.supports(LLMCapability.Audio)) {
+            listOf(OpenAIModalities.Text, OpenAIModalities.Audio)
+        } else {
+            null
+        }
 
         val responseFormat = createResponseFormat(chatParams.schema, model)
 
@@ -308,7 +311,6 @@ public open class OpenAILLMClient(
         model: LLModel,
         tools: List<ToolDescriptor>
     ): List<LLMChoice> = super.executeMultipleChoices(prompt, model, tools)
-
 
     /**
      * Embeds the given text using the OpenAI embeddings API.
@@ -503,7 +505,6 @@ public open class OpenAILLMClient(
             }
         }
     }
-
 
     private suspend fun getResponseWithResponsesAPI(
         prompt: Prompt,

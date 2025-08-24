@@ -41,7 +41,7 @@ public interface OpenAIBaseLLMResponse {
     public val created: Long
 }
 
-public interface OpenAIBaseLLMStreamResponse: OpenAIBaseLLMResponse
+public interface OpenAIBaseLLMStreamResponse : OpenAIBaseLLMResponse
 
 /**
  * Represents a message in the OpenAI chat completion API.

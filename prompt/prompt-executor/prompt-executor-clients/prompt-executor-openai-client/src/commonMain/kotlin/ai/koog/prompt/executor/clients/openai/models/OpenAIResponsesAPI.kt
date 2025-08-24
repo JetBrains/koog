@@ -141,7 +141,6 @@ internal class OpenAIResponsesAPIRequest(
     val user: String? = null
 ) : OpenAIBaseLLMRequest
 
-
 @Serializable(with = ItemPolymorphicSerializer::class)
 internal sealed interface Item {
 
@@ -164,7 +163,9 @@ internal sealed interface Item {
      */
     @Serializable
     class InputMessage(
-        val content: List<InputContent>, val role: String, val status: OpenAIInputStatus? = null
+        val content: List<InputContent>,
+        val role: String,
+        val status: OpenAIInputStatus? = null
     ) : Item {
         val type: String = "message"
     }
@@ -179,7 +180,10 @@ internal sealed interface Item {
      */
     @Serializable
     class OutputMessage(
-        val content: List<OutputContent>, val id: String, val role: String = "assistant", val status: OpenAIInputStatus
+        val content: List<OutputContent>,
+        val id: String,
+        val role: String = "assistant",
+        val status: OpenAIInputStatus
     ) : Item {
         val type: String = "message"
 
@@ -613,7 +617,10 @@ internal sealed interface Item {
      */
     @Serializable
     class McpListTools(
-        val id: String, val serverLabel: String, val tools: List<McpTool>, val error: String? = null
+        val id: String,
+        val serverLabel: String,
+        val tools: List<McpTool>,
+        val error: String? = null
     ) : Item {
         val type: String = "mcp_list_tools"
     }
@@ -739,8 +746,10 @@ internal sealed interface InputContent {
     @Serializable
     @SerialName("input_file")
     class File(
-        val fileData: String? = null, val fileId: String? = null,
-        val fileUrl: String? = null, val filename: String? = null
+        val fileData: String? = null,
+        val fileId: String? = null,
+        val fileUrl: String? = null,
+        val filename: String? = null
     ) : InputContent
 }
 
@@ -2201,7 +2210,6 @@ internal object ItemTextSerializer : KSerializer<Item.Text> {
     override fun deserialize(decoder: Decoder): Item.Text {
         return Item.Text(decoder.decodeString())
     }
-
 }
 
 internal object ItemPolymorphicSerializer : JsonContentPolymorphicSerializer<Item>(Item::class) {
@@ -2292,24 +2300,29 @@ internal object OpenAIResponsesToolChoiceSerializer : KSerializer<OpenAIResponse
             is JsonObject -> {
                 when (element["type"]?.jsonPrimitive?.content) {
                     "allowed_tools" -> jsonDecoder.json.decodeFromJsonElement(
-                        OpenAIResponsesToolChoice.AllowedTools.serializer(), element
+                        OpenAIResponsesToolChoice.AllowedTools.serializer(),
+                        element
                     )
 
                     "function" -> jsonDecoder.json.decodeFromJsonElement(
-                        OpenAIResponsesToolChoice.FunctionTool.serializer(), element
+                        OpenAIResponsesToolChoice.FunctionTool.serializer(),
+                        element
                     )
 
                     "mcp" -> jsonDecoder.json.decodeFromJsonElement(
-                        OpenAIResponsesToolChoice.McpTool.serializer(), element
+                        OpenAIResponsesToolChoice.McpTool.serializer(),
+                        element
                     )
 
                     "custom" -> jsonDecoder.json.decodeFromJsonElement(
-                        OpenAIResponsesToolChoice.CustomTool.serializer(), element
+                        OpenAIResponsesToolChoice.CustomTool.serializer(),
+                        element
                     )
 
                     "file_search", "web_search_preview", "computer_use_preview", "code_interpreter", "image_generation" ->
                         jsonDecoder.json.decodeFromJsonElement(
-                            OpenAIResponsesToolChoice.HostedTool.serializer(), element
+                            OpenAIResponsesToolChoice.HostedTool.serializer(),
+                            element
                         )
 
                     else -> throw SerializationException("Not recognize tool choice type: ${element["type"]?.jsonPrimitive?.content}")
@@ -2319,5 +2332,4 @@ internal object OpenAIResponsesToolChoiceSerializer : KSerializer<OpenAIResponse
             else -> throw SerializationException("Tool choice must be either a string or an object")
         }
     }
-
 }

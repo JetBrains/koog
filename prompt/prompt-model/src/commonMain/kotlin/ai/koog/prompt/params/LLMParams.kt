@@ -117,19 +117,19 @@ public open class LLMParams(
     public operator fun component8(): Boolean? = includeThoughts
     public operator fun component9(): Int? = thinkingBudget
 
-
     override fun equals(other: Any?): Boolean = when {
         this === other -> true
         other !is LLMParams -> false
-        else -> temperature == other.temperature &&
-            maxTokens == other.maxTokens &&
-            numberOfChoices == other.numberOfChoices &&
-            speculation == other.speculation &&
-            schema == other.schema &&
-            toolChoice == other.toolChoice &&
-            user == other.user &&
-            includeThoughts == other.includeThoughts &&
-            thinkingBudget == other.thinkingBudget
+        else ->
+            temperature == other.temperature &&
+                maxTokens == other.maxTokens &&
+                numberOfChoices == other.numberOfChoices &&
+                speculation == other.speculation &&
+                schema == other.schema &&
+                toolChoice == other.toolChoice &&
+                user == other.user &&
+                includeThoughts == other.includeThoughts &&
+                thinkingBudget == other.thinkingBudget
     }
 
     override fun hashCode(): Int = listOf(
@@ -153,7 +153,6 @@ public open class LLMParams(
         append(", thinkingBudget=$thinkingBudget")
         append(")")
     }
-
 
     /**
      * Represents a schema for the structured response.

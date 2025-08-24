@@ -46,7 +46,10 @@ public class DeepSeekLLMClient(
     baseClient: HttpClient = HttpClient(),
     clock: Clock = Clock.System
 ) : AbstractOpenAILLMClient<DeepSeekChatCompletionResponse, DeepSeekChatCompletionStreamResponse>(
-    apiKey, settings, baseClient, clock
+    apiKey,
+    settings,
+    baseClient,
+    clock
 ) {
 
     private companion object {

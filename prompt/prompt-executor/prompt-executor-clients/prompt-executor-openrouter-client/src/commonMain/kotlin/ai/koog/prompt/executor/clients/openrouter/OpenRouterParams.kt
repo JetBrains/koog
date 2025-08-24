@@ -167,29 +167,30 @@ public open class OpenRouterParams(
     override fun equals(other: Any?): Boolean = when {
         this === other -> true
         other !is OpenRouterParams -> false
-        else -> temperature == other.temperature &&
-            maxTokens == other.maxTokens &&
-            numberOfChoices == other.numberOfChoices &&
-            speculation == other.speculation &&
-            schema == other.schema &&
-            toolChoice == other.toolChoice &&
-            user == other.user &&
-            includeThoughts == other.includeThoughts &&
-            thinkingBudget == other.thinkingBudget &&
-            frequencyPenalty == other.frequencyPenalty &&
-            presencePenalty == other.presencePenalty &&
-            logprobs == other.logprobs &&
-            stop == other.stop &&
-            topLogprobs == other.topLogprobs &&
-            topP == other.topP &&
-            topK == other.topK &&
-            repetitionPenalty == other.repetitionPenalty &&
-            minP == other.minP &&
-            topA == other.topA &&
-            transforms == other.transforms &&
-            models == other.models &&
-            route == other.route &&
-            provider == other.provider
+        else ->
+            temperature == other.temperature &&
+                maxTokens == other.maxTokens &&
+                numberOfChoices == other.numberOfChoices &&
+                speculation == other.speculation &&
+                schema == other.schema &&
+                toolChoice == other.toolChoice &&
+                user == other.user &&
+                includeThoughts == other.includeThoughts &&
+                thinkingBudget == other.thinkingBudget &&
+                frequencyPenalty == other.frequencyPenalty &&
+                presencePenalty == other.presencePenalty &&
+                logprobs == other.logprobs &&
+                stop == other.stop &&
+                topLogprobs == other.topLogprobs &&
+                topP == other.topP &&
+                topK == other.topK &&
+                repetitionPenalty == other.repetitionPenalty &&
+                minP == other.minP &&
+                topA == other.topA &&
+                transforms == other.transforms &&
+                models == other.models &&
+                route == other.route &&
+                provider == other.provider
     }
 
     override fun hashCode(): Int = listOf(

@@ -48,8 +48,10 @@ public class OpenRouterLLMClient(
     baseClient: HttpClient = HttpClient(),
     clock: Clock = Clock.System
 ) : AbstractOpenAILLMClient<OpenRouterChatCompletionResponse, OpenRouterChatCompletionStreamResponse>(
-    apiKey, settings,
-    baseClient, clock
+    apiKey,
+    settings,
+    baseClient,
+    clock
 ) {
 
     private companion object {
