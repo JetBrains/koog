@@ -12,7 +12,6 @@ import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import ai.koog.prompt.executor.clients.openai.models.Content
 import ai.koog.prompt.executor.clients.openai.models.InputContent
 import ai.koog.prompt.executor.clients.openai.models.Item
-import ai.koog.prompt.executor.clients.openai.models.JsonSchemaObject
 import ai.koog.prompt.executor.clients.openai.models.OpenAIChatCompletionRequest
 import ai.koog.prompt.executor.clients.openai.models.OpenAIChatCompletionResponse
 import ai.koog.prompt.executor.clients.openai.models.OpenAIChatCompletionStreamResponse
@@ -22,7 +21,6 @@ import ai.koog.prompt.executor.clients.openai.models.OpenAIEmbeddingResponse
 import ai.koog.prompt.executor.clients.openai.models.OpenAIMessage
 import ai.koog.prompt.executor.clients.openai.models.OpenAIModalities
 import ai.koog.prompt.executor.clients.openai.models.OpenAIOutputFormat
-import ai.koog.prompt.executor.clients.openai.models.OpenAIResponseFormat
 import ai.koog.prompt.executor.clients.openai.models.OpenAIResponsesAPIRequest
 import ai.koog.prompt.executor.clients.openai.models.OpenAIResponsesAPIResponse
 import ai.koog.prompt.executor.clients.openai.models.OpenAIResponsesTool
@@ -136,20 +134,7 @@ public open class OpenAILLMClient(
         val modalities = if (chatParams.audio != null && model.supports(LLMCapability.Audio))
             listOf(OpenAIModalities.Text, OpenAIModalities.Audio) else null
 
-        val responseFormat = chatParams.schema?.let { schema ->
-            require(schema.capability in model.capabilities) {
-                "Model ${model.id} does not support structured output schema ${schema.name}"
-            }
-            when (schema) {
-                is LLMParams.Schema.JSON -> OpenAIResponseFormat.JsonSchema(
-                    JsonSchemaObject(
-                        name = schema.name,
-                        schema = schema.schema,
-                        strict = true
-                    )
-                )
-            }
-        }
+        val responseFormat = createResponseFormat(chatParams.schema, model)
 
         val request = OpenAIChatCompletionRequest(
             messages = messages,
@@ -235,79 +220,37 @@ public open class OpenAILLMClient(
     }
 
     override fun processProviderChatResponse(response: OpenAIChatCompletionResponse): List<LLMChoice> {
-        if (response.choices.isEmpty()) {
-            logger.error { "Empty choices in response" }
-            error("Empty choices in response")
-        }
-
+        require(response.choices.isNotEmpty()) { "Empty choices in response" }
         return response.choices.map { it.toMessageResponses(createMetaInfo(response.usage)) }
     }
 
-    override fun decodeStreamingResponse(data: String): OpenAIChatCompletionStreamResponse {
-        return json.decodeFromString(data)
-    }
+    override fun decodeStreamingResponse(data: String): OpenAIChatCompletionStreamResponse =
+        json.decodeFromString(data)
 
-    override fun decodeResponse(data: String): OpenAIChatCompletionResponse {
-        return json.decodeFromString<OpenAIChatCompletionResponse>(data)
-    }
+    override fun decodeResponse(data: String): OpenAIChatCompletionResponse =
+        json.decodeFromString(data)
 
-    override fun processStreamingChunk(chunk: OpenAIChatCompletionStreamResponse): String? {
-        return chunk.choices.firstOrNull()?.delta?.content
-    }
+    override fun processStreamingChunk(chunk: OpenAIChatCompletionStreamResponse): String? =
+        chunk.choices.firstOrNull()?.delta?.content
 
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
-        val params = prompt.params
-        return when {
-            params is OpenAIResponsesParams && model.supports(LLMCapability.OpenAIEndpoint.Responses) -> {
-                val response = getResponseWithResponsesAPI(prompt, params, model, tools)
-                processResponsesAPIResponse(response)
-            }
-
-            params is OpenAIChatParams && model.supports(LLMCapability.OpenAIEndpoint.Completions) -> {
-                super.execute(prompt, model, tools)
-            }
-
-            else -> {
-                when {
-                    model.supports(LLMCapability.OpenAIEndpoint.Responses) -> {
-                        val response =
-                            getResponseWithResponsesAPI(prompt, params.toOpenAIResponsesParams(), model, tools)
-                        processResponsesAPIResponse(response)
-                    }
-
-                    model.supports(LLMCapability.OpenAIEndpoint.Completions) -> {
-                        super.execute(prompt, model, tools)
-                    }
-
-                    else -> error("Unsupported OpenAI API endpoint for model: ${model.id}")
+        return selectExecutionStrategy(prompt, model) { params ->
+            when (params) {
+                is OpenAIResponsesParams -> {
+                    val response = getResponseWithResponsesAPI(prompt, params, model, tools)
+                    processResponsesAPIResponse(response)
                 }
+
+                is OpenAIChatParams -> super.execute(prompt, model, tools)
             }
         }
     }
 
     override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
-        val params = prompt.params
-        return when {
-            params is OpenAIResponsesParams && model.supports(LLMCapability.OpenAIEndpoint.Responses) -> {
-                executeResponsesStreaming(prompt, model, params)
-            }
-
-            params is OpenAIChatParams && model.supports(LLMCapability.OpenAIEndpoint.Completions) -> {
-                super.executeStreaming(prompt, model)
-            }
-
-            else -> {
-                when {
-                    model.supports(LLMCapability.OpenAIEndpoint.Responses) -> {
-                        executeResponsesStreaming(prompt, model, params.toOpenAIResponsesParams())
-                    }
-
-                    model.supports(LLMCapability.OpenAIEndpoint.Completions) -> {
-                        super.executeStreaming(prompt, model)
-                    }
-
-                    else -> error("Unsupported OpenAI API endpoint for model: ${model.id}")
-                }
+        return selectExecutionStrategy(prompt, model) { params ->
+            when (params) {
+                is OpenAIResponsesParams -> executeResponsesStreaming(prompt, model, params)
+                is OpenAIChatParams -> super.executeStreaming(prompt, model)
             }
         }
     }
@@ -364,9 +307,7 @@ public open class OpenAILLMClient(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
-    ): List<LLMChoice> {
-        return super.executeMultipleChoices(prompt, model, tools)
-    }
+    ): List<LLMChoice> = super.executeMultipleChoices(prompt, model, tools)
 
 
     /**
@@ -603,14 +544,12 @@ public open class OpenAILLMClient(
         }
     }
 
-    private fun ToolDescriptor.toResponsesTool(): OpenAIResponsesTool.Function {
-        val parameters = this.paramsToJsonObject()
-        return OpenAIResponsesTool.Function(
+    private fun ToolDescriptor.toResponsesTool(): OpenAIResponsesTool.Function =
+        OpenAIResponsesTool.Function(
             name = name,
-            parameters = parameters,
+            parameters = paramsToJsonObject(),
             description = description
         )
-    }
 
     @OptIn(ExperimentalUuidApi::class)
     private fun convertPromptToInput(prompt: Prompt, model: LLModel): List<Item> {
@@ -716,10 +655,7 @@ public open class OpenAILLMClient(
     }
 
     private fun processResponsesAPIResponse(response: OpenAIResponsesAPIResponse): List<Message.Response> {
-        if (response.output.isEmpty()) {
-            logger.error { "Empty output in response" }
-            error("Empty output in response")
-        }
+        require(response.output.isNotEmpty()) { "Empty output in response" }
 
         val metaInfo = ResponseMetaInfo.create(
             clock,
@@ -728,28 +664,24 @@ public open class OpenAILLMClient(
             outputTokensCount = response.usage?.outputTokens
         )
 
-        val list = response.output.map { output ->
-            when {
-                output is Item.FunctionToolCall -> Message.Tool.Call(
+        return response.output.map { output ->
+            when (output) {
+                is Item.FunctionToolCall -> Message.Tool.Call(
                     id = output.callId,
                     tool = output.name,
                     content = output.arguments,
                     metaInfo = metaInfo
                 )
 
-                output is Item.OutputMessage -> Message.Assistant(
+                is Item.OutputMessage -> Message.Assistant(
                     content = output.text(),
                     finishReason = output.status.name,
                     metaInfo = metaInfo
                 )
 
-                else -> {
-                    logger.error { "Unexpected response from $clientName: no tool calls and no content" }
-                    error("Unexpected response from $clientName: no tool calls and no content")
-                }
+                else -> error("Unexpected response from $clientName: no tool calls and no content")
             }
         }
-        return list
     }
 
     private fun LLMParams.ToolChoice.toOpenAIResponseToolChoice() = when (this) {
@@ -758,4 +690,18 @@ public open class OpenAILLMClient(
         LLMParams.ToolChoice.Required -> OpenAIResponsesToolChoice.Mode("required")
         is LLMParams.ToolChoice.Named -> OpenAIResponsesToolChoice.FunctionTool(name = name)
     }
+
+    private fun determineParams(params: LLMParams, model: LLModel): OpenAIParams = when {
+        params is OpenAIResponsesParams && model.supports(LLMCapability.OpenAIEndpoint.Responses) -> params
+        params is OpenAIChatParams && model.supports(LLMCapability.OpenAIEndpoint.Completions) -> params
+        model.supports(LLMCapability.OpenAIEndpoint.Responses) -> params.toOpenAIResponsesParams()
+        model.supports(LLMCapability.OpenAIEndpoint.Completions) -> params.toOpenAIChatParams()
+        else -> error("Unsupported OpenAI API endpoint for model: ${model.id}")
+    }
+
+    private inline fun <T> selectExecutionStrategy(
+        prompt: Prompt,
+        model: LLModel,
+        action: (OpenAIParams) -> T
+    ): T = action(determineParams(prompt.params, model))
 }

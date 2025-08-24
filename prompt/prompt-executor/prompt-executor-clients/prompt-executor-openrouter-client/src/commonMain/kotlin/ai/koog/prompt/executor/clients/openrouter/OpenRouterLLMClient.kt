@@ -7,9 +7,7 @@ import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.openai.AbstractOpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIBasedSettings
 import ai.koog.prompt.executor.clients.openai.models.Content
-import ai.koog.prompt.executor.clients.openai.models.JsonSchemaObject
 import ai.koog.prompt.executor.clients.openai.models.OpenAIMessage
-import ai.koog.prompt.executor.clients.openai.models.OpenAIResponseFormat
 import ai.koog.prompt.executor.clients.openai.models.OpenAIStaticContent
 import ai.koog.prompt.executor.clients.openai.models.OpenAITool
 import ai.koog.prompt.executor.clients.openai.models.OpenAIToolChoice
@@ -69,21 +67,7 @@ public class OpenRouterLLMClient(
         stream: Boolean
     ): String {
         val openRouterParams = params.toOpenRouterParams()
-
-        val responseFormat = params.schema?.let { schema ->
-            require(schema.capability in model.capabilities) {
-                "Model ${model.id} does not support structured output schema ${schema.name}"
-            }
-            when (schema) {
-                is LLMParams.Schema.JSON -> OpenAIResponseFormat.JsonSchema(
-                    JsonSchemaObject(
-                        name = schema.name,
-                        schema = schema.schema,
-                        strict = true
-                    )
-                )
-            }
-        }
+        val responseFormat = createResponseFormat(params.schema, model)
 
         val request = OpenRouterChatCompletionRequest(
             messages = messages,
@@ -116,35 +100,19 @@ public class OpenRouterLLMClient(
     }
 
     override fun processProviderChatResponse(response: OpenRouterChatCompletionResponse): List<LLMChoice> {
-        if (response.choices.isEmpty()) {
-            logger.error { "Empty choices in response" }
-            error("Empty choices in response")
-        }
-
+        require(response.choices.isNotEmpty()) { "Empty choices in response" }
         return response.choices.map { it.toMessageResponses(createMetaInfo(response.usage)) }
     }
 
-    override fun decodeStreamingResponse(data: String): OpenRouterChatCompletionStreamResponse {
-        return json.decodeFromString(data)
-    }
+    override fun decodeStreamingResponse(data: String): OpenRouterChatCompletionStreamResponse =
+        json.decodeFromString(data)
 
-    override fun decodeResponse(data: String): OpenRouterChatCompletionResponse {
-        return json.decodeFromString(data)
-    }
+    override fun decodeResponse(data: String): OpenRouterChatCompletionResponse =
+        json.decodeFromString(data)
 
-    override fun processStreamingChunk(chunk: OpenRouterChatCompletionStreamResponse): String? {
-        return chunk.choices.firstOrNull()?.delta?.content
-    }
+    override fun processStreamingChunk(chunk: OpenRouterChatCompletionStreamResponse): String? =
+        chunk.choices.firstOrNull()?.delta?.content
 
-    /**
-     * Executes a moderation action on the given prompt using the specified language model.
-     * This method is not supported by the OpenRouter API and will always throw an `UnsupportedOperationException`.
-     *
-     * @param prompt The [Prompt] object to be moderated, containing the messages and respective context.
-     * @param model The [LLModel] to be used for the moderation process.
-     * @return This method does not return a valid result as it always throws an exception.
-     * @throws UnsupportedOperationException Always thrown because moderation is not supported by the OpenRouter API.
-     */
     public override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
         logger.warn { "Moderation is not supported by OpenRouter API" }
         throw UnsupportedOperationException("Moderation is not supported by OpenRouter API.")

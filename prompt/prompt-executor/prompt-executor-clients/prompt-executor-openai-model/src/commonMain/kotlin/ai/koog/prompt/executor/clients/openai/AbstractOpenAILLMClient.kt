@@ -8,12 +8,14 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.openai.models.Content
+import ai.koog.prompt.executor.clients.openai.models.JsonSchemaObject
 import ai.koog.prompt.executor.clients.openai.models.OpenAIBaseLLMResponse
 import ai.koog.prompt.executor.clients.openai.models.OpenAIBaseLLMStreamResponse
 import ai.koog.prompt.executor.clients.openai.models.OpenAIChoice
 import ai.koog.prompt.executor.clients.openai.models.OpenAIContentPart
 import ai.koog.prompt.executor.clients.openai.models.OpenAIFunction
 import ai.koog.prompt.executor.clients.openai.models.OpenAIMessage
+import ai.koog.prompt.executor.clients.openai.models.OpenAIResponseFormat
 import ai.koog.prompt.executor.clients.openai.models.OpenAITool
 import ai.koog.prompt.executor.clients.openai.models.OpenAIToolCall
 import ai.koog.prompt.executor.clients.openai.models.OpenAIToolChoice
@@ -57,7 +59,6 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNamingStrategy
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonObjectBuilder
-import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -198,8 +199,8 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
                     event
                         .takeIf { it.data != "[DONE]" }
                         ?.data?.trim()
-                        ?.let { decodeStreamingResponse(it) }
-                        ?.let { processStreamingChunk(it) }
+                        ?.let(::decodeStreamingResponse)
+                        ?.let(::processStreamingChunk)
                         ?.let { emit(it) }
                 }
             }
@@ -250,8 +251,7 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
             }
 
             if (response.status.isSuccess()) {
-                val providerResponse = response.bodyAsText()
-                decodeResponse(providerResponse)
+                response.bodyAsText().let(::decodeResponse)
             } else {
                 val errorBody = response.bodyAsText()
                 logger.error { "Error from $clientName API: ${response.status}: $errorBody" }
@@ -260,9 +260,6 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
         }
     }
 
-    /**
-     * Converts prompt messages and tools to common LLM format.
-     */
     @OptIn(ExperimentalUuidApi::class)
     protected fun convertPromptToMessages(prompt: Prompt, model: LLModel): List<OpenAIMessage> {
         val messages = mutableListOf<OpenAIMessage>()
@@ -275,40 +272,36 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
             }
         }
 
-        with(messages) {
-            prompt.messages.forEach { message ->
-                when (message) {
-                    is Message.System -> {
-                        flushPendingCalls()
-                        add(OpenAIMessage.System(content = Content.Text(message.content)))
-                    }
+        prompt.messages.forEach { message ->
+            when (message) {
+                is Message.System -> {
+                    flushPendingCalls()
+                    messages += OpenAIMessage.System(content = Content.Text(message.content))
+                }
 
-                    is Message.User -> {
-                        flushPendingCalls()
-                        add(OpenAIMessage.User(content = message.toMessageContent(model)))
-                    }
+                is Message.User -> {
+                    flushPendingCalls()
+                    messages += OpenAIMessage.User(content = message.toMessageContent(model))
+                }
 
-                    is Message.Assistant -> {
-                        flushPendingCalls()
-                        add(OpenAIMessage.Assistant(content = Content.Text(message.content)))
-                    }
+                is Message.Assistant -> {
+                    flushPendingCalls()
+                    messages += OpenAIMessage.Assistant(content = Content.Text(message.content))
+                }
 
-                    is Message.Tool.Result -> {
-                        flushPendingCalls()
-                        add(
-                            OpenAIMessage.Tool(
-                                content = Content.Text(message.content),
-                                toolCallId = message.id ?: Uuid.random().toString()
-                            )
-                        )
-                    }
+                is Message.Tool.Result -> {
+                    flushPendingCalls()
+                    messages += OpenAIMessage.Tool(
+                        content = Content.Text(message.content),
+                        toolCallId = message.id ?: Uuid.random().toString()
+                    )
+                }
 
-                    is Message.Tool.Call -> {
-                        pendingCalls += OpenAIToolCall(
-                            message.id ?: Uuid.random().toString(),
-                            function = OpenAIFunction(message.tool, message.content)
-                        )
-                    }
+                is Message.Tool.Call -> {
+                    pendingCalls += OpenAIToolCall(
+                        message.id ?: Uuid.random().toString(),
+                        function = OpenAIFunction(message.tool, message.content)
+                    )
                 }
             }
         }
@@ -326,78 +319,61 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
             if (content.isNotEmpty()) {
                 add(OpenAIContentPart.Text(content))
             }
-
-            attachments.forEach { attachment ->
-                when (attachment) {
-                    is Attachment.Image -> {
-                        model.requireCapability(LLMCapability.Vision.Image)
-
-                        val imageUrl: String = when (val content = attachment.content) {
-                            is AttachmentContent.URL -> content.url
-                            is AttachmentContent.Binary -> "data:${attachment.mimeType};base64,${content.base64}"
-                            else -> throw IllegalArgumentException("Unsupported image attachment content: ${content::class}")
-                        }
-
-                        add(OpenAIContentPart.Image(OpenAIContentPart.ImageUrl(imageUrl)))
-                    }
-
-                    is Attachment.Audio -> {
-                        model.requireCapability(LLMCapability.Audio)
-
-                        val inputAudio: OpenAIContentPart.InputAudio = when (val content = attachment.content) {
-                            is AttachmentContent.Binary -> OpenAIContentPart.InputAudio(
-                                content.base64,
-                                attachment.format
-                            )
-
-                            else -> throw IllegalArgumentException("Unsupported audio attachment content: ${content::class}")
-                        }
-
-                        add(OpenAIContentPart.Audio(inputAudio))
-                    }
-
-                    is Attachment.File -> {
-                        model.requireCapability(LLMCapability.Document)
-
-                        val fileData: OpenAIContentPart.FileData = when (val content = attachment.content) {
-                            is AttachmentContent.Binary -> OpenAIContentPart.FileData(
-                                fileData = "data:${attachment.mimeType};base64,${content.base64}",
-                                filename = attachment.fileName
-                            )
-
-                            else -> throw IllegalArgumentException("Unsupported file attachment content: ${content::class}")
-                        }
-
-                        add(OpenAIContentPart.File(fileData))
-                    }
-
-                    else -> throw IllegalArgumentException("Unsupported attachment type: $attachment")
-                }
-            }
+            attachments.forEach { attachment -> add(attachment.toContentPart(model)) }
         }
 
         return Content.Parts(parts)
     }
 
-    protected fun ToolDescriptor.toOpenAIChatTool(): OpenAITool {
-        val parameters = this.paramsToJsonObject()
-        return OpenAITool(
-            function = OpenAIToolFunction(
-                name = name,
-                description = description,
-                parameters = parameters
-            )
-        )
+    private fun Attachment.toContentPart(model: LLModel): OpenAIContentPart = when (this) {
+        is Attachment.Image -> {
+            model.requireCapability(LLMCapability.Vision.Image)
+            val imageUrl = when (val attachmentContent = content) {
+                is AttachmentContent.URL -> attachmentContent.url
+                is AttachmentContent.Binary -> "data:$mimeType;base64,${attachmentContent.base64}"
+                else -> throw IllegalArgumentException("Unsupported image attachment content: ${attachmentContent::class}")
+            }
+            OpenAIContentPart.Image(OpenAIContentPart.ImageUrl(imageUrl))
+        }
+
+        is Attachment.Audio -> {
+            model.requireCapability(LLMCapability.Audio)
+            val inputAudio = when (val attachmentContent = content) {
+                is AttachmentContent.Binary -> OpenAIContentPart.InputAudio(attachmentContent.base64, format)
+                else -> throw IllegalArgumentException("Unsupported audio attachment content: ${attachmentContent::class}")
+            }
+            OpenAIContentPart.Audio(inputAudio)
+        }
+
+        is Attachment.File -> {
+            model.requireCapability(LLMCapability.Document)
+            val fileData = when (val attachmentContent = content) {
+                is AttachmentContent.Binary -> OpenAIContentPart.FileData(
+                    fileData = "data:$mimeType;base64,${attachmentContent.base64}",
+                    filename = fileName
+                )
+
+                else -> throw IllegalArgumentException("Unsupported file attachment content: ${attachmentContent::class}")
+            }
+            OpenAIContentPart.File(fileData)
+        }
+
+        else -> throw IllegalArgumentException("Unsupported attachment type: $this")
     }
+
+    protected fun ToolDescriptor.toOpenAIChatTool(): OpenAITool = OpenAITool(
+        function = OpenAIToolFunction(
+            name = name,
+            description = description,
+            parameters = paramsToJsonObject()
+        )
+    )
 
     protected fun ToolDescriptor.paramsToJsonObject(): JsonObject =
         buildJsonObject {
             put("type", "object")
             putJsonObject("properties") {
-                requiredParameters.forEach { param ->
-                    put(param.name, param.toJsonSchema())
-                }
-                optionalParameters.forEach { param ->
+                (requiredParameters + optionalParameters).forEach { param ->
                     put(param.name, param.toJsonSchema())
                 }
             }
@@ -416,7 +392,7 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
     }
 
     protected fun ToolParameterDescriptor.toJsonSchema(): JsonObject = buildJsonObject {
-        put("description", JsonPrimitive(description))
+        put("description", description)
         fillJsonSchema(type)
     }
 
@@ -504,12 +480,27 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
      * Creates ResponseMetaInfo from usage data.
      * Should be used by concrete implementations when processing responses.
      */
-    protected fun createMetaInfo(usage: OpenAIUsage?): ResponseMetaInfo {
-        return ResponseMetaInfo.create(
-            clock,
-            totalTokensCount = usage?.totalTokens,
-            inputTokensCount = usage?.promptTokens,
-            outputTokensCount = usage?.completionTokens
-        )
+    protected fun createMetaInfo(usage: OpenAIUsage?): ResponseMetaInfo = ResponseMetaInfo.create(
+        clock,
+        totalTokensCount = usage?.totalTokens,
+        inputTokensCount = usage?.promptTokens,
+        outputTokensCount = usage?.completionTokens
+    )
+
+    protected fun createResponseFormat(schema: LLMParams.Schema?, model: LLModel): OpenAIResponseFormat? {
+        return schema?.let {
+            require(it.capability in model.capabilities) {
+                "Model ${model.id} does not support structured output schema ${it.name}"
+            }
+            when (it) {
+                is LLMParams.Schema.JSON -> OpenAIResponseFormat.JsonSchema(
+                    JsonSchemaObject(
+                        name = it.name,
+                        schema = it.schema,
+                        strict = true
+                    )
+                )
+            }
+        }
     }
 }

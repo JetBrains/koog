@@ -8,6 +8,8 @@ import ai.koog.prompt.executor.clients.openai.models.ServiceTier
 import ai.koog.prompt.executor.clients.openai.models.Truncation
 import ai.koog.prompt.params.LLMParams
 
+internal sealed interface OpenAIParams
+
 
 internal fun LLMParams.toOpenAIChatParams(): OpenAIChatParams {
     if (this is OpenAIChatParams) return this
@@ -99,7 +101,7 @@ public open class OpenAIChatParams(
     temperature, maxTokens, numberOfChoices,
     speculation, schema, toolChoice,
     user, includeThoughts, thinkingBudget
-) {
+), OpenAIParams {
     init {
         require(topP == null || topP in 0.0..1.0) {
             "topP must be in (0.0, 1.0], but was $topP"
@@ -315,7 +317,7 @@ public open class OpenAIResponsesParams(
     temperature, maxTokens, numberOfChoices,
     speculation, schema, toolChoice,
     user, includeThoughts, thinkingBudget
-) {
+), OpenAIParams {
     init {
         require(topP == null || topP in 0.0..1.0) {
             "topP must be in (0.0, 1.0], but was $topP"
