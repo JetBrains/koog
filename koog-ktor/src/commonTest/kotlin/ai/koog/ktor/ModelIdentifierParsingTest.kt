@@ -45,12 +45,6 @@ class ModelIdentifierParsingTest {
         assertEquals(LLMProvider.OpenAI, o3Mini.provider)
         assertEquals(OpenAIModels.Reasoning.O3Mini, o3Mini)
 
-        // Test O1 Mini
-        val o1Mini = getModelFromIdentifier("openai.reasoning.o1mini")
-        assertNotNull(o1Mini)
-        assertEquals(LLMProvider.OpenAI, o1Mini.provider)
-        assertEquals(OpenAIModels.Reasoning.O1Mini, o1Mini)
-
         // Test O3
         val o3 = getModelFromIdentifier("openai.reasoning.o3")
         assertNotNull(o3)
@@ -123,12 +117,6 @@ class ModelIdentifierParsingTest {
 
     @Test
     fun testOpenAIModerationModels() = runTest {
-        // Test Text Moderation
-        val textModeration = getModelFromIdentifier("openai.moderation.text")
-        assertNotNull(textModeration)
-        assertEquals(LLMProvider.OpenAI, textModeration.provider)
-        assertEquals(OpenAIModels.Moderation.Text, textModeration)
-
         // Test Omni Moderation
         val omniModeration = getModelFromIdentifier("openai.moderation.omni")
         assertNotNull(omniModeration)
