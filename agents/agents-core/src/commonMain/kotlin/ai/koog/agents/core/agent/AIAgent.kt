@@ -133,7 +133,7 @@ public open class AIAgent<Input, Output>(
 
     private val pipeline = AIAgentPipeline()
 
-    override val id: String = id ?: Uuid.random().toString()
+    override val id: String by lazy { id ?: Uuid.random().toString() }
 
     init {
         FeatureContext(this).installFeatures()
