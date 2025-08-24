@@ -95,7 +95,7 @@ public open class AIAgent<Input, Output>(
     public val promptExecutor: PromptExecutor,
     private val strategy: AIAgentStrategy<Input, Output>,
     public val agentConfig: AIAgentConfigBase,
-    override val id: String = Uuid.random().toString(),
+    id: String? = null,
     public val toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     public val clock: Clock = Clock.System,
     private val installFeatures: FeatureContext.() -> Unit = {},
@@ -132,6 +132,8 @@ public open class AIAgent<Input, Output>(
     private val runningMutex = Mutex()
 
     private val pipeline = AIAgentPipeline()
+
+    override val id: String = id ?: Uuid.random().toString()
 
     init {
         FeatureContext(this).installFeatures()
