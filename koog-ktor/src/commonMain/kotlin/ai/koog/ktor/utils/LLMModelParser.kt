@@ -182,7 +182,10 @@ private fun openAI(parts: List<String>, identifier: String): LLModel? {
 private val OPENAI_MODELS_MAP = mapOf(
     "chat" to mapOf(
         "gpt4o" to OpenAIModels.Chat.GPT4o,
-        "gpt4_1" to OpenAIModels.Chat.GPT4_1
+        "gpt4_1" to OpenAIModels.Chat.GPT4_1,
+        "gpt5" to OpenAIModels.Chat.GPT5,
+        "gpt5mini" to OpenAIModels.Chat.GPT5Mini,
+        "gpt5nano" to OpenAIModels.Chat.GPT5Nano,
     ),
     "reasoning" to mapOf(
         "o4mini" to OpenAIModels.Reasoning.O4Mini,

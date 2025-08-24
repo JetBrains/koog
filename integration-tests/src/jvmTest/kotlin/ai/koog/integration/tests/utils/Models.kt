@@ -22,10 +22,12 @@ object Models {
         return Stream.of(
             OpenAIModels.Chat.GPT4o,
             OpenAIModels.Chat.GPT4_1,
+            OpenAIModels.Chat.GPT5,
+            OpenAIModels.Chat.GPT5Mini,
+            OpenAIModels.Chat.GPT5Nano,
 
             OpenAIModels.Reasoning.O4Mini,
             OpenAIModels.Reasoning.O3Mini,
-            OpenAIModels.Reasoning.O1Mini,
             OpenAIModels.Reasoning.O3,
             OpenAIModels.Reasoning.O1,
 
