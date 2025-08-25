@@ -12,6 +12,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import io.ktor.utils.io.ByteReadChannel
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertSame
@@ -32,7 +33,7 @@ class GoogleModelsTest {
     }
 
     @Test
-    fun `Test when FLASH_2_5 returns no parts GoogleLLMClient does not fail`() {
+    fun `Test when FLASH_2_5 returns no parts GoogleLLMClient does not fail`() = runTest {
         val mockEngine = MockEngine { request ->
             respond(
                 content = ByteReadChannel(
@@ -74,20 +75,17 @@ class GoogleModelsTest {
             baseClient = HttpClient(mockEngine) // Ktor client would always respond with the json from above
         )
 
-        runBlocking {
-            val responses = googleClient.execute(
-                prompt = prompt("test") { user("What is the capital of France?") },
-                model = GoogleModels.Gemini2_5Flash
-            )
+        val responses = googleClient.execute(
+            prompt = prompt("test") { user("What is the capital of France?") },
+            model = GoogleModels.Gemini2_5Flash
+        )
 
-            assertEquals(1, responses.size)
-            // When no parts returned -- content should be interpreted as empty
-            assertEquals("", responses.single().content)
-            // Also let's check some other fields parsing
-            assertEquals(Message.Role.Assistant, responses.single().role)
-            assertEquals(36, responses.single().metaInfo.inputTokensCount)
-            assertEquals(146, responses.single().metaInfo.totalTokensCount)
-        }
-
+        assertEquals(1, responses.size)
+        // When no parts returned -- content should be interpreted as empty
+        assertEquals("", responses.single().content)
+        // Also let's check some other fields parsing
+        assertEquals(Message.Role.Assistant, responses.single().role)
+        assertEquals(36, responses.single().metaInfo.inputTokensCount)
+        assertEquals(146, responses.single().metaInfo.totalTokensCount)
     }
 }
