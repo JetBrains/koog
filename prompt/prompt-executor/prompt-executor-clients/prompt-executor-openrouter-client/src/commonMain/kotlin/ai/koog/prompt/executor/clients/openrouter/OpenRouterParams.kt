@@ -36,14 +36,17 @@ internal fun LLMParams.toOpenRouterParams(): OpenRouterParams {
  * @property stop Stop sequences (0–4 items); generation halts before any of these.
  * @property topLogprobs Number of top alternatives per position (0–20). Requires [logprobs] = true.
  * @property topP Nucleus sampling in (0.0, 1.0]; use **instead of** [temperature].
- * @property topK
- * @property repetitionPenalty
- * @property minP
- * @property topA
- * @property transforms
- * @property models
- * @property route
- * @property provider
+ * @property topK Number of top tokens to consider when generating output (min 1).
+ * @property repetitionPenalty Number in (0.0, 2.0] — penalizes token repetition.
+ * @property minP Minimum cumulative probability for token inclusion in sampling.
+ * @property topA Temperature scaling based on marginal probability gain.
+ * @property transforms List of context transforms.
+ *   Defines how context is transformed when it exceeds the model's token limit.
+ *   Default is ["middle-out"] which truncates from the middle of the prompt.
+ *   Use empty list [] for no transformations.
+ * @property models List of allowed models for this request.
+ * @property route Request routing identifier.
+ * @property provider Model provider preferences.
  */
 public open class OpenRouterParams(
     temperature: Double? = null,
@@ -78,14 +81,22 @@ public open class OpenRouterParams(
         require(topP == null || topP in 0.0..1.0) {
             "topP must be in (0.0, 1.0], but was $topP"
         }
-        require(topLogprobs == null || topLogprobs in 0..20) {
-            "topLogprobs must be in [0, 20], but was $topLogprobs"
+        if (topLogprobs != null) {
+            require(logprobs == true) {
+                "`topLogprobs` requires `logprobs=true`."
+            }
+            require(topLogprobs in 0..20) {
+                "topLogprobs must be in [0, 20], but was $topLogprobs"
+            }
         }
         require(frequencyPenalty == null || frequencyPenalty in -2.0..2.0) {
             "frequencyPenalty must be in [-2.0, 2.0], but was $frequencyPenalty"
         }
         require(presencePenalty == null || presencePenalty in -2.0..2.0) {
             "presencePenalty must be in [-2.0, 2.0], but was $presencePenalty"
+        }
+        require(repetitionPenalty == null || repetitionPenalty in 0.0..2.0) {
+            "repetitionPenalty must be in (0.0, 2.0], but was $repetitionPenalty"
         }
         require(topK == null || topK >= 1) {
             "topK must be in [1, Infinity], but was $topK"
@@ -95,12 +106,6 @@ public open class OpenRouterParams(
         }
         require(topA == null || topA in 0.0..1.0) {
             "topA must be in [0.0, 1.0], but was $topA"
-        }
-        // --- Log-probabilities ---
-        if (topLogprobs != null) {
-            require(logprobs == true) {
-                "topLogprobs requires logprobs=true."
-            }
         }
 
         // --- Stop sequences ---

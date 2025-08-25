@@ -36,7 +36,7 @@ internal fun LLMParams.toDeepSeekParams(): DeepSeekParams {
  * @property topLogprobs Number of top alternatives per position (0–20). Requires [logprobs] = true.
  * @property topP Nucleus sampling in (0.0, 1.0]; use **instead of** [temperature].
  */
-public open class DeepSeekParams(
+public class DeepSeekParams(
     temperature: Double? = null,
     maxTokens: Int? = null,
     numberOfChoices: Int? = null,
@@ -61,23 +61,19 @@ public open class DeepSeekParams(
         require(topP == null || topP in 0.0..1.0) {
             "topP must be in (0.0, 1.0], but was $topP"
         }
-        require(topLogprobs == null || topLogprobs in 0..20) {
-            "topLogprobs must be in [0, 20], but was $topLogprobs"
+        if (topLogprobs != null) {
+            require(logprobs == true) {
+                "`topLogprobs` requires `logprobs=true`."
+            }
+            require(topLogprobs in 0..20) {
+                "topLogprobs must be in [0, 20], but was $topLogprobs"
+            }
         }
         require(frequencyPenalty == null || frequencyPenalty in -2.0..2.0) {
             "frequencyPenalty must be in [-2.0, 2.0], but was $frequencyPenalty"
         }
         require(presencePenalty == null || presencePenalty in -2.0..2.0) {
             "presencePenalty must be in [-2.0, 2.0], but was $presencePenalty"
-        }
-        // --- Log-probabilities ---
-        if (topLogprobs != null) {
-            require(topLogprobs in 0..20) {
-                "topLogprobs must be in [0, 20], but was $topLogprobs"
-            }
-            require(logprobs == true) {
-                "topLogprobs requires logprobs=true."
-            }
         }
 
         // --- Stop sequences ---
