@@ -22,14 +22,12 @@ import ai.koog.agents.utils.use
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.message.Message
 import io.opentelemetry.sdk.trace.export.SpanExporter
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 
 abstract class TraceStructureTestBase(private val openTelemetryConfigurator: OpenTelemetryConfig.() -> Unit) {
 
@@ -66,21 +64,28 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
 
             val actualSpans = mockSpanExporter.collectedSpans
 
-            assertTrue { actualSpans.filter { it.name.startsWith("run.") }.size == 1 }
-            assertTrue { actualSpans.filter { it.name == "node.__start__" }.size == 1 }
-            assertTrue { actualSpans.filter { it.name == "node.llm-call" }.size == 1 }
-            assertTrue { actualSpans.filter { it.name == "llm.test-prompt-id" }.size == 1 }
+            val spansRun = actualSpans.filter { it.name.startsWith("run.") }
+            assertEquals(1, spansRun.size)
 
-            val runNode = actualSpans.first { it.name.startsWith("run.") }
-            val startNode = actualSpans.first { it.name == "node.__start__" }
-            val llmNode = actualSpans.first { it.name == "node.llm-call" }
-            val llmGeneration = actualSpans.first { it.name == "llm.test-prompt-id" }
+            val spansStartNode = actualSpans.filter { it.name == "node.__start__" }
+            assertEquals(1, spansStartNode.size)
 
-            assertTrue { runNode.spanId == startNode.parentSpanId }
-            assertTrue { runNode.spanId == llmNode.parentSpanId }
-            assertTrue { llmNode.spanId == llmGeneration.parentSpanId }
+            val spansLLMCall = actualSpans.filter { it.name == "node.llm-call" }
+            assertEquals(1, spansLLMCall.size)
 
-            val actualSpanAttributes = llmGeneration.attributes.asMap()
+            val spansLLMGeneration = actualSpans.filter { it.name == "llm.test-prompt-id" }
+            assertEquals(1, spansLLMGeneration.size)
+
+            val spanRunNode = spansRun.first()
+            val spanStartNode = spansStartNode.first()
+            val spanLLMNode = spansLLMCall.first()
+            val spanLLMGeneration = spansLLMGeneration.first()
+
+            assertEquals(spanStartNode.parentSpanId, spanRunNode.spanId)
+            assertEquals(spanLLMNode.parentSpanId, spanRunNode.spanId)
+            assertEquals(spanLLMGeneration.parentSpanId, spanLLMNode.spanId)
+
+            val actualSpanAttributes = spanLLMGeneration.attributes.asMap()
                 .map { (key, value) -> key.key to value }
                 .toMap()
 
@@ -109,6 +114,10 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
         }
     }
 
+    abstract fun testLLMCallToolCallLLMCallGetExpectedInitialLLMCallSpanAttributes(model: LLModel, temperature: Double, systemPrompt: String, userPrompt: String, runId: String, toolCallId: String): Map<String, Any>
+
+    abstract fun testLLMCallToolCallLLMCallGetExpectedFinalLLMCallSpansAttributes(model: LLModel, temperature: Double, systemPrompt: String, userPrompt: String, runId: String, toolCallId: String, toolResponse: String, finalResponse: String): Map<String, Any>
+
     @Test
     fun testLLMCallToolCallLLMCall() = runBlocking {
         MockSpanExporter().use { mockSpanExporter ->
@@ -131,9 +140,11 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
             val toolResponse = TestGetWeatherTool.DEFAULT_PARIS_RESULT
             val finalResponse = "The weather in Paris is rainy and overcast, with temperatures around 57°F"
 
+            val toolCallId = "get-weather-tool-call-id"
+
             val mockExecutor = getMockExecutor {
-                mockLLMToolCall(TestGetWeatherTool, toolCallArgs) onRequestEquals userPrompt
-                mockLLMAnswer(finalResponse) onRequestContains toolResponse
+                mockLLMToolCall(tool = TestGetWeatherTool, args = toolCallArgs, toolCallId = toolCallId) onRequestEquals userPrompt
+                mockLLMAnswer(response = finalResponse) onRequestContains toolResponse
             }
 
             val toolRegistry = ToolRegistry {
@@ -151,46 +162,51 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
                 spanExporter = mockSpanExporter
             )
 
+            // Assert collected spans
             val actualSpans = mockSpanExporter.collectedSpans
 
-            assertTrue { actualSpans.filter { it.name == "tool.Get whether" }.size == 1 }
+            val toolSpans = actualSpans.filter { it.name == "tool.Get whether" }
+            assertEquals(1, toolSpans.size)
 
-            val runNode = actualSpans.first { it.name.startsWith("run.") }
-            val startNode = actualSpans.first { it.name == "node.__start__" }
-            val llmRequestNode = actualSpans.first { it.name == "node.LLM Request" }
-            val executeToolNode = actualSpans.first { it.name == "node.Execute Tool" }
-            val sendToolResultNode = actualSpans.first { it.name == "node.Send Tool Result" }
-            val toolCallSpan = actualSpans.first { it.name == "tool.Get whether" }
-            val llmSpans = actualSpans.filter { it.name == "llm.test-prompt-id" }
+            val runNode = actualSpans.firstOrNull { it.name.startsWith("run.") }
+            assertNotNull(runNode)
+
+            val startNode = actualSpans.firstOrNull { it.name == "node.__start__" }
+            assertNotNull(startNode)
+
+            val llmRequestNode = actualSpans.firstOrNull { it.name == "node.LLM Request" }
+            assertNotNull(llmRequestNode)
+
+            val executeToolNode = actualSpans.firstOrNull { it.name == "node.Execute Tool" }
+            assertNotNull(executeToolNode)
+
+            val sendToolResultNode = actualSpans.firstOrNull { it.name == "node.Send Tool Result" }
+            assertNotNull(sendToolResultNode)
+
+            val toolCallSpan = actualSpans.firstOrNull { it.name == "tool.Get whether" }
+            assertNotNull(toolCallSpan)
 
             // All nodes should have runNode as parent
-            assertTrue { runNode.spanId == startNode.parentSpanId }
-            assertTrue { runNode.spanId == llmRequestNode.parentSpanId }
-            assertTrue { runNode.spanId == executeToolNode.parentSpanId }
-            assertTrue { runNode.spanId == sendToolResultNode.parentSpanId }
+            assertEquals(startNode.parentSpanId, runNode.spanId)
+            assertEquals(llmRequestNode.parentSpanId, runNode.spanId)
+            assertEquals(executeToolNode.parentSpanId, runNode.spanId)
+            assertEquals(sendToolResultNode.parentSpanId, runNode.spanId)
 
             // Check LLM Call span with the initial call and tool call request
+            val llmSpans = actualSpans.filter { it.name == "llm.test-prompt-id" }
             val actualInitialLLMCallSpan = llmSpans.firstOrNull { it.parentSpanId == llmRequestNode.spanId }
             assertNotNull(actualInitialLLMCallSpan)
 
             val actualInitialLLMCallSpanAttributes =
                 actualInitialLLMCallSpan.attributes.asMap().map { (key, value) -> key.key to value }.toMap()
 
-            val expectedInitialLLMCallSpansAttributes = mapOf(
-                "gen_ai.system" to model.provider.id,
-                "gen_ai.conversation.id" to mockSpanExporter.lastRunId,
-                "gen_ai.operation.name" to "chat",
-                "gen_ai.request.temperature" to temperature,
-                "gen_ai.request.model" to model.id,
-                "gen_ai.response.finish_reasons" to listOf(SpanAttributes.Response.FinishReasonType.ToolCalls.id),
-
-                "gen_ai.prompt.0.role" to Message.Role.System.name.lowercase(),
-                "gen_ai.prompt.0.content" to systemPrompt,
-                "gen_ai.prompt.1.role" to Message.Role.User.name.lowercase(),
-                "gen_ai.prompt.1.content" to userPrompt,
-                "gen_ai.completion.0.role" to Message.Role.Assistant.name.lowercase(),
-                "gen_ai.completion.0.content" to "[{\"function\":{\"name\":\"${TestGetWeatherTool.name}\",\"arguments\":\"{\"location\":\"Paris\"}\"},\"id\":\"\",\"type\":\"function\"}]",
-                "gen_ai.completion.0.finish_reason" to SpanAttributes.Response.FinishReasonType.ToolCalls.id,
+            val expectedInitialLLMCallSpansAttributes = testLLMCallToolCallLLMCallGetExpectedInitialLLMCallSpanAttributes(
+                model = model,
+                temperature = temperature,
+                systemPrompt = systemPrompt,
+                userPrompt = userPrompt,
+                runId = mockSpanExporter.lastRunId,
+                toolCallId = toolCallId,
             )
 
             assertEquals(expectedInitialLLMCallSpansAttributes.size, actualInitialLLMCallSpanAttributes.size)
@@ -203,35 +219,29 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
             val actualFinalLLMCallSpanAttributes =
                 actualFinalLLMCallSpan.attributes.asMap().map { (key, value) -> key.key to value }.toMap()
 
-            val expectedFinalLLMCallSpansAttributes = mapOf(
-                "gen_ai.system" to model.provider.id,
-                "gen_ai.conversation.id" to mockSpanExporter.lastRunId,
-                "gen_ai.operation.name" to "chat",
-                "gen_ai.request.temperature" to temperature,
-                "gen_ai.request.model" to model.id,
-                "gen_ai.response.finish_reasons" to listOf(SpanAttributes.Response.FinishReasonType.Stop.id),
-
-                "gen_ai.prompt.0.role" to Message.Role.System.name.lowercase(),
-                "gen_ai.prompt.0.content" to systemPrompt,
-                "gen_ai.prompt.1.role" to Message.Role.User.name.lowercase(),
-                "gen_ai.prompt.1.content" to userPrompt,
-                "gen_ai.prompt.2.role" to Message.Role.Tool.name.lowercase(),
-                "gen_ai.prompt.2.content" to TestGetWeatherTool.DEFAULT_PARIS_RESULT,
-                "gen_ai.completion.0.role" to Message.Role.Assistant.name.lowercase(),
-                "gen_ai.completion.0.content" to finalResponse,
+            val expectedFinalLLMCallSpansAttributes = testLLMCallToolCallLLMCallGetExpectedFinalLLMCallSpansAttributes(
+                model = model,
+                temperature = temperature,
+                systemPrompt = systemPrompt,
+                userPrompt = userPrompt,
+                runId = mockSpanExporter.lastRunId,
+                toolCallId = toolCallId,
+                toolResponse = toolResponse,
+                finalResponse = finalResponse,
             )
 
             assertEquals(expectedFinalLLMCallSpansAttributes.size, actualFinalLLMCallSpanAttributes.size)
             assertMapsEqual(expectedFinalLLMCallSpansAttributes, actualFinalLLMCallSpanAttributes)
 
             // Tool span should have executed tool node as parent
-            assertTrue { executeToolNode.spanId == toolCallSpan.parentSpanId }
+            assertEquals(executeToolNode.spanId, toolCallSpan.parentSpanId)
             val actualToolCallSpanAttributes =
                 toolCallSpan.attributes.asMap().map { (key, value) -> key.key to value }.toMap()
 
             val expectedToolCallSpanAttributes = mapOf(
                 "gen_ai.tool.name" to TestGetWeatherTool.name,
                 "gen_ai.tool.description" to TestGetWeatherTool.descriptor.description,
+                "gen_ai.tool.call.id" to toolCallId,
                 "input.value" to "{\"location\":\"Paris\"}",
                 "output.value" to TestGetWeatherTool.DEFAULT_PARIS_RESULT,
             )
@@ -255,6 +265,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
                 edge(llmRequest forwardTo executeTool1 onToolCall { true })
                 edge(executeTool1 forwardTo sendToolResult1)
                 edge(sendToolResult1 forwardTo executeTool2 onToolCall { true })
+                edge(sendToolResult1 forwardTo nodeFinish onAssistantMessage { true })
                 edge(executeTool2 forwardTo sendToolResult2)
                 edge(sendToolResult2 forwardTo nodeFinish transformed { input -> input.content })
             }
@@ -274,8 +285,8 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
             val finalResponse = "The weather in Paris is rainy (57°F) and in London it's cloudy (62°F)"
 
             val mockExecutor = getMockExecutor {
-                mockLLMToolCall(TestGetWeatherTool, toolCallArgs1) onRequestEquals userPrompt
-                mockLLMToolCall(TestGetWeatherTool, toolCallArgs2) onRequestContains toolResponse1
+                mockLLMToolCall(tool = TestGetWeatherTool, args = toolCallArgs1) onRequestEquals userPrompt
+                mockLLMToolCall(tool = TestGetWeatherTool, args = toolCallArgs2) onRequestContains toolResponse1
                 mockLLMAnswer(finalResponse) onRequestContains toolResponse2
             }
 
@@ -344,8 +355,6 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
         }
     }
 
-    //region Private Methods
-
     /**
      * Runs an agent with the given strategy and verifies the spans.
      */
@@ -384,6 +393,4 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
             agent.run(userPrompt ?: "User prompt message")
         }
     }
-
-    //endregion Private Methods
 }

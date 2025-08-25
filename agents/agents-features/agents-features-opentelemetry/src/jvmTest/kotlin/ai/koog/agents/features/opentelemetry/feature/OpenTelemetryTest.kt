@@ -526,8 +526,10 @@ class OpenTelemetryTest {
                 tool(TestGetWeatherTool)
             }
 
+            val toolCallId = "tool-call-id"
+
             val mockExecutor = getMockExecutor(clock = testClock) {
-                mockLLMToolCall(TestGetWeatherTool, TestGetWeatherTool.Args("Paris")) onRequestEquals userPrompt
+                mockLLMToolCall(tool = TestGetWeatherTool, args = TestGetWeatherTool.Args("Paris"), toolCallId = toolCallId) onRequestEquals userPrompt
                 mockLLMAnswer(mockResponse) onRequestContains TestGetWeatherTool.DEFAULT_PARIS_RESULT
             }
 
@@ -620,10 +622,17 @@ class OpenTelemetryTest {
                                 "role" to Message.Role.User.name.lowercase(),
                                 "content" to userPrompt,
                             ),
+                            "gen_ai.choice" to mapOf(
+                                "gen_ai.system" to model.provider.id,
+                                "role" to Message.Role.Tool.name.lowercase(),
+                                "tool_calls" to """[{"function":{"name":"${TestGetWeatherTool.name}","arguments":"{\"location\":\"Paris\"}"},"id":"$toolCallId","type":"function"}]""",
+                                "finish_reason" to FinishReasonType.ToolCalls.id,
+                            ),
                             "gen_ai.tool.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
                                 "role" to Message.Role.Tool.name.lowercase(),
                                 "content" to TestGetWeatherTool.DEFAULT_PARIS_RESULT,
+                                "id" to toolCallId,
                             ),
                             "gen_ai.assistant.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
@@ -649,6 +658,7 @@ class OpenTelemetryTest {
                             "input.value" to "{\"location\":\"Paris\"}",
                             "gen_ai.tool.description" to "The test tool to get a whether based on provided location.",
                             "gen_ai.tool.name" to "Get whether",
+                            "gen_ai.tool.call.id" to toolCallId,
                         ),
                         "events" to mapOf()
                     )
@@ -687,7 +697,7 @@ class OpenTelemetryTest {
                                 "gen_ai.system" to model.provider.id,
                                 "index" to 0L,
                                 "role" to Message.Role.Tool.name.lowercase(),
-                                "tool_calls" to """[{"function":{"name":"${TestGetWeatherTool.name}","arguments":"{\"location\":\"Paris\"}"},"id":"","type":"function"}]""",
+                                "tool_calls" to """[{"function":{"name":"${TestGetWeatherTool.name}","arguments":"{\"location\":\"Paris\"}"},"id":"$toolCallId","type":"function"}]""",
                                 "finish_reason" to FinishReasonType.ToolCalls.id,
                             ),
                         )
@@ -739,8 +749,10 @@ class OpenTelemetryTest {
                 tool(TestGetWeatherTool)
             }
 
+            val toolCallId = "tool-call-id"
+
             val mockExecutor = getMockExecutor(clock = testClock) {
-                mockLLMToolCall(TestGetWeatherTool, TestGetWeatherTool.Args("Paris")) onRequestEquals userPrompt
+                mockLLMToolCall(tool = TestGetWeatherTool, args = TestGetWeatherTool.Args("Paris"), toolCallId = toolCallId) onRequestEquals userPrompt
                 mockLLMAnswer(mockResponse) onRequestContains "57°F"
             }
 
@@ -833,10 +845,17 @@ class OpenTelemetryTest {
                                 "role" to Message.Role.User.name.lowercase(),
                                 "content" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
                             ),
+                            "gen_ai.choice" to mapOf(
+                                "gen_ai.system" to model.provider.id,
+                                "role" to Message.Role.Tool.name.lowercase(),
+                                "tool_calls" to "[{\"function\":{\"name\":\"${HiddenString.HIDDEN_STRING_PLACEHOLDER}\",\"arguments\":\"${HiddenString.HIDDEN_STRING_PLACEHOLDER}\"},\"id\":\"$toolCallId\",\"type\":\"function\"}]",
+                                "finish_reason" to FinishReasonType.ToolCalls.id,
+                            ),
                             "gen_ai.tool.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
                                 "role" to Message.Role.Tool.name.lowercase(),
                                 "content" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
+                                "id" to toolCallId,
                             ),
                             "gen_ai.assistant.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
@@ -862,6 +881,7 @@ class OpenTelemetryTest {
                             "input.value" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
                             "gen_ai.tool.description" to "The test tool to get a whether based on provided location.",
                             "gen_ai.tool.name" to "Get whether",
+                            "gen_ai.tool.call.id" to toolCallId,
                         ),
                         "events" to mapOf()
                     )
@@ -900,7 +920,7 @@ class OpenTelemetryTest {
                                 "gen_ai.system" to model.provider.id,
                                 "index" to 0L,
                                 "role" to Message.Role.Tool.name.lowercase(),
-                                "tool_calls" to "[{\"function\":{\"name\":\"${HiddenString.HIDDEN_STRING_PLACEHOLDER}\",\"arguments\":\"${HiddenString.HIDDEN_STRING_PLACEHOLDER}\"},\"id\":\"\",\"type\":\"function\"}]",
+                                "tool_calls" to "[{\"function\":{\"name\":\"${HiddenString.HIDDEN_STRING_PLACEHOLDER}\",\"arguments\":\"${HiddenString.HIDDEN_STRING_PLACEHOLDER}\"},\"id\":\"$toolCallId\",\"type\":\"function\"}]",
                                 "finish_reason" to FinishReasonType.ToolCalls.id,
                             ),
                         )

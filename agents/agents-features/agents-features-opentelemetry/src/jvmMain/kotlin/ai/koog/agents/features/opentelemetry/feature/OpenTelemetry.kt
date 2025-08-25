@@ -275,11 +275,20 @@ public class OpenTelemetry {
                 )
 
                 // Add events to the InferenceSpan after the span is created
-                val eventsFromMessages = eventContext.prompt.messages.mapNotNull { message ->
+                val eventsFromMessages = eventContext.prompt.messages.map { message ->
                     when (message) {
-                        is Message.System -> SystemMessageEvent(provider, message)
-                        is Message.User -> UserMessageEvent(provider, message)
-                        is Message.Assistant -> AssistantMessageEvent(provider, message)
+                        is Message.System -> {
+                            SystemMessageEvent(provider, message)
+                        }
+                        is Message.User -> {
+                            UserMessageEvent(provider, message)
+                        }
+                        is Message.Assistant -> {
+                            AssistantMessageEvent(provider, message)
+                        }
+                        is Message.Tool.Call -> {
+                            ChoiceEvent(provider, message, arguments = message.contentJson)
+                        }
                         is Message.Tool.Result -> {
                             ToolMessageEvent(
                                 provider = provider,
@@ -287,7 +296,6 @@ public class OpenTelemetry {
                                 content = message.content
                             )
                         }
-                        else -> null
                     }
                 }
 
@@ -384,6 +392,7 @@ public class OpenTelemetry {
                     parent = nodeExecuteSpan,
                     tool = eventContext.tool,
                     toolArgs = eventContext.toolArgs,
+                    toolCallId = eventContext.toolCallId,
                 )
 
                 spanAdapter?.onBeforeSpanStarted(executeToolSpan)

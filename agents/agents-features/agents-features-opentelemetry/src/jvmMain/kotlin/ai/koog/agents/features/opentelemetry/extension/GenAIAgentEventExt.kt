@@ -2,6 +2,7 @@ package ai.koog.agents.features.opentelemetry.extension
 
 import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute
 import ai.koog.agents.features.opentelemetry.event.GenAIAgentEvent
+import ai.koog.agents.features.opentelemetry.integration.isSdkArrayPrimitive
 import ai.koog.agents.features.opentelemetry.span.GenAIAgentSpan
 import ai.koog.agents.utils.HiddenString
 
@@ -42,14 +43,7 @@ internal fun GenAIAgentEvent.bodyFieldsToAttributes(verbose: Boolean) {
                 is List<*> -> {
                     // SDK Array Primitives
                     val isSdkArrayPrimitive = value.all { v ->
-                        v is HiddenString ||
-                            v is CharSequence ||
-                            v is Char ||
-                            v is Boolean ||
-                            v is Long ||
-                            v is Int ||
-                            v is Float ||
-                            v is Double
+                        v != null && v.isSdkArrayPrimitive
                     }
 
                     // Add value as is if SDK supports this type and [String] type for the rest

@@ -4,6 +4,7 @@ import ai.koog.agents.features.opentelemetry.attribute.Attribute
 import ai.koog.agents.features.opentelemetry.event.EventBodyField
 import ai.koog.agents.features.opentelemetry.event.GenAIAgentEvent
 import ai.koog.agents.features.opentelemetry.span.GenAIAgentSpan
+import ai.koog.agents.utils.HiddenString
 
 /**
  * Transfers specific body fields of an event to custom attributes in the span
@@ -49,3 +50,13 @@ internal inline fun <reified TBodyField> GenAIAgentSpan.replaceBodyFields(
 
     eventBodyFields.forEach { bodyField -> event.removeBodyField(bodyField) }
 }
+
+internal val Any.isSdkArrayPrimitive
+    get() = this is HiddenString ||
+        this is CharSequence ||
+        this is Char ||
+        this is Boolean ||
+        this is Long ||
+        this is Int ||
+        this is Float ||
+        this is Double
