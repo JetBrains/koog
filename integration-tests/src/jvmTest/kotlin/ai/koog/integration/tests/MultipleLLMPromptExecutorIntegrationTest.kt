@@ -1213,6 +1213,11 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testStructuredOutputManual(model: LLModel) = runTest {
         assumeTrue(
+            model.provider !== LLMProvider.Google,
+            "Google models fail to return manually requested structured output without fixing"
+        )
+
+        assumeTrue(
             model.capabilities.contains(LLMCapability.Schema.JSON.Standard),
             "Model does not support Standard JSON Schema"
         )
@@ -1233,11 +1238,16 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testStructuredOutputManualWithFixingParser(model: LLModel) = runTest {
         assumeTrue(
+            model !== GoogleModels.Gemini2_0FlashLite,
+            "Gemini Flash Lite 2.0 model fail to return manually requested structured output"
+        )
+
+        assumeTrue(
             model.capabilities.contains(LLMCapability.Schema.JSON.Standard),
             "Model does not support Standard JSON Schema"
         )
 
-        withRetry {
+        withRetry(6) {
             val result = executor.executeStructured(
                 prompt = StructuredTest.prompt,
                 model = model,

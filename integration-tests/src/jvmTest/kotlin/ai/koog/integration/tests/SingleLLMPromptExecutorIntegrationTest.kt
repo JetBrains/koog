@@ -35,6 +35,7 @@ import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.bedrock.BedrockClientSettings
 import ai.koog.prompt.executor.clients.bedrock.BedrockLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
+import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
@@ -1149,7 +1150,7 @@ class SingleLLMPromptExecutorIntegrationTest {
     fun integration_testStructuredOutputManual(model: LLModel, client: LLMClient) = runTest {
         assumeTrue(
             model.provider !== LLMProvider.Google,
-            "Google models fail to return manually requested structured output"
+            "Google models fail to return manually requested structured output without fixing"
         )
         val executor = SingleLLMPromptExecutor(client)
 
@@ -1169,12 +1170,12 @@ class SingleLLMPromptExecutorIntegrationTest {
     @MethodSource("modelClientCombinations")
     fun integration_testStructuredOutputManualWithFixingParser(model: LLModel, client: LLMClient) = runTest {
         assumeTrue(
-            model.provider !== LLMProvider.Google,
-            "Google models fail to return manually requested structured output"
+            (model !== GoogleModels.Gemini2_0FlashLite) && (model !== GoogleModels.Gemini2_0FlashLite001),
+            "Gemini Flash Lite 2.0 models fail to return manually requested structured output"
         )
         val executor = SingleLLMPromptExecutor(client)
 
-        withRetry {
+        withRetry(6) {
             val result = executor.executeStructured(
                 prompt = StructuredTest.prompt,
                 model = model,
