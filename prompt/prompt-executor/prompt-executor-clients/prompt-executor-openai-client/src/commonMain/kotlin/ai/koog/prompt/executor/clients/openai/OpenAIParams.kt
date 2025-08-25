@@ -100,7 +100,8 @@ public class OpenAIChatParams(
     temperature, maxTokens, numberOfChoices,
     speculation, schema, toolChoice,
     user, includeThoughts, thinkingBudget
-), OpenAIParams {
+),
+    OpenAIParams {
     init {
         require(topP == null || topP in 0.0..1.0) {
             "topP must be in (0.0, 1.0], but was $topP"
