@@ -36,7 +36,10 @@ nav:
               - Tracing: tracing.md
               - Memory: agent-memory.md
               - Agent Persistency: agent-persistency.md
-              - OpenTelemetry: opentelemetry-support.md
+              - OpenTelemetry:
+                  - Overview: opentelemetry-support.md
+                  - Langfuse Exporter: langfuse-exporter.md
+                  - Weave Exporter: weave-exporter.md
       - Testing: testing.md
   - Examples: examples.md
   - API reference: https://api.koog.ai/
