@@ -2,6 +2,7 @@ package ai.koog.agents.features.opentelemetry.span
 
 import ai.koog.agents.features.opentelemetry.attribute.Attribute
 import ai.koog.agents.features.opentelemetry.event.GenAIAgentEvent
+import io.github.oshai.kotlinlogging.KotlinLogging
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.context.Context
@@ -16,6 +17,10 @@ import io.opentelemetry.context.Context
 internal abstract class GenAIAgentSpan(
     val parent: GenAIAgentSpan?,
 ) {
+
+    companion object {
+        private val logger = KotlinLogging.logger { }
+    }
 
     private var _context: Context? = null
 
@@ -82,22 +87,27 @@ internal abstract class GenAIAgentSpan(
         get() = _events
 
     fun addAttribute(attribute: Attribute) {
+        logger.debug { "Adding attribute to span (name: $name, id: $spanId): ${attribute.key}" }
         _attributes.add(attribute)
     }
 
     fun addAttributes(attributes: List<Attribute>) {
+        logger.debug { "Adding ${attributes.size} attributes to span (name: $name, id: $spanId):\n${attributes.joinToString("\n") { "- ${it.key}" }}" }
         _attributes.addAll(attributes)
     }
 
     fun addEvent(event: GenAIAgentEvent) {
+        logger.debug { "Adding event to span (name: $name, id: $spanId): ${event.name}" }
         _events.add(event)
     }
 
     fun addEvents(events: List<GenAIAgentEvent>) {
+        logger.debug { "Adding ${events.size} events to span (name: $name, id: $spanId):\n${events.joinToString("\n") { "- ${it.name}" }}" }
         _events.addAll(events)
     }
 
     fun removeEvent(event: GenAIAgentEvent): Boolean {
+        logger.debug { "Removing event from span (name: $name, id: $spanId): ${event.name}" }
         return _events.remove(event)
     }
 }
