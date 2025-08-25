@@ -1,4 +1,4 @@
-# Langfuse Exporter
+# Langfuse exporter
 
 Koog provides built-in support for exporting agent traces to [Langfuse](https://langfuse.com/), a platform for observability and analytics of AI applications.  
 With Langfuse integration, you can visualize, analyze, and debug how your Koog agents interact with LLMs, APIs, and other components.
@@ -7,11 +7,13 @@ For background on Koog’s OpenTelemetry support, see the [OpenTelemetry support
 
 ---
 
-### Setup Instructions
+### Setup instructions
 
 1. Create a Langfuse project. Follow the setup guide at [Create new project in Langfuse](https://langfuse.com/docs/get-started#create-new-project-in-langfuse)
 2. Obtain API credentials. Retrieve your Langfuse `public key` and `secret key` as described in [Where are Langfuse API keys?](https://langfuse.com/faq/all/where-are-langfuse-api-keys)
-3. Set environment variables. Add the following variables to your environment:
+3. Pass the Langfuse host, private key, and secret key to the Langfuse exporter. 
+This can be done by providing them as parameters to the `addLangfuseExporter()` function, 
+or by setting environment variables as shown below:
 
 ```bash
    export LANGFUSE_HOST="https://cloud.langfuse.com"
@@ -19,19 +21,27 @@ For background on Koog’s OpenTelemetry support, see the [OpenTelemetry support
    export LANGFUSE_SECRET_KEY="<your-secret-key>"
 ```
 
-Once configured, Koog automatically forwards OpenTelemetry traces to your Langfuse instance.
-
 ## Configuration
 
 To enable Langfuse export, install the **OpenTelemetry feature** and add the `LangfuseExporter`.  
 The exporter uses `OtlpHttpSpanExporter` under the hood to send traces to Langfuse’s OpenTelemetry endpoint.
 
-### Example: Agent with Langfuse Tracing
+### Example: agent with Langfuse tracing
 
+<!--- INCLUDE
+import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
+import ai.koog.agents.features.opentelemetry.integration.langfuse.addLangfuseExporter
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+import kotlinx.coroutines.runBlocking
+-->
 ```kotlin
 fun main() = runBlocking {
+    val apiKey = "api-key"
+    
     val agent = AIAgent(
-        executor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey),
+        executor = simpleOpenAIExecutor(apiKey),
         llmModel = OpenAIModels.CostOptimized.GPT4oMini,
         systemPrompt = "You are a code assistant. Provide concise code examples."
     ) {
@@ -47,24 +57,23 @@ fun main() = runBlocking {
     println("Result: $result\nSee traces on the Langfuse instance")
 }
 ```
+<!--- KNIT example-langfuse-exporter-01.kt -->
 
-
-
-## What Gets Traced
+## What gets traced
 
 When enabled, the Langfuse exporter captures the same spans as Koog’s general OpenTelemetry integration, including:
 
-- **Agent lifecycle events** – agent start, stop, errors
-- **LLM interactions** – prompts, responses, token usage, latency
-- **Tool and API calls** – execution traces for function/tool invocations
-- **System context** – metadata such as model name, environment, Koog version
+- **Agent lifecycle events**: agent start, stop, errors
+- **LLM interactions**: prompts, responses, token usage, latency
+- **Tool calls**: execution traces for tool invocations
+- **System context**: metadata such as model name, environment, Koog version
 
 Koog also captures span attributes required by Langfuse to show [Agent Graphs](https://langfuse.com/docs/observability/features/agent-graphs). 
 
 This allows you to correlate agent reasoning with API calls and user inputs in a structured way within Langfuse.
 
-For more details on Langfuse OTLP tracing, see:  
-[Langfuse OpenTelemetry Docs](https://langfuse.com/docs/opentelemetry/get-started#opentelemetry-endpoint)
+For more details on Langfuse OpenTelemetry tracing, see:  
+[Langfuse OpenTelemetry Docs](https://langfuse.com/integrations/native/opentelemetry#opentelemetry-endpoint)
 
 ---
 
