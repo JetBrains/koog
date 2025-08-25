@@ -11,11 +11,38 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import io.ktor.utils.io.ByteReadChannel
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertSame
+
+// "Bad" request from Gemini with missing `parts` field
+private val badRequest: String = """
+    {
+      "candidates": [
+        {
+          "content": {
+            "role": "model"
+          },
+          "finishReason": "STOP",
+          "index": 0
+        }
+      ],
+      "usageMetadata": {
+        "promptTokenCount": 36,
+        "totalTokenCount": 146,
+        "promptTokensDetails": [
+          {
+            "modality": "TEXT",
+            "tokenCount": 36
+          }
+        ],
+        "thoughtsTokenCount": 110
+      },
+      "modelVersion": "gemini-2.5-pro",
+      "responseId": "B0esaJmqKv-0xN8P-dzlwQY"
+    }
+""".trimIndent()
 
 class GoogleModelsTest {
 
@@ -36,35 +63,7 @@ class GoogleModelsTest {
     fun `Test when FLASH_2_5 returns no parts GoogleLLMClient does not fail`() = runTest {
         val mockEngine = MockEngine { request ->
             respond(
-                content = ByteReadChannel(
-                    // "Bad" request from Gemini with missing `parts` field
-                    """
-                    {
-                      "candidates": [
-                        {
-                          "content": {
-                            "role": "model"
-                          },
-                          "finishReason": "STOP",
-                          "index": 0
-                        }
-                      ],
-                      "usageMetadata": {
-                        "promptTokenCount": 36,
-                        "totalTokenCount": 146,
-                        "promptTokensDetails": [
-                          {
-                            "modality": "TEXT",
-                            "tokenCount": 36
-                          }
-                        ],
-                        "thoughtsTokenCount": 110
-                      },
-                      "modelVersion": "gemini-2.5-pro",
-                      "responseId": "B0esaJmqKv-0xN8P-dzlwQY"
-                    }
-                """.trimIndent()
-                ),
+                content = ByteReadChannel(badRequest),
                 status = HttpStatusCode.OK,
                 headers = headersOf(HttpHeaders.ContentType, "application/json")
             )
