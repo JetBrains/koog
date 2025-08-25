@@ -16,7 +16,10 @@ import ai.koog.integration.tests.utils.RetryUtils.withRetry
 import ai.koog.integration.tests.utils.TestUtils.CalculatorOperation
 import ai.koog.integration.tests.utils.TestUtils.Colors
 import ai.koog.integration.tests.utils.TestUtils.Country
-import ai.koog.integration.tests.utils.TestUtils.WeatherReport
+import ai.koog.integration.tests.utils.TestUtils.StructuredTest
+import ai.koog.integration.tests.utils.TestUtils.StructuredTest.checkResponse
+import ai.koog.integration.tests.utils.TestUtils.StructuredTest.getConfigFixingParserManual
+import ai.koog.integration.tests.utils.TestUtils.StructuredTest.getConfigFixingParserNative
 import ai.koog.integration.tests.utils.TestUtils.markdownCountryDefinition
 import ai.koog.integration.tests.utils.TestUtils.parseMarkdownStreamToCountries
 import ai.koog.integration.tests.utils.TestUtils.readAwsAccessKeyIdFromEnv
@@ -44,12 +47,7 @@ import ai.koog.prompt.message.Attachment
 import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams.ToolChoice
-import ai.koog.prompt.structure.StructureFixingParser
-import ai.koog.prompt.structure.StructuredOutput
-import ai.koog.prompt.structure.StructuredOutputConfig
 import ai.koog.prompt.structure.executeStructured
-import ai.koog.prompt.structure.json.JsonStructuredData
-import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -1100,6 +1098,10 @@ class SingleLLMPromptExecutorIntegrationTest {
         }
     }
 
+    /*
+    * Structured native/manual output tests.
+    * */
+
     @ParameterizedTest
     @MethodSource("modelClientCombinations")
     fun integration_testStructuredOutputNative(model: LLModel, client: LLMClient) = runTest {
@@ -1109,58 +1111,36 @@ class SingleLLMPromptExecutorIntegrationTest {
         )
         val executor = SingleLLMPromptExecutor(client)
 
-        val structure = JsonStructuredData.createJsonStructure<WeatherReport>(
-            schemaGenerator = StandardJsonSchemaGenerator,
-            descriptionOverrides = mapOf(
-                "WeatherReport.city" to "Name of the city or location",
-                "WeatherReport.temperature" to "Current temperature in Celsius degrees"
-            ),
-            examples = listOf(
-                WeatherReport("Moscow", 20, "Rainy", 50)
-            )
-        )
-        val config = StructuredOutputConfig(
-            default = StructuredOutput.Native(structure),
-            fixingParser = StructureFixingParser(
-                fixingModel = model,
-                retries = 3
-            )
-        )
-
-        val prompt = Prompt.build("test-structured-json") {
-            system(
-                """
-                You are a weather forecasting assistant.
-                When asked for a weather forecast, provide a realistic but fictional forecast.
-                """.trimIndent()
-            )
-            user(
-                "What is the weather forecast for London? Please provide temperature, description, and humidity if available."
-            )
-        }
-
         withRetry {
             val result = executor.executeStructured(
-                prompt = prompt,
+                prompt = StructuredTest.prompt,
                 model = model,
-                config = config
+                config = StructuredTest.configNoFixingParserNative
             )
 
             assertTrue(result.isSuccess, "Structured output should succeed: ${result.exceptionOrNull()}")
-            val response = result.getOrThrow()
+            checkResponse(result)
+        }
+    }
 
-            assertNotNull(response.structure)
+    @ParameterizedTest
+    @MethodSource("modelClientCombinations")
+    fun integration_testStructuredOutputNativeWithFixingParser(model: LLModel, client: LLMClient) = runTest {
+        assumeTrue(
+            model.capabilities.contains(LLMCapability.Schema.JSON.Standard),
+            "Model does not support Standard JSON Schema"
+        )
+        val executor = SingleLLMPromptExecutor(client)
 
-            assertEquals("London", response.structure.city, "City should be London, got: ${response.structure.city}")
-            assertTrue(
-                response.structure.temperature in -50..60,
-                "Temperature should be realistic, got: ${response.structure.temperature}"
+        withRetry {
+            val result = executor.executeStructured(
+                prompt = StructuredTest.prompt,
+                model = model,
+                config = getConfigFixingParserNative(model)
             )
-            assertTrue(response.structure.description.isNotBlank(), "Description should not be empty")
-            assertTrue(
-                response.structure.humidity >= 0,
-                "Humidity should be a valid percentage, got: ${response.structure.humidity}"
-            )
+
+            assertTrue(result.isSuccess, "Structured output should succeed: ${result.exceptionOrNull()}")
+            checkResponse(result)
         }
     }
 
@@ -1173,58 +1153,36 @@ class SingleLLMPromptExecutorIntegrationTest {
         )
         val executor = SingleLLMPromptExecutor(client)
 
-        val structure = JsonStructuredData.createJsonStructure<WeatherReport>(
-            schemaGenerator = StandardJsonSchemaGenerator,
-            descriptionOverrides = mapOf(
-                "WeatherReport.city" to "Name of the city or location",
-                "WeatherReport.temperature" to "Current temperature in Celsius degrees"
-            ),
-            examples = listOf(
-                WeatherReport("Moscow", 20, "Rainy", 50)
-            )
-        )
-        val config = StructuredOutputConfig(
-            default = StructuredOutput.Manual(structure),
-            fixingParser = StructureFixingParser(
-                fixingModel = model,
-                retries = 3
-            )
-        )
-
-        val prompt = Prompt.build("test-structured-json") {
-            system(
-                """
-                You are a weather forecasting assistant.
-                When asked for a weather forecast, provide a realistic but fictional forecast.
-                """.trimIndent()
-            )
-            user(
-                "What is the weather forecast for London? Please provide temperature, description, and humidity if available."
-            )
-        }
-
         withRetry {
             val result = executor.executeStructured(
-                prompt = prompt,
+                prompt = StructuredTest.prompt,
                 model = model,
-                config = config
+                config = StructuredTest.configNoFixingParserManual
             )
 
             assertTrue(result.isSuccess, "Structured output should succeed: ${result.exceptionOrNull()}")
-            val response = result.getOrThrow()
+            checkResponse(result)
+        }
+    }
 
-            assertNotNull(response.structure)
+    @ParameterizedTest
+    @MethodSource("modelClientCombinations")
+    fun integration_testStructuredOutputManualWithFixingParser(model: LLModel, client: LLMClient) = runTest {
+        assumeTrue(
+            model.provider !== LLMProvider.Google,
+            "Google models fail to return manually requested structured output"
+        )
+        val executor = SingleLLMPromptExecutor(client)
 
-            assertEquals("London", response.structure.city, "City should be London, got: ${response.structure.city}")
-            assertTrue(
-                response.structure.temperature in -50..60,
-                "Temperature should be realistic, got: ${response.structure.temperature}"
+        withRetry {
+            val result = executor.executeStructured(
+                prompt = StructuredTest.prompt,
+                model = model,
+                config = getConfigFixingParserManual(model)
             )
-            assertTrue(response.structure.description.isNotBlank(), "Description should not be empty")
-            assertTrue(
-                response.structure.humidity >= 0,
-                "Humidity should be a valid percentage, got: ${response.structure.humidity}"
-            )
+
+            assertTrue(result.isSuccess, "Structured output should succeed: ${result.exceptionOrNull()}")
+            checkResponse(result)
         }
     }
 }
