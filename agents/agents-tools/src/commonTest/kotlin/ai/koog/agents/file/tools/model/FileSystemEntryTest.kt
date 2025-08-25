@@ -57,7 +57,7 @@ class FileSystemEntryTest {
     }
 
     @Test
-    fun `Content_of - Text when selecting full range (-1)`() {
+    fun `Content of Text when selecting full range -1`() {
         val content = "first\nsecond\nthird"
         val result = FileSystemEntry.File.Content.of(content, startLine = 0, endLine = -1)
 
