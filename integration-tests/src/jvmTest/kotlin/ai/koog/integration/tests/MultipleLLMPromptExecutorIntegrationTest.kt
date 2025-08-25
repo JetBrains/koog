@@ -19,7 +19,6 @@ import ai.koog.integration.tests.utils.TestUtils.Country
 import ai.koog.integration.tests.utils.TestUtils.StructuredTest
 import ai.koog.integration.tests.utils.TestUtils.StructuredTest.checkResponse
 import ai.koog.integration.tests.utils.TestUtils.StructuredTest.getConfigFixingParserManual
-import ai.koog.integration.tests.utils.TestUtils.StructuredTest.getConfigFixingParserNative
 import ai.koog.integration.tests.utils.TestUtils.markdownCountryDefinition
 import ai.koog.integration.tests.utils.TestUtils.parseMarkdownStreamToCountries
 import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
@@ -1167,8 +1166,8 @@ class MultipleLLMPromptExecutorIntegrationTest {
     }
 
     /*
-    * Structured native/manual output tests.
-    * */
+     * Structured native/manual output tests.
+     * */
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
@@ -1182,7 +1181,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
             val result = executor.executeStructured(
                 prompt = StructuredTest.prompt,
                 model = model,
-                config = StructuredTest.configNoFixingParserNative
+                config = StructuredTest.getConfigNoFixingParserNative(model)
             )
 
             assertTrue(result.isSuccess, "Structured output should succeed: ${result.exceptionOrNull()}")
@@ -1202,7 +1201,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
             val result = executor.executeStructured(
                 prompt = StructuredTest.prompt,
                 model = model,
-                config = getConfigFixingParserNative(model)
+                config = StructuredTest.getConfigFixingParserNative(model)
             )
 
             assertTrue(result.isSuccess, "Structured output should succeed: ${result.exceptionOrNull()}")
@@ -1222,7 +1221,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
             val result = executor.executeStructured(
                 prompt = StructuredTest.prompt,
                 model = model,
-                config = StructuredTest.configNoFixingParserManual
+                config = StructuredTest.getConfigNoFixingParserManual(model)
             )
 
             assertTrue(result.isSuccess, "Structured output should succeed: ${result.exceptionOrNull()}")

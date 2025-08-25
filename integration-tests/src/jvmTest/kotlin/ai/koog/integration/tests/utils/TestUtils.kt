@@ -8,10 +8,12 @@ import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.structure.RegisteredStandardJsonSchemaGenerators
 import ai.koog.prompt.structure.StructureFixingParser
 import ai.koog.prompt.structure.StructuredOutput
 import ai.koog.prompt.structure.StructuredOutputConfig
 import ai.koog.prompt.structure.StructuredResponse
+import ai.koog.prompt.structure.annotations.InternalStructuredOutputApi
 import ai.koog.prompt.structure.json.JsonStructuredData
 import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
 import kotlinx.coroutines.flow.Flow
@@ -317,9 +319,10 @@ object TestUtils {
     }
 
     object StructuredTest {
-        val structure = JsonStructuredData.createJsonStructure<WeatherReport>(
+        @OptIn(InternalStructuredOutputApi::class)
+        fun getStructure(model: LLModel) = JsonStructuredData.createJsonStructure<WeatherReport>(
             json = Json,
-            schemaGenerator = StandardJsonSchemaGenerator,
+            schemaGenerator = RegisteredStandardJsonSchemaGenerators[model.provider] ?: StandardJsonSchemaGenerator,
             descriptionOverrides = mapOf(
                 "WeatherReport.city" to "Name of the city or location",
                 "WeatherReport.temperature" to "Current temperature in Celsius degrees"
@@ -328,20 +331,23 @@ object TestUtils {
                 WeatherReport("Moscow", 20, "Sunny", 50)
             )
         )
-        val configNoFixingParserNative = StructuredOutputConfig(default = StructuredOutput.Native(structure))
+
+        fun getConfigNoFixingParserNative(model: LLModel) =
+            StructuredOutputConfig(default = StructuredOutput.Native(getStructure(model)))
 
         fun getConfigFixingParserNative(model: LLModel) = StructuredOutputConfig(
-            default = StructuredOutput.Native(structure),
+            default = StructuredOutput.Native(getStructure(model)),
             fixingParser = StructureFixingParser(
                 fixingModel = model,
                 retries = 3
             )
         )
 
-        val configNoFixingParserManual = StructuredOutputConfig(default = StructuredOutput.Manual(structure))
+        fun getConfigNoFixingParserManual(model: LLModel) =
+            StructuredOutputConfig(default = StructuredOutput.Manual(getStructure(model)))
 
         fun getConfigFixingParserManual(model: LLModel) = StructuredOutputConfig(
-            default = StructuredOutput.Manual(structure),
+            default = StructuredOutput.Manual(getStructure(model)),
             fixingParser = StructureFixingParser(
                 fixingModel = model,
                 retries = 3
