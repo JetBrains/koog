@@ -137,11 +137,11 @@ Adds a span exporter to send telemetry data to external systems. Takes the follo
 
 #### addSpanProcessor
 
-Adds a span processor to process spans before they are exported. Takes the following argument:
+Adds a span processor factory to process spans before they are exported. Takes the following argument:
 
-| Name        | Data type       | Required | Default value | Description                                                                                |
-|-------------|-----------------|----------|---------------|--------------------------------------------------------------------------------------------|
-| `processor` | `SpanProcessor` | Yes      |               | The span processor that includes the custom logic to process telemetry data before export. |
+| Name        | Data type                         | Required | Default value | Description                                                                                                  |
+|-------------|-----------------------------------|----------|---------------|--------------------------------------------------------------------------------------------------------------|
+| `processor` | `(SpanExporter) -> SpanProcessor` | Yes      |               | A function that creates a span processor for a given exporter. Lets you customize processing per exporter.   |
 
 #### addResourceAttributes
 
@@ -166,6 +166,17 @@ Enables or disables verbose logging for debugging OpenTelemetry configuration. T
 | Name      | Data type | Required | Default value | Description                                                     |
 |-----------|-----------|----------|---------------|-----------------------------------------------------------------|
 | `verbose` | `Boolean` | Yes      | `false`       | If true, the application collects more detailed telemetry data. |
+
+#### setSdk
+
+Injects a pre-configured OpenTelemetrySdk instance.
+
+- When you call setSdk(sdk), the provided SDK is used as-is, and any custom configuration applied via addSpanExporter, addSpanProcessor, addResourceAttributes, or setSampler is ignored.
+- The tracer’s instrumentation scope name/version are aligned with your service info.
+
+| Name | Data type         | Required | Description                           |
+|------|-------------------|----------|---------------------------------------|
+| `sdk`| `OpenTelemetrySdk`| Yes      | The SDK instance to use in the agent. |
 
 ### Advanced configuration
 
@@ -323,6 +334,7 @@ The following event types are supported in line with OpenTelemetry's [Semantic c
 - **AssistantMessageEvent**: the assistant message passed to the model.
 - **ToolMessageEvent**: the response from a tool or function call passed to the model.
 - **ChoiceEvent**: the response message from a model.
+- **ModerationResponseEvent**: the model moderation result or signal.
 
 !!! note   
     The `optentelemetry-java` SDK does not support the event body fields parameter when adding an event. Therefore, in 
@@ -341,7 +353,10 @@ method takes the following argument:
 |------------|--------------|----------|---------|-----------------------------------------------------------------------------|
 | `exporter` | SpanExporter | Yes      |         | The SpanExporter instance to be added to the list of custom span exporters. |
 
-The sections below provide information about some of the most commonly used exporters from the `opentelemetry-java` SDK.  
+The sections below provide information about some of the most commonly used exporters from the `opentelemetry-java` SDK.
+
+!!! note
+    If you do not configure any custom exporters, Koog will use a console LoggingSpanExporter by default. This helps during local development and debugging.
 
 ### Logging exporter
 
@@ -458,6 +473,79 @@ install(OpenTelemetry) {
 ```
 <!--- KNIT example-opentelemetry-support-07.kt -->
 
+## Integration with Langfuse
+
+Langfuse provides trace visualization and analytics for LLM/agent workloads.
+
+You can configure Koog to export OpenTelemetry traces directly to Langfuse using a helper function:
+
+<!--- INCLUDE
+import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
+import ai.koog.agents.features.opentelemetry.integration.langfuse.addLangfuseExporter
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+
+const val apiKey = ""
+
+val agent = AIAgent(
+    executor = simpleOpenAIExecutor(apiKey),
+    llmModel = OpenAIModels.Chat.GPT4o,
+    systemPrompt = "You are a helpful assistant."
+) {
+-->
+<!--- SUFFIX
+}
+-->
+```kotlin
+install(OpenTelemetry) {
+    addLangfuseExporter(
+        langfuseUrl = "https://cloud.langfuse.com",
+        langfusePublicKey = "...",
+        langfuseSecretKey = "..."
+    )
+}
+```
+<!--- KNIT example-opentelemetry-support-08.kt -->
+
+Please read the [full documentation](opentelemetry-langfuse-exporter.md) about integration with Langfuse.
+
+## Integration with Weave
+
+Weave provides trace visualization and analytics for LLM/agent workloads. Integration with W&B Weave can be configured via a predefined exporter:
+
+<!--- INCLUDE
+import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
+import ai.koog.agents.features.opentelemetry.integration.weave.addWeaveExporter
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+
+const val apiKey = ""
+
+val agent = AIAgent(
+    executor = simpleOpenAIExecutor(apiKey),
+    llmModel = OpenAIModels.Chat.GPT4o,
+    systemPrompt = "You are a helpful assistant."
+) {
+-->
+<!--- SUFFIX
+}
+-->
+```kotlin
+install(OpenTelemetry) {
+    addWeaveExporter(
+        weaveOtelBaseUrl = "https://trace.wandb.ai",
+        weaveEntity = "my-team",
+        weaveProjectName = "my-project",
+        weaveApiKey = "..."
+    )
+}
+```
+<!--- KNIT example-opentelemetry-support-09.kt -->
+
+Please read the [full documentation](opentelemetry-weave-exporter.md) about integration with W&B Weave.
+
 ## Integration with Jaeger
 
 Jaeger is a popular distributed tracing system that works with OpenTelemetry. The `opentelemetry` directory within 
@@ -542,13 +630,13 @@ fun main() {
     }
 }
 ```
-<!--- KNIT example-opentelemetry-support-08.kt -->
+<!--- KNIT example-opentelemetry-support-10.kt -->
 
 ## Troubleshooting
 
 ### Common issues
 
-1. **No traces appearing in Jaeger or Langfuse**
+1. **No traces appearing in Jaeger, Langfuse, or Weave**
     - Ensure the service is running and the OpenTelemetry port (4317) is accessible.
     - Check that the OpenTelemetry exporter is configured with the correct endpoint.
     - Make sure to wait a few seconds after agent execution for traces to be exported.
@@ -561,3 +649,6 @@ fun main() {
 3. **Excessive number of spans**
     - Consider using a different sampling strategy by configuring the `sampler` property.
     - For example, use `Sampler.traceIdRatioBased(0.1)` to sample only 10% of traces.
+
+4. **Span adapters override each other**
+    - Currently, the OpenTelemetry agent feature does not support applying multiple span adapters [KG-265](https://youtrack.jetbrains.com/issue/KG-265/Adding-Weave-exporter-breaks-Langfuse-exporter).
