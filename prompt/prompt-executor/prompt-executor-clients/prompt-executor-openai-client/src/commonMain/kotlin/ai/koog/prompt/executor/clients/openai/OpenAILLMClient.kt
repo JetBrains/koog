@@ -665,24 +665,26 @@ public open class OpenAILLMClient(
             outputTokensCount = response.usage?.outputTokens
         )
 
-        return response.output.map { output ->
-            when (output) {
-                is Item.FunctionToolCall -> Message.Tool.Call(
-                    id = output.callId,
-                    tool = output.name,
-                    content = output.arguments,
-                    metaInfo = metaInfo
-                )
+        return response.output
+            .filter { it is Item.FunctionToolCall || it is Item.OutputMessage } // TODO: support all other types of Item
+            .map { output ->
+                when (output) {
+                    is Item.FunctionToolCall -> Message.Tool.Call(
+                        id = output.callId,
+                        tool = output.name,
+                        content = output.arguments,
+                        metaInfo = metaInfo
+                    )
 
-                is Item.OutputMessage -> Message.Assistant(
-                    content = output.text(),
-                    finishReason = output.status.name,
-                    metaInfo = metaInfo
-                )
+                    is Item.OutputMessage -> Message.Assistant(
+                        content = output.text(),
+                        finishReason = output.status.name,
+                        metaInfo = metaInfo
+                    )
 
-                else -> error("Unexpected response from $clientName: no tool calls and no content")
+                    else -> error("Unexpected response from $clientName: no tool calls and no content")
+                }
             }
-        }
     }
 
     private fun LLMParams.ToolChoice.toOpenAIResponseToolChoice() = when (this) {
