@@ -21,7 +21,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class LLMPromptExecutorMockTest {
+class MultiLLMPromptExecutorTest {
 
     val mockClock = object : Clock {
         override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z")
