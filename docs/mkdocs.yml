@@ -47,6 +47,9 @@ nav:
       - Chess: examples/Chess.md
       - Guesser: examples/Guesser.md
       - Langfuse: examples/Langfuse.md
+      - MCP - Google Maps: examples/GoogleMapsMcp.md
+      - MCP - Playwright: examples/PlaywrightMcp.md
+      - MCP - Unity: examples/UnityMcp.md
       - OpenTelemetry: examples/OpenTelemetry.md
       - VaccumAgent: examples/VaccumAgent.md
       - Weave: examples/Weave.md

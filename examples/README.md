@@ -36,7 +36,10 @@ Each example includes both **interactive Jupyter notebooks** and **complete Kotl
 | **BedrockAgent** | Create intelligent AI agents using AWS Bedrock integration                 | [📓 Notebook](notebooks/BedrockAgent.ipynb) | [🚀 Project](src/main/kotlin/ai/koog/agents/example/client)      |
 | **Calculator**   | Build a calculator agent with parallel tool calls and event logging        | [📓 Notebook](notebooks/Calculator.ipynb)   | [🚀 Project](src/main/kotlin/ai/koog/agents/example/calculator)  |
 | **Chess**        | Build an intelligent chess-playing agent with interactive choice selection | [📓 Notebook](notebooks/Chess.ipynb)        | [🚀 Project](src/main/kotlin/ai/koog/agents/example/chess)       |
+| **GoogleMapsMcp** | Connect to Google Maps MCP server and perform geocoding and elevation queries | [📓 Notebook](notebooks/GoogleMapsMcp.ipynb) | [🚀 Project](src/main/kotlin/ai/koog/agents/example/mcp)    |
 | **Guesser**      | Build a number-guessing agent implementing binary search strategy          | [📓 Notebook](notebooks/Guesser.ipynb)      | [🚀 Project](src/main/kotlin/ai/koog/agents/example/guesser)     |
+| **PlaywrightMcp** | Drive browsers with Playwright MCP for web automation tasks              | [📓 Notebook](notebooks/PlaywrightMcp.ipynb) | [🚀 Project](src/main/kotlin/ai/koog/agents/example/mcp)    |
+| **UnityMcp**     | Control Unity game development through MCP server integration             | [📓 Notebook](notebooks/UnityMcp.ipynb)     | [🚀 Project](src/main/kotlin/ai/koog/agents/example/mcp)         |
 | **VaccumAgent**  | Implementation of a basic reflex agent for cleaning tasks                  | [📓 Notebook](notebooks/VaccumAgent.ipynb)  | [🚀 Project](src/main/kotlin/ai/koog/agents/example/simpleapi)   |
 
 ### Advanced Features
