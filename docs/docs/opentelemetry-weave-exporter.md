@@ -75,6 +75,10 @@ When enabled, the Weave exporter captures the same spans as Koog’s general Ope
 - **Tool calls**: execution traces for tool invocations
 - **System context**: metadata such as model name, environment, Koog version
 
+When visualized in W&B Weave, the trace appears as follows:
+![W&B Weave traces](img/opentelemetry-weave-exporter-light.png#only-light)
+![W&B Weave traces](img/opentelemetry-weave-exporter-dark.png#only-dark)
+
 For more details, see the official [Weave OpenTelemetry Docs](https://weave-docs.wandb.ai/guides/tracking/otel/).
 
 ---
