@@ -65,7 +65,7 @@ The `createStorageKey` function takes a single string parameter that uniquely id
 
 ### Storing data
 
-To save data using a created storage key, use the `storage.set` method in a node:
+To save data using a created storage key, use the `storage.set(key: AIAgentStorageKey<T>, value: T)` method in a node:
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
