@@ -402,7 +402,7 @@ For faster setup, Koog provides the following ready-to-use executor implementati
     - `simpleOpenAIExecutor` for executing prompts with OpenAI models.
     - `simpleAzureOpenAIExecutor` for executing prompts using Azure OpenAI Service.
     - `simpleAnthropicExecutor` for executing prompts with Anthropic models.
-    - `simpleGoogleExecutor` for executing prompts with Google models.
+    - `simpleGoogleAIExecutor` for executing prompts with Google models.
     - `simpleOpenRouterExecutor` for executing prompts with OpenRouter.
     - `simpleOllamaExecutor` for executing prompts with Ollama.
 
@@ -510,7 +510,7 @@ val cachedExecutor = CachedPromptExecutor(
 
 3. Run the cached prompt executor with the desired prompt and model:
 <!--- INCLUDE
-import ai.koog.agents.example.examplePromptApi04.prompt
+import ai.koog.prompt.dsl.prompt
 import ai.koog.agents.example.examplePromptApi16.cachedExecutor
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import kotlinx.coroutines.runBlocking
