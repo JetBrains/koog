@@ -23,6 +23,7 @@ nav:
       - Content moderation: content-moderation.md
       - Backend framework integrations:
           - Ktor: ktor-plugin.md
+          - Spring Boot: spring-boot.md
       - Advanced usage:
           - Structured data: structured-data.md
           - Streaming API: streaming-api.md
