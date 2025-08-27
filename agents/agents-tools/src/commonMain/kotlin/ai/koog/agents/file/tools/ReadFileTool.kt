@@ -7,6 +7,8 @@ import ai.koog.agents.core.tools.ToolException
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.ToolResult
+import ai.koog.agents.core.tools.validate
+import ai.koog.agents.core.tools.validateNotNull
 import ai.koog.agents.file.tools.model.FileSystemEntry
 import ai.koog.agents.file.tools.render.file
 import ai.koog.prompt.text.text
@@ -86,20 +88,13 @@ public class ReadFileTool<Path>(private val fs: FileSystemProvider.ReadOnly<Path
      */
     override suspend fun execute(args: Args): Result {
         val path = fs.fromAbsolutePathString(args.path)
+        validate(fs.exists(path)) { "File not found: ${args.path}" }
 
-        if (!fs.exists(path)) {
-            throw ToolException.ValidationFailure("File not found: ${args.path}")
-        }
+        val metadata = validateNotNull(fs.metadata(path)) { "Cannot read metadata: ${args.path}" }
+        validate(metadata.type == FileMetadata.FileType.File) { "Not a file: ${args.path}" }
 
-        val metadata = fs.metadata(path)
-            ?: throw ToolException.ValidationFailure("Cannot read metadata: ${args.path}")
-
-        if (metadata.type != FileMetadata.FileType.File) {
-            throw ToolException.ValidationFailure("Not a file: ${args.path}")
-        }
-
-        if (fs.getFileContentType(path) != FileMetadata.FileContentType.Text) {
-            throw ToolException.ValidationFailure("File is not a text file: ${args.path}")
+        validate(fs.getFileContentType(path) == FileMetadata.FileContentType.Text) {
+            "File is not a text file: ${args.path}"
         }
 
         return Result(
