@@ -18,7 +18,6 @@ import ai.koog.prompt.executor.clients.openai.models.OpenAIChatCompletionStreamR
 import ai.koog.prompt.executor.clients.openai.models.OpenAIContentPart
 import ai.koog.prompt.executor.clients.openai.models.OpenAIEmbeddingRequest
 import ai.koog.prompt.executor.clients.openai.models.OpenAIEmbeddingResponse
-import ai.koog.prompt.executor.clients.openai.models.OpenAIInputStatus
 import ai.koog.prompt.executor.clients.openai.models.OpenAIMessage
 import ai.koog.prompt.executor.clients.openai.models.OpenAIModalities
 import ai.koog.prompt.executor.clients.openai.models.OpenAIOutputFormat
@@ -68,7 +67,6 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
-import kotlin.random.Random
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -582,12 +580,16 @@ public open class OpenAILLMClient(
 
                     is Message.Assistant -> {
                         flushPendingCalls()
-                        add(Item.OutputMessage(
-                            role = "assistant",
-                            content = listOf(OutputContent.Text(text = message.content, annotations = emptyList())),
+                        add(
+                            Item.OutputMessage(
+                                role = "assistant",
+                                content = listOf(
+                                    OutputContent.Text(text = message.content, annotations = emptyList())
+                                ),
 //                            id = "msg-fake_id", // TODO: preserve message ID from previous output
 //                            status = OpenAIInputStatus.IN_PROGRESS // TODO: preserve status from previous output
-                        ))
+                            )
+                        )
                     }
 
                     is Message.Tool.Result -> {
