@@ -5,11 +5,11 @@
 ## Major Features
 
 - **Integration with Observability Tools**:
-  - **LangFuse Integration**: Span adapters for Langfuse client, including open telemetry and graph visualisation (KG-217, KG-223)
-  - **Weave Integration**: Span adapters for Weave open telemetry and observability (KG-217, KG-218)
+  - **Langfuse Integration**: Span adapters for Langfuse client, including open telemetry and graph visualisation ([KG-217](https://youtrack.jetbrains.com/issue/KG-217), [KG-223](https://youtrack.jetbrains.com/issue/KG-223))
+  - **W&B Weave Integration**: Span adapters for W&B Weave open telemetry and observability ([KG-217](https://youtrack.jetbrains.com/issue/KG-217), [KG-218](https://youtrack.jetbrains.com/issue/KG-218))
 - **Ktor Integration**: First-class Ktor support via the "Koog" Ktor plugin to register and run agents in Ktor applications (#422).
 - **iOS Target Support**: Multiplatform expanded with native iOS targets, enabling agents to run on Apple platforms (#512).
-- **Structured Output 2.0**: Refactored structured output API to be more flexible and add built-in/native provider support for OpenAI and Google, reducing prompt boilerplate and improving validation (#443).
+- **Upgraded Structured Output**: Refactored structured output API to be more flexible and add built-in/native provider support for OpenAI and Google, reducing prompt boilerplate and improving validation (#443).
 - **GPT5 and Custom LLM Parameters Support**: Now GPT5 is available together with custom additional LLM parameters for OpenAI-compatible clients (#631, #517)
 - **Resilience and Retries**:
   - **Retryable LLM Clients**: Introduce retry logic for LLM clients with sensible defaults to reduce transient failures (#592)
@@ -18,19 +18,19 @@
 ## Improvements
 
 - **OpenTelemetry and Observability**:
-  - Finish reason and unified attributes for inference/tool/message spans and events; extract event body fields to attributes for better querying (KG-218).
-  - Mask sensitive data in events/attributes and introduce a “hidden-by-default” string type to keep secrets safe in logs (KG-259).
-  - Include all messages into the inference span and add an index for ChoiceEvent to simplify analysis (KG-172).
+  - Finish reason and unified attributes for inference/tool/message spans and events; extract event body fields to attributes for better querying ([KG-218](https://youtrack.jetbrains.com/issue/KG-218)).
+  - Mask sensitive data in events/attributes and introduce a “hidden-by-default” string type to keep secrets safe in logs ([KG-259](https://youtrack.jetbrains.com/issue/KG-259)).
+  - Include all messages into the inference span and add an index for ChoiceEvent to simplify analysis ([KG-172](https://youtrack.jetbrains.com/issue/KG-172)).
   - Add tool arguments to `gen_ai.choice` and `gen_ai.assistant.message` events (#462).
-  - Allow setting a custom OpenTelemetry SDK instance in Koog (KG-169).
+  - Allow setting a custom OpenTelemetry SDK instance in Koog ([KG-169](https://youtrack.jetbrains.com/issue/KG-169)).
 - **LLM and Providers**:
   - Support Google’s “thinking” mode in generation config to improve reasoning quality (#414).
   - Add responses API support for OpenAI (#645)
   - AWS Bedrock: support Inference Profiles for simpler, consistent configuration (#506) and accept `AWS_SESSION_TOKEN` (#456).
   - Add `maxTokens` as prompt parameters for finer control over generation length (#579).
-  - Add `contextLength` and `maxOutputTokens` to `LLModel` (#438, KG-134)
+  - Add `contextLength` and `maxOutputTokens` to `LLModel` (#438, [KG-134](https://youtrack.jetbrains.com/issue/KG-134))
 - **Agent Engine**:
-  - Add AIAgentPipeline interceptors to uniformly handle node errors; propagate `NodeExecutionError` across features (KG-170).
+  - Add AIAgentPipeline interceptors to uniformly handle node errors; propagate `NodeExecutionError` across features ([KG-170](https://youtrack.jetbrains.com/issue/KG-170)).
   - Include finish node processing in the pipeline to ensure finalizers run reliably (#598).
 - **File Tools and RAG**:
     - Reworked FileSystemProvider with API cleanups and better ergonomics; moved blocking/suspendable operations to `Dispatchers.IO` for improved performance and responsiveness (#557, “Move suspendable operations to Dispatchers.IO”).
@@ -44,11 +44,11 @@
 ## Bug Fixes
 
 - Make `parts` field nullable in Google responses to handle missing content from Gemini models (#652).
-- Fix enum parsing in MCP when type is not mentioned (#601, KG-49)
+- Fix enum parsing in MCP when type is not mentioned (#601, [KG-49](https://youtrack.jetbrains.com/issue/KG-49))
 - Fix function calling for `gemini-2.5-flash` models to correctly route tool invocations (#586).
 - Restore OpenAI `responseFormat` option support in requests (#643).
 - Correct `o4-mini` vs `gpt-4o-mini` model mix-up in configuration (#573).
-- Ensure event body for function calls is valid JSON for telemetry ingestion (KG-268).
+- Ensure event body for function calls is valid JSON for telemetry ingestion ([KG-268](https://youtrack.jetbrains.com/issue/KG-268)).
 - Fix duplicated tool names resolution in `AIAgentSubgraphExt` to prevent conflicts (#493).
 - Fix Azure OpenAI client settings to generate valid endpoint URLs (#478).
 - Restore `llama3.2:latest` as the default for LLAMA_3_2 to match the provider expectations (#522).
@@ -57,7 +57,7 @@
 
 ## Removals / Breaking Changes
 
-- Remove Google Gemini 1.5 Flash/Pro variants from the catalog (KG-216, #574).
+- Remove Google Gemini 1.5 Flash/Pro variants from the catalog ([KG-216](https://youtrack.jetbrains.com/issue/KG-216), #574).
 - Drop `execute` extensions for `PromptExecutor` in favor of the unified API (#591).
 - File system API cleanup: removed deprecated FSProvider interfaces and methods; `PathFilter` renamed to `TraversalFilter` with suspendable operations; `fromAbsoluteString` renamed to `fromAbsolutePathString`.
 
@@ -136,7 +136,7 @@
 ## Examples
 
 - W&B Weave Tracing example
-- LangFuse Tracing example
+- Langfuse Tracing example
 - Moderation example: Moderating iterative joke-generation conversation
 - Parallel Nodes Execution example: Generating jokes using 3 different LLMs in parallel, and choosing the funniest one
 - Snapshot and Persistency example: Taking agent snapshots and restoring its state example
