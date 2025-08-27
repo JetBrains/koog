@@ -586,8 +586,6 @@ public open class OpenAILLMClient(
                                 content = listOf(
                                     OutputContent.Text(text = message.content, annotations = emptyList())
                                 ),
-//                            id = "msg-fake_id", // TODO: preserve message ID from previous output
-//                            status = OpenAIInputStatus.IN_PROGRESS // TODO: preserve status from previous output
                             )
                         )
                     }
@@ -704,12 +702,12 @@ public open class OpenAILLMClient(
         is LLMParams.ToolChoice.Named -> OpenAIResponsesToolChoice.FunctionTool(name = name)
     }
 
-    private fun determineParams(params: LLMParams, model: LLModel): OpenAIParams = when {
+    internal fun determineParams(params: LLMParams, model: LLModel): OpenAIParams = when {
         "openai.azure.com" in settings.baseUrl -> params.toOpenAIChatParams() // TODO: create a separate Azure Client
         params is OpenAIResponsesParams && model.supports(LLMCapability.OpenAIEndpoint.Responses) -> params
         params is OpenAIChatParams && model.supports(LLMCapability.OpenAIEndpoint.Completions) -> params
-        model.supports(LLMCapability.OpenAIEndpoint.Responses) -> params.toOpenAIResponsesParams()
         model.supports(LLMCapability.OpenAIEndpoint.Completions) -> params.toOpenAIChatParams()
+        model.supports(LLMCapability.OpenAIEndpoint.Responses) -> params.toOpenAIResponsesParams()
         else -> error("Unsupported OpenAI API endpoint for model: ${model.id}")
     }
 
