@@ -181,9 +181,9 @@ internal sealed interface Item {
     @Serializable
     class OutputMessage(
         val content: List<OutputContent>,
-        val id: String,
+        val id: String? = null,
         val role: String = "assistant",
-        val status: OpenAIInputStatus
+        val status: OpenAIInputStatus? = null
     ) : Item {
         val type: String = "message"
 

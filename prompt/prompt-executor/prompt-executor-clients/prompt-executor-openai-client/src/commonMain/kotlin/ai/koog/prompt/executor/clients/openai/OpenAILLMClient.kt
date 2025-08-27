@@ -18,6 +18,7 @@ import ai.koog.prompt.executor.clients.openai.models.OpenAIChatCompletionStreamR
 import ai.koog.prompt.executor.clients.openai.models.OpenAIContentPart
 import ai.koog.prompt.executor.clients.openai.models.OpenAIEmbeddingRequest
 import ai.koog.prompt.executor.clients.openai.models.OpenAIEmbeddingResponse
+import ai.koog.prompt.executor.clients.openai.models.OpenAIInputStatus
 import ai.koog.prompt.executor.clients.openai.models.OpenAIMessage
 import ai.koog.prompt.executor.clients.openai.models.OpenAIModalities
 import ai.koog.prompt.executor.clients.openai.models.OpenAIOutputFormat
@@ -30,6 +31,7 @@ import ai.koog.prompt.executor.clients.openai.models.OpenAIStreamEvent
 import ai.koog.prompt.executor.clients.openai.models.OpenAITextConfig
 import ai.koog.prompt.executor.clients.openai.models.OpenAITool
 import ai.koog.prompt.executor.clients.openai.models.OpenAIToolChoice
+import ai.koog.prompt.executor.clients.openai.models.OutputContent
 import ai.koog.prompt.executor.clients.openai.structure.OpenAIBasicJsonSchemaGenerator
 import ai.koog.prompt.executor.clients.openai.structure.OpenAIStandardJsonSchemaGenerator
 import ai.koog.prompt.executor.model.LLMChoice
@@ -66,6 +68,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
+import kotlin.random.Random
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -579,7 +582,12 @@ public open class OpenAILLMClient(
 
                     is Message.Assistant -> {
                         flushPendingCalls()
-                        add(Item.InputMessage(role = "assistant", content = listOf(InputContent.Text(message.content))))
+                        add(Item.OutputMessage(
+                            role = "assistant",
+                            content = listOf(OutputContent.Text(text = message.content, annotations = emptyList())),
+//                            id = "msg-fake_id", // TODO: preserve message ID from previous output
+//                            status = OpenAIInputStatus.IN_PROGRESS // TODO: preserve status from previous output
+                        ))
                     }
 
                     is Message.Tool.Result -> {
@@ -678,7 +686,7 @@ public open class OpenAILLMClient(
 
                     is Item.OutputMessage -> Message.Assistant(
                         content = output.text(),
-                        finishReason = output.status.name,
+                        finishReason = output.status?.name,
                         metaInfo = metaInfo
                     )
 
