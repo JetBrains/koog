@@ -1,11 +1,11 @@
 rag/rag-base/src/commonMain/kotlin/ai/koog/rag/base/files/Extensions.kt @petuch03 @skarpovdev @sproshev
 rag/rag-base/src/commonMain/kotlin/ai/koog/rag/base/files/FileMetadata.kt @petuch03 @skarpovdev @sproshev
-rag/rag-base/src/commonMain/kotlin/ai/koog/rag/base/files/FileSystemProvider.kt @skarpovdev @sproshev
-rag/rag-base/src/commonMain/kotlin/ai/koog/rag/base/files/FilteredFileSystemProvider.kt @skarpovdev @sproshev
+rag/rag-base/src/commonMain/kotlin/ai/koog/rag/base/files/FileSystemProvider.kt @petuch03 @skarpovdev @sproshev
+rag/rag-base/src/commonMain/kotlin/ai/koog/rag/base/files/FilteredFileSystemProvider.kt @petuch03 @skarpovdev @sproshev
 
 rag/rag-base/src/commonMain/kotlin/ai/koog/rag/base/files/filter/TraversalFilter.kt @petuch03 @skarpovdev @sproshev
 
-rag/rag-base/src/jvmMain/kotlin/ai/koog/rag/base/files/JVMFileSystemProvider.kt @skarpovdev @sproshev
-rag/rag-base/src/jvmTest/kotlin/ai/koog/rag/base/files/JVMFileSystemProviderTest.kt @skarpovdev @sproshev
+rag/rag-base/src/jvmMain/kotlin/ai/koog/rag/base/files/JVMFileSystemProvider.kt @petuch03 @skarpovdev @sproshev
+rag/rag-base/src/jvmTest/kotlin/ai/koog/rag/base/files/JVMFileSystemProviderTest.kt @petuch03 @skarpovdev @sproshev
 rag/rag-base/src/jvmTest/kotlin/ai/koog/rag/base/files/JVMFilteredFileSystemProviderTest.kt @petuch03 @skarpovdev @sproshev
 rag/rag-base/src/jvmTest/kotlin/ai/koog/rag/base/files/KoogTestBase.kt @petuch03 @skarpovdev @sproshev
