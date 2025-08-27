@@ -16,6 +16,12 @@ dependencies {
     implementation(libs.opentelemetry.exporter.logging)
 }
 
+dokka {
+    dokkaSourceSets.configureEach {
+        suppress.set(true)
+    }
+}
+
 val knitProperties: Provider<Properties> =
     providers.fileContents(layout.projectDirectory.file("knit.properties"))
         .asText
