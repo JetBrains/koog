@@ -52,6 +52,4 @@ class OpenAILLMClientTest {
 
         assertEquals(expectedClass, result::class)
     }
-
-
 }

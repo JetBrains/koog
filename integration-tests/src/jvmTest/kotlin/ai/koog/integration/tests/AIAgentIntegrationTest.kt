@@ -566,7 +566,6 @@ class AIAgentIntegrationTest {
         }
     }
 
-
     @ParameterizedTest
     @MethodSource("reasoningIntervals")
     fun integration_AIAgentWithReActStrategyTest(interval: Int) = runTest(timeout = 300.seconds) {
