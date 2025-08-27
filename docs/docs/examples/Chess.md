@@ -4,7 +4,7 @@
 https://github.com/JetBrains/koog/blob/develop/examples/notebooks/Chess.ipynb
 ){ .md-button .md-button--primary }
 [:material-download: Download .ipynb](
-https://raw.githubusercontent.com/JetBrains/koog/develop/examples/Chess.ipynb
+https://raw.githubusercontent.com/JetBrains/koog/develop/examples/notebooks/Chess.ipynb
 ){ .md-button }
 
 This tutorial demonstrates how to build an intelligent chess-playing agent using the Koog framework. We'll explore key concepts including tool integration, agent strategies, memory optimization, and interactive AI decision-making.

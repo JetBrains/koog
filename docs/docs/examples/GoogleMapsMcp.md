@@ -4,7 +4,7 @@
 https://github.com/JetBrains/koog/blob/develop/examples/notebooks/GoogleMapsMcp.ipynb
 ){ .md-button .md-button--primary }
 [:material-download: Download .ipynb](
-https://raw.githubusercontent.com/JetBrains/koog/develop/examples/GoogleMapsMcp.ipynb
+https://raw.githubusercontent.com/JetBrains/koog/develop/examples/notebooks/GoogleMapsMcp.ipynb
 ){ .md-button }
 
 In this short, blog-style walkthrough, we’ll connect Koog to a Model Context Protocol (MCP) server for Google Maps. We’ll spin up the server with Docker, discover the available tools, and let an AI agent geocode an address and fetch its elevation — all from a Kotlin Notebook.

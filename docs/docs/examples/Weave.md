@@ -4,7 +4,7 @@
 https://github.com/JetBrains/koog/blob/develop/examples/notebooks/Weave.ipynb
 ){ .md-button .md-button--primary }
 [:material-download: Download .ipynb](
-https://raw.githubusercontent.com/JetBrains/koog/develop/examples/Weave.ipynb
+https://raw.githubusercontent.com/JetBrains/koog/develop/examples/notebooks/Weave.ipynb
 ){ .md-button }
 
 This notebook demonstrates how to trace Koog agents to W&B Weave using OpenTelemetry (OTLP).

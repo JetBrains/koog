@@ -4,7 +4,7 @@
 https://github.com/JetBrains/koog/blob/develop/examples/notebooks/UnityMcp.ipynb
 ){ .md-button .md-button--primary }
 [:material-download: Download .ipynb](
-https://raw.githubusercontent.com/JetBrains/koog/develop/examples/UnityMcp.ipynb
+https://raw.githubusercontent.com/JetBrains/koog/develop/examples/notebooks/UnityMcp.ipynb
 ){ .md-button }
 
 This notebook walks you through building a Unity-savvy AI agent with Koog using the Model Context Protocol (MCP). We'll connect to a Unity MCP server, discover tools, plan with an LLM, and execute actions against your open scene.
