@@ -29,4 +29,4 @@ jobs:
           cd ./docs
           pip install mkdocs-material
           pip install mkdocs-redirects
-          mkdocs gh-deploy
+          mkdocs gh-deploy --force
