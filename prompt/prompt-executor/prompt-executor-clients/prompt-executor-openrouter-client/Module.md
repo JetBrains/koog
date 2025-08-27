@@ -71,7 +71,7 @@ This module provides a client implementation for the OpenRouter API, allowing yo
 - **Documents**: Only PDF files are supported despite client having document capability checks
 - **Size limits**: No size validation is enforced in the current implementation
 
-### Custom Parameters Support
+### Model-Specific Parameters Support
 
 The client supports extensive OpenRouter-specific parameters through `OpenRouterParams` class:
 

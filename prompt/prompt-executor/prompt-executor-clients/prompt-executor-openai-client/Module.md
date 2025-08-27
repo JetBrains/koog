@@ -71,7 +71,7 @@ requirements.
 - **PDF Documents**: Only PDF format, requires vision capability
 - **Model Requirements**: Audio needs Audio capability, PDF needs Vision.Image capability
 
-### Custom Parameters Support
+### Model-Specific Parameters Support
 
 #### OpenAI Chat Parameters
 

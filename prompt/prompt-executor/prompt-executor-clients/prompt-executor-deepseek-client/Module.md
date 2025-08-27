@@ -14,7 +14,7 @@ This module provides a client implementation for the DeepSeek API, allowing you 
 | [DeepSeekReasoner] | Medium | $0.55-$2.19 | Text, Tools | Text, Tools |
 
 
-### Custom Parameters Support
+### Model-Specific Parameters Support
 
 The client supports DeepSeek-specific parameters through `DeepSeekParams` class:
 
