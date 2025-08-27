@@ -1,7 +1,7 @@
 # Building an AI Chess Player with Koog Framework
 
 [:material-github: Open on GitHub](
-https://github.com/JetBrains/koog/blob/develop/examples/Chess.ipynb
+https://github.com/JetBrains/koog/blob/develop/examples/notebooks/Chess.ipynb
 ){ .md-button .md-button--primary }
 [:material-download: Download .ipynb](
 https://raw.githubusercontent.com/JetBrains/koog/develop/examples/Chess.ipynb

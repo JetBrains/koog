@@ -1,7 +1,7 @@
 # Drive the browser with Playwright MCP and Koog
 
 [:material-github: Open on GitHub](
-https://github.com/JetBrains/koog/blob/develop/examples/PlaywrightMcp.ipynb
+https://github.com/JetBrains/koog/blob/develop/examples/notebooks/PlaywrightMcp.ipynb
 ){ .md-button .md-button--primary }
 [:material-download: Download .ipynb](
 https://raw.githubusercontent.com/JetBrains/koog/develop/examples/PlaywrightMcp.ipynb

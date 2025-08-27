@@ -1,7 +1,7 @@
 # Unity + Koog: Drive your game from a Kotlin Agent
 
 [:material-github: Open on GitHub](
-https://github.com/JetBrains/koog/blob/develop/examples/UnityMcp.ipynb
+https://github.com/JetBrains/koog/blob/develop/examples/notebooks/UnityMcp.ipynb
 ){ .md-button .md-button--primary }
 [:material-download: Download .ipynb](
 https://raw.githubusercontent.com/JetBrains/koog/develop/examples/UnityMcp.ipynb

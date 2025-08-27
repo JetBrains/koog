@@ -1,7 +1,7 @@
 # Building AI Agents with AWS Bedrock and Koog Framework
 
 [:material-github: Open on GitHub](
-https://github.com/JetBrains/koog/blob/develop/examples/BedrockAgent.ipynb
+https://github.com/JetBrains/koog/blob/develop/examples/notebooks/BedrockAgent.ipynb
 ){ .md-button .md-button--primary }
 [:material-download: Download .ipynb](
 https://raw.githubusercontent.com/JetBrains/koog/develop/examples/BedrockAgent.ipynb

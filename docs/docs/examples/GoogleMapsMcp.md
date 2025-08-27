@@ -1,7 +1,7 @@
 # Google Maps MCP with Koog: From Zero to Elevation in a Kotlin Notebook
 
 [:material-github: Open on GitHub](
-https://github.com/JetBrains/koog/blob/develop/examples/GoogleMapsMcp.ipynb
+https://github.com/JetBrains/koog/blob/develop/examples/notebooks/GoogleMapsMcp.ipynb
 ){ .md-button .md-button--primary }
 [:material-download: Download .ipynb](
 https://raw.githubusercontent.com/JetBrains/koog/develop/examples/GoogleMapsMcp.ipynb
