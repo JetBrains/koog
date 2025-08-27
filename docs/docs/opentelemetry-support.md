@@ -510,9 +510,9 @@ install(OpenTelemetry) {
 
 Please read the [full documentation](opentelemetry-langfuse-exporter.md) about integration with Langfuse.
 
-## Integration with Weave
+## Integration with W&B Weave
 
-Weave provides trace visualization and analytics for LLM/agent workloads. Integration with W&B Weave can be configured via a predefined exporter:
+W&B Weave provides trace visualization and analytics for LLM/agent workloads. Integration with W&B Weave can be configured via a predefined exporter:
 
 <!--- INCLUDE
 import ai.koog.agents.core.agent.AIAgent
@@ -636,7 +636,7 @@ fun main() {
 
 ### Common issues
 
-1. **No traces appearing in Jaeger, Langfuse, or Weave**
+1. **No traces appearing in Jaeger, Langfuse, or W&B Weave**
     - Ensure the service is running and the OpenTelemetry port (4317) is accessible.
     - Check that the OpenTelemetry exporter is configured with the correct endpoint.
     - Make sure to wait a few seconds after agent execution for traces to be exported.
