@@ -1,7 +1,7 @@
 package ai.koog.prompt.llm
 
 import kotlinx.serialization.Serializable
-import org.jetbrains.annotations.ApiStatus
+import org.jetbrains.annotations.ApiStatus.Experimental
 
 /**
  * Represents a specific capability or feature of an LLM (Large Language Model). This is a sealed class,
@@ -214,7 +214,7 @@ public sealed class LLMCapability(public val id: String) {
          * https://platform.openai.com/docs/api-reference/responses
          */
         @Serializable
-        @ApiStatus.Experimental
+        @Experimental
         public data object Responses : OpenAIEndpoint("openai-endpoint-responses")
     }
 }

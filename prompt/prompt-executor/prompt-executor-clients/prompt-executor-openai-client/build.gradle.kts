@@ -12,6 +12,7 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
+                api(libs.jetbrains.annotations)
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-model"))
                 api(project(":prompt:prompt-structure"))
                 implementation(libs.oshai.kotlin.logging)
