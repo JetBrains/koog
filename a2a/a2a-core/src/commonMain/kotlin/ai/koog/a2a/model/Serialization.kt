@@ -1,13 +1,18 @@
 package ai.koog.a2a.model
 
+import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.JsonContentPolymorphicSerializer
 import kotlinx.serialization.json.JsonDecoder
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonEncoder
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.long
 import kotlinx.serialization.json.longOrNull
 
@@ -33,6 +38,22 @@ internal object RequestIdSerializer : KSerializer<RequestId> {
         when (value) {
             is RequestId.StringId -> jsonEncoder.encodeString(value.value)
             is RequestId.NumberId -> jsonEncoder.encodeLong(value.value)
+        }
+    }
+}
+
+internal object SecuritySchemeSerializer : JsonContentPolymorphicSerializer<SecurityScheme>(SecurityScheme::class) {
+    override fun selectDeserializer(element: JsonElement): DeserializationStrategy<SecurityScheme> {
+        val jsonObject = element.jsonObject
+        val type = jsonObject["type"]?.jsonPrimitive?.content ?: error("Missing 'type' field in SecurityScheme")
+
+        return when (type) {
+            "apiKey" -> APIKeySecurityScheme.serializer()
+            "http" -> HTTPAuthSecurityScheme.serializer()
+            "oauth2" -> OAuth2SecurityScheme.serializer()
+            "openIdConnect" -> OpenIdConnectSecurityScheme.serializer()
+            "mutualTLS" -> MutualTLSSecurityScheme.serializer()
+            else -> error("Unknown SecurityScheme type: $type")
         }
     }
 }

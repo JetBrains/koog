@@ -12,13 +12,6 @@ import kotlinx.serialization.json.JsonElement
  */
 public const val JSONRPC_VERSION: String = "2.0"
 
-@Serializable
-public data class JSONRPCError(
-    val code: Int,
-    val message: String,
-    val data: JsonElement? = null,
-)
-
 @Serializable(with = JSONRPCMessageSerializer::class)
 public sealed interface JSONRPCMessage {
     public val jsonrpc: String
@@ -51,6 +44,13 @@ public data class JSONRPCSuccessResponse(
     @EncodeDefault
     override val jsonrpc: String = JSONRPC_VERSION,
 ) : JSONRPCResponse
+
+@Serializable
+public data class JSONRPCError(
+    val code: Int,
+    val message: String,
+    val data: JsonElement? = null,
+)
 
 @Serializable
 public data class JSONRPCErrorResponse(
