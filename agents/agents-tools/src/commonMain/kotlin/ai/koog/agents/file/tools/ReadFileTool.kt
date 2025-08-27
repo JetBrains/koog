@@ -7,14 +7,11 @@ import ai.koog.agents.core.tools.ToolException
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.ToolResult
-import ai.koog.agents.core.tools.fail
-import ai.koog.agents.core.tools.validate
 import ai.koog.agents.file.tools.model.FileSystemEntry
 import ai.koog.agents.file.tools.render.file
 import ai.koog.prompt.text.text
 import ai.koog.rag.base.files.FileMetadata
 import ai.koog.rag.base.files.FileSystemProvider
-import ai.koog.rag.base.files.readText
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 
@@ -48,7 +45,7 @@ public class ReadFileTool<Path>(private val fs: FileSystemProvider.ReadOnly<Path
      *
      * The result encapsulates a [FileSystemEntry.File] which includes:
      * - File metadata (path, name, extension, size, content type, hidden status)
-     * - Content as either full text or line-range excerpt
+     * - Content as either full-text or line-range excerpt
      *
      * @property file the file entry containing metadata and content
      */
@@ -79,33 +76,41 @@ public class ReadFileTool<Path>(private val fs: FileSystemProvider.ReadOnly<Path
      *
      * Performs validation before reading:
      * - Verifies the path exists in the filesystem
-     * - Confirms the path points to a file (not a directory)
+     * - Confirms the path points to a file
+     *  - Confirms the file is a text file
      *
      * @param args arguments specifying the file path and optional line range
      * @return [Result] containing the file with its content and metadata
-     * @throws [ToolException.ValidationFailure] if the file doesn't exist, is a directory, or
-     *   cannot be read
+     * @throws [ToolException.ValidationFailure] if the file doesn't exist, is a directory, or is not a text file
      * @throws [IllegalArgumentException] if line range parameters are invalid
      */
     override suspend fun execute(args: Args): Result {
         val path = fs.fromAbsolutePathString(args.path)
 
-        validate(fs.exists(path)) { "File does not exist: ${args.path}" }
-        validate(fs.metadata(path)?.type == FileMetadata.FileType.File) {
-            "Path must point to a file, not a directory: ${args.path}"
+        if (!fs.exists(path)) {
+            throw ToolException.ValidationFailure("File not found: ${args.path}")
         }
 
-        val file = FileSystemEntry.File.of(
-            path,
-            content = FileSystemEntry.File.Content.of(
-                fs.readText(path),
-                args.startLine,
-                args.endLine,
-            ),
-            fs = fs,
-        ) ?: fail("Unable to read file: ${args.path}")
+        val metadata = fs.metadata(path)
+            ?: throw ToolException.ValidationFailure("Cannot read metadata: ${args.path}")
 
-        return Result(file)
+        if (metadata.type != FileMetadata.FileType.File) {
+            throw ToolException.ValidationFailure("Not a file: ${args.path}")
+        }
+
+        if (fs.getFileContentType(path) != FileMetadata.FileContentType.Text) {
+            throw ToolException.ValidationFailure("File is not a text file: ${args.path}")
+        }
+
+        return Result(
+            buildFileEntry(
+                fs = fs,
+                path = path,
+                metadata = metadata,
+                startLine = args.startLine,
+                endLine = args.endLine,
+            )
+        )
     }
 
     public companion object {
