@@ -517,6 +517,9 @@ import kotlinx.coroutines.runBlocking
 
 fun main() {
     runBlocking {
+        val prompt = prompt("test") {
+            user("Hello")
+        }
 
 -->
 <!--- SUFFIX
