@@ -1,38 +1,75 @@
 package ai.koog.a2a.model
 
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.descriptors.buildClassSerialDescriptor
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
-import kotlinx.serialization.json.JsonDecoder
-import kotlinx.serialization.json.JsonEncoder
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.long
-import kotlinx.serialization.json.longOrNull
+import kotlinx.serialization.DeserializationStrategy
+import kotlinx.serialization.json.JsonContentPolymorphicSerializer
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
-internal object RequestIdSerializer : KSerializer<RequestId> {
-    override val descriptor: SerialDescriptor = buildClassSerialDescriptor("RequestId")
+internal object SecuritySchemeSerializer : JsonContentPolymorphicSerializer<SecurityScheme>(SecurityScheme::class) {
+    override fun selectDeserializer(element: JsonElement): DeserializationStrategy<SecurityScheme> {
+        val jsonObject = element.jsonObject
+        val type = jsonObject["type"]?.jsonPrimitive?.content ?: error("Missing 'type' field in SecurityScheme")
 
-    override fun deserialize(decoder: Decoder): RequestId {
-        val jsonDecoder = decoder as? JsonDecoder ?: error("Can only deserialize JSON")
-
-        return when (val element = jsonDecoder.decodeJsonElement()) {
-            is JsonPrimitive -> when {
-                element.isString -> RequestId.StringId(element.content)
-                element.longOrNull != null -> RequestId.NumberId(element.long)
-                else -> error("Invalid RequestId type")
-            }
-
-            else -> error("Invalid RequestId format")
+        return when (type) {
+            "apiKey" -> APIKeySecurityScheme.serializer()
+            "http" -> HTTPAuthSecurityScheme.serializer()
+            "oauth2" -> OAuth2SecurityScheme.serializer()
+            "openIdConnect" -> OpenIdConnectSecurityScheme.serializer()
+            "mutualTLS" -> MutualTLSSecurityScheme.serializer()
+            else -> error("Unknown SecurityScheme type: $type")
         }
     }
+}
 
-    override fun serialize(encoder: Encoder, value: RequestId) {
-        val jsonEncoder = encoder as? JsonEncoder ?: error("Can only serialize JSON")
-        when (value) {
-            is RequestId.StringId -> jsonEncoder.encodeString(value.value)
-            is RequestId.NumberId -> jsonEncoder.encodeLong(value.value)
+internal object PartSerializer : JsonContentPolymorphicSerializer<Part>(Part::class) {
+    override fun selectDeserializer(element: JsonElement): DeserializationStrategy<Part> {
+        val jsonObject = element.jsonObject
+        val kind = jsonObject["kind"]?.jsonPrimitive?.content ?: error("Missing 'kind' field in Part")
+
+        return when (kind) {
+            "text" -> TextPart.serializer()
+            "file" -> FilePart.serializer()
+            "data" -> DataPart.serializer()
+            else -> error("Unknown Part kind: $kind")
+        }
+    }
+}
+
+internal object FileSerializer : JsonContentPolymorphicSerializer<File>(File::class) {
+    override fun selectDeserializer(element: JsonElement): DeserializationStrategy<File> {
+        val jsonObject = element.jsonObject
+
+        return when {
+            "bytes" in jsonObject -> FileWithBytes.serializer()
+            "uri" in jsonObject -> FileWithUri.serializer()
+            else -> error("Unknown File type")
+        }
+    }
+}
+
+internal object EventSerializer : JsonContentPolymorphicSerializer<Event>(Event::class) {
+    override fun selectDeserializer(element: JsonElement): DeserializationStrategy<Event> {
+        val jsonObject = element.jsonObject
+        val kind = jsonObject["kind"]?.jsonPrimitive?.content ?: error("Missing 'kind' field in Event")
+
+        return when (kind) {
+            "status-update" -> TaskStatusUpdateEvent.serializer()
+            "artifact-update" -> TaskArtifactUpdateEvent.serializer()
+            else -> CommunicationSerializer
+        }
+    }
+}
+
+internal object CommunicationSerializer : JsonContentPolymorphicSerializer<Communication>(Communication::class) {
+    override fun selectDeserializer(element: JsonElement): DeserializationStrategy<Communication> {
+        val jsonObject = element.jsonObject
+        val kind = jsonObject["kind"]?.jsonPrimitive?.content ?: error("Missing 'kind' field in Communication")
+
+        return when (kind) {
+            "task" -> Task.serializer()
+            "message" -> Message.serializer()
+            else -> error("Unknown kind: $kind")
         }
     }
 }

@@ -1,10 +1,10 @@
-package ai.koog.a2a.model
+package ai.koog.a2a.transport
 
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class ModelSerializationTest {
+class TransportSerializationTest {
     @Suppress("PrivatePropertyName")
     private val TestJson = Json
 

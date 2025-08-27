@@ -2,7 +2,7 @@
 
 package ai.koog.a2a.transport.jsonrpc.model
 
-import ai.koog.a2a.model.RequestId
+import ai.koog.a2a.transport.RequestId
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
@@ -11,13 +11,6 @@ import kotlinx.serialization.json.JsonElement
  * Default JSON-RPC version.
  */
 public const val JSONRPC_VERSION: String = "2.0"
-
-@Serializable
-public data class JSONRPCError(
-    val code: Int,
-    val message: String,
-    val data: JsonElement? = null,
-)
 
 @Serializable(with = JSONRPCMessageSerializer::class)
 public sealed interface JSONRPCMessage {
@@ -51,6 +44,13 @@ public data class JSONRPCSuccessResponse(
     @EncodeDefault
     override val jsonrpc: String = JSONRPC_VERSION,
 ) : JSONRPCResponse
+
+@Serializable
+public data class JSONRPCError(
+    val code: Int,
+    val message: String,
+    val data: JsonElement? = null,
+)
 
 @Serializable
 public data class JSONRPCErrorResponse(
