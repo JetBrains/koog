@@ -163,10 +163,10 @@ install(Koog) {
     llm {
         openAI(apiKey = System.getenv("OPENAI_API_KEY") ?: "") {
             baseUrl = "https://api.openai.com"
-            timeouts { // values are Durations under the hood
-                requestTimeoutMillis = 30_000
-                connectTimeoutMillis = 10_000
-                socketTimeoutMillis = 30_000
+            timeouts { // Default values shown below
+                requestTimeout = 15.minutes
+                connectTimeout = 60.seconds
+                socketTimeout = 15.minutes
             }
         }
         anthropic(apiKey = System.getenv("ANTHROPIC_API_KEY") ?: "")
