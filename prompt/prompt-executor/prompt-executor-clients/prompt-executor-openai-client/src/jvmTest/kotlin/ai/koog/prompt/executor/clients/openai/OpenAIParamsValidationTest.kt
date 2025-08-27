@@ -3,6 +3,9 @@ package ai.koog.prompt.executor.clients.openai
 import ai.koog.prompt.params.LLMParams
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.NullSource
+import org.junit.jupiter.params.provider.ValueSource
 import kotlin.test.assertEquals
 
 class OpenAIParamsValidationTest {
@@ -13,42 +16,83 @@ class OpenAIParamsValidationTest {
         OpenAIResponsesParams(topP = 1.0)
     }
 
-    @Test
-    fun `OpenAIResponsesParams invalid topP`() {
-        assertThrows<IllegalArgumentException> { OpenAIResponsesParams(topP = -0.1) }
-        assertThrows<IllegalArgumentException> { OpenAIResponsesParams(topP = 1.1) }
+    @ParameterizedTest
+    @ValueSource(doubles = [-0.1, 1.1])
+    fun `OpenAIResponsesParams invalid topP`(value: Double) {
+        assertThrows<IllegalArgumentException>("Responses: topP must be in (0.0, 1.0]") {
+            OpenAIResponsesParams(topP = value)
+        }
     }
 
-    @Test
-    fun `OpenAIResponsesParams topLogprobs requires logprobs=true`() {
-        assertThrows<IllegalArgumentException> { OpenAIResponsesParams(logprobs = null, topLogprobs = 1) }
-        assertThrows<IllegalArgumentException> { OpenAIResponsesParams(logprobs = false, topLogprobs = 1) }
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(booleans = [false])
+    fun `OpenAIResponsesParams topLogprobs requires logprobs=true`(logprobsValue: Boolean?) {
+        assertThrows<IllegalArgumentException>("Responses: `topLogprobs` requires `logprobs=true`.") {
+            OpenAIResponsesParams(
+                logprobs = logprobsValue,
+                topLogprobs = 1
+            )
+        }
     }
 
-    @Test
-    fun `OpenAIResponsesParams topLogprobs bounds`() {
+    @ParameterizedTest
+    @ValueSource(ints = [0, 20])
+    fun `OpenAIResponsesParams topLogprobs bounds`(topLogprobs: Int) {
         // With logprobs=true the allowed range is [0, 20]
-        OpenAIResponsesParams(logprobs = true, topLogprobs = 0)
-        OpenAIResponsesParams(logprobs = true, topLogprobs = 20)
-        assertThrows<IllegalArgumentException> { OpenAIResponsesParams(logprobs = true, topLogprobs = -1) }
-        assertThrows<IllegalArgumentException> { OpenAIResponsesParams(logprobs = true, topLogprobs = 21) }
+        OpenAIResponsesParams(logprobs = true, topLogprobs = topLogprobs)
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = [-1, 21])
+    fun `OpenAIResponsesParams invalid topLogprobs values when logprobs=true`(value: Int) {
+        assertThrows<IllegalArgumentException>("Responses: `topLogprobs` must be in [0, 20]") {
+            OpenAIResponsesParams(
+                logprobs = true,
+                topLogprobs = value
+            )
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(doubles = [0.0, 1.0])
+    fun `OpenAIChatParams topP within bounds`(topP: Double) {
+        OpenAIChatParams(topP = topP)
+    }
+
+    @ParameterizedTest
+    @ValueSource(doubles = [-0.1, 1.1])
+    fun `OpenAIChatParams invalid topP`(value: Double) {
+        val expected = if (value < 0) "TopP must be positive" else "TopP must be <= 1"
+        assertThrows<IllegalArgumentException>(expected) { OpenAIChatParams(topP = value) }
     }
 
     @Test
-    fun `OpenAIChatParams validations smoke`() {
-        OpenAIChatParams(topP = 0.0)
-        OpenAIChatParams(topP = 1.0)
-        assertThrows<IllegalArgumentException> { OpenAIChatParams(topP = -0.1) }
-        assertThrows<IllegalArgumentException> { OpenAIChatParams(topP = 1.1) }
-
-        // topLogprobs requires logprobs=true
-        assertThrows<IllegalArgumentException> { OpenAIChatParams(logprobs = null, topLogprobs = 1) }
-        assertThrows<IllegalArgumentException> { OpenAIChatParams(logprobs = false, topLogprobs = 1) }
-
+    fun `OpenAIChatParams other validations`() {
+        // non-parametric checks remain here
         OpenAIChatParams(logprobs = true, topLogprobs = 0)
         OpenAIChatParams(logprobs = true, topLogprobs = 20)
-        assertThrows<IllegalArgumentException> { OpenAIChatParams(logprobs = true, topLogprobs = -1) }
-        assertThrows<IllegalArgumentException> { OpenAIChatParams(logprobs = true, topLogprobs = 21) }
+    }
+
+    @Test
+    fun `OpenAIChatParams topLogprobs requires logprobs=true`() {
+        assertThrows<IllegalArgumentException> {
+            OpenAIChatParams(
+                logprobs = false,
+                topLogprobs = 1
+            )
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = [-1, 21])
+    fun `OpenAIChatParams invalid topLogprobs values when logprobs=true`(value: Int) {
+        assertThrows<IllegalArgumentException>("Chat: `topLogprobs` must be in [0, 20]") {
+            OpenAIChatParams(
+                logprobs = true,
+                topLogprobs = value
+            )
+        }
     }
 
     @Test
@@ -82,25 +126,63 @@ class OpenAIParamsValidationTest {
 
     @Test
     fun `temperature and topP are mutually exclusive in Chat and Responses`() {
-        assertThrows<IllegalArgumentException> { OpenAIChatParams(temperature = 0.5, topP = 0.5) }
-        assertThrows<IllegalArgumentException> { OpenAIResponsesParams(temperature = 0.5, topP = 0.5) }
+        assertThrows<IllegalArgumentException>("Chat: temperature and topP are mutually exclusive") {
+            OpenAIChatParams(
+                temperature = 0.5,
+                topP = 0.5
+            )
+        }
+        assertThrows<IllegalArgumentException>("Responses: temperature and topP are mutually exclusive") {
+            OpenAIResponsesParams(
+                temperature = 0.5,
+                topP = 0.5
+            )
+        }
     }
 
     @Test
     fun `non-blank identifiers validated`() {
-        assertThrows<IllegalArgumentException> { OpenAIChatParams(promptCacheKey = " ") }
-        assertThrows<IllegalArgumentException> { OpenAIChatParams(safetyIdentifier = "") }
-        assertThrows<IllegalArgumentException> { OpenAIResponsesParams(promptCacheKey = " ") }
-        assertThrows<IllegalArgumentException> { OpenAIResponsesParams(safetyIdentifier = "") }
+        assertThrows<IllegalArgumentException>("Chat: promptCacheKey must be non-blank") {
+            OpenAIChatParams(
+                promptCacheKey = " "
+            )
+        }
+        assertThrows<IllegalArgumentException>("Chat: safetyIdentifier must be non-blank") {
+            OpenAIChatParams(
+                safetyIdentifier = ""
+            )
+        }
+        assertThrows<IllegalArgumentException>("Responses: promptCacheKey must be non-blank") {
+            OpenAIResponsesParams(
+                promptCacheKey = " "
+            )
+        }
+        assertThrows<IllegalArgumentException>("Responses: safetyIdentifier must be non-blank") {
+            OpenAIResponsesParams(
+                safetyIdentifier = ""
+            )
+        }
         OpenAIChatParams(promptCacheKey = "key", safetyIdentifier = "sid")
         OpenAIResponsesParams(promptCacheKey = "key", safetyIdentifier = "sid")
     }
 
     @Test
     fun `responses include and maxToolCalls validations`() {
-        assertThrows<IllegalArgumentException> { OpenAIResponsesParams(include = emptyList()) }
-        assertThrows<IllegalArgumentException> { OpenAIResponsesParams(include = listOf("")) }
-        assertThrows<IllegalArgumentException> { OpenAIResponsesParams(maxToolCalls = -1) }
+        assertThrows<IllegalArgumentException>("Responses: include must not be empty when provided.") {
+            OpenAIResponsesParams(
+                include = emptyList()
+            )
+        }
+        assertThrows<IllegalArgumentException>("Responses: include entries must be non-blank") {
+            OpenAIResponsesParams(
+                include = listOf("")
+            )
+        }
+        assertThrows<IllegalArgumentException>("Responses: maxToolCalls must be >= 0") {
+            OpenAIResponsesParams(
+                maxToolCalls = -1
+            )
+        }
         OpenAIResponsesParams(include = listOf("output_text"), maxToolCalls = 0)
     }
 }

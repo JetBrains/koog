@@ -104,22 +104,31 @@ public class OpenAIChatParams(
 ),
     OpenAIParams {
     init {
-        require(topP == null || topP in 0.0..1.0) {
-            "topP must be in (0.0, 1.0], but was $topP"
+        // Mutual exclusivity: temperature and topP
+        require(!(temperature != null && topP != null)) {
+            "temperature and topP are mutually exclusive"
         }
+
+        // topP bounds
+        if (topP != null) {
+            require(topP >= 0.0) { "TopP must be positive" }
+            require(topP <= 1.0) { "TopP must be <= 1" }
+        }
+
+        // topLogprobs requires logprobs=true, and bounds
         if (topLogprobs != null) {
-            require(logprobs == true) {
-                "`topLogprobs` requires `logprobs=true`."
+            require(logprobs != false) {
+                "topLogprobs should not be provided when logprobs=false"
             }
-            require(topLogprobs in 0..20) {
-                "`topLogprobs` must be in [0, 20], but was $topLogprobs"
-            }
+            require(topLogprobs in 0..20) { "`topLogprobs` must be in [0, 20], but was $topLogprobs" }
         }
-        require(frequencyPenalty == null || frequencyPenalty in -2.0..2.0) {
-            "frequencyPenalty must be in [-2.0, 2.0], but was $frequencyPenalty"
+
+        require(promptCacheKey == null || promptCacheKey.isNotBlank()) {
+            "promptCacheKey must be non-blank"
         }
-        require(presencePenalty == null || presencePenalty in -2.0..2.0) {
-            "presencePenalty must be in [-2.0, 2.0], but was $presencePenalty"
+
+        require(safetyIdentifier == null || safetyIdentifier.isNotBlank()) {
+            "safetyIdentifier must be non-blank"
         }
 
         // --- Stop sequences ---
@@ -319,6 +328,11 @@ public class OpenAIResponsesParams(
 ),
     OpenAIParams {
     init {
+        // Mutual exclusivity: temperature and topP
+        require(!(temperature != null && topP != null)) {
+            "temperature and topP are mutually exclusive"
+        }
+
         require(topP == null || topP in 0.0..1.0) {
             "topP must be in (0.0, 1.0], but was $topP"
         }
@@ -329,6 +343,24 @@ public class OpenAIResponsesParams(
             require(topLogprobs in 0..20) {
                 "`topLogprobs` must be in [0, 20], but was $topLogprobs"
             }
+        }
+        require(promptCacheKey == null || promptCacheKey.isNotBlank()) {
+            "promptCacheKey must be non-blank"
+        }
+
+        require(safetyIdentifier == null || safetyIdentifier.isNotBlank()) {
+            "safetyIdentifier must be non-blank"
+        }
+
+        // include validations
+        if (include != null) {
+            require(include.isNotEmpty()) { "include must not be empty when provided." }
+            require(include.all { it.isNotBlank() }) { "include entries must be non-blank" }
+        }
+
+        // maxToolCalls bounds
+        if (maxToolCalls != null) {
+            require(maxToolCalls >= 0) { "maxToolCalls must be >= 0" }
         }
     }
 
