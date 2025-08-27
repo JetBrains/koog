@@ -223,7 +223,7 @@ class AIAgentIntegrationTest {
                 prompt = prompt(
                     id = "multiple-tool-calls-agent",
                     params = LLMParams(
-                        temperature = 0.0,
+                        temperature = 1.0,
                         toolChoice = ToolChoice.Auto,
                     )
                 ) {
@@ -389,7 +389,6 @@ class AIAgentIntegrationTest {
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_AIAgentShouldCallCustomTool(model: LLModel) = runTest {
         Models.assumeAvailable(model.provider)
-        val systemPromptForSmallLLM = systemPrompt + "You MUST use tools."
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
         val toolRegistry = ToolRegistry {
@@ -401,13 +400,7 @@ class AIAgentIntegrationTest {
 
             val agent = AIAgent(
                 executor = executor,
-                systemPrompt = if (model.id ==
-                    OpenAIModels.CostOptimized.O4Mini.id
-                ) {
-                    systemPromptForSmallLLM
-                } else {
-                    systemPrompt
-                },
+                systemPrompt = systemPrompt + "You MUST use tools.",
                 llmModel = model,
                 temperature = 1.0,
                 toolRegistry = toolRegistry,
@@ -450,7 +443,7 @@ class AIAgentIntegrationTest {
                 executor = executor,
                 systemPrompt = "You are a helpful assistant that can analyze images.",
                 llmModel = model,
-                temperature = 0.7,
+                temperature = 1.0,
                 maxIterations = 10,
                 installFeatures = { install(EventHandler.Feature, eventHandlerConfig) },
             )
@@ -576,7 +569,6 @@ class AIAgentIntegrationTest {
     @ParameterizedTest
     @MethodSource("reasoningIntervals")
     fun integration_AIAgentWithReActStrategyTest(interval: Int) = runTest(timeout = 300.seconds) {
-        // As we're checking the strategy, we're not passing each model and use one "default" profile to build an agent
         val model = OpenAIModels.Chat.GPT4o
 
         withRetry {
@@ -588,7 +580,7 @@ class AIAgentIntegrationTest {
                     prompt = prompt(
                         id = "react-agent-test",
                         params = LLMParams(
-                            temperature = 0.0,
+                            temperature = 1.0,
                             toolChoice = ToolChoice.Auto,
                         )
                     ) {},
@@ -1016,7 +1008,7 @@ class AIAgentIntegrationTest {
                     prompt = prompt(
                         id = "calculator-agent-test",
                         params = LLMParams(
-                            temperature = 0.1,
+                            temperature = 1.0,
                             toolChoice = ToolChoice.Auto, // KG-163
                         )
                     ) {

@@ -34,9 +34,6 @@ object Models {
             OpenAIModels.CostOptimized.GPT4_1Nano,
             OpenAIModels.CostOptimized.GPT4_1Mini,
             OpenAIModels.CostOptimized.GPT4oMini,
-
-            OpenAIModels.Audio.GPT4oMiniAudio,
-            OpenAIModels.Audio.GPT4oAudio,
         )
     }
 
