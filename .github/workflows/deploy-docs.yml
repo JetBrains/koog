@@ -28,11 +28,12 @@ jobs:
           git config --global user.email "github-actions@github.com"
           
           cd build/dokka/html
-
+          
+          echo "api.koog.ai" > CNAME
+          
           git init
           git remote add origin https://x-access-token:${{ secrets.DOCS_DEPLOY_TOKEN }}@github.com/JetBrains/koog-api-docs.git
           git checkout -b main
-
           git add .
           git commit -m "Update docs"
           git push --force origin main
