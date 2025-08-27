@@ -7,6 +7,7 @@ import ai.koog.prompt.executor.clients.openai.models.ReasoningEffort
 import ai.koog.prompt.executor.clients.openai.models.ServiceTier
 import ai.koog.prompt.executor.clients.openai.models.Truncation
 import ai.koog.prompt.params.LLMParams
+import org.jetbrains.annotations.ApiStatus.Experimental
 
 internal sealed interface OpenAIParams
 
