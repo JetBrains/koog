@@ -124,7 +124,7 @@ public sealed interface FileSystemEntry {
         /**
          * Visits this folder and its descendants up to the specified depth.
          *
-         * @param depth Hhw deep to traverse (0 = this folder only, negative values treated as 0)
+         * @param depth how deep to traverse (0 = this folder only, negative values treated as 0)
          * @param visitor function called for each visited entry
          */
         override suspend fun visit(depth: Int, visitor: suspend (FileSystemEntry) -> Unit) {
