@@ -177,7 +177,7 @@ install(Koog) {
 
         // Optional fallback used by PromptExecutor when a provider isn’t configured
         fallback {
-            provider = ai.koog.prompt.llm.LLMProvider.OpenAI
+            provider = LLMProvider.OpenAI
             model = OpenAIModels.Chat.GPT4_1
         }
     }
