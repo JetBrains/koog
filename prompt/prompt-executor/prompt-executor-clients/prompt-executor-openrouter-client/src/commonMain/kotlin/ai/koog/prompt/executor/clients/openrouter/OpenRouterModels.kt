@@ -132,43 +132,6 @@ public object OpenRouterModels : LLModelDefinitions {
     )
 
     /**
-     * Represents the GPT-5 Chat model hosted on OpenRouter.
-     *
-     * It leverages a set of multimodal capabilities for interaction.
-     */
-    public val GPT5Chat: LLModel = LLModel(
-        provider = LLMProvider.OpenRouter,
-        id = "openai/gpt-5-chat",
-        capabilities = multimodalCapabilities,
-        contextLength = 400_000,
-        maxOutputTokens = 128_000,
-    )
-
-    /**
-     * GPT-5 Mini model offering balanced performance and efficiency.
-     * Provides multimodal capabilities with extensive context and output limits.
-     */
-    public val GPT5Mini: LLModel = LLModel(
-        provider = LLMProvider.OpenRouter,
-        id = "openai/gpt-5-mini",
-        capabilities = multimodalCapabilities,
-        contextLength = 400_000,
-        maxOutputTokens = 128_000,
-    )
-
-    /**
-     * GPT-5 Nano model designed for lightweight yet capable operations.
-     * Features multimodal support with large context window and output capacity.
-     */
-    public val GPT5Nano: LLModel = LLModel(
-        provider = LLMProvider.OpenRouter,
-        id = "openai/gpt-5-nano",
-        capabilities = multimodalCapabilities,
-        contextLength = 400_000,
-        maxOutputTokens = 128_000,
-    )
-
-    /**
      * Represents the GPT-4o-mini model hosted on OpenRouter.
      *
      * It leverages a standard set of capabilities for interaction.
@@ -179,6 +142,19 @@ public object OpenRouterModels : LLModelDefinitions {
         capabilities = multimodalCapabilities,
         contextLength = 128_000,
         maxOutputTokens = 16_400,
+    )
+
+    /**
+     * Represents the GPT-5 Chat model hosted on OpenRouter.
+     *
+     * It leverages a set of multimodal capabilities for interaction.
+     */
+    public val GPT5Chat: LLModel = LLModel(
+        provider = LLMProvider.OpenRouter,
+        id = "openai/gpt-5-chat",
+        capabilities = multimodalCapabilities,
+        contextLength = 400_000,
+        maxOutputTokens = 128_000,
     )
 
     /**

@@ -1,18 +1,16 @@
 package ai.koog.prompt.executor.llms
 
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.agents.testing.client.CapturingLLMClient
 import ai.koog.prompt.dsl.ModerationCategory
 import ai.koog.prompt.dsl.ModerationCategoryResult
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
-import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
@@ -25,61 +23,6 @@ class SingleLLMPromptExecutorTest {
 
     private val mockClock = object : Clock {
         override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z")
-    }
-
-    private class CapturingLLMClient(
-        private val executeResponses: List<Message.Response> = emptyList(),
-        private val streamingChunks: List<String> = emptyList(),
-        private val choices: List<LLMChoice> = emptyList(),
-        private val moderationResult: ModerationResult = ModerationResult(isHarmful = false, categories = emptyMap()),
-    ) : LLMClient {
-        var lastExecutedPrompt: Prompt? = null
-        var lastExecutedModel: LLModel? = null
-        var lastExecutedTools: List<ToolDescriptor>? = null
-
-        var lastStreamingPrompt: Prompt? = null
-        var lastStreamingModel: LLModel? = null
-
-        var lastChoicesPrompt: Prompt? = null
-        var lastChoicesModel: LLModel? = null
-        var lastChoicesTools: List<ToolDescriptor>? = null
-
-        var lastModerationPrompt: Prompt? = null
-        var lastModerationModel: LLModel? = null
-
-        override suspend fun execute(
-            prompt: Prompt,
-            model: LLModel,
-            tools: List<ToolDescriptor>
-        ): List<Message.Response> {
-            lastExecutedPrompt = prompt
-            lastExecutedModel = model
-            lastExecutedTools = tools
-            return executeResponses
-        }
-
-        override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
-            lastStreamingPrompt = prompt
-            lastStreamingModel = model
-            return flowOf(*streamingChunks.toTypedArray())
-        }
-
-        override suspend fun executeMultipleChoices(
-            prompt: Prompt,
-            model: LLModel,
-            tools: List<ToolDescriptor>
-        ): List<LLMChoice> {
-            lastChoicesPrompt = prompt
-            lastChoicesModel = model
-            lastChoicesTools = tools
-            return choices
-        }
-
-        override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
-            lastModerationPrompt = prompt
-            lastModerationModel = model
-            return moderationResult
-        }
     }
 
     private val mockModel: LLModel = LLModel(

@@ -22,6 +22,7 @@ kotlin {
         }
         commonTest {
             dependencies {
+                api(project(":agents:agents-test"))
                 implementation(kotlin("test"))
                 implementation(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
                 implementation(

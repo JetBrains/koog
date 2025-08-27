@@ -38,30 +38,36 @@ class DeepSeekLLMClientTest {
     val http = HttpClient(engine) {}
     val key = "test-key"
     val content = "Hello from DeepSeek"
+
+    //language=json
     val body = """
         {
-          "id": "chatcmpl-123",
-          "object": "chat.completion",
-          "created": 1716920000,
-          "model": "deepseek-chat",
-          "choices": [
+        "id": "chatcmpl-123",
+        "object": "chat.completion", 
+        "created": 1716920000,
+        "system_fingerprint": "dummy",
+        "model": "deepseek-chat",
+        "choices": [
             {
-              "index": 0,
-              "message": {"role": "assistant", "content": "$content"},
-              "finish_reason": "stop"
+        "index": 0,
+        "message": {"role": "assistant", "content": "$content"},
+        "finish_reason": "stop"
             }
-          ],
-          "usage": {"total_tokens": 10, "prompt_tokens": 5, "completion_tokens": 5}
+        ],
+        "usage": {"total_tokens": 10, "prompt_tokens": 5, "completion_tokens": 5}
         }
     """.trimIndent()
 
     val optionA = "Choice A"
     val optionB = "Choice B"
+
+    //language=json
     val bodyMultipleChoices = """
         {
           "id": "chatcmpl-456",
           "object": "chat.completion",
           "created": 1716920003,
+          "system_fingerprint": "dummy",
           "model": "deepseek-chat",
           "choices": [
             {
@@ -79,11 +85,13 @@ class DeepSeekLLMClientTest {
         }
     """.trimIndent()
 
+    //language=json
     val structuredBody = """
         {
           "id": "chatcmpl-789",
           "object": "chat.completion",
           "created": 1716920004,
+          "system_fingerprint": "dummy",
           "model": "deepseek-chat",
           "choices": [
             {"index": 0, "message": {"role": "assistant", "content": "{\"name\":\"Alice\"}"}, "finish_reason": "stop"}
