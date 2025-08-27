@@ -187,11 +187,31 @@ public sealed class LLMCapability(public val id: String) {
         }
     }
 
+    /**
+     * Represents an OpenAI-related API endpoint for Large Language Model (LLM) operations.
+     *
+     * This sealed class serves as a specific capability type for OpenAI-based LLM. It provides predefined
+     * endpoints that correspond to specific functionalities, such as generating completions or accessing responses.
+     *
+     * @param endpoint A string identifier representing the OpenAI endpoint's functionality.
+     */
     @Serializable
     public sealed class OpenAIEndpoint(public val endpoint: String) : LLMCapability(endpoint) {
+        /**
+         * Represents the chat completion endpoint capability for an OpenAI-based LLM.
+         *
+         * This capability identifies the chat completion-based interaction capability of OpenAI-based LLM.
+         * https://platform.openai.com/docs/api-reference/chat
+         */
         @Serializable
         public data object Completions : OpenAIEndpoint("openai-endpoint-chat-completions")
 
+        /**
+         * Represents the responses endpoint capability for an OpenAI-based LLM.
+         *
+         * This capability identifies the response-based interaction capability of OpenAI-based LLM.
+         * https://platform.openai.com/docs/api-reference/responses
+         */
         @Serializable
         public data object Responses : OpenAIEndpoint("openai-endpoint-responses")
     }
