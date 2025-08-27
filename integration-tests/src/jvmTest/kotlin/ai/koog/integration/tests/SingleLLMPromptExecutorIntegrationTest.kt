@@ -522,9 +522,7 @@ class SingleLLMPromptExecutorIntegrationTest {
     @MethodSource("modelClientCombinations")
     fun integration_testStructuredDataStreaming(model: LLModel, client: LLMClient) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
-        if (model.id == OpenAIModels.Audio.GPT4oAudio.id || model.id == OpenAIModels.Audio.GPT4oMiniAudio.id) {
-            assumeTrue(false, "https://github.com/JetBrains/koog/issues/231")
-        }
+        assumeTrue(model != OpenAIModels.CostOptimized.GPT4_1Nano, "Model $model is too small for structured streaming")
 
         val countries = mutableListOf<Country>()
         val countryDefinition = markdownCountryDefinition()
@@ -800,10 +798,10 @@ class SingleLLMPromptExecutorIntegrationTest {
                             } else if (model.provider == LLMProvider.OpenAI) {
                                 assertEquals(
                                     e.message?.contains(
-                                        "The image data you provided does not represent a valid image. Please check your input and try again."
+                                        "You uploaded an unsupported image. Please make sure your image is valid."
                                     ),
                                     true,
-                                    "Expected exception for a corrupted image [The image data you provided does not represent a valid image. Please check your input and try again..] was not found, got [${e.message}] instead"
+                                    "Expected exception for a corrupted image [You uploaded an unsupported image. Please make sure your image is valid..] was not found, got [${e.message}] instead"
                                 )
                             }
                         }

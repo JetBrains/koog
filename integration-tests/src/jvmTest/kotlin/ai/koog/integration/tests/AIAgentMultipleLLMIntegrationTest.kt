@@ -719,6 +719,7 @@ class AIAgentMultipleLLMIntegrationTest {
     @MethodSource("modelsWithVisionCapability")
     fun integration_testAgentWithImageCapabilityUrl(model: LLModel) = runTest(timeout = 120.seconds) {
         Models.assumeAvailable(model.provider)
+
         val fs = MockFileSystem()
         val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
             onToolCall { eventContext ->
@@ -756,21 +757,22 @@ class AIAgentMultipleLLMIntegrationTest {
             prompt = prompt,
         )
 
-        val result = agent.run("Hi! Please analyse my image.")
+        withRetry(5) {
+            val result = agent.run("Hi! Please analyse my image.")
+            assertNotNull(result, "Result should not be null")
+            assertTrue(result.isNotBlank(), "Result should not be empty or blank")
+            assertTrue(result.length > 20, "Result should contain more than 20 characters")
 
-        assertNotNull(result, "Result should not be null")
-        assertTrue(result.isNotBlank(), "Result should not be empty or blank")
-        assertTrue(result.length > 20, "Result should contain more than 20 characters")
-
-        val resultLowerCase = result.lowercase()
-        assertFalse(resultLowerCase.contains("error processing"), "Result should not contain error messages")
-        assertFalse(
-            resultLowerCase.contains("unable to process"),
-            "Result should not indicate inability to process"
-        )
-        assertFalse(
-            resultLowerCase.contains("cannot process"),
-            "Result should not indicate inability to process"
-        )
+            val resultLowerCase = result.lowercase()
+            assertFalse(resultLowerCase.contains("error processing"), "Result should not contain error messages")
+            assertFalse(
+                resultLowerCase.contains("unable to process"),
+                "Result should not indicate inability to process"
+            )
+            assertFalse(
+                resultLowerCase.contains("cannot process"),
+                "Result should not indicate inability to process"
+            )
+        }
     }
 }

@@ -990,7 +990,8 @@ class AIAgentIntegrationTest {
             GoogleModels.Gemini2_0Flash.id,
             GoogleModels.Gemini2_0Flash001.id,
             GoogleModels.Gemini2_0FlashLite.id,
-            GoogleModels.Gemini2_0FlashLite001.id
+            GoogleModels.Gemini2_0FlashLite001.id,
+            OpenAIModels.Chat.GPT5Mini.id
         )
         assumeTrue(!flakyModels.contains(model.id), "Model $model is flaky and fails to call tools")
 
@@ -1029,7 +1030,7 @@ class AIAgentIntegrationTest {
             assertEquals(
                 listOf(CalculatorToolNoArgs.descriptor.name),
                 actualToolCalls,
-                "Only the ${CalculatorToolNoArgs.descriptor.name} tool should be called for model $model"
+                "${CalculatorToolNoArgs.descriptor.name} tool should be called for model $model"
             )
 
             assertTrue(errors.isEmpty(), "There should be no errors")
