@@ -101,7 +101,7 @@ jobs:
 
       - name: iosSimulatorArm64Test with Gradle Wrapper
         if: matrix.os == 'macos-latest'
-        run: ./gradlew iosSimulatorArm64Test --continue
+        run: ./gradlew linkIosSimulatorArm64 iosSimulatorArm64Test --continue
 
       - name: Archive coverage data
         if: matrix.os == 'ubuntu-latest'
