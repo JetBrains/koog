@@ -14,6 +14,7 @@ val libs = the<LibrariesForLibs>()
  */
 val kotlinLanguageVersion = KotlinVersion.KOTLIN_2_1
 val kotlinApiVersion = KotlinVersion.KOTLIN_2_1
+val kotlinBomVersion = requireNotNull(libs.kotlin.bom.get().version)
 
 extensions.getByType<KotlinProjectExtension>().apply {
     jvmToolchain {
@@ -66,7 +67,7 @@ configurations.all {
              constraints consumers.
              */
             if (requested.group == "org.jetbrains.kotlin") {
-                useVersion(requireNotNull(libs.kotlin.bom.get().version))
+                useVersion(kotlinBomVersion)
                 because("Kotlin dependencies should use version from the Kotlin BOM")
             }
         }
