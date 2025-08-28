@@ -7,49 +7,7 @@ import ai.koog.agents.core.agent.entity.AIAgentNodeBase
 import ai.koog.agents.core.utils.Some
 import kotlin.reflect.KProperty
 import kotlin.reflect.KType
-
-/**
- * A builder class for constructing instances of [AIAgentNodeBase] with specific behavior and attributes.
- *
- * This class is responsible for managing the configuration of an AI agent node, including its name
- * and execution logic. It provides a mechanism for defining a unit of execution that operates
- * within the context of an AI agent, linking an input type [Input] to an output type [Output].
- *
- * @param Input The type of input data the node will process.
- * @param Output The type of output data the node will produce.
- * @param inputType [KType] of the [Input]
- * @param outputType [KType] of the [Output]
- * @constructor Used internally to create a new builder with the provided execution logic.
- * @param execute A suspending function to define the execution logic of the node. This function will be called
- * in the scope of [AIAgentContext], where it has access to the AI agent's context and tools relevant
- * to its operation.
- */
-public open class AIAgentNodeBuilder<Input, Output>(
-    private val inputType: KType,
-    private val outputType: KType,
-    private val execute: suspend AIAgentGraphContextBase.(Input) -> Output
-) : BaseBuilder<AIAgentNodeBase<Input, Output>> {
-    /**
-     * The name of the AI agent node being built.
-     *
-     * This property must be initialized before building the instance, as it serves as the unique identifier
-     * for the node within the agent's configuration. The name can be used to reference the node
-     * in the context of an AI agent's execution graph or strategy.
-     *
-     * The `name` value directly influences the identification of the node in the agent's internal architecture
-     * and is essential for maintaining clarity and structure in complex configurations.
-     */
-    public lateinit var name: String
-
-    override fun build(): AIAgentNodeBase<Input, Output> {
-        return AIAgentNode(
-            name = name,
-            inputType = inputType,
-            outputType = outputType,
-            execute = execute
-        )
-    }
-}
+import kotlin.reflect.typeOf
 
 /**
  * Creates a directed edge from this `AIAgentNodeBase` to another `AIAgentNodeBase`, allowing
@@ -74,7 +32,7 @@ public infix fun <IncomingOutput, OutgoingInput> AIAgentNodeBase<*, IncomingOutp
  * A delegate for creating and managing an instance of [AIAgentNodeBase].
  *
  * This class simplifies the instantiation and management of AI agent nodes. It leverages
- * property delegation to lazily initialize a node instance using a given [AIAgentNodeBuilder].
+ * property delegation to lazily initialize a node instance.
  * The node's name can either be explicitly provided or derived from the delegated property name.
  *
  * @param Input The type of input data the delegated node will process.
@@ -82,11 +40,12 @@ public infix fun <IncomingOutput, OutgoingInput> AIAgentNodeBase<*, IncomingOutp
  * @constructor Initializes the delegate with the provided node name and builder.
  * @param name The optional name of the node. If not provided, the name will be derived from the
  * property to which the delegate is applied.
- * @param nodeBuilder The builder used to construct the [AIAgentNodeBase] instance for this delegate.
  */
 public open class AIAgentNodeDelegate<Input, Output>(
-    private val name: String?,
-    private val nodeBuilder: AIAgentNodeBuilder<Input, Output>,
+    public val name: String?,
+    public val inputType: KType,
+    public val outputType: KType,
+    public val execute: suspend AIAgentContextBase.(Input) -> Output
 ) {
     private var node: AIAgentNodeBase<Input, Output>? = null
 
@@ -100,10 +59,34 @@ public open class AIAgentNodeDelegate<Input, Output>(
      */
     public operator fun getValue(thisRef: Any?, property: KProperty<*>): AIAgentNodeBase<Input, Output> {
         if (node == null) {
-            // if name is explicitly defined, use it, otherwise use property name as node name
-            node = nodeBuilder.also { it.name = name ?: property.name }.build()
+            node = AIAgentNode(
+                // if name is explicitly defined, use it, otherwise use property name as node name
+                name = name ?: property.name,
+                inputType = inputType,
+                outputType = outputType,
+                execute = execute
+            )
         }
 
         return node!!
+    }
+
+    /**
+     * Creates a transformed version of this node delegate that applies a transformation to the output.
+     *
+     * @param T The type of the transformed output.
+     * @param transformation A function that transforms the original output to the new type.
+     * @return A new AIAgentNodeDelegate with the transformed output type.
+     */
+    public inline fun <reified T> transform(noinline transformation: suspend (Output) -> T): AIAgentNodeDelegate<Input, T> {
+        return AIAgentNodeDelegate(
+            name = name,
+            inputType = inputType,
+            outputType = typeOf<T>(),
+            execute = { input ->
+                val result = execute.invoke(this, input)
+                transformation(result)
+            }
+        )
     }
 }
