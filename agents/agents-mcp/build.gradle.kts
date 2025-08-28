@@ -11,6 +11,11 @@ plugins {
 // FIXME Kotlin MCP SDK only supports JVM target for now, so we only provide JVM target for this module too. Fix later
 kotlin {
     sourceSets {
+        commonMain {
+            dependencies {
+            }
+        }
+
         jvmMain {
             dependencies {
                 api(project(":agents:agents-tools"))
@@ -21,9 +26,9 @@ kotlin {
                 api(project(":prompt:prompt-executor:prompt-executor-llms-all"))
 
                 api(libs.mcp)
+                api(libs.kotlinx.serialization.json)
                 api(libs.kotlinx.io.core)
                 api(libs.kotlinx.coroutines.core)
-                api(libs.kotlinx.serialization.json)
                 api(libs.ktor.client.cio)
                 api(libs.ktor.client.sse)
                 implementation(libs.oshai.kotlin.logging)
