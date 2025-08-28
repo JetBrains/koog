@@ -13,12 +13,6 @@ import ai.koog.rag.base.files.FileMetadata
 import ai.koog.rag.base.files.FileSystemProvider
 import ai.koog.rag.base.files.readText
 
-internal fun extractExtension(name: String): String? {
-    if (name.startsWith('.') && name.indexOf('.', 1) == -1) return null
-    val ext = name.substringAfterLast('.', "")
-    return ext.ifEmpty { null }
-}
-
 /**
  * Constructs a file entry with content and metadata from the filesystem.
  *
@@ -44,7 +38,7 @@ public suspend fun <Path> buildFileEntry(
     val name = fs.name(path)
     return FileSystemEntry.File(
         name = name,
-        extension = extractExtension(name),
+        extension = fs.extension(path),
         path = fs.toAbsolutePathString(path),
         content = buildContent(
             fs.readText(path),

@@ -32,7 +32,7 @@ class ReadFileToolJvmTest {
         tempDir.resolve(name).createFile().apply { writeText(content) }
 
     private suspend fun readFile(path: Path, startLine: Int = 0, endLine: Int = -1): ReadFileTool.Result =
-        tool.executeUnsafe(ReadFileTool.Args(path.toString(), startLine, endLine), enabler)
+        tool.execute(ReadFileTool.Args(path.toString(), startLine, endLine), enabler)
 
     @Test
     fun `tool reads complete file successfully`() = runBlocking {

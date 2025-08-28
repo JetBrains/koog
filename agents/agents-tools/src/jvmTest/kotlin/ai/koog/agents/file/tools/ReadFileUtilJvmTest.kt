@@ -14,7 +14,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class ReadFileUtilJvmTest {
@@ -26,37 +25,6 @@ class ReadFileUtilJvmTest {
 
     private fun createTestFile(name: String, content: String = ""): Path =
         tempDir.resolve(name).createFile().apply { writeText(content) }
-
-    @Test
-    fun `extractExtension extracts standard extensions`() {
-        assertEquals("txt", extractExtension("file.txt"))
-        assertEquals("java", extractExtension("Main.java"))
-        assertEquals("kt", extractExtension("MyClass.kt"))
-        assertEquals("json", extractExtension("config.json"))
-    }
-
-    @Test
-    fun `extractExtension returns null for files without extension`() {
-        assertNull(extractExtension("README"))
-        assertNull(extractExtension("Makefile"))
-        assertNull(extractExtension("file"))
-        assertNull(extractExtension("file."))
-    }
-
-    @Test
-    fun `extractExtension handles hidden files`() {
-        assertNull(extractExtension(".hidden"))
-        assertNull(extractExtension(".bashrc"))
-        assertEquals("json", extractExtension(".config.json"))
-        assertEquals("txt", extractExtension(".hidden.txt"))
-    }
-
-    @Test
-    fun `extractExtension handles multiple dots by taking last extension`() {
-        assertEquals("gz", extractExtension("archive.tar.gz"))
-        assertEquals("js", extractExtension("script.min.js"))
-        assertEquals("backup", extractExtension("file.txt.backup"))
-    }
 
     @Test
     fun `buildContent returns Text for complete file`() {
