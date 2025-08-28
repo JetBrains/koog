@@ -6,9 +6,14 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
 val libs = the<LibrariesForLibs>()
 
+/*
+  For KMP there's no support for languageLevel, and your Kotlin Gradle Plugin version determines your language level.
+  So keep these the same as KGP version.
+
+  See: https://youtrack.jetbrains.com/issue/KT-66755/Native-non-JVM-targets-add-support-for-languageVersion
+ */
 val kotlinLanguageVersion = KotlinVersion.KOTLIN_2_1
 val kotlinApiVersion = KotlinVersion.KOTLIN_2_1
-val kotlinCoreLibrariesVersion = libs.versions.kotlin.get()
 
 extensions.getByType<KotlinProjectExtension>().apply {
     jvmToolchain {
@@ -35,8 +40,6 @@ extensions.getByType<KotlinProjectExtension>().apply {
         dependencies {
             implementation(project.dependencies.platform(libs.kotlin.bom))
         }
-
-        coreLibrariesVersion = kotlinCoreLibrariesVersion
     }
 }
 
