@@ -14,7 +14,7 @@ import ai.koog.rag.base.files.FileSystemProvider
 import ai.koog.rag.base.files.readText
 
 /**
- * Constructs a file entry with content and metadata from the filesystem.
+ * Constructs a text file entry with content and metadata from the filesystem.
  *
  * Reads the file content and creates a [FileSystemEntry.File] with the specified line range.
  * For full file content, pass `startLine = 0` and `endLine = -1`. The content will be
@@ -27,14 +27,19 @@ import ai.koog.rag.base.files.readText
  * @param startLine the starting line index (0-based, inclusive) for content extraction
  * @param endLine the ending line index (0-based, exclusive) for content extraction, or -1 for the end of the file
  * @return a file entry containing the requested content range and file attributes
+ * @throws IllegalArgumentException when contentType is not [FileMetadata.FileContentType.Text]
  */
 public suspend fun <Path> buildFileEntry(
     fs: FileSystemProvider.ReadOnly<Path>,
     path: Path,
     metadata: FileMetadata,
+    contentType: FileMetadata.FileContentType,
     startLine: Int,
     endLine: Int
 ): FileSystemEntry.File {
+    require(contentType == FileMetadata.FileContentType.Text) {
+        "buildFileEntry requires a text file, but was: $contentType"
+    }
     val name = fs.name(path)
     return FileSystemEntry.File(
         name = name,
@@ -47,7 +52,7 @@ public suspend fun <Path> buildFileEntry(
         ),
         size = buildFileSize(fs, path),
         hidden = metadata.hidden,
-        contentType = fs.getFileContentType(path),
+        contentType = contentType,
     )
 }
 

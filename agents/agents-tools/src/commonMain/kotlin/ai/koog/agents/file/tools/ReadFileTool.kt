@@ -93,7 +93,8 @@ public class ReadFileTool<Path>(private val fs: FileSystemProvider.ReadOnly<Path
         val metadata = validateNotNull(fs.metadata(path)) { "Cannot read metadata: ${args.path}" }
         validate(metadata.type == FileMetadata.FileType.File) { "Not a file: ${args.path}" }
 
-        validate(fs.getFileContentType(path) == FileMetadata.FileContentType.Text) {
+        val contentType = fs.getFileContentType(path)
+        validate(contentType == FileMetadata.FileContentType.Text) {
             "File is not a text file: ${args.path}"
         }
 
@@ -102,6 +103,7 @@ public class ReadFileTool<Path>(private val fs: FileSystemProvider.ReadOnly<Path
                 fs = fs,
                 path = path,
                 metadata = metadata,
+                contentType = contentType,
                 startLine = args.startLine,
                 endLine = args.endLine,
             )
@@ -118,9 +120,8 @@ public class ReadFileTool<Path>(private val fs: FileSystemProvider.ReadOnly<Path
         public val descriptor: ToolDescriptor = ToolDescriptor(
             name = "__read_file__",
             description = text {
-                +"Reads text file content with optional line range selection."
+                +"Reads a text file (throws if non-text) with optional line range selection."
                 +"Returns file content along with metadata (path, size, line count, hidden status)."
-                newline()
                 +"Uses 0-based line indexing."
             },
             requiredParameters = listOf(

@@ -141,8 +141,9 @@ class ReadFileUtilJvmTest {
     fun `buildFileEntry works with full file`() = runTest {
         val file = createTestFile("test.txt", "content")
         val metadata = fs.metadata(file)!!
+        val contentType = fs.getFileContentType(file)
 
-        val entry = buildFileEntry(fs, file, metadata, 0, -1)
+        val entry = buildFileEntry(fs, file, metadata, contentType, 0, -1)
 
         assertIs<FileSystemEntry.File.Content.Text>(entry.content)
         assertEquals("content", entry.content.text)
@@ -153,9 +154,24 @@ class ReadFileUtilJvmTest {
         val file = createTestFile("test.txt", "line0\nline1\nline2")
         val metadata = fs.metadata(file)!!
 
-        val entry = buildFileEntry(fs, file, metadata, 1, 2)
+        val contentType = fs.getFileContentType(file)
+        val entry = buildFileEntry(fs, file, metadata, contentType, 1, 2)
 
         assertIs<FileSystemEntry.File.Content.Excerpt>(entry.content)
         assertEquals("line1\n", entry.content.snippets[0].text)
+    }
+
+    @Test
+    fun `buildFileEntry throws for non-text content`() = runTest {
+        val binaryFile = tempDir.resolve("binary.dat").apply {
+            createFile()
+            writeBytes(byteArrayOf(0x00, 0xFF.toByte(), 0xAB.toByte()))
+        }
+        val metadata = fs.metadata(binaryFile)!!
+        val contentType = fs.getFileContentType(binaryFile)
+
+        assertFailsWith<IllegalArgumentException> {
+            buildFileEntry(fs, binaryFile, metadata, contentType, 0, -1)
+        }
     }
 }
