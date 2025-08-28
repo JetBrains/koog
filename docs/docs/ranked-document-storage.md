@@ -137,7 +137,7 @@ suspend fun solveUserRequest(query: String) {
         prompt = prompt("context") {
             system("You are a helpful assistant. Use the provided context to answer the user's question accurately.")
             user {
-                "Relevant context"
+                +"Relevant context"
                 attachments {
                     relevantDocuments.forEach {
                         file(it.pathString, "text/plain")
