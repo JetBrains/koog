@@ -8,7 +8,7 @@ val libs = the<LibrariesForLibs>()
 
 val kotlinLanguageVersion = KotlinVersion.KOTLIN_2_1
 val kotlinApiVersion = KotlinVersion.KOTLIN_2_1
-val kotlinCoreLibrariesVersion = "2.1.0"
+val kotlinCoreLibrariesVersion = libs.versions.kotlin.get()
 
 extensions.getByType<KotlinProjectExtension>().apply {
     jvmToolchain {
