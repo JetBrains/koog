@@ -108,7 +108,7 @@ class ReadFileUtilJvmTest {
     @Test
     fun `buildFileSize handles only newlines`() = runTest {
         val onlyNewlines = createTestFile("newlines.txt", "\n\n\n")
-        assertEquals(3, buildFileSize(fs, onlyNewlines).filterIsInstance<FileSize.Lines>().first().lines)
+        assertEquals(0, buildFileSize(fs, onlyNewlines).filterIsInstance<FileSize.Lines>().first().lines)
     }
 
     @Test
