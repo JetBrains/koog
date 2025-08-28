@@ -95,7 +95,15 @@ public data class AgentCard(
     @EncodeDefault
     public val supportsAuthenticatedExtendedCard: Boolean = false,
     public val signatures: List<AgentCardSignature>? = null
-)
+) {
+    init {
+        additionalInterfaces?.let { interfaces ->
+            requireNotNull(interfaces.find { it.url == url && it.transport == preferredTransport }) {
+                "If additionalInterfaces are specified, they must include an entry matching the main 'url' and 'preferredTransport'."
+            }
+        }
+    }
+}
 
 /**
  * The transport protocol for an agent.
