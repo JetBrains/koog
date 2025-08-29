@@ -189,7 +189,7 @@ val agent = AIAgent(
 The following code snippets demonstrate the basic setup of a memory storage and how facts are saved to and loaded from
 the memory.
 
-1. Set up memory storage
+1) Set up memory storage
 <!--- INCLUDE
 import ai.koog.agents.memory.providers.LocalFileMemoryProvider
 import ai.koog.agents.memory.providers.LocalMemoryConfig
@@ -208,7 +208,7 @@ val memoryProvider = LocalFileMemoryProvider(
 ```
 <!--- KNIT example-agent-memory-06.kt -->
 
-2. Store a fact in the memory
+2) Store a fact in the memory
 <!--- INCLUDE
 import ai.koog.agents.example.exampleAgentMemory03.MemorySubjects
 import ai.koog.agents.example.exampleAgentMemory06.memoryProvider
@@ -236,7 +236,7 @@ memoryProvider.save(
 ```
 <!--- KNIT example-agent-memory-07.kt -->
 
-3. Retrieve the fact
+3) Retrieve the fact
 <!--- INCLUDE
 import ai.koog.agents.example.exampleAgentMemory03.MemorySubjects
 import ai.koog.agents.example.exampleAgentMemory06.memoryProvider
@@ -438,17 +438,17 @@ In the example above, the LLM would search for the user-related facts and projec
     - Keep related information under the same subject
 
 3. **Handle Errors**
-   <!--- INCLUDE
-    import ai.koog.agents.core.agent.AIAgent
-    -->
-   ```kotlin
-    try {
-        memoryProvider.save(fact, subject)
-    } catch (e: Exception) {
-        println("Oops! Couldn't save: ${e.message}")
-    }
-   ```
-   <!--- KNIT example-agent-memory-14.kt -->
+<!--- INCLUDE
+import ai.koog.agents.core.agent.AIAgent
+-->
+```kotlin
+try {
+    memoryProvider.save(fact, subject)
+} catch (e: Exception) {
+    println("Oops! Couldn't save: ${e.message}")
+}
+```
+<!--- KNIT example-agent-memory-14.kt -->
 
    For more details on error handling, see [Error handling and edge cases](#error-handling-and-edge-cases).
 

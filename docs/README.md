@@ -6,10 +6,13 @@ This module contains documentation for the Koog framework, including user guides
 
 The docs module is organized as follows:
 
-- **docs/** - Contains markdown files with user documentation
-- **overrides/** - Custom overrides for the MkDocs theme
-- **prompt/** - Prompting guidelines with extensions for popular modules
-- **src/** - Knit generated source code from documentation code snippets, should not be commited
+| Folder         | Description                                                                          |
+|----------------|--------------------------------------------------------------------------------------|
+| **docs/**      | Contains Markdown files with user documentation.                                     |
+| **overrides/** | Contains custom overrides for the MkDocs theme.                                      |
+| **prompt/**    | Prompting guidelines with extensions for popular modules.                            |
+| **src/**       | Knit generated source code from documentation code snippets, should not be commited. |
+
 
 ## Documentation System
 
@@ -28,60 +31,93 @@ The documentation is available at [https://docs.koog.ai/](https://docs.koog.ai/)
 
 To ensure code snippets in documentation are compilable and up-to-date with the latest framework version, the [kotlinx-knit](https://github.com/Kotlin/kotlinx-knit) library is used.
 
-Knit provides a Gradle plugin that extracts specially annotated Kotlin code snippets from markdown files and generates Kotlin source files.
+Knit provides a Gradle plugin that extracts specially annotated Kotlin code snippets from Markdown files and generates Kotlin source files.
 
 #### How to fix docs?
-1. Run `:docs:knitAssemble` task which will clean old knit-generated files, extract fresh code snippets to /src/main/kotlin and assemble the docs project:
-```
-./gradlew :docs:knitAssemble
-```
-2. Navigate to the file with the compilation error `example-[md-file-name]-[index].kt`
-3. Fix the error in this file
-4. Navigate to the code snippet in Markdown `md-file-name.md` by searing `<!--- KNIT example-[md-file-name]-[index].kt` -->`
-5. Update the code snippet to reflect the changes in kt file
-   * Update dependencies (usually they are provided in `<!--- INCLUDE -->` section)
-   * Edit code (don't forget about tabulation when you just copy paste from kt)
+
+1. Run `:docs:knitAssemble` task to clean old knit-generated files, extract fresh code snippets to **/src/main/kotlin**, and assemble the docs project:
+    ```
+    ./gradlew :docs:knitAssemble
+    ```
+2. Navigate to the file with the compilation error `example-[md-file-name]-[index].kt`.
+3. Fix the error in this file.
+4. Navigate to the code snippet in Markdown `md-file-name.md` by searching `<!--- KNIT example-[md-file-name]-[index].kt` -->`.
+5. Update the code snippet to reflect the changes in ***.kt** file:
+   * Update dependencies (usually they are provided in the `<!--- INCLUDE -->` section).
+   * Edit code (do not forget about tabulation when you just copy and paste from the ***.kt** file).
 
 #### How to annotate docs?
 
 To annotate new Kotlin code snippets in Markdown and make them compilable:
+
 1. Put an example annotation comment (`<!--- KNIT example-[md-file-name]-01.kt -->`) after every code block. 
-It's not obligated to put right inexes, just set the `01` for each example, and they will be updated automatically after first knit run
-```
-    ```kotlin
-    val agent = AIAgent(...)
+You do not need to put correct indexes, just set the `01` for each example,
+   and they will be updated automatically after the first knit run.
     ```
-    <!--- KNIT example-[md-file-name]-01.kt -->
-```
-2. In case you need some imports, add include comment (`<!--- INCLIDE ... -->`)
+        ```kotlin
+        val agent = AIAgent(...)
+        ```
+        <!--- KNIT example-[md-file-name]-01.kt -->
+    ```
+2. If you need some imports, add the include comment `<!--- INCLIDE ... -->` before the code block:
+    ```
+        <!--- INCLUDE
+        import ai.koog.agents.core.agent.AIAgent
+        -->
+        ```kotlin
+        val agent = AIAgent(...)
+        ```
+        <!--- KNIT example-[md-file-name]-01.kt -->
+    ```
+3. If you need to wrap your code with `main` or other functions, 
+use the include comment `<!--- INCLIDE ... -->` for prefix, and the suffix comment `<!--- SUFFIX ... -->` for suffix:
+    ```
+        <!--- INCLUDE
+        import ai.koog.agents.core.agent.AIAgent
+        fun main() {
+        -->
+        <!--- SUFFIX
+        }
+        -->
+        ```kotlin
+        val agent = AIAgent(...)
+        ```
+        <!--- KNIT example-[md-file-name]-01.kt -->
+    ```
 
-```
-    <!--- INCLUDE
-    import ai.koog.agents.core.agent.AIAgent
-    -->
-    ```kotlin
-    val agent = AIAgent(...)
-    ```
-    <!--- KNIT example-[md-file-name]-01.kt -->
-```
-3. In case you need to whap your code into `main` or other function imports, 
-use include comment (`<!--- INCLIDE ... -->`) for prefix and suffix comment (`<!--- SUFFIX ... -->`) for suffix
-```
-    <!--- INCLUDE
-    import ai.koog.agents.core.agent.AIAgent
-    fun main() {
-    -->
-    <!--- SUFFIX
-    }
-    -->
-    ```kotlin
-    val agent = AIAgent(...)
-    ```
-    <!--- KNIT example-[md-file-name]-01.kt -->
-```
+For more information, follow the examples in the [kotlinx-knit](https://github.com/Kotlin/kotlinx-knit) repository or refer to already annotated code snippets in the documentation.
 
-For more information, follow the examples in the [kotlinx-knit](https://github.com/Kotlin/kotlinx-knit) repository 
-or refer to already annotated code snippets in the documentation.
+> [!NOTE]
+> If your documentation contains instructions with code snippets,
+> use manual numbering (for example, `1) 2) 3)`) instead of Markdown built-in numbered lists.
+> This ensures compatibility with the KNIT tool, as KNIT annotations must remain unindented (starting at column 0) and cannot be nested within numbered Markdown lists.
+>
+> Here is an example:
+> ``````markdown
+> 1) Step description for the first acti
+> on:
+> 
+> <!--- INCLUDE
+> import ai.koog.agents.core.agent.AIAgent -->
+> ```kotlin
+> // Code snippet
+> ```
+> <!--- KNIT example-[md-file-name]-01.kt -->
+> 
+> 2) Step description for the second action:
+> 
+> <!--- INCLUDE
+> import ai.koog.agents.core.agent.AIAgent
+> fun main() {
+> -->
+> <!--- SUFFIX
+> }
+> -->
+> ```kotlin
+> // Another code snippet
+> ```
+> <!--- KNIT example-[md-file-name]-02.kt -->
+> ``````
 
 ### API Documentation
 
