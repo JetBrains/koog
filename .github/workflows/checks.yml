@@ -93,7 +93,9 @@ jobs:
 
       - name: JvmTest with Gradle Wrapper and Kover coverage
         if: matrix.os == 'ubuntu-latest'
-        run: ./gradlew jvmTest :koverBinaryReport --continue
+        run: |-
+          ./gradlew jvmJar && ./gradlew checkSplitPackages
+          ./gradlew jvmTest :koverBinaryReport --continue
 
       - name: JvmTest with Gradle Wrapper
         if: matrix.os != 'ubuntu-latest'

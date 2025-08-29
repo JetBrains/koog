@@ -1,4 +1,5 @@
 import ai.koog.gradle.fixups.DisableDistTasks.disableDistTasks
+import ai.koog.gradle.plugins.checkSplitPackages
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -267,4 +268,10 @@ tasks.register("compileTestKotlinAll") {
     """.trimIndent()
 
     dependsOn(subprojects.map { it.getKotlinCompileTasks("test") })
+}
+
+checkSplitPackages {
+    includeProjects = setOf(":agents:", ":embeddings:", ":prompt:", ":koog-spring-boot-starter", ":rag:")
+    failOnError = false
+    inclidePackages = setOf("ai.koog")
 }
