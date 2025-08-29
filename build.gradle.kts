@@ -7,6 +7,7 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
 import org.jetbrains.kotlin.gradle.targets.js.ir.KotlinJsIrLink
 import org.jetbrains.kotlin.gradle.tasks.BaseKotlinCompile
 import org.jlleitschuh.gradle.ktlint.KtlintExtension
+import java.time.Clock
 import java.util.Base64
 
 group = "ai.koog"
@@ -17,11 +18,20 @@ version = run {
 
     val feat = run {
         val releaseBuild = !System.getenv("BRANCH_KOOG_IS_RELEASING_FROM").isNullOrBlank()
+        val nightlyBuild = System.getenv("BRANCH_KOOG_IS_NIGHTLY_BUILD")?.toBoolean() ?: false
         val branch = System.getenv("BRANCH_KOOG_IS_RELEASING_FROM")
         val customVersion = System.getenv("CE_CUSTOM_VERSION")
         val tcCounter = System.getenv("TC_BUILD_COUNTER")
 
-        if (releaseBuild) {
+        if (nightlyBuild) {
+            val date = Clock.systemUTC().instant().atZone(java.time.ZoneId.of("CET"))
+                .format(java.time.format.DateTimeFormatter.ISO_LOCAL_DATE)
+            if (!customVersion.isNullOrBlank()) {
+                "-develop-$date-$customVersion"
+            } else {
+                "-develop-$date"
+            }
+        } else if (releaseBuild) {
             when (branch) {
                 "main" -> {
                     if (customVersion.isNullOrBlank()) {
