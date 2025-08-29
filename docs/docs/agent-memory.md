@@ -439,18 +439,39 @@ In the example above, the LLM would search for the user-related facts and projec
 
 3. **Handle Errors**
 <!--- INCLUDE
-import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.example.exampleAgentMemory03.MemorySubjects
+import ai.koog.agents.example.exampleAgentMemory06.memoryProvider
+import ai.koog.agents.memory.model.Concept
+import ai.koog.agents.memory.model.DefaultTimeProvider
+import ai.koog.agents.memory.model.FactType
+import ai.koog.agents.memory.model.MemoryScope
+import ai.koog.agents.memory.model.SingleFact
+import kotlinx.coroutines.runBlocking
+
+fun main() {
+    runBlocking {
+        val fact = SingleFact(
+            concept = Concept("preferred-language", "What programming language is preferred by the user?", FactType.SINGLE),
+            value = "Kotlin",
+            timestamp = DefaultTimeProvider.getCurrentTimestamp()
+        )
+        val subject = MemorySubjects.User
+        val scope = MemoryScope.Product("my-app")
+-->
+<!--- SUFFIX
+    }
+}
 -->
 ```kotlin
 try {
-    memoryProvider.save(fact, subject)
+    memoryProvider.save(fact, subject, scope)
 } catch (e: Exception) {
     println("Oops! Couldn't save: ${e.message}")
 }
 ```
 <!--- KNIT example-agent-memory-14.kt -->
 
-   For more details on error handling, see [Error handling and edge cases](#error-handling-and-edge-cases).
+For more details on error handling, see [Error handling and edge cases](#error-handling-and-edge-cases).
 
 ## Error handling and edge cases
 
@@ -528,7 +549,7 @@ class MyCustomMemoryProvider : AgentMemoryProvider {
     }
 }
 ```
-<!--- KNIT example-agent-memory-14.kt -->
+<!--- KNIT example-agent-memory-15.kt -->
 
 ### How are facts prioritized when loading from multiple subjects?
 
@@ -548,6 +569,6 @@ val concept = Concept(
     factType = FactType.MULTIPLE
 )
 ```
-<!--- KNIT example-agent-memory-15.kt -->
+<!--- KNIT example-agent-memory-16.kt -->
 
 This lets you store multiple values for the concept, which is retrieved as a list.
