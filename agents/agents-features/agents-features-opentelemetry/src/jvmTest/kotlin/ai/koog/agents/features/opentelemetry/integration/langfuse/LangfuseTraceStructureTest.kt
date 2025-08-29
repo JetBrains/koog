@@ -5,17 +5,14 @@ import ai.koog.agents.features.opentelemetry.integration.TraceStructureTestBase
 import ai.koog.agents.features.opentelemetry.mock.TestGetWeatherTool
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
-import kotlin.test.Ignore
+import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable
 
 /**
  * A test class for verifying trace structures using the Langfuse exporter.
  */
-// Explicitly ignore this test as we do not have env variables for Langfuse in CI to make these tests passed.
-// Required env variables:
-//   - LANGFUSE_SECRET_KEY
-//   - LANGFUSE_PUBLIC_KEY
-//   - LANGFUSE_HOST
-@Ignore
+@EnabledIfEnvironmentVariable(named = "LANGFUSE_SECRET_KEY", matches = ".+")
+@EnabledIfEnvironmentVariable(named = "LANGFUSE_PUBLIC_KEY", matches = ".+")
+@EnabledIfEnvironmentVariable(named = "LANGFUSE_HOST", matches = ".+")
 class LangfuseTraceStructureTest :
     TraceStructureTestBase(openTelemetryConfigurator = { addLangfuseExporter() }) {
 
