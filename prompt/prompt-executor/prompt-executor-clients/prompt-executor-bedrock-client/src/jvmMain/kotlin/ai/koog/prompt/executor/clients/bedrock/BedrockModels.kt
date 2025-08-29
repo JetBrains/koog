@@ -293,7 +293,7 @@ public object BedrockModels : LLModelDefinitions {
         LLModel(
             provider = LLMProvider.Bedrock,
             id = "amazon.nova-micro-v1:0",
-            capabilities = standardCapabilities,
+            capabilities = toolCapabilities,
             contextLength = 128_000,
         ),
     ).effectiveModel
@@ -313,7 +313,7 @@ public object BedrockModels : LLModelDefinitions {
         LLModel(
             provider = LLMProvider.Bedrock,
             id = "amazon.nova-lite-v1:0",
-            capabilities = standardCapabilities,
+            capabilities = toolCapabilities,
             contextLength = 300_000,
         ),
     ).effectiveModel
@@ -333,7 +333,7 @@ public object BedrockModels : LLModelDefinitions {
         LLModel(
             provider = LLMProvider.Bedrock,
             id = "amazon.nova-pro-v1:0",
-            capabilities = standardCapabilities,
+            capabilities = toolCapabilities,
             contextLength = 300_000,
         ),
     ).effectiveModel
@@ -353,7 +353,7 @@ public object BedrockModels : LLModelDefinitions {
         LLModel(
             provider = LLMProvider.Bedrock,
             id = "amazon.nova-premier-v1:0",
-            capabilities = standardCapabilities,
+            capabilities = toolCapabilities,
             contextLength = 1_000_000,
         ),
     ).effectiveModel
