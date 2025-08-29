@@ -16,6 +16,7 @@ nav:
       - Agent strategies:
           - Custom strategy graphs: custom-strategy-graphs.md
           - Pre-defined nodes and components: nodes-and-components.md
+          - ReAct strategy: react-strategy.md
           - Parallel node execution: parallel-node-execution.md
           - Data transfer between nodes: data-transfer-between-nodes.md
       - History compression: history-compression.md
