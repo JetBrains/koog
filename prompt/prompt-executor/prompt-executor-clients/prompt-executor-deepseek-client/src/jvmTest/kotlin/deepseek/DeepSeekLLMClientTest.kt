@@ -25,6 +25,7 @@ import kotlinx.serialization.json.putJsonObject
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -97,6 +98,33 @@ class DeepSeekLLMClientTest {
             {"index": 0, "message": {"role": "assistant", "content": "{\"name\":\"Alice\"}"}, "finish_reason": "stop"}
           ],
           "usage": {"total_tokens": 10, "prompt_tokens": 5, "completion_tokens": 5}
+        }
+    """.trimIndent()
+
+    //language=json
+    val complexUsageBody = """
+        {
+          "id": "chatcmpl-789",
+          "object": "chat.completion",
+          "created": 1716920004,
+          "system_fingerprint": "dummy",
+          "model": "deepseek-chat",
+          "choices": [
+            {"index": 0, "message": {"role": "assistant", "content": "{\"name\":\"Alice\"}"}, "finish_reason": "stop"}
+          ],
+          "usage" : {
+              "prompt_tokens" : 35,
+              "completion_tokens" : 191,
+              "total_tokens" : 226,
+              "prompt_tokens_details" : {
+                "cached_tokens" : 0
+              },
+              "completion_tokens_details" : {
+                "reasoning_tokens" : 100
+              },
+              "prompt_cache_hit_tokens" : 0,
+              "prompt_cache_miss_tokens" : 35
+          }
         }
     """.trimIndent()
 
@@ -229,5 +257,31 @@ class DeepSeekLLMClientTest {
             client.moderate(prompt, DeepSeekModels.DeepSeekChat)
         }
         assertTrue(ex.message!!.contains("Moderation is not supported"))
+    }
+
+    @Test
+    fun testResponseUsage() = runTest {
+        val engine = MockEngine { _ ->
+            respond(
+                content = complexUsageBody,
+                status = HttpStatusCode.OK,
+                headers = headersOf(HttpHeaders.ContentType, Json.toString())
+            )
+        }
+        val http = HttpClient(engine) {}
+        val client = DeepSeekLLMClient(apiKey = key, baseClient = http, clock = FixedClock)
+        val prompt = Prompt.build(id = "p-multi", clock = FixedClock) {
+            user("Give two options")
+        }.withUpdatedParams {
+            temperature = 0.2
+        }
+
+        val responses = client.execute(prompt, DeepSeekModels.DeepSeekChat, tools = emptyList())
+        assertEquals(1, responses.size, "Response should have once response")
+        val response = responses.first()
+        assertIs<Message.Assistant>(response, "Response should be assistant message")
+        assertEquals(35, response.metaInfo.inputTokensCount)
+        assertEquals(191, response.metaInfo.outputTokensCount)
+        assertEquals(226, response.metaInfo.totalTokensCount)
     }
 }
