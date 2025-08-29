@@ -24,10 +24,19 @@ import kotlin.jvm.JvmInline
  * Contains properties that are common across all supported LLM providers.
  */
 public interface OpenAIBaseLLMRequest {
+    /** The model to use for generating a response. */
     public val model: String?
+
+    /** The stream output enabler. */
     public val stream: Boolean?
+
+    /** The temperature parameter for controlling randomness in the output. */
     public val temperature: Double?
+
+    /** The top probability threshold. */
     public val topP: Double?
+
+    /** The number of alternatives per position. */
     public val topLogprobs: Int?
 }
 
@@ -36,11 +45,21 @@ public interface OpenAIBaseLLMRequest {
  * Contains properties that are common across different response types.
  */
 public interface OpenAIBaseLLMResponse {
+    /** The response id. */
     public val id: String
+
+    /** The response model. */
     public val model: String
+
+    /** The Unix timestamp (in seconds) of when the chat completion was created. */
     public val created: Long
 }
 
+/**
+ * Represents a base interface for handling real-time streaming responses from OpenAI's LLM API.
+ * Provides a structure extending from the common attributes defined in `OpenAIBaseLLMResponse`.
+ * Used as a foundation for streaming response data models in OpenAI integrations.
+ */
 public interface OpenAIBaseLLMStreamResponse : OpenAIBaseLLMResponse
 
 /**
@@ -56,6 +75,7 @@ public interface OpenAIBaseLLMStreamResponse : OpenAIBaseLLMResponse
 @Serializable
 @JsonClassDiscriminator("role")
 public sealed interface OpenAIMessage {
+    /** The content of the message. */
     public val content: Content?
 
     /**
@@ -135,6 +155,7 @@ public sealed interface OpenAIMessage {
  */
 @Serializable(with = ContentSerializer::class)
 public sealed interface Content {
+    /** The simple text content of the message. */
     public fun text(): String
 
     /**
@@ -160,6 +181,11 @@ public sealed interface Content {
     }
 }
 
+/**
+ * Represents a content part that can be used within OpenAI chat completion APIs.
+ * This is a sealed interface that defines various types of content components,
+ * like text, images, audio, and files, enabling diverse inputs and outputs in the API.
+ */
 @Serializable
 @JsonClassDiscriminator("type")
 public sealed interface OpenAIContentPart {
@@ -265,6 +291,7 @@ public class OpenAIToolCall(
     public val id: String,
     public val function: OpenAIFunction
 ) {
+    /** The type of the tool. Currently, only `function` is supported. */
     public val type: String = "function"
 }
 
@@ -302,6 +329,12 @@ public class OpenAIAudioConfig(
     public val voice: OpenAIAudioVoice,
 )
 
+/**
+ * Represents the supported audio output formats.
+ *
+ * This enum is used to specify the format of the audio output. It contains several standard audio formats
+ * which are widely compatible with various audio players and systems.
+ */
 @Serializable
 public enum class OpenAIAudioFormat {
     @SerialName("wav")
@@ -320,6 +353,11 @@ public enum class OpenAIAudioFormat {
     PCM16,
 }
 
+/**
+ * Represents the available voice options for audio output in OpenAI's system.
+ *
+ * This enum defines a list of predefined voices that can be used to synthesize audio responses.
+ */
 @Serializable
 public enum class OpenAIAudioVoice {
     @SerialName("alloy")
@@ -353,6 +391,11 @@ public enum class OpenAIAudioVoice {
     Shimmer,
 }
 
+/**
+ * Specifies the supported modalities for OpenAI API operations.
+ *
+ * This enumeration lists the types of content that can be processed by certain OpenAI API requests.
+ */
 @Serializable
 public enum class OpenAIModalities {
     @SerialName("text")
@@ -371,6 +414,7 @@ public enum class OpenAIModalities {
  */
 @Serializable
 public class OpenAIStaticContent(public val content: Content) {
+    /** The type of the predicted content you want to provide. This type is currently always `content`. */
     public val type: String = "content"
 }
 
@@ -548,6 +592,16 @@ public class OpenAIStreamOptions(public val includeUsage: Boolean? = null)
  */
 @Serializable(OpenAIToolChoiceSerializer::class)
 public sealed interface OpenAIToolChoice {
+    /**
+     * Represents the mode in which a tool can be invoked by the model.
+     *
+     * Modes:
+     * - `none`: The model will not invoke any tool and will generate a message instead.
+     * - `auto`: The model chooses between generating a message or invoking one or more tools.
+     * - `required`: The model must invoke one or more tools.
+     *
+     * @property value The string representation of the mode. Must be one of: "none", "auto", "required".
+     */
     @JvmInline
     @Serializable
     public value class Mode internal constructor(public val value: String) : OpenAIToolChoice {
@@ -571,6 +625,9 @@ public sealed interface OpenAIToolChoice {
      */
     @Serializable
     public class Function(public val function: FunctionName) : OpenAIToolChoice {
+        /**
+         * Specifies the type of the tool being used.
+         */
         public val type: String = "function"
     }
 
@@ -580,10 +637,16 @@ public sealed interface OpenAIToolChoice {
      * - `required` means the model must call one or more tools.
      */
     public companion object {
+        /** Represents the `auto` mode for invoking tools in the OpenAI system.*/
         public val Auto: Mode = Mode("auto")
+
+        /** Represents the `required` mode for invoking tools in the OpenAI system.*/
         public val Required: Mode = Mode("required")
+
+        /** Represents the `none` mode for invoking tools in the OpenAI system.*/
         public val None: Mode = Mode("none")
 
+        /** Creates a function tool with the specified name. */
         public fun function(name: String): Function = Function(FunctionName(name))
     }
 }
@@ -595,6 +658,7 @@ public sealed interface OpenAIToolChoice {
  */
 @Serializable
 public class OpenAITool(public val function: OpenAIToolFunction) {
+    /** Type of the tool. */
     public val type: String = "function"
 }
 
@@ -639,6 +703,7 @@ public class OpenAIWebSearchOptions(
 public class OpenAIUserLocation(
     public val approximate: ApproximateLocation
 ) {
+    /** Approximate location parameters for the search. */
     public val type: String = "approximate"
 
     /**
@@ -730,7 +795,7 @@ public class OpenAIChoiceLogProbs(
  */
 @Serializable
 public class OpenAIWebUrlCitation(public val urlCitation: Citation) {
-
+    /** The type of the URL citation. */
     public val type: String = "url_citation"
 
     /**
@@ -759,7 +824,7 @@ public class OpenAIWebUrlCitation(public val urlCitation: Citation) {
 public class OpenAIUsage(
     public val promptTokens: Int? = null,
     public val completionTokens: Int? = null,
-    public val totalTokens: Int,
+    public val totalTokens: Int? = null,
     public val completionTokensDetails: CompletionTokensDetails? = null,
     public val promptTokensDetails: PromptTokensDetails? = null
 )
@@ -776,10 +841,10 @@ public class OpenAIUsage(
  */
 @Serializable
 public class CompletionTokensDetails(
-    public val acceptedPredictionTokens: Int,
-    public val audioTokens: Int,
-    public val reasoningTokens: Int,
-    public val rejectedPredictionTokens: Int,
+    public val acceptedPredictionTokens: Int? = null,
+    public val audioTokens: Int? = null,
+    public val reasoningTokens: Int? = null,
+    public val rejectedPredictionTokens: Int? = null,
 )
 
 /**
@@ -788,8 +853,8 @@ public class CompletionTokensDetails(
  */
 @Serializable
 public class PromptTokensDetails(
-    public val audioTokens: Int,
-    public val cachedTokens: Int,
+    public val audioTokens: Int? = null,
+    public val cachedTokens: Int? = null,
 )
 
 /**
