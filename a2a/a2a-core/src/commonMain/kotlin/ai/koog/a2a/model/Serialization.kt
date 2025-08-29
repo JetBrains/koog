@@ -47,3 +47,29 @@ internal object FileSerializer : JsonContentPolymorphicSerializer<File>(File::cl
         }
     }
 }
+
+internal object EventSerializer : JsonContentPolymorphicSerializer<Event>(Event::class) {
+    override fun selectDeserializer(element: JsonElement): DeserializationStrategy<Event> {
+        val jsonObject = element.jsonObject
+        val kind = jsonObject["kind"]?.jsonPrimitive?.content ?: error("Missing 'kind' field in Event")
+
+        return when (kind) {
+            "status-update" -> TaskStatusUpdateEvent.serializer()
+            "artifact-update" -> TaskArtifactUpdateEvent.serializer()
+            else -> CommunicationSerializer
+        }
+    }
+}
+
+internal object CommunicationSerializer : JsonContentPolymorphicSerializer<Communication>(Communication::class) {
+    override fun selectDeserializer(element: JsonElement): DeserializationStrategy<Communication> {
+        val jsonObject = element.jsonObject
+        val kind = jsonObject["kind"]?.jsonPrimitive?.content ?: error("Missing 'kind' field in Communication")
+
+        return when (kind) {
+            "task" -> Task.serializer()
+            "message" -> Message.serializer()
+            else -> error("Unknown kind: $kind")
+        }
+    }
+}
