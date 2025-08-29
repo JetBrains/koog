@@ -184,3 +184,89 @@ When building agent workflows with nodes, you can use special nodes to call tool
 * **nodeLLMSendToolResult** that sends a tool result to the LLM and gets a response. For details, see [API reference](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.dsl.extension/node-l-l-m-send-tool-result.html).
 
 * **nodeLLMSendMultipleToolResults** that sends multiple tool results to the LLM. For details, see [API reference](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.dsl.extension/node-l-l-m-send-multiple-tool-results.html).
+
+## Using agents as tools
+
+The framework provides the capability to convert any AI agent into a tool that can be used by other agents. 
+This powerful feature enables you to create hierarchical agent architectures where specialized agents can be called as tools by higher-level orchestrating agents.
+
+### Converting agents to tools
+
+To convert an agent into a tool, use the `asTool()` extension function:
+
+<!--- INCLUDE
+import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.core.agent.asTool
+import ai.koog.agents.core.tools.ToolParameterDescriptor
+import ai.koog.agents.core.tools.ToolParameterType
+import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+
+const val apiKey = ""
+val analysisToolRegistry = ToolRegistry {}
+
+-->
+```kotlin
+// Create a specialized agent
+val analysisAgent = AIAgent(
+    executor = simpleOpenAIExecutor(apiKey),
+    llmModel = OpenAIModels.Chat.GPT4o,
+    systemPrompt = "You are a financial analysis specialist.",
+    toolRegistry = analysisToolRegistry
+)
+
+// Convert the agent to a tool
+val analysisAgentTool = analysisAgent.asTool(
+    agentName = "analyzeTransactions",
+    agentDescription = "Performs financial transaction analysis",
+    inputDescriptor = ToolParameterDescriptor(
+        name = "request",
+        description = "Transaction analysis request",
+        type = ToolParameterType.String
+    )
+)
+```
+<!--- KNIT example-tools-overview-05.kt -->
+
+### Using agent tools in other agents
+
+Once converted to a tool, you can add the agent tool to another agent's tool registry:
+
+<!--- INCLUDE
+import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.example.exampleToolsOverview05.analysisAgentTool
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+
+const val apiKey = ""
+
+-->
+```kotlin
+// Create a coordinator agent that can use specialized agents as tools
+val coordinatorAgent = AIAgent(
+    executor = simpleOpenAIExecutor(apiKey),
+    llmModel = OpenAIModels.Chat.GPT4o,
+    systemPrompt = "You coordinate different specialized services.",
+    toolRegistry = ToolRegistry {
+        tool(analysisAgentTool)
+        // Add other tools as needed
+    }
+)
+```
+<!--- KNIT example-tools-overview-06.kt -->
+
+### Agent tool execution
+
+When an agent tool is called:
+
+1. The arguments are deserialized according to the input descriptor
+2. The wrapped agent is executed with the deserialized input
+3. The agent's output is serialized and returned as the tool result
+
+### Benefits of agents as tools
+
+- **Modularity**: Break complex workflows into specialized agents
+- **Reusability**: Use the same specialized agent across multiple coordinator agents
+- **Separation of concerns**: Each agent can focus on its specific domain

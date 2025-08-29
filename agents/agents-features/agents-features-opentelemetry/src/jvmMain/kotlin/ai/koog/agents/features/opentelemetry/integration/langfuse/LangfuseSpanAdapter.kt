@@ -4,6 +4,7 @@ import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute
 import ai.koog.agents.features.opentelemetry.event.AssistantMessageEvent
 import ai.koog.agents.features.opentelemetry.event.ChoiceEvent
 import ai.koog.agents.features.opentelemetry.event.EventBodyFields
+import ai.koog.agents.features.opentelemetry.event.GenAIAgentEvent
 import ai.koog.agents.features.opentelemetry.event.SystemMessageEvent
 import ai.koog.agents.features.opentelemetry.event.ToolMessageEvent
 import ai.koog.agents.features.opentelemetry.event.UserMessageEvent
@@ -41,19 +42,9 @@ internal class LangfuseSpanAdapter(private val openTelemetryConfig: OpenTelemetr
                         is SystemMessageEvent,
                         is UserMessageEvent,
                         is AssistantMessageEvent,
-                        is ToolMessageEvent -> {
-                            // Convert event data fields into the span attributes
-                            span.bodyFieldsToCustomAttribute<EventBodyFields.Role>(event) { role ->
-                                CustomAttribute("gen_ai.prompt.$index.${role.key}", role.value)
-                            }
+                        is ToolMessageEvent -> event.convertToPrompt(span, index)
 
-                            span.bodyFieldsToCustomAttribute<EventBodyFields.Content>(event) { content ->
-                                CustomAttribute("gen_ai.prompt.$index.${content.key}", content.value)
-                            }
-
-                            // Delete event from the span
-                            span.removeEvent(event)
-                        }
+                        is ChoiceEvent -> event.convertToPrompt(span, index)
                     }
                 }
             }
@@ -85,54 +76,87 @@ internal class LangfuseSpanAdapter(private val openTelemetryConfig: OpenTelemetr
 
                 eventsToProcess.forEachIndexed { index, event ->
                     when (event) {
-                        is AssistantMessageEvent -> {
-                            // Convert event data fields into the span attributes
-                            span.bodyFieldsToCustomAttribute<EventBodyFields.Role>(event) { role ->
-                                CustomAttribute("gen_ai.completion.$index.${role.key}", role.value)
-                            }
-
-                            span.bodyFieldsToCustomAttribute<EventBodyFields.Content>(event) { content ->
-                                CustomAttribute("gen_ai.completion.$index.${content.key}", content.value)
-                            }
-
-                            span.bodyFieldsToCustomAttribute<EventBodyFields.ToolCalls>(event) { toolCalls ->
-                                CustomAttribute("gen_ai.completion.$index.content", toolCalls.valueString(openTelemetryConfig.isVerbose))
-                            }
-
-                            span.bodyFieldsToCustomAttribute<EventBodyFields.FinishReason>(event) { finishReason ->
-                                CustomAttribute("gen_ai.completion.$index.finish_reason", finishReason.value)
-                            }
-
-                            // Delete event from the span
-                            span.removeEvent(event)
-                        }
-
-                        is ChoiceEvent -> {
-                            // Convert event data fields into the span attributes
-                            span.bodyFieldsToCustomAttribute<EventBodyFields.Role>(event) { role ->
-                                // Langfuse expects to have an assistant message for correct displaying the responses from LLM.
-                                // Set a role explicitly to Assistant (even for LLM Tool Calls response).
-                                CustomAttribute("gen_ai.completion.$index.${role.key}", Message.Role.Assistant.name.lowercase())
-                            }
-
-                            span.bodyFieldsToCustomAttribute<EventBodyFields.Content>(event) { content ->
-                                CustomAttribute("gen_ai.completion.$index.${content.key}", content.value)
-                            }
-
-                            span.bodyFieldsToCustomAttribute<EventBodyFields.ToolCalls>(event) { toolCalls ->
-                                CustomAttribute("gen_ai.completion.$index.content", toolCalls.valueString(openTelemetryConfig.isVerbose))
-                            }
-
-                            span.bodyFieldsToCustomAttribute<EventBodyFields.FinishReason>(event) { finishReason ->
-                                CustomAttribute("gen_ai.completion.$index.finish_reason", finishReason.value)
-                            }
-
-                            // Delete event from the span
-                            span.removeEvent(event)
-                        }
+                        is AssistantMessageEvent -> event.convertToCompletion(span, index)
+                        is ChoiceEvent -> event.convertToCompletion(span, index)
                     }
                 }
             }
         }
     }
+
+    //region Private Methods
+
+    private fun GenAIAgentEvent.convertToPrompt(span: GenAIAgentSpan, index: Int) {
+        span.bodyFieldsToCustomAttribute<EventBodyFields.Role>(this) { role ->
+            CustomAttribute("gen_ai.prompt.$index.${role.key}", role.value)
+        }
+
+        span.bodyFieldsToCustomAttribute<EventBodyFields.Content>(this) { content ->
+            CustomAttribute("gen_ai.prompt.$index.${content.key}", content.value)
+        }
+
+        // Delete event from the span
+        span.removeEvent(this)
+    }
+
+    private fun ChoiceEvent.convertToPrompt(span: GenAIAgentSpan, index: Int) {
+        span.bodyFieldsToCustomAttribute<EventBodyFields.Role>(this) { role ->
+            CustomAttribute("gen_ai.prompt.$index.${role.key}", role.value)
+        }
+
+        span.bodyFieldsToCustomAttribute<EventBodyFields.ToolCalls>(this) { toolCalls ->
+            CustomAttribute("gen_ai.prompt.$index.content", toolCalls.valueString(openTelemetryConfig.isVerbose))
+        }
+
+        // Delete event from the span
+        span.removeEvent(this)
+    }
+
+    private fun AssistantMessageEvent.convertToCompletion(span: InferenceSpan, index: Int) {
+        // Convert event data fields into the span attributes
+        span.bodyFieldsToCustomAttribute<EventBodyFields.Role>(this) { role ->
+            CustomAttribute("gen_ai.completion.$index.${role.key}", role.value)
+        }
+
+        span.bodyFieldsToCustomAttribute<EventBodyFields.Content>(this) { content ->
+            CustomAttribute("gen_ai.completion.$index.${content.key}", content.value)
+        }
+
+        span.bodyFieldsToCustomAttribute<EventBodyFields.ToolCalls>(this) { toolCalls ->
+            CustomAttribute("gen_ai.completion.$index.content", toolCalls.valueString(openTelemetryConfig.isVerbose))
+        }
+
+        span.bodyFieldsToCustomAttribute<EventBodyFields.FinishReason>(this) { finishReason ->
+            CustomAttribute("gen_ai.completion.$index.finish_reason", finishReason.value)
+        }
+
+        // Delete event from the span
+        span.removeEvent(this)
+    }
+
+    private fun ChoiceEvent.convertToCompletion(span: InferenceSpan, index: Int) {
+        // Convert event data fields into the span attributes
+        span.bodyFieldsToCustomAttribute<EventBodyFields.Role>(this) { role ->
+            // Langfuse expects to have an assistant message for correct displaying the responses from LLM.
+            // Set a role explicitly to Assistant (even for LLM Tool Calls response).
+            CustomAttribute("gen_ai.completion.$index.${role.key}", Message.Role.Assistant.name.lowercase())
+        }
+
+        span.bodyFieldsToCustomAttribute<EventBodyFields.Content>(this) { content ->
+            CustomAttribute("gen_ai.completion.$index.${content.key}", content.value)
+        }
+
+        span.bodyFieldsToCustomAttribute<EventBodyFields.ToolCalls>(this) { toolCalls ->
+            CustomAttribute("gen_ai.completion.$index.content", toolCalls.valueString(openTelemetryConfig.isVerbose))
+        }
+
+        span.bodyFieldsToCustomAttribute<EventBodyFields.FinishReason>(this) { finishReason ->
+            CustomAttribute("gen_ai.completion.$index.finish_reason", finishReason.value)
+        }
+
+        // Delete event from the span
+        span.removeEvent(this)
+    }
+
+    //endregion Private Methods
 }

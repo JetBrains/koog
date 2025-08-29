@@ -1,6 +1,6 @@
 # Module prompt-executor-openai-client
 
-A client implementation for executing prompts using OpenAI's GPT models with support for images and audio.
+A client implementation for executing prompts using OpenAI's GPT models with support for images, audio, and custom parameters. Includes support for both Chat Completions and Responses APIs.
 
 ### Overview
 
@@ -12,23 +12,23 @@ requirements.
 
 #### Reasoning Models
 
-| Model       | Speed   | Context | Input Support       | Output Support | Pricing (per 1M tokens) |
-|-------------|---------|---------|---------------------|----------------|-------------------------|
-| GPT-4o Mini | Medium  | 128K    | Text, Images, Tools | Text, Tools    | $1.1-$4.4               |
-| o3-mini     | Medium  | 200K    | Text, Tools         | Text, Tools    | $1.1-$4.4               |
-| o1-mini     | Slow    | 128K    | Text                | Text           | $1.1-$4.4               |
-| o3          | Slowest | 200K    | Text, Images, Tools | Text, Tools    | $10-$40                 |
-| o1          | Slowest | 200K    | Text, Images, Tools | Text, Tools    | $15-$60                 |
+| Model    | Speed   | Context | Input Support        | Output Support | Pricing (per 1M tokens) | APIs Support    |
+|----------|---------|---------|----------------------|----------------|--------------------------|-----------------|
+| o4-mini  | Medium  | 200K    | Text, Images, Tools  | Text, Tools    | $1.1-$4.4               | Chat, Responses |
+| o3-mini  | Medium  | 200K    | Text, Tools          | Text, Tools    | $1.1-$4.4               | Chat, Responses |
+| o1-mini  | Slow    | 128K    | Text                 | Text           | $1.1-$4.4               | Chat            |
+| o3       | Slowest | 200K    | Text, Images, Tools  | Text, Tools    | $10-$40                 | Chat, Responses |
+| o1       | Slowest | 200K    | Text, Images, Tools  | Text, Tools    | $15-$60                 | Chat, Responses |
 
 #### Chat Models
 
-| Model     | Speed     | Context | Input Support         | Output Support | Pricing (per 1M tokens) |
-|-----------|-----------|---------|-----------------------|----------------|-------------------------|
-| GPT-4o    | Medium    | 128K    | Text, Images, Tools   | Text, Tools    | $2.5-$10                |
-| GPT-4.1   | Medium    | 1M      | Text, Images, Tools   | Text, Tools    | $2-$8                   |
-| GPT5      | Medium    | 400K    | Text, Image, Document | Text, Tools    | $1.25-$10               |
-| GPT5 Mini | Fast      | 400K    | Text, Image, Document | Text, Tools    | $0.25-$2                |
-| GPT5 Nano | Very fast | 400K    | Text, Image, Document | Text, Tools    | $0.05-$0.4              |
+| Model       | Speed     | Context | Input Support            | Output Support | Pricing (per 1M tokens) | APIs Support    |
+|-------------|-----------|---------|--------------------------|----------------|--------------------------|-----------------|
+| GPT-4o      | Medium    | 128K    | Text, Images, Tools      | Text, Tools    | $2.5-$10                | Chat, Responses |
+| GPT-4.1     | Medium    | 1M      | Text, Images, Tools      | Text, Tools    | $2-$8                   | Chat, Responses |
+| GPT-5       | Medium    | 400K    | Text, Images, Documents  | Text, Tools    | $1.25-$10               | Chat, Responses |
+| GPT-5 Mini  | Fast      | 400K    | Text, Images, Documents  | Text, Tools    | $0.25-$2                | Chat, Responses |
+| GPT-5 Nano  | Very fast | 400K    | Text, Images, Documents  | Text, Tools    | $0.05-$0.4              | Chat, Responses |
 
 #### Audio Models
 
@@ -39,11 +39,13 @@ requirements.
 
 #### Cost-Optimized Models
 
-| Model        | Speed     | Context | Input Support       | Output Support | Pricing (per 1M tokens) |
-|--------------|-----------|---------|---------------------|----------------|-------------------------|
-| o4-mini      | Medium    | 200K    | Text, Images, Tools | Text, Tools    | $1.1-$4.4               |
-| GPT-4.1-nano | Very fast | 1M      | Text, Images, Tools | Text, Tools    | $0.1-$0.4               |
-| GPT-4.1-mini | Fast      | 1M      | Text, Images, Tools | Text, Tools    | $0.4-$1.6               |
+| Model        | Speed     | Context | Input Support       | Output Support | Pricing (per 1M tokens) | APIs Support    |
+|--------------|-----------|---------|---------------------|----------------|--------------------------|-----------------|
+| o4-mini      | Medium    | 200K    | Text, Images, Tools | Text, Tools    | $1.1-$4.4               | Chat, Responses |
+| GPT-4o Mini  | Medium    | 128K    | Text, Images, Tools | Text, Tools    | $0.15-$0.6              | Chat, Responses |
+| GPT-4.1-nano | Very fast | 1M      | Text, Images, Tools | Text, Tools    | $0.1-$0.4               | Chat, Responses |
+| GPT-4.1-mini | Fast      | 1M      | Text, Images, Tools | Text, Tools    | $0.4-$1.6               | Chat, Responses |
+| o3-mini      | Medium    | 200K    | Text, Tools         | Text, Tools    | $1.1-$4.4               | Chat, Responses |
 
 #### Embedding Models
 
@@ -68,6 +70,52 @@ requirements.
 - **Audio**: Only WAV and MP3 formats, base64 only
 - **PDF Documents**: Only PDF format, requires vision capability
 - **Model Requirements**: Audio needs Audio capability, PDF needs Vision.Image capability
+
+### Model-Specific Parameters Support
+
+#### OpenAI Chat Parameters
+
+The client supports OpenAI-specific parameters through `OpenAIChatParams` class:
+
+```kotlin
+val chatParams = OpenAIChatParams(
+    temperature = 0.7,
+    maxTokens = 1000,
+    frequencyPenalty = 0.5,
+    presencePenalty = 0.5,
+    topP = 0.9,
+    stop = listOf("\\n", "END"),
+    logprobs = true,
+    topLogprobs = 5,
+    reasoningEffort = ReasoningEffort.MEDIUM,
+    parallelToolCalls = true,
+    audio = OpenAIAudioConfig(voice = "alloy", format = "mp3"),
+    webSearchOptions = OpenAIWebSearchOptions(enabled = true)
+)
+```
+
+#### OpenAI Responses API Parameters
+
+For the Responses API, use `OpenAIResponsesParams`:
+
+```kotlin
+val responsesParams = OpenAIResponsesParams(
+    temperature = 0.7,
+    maxTokens = 1000,
+    background = true,
+    include = listOf("sources", "citations"),
+    maxToolCalls = 10,
+    reasoning = ReasoningConfig(effort = ReasoningEffort.HIGH),
+    truncation = Truncation(type = "auto")
+)
+```
+
+### API Endpoints Support
+
+The client now supports both OpenAI API endpoints:
+
+- **Chat Completions API**: Traditional chat completions with streaming support
+- **Responses API**: Enhanced API with background processing, built-in tools, and structured outputs
 
 ### Using in your project
 
@@ -95,13 +143,31 @@ suspend fun main() {
         apiKey = System.getenv("OPENAI_API_KEY"),
     )
 
-    // Text-only example
+    // Text-only example with Chat API
     val response = client.execute(
         prompt = prompt {
             system("You are helpful assistant")
             user("What time is it now?")
         },
-        model = OpenAIModels.Chat.GPT4o
+        model = OpenAIModels.Chat.GPT5,
+        params = OpenAIChatParams(
+            temperature = 0.7,
+            reasoningEffort = ReasoningEffort.MEDIUM
+        )
+    )
+
+    // Using Responses API
+    val responsesResponse = client.execute(
+        prompt = prompt {
+            system("You are helpful assistant")
+            user("Research the latest developments in AI")
+        },
+        model = OpenAIModels.Chat.GPT5,
+        params = OpenAIResponsesParams(
+            background = true,
+            include = listOf("sources", "citations"),
+            maxToolCalls = 5
+        )
     )
 
     println(response)
@@ -111,7 +177,7 @@ suspend fun main() {
 ### Multimodal Examples
 
 ```kotlin
-// Image analysis
+// Image analysis with GPT-5
 val imageResponse = client.execute(
     prompt = prompt {
         user {
@@ -119,7 +185,11 @@ val imageResponse = client.execute(
             image("/path/to/image.jpg")
         }
     },
-    model = OpenAIModels.Chat.GPT4o
+    model = OpenAIModels.Chat.GPT5,
+    params = OpenAIChatParams(
+        temperature = 0.3,
+        reasoningEffort = ReasoningEffort.HIGH
+    )
 )
 
 // Audio transcription (requires audio models)
@@ -131,18 +201,25 @@ val transcriptionResponse = client.execute(
             audio(audioData, "wav")
         }
     },
-    model = OpenAIModels.Audio.GPT4oAudio
+    model = OpenAIModels.Audio.GPT4oAudio,
+    params = OpenAIChatParams(
+        audio = OpenAIAudioConfig(voice = "alloy", format = "mp3")
+    )
 )
 
-// PDF document processing (requires vision models)
+// PDF document processing with Responses API
 val pdfResponse = client.execute(
     prompt = prompt {
         user {
-            text("Summarize this PDF document")
+            text("Summarize this PDF document with citations")
             document("/path/to/document.pdf")
         }
     },
-    model = OpenAIModels.Chat.GPT4o
+    model = OpenAIModels.Chat.GPT5,
+    params = OpenAIResponsesParams(
+        include = listOf("sources", "citations"),
+        reasoning = ReasoningConfig(effort = ReasoningEffort.MEDIUM)
+    )
 )
 
 // Embedding example
@@ -151,7 +228,7 @@ val embedding = client.embed(
     model = OpenAIModels.Embeddings.TextEmbedding3Small
 )
 
-// Mixed content (image + PDF)
+// Mixed content with custom parameters
 val mixedResponse = client.execute(
     prompt = prompt {
         user {
@@ -161,6 +238,26 @@ val mixedResponse = client.execute(
             text("What insights can you provide?")
         }
     },
-    model = OpenAIModels.Chat.GPT4o
+    model = OpenAIModels.Chat.GPT5,
+    params = OpenAIChatParams(
+        temperature = 0.5,
+        maxTokens = 4000,
+        reasoningEffort = ReasoningEffort.HIGH,
+        parallelToolCalls = true
+    )
+)
+
+// Background processing with Responses API
+val backgroundResponse = client.execute(
+    prompt = prompt {
+        user("Research and analyze market trends for renewable energy")
+    },
+    model = OpenAIModels.Chat.GPT5,
+    params = OpenAIResponsesParams(
+        background = true,
+        include = listOf("sources", "citations", "steps"),
+        maxToolCalls = 20,
+        reasoning = ReasoningConfig(effort = ReasoningEffort.HIGH)
+    )
 )
 ```

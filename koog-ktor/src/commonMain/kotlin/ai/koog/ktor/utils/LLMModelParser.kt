@@ -182,12 +182,14 @@ private fun openAI(parts: List<String>, identifier: String): LLModel? {
 private val OPENAI_MODELS_MAP = mapOf(
     "chat" to mapOf(
         "gpt4o" to OpenAIModels.Chat.GPT4o,
-        "gpt4_1" to OpenAIModels.Chat.GPT4_1
+        "gpt4_1" to OpenAIModels.Chat.GPT4_1,
+        "gpt5" to OpenAIModels.Chat.GPT5,
+        "gpt5mini" to OpenAIModels.Chat.GPT5Mini,
+        "gpt5nano" to OpenAIModels.Chat.GPT5Nano,
     ),
     "reasoning" to mapOf(
         "o4mini" to OpenAIModels.Reasoning.O4Mini,
         "o3mini" to OpenAIModels.Reasoning.O3Mini,
-        "o1mini" to OpenAIModels.Reasoning.O1Mini,
         "o3" to OpenAIModels.Reasoning.O3,
         "o1" to OpenAIModels.Reasoning.O1
     ),
@@ -196,7 +198,6 @@ private val OPENAI_MODELS_MAP = mapOf(
         "gpt4_1nano" to OpenAIModels.CostOptimized.GPT4_1Nano,
         "gpt4_1mini" to OpenAIModels.CostOptimized.GPT4_1Mini,
         "gpt4omini" to OpenAIModels.CostOptimized.GPT4oMini,
-        "o1mini" to OpenAIModels.CostOptimized.O1Mini,
         "o3mini" to OpenAIModels.CostOptimized.O3Mini
     ),
     "audio" to mapOf(
@@ -209,7 +210,6 @@ private val OPENAI_MODELS_MAP = mapOf(
         "textembeddingada002" to OpenAIModels.Embeddings.TextEmbeddingAda002
     ),
     "moderation" to mapOf(
-        "text" to OpenAIModels.Moderation.Text,
         "omni" to OpenAIModels.Moderation.Omni
     )
 )
@@ -238,6 +238,10 @@ private val OPENROUTER_MODELS_MAP = mapOf(
     "claude3haiku" to OpenRouterModels.Claude3Haiku,
     "gpt4" to OpenRouterModels.GPT4,
     "gpt4o" to OpenRouterModels.GPT4o,
+    "gpt5" to OpenRouterModels.GPT5,
+    "gpt5mini" to OpenRouterModels.GPT5Mini,
+    "gpt5nano" to OpenRouterModels.GPT5Nano,
+    "gptoss120b" to OpenRouterModels.GPT_OSS_120b,
     "gpt4turbo" to OpenRouterModels.GPT4Turbo,
     "gpt35turbo" to OpenRouterModels.GPT35Turbo
 )

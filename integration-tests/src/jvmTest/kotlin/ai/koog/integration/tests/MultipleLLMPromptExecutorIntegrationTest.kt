@@ -13,7 +13,14 @@ import ai.koog.integration.tests.utils.MediaTestUtils.checkExecutorMediaResponse
 import ai.koog.integration.tests.utils.MediaTestUtils.checkResponseBasic
 import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.RetryUtils.withRetry
-import ai.koog.integration.tests.utils.TestUtils
+import ai.koog.integration.tests.utils.TestUtils.CalculatorOperation
+import ai.koog.integration.tests.utils.TestUtils.Colors
+import ai.koog.integration.tests.utils.TestUtils.Country
+import ai.koog.integration.tests.utils.TestUtils.StructuredTest
+import ai.koog.integration.tests.utils.TestUtils.StructuredTest.checkResponse
+import ai.koog.integration.tests.utils.TestUtils.StructuredTest.getConfigFixingParserManual
+import ai.koog.integration.tests.utils.TestUtils.markdownCountryDefinition
+import ai.koog.integration.tests.utils.TestUtils.parseMarkdownStreamToCountries
 import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestGoogleAIKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
@@ -36,6 +43,7 @@ import ai.koog.prompt.message.Attachment
 import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams.ToolChoice
+import ai.koog.prompt.structure.executeStructured
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
@@ -126,7 +134,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
                 ToolParameterDescriptor(
                     name = "operation",
                     description = "The operation to perform.",
-                    type = ToolParameterType.Enum(TestUtils.CalculatorOperation.entries.map { it.name }.toTypedArray())
+                    type = ToolParameterType.Enum(CalculatorOperation.entries.map { it.name }.toTypedArray())
                 ),
                 ToolParameterDescriptor(
                     name = "a",
@@ -223,7 +231,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
                 ToolParameterDescriptor(
                     name = "operation",
                     description = "The operation to perform.",
-                    type = ToolParameterType.Enum(TestUtils.CalculatorOperation.entries.map { it.name }.toTypedArray())
+                    type = ToolParameterType.Enum(CalculatorOperation.entries.map { it.name }.toTypedArray())
                 ),
                 ToolParameterDescriptor(
                     name = "a",
@@ -269,7 +277,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
                 ToolParameterDescriptor(
                     name = "operation",
                     description = "The operation to perform.",
-                    type = ToolParameterType.Enum(TestUtils.CalculatorOperation.entries.map { it.name }.toTypedArray())
+                    type = ToolParameterType.Enum(CalculatorOperation.entries.map { it.name }.toTypedArray())
                 ),
                 ToolParameterDescriptor(
                     name = "a",
@@ -323,7 +331,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
                 ToolParameterDescriptor(
                     name = "operation",
                     description = "The operation to perform.",
-                    type = ToolParameterType.Enum(TestUtils.CalculatorOperation.entries.map { it.name }.toTypedArray())
+                    type = ToolParameterType.Enum(CalculatorOperation.entries.map { it.name }.toTypedArray())
                 ),
                 ToolParameterDescriptor(
                     name = "a",
@@ -410,7 +418,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
                     description = "The color to be picked.",
                     type = ToolParameterType.List(
                         ToolParameterType.Enum(
-                            TestUtils.Colors.entries.map { it.name }
+                            Colors.entries.map { it.name }
                                 .toTypedArray()
                         )
                     )
@@ -513,11 +521,10 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testStructuredDataStreaming(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
-        if (model.id == OpenAIModels.Audio.GPT4oAudio.id || model.id == OpenAIModels.Audio.GPT4oMiniAudio.id) {
-            assumeTrue(false, "There is no text response for audio models.")
-        }
-        val countries = mutableListOf<TestUtils.Country>()
-        val countryDefinition = TestUtils.markdownCountryDefinition()
+        assumeTrue(model != OpenAIModels.CostOptimized.GPT4_1Nano, "Model $model is too small for structured streaming")
+
+        val countries = mutableListOf<Country>()
+        val countryDefinition = markdownCountryDefinition()
 
         val prompt = prompt("test-structured-streaming") {
             system("You are a helpful assistant.")
@@ -540,7 +547,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
         withRetry(times = 3, testName = "integration_testStructuredDataStreaming[${model.id}]") {
             val markdownStream = client.executeStreaming(prompt, model)
-            TestUtils.parseMarkdownStreamToCountries(markdownStream).collect { country ->
+            parseMarkdownStreamToCountries(markdownStream).collect { country ->
                 countries.add(country)
             }
 
@@ -1155,5 +1162,99 @@ class MultipleLLMPromptExecutorIntegrationTest {
         println("OpenAI Response: ${responseOpenAI.content}")
         println("Anthropic Response: ${responseAnthropic.content}")
         println("Gemini Response: ${responseGemini.content}")
+    }
+
+    /*
+     * Structured native/manual output tests.
+     * */
+
+    @ParameterizedTest
+    @MethodSource("openAIModels", "anthropicModels", "googleModels")
+    fun integration_testStructuredOutputNative(model: LLModel) = runTest {
+        assumeTrue(
+            model.capabilities.contains(LLMCapability.Schema.JSON.Standard),
+            "Model does not support Standard JSON Schema"
+        )
+
+        withRetry {
+            val result = executor.executeStructured(
+                prompt = StructuredTest.prompt,
+                model = model,
+                config = StructuredTest.getConfigNoFixingParserNative(model)
+            )
+
+            assertTrue(result.isSuccess, "Structured output should succeed: ${result.exceptionOrNull()}")
+            checkResponse(result)
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("openAIModels", "anthropicModels", "googleModels")
+    fun integration_testStructuredOutputNativeWithFixingParser(model: LLModel) = runTest {
+        assumeTrue(
+            model.capabilities.contains(LLMCapability.Schema.JSON.Standard),
+            "Model does not support Standard JSON Schema"
+        )
+
+        withRetry {
+            val result = executor.executeStructured(
+                prompt = StructuredTest.prompt,
+                model = model,
+                config = StructuredTest.getConfigFixingParserNative(model)
+            )
+
+            assertTrue(result.isSuccess, "Structured output should succeed: ${result.exceptionOrNull()}")
+            checkResponse(result)
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("openAIModels", "anthropicModels", "googleModels")
+    fun integration_testStructuredOutputManual(model: LLModel) = runTest {
+        assumeTrue(
+            model.provider !== LLMProvider.Google,
+            "Google models fail to return manually requested structured output without fixing"
+        )
+
+        assumeTrue(
+            model.capabilities.contains(LLMCapability.Schema.JSON.Standard),
+            "Model does not support Standard JSON Schema"
+        )
+
+        withRetry {
+            val result = executor.executeStructured(
+                prompt = StructuredTest.prompt,
+                model = model,
+                config = StructuredTest.getConfigNoFixingParserManual(model)
+            )
+
+            assertTrue(result.isSuccess, "Structured output should succeed: ${result.exceptionOrNull()}")
+            checkResponse(result)
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("openAIModels", "anthropicModels", "googleModels")
+    fun integration_testStructuredOutputManualWithFixingParser(model: LLModel) = runTest {
+        assumeTrue(
+            model !== GoogleModels.Gemini2_0FlashLite,
+            "Gemini Flash Lite 2.0 model fail to return manually requested structured output"
+        )
+
+        assumeTrue(
+            model.capabilities.contains(LLMCapability.Schema.JSON.Standard),
+            "Model does not support Standard JSON Schema"
+        )
+
+        withRetry(6) {
+            val result = executor.executeStructured(
+                prompt = StructuredTest.prompt,
+                model = model,
+                config = getConfigFixingParserManual(model)
+            )
+
+            assertTrue(result.isSuccess, "Structured output should succeed: ${result.exceptionOrNull()}")
+            checkResponse(result)
+        }
     }
 }

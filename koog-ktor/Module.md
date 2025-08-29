@@ -60,7 +60,7 @@ fun Application.module() {
         route("/ai") {
             post("/chat") {
                 val userInput = call.receive<String>()
-                val output = singleRunAgent(userInput)
+                val output = aiAgent(userInput)
                 call.respond(HttpStatusCode.OK, output)
             }
         }
@@ -86,7 +86,7 @@ post("/moderated-chat") {
         return@post
     }
 
-    val output = singleRunAgent(userInput)
+    val output = aiAgent(userInput)
     call.respond(HttpStatusCode.OK, output)
 }
 ```

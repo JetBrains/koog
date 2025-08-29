@@ -44,7 +44,7 @@ internal class GoogleRequest(
  */
 @Serializable
 internal class GoogleContent(
-    val parts: List<GooglePart>,
+    val parts: List<GooglePart>? = null,
     val role: String? = null,
 )
 

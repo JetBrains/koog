@@ -21,7 +21,7 @@ import kotlin.test.assertFailsWith
 import kotlin.time.Clock
 import kotlin.time.Instant
 
-class LLMPromptExecutorMockTest {
+class MultiLLMPromptExecutorTest {
 
     val mockClock = object : Clock {
         override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z")

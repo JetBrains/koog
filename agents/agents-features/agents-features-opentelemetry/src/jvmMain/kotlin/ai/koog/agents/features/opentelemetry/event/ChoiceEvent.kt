@@ -10,7 +10,7 @@ internal class ChoiceEvent(
     provider: LLMProvider,
     private val message: Message.Response,
     private val arguments: JsonObject? = null,
-    val index: Int,
+    val index: Int? = null,
 ) : GenAIAgentEvent() {
 
     init {
@@ -18,7 +18,7 @@ internal class ChoiceEvent(
         addAttribute(CommonAttributes.System(provider))
 
         // Body Fields
-        addBodyField(EventBodyFields.Index(index))
+        index?.let { index -> addBodyField(EventBodyFields.Index(index)) }
 
         when (message) {
             is Message.Assistant -> {

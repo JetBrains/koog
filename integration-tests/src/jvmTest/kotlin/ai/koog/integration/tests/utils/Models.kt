@@ -22,19 +22,18 @@ object Models {
         return Stream.of(
             OpenAIModels.Chat.GPT4o,
             OpenAIModels.Chat.GPT4_1,
+            OpenAIModels.Chat.GPT5,
+            OpenAIModels.Chat.GPT5Mini,
+            OpenAIModels.Chat.GPT5Nano,
 
             OpenAIModels.Reasoning.O4Mini,
             OpenAIModels.Reasoning.O3Mini,
-            OpenAIModels.Reasoning.O1Mini,
             OpenAIModels.Reasoning.O3,
             OpenAIModels.Reasoning.O1,
 
             OpenAIModels.CostOptimized.GPT4_1Nano,
             OpenAIModels.CostOptimized.GPT4_1Mini,
             OpenAIModels.CostOptimized.GPT4oMini,
-
-            OpenAIModels.Audio.GPT4oMiniAudio,
-            OpenAIModels.Audio.GPT4oAudio,
         )
     }
 
@@ -74,10 +73,13 @@ object Models {
         )
     }
 
-    // Adding only free LLM profile until more are bought
     @JvmStatic
     fun openRouterModels(): Stream<LLModel> = Stream.of(
-        OpenRouterModels.Phi4Reasoning
+        OpenRouterModels.GPT5Nano,
+        OpenRouterModels.DeepSeekV30324,
+        OpenRouterModels.Claude4Sonnet,
+        // ToDo add Gemini when KG-203 is fixed
+        // OpenRouterModels.Gemini2_5FlashLite,
     )
 
     @JvmStatic

@@ -2,28 +2,28 @@
 
 The Prompt API provides a comprehensive toolkit for interacting with Large Language Models (LLMs) in production applications. It offers:
 
-- **Kotlin DSL** for creating structured prompts with type safety
-- **Multi-provider support** for OpenAI, Anthropic, Google, and other LLM providers
-- **Production features** like retry logic, error handling, and timeout configuration
-- **Multimodal capabilities** for working with text, images, audio, and documents
+- **Kotlin DSL** for creating structured prompts with type safety.
+- **Multi-provider support** for OpenAI, Anthropic, Google, and other LLM providers.
+- **Production features** such as retry logic, error handling, and timeout configuration.
+- **Multimodal capabilities** for working with text, images, audio, and documents.
 
-## Architecture Overview
+## Architecture overview
 
 The Prompt API consists of three main layers:
 
-1. **LLM Clients** - Low-level interfaces to specific providers (OpenAI, Anthropic, etc.)
-2. **Decorators** - Optional wrappers that add functionality like retry logic
-3. **Prompt Executors** - High-level abstractions that manage client lifecycle and simplify usage
+- **LLM clients**: Low-level interfaces to specific providers (OpenAI, Anthropic, etc.).
+- **Decorators**: Optional wrappers that add functionality like retry logic.
+- **Prompt executors**: High-level abstractions that manage client lifecycle and simplify usage.
 
-## Create a prompt
+## Creating a prompt
 
 The Prompt API uses Kotlin DSL to create prompts. It supports the following types of messages:
 
-- `system`: sets the context and instructions for the LLM.
-- `user`: represents user input.
-- `assistant`: represents LLM responses.
+- `system`: Sets the context and instructions for the LLM.
+- `user`: Represents user input.
+- `assistant`: Represents LLM responses.
 
-Here's an example of a simple prompt:
+Here is an example of a simple prompt:
 
 <!--- INCLUDE
 import ai.koog.prompt.dsl.prompt
@@ -46,46 +46,192 @@ val prompt = prompt("prompt_name", LLMParams()) {
 ```
 <!--- KNIT example-prompt-api-01.kt -->
 
-## Execute a prompt
+## Multimodal inputs
 
-To execute a prompt with a specific LLM, you need to the following:
+In addition to providing text messages within prompts, Koog also lets you send images, audio, video, and files to LLMs along with `user` messages.
+As with standard text-only prompts, you also add media to the prompt using the DSL structure for prompt construction.
 
-1. Create a corresponding LLM client that handles the connection between your application and LLM providers. For example:
 <!--- INCLUDE
-import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
-const val apiKey = "apikey"
+import ai.koog.prompt.dsl.prompt
+import kotlinx.io.files.Path
 -->
 ```kotlin
-// Create an OpenAI client
-val client = OpenAILLMClient(apiKey)
+val prompt = prompt("multimodal_input") {
+    system("You are a helpful assistant.")
+
+    user {
+        +"Describe these images"
+
+        attachments {
+            image("https://example.com/test.png")
+            image(Path("/User/koog/image.png"))
+        }
+    }
+}
 ```
 <!--- KNIT example-prompt-api-02.kt -->
 
-2. Call the `execute` method with the prompt and LLM as arguments.
-<!--- INCLUDE
-import ai.koog.agents.example.examplePromptApi01.prompt
-import ai.koog.agents.example.examplePromptApi02.client
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import kotlinx.coroutines.runBlocking
+### Textual prompt content
 
-fun main() {
-    runBlocking {
+To accommodate for the support for various attachment types and create a clear distinction between text and file inputs in a prompt, you put text messages in a dedicated `content` parameter within a user prompt.
+To add file inputs, provide them as a list within the `attachments` parameter.
+
+The general format of a user message that includes a text message and a list of attachments is as follows:
+
+<!--- INCLUDE
+import ai.koog.prompt.dsl.prompt
+
+val prompt = prompt("prompt") {
 -->
 <!--- SUFFIX
-    }
 }
 -->
 ```kotlin
-// Execute the prompt
-val response = client.execute(
-    prompt = prompt,
-    model = OpenAIModels.Chat.GPT4o  // You can choose different models
+user(
+    content = "This is the user message",
+    attachments = listOf(
+        // Add attachments
+    )
 )
 ```
 <!--- KNIT example-prompt-api-03.kt -->
 
+### File attachments
 
-The following LLM clients are available:
+To include an attachment, provide the file in the `attachments` parameter, following the format below:
+
+<!--- INCLUDE
+import ai.koog.prompt.dsl.prompt
+import ai.koog.prompt.message.Attachment
+import ai.koog.prompt.message.AttachmentContent
+
+val prompt = prompt("prompt") {
+-->
+<!--- SUFFIX
+}
+-->
+```kotlin
+user(
+    content = "Describe this image",
+    attachments = listOf(
+        Attachment.Image(
+            content = AttachmentContent.URL("https://example.com/capture.png"),
+            format = "png",
+            mimeType = "image/png",
+            fileName = "capture.png"
+        )
+    )
+)
+```
+<!--- KNIT example-prompt-api-04.kt -->
+
+The `attachments` parameter takes a list of file inputs, where each item is an instance of one of the following classes:
+
+- `Attachment.Image`: image attachments, such as `jpg` or `png` files.
+- `Attachment.Audio`: audio attachments, such as `mp3` or `wav` files.
+- `Attachment.Video`: video attachments, such as `mpg` or `avi` files.
+- `Attachment.File`: file attachments, such as `pdf` or `txt` files.
+
+Each of the classes above takes the following parameters:
+
+| Name       | Data type                               | Required                   | Description                                                                                                 |
+|------------|-----------------------------------------|----------------------------|-------------------------------------------------------------------------------------------------------------|
+| `content`  | [AttachmentContent](#attachmentcontent) | Yes                        | The source of the provided file content. For more information, see [AttachmentContent](#attachmentcontent). |
+| `format`   | String                                  | Yes                        | The format of the provided file. For example, `png`.                                                        |
+| `mimeType` | String                                  | Only for `Attachment.File` | The MIME Type of the provided file. For example, `image/png`.                                               |
+| `fileName` | String                                  | No                         | The name of the provided file including the extension. For example, `screenshot.png`.                       |
+
+For more details, see [API reference](https://api.koog.ai/prompt/prompt-model/ai.koog.prompt.message/-attachment/index.html).
+
+#### AttachmentContent
+
+`AttachmentContent` defines the type and source of content that is provided as an input to the LLM. The following
+classes are supported:
+
+* `AttachmentContent.URL(val url: String)`
+
+  Provides file content from the specified URL. Takes the following parameter:
+
+  | Name   | Data type | Required | Description                      |
+          |--------|-----------|----------|----------------------------------|
+  | `url`  | String    | Yes      | The URL of the provided content. |
+
+  See also [API reference](https://api.koog.ai/prompt/prompt-model/ai.koog.prompt.message/-attachment-content/-u-r-l/index.html).
+
+* `AttachmentContent.Binary.Bytes(val data: ByteArray)`
+
+  Provides file content as a byte array. Takes the following parameter:
+
+  | Name   | Data type | Required | Description                                |
+          |--------|-----------|----------|--------------------------------------------|
+  | `data` | ByteArray | Yes      | The file content provided as a byte array. |
+
+  See also [API reference](https://api.koog.ai/prompt/prompt-model/ai.koog.prompt.message/-attachment-content/-binary/index.html).
+
+* `AttachmentContent.Binary.Base64(val base64: String)`
+
+  Provides file content encoded as a Base64 string. Takes the following parameter:
+
+  | Name     | Data type | Required | Description                             |
+          |----------|-----------|----------|-----------------------------------------|
+  | `base64` | String    | Yes      | The Base64 string containing file data. |
+
+  See also [API reference](https://api.koog.ai/prompt/prompt-model/ai.koog.prompt.message/-attachment-content/-binary/index.html).
+
+* `AttachmentContent.PlainText(val text: String)`
+
+  !!! tip
+  Applies only if the attachment type is `Attachment.File`.
+  Provides content from a plain text file (such as the `text/plain` MIME type). Takes the following parameter:
+
+  | Name   | Data type | Required | Description              |
+          |--------|-----------|----------|--------------------------|
+  | `text` | String    | Yes      | The content of the file. |
+
+  See also [API reference](https://api.koog.ai/prompt/prompt-model/ai.koog.prompt.message/-attachment-content/-plain-text/index.html).
+
+### Mixed attachment content
+
+In addition to providing different types of attachments in separate prompts or messages, you can also provide multiple and mixed types of attachments in a single `user` message:
+
+<!--- INCLUDE
+import ai.koog.prompt.dsl.prompt
+import kotlinx.io.files.Path
+-->
+```kotlin
+val prompt = prompt("mixed_content") {
+    system("You are a helpful assistant.")
+
+    user {
+        +"Compare the image with the document content."
+
+        attachments {
+            image(Path("/User/koog/page.png"))
+            binaryFile(Path("/User/koog/page.pdf"), "application/pdf")
+        }
+    }
+}
+```
+<!--- KNIT example-prompt-api-05.kt -->
+
+## Choosing between LLM clients and prompt executors
+
+When working with the Prompt API, you can run prompts by using either LLM clients or prompt executors.
+To choose between clients and executors, consider the following factors:
+
+- Use LLM clients directly if you work with a single LLM provider and do not require advanced lifecycle management. To learm more, see [Running prompts with LLM clients](#running-prompts-with-llm-clients).
+- Use prompt executors if you need a higher level of abstraction for managing LLMs and their lifecycle, or if you want to run prompts with a consistent API across multiple providers and dynamically switch between them.
+  To learn more, see [Runnning prompts with prompt executors](#running-prompts-with-executors).
+
+!!!note
+    Both the LLM clients and prompt executors let you stream responses, generate multiple choices, and run content moderation.
+    For more information, refer to the [API Reference](https://api.koog.ai/index.html) for the specific client or executor.
+
+
+## Running prompts with LLM clients
+
+You can use LLM clients to run prompts if you work with a single LLM provider and do not require advanced lifecycle management.
+Koog provides the following LLM clients:
 
 * [OpenAILLMClient](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/prompt-executor-openai-client/ai.koog.prompt.executor.clients.openai/-open-a-i-l-l-m-client/index.html)
 * [AnthropicLLMClient](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/prompt-executor-anthropic-client/ai.koog.prompt.executor.clients.anthropic/-anthropic-l-l-m-client/index.html)
@@ -94,8 +240,43 @@ The following LLM clients are available:
 * [OllamaClient](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/prompt-executor-ollama-client/ai.koog.prompt.executor.ollama.client/-ollama-client/index.html)
 * [BedrockLLMClient](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/prompt-executor-bedrock-client/ai.koog.prompt.executor.clients.bedrock/-bedrock-l-l-m-client/index.html) (JVM only)
 
+To run a prompt using an LLM client, perform the following:
 
-Here's a simple example of using the Prompt API:
+1. Create the LLM client that handles the connection between your application and LLM providers. For example:
+<!--- INCLUDE
+import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
+const val apiKey = "apikey"
+-->
+```kotlin
+// Create an OpenAI client
+val client = OpenAILLMClient(apiKey)
+```
+<!--- KNIT example-prompt-api-06.kt -->
+
+2. Call the `execute` method with the prompt and LLM as arguments.
+<!--- INCLUDE
+import ai.koog.agents.example.examplePromptApi01.prompt
+import ai.koog.agents.example.examplePromptApi06.client
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import kotlinx.coroutines.runBlocking
+
+fun main() {
+    runBlocking {
+-->
+<!--- SUFFIX
+        }
+    }
+-->
+```kotlin
+// Execute the prompt
+val response = client.execute(
+    prompt = prompt,
+    model = OpenAIModels.Chat.GPT4o  // You can choose different models
+)
+```
+<!--- KNIT example-prompt-api-07.kt -->
+
+Here is an example that uses the OpenAI client to run a prompt:
 
 <!--- INCLUDE
 import ai.koog.prompt.dsl.prompt
@@ -133,7 +314,229 @@ fun main() {
     }
 }
 ```
-<!--- KNIT example-prompt-api-04.kt -->
+<!--- KNIT example-prompt-api-08.kt -->
+
+!!!note
+    The LLM clients let you stream responses, generate multiple choices, and run content moderation.
+    For more information, refer to the API Reference for the specific client.
+    To learn more about content moderation, see [Content moderation](content-moderation.md).
+
+## Running prompts with prompt executors
+
+While LLM clients provide direct access to providers, prompt executors offer a higher-level abstraction that simplifies common use cases and handles client lifecycle management.
+They are ideal when you need to:
+
+- Quickly prototype without managing client configuration.
+- Work with multiple providers through a unified interface.
+- Simplify dependency injection in larger applications.
+- Abstract away provider-specific details.
+
+### Executor types
+
+Koog provides two main prompt executors:
+
+| <div style="width:175px">Name</div> | Description                                                                                                                                                                                                                             |
+|-------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [`SingleLLMPromptExecutor`](https://api.koog.ai/prompt/prompt-executor/prompt-executor-llms/ai.koog.prompt.executor.llms/-single-l-l-m-prompt-executor/index.html)       | Wraps a single LLM client for one provider. Use this executor if your agent only requires the ability to switch between models within a single LLM provider.                                                                            |
+| [`MultiLLMPromptExecutor`](https://api.koog.ai/prompt/prompt-executor/prompt-executor-llms/ai.koog.prompt.executor.llms/-multi-l-l-m-prompt-executor/index.html)        | Routes to multiple LLM clients by a provider, with optional fallbacks for each provider to be used when a requested provider is not available. Use this executor if your agent needs to switch between models from different providers. |
+
+These are implementations of the [`PromtExecutor`](https://api.koog.ai/prompt/prompt-executor/prompt-executor-model/ai.koog.prompt.executor.model/-prompt-executor/index.html) interface for executing prompts with LLMs.
+
+### Creating a single provider executor
+
+To create a prompt executor for a specific LLM provider, perform the following:
+
+1. Configure an LLM client for a specific provider with the corresponding API key:
+<!--- INCLUDE
+import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
+-->
+```kotlin
+val openAIClient = OpenAILLMClient(System.getenv("OPENAI_KEY"))
+```
+<!--- KNIT example-prompt-api-09.kt -->
+2. Create a prompt executor using [`SingleLLMPromptExecutor`](https://api.koog.ai/prompt/prompt-executor/prompt-executor-llms/ai.koog.prompt.executor.llms/-single-l-l-m-prompt-executor/index.html):
+<!--- INCLUDE
+import ai.koog.agents.example.examplePromptApi09.openAIClient
+import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
+-->
+```kotlin
+val promptExecutor = SingleLLMPromptExecutor(openAIClient)
+```
+<!--- KNIT example-prompt-api-10.kt -->
+
+### Creating a multi-provider executor
+
+To create a prompt executor that works with multiple LLM providers, do the following:
+
+1. Configure clients for the required LLM providers with the corresponding API keys:
+<!--- INCLUDE
+import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
+import ai.koog.prompt.executor.ollama.client.OllamaClient
+-->
+```kotlin
+val openAIClient = OpenAILLMClient(System.getenv("OPENAI_KEY"))
+val ollamaClient = OllamaClient()
+```
+<!--- KNIT example-prompt-api-11.kt -->
+
+2. Pass the configured clients to the `MultiLLMPromptExecutor` class constructor to create a prompt executor with multiple LLM providers:
+<!--- INCLUDE
+import ai.koog.agents.example.examplePromptApi11.openAIClient
+import ai.koog.agents.example.examplePromptApi11.ollamaClient
+import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
+import ai.koog.prompt.llm.LLMProvider
+-->
+```kotlin
+val multiExecutor = MultiLLMPromptExecutor(
+    LLMProvider.OpenAI to openAIClient,
+    LLMProvider.Ollama to ollamaClient
+)
+```
+<!--- KNIT example-prompt-api-12.kt -->
+
+### Pre-defined prompt executors
+
+For faster setup, Koog provides the following ready-to-use executor implementations for common providers:
+
+- Single provider executors that return `SingleLLMPromptExecutor` configured with a certain LLM client:
+    - `simpleOpenAIExecutor` for executing prompts with OpenAI models.
+    - `simpleAzureOpenAIExecutor` for executing prompts using Azure OpenAI Service.
+    - `simpleAnthropicExecutor` for executing prompts with Anthropic models.
+    - `simpleGoogleAIExecutor` for executing prompts with Google models.
+    - `simpleOpenRouterExecutor` for executing prompts with OpenRouter.
+    - `simpleOllamaExecutor` for executing prompts with Ollama.
+
+- Multi-provider executor:
+    - `DefaultMultiLLMPromptExecutor` which is an implementation of `MultiLLMPromptExecutor` that supports OpenAI, Anthropic, and Google providers.
+
+Here is an example of creating pre-defined single and multi-provider executors:
+
+<!--- INCLUDE
+import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+import ai.koog.prompt.executor.llms.all.DefaultMultiLLMPromptExecutor
+import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
+import ai.koog.prompt.executor.clients.google.GoogleLLMClient
+import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
+import kotlinx.coroutines.runBlocking
+
+fun main() {
+    runBlocking {
+-->
+<!--- SUFFIX
+    }
+}
+-->
+```kotlin
+// Create an OpenAI executor
+val promptExecutor = simpleOpenAIExecutor("OPENAI_KEY")
+
+// Create a DefaultMultiLLMPromptExecutor with OpenAI, Anthropic, and Google LLM clients
+val openAIClient = OpenAILLMClient("OPENAI_KEY")
+val anthropicClient = AnthropicLLMClient("ANTHROPIC_KEY")
+val googleClient = GoogleLLMClient("GOOGLE_KEY")
+val multiExecutor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
+```
+<!--- KNIT example-prompt-api-13.kt -->
+
+### Executing a prompt
+
+The prompt executors provide methods to run prompts using various capabilities, such as streaming, multiple choices generation, and content moderation.
+
+Here is an example of how to run a prompt with a specific LLM using the `execute` method:
+
+<!--- INCLUDE
+import ai.koog.agents.example.examplePromptApi04.prompt
+import ai.koog.agents.example.examplePromptApi10.promptExecutor
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import kotlinx.coroutines.runBlocking
+
+fun main() {
+    runBlocking {
+-->
+<!--- SUFFIX
+    }
+}
+-->
+```kotlin
+// Execute a prompt
+val response = promptExecutor.execute(
+    prompt = prompt,
+    model = OpenAIModels.Chat.GPT4o
+)
+```
+<!--- KNIT example-prompt-api-14.kt -->
+
+This will run the prompt with the `GPT4o` model and return the response.
+
+!!!note
+    The prompt executors let you stream responses, generate multiple choices, and run content moderation.
+    For more information, refer to the API Reference for the specific executor.
+    To learn more about content moderation, see [Content moderation](content-moderation.md).
+
+## Cached prompt executors
+
+For repeated requests, you can cache LLM responses to optimize performance and reduce costs.
+Koog provides the `CachedPromptExecutor`, which is a wrapper around the `PromptExecutor` that adds caching functionality.
+It lets you store responses from previously executed prompts and retrieve them when the same prompts are run again.
+
+To create a cached prompt executor, perform the following:
+
+1. Create a prompt executor for which you want to cache responses:
+<!--- INCLUDE
+import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
+import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
+-->
+```kotlin
+val client = OpenAILLMClient(System.getenv("OPENAI_KEY"))
+val promptExecutor = SingleLLMPromptExecutor(client)
+```
+<!--- KNIT example-prompt-api-15.kt -->
+
+2. Create a `CachedPromptExecutor` instance with the desired cache and provide the created prompt executor:
+<!--- INCLUDE
+import ai.koog.agents.example.examplePromptApi15.promptExecutor
+import ai.koog.prompt.cache.files.FilePromptCache
+import ai.koog.prompt.executor.cached.CachedPromptExecutor
+import kotlin.io.path.Path
+import kotlinx.coroutines.runBlocking
+--> 
+```kotlin
+val cachedExecutor = CachedPromptExecutor(
+    cache = FilePromptCache(Path("/cache_directory")),
+    nested = promptExecutor
+)
+```
+<!--- KNIT example-prompt-api-16.kt -->
+
+3. Run the cached prompt executor with the desired prompt and model:
+<!--- INCLUDE
+import ai.koog.prompt.dsl.prompt
+import ai.koog.agents.example.examplePromptApi16.cachedExecutor
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import kotlinx.coroutines.runBlocking
+
+fun main() {
+    runBlocking {
+        val prompt = prompt("test") {
+            user("Hello")
+        }
+
+-->
+<!--- SUFFIX
+    }
+}
+--> 
+```kotlin
+val response = cachedExecutor.execute(prompt, OpenAIModels.Chat.GPT4o)
+```
+<!--- KNIT example-prompt-api-17.kt -->
+
+Now you can run the same prompt with the same model multiple times, the response will be retrieved from the cache.
+
+!!!note
+    * If you call `executeStreaming()` with the cached prompt executor, it produces a response as a single chunk.
+    * If you call `moderate()` with the cached prompt executor, it forwards the request to the nested prompt executor and does not use the cache.
+    * Caching of multiple choice responses is not supported.
 
 ## Retry functionality
 
@@ -169,20 +572,20 @@ val resilientClient = RetryingLLMClient(client)
 // Now all operations will automatically retry on transient errors
 val response = resilientClient.execute(prompt, OpenAIModels.Chat.GPT4o)
 ```
-<!--- KNIT example-prompt-api-05.kt -->
+<!--- KNIT example-prompt-api-18.kt -->
 
-#### Configuring Retry Behavior
+#### Configuring retry behavior
 
 Koog provides several predefined retry configurations:
 
-| Configuration | Max Attempts | Initial Delay | Max Delay | Use Case |
-|--------------|-------------|---------------|-----------|----------|
-| `DISABLED` | 1 (no retry) | - | - | Development/testing |
-| `CONSERVATIVE` | 3 | 2s | 30s | Normal production use |
-| `AGGRESSIVE` | 5 | 500ms | 20s | Critical operations |
-| `PRODUCTION` | 3 | 1s | 20s | Recommended default |
+| Configuration  | Max Attempts | Initial Delay | Max Delay | Use Case             |
+|----------------|--------------|---------------|-----------|----------------------|
+| `DISABLED`     | 1 (no retry) | -             | -         | Development and testing |
+| `CONSERVATIVE` | 3            | 2s            | 30s       | Normal production use |
+| `AGGRESSIVE`   | 5            | 500ms         | 20s       | Critical operations  |
+| `PRODUCTION`   | 3            | 1s            | 20s       | Recommended default  |
 
-Use them directly or create custom configurations:
+You can use them directly or create custom configurations:
 
 <!--- INCLUDE
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
@@ -194,13 +597,13 @@ val apiKey = System.getenv("OPENAI_API_KEY")
 val client = OpenAILLMClient(apiKey)
 -->
 ```kotlin
-// Use predefined configuration
+// Use the predefined configuration
 val conservativeClient = RetryingLLMClient(
     delegate = client,
     config = RetryConfig.CONSERVATIVE
 )
 
-// Or create custom configuration
+// Or create a custom configuration
 val customClient = RetryingLLMClient(
     delegate = client,
     config = RetryConfig(
@@ -212,14 +615,31 @@ val customClient = RetryingLLMClient(
     )
 )
 ```
-<!--- KNIT example-prompt-api-06.kt -->
+<!--- KNIT example-prompt-api-19.kt -->
 
-#### Retryable Error Patterns
+#### Retryable error patterns
 
 By default, the retry mechanism recognizes common transient errors:
 
-- **HTTP Status Codes**: 429 (Rate Limit), 500, 502, 503, 504
-- **Error Keywords**: "rate limit", "timeout", "connection reset", "overloaded"
+* **HTTP status codes**:
+    * `429`: Rate limit
+    * `500`: Internal server error
+    * `502`: Bag gateway
+    * `503`: Service unavailable
+    * `504`: Gateway timeout
+    * `529`: Anthropic overloaded
+
+* **Error keywords**:
+    * rate limit
+    * too many requests
+    * request timeout
+    * connection timeout
+    * read timeout
+    * write timeout
+    * connection reset by peer
+    * connection refused
+    * temporarily unavailable
+    * service unavailable
 
 You can define custom patterns for your specific needs:
 
@@ -239,11 +659,11 @@ val config = RetryConfig(
     )
 )
 ```
-<!--- KNIT example-prompt-api-07.kt -->
+<!--- KNIT example-prompt-api-20.kt -->
 
-#### Retry with Prompt Executors
+#### Retry with prompt executors
 
-When using prompt executors, wrap the underlying client before creating the executor:
+When working with prompt executors, you can wrap the underlying LLM client with a retry mechanism before creating the executor:
 
 <!--- INCLUDE
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
@@ -259,7 +679,7 @@ import ai.koog.prompt.llm.LLMProvider
 ```kotlin
 // Single provider executor with retry
 val resilientClient = RetryingLLMClient(
-    OpenAILLMClient(System.getenv("OPENAI_API_KEY")),
+    OpenAILLMClient(System.getenv("OPENAI_KEY")),
     RetryConfig.PRODUCTION
 )
 val executor = SingleLLMPromptExecutor(resilientClient)
@@ -267,25 +687,25 @@ val executor = SingleLLMPromptExecutor(resilientClient)
 // Multi-provider executor with flexible client configuration
 val multiExecutor = MultiLLMPromptExecutor(
     LLMProvider.OpenAI to RetryingLLMClient(
-        OpenAILLMClient(System.getenv("OPENAI_API_KEY")),
+        OpenAILLMClient(System.getenv("OPENAI_KEY")),
         RetryConfig.CONSERVATIVE
     ),
     LLMProvider.Anthropic to RetryingLLMClient(
         AnthropicLLMClient(System.getenv("ANTHROPIC_API_KEY")),
         RetryConfig.AGGRESSIVE  
     ),
-    // Bedrock client already has AWS SDK retry built-in
+    // The Bedrock client already has a built-in AWS SDK retry 
     LLMProvider.Bedrock to BedrockLLMClient(
         awsAccessKeyId = System.getenv("AWS_ACCESS_KEY_ID"),
         awsSecretAccessKey = System.getenv("AWS_SECRET_ACCESS_KEY"),
         awsSessionToken = System.getenv("AWS_SESSION_TOKEN"),
     ))
 ```
-<!--- KNIT example-prompt-api-08.kt -->
+<!--- KNIT example-prompt-api-21.kt -->
 
-#### Streaming with Retry
+#### Streaming with retry
 
-Streaming operations can optionally be retried (disabled by default):
+Streaming operations can optionally be retried. This feature is disabled by default.
 
 <!--- INCLUDE
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
@@ -297,7 +717,7 @@ import kotlinx.coroutines.runBlocking
 
 fun main() {
     runBlocking {
-        val baseClient = OpenAILLMClient(System.getenv("OPENAI_API_KEY"))
+        val baseClient = OpenAILLMClient(System.getenv("OPENAI_KEY"))
         val prompt = prompt("test") {
             user("Generate a story")
         }
@@ -314,11 +734,13 @@ val config = RetryConfig(
 val client = RetryingLLMClient(baseClient, config)
 val stream = client.executeStreaming(prompt, OpenAIModels.Chat.GPT4o)
 ```
-<!--- KNIT example-prompt-api-09.kt -->
+<!--- KNIT example-prompt-api-22.kt -->
 
-> **Note**: Streaming retry only applies to connection failures before the first token is received. Once streaming begins, errors are passed through to preserve content integrity.
+!!!note
+    Streaming retry only applies to the connection failures before the first token is received. Once streaming begins, errors are passed through to preserve content integrity.
 
-### Timeout Configuration
+
+### Timeout configuration
 
 All LLM clients support timeout configuration to prevent hanging requests:
 
@@ -340,18 +762,18 @@ val client = OpenAILLMClient(
     )
 )
 ```
-<!--- KNIT example-prompt-api-10.kt -->
+<!--- KNIT example-prompt-api-23.kt -->
 
-### Error Handling Best Practices
+### Error handling
 
-When working with LLMs in production:
+When working with LLMs in production, you need to imlement error-handling strategies:
 
-1. **Always wrap operations in try-catch blocks** to handle unexpected errors
-2. **Log errors with context** for debugging
-3. **Implement fallback strategies** for critical operations
-4. **Monitor retry patterns** to identify systemic issues
+- **Use try-catch blocks** to handle unexpected errors.
+- **Log errors with context** for debugging.
+- **Implement fallback strategies** for critical operations.
+- **Monitor retry patterns** to identify recurring or systemic issues.
 
-Example of comprehensive error handling:
+Here is an example of comprehensive error handling:
 
 <!--- INCLUDE
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
@@ -365,7 +787,7 @@ fun main() {
     runBlocking {
         val logger = LoggerFactory.getLogger("Example")
         val resilientClient = RetryingLLMClient(
-            OpenAILLMClient(System.getenv("OPENAI_API_KEY"))
+            OpenAILLMClient(System.getenv("OPENAI_KEY"))
         )
         val prompt = prompt("test") { user("Hello") }
         val model = OpenAIModels.Chat.GPT4o
@@ -396,280 +818,11 @@ try {
             notifyAdministrator()
         }
         else -> {
-            // Fall back to alternative solution
+            // Fall back to an alternative solution
             useDefaultResponse()
         }
     }
 }
 ```
-<!--- KNIT example-prompt-api-11.kt -->
-
-## Multimodal inputs
-
-In addition to providing text messages within prompts, Koog also lets you send images, audio, video, and files to LLMs along with `user` messages. As with standard text-only prompts, you also add media to the prompt using the DSL structure for prompt construction.
-
-<!--- INCLUDE
-import ai.koog.prompt.dsl.prompt
-import kotlinx.io.files.Path
--->
-```kotlin
-val prompt = prompt("multimodal_input") {
-    system("You are a helpful assistant.")
-
-    user {
-        +"Describe these images"
-
-        attachments {
-            image("https://example.com/test.png")
-            image(Path("/User/koog/image.png"))
-        }
-    }
-}
-```
-<!--- KNIT example-prompt-api-12.kt -->
-
-### Textual prompt content
-
-To accommodate for the support for various attachment types and create a clear distinction between text and file inputs in a prompt, you put text messages in a dedicated `content` parameter within a user prompt. 
-To add file inputs, provide them as a list within the `attachments` parameter. 
-
-The general format of a user message that includes a text message and a list of attachments is as follows:
-
-<!--- INCLUDE
-import ai.koog.prompt.dsl.prompt
-
-val prompt = prompt("prompt") {
--->
-<!--- SUFFIX
-}
--->
-```kotlin
-user(
-    content = "This is the user message",
-    attachments = listOf(
-        // Add attachments
-    )
-)
-```
-<!--- KNIT example-prompt-api-13.kt -->
-
-### File attachments
-
-To include an attachment, provide the file in the `attachments` parameter, following the format below:
-
-<!--- INCLUDE
-import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.message.Attachment
-import ai.koog.prompt.message.AttachmentContent
-
-val prompt = prompt("prompt") {
--->
-<!--- SUFFIX
-}
--->
-```kotlin
-user(
-    content = "Describe this image",
-    attachments = listOf(
-        Attachment.Image(
-            content = AttachmentContent.URL("https://example.com/capture.png"),
-            format = "png",
-            mimeType = "image/png",
-            fileName = "capture.png"
-        )
-    )
-)
-```
-<!--- KNIT example-prompt-api-14.kt -->
-
-The `attachments` parameter takes a list of file inputs, where each item is an instance of one of the following classes:
-
-- `Attachment.Image`: image attachments, such as `jpg` or `png` files.
-- `Attachment.Audio`: audio attachments, such as `mp3` or `wav` files.
-- `Attachment.Video`: video attachments, such as `mpg` or `avi` files.
-- `Attachment.File`: file attachments, such as `pdf` or `txt` files.
-
-Each of the classes above takes the following parameters:
-
-| Name       | Data type                               | Required                   | Description                                                                                                 |
-|------------|-----------------------------------------|----------------------------|-------------------------------------------------------------------------------------------------------------|
-| `content`  | [AttachmentContent](#attachmentcontent) | Yes                        | The source of the provided file content. For more information, see [AttachmentContent](#attachmentcontent). |
-| `format`   | String                                  | Yes                        | The format of the provided file. For example, `png`.                                                        |
-| `mimeType` | String                                  | Only for `Attachment.File` | The MIME Type of the provided file. For example, `image/png`.                                               |
-| `fileName` | String                                  | No                         | The name of the provided file including the extension. For example, `screenshot.png`.                       |
-
-#### AttachmentContent
-
-`AttachmentContent` defines the type and source of content that is provided as an input to the LLM. The following 
-classes are supported:
-
-`AttachmentContent.URL(val url: String)`
-
-Provides file content from the specified URL. Takes the following parameter:
-
-| Name   | Data type | Required | Description                      |
-|--------|-----------|----------|----------------------------------|
-| `url`  | String    | Yes      | The URL of the provided content. |
-
-`AttachmentContent.Binary.Bytes(val data: ByteArray)`
-
-Provides file content as a byte array. Takes the following parameter:
-
-| Name   | Data type | Required | Description                                |
-|--------|-----------|----------|--------------------------------------------|
-| `data` | ByteArray | Yes      | The file content provided as a byte array. |
-
-`AttachmentContent.Binary.Base64(val base64: String)`
-
-Provides file content encoded as a Base64 string. Takes the following parameter:
-
-| Name     | Data type | Required | Description                             |
-|----------|-----------|----------|-----------------------------------------|
-| `base64` | String    | Yes      | The Base64 string containing file data. |
-
-`AttachmentContent.PlainText(val text: String)`
-
-_Applies only if the attachment type is `Attachment.File`_. Provides content from a plain text file (such as the `text/plain` MIME type). Takes the following parameter:
-
-| Name   | Data type | Required | Description              |
-|--------|-----------|----------|--------------------------|
-| `text` | String    | Yes      | The content of the file. |
-
-### Mixed attachment content
-
-In addition to providing different types of attachments in separate prompts or messages, you can also provide multiple and mixed types of attachments in a single `user` message, as shown below:
-
-<!--- INCLUDE
-import ai.koog.prompt.dsl.prompt
-import kotlinx.io.files.Path
--->
-```kotlin
-val prompt = prompt("mixed_content") {
-    system("You are a helpful assistant.")
-
-    user {
-        +"Compare the image with the document content."
-
-        attachments {
-            image(Path("/User/koog/page.png"))
-            binaryFile(Path("/User/koog/page.pdf"), "application/pdf")
-        }
-    }
-}
-```
-<!--- KNIT example-prompt-api-15.kt -->
-
-## Prompt Executors
-
-While LLM clients provide direct access to providers, **Prompt Executors** offer a higher-level abstraction that simplifies common use cases and handles client lifecycle management. They're ideal when you want to:
-
-- Quickly prototype without managing client configuration
-- Work with multiple providers through a unified interface  
-- Simplify dependency injection in larger applications
-- Abstract away provider-specific details
-
-### Executor Types
-
-The Koog framework provides several prompt executors:
-
-- **Single provider executors**:
-    - `simpleOpenAIExecutor`: for executing prompts with OpenAI models.
-    - `simpleAnthropicExecutor`: for executing prompts with Anthropic models.
-    - `simpleGoogleExecutor`: for executing prompts with Google models.
-    - `simpleOpenRouterExecutor`: for executing prompts with OpenRouter.
-    - `simpleOllamaExecutor`: for executing prompts with Ollama.
-
-- **Multi-provider executor**:
-    - `DefaultMultiLLMPromptExecutor`: For working with multiple LLM providers
-
-### Create a single provider executor
-
-To create a prompt executor for a specific LLM provider, use the corresponding function.
-For example, to create the OpenAI prompt executor, you need to call the `simpleOpenAIExecutor` function and provide it with the API key required for authentication with the OpenAI service:
-
-1. Create a prompt executor:
-<!--- INCLUDE
-import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
-const val apiToken = "YOUR_API_TOKEN"
--->
-```kotlin
-// Create an OpenAI executor
-val promptExecutor = simpleOpenAIExecutor(apiToken)
-```
-<!--- KNIT example-prompt-api-16.kt -->
-
-2. Execute the prompt with a specific LLM:
-<!--- INCLUDE
-import ai.koog.agents.example.examplePromptApi12.prompt
-import ai.koog.agents.example.examplePromptApi16.promptExecutor
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import kotlinx.coroutines.runBlocking
-
-fun main() {
-    runBlocking {
--->
-<!--- SUFFIX
-    }
-}
--->
-```kotlin
-// Execute a prompt
-val response = promptExecutor.execute(
-    prompt = prompt,
-    model = OpenAIModels.Chat.GPT4o
-).single()
-```
-<!--- KNIT example-prompt-api-17.kt -->
-
-### Create a multi-provider executor
-
-To create a prompt executor that works with multiple LLM providers, do the following:
-
-1. Configure clients for the required LLM providers with the corresponding API keys. For example:
-<!--- INCLUDE
-import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
-import ai.koog.prompt.executor.clients.google.GoogleLLMClient
-import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
--->
-```kotlin
-val openAIClient = OpenAILLMClient(System.getenv("OPENAI_KEY"))
-val anthropicClient = AnthropicLLMClient(System.getenv("ANTHROPIC_KEY"))
-val googleClient = GoogleLLMClient(System.getenv("GOOGLE_KEY"))
-```
-<!--- KNIT example-prompt-api-18.kt -->
-
-2. Pass the configured clients to the `DefaultMultiLLMPromptExecutor` class constructor to create a prompt executor with multiple LLM providers:
-<!--- INCLUDE
-import ai.koog.agents.example.examplePromptApi18.anthropicClient
-import ai.koog.agents.example.examplePromptApi18.googleClient
-import ai.koog.agents.example.examplePromptApi18.openAIClient
-import ai.koog.prompt.executor.llms.all.DefaultMultiLLMPromptExecutor
--->
-```kotlin
-val multiExecutor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
-```
-<!--- KNIT example-prompt-api-19.kt -->
-
-3. Execute the prompt with a specific LLM:
-<!--- INCLUDE
-import ai.koog.agents.example.examplePromptApi12.prompt
-import ai.koog.agents.example.examplePromptApi19.multiExecutor
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import kotlinx.coroutines.runBlocking
-
-
-fun main() {
-    runBlocking {
--->
-<!--- SUFFIX
-    }
-}
--->
-```kotlin
-val response = multiExecutor.execute(
-    prompt = prompt,
-    model = OpenAIModels.Chat.GPT4o
-).single()
-```
-<!--- KNIT example-prompt-api-20.kt -->
+<!--- KNIT example-prompt-api-24.kt -->
 

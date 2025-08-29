@@ -43,8 +43,8 @@ fun main() = runBlocking {
             tool(AskUser)
             tool(
                 transferAgent.asTool(
-                    agentName = "Transfers money and solves all arising problems",
-                    agentDescription = "transferMoney",
+                    agentName = "transferMoney",
+                    agentDescription = "Transfers money and solves all arising problems",
                     inputDescriptor = ToolParameterDescriptor("request", "Transfer request", ToolParameterType.String)
                 )
             )

@@ -182,7 +182,7 @@ class DebuggerTest {
             FeatureMessageRemoteClient(connectionConfig = clientConfig, scope = this).use { client ->
 
                 val clientEventsCollector =
-                    ClientEventsCollector(client = client, expectedEventsCount = 18)
+                    ClientEventsCollector(client = client, expectedEventsCount = 20)
 
                 val collectEventsJob =
                     clientEventsCollector.startCollectEvents(coroutineScope = this@launch)
@@ -378,7 +378,7 @@ class DebuggerTest {
         val clientJob = launch {
             FeatureMessageRemoteClient(connectionConfig = clientConfig, scope = this).use { client ->
 
-                val clientEventsCollector = ClientEventsCollector(client = client, expectedEventsCount = 2)
+                val clientEventsCollector = ClientEventsCollector(client = client, expectedEventsCount = 6)
                 val collectEventsJob = clientEventsCollector.startCollectEvents(coroutineScope = this@launch)
 
                 client.connect()
@@ -484,7 +484,7 @@ class DebuggerTest {
         val clientJob = launch {
             FeatureMessageRemoteClient(connectionConfig = clientConfig, scope = this).use { client ->
 
-                val clientEventsCollector = ClientEventsCollector(client = client, expectedEventsCount = 6)
+                val clientEventsCollector = ClientEventsCollector(client = client, expectedEventsCount = 8)
                 val collectEventsJob = clientEventsCollector.startCollectEvents(coroutineScope = this@launch)
 
                 client.connect()

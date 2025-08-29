@@ -6,7 +6,7 @@ import kotlinx.serialization.json.JsonObject
 internal object EventBodyFields {
 
     data class ToolCalls(
-        private val tools: List<ai.koog.prompt.message.Message.Tool>
+        private val tools: List<ai.koog.prompt.message.Message.Tool.Call>
     ) : EventBodyField() {
         override val key: String = "tool_calls"
         override val value: List<Map<String, Any>>

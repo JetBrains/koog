@@ -12,7 +12,8 @@ import io.opentelemetry.api.trace.SpanKind
 internal class ExecuteToolSpan(
     parent: NodeExecuteSpan,
     tool: Tool<*, *>,
-    private val toolArgs: ToolArgs
+    toolArgs: ToolArgs,
+    toolCallId: String?,
 ) : GenAIAgentSpan(parent) {
 
     companion object {
@@ -43,6 +44,11 @@ internal class ExecuteToolSpan(
 
         // gen_ai.tool.name
         addAttribute(SpanAttributes.Tool.Name(name = tool.name))
+
+        // gen_ai.tool.call.id
+        toolCallId?.let { id ->
+            addAttribute(SpanAttributes.Tool.Call.Id(id = id))
+        }
 
         // Tool arguments custom attribute
         @Suppress("UNCHECKED_CAST")

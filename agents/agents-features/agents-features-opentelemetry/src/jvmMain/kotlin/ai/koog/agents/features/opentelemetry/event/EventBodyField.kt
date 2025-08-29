@@ -24,12 +24,12 @@ internal abstract class EventBodyField {
     abstract val value: Any
 
     fun valueString(verbose: Boolean): String {
-        return Json.encodeToString(JsonElement.serializer(), convertValueToString(value, verbose))
+        return Json.encodeToString(JsonElement.serializer(), convertValueToJsonElement(value, verbose))
     }
 
     //region Private Methods
 
-    private fun convertValueToString(value: Any, verbose: Boolean): JsonElement {
+    fun convertValueToJsonElement(value: Any, verbose: Boolean): JsonElement {
         return when (value) {
             is HiddenString -> {
                 JsonPrimitive(
@@ -50,15 +50,13 @@ internal abstract class EventBodyField {
             is List<*> -> JsonArray(
                 value
                     .filterNotNull()
-                    .map { convertValueToString(it, verbose) }
+                    .map { convertValueToJsonElement(it, verbose) }
             )
             is Map<*, *> -> JsonObject(
                 value.entries
                     .filter { it.key != null }
                     .associate { (k, v) ->
-                        k.toString() to (
-                            v?.let { convertValueToString(it, verbose) } ?: JsonNull
-                            )
+                        k.toString() to (v?.let { convertValueToJsonElement(it, verbose) } ?: JsonNull)
                     }
             )
             else -> {

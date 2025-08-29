@@ -14,6 +14,17 @@ plugins {
 }
 
 kotlin {
+    // Tiers are in accordance with <https://kotlinlang.org/docs/native-target-support.html>
+    // Tier 1
+    iosSimulatorArm64()
+    iosX64()
+
+    // Tier 2
+    iosArm64()
+
+    // Tier 3
+
+    // jvm & js
     jvm {
         configureTests()
     }

@@ -296,6 +296,7 @@ class DefaultMcpToolDescriptorParserTest {
             name = "test-tool",
             description = "A test tool with enum parameter",
             properties = buildJsonObject {
+                // Enum with type
                 putJsonObject("enumParam") {
                     put("type", "enum")
                     put("description", "Enum parameter")
@@ -305,8 +306,18 @@ class DefaultMcpToolDescriptorParserTest {
                         add("option3")
                     }
                 }
+
+                // Enum with a default string type
+                putJsonObject("stringEnumParam") {
+                    put("description", "String enum parameter")
+                    putJsonArray("enum") {
+                        add("option4")
+                        add("option5")
+                        add("option6")
+                    }
+                }
             },
-            required = listOf("enumParam")
+            required = listOf("enumParam", "stringEnumParam")
         )
 
         // Parse the tool
@@ -315,7 +326,7 @@ class DefaultMcpToolDescriptorParserTest {
         // Verify the basic properties
         assertEquals("test-tool", toolDescriptor.name)
         assertEquals("A test tool with enum parameter", toolDescriptor.description)
-        assertEquals(1, toolDescriptor.requiredParameters.size)
+        assertEquals(2, toolDescriptor.requiredParameters.size)
         assertEquals(0, toolDescriptor.optionalParameters.size)
 
         // Verify the enum parameter
@@ -330,6 +341,20 @@ class DefaultMcpToolDescriptorParserTest {
         assertEquals(expectedOptions.size, enumType.entries.size)
         expectedOptions.forEachIndexed { index, option ->
             assertEquals(option, enumType.entries[index])
+        }
+
+        // Verify the enum parameter
+        val specialEnumParam = toolDescriptor.requiredParameters[1]
+        assertEquals("stringEnumParam", specialEnumParam.name)
+        assertEquals("String enum parameter", specialEnumParam.description)
+        assertTrue(specialEnumParam.type is ToolParameterType.Enum)
+
+        // Verify the enum values
+        val specialEnumType = specialEnumParam.type as ToolParameterType.Enum
+        val expectedSpecialOptions = arrayOf("option4", "option5", "option6")
+        assertEquals(expectedSpecialOptions.size, specialEnumType.entries.size)
+        expectedSpecialOptions.forEachIndexed { index, option ->
+            assertEquals(option, specialEnumType.entries[index])
         }
     }
 

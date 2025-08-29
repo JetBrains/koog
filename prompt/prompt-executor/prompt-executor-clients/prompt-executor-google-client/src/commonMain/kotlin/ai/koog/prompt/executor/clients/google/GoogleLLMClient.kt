@@ -220,7 +220,7 @@ public open class GoogleLLMClient(
 
         val request = createGoogleRequest(prompt, model, tools)
 
-        return withContext(Dispatchers.SuitableForIO) {
+        val response = withContext(Dispatchers.SuitableForIO) {
             val response = httpClient.post("$DEFAULT_PATH/${model.id}:$DEFAULT_METHOD_GENERATE_CONTENT") {
                 setBody(request)
             }
@@ -233,6 +233,13 @@ public open class GoogleLLMClient(
                 error("Error from GoogleAI API: ${response.status}: $errorBody")
             }
         }
+
+        // https://discuss.ai.google.dev/t/gemini-2-5-pro-with-empty-response-text/81175/219
+        if (response.candidates.isNotEmpty() && response.candidates.all { it.content?.parts?.isEmpty() == true }) {
+            logger.warn { "Content `parts` field is missing in the response from GoogleAI API: $response" }
+        }
+
+        return response
     }
 
     /**

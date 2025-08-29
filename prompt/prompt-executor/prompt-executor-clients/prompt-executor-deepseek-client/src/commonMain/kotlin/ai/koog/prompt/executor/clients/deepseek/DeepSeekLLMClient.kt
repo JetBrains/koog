@@ -4,9 +4,17 @@ import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
+import ai.koog.prompt.executor.clients.deepseek.models.DeepSeekChatCompletionRequest
+import ai.koog.prompt.executor.clients.deepseek.models.DeepSeekChatCompletionResponse
+import ai.koog.prompt.executor.clients.deepseek.models.DeepSeekChatCompletionStreamResponse
 import ai.koog.prompt.executor.clients.openai.AbstractOpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIBasedSettings
+import ai.koog.prompt.executor.clients.openai.models.OpenAIMessage
+import ai.koog.prompt.executor.clients.openai.models.OpenAITool
+import ai.koog.prompt.executor.clients.openai.models.OpenAIToolChoice
+import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.params.LLMParams
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
@@ -37,7 +45,12 @@ public class DeepSeekLLMClient(
     private val settings: DeepSeekClientSettings = DeepSeekClientSettings(),
     baseClient: HttpClient = HttpClient(),
     clock: Clock = Clock.System
-) : AbstractOpenAILLMClient(apiKey, settings, baseClient, clock) {
+) : AbstractOpenAILLMClient<DeepSeekChatCompletionResponse, DeepSeekChatCompletionStreamResponse>(
+    apiKey,
+    settings,
+    baseClient,
+    clock
+) {
 
     private companion object {
         private val staticLogger = KotlinLogging.logger { }
@@ -45,15 +58,51 @@ public class DeepSeekLLMClient(
 
     override val logger: KLogger = staticLogger
 
-    /**
-     * Executes a moderation action on the given prompt using the specified language model.
-     * This method is not supported by the DeepSeek API and will always throw an `UnsupportedOperationException`.
-     *
-     * @param prompt The [Prompt] object to be moderated, containing the messages and respective context.
-     * @param model The [LLModel] to be used for the moderation process.
-     * @return This method does not return a valid result as it always throws an exception.
-     * @throws UnsupportedOperationException Always thrown because moderation is not supported by the DeepSeek API.
-     */
+    override fun serializeProviderChatRequest(
+        messages: List<OpenAIMessage>,
+        model: LLModel,
+        tools: List<OpenAITool>?,
+        toolChoice: OpenAIToolChoice?,
+        params: LLMParams,
+        stream: Boolean
+    ): String {
+        val deepSeekParams = params.toDeepSeekParams()
+        val responseFormat = createResponseFormat(params.schema, model)
+
+        val request = DeepSeekChatCompletionRequest(
+            messages = messages,
+            model = model.id,
+            frequencyPenalty = deepSeekParams.frequencyPenalty,
+            logprobs = deepSeekParams.logprobs,
+            maxTokens = deepSeekParams.maxTokens,
+            presencePenalty = deepSeekParams.presencePenalty,
+            responseFormat = responseFormat,
+            stop = deepSeekParams.stop,
+            stream = stream,
+            temperature = deepSeekParams.temperature,
+            toolChoice = deepSeekParams.toolChoice?.toOpenAIToolChoice(),
+            tools = tools,
+            topLogprobs = deepSeekParams.topLogprobs,
+            topP = deepSeekParams.topP,
+        )
+
+        return json.encodeToString(request)
+    }
+
+    override fun processProviderChatResponse(response: DeepSeekChatCompletionResponse): List<LLMChoice> {
+        require(response.choices.isNotEmpty()) { "Empty choices in response" }
+        return response.choices.map { it.toMessageResponses(createMetaInfo(response.usage)) }
+    }
+
+    override fun decodeStreamingResponse(data: String): DeepSeekChatCompletionStreamResponse =
+        json.decodeFromString(data)
+
+    override fun decodeResponse(data: String): DeepSeekChatCompletionResponse =
+        json.decodeFromString(data)
+
+    override fun processStreamingChunk(chunk: DeepSeekChatCompletionStreamResponse): String? =
+        chunk.choices.firstOrNull()?.delta?.content
+
     public override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
         logger.warn { "Moderation is not supported by DeepSeek API" }
         throw UnsupportedOperationException("Moderation is not supported by DeepSeek API.")

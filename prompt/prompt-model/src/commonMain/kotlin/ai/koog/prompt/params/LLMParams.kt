@@ -11,39 +11,33 @@ import kotlinx.serialization.json.JsonObject
  * encourage more diverse results, while lower values produce deterministically focused outputs.
  * The value is optional and defaults to null.
  *
+ * @property maxTokens Maximum number of tokens to generate in the response.
  * @property numberOfChoices Specifies the number of alternative completions to generate.
- *
  * @property speculation Reserved for speculative proposition of how result would look like,
  * supported only by a number of models, but may greatly improve speed and accuracy of result.
  * For example, in OpenAI that feature is called PredictedOutput
- *
  * @property schema Defines the structure for the model's structured response format.
- *
  * @property toolChoice Used to switch tool calling behavior of LLM.
- *
  * @property user An optional identifier for the user making the request, which can be used for tracking purposes.
- *
- * @property includeThoughts If `true`, requests the model to add reasoning blocks to the response. Defaults to `null`.
+ * @property includeThoughts If `true`, requests the model to add reasoning blocks to the response.
+ * Defaults to `null`.
  * When set to `true`, responses may include detailed reasoning steps.
  * When `false` or `null`, responses are typically shorter and faster.
- *
- * @property thinkingBudget Hard cap for reasoning tokens. Ignored by models that don't support budgets.
+ * @property thinkingBudget Hard cap for reasoning tokens.
+ * Ignored by models that don't support budgets.
  * This can be used to limit the amount of tokens used for reasoning when `includeThoughts` is enabled.
- *
- * This class also includes a nested `Builder` class to facilitate constructing instances in a more
- * customizable and incremental way.
  */
 @Serializable
-public data class LLMParams(
-    val temperature: Double? = null,
-    val maxTokens: Int? = null,
-    val numberOfChoices: Int? = null,
-    val speculation: String? = null,
-    val schema: Schema? = null,
-    val toolChoice: ToolChoice? = null,
-    val user: String? = null,
-    val includeThoughts: Boolean? = null,
-    val thinkingBudget: Int? = null,
+public open class LLMParams(
+    public val temperature: Double? = null,
+    public val maxTokens: Int? = null,
+    public val numberOfChoices: Int? = null,
+    public val speculation: String? = null,
+    public val schema: Schema? = null,
+    public val toolChoice: ToolChoice? = null,
+    public val user: String? = null,
+    public val includeThoughts: Boolean? = null,
+    public val thinkingBudget: Int? = null,
 ) {
     init {
         temperature?.let { temp ->
@@ -79,10 +73,86 @@ public data class LLMParams(
         numberOfChoices = numberOfChoices ?: default.numberOfChoices,
         speculation = speculation ?: default.speculation,
         schema = schema ?: default.schema,
+        toolChoice = toolChoice ?: default.toolChoice,
         user = user ?: default.user,
         includeThoughts = includeThoughts ?: default.includeThoughts,
         thinkingBudget = thinkingBudget ?: default.thinkingBudget,
     )
+
+    /**
+     * Creates a copy of this instance with the ability to modify any of its properties.
+     */
+    public open fun copy(
+        temperature: Double? = this.temperature,
+        maxTokens: Int? = this.maxTokens,
+        numberOfChoices: Int? = this.numberOfChoices,
+        speculation: String? = this.speculation,
+        schema: Schema? = this.schema,
+        toolChoice: ToolChoice? = this.toolChoice,
+        user: String? = this.user,
+        includeThoughts: Boolean? = this.includeThoughts,
+        thinkingBudget: Int? = this.thinkingBudget,
+    ): LLMParams = LLMParams(
+        temperature = temperature,
+        maxTokens = maxTokens,
+        numberOfChoices = numberOfChoices,
+        speculation = speculation,
+        schema = schema,
+        toolChoice = toolChoice,
+        user = user,
+        includeThoughts = includeThoughts,
+        thinkingBudget = thinkingBudget,
+    )
+
+    /**
+     * Component functions for destructuring declarations
+     */
+    public operator fun component1(): Double? = temperature
+    public operator fun component2(): Int? = maxTokens
+    public operator fun component3(): Int? = numberOfChoices
+    public operator fun component4(): String? = speculation
+    public operator fun component5(): Schema? = schema
+    public operator fun component6(): ToolChoice? = toolChoice
+    public operator fun component7(): String? = user
+    public operator fun component8(): Boolean? = includeThoughts
+    public operator fun component9(): Int? = thinkingBudget
+
+    override fun equals(other: Any?): Boolean = when {
+        this === other -> true
+        other !is LLMParams -> false
+        else ->
+            temperature == other.temperature &&
+                maxTokens == other.maxTokens &&
+                numberOfChoices == other.numberOfChoices &&
+                speculation == other.speculation &&
+                schema == other.schema &&
+                toolChoice == other.toolChoice &&
+                user == other.user &&
+                includeThoughts == other.includeThoughts &&
+                thinkingBudget == other.thinkingBudget
+    }
+
+    override fun hashCode(): Int = listOf(
+        temperature, maxTokens, numberOfChoices,
+        speculation, schema, toolChoice,
+        user, includeThoughts, thinkingBudget
+    ).fold(0) { acc, element ->
+        31 * acc + (element?.hashCode() ?: 0)
+    }
+
+    override fun toString(): String = buildString {
+        append("LLMParams(")
+        append("temperature=$temperature")
+        append(", maxTokens=$maxTokens")
+        append(", numberOfChoices=$numberOfChoices")
+        append(", speculation=$speculation")
+        append(", schema=$schema")
+        append(", toolChoice=$toolChoice")
+        append(", user=$user")
+        append(", includeThoughts=$includeThoughts")
+        append(", thinkingBudget=$thinkingBudget")
+        append(")")
+    }
 
     /**
      * Represents a schema for the structured response.
