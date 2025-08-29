@@ -1,14 +1,18 @@
 import ai.koog.gradle.fixups.DisableDistTasks.disableDistTasks
-import ai.koog.gradle.plugins.checkSplitPackages
+import ai.koog.gradle.plugins.CheckSplitPackagesExtension
+import ai.koog.gradle.plugins.CheckSplitPackagesPlugin
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.asRequestBody
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+import org.gradle.kotlin.dsl.apply
+import org.gradle.kotlin.dsl.getByType
 import org.jetbrains.kotlin.gradle.targets.js.ir.KotlinJsIrLink
 import org.jetbrains.kotlin.gradle.tasks.BaseKotlinCompile
 import org.jlleitschuh.gradle.ktlint.KtlintExtension
 import java.util.Base64
+import kotlin.apply
 
 group = "ai.koog"
 version = run {
@@ -76,6 +80,8 @@ allprojects {
         mavenCentral()
     }
 }
+
+apply<CheckSplitPackagesPlugin>()
 
 disableDistTasks()
 
@@ -270,8 +276,8 @@ tasks.register("compileTestKotlinAll") {
     dependsOn(subprojects.map { it.getKotlinCompileTasks("test") })
 }
 
-checkSplitPackages {
+extensions.getByType<CheckSplitPackagesExtension>().apply {
     includeProjects = setOf(":agents:", ":embeddings:", ":prompt:", ":koog-spring-boot-starter", ":rag:")
     failOnError = false
-    inclidePackages = setOf("ai.koog")
+    includePackages = setOf("ai.koog")
 }

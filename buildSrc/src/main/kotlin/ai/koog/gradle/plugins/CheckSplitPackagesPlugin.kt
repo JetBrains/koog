@@ -4,10 +4,13 @@ import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.logging.LogLevel
+import org.gradle.api.logging.Logger
+import org.gradle.api.provider.Property
 import org.gradle.api.provider.SetProperty
 import org.gradle.kotlin.dsl.apply
 import org.gradle.kotlin.dsl.create
 import org.gradle.kotlin.dsl.getByType
+import java.io.File
 import java.util.jar.JarFile
 
 /**
@@ -22,16 +25,16 @@ open class CheckSplitPackagesExtension(project: Project) {
 
     /**
      * A set of package name prefixes to include when detecting split packages.
-     * Intentional name per request: "inclidePackages".
+     * Intentional name per request: "includePackages".
      * If empty, all packages are considered.
      */
-    val inclidePackages: SetProperty<String> = project.objects.setProperty(String::class.java).convention(emptySet())
+    val includePackages: SetProperty<String> = project.objects.setProperty(String::class.java).convention(emptySet())
 
     /**
      * When true (default), the task fails the build on detecting split packages.
      * When false, the task logs warnings but does not fail the build.
      */
-    val failOnError: org.gradle.api.provider.Property<Boolean> =
+    val failOnError: Property<Boolean> =
         project.objects.property(Boolean::class.java).convention(true)
 }
 
@@ -62,8 +65,9 @@ class CheckSplitPackagesPlugin : Plugin<Project> {
             }
 
             // Register per-project task where a classpath exists
-            val shouldFail = ext.failOnError.getOrElse(true)
-            val packagePrefixes = ext.inclidePackages.getOrElse(emptySet()).map { it.trim() }.filter { it.isNotEmpty() }.toSet()
+            val shouldFail = ext.failOnError.get()
+            val packagePrefixes =
+                ext.includePackages.getOrElse(emptySet()).map { it.trim() }.filter { it.isNotEmpty() }.toSet()
             targetProjects.forEach { subproj ->
                 configureProject(subproj, shouldFail, packagePrefixes)
             }
@@ -101,10 +105,12 @@ class CheckSplitPackagesPlugin : Plugin<Project> {
                             (conf.name.endsWith("RuntimeClasspath") || conf.name.endsWith("CompileClasspath")) &&
                             !conf.name.contains("Test", ignoreCase = true) &&
                             // prefer JVM-like configurations if possible
-                            (conf.name.startsWith("jvm", ignoreCase = true) || conf.name.equals(
-                                "runtimeClasspath",
-                                true
-                            ) || conf.name.equals("compileClasspath", true))
+                            (
+                                conf.name.startsWith(prefix = "jvm", ignoreCase = true) || conf.name.equals(
+                                    other = "runtimeClasspath",
+                                    ignoreCase = true
+                                ) || conf.name.equals("compileClasspath", true)
+                                )
                     }
 
             if (cpConf == null) {
@@ -123,7 +129,7 @@ class CheckSplitPackagesPlugin : Plugin<Project> {
                         return@doLast
                     }
 
-                    val packagesToJars = mutableMapOf<String, MutableSet<java.io.File>>()
+                    val packagesToJars = mutableMapOf<String, MutableSet<File>>()
 
                     files.forEach { jarFile ->
                         JarFile(jarFile).use { jar ->
@@ -139,7 +145,7 @@ class CheckSplitPackagesPlugin : Plugin<Project> {
                                 .filter { pkg ->
                                     // If no prefixes specified, include all packages; otherwise require match by prefix or exact.
                                     packagePrefixes.isEmpty() || packagePrefixes.any { prefix ->
-                                        pkg == prefix || pkg.startsWith(prefix + ".")
+                                        pkg == prefix || pkg.startsWith("$prefix.")
                                     }
                                 }
                                 .toSet() // de-dup per JAR
@@ -151,9 +157,9 @@ class CheckSplitPackagesPlugin : Plugin<Project> {
 
                     // Build a quick index of jar -> owning subproject path if jar lies under a buildDir
                     val allProjects = project.rootProject.allprojects
-                    fun ownerOf(jar: java.io.File): String? {
+                    fun ownerOf(jar: File): String? {
                         val abs = jar.absolutePath
-                        return allProjects.firstOrNull { p -> abs.startsWith(p.layout.buildDirectory.asFile.get().absolutePath + java.io.File.separator) }?.path
+                        return allProjects.firstOrNull { p -> abs.startsWith(p.layout.buildDirectory.asFile.get().absolutePath + File.separator) }?.path
                     }
 
                     val split = packagesToJars
@@ -181,40 +187,23 @@ class CheckSplitPackagesPlugin : Plugin<Project> {
             }
         }
     }
-}
 
-private fun printSplitDetails(
-    logger: org.gradle.api.logging.Logger,
-    split: Map<String, List<Pair<java.io.File, String?>>>,
-    warnMode: Boolean
-) {
-    split.forEach { (pkg, jarPairs) ->
-        val logLevel = if (warnMode) LogLevel.WARN else LogLevel.ERROR
-        logger.log(logLevel, "- $pkg")
-        jarPairs.map { it.first }.sortedBy { it.name }.forEach { jf ->
-            val owner = jarPairs.firstOrNull { it.first == jf }?.second
-            if (owner != null) {
-                logger.log(logLevel, "    in: ${jf.name}  (project: $owner)")
-            } else {
-                logger.log(logLevel, "    in: ${jf.name}")
+    private fun printSplitDetails(
+        logger: Logger,
+        split: Map<String, List<Pair<File, String?>>>,
+        warnMode: Boolean
+    ) {
+        split.forEach { (pkg, jarPairs) ->
+            val logLevel = if (warnMode) LogLevel.WARN else LogLevel.ERROR
+            logger.log(logLevel, "- $pkg")
+            jarPairs.map { it.first }.sortedBy { it.name }.forEach { jf ->
+                val owner = jarPairs.firstOrNull { it.first == jf }?.second
+                if (owner != null) {
+                    logger.log(logLevel, "    in: ${jf.name}  (project: $owner)")
+                } else {
+                    logger.log(logLevel, "    in: ${jf.name}")
+                }
             }
         }
     }
-}
-
-/**
- * Kotlin DSL convenience to both apply the plugin and configure its extension in one call.
- * Usage:
- *   checkSplitPackages {
- *       include.set(listOf("rag", "prompt", "koog-agents"))
- *       // or simply: include = listOf("rag", "prompt") in Groovy DSL
- *   }
- */
-fun Project.checkSplitPackages(configure: CheckSplitPackagesExtension.() -> Unit) {
-    // Ensure plugin is applied to current project so that the extension exists.
-    if (plugins.findPlugin(CheckSplitPackagesPlugin::class.java) == null) {
-        apply<CheckSplitPackagesPlugin>()
-    }
-    // Now configure the extension
-    extensions.getByType<CheckSplitPackagesExtension>().apply(configure)
 }
