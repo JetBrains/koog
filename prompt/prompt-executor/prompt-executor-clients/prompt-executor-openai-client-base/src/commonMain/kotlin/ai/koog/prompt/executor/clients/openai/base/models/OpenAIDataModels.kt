@@ -1,4 +1,4 @@
-package ai.koog.prompt.executor.clients.openai.models
+package ai.koog.prompt.executor.clients.openai.base.models
 
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
