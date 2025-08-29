@@ -40,7 +40,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import io.opentelemetry.sdk.trace.export.SpanExporter
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -55,7 +55,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
     private val json = Json { allowStructuredMapKeys = true }
 
     @Test
-    fun testSingleLLMCall() = runBlocking {
+    fun testSingleLLMCall() = runTest {
         MockSpanExporter().use { mockSpanExporter ->
 
             val strategy = strategy("single-llm-call-strategy") {
@@ -158,7 +158,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
     ): Map<String, Any>
 
     @Test
-    fun testLLMCallToolCallLLMCall() = runBlocking {
+    fun testLLMCallToolCallLLMCall() = runTest {
         MockSpanExporter().use { mockSpanExporter ->
             val strategy = strategy("llm-tool-llm-strategy") {
                 val llmRequest by nodeLLMRequest("LLM Request", allowToolCalls = true)
@@ -296,7 +296,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
     }
 
     @Test
-    fun testMultipleToolCalls() = runBlocking {
+    fun testMultipleToolCalls() = runTest {
         MockSpanExporter().use { mockSpanExporter ->
             val strategy = strategy("multiple-tool-calls-strategy") {
                 val llmRequest by nodeLLMRequest("Initial LLM Request", allowToolCalls = true)
@@ -400,7 +400,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
     }
 
     @Test
-    fun testSubgraphWithFinishTool() = runBlocking {
+    fun testSubgraphWithFinishTool() = runTest {
         MockSpanExporter().use { mockSpanExporter ->
             val strategy = strategy("subgraph-finish-tool-strategy") {
                 val sg by subgraphWithTask<String>(
@@ -463,7 +463,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
     }
 
     @Test
-    fun `test adapter customizes spans after creation`() = runBlocking {
+    fun `test adapter customizes spans after creation`() = runTest {
         MockSpanExporter().use { mockExporter ->
             val systemPrompt = "You are the application that predicts weather"
             val userPrompt = "What's the weather in Paris?"
@@ -542,7 +542,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
     }
 
     @Test
-    fun testStructuredDataLLMCall() = runBlocking {
+    fun testStructuredDataLLMCall() = runTest {
         MockSpanExporter().use { mockSpanExporter ->
             @Serializable
             @SerialName("SimpleWeatherForecast")
@@ -628,7 +628,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
     @Disabled("KG-288")
     @OptIn(DetachedPromptExecutorAPI::class)
     @Test
-    fun testContentModerationEventOnLLMSpan() = runBlocking {
+    fun testContentModerationEventOnLLMSpan() = runTest {
         MockSpanExporter().use { mockSpanExporter ->
             val strategy = strategy<String, String>("moderation-strategy") {
                 val moderate by node<String, String>("moderate-message") { input ->
@@ -697,7 +697,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
 
     @Disabled("KG-288")
     @Test
-    fun testEmbeddingsTracingWithOpenAI() = runBlocking {
+    fun testEmbeddingsTracingWithOpenAI() = runTest {
         MockSpanExporter().use { mockSpanExporter ->
             val model = OpenAIModels.Embeddings.TextEmbeddingAda002
             val openaiKey = System.getenv("OPENAI_API_KEY")

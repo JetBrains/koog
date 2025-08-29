@@ -5,16 +5,13 @@ import ai.koog.agents.features.opentelemetry.integration.TraceStructureTestBase
 import ai.koog.agents.features.opentelemetry.mock.TestGetWeatherTool
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
-import kotlin.test.Ignore
+import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable
 
 /**
  * A test class for verifying trace structures using the Weave exporter.
  */
-// Explicitly ignore this test as we do not have env variables for Weave in CI to make these tests passed.
-// Required env variables:
-//   - WEAVE_ENTITY
-//   - WEAVE_API_KEY
-@Ignore
+@EnabledIfEnvironmentVariable(named = "WEAVE_ENTITY", matches = ".+")
+@EnabledIfEnvironmentVariable(named = "WEAVE_API_KEY", matches = ".+")
 class WeaveTraceStructureTest :
     TraceStructureTestBase(openTelemetryConfigurator = { addWeaveExporter() }) {
 
