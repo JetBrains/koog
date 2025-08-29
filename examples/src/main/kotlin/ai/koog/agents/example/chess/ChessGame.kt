@@ -1,7 +1,5 @@
 package ai.koog.agents.example.chess
 
-import java.lang.IllegalArgumentException
-
 /**
  * Simple chess game without checks for valid moves.
  * Stores a correct state of the board if the entered moves are valid
