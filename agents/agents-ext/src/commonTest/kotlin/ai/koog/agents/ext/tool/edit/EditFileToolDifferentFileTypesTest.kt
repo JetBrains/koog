@@ -5,9 +5,9 @@ import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.ext.tool.edit.testutil.InMemoryFS
 import ai.koog.rag.base.files.readText
 import ai.koog.rag.base.files.writeText
+import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlinx.coroutines.test.runTest
 
 @OptIn(InternalAgentToolsApi::class)
 class EditFileToolDifferentFileTypesTest {
@@ -20,14 +20,12 @@ class EditFileToolDifferentFileTypesTest {
         val path = "/repo/module/test_sample.py"
         mockedFS.writeText(
             path,
-            (
-                """
-                def test():
-                    print("debug")
-                    x = 42
-                    return x
-                """.trimIndent()
-            )
+            """
+            |def test():
+            |    print("debug")
+            |    x = 42
+            |    return x
+            """.trimMargin()
         )
 
         // When

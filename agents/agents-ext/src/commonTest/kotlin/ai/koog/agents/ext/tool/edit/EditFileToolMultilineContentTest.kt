@@ -5,10 +5,10 @@ import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.ext.tool.edit.testutil.InMemoryFS
 import ai.koog.rag.base.files.readText
 import ai.koog.rag.base.files.writeText
+import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import kotlinx.coroutines.test.runTest
 
 @OptIn(InternalAgentToolsApi::class)
 class EditFileToolMultilineContentTest {
@@ -21,16 +21,14 @@ class EditFileToolMultilineContentTest {
         val path = "/project/js/Block.js"
         mockedFS.writeText(
             path,
-            (
-                """
-                |function test() {
-                |    if (condition) {
-                |        doSomething();
-                |    }
-                |    return result;
-                |}
-                |""".trimMargin()
-            )
+            """
+            |function test() {
+            |    if (condition) {
+            |        doSomething();
+            |    }
+            |    return result;
+            |}
+            """.trimMargin()
         )
 
         // When
@@ -61,7 +59,7 @@ class EditFileToolMultilineContentTest {
             |    }
             |    return result;
             |}
-            |""".trimMargin(),
+            """.trimMargin(),
             updated
         )
     }

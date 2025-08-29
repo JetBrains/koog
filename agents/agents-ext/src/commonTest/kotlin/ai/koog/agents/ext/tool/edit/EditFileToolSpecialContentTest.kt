@@ -5,10 +5,10 @@ import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.ext.tool.edit.testutil.InMemoryFS
 import ai.koog.rag.base.files.readText
 import ai.koog.rag.base.files.writeText
+import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import kotlinx.coroutines.test.runTest
 
 @OptIn(InternalAgentToolsApi::class)
 class EditFileToolSpecialContentTest {
@@ -21,15 +21,13 @@ class EditFileToolSpecialContentTest {
         val path = "/project/i18n/Unicode.txt"
         mockedFS.writeText(
             path,
-            (
-                """
-                |function test() {
-                |    // Unicode symbols: 🚀 💻 🔧
-                |    const greeting = "Hello, 世界!";
-                |    return "こんにちは";
-                |}
-                |""".trimMargin()
-            )
+            """
+            |function test() {
+            |    // Unicode symbols: 🚀 💻 🔧
+            |    const greeting = "Hello, 世界!";
+            |    return "こんにちは";
+            |}
+            """.trimMargin()
         )
 
         // When
@@ -45,13 +43,14 @@ class EditFileToolSpecialContentTest {
 
         // Then
         val updated = mockedFS.readText(path)
-        assertEquals("""
-                |function test() {
-                |    // Unicode symbols: 🚀 💻 🔧
-                |    const greeting = "Bonjour, 世界!";
-                |    return "さようなら";
-                |}
-                |""".trimMargin(),
+        assertEquals(
+            """
+            |function test() {
+            |    // Unicode symbols: 🚀 💻 🔧
+            |    const greeting = "Bonjour, 世界!";
+            |    return "さようなら";
+            |}
+            """.trimMargin(),
             updated
         )
     }
@@ -126,14 +125,12 @@ class EditFileToolSpecialContentTest {
         val path = "/project/comments/PatchLike.js"
         mockedFS.writeText(
             path,
-            (
-                """
-                |// TODO: Replace "return 42" with "return 43"
-                |function test() {
-                |    return 42;  // Will be replaced
-                |}
-                |""".trimMargin()
-            )
+            """
+            |// TODO: Replace "return 42" with "return 43"
+            |function test() {
+            |    return 42;  // Will be replaced
+            |}
+            """.trimMargin()
         )
 
         // When

@@ -6,10 +6,10 @@ import ai.koog.agents.ext.tool.edit.diff.toUnifiedDiff
 import ai.koog.agents.ext.tool.edit.testutil.InMemoryFS
 import ai.koog.rag.base.files.readText
 import ai.koog.rag.base.files.writeText
-import kotlin.test.Test
-import kotlin.test.assertEquals
 import kotlinx.coroutines.test.runTest
+import kotlin.test.Test
 import kotlin.test.assertContains
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 
 @OptIn(InternalAgentToolsApi::class)
@@ -59,13 +59,16 @@ class EditFileToolCoreTest {
         assertContains(markdownReport, "Success")
         assertContains(markdownReport, "edit")
         assertContains(markdownReport, path)
-        assertContains(markdownReport, """
-            --- original
-            +++ revised
-            @@ -1,2 +1,2 @@
-            -Hello World
-            +Hello Koog
-        """.trimIndent())
+        assertContains(
+            markdownReport,
+            """
+            |--- original
+            |+++ revised
+            |@@ -1,2 +1,2 @@
+            |-Hello World
+            |+Hello Koog
+            """.trimMargin()
+        )
     }
 
     @Test
@@ -74,11 +77,14 @@ class EditFileToolCoreTest {
         val mockedFS = InMemoryFS()
         val tool = EditFileTool(mockedFS)
         val path = "/project/CaseNotes.txt"
-        mockedFS.writeText(path, """
+        mockedFS.writeText(
+            path,
+            """
             |Line A
             |Hello World
             |Line C
-        """.trimMargin() + "\n")
+            """.trimMargin() + "\n"
+        )
 
         // When
         val args = EditFileTool.Args(
@@ -95,7 +101,7 @@ class EditFileToolCoreTest {
             |Line A
             |Hello Koog
             |Line C
-            |""".trimMargin(),
+            """.trimMargin(),
             updated
         )
     }
@@ -106,11 +112,14 @@ class EditFileToolCoreTest {
         val mockedFS = InMemoryFS()
         val tool = EditFileTool(mockedFS)
         val path = "/project/SpaceNotes.txt"
-        mockedFS.writeText(path, """
+        mockedFS.writeText(
+            path,
+            """
             |Line A
             |Hello World
             |Line C
-        """.trimMargin() + "\n")
+            """.trimMargin() + "\n"
+        )
 
         // When
         val args = EditFileTool.Args(
@@ -127,7 +136,7 @@ class EditFileToolCoreTest {
             |Line A
             |Hello Koog
             |Line C
-            |""".trimMargin(),
+            """.trimMargin(),
             updated
         )
     }
@@ -138,11 +147,14 @@ class EditFileToolCoreTest {
         val mockedFS = InMemoryFS()
         val tool = EditFileTool(mockedFS)
         val path = "/project/SpaceNotes.txt"
-        mockedFS.writeText(path, """
+        mockedFS.writeText(
+            path,
+            """
             |Line A
             |Hello    World
             |Line C
-        """.trimMargin() + "\n")
+            """.trimMargin() + "\n"
+        )
 
         // When
         val args = EditFileTool.Args(
@@ -159,7 +171,7 @@ class EditFileToolCoreTest {
             |Line A
             |Hello Koog
             |Line C
-            |""".trimMargin(),
+            """.trimMargin(),
             updated
         )
     }
@@ -170,11 +182,14 @@ class EditFileToolCoreTest {
         val mockedFS = InMemoryFS()
         val tool = EditFileTool(mockedFS)
         val path = "/project/DeleteNotes.txt"
-        mockedFS.writeText(path, """
+        mockedFS.writeText(
+            path,
+            """
             |Line A
             |Hello World
             |Line C
-        """.trimMargin() + "\n")
+            """.trimMargin() + "\n"
+        )
 
         // When
         val args = EditFileTool.Args(
@@ -190,7 +205,7 @@ class EditFileToolCoreTest {
             """
             |Line A
             |Line C
-            |""".trimMargin(),
+            """.trimMargin(),
             updated
         )
     }
@@ -225,18 +240,18 @@ class EditFileToolCoreTest {
         val tool = EditFileTool(mockedFS)
         val path = "/project/Rewrite.txt"
         val originalContent = """
-            |Old A
-            |Old B
-            |Old C
-            |""".trimMargin()
+        |Old A
+        |Old B
+        |Old C
+        """.trimMargin()
         mockedFS.writeText(path, originalContent)
 
         // When
         val replacementContent = """
-            |New 1
-            |New 2
-            |New 3
-            |""".trimMargin()
+        |New 1
+        |New 2
+        |New 3
+        """.trimMargin()
         val args = EditFileTool.Args(
             path = path,
             original = "",
@@ -255,11 +270,14 @@ class EditFileToolCoreTest {
         val mockedFS = InMemoryFS()
         val tool = EditFileTool(mockedFS)
         val path = "/project/NoMatch.txt"
-        mockedFS.writeText(path, """
+        mockedFS.writeText(
+            path,
+            """
             |Alpha
             |Beta
             |Gamma
-        """.trimMargin() + "\n")
+            """.trimMargin() + "\n"
+        )
 
         val originalContentBefore = mockedFS.readText(path)
 

@@ -110,8 +110,8 @@ class UnifiedDiffSerializerTest {
         val oldContent = (1..20).map { "line $it" }
         val newContent = oldContent.mapIndexed { index, line ->
             when (index + 1) {
-                2    -> "modified line 2"
-                18   -> "modified line 18"
+                2 -> "modified line 2"
+                18 -> "modified line 18"
                 else -> line
             }
         }
@@ -148,8 +148,8 @@ class UnifiedDiffSerializerTest {
         val oldContent = (1..10).map { "line $it" }
         val newContent = oldContent.mapIndexed { index, line ->
             when (index + 1) {
-                2    -> "modified line 2"
-                8    -> "modified line 8"
+                2 -> "modified line 2"
+                8 -> "modified line 8"
                 else -> line
             }
         }

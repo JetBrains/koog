@@ -16,7 +16,10 @@ class MyersDiffAlgorithmTest {
         val result = algorithm.diff(content, content).operations
 
         assertEquals(content.size, result.size, "Result should have same number of operations as input lines")
-        assertTrue(result.all { it.type == DiffOperation.Type.KEEP }, "All operations should be KEEP for identical content")
+        assertTrue(
+            result.all { it.type == DiffOperation.Type.KEEP },
+            "All operations should be KEEP for identical content"
+        )
     }
 
     @Test
@@ -118,7 +121,7 @@ class MyersDiffAlgorithmTest {
     @Test
     fun testLongCommonPrefixSuffix() {
         val source = listOf("P1", "P2", "X1", "X2", "S1", "S2")
-        val target = listOf("P1", "P2", "Y",  "X2", "S1", "S2")
+        val target = listOf("P1", "P2", "Y", "X2", "S1", "S2")
         val result = algorithm.diff(source, target).operations
 
         // Prefix "P1","P2" and suffix "X2","S1","S2" should be KEEP
@@ -138,7 +141,7 @@ class MyersDiffAlgorithmTest {
             types
         )
         assertEquals(
-            listOf("P1", "P2", "X1", "Y",  "X2", "S1", "S2"),
+            listOf("P1", "P2", "X1", "Y", "X2", "S1", "S2"),
             values
         )
     }
@@ -159,7 +162,10 @@ class MyersDiffAlgorithmTest {
                 when (op.type) {
                     DiffOperation.Type.KEEP,
                     DiffOperation.Type.INSERT -> add(op.value)
-                    DiffOperation.Type.DELETE -> { /* skip */ }
+
+                    DiffOperation.Type.DELETE -> {
+                        /* skip */
+                    }
                 }
             }
         }

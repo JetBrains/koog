@@ -165,7 +165,6 @@ class DiffTest {
         assertEquals(listOf("w", "a", "x", "y", "c", "z"), result)
     }
 
-
     @Test
     fun testVarargConstructor() {
         val diff = Diff(

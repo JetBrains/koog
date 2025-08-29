@@ -54,7 +54,8 @@ internal class MyersDiffAlgorithm<T> : DiffAlgorithm<T> {
 
                 // "Snake" down the diagonal (matches)
                 while (x < n && y < m && source[x] == target[y]) {
-                    x++; y++
+                    x++
+                    y++
                 }
                 currV[k] = x
 
@@ -75,7 +76,12 @@ internal class MyersDiffAlgorithm<T> : DiffAlgorithm<T> {
     /**
      * Backtrack through the trace to reconstruct the edit script.
      */
-    private fun backtrack(source: List<T>, target: List<T>, trace: List<Map<Int, Int>>, d: Int): List<DiffOperation<T>> {
+    private fun backtrack(
+        source: List<T>,
+        target: List<T>,
+        trace: List<Map<Int, Int>>,
+        d: Int
+    ): List<DiffOperation<T>> {
         val result = mutableListOf<DiffOperation<T>>()
         var x = source.size
         var y = target.size

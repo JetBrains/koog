@@ -1,6 +1,11 @@
 package ai.koog.agents.ext.tool.edit
 
-import ai.koog.agents.core.tools.*
+import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.ToolArgs
+import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.agents.core.tools.ToolParameterDescriptor
+import ai.koog.agents.core.tools.ToolParameterType
+import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.ext.tool.edit.diff.Diff
 import ai.koog.agents.ext.tool.edit.diff.MyersDiffAlgorithm
 import ai.koog.agents.ext.tool.edit.diff.diff
@@ -63,7 +68,7 @@ internal class EditFileTool<Path>(
     }
 
     companion object {
-        private val logger = KotlinLogging.logger {  }
+        private val logger = KotlinLogging.logger { }
 
         val descriptor: ToolDescriptor = ToolDescriptor(
             name = "edit_file",

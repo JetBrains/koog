@@ -37,22 +37,22 @@ class UnifiedDiffIntegrationTest {
             .joinToString("\n")
 
         val expected = """
-              --- a/file1.txt
-              +++ b/file1.txt
-              @@ -1,3 +1,3 @@
-               line 1
-              -line 2
-              +modified line
-               line 3
-        
-              --- a/file2.txt
-              +++ b/file2.txt
-              @@ -1,2 +1,3 @@
-               file 2 line 1
-               file 2 line 2
-              +file 2 line 3
-              
-            """.trimIndent()
+          --- a/file1.txt
+          +++ b/file1.txt
+          @@ -1,3 +1,3 @@
+           line 1
+          -line 2
+          +modified line
+           line 3
+    
+          --- a/file2.txt
+          +++ b/file2.txt
+          @@ -1,2 +1,3 @@
+           file 2 line 1
+           file 2 line 2
+          +file 2 line 3
+          
+        """.trimIndent()
 
         assertEquals(expected, combinedDiff)
     }
@@ -71,17 +71,17 @@ class UnifiedDiffIntegrationTest {
         )
 
         val expected = """
-              --- a/file.txt
-              +++ b/file.txt
-              @@ -1,4 +1,5 @@
-               line 1
-              -line 2
-              +modified line 2
-               line 3
-               line 4
-              +line 5
-              
-            """.trimIndent()
+          --- a/file.txt
+          +++ b/file.txt
+          @@ -1,4 +1,5 @@
+           line 1
+          -line 2
+          +modified line 2
+           line 3
+           line 4
+          +line 5
+          
+        """.trimIndent()
 
         assertEquals(expected, diff)
     }
@@ -106,13 +106,13 @@ class UnifiedDiffIntegrationTest {
         )
 
         val expectedBinary = """
-              --- a/binary.bin
-              +++ b/binary.bin
-              @@ -1,1 +1,1 @@
-              -$oldLine
-              +$newLine
-              
-            """.trimIndent()
+          --- a/binary.bin
+          +++ b/binary.bin
+          @@ -1,1 +1,1 @@
+          -$oldLine
+          +$newLine
+          
+        """.trimIndent()
 
         assertEquals(expectedBinary, binaryDiff)
     }

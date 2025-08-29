@@ -5,9 +5,9 @@ import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.ext.tool.edit.testutil.InMemoryFS
 import ai.koog.rag.base.files.readText
 import ai.koog.rag.base.files.writeText
+import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlinx.coroutines.test.runTest
 
 @OptIn(InternalAgentToolsApi::class)
 class EditFileToolFormattingEdgeCasesTest {
@@ -21,12 +21,12 @@ class EditFileToolFormattingEdgeCasesTest {
         mockedFS.writeText(
             path,
             """
-            function test() {
-            	if (true) {  // Tab indentation
-                	return 42;  // Mixed tab and spaces
-            	}
-            }
-        """.trimIndent()
+            |function test() {
+            |	if (true) {  // Tab indentation
+            |    	return 42;  // Mixed tab and spaces
+            |	}
+            |}
+            """.trimMargin()
         )
 
         // When
@@ -41,12 +41,12 @@ class EditFileToolFormattingEdgeCasesTest {
         val updated = mockedFS.readText(path)
         assertEquals(
             """
-            function test() {
-            	if (true) {  // Tab indentation
-                	return 43;  // Mixed tab and spaces
-            	}
-            }
-        """.trimIndent(),
+            |function test() {
+            |	if (true) {  // Tab indentation
+            |    	return 43;  // Mixed tab and spaces
+            |	}
+            |}
+            """.trimMargin(),
             updated
         )
     }

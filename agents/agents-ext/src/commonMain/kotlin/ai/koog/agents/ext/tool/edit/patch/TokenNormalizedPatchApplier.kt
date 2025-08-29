@@ -9,8 +9,11 @@ internal fun applyTokenNormalizedPatch(content: String, patch: FilePatch): Patch
         val originalTokens = TokenList(tokenize(patch.original))
 
         val match = contentTokens.find(originalTokens) { fst, snd ->
-            if (fst.isWhitespace && snd.isWhitespace) true
-            else fst.content.equals(snd.content, ignoreCase = true)
+            if (fst.isWhitespace && snd.isWhitespace) {
+                true
+            } else {
+                fst.content.equals(snd.content, ignoreCase = true)
+            }
         } ?: return PatchApplyResult.Failure.OriginalNotFound
 
         val replacementTokens = TokenList(tokenize(patch.replacement))
@@ -38,7 +41,6 @@ internal fun PatchApplyResult.isSuccess(): Boolean {
     }
     return this is PatchApplyResult.Success
 }
-
 
 internal fun tokenize(
     text: String,
@@ -79,7 +81,10 @@ internal data class TokenList(val tokens: List<Token>) {
 
     fun replace(range: IntRange, replacement: TokenList): TokenList {
         return TokenList(
-            tokens.subList(0, range.start) + replacement.tokens + tokens.subList(range.endInclusive + 1, this.tokens.size)
+            tokens.subList(0, range.start) + replacement.tokens + tokens.subList(
+                range.endInclusive + 1,
+                this.tokens.size
+            )
         )
     }
 }
