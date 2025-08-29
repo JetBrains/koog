@@ -11,6 +11,7 @@ val excluded = setOf(
     ":agents:agents-test",
     ":examples",
     ":integration-tests",
+    ":test-utils",
     ":koog-spring-boot-starter",
     ":koog-ktor",
     ":docs",
