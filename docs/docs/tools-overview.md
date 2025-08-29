@@ -261,12 +261,12 @@ val coordinatorAgent = AIAgent(
 
 When an agent tool is called:
 
-1. The arguments are deserialized according to the input descriptor
-2. The wrapped agent is executed with the deserialized input
-3. The agent's output is serialized and returned as the tool result
+1. The arguments are deserialized according to the input descriptor.
+2. The wrapped agent is executed with the deserialized input.
+3. The agent's output is serialized and returned as the tool result.
 
 ### Benefits of agents as tools
 
-- **Modularity**: Break complex workflows into specialized agents
-- **Reusability**: Use the same specialized agent across multiple coordinator agents
-- **Separation of concerns**: Each agent can focus on its specific domain
+- **Modularity**: Break complex workflows into specialized agents.
+- **Reusability**: Use the same specialized agent across multiple coordinator agents.
+- **Separation of concerns**: Each agent can focus on its specific domain.
