@@ -18,7 +18,7 @@ version = run {
 
     val feat = run {
         val releaseBuild = !System.getenv("BRANCH_KOOG_IS_RELEASING_FROM").isNullOrBlank()
-        val nightlyBuild = System.getenv("BRANCH_KOOG_IS_NIGHTLY_BUILD")?.toBoolean() ?: false
+        val nightlyBuild = System.getenv("IS_NIGHTLY_BUILD")?.toBoolean() ?: false
         val branch = System.getenv("BRANCH_KOOG_IS_RELEASING_FROM")
         val customVersion = System.getenv("CE_CUSTOM_VERSION")
         val tcCounter = System.getenv("TC_BUILD_COUNTER")
