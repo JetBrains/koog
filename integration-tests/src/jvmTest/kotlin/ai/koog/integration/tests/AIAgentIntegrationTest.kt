@@ -26,15 +26,20 @@ import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.RetryUtils.withRetry
 import ai.koog.integration.tests.utils.TestUtils.CalculatorTool
 import ai.koog.integration.tests.utils.TestUtils.DelayTool
+import ai.koog.integration.tests.utils.TestUtils.readAwsAccessKeyIdFromEnv
+import ai.koog.integration.tests.utils.TestUtils.readAwsSecretAccessKeyFromEnv
+import ai.koog.integration.tests.utils.TestUtils.readAwsSessionTokenFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestGoogleAIKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
+import ai.koog.prompt.executor.clients.bedrock.BedrockModels
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 import ai.koog.prompt.executor.llms.all.simpleAnthropicExecutor
+import ai.koog.prompt.executor.llms.all.simpleBedrockExecutor
 import ai.koog.prompt.executor.llms.all.simpleGoogleAIExecutor
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.koog.prompt.llm.LLMCapability
@@ -59,6 +64,7 @@ import kotlin.io.path.readBytes
 import kotlin.reflect.typeOf
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
+import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
@@ -201,13 +207,19 @@ class AIAgentIntegrationTest {
         I need you to perform two operations:
         1. Calculate 7 times 2
         2. Wait for 500 milliseconds
-        
+
         Respond briefly after completing both tasks. DO NOT EXCEED THE LIMIT OF 20 WORDS.
         """.trimIndent()
 
         fun getExecutor(model: LLModel): SingleLLMPromptExecutor = when (model.provider) {
             is LLMProvider.Anthropic -> simpleAnthropicExecutor(readTestAnthropicKeyFromEnv())
             is LLMProvider.Google -> simpleGoogleAIExecutor(readTestGoogleAIKeyFromEnv())
+            is LLMProvider.Bedrock -> simpleBedrockExecutor(
+                readAwsAccessKeyIdFromEnv(),
+                readAwsSecretAccessKeyFromEnv(),
+                readAwsSessionTokenFromEnv()
+            )
+
             else -> simpleOpenAIExecutor(readTestOpenAIKeyFromEnv())
         }
 
@@ -413,6 +425,40 @@ class AIAgentIntegrationTest {
             assertTrue(
                 actualToolCalls.contains(CalculatorTool.name),
                 "The ${CalculatorTool.name} tool was not called for model $model"
+            )
+        }
+    }
+
+    @Test
+    fun integration_BedrockNovaAgentShouldCallTools() = runTest {
+        val model = BedrockModels.AmazonNovaLite
+
+        Models.assumeAvailable(model.provider)
+        assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
+
+        val toolRegistry = ToolRegistry {
+            tool(CalculatorTool)
+        }
+
+        withRetry {
+            val executor = getExecutor(model)
+
+            val agent = AIAgent(
+                executor = executor,
+                systemPrompt = systemPrompt + "You MUST use tools.",
+                llmModel = model,
+                strategy = singleRunStrategy(ToolCalls.PARALLEL),
+                temperature = 1.0,
+                toolRegistry = toolRegistry,
+                maxIterations = 10,
+                installFeatures = { install(EventHandler.Feature, eventHandlerConfig) },
+            )
+
+            agent.run("How much is 3 times 5?")
+            assertTrue(actualToolCalls.isNotEmpty(), "No tools were called for Bedrock Nova model $model")
+            assertTrue(
+                actualToolCalls.contains(CalculatorTool.name),
+                "The ${CalculatorTool.name} tool was not called for Bedrock Nova model $model"
             )
         }
     }
