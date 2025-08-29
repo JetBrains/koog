@@ -35,9 +35,9 @@ public data class Message(
     public val messageId: String,
     public val role: Role,
     public val parts: List<Part>,
-    public val extensions: List<String> = emptyList(),
+    public val extensions: List<String>? = null,
     public val taskId: String? = null,
-    public val referenceTaskIds: List<String> = emptyList(),
+    public val referenceTaskIds: List<String>? = null,
     public val contextId: String? = null,
     public val metadata: JsonObject? = null,
 ) : CommunicationUnit {

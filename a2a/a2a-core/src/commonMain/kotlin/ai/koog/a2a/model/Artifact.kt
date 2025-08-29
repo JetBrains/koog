@@ -10,7 +10,7 @@ import kotlinx.serialization.json.JsonObject
  * @property name An optional, human-readable name for the artifact.
  * @property description An optional, human-readable description of the artifact.
  * @property parts A list of content parts that make up the artifact.
- * @property extensions The URIs of extensions that are relevant to this artifact.
+ * @property extensions Optional URIs of extensions that are relevant to this artifact.
  * @property metadata Optional metadata for extensions. The key is an extension-specific identifier.
  */
 @Serializable
@@ -19,6 +19,6 @@ public data class Artifact(
     public val name: String? = null,
     public val description: String? = null,
     public val parts: List<Part>,
-    public val extensions: List<String> = emptyList(),
+    public val extensions: List<String>? = null,
     public val metadata: JsonObject? = null,
 )
