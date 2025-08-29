@@ -204,7 +204,7 @@ public data class AgentExtension(
 @Serializable(with = SecuritySchemeSerializer::class)
 public sealed interface SecurityScheme {
     /**
-     * The type of the security scheme.
+     * The type of the security scheme, used as discriminator.
      */
     public val type: String
 }
