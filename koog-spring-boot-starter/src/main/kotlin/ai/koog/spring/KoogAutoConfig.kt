@@ -40,7 +40,7 @@ public class KoogAutoConfiguration {
     @Bean
     @ConditionalOnProperty(prefix = KoogProperties.PREFIX, name = ["anthropic.api-key"])
     public fun anthropicExecutor(properties: KoogProperties): SingleLLMPromptExecutor {
-        val props = properties.anthropicClientProperties
+        val props = properties.anthropic
         return SingleLLMPromptExecutor(
             AnthropicLLMClient(
                 apiKey = props.apiKey,
@@ -59,7 +59,7 @@ public class KoogAutoConfiguration {
     @Bean
     @ConditionalOnProperty(prefix = KoogProperties.PREFIX, name = ["google.api-key"])
     public fun googleExecutor(properties: KoogProperties): SingleLLMPromptExecutor {
-        val props = properties.googleClientProperties
+        val props = properties.google
         return SingleLLMPromptExecutor(
             GoogleLLMClient(
                 apiKey = props.apiKey,
@@ -78,9 +78,9 @@ public class KoogAutoConfiguration {
      * @return a [SingleLLMPromptExecutor] configured to use the Ollama client.
      */
     @Bean
-    @ConditionalOnProperty(prefix = KoogProperties.PREFIX, name = ["ollama"])
+    @ConditionalOnProperty(prefix = KoogProperties.PREFIX, name = ["ollama.base-url"])
     public fun ollamaExecutor(properties: KoogProperties): SingleLLMPromptExecutor {
-        val props = properties.ollamaClientProperties
+        val props = properties.ollama
         return SingleLLMPromptExecutor(
             OllamaClient(baseUrl = props.baseUrl)
         )
@@ -96,7 +96,7 @@ public class KoogAutoConfiguration {
     @Bean
     @ConditionalOnProperty(prefix = KoogProperties.PREFIX, name = ["openai.api-key"])
     public fun openAIExecutor(properties: KoogProperties): SingleLLMPromptExecutor {
-        val props = properties.openAIClientProperties
+        val props = properties.openai
         return SingleLLMPromptExecutor(
             OpenAILLMClient(
                 apiKey = props.apiKey,
@@ -117,7 +117,7 @@ public class KoogAutoConfiguration {
     @Bean
     @ConditionalOnProperty(prefix = KoogProperties.PREFIX, name = ["openrouter.api-key"])
     public fun openRouterExecutor(properties: KoogProperties): SingleLLMPromptExecutor {
-        val props = properties.openRouterClientProperties
+        val props = properties.openrouter
         return SingleLLMPromptExecutor(
             OpenRouterLLMClient(
                 props.apiKey,
@@ -138,7 +138,7 @@ public class KoogAutoConfiguration {
     @Bean
     @ConditionalOnProperty(prefix = KoogProperties.PREFIX, name = ["deepseek.api-key"])
     public fun deepSeekExecutor(properties: KoogProperties): SingleLLMPromptExecutor {
-        val props = properties.deepSeekClientProperties
+        val props = properties.deepseek
         return SingleLLMPromptExecutor(
             DeepSeekLLMClient(
                 props.apiKey,

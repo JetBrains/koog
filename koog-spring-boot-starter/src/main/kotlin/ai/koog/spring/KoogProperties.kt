@@ -47,7 +47,7 @@ public class KoogProperties {
      * Default value for [ProviderKoogProperties.baseUrl] is set to `https://api.anthropic.com`.
      */
     @NestedConfigurationProperty
-    public var anthropicClientProperties: ProviderKoogProperties =
+    public var anthropic: ProviderKoogProperties =
         ProviderKoogProperties(baseUrl = "https://api.anthropic.com")
 
     /**
@@ -60,7 +60,7 @@ public class KoogProperties {
      * The [ProviderKoogProperties.baseUrl] is pre-configured to the default API endpoint for Google's Generative Language service.
      */
     @NestedConfigurationProperty
-    public var googleClientProperties: ProviderKoogProperties =
+    public var google: ProviderKoogProperties =
         ProviderKoogProperties(baseUrl = "https://generativelanguage.googleapis.com")
 
     /**
@@ -74,7 +74,7 @@ public class KoogProperties {
      * and can be customized via application properties files using the `ai.koog.ollama` prefix.
      */
     @NestedConfigurationProperty
-    public var ollamaClientProperties: OllamaKoogProperties = OllamaKoogProperties()
+    public var ollama: OllamaKoogProperties = OllamaKoogProperties()
 
     /**
      * Configuration properties for the OpenAI client.
@@ -90,7 +90,7 @@ public class KoogProperties {
      * nested configuration element within [KoogProperties].
      */
     @NestedConfigurationProperty
-    public var openAIClientProperties: ProviderKoogProperties =
+    public var openai: ProviderKoogProperties =
         ProviderKoogProperties(baseUrl = "https://api.openai.com")
 
     /**
@@ -101,7 +101,7 @@ public class KoogProperties {
      * used to initialize the corresponding OpenRouter client.
      */
     @NestedConfigurationProperty
-    public var openRouterClientProperties: ProviderKoogProperties =
+    public var openrouter: ProviderKoogProperties =
         ProviderKoogProperties(baseUrl = "https://openrouter.ai")
 
     /**
@@ -112,7 +112,7 @@ public class KoogProperties {
      * used to initialize the corresponding DeepSeek client.
      */
     @NestedConfigurationProperty
-    public var deepSeekClientProperties: ProviderKoogProperties =
+    public var deepseek: ProviderKoogProperties =
         ProviderKoogProperties(baseUrl = "https://api.deepseek.com")
 }
 
@@ -128,8 +128,8 @@ public class KoogProperties {
  * @param baseUrl The base URL of the provider's API endpoint.
  */
 public data class ProviderKoogProperties(
-    val apiKey: String = "",
-    val baseUrl: String
+    var apiKey: String = "",
+    var baseUrl: String
 )
 
 /**
@@ -141,5 +141,5 @@ public data class ProviderKoogProperties(
  * @property baseUrl The base URL of the Ollama API. Defaults to "http://localhost:11434".
  */
 public data class OllamaKoogProperties(
-    val baseUrl: String = "http://localhost:11434"
+    var baseUrl: String = "http://localhost:11434"
 )
