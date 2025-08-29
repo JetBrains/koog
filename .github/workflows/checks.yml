@@ -73,8 +73,6 @@ jobs:
   tests:
 
     runs-on: ${{ matrix.os }}
-    # Run on all platforms except macOS, because it is too slow.
-    if: ${{ matrix.os != 'macos-latest' || github.repository == 'jetbrains/koog' }}
     permissions:
       contents: read
 
@@ -113,7 +111,7 @@ jobs:
         run: ./gradlew jvmTest --continue
 
       - name: iosSimulatorArm64Test with Gradle Wrapper
-        if: matrix.os == 'macos-latest' && github.event.pull_request.draft == false
+        if: matrix.os == 'macos-latest' && github.event.pull_request.draft == false && github.repository == 'jetbrains/koog'
         run: ./gradlew linkIosSimulatorArm64 iosSimulatorArm64Test --continue
 
       - name: Archive coverage data
