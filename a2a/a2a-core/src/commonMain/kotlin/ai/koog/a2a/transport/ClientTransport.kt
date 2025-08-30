@@ -11,13 +11,12 @@ import ai.koog.a2a.model.TaskPushNotificationConfig
 import ai.koog.a2a.model.TaskPushNotificationConfigParams
 import ai.koog.a2a.model.TaskQueryParams
 import kotlinx.coroutines.flow.Flow
-import kotlinx.serialization.Serializable
 
 /**
  * Client transport implementing client interactions with
  * [A2A protocol methods](https://a2a-protocol.org/latest/specification/#7-protocol-rpc-methods).
  */
-public interface ClientTransport {
+public interface ClientTransport : AutoCloseable {
     /**
      * Implements [agent/getAuthenticatedExtendedCard](https://a2a-protocol.org/latest/specification/#710-agentgetauthenticatedextendedcard)
      *
@@ -114,7 +113,6 @@ public interface ClientTransport {
  *
  * @property additionalHeaders Additional call-specific headers associated with the call.
  */
-@Serializable
 public class ClientCallContext(
     public val additionalHeaders: Map<String, String> = emptyMap(),
 ) {
