@@ -11,6 +11,7 @@ import ai.koog.a2a.model.TaskPushNotificationConfig
 import ai.koog.a2a.model.TaskPushNotificationConfigParams
 import ai.koog.a2a.model.TaskQueryParams
 import kotlinx.coroutines.flow.Flow
+import kotlinx.serialization.Serializable
 
 /**
  * Client transport implementing client interactions with
@@ -18,18 +19,13 @@ import kotlinx.coroutines.flow.Flow
  */
 public interface ClientTransport {
     /**
-     * Retrieves the agent card.
-     */
-    public suspend fun getAgentCard(): AgentCard
-
-    /**
      * Implements [agent/getAuthenticatedExtendedCard](https://a2a-protocol.org/latest/specification/#710-agentgetauthenticatedextendedcard)
      *
      * @throws A2AException if server returned an error.
      */
     public suspend fun getAuthenticatedExtendedAgentCard(
         request: Request<Unit>,
-        ctx: CallContext = CallContext.Default
+        ctx: ClientCallContext = ClientCallContext.Default
     ): Response<AgentCard>
 
     /**
@@ -39,7 +35,7 @@ public interface ClientTransport {
      */
     public suspend fun sendMessage(
         request: Request<MessageSendParams>,
-        ctx: CallContext = CallContext.Default
+        ctx: ClientCallContext = ClientCallContext.Default
     ): Response<Communication>
 
     /**
@@ -49,7 +45,7 @@ public interface ClientTransport {
      */
     public suspend fun sendMessageStreaming(
         request: Request<MessageSendParams>,
-        ctx: CallContext = CallContext.Default
+        ctx: ClientCallContext = ClientCallContext.Default
     ): Flow<Response<Event>>
 
     /**
@@ -59,7 +55,7 @@ public interface ClientTransport {
      */
     public suspend fun getTask(
         request: Request<TaskQueryParams>,
-        ctx: CallContext = CallContext.Default
+        ctx: ClientCallContext = ClientCallContext.Default
     ): Response<Task>
 
     /**
@@ -69,7 +65,7 @@ public interface ClientTransport {
      */
     public suspend fun cancelTask(
         request: Request<TaskIdParams>,
-        ctx: CallContext = CallContext.Default
+        ctx: ClientCallContext = ClientCallContext.Default
     ): Response<Task>
 
     /**
@@ -79,7 +75,7 @@ public interface ClientTransport {
      */
     public suspend fun setTaskPushNotificationConfig(
         request: Request<TaskPushNotificationConfig>,
-        ctx: CallContext = CallContext.Default
+        ctx: ClientCallContext = ClientCallContext.Default
     ): Response<TaskPushNotificationConfig>
 
     /**
@@ -89,7 +85,7 @@ public interface ClientTransport {
      */
     public suspend fun getTaskPushNotificationConfig(
         request: Request<TaskPushNotificationConfigParams>,
-        ctx: CallContext = CallContext.Default
+        ctx: ClientCallContext = ClientCallContext.Default
     ): Response<TaskPushNotificationConfig>
 
     /**
@@ -99,7 +95,7 @@ public interface ClientTransport {
      */
     public suspend fun listTaskPushNotificationConfig(
         request: Request<TaskIdParams>,
-        ctx: CallContext = CallContext.Default
+        ctx: ClientCallContext = ClientCallContext.Default
     ): Response<List<TaskPushNotificationConfig>>
 
     /**
@@ -109,6 +105,21 @@ public interface ClientTransport {
      */
     public suspend fun deleteTaskPushNotificationConfig(
         request: Request<TaskPushNotificationConfigParams>,
-        ctx: CallContext = CallContext.Default
+        ctx: ClientCallContext = ClientCallContext.Default
     ): Response<Unit>
+}
+
+/**
+ * Represents the client context of a call.
+ *
+ * @property additionalHeaders Additional call-specific headers associated with the call.
+ */
+@Serializable
+public class ClientCallContext(
+    public val additionalHeaders: Map<String, String> = emptyMap(),
+) {
+    @Suppress("MissingKDocForPublicAPI")
+    public companion object {
+        public val Default: ClientCallContext = ClientCallContext()
+    }
 }

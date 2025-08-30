@@ -41,18 +41,3 @@ public class Response<T>(
     public val id: RequestId,
     public val data: T,
 )
-
-/**
- * Represents the context of a call.
- *
- * @property headers The HTTP headers associated with the call.
- */
-@Serializable
-public class CallContext(
-    public val headers: Map<String, String> = emptyMap(),
-) {
-    @Suppress("MissingKDocForPublicAPI")
-    public companion object {
-        public val Default: CallContext = CallContext()
-    }
-}
