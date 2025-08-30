@@ -21,7 +21,7 @@ kover = "0.9.1"
 spring-boot = "3.5.3"
 spring-management = "1.1.7"
 opentelemetry = "1.51.0"
-aws-sdk-kotlin = "1.4.119"
+aws-sdk-kotlin = "1.5.16"
 ktlint = "13.0.0"
 knit = "0.5.0"
 
