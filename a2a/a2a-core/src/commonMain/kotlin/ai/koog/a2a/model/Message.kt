@@ -44,7 +44,7 @@ public data class Message(
     public val referenceTaskIds: List<String>? = null,
     public val contextId: String? = null,
     public val metadata: JsonObject? = null,
-) : Communication {
+) : CommunicationEvent {
     @EncodeDefault
     override val kind: String = "message"
 }

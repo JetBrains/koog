@@ -1,6 +1,24 @@
 package ai.koog.a2a.exceptions
 
 /**
+ * Enum containing all A2A error codes.
+ */
+public enum class A2AErrorCode(public val value: Int) {
+    PARSE_ERROR(-32700),
+    INVALID_REQUEST(-32600),
+    METHOD_NOT_FOUND(-32601),
+    INVALID_PARAMS(-32602),
+    INTERNAL_ERROR(-32603),
+    TASK_NOT_FOUND(-32001),
+    TASK_NOT_CANCELABLE(-32002),
+    PUSH_NOTIFICATION_NOT_SUPPORTED(-32003),
+    UNSUPPORTED_OPERATION(-32004),
+    CONTENT_TYPE_NOT_SUPPORTED(-32005),
+    INVALID_AGENT_RESPONSE(-32006),
+    AUTHENTICATED_EXTENDED_CARD_NOT_CONFIGURED(-32007)
+}
+
+/**
  * Base class for all A2A exceptions.
  */
 public sealed class A2AException(
@@ -46,7 +64,7 @@ public class InternalErrorException(
 /**
  * Reserved for implementation-defined server exceptions. A2A-specific exceptions use this range.
  */
-public open class A2AServerException(
+public sealed class A2AServerException(
     message: String,
     errorCode: Int,
 ) : A2AException(message, errorCode) {
@@ -108,3 +126,35 @@ public class InvalidAgentResponseException(
 public class AuthenticatedExtendedCardNotConfiguredException(
     message: String = "Authenticated Extended Card not configured",
 ) : A2AServerException(message, errorCode = -32007)
+
+/**
+ * Server returned some unknown error code.
+ */
+public class UnknownA2AException(
+    message: String,
+    errorCode: Int,
+) : A2AException(message, errorCode)
+
+/**
+ * Create appropriate [A2AException] based on the provided errorCode.
+ */
+public fun createA2AException(
+    message: String,
+    errorCode: Int,
+): A2AException {
+    return when (errorCode) {
+        A2AErrorCode.PARSE_ERROR.value -> ParseException(message)
+        A2AErrorCode.INVALID_REQUEST.value -> InvalidRequestException(message)
+        A2AErrorCode.METHOD_NOT_FOUND.value -> MethodNotFoundException(message)
+        A2AErrorCode.INVALID_PARAMS.value -> InvalidParamsException(message)
+        A2AErrorCode.INTERNAL_ERROR.value -> InternalErrorException(message)
+        A2AErrorCode.TASK_NOT_FOUND.value -> TaskNotFoundException(message)
+        A2AErrorCode.TASK_NOT_CANCELABLE.value -> TaskNotCancelableException(message)
+        A2AErrorCode.PUSH_NOTIFICATION_NOT_SUPPORTED.value -> PushNotificationNotSupportedException(message)
+        A2AErrorCode.UNSUPPORTED_OPERATION.value -> UnsupportedOperationException(message)
+        A2AErrorCode.CONTENT_TYPE_NOT_SUPPORTED.value -> ContentTypeNotSupportedException(message)
+        A2AErrorCode.INVALID_AGENT_RESPONSE.value -> InvalidAgentResponseException(message)
+        A2AErrorCode.AUTHENTICATED_EXTENDED_CARD_NOT_CONFIGURED.value -> AuthenticatedExtendedCardNotConfiguredException(message)
+        else -> UnknownA2AException(message, errorCode)
+    }
+}

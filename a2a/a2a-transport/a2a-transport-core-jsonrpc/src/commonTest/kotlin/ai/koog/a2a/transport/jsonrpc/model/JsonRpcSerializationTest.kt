@@ -1,6 +1,6 @@
 package ai.koog.a2a.transport.jsonrpc.model
 
-import ai.koog.a2a.model.RequestId
+import ai.koog.a2a.transport.RequestId
 import kotlinx.serialization.json.JsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -24,7 +24,6 @@ class JsonRpcSerializationTest {
         val request: JSONRPCMessage = JSONRPCRequest(
             id = RequestId.NumberId(42),
             method = "add",
-            params = null
         )
 
         //language=JSON
@@ -58,7 +57,6 @@ class JsonRpcSerializationTest {
     fun testJSONRPCNotificationWithoutParams() {
         val request: JSONRPCMessage = JSONRPCNotification(
             method = "notify",
-            params = null
         )
 
         //language=JSON

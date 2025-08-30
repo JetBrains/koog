@@ -28,7 +28,7 @@ public data class Task(
     public val history: List<Message>? = null,
     public val artifacts: List<Artifact>? = null,
     public val metadata: JsonObject? = null,
-) : Communication {
+) : CommunicationEvent {
     @EncodeDefault
     override val kind: String = "task"
 }

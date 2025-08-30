@@ -87,8 +87,8 @@ public data class AgentCard(
     public val version: String,
     public val documentationUrl: String? = null,
     public val capabilities: AgentCapabilities,
-    public val securitySchemes: Map<String, SecurityScheme>? = null,
-    public val security: List<Map<String, List<String>>>? = null,
+    public val securitySchemes: SecuritySchemes? = null,
+    public val security: Security? = null,
     public val defaultInputModes: List<String>,
     public val defaultOutputModes: List<String>,
     public val skills: List<AgentSkill>,
@@ -164,8 +164,16 @@ public data class AgentProvider(
  * Defines optional capabilities supported by an agent.
  *
  * @property streaming Indicates if the agent supports Server-Sent Events (SSE) for streaming responses.
+ *
  * @property pushNotifications Indicates if the agent supports sending push notifications for asynchronous task updates.
+ *
  * @property stateTransitionHistory Indicates if the agent provides a history of state transitions for a task.
+ *
+ * TODO: it's not clear from the specification and official Python SDK, what does this field control.
+ *   It's not [Task.history], since it always should be present.
+ *   There are no further mentions or usages of this field in the official sources.
+ *   So currently in our implementation it does not control anything.
+ *
  * @property extensions A list of protocol extensions supported by the agent.
  */
 @Serializable
@@ -194,6 +202,33 @@ public data class AgentExtension(
     public val required: Boolean? = null,
     public val params: Map<String, JsonElement>? = null
 )
+
+/**
+ * A declaration of the security schemes available to authorize requests. The key is the scheme name. The value is the
+ * declaration of the security scheme object, which follows the OpenAPI 3.0 Security Scheme Object.
+ */
+public typealias SecuritySchemes = Map<String, SecurityScheme>
+
+/**
+ * A list of alternative security requirements (a logical OR). To authorize a request, a client must satisfy one of the
+ * [SecurityRequirement]s in this list.
+ *
+ * For example, `[{"oauth": ["read"]}, {"apiKey": [], "mtls": []}]` means a client can use either OAuth with the "read" scope
+ * or both an API key and mTLS.
+ *
+ * @see [https://swagger.io/specification/#security-requirement-object]
+ */
+public typealias Security = List<SecurityRequirement>
+
+/**
+ * A set of security schemes that must be satisfied together (a logical AND). The key is a security scheme name, and the
+ * value is a list of required scopes.
+ *
+ * For example, `{"apiKey": [], "mtls": []}` requires both an API key and mTLS.
+ *
+ * @see [https://swagger.io/specification/#security-requirement-object]
+ */
+public typealias SecurityRequirement = Map<String, List<String>>
 
 /**
  * Defines a security scheme that can be used to secure an agent's endpoints.
@@ -425,7 +460,7 @@ public data class AgentSkill(
     public val examples: List<String>? = null,
     public val inputModes: List<String>? = null,
     public val outputModes: List<String>? = null,
-    public val security: List<Map<String, List<String>>>? = null
+    public val security: Security? = null
 )
 
 /**
