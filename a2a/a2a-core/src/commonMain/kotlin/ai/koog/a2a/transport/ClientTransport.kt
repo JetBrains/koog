@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.Flow
 
 /**
  * Client transport implementing client interactions with
- * [A2A protocol methods](https://a2a-protocol.org/latest/specification/#71-messagesend).
+ * [A2A protocol methods](https://a2a-protocol.org/latest/specification/#7-protocol-rpc-methods).
  */
 public interface ClientTransport {
     /**
