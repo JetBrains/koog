@@ -1,5 +1,5 @@
 [versions]
-agp = "8.11.1"
+agp = "8.12.2"
 appcompat = "1.7.1"
 compose-bom = "2025.08.01"
 coreKtx = "1.16.0"
