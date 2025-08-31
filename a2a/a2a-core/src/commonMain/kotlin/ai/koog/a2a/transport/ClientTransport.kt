@@ -50,7 +50,7 @@ public interface ClientTransport : AutoCloseable {
      *
      * @throws A2AException if server returned an error.
      */
-    public suspend fun sendMessageStreaming(
+    public fun sendMessageStreaming(
         request: Request<MessageSendParams>,
         ctx: ClientCallContext = ClientCallContext.Default
     ): Flow<Response<UpdateEvent>>
@@ -122,7 +122,7 @@ public interface ClientTransport : AutoCloseable {
  * @property additionalHeaders Additional call-specific headers associated with the call.
  */
 public class ClientCallContext(
-    public val additionalHeaders: Map<String, String> = emptyMap(),
+    public val additionalHeaders: Map<String, List<String>> = emptyMap(),
 ) {
     @Suppress("MissingKDocForPublicAPI")
     public companion object {

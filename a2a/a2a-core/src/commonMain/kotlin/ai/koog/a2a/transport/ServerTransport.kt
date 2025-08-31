@@ -1,7 +1,7 @@
 package ai.koog.a2a.transport
 
 import ai.koog.a2a.exceptions.A2AException
-import ai.koog.a2a.exceptions.InternalErrorException
+import ai.koog.a2a.exceptions.A2AInternalErrorException
 import ai.koog.a2a.model.AgentCard
 import ai.koog.a2a.model.CommunicationEvent
 import ai.koog.a2a.model.MessageSendParams
@@ -19,7 +19,7 @@ import kotlinx.coroutines.flow.Flow
  *
  * Server transport must respond with appropriate [A2AException] in case of errors while processing the request
  * (e.g. method not found or invalid method parameters). It must also handle [A2AException] thrown by the [RequestHandler] methods.
- * In case non [A2AException] is thrown, it must be converted to [InternalErrorException] with appropriate message.
+ * In case non [A2AException] is thrown, it must be converted to [A2AInternalErrorException] with appropriate message.
  *
  * Server transport must convert [A2AException] to appropriate response data format (e.g. JSON error object),
  * preserving the [A2AException.errorCode] so that it can be properly handled by the [ClientTransport].
@@ -61,7 +61,7 @@ public interface RequestHandler {
      *
      * @throws A2AException if there is an error with processsing the request.
      */
-    public suspend fun onSendMessageStreaming(
+    public fun onSendMessageStreaming(
         request: Request<MessageSendParams>,
         ctx: ServerCallContext
     ): Flow<Response<UpdateEvent>>
@@ -133,7 +133,7 @@ public interface RequestHandler {
  * @property headers Headers associated with the call.
  */
 public class ServerCallContext(
-    public val headers: Map<String, String> = emptyMap(),
+    public val headers: Map<String, List<String>> = emptyMap(),
 ) {
     @Suppress("MissingKDocForPublicAPI")
     public companion object {

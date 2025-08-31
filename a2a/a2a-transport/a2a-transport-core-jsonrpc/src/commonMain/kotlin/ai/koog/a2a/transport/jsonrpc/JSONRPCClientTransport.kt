@@ -33,20 +33,16 @@ import kotlinx.serialization.json.encodeToJsonElement
 public abstract class JSONRPCClientTransport : ClientTransport {
     /**
      * Sends a JSON-RPC request and returns the corresponding response.
-     *
-     * @throws A2AException if server returned an error.
      */
-    public abstract suspend fun request(
+    protected abstract suspend fun request(
         request: JSONRPCRequest,
         ctx: ClientCallContext,
     ): JSONRPCResponse
 
     /**
      * Sends a JSON-RPC request and returns the corresponding response stream.
-     *
-     * @throws A2AException if server returned an error.
      */
-    public abstract suspend fun requestStreaming(
+    protected abstract fun requestStreaming(
         request: JSONRPCRequest,
         ctx: ClientCallContext,
     ): Flow<JSONRPCResponse>
@@ -101,7 +97,7 @@ public abstract class JSONRPCClientTransport : ClientTransport {
     /**
      * Generic streaming request processing.
      */
-    protected suspend inline fun <reified TRequest, reified TResponse> requestStreaming(
+    protected inline fun <reified TRequest, reified TResponse> requestStreaming(
         method: A2AMethod,
         request: Request<TRequest>,
         ctx: ClientCallContext
@@ -124,7 +120,7 @@ public abstract class JSONRPCClientTransport : ClientTransport {
     ): Response<CommunicationEvent> =
         request(A2AMethod.SendMessage, request, ctx)
 
-    override suspend fun sendMessageStreaming(
+    override fun sendMessageStreaming(
         request: Request<MessageSendParams>,
         ctx: ClientCallContext
     ): Flow<Response<UpdateEvent>> =

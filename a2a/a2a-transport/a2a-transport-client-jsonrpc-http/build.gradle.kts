@@ -18,14 +18,20 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
+                api(project(":a2a:a2a-transport:a2a-transport-core-jsonrpc"))
                 api(libs.kotlinx.serialization.json)
                 api(libs.kotlinx.coroutines.core)
+                api(libs.ktor.client.core)
+                api(libs.ktor.client.content.negotiation)
+                api(libs.ktor.serialization.kotlinx.json)
             }
         }
 
         commonTest {
             dependencies {
                 implementation(kotlin("test"))
+                implementation(libs.kotlinx.coroutines.test)
+                implementation(libs.ktor.client.mock)
             }
         }
 
