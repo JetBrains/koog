@@ -18,6 +18,7 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
+                api(project(":a2a:a2a-core"))
                 api(libs.kotlinx.serialization.json)
                 api(libs.kotlinx.coroutines.core)
             }

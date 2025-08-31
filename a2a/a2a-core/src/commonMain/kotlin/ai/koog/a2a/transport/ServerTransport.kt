@@ -13,99 +13,110 @@ import ai.koog.a2a.model.UpdateEvent
 import kotlinx.coroutines.flow.Flow
 
 /**
- * Server transport implementing server handling of
- * [A2A protocol methods](https://a2a-protocol.org/latest/specification/#7-protocol-rpc-methods).
+ * Server transport processing raw requests made to [A2A protocol methods](https://a2a-protocol.org/latest/specification/#7-protocol-rpc-methods)
+ * and delegating the processing to [RequestHandler].
  */
 public interface ServerTransport {
+    /**
+     * Handler responsible for processing parsed A2A requests.
+     */
+    public val requestHandler: RequestHandler
+}
+
+/**
+ * Handler responsible for processing parsed A2A requests, implementing
+ * [A2A protocol methods](https://a2a-protocol.org/latest/specification/#7-protocol-rpc-methods).
+ */
+public interface RequestHandler {
     /**
      * Handles [agent/getAuthenticatedExtendedCard](https://a2a-protocol.org/latest/specification/#710-agentgetauthenticatedextendedcard)
      *
      * @throws A2AException if there is an error with processsing the request.
      */
-    public val onGetAuthenticatedExtendedAgentCard: suspend (
+    public suspend fun onGetAuthenticatedExtendedAgentCard(
         request: Request<Unit>,
         ctx: ServerCallContext
-    ) -> Response<AgentCard>
+    ): Response<AgentCard>
 
     /**
      * Handles [message/send](https://a2a-protocol.org/latest/specification/#71-messagesend).
      *
      * @throws A2AException if there is an error with processsing the request.
      */
-    public val onSendMessage: suspend (
+    public suspend fun onSendMessage(
         request: Request<MessageSendParams>,
         ctx: ServerCallContext
-    ) -> Response<CommunicationEvent>
+    ): Response<CommunicationEvent>
 
     /**
      * Handles [message/stream](https://a2a-protocol.org/latest/specification/#72-messagestream)
      *
      * @throws A2AException if there is an error with processsing the request.
      */
-    public val onSendMessageStreaming: suspend (
+    public suspend fun onSendMessageStreaming(
         request: Request<MessageSendParams>,
         ctx: ServerCallContext
-    ) -> Flow<Response<UpdateEvent>>
+    ): Flow<Response<UpdateEvent>>
 
     /**
      * Handles [tasks/get](https://a2a-protocol.org/latest/specification/#73-tasksget)
      *
      * @throws A2AException if there is an error with processsing the request.
      */
-    public val onGetTask: suspend (
+    public suspend fun onGetTask(
         request: Request<TaskQueryParams>,
         ctx: ServerCallContext
-    ) -> Response<Task>
+    ): Response<Task>
 
     /**
      * Handles [tasks/cancel](https://a2a-protocol.org/latest/specification/#74-taskscancel)
      *
      * @throws A2AException if there is an error with processsing the request.
      */
-    public val onCancelTask: suspend (
+    public suspend fun onCancelTask(
         request: Request<TaskIdParams>,
         ctx: ServerCallContext
-    ) -> Response<Task>
+    ): Response<Task>
 
     /**
      * Handles [tasks/pushNotificationConfig/set](https://a2a-protocol.org/latest/specification/#75-taskspushnotificationconfigset)
      *
      * @throws A2AException if there is an error with processsing the request.
      */
-    public val onSetTaskPushNotificationConfig: suspend (
+    public suspend fun onSetTaskPushNotificationConfig(
         request: Request<TaskPushNotificationConfig>,
         ctx: ServerCallContext
-    ) -> Response<TaskPushNotificationConfig>
+    ): Response<TaskPushNotificationConfig>
 
     /**
      * Handles [tasks/pushNotificationConfig/get](https://a2a-protocol.org/latest/specification/#76-taskspushnotificationconfigget)
      *
      * @throws A2AException if there is an error with processsing the request.
      */
-    public val onGetTaskPushNotificationConfig: suspend (
+    public suspend fun onGetTaskPushNotificationConfig(
         request: Request<TaskPushNotificationConfigParams>,
         ctx: ServerCallContext
-    ) -> Response<TaskPushNotificationConfig>
+    ): Response<TaskPushNotificationConfig>
 
     /**
      * Handles [tasks/pushNotificationConfig/list](https://a2a-protocol.org/latest/specification/#77-taskspushnotificationconfiglist)
      *
      * @throws A2AException if there is an error with processsing the request.
      */
-    public val onListTaskPushNotificationConfig: suspend (
+    public suspend fun onListTaskPushNotificationConfig(
         request: Request<TaskIdParams>,
         ctx: ServerCallContext
-    ) -> Response<List<TaskPushNotificationConfig>>
+    ): Response<List<TaskPushNotificationConfig>>
 
     /**
      * Handles [tasks/pushNotificationConfig/delete](https://a2a-protocol.org/latest/specification/#78-taskspushnotificationconfigdelete)
      *
      * @throws A2AException if there is an error with processsing the request.
      */
-    public val onDeleteTaskPushNotificationConfig: suspend (
+    public suspend fun onDeleteTaskPushNotificationConfig(
         request: Request<TaskPushNotificationConfigParams>,
         ctx: ServerCallContext
-    ) -> Response<Unit>
+    ): Response<Unit>
 }
 
 /**
