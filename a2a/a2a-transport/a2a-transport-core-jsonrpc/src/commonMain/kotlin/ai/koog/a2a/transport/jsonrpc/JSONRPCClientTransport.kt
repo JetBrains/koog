@@ -46,7 +46,7 @@ public abstract class JSONRPCClientTransport : ClientTransport {
      *
      * @throws A2AException if server returned an error.
      */
-    public abstract suspend fun requestStreaming(
+    public abstract fun requestStreaming(
         request: JSONRPCRequest,
         ctx: ClientCallContext,
     ): Flow<JSONRPCResponse>
@@ -101,7 +101,7 @@ public abstract class JSONRPCClientTransport : ClientTransport {
     /**
      * Generic streaming request processing.
      */
-    protected suspend inline fun <reified TRequest, reified TResponse> requestStreaming(
+    protected inline fun <reified TRequest, reified TResponse> requestStreaming(
         method: A2AMethod,
         request: Request<TRequest>,
         ctx: ClientCallContext
@@ -124,7 +124,7 @@ public abstract class JSONRPCClientTransport : ClientTransport {
     ): Response<CommunicationEvent> =
         request(A2AMethod.SendMessage, request, ctx)
 
-    override suspend fun sendMessageStreaming(
+    override fun sendMessageStreaming(
         request: Request<MessageSendParams>,
         ctx: ClientCallContext
     ): Flow<Response<UpdateEvent>> =

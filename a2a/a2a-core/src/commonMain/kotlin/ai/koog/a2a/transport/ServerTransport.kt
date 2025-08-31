@@ -61,7 +61,7 @@ public interface RequestHandler {
      *
      * @throws A2AException if there is an error with processsing the request.
      */
-    public suspend fun onSendMessageStreaming(
+    public fun onSendMessageStreaming(
         request: Request<MessageSendParams>,
         ctx: ServerCallContext
     ): Flow<Response<UpdateEvent>>

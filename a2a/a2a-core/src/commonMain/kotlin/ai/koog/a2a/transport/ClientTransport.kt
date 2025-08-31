@@ -50,7 +50,7 @@ public interface ClientTransport : AutoCloseable {
      *
      * @throws A2AException if server returned an error.
      */
-    public suspend fun sendMessageStreaming(
+    public fun sendMessageStreaming(
         request: Request<MessageSendParams>,
         ctx: ClientCallContext = ClientCallContext.Default
     ): Flow<Response<UpdateEvent>>
