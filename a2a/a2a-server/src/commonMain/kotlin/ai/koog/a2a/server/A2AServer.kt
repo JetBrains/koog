@@ -20,7 +20,7 @@ import kotlinx.coroutines.flow.Flow
  */
 public class A2AServer : RequestHandler {
     override suspend fun onGetAuthenticatedExtendedAgentCard(
-        request: Request<Unit>,
+        request: Request<Nothing?>,
         ctx: ServerCallContext
     ): Response<AgentCard> {
         TODO("Not yet implemented")

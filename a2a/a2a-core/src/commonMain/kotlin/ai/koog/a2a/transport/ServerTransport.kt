@@ -42,7 +42,7 @@ public interface RequestHandler {
      * @throws A2AException if there is an error with processsing the request.
      */
     public suspend fun onGetAuthenticatedExtendedAgentCard(
-        request: Request<Unit>,
+        request: Request<Nothing?>,
         ctx: ServerCallContext
     ): Response<AgentCard>
 

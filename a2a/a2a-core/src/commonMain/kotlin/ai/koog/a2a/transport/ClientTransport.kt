@@ -31,7 +31,7 @@ public interface ClientTransport : AutoCloseable {
      * @throws A2AException if server returned an error.
      */
     public suspend fun getAuthenticatedExtendedAgentCard(
-        request: Request<Unit>,
+        request: Request<Nothing?>,
         ctx: ClientCallContext = ClientCallContext.Default
     ): Response<AgentCard>
 

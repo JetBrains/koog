@@ -6,6 +6,7 @@ import ai.koog.a2a.transport.RequestId
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
 
 /**
  * Default JSON-RPC version.
@@ -24,7 +25,7 @@ public sealed interface JSONRPCResponse : JSONRPCMessage
 public data class JSONRPCRequest(
     public val id: RequestId,
     val method: String,
-    val params: JsonElement?,
+    val params: JsonElement = JsonNull,
     @EncodeDefault
     override val jsonrpc: String = JSONRPC_VERSION,
 ) : JSONRPCMessage
@@ -32,7 +33,7 @@ public data class JSONRPCRequest(
 @Serializable
 public data class JSONRPCNotification(
     val method: String,
-    val params: JsonElement?,
+    val params: JsonElement = JsonNull,
     @EncodeDefault
     override val jsonrpc: String = JSONRPC_VERSION,
 ) : JSONRPCMessage
@@ -49,7 +50,7 @@ public data class JSONRPCSuccessResponse(
 public data class JSONRPCError(
     val code: Int,
     val message: String,
-    val data: JsonElement? = null,
+    val data: JsonElement = JsonNull,
 )
 
 @Serializable
