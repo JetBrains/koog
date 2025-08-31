@@ -11,10 +11,18 @@ import ai.koog.a2a.model.TaskPushNotificationConfigParams
 import ai.koog.a2a.model.TaskQueryParams
 import ai.koog.a2a.model.UpdateEvent
 import kotlinx.coroutines.flow.Flow
+import kotlinx.serialization.SerializationException
 
 /**
- * Client transport implementing client interactions with
- * [A2A protocol methods](https://a2a-protocol.org/latest/specification/#7-protocol-rpc-methods).
+ * Client transport making requests to [A2A protocol methods](https://a2a-protocol.org/latest/specification/#7-protocol-rpc-methods)
+ * and handling responses from the server.
+ *
+ * Client transport must handle error responses from the server and convert them to appropriate [A2AException]
+ * (e.g. parsing error response data format like JSON error object and throwing corresponding [A2AException] based on the error code).
+ * It must preserve the [A2AException.errorCode] received from the [ServerTransport].
+ *
+ * Client transport may throw exceptions other than [A2AException] for any transport-level errors (e.g. network failures, invalid responses, timeout),
+ * e.g. [SerializationException]
  */
 public interface ClientTransport : AutoCloseable {
     /**
