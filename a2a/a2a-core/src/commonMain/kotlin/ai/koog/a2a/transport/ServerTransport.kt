@@ -2,14 +2,14 @@ package ai.koog.a2a.transport
 
 import ai.koog.a2a.exceptions.A2AException
 import ai.koog.a2a.model.AgentCard
-import ai.koog.a2a.model.Communication
-import ai.koog.a2a.model.Event
+import ai.koog.a2a.model.CommunicationEvent
 import ai.koog.a2a.model.MessageSendParams
 import ai.koog.a2a.model.Task
 import ai.koog.a2a.model.TaskIdParams
 import ai.koog.a2a.model.TaskPushNotificationConfig
 import ai.koog.a2a.model.TaskPushNotificationConfigParams
 import ai.koog.a2a.model.TaskQueryParams
+import ai.koog.a2a.model.UpdateEvent
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -35,7 +35,7 @@ public interface ServerTransport {
     public val onSendMessage: suspend (
         request: Request<MessageSendParams>,
         ctx: ServerCallContext
-    ) -> Response<Communication>
+    ) -> Response<CommunicationEvent>
 
     /**
      * Handles [message/stream](https://a2a-protocol.org/latest/specification/#72-messagestream)
@@ -45,7 +45,7 @@ public interface ServerTransport {
     public val onSendMessageStreaming: suspend (
         request: Request<MessageSendParams>,
         ctx: ServerCallContext
-    ) -> Flow<Response<Event>>
+    ) -> Flow<Response<UpdateEvent>>
 
     /**
      * Handles [tasks/get](https://a2a-protocol.org/latest/specification/#73-tasksget)

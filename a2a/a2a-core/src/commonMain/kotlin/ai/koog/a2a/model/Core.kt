@@ -5,8 +5,8 @@ import kotlinx.serialization.Serializable
 /**
  * Base interface for events.
  */
-@Serializable(with = EventSerializer::class)
-public sealed interface Event {
+@Serializable(with = UpdateEventSerializer::class)
+public sealed interface UpdateEvent {
     /**
      * The type used as discriminator.
      */
@@ -16,5 +16,5 @@ public sealed interface Event {
 /**
  * Base interface for communication units, such as messages or tasks.
  */
-@Serializable(with = CommunicationSerializer::class)
-public sealed interface Communication : Event
+@Serializable(with = CommunicationEventSerializer::class)
+public sealed interface CommunicationEvent : UpdateEvent

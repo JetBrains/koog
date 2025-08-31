@@ -21,7 +21,7 @@ public data class TaskStatusUpdateEvent(
     public val status: TaskStatus,
     public val final: Boolean,
     public val metadata: JsonObject? = null,
-) : Event {
+) : UpdateEvent {
     @EncodeDefault
     override val kind: String = "status-update"
 }
@@ -46,7 +46,7 @@ public data class TaskArtifactUpdateEvent(
     public val append: Boolean = false,
     public val lastChunk: Boolean? = null,
     public val metadata: JsonObject? = null,
-) : Event {
+) : UpdateEvent {
     @EncodeDefault
     override val kind: String = "artifact-update"
 }
