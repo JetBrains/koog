@@ -11,6 +11,7 @@ import org.gradle.kotlin.dsl.getByType
 import org.jetbrains.kotlin.gradle.targets.js.ir.KotlinJsIrLink
 import org.jetbrains.kotlin.gradle.tasks.BaseKotlinCompile
 import org.jlleitschuh.gradle.ktlint.KtlintExtension
+import java.time.Clock
 import java.util.Base64
 import kotlin.apply
 
@@ -22,11 +23,23 @@ version = run {
 
     val feat = run {
         val releaseBuild = !System.getenv("BRANCH_KOOG_IS_RELEASING_FROM").isNullOrBlank()
+        val nightlyBuild = System.getenv("IS_NIGHTLY_BUILD")?.toBoolean() ?: false
         val branch = System.getenv("BRANCH_KOOG_IS_RELEASING_FROM")
         val customVersion = System.getenv("CE_CUSTOM_VERSION")
         val tcCounter = System.getenv("TC_BUILD_COUNTER")
 
-        if (releaseBuild) {
+        if (nightlyBuild) {
+            if (branch != "develop") {
+                throw GradleException("Nightly builds are allowed only from the develop branch")
+            }
+            val date = Clock.systemUTC().instant().atZone(java.time.ZoneId.of("CET"))
+                .format(java.time.format.DateTimeFormatter.ISO_LOCAL_DATE)
+            if (!customVersion.isNullOrBlank()) {
+                "-$branch-$date-$customVersion"
+            } else {
+                "-$branch-$date"
+            }
+        } else if (releaseBuild) {
             when (branch) {
                 "main" -> {
                     if (customVersion.isNullOrBlank()) {
