@@ -24,12 +24,15 @@ version = run {
         val tcCounter = System.getenv("TC_BUILD_COUNTER")
 
         if (nightlyBuild) {
+            if (branch != "develop") {
+                throw GradleException("Nightly builds are allowed only from the develop branch")
+            }
             val date = Clock.systemUTC().instant().atZone(java.time.ZoneId.of("CET"))
                 .format(java.time.format.DateTimeFormatter.ISO_LOCAL_DATE)
             if (!customVersion.isNullOrBlank()) {
-                "-develop-$date-$customVersion"
+                "-$branch-$date-$customVersion"
             } else {
-                "-develop-$date"
+                "-$branch-$date"
             }
         } else if (releaseBuild) {
             when (branch) {
