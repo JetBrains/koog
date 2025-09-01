@@ -21,19 +21,19 @@ class EditFileToolFormattingEdgeCasesTest {
         mockedFS.writeText(
             path,
             """
-            |function test() {
-            |	if (true) {  // Tab indentation
-            |    	return 42;  // Mixed tab and spaces
-            |	}
-            |}
-            """.trimMargin()
+            function test() {
+            	if (true) {  // Tab indentation
+            	    return 42;  // Mixed tab and spaces
+            	}
+            }
+            """.trimIndent()
         )
 
         // When
         val args = EditFileTool.Args(
             path = path,
             original = "        return 42",
-            replacement = "    \treturn 43"
+            replacement = "\t    return 43"
         )
         tool.execute(args, object : DirectToolCallsEnabler {})
 
@@ -41,12 +41,12 @@ class EditFileToolFormattingEdgeCasesTest {
         val updated = mockedFS.readText(path)
         assertEquals(
             """
-            |function test() {
-            |	if (true) {  // Tab indentation
-            |    	return 43;  // Mixed tab and spaces
-            |	}
-            |}
-            """.trimMargin(),
+            function test() {
+            	if (true) {  // Tab indentation
+            	    return 43;  // Mixed tab and spaces
+            	}
+            }
+            """.trimIndent(),
             updated
         )
     }

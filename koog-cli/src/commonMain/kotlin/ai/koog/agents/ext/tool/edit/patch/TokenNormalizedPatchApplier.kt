@@ -29,7 +29,12 @@ internal fun applyTokenNormalizedPatch(content: String, patch: FilePatch): Patch
 internal sealed interface PatchApplyResult {
     data class Success(val updatedContent: String) : PatchApplyResult
     sealed class Failure(val reason: String) : PatchApplyResult {
-        object OriginalNotFound : Failure("The original text to replace was not found in the file content")
+        object OriginalNotFound : Failure(
+            """
+            The original text to replace was not found in the file content. 
+            Consider re-reading the file to check if the original as changed since last read.
+            """
+        )
     }
 }
 
@@ -62,7 +67,7 @@ internal fun tokenize(
 }
 
 internal data class TokenList(val tokens: List<Token>) {
-    val text: String = tokens.joinToString("") { it.content }
+    val text = tokens.joinToString("") { it.content }
 
     fun find(
         other: TokenList,

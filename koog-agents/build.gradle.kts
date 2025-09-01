@@ -55,7 +55,8 @@ val included = setOf(
     ":prompt:prompt-tokenizer",
     ":prompt:prompt-xml",
     ":rag:rag-base",
-    ":rag:vector-storage"
+    ":rag:vector-storage",
+    ":koog-cli"
 )
 
 kotlin {

@@ -6,10 +6,6 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.ToolResult
-import ai.koog.agents.ext.tool.edit.diff.Diff
-import ai.koog.agents.ext.tool.edit.diff.MyersDiffAlgorithm
-import ai.koog.agents.ext.tool.edit.diff.diff
-import ai.koog.agents.ext.tool.edit.diff.toUnifiedDiff
 import ai.koog.agents.ext.tool.edit.patch.FilePatch
 import ai.koog.agents.ext.tool.edit.patch.PatchApplyResult
 import ai.koog.agents.ext.tool.edit.patch.applyTokenNormalizedPatch
@@ -35,9 +31,7 @@ internal class EditFileTool<Path>(
 
     @Serializable
     data class Result(
-        val diff: Diff<String>,
-        private val patchApplyResult: PatchApplyResult,
-        val path: String
+        private val patchApplyResult: PatchApplyResult
     ) : ToolResult.JSONSerializable<Result> {
         @Serializable
         val applied: Boolean = patchApplyResult.isSuccess()
@@ -47,19 +41,14 @@ internal class EditFileTool<Path>(
         fun toMarkdown(): String = markdown {
             if (patchApplyResult.isSuccess()) {
                 line {
-                    bold("Successfully").text(" edited file (").code(path).text(")")
+                    bold("Successfully").text(" edited file (patch applied)")
                 }
-                codeblock(diff.toUnifiedDiff())
             } else {
                 line {
-                    text("File (").code(path).text(") was ")
+                    text("File was ")
                         .bold("not")
-                        .text(" modified")
+                        .text(" modified (patch application failed: ${patchApplyResult.reason})")
                 }
-                patchApplyResult.reason.let { reason ->
-                    line { text("Reason: ").code(reason) }
-                }
-                codeblock(diff.toUnifiedDiff())
             }
         }
 
@@ -196,7 +185,7 @@ internal class EditFileTool<Path>(
         )
     }
 
-    override val argsSerializer: KSerializer<Args> = Args.serializer()
+    override val argsSerializer = Args.serializer()
 
     override val descriptor: ToolDescriptor = EditFileTool.descriptor
 
@@ -209,14 +198,10 @@ internal class EditFileTool<Path>(
 
         if (patchApplyResult.isSuccess()) {
             fs.writeText(path, patchApplyResult.updatedContent)
-
-            val diff = MyersDiffAlgorithm.forStrings.diff(content, patchApplyResult.updatedContent)
-            logger.info { "Patch was applied with diff: $diff" }
-
-            return Result(diff, patchApplyResult, args.path)
+            logger.info { "Patch was applied" }
         } else {
-            logger.info { "Patch was NOT applied because of ${patchApplyResult.reason}" }
-            return Result(MyersDiffAlgorithm.forStrings.diff(content, content), patchApplyResult, args.path)
+            logger.info { "Patch was NOT applied because of: ${patchApplyResult.reason}" }
         }
+        return Result(patchApplyResult)
     }
 }
