@@ -13,6 +13,8 @@ kotlin {
         commonMain {
             dependencies {
                 api(libs.kotlinx.coroutines.core)
+                implementation(libs.ktor.client.core)
+                implementation(libs.oshai.kotlin.logging)
             }
         }
 
