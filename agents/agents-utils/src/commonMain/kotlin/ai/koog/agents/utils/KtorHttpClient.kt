@@ -22,6 +22,21 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 import kotlin.reflect.KClass
 
+/**
+ * KtorHttpClient is an implementation of the KoogHttpClient interface, utilizing Ktor's HttpClient
+ * to perform HTTP operations, including POST requests and Server-Sent Events (SSE) streaming.
+ *
+ * This client provides enhanced logging, flexible request and response handling, and supports
+ * configurability for underlying Ktor HttpClient instances.
+ *
+ * @property clientName The name of the client, used for logging and traceability.
+ * @property logger A logging instance of type KLogger for recording client-related events and errors.
+ * @constructor Creates a KtorHttpClient instance with an optional base Ktor HttpClient and configuration block.
+ *
+ * @param baseClient The base Ktor HttpClient instance to be used. Default is a newly created instance.
+ * @param configurer A lambda function to configure the base Ktor HttpClient instance.
+ * The configuration is applied using the Ktor `HttpClient.config` method.
+ */
 public class KtorHttpClient(
     private val clientName: String,
     private val logger: KLogger,
@@ -29,6 +44,16 @@ public class KtorHttpClient(
     configurer: HttpClientConfig<*>.() -> Unit
 ) : KoogHttpClient {
 
+    /**
+     * A configured instance of the Ktor HTTP client used for making HTTP requests.
+     *
+     * This property is initialized with a base client configuration, extended using a custom
+     * `configurer` function to adapt to specific requirements or settings.
+     *
+     * It is designed to interact with various endpoints to perform HTTP operations such as
+     * POST requests and Server-Sent Events (SSE) streaming, supporting request and response
+     * serialization and deserialization for different data types.
+     */
     public val ktorClient: io.ktor.client.HttpClient = baseClient.config(configurer)
 
     public override suspend fun <T : Any, R : Any> post(
