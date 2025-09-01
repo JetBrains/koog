@@ -13,6 +13,7 @@ kotlin {
                 api(kotlin("test"))
                 api(libs.kotlinx.coroutines.test)
                 api(libs.kotlinx.serialization.json)
+                api(project(":rag:rag-base"))
             }
         }
 

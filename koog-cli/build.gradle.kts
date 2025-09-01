@@ -18,8 +18,6 @@ kotlin {
                 api(project(":agents:agents-utils"))
 
                 api(libs.kotlinx.serialization.json)
-                // utilities from rag-base used by tests/util in edit tool
-                api(project(":rag:rag-base"))
             }
         }
         commonTest {
@@ -27,6 +25,7 @@ kotlin {
                 implementation(kotlin("test"))
                 implementation(libs.kotlinx.coroutines.test)
                 implementation(project(":agents:agents-test"))
+                implementation(project(":test-utils"))
             }
         }
         jvmTest {
