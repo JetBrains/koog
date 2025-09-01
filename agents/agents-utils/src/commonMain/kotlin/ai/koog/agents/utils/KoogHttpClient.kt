@@ -31,6 +31,20 @@ public interface KoogHttpClient {
     ): R
 
     /**
+     * Sends an HTTP POST request to the specified `path` with the provided `request` payload.
+     *
+     * @param path The endpoint path to which the HTTP POST request is sent.
+     * @param request The request payload to be sent in the POST request. It must be a string.
+     * @return The response payload from the server, represented as a string.
+     */
+    public suspend fun post(
+        path: String,
+        request: String
+    ): String =
+        post(path, request, String::class, String::class)
+
+
+    /**
      * Initiates a Server-Sent Events (SSE) streaming operation over an HTTP POST request.
      *
      * This function sends a request to the specified `path` with the given `request` payload,

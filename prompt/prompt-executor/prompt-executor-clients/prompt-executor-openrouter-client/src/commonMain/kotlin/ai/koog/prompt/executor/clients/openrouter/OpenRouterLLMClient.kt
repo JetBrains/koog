@@ -17,7 +17,6 @@ import ai.koog.prompt.executor.clients.openrouter.models.OpenRouterChatCompletio
 import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
-import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import kotlinx.datetime.Clock
@@ -51,14 +50,13 @@ public class OpenRouterLLMClient(
     apiKey,
     settings,
     baseClient,
-    clock
+    clock,
+    staticLogger
 ) {
 
     private companion object {
         private val staticLogger = KotlinLogging.logger { }
     }
-
-    override val logger: KLogger = staticLogger
 
     override fun serializeProviderChatRequest(
         messages: List<OpenAIMessage>,

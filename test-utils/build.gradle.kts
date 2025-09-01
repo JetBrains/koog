@@ -21,6 +21,7 @@ kotlin {
                 api(kotlin("test-junit5"))
                 implementation(libs.junit.jupiter.params)
                 implementation(libs.kotlinx.coroutines.test)
+                runtimeOnly(libs.slf4j.simple)
             }
         }
     }

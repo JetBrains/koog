@@ -1,7 +1,6 @@
 package ai.koog.prompt.executor.clients.openai
 
 import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.agents.utils.SuitableForIO
 import ai.koog.prompt.dsl.ModerationCategory
 import ai.koog.prompt.dsl.ModerationCategoryResult
 import ai.koog.prompt.dsl.ModerationResult
@@ -47,26 +46,9 @@ import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.structure.RegisteredBasicJsonSchemaGenerators
 import ai.koog.prompt.structure.RegisteredStandardJsonSchemaGenerators
 import ai.koog.prompt.structure.annotations.InternalStructuredOutputApi
-import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
-import io.ktor.client.plugins.sse.SSEClientException
-import io.ktor.client.plugins.sse.sse
-import io.ktor.client.request.accept
-import io.ktor.client.request.headers
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
-import io.ktor.client.statement.bodyAsText
-import io.ktor.client.statement.readRawBytes
-import io.ktor.http.ContentType
-import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpMethod
-import io.ktor.http.isSuccess
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.uuid.ExperimentalUuidApi
@@ -108,7 +90,8 @@ public open class OpenAILLMClient(
     apiKey,
     settings,
     baseClient,
-    clock
+    clock,
+    staticLogger
 ),
     LLMEmbeddingProvider {
 
@@ -122,8 +105,6 @@ public open class OpenAILLMClient(
             RegisteredStandardJsonSchemaGenerators[LLMProvider.OpenAI] = OpenAIStandardJsonSchemaGenerator
         }
     }
-
-    override val logger: KLogger = staticLogger
 
     override fun serializeProviderChatRequest(
         messages: List<OpenAIMessage>,
@@ -261,53 +242,29 @@ public open class OpenAILLMClient(
         }
     }
 
-    private fun executeResponsesStreaming(prompt: Prompt, model: LLModel, params: OpenAIResponsesParams): Flow<String> =
-        flow {
-            logger.debug { "Executing streaming prompt: $prompt with model: $model" }
+    private fun executeResponsesStreaming(prompt: Prompt, model: LLModel, params: OpenAIResponsesParams): Flow<String> {
+        logger.debug { "Executing streaming prompt: $prompt with model: $model" }
 
-            val messages = convertPromptToInput(prompt, model)
-            val request = serializeResponsesAPIRequest(
-                messages = messages,
-                model = model,
-                tools = emptyList(),
-                toolChoice = prompt.params.toolChoice?.toOpenAIResponseToolChoice(),
-                params = params,
-                stream = true
-            )
+        val messages = convertPromptToInput(prompt, model)
+        val request = serializeResponsesAPIRequest(
+            messages = messages,
+            model = model,
+            tools = emptyList(),
+            toolChoice = prompt.params.toolChoice?.toOpenAIResponseToolChoice(),
+            params = params,
+            stream = true
+        )
 
-            try {
-                httpClient.sse(
-                    urlString = settings.responsesAPIPath,
-                    request = {
-                        method = HttpMethod.Post
-                        accept(ContentType.Text.EventStream)
-                        headers {
-                            append(HttpHeaders.CacheControl, "no-cache")
-                            append(HttpHeaders.Connection, "keep-alive")
-                        }
-                        setBody(request)
-                    }
-                ) {
-                    incoming.collect { event ->
-                        event
-                            .data
-                            ?.let { json.decodeFromString<OpenAIStreamEvent>(it) }
-                            ?.takeIf { it is OpenAIStreamEvent.ResponseOutputTextDelta } // TODO("handle other events")
-                            ?.let { (it as OpenAIStreamEvent.ResponseOutputTextDelta).delta }
-                            ?.let { emit(it) }
-                    }
-                }
-            } catch (e: SSEClientException) {
-                e.response?.let { response ->
-                    val body = response.readRawBytes().decodeToString()
-                    logger.error(e) { "Error from $clientName API: ${response.status}: ${e.message}.\nBody:\n$body" }
-                    error("Error from $clientName API: ${response.status}: ${e.message}")
-                }
-            } catch (e: Exception) {
-                logger.error { "Exception during streaming from $clientName: $e" }
-                error(e.message ?: "Unknown error during streaming from $clientName: $e")
+        return httpClient.sse(
+            path = settings.responsesAPIPath,
+            request = request,
+            requestBodyType = String::class,
+            decodeStreamingResponse = { json.decodeFromString<OpenAIStreamEvent>(it) },
+            processStreamingChunk = {
+                (it as? OpenAIStreamEvent.ResponseOutputTextDelta)?.delta
             }
-        }
+        )
+    }
 
     override suspend fun executeMultipleChoices(
         prompt: Prompt,
@@ -333,25 +290,17 @@ public open class OpenAILLMClient(
             input = text
         )
 
-        return withContext(Dispatchers.SuitableForIO) {
-            val response = httpClient.post(settings.embeddingsPath) {
-                setBody(request)
-            }
-
-            if (response.status.isSuccess()) {
-                val openAIResponse = response.body<OpenAIEmbeddingResponse>()
-                if (openAIResponse.data.isNotEmpty()) {
-                    openAIResponse.data.first().embedding
-                } else {
-                    logger.error { "Empty data in OpenAI embedding response" }
-                    error("Empty data in OpenAI embedding response")
-                }
-            } else {
-                val errorBody = response.bodyAsText()
-                logger.error { "Error from OpenAI API: ${response.status}: $errorBody" }
-                error("Error from OpenAI API: ${response.status}: $errorBody")
-            }
+        val openAIResponse = httpClient.post(
+            path = settings.embeddingsPath,
+            request = request,
+            requestBodyType = OpenAIEmbeddingRequest::class,
+            responseType = OpenAIEmbeddingResponse::class
+        )
+        if (openAIResponse.data.isEmpty()) {
+            logger.error { "Empty data in OpenAI embedding response" }
+            error("Empty data in OpenAI embedding response")
         }
+        return openAIResponse.data.first().embedding
     }
 
     /**
@@ -407,106 +356,104 @@ public open class OpenAILLMClient(
             model = model.id
         )
 
-        return withContext(Dispatchers.SuitableForIO) {
-            val response = httpClient.post(settings.moderationsPath) {
-                setBody(request)
-            }
+        val openAIResponse = httpClient.post(
+            path = settings.moderationsPath,
+            request = request,
+            requestBodyType = OpenAIModerationRequest::class,
+            responseType = OpenAIModerationResponse::class
+        )
 
-            if (response.status.isSuccess()) {
-                val openAIResponse = response.body<OpenAIModerationResponse>()
-                if (openAIResponse.results.isNotEmpty()) {
-                    val result = openAIResponse.results.first()
-
-                    // Convert OpenAI categories to a map
-                    val categories = mapOf(
-                        ModerationCategory.Harassment to result.categories.harassment,
-                        ModerationCategory.HarassmentThreatening to result.categories.harassmentThreatening,
-                        ModerationCategory.Hate to result.categories.hate,
-                        ModerationCategory.HateThreatening to result.categories.hateThreatening,
-                        ModerationCategory.Sexual to result.categories.sexual,
-                        ModerationCategory.SexualMinors to result.categories.sexualMinors,
-                        ModerationCategory.Violence to result.categories.violence,
-                        ModerationCategory.ViolenceGraphic to result.categories.violenceGraphic,
-                        ModerationCategory.SelfHarm to result.categories.selfHarm,
-                        ModerationCategory.SelfHarmIntent to result.categories.selfHarmIntent,
-                        ModerationCategory.SelfHarmInstructions to result.categories.selfHarmInstructions,
-                        ModerationCategory.Illicit to (result.categories.illicit ?: false),
-                        ModerationCategory.IllicitViolent to (result.categories.illicitViolent ?: false)
-                    )
-
-                    // Convert OpenAI category scores to a map
-                    val categoryScores = mapOf(
-                        ModerationCategory.Harassment to result.categoryScores.harassment,
-                        ModerationCategory.HarassmentThreatening to result.categoryScores.harassmentThreatening,
-                        ModerationCategory.Hate to result.categoryScores.hate,
-                        ModerationCategory.HateThreatening to result.categoryScores.hateThreatening,
-                        ModerationCategory.Sexual to result.categoryScores.sexual,
-                        ModerationCategory.SexualMinors to result.categoryScores.sexualMinors,
-                        ModerationCategory.Violence to result.categoryScores.violence,
-                        ModerationCategory.ViolenceGraphic to result.categoryScores.violenceGraphic,
-                        ModerationCategory.SelfHarm to result.categoryScores.selfHarm,
-                        ModerationCategory.SelfHarmIntent to result.categoryScores.selfHarmIntent,
-                        ModerationCategory.SelfHarmInstructions to result.categoryScores.selfHarmInstructions,
-                        ModerationCategory.Illicit to (result.categoryScores.illicit ?: 0.0),
-                        ModerationCategory.IllicitViolent to (result.categoryScores.illicitViolent ?: 0.0)
-                    )
-
-                    // Convert category applied input types if available
-                    val categoryAppliedInputTypes = result.categoryAppliedInputTypes?.let { appliedTypes ->
-                        buildMap {
-                            appliedTypes.harassment?.map { ModerationResult.InputType.valueOf(it.uppercase()) }
-                                ?.let { put(ModerationCategory.Harassment, it) }
-                            appliedTypes.harassmentThreatening?.map {
-                                ModerationResult.InputType.valueOf(it.uppercase())
-                            }
-                                ?.let { put(ModerationCategory.HarassmentThreatening, it) }
-                            appliedTypes.hate?.map { ModerationResult.InputType.valueOf(it.uppercase()) }
-                                ?.let { put(ModerationCategory.Hate, it) }
-                            appliedTypes.hateThreatening?.map { ModerationResult.InputType.valueOf(it.uppercase()) }
-                                ?.let { put(ModerationCategory.HateThreatening, it) }
-                            appliedTypes.sexual?.map { ModerationResult.InputType.valueOf(it.uppercase()) }
-                                ?.let { put(ModerationCategory.Sexual, it) }
-                            appliedTypes.sexualMinors?.map { ModerationResult.InputType.valueOf(it.uppercase()) }
-                                ?.let { put(ModerationCategory.SexualMinors, it) }
-                            appliedTypes.violence?.map { ModerationResult.InputType.valueOf(it.uppercase()) }
-                                ?.let { put(ModerationCategory.Violence, it) }
-                            appliedTypes.violenceGraphic?.map { ModerationResult.InputType.valueOf(it.uppercase()) }
-                                ?.let { put(ModerationCategory.ViolenceGraphic, it) }
-                            appliedTypes.selfHarm?.map { ModerationResult.InputType.valueOf(it.uppercase()) }
-                                ?.let { put(ModerationCategory.SelfHarm, it) }
-                            appliedTypes.selfHarmIntent?.map { ModerationResult.InputType.valueOf(it.uppercase()) }
-                                ?.let { put(ModerationCategory.SelfHarmIntent, it) }
-                            appliedTypes.selfHarmInstructions?.map {
-                                ModerationResult.InputType.valueOf(it.uppercase())
-                            }
-                                ?.let { put(ModerationCategory.SelfHarmInstructions, it) }
-                            appliedTypes.illicit?.map { ModerationResult.InputType.valueOf(it.uppercase()) }
-                                ?.let { put(ModerationCategory.Illicit, it) }
-                            appliedTypes.illicitViolent?.map { ModerationResult.InputType.valueOf(it.uppercase()) }
-                                ?.let { put(ModerationCategory.IllicitViolent, it) }
-                        }
-                    } ?: emptyMap()
-
-                    ModerationResult(
-                        isHarmful = result.flagged,
-                        categories = categories.mapValues { (category, detected) ->
-                            ModerationCategoryResult(
-                                detected,
-                                categoryScores[category],
-                                categoryAppliedInputTypes[category] ?: emptyList()
-                            )
-                        }
-                    )
-                } else {
-                    logger.error { "Empty results in OpenAI moderation response" }
-                    error("Empty results in OpenAI moderation response")
-                }
-            } else {
-                val errorBody = response.bodyAsText()
-                logger.error { "Error from OpenAI API: ${response.status}: $errorBody" }
-                error("Error from OpenAI API: ${response.status}: $errorBody")
-            }
+        if (openAIResponse.results.isEmpty()) {
+            logger.error { "Empty results in OpenAI moderation response" }
+            error("Empty results in OpenAI moderation response")
         }
+        val result = openAIResponse.results.first()
+
+        // Convert OpenAI categories to a map
+        return convertModerationResult(result)
+    }
+
+    private fun convertModerationResult(result: OpenAIModerationResult): ModerationResult {
+        // Convert OpenAI categories to a map
+        val categories = mapOf(
+            ModerationCategory.Harassment to result.categories.harassment,
+            ModerationCategory.HarassmentThreatening to result.categories.harassmentThreatening,
+            ModerationCategory.Hate to result.categories.hate,
+            ModerationCategory.HateThreatening to result.categories.hateThreatening,
+            ModerationCategory.Sexual to result.categories.sexual,
+            ModerationCategory.SexualMinors to result.categories.sexualMinors,
+            ModerationCategory.Violence to result.categories.violence,
+            ModerationCategory.ViolenceGraphic to result.categories.violenceGraphic,
+            ModerationCategory.SelfHarm to result.categories.selfHarm,
+            ModerationCategory.SelfHarmIntent to result.categories.selfHarmIntent,
+            ModerationCategory.SelfHarmInstructions to result.categories.selfHarmInstructions,
+            ModerationCategory.Illicit to (result.categories.illicit ?: false),
+            ModerationCategory.IllicitViolent to (result.categories.illicitViolent ?: false)
+        )
+
+        // Convert OpenAI category scores to a map
+        val categoryScores = mapOf(
+            ModerationCategory.Harassment to result.categoryScores.harassment,
+            ModerationCategory.HarassmentThreatening to result.categoryScores.harassmentThreatening,
+            ModerationCategory.Hate to result.categoryScores.hate,
+            ModerationCategory.HateThreatening to result.categoryScores.hateThreatening,
+            ModerationCategory.Sexual to result.categoryScores.sexual,
+            ModerationCategory.SexualMinors to result.categoryScores.sexualMinors,
+            ModerationCategory.Violence to result.categoryScores.violence,
+            ModerationCategory.ViolenceGraphic to result.categoryScores.violenceGraphic,
+            ModerationCategory.SelfHarm to result.categoryScores.selfHarm,
+            ModerationCategory.SelfHarmIntent to result.categoryScores.selfHarmIntent,
+            ModerationCategory.SelfHarmInstructions to result.categoryScores.selfHarmInstructions,
+            ModerationCategory.Illicit to (result.categoryScores.illicit ?: 0.0),
+            ModerationCategory.IllicitViolent to (result.categoryScores.illicitViolent ?: 0.0)
+        )
+
+        // Convert category applied input types if available
+        val categoryAppliedInputTypes = result.categoryAppliedInputTypes?.let { appliedTypes ->
+            buildMap {
+                appliedTypes.harassment?.map { ModerationResult.InputType.valueOf(it.uppercase()) }
+                    ?.let { put(ModerationCategory.Harassment, it) }
+                appliedTypes.harassmentThreatening?.map {
+                    ModerationResult.InputType.valueOf(it.uppercase())
+                }
+                    ?.let { put(ModerationCategory.HarassmentThreatening, it) }
+                appliedTypes.hate?.map { ModerationResult.InputType.valueOf(it.uppercase()) }
+                    ?.let { put(ModerationCategory.Hate, it) }
+                appliedTypes.hateThreatening?.map { ModerationResult.InputType.valueOf(it.uppercase()) }
+                    ?.let { put(ModerationCategory.HateThreatening, it) }
+                appliedTypes.sexual?.map { ModerationResult.InputType.valueOf(it.uppercase()) }
+                    ?.let { put(ModerationCategory.Sexual, it) }
+                appliedTypes.sexualMinors?.map { ModerationResult.InputType.valueOf(it.uppercase()) }
+                    ?.let { put(ModerationCategory.SexualMinors, it) }
+                appliedTypes.violence?.map { ModerationResult.InputType.valueOf(it.uppercase()) }
+                    ?.let { put(ModerationCategory.Violence, it) }
+                appliedTypes.violenceGraphic?.map { ModerationResult.InputType.valueOf(it.uppercase()) }
+                    ?.let { put(ModerationCategory.ViolenceGraphic, it) }
+                appliedTypes.selfHarm?.map { ModerationResult.InputType.valueOf(it.uppercase()) }
+                    ?.let { put(ModerationCategory.SelfHarm, it) }
+                appliedTypes.selfHarmIntent?.map { ModerationResult.InputType.valueOf(it.uppercase()) }
+                    ?.let { put(ModerationCategory.SelfHarmIntent, it) }
+                appliedTypes.selfHarmInstructions?.map {
+                    ModerationResult.InputType.valueOf(it.uppercase())
+                }
+                    ?.let { put(ModerationCategory.SelfHarmInstructions, it) }
+                appliedTypes.illicit?.map { ModerationResult.InputType.valueOf(it.uppercase()) }
+                    ?.let { put(ModerationCategory.Illicit, it) }
+                appliedTypes.illicitViolent?.map { ModerationResult.InputType.valueOf(it.uppercase()) }
+                    ?.let { put(ModerationCategory.IllicitViolent, it) }
+            }
+        } ?: emptyMap()
+
+        return ModerationResult(
+            isHarmful = result.flagged,
+            categories = categories.mapValues { (category, detected) ->
+                ModerationCategoryResult(
+                    detected,
+                    categoryScores[category],
+                    categoryAppliedInputTypes[category] ?: emptyList()
+                )
+            }
+        )
     }
 
     private suspend fun getResponseWithResponsesAPI(
@@ -533,19 +480,12 @@ public open class OpenAILLMClient(
             false
         )
 
-        return withContext(Dispatchers.SuitableForIO) {
-            val response = httpClient.post(settings.responsesAPIPath) {
-                setBody(request)
-            }
-
-            if (response.status.isSuccess()) {
-                response.body<OpenAIResponsesAPIResponse>()
-            } else {
-                val errorBody = response.bodyAsText()
-                logger.error { "Error from $clientName API: ${response.status}: $errorBody" }
-                error("Error from $clientName API: ${response.status}: $errorBody")
-            }
-        }
+        return httpClient.post(
+            path = settings.responsesAPIPath,
+            request = request,
+            requestBodyType = String::class,
+            responseType = OpenAIResponsesAPIResponse::class
+        )
     }
 
     private fun ToolDescriptor.toResponsesTool(): OpenAIResponsesTool.Function =

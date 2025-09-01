@@ -38,11 +38,21 @@ public class KtorHttpClient(
         responseType: KClass<R>
     ): R = withContext(Dispatchers.SuitableForIO) {
         val response = ktorClient.post(path) {
-            setBody(request, TypeInfo(requestBodyType))
+            if (requestBodyType == String::class) {
+                @Suppress("UNCHECKED_CAST")
+                setBody(request as String)
+            } else {
+                setBody(request, TypeInfo(requestBodyType))
+            }
         }
 
         if (response.status.isSuccess()) {
-            response.body(TypeInfo(responseType))
+            if (responseType == String::class) {
+                @Suppress("UNCHECKED_CAST")
+                response.bodyAsText() as R
+            } else {
+                response.body(TypeInfo(responseType))
+            }
         } else {
             val errorBody = response.bodyAsText()
             logger.error { "Error from $clientName API: ${response.status}: $errorBody" }
@@ -69,7 +79,12 @@ public class KtorHttpClient(
                         append(HttpHeaders.CacheControl, "no-cache")
                         append(HttpHeaders.Connection, "keep-alive")
                     }
-                    setBody(request, TypeInfo(requestBodyType))
+                    if (requestBodyType == String::class) {
+                        @Suppress("UNCHECKED_CAST")
+                        setBody(request as String)
+                    } else {
+                        setBody(request, TypeInfo(requestBodyType))
+                    }
                 }
             ) {
                 incoming.collect { event ->
