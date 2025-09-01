@@ -57,7 +57,6 @@ class EditFileToolCoreTest {
         val markdownReport = result.toMarkdown()
         assertContains(markdownReport, "Success")
         assertContains(markdownReport, "edit")
-//        assertContains(markdownReport, path)
     }
 
     @Test
