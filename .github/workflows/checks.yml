@@ -12,6 +12,11 @@ on:
     branches: [ "main", "develop" ]
   pull_request:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  # Cancel only when the run is not on main
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
 jobs:
   compilation:
 
@@ -93,14 +98,20 @@ jobs:
 
       - name: JvmTest with Gradle Wrapper and Kover coverage
         if: matrix.os == 'ubuntu-latest'
-        run: ./gradlew jvmTest :koverBinaryReport --continue
+        run: |-
+          ./gradlew jvmTest :koverBinaryReport --continue
+
+      - name: Check Split Packages
+        if:  matrix.os == 'ubuntu-latest' && github.event.pull_request.draft == false
+        run: |-
+          ./gradlew jvmJar && ./gradlew checkSplitPackages
 
       - name: JvmTest with Gradle Wrapper
         if: matrix.os != 'ubuntu-latest'
         run: ./gradlew jvmTest --continue
 
       - name: iosSimulatorArm64Test with Gradle Wrapper
-        if: matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-latest' && github.event.pull_request.draft == false && github.repository == 'jetbrains/koog'
         run: ./gradlew linkIosSimulatorArm64 iosSimulatorArm64Test --continue
 
       - name: Archive coverage data

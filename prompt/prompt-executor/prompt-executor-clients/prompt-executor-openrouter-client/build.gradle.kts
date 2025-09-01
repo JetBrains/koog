@@ -12,7 +12,7 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-model"))
+                api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client-base"))
                 implementation(libs.oshai.kotlin.logging)
             }
         }

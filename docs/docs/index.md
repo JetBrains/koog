@@ -25,25 +25,30 @@ Key features of Koog include:
 - **Flexible graph workflows**: Design complex agent behaviors using intuitive graph-based workflows.
 - **Modular feature system**: Customize agent capabilities through a composable architecture.
 - **Scalable architecture**: Handle workloads from simple chatbots to enterprise applications.
-- **Multiplatform**: Run agents on JVM, JS, WasmJS targets with Kotlin Multiplatform.
+- **Multiplatform**: Run agents on JVM, JS, WasmJS, and iOS targets with Kotlin Multiplatform.
 
-# Available LLM providers and platforms
+## Available LLM providers and platforms
 
 The LLM providers and platforms whose LLMs you can use to power your agent capabilities:
 
 - Google
 - OpenAI
 - Anthropic
+- DeepSeek
 - OpenRouter
 - Ollama
+- Bedrock
 
-# Installation
+For detailed guidance on using these providers with dedicated LLM clients, refer to [Runnning prompts with LLM clients](prompt-api.md#running-prompts-with-llm-clients).
+
+
+## Installation
 
 To use Koog, you need to include all necessary dependencies in your build configuration.
 
-## Gradle
+### Gradle
 
-### Gradle (Kotlin DSL)
+#### Gradle (Kotlin DSL)
 
 1. Add dependencies to the `build.gradle.kts` file:
 
@@ -55,7 +60,7 @@ To use Koog, you need to include all necessary dependencies in your build config
 
 2. Make sure that you have `mavenCentral()` in the list of repositories.
 
-### Gradle (Groovy)
+#### Gradle (Groovy)
 
 1. Add dependencies to the `build.gradle` file:
 
@@ -67,7 +72,7 @@ To use Koog, you need to include all necessary dependencies in your build config
 
 2. Make sure that you have `mavenCentral()` in the list of repositories.
 
-## Maven
+### Maven
 
 1. Add dependencies to the `pom.xml` file:
 
@@ -82,7 +87,7 @@ To use Koog, you need to include all necessary dependencies in your build config
 2. Make sure that you have `mavenCentral` in the list of repositories.
 
 
-# Quickstart example
+## Quickstart example
 
 To help you get started with AI agents, here is a quick example of a single-run agent:
 
