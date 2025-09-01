@@ -1,23 +1,18 @@
 package ai.koog.agents.features.sql.providers
 
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
-import kotlinx.coroutines.Dispatchers
 import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
-import org.jetbrains.exposed.sql.*
+import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.isNotNull
-import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
-import org.jetbrains.exposed.sql.transactions.transaction
-import org.jetbrains.exposed.sql.statements.BatchUpdateStatement
-import org.jetbrains.exposed.sql.vendors.currentDialect
-import org.jetbrains.exposed.sql.vendors.PostgreSQLDialect
-import org.jetbrains.exposed.sql.vendors.MysqlDialect
-import org.jetbrains.exposed.sql.vendors.H2Dialect
-import org.jetbrains.exposed.sql.vendors.SQLiteDialect
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.deleteWhere
+import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.upsert
 
 /**
  * Configuration for TTL cleanup behavior
@@ -27,11 +22,51 @@ import org.jetbrains.exposed.sql.vendors.SQLiteDialect
  */
 public data class CleanupConfig(
     val enabled: Boolean = true,
-    val intervalMs: Long = 60_000L // 1 minute default
+    val intervalMs: Long = 60_000L
 ) {
+    /**
+     * Companion object for CleanupConfig providing factory methods for creating configuration instances.
+     */
     public companion object {
+        /**
+         * Creates a default CleanupConfig instance with automatic TTL cleanup enabled
+         * and a default interval of 1 minute between cleanup operations.
+         *
+         * @return A CleanupConfig instance with default settings.
+         */
         public fun default(): CleanupConfig = CleanupConfig()
+
+        /**
+         * Creates a CleanupConfig instance with automatic TTL cleanup disabled.
+         *
+         * @return A CleanupConfig instance with the `enabled` property set to `false`.
+         */
         public fun disabled(): CleanupConfig = CleanupConfig(enabled = false)
+    }
+}
+
+/**
+ * Exposed table definition for storing agent checkpoints.
+ *
+ * Schema:
+ * - Composite primary key: (persistence_id, checkpoint_id)
+ * - Timestamp for ordering and querying
+ * - JSON column for flexible checkpoint data storage
+ * - Optional TTL timestamp for expiration (indexed for efficient cleanup)
+ */
+@Suppress("MissingKDocForPublicAPI")
+public open class CheckpointsTable(tableName: String) : Table(tableName) {
+    public val persistenceId: Column<String> = varchar("persistence_id", 255)
+    public val checkpointId: Column<String> = varchar("checkpoint_id", 255)
+    public val createdAt: Column<Long> = long("created_at").index()
+    public val checkpointJson: Column<String> = text("checkpoint_json")
+    public val ttlTimestamp: Column<Long?> = long("ttl_timestamp").nullable().index()
+
+    override val primaryKey: PrimaryKey = PrimaryKey(persistenceId, checkpointId)
+
+    init {
+        // Create composite index for efficient queries
+        index(isUnique = false, persistenceId, createdAt)
     }
 }
 
@@ -74,92 +109,29 @@ public data class CleanupConfig(
  * @param database The Exposed Database instance to use
  * @param tableName Name of the table to store checkpoints (default: "agent_checkpoints")
  * @param ttlSeconds Optional TTL for checkpoint entries in seconds (null = no expiration)
- * @param cleanupConfig Configuration for TTL cleanup behavior
  */
+@Suppress("MissingKDocForPublicAPI")
 public abstract class ExposedPersistencyStorageProvider(
     persistenceId: String,
     protected val database: Database,
     tableName: String = "agent_checkpoints",
-    ttlSeconds: Long? = null,
-    private val cleanupConfig: CleanupConfig = CleanupConfig.default()
+    ttlSeconds: Long? = null
 ) : SQLPersistencyStorageProvider(
     persistenceId = persistenceId,
     tableName = tableName,
     ttlSeconds = ttlSeconds
-), AutoCloseable {
-    
+) {
     /**
      * The Exposed table definition for checkpoints.
      * Uses a composite primary key and JSON column for checkpoint data.
      */
     protected open val checkpointsTable: CheckpointsTable = CheckpointsTable(tableName)
-    
+
     /**
      * Track last cleanup time to avoid excessive cleanup operations
      */
     private var lastCleanupTime: Long = 0
-    
-    /**
-     * Exposed table definition for storing agent checkpoints.
-     * 
-     * Schema:
-     * - Composite primary key: (persistence_id, checkpoint_id)
-     * - Timestamp for ordering and querying
-     * - JSON column for flexible checkpoint data storage
-     * - Optional TTL timestamp for expiration (indexed for efficient cleanup)
-     */
-    public open class CheckpointsTable(tableName: String) : Table(tableName) {
-        public val persistenceId: Column<String> = varchar("persistence_id", 255)
-        public val checkpointId: Column<String> = varchar("checkpoint_id", 255)
-        public val createdAt: Column<Long> = long("created_at").index()
-        public val checkpointJson: Column<String> = text("checkpoint_json")
-        public val ttlTimestamp: Column<Long?> = long("ttl_timestamp").nullable().index()
-        
-        override val primaryKey: Table.PrimaryKey = PrimaryKey(persistenceId, checkpointId)
-        
-        init {
-            // Create composite index for efficient queries
-            index(isUnique = false, persistenceId, createdAt)
-        }
-    }
-    
-    public override suspend fun initializeSchema() {
-        newSuspendedTransaction(Dispatchers.IO, database) {
-            SchemaUtils.createMissingTablesAndColumns(checkpointsTable)
-        }
-    }
-    
-    override suspend fun <T> transaction(block: suspend () -> T): T {
-        return newSuspendedTransaction(Dispatchers.IO, database) {
-            applyDialectOptimizations()
-            block()
-        }
-    }
-    
-    /**
-     * Applies database-specific optimizations based on the current dialect.
-     * This method is called at the beginning of each transaction.
-     */
-    protected open fun Transaction.applyDialectOptimizations() {
-        when (currentDialect) {
-            is PostgreSQLDialect -> {
-                // PostgreSQL: Use READ COMMITTED for better concurrent performance
-                exec("SET TRANSACTION ISOLATION LEVEL READ COMMITTED")
-            }
-            is MysqlDialect -> {
-                // MySQL: Ensure we're using READ COMMITTED (default is REPEATABLE READ)
-                exec("SET SESSION TRANSACTION ISOLATION LEVEL READ COMMITTED")
-            }
-            is H2Dialect -> {
-                // H2: Already uses READ COMMITTED by default
-            }
-            is SQLiteDialect -> {
-                // SQLite: Enable WAL mode for better concurrency (if not already set)
-                // Note: This is typically set at the database level, not per transaction
-            }
-        }
-    }
-    
+
     /**
      * Conditionally performs cleanup based on configuration and TTL settings.
      * Only runs cleanup if:
@@ -167,45 +139,42 @@ public abstract class ExposedPersistencyStorageProvider(
      * 2. TTL is configured (ttlSeconds is not null)
      * 3. Enough time has passed since last cleanup
      */
-    private suspend fun conditionalCleanup() {
+    public suspend fun conditionalCleanup(cleanupConfig: CleanupConfig = CleanupConfig.default()) {
         // Skip cleanup entirely if disabled or no TTL configured
         if (!cleanupConfig.enabled || ttlSeconds == null) {
             return
         }
-        
+
         val now = Clock.System.now().toEpochMilliseconds()
-        
+
         // Skip cleanup if we've cleaned up recently
         if (now - lastCleanupTime < cleanupConfig.intervalMs) {
             return
         }
-        
+
         cleanupExpired()
     }
-    
+
     override suspend fun cleanupExpired() {
         // Only perform cleanup if TTL is configured
         if (ttlSeconds == null) {
             return
         }
-        
+
         val now = Clock.System.now().toEpochMilliseconds()
-        
+
         transaction {
             val deletedCount = checkpointsTable.deleteWhere {
                 (checkpointsTable.ttlTimestamp less now) and
-                (checkpointsTable.ttlTimestamp.isNotNull())
+                    (checkpointsTable.ttlTimestamp.isNotNull())
             }
             if (deletedCount > 0) {
                 lastCleanupTime = now
             }
         }
     }
-    
+
     override suspend fun getCheckpoints(): List<AgentCheckpointData> {
-        validatePersistenceId()
-        conditionalCleanup()
-        
         return transaction {
             checkpointsTable
                 .select(checkpointsTable.checkpointJson)
@@ -220,14 +189,11 @@ public abstract class ExposedPersistencyStorageProvider(
                 }
         }
     }
-    
+
     override suspend fun saveCheckpoint(agentCheckpointData: AgentCheckpointData) {
-        validatePersistenceId()
-        conditionalCleanup()
-        
         val checkpointJson = json.encodeToString(agentCheckpointData)
         val ttlTimestamp = calculateTtlTimestamp(agentCheckpointData.createdAt)
-        
+
         transaction {
             // Use upsert for idempotent saves
             checkpointsTable.upsert {
@@ -239,11 +205,8 @@ public abstract class ExposedPersistencyStorageProvider(
             }
         }
     }
-    
+
     override suspend fun getLatestCheckpoint(): AgentCheckpointData? {
-        validatePersistenceId()
-        conditionalCleanup()
-        
         return transaction {
             checkpointsTable
                 .select(checkpointsTable.checkpointJson)
@@ -259,44 +222,29 @@ public abstract class ExposedPersistencyStorageProvider(
                 }
         }
     }
-    
+
     override suspend fun deleteCheckpoint(checkpointId: String) {
-        validatePersistenceId()
-        
         transaction {
             checkpointsTable.deleteWhere {
                 (checkpointsTable.persistenceId eq this@ExposedPersistencyStorageProvider.persistenceId) and
-                (checkpointsTable.checkpointId eq checkpointId)
+                    (checkpointsTable.checkpointId eq checkpointId)
             }
         }
     }
-    
+
     override suspend fun deleteAllCheckpoints() {
-        validatePersistenceId()
-        
         transaction {
             checkpointsTable.deleteWhere {
                 checkpointsTable.persistenceId eq this@ExposedPersistencyStorageProvider.persistenceId
             }
         }
     }
-    
+
     override suspend fun getCheckpointCount(): Long {
-        validatePersistenceId()
-        
         return transaction {
             checkpointsTable.selectAll().where {
                 checkpointsTable.persistenceId eq this@ExposedPersistencyStorageProvider.persistenceId
             }.count()
         }
-    }
-    
-    /**
-     * Closes any resources associated with this provider.
-     * Concrete implementations should override this to close connection pools.
-     */
-    override fun close() {
-        // Base implementation does nothing
-        // Concrete implementations should close their connection pools
     }
 }

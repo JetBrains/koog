@@ -1,20 +1,16 @@
 package ai.koog.agents.features.sql.providers
 
-import com.zaxxer.hikari.HikariConfig
-import com.zaxxer.hikari.HikariDataSource
+import kotlinx.coroutines.Dispatchers
 import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
+import org.jetbrains.exposed.sql.transactions.transaction
 
 /**
  * MySQL-specific implementation of [ExposedPersistencyStorageProvider] for managing
  * agent checkpoints in MySQL databases.
  *
- * This provider is optimized for MySQL 5.7+ and MariaDB 10.2+, leveraging their 
+ * This provider is optimized for MySQL 5.7+ and MariaDB 10.2+, leveraging their
  * JSON column support for efficient checkpoint storage.
- *
- * ## Connection Options:
- * 1. JDBC URL: Direct connection string
- * 2. HikariCP: Advanced connection pooling with monitoring
- * 3. External DataSource: Integrate with existing connection pools
  *
  * ## MySQL Features:
  * - JSON column support for structured data
@@ -24,144 +20,88 @@ import org.jetbrains.exposed.sql.Database
  *
  * ## Example Usage:
  * ```kotlin
- * // Using JDBC URL
  * val provider = MySQLPersistencyStorageProvider(
  *     persistenceId = "my-agent",
- *     jdbcUrl = "jdbc:mysql://localhost:3306/mydb?useSSL=false&serverTimezone=UTC",
- *     username = "user",
- *     password = "pass",
+ *     database = Database.connect(
+ *         url = "jdbc:mysql://localhost:3306/mydb?useSSL=false&serverTimezone=UTC",
+ *         driver = "com.mysql.cj.jdbc.Driver",
+ *         user = "user",
+ *         password = "pass"
+ *     ),
  *     ttlSeconds = 3600
- * )
- *
- * // Using HikariCP configuration
- * val hikariConfig = HikariConfig().apply {
- *     jdbcUrl = "jdbc:mysql://localhost:3306/mydb"
- *     username = "user"
- *     password = "pass"
- *     maximumPoolSize = 10
- *     addDataSourceProperty("useSSL", "false")
- *     addDataSourceProperty("serverTimezone", "UTC")
- * }
- * val provider = MySQLPersistencyStorageProvider(
- *     persistenceId = "my-agent",
- *     hikariConfig = hikariConfig
  * )
  * ```
  *
- * @constructor Initializes the MySQL persistence provider with connection details.
+ * @constructor Initializes the MySQL persistence provider with an Exposed Database instance.
  */
-public class MySQLPersistencyStorageProvider : ExposedPersistencyStorageProvider {
-    
-    /**
-     * Creates a provider with a JDBC URL and credentials.
-     *
-     * @param persistenceId Unique identifier for this agent's persistence data
-     * @param jdbcUrl MySQL JDBC connection URL
-     * @param username Database username
-     * @param password Database password
-     * @param tableName Name of the table to store checkpoints (default: "agent_checkpoints")
-     * @param ttlSeconds Optional TTL for checkpoint entries in seconds
-     */
-    public constructor(
-        persistenceId: String,
-        jdbcUrl: String,
-        username: String,
-        password: String,
-        tableName: String = "agent_checkpoints",
-        ttlSeconds: Long? = null
-    ) : super(
-        persistenceId = persistenceId,
-        database = Database.connect(
-            url = jdbcUrl,
-            driver = "com.mysql.cj.jdbc.Driver",
-            user = username,
-            password = password
-        ),
-        tableName = tableName,
-        ttlSeconds = ttlSeconds
-    )
-    
-    /**
-     * Creates a provider with HikariCP configuration for advanced pooling.
-     *
-     * @param persistenceId Unique identifier for this agent's persistence data
-     * @param hikariConfig HikariCP configuration
-     * @param tableName Name of the table to store checkpoints
-     * @param ttlSeconds Optional TTL for checkpoint entries in seconds
-     */
-    public constructor(
-        persistenceId: String,
-        hikariConfig: HikariConfig,
-        tableName: String = "agent_checkpoints",
-        ttlSeconds: Long? = null
-    ) : super(
-        persistenceId = persistenceId,
-        database = Database.connect(HikariDataSource(hikariConfig)),
-        tableName = tableName,
-        ttlSeconds = ttlSeconds
-    ) {
-        this.dataSource = HikariDataSource(hikariConfig)
+public class MySQLPersistencyStorageProvider(
+    persistenceId: String,
+    database: Database,
+    tableName: String = "agent_checkpoints",
+    ttlSeconds: Long? = null,
+    private val migrator: ExposedSQLMigrator = MySqlExposedMigrator(database, tableName)
+) : ExposedPersistencyStorageProvider(persistenceId, database, tableName, ttlSeconds) {
+
+    override suspend fun migrate() {
+        migrator.migrate()
     }
-    
-    /**
-     * Creates a provider with an existing HikariDataSource.
-     *
-     * @param persistenceId Unique identifier for this agent's persistence data
-     * @param dataSource Pre-configured HikariDataSource
-     * @param tableName Name of the table to store checkpoints
-     * @param ttlSeconds Optional TTL for checkpoint entries in seconds
-     */
-    public constructor(
-        persistenceId: String,
-        dataSource: HikariDataSource,
-        tableName: String = "agent_checkpoints",
-        ttlSeconds: Long? = null
-    ) : super(
-        persistenceId = persistenceId,
-        database = Database.connect(dataSource),
-        tableName = tableName,
-        ttlSeconds = ttlSeconds
-    ) {
-        this.dataSource = dataSource
-    }
-    
-    private var dataSource: HikariDataSource? = null
-    
-    /**
-     * Closes the data source if it was created by this provider.
-     * Should be called when the provider is no longer needed.
-     */
-    override fun close() {
-        dataSource?.close()
-    }
-    
-    /**
-     * Returns connection pool statistics if using HikariCP.
-     * Useful for monitoring connection usage and performance.
-     */
-    public fun getPoolStats(): PoolStats? {
-        return dataSource?.let { ds ->
-            PoolStats(
-                activeConnections = ds.hikariPoolMXBean?.activeConnections ?: 0,
-                idleConnections = ds.hikariPoolMXBean?.idleConnections ?: 0,
-                totalConnections = ds.hikariPoolMXBean?.totalConnections ?: 0,
-                threadsAwaitingConnection = ds.hikariPoolMXBean?.threadsAwaitingConnection ?: 0,
-                maxPoolSize = ds.maximumPoolSize
+
+    override suspend fun <T> transaction(block: suspend () -> T): T =
+        newSuspendedTransaction(Dispatchers.IO, database) {
+            block()
+        }
+}
+
+/**
+ * MySqlExposedMigrator is responsible for managing schema migrations for a MySQL table
+ * using the Exposed SQL library. It ensures that the required table for storing checkpoint
+ * data is created and configured appropriately.
+ *
+ * This class provides functionality to set up the database schema by creating the table with
+ * appropriate indices, comments, and data types, including support for JSON fields and TTL
+ * (Time-to-Live) timestamps.
+ *
+ * The migration process is executed asynchronously to integrate seamlessly into applications
+ * that rely on coroutine-based concurrency.
+ *
+ * @param database The connection to the MySQL database where migrations will be applied
+ * @param tableName The name of the table to be created or updated during migration
+ */
+public class MySqlExposedMigrator(private val database: Database, private val tableName: String) : ExposedSQLMigrator {
+    override suspend fun migrate() {
+        transaction(database) {
+            exec(
+                """
+            CREATE TABLE IF NOT EXISTS $tableName (
+                persistence_id VARCHAR(255) NOT NULL,
+                checkpoint_id VARCHAR(255) NOT NULL,
+                created_at BIGINT NOT NULL,
+                checkpoint_json JSON NOT NULL,
+                ttl_timestamp BIGINT NULL,
+                
+                PRIMARY KEY (persistence_id, checkpoint_id),
+                INDEX idx_${tableName}_created_at (created_at),
+                INDEX idx_${tableName}_ttl_timestamp (ttl_timestamp)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+                """.trimIndent()
+            )
+
+            exec(
+                """
+            ALTER TABLE $tableName COMMENT = 'Stores checkpoint data with persistence and TTL support'
+                """.trimIndent()
+            )
+
+            exec(
+                """
+            ALTER TABLE $tableName 
+                MODIFY COLUMN persistence_id VARCHAR(255) NOT NULL COMMENT 'Identifier for the persistence context',
+                MODIFY COLUMN checkpoint_id VARCHAR(255) NOT NULL COMMENT 'Unique identifier for the checkpoint',
+                MODIFY COLUMN created_at BIGINT NOT NULL COMMENT 'Timestamp when the checkpoint was created (as BIGINT)',
+                MODIFY COLUMN checkpoint_json JSON NOT NULL COMMENT 'JSON data of the checkpoint',
+                MODIFY COLUMN ttl_timestamp BIGINT NULL COMMENT 'Time-to-live timestamp for automatic expiration (nullable)'
+                """.trimIndent()
             )
         }
-    }
-    
-    /**
-     * Connection pool statistics for monitoring.
-     */
-    public data class PoolStats(
-        val activeConnections: Int,
-        val idleConnections: Int,
-        val totalConnections: Int,
-        val threadsAwaitingConnection: Int,
-        val maxPoolSize: Int
-    ) {
-        val utilizationPercent: Double = (activeConnections.toDouble() / maxPoolSize) * 100
-        val isHighUtilization: Boolean = utilizationPercent > 80.0
     }
 }

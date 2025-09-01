@@ -1,13 +1,12 @@
 package ai.koog.agents.features.sql.providers
 
-import ai.koog.agents.snapshot.feature.AgentCheckpointData
 import ai.koog.agents.snapshot.providers.PersistencyStorageProvider
 import kotlinx.datetime.Instant
 import kotlinx.serialization.json.Json
 
 /**
  * Abstract base class for SQL-based implementations of [PersistencyStorageProvider].
- * 
+ *
  * This provider offers a generic SQL abstraction for persisting agent checkpoints
  * to relational databases. Concrete implementations should handle specific SQL
  * dialects and connection management.
@@ -39,59 +38,49 @@ public abstract class SQLPersistencyStorageProvider(
     protected val tableName: String = "agent_checkpoints",
     protected val ttlSeconds: Long? = null
 ) : PersistencyStorageProvider {
-    
-    protected val json: Json = Json { 
+
+    protected val json: Json = Json {
         prettyPrint = true
         ignoreUnknownKeys = true
     }
-    
+
     /**
      * Initializes the database schema if it doesn't exist.
      * This should be called once during provider initialization.
      */
-    public abstract suspend fun initializeSchema()
-    
+    public abstract suspend fun migrate()
+
     /**
      * Executes a database transaction with the given operations.
      * Implementations should ensure proper transaction isolation and rollback on failure.
      */
     protected abstract suspend fun <T> transaction(block: suspend () -> T): T
-    
+
     /**
      * Cleans up expired checkpoints based on TTL.
      * This should be called periodically or before operations to maintain database hygiene.
      */
-    protected abstract suspend fun cleanupExpired()
-    
+    public abstract suspend fun cleanupExpired()
+
     /**
      * Calculates the TTL timestamp for a checkpoint if TTL is configured.
      */
-    protected fun calculateTtlTimestamp(timestamp: Instant): Long? {
-        return ttlSeconds?.let { 
+    public fun calculateTtlTimestamp(timestamp: Instant): Long? {
+        return ttlSeconds?.let {
             timestamp.toEpochMilliseconds() + (it * 1000)
         }
     }
-    
-    /**
-     * Validates that the persistence ID contains only safe characters for SQL.
-     * This helps prevent SQL injection when persistence ID is used in queries.
-     */
-    protected fun validatePersistenceId() {
-        require(persistenceId.matches(Regex("^[a-zA-Z0-9_.-]+$"))) {
-            "Persistence ID must contain only alphanumeric characters, dots, hyphens, and underscores"
-        }
-    }
-    
+
     /**
      * Deletes a specific checkpoint by ID
      */
     public abstract suspend fun deleteCheckpoint(checkpointId: String)
-    
+
     /**
      * Deletes all checkpoints for this persistence ID
      */
     public abstract suspend fun deleteAllCheckpoints()
-    
+
     /**
      * Gets the total number of checkpoints stored
      */

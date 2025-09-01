@@ -19,9 +19,6 @@ Demonstrates using SQL databases as persistence backends for agent checkpoints t
    
    # H2 example (embedded database)
    ./gradlew :examples:runExampleSQLPersistentAgent --args="h2"
-   
-   # SQLite example (embedded database)
-   ./gradlew :examples:runExampleSQLPersistentAgent --args="sqlite"
    ```
 
 ## What It Does
@@ -53,9 +50,12 @@ CREATE TABLE agent_checkpoints (
 ```kotlin
 PostgresPersistencyStorageProvider(
     persistenceId = "my-agent",
-    jdbcUrl = "jdbc:postgresql://localhost:5432/agents",
-    username = "agent_user",
-    password = "agent_pass",
+    database = Database.connect(
+        url = "jdbc:postgresql://localhost:5432/agents",
+        driver = "org.postgresql.Driver",
+        user = "agent_user",
+        password = "agent_pass"
+    ),
     ttlSeconds = 3600  // Optional TTL
 )
 ```
@@ -65,9 +65,12 @@ PostgresPersistencyStorageProvider(
 ```kotlin
 MySQLPersistencyStorageProvider(
     persistenceId = "my-agent",
-    jdbcUrl = "jdbc:mysql://localhost:3306/agents",
-    username = "agent_user",
-    password = "agent_pass",
+    database = Database.connect(
+        url = "jdbc:mysql://localhost:3306/agents",
+        driver = "com.mysql.cj.jdbc.Driver",
+        user = "agent_user",
+        password = "agent_pass"
+    ),
     ttlSeconds = 7200
 )
 ```
@@ -87,21 +90,8 @@ H2PersistencyStorageProvider.fileBased(
     filePath = "./data/h2/agent_checkpoints"
 )
 ```
-
 ### SQLite (Embedded)
 
-```kotlin
-// In-memory
-SQLitePersistencyStorageProvider.inMemory(
-    persistenceId = "test-agent"
-)
-
-// File-based
-SQLitePersistencyStorageProvider.fileBased(
-    persistenceId = "my-agent",
-    filePath = "./data/sqlite/checkpoints.db"
-)
-```
 
 ## Connection Pool Monitoring
 
