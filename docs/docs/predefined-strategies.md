@@ -1,8 +1,128 @@
-# ReAct strategy
+# Predefined agent strategies
 
-The ReAct (Reasoning and Acting) strategy is an AI agent strategy that alternates between reasoning and execution stages to dynamically process tasks and request outputs from a Large Language Model (LLM).
+To make agent implementations easier, Koog provides predefined agent strategies for common agent use cases. 
+The following predefined strategies are available:
 
-## Overview
+- [Chat agent strategy](#chat-agent-strategy)
+- [ReAct strategy](#react-strategy)
+
+## Chat agent strategy
+
+The Chat agent strategy is designed for executing a chat interaction process.
+It orchestrates interactions between different stages, nodes, and tools to handle user input, execute tools, and provide responses in a chat-like manner.
+
+### Overview
+
+The Chat agent strategy implements a pattern where the agent:
+
+1. Receives user input
+2. Processes the input using an LLM
+3. Either calls a tool or provides a direct response
+4. Processes tool results and continues the conversation
+5. Provides feedback if the LLM tries to respond with plain text instead of using tools
+
+This approach creates a conversational interface where the agent can use tools to fulfill user requests.
+
+### Setup and dependencies
+
+The implementation of Chat agent strategy in Koog is done through the `chatAgentStrategy` function. To make the function available in your agent code, add the following dependency import:
+
+```
+ai.koog.agents.ext.agent.chatAgentStrategy
+```
+
+To use the strategy, create an AI agent following the pattern below:
+
+<!--- INCLUDE
+import ai.koog.agents.core.agent.AIAgent
+import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+import ai.koog.agents.ext.agent.chatAgentStrategy
+import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
+
+val apiKey = System.getenv("OPENAI_API_KEY") ?: error("Please set OPENAI_API_KEY environment variable")
+val promptExecutor = simpleOpenAIExecutor(apiKey)
+val toolRegistry = ToolRegistry.EMPTY
+val model =  OpenAIModels.Reasoning.O4Mini
+-->
+```kotlin
+val chatAgent = AIAgent(
+    executor = promptExecutor,
+    toolRegistry = toolRegistry,
+    llmModel = model,
+    // Set chatAgentStrategy as the agent strategy
+    strategy = chatAgentStrategy()
+)
+```
+<!--- KNIT example-predefined-strategies-01.kt -->
+
+### Implementation details
+
+The Chat agent strategy is implemented with the following components:
+
+1. _Nodes_:
+    - `nodeCallLLM`: makes requests to the LLM with the user input
+    - `nodeExecuteTool`: runs tools called by the LLM
+    - `nodeSendToolResult`: sends tool results back to the LLM
+    - `giveFeedbackToCallTools`: provides feedback if the LLM tries to respond with plain text instead of using tools
+
+2. _Edges_ that define the flow between nodes.
+
+### When to use the Chat agent strategy
+
+The Chat agent strategy is particularly useful for:
+
+- Building conversational agents that need to use tools
+- Creating assistants that can perform actions based on user requests
+- Implementing chatbots that need to access external systems or data
+- Scenarios where you want to enforce tool usage rather than plain text responses
+
+### Example
+
+Here is a code sample of an AI agent that implements the predefined Chat agent strategy (`chatAgentStrategy`) and tools that the agent may use:
+
+<!--- INCLUDE
+import ai.koog.agents.core.agent.AIAgent
+import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+import ai.koog.agents.ext.agent.chatAgentStrategy
+import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.agents.ext.tool.AskUser
+import ai.koog.agents.ext.tool.SayToUser
+
+typealias searchTool = AskUser
+typealias weatherTool = SayToUser
+
+val apiKey = System.getenv("OPENAI_API_KEY") ?: error("Please set OPENAI_API_KEY environment variable")
+val promptExecutor = simpleOpenAIExecutor(apiKey)
+val toolRegistry = ToolRegistry.EMPTY
+val model =  OpenAIModels.Reasoning.O4Mini
+-->
+```kotlin
+val chatAgent = AIAgent(
+    executor = promptExecutor,
+    llmModel = model,
+    // Use chatAgentStrategy as the agent strategy
+    strategy = chatAgentStrategy(),
+    // Add tools the agent can use
+    toolRegistry = ToolRegistry {
+        tool(searchTool)
+        tool(weatherTool)
+    }
+)
+
+suspend fun main() { 
+    // Run the agent with a user query
+    val result = chatAgent.run("What's the weather like today and should I bring an umbrella?")
+}
+```
+<!--- KNIT example-predefined-strategies-02.kt -->
+
+## ReAct strategy
+
+The ReAct (Reasoning and Acting) strategy is an AI agent strategy that alternates between reasoning and execution stages to dynamically process tasks and request output from a Large Language Model (LLM).
+
+### Overview
 
 The ReAct strategy implements a pattern where the agent:
 
@@ -13,22 +133,22 @@ The ReAct strategy implements a pattern where the agent:
 
 This approach combines the strengths of reasoning (thinking through problems step by step) and acting (executing tools to gather information or perform operations).
 
-## Flow diagram
+### Flow diagram
 
 Here is the flow diagram of the ReAct strategy:
 
 ![Koog flow diagram](img/koog-react-diagram-light.png#only-light)
 ![Koog flow diagram](img/koog-react-diagram-dark.png#only-dark)
 
-## Setup and dependencies
+### Setup and dependencies
 
 The implementation of ReAct strategy in Koog is done through the `reActStrategy` function. To make the function
 available in your agent code, add the following dependency import:
 
-```kotlin
-import ai.koog.agents.ext.agent.reActStrategy
 ```
-<!--- KNIT example-react-strategy-01.kt -->
+ai.koog.agents.ext.agent.reActStrategy
+```
+<!--- KNIT example-predefined-strategies-03.kt -->
 
 To use the strategy, create an AI agent following the pattern below:
 
@@ -57,9 +177,9 @@ val reActAgent = AIAgent(
     )
 )
 ```
-<!--- KNIT example-react-strategy-02.kt -->
+<!--- KNIT example-predefined-strategies-04.kt -->
 
-## Parameters
+### Parameters
 
 The `reActStrategy` function takes the following parameters:
 
@@ -68,7 +188,7 @@ The `reActStrategy` function takes the following parameters:
 | `reasoningInterval` | Int    | 1        | Specifies the interval for reasoning steps. Must be greater than 0. |
 | `name`              | String | `re_act` | The name of the strategy.                                           |
 
-## Implementation details
+### Implementation details
 
 The ReAct strategy is implemented with the following components:
 
@@ -82,15 +202,15 @@ The ReAct strategy is implemented with the following components:
 
 3. _Edges_ that define the flow between nodes.
 
-## Example use case
+### Example use case
 
 Here is an example of how the ReAct strategy works with a simple banking agent:
 
-### 1. User input
+#### 1. User input
 
 The user sends the initial prompt. For example, this can be a question such as `How much did I spend last month?`.
 
-### 2. Reasoning
+#### 2. Reasoning
 
 The agent performs the initial reasoning by taking the user input and the reasoning prompt. The reasoning can look as
 follows:
@@ -102,7 +222,7 @@ I need to follow these steps:
 3. Calculate total spending
 ```
 
-### 3. Action and execution
+#### 3. Action and execution, phase 1
 
 Based on the action items that the agent defined in the previous step, it runs a tool to get all transactions
 from the previous month.
@@ -125,7 +245,7 @@ The tool returns a result that can look as follows:
 ]
 ```
 
-### 4. Reasoning
+#### 4. Reasoning
 
 With the result returned by the tool, the agent performs reasoning again to determine the next steps in its flow:
 
@@ -135,7 +255,7 @@ I have the transactions. Now I need to:
 2. Sum up the remaining transactions
 ```
 
-### 5. Action and execution
+#### 5. Action and execution, phase 2
 
 Based on the previous reasoning step, the agent calls the `calculate_sum` tool that sums up the amounts provided as
 tool arguments. As the reasoning also resulted in the action point of removing the positive amount from transactions,
@@ -151,7 +271,7 @@ The tool returns the final result:
 -800.00
 ```
 
-### 6. Final response
+#### 6. Final response
 
 The agent returns the final response (assistant message) that includes the calculated sum:
 
@@ -159,7 +279,7 @@ The agent returns the final response (assistant message) that includes the calcu
 You spent $800.00 last month on groceries, rent, and utilities.
 ```
 
-## When to use the ReAct strategy
+### When to use the ReAct strategy
 
 The ReAct strategy is particularly useful for:
 
@@ -168,10 +288,10 @@ The ReAct strategy is particularly useful for:
 - Problems that benefit from breaking down into smaller steps
 - Tasks requiring both analytical thinking and tool usage
 
-## Example
+### Example
 
 Here is a code sample of an AI agent that implements the predefined ReAct strategy (`reActStrategy`) and tools that
-the agent may use in the acting step:
+the agent may use:
 
 <!--- INCLUDE
 import ai.koog.agents.core.agent.AIAgent
@@ -213,4 +333,4 @@ suspend fun main() {
     val result = bankingAgent.run("How much did I spend last month?")
 }
 ```
-<!--- KNIT example-react-strategy-03.kt -->
+<!--- KNIT example-predefined-strategies-05.kt -->
