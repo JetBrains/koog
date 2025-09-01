@@ -28,6 +28,7 @@ knit = "0.5.0"
 [libraries]
 jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "annotations" }
 junit-jupiter-params = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "junit" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
 kotlin-bom = { module = "org.jetbrains.kotlin:kotlin-bom", version.ref = "kotlin" }
 kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
@@ -71,12 +72,7 @@ aws-sdk-kotlin-sts = { module = "aws.sdk.kotlin:sts", version.ref = "aws-sdk-kot
 # Spring
 spring-boot-bom = { module = "org.springframework.boot:spring-boot-dependencies", version.ref = "spring-boot" }
 spring-boot-starter = { module = "org.springframework.boot:spring-boot-starter"}
-spring-boot-actuator = { module = "org.springframework.boot:spring-boot-starter-actuator"}
-spring-boot-security = { module = "org.springframework.boot:spring-boot-starter-security"}
-spring-boot-validation = { module = "org.springframework.boot:spring-boot-starter-validation"}
-spring-boot-web = { module = "org.springframework.boot:spring-boot-starter-web"}
-spring-boot-webflux = { module = "org.springframework.boot:spring-boot-starter-webflux"}
-spring-boot-processor = { module = "org.springframework.boot:spring-boot-configuration-processor"}
+spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test" }
 jackson-module-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin"}
 reactor-kotlin-extensions = { module = "io.projectreactor.kotlin:reactor-kotlin-extensions" }
 
@@ -85,16 +81,6 @@ spring-boot-core = [
     "spring-boot-starter",
     "jackson-module-kotlin",
     "kotlinx-coroutines-reactor"
-]
-
-spring-boot-web = [
-    "spring-boot-web",
-    "spring-boot-webflux"
-]
-
-spring-boot-security = [
-    "spring-boot-security",
-    "spring-boot-validation"
 ]
 
 [plugins]
