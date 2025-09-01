@@ -43,7 +43,6 @@ public interface KoogHttpClient {
     ): String =
         post(path, request, String::class, String::class)
 
-
     /**
      * Initiates a Server-Sent Events (SSE) streaming operation over an HTTP POST request.
      *
