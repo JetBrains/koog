@@ -1,4 +1,4 @@
-# Module prompt-executor-openai-model
+# Module prompt-executor-openai-client-base
 
 Abstract base client and data models for OpenAI-compatible LLM client implementations.
 
