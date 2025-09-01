@@ -9,7 +9,8 @@ import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Loads and configures the environment-specific settings for Koog agents based on the provided
- * application configuration. This includes setup for OpenAI, Anthropic, Google, OpenRouter,
+ * application configuration.
+ * This includes setup for OpenAI, Anthropic, Google, OpenRouter, DeepSeek,
  * Ollama, as well as default and fallback LLM (Large Language Model) configurations.
  *
  * @param envConfig The application configuration that contains environment-specific properties
@@ -22,6 +23,7 @@ internal fun ApplicationEnvironment.loadAgentsConfig(scope: CoroutineScope): Koo
         .anthropic(config)
         .google(config)
         .openrouter(config)
+        .deepSeek(config)
 
     if (config.propertyOrNull("koog.ollama.enable") != null) {
         koogConfig.ollama(config)
@@ -37,6 +39,7 @@ internal fun ApplicationEnvironment.loadAgentsConfig(scope: CoroutineScope): Koo
             "google" -> LLMProvider.Google
             "openrouter" -> LLMProvider.OpenRouter
             "ollama" -> LLMProvider.Ollama
+            "deepseek" -> LLMProvider.DeepSeek
             else -> throw IllegalArgumentException("Unsupported LLM provider: $fallbackProviderStr")
         }
 
@@ -81,6 +84,14 @@ private fun KoogAgentsConfig.ollama(envConfig: ApplicationConfig) = apply {
 private fun KoogAgentsConfig.openrouter(envConfig: ApplicationConfig) =
     config(envConfig.config("koog.openrouter")) { apiKey, baseUrlOrNull ->
         openRouter(apiKey) {
+            baseUrlOrNull?.let { baseUrl = it }
+            timeouts { configure(envConfig.config("timeout")) }
+        }
+    }
+
+private fun KoogAgentsConfig.deepSeek(envConfig: ApplicationConfig) =
+    config(envConfig.config("koog.deepseek")) { apiKey, baseUrlOrNull ->
+        deepSeek(apiKey) {
             baseUrlOrNull?.let { baseUrl = it }
             timeouts { configure(envConfig.config("timeout")) }
         }

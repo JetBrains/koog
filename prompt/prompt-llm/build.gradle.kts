@@ -13,6 +13,7 @@ kotlin {
         commonMain {
             dependencies {
                 api(libs.kotlinx.serialization.core)
+                api(libs.jetbrains.annotations)
             }
         }
     }

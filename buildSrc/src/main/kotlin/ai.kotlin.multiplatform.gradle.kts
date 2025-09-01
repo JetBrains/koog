@@ -4,8 +4,6 @@ import ai.koog.gradle.publish.maven.configureJvmJarManifest
 import ai.koog.gradle.tests.configureTests
 import jetbrains.sign.GpgSignSignatoryProvider
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
-import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsEnvSpec
-import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootPlugin
 
 plugins {
     kotlin("multiplatform")
@@ -16,6 +14,17 @@ plugins {
 }
 
 kotlin {
+    // Tiers are in accordance with <https://kotlinlang.org/docs/native-target-support.html>
+    // Tier 1
+    iosSimulatorArm64()
+    iosX64()
+
+    // Tier 2
+    iosArm64()
+
+    // Tier 3
+
+    // jvm & js
     jvm {
         configureTests()
     }
@@ -54,13 +63,5 @@ signing {
     if (isUnderTeamCity) {
         signatories = GpgSignSignatoryProvider()
         sign(publishing.publications)
-    }
-}
-
-//setupKarmaConfigs()
-
-plugins.withType<NodeJsRootPlugin>().configureEach {
-    extensions.configure<NodeJsEnvSpec> {
-        downloadBaseUrl = "https://packages.jetbrains.team/files/p/grazi/node-mirror"
     }
 }

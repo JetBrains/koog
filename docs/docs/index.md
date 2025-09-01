@@ -25,30 +25,30 @@ Key features of Koog include:
 - **Flexible graph workflows**: Design complex agent behaviors using intuitive graph-based workflows.
 - **Modular feature system**: Customize agent capabilities through a composable architecture.
 - **Scalable architecture**: Handle workloads from simple chatbots to enterprise applications.
-- **Multiplatform**: Run agents on both JVM and JS targets with Kotlin Multiplatform.
+- **Multiplatform**: Run agents on JVM, JS, WasmJS, and iOS targets with Kotlin Multiplatform.
 
-# Available LLM providers and platforms
+## Available LLM providers and platforms
 
 The LLM providers and platforms whose LLMs you can use to power your agent capabilities:
 
 - Google
 - OpenAI
 - Anthropic
+- DeepSeek
 - OpenRouter
 - Ollama
+- Bedrock
 
-# Installation
+For detailed guidance on using these providers with dedicated LLM clients, refer to [Runnning prompts with LLM clients](prompt-api.md#running-prompts-with-llm-clients).
 
-To use the Koog framework, you need to include all necessary dependencies in your build configuration.
-The required package is hosted in the following Maven repository:
 
-```
-https://packages.jetbrains.team/maven/p/grazi/grazie-platform-public
-```
+## Installation
 
-## Gradle
+To use Koog, you need to include all necessary dependencies in your build configuration.
 
-### Gradle (Kotlin DSL)
+### Gradle
+
+#### Gradle (Kotlin DSL)
 
 1. Add dependencies to the `build.gradle.kts` file:
 
@@ -60,7 +60,7 @@ https://packages.jetbrains.team/maven/p/grazi/grazie-platform-public
 
 2. Make sure that you have `mavenCentral()` in the list of repositories.
 
-### Gradle (Groovy)
+#### Gradle (Groovy)
 
 1. Add dependencies to the `build.gradle` file:
 
@@ -72,14 +72,14 @@ https://packages.jetbrains.team/maven/p/grazi/grazie-platform-public
 
 2. Make sure that you have `mavenCentral()` in the list of repositories.
 
-## Maven
+### Maven
 
 1. Add dependencies to the `pom.xml` file:
 
     ```
     <dependency>
         <groupId>ai.koog</groupId>
-        <artifactId>koog-agents</artifactId>
+        <artifactId>koog-agents-jvm</artifactId>
         <version>LATEST_VERSION</version>
     </dependency>
     ```
@@ -87,25 +87,34 @@ https://packages.jetbrains.team/maven/p/grazi/grazie-platform-public
 2. Make sure that you have `mavenCentral` in the list of repositories.
 
 
-# Quickstart example
+## Quickstart example
 
 To help you get started with AI agents, here is a quick example of a single-run agent:
 
 !!! note
     Before you run the example, assign a corresponding API key as an environment variable. For details, see [Getting started](single-run-agents.md).
 
+<!--- INCLUDE
+import ai.koog.agents.core.agent.AIAgent
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+import kotlinx.coroutines.runBlocking
+-->
 ```kotlin
-fun main() = runBlocking {
-    val apiKey = System.getenv("OPENAI_API_KEY") // or Anthropic, Google, OpenRouter, etc.
+fun main() {
+    runBlocking {
+        val apiKey = System.getenv("OPENAI_API_KEY") // or Anthropic, Google, OpenRouter, etc.
 
-    val agent = AIAgent(
-        executor = simpleOpenAIExecutor(apiKey), // or Anthropic, Google, OpenRouter, etc.
-        systemPrompt = "You are a helpful assistant. Answer user questions concisely.",
-        llmModel = OpenAIModels.Chat.GPT4o
-    )
-    
-    val result = agent.runAndGetResult("Hello! How can you help me?")
-    println(result)
+        val agent = AIAgent(
+            executor = simpleOpenAIExecutor(apiKey), // or Anthropic, Google, OpenRouter, etc.
+            systemPrompt = "You are a helpful assistant. Answer user questions concisely.",
+            llmModel = OpenAIModels.Chat.GPT4o
+        )
+
+        val result = agent.run("Hello! How can you help me?")
+        println(result)
+    }
 }
 ```
+<!--- KNIT example-index-01.kt -->
 For more details, see [Getting started](single-run-agents.md).

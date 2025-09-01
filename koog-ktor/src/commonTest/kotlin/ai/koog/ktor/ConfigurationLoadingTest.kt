@@ -35,6 +35,9 @@ class ConfigurationLoadingTest {
         // Verify OpenRouter configuration
         assertNotNull(koogConfig.llmConnections[LLMProvider.OpenRouter])
 
+        // Verify DeepSeek configuration
+        assertNotNull(koogConfig.llmConnections[LLMProvider.DeepSeek])
+
         // Verify Ollama configuration
         assertNotNull(koogConfig.llmConnections[LLMProvider.Ollama])
 
@@ -79,6 +82,7 @@ class ConfigurationLoadingTest {
         assertNull(koogConfig.llmConnections[LLMProvider.Anthropic])
         assertNull(koogConfig.llmConnections[LLMProvider.Google])
         assertNull(koogConfig.llmConnections[LLMProvider.OpenRouter])
+        assertNull(koogConfig.llmConnections[LLMProvider.DeepSeek])
         assertNull(koogConfig.llmConnections[LLMProvider.Ollama])
     }
 
@@ -95,6 +99,7 @@ class ConfigurationLoadingTest {
         assertNull(koogConfig.llmConnections[LLMProvider.OpenAI])
         assertNull(koogConfig.llmConnections[LLMProvider.Google])
         assertNull(koogConfig.llmConnections[LLMProvider.OpenRouter])
+        assertNull(koogConfig.llmConnections[LLMProvider.DeepSeek])
         assertNull(koogConfig.llmConnections[LLMProvider.Ollama])
     }
 
@@ -111,6 +116,7 @@ class ConfigurationLoadingTest {
         assertNull(koogConfig.llmConnections[LLMProvider.OpenAI])
         assertNull(koogConfig.llmConnections[LLMProvider.Anthropic])
         assertNull(koogConfig.llmConnections[LLMProvider.OpenRouter])
+        assertNull(koogConfig.llmConnections[LLMProvider.DeepSeek])
         assertNull(koogConfig.llmConnections[LLMProvider.Ollama])
     }
 
@@ -126,6 +132,24 @@ class ConfigurationLoadingTest {
         // Verify no other providers
         assertNull(koogConfig.llmConnections[LLMProvider.OpenAI])
         assertNull(koogConfig.llmConnections[LLMProvider.Anthropic])
+        assertNull(koogConfig.llmConnections[LLMProvider.Google])
+        assertNull(koogConfig.llmConnections[LLMProvider.DeepSeek])
+        assertNull(koogConfig.llmConnections[LLMProvider.Ollama])
+    }
+
+    @Test
+    fun testLoadDeepSeekConfiguration() = runTest {
+        val koogConfig = applicationEnvironment {
+            config = createConfigFromResource("deepseek_config.yaml")
+        }.loadAgentsConfig(GlobalScope)
+
+        // Verify DeepSeek configuration
+        assertNotNull(koogConfig.llmConnections[LLMProvider.DeepSeek])
+
+        // Verify no other providers
+        assertNull(koogConfig.llmConnections[LLMProvider.OpenAI])
+        assertNull(koogConfig.llmConnections[LLMProvider.Anthropic])
+        assertNull(koogConfig.llmConnections[LLMProvider.OpenRouter])
         assertNull(koogConfig.llmConnections[LLMProvider.Google])
         assertNull(koogConfig.llmConnections[LLMProvider.Ollama])
     }
@@ -198,6 +222,13 @@ class ConfigurationLoadingTest {
                 config.put("koog.openrouter.timeout.connectTimeoutMillis", "30000")
                 config.put("koog.openrouter.timeout.socketTimeoutMillis", "60000")
 
+                // DeepSeek configuration
+                config.put("koog.deepseek.apikey", "test-deepseek-api-key")
+                config.put("koog.deepseek.baseUrl", "https://api.deepseek.com")
+                config.put("koog.deepseek.timeout.requestTimeoutMillis", "60000")
+                config.put("koog.deepseek.timeout.connectTimeoutMillis", "30000")
+                config.put("koog.deepseek.timeout.socketTimeoutMillis", "60000")
+
                 // Ollama configuration
                 config.put("koog.ollama.enable", "true")
                 config.put("koog.ollama.baseUrl", "http://localhost:11434")
@@ -258,6 +289,15 @@ class ConfigurationLoadingTest {
                 config.put("koog.openrouter.timeout.requestTimeoutMillis", "60000")
                 config.put("koog.openrouter.timeout.connectTimeoutMillis", "30000")
                 config.put("koog.openrouter.timeout.socketTimeoutMillis", "60000")
+            }
+
+            "deepseek_config.yaml" -> {
+                // OpenRouter configuration
+                config.put("koog.deepseek.apikey", "test-deepseek-api-key")
+                config.put("koog.deepseek.baseUrl", "https://api.deepseek.com")
+                config.put("koog.deepseek.timeout.requestTimeoutMillis", "60000")
+                config.put("koog.deepseek.timeout.connectTimeoutMillis", "30000")
+                config.put("koog.deepseek.timeout.socketTimeoutMillis", "60000")
             }
 
             "ollama_config.yaml" -> {

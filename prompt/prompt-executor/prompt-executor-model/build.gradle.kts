@@ -17,27 +17,6 @@ kotlin {
                 api(libs.oshai.kotlin.logging)
             }
         }
-
-        commonTest {
-            dependencies {
-                implementation(kotlin("test"))
-                implementation(libs.kotlinx.coroutines.test)
-            }
-        }
-
-        jvmTest {
-            dependencies {
-                implementation(kotlin("test-junit5"))
-                runtimeOnly(libs.slf4j.simple)
-            }
-        }
-
-        jsTest {
-            dependencies {
-                implementation(kotlin("test-js"))
-                runtimeOnly(libs.slf4j.simple)
-            }
-        }
     }
 
     explicitApi()

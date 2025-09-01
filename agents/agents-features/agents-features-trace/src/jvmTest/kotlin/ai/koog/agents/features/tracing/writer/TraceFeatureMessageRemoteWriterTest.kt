@@ -7,6 +7,7 @@ import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
 import ai.koog.agents.core.dsl.extension.onAssistantMessage
 import ai.koog.agents.core.dsl.extension.onToolCall
+import ai.koog.agents.core.feature.message.FeatureMessage
 import ai.koog.agents.core.feature.model.AIAgentFinishedEvent
 import ai.koog.agents.core.feature.model.AIAgentNodeExecutionEndEvent
 import ai.koog.agents.core.feature.model.AIAgentNodeExecutionStartEvent
@@ -18,11 +19,10 @@ import ai.koog.agents.core.feature.model.BeforeLLMCallEvent
 import ai.koog.agents.core.feature.model.DefinedFeatureEvent
 import ai.koog.agents.core.feature.model.ToolCallEvent
 import ai.koog.agents.core.feature.model.ToolCallResultEvent
+import ai.koog.agents.core.feature.remote.client.FeatureMessageRemoteClient
 import ai.koog.agents.core.feature.remote.client.config.AIAgentFeatureClientConnectionConfig
 import ai.koog.agents.core.feature.remote.server.config.AIAgentFeatureServerConnectionConfig
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.features.common.message.FeatureMessage
-import ai.koog.agents.features.common.remote.client.FeatureMessageRemoteClient
 import ai.koog.agents.features.tracing.eventString
 import ai.koog.agents.features.tracing.feature.Tracing
 import ai.koog.agents.features.tracing.mock.MockLLMProvider
@@ -63,9 +63,7 @@ import kotlin.time.Duration.Companion.seconds
 class TraceFeatureMessageRemoteWriterTest {
 
     companion object {
-        private val logger = KotlinLogging.logger(
-            "ai.koog.agents.features.tracing.writer.TraceFeatureMessageRemoteWriterTest"
-        )
+        private val logger = KotlinLogging.logger { }
         private val defaultClientServerTimeout = 30.seconds
         private const val HOST = "127.0.0.1"
     }
@@ -232,7 +230,7 @@ class TraceFeatureMessageRemoteWriterTest {
             FeatureMessageRemoteClient(connectionConfig = clientConfig, scope = this).use { client ->
 
                 var runId = ""
-                val expectedEventsCount = 18
+                val expectedEventsCount = 20
 
                 val collectEventsJob = launch {
                     client.receivedMessages.consumeAsFlow().collect { event ->
@@ -241,6 +239,7 @@ class TraceFeatureMessageRemoteWriterTest {
                         }
 
                         actualEvents.add(event as DefinedFeatureEvent)
+                        logger.info { "[${actualEvents.size}/$expectedEventsCount] Received event: $event" }
 
                         if (actualEvents.size >= expectedEventsCount) {
                             cancel()
@@ -345,6 +344,17 @@ class TraceFeatureMessageRemoteWriterTest {
                         input = toolResult("0", dummyTool.name, dummyTool.result, dummyTool.result).toString(),
                         output = assistantMessage(mockResponse).toString()
                     ),
+                    AIAgentNodeExecutionStartEvent(
+                        runId = runId,
+                        nodeName = "__finish__",
+                        input = mockResponse
+                    ),
+                    AIAgentNodeExecutionEndEvent(
+                        runId = runId,
+                        nodeName = "__finish__",
+                        input = mockResponse,
+                        output = mockResponse
+                    ),
                     AIAgentStrategyFinishedEvent(
                         runId = runId,
                         strategyName = strategyName,
@@ -365,9 +375,6 @@ class TraceFeatureMessageRemoteWriterTest {
                     expectedEvents.size,
                     "expectedEventsCount variable in the test need to be updated"
                 )
-                assertContentEquals(expectedEvents, actualEvents)
-
-                assertEquals(expectedEvents.size, actualEvents.size)
                 assertContentEquals(expectedEvents, actualEvents)
 
                 isClientFinished.complete(true)
@@ -586,6 +593,7 @@ class TraceFeatureMessageRemoteWriterTest {
                         }
 
                         actualEvents.add(event as DefinedFeatureEvent)
+                        logger.info { "[${actualEvents.size}/$expectedEventsCount] Received event: $event" }
 
                         if (actualEvents.size >= expectedEventsCount) {
                             cancel()

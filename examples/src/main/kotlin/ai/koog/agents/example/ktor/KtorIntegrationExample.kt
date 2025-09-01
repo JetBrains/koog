@@ -9,10 +9,8 @@ import ai.koog.ktor.Koog
 import ai.koog.ktor.aiAgent
 import ai.koog.ktor.llm
 import ai.koog.ktor.mcp
-import ai.koog.ktor.singleRunAgent
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.model.PromptExecutorExt.execute
 import ai.koog.prompt.llm.OllamaModels
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
@@ -129,9 +127,9 @@ private fun Route.agenticRoutes() {
                 user(userRequest)
             },
             OllamaModels.Meta.LLAMA_3_2
-        )
+        ).single()
 
-        val output = singleRunAgent(updatedRequest.content, OpenAIModels.Chat.GPT4_1)
+        val output = aiAgent(updatedRequest.content, OpenAIModels.Chat.GPT4_1)
         call.respond(HttpStatusCode.OK, output)
     }
     get("organization") {

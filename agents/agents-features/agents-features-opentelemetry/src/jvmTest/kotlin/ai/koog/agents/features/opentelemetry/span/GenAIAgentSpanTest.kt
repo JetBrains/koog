@@ -1,5 +1,6 @@
 package ai.koog.agents.features.opentelemetry.span
 
+import ai.koog.agents.features.opentelemetry.event.EventBodyFields
 import ai.koog.agents.features.opentelemetry.mock.MockAttribute
 import ai.koog.agents.features.opentelemetry.mock.MockGenAIAgentEvent
 import ai.koog.agents.features.opentelemetry.mock.MockGenAIAgentSpan
@@ -102,25 +103,92 @@ class GenAIAgentSpanTest {
         span.span = mockSpan
 
         val events = listOf(
-            MockGenAIAgentEvent(
-                name = "event1",
-                attributes = listOf(
-                    MockAttribute("key1", "value1"),
-                    MockAttribute("key2", 42)
-                )
-            ),
-            MockGenAIAgentEvent(
-                name = "event2",
-                attributes = listOf(
-                    MockAttribute("key3", true)
-                )
-            )
+            MockGenAIAgentEvent(name = "event1").apply {
+                addAttribute(MockAttribute("key1", "value1"))
+                addAttribute(MockAttribute("key2", 42))
+            },
+            MockGenAIAgentEvent(name = "event2").apply {
+                addAttribute(MockAttribute("key3", true))
+            },
+        )
+
+        events.forEach { event -> span.addEvent(event) }
+
+        // Verify events were added to the internal events set
+        assertEquals(2, span.events.size)
+        assertTrue(span.events.contains(events[0]))
+        assertTrue(span.events.contains(events[1]))
+    }
+
+    @Test
+    fun `addEvents should handle duplicate events`() {
+        val span = MockGenAIAgentSpan("test.span")
+        val mockSpan = MockSpan()
+        span.span = mockSpan
+
+        val event = MockGenAIAgentEvent(name = "duplicate-event").apply {
+            addAttribute(MockAttribute("key", "value"))
+        }
+
+        // Add the same event twice
+        span.addEvent(event)
+        span.addEvent(event)
+
+        // Verify that both event were added
+        assertEquals(2, span.events.size)
+        assertTrue(span.events.contains(event))
+    }
+
+    @Test
+    fun `addEvents should handle events with body fields`() {
+        val span = MockGenAIAgentSpan("test.span")
+        val mockSpan = MockSpan()
+        span.span = mockSpan
+
+        val event = MockGenAIAgentEvent(name = "event-with-body-fields").apply {
+            addAttribute(MockAttribute("key", "value"))
+            addBodyField(EventBodyFields.Content("test content"))
+        }
+
+        span.addEvent(event)
+
+        // Verify the event was added
+        assertEquals(1, span.events.size)
+        assertTrue(span.events.contains(event))
+    }
+
+    @Test
+    fun `addAttributes(list) should add multiple attributes to span`() {
+        val span = MockGenAIAgentSpan("test.span")
+        val mockSpan = MockSpan()
+        span.span = mockSpan
+
+        val attributes = listOf(
+            MockAttribute("stringKey", "stringValue"),
+            MockAttribute("numberKey", 123),
+            MockAttribute("booleanKey", true)
+        )
+
+        span.addAttributes(attributes)
+
+        assertEquals(3, span.attributes.size)
+        assertTrue(span.attributes.containsAll(attributes))
+    }
+
+    @Test
+    fun `addEvents(list) should add multiple events to span`() {
+        val span = MockGenAIAgentSpan("test.span")
+        val mockSpan = MockSpan()
+        span.span = mockSpan
+
+        val events = listOf(
+            MockGenAIAgentEvent(name = "event1").apply { addAttribute(MockAttribute("stringKey", "stringValue")) },
+            MockGenAIAgentEvent(name = "event2").apply { addAttribute(MockAttribute("numberKey", 2)) },
         )
 
         span.addEvents(events)
 
-        // Since we can't directly verify the events were added (MockSpan doesn't track them),
-        // we're just verifying the method doesn't throw exceptions
-        assertTrue(true, "addEvents completed without exceptions")
+        assertEquals(2, span.events.size)
+        assertTrue(span.events.containsAll(events))
     }
 }

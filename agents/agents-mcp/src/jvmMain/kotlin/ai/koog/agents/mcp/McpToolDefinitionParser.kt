@@ -91,6 +91,25 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
                     return parseParameterType(nonNullType, depth + 1)
                 }
             }
+
+            /**
+             * Special case for enum string types.
+             * Schema example:
+             * {
+             *   "enumParam": {
+             *     "enum": [
+             *       "value1",
+             *       "value2"
+             *     ],
+             *     "title": "Enum string parameter"
+             *   }
+             * }
+             */
+            val enum = element["enum"]?.jsonArray
+            if (enum != null && enum.isNotEmpty()) {
+                return ToolParameterType.Enum(enum.map { it.jsonPrimitive.content }.toTypedArray())
+            }
+
             val title =
                 element["title"]?.jsonPrimitive?.content ?: element["description"]?.jsonPrimitive?.content.orEmpty()
             throw IllegalArgumentException("Parameter $title must have type property")

@@ -9,8 +9,8 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.extension.dropTrailingToolCalls
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentPipeline
+import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.tools.annotations.LLMDescription
-import ai.koog.agents.features.common.config.FeatureConfig
 import ai.koog.agents.memory.config.MemoryScopeType
 import ai.koog.agents.memory.config.MemoryScopesProfile
 import ai.koog.agents.memory.model.Concept
@@ -28,6 +28,8 @@ import ai.koog.agents.memory.providers.NoMemory
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.structure.StructuredOutput
+import ai.koog.prompt.structure.StructuredOutputConfig
 import ai.koog.prompt.structure.json.JsonStructuredData
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.Serializable
@@ -554,7 +556,10 @@ internal suspend fun AIAgentLLMWriteSession.retrieveFactsFromHistory(
 
     val facts = when (concept.factType) {
         FactType.SINGLE -> {
-            val response = requestLLMStructured(JsonStructuredData.createJsonStructure<FactStructure>())
+            val response = requestLLMStructured(
+                config = StructuredOutputConfig(default = StructuredOutput.Manual(JsonStructuredData.createJsonStructure<FactStructure>()))
+            )
+
             SingleFact(
                 concept = concept,
                 value = response.getOrNull()?.structure?.fact ?: "No facts extracted",
@@ -563,7 +568,9 @@ internal suspend fun AIAgentLLMWriteSession.retrieveFactsFromHistory(
         }
 
         FactType.MULTIPLE -> {
-            val response = requestLLMStructured(JsonStructuredData.createJsonStructure<FactListStructure>())
+            val response = requestLLMStructured(
+                config = StructuredOutputConfig(default = StructuredOutput.Manual(JsonStructuredData.createJsonStructure<FactListStructure>()))
+            )
             val factsList = response.getOrNull()?.structure?.facts ?: emptyList()
             MultipleFacts(concept = concept, values = factsList.map { it.fact }, timestamp = timestamp)
         }

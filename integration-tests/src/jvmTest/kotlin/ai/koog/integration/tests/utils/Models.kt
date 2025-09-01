@@ -22,19 +22,18 @@ object Models {
         return Stream.of(
             OpenAIModels.Chat.GPT4o,
             OpenAIModels.Chat.GPT4_1,
+            OpenAIModels.Chat.GPT5,
+            OpenAIModels.Chat.GPT5Mini,
+            OpenAIModels.Chat.GPT5Nano,
 
-            OpenAIModels.Reasoning.GPT4oMini,
+            OpenAIModels.Reasoning.O4Mini,
             OpenAIModels.Reasoning.O3Mini,
-            OpenAIModels.Reasoning.O1Mini,
             OpenAIModels.Reasoning.O3,
             OpenAIModels.Reasoning.O1,
 
-            OpenAIModels.CostOptimized.O4Mini,
             OpenAIModels.CostOptimized.GPT4_1Nano,
             OpenAIModels.CostOptimized.GPT4_1Mini,
-
-            OpenAIModels.Audio.GPT4oMiniAudio,
-            OpenAIModels.Audio.GPT4oAudio,
+            OpenAIModels.CostOptimized.GPT4oMini,
         )
     }
 
@@ -56,20 +55,11 @@ object Models {
     @JvmStatic
     fun googleModels(): Stream<LLModel> {
         return Stream.of(
-            GoogleModels.Gemini1_5Pro,
-            GoogleModels.Gemini1_5ProLatest,
             GoogleModels.Gemini2_5Pro,
-
             GoogleModels.Gemini2_0Flash,
             GoogleModels.Gemini2_0Flash001,
             GoogleModels.Gemini2_0FlashLite,
             GoogleModels.Gemini2_0FlashLite001,
-            GoogleModels.Gemini1_5Flash,
-            GoogleModels.Gemini1_5FlashLatest,
-            GoogleModels.Gemini1_5Flash002,
-            GoogleModels.Gemini1_5Flash8B,
-            GoogleModels.Gemini1_5Flash8B001,
-            GoogleModels.Gemini1_5Flash8BLatest,
             GoogleModels.Gemini2_5Flash,
         )
     }
@@ -83,10 +73,13 @@ object Models {
         )
     }
 
-    // Adding only free LLM profile until more are bought
     @JvmStatic
     fun openRouterModels(): Stream<LLModel> = Stream.of(
-        OpenRouterModels.Phi4Reasoning
+        OpenRouterModels.GPT5Nano,
+        OpenRouterModels.DeepSeekV30324,
+        OpenRouterModels.Claude4Sonnet,
+        // ToDo add Gemini when KG-203 is fixed
+        // OpenRouterModels.Gemini2_5FlashLite,
     )
 
     @JvmStatic
@@ -115,7 +108,6 @@ object Models {
      * to signal one does not have an API key for this or that provider
      *
      * @param provider The LLM provider to check
-     * @param skipProvidersOverride Optional override for the skip providers list, used for testing
      */
     @JvmStatic
     fun assumeAvailable(provider: LLMProvider) {

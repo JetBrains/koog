@@ -12,14 +12,6 @@ import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
-import kotlin.collections.filter
-import kotlin.collections.joinToString
-import kotlin.collections.map
-import kotlin.collections.sum
-import kotlin.text.split
-import kotlin.text.toDoubleOrNull
-import kotlin.text.toInt
-import kotlin.text.trim
 
 @Serializable
 enum class TransactionCategory(val title: String) {
@@ -143,7 +135,7 @@ fun main() = runBlocking {
 
     val agent = AIAgent(
         executor = simpleOpenAIExecutor(apiKey),
-        llmModel = OpenAIModels.Reasoning.GPT4oMini,
+        llmModel = OpenAIModels.CostOptimized.GPT4oMini,
         systemPrompt = bankingAssistantSystemPrompt + transactionAnalysisPrompt,
         temperature = 0.0,
         toolRegistry = toolRegistry

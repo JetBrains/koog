@@ -11,7 +11,8 @@ building a simple chatbot, a complex data processing pipeline, or anything in be
 
 At a high level, a strategy graph consists of the following components:
 
-- **Strategy**: the top-level container for the graph, created using the `strategy` function.
+- **Strategy**: the top-level container for the graph, created using the `strategy` function with the specified input 
+  and output types using generic parameters.
 - **Subgraphs**: sections of the graph that can have their own set of tools and context.
 - **Nodes**: individual operations or transformations in the workflow.
 - **Edges**: connections between nodes that define transition conditions and transformations.
@@ -34,13 +35,25 @@ For details, see [Predefined nodes and components](nodes-and-components.md) and 
 Edges connect nodes and define the flow of operation in the strategy graph.
 An edge is created using the `edge` function and the `forwardTo` infix function:
 
+<!--- INCLUDE
+import ai.koog.agents.core.dsl.builder.forwardTo
+import ai.koog.agents.core.dsl.builder.strategy
+
+val strategy = strategy<String, String>("strategy_name") {
+        val sourceNode by node<String, String> { input -> input }
+        val targetNode by node<String, String> { input -> input }
+-->
+<!--- SUFFIX
+}
+-->
 ```kotlin
 edge(sourceNode forwardTo targetNode)
 ```
+<!--- KNIT example-custom-strategy-graphs-01.kt -->
 
 #### Conditions
 
-Conditions determine when to follow a particular edge in the strategy graph. There are several types of conditions:
+Conditions determine when to follow a particular edge in the strategy graph. There are several types of conditions, here are some common ones:
 
 | Condition type      | Description                                                                              |
 |---------------------|------------------------------------------------------------------------------------------|
@@ -52,34 +65,74 @@ Conditions determine when to follow a particular edge in the strategy graph. The
 
 You can transform the output before passing it to the target node by using the `transformed` function:
 
+<!--- INCLUDE
+import ai.koog.agents.core.dsl.builder.forwardTo
+import ai.koog.agents.core.dsl.builder.strategy
+
+val strategy = strategy<String, String>("strategy_name") {
+        val sourceNode by node<String, String> { input -> input }
+        val targetNode by node<String, String> { input -> input }
+-->
+<!--- SUFFIX
+}
+-->
 ```kotlin
 edge(sourceNode forwardTo targetNode 
         onCondition { input -> input.length > 10 }
         transformed { input -> input.uppercase() }
 )
 ```
+<!--- KNIT example-custom-strategy-graphs-02.kt -->
+
 
 ### Subgraphs
 
 Subgraphs are sections of the strategy graph that operate with their own set of tools and context.
 The strategy graph can contain multiple subgraphs. Each subgraph is defined by using the `subgraph` function:
 
+<!--- INCLUDE
+import ai.koog.agents.core.dsl.builder.strategy
+
+typealias Input = String
+typealias Output = Int
+
+typealias FirstInput = String
+typealias FirstOutput = Int
+
+typealias SecondInput = String
+typealias SecondOutput = Int
+-->
 ```kotlin
-val strategy = strategy("strategy-name") {
-    val firstSubgraph by subgraph("first") {
+val strategy = strategy<Input, Output>("strategy-name") {
+    val firstSubgraph by subgraph<FirstInput, FirstOutput>("first") {
         // Define nodes and edges for this subgraph
     }
-    val secondSubgraph by subgraph("second") {
+    val secondSubgraph by subgraph<SecondInput, SecondOutput>("second") {
         // Define nodes and edges for this subgraph
     }
 }
 ```
+<!--- KNIT example-custom-strategy-graphs-03.kt -->
+
 A subgraph can use any tool from a tool registry. 
 However, you can specify a subset of tools from this registry that can be used in the subgraph and pass it as an argument to the `subgraph` function:
 
+<!--- INCLUDE
+import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.ext.tool.SayToUser
+
+typealias Input = String
+typealias Output = Int
+
+typealias FirstInput = String
+typealias FirstOutput = Int
+
+val someTool = SayToUser
+
+-->
 ```kotlin
-val strategy = strategy("strategy-name") {
-    val firstSubgraph by subgraph(
+val strategy = strategy<Input, Output>("strategy-name") {
+    val firstSubgraph by subgraph<FirstInput, FirstOutput>(
         name = "first",
         tools = listOf(someTool)
     ) {
@@ -88,6 +141,7 @@ val strategy = strategy("strategy-name") {
    // Define other subgraphs
 }
 ```
+<!--- KNIT example-custom-strategy-graphs-04.kt -->
 
 ## Basic strategy graph creation
 
@@ -105,8 +159,18 @@ The basic strategy graph operates as follows:
 
 Here is an example of a basic strategy graph:
 
+<!--- INCLUDE
+import ai.koog.agents.core.dsl.builder.forwardTo
+import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.extension.nodeExecuteTool
+import ai.koog.agents.core.dsl.extension.nodeLLMRequest
+import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
+import ai.koog.agents.core.dsl.extension.onAssistantMessage
+import ai.koog.agents.core.dsl.extension.onToolCall
+
+-->
 ```kotlin
-val myStrategy = strategy("my-strategy") {
+val myStrategy = strategy<String, String>("my-strategy") {
     val nodeCallLLM by nodeLLMRequest()
     val executeToolCall by nodeExecuteTool()
     val sendToolResult by nodeLLMSendToolResult()
@@ -119,6 +183,8 @@ val myStrategy = strategy("my-strategy") {
     edge(sendToolResult forwardTo executeToolCall onToolCall { true })
 }
 ```
+<!--- KNIT example-custom-strategy-graphs-05.kt -->
+
 ## Advanced strategy techniques
 
 ### History compression
@@ -129,6 +195,19 @@ For long-running conversations, the history can grow large and consume a lot of 
 
 For workflows that require executing multiple tools in parallel, you can use the `nodeExecuteMultipleTools` node:
 
+<!--- INCLUDE
+import ai.koog.agents.core.dsl.builder.forwardTo
+import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.extension.nodeExecuteMultipleTools
+import ai.koog.agents.core.dsl.extension.nodeLLMSendMultipleToolResults
+import ai.koog.prompt.message.Message
+
+val strategy = strategy<String, String>("strategy_name") {
+    val someNode by node<String, List<Message.Tool.Call>> { emptyList() }
+-->
+<!--- SUFFIX
+}
+-->
 ```kotlin
 val executeMultipleTools by nodeExecuteMultipleTools()
 val processMultipleResults by nodeLLMSendMultipleToolResults()
@@ -136,19 +215,69 @@ val processMultipleResults by nodeLLMSendMultipleToolResults()
 edge(someNode forwardTo executeMultipleTools)
 edge(executeMultipleTools forwardTo processMultipleResults)
 ```
+<!--- KNIT example-custom-strategy-graphs-06.kt -->
 
 You can also use the `toParallelToolCallsRaw` extension function for streaming data:
 
+<!--- INCLUDE
+/*
+-->
+<!--- SUFFIX
+*/
+-->
 ```kotlin
 parseMarkdownStreamToBooks(markdownStream).toParallelToolCallsRaw(BookTool::class).collect()
 ```
+<!--- KNIT example-custom-strategy-graphs-07.kt -->
 
 To learn more, see [Tools](tools-overview.md#parallel-tool-calls). 
+
+### Parallel node execution 
+
+Parallel node execution lets you run multiple nodes concurrently, improving performance and enabling complex workflows.
+
+To initiate parallel node runs, use the `parallel` method:
+
+<!--- INCLUDE
+import ai.koog.agents.core.dsl.builder.strategy
+
+val strategy = strategy<String, String>("strategy_name") {
+    val nodeCalcTokens by node<String, Int> { 42 }
+    val nodeCalcSymbols by node<String, Int> { 42 }
+    val nodeCalcWords by node<String, Int> { 42 }
+
+-->
+<!--- SUFFIX
+}
+-->
+```kotlin
+val calc by parallel<String, Int>(
+    nodeCalcTokens, nodeCalcSymbols, nodeCalcWords,
+) {
+    selectByMax { it }
+}
+```
+<!--- KNIT example-custom-strategy-graphs-08.kt -->
+
+The code above creates a node named `calc` that runs the `nodeCalcTokens`, `nodeCalcSymbols`, and `nodeCalcWords` nodes 
+in parallel and returns the results as an instance of `AsyncParallelResult`.
+
+For more information related to parallel node execution and a detailed reference, see [Parallel node execution](parallel-node-execution.md).
 
 ### Conditional branching
 
 For complex workflows that require different paths based on certain conditions, you can use conditional branching:
 
+<!--- INCLUDE
+import ai.koog.agents.core.dsl.builder.forwardTo
+import ai.koog.agents.core.dsl.builder.strategy
+
+val strategy = strategy<String, String>("strategy_name") {
+    val someNode by node<String, String> { it }
+-->
+<!--- SUFFIX
+}
+-->
 ```kotlin
 val branchA by node<String, String> { input ->
     // Logic for branch A
@@ -169,6 +298,7 @@ edge(
             onCondition { input -> input.contains("B") }
 )
 ```
+<!--- KNIT example-custom-strategy-graphs-09.kt -->
 
 ## Best practices
 
@@ -189,13 +319,26 @@ When you create custom strategy graphs, follow these best practices:
 
 The tone analysis strategy is a good example of a tool-based strategy that includes history compression:
 
+<!--- INCLUDE
+import ai.koog.agents.core.agent.entity.AIAgentStrategy
+import ai.koog.agents.core.dsl.builder.forwardTo
+import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.extension.nodeExecuteTool
+import ai.koog.agents.core.dsl.extension.nodeLLMCompressHistory
+import ai.koog.agents.core.dsl.extension.nodeLLMRequest
+import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
+import ai.koog.agents.core.dsl.extension.onAssistantMessage
+import ai.koog.agents.core.dsl.extension.onToolCall
+import ai.koog.agents.core.environment.ReceivedToolResult
+import ai.koog.agents.core.tools.ToolRegistry
+-->
 ```kotlin
-fun toneStrategy(name: String, toolRegistry: ToolRegistry): AIAgentStrategy {
+fun toneStrategy(name: String, toolRegistry: ToolRegistry): AIAgentStrategy<String, String> {
     return strategy(name) {
         val nodeSendInput by nodeLLMRequest()
         val nodeExecuteTool by nodeExecuteTool()
         val nodeSendToolResult by nodeLLMSendToolResult()
-        val nodeCompressHistory by nodeLLMCompressHistory<Message.Tool.Result>()
+        val nodeCompressHistory by nodeLLMCompressHistory<ReceivedToolResult>()
 
         // Define the flow of the agent
         edge(nodeStart forwardTo nodeSendInput)
@@ -240,6 +383,7 @@ fun toneStrategy(name: String, toolRegistry: ToolRegistry): AIAgentStrategy {
     }
 }
 ```
+<!--- KNIT example-custom-strategy-graphs-10.kt -->
 
 This strategy does the following:
 

@@ -7,6 +7,7 @@ import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
+import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.handler.AfterLLMCallContext
 import ai.koog.agents.core.feature.handler.AfterLLMCallHandler
 import ai.koog.agents.core.feature.handler.AfterNodeHandler
@@ -49,7 +50,6 @@ import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolResult
-import ai.koog.agents.features.common.config.FeatureConfig
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.LLModel
@@ -158,7 +158,7 @@ public class AIAgentPipeline {
     internal suspend fun prepareFeatures() {
         withContext(featurePrepareDispatcher) {
             registeredFeatures.values.forEach { featureConfig ->
-                featureConfig.messageProcessor.map { processor ->
+                featureConfig.messageProcessors.map { processor ->
                     launch {
                         logger.debug { "Start preparing processor: ${processor::class.simpleName}" }
                         processor.initialize()
@@ -176,7 +176,7 @@ public class AIAgentPipeline {
      * ensuring resources are released appropriately.
      */
     internal suspend fun closeFeaturesStreamProviders() {
-        registeredFeatures.values.forEach { config -> config.messageProcessor.forEach { provider -> provider.close() } }
+        registeredFeatures.values.forEach { config -> config.messageProcessors.forEach { provider -> provider.close() } }
     }
 
     //region Trigger Agent Handlers
@@ -667,8 +667,8 @@ public class AIAgentPipeline {
      * Example:
      * ```
      * pipeline.interceptStrategyStarted(InterceptContext) {
-     *     val strategyId = strategy.id
-     *     logger.info("Strategy $strategyId has started execution")
+     *     val strategyName = strategy.name
+     *     logger.info("Strategy $strategyName has started execution")
      * }
      * ```
      */

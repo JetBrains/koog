@@ -38,43 +38,65 @@ ai/agents/agents-features/agents-features-event-handler/ai.koog.agents.local.fea
 
 To install the feature and configure event handlers for the agent, do the following:
 
+<!--- INCLUDE
+import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.features.eventHandler.feature.handleEvents
+import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
+import ai.koog.prompt.llm.OllamaModels
+
+val agent = AIAgent(
+    executor = simpleOllamaAIExecutor(),
+    llmModel = OllamaModels.Meta.LLAMA_3_2,
+) {
+-->
+<!--- SUFFIX 
+} 
+-->
+
 ```kotlin
-{
-    install(EventHandler){
-        // Define event handlers here
-        onToolCall = { stage, tool, toolArgs ->
-            // Handle tool call event
-        }
-
-        onAgentFinished = { strategyName, result ->
-            // Handle event triggered when the agent completes its execution
-        }
-
-        // Define other event handlers
+handleEvents {
+    // Handle tool calls
+    onToolCall { eventContext ->
+        println("Tool called: ${eventContext.tool} with args ${eventContext.toolArgs}")
     }
+    // Handle event triggered when the agent completes its execution
+    onAgentFinished { eventContext ->
+        println("Agent finished with result: ${eventContext.result}")
+    }
+
+    // Other event handlers
 }
 ```
+<!--- KNIT example-events-01.kt -->
 
 For more details about event handler configuration, see [API reference](https://api.koog.ai/agents/agents-features/agents-features-event-handler/ai.koog.agents.local.features.eventHandler.feature/-event-handler-config/index.html).
 
 You can also set up event handlers using the `handleEvents` extension function when creating an agent.
 This function also installs the event handler feature and configures event handlers for the agent. Here is an example:
 
+<!--- INCLUDE
+import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.features.eventHandler.feature.handleEvents
+import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
+import ai.koog.prompt.llm.OllamaModels
+-->
 ```kotlin
 val agent = AIAgent(
-    // Initialization options
+    executor = simpleOllamaAIExecutor(),
+    llmModel = OllamaModels.Meta.LLAMA_3_2,
 ){
     handleEvents {
         // Handle tool calls
-        onToolCall = { stage, tool, toolArgs ->
-            println("Tool called: ${tool.name} with args $toolArgs")
+        onToolCall { eventContext ->
+            println("Tool called: ${eventContext.tool} with args ${eventContext.toolArgs}")
         }
         // Handle event triggered when the agent completes its execution
-        onAgentFinished = { strategyName, result ->
-            println("Agent finished with result: $result")
+        onAgentFinished { eventContext ->
+            println("Agent finished with result: ${eventContext.result}")
         }
 
         // Other event handlers
     }
 }
 ```
+<!--- KNIT example-events-02.kt -->

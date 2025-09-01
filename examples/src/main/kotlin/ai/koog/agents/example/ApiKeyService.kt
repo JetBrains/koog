@@ -20,4 +20,8 @@ internal object ApiKeyService {
     val awsSecretAccessKey: String
         get() = System.getenv("AWS_SECRET_ACCESS_KEY")
             ?: throw IllegalArgumentException("AWS_SECRET_ACCESS_KEY env is not set")
+
+    val brightDataKey: String
+        get() = System.getenv("BRIGHT_DATA_KEY")
+            ?: throw IllegalArgumentException("BRIGHT_DATA_KEY env is not set")
 }

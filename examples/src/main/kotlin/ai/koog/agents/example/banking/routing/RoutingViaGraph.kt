@@ -22,8 +22,7 @@ import ai.koog.agents.ext.tool.AskUser
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
-import ai.koog.prompt.structure.json.JsonSchemaGenerator
-import ai.koog.prompt.structure.json.JsonStructuredData
+import ai.koog.prompt.structure.StructureFixingParser
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
@@ -41,22 +40,21 @@ fun main() = runBlocking {
         val classifyRequest by subgraph<String, ClassifiedBankRequest>(
             tools = listOf(AskUser)
         ) {
-            val requestClassification by nodeLLMRequestStructured(
-                structure = JsonStructuredData.createJsonStructure<ClassifiedBankRequest>(
-                    schemaFormat = JsonSchemaGenerator.SchemaFormat.JsonSchema,
-                    examples = listOf(
-                        ClassifiedBankRequest(
-                            requestType = RequestType.Transfer,
-                            userRequest = "Send 25 euros to Daniel for dinner at the restaurant."
-                        ),
-                        ClassifiedBankRequest(
-                            requestType = RequestType.Analytics,
-                            userRequest = "Provide transaction overview for the last month"
-                        )
+            val requestClassification by nodeLLMRequestStructured<ClassifiedBankRequest>(
+                examples = listOf(
+                    ClassifiedBankRequest(
+                        requestType = RequestType.Transfer,
+                        userRequest = "Send 25 euros to Daniel for dinner at the restaurant."
+                    ),
+                    ClassifiedBankRequest(
+                        requestType = RequestType.Analytics,
+                        userRequest = "Provide transaction overview for the last month"
                     )
                 ),
-                retries = 2,
-                fixingModel = OpenAIModels.CostOptimized.GPT4oMini
+                fixingParser = StructureFixingParser(
+                    fixingModel = OpenAIModels.CostOptimized.GPT4oMini,
+                    retries = 2,
+                )
             )
 
             val callLLM by nodeLLMRequest()

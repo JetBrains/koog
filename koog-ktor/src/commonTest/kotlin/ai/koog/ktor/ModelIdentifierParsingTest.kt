@@ -2,6 +2,7 @@ package ai.koog.ktor
 
 import ai.koog.ktor.utils.getModelFromIdentifier
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
+import ai.koog.prompt.executor.clients.deepseek.DeepSeekModels
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterModels
@@ -33,22 +34,16 @@ class ModelIdentifierParsingTest {
     @Test
     fun testOpenAIReasoningModels() = runTest {
         // Test GPT-4o Mini
-        val gpt4oMini = getModelFromIdentifier("openai.reasoning.gpt4omini")
-        assertNotNull(gpt4oMini)
-        assertEquals(LLMProvider.OpenAI, gpt4oMini.provider)
-        assertEquals(OpenAIModels.Reasoning.GPT4oMini, gpt4oMini)
+        val o4Mini = getModelFromIdentifier("openai.reasoning.o4mini")
+        assertNotNull(o4Mini)
+        assertEquals(LLMProvider.OpenAI, o4Mini.provider)
+        assertEquals(OpenAIModels.Reasoning.O4Mini, o4Mini)
 
         // Test O3 Mini
         val o3Mini = getModelFromIdentifier("openai.reasoning.o3mini")
         assertNotNull(o3Mini)
         assertEquals(LLMProvider.OpenAI, o3Mini.provider)
         assertEquals(OpenAIModels.Reasoning.O3Mini, o3Mini)
-
-        // Test O1 Mini
-        val o1Mini = getModelFromIdentifier("openai.reasoning.o1mini")
-        assertNotNull(o1Mini)
-        assertEquals(LLMProvider.OpenAI, o1Mini.provider)
-        assertEquals(OpenAIModels.Reasoning.O1Mini, o1Mini)
 
         // Test O3
         val o3 = getModelFromIdentifier("openai.reasoning.o3")
@@ -122,12 +117,6 @@ class ModelIdentifierParsingTest {
 
     @Test
     fun testOpenAIModerationModels() = runTest {
-        // Test Text Moderation
-        val textModeration = getModelFromIdentifier("openai.moderation.text")
-        assertNotNull(textModeration)
-        assertEquals(LLMProvider.OpenAI, textModeration.provider)
-        assertEquals(OpenAIModels.Moderation.Text, textModeration)
-
         // Test Omni Moderation
         val omniModeration = getModelFromIdentifier("openai.moderation.omni")
         assertNotNull(omniModeration)
@@ -184,17 +173,16 @@ class ModelIdentifierParsingTest {
     // Google model identifier tests
     @Test
     fun testGoogleModels() = runTest {
-        // Test Gemini 1.5 Pro
-        val gemini1_5Pro = getModelFromIdentifier("google.gemini1_5pro")
-        assertNotNull(gemini1_5Pro)
-        assertEquals(LLMProvider.Google, gemini1_5Pro.provider)
-        assertEquals(GoogleModels.Gemini1_5Pro, gemini1_5Pro)
+        // Test Gemini 2.0 Flash
+        val gemini20Flash = getModelFromIdentifier("google.gemini2_0flash")
+        assertNotNull(gemini20Flash)
+        assertEquals(LLMProvider.Google, gemini20Flash.provider)
+        assertEquals(GoogleModels.Gemini2_0Flash, gemini20Flash)
 
-        // Test Gemini 1.5 Pro Latest
-        val gemini1_5ProLatest = getModelFromIdentifier("google.gemini1_5prolatest")
-        assertNotNull(gemini1_5ProLatest)
-        assertEquals(LLMProvider.Google, gemini1_5ProLatest.provider)
-        assertEquals(GoogleModels.Gemini1_5ProLatest, gemini1_5ProLatest)
+        val gemini25Pro = getModelFromIdentifier("google.gemini2_5pro")
+        assertNotNull(gemini25Pro)
+        assertEquals(LLMProvider.Google, gemini25Pro.provider)
+        assertEquals(GoogleModels.Gemini2_5Pro, gemini25Pro)
     }
 
     // OpenRouter model identifier tests
@@ -235,6 +223,22 @@ class ModelIdentifierParsingTest {
         assertNotNull(gpt35Turbo)
         assertEquals(LLMProvider.OpenRouter, gpt35Turbo.provider)
         assertEquals(OpenRouterModels.GPT35Turbo, gpt35Turbo)
+    }
+
+    // DeepSeek model identifier tests
+    @Test
+    fun testDeepSeekModels() = runTest {
+        // Test DeepSeek Chat
+        val deepSeekChat = getModelFromIdentifier("deepseek.deepseek-chat")
+        assertNotNull(deepSeekChat)
+        assertEquals(LLMProvider.DeepSeek, deepSeekChat.provider)
+        assertEquals(DeepSeekModels.DeepSeekChat, deepSeekChat)
+
+        // Test DeepSeek Reasoner
+        val deepSeekReasoner = getModelFromIdentifier("deepseek.deepseek-reasoner")
+        assertNotNull(deepSeekReasoner)
+        assertEquals(LLMProvider.DeepSeek, deepSeekReasoner.provider)
+        assertEquals(DeepSeekModels.DeepSeekReasoner, deepSeekReasoner)
     }
 
     // Ollama model identifier tests

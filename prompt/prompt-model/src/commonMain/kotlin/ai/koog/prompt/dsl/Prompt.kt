@@ -137,6 +137,13 @@ public data class Prompt(
      *
      * @property user An optional user identifier that can be used for tracking or personalization purposes. This property
      * is mutable to allow updates to the user context.
+     *
+     * @property includeThoughts If `true`, requests the model to add reasoning blocks to the response. Defaults to `null`.
+     * When set to `true`, responses may include detailed reasoning steps.
+     * When `false` or `null`, responses are typically shorter and faster.
+     *
+     * @property thinkingBudget Hard cap for reasoning tokens. Ignored by models that don't support budgets.
+     * This can be used to limit the amount of tokens used for reasoning when `includeThoughts` is enabled.
      */
     public class LLMParamsUpdateContext internal constructor(
         public var temperature: Double?,
@@ -144,6 +151,8 @@ public data class Prompt(
         public var schema: Schema?,
         public var toolChoice: ToolChoice?,
         public var user: String? = null,
+        public var includeThoughts: Boolean? = null,
+        public var thinkingBudget: Int? = null,
     ) {
         /**
          * Secondary constructor for `LLMParamsUpdateContext` that initializes the context using an
@@ -157,7 +166,9 @@ public data class Prompt(
             params.speculation,
             params.schema,
             params.toolChoice,
-            params.user
+            params.user,
+            params.includeThoughts,
+            params.thinkingBudget
         )
 
         /**
@@ -171,7 +182,9 @@ public data class Prompt(
             speculation = speculation,
             schema = schema,
             toolChoice = toolChoice,
-            user = user
+            user = user,
+            includeThoughts = includeThoughts,
+            thinkingBudget = thinkingBudget
         )
     }
 

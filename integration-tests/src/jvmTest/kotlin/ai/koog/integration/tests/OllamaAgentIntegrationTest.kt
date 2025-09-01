@@ -86,7 +86,7 @@ class OllamaAgentIntegrationTest {
             val definePrompt by node<Unit, Unit> {
                 llm.writeSession {
                     model = OllamaModels.Meta.LLAMA_3_2
-                    rewritePrompt {
+                    updatePrompt {
                         prompt("test-ollama") {
                             system(
                                 """"
@@ -147,7 +147,7 @@ class OllamaAgentIntegrationTest {
             agentConfig = AIAgentConfig(
                 prompt("test-ollama", LLMParams(temperature = 0.0)) {},
                 model,
-                15
+                20
             ),
             toolRegistry = toolRegistry
         ) {
@@ -173,7 +173,7 @@ class OllamaAgentIntegrationTest {
                     promptsAndResponses.add("RESPONSE: $responseText")
                 }
 
-                onAgentFinished { eventContext ->
+                onAgentFinished { _ ->
                     println("Agent execution finished")
                 }
             }

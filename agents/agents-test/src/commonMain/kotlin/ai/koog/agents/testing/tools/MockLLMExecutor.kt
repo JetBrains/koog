@@ -5,7 +5,6 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
-import ai.koog.prompt.executor.model.PromptExecutorExt.execute
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.tokenizer.Tokenizer
@@ -43,10 +42,12 @@ internal class ResponseMatcher<TResponse>(
  *
  * It also supports tool calls and can be configured to return specific tool results.
  *
- * @property partialMatches Map of patterns to responses for partial matching
- * @property exactMatches Map of patterns to responses for exact matching
- * @property conditional Map of conditions to responses for conditional matching
- * @property defaultResponse Default response to return when no other matches are found
+ * @property handleLastAssistantMessage If true, only the last `Message.Assistant`
+ *           message in a prompt is processed; otherwise, the last message of any type is used.
+ * @property responseMatcher Defines the rules for matching prompts to responses,
+ *           including support for exact, partial, and conditional matches as well as default responses.
+ * @property moderationResponseMatcher Defines the rules for evaluating moderation
+ *           matches for prompt messages.
  * @property toolRegistry Optional tool registry for tool execution
  * @property logger Logger for debugging
  * @property toolActions List of tool conditions and their corresponding actions
@@ -88,7 +89,7 @@ internal class MockLLMExecutor(
      * @return A flow containing a single string response
      */
     override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
-        val response = execute(prompt = prompt, model = model)
+        val response = execute(prompt = prompt, model = model).single()
         return flowOf(response.content)
     }
 

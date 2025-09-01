@@ -27,13 +27,30 @@ import kotlinx.serialization.json.JsonObject
 public data class AnthropicMessageRequest(
     val model: String,
     val messages: List<AnthropicMessage>,
-    val maxTokens: Int = 2048,
+    val maxTokens: Int = MAX_TOKENS_DEFAULT,
     val temperature: Double? = null,
     val system: List<SystemAnthropicMessage>? = null,
     val tools: List<AnthropicTool>? = null,
     val stream: Boolean = false,
     val toolChoice: AnthropicToolChoice? = null,
-)
+) {
+    init {
+        require(maxTokens > 0) { "maxTokens must be greater than 0, but was $maxTokens" }
+        if (temperature != null) {
+            require(temperature >= 0) { "temperature must be greater than 0, but was $temperature" }
+        }
+    }
+
+    /**
+     * Companion object with default values for request
+     */
+    public companion object {
+        /**
+         * Default max tokens
+         */
+        public const val MAX_TOKENS_DEFAULT: Int = 2048
+    }
+}
 
 /**
  * Represents a message within the Anthropic LLM system. This data class encapsulates

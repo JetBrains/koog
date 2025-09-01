@@ -199,7 +199,7 @@ public interface AIAgentContextBase {
      * @param stateManager The state manager for the AI agent
      * @param storage The AI agent's key-value storage
      * @param runId The id of an agent run
-     * @param strategyId The strategy ID
+     * @param strategyName The strategy name
      * @param pipeline The AI agent pipeline
      * @return A new instance of [AIAgentContext] with the specified overrides.
      */
@@ -213,7 +213,7 @@ public interface AIAgentContextBase {
         stateManager: AIAgentStateManager = this.stateManager,
         storage: AIAgentStorage = this.storage,
         runId: String = this.runId,
-        strategyId: String = this.strategyName,
+        strategyName: String = this.strategyName,
         pipeline: AIAgentPipeline = this.pipeline,
     ): AIAgentContextBase
 

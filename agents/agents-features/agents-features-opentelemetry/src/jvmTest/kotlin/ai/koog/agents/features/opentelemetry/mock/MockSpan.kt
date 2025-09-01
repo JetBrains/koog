@@ -21,20 +21,54 @@ class MockSpan() : Span {
 
     var statusDescription: String? = null
 
-    override fun <T : Any?> setAttribute(key: AttributeKey<T?>, value: T?): Span = this
+    private val _collectedAttributes = mutableMapOf<AttributeKey<*>, Any?>()
 
-    override fun setAttribute(key: String, value: String?): Span = this
+    private val _collectedEvents = mutableMapOf<String, Attributes>()
 
-    override fun setAttribute(key: String, value: Boolean): Span = this
+    val collectedAttributes: Map<AttributeKey<*>, Any?>
+        get() = _collectedAttributes.toMap()
 
-    override fun setAttribute(key: String, value: Long): Span = this
+    val collectedEvents: Map<String, Attributes>
+        get() = _collectedEvents.toMap()
 
-    override fun setAttribute(key: String, value: Double): Span = this
+    override fun <T : Any?> setAttribute(key: AttributeKey<T?>, value: T?): Span {
+        _collectedAttributes[key] = value
+        return this
+    }
 
-    override fun setAttribute(key: AttributeKey<Long>, value: Int): Span = this
+    override fun setAttribute(key: String, value: String?): Span {
+        _collectedAttributes[AttributeKey.stringKey(key)] = value
+        return this
+    }
+    override fun setAttribute(key: String, value: Boolean): Span {
+        _collectedAttributes[AttributeKey.booleanKey(key)] = value
+        return this
+    }
 
-    override fun addEvent(name: String, attributes: Attributes): Span = this
-    override fun addEvent(name: String, attributes: Attributes, timestamp: Long, unit: TimeUnit): Span = this
+    override fun setAttribute(key: String, value: Long): Span {
+        _collectedAttributes[AttributeKey.longKey(key)] = value
+        return this
+    }
+
+    override fun setAttribute(key: String, value: Double): Span {
+        _collectedAttributes[AttributeKey.doubleKey(key)] = value
+        return this
+    }
+
+    override fun setAttribute(key: AttributeKey<Long>, value: Int): Span {
+        _collectedAttributes[key] = value
+        return this
+    }
+
+    override fun addEvent(name: String, attributes: Attributes): Span {
+        _collectedEvents[name] = attributes
+        return this
+    }
+
+    override fun addEvent(name: String, attributes: Attributes, timestamp: Long, unit: TimeUnit): Span {
+        _collectedEvents[name] = attributes
+        return this
+    }
 
     override fun setStatus(statusCode: StatusCode, description: String): Span {
         status = statusCode

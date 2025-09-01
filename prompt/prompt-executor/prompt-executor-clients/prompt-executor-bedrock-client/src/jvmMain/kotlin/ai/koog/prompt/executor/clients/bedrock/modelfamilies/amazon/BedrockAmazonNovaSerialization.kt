@@ -44,7 +44,7 @@ internal object BedrockAmazonNovaSerialization {
             }
 
         val inferenceConfig = NovaInferenceConfig(
-            maxTokens = 4096,
+            maxTokens = prompt.params.maxTokens ?: NovaInferenceConfig.MAX_TOKENS_DEFAULT,
             temperature = if (model.capabilities.contains(LLMCapability.Temperature)) {
                 prompt.params.temperature
             } else {

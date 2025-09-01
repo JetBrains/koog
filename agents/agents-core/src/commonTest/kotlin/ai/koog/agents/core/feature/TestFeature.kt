@@ -3,7 +3,7 @@ package ai.koog.agents.core.feature
 import ai.koog.agents.core.agent.context.AIAgentContextBase
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.entity.createStorageKey
-import ai.koog.agents.features.common.config.FeatureConfig
+import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.prompt.message.Message
 
 class TestFeature(val events: MutableList<String>) {

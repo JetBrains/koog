@@ -12,28 +12,10 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                api(project(":agents:agents-tools"))
-                api(project(":agents:agents-utils"))
-                api(project(":prompt:prompt-executor:prompt-executor-clients"))
-                api(project(":prompt:prompt-llm"))
-                api(project(":prompt:prompt-model"))
-                api(libs.kotlinx.coroutines.core)
-                api(libs.ktor.client.content.negotiation)
-                api(libs.ktor.serialization.kotlinx.json)
-                api(libs.kotlinx.datetime)
+                api(libs.jetbrains.annotations)
+                api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-model"))
+                api(project(":prompt:prompt-structure"))
                 implementation(libs.oshai.kotlin.logging)
-            }
-        }
-
-        jvmMain {
-            dependencies {
-                api(libs.ktor.client.cio)
-            }
-        }
-
-        jsMain {
-            dependencies {
-                api(libs.ktor.client.js)
             }
         }
 
@@ -49,6 +31,7 @@ kotlin {
         jvmTest {
             dependencies {
                 implementation(kotlin("test-junit5"))
+                implementation(libs.junit.jupiter.params)
             }
         }
     }

@@ -1,10 +1,15 @@
 package ai.koog.prompt.executor.clients.bedrock.modelfamilies.ai21
 
+import ai.koog.prompt.executor.clients.anthropic.AnthropicMessageRequest
+import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
+import ai.koog.prompt.executor.clients.bedrock.modelfamilies.ai21.JambaRequest.Companion.MAX_TOKENS_DEFAULT
+import ai.koog.test.utils.verifyDeserialization
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
@@ -52,6 +57,30 @@ class JambaDataModelsTest {
     }
 
     @Test
+    fun `JambaRequest serialization with default maxTokens`() {
+        val request = JambaRequest(
+            model = "ai21.jamba-1-5-large-v1:0",
+            messages = listOf(
+                JambaMessage(role = "user", content = "Tell me about Paris")
+            ),
+            temperature = 0.7
+        )
+        assertEquals(MAX_TOKENS_DEFAULT, request.maxTokens)
+    }
+
+    @Test
+    fun `JambaRequest serialization with maxTokens less than 1`() {
+        val exception = assertFailsWith<IllegalArgumentException> {
+            AnthropicMessageRequest(
+                model = AnthropicModels.Opus_3.id,
+                messages = emptyList(),
+                maxTokens = 0
+            )
+        }
+        assertEquals("maxTokens must be greater than 0, but was 0", exception.message)
+    }
+
+    @Test
     fun `JambaRequest serialization with null fields`() {
         val request = JambaRequest(
             model = "ai21.jamba-1-5-large-v1:0",
@@ -77,6 +106,7 @@ class JambaDataModelsTest {
 
     @Test
     fun `JambaRequest deserialization`() {
+        // language=JSON
         val jsonString = """
             {
                 "model": "ai21.jamba-1-5-large-v1:0",
@@ -91,7 +121,7 @@ class JambaDataModelsTest {
             }
         """.trimIndent()
 
-        val request = json.decodeFromString(JambaRequest.serializer(), jsonString)
+        val request: JambaRequest = verifyDeserialization(jsonString, json)
 
         assertEquals("ai21.jamba-1-5-large-v1:0", request.model)
         assertEquals(1, request.messages.size)
@@ -103,6 +133,7 @@ class JambaDataModelsTest {
 
     @Test
     fun `JambaRequest deserialization with missing fields`() {
+        // language=JSON
         val jsonString = """
             {
                 "model": "ai21.jamba-1-5-large-v1:0",
@@ -115,13 +146,13 @@ class JambaDataModelsTest {
             }
         """.trimIndent()
 
-        val request = json.decodeFromString(JambaRequest.serializer(), jsonString)
+        val request: JambaRequest = verifyDeserialization(jsonString, json)
 
         assertEquals("ai21.jamba-1-5-large-v1:0", request.model)
         assertEquals(1, request.messages.size)
         assertEquals("user", request.messages[0].role)
         assertEquals("Tell me about Paris", request.messages[0].content)
-        assertNull(request.maxTokens)
+        assertEquals(MAX_TOKENS_DEFAULT, request.maxTokens)
         assertNull(request.temperature)
     }
 
@@ -168,6 +199,7 @@ class JambaDataModelsTest {
 
     @Test
     fun `JambaMessage deserialization`() {
+        // language=JSON
         val jsonString = """
             {
                 "role": "user",
@@ -175,7 +207,7 @@ class JambaDataModelsTest {
             }
         """.trimIndent()
 
-        val message = json.decodeFromString(JambaMessage.serializer(), jsonString)
+        val message: JambaMessage = verifyDeserialization(jsonString, json)
 
         assertEquals("user", message.role)
         assertEquals("Tell me about Paris", message.content)
@@ -185,6 +217,7 @@ class JambaDataModelsTest {
 
     @Test
     fun `JambaMessage deserialization with tool calls`() {
+        // language=JSON
         val jsonString = """
             {
                 "role": "assistant",
@@ -201,7 +234,7 @@ class JambaDataModelsTest {
             }
         """.trimIndent()
 
-        val message = json.decodeFromString(JambaMessage.serializer(), jsonString)
+        val message: JambaMessage = verifyDeserialization(jsonString, json)
 
         assertEquals("assistant", message.role)
         assertNull(message.content)
@@ -297,6 +330,7 @@ class JambaDataModelsTest {
 
     @Test
     fun `JambaResponse deserialization`() {
+        // language=JSON
         val jsonString = """
             {
                 "id": "resp_01234567",
@@ -319,7 +353,7 @@ class JambaDataModelsTest {
             }
         """.trimIndent()
 
-        val response = json.decodeFromString(JambaResponse.serializer(), jsonString)
+        val response: JambaResponse = verifyDeserialization(jsonString, json)
 
         assertEquals("resp_01234567", response.id)
         assertEquals("ai21.jamba-1-5-large-v1:0", response.model)
@@ -360,6 +394,7 @@ class JambaDataModelsTest {
 
     @Test
     fun `JambaStreamResponse deserialization`() {
+        // language=JSON
         val jsonString = """
             {
                 "id": "resp_01234567",
@@ -374,7 +409,7 @@ class JambaDataModelsTest {
             }
         """.trimIndent()
 
-        val streamResponse = json.decodeFromString(JambaStreamResponse.serializer(), jsonString)
+        val streamResponse: JambaStreamResponse = verifyDeserialization(jsonString, json)
 
         assertEquals("resp_01234567", streamResponse.id)
         assertEquals(1, streamResponse.choices.size)

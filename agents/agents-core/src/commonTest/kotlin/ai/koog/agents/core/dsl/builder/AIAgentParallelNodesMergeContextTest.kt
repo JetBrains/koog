@@ -14,7 +14,7 @@ class AIAgentParallelNodesMergeContextTest {
     private fun createMockContext(): AIAgentContextBase {
         return AIAgentContextMockBuilder().apply {
             runId = "test-run-id"
-            strategyId = "test-strategy"
+            strategyName = "test-strategy"
         }.build()
     }
 

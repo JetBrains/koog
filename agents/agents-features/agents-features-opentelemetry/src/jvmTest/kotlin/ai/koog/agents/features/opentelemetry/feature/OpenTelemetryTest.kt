@@ -8,14 +8,21 @@ import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
 import ai.koog.agents.core.dsl.extension.onAssistantMessage
 import ai.koog.agents.core.dsl.extension.onToolCall
 import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.assertMapsEqual
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.createAgent
+import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute
+import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes
 import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes.Response.FinishReasonType
+import ai.koog.agents.features.opentelemetry.integration.SpanAdapter
 import ai.koog.agents.features.opentelemetry.mock.MockSpanExporter
 import ai.koog.agents.features.opentelemetry.mock.TestGetWeatherTool
+import ai.koog.agents.features.opentelemetry.span.GenAIAgentSpan
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.agents.testing.tools.mockLLMAnswer
+import ai.koog.agents.utils.HiddenString
 import ai.koog.agents.utils.use
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.message.Message
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.opentelemetry.sdk.OpenTelemetrySdk
 import io.opentelemetry.sdk.trace.SdkTracerProvider
@@ -120,7 +127,9 @@ class OpenTelemetryTest {
     fun `test spans are created for agent with one llm call`() = runBlocking {
         MockSpanExporter().use { mockExporter ->
 
+            val systemPrompt = "You are the application that predicts weather"
             val userPrompt = "What's the weather in Paris?"
+
             val agentId = "test-agent-id"
             val promptId = "test-prompt-id"
             val testClock = Clock.System
@@ -144,6 +153,7 @@ class OpenTelemetryTest {
                 agentId = agentId,
                 strategy = strategy,
                 promptId = promptId,
+                systemPrompt = systemPrompt,
                 promptExecutor = mockExecutor,
                 model = model,
                 clock = testClock,
@@ -191,6 +201,16 @@ class OpenTelemetryTest {
                 ),
 
                 mapOf(
+                    "node.__finish__" to mapOf(
+                        "attributes" to mapOf(
+                            "gen_ai.conversation.id" to mockExporter.lastRunId,
+                            "koog.node.name" to "__finish__"
+                        ),
+                        "events" to emptyMap()
+                    )
+                ),
+
+                mapOf(
                     "node.test-llm-call" to mapOf(
                         "attributes" to mapOf(
                             "gen_ai.conversation.id" to mockExporter.lastRunId,
@@ -208,22 +228,31 @@ class OpenTelemetryTest {
                             "gen_ai.conversation.id" to mockExporter.lastRunId,
                             "gen_ai.request.temperature" to temperature,
                             "gen_ai.request.model" to model.id,
+                            "gen_ai.response.finish_reasons" to listOf(FinishReasonType.Stop.id)
                         ),
                         "events" to mapOf(
                             "gen_ai.user.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "body" to "{\"content\":\"${userPrompt}\"}"
+                                "role" to Message.Role.User.name.lowercase(),
+                                "content" to userPrompt
                             )
                         ),
 
                         "events" to mapOf(
+                            "gen_ai.system.message" to mapOf(
+                                "gen_ai.system" to model.provider.id,
+                                "role" to Message.Role.System.name.lowercase(),
+                                "content" to systemPrompt,
+                            ),
                             "gen_ai.user.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "body" to "{\"content\":\"${userPrompt}\"}"
+                                "role" to Message.Role.User.name.lowercase(),
+                                "content" to userPrompt,
                             ),
-                            "gen_ai.choice" to mapOf(
+                            "gen_ai.assistant.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "body" to "{\"index\":0,\"message\":{\"content\":\"${mockResponse}\"}}"
+                                "role" to Message.Role.Assistant.name.lowercase(),
+                                "content" to mockResponse,
                             )
                         )
                     )
@@ -247,6 +276,8 @@ class OpenTelemetryTest {
     @Test
     fun `test spans for same agent run multiple times`() = runBlocking {
         MockSpanExporter().use { mockExporter ->
+
+            val systemPrompt = "You are the application that predicts weather"
 
             val userPrompt0 = "What's the weather in Paris?"
             val mockResponse0 = "The weather in Paris is rainy and overcast, with temperatures around 57°F"
@@ -276,6 +307,7 @@ class OpenTelemetryTest {
                 agentId = agentId,
                 strategy = strategy,
                 promptId = promptId,
+                systemPrompt = systemPrompt,
                 promptExecutor = mockExecutor,
                 model = model,
                 clock = testClock,
@@ -325,6 +357,16 @@ class OpenTelemetryTest {
                 ),
 
                 mapOf(
+                    "node.__finish__" to mapOf(
+                        "attributes" to mapOf(
+                            "gen_ai.conversation.id" to mockExporter.runIds[1],
+                            "koog.node.name" to "__finish__"
+                        ),
+                        "events" to emptyMap()
+                    )
+                ),
+
+                mapOf(
                     "node.test-llm-call" to mapOf(
                         "attributes" to mapOf(
                             "gen_ai.conversation.id" to mockExporter.runIds[1],
@@ -342,15 +384,23 @@ class OpenTelemetryTest {
                             "gen_ai.conversation.id" to mockExporter.runIds[1],
                             "gen_ai.request.temperature" to temperature,
                             "gen_ai.request.model" to model.id,
+                            "gen_ai.response.finish_reasons" to listOf(FinishReasonType.Stop.id),
                         ),
                         "events" to mapOf(
+                            "gen_ai.system.message" to mapOf(
+                                "gen_ai.system" to model.provider.id,
+                                "role" to Message.Role.System.name.lowercase(),
+                                "content" to systemPrompt,
+                            ),
                             "gen_ai.user.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "body" to "{\"content\":\"${userPrompt1}\"}"
+                                "role" to Message.Role.User.name.lowercase(),
+                                "content" to userPrompt1,
                             ),
-                            "gen_ai.choice" to mapOf(
+                            "gen_ai.assistant.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "body" to "{\"index\":0,\"message\":{\"content\":\"${mockResponse1}\"}}"
+                                "role" to Message.Role.Assistant.name.lowercase(),
+                                "content" to mockResponse1,
                             )
                         )
                     )
@@ -381,6 +431,16 @@ class OpenTelemetryTest {
                 ),
 
                 mapOf(
+                    "node.__finish__" to mapOf(
+                        "attributes" to mapOf(
+                            "gen_ai.conversation.id" to mockExporter.runIds[0],
+                            "koog.node.name" to "__finish__"
+                        ),
+                        "events" to emptyMap()
+                    )
+                ),
+
+                mapOf(
                     "node.test-llm-call" to mapOf(
                         "attributes" to mapOf(
                             "gen_ai.conversation.id" to mockExporter.runIds[0],
@@ -398,15 +458,23 @@ class OpenTelemetryTest {
                             "gen_ai.conversation.id" to mockExporter.runIds[0],
                             "gen_ai.request.temperature" to temperature,
                             "gen_ai.request.model" to model.id,
+                            "gen_ai.response.finish_reasons" to listOf(FinishReasonType.Stop.id),
                         ),
                         "events" to mapOf(
+                            "gen_ai.system.message" to mapOf(
+                                "gen_ai.system" to model.provider.id,
+                                "role" to Message.Role.System.name.lowercase(),
+                                "content" to systemPrompt,
+                            ),
                             "gen_ai.user.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "body" to "{\"content\":\"${userPrompt0}\"}"
+                                "role" to Message.Role.User.name.lowercase(),
+                                "content" to userPrompt0,
                             ),
-                            "gen_ai.choice" to mapOf(
+                            "gen_ai.assistant.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "body" to "{\"index\":0,\"message\":{\"content\":\"${mockResponse0}\"}}"
+                                "role" to Message.Role.Assistant.name.lowercase(),
+                                "content" to mockResponse0,
                             )
                         )
                     )
@@ -431,6 +499,7 @@ class OpenTelemetryTest {
     fun `test spans are created for agent with tool call`() = runBlocking {
         MockSpanExporter().use { mockExporter ->
 
+            val systemPrompt = "You are the application that predicts weather"
             val userPrompt = "What's the weather in Paris?"
             val mockResponse = "The weather in Paris is rainy and overcast, with temperatures around 57°F"
 
@@ -457,15 +526,18 @@ class OpenTelemetryTest {
                 tool(TestGetWeatherTool)
             }
 
+            val toolCallId = "tool-call-id"
+
             val mockExecutor = getMockExecutor(clock = testClock) {
-                mockLLMToolCall(TestGetWeatherTool, TestGetWeatherTool.Args("Paris")) onRequestEquals userPrompt
-                mockLLMAnswer(mockResponse) onRequestContains "rainy, 57°F"
+                mockLLMToolCall(tool = TestGetWeatherTool, args = TestGetWeatherTool.Args("Paris"), toolCallId = toolCallId) onRequestEquals userPrompt
+                mockLLMAnswer(mockResponse) onRequestContains TestGetWeatherTool.DEFAULT_PARIS_RESULT
             }
 
             val agent = createAgent(
                 agentId = agentId,
                 strategy = strategy,
                 promptId = promptId,
+                systemPrompt = systemPrompt,
                 toolRegistry = toolRegistry,
                 promptExecutor = mockExecutor,
                 model = model,
@@ -512,6 +584,15 @@ class OpenTelemetryTest {
                     )
                 ),
                 mapOf(
+                    "node.__finish__" to mapOf(
+                        "attributes" to mapOf(
+                            "gen_ai.conversation.id" to mockExporter.lastRunId,
+                            "koog.node.name" to "__finish__",
+                        ),
+                        "events" to emptyMap()
+                    )
+                ),
+                mapOf(
                     "node.test-node-llm-send-tool-result" to mapOf(
                         "attributes" to mapOf(
                             "gen_ai.conversation.id" to mockExporter.lastRunId,
@@ -528,12 +609,36 @@ class OpenTelemetryTest {
                             "gen_ai.conversation.id" to mockExporter.lastRunId,
                             "gen_ai.operation.name" to "chat",
                             "gen_ai.request.temperature" to temperature,
+                            "gen_ai.response.finish_reasons" to listOf(FinishReasonType.Stop.id),
                         ),
                         "events" to mapOf(
+                            "gen_ai.system.message" to mapOf(
+                                "gen_ai.system" to model.provider.id,
+                                "role" to Message.Role.System.name.lowercase(),
+                                "content" to systemPrompt,
+                            ),
+                            "gen_ai.user.message" to mapOf(
+                                "gen_ai.system" to model.provider.id,
+                                "role" to Message.Role.User.name.lowercase(),
+                                "content" to userPrompt,
+                            ),
                             "gen_ai.choice" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "body" to "{\"index\":0,\"message\":{\"content\":\"${mockResponse}\"}}"
-                            )
+                                "role" to Message.Role.Tool.name.lowercase(),
+                                "tool_calls" to """[{"function":{"name":"${TestGetWeatherTool.name}","arguments":"{\"location\":\"Paris\"}"},"id":"$toolCallId","type":"function"}]""",
+                                "finish_reason" to FinishReasonType.ToolCalls.id,
+                            ),
+                            "gen_ai.tool.message" to mapOf(
+                                "gen_ai.system" to model.provider.id,
+                                "role" to Message.Role.Tool.name.lowercase(),
+                                "content" to TestGetWeatherTool.DEFAULT_PARIS_RESULT,
+                                "id" to toolCallId,
+                            ),
+                            "gen_ai.assistant.message" to mapOf(
+                                "gen_ai.system" to model.provider.id,
+                                "role" to Message.Role.Assistant.name.lowercase(),
+                                "content" to mockResponse,
+                            ),
                         )
                     )
                 ),
@@ -549,15 +654,13 @@ class OpenTelemetryTest {
                 mapOf(
                     "tool.Get whether" to mapOf(
                         "attributes" to mapOf(
+                            "output.value" to TestGetWeatherTool.DEFAULT_PARIS_RESULT,
+                            "input.value" to "{\"location\":\"Paris\"}",
                             "gen_ai.tool.description" to "The test tool to get a whether based on provided location.",
                             "gen_ai.tool.name" to "Get whether",
+                            "gen_ai.tool.call.id" to toolCallId,
                         ),
-                        "events" to mapOf(
-                            "gen_ai.tool.message" to mapOf(
-                                "gen_ai.system" to model.provider.id,
-                                "body" to "{\"content\":\"rainy, 57°F\"}" // Mocked return result defined in the Tool
-                            ),
-                        )
+                        "events" to mapOf()
                     )
                 ),
                 mapOf(
@@ -577,11 +680,25 @@ class OpenTelemetryTest {
                             "gen_ai.conversation.id" to mockExporter.lastRunId,
                             "gen_ai.operation.name" to "chat",
                             "gen_ai.request.temperature" to temperature,
+                            "gen_ai.response.finish_reasons" to listOf(FinishReasonType.ToolCalls.id),
                         ),
                         "events" to mapOf(
+                            "gen_ai.system.message" to mapOf(
+                                "gen_ai.system" to model.provider.id,
+                                "role" to Message.Role.System.name.lowercase(),
+                                "content" to systemPrompt,
+                            ),
                             "gen_ai.user.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "body" to "{\"content\":\"${userPrompt}\"}"
+                                "role" to Message.Role.User.name.lowercase(),
+                                "content" to userPrompt,
+                            ),
+                            "gen_ai.choice" to mapOf(
+                                "gen_ai.system" to model.provider.id,
+                                "index" to 0L,
+                                "role" to Message.Role.Tool.name.lowercase(),
+                                "tool_calls" to """[{"function":{"name":"${TestGetWeatherTool.name}","arguments":"{\"location\":\"Paris\"}"},"id":"$toolCallId","type":"function"}]""",
+                                "finish_reason" to FinishReasonType.ToolCalls.id,
                             ),
                         )
                     )
@@ -605,6 +722,7 @@ class OpenTelemetryTest {
     fun `test spans for agent with tool call and verbose level set to false`() = runBlocking {
         MockSpanExporter().use { mockExporter ->
 
+            val systemPrompt = "You are the application that predicts weather"
             val userPrompt = "What's the weather in Paris?"
             val mockResponse = "The weather in Paris is rainy and overcast, with temperatures around 57°F"
 
@@ -631,14 +749,17 @@ class OpenTelemetryTest {
                 tool(TestGetWeatherTool)
             }
 
+            val toolCallId = "tool-call-id"
+
             val mockExecutor = getMockExecutor(clock = testClock) {
-                mockLLMToolCall(TestGetWeatherTool, TestGetWeatherTool.Args("Paris")) onRequestEquals userPrompt
+                mockLLMToolCall(tool = TestGetWeatherTool, args = TestGetWeatherTool.Args("Paris"), toolCallId = toolCallId) onRequestEquals userPrompt
                 mockLLMAnswer(mockResponse) onRequestContains "57°F"
             }
 
             val agent = createAgent(
                 agentId = agentId,
                 strategy = strategy,
+                systemPrompt = systemPrompt,
                 promptId = promptId,
                 toolRegistry = toolRegistry,
                 promptExecutor = mockExecutor,
@@ -686,6 +807,15 @@ class OpenTelemetryTest {
                     )
                 ),
                 mapOf(
+                    "node.__finish__" to mapOf(
+                        "attributes" to mapOf(
+                            "gen_ai.conversation.id" to mockExporter.lastRunId,
+                            "koog.node.name" to "__finish__",
+                        ),
+                        "events" to emptyMap()
+                    )
+                ),
+                mapOf(
                     "node.test-node-llm-send-tool-result" to mapOf(
                         "attributes" to mapOf(
                             "gen_ai.conversation.id" to mockExporter.lastRunId,
@@ -702,12 +832,36 @@ class OpenTelemetryTest {
                             "gen_ai.conversation.id" to mockExporter.lastRunId,
                             "gen_ai.operation.name" to "chat",
                             "gen_ai.request.temperature" to temperature,
+                            "gen_ai.response.finish_reasons" to listOf(FinishReasonType.Stop.id),
                         ),
                         "events" to mapOf(
+                            "gen_ai.system.message" to mapOf(
+                                "gen_ai.system" to model.provider.id,
+                                "role" to Message.Role.System.name.lowercase(),
+                                "content" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
+                            ),
+                            "gen_ai.user.message" to mapOf(
+                                "gen_ai.system" to model.provider.id,
+                                "role" to Message.Role.User.name.lowercase(),
+                                "content" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
+                            ),
                             "gen_ai.choice" to mapOf(
                                 "gen_ai.system" to model.provider.id,
-                                "body" to "{\"index\":0}"
-                            )
+                                "role" to Message.Role.Tool.name.lowercase(),
+                                "tool_calls" to "[{\"function\":{\"name\":\"${HiddenString.HIDDEN_STRING_PLACEHOLDER}\",\"arguments\":\"${HiddenString.HIDDEN_STRING_PLACEHOLDER}\"},\"id\":\"$toolCallId\",\"type\":\"function\"}]",
+                                "finish_reason" to FinishReasonType.ToolCalls.id,
+                            ),
+                            "gen_ai.tool.message" to mapOf(
+                                "gen_ai.system" to model.provider.id,
+                                "role" to Message.Role.Tool.name.lowercase(),
+                                "content" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
+                                "id" to toolCallId,
+                            ),
+                            "gen_ai.assistant.message" to mapOf(
+                                "gen_ai.system" to model.provider.id,
+                                "role" to Message.Role.Assistant.name.lowercase(),
+                                "content" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
+                            ),
                         )
                     )
                 ),
@@ -723,14 +877,13 @@ class OpenTelemetryTest {
                 mapOf(
                     "tool.Get whether" to mapOf(
                         "attributes" to mapOf(
+                            "output.value" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
+                            "input.value" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
                             "gen_ai.tool.description" to "The test tool to get a whether based on provided location.",
                             "gen_ai.tool.name" to "Get whether",
+                            "gen_ai.tool.call.id" to toolCallId,
                         ),
-                        "events" to mapOf(
-                            "gen_ai.tool.message" to mapOf(
-                                "gen_ai.system" to model.provider.id,
-                            ),
-                        )
+                        "events" to mapOf()
                     )
                 ),
                 mapOf(
@@ -750,10 +903,25 @@ class OpenTelemetryTest {
                             "gen_ai.conversation.id" to mockExporter.lastRunId,
                             "gen_ai.operation.name" to "chat",
                             "gen_ai.request.temperature" to temperature,
+                            "gen_ai.response.finish_reasons" to listOf(FinishReasonType.ToolCalls.id),
                         ),
                         "events" to mapOf(
+                            "gen_ai.system.message" to mapOf(
+                                "gen_ai.system" to model.provider.id,
+                                "role" to Message.Role.System.name.lowercase(),
+                                "content" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
+                            ),
                             "gen_ai.user.message" to mapOf(
                                 "gen_ai.system" to model.provider.id,
+                                "role" to Message.Role.User.name.lowercase(),
+                                "content" to HiddenString.HIDDEN_STRING_PLACEHOLDER,
+                            ),
+                            "gen_ai.choice" to mapOf(
+                                "gen_ai.system" to model.provider.id,
+                                "index" to 0L,
+                                "role" to Message.Role.Tool.name.lowercase(),
+                                "tool_calls" to "[{\"function\":{\"name\":\"${HiddenString.HIDDEN_STRING_PLACEHOLDER}\",\"arguments\":\"${HiddenString.HIDDEN_STRING_PLACEHOLDER}\"},\"id\":\"$toolCallId\",\"type\":\"function\"}]",
+                                "finish_reason" to FinishReasonType.ToolCalls.id,
                             ),
                         )
                     )
@@ -863,7 +1031,7 @@ class OpenTelemetryTest {
             }
 
             // Check if we have the expected number of node spans (5 nodes)
-            assertEquals(5, nodeSpanNames.size, "Expected 6 node spans but found ${nodeSpanNames.size}")
+            assertEquals(6, nodeSpanNames.size, "Expected 6 node spans but found ${nodeSpanNames.size}")
 
             // Check for each node span
             assertTrue(nodeSpanNames.any { it.contains("nodeFirstJoke") }, "First joke node span should be created")
@@ -953,7 +1121,7 @@ class OpenTelemetryTest {
             val collectedSpans = mockExporter.collectedSpans
             agent.close()
 
-            assertEquals(5, collectedSpans.size)
+            assertEquals(6, collectedSpans.size)
         }
     }
 
@@ -1051,6 +1219,89 @@ class OpenTelemetryTest {
             )
 
             assertSpans(expectedSpans, mockExporter.collectedSpans)
+        }
+    }
+
+    @Test
+    fun `test span adapter applies custom attribute to invoke agent span`() = runBlocking {
+        MockSpanExporter().use { mockExporter ->
+
+            val userPrompt = "What's the weather in Paris?"
+            val agentId = "test-agent-id"
+            val promptId = "test-prompt-id"
+            val testClock = Clock.System
+            val model = OpenAIModels.Chat.GPT4o
+
+            val strategyName = "test-strategy"
+
+            val strategy = strategy(strategyName) {
+                val nodeSendInput by nodeLLMRequest("test-llm-call")
+
+                edge(nodeStart forwardTo nodeSendInput)
+                edge(nodeSendInput forwardTo nodeFinish onAssistantMessage { true })
+            }
+
+            val mockResponse = "Sunny"
+            val mockExecutor = getMockExecutor(clock = testClock) {
+                mockLLMAnswer(mockResponse) onRequestEquals userPrompt
+            }
+
+            // Custom SpanAdapter that adds a test attribute to each processed span
+            val customBeforeStartAttribute = CustomAttribute(key = "test.adapter.before.start.key", value = "test-value-before-start")
+            val customBeforeFinishAttribute = CustomAttribute(key = "test.adapter.before.finish.key", value = "test-value-before-finish")
+            val adapter = object : SpanAdapter() {
+                override fun onBeforeSpanStarted(span: GenAIAgentSpan) {
+                    span.addAttribute(customBeforeStartAttribute)
+                }
+
+                override fun onBeforeSpanFinished(span: GenAIAgentSpan) {
+                    span.addAttribute(customBeforeFinishAttribute)
+                }
+            }
+
+            createAgent(
+                agentId = agentId,
+                strategy = strategy,
+                promptId = promptId,
+                promptExecutor = mockExecutor,
+                model = model,
+                clock = testClock,
+            ) {
+                install(OpenTelemetry) {
+                    addSpanExporter(mockExporter)
+
+                    // Add custom span adapter
+                    addSpanAdapter(adapter)
+                }
+            }.use { agent ->
+                agent.run(userPrompt)
+            }
+
+            val collectedSpans = mockExporter.collectedSpans
+            assertTrue(collectedSpans.isNotEmpty(), "Spans should be created during agent execution")
+
+            val actualInvokeAgentSpans = collectedSpans.filter { span -> span.name.startsWith("run.") }
+            assertEquals(1, actualInvokeAgentSpans.size, "Invoke agent span should be present")
+
+            val expectedInvokeAgentSpans = listOf(
+                mapOf(
+
+                    "run.${mockExporter.lastRunId}" to mapOf(
+                        "attributes" to mapOf(
+                            "koog.agent.strategy.name" to strategyName,
+                            "gen_ai.conversation.id" to mockExporter.lastRunId,
+                            customBeforeStartAttribute.key to customBeforeStartAttribute.value,
+                            customBeforeFinishAttribute.key to customBeforeFinishAttribute.value,
+                            "gen_ai.system" to model.provider.id,
+                            "gen_ai.agent.id" to agentId,
+                            "gen_ai.operation.name" to SpanAttributes.Operation.OperationNameType.INVOKE_AGENT.id,
+                        ),
+                        "events" to emptyMap()
+                    )
+                )
+            )
+
+            assertSpans(expectedInvokeAgentSpans, actualInvokeAgentSpans)
         }
     }
 
@@ -1225,15 +1476,6 @@ class OpenTelemetryTest {
                     )
                 }
             }
-        }
-    }
-
-    private fun assertMapsEqual(expected: Map<*, *>, actual: Map<*, *>, message: String = "") {
-        assertEquals(expected.size, actual.size, "$message - Map sizes should be equal")
-
-        expected.forEach { (key, value) ->
-            assertTrue(actual.containsKey(key), "$message - Key '$key' should exist in actual map")
-            assertEquals(value, actual[key], "$message - Value for key '$key' should match")
         }
     }
 

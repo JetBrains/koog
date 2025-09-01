@@ -8,7 +8,6 @@ import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleAnthropicExecutor
 import ai.koog.prompt.executor.llms.all.simpleGoogleAIExecutor
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
-import ai.koog.prompt.executor.model.PromptExecutorExt.execute
 import ai.koog.prompt.markdown.markdown
 import kotlinx.coroutines.runBlocking
 import kotlinx.io.files.Path
@@ -49,10 +48,10 @@ fun main() {
 
     runBlocking {
         println("OpenAI response:")
-        openaiExecutor.execute(prompt, OpenAIModels.Chat.GPT4_1).content.also(::println)
+        openaiExecutor.execute(prompt, OpenAIModels.Chat.GPT4_1).single().content.also(::println)
         println("Anthropic response:")
-        anthropicExecutor.execute(prompt, AnthropicModels.Sonnet_4).content.also(::println)
+        anthropicExecutor.execute(prompt, AnthropicModels.Sonnet_4).single().content.also(::println)
         println("Google response:")
-        googleExecutor.execute(prompt, GoogleModels.Gemini2_0Flash).content.also(::println)
+        googleExecutor.execute(prompt, GoogleModels.Gemini2_0Flash).single().content.also(::println)
     }
 }

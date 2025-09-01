@@ -7,6 +7,9 @@ import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
 import ai.koog.agents.core.dsl.extension.onAssistantMessage
 import ai.koog.agents.core.dsl.extension.onToolCall
+import ai.koog.agents.core.feature.message.FeatureEvent
+import ai.koog.agents.core.feature.message.FeatureMessage
+import ai.koog.agents.core.feature.message.FeatureStringMessage
 import ai.koog.agents.core.feature.model.AIAgentBeforeCloseEvent
 import ai.koog.agents.core.feature.model.AIAgentFinishedEvent
 import ai.koog.agents.core.feature.model.AIAgentNodeExecutionEndEvent
@@ -19,9 +22,6 @@ import ai.koog.agents.core.feature.model.BeforeLLMCallEvent
 import ai.koog.agents.core.feature.model.ToolCallEvent
 import ai.koog.agents.core.feature.model.ToolCallResultEvent
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.features.common.message.FeatureEvent
-import ai.koog.agents.features.common.message.FeatureMessage
-import ai.koog.agents.features.common.message.FeatureStringMessage
 import ai.koog.agents.features.tracing.eventString
 import ai.koog.agents.features.tracing.feature.Tracing
 import ai.koog.agents.features.tracing.mock.MockLLMProvider
@@ -237,6 +237,8 @@ class TraceFeatureMessageFileWriterTest {
                         dummyTool.result
                     )
                 }, output: $expectedResponse)",
+                "${AIAgentNodeExecutionStartEvent::class.simpleName} (run id: $runId, node: __finish__, input: $mockResponse)",
+                "${AIAgentNodeExecutionEndEvent::class.simpleName} (run id: $runId, node: __finish__, input: $mockResponse, output: $mockResponse)",
                 "${AIAgentStrategyFinishedEvent::class.simpleName} (run id: $runId, strategy: $strategyName, result: $mockResponse)",
                 "${AIAgentFinishedEvent::class.simpleName} (agent id: $agentId, run id: $runId, result: $mockResponse)",
                 "${AIAgentBeforeCloseEvent::class.simpleName} (agent id: $agentId)",
@@ -309,6 +311,8 @@ class TraceFeatureMessageFileWriterTest {
             "CUSTOM. ${AIAgentNodeExecutionStartEvent::class.simpleName}",
             "CUSTOM. ${BeforeLLMCallEvent::class.simpleName}",
             "CUSTOM. ${AfterLLMCallEvent::class.simpleName}",
+            "CUSTOM. ${AIAgentNodeExecutionEndEvent::class.simpleName}",
+            "CUSTOM. ${AIAgentNodeExecutionStartEvent::class.simpleName}",
             "CUSTOM. ${AIAgentNodeExecutionEndEvent::class.simpleName}",
             "CUSTOM. ${AIAgentStrategyFinishedEvent::class.simpleName}",
             "CUSTOM. ${AIAgentFinishedEvent::class.simpleName}",

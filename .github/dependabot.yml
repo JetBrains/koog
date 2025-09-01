@@ -1,0 +1,97 @@
+version: 2
+updates:
+  # Gradle dependencies
+  - package-ecosystem: "gradle"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    groups:
+      kotlin-ecosystem:
+        patterns:
+          - "org.jetbrains.kotlin*"
+          - "org.jetbrains.kotlinx*"
+      ktor:
+        patterns:
+          - "io.ktor*"
+      spring-ecosystem:
+        patterns:
+          - "org.springframework*"
+          - "com.fasterxml.jackson*"
+          - "io.projectreactor*"
+      aws-sdk:
+        patterns:
+          - "aws.sdk.kotlin*"
+      testing-tools:
+        patterns:
+          - "*junit*"
+          - "*mockk*"
+          - "*testcontainers*"
+      monitoring:
+        patterns:
+          - "io.opentelemetry*"
+          - "ch.qos.logback*"
+          - "org.slf4j*"
+          - "io.github.oshai*"
+      build-plugins:
+        patterns:
+          - "com.github.johnrengelman*"
+          - "org.jetbrains.dokka*"
+          - "org.jetbrains.kotlinx.kover*"
+          - "org.jlleitschuh.gradle.ktlint*"
+    # Ignoring
+    ignore:
+      # Kotlin majority updates
+      - dependency-name: "org.jetbrains.kotlin*"
+        update-types: [ "version-update:semver-major" ]
+      # Spring Boot majority updates
+      - dependency-name: "org.springframework.boot*"
+        update-types: ["version-update:semver-major"]
+    # Settings PR
+    open-pull-requests-limit: 10
+    target-branch: "develop"
+    labels:
+      - "dependencies"
+      - "automated-pr"
+    commit-message:
+      prefix: "deps"
+      prefix-development: "deps(dev)"
+      include: "scope"
+
+  # Android demo app
+  - package-ecosystem: "gradle"
+    directory: "/examples/demo-android-app"
+    schedule:
+      interval: "monthly"
+    target-branch: "develop"
+    labels:
+      - "dependencies"
+      - "android-demo"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+      day: "monday"
+    groups:
+      checkout-and-setup:
+        patterns:
+          - "actions/checkout*"
+          - "actions/setup-*"
+      gradle-actions:
+        patterns:
+          - "gradle/actions*"
+      aws-actions:
+        patterns:
+          - "aws-actions/*"
+      jetbrains-actions:
+        patterns:
+          - "JetBrains/*"
+    target-branch: "develop"
+    labels:
+      - "github-actions"
+      - "dependencies"
+    commit-message:
+      prefix: "ci"

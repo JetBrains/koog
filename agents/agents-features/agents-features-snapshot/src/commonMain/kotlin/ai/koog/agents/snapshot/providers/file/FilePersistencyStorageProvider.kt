@@ -2,8 +2,10 @@ package ai.koog.agents.snapshot.providers.file
 
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
 import ai.koog.agents.snapshot.providers.PersistencyStorageProvider
-import ai.koog.rag.base.files.FileMetadata
 import ai.koog.rag.base.files.FileSystemProvider
+import ai.koog.rag.base.files.createDirectory
+import ai.koog.rag.base.files.readText
+import ai.koog.rag.base.files.writeText
 import kotlinx.serialization.json.Json
 
 /**
@@ -27,9 +29,9 @@ public open class FilePersistencyStorageProvider<Path>(
      * Directory where agent checkpoints are stored
      */
     private suspend fun checkpointsDir(): Path {
-        val dir = fs.fromRelativeString(root, "checkpoints")
+        val dir = fs.joinPath(root, "checkpoints")
         if (!fs.exists(dir)) {
-            fs.create(root, "checkpoints", FileMetadata.FileType.Directory)
+            fs.createDirectory(dir)
         }
         return dir
     }
@@ -39,9 +41,9 @@ public open class FilePersistencyStorageProvider<Path>(
      */
     private suspend fun agentCheckpointsDir(): Path {
         val checkpointsDir = checkpointsDir()
-        val agentDir = fs.fromRelativeString(checkpointsDir, persistenceId)
+        val agentDir = fs.joinPath(checkpointsDir, persistenceId)
         if (!fs.exists(agentDir)) {
-            fs.create(checkpointsDir, persistenceId, FileMetadata.FileType.Directory)
+            fs.createDirectory(agentDir)
         }
         return agentDir
     }
@@ -51,7 +53,7 @@ public open class FilePersistencyStorageProvider<Path>(
      */
     private suspend fun checkpointPath(checkpointId: String): Path {
         val agentDir = agentCheckpointsDir()
-        return fs.fromRelativeString(agentDir, checkpointId)
+        return fs.joinPath(agentDir, checkpointId)
     }
 
     override suspend fun getCheckpoints(): List<AgentCheckpointData> {
@@ -63,7 +65,7 @@ public open class FilePersistencyStorageProvider<Path>(
 
         return fs.list(agentDir).mapNotNull { path ->
             try {
-                val content = fs.read(path).decodeToString()
+                val content = fs.readText(path)
                 json.decodeFromString<AgentCheckpointData>(content)
             } catch (_: Exception) {
                 null
@@ -74,7 +76,7 @@ public open class FilePersistencyStorageProvider<Path>(
     override suspend fun saveCheckpoint(agentCheckpointData: AgentCheckpointData) {
         val checkpointPath = checkpointPath(agentCheckpointData.checkpointId)
         val serialized = json.encodeToString(AgentCheckpointData.serializer(), agentCheckpointData)
-        fs.write(checkpointPath, serialized.encodeToByteArray())
+        fs.writeText(checkpointPath, serialized)
     }
 
     override suspend fun getLatestCheckpoint(): AgentCheckpointData? {

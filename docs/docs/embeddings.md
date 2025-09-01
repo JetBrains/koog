@@ -21,18 +21,27 @@ The following sections include basic examples of how to use embeddings in the fo
 To use the embedding functionality with a local model, you need to have Ollama installed and running on your system.
 For installation and running instructions, refer to the [official Ollama GitHub repository](https://github.com/ollama/ollama).
 
+<!--- INCLUDE
+import ai.koog.embeddings.local.LLMEmbedder
+import ai.koog.embeddings.local.OllamaEmbeddingModels
+import ai.koog.prompt.executor.ollama.client.OllamaClient
+import kotlinx.coroutines.runBlocking
+-->
 ```kotlin
 fun main() {
-    // Create an OllamaClient instance
-    val client = OllamaClient()
-    // Create an embedder
-    val embedder = LLMEmbedder(client, OllamaEmbeddingModels.NOMIC_EMBED_TEXT)
-    // Create embeddings
-    val embedding = embedder.embed("This is the text to embed")
-    // Print embeddings to the output
-    println(embedding)
+    runBlocking {
+        // Create an OllamaClient instance
+        val client = OllamaClient()
+        // Create an embedder
+        val embedder = LLMEmbedder(client, OllamaEmbeddingModels.NOMIC_EMBED_TEXT)
+        // Create embeddings
+        val embedding = embedder.embed("This is the text to embed")
+        // Print embeddings to the output
+        println(embedding)
+    }
 }
 ```
+<!--- KNIT example-embeddings-01.kt -->
 
 To use an Ollama embedding model, make sure to have the following prerequisites:
 
@@ -74,6 +83,11 @@ Here are some general tips on which Ollama embedding model to select depending o
 To create embeddings using an OpenAI embedding model, use the `embed` method of an `OpenAILLMClient` instance as shown
 in the example below.
 
+<!--- INCLUDE
+import ai.koog.embeddings.local.LLMEmbedder
+import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
+-->
 ```kotlin
 suspend fun openAIEmbed(text: String) {
     // Get the OpenAI API token from the OPENAI_KEY environment variable
@@ -81,13 +95,14 @@ suspend fun openAIEmbed(text: String) {
     // Create an OpenAILLMClient instance
     val client = OpenAILLMClient(token)
     // Create an embedder
-    val embedder = LLMEmbedder(client, OpenAIModels.Embeddings.TextEmbeddingAda3Small)
+    val embedder = LLMEmbedder(client, OpenAIModels.Embeddings.TextEmbeddingAda002)
     // Create embeddings
     val embedding = embedder.embed(text)
     // Print embeddings to the output
     println(embedding)
 }
 ```
+<!--- KNIT example-embeddings-02.kt -->
 
 ## Examples
 
@@ -97,6 +112,9 @@ The following examples show how you can use embeddings to compare code with text
 
 Compare code snippets with natural language descriptions to find semantic matches:
 
+<!--- INCLUDE
+import ai.koog.embeddings.base.Embedder
+-->
 ```kotlin
 suspend fun compareCodeToText(embedder: Embedder) { // Embedder type
     // Code snippet
@@ -130,11 +148,15 @@ suspend fun compareCodeToText(embedder: Embedder) { // Embedder type
     }
 }
 ```
+<!--- KNIT example-embeddings-03.kt -->
 
 ### Code-to-code comparison
 
 Compare code snippets to find semantic similarities regardless of syntax differences:
 
+<!--- INCLUDE
+import ai.koog.embeddings.base.Embedder
+-->
 ```kotlin
 suspend fun compareCodeToCode(embedder: Embedder) { // Embedder type
     // Two implementations of the same algorithm in different languages
@@ -188,6 +210,7 @@ suspend fun compareCodeToCode(embedder: Embedder) { // Embedder type
     }
 }
 ```
+<!--- KNIT example-embeddings-04.kt -->
 
 ## API documentation
 

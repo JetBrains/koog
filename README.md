@@ -29,7 +29,7 @@ Key features of Koog include:
 - **Flexible graph workflows**: Design complex agent behaviors using intuitive graph-based workflows.
 - **Modular feature system**: Customize agent capabilities through a composable architecture.
 - **Scalable architecture**: Handle workloads from simple chatbots to enterprise applications.
-- **Multiplatform**: Run agents on JVM, JS, WasmJS targets with Kotlin Multiplatform.
+- **Multiplatform**: Run agents on JVM, JS, WasmJS, iOS targets with Kotlin Multiplatform.
 
 ### Available LLM providers and platforms
 
@@ -65,7 +65,7 @@ fun main() = runBlocking {
 
 ### Supported targets
 
-Currently, the framework supports the JVM, JS and WasmJS targets.
+Currently, the framework supports the JVM, JS, WasmJS and iOS targets.
 
 On JVM, JDK 17 or higher is required to use the framework.
 
@@ -77,7 +77,7 @@ Please check the [libs.versions.toml](gradle/libs.versions.toml) to know more ab
 
     ```
     dependencies {
-        implementation("ai.koog:koog-agents:0.3.0")
+        implementation("ai.koog:koog-agents:0.4.1")
     }
     ```
 2. Make sure that you have `mavenCentral()` in the list of repositories.
@@ -87,7 +87,7 @@ Please check the [libs.versions.toml](gradle/libs.versions.toml) to know more ab
 
     ```
     dependencies {
-        implementation 'ai.koog:koog-agents:0.3.0'
+        implementation 'ai.koog:koog-agents:0.4.1'
     }
     ```
 2. Make sure that you have `mavenCentral()` in the list of repositories.
@@ -98,8 +98,8 @@ Please check the [libs.versions.toml](gradle/libs.versions.toml) to know more ab
     ```
     <dependency>
         <groupId>ai.koog</groupId>
-        <artifactId>koog-agents</artifactId>
-        <version>0.3.0</version>
+        <artifactId>koog-agents-jvm</artifactId>
+        <version>0.4.1</version>
     </dependency>
     ```
 2. Make sure that you have `mavenCentral` in the list of repositories.

@@ -5,6 +5,7 @@ import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.bedrock.BedrockModels
+import ai.koog.prompt.executor.clients.bedrock.modelfamilies.ai21.JambaRequest.Companion.MAX_TOKENS_DEFAULT
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -43,7 +44,7 @@ class BedrockAI21JambaSerializationTest {
 
         assertNotNull(request)
         assertEquals(model.id, request.model)
-        assertEquals(4096, request.maxTokens)
+        assertEquals(MAX_TOKENS_DEFAULT, request.maxTokens)
         assertEquals(temperature, request.temperature)
 
         assertEquals(2, request.messages.size)
@@ -53,6 +54,22 @@ class BedrockAI21JambaSerializationTest {
 
         assertEquals("user", request.messages[1].role)
         assertEquals(userMessage, request.messages[1].content)
+    }
+
+    @Test
+    fun `createJambaRequest with custom maxTokens`() {
+        val maxTokens = 1000
+
+        val prompt = Prompt.build("test", params = LLMParams(maxTokens = maxTokens)) {
+            system(systemMessage)
+            user(userMessage)
+        }
+
+        val request = BedrockAI21JambaSerialization.createJambaRequest(prompt, model, emptyList())
+
+        assertNotNull(request)
+        assertEquals(model.id, request.model)
+        assertEquals(MAX_TOKENS_DEFAULT, request.maxTokens)
     }
 
     @Test
@@ -162,7 +179,9 @@ class BedrockAI21JambaSerializationTest {
 
     @Test
     fun `parseJambaResponse with text content`() {
+        // language=text
         val responseContent = "Paris is the capital of France"
+        // language=json
         val responseJson = """
             {
                 "id": "resp_01234567",
@@ -202,6 +221,7 @@ class BedrockAI21JambaSerializationTest {
 
     @Test
     fun `parseJambaResponse with tool call content`() {
+        // language=text
         val callId = "call_01234567"
         // language=json
         val responseJson = """
@@ -252,7 +272,9 @@ class BedrockAI21JambaSerializationTest {
 
     @Test
     fun `parseJambaResponse with both text and tool calls`() {
+        // language=text
         val message = "I'll check the weather for you."
+        // language=text
         val callId = "call_01234567"
 
         // language=json

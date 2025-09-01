@@ -1,6 +1,7 @@
 package ai.koog.agents.features.opentelemetry.attribute
 
 import ai.koog.agents.features.opentelemetry.mock.UnsupportedType
+import ai.koog.agents.utils.HiddenString
 import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.common.AttributeType
 import io.opentelemetry.api.internal.InternalAttributeKeyImpl
@@ -17,7 +18,8 @@ class AttributeExtensionTest {
             key = "stringKey",
             value = "stringValue",
             expectedType = AttributeType.STRING,
-            expectedValue = "stringValue"
+            expectedValue = "stringValue",
+            verbose = true
         )
 
     @Test
@@ -26,7 +28,8 @@ class AttributeExtensionTest {
             key = "intKey",
             value = 123,
             expectedType = AttributeType.LONG,
-            expectedValue = 123L
+            expectedValue = 123L,
+            verbose = true
         )
 
     @Test
@@ -35,7 +38,8 @@ class AttributeExtensionTest {
             key = "booleanKey",
             value = false,
             expectedType = AttributeType.BOOLEAN,
-            expectedValue = false
+            expectedValue = false,
+            verbose = true
         )
 
     @Test
@@ -44,7 +48,8 @@ class AttributeExtensionTest {
             key = "longKey",
             value = 123L,
             expectedType = AttributeType.LONG,
-            expectedValue = 123L
+            expectedValue = 123L,
+            verbose = true
         )
 
     @Test
@@ -53,7 +58,28 @@ class AttributeExtensionTest {
             key = "doubleKey",
             value = 123.45,
             expectedType = AttributeType.DOUBLE,
-            expectedValue = 123.45
+            expectedValue = 123.45,
+            verbose = true
+        )
+
+    @Test
+    fun `test convert FLOAT attribute to sdk map with verbose true`() =
+        testAttributeType(
+            key = "floatKey",
+            value = 12.34f,
+            expectedType = AttributeType.DOUBLE,
+            expectedValue = 12.34f,
+            verbose = true
+        )
+
+    @Test
+    fun `test convert HIDDEN STRING attribute to sdk map with verbose true`() =
+        testAttributeType(
+            key = "hiddenStringKey",
+            value = HiddenString("secret"),
+            expectedType = AttributeType.STRING,
+            expectedValue = "secret",
+            verbose = true
         )
 
     @Test
@@ -62,7 +88,8 @@ class AttributeExtensionTest {
             key = "stringArrayKey",
             value = listOf("stringValue1", "stringValue2"),
             expectedType = AttributeType.STRING_ARRAY,
-            expectedValue = listOf("stringValue1", "stringValue2")
+            expectedValue = listOf("stringValue1", "stringValue2"),
+            verbose = true
         )
 
     @Test
@@ -71,7 +98,8 @@ class AttributeExtensionTest {
             key = "intArrayKey",
             value = listOf(123, 456),
             expectedType = AttributeType.LONG_ARRAY,
-            expectedValue = listOf(123L, 456L)
+            expectedValue = listOf(123L, 456L),
+            verbose = true
         )
 
     @Test
@@ -80,7 +108,8 @@ class AttributeExtensionTest {
             key = "booleanArrayKey",
             value = listOf(true, false),
             expectedType = AttributeType.BOOLEAN_ARRAY,
-            expectedValue = listOf(true, false)
+            expectedValue = listOf(true, false),
+            verbose = true
         )
 
     @Test
@@ -89,7 +118,8 @@ class AttributeExtensionTest {
             key = "longArrayKey",
             value = listOf(123L, 456L),
             expectedType = AttributeType.LONG_ARRAY,
-            expectedValue = listOf(123L, 456L)
+            expectedValue = listOf(123L, 456L),
+            verbose = true
         )
 
     @Test
@@ -98,7 +128,21 @@ class AttributeExtensionTest {
             key = "doubleArrayKey",
             value = listOf(123.45, 678.90),
             expectedType = AttributeType.DOUBLE_ARRAY,
-            expectedValue = listOf(123.45, 678.90)
+            expectedValue = listOf(123.45, 678.90),
+            verbose = true
+        )
+
+    @Test
+    fun `test convert ARRAY OF HIDDEN STRING attribute to sdk map with verbose true`() =
+        testAttributeType(
+            key = "hiddenStringArrayKey",
+            value = listOf(
+                HiddenString("one"),
+                HiddenString("two")
+            ),
+            expectedType = AttributeType.STRING_ARRAY,
+            expectedValue = listOf("one", "two"),
+            verbose = true
         )
 
     @Test
@@ -108,7 +152,7 @@ class AttributeExtensionTest {
 
         val expectedAttributes = listOf(testCustomAttribute)
         val throwable = assertThrows<IllegalStateException> {
-            expectedAttributes.toSdkAttributes()
+            expectedAttributes.toSdkAttributes(verbose = true)
         }
 
         assertEquals(
@@ -127,7 +171,7 @@ class AttributeExtensionTest {
 
         val expectedAttributes = listOf(testCustomAttribute)
         val throwable = assertThrows<IllegalStateException> {
-            expectedAttributes.toSdkAttributes()
+            expectedAttributes.toSdkAttributes(verbose = true)
         }
 
         assertEquals(
@@ -142,7 +186,7 @@ class AttributeExtensionTest {
         val testCustomAttribute2 = CustomAttribute("intKey", 123)
 
         val expectedAttributes = listOf(testCustomAttribute1, testCustomAttribute2)
-        val actualSdkAttributes = expectedAttributes.toSdkAttributes()
+        val actualSdkAttributes = expectedAttributes.toSdkAttributes(verbose = true)
 
         assertEquals(expectedAttributes.size, actualSdkAttributes.size())
 
@@ -175,7 +219,7 @@ class AttributeExtensionTest {
 
         val expectedAttributes = listOf(testCustomAttribute, unsupportedAttribute)
         val throwable = assertThrows<IllegalStateException> {
-            expectedAttributes.toSdkAttributes()
+            expectedAttributes.toSdkAttributes(verbose = true)
         }
 
         assertEquals(
@@ -183,6 +227,36 @@ class AttributeExtensionTest {
             "Attribute 'unsupportedKey' has unsupported type for value: ${UnsupportedType::class.simpleName}"
         )
     }
+
+    @Test
+    fun `test convert HIDDEN STRING attribute to sdk map with verbose false`() {
+        testAttributeType(
+            key = "hiddenStringKey",
+            value = HiddenString("secret"),
+            expectedType = AttributeType.STRING,
+            expectedValue = HiddenString.HIDDEN_STRING_PLACEHOLDER,
+            verbose = false
+        )
+    }
+
+    @Test
+    fun `test convert ARRAY OF HIDDEN STRING attribute to sdk map with verbose false`() {
+        testAttributeType(
+            key = "hiddenStringArrayKey",
+            value = listOf(
+                HiddenString("one"),
+                HiddenString("two")
+            ),
+            expectedType = AttributeType.STRING_ARRAY,
+            expectedValue = listOf(
+                HiddenString.HIDDEN_STRING_PLACEHOLDER,
+                HiddenString.HIDDEN_STRING_PLACEHOLDER
+            ),
+            verbose = false
+        )
+    }
+
+    //region Private Methods
 
     private fun assertSdkAttribute(
         actualKey: AttributeKey<*>,
@@ -220,12 +294,13 @@ class AttributeExtensionTest {
         key: String,
         value: TActual,
         expectedType: AttributeType,
-        expectedValue: TExpected
+        expectedValue: TExpected,
+        verbose: Boolean
     ) where TActual : Any, TExpected : Any {
         val testCustomAttribute = CustomAttribute(key, value)
 
         val expectedAttributes = listOf(testCustomAttribute)
-        val actualSdkAttributes = expectedAttributes.toSdkAttributes()
+        val actualSdkAttributes = expectedAttributes.toSdkAttributes(verbose = verbose)
 
         assertEquals(expectedAttributes.size, actualSdkAttributes.size())
 
@@ -240,4 +315,6 @@ class AttributeExtensionTest {
             expectedValue = expectedValue
         )
     }
+
+    //endregion Private Methods
 }

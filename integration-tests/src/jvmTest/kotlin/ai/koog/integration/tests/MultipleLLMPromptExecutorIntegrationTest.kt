@@ -13,19 +13,28 @@ import ai.koog.integration.tests.utils.MediaTestUtils.checkExecutorMediaResponse
 import ai.koog.integration.tests.utils.MediaTestUtils.checkResponseBasic
 import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.RetryUtils.withRetry
-import ai.koog.integration.tests.utils.TestUtils
+import ai.koog.integration.tests.utils.TestUtils.CalculatorOperation
+import ai.koog.integration.tests.utils.TestUtils.Colors
+import ai.koog.integration.tests.utils.TestUtils.Country
+import ai.koog.integration.tests.utils.TestUtils.StructuredTest
+import ai.koog.integration.tests.utils.TestUtils.StructuredTest.checkResponse
+import ai.koog.integration.tests.utils.TestUtils.StructuredTest.getConfigFixingParserManual
+import ai.koog.integration.tests.utils.TestUtils.markdownCountryDefinition
+import ai.koog.integration.tests.utils.TestUtils.parseMarkdownStreamToCountries
 import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestGoogleAIKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
+import ai.koog.integration.tests.utils.annotations.Retry
 import ai.koog.prompt.dsl.ModerationCategory
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
+import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
+import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.llms.all.DefaultMultiLLMPromptExecutor
-import ai.koog.prompt.executor.model.PromptExecutorExt.execute
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -34,7 +43,9 @@ import ai.koog.prompt.message.Attachment
 import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams.ToolChoice
+import ai.koog.prompt.structure.executeStructured
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
@@ -43,7 +54,7 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.util.*
+import java.util.Base64
 import java.util.stream.Stream
 import kotlin.io.path.pathString
 import kotlin.io.path.readBytes
@@ -105,14 +116,14 @@ class MultipleLLMPromptExecutorIntegrationTest {
     }
 
     // API keys for testing
-    private val geminiApiKey: String get() = readTestGoogleAIKeyFromEnv()
     private val openAIApiKey: String get() = readTestOpenAIKeyFromEnv()
     private val anthropicApiKey: String get() = readTestAnthropicKeyFromEnv()
+    private val googleApiKey: String get() = readTestGoogleAIKeyFromEnv()
 
     // LLM clients
     private val openAIClient get() = OpenAILLMClient(openAIApiKey)
     private val anthropicClient get() = AnthropicLLMClient(anthropicApiKey)
-    private val googleClient get() = GoogleLLMClient(geminiApiKey)
+    private val googleClient get() = GoogleLLMClient(googleApiKey)
     val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
 
     private fun createCalculatorTool(): ToolDescriptor {
@@ -123,7 +134,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
                 ToolParameterDescriptor(
                     name = "operation",
                     description = "The operation to perform.",
-                    type = ToolParameterType.Enum(TestUtils.CalculatorOperation.entries.map { it.name }.toTypedArray())
+                    type = ToolParameterType.Enum(CalculatorOperation.entries.map { it.name }.toTypedArray())
                 ),
                 ToolParameterDescriptor(
                     name = "a",
@@ -209,37 +220,6 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
-    fun integration_testCodeGeneration(model: LLModel) = runTest(timeout = 300.seconds) {
-        Models.assumeAvailable(model.provider)
-        assumeTrue(model.capabilities.contains(LLMCapability.Tools))
-
-        val prompt = prompt("test-code") {
-            system("You are a helpful coding assistant.")
-            user(
-                "Write a simple Kotlin function to calculate the factorial of a number. " +
-                    "Make sure the name of the function starts with 'factorial'. ONLY generate CODE, no explanations or other texts. " +
-                    "The function MUST have a return statement."
-            )
-        }
-
-        withRetry(times = 3, testName = "integration_testCodeGeneration[${model.id}]") {
-            val response = executor.execute(prompt, model, emptyList())
-
-            assertNotNull(response, "Response should not be null")
-            assertTrue(response.isNotEmpty(), "Response should not be empty")
-            assertTrue(response.first() is Message.Assistant, "Response should be an Assistant message")
-
-            val content = (response.first() as Message.Assistant).content
-            assertTrue(
-                content.contains("fun factorial"),
-                "Response should contain a factorial function. Response: $response. Content: $content"
-            )
-            assertTrue(content.contains("return"), "Response should contain a return statement")
-        }
-    }
-
-    @ParameterizedTest
-    @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testToolsWithRequiredParams(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
@@ -251,7 +231,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
                 ToolParameterDescriptor(
                     name = "operation",
                     description = "The operation to perform.",
-                    type = ToolParameterType.Enum(TestUtils.CalculatorOperation.entries.map { it.name }.toTypedArray())
+                    type = ToolParameterType.Enum(CalculatorOperation.entries.map { it.name }.toTypedArray())
                 ),
                 ToolParameterDescriptor(
                     name = "a",
@@ -297,7 +277,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
                 ToolParameterDescriptor(
                     name = "operation",
                     description = "The operation to perform.",
-                    type = ToolParameterType.Enum(TestUtils.CalculatorOperation.entries.map { it.name }.toTypedArray())
+                    type = ToolParameterType.Enum(CalculatorOperation.entries.map { it.name }.toTypedArray())
                 ),
                 ToolParameterDescriptor(
                     name = "a",
@@ -351,7 +331,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
                 ToolParameterDescriptor(
                     name = "operation",
                     description = "The operation to perform.",
-                    type = ToolParameterType.Enum(TestUtils.CalculatorOperation.entries.map { it.name }.toTypedArray())
+                    type = ToolParameterType.Enum(CalculatorOperation.entries.map { it.name }.toTypedArray())
                 ),
                 ToolParameterDescriptor(
                     name = "a",
@@ -438,7 +418,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
                     description = "The color to be picked.",
                     type = ToolParameterType.List(
                         ToolParameterType.Enum(
-                            TestUtils.Colors.entries.map { it.name }
+                            Colors.entries.map { it.name }
                                 .toTypedArray()
                         )
                     )
@@ -541,11 +521,10 @@ class MultipleLLMPromptExecutorIntegrationTest {
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_testStructuredDataStreaming(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
-        if (model.id == OpenAIModels.Audio.GPT4oAudio.id || model.id == OpenAIModels.Audio.GPT4oMiniAudio.id) {
-            assumeTrue(false, "There is no text response for audio models.")
-        }
-        val countries = mutableListOf<TestUtils.Country>()
-        val countryDefinition = TestUtils.markdownCountryDefinition()
+        assumeTrue(model != OpenAIModels.CostOptimized.GPT4_1Nano, "Model $model is too small for structured streaming")
+
+        val countries = mutableListOf<Country>()
+        val countryDefinition = markdownCountryDefinition()
 
         val prompt = prompt("test-structured-streaming") {
             system("You are a helpful assistant.")
@@ -568,7 +547,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
         withRetry(times = 3, testName = "integration_testStructuredDataStreaming[${model.id}]") {
             val markdownStream = client.executeStreaming(prompt, model)
-            TestUtils.parseMarkdownStreamToCountries(markdownStream).collect { country ->
+            parseMarkdownStreamToCountries(markdownStream).collect { country ->
                 countries.add(country)
             }
 
@@ -670,8 +649,6 @@ class MultipleLLMPromptExecutorIntegrationTest {
         }
     }
 
-    // ToDo add video & pdf specific scenarios
-
     @ParameterizedTest
     @MethodSource("markdownScenarioModelCombinations")
     fun integration_testMarkdownProcessingBasic(
@@ -681,39 +658,40 @@ class MultipleLLMPromptExecutorIntegrationTest {
         runTest(timeout = 300.seconds) {
             Models.assumeAvailable(model.provider)
             val file = MediaTestUtils.createMarkdownFileForScenario(scenario, testResourcesDir)
-            val prompt = if (model.capabilities.contains(LLMCapability.Document)) {
-                prompt("markdown-test-${scenario.name.lowercase()}") {
-                    system("You are a helpful assistant that can analyze markdown files.")
+            val prompt =
+                if (model.capabilities.contains(LLMCapability.Document) && model.provider != LLMProvider.OpenAI) {
+                    prompt("markdown-test-${scenario.name.lowercase()}") {
+                        system("You are a helpful assistant that can analyze markdown files.")
 
-                    user {
-                        markdown {
-                            "I'm sending you a markdown file with different markdown elements. "
-                            +"Please list all the markdown elements used in it and describe its structure clearly."
+                        user {
+                            markdown {
+                                +"I'm sending you a markdown file with different markdown elements. "
+                                +"Please list all the markdown elements used in it and describe its structure clearly."
+                            }
+
+                            attachments {
+                                textFile(KtPath(file.pathString), "text/plain")
+                            }
                         }
+                    }
+                } else {
+                    prompt("markdown-test-${scenario.name.lowercase()}") {
+                        system("You are a helpful assistant that can analyze markdown files.")
 
-                        attachments {
-                            file(file.pathString, "text/markdown")
+                        user {
+                            markdown {
+                                +"I'm sending you a markdown file with different markdown elements. "
+                                +"Please list all the markdown elements used in it and describe its structure clearly."
+                                newline()
+                                +file.readText()
+                            }
                         }
                     }
                 }
-            } else {
-                prompt("markdown-test-${scenario.name.lowercase()}") {
-                    system("You are a helpful assistant that can analyze markdown files.")
-
-                    user {
-                        markdown {
-                            "I'm sending you a markdown file with different markdown elements. "
-                            +"Please list all the markdown elements used in it and describe its structure clearly."
-                            newline()
-                            +file.readText()
-                        }
-                    }
-                }
-            }
 
             withRetry {
                 try {
-                    val response = executor.execute(prompt, model)
+                    val response = executor.execute(prompt, model).single()
                     when (scenario) {
                         MarkdownTestScenario.MALFORMED_SYNTAX,
                         MarkdownTestScenario.MATH_NOTATION,
@@ -781,38 +759,42 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
             withRetry {
                 try {
-                    val response = executor.execute(prompt, model)
+                    val response = executor.execute(prompt, model).single()
                     checkExecutorMediaResponse(response)
                 } catch (e: Exception) {
                     // For some edge cases, exceptions are expected
                     when (scenario) {
                         ImageTestScenario.LARGE_IMAGE_ANTHROPIC, ImageTestScenario.LARGE_IMAGE -> {
-                            assertTrue(
-                                e.message?.contains("400 Bad Request") == true,
+                            assertEquals(
+                                e.message?.contains("400 Bad Request"),
+                                true,
                                 "Expected exception for a large image [400 Bad Request] was not found, got [${e.message}] instead"
                             )
-                            assertTrue(
-                                e.message?.contains("image exceeds") == true,
+                            assertEquals(
+                                e.message?.contains("image exceeds"),
+                                true,
                                 "Expected exception for a large image [image exceeds] was not found, got [${e.message}] instead"
                             )
                         }
 
                         ImageTestScenario.CORRUPTED_IMAGE, ImageTestScenario.EMPTY_IMAGE -> {
-                            assertTrue(
-                                e.message?.contains("400 Bad Request") == true,
+                            assertEquals(
+                                e.message?.contains("400 Bad Request"),
+                                true,
                                 "Expected exception for a corrupted image [400 Bad Request] was not found, got [${e.message}] instead"
                             )
                             if (model.provider == LLMProvider.Anthropic) {
-                                assertTrue(
-                                    e.message?.contains("Could not process image") == true,
+                                assertEquals(
+                                    e.message?.contains("Could not process image"),
+                                    true,
                                     "Expected exception for a corrupted image [Could not process image] was not found, got [${e.message}] instead"
                                 )
                             } else if (model.provider == LLMProvider.OpenAI) {
-                                assertTrue(
+                                assertEquals(
                                     e.message?.contains(
                                         "You uploaded an unsupported image. Please make sure your image is valid."
-                                    ) ==
-                                        true,
+                                    ),
+                                    true,
                                     "Expected exception for a corrupted image [You uploaded an unsupported image. Please make sure your image is valid.] was not found, got [${e.message}] instead"
                                 )
                             }
@@ -831,55 +813,56 @@ class MultipleLLMPromptExecutorIntegrationTest {
     fun integration_testTextProcessingBasic(scenario: TextTestScenario, model: LLModel) =
         runTest(timeout = 300.seconds) {
             Models.assumeAvailable(model.provider)
-            assumeTrue(model.provider != LLMProvider.OpenAI, "File format txt not supported for OpenAI")
 
             val file = MediaTestUtils.createTextFileForScenario(scenario, testResourcesDir)
 
-            val prompt = if (model.capabilities.contains(LLMCapability.Document)) {
-                prompt("text-test-${scenario.name.lowercase()}") {
-                    system("You are a helpful assistant that can analyze and process text.")
+            val prompt =
+                if (model.capabilities.contains(LLMCapability.Document) && model.provider != LLMProvider.OpenAI) {
+                    prompt("text-test-${scenario.name.lowercase()}") {
+                        system("You are a helpful assistant that can analyze and process text.")
 
-                    user {
-                        markdown {
-                            "I'm sending you a text file. Please analyze it and summarize its content."
+                        user {
+                            markdown {
+                                +"I'm sending you a text file. Please analyze it and summarize its content."
+                            }
+
+                            attachments {
+                                textFile(KtPath(file.pathString), "text/plain")
+                            }
                         }
+                    }
+                } else {
+                    prompt("text-test-${scenario.name.lowercase()}") {
+                        system("You are a helpful assistant that can analyze and process text.")
 
-                        attachments {
-                            textFile(KtPath(file.pathString), "text/plain")
+                        user {
+                            markdown {
+                                +"I'm sending you a text file. Please analyze it and summarize its content."
+                                newline()
+                                +file.readText()
+                            }
                         }
                     }
                 }
-            } else {
-                prompt("text-test-${scenario.name.lowercase()}") {
-                    system("You are a helpful assistant that can analyze and process text.")
-
-                    user {
-                        markdown {
-                            +"I'm sending you a text file. Please analyze it and summarize its content."
-                            newline()
-                            +file.readText()
-                        }
-                    }
-                }
-            }
 
             withRetry {
                 try {
-                    val response = executor.execute(prompt, model)
+                    val response = executor.execute(prompt, model).single()
                     checkExecutorMediaResponse(response)
                 } catch (e: Exception) {
                     when (scenario) {
                         TextTestScenario.EMPTY_TEXT -> {
                             if (model.provider == LLMProvider.Google) {
-                                assertTrue(
-                                    e.message?.contains("400 Bad Request") == true,
+                                assertEquals(
+                                    e.message?.contains("400 Bad Request"),
+                                    true,
                                     "Expected exception for empty text [400 Bad Request] was not found, got [${e.message}] instead"
                                 )
-                                assertTrue(
+                                assertEquals(
                                     e.message?.contains(
                                         "Unable to submit request because it has an empty inlineData parameter. Add a value to the parameter and try again."
-                                    ) ==
-                                        true,
+                                    ),
+                                    true,
                                     "Expected exception for empty text [Unable to submit request because it has an empty inlineData parameter. Add a value to the parameter and try again] was not found, got [${e.message}] instead"
                                 )
                             }
@@ -887,12 +870,14 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
                         TextTestScenario.LONG_TEXT_5_MB -> {
                             if (model.provider == LLMProvider.Anthropic) {
-                                assertTrue(
-                                    e.message?.contains("400 Bad Request") == true,
+                                assertEquals(
+                                    e.message?.contains("400 Bad Request"),
+                                    true,
                                     "Expected exception for long text [400 Bad Request] was not found, got [${e.message}] instead"
                                 )
-                                assertTrue(
-                                    e.message?.contains("prompt is too long") == true,
+                                assertEquals(
+                                    e.message?.contains("prompt is too long"),
+                                    true,
                                     "Expected exception for long text [prompt is too long:] was not found, got [${e.message}] instead"
                                 )
                             } else if (model.provider == LLMProvider.Google) {
@@ -925,7 +910,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
                 user {
                     markdown {
-                        "I'm sending you an audio file. Please tell me a couple of words about it."
+                        +"I'm sending you an audio file. Please tell me a couple of words about it."
                     }
 
                     attachments {
@@ -936,22 +921,25 @@ class MultipleLLMPromptExecutorIntegrationTest {
 
             withRetry {
                 try {
-                    val response = executor.execute(prompt, model)
+                    val response = executor.execute(prompt, model).single()
                     checkExecutorMediaResponse(response)
                 } catch (e: Exception) {
                     if (scenario == AudioTestScenario.CORRUPTED_AUDIO) {
-                        assertTrue(
-                            e.message?.contains("400 Bad Request") == true,
+                        assertEquals(
+                            e.message?.contains("400 Bad Request"),
+                            true,
                             "Expected exception for empty text [400 Bad Request] was not found, got [${e.message}] instead"
                         )
                         if (model.provider == LLMProvider.OpenAI) {
-                            assertTrue(
-                                e.message?.contains("This model does not support the format you provided.") == true,
+                            assertEquals(
+                                e.message?.contains("This model does not support the format you provided."),
+                                true,
                                 "Expected exception for corrupted audio [This model does not support the format you provided.]"
                             )
                         } else if (model.provider == LLMProvider.Google) {
-                            assertTrue(
-                                e.message?.contains("Request contains an invalid argument.") == true,
+                            assertEquals(
+                                e.message?.contains("Request contains an invalid argument."),
+                                true,
                                 "Expected exception for corrupted audio [Request contains an invalid argument.]"
                             )
                         }
@@ -1001,7 +989,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
         }
 
         withRetry {
-            val response = executor.execute(prompt, model)
+            val response = executor.execute(prompt, model).single()
             checkExecutorMediaResponse(response)
 
             assertTrue(
@@ -1041,7 +1029,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
         }
 
         withRetry {
-            val response = executor.execute(prompt, model)
+            val response = executor.execute(prompt, model).single()
             checkExecutorMediaResponse(response)
 
             assertTrue(
@@ -1134,5 +1122,139 @@ class MultipleLLMPromptExecutorIntegrationTest {
                 ModerationCategory.Violence
             )
         ) { "Violence must be detected!" }
+    }
+
+    @Retry
+    @Test
+    fun integration_testMultipleSystemMessages() = runBlocking {
+        Models.assumeAvailable(LLMProvider.OpenAI)
+        Models.assumeAvailable(LLMProvider.Anthropic)
+        Models.assumeAvailable(LLMProvider.Google)
+
+        val openAIClient = OpenAILLMClient(openAIApiKey)
+        val anthropicClient = AnthropicLLMClient(anthropicApiKey)
+        val googleClient = GoogleLLMClient(googleApiKey)
+
+        val executor = MultiLLMPromptExecutor(
+            LLMProvider.OpenAI to openAIClient,
+            LLMProvider.Anthropic to anthropicClient,
+            LLMProvider.Google to googleClient
+        )
+
+        val prompt = prompt("multiple-system-messages-test") {
+            system("You are a helpful assistant.")
+            user("Hi")
+            system("You can handle multiple system messages.")
+            user("Respond with a short message.")
+        }
+
+        val modelOpenAI = OpenAIModels.CostOptimized.GPT4oMini
+        val modelAnthropic = AnthropicModels.Haiku_3_5
+        val modelGemini = GoogleModels.Gemini2_0Flash
+
+        val responseOpenAI = executor.execute(prompt, modelOpenAI).single()
+        val responseAnthropic = executor.execute(prompt, modelAnthropic).single()
+        val responseGemini = executor.execute(prompt, modelGemini).single()
+
+        assertTrue(responseOpenAI.content.isNotEmpty(), "OpenAI response should not be empty")
+        assertTrue(responseAnthropic.content.isNotEmpty(), "Anthropic response should not be empty")
+        assertTrue(responseGemini.content.isNotEmpty(), "Gemini response should not be empty")
+        println("OpenAI Response: ${responseOpenAI.content}")
+        println("Anthropic Response: ${responseAnthropic.content}")
+        println("Gemini Response: ${responseGemini.content}")
+    }
+
+    /*
+     * Structured native/manual output tests.
+     * */
+
+    @ParameterizedTest
+    @MethodSource("openAIModels", "anthropicModels", "googleModels")
+    fun integration_testStructuredOutputNative(model: LLModel) = runTest {
+        assumeTrue(
+            model.capabilities.contains(LLMCapability.Schema.JSON.Standard),
+            "Model does not support Standard JSON Schema"
+        )
+
+        withRetry {
+            val result = executor.executeStructured(
+                prompt = StructuredTest.prompt,
+                model = model,
+                config = StructuredTest.getConfigNoFixingParserNative(model)
+            )
+
+            assertTrue(result.isSuccess, "Structured output should succeed: ${result.exceptionOrNull()}")
+            checkResponse(result)
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("openAIModels", "anthropicModels", "googleModels")
+    fun integration_testStructuredOutputNativeWithFixingParser(model: LLModel) = runTest {
+        assumeTrue(
+            model.capabilities.contains(LLMCapability.Schema.JSON.Standard),
+            "Model does not support Standard JSON Schema"
+        )
+
+        withRetry {
+            val result = executor.executeStructured(
+                prompt = StructuredTest.prompt,
+                model = model,
+                config = StructuredTest.getConfigFixingParserNative(model)
+            )
+
+            assertTrue(result.isSuccess, "Structured output should succeed: ${result.exceptionOrNull()}")
+            checkResponse(result)
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("openAIModels", "anthropicModels", "googleModels")
+    fun integration_testStructuredOutputManual(model: LLModel) = runTest {
+        assumeTrue(
+            model.provider !== LLMProvider.Google,
+            "Google models fail to return manually requested structured output without fixing"
+        )
+
+        assumeTrue(
+            model.capabilities.contains(LLMCapability.Schema.JSON.Standard),
+            "Model does not support Standard JSON Schema"
+        )
+
+        withRetry {
+            val result = executor.executeStructured(
+                prompt = StructuredTest.prompt,
+                model = model,
+                config = StructuredTest.getConfigNoFixingParserManual(model)
+            )
+
+            assertTrue(result.isSuccess, "Structured output should succeed: ${result.exceptionOrNull()}")
+            checkResponse(result)
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("openAIModels", "anthropicModels", "googleModels")
+    fun integration_testStructuredOutputManualWithFixingParser(model: LLModel) = runTest {
+        assumeTrue(
+            model !== GoogleModels.Gemini2_0FlashLite,
+            "Gemini Flash Lite 2.0 model fail to return manually requested structured output"
+        )
+
+        assumeTrue(
+            model.capabilities.contains(LLMCapability.Schema.JSON.Standard),
+            "Model does not support Standard JSON Schema"
+        )
+
+        withRetry(6) {
+            val result = executor.executeStructured(
+                prompt = StructuredTest.prompt,
+                model = model,
+                config = getConfigFixingParserManual(model)
+            )
+
+            assertTrue(result.isSuccess, "Structured output should succeed: ${result.exceptionOrNull()}")
+            checkResponse(result)
+        }
     }
 }

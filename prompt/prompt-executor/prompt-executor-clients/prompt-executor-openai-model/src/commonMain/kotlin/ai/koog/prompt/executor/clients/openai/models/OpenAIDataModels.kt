@@ -1,0 +1,970 @@
+package ai.koog.prompt.executor.clients.openai.models
+
+import kotlinx.serialization.InternalSerializationApi
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.SerialKind
+import kotlinx.serialization.descriptors.buildSerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonClassDiscriminator
+import kotlinx.serialization.json.JsonDecoder
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
+import kotlin.jvm.JvmInline
+
+/**
+ * Base interface for LLM OpenAI API requests.
+ * Contains properties that are common across all supported LLM providers.
+ */
+public interface OpenAIBaseLLMRequest {
+    /** The model to use for generating a response. */
+    public val model: String?
+
+    /** The stream output enabler. */
+    public val stream: Boolean?
+
+    /** The temperature parameter for controlling randomness in the output. */
+    public val temperature: Double?
+
+    /** The top probability threshold. */
+    public val topP: Double?
+
+    /** The number of alternatives per position. */
+    public val topLogprobs: Int?
+}
+
+/**
+ * Base interface for all LLM OpenAI API responses.
+ * Contains properties that are common across different response types.
+ */
+public interface OpenAIBaseLLMResponse {
+    /** The response id. */
+    public val id: String
+
+    /** The response model. */
+    public val model: String
+
+    /** The Unix timestamp (in seconds) of when the chat completion was created. */
+    public val created: Long
+}
+
+/**
+ * Represents a base interface for handling real-time streaming responses from OpenAI's LLM API.
+ * Provides a structure extending from the common attributes defined in `OpenAIBaseLLMResponse`.
+ * Used as a foundation for streaming response data models in OpenAI integrations.
+ */
+public interface OpenAIBaseLLMStreamResponse : OpenAIBaseLLMResponse
+
+/**
+ * Represents a message in the OpenAI chat completion API.
+ *
+ * Each message type has specific roles and capabilities:
+ * - [Developer]
+ * - [System]
+ * - [User]
+ * - [Assistant]
+ * - [Tool]
+ */
+@Serializable
+@JsonClassDiscriminator("role")
+public sealed interface OpenAIMessage {
+    /** The content of the message. */
+    public val content: Content?
+
+    /**
+     * Developer-provided instructions that the model should follow,
+     * regardless of messages sent by the user.
+     * With o1 models and newer, `developer` messages replace the previous `system` messages.
+     *
+     * @property content The contents of the developer message. For developer messages, only type text is supported.
+     * @property name An optional name for the participant.
+     * Provides the model information to differentiate between participants of the same role.
+     */
+    @Serializable
+    @SerialName("developer")
+    public class Developer(override val content: Content, public val name: String? = null) : OpenAIMessage
+
+    /**
+     * Developer-provided instructions that the model should follow, regardless of messages sent by the user.
+     * With o1 models and newer, use developer messages for this purpose instead.
+     *
+     * @property content The contents of the system message. For system messages, only type text is supported.
+     * @property name An optional name for the participant.
+     * Provides the model information to differentiate between participants of the same role.
+     */
+    @Serializable
+    @SerialName("system")
+    public class System(override val content: Content, public val name: String? = null) : OpenAIMessage
+
+    /**
+     * Messages sent by an end user, containing prompts or additional context information.
+     *
+     * @property content The contents of the user message.
+     * @property name An optional name for the participant.
+     * Provides the model information to differentiate between participants of the same role.
+     */
+    @Serializable
+    @SerialName("user")
+    public class User(override val content: Content, public val name: String? = null) : OpenAIMessage
+
+    /**
+     * Messages sent by the model in response to user messages.
+     *
+     * @property audio Data about a previous audio response from the model.
+     * @property content The contents of the assistant message.
+     * Required unless `[toolCalls]` or `function_call` is specified.
+     * @property name An optional name for the participant.
+     * Provides the model information to differentiate between participants of the same role.
+     * @property refusal The refusal message by the assistant.
+     * @property toolCalls The tool calls generated by the model, such as function calls.
+     */
+    @Serializable
+    @SerialName("assistant")
+    public class Assistant(
+        override val content: Content? = null,
+        public val audio: OpenAIAudio? = null,
+        public val name: String? = null,
+        public val refusal: String? = null,
+        public val toolCalls: List<OpenAIToolCall>? = null,
+        public val annotations: List<OpenAIWebUrlCitation>? = null,
+    ) : OpenAIMessage
+
+    /**
+     * @property content The contents of the tool message. For tool messages, only type text is supported.
+     * @property toolCallId Tool call that this message is responding to.
+     */
+    @Serializable
+    @SerialName("tool")
+    public class Tool(override val content: Content, public val toolCallId: String) : OpenAIMessage
+}
+
+/**
+ * Represents the content of a message in the OpenAI chat completion API.
+ * Can be either a simple text message or a complex content consisting of multiple parts.
+ *
+ * This sealed interface has two implementations:
+ * - [Text] - For simple text content
+ * - [Parts] - For complex content containing multiple parts (text, images, audio, files)
+ */
+@Serializable(with = ContentSerializer::class)
+public sealed interface Content {
+    /** The simple text content of the message. */
+    public fun text(): String
+
+    /**
+     * The contents of the message.
+     */
+    @Serializable
+    @JvmInline
+    public value class Text(public val value: String) : Content {
+        override fun text(): String = value
+    }
+
+    /**
+     * An array of content parts with a defined type.
+     * Supported options differ based on the model being used to generate the response.
+     * Can contain text, image or audio inputs.
+     */
+    @Serializable
+    @JvmInline
+    public value class Parts(public val value: List<OpenAIContentPart>) : Content {
+        override fun text(): String = value
+            .filterIsInstance<OpenAIContentPart.Text>()
+            .joinToString("\n") { it.text }
+    }
+}
+
+/**
+ * Represents a content part that can be used within OpenAI chat completion APIs.
+ * This is a sealed interface that defines various types of content components,
+ * like text, images, audio, and files, enabling diverse inputs and outputs in the API.
+ */
+@Serializable
+@JsonClassDiscriminator("type")
+public sealed interface OpenAIContentPart {
+
+    /**
+     * Text content part in the OpenAI chat completion API.
+     *
+     *
+     * @property text The text content.
+     */
+    @Serializable
+    @SerialName("text")
+    public class Text(public val text: String) : OpenAIContentPart
+
+    /**
+     * Image content part in the OpenAI chat completion API.
+     *
+     * @property imageUrl Contains the URL of the image and optional descriptive details about the image
+     */
+    @Serializable
+    @SerialName("image_url")
+    public class Image(public val imageUrl: ImageUrl) : OpenAIContentPart
+
+    /**
+     * An image URL configuration for image content in the OpenAI chat completion API.
+     *
+     * @property url Either a URL of the image or the base64 encoded image data.
+     * @property detail Specifies the detail level of the image.
+     */
+    @Serializable
+    public class ImageUrl(public val url: String, public val detail: String? = null)
+
+    /**
+     * Audio content part in the OpenAI chat completion API.
+     *
+     * @property inputAudio Contains the encoded audio data and format information.
+     * The audio data should be base64 encoded and the format can be either "wav" or "mp3"
+     */
+    @Serializable
+    @SerialName("input_audio")
+    public class Audio(public val inputAudio: InputAudio) : OpenAIContentPart
+
+    /**
+     * Represents the audio data and format configuration for audio content in the OpenAI chat completion API.
+     *
+     * @property data Base64 encoded audio data.
+     * @property format The format of the encoded audio data. Currently, it supports "wav" and "mp3".
+     */
+    @Serializable
+    public class InputAudio(public val data: String, public val format: String)
+
+    /**
+     * File content part in the OpenAI chat completion API.
+     *
+     * @property file The file data containing file content, ID and filename information
+     */
+    @Serializable
+    @SerialName("file")
+    public class File(public val file: FileData) : OpenAIContentPart
+
+    /**
+     * File data containing optional file content, ID and filename information.
+     * Used to pass file data to OpenAI APIs requiring file handling capabilities.
+     *
+     * @property fileData The base64 encoded file data, used when passing the file to the model as a string.
+     * @property fileId The ID of an uploaded file to use as input.
+     * @property filename The name of the file, used when passing the file to the model as a string.
+     */
+    @Serializable
+    public class FileData(
+        public val fileData: String? = null,
+        public val fileId: String? = null,
+        public val filename: String? = null
+    )
+}
+
+/**
+ * Data about a previous audio response from the model.
+ *
+ * @property data Base64 encoded audio bytes generated by the model, in the format specified in the request.
+ * @property expiresAt The Unix timestamp (in seconds)
+ * for when this audio response will no longer be accessible on the server for use in multi-turn conversations.
+ * @property id Unique identifier for this audio response.
+ * @property transcript Transcript of the audio generated by the model.
+ */
+@Serializable
+public class OpenAIAudio(
+    public val data: String? = null,
+    public val expiresAt: Long? = null,
+    public val id: String,
+    public val transcript: String? = null,
+)
+
+/**
+ * Tool call generated by the OpenAI model.
+ *
+ * @property id The ID of the tool call.
+ * @property type The type of the tool. Currently, only `function` is supported.
+ * @property function The function that the model called.
+ */
+@Serializable
+public class OpenAIToolCall(
+    public val id: String,
+    public val function: OpenAIFunction
+) {
+    /** The type of the tool. Currently, only `function` is supported. */
+    public val type: String = "function"
+}
+
+/**
+ * Function call from an OpenAI model, containing the function name and arguments.
+ *
+ * @property name The name of the function to call
+ * @property arguments The arguments to call the function with, as generated by the model in JSON format.
+ * Note that the model does not always generate valid JSON
+ * and may hallucinate parameters not defined by your function schema.
+ * Validate the arguments in your code before calling your function.
+ */
+@Serializable
+public class OpenAIFunction(
+    public val name: String,
+    public val arguments: String
+)
+
+/**
+ * Parameters for audio output.
+ *
+ * @property format Specifies the output audio format.
+ * Must be one of [wav][OpenAIAudioFormat.WAV], [mp3][OpenAIAudioFormat.MP3], [flac][OpenAIAudioFormat.FLAC],
+ * [opus][OpenAIAudioFormat.OPUS] or [pcm16][OpenAIAudioFormat.PCM16].
+ * @property voice The voice the model uses to respond.
+ * Supported voices are [alloy][OpenAIAudioVoice.Alloy],
+ * [ash][OpenAIAudioVoice.Alloy], [ballad][OpenAIAudioVoice.Ballad],
+ * [coral][OpenAIAudioVoice.Coral], [echo][OpenAIAudioVoice.Echo], [fable][OpenAIAudioVoice.Fable],
+ * [nova][OpenAIAudioVoice.Nova], [onyx][OpenAIAudioVoice.Onyx], [sage][OpenAIAudioVoice.Sage]
+ * and [shimmer][OpenAIAudioVoice.Shimmer]
+ */
+@Serializable
+public class OpenAIAudioConfig(
+    public val format: OpenAIAudioFormat,
+    public val voice: OpenAIAudioVoice,
+)
+
+/**
+ * Represents the supported audio output formats.
+ *
+ * This enum is used to specify the format of the audio output. It contains several standard audio formats
+ * which are widely compatible with various audio players and systems.
+ */
+@Serializable
+public enum class OpenAIAudioFormat {
+    @SerialName("wav")
+    WAV,
+
+    @SerialName("mp3")
+    MP3,
+
+    @SerialName("flac")
+    FLAC,
+
+    @SerialName("opus")
+    OPUS,
+
+    @SerialName("pcm16")
+    PCM16,
+}
+
+/**
+ * Represents the available voice options for audio output in OpenAI's system.
+ *
+ * This enum defines a list of predefined voices that can be used to synthesize audio responses.
+ */
+@Serializable
+public enum class OpenAIAudioVoice {
+    @SerialName("alloy")
+    Alloy,
+
+    @SerialName("ash")
+    Ash,
+
+    @SerialName("ballad")
+    Ballad,
+
+    @SerialName("coral")
+    Coral,
+
+    @SerialName("echo")
+    Echo,
+
+    @SerialName("fable")
+    Fable,
+
+    @SerialName("nova")
+    Nova,
+
+    @SerialName("onyx")
+    Onyx,
+
+    @SerialName("sage")
+    Sage,
+
+    @SerialName("shimmer")
+    Shimmer,
+}
+
+/**
+ * Specifies the supported modalities for OpenAI API operations.
+ *
+ * This enumeration lists the types of content that can be processed by certain OpenAI API requests.
+ */
+@Serializable
+public enum class OpenAIModalities {
+    @SerialName("text")
+    Text,
+
+    @SerialName("audio")
+    Audio,
+}
+
+/**
+ * Static predicted output content, such as the content of a text file that is being regenerated.
+ *
+ * @property content The content that should be matched when generating a model response.
+ * If generated tokens match this content, the entire model response can be returned much more quickly.
+ * @property type The type of the predicted content you want to provide. This type is currently always `content`.
+ */
+@Serializable
+public class OpenAIStaticContent(public val content: Content) {
+    /** The type of the predicted content you want to provide. This type is currently always `content`. */
+    public val type: String = "content"
+}
+
+/**
+ * Constrains the amount of effort a reasoning-capable model spends on internal reasoning.
+ *
+ * Lower settings can yield faster responses and fewer reasoning tokens; higher settings may
+ * improve performance on multistep or complex tasks at the cost of additional latency and
+ * token usage.
+ * Exact effects are model-dependent.
+ * If not set, the model/provider default applies.
+ *
+ * Serialized as `"minimal" | "low" | "medium" | "high"`.
+ */
+@Serializable
+public enum class ReasoningEffort {
+    /**
+     * Strongly limits internal reasoning to minimize latency and cost.
+     * Best for simple, well-specified tasks where extra deliberation is unnecessary.
+     * Serialized as `"minimal"`.
+     */
+    @SerialName("minimal")
+    MINIMAL,
+
+    /**
+     * Allows a small amount of reasoning while prioritizing speed and efficiency.
+     * Suitable for straightforward prompts with occasional light chaining.
+     * Serialized as `"low"`.
+     */
+    @SerialName("low")
+    LOW,
+
+    /**
+     * Balanced allowance for reasoning to handle typical multi-step tasks without
+     * excessive overhead. Serialized as `"medium"`.
+     */
+    @SerialName("medium")
+    MEDIUM,
+
+    /**
+     * Maximizes the model’s reasoning depth for complex or ambiguous problems.
+     * Expect higher latency and token usage. Serialized as `"high"`.
+     */
+    @SerialName("high")
+    HIGH
+}
+
+/**
+ * Expected response format from OpenAI's chat completion API.
+ * This interface defines different types of response formats that can be requested:
+ * - [Text] - Response in plain text format
+ * - [JsonSchema] - Response conforming to a specified JSON schema
+ * - [JsonObject] - Response as a JSON object
+ */
+@Serializable
+@JsonClassDiscriminator("type")
+public sealed interface OpenAIResponseFormat {
+    /**
+     * Default response format. Used to generate text responses.
+     */
+    @Serializable
+    @SerialName("text")
+    public class Text() : OpenAIResponseFormat
+
+    /**
+     * JSON Schema response format. Used to generate structured JSON responses.
+     *
+     * @property jsonSchema Structured Outputs configuration options, including a JSON Schema.
+     */
+    @Serializable
+    @SerialName("json_schema")
+    public class JsonSchema(public val jsonSchema: JsonSchemaObject) : OpenAIResponseFormat
+
+    /**
+     * JSON object response format.
+     * An older method of generating JSON responses.
+     * Using `json_schema` is recommended for models that support it.
+     * Note that the model will not generate JSON without a system or user message instructing it to do so.
+     */
+    @Serializable
+    @SerialName("json_object")
+    public class JsonObject() : OpenAIResponseFormat
+}
+
+/**
+ * Service tier used to process a request.
+ *
+ *
+ * Behavior overview:
+ * - `AUTO` — Defers to the Project’s configured service tier (which, unless
+ *   changed, is `DEFAULT`).
+ * - `DEFAULT` — Standard pricing and performance for the selected model.
+ * - `FLEX` — Lower cost in exchange for slower responses and occasional
+ *   resource unavailability; suited for non-production / lower-priority tasks
+ *   such as evaluations, data enrichment, and asynchronous workloads. Tokens
+ *   are billed at Batch-API-like rates and can benefit from prompt-cache
+ *   discounts.
+ * - `PRIORITY` — Reliable, high-speed processing with predictably low latency,
+ *   even during peak demand; available on a flexible, pay-as-you-go basis
+ *   without advance provisioning.
+ *
+ * Note: When a tier is requested, the response payload includes the
+ * `service_tier` actually used to serve the request. This value may differ from
+ * the one provided in the request.
+ */
+public enum class ServiceTier {
+    /**
+     * Defer to the Project’s configured service tier (defaults to [DEFAULT] unless
+     * overridden at the Project level). Serialized as `"auto"`.
+     */
+    @SerialName("auto")
+    AUTO,
+
+    /**
+     * Use the standard pricing and performance for the selected model.
+     * Serialized as `"default"`.
+     */
+    @SerialName("default")
+    DEFAULT,
+
+    /**
+     * Lower-cost, opportunistic processing that may be slower and occasionally
+     * unavailable; ideal for non-production or background workloads. Tokens are
+     * priced similarly to Batch API with additional savings from prompt caching.
+     * Serialized as `"flex"`.
+     */
+    @SerialName("flex")
+    FLEX,
+
+    /**
+     * High-speed, reliable processing with predictably low latency, including
+     * during peak demand; available pay-as-you-go without pre-provisioning.
+     * Serialized as `"priority"`.
+     */
+    @SerialName("priority")
+    PRIORITY,
+}
+
+/**
+ * Structured Outputs configuration options, including a JSON Schema.
+ *
+ * @property name The name of the response format.
+ * Must be a-z, A-Z, 0-9 or contain underscores and dashes, with a maximum length of 64.
+ * @property description A description of what the response format is for,
+ * used by the model to determine how to respond in the format.
+ * @property schema The schema for the response format, described as a JSON Schema object.
+ * @property strict Whether to enable strict schema adherence when generating the output.
+ * If set to true, the model will always follow the exact schema defined in the [schema] field.
+ * Only a subset of JSON Schema is supported when [strict] is `true`.
+ */
+@Serializable
+public class JsonSchemaObject(
+    public val name: String,
+    public val description: String? = null,
+    public val schema: JsonObject? = null,
+    public val strict: Boolean? = null
+)
+
+/**
+ * Options for streaming response.
+ *
+ * @property includeUsage If set, an additional chunk will be streamed before the `data: [DONE]` message.
+ * The `usage` field on this chunk shows the token usage statistics for the entire request,
+ * and the `choices` field will always be an empty array.
+ *
+ * All other chunks will also include a `usage` field, but with a null value.
+ * NOTE: If the stream is interrupted,
+ * you may not receive the final usage chunk which contains the total token usage for the request.
+ */
+@Serializable
+public class OpenAIStreamOptions(public val includeUsage: Boolean? = null)
+
+/**
+ * Controls which (if any) tool is called by the model.
+ */
+@Serializable(OpenAIToolChoiceSerializer::class)
+public sealed interface OpenAIToolChoice {
+    /**
+     * Represents the mode in which a tool can be invoked by the model.
+     *
+     * Modes:
+     * - `none`: The model will not invoke any tool and will generate a message instead.
+     * - `auto`: The model chooses between generating a message or invoking one or more tools.
+     * - `required`: The model must invoke one or more tools.
+     *
+     * @property value The string representation of the mode. Must be one of: "none", "auto", "required".
+     */
+    @JvmInline
+    @Serializable
+    public value class Mode internal constructor(public val value: String) : OpenAIToolChoice {
+        init {
+            require(value in setOf("none", "auto", "required")) {
+                "Invalid tool choice mode: $value. Must be one of: none, auto, required"
+            }
+        }
+    }
+
+    /**
+     * @property name The name of the function to call.
+     */
+    @Serializable
+    public class FunctionName(public val name: String)
+
+    /**
+     * Specifies a tool the model should use. Use to force the model to call a specific function.
+     *
+     * @property type The type of the tool. Currently, only function is supported.
+     */
+    @Serializable
+    public class Function(public val function: FunctionName) : OpenAIToolChoice {
+        /**
+         * Specifies the type of the tool being used.
+         */
+        public val type: String = "function"
+    }
+
+    /**
+     * - `none` means the model will not call any tool and instead generates a message.
+     * - `auto` means the model can pick between generating a message or calling one or more tools.
+     * - `required` means the model must call one or more tools.
+     */
+    public companion object {
+        /** Represents the `auto` mode for invoking tools in the OpenAI system.*/
+        public val Auto: Mode = Mode("auto")
+
+        /** Represents the `required` mode for invoking tools in the OpenAI system.*/
+        public val Required: Mode = Mode("required")
+
+        /** Represents the `none` mode for invoking tools in the OpenAI system.*/
+        public val None: Mode = Mode("none")
+
+        /** Creates a function tool with the specified name. */
+        public fun function(name: String): Function = Function(FunctionName(name))
+    }
+}
+
+/**
+ * Tool the model may call.
+ *
+ * @property type The type of the tool. Currently, only `function` is supported.
+ */
+@Serializable
+public class OpenAITool(public val function: OpenAIToolFunction) {
+    /** Type of the tool. */
+    public val type: String = "function"
+}
+
+/**
+ * @property name The name of the function to be called.
+ * Must be a-z, A-Z, 0-9 or contain underscores and dashes, with a maximum length of 64.
+ * @property description A description of what the function does,
+ * used by the model to choose when and how to call the function.
+ * @property parameters The parameters the functions accept, described as a JSON Schema object.
+ *
+ * Omitting [parameters] defines a function with an empty parameter list.
+ * @property strict Whether to enable strict schema adherence when generating the function call.
+ * If set to true, the model will follow the exact schema defined in the [parameters] field.
+ * Only a subset of JSON Schema is supported when [strict] is `true`.
+ */
+@Serializable
+public class OpenAIToolFunction(
+    public val name: String,
+    public val description: String? = null,
+    public val parameters: JsonObject? = null,
+    public val strict: Boolean? = null,
+)
+
+/**
+ * @property searchContextSize High-level guidance for the amount of context window space to use for the search.
+ * One of `low`, `medium`, or `high`.
+ * `medium` is the default.
+ * @property userLocation Approximate location parameters for the search.
+ */
+@Serializable
+public class OpenAIWebSearchOptions(
+    public val searchContextSize: String? = null,
+    public val userLocation: OpenAIUserLocation? = null
+)
+
+/**
+ * Approximate location parameters for the search.
+ * @property approximate Approximate location parameters for the search.
+ * @property type The type of location approximation. Always `approximate`.
+ */
+@Serializable
+public class OpenAIUserLocation(
+    public val approximate: ApproximateLocation
+) {
+    /** Approximate location parameters for the search. */
+    public val type: String = "approximate"
+
+    /**
+     * Approximate location parameters for the search.
+     *
+     * @property city Free text input for the city of the user, e.g. `San Francisco`.
+     * @property country The two-letter ISO country code of the user, e.g. `US`.
+     * @property region Free text input for the region of the user, e.g. `California`.
+     * @property timezone The IANA timezone of the user, e.g. `America/Los_Angeles`.
+     */
+    @Serializable
+    public class ApproximateLocation(
+        public val city: String? = null,
+        public val country: String? = null,
+        public val region: String? = null,
+        public val timezone: String? = null,
+    )
+}
+
+/**
+ * Chat completion choice
+ *
+ * @property finishReason The reason the model stopped generating tokens.
+ * This will be `stop` if the model hit a natural stop point or a provided stop sequence,
+ * `length` if the maximum number of tokens specified in the request was reached,
+ * `content_filter` if content was omitted due to a flag from our content filters,
+ * `tool_calls` if the model called a tool, or `function_call` (deprecated) if the model called a function.
+ * @property index The index of the choice in the list of choices.
+ * @property logprobs Log probability information for the choice.
+ * @property message A chat completion message generated by the model.
+ */
+@Serializable
+public class OpenAIChoice(
+    public val finishReason: String,
+    public val index: Int,
+    public val logprobs: OpenAIChoiceLogProbs? = null,
+    public val message: OpenAIMessage,
+)
+
+/**
+ * @property content A list of message content tokens with log probability information.
+ * @property refusal A list of message refusal tokens with log probability information.
+ */
+@Serializable
+public class OpenAIChoiceLogProbs(
+    public val content: List<ContentLogProbs>? = null,
+    public val refusal: List<ContentLogProbs>? = null,
+) {
+
+    /**
+     * @property bytes A list of integers representing the UTF-8 bytes representation of the token.
+     * Useful in instances where characters are represented by multiple tokens
+     * and their byte representations must be combined to generate the correct text representation.
+     * Can be `null` if there is no byte representation for the token.
+     * @property logprob The log probability of this token, if it is within the top 20 most likely tokens.
+     * Otherwise, the value `-9999.0` is used to signify that the token is very unlikely.
+     * @property token The token.
+     * @property topLogprobs List of the most likely tokens and their log probability, at this token position.
+     * In rare cases, there may be fewer than the number of requested `[topLogprobs]` returned.
+     */
+    @Serializable
+    public class ContentLogProbs(
+        public val bytes: List<Int>? = null,
+        public val logprob: Double,
+        public val token: String,
+        public val topLogprobs: List<ContentTopLogProbs>
+    )
+
+    /**
+     * @property bytes A list of integers representing the UTF-8 bytes representation of the token.
+     * Useful in instances where characters are represented by multiple tokens
+     * and their byte representations must be combined to generate the correct text representation.
+     * Can be `null` if there is no byte representation for the token.
+     * @property logprob The log probability of this token, if it is within the top 20 most likely tokens.
+     * Otherwise, the value `-9999.0` is used to signify that the token is very unlikely.
+     * @property token The token.
+     */
+    @Serializable
+    public class ContentTopLogProbs(
+        public val bytes: List<Int>? = null,
+        public val logprob: Double,
+        public val token: String,
+    )
+}
+
+/**
+ * @property urlCitation A URL citation when using web search.
+ * @property type The type of the URL citation. Always `url_citation`.
+ */
+@Serializable
+public class OpenAIWebUrlCitation(public val urlCitation: Citation) {
+    /** The type of the URL citation. */
+    public val type: String = "url_citation"
+
+    /**
+     * @property endIndex The index of the last character of the URL citation in the message.
+     * @property startIndex The index of the first character of the URL citation in the message.
+     * @property title The title of the web resource.
+     * @property url The URL of the web resource.
+     */
+    @Serializable
+    public class Citation(
+        public val endIndex: Int,
+        public val startIndex: Int,
+        public val title: String,
+        public val url: String,
+    )
+}
+
+/**
+ * @property completionTokens Number of tokens in the generated completion.
+ * @property promptTokens Number of tokens in the prompt.
+ * @property totalTokens Total number of tokens used in the request (prompt + completion).
+ * @property completionTokensDetails Breakdown of tokens used in a completion.
+ * @property promptTokensDetails Breakdown of tokens used in the prompt.
+ */
+@Serializable
+public class OpenAIUsage(
+    public val promptTokens: Int? = null,
+    public val completionTokens: Int? = null,
+    public val totalTokens: Int? = null,
+    public val completionTokensDetails: CompletionTokensDetails? = null,
+    public val promptTokensDetails: PromptTokensDetails? = null
+)
+
+/**
+ * @property acceptedPredictionTokens When using Predicted Outputs,
+ * the number of tokens in the prediction that appeared in the completion.
+ * @property audioTokens Audio input tokens generated by the model.
+ * @property reasoningTokens Tokens generated by the model for reasoning.
+ * @property rejectedPredictionTokens When using Predicted Outputs,
+ * the number of tokens in the prediction that did not appear in the completion.
+ * However, like reasoning tokens, these tokens are still counted in the total completion tokens for purposes of billing,
+ * output and context window limits.
+ */
+@Serializable
+public class CompletionTokensDetails(
+    public val acceptedPredictionTokens: Int? = null,
+    public val audioTokens: Int? = null,
+    public val reasoningTokens: Int? = null,
+    public val rejectedPredictionTokens: Int? = null,
+)
+
+/**
+ * @property audioTokens Audio input tokens generated by the model.
+ * @property cachedTokens Cached tokens present in the prompt.
+ */
+@Serializable
+public class PromptTokensDetails(
+    public val audioTokens: Int? = null,
+    public val cachedTokens: Int? = null,
+)
+
+/**
+ * @property delta A chat completion delta generated by streamed model responses.
+ * @property finishReason The reason the model stopped generating tokens.
+ * This will be `stop` if the model hit a natural stop point or a provided stop sequence,
+ * `length` if the maximum number of tokens specified in the request was reached,
+ * `content_filter` if content was omitted due to a flag from our content filters,
+ * `tool_calls` if the model called a tool, or `function_call` (deprecated) if the model called a function.
+ * @property index The index of the choice in the list of choices.
+ * @property logprobs Log probability information for the choice.
+ *
+ */
+@Serializable
+public class OpenAIStreamChoice(
+    public val delta: OpenAIStreamDelta,
+    public val finishReason: String? = null,
+    public val index: Int,
+    public val logprobs: OpenAIChoiceLogProbs? = null,
+)
+
+/**
+ * @property content The contents of the chunk message.
+ * @property refusal The refusal message generated by the model.
+ * @property role The role of the author of this message.
+ * @property toolCalls
+ */
+@Serializable
+public class OpenAIStreamDelta(
+    public val content: String? = null,
+    public val refusal: String? = null,
+    public val role: String? = null,
+    public val toolCalls: List<OpenAIToolCall>? = null
+)
+
+internal object ContentSerializer : KSerializer<Content> {
+    @OptIn(InternalSerializationApi::class)
+    override val descriptor: SerialDescriptor = buildSerialDescriptor("Content", SerialKind.CONTEXTUAL)
+
+    override fun serialize(encoder: Encoder, value: Content) {
+        when (value) {
+            is Content.Text -> encoder.encodeString(value.value)
+            is Content.Parts -> encoder.encodeSerializableValue(
+                ListSerializer(OpenAIContentPart.serializer()),
+                value.value
+            )
+        }
+    }
+
+    override fun deserialize(decoder: Decoder): Content {
+        val jsonDecoder = decoder as? JsonDecoder
+            ?: throw SerializationException("Content can only be deserialized from JSON")
+        return when (val element = jsonDecoder.decodeJsonElement()) {
+            is JsonPrimitive -> {
+                if (!element.isString) {
+                    throw SerializationException(
+                        "Expected string for text content, but got: ${element.contentOrNull}"
+                    )
+                }
+                Content.Text(element.content)
+            }
+
+            is JsonArray -> {
+                if (element.isEmpty()) {
+                    throw SerializationException("Content array cannot be empty")
+                }
+                Content.Parts(
+                    jsonDecoder.json.decodeFromJsonElement(
+                        ListSerializer(OpenAIContentPart.serializer()),
+                        element
+                    )
+                )
+            }
+
+            else -> throw SerializationException(
+                "Content must be either a string or an array of content parts. " +
+                    "Got: ${element::class.simpleName}"
+            )
+        }
+    }
+}
+
+internal object OpenAIToolChoiceSerializer : KSerializer<OpenAIToolChoice> {
+    @OptIn(InternalSerializationApi::class)
+    override val descriptor: SerialDescriptor = buildSerialDescriptor("OpenAIToolChoice", SerialKind.CONTEXTUAL)
+
+    override fun serialize(encoder: Encoder, value: OpenAIToolChoice) {
+        when (value) {
+            is OpenAIToolChoice.Mode -> encoder.encodeString(value.value)
+            is OpenAIToolChoice.Function -> encoder.encodeSerializableValue(
+                OpenAIToolChoice.Function.serializer(),
+                value
+            )
+        }
+    }
+
+    override fun deserialize(decoder: Decoder): OpenAIToolChoice {
+        val jsonDecoder = decoder as? JsonDecoder
+            ?: throw SerializationException("OpenAIToolChoice can only be deserialized from JSON")
+
+        return when (val element = jsonDecoder.decodeJsonElement()) {
+            is JsonPrimitive -> {
+                OpenAIToolChoice.Mode(element.content)
+            }
+
+            is JsonObject -> {
+                jsonDecoder.json.decodeFromJsonElement(OpenAIToolChoice.Function.serializer(), element)
+            }
+
+            else -> throw SerializationException("Tool choice must be either a string or an object")
+        }
+    }
+}

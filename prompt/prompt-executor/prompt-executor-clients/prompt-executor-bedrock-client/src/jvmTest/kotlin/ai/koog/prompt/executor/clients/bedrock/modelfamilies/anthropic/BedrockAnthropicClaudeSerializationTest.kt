@@ -5,6 +5,7 @@ import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicContent
+import ai.koog.prompt.executor.clients.anthropic.AnthropicMessageRequest
 import ai.koog.prompt.executor.clients.anthropic.AnthropicToolChoice
 import ai.koog.prompt.executor.clients.bedrock.BedrockModels
 import ai.koog.prompt.message.Message
@@ -47,7 +48,7 @@ class BedrockAnthropicClaudeSerializationTest {
 
         assertNotNull(request)
         assertEquals(model.id, request.model)
-        assertEquals(4096, request.maxTokens)
+        assertEquals(AnthropicMessageRequest.MAX_TOKENS_DEFAULT, request.maxTokens)
         assertEquals(temperature, request.temperature)
 
         assertNotNull(request.system)

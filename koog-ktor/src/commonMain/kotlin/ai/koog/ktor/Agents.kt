@@ -88,21 +88,21 @@ public suspend inline fun <reified Input, reified Output, Result> RoutingContext
 ): Result = aiAgent(strategy, model).use(block)
 
 /**
- * A `simpleRungAgent` is an agent that runs using [singleRunStrategy], by default, it relies on sequential [ToolCalls].
+ * A default `aiAgent` is an agent that runs using [singleRunStrategy], by default, it relies on sequential [ToolCalls].
  * Inside the [block] lambda you can use the agent to perform tasks, and calculate a result, such as [AIAgent.run].
  */
-public suspend fun <Result> RoutingContext.singleRunAgent(
+public suspend fun <Result> RoutingContext.aiAgent(
     runMode: ToolCalls = ToolCalls.SINGLE_RUN_SEQUENTIAL,
     model: LLModel,
     block: suspend (agent: AIAgent<String, String>) -> Result
 ): Result = aiAgent(singleRunStrategy(runMode), model).use(block)
 
 /**
- * A `simpleRungAgent` is an agent that runs using [singleRunStrategy], by default, it relies on sequential [ToolCalls].
+ * A default `aiAgent` is an agent that runs using [singleRunStrategy], by default, it relies on sequential [ToolCalls].
  * It takes an [input], and when the agent finishes running provides a final result [String].
  */
-public suspend fun RoutingContext.singleRunAgent(
+public suspend fun RoutingContext.aiAgent(
     input: String,
     model: LLModel,
     runMode: ToolCalls = ToolCalls.SINGLE_RUN_SEQUENTIAL,
-): String = singleRunAgent(runMode, model) { it.run(input) }
+): String = aiAgent(runMode, model) { it.run(input) }

@@ -62,7 +62,7 @@ import kotlinx.serialization.json.Json
  * @property moderationGuardrailsSettings Optional settings of the AWS bedrock Guardrails (see [AWS documentation](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-use-independent-api.html) ) that would be used for the [LLMClient.moderate] request
  */
 public class BedrockClientSettings(
-    internal val region: String = "us-east-1",
+    internal val region: String = BedrockRegions.US_WEST_2.regionCode,
     internal val timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig(),
     internal val endpointUrl: String? = null,
     internal val maxRetries: Int = 3,
@@ -124,7 +124,7 @@ public class BedrockLLMClient(
                 awsSessionToken?.let { this.sessionToken = it }
             }
 
-            // Configure custom endpoint if provided
+            // Configure a custom endpoint if provided
             settings.endpointUrl?.let { url ->
                 this.endpointUrl = Url.parse(url)
             }
@@ -147,10 +147,10 @@ public class BedrockLLMClient(
     internal fun getBedrockModelFamily(model: LLModel): BedrockModelFamilies {
         require(model.provider == LLMProvider.Bedrock) { "Model ${model.id} is not a Bedrock model" }
         return when {
-            model.id.startsWith("anthropic.claude") -> BedrockModelFamilies.AnthropicClaude
-            model.id.startsWith("amazon.nova") -> BedrockModelFamilies.AmazonNova
-            model.id.startsWith("ai21.jamba") -> BedrockModelFamilies.AI21Jamba
-            model.id.startsWith("meta.llama") -> BedrockModelFamilies.Meta
+            model.id.contains("anthropic.claude") -> BedrockModelFamilies.AnthropicClaude
+            model.id.contains("amazon.nova") -> BedrockModelFamilies.AmazonNova
+            model.id.contains("ai21.jamba") -> BedrockModelFamilies.AI21Jamba
+            model.id.contains("meta.llama") -> BedrockModelFamilies.Meta
             else -> throw IllegalArgumentException("Model ${model.id} is not a supported Bedrock model")
         }
     }
@@ -368,14 +368,14 @@ public class BedrockLLMClient(
         )
 
         val inputIsHarmful = inputGuardrailResponse.action is GuardrailAction.GuardrailIntervened
-        val outputputIsHarmful = inputGuardrailResponse.action is GuardrailAction.GuardrailIntervened
+        val outputIsHarmful = inputGuardrailResponse.action is GuardrailAction.GuardrailIntervened
 
         val categories = buildMap {
             fillCategoriesMap(inputGuardrailResponse)
             fillCategoriesMap(outputGuardrailResponse)
         }
 
-        return ModerationResult(inputIsHarmful || outputputIsHarmful, categories)
+        return ModerationResult(inputIsHarmful || outputIsHarmful, categories)
     }
 
     private fun MutableMap<ModerationCategory, ModerationCategoryResult>.fillCategoriesMap(

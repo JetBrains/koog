@@ -1,5 +1,5 @@
 [versions]
-annotations = "26.0.1"
+annotations = "26.0.2"
 junit = "5.8.2"
 kotlin = "2.1.21"
 kotlinx-coroutines = "1.10.2"
@@ -13,7 +13,7 @@ oshai-logging = "7.0.7"
 mockk = "1.13.8"
 shadow = "8.1.1"
 slf4j = "2.0.17"
-mcp = "0.5.0"
+mcp = "0.6.0"
 dokka = "2.0.0"
 jetsign = "45.47"
 testcontainers = "1.19.7"
@@ -29,10 +29,12 @@ spring-management = "1.1.7"
 opentelemetry = "1.51.0"
 aws-sdk-kotlin = "1.4.119"
 ktlint = "13.0.0"
+knit = "0.5.0"
 
 [libraries]
 jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "annotations" }
 junit-jupiter-params = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "junit" }
+kotlin-bom = { module = "org.jetbrains.kotlin:kotlin-bom", version.ref = "kotlin" }
 kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutines-reactive = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-reactive", version.ref = "kotlinx-coroutines" }
@@ -44,6 +46,9 @@ kotlinx-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serializa
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor3" }
 ktor-client-js = { module = "io.ktor:ktor-client-js", version.ref = "ktor3" }
+ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor3" }
+ktor-client-winhttp = { module = "io.ktor:ktor-client-winhttp", version.ref = "ktor3" }
+ktor-client-curl = { module = "io.ktor:ktor-client-curl", version.ref = "ktor3" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor3" }
 ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktor3" }
 ktor-client-sse = { module = "io.ktor:ktor-server-sse", version.ref = "ktor3" }
@@ -116,3 +121,4 @@ kotlinx-kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
 kotlin-spring = { id = "org.jetbrains.kotlin.plugin.spring", version.ref = "kotlin" }
 spring-management = { id = "io.spring.dependency-management", version.ref = "spring-management" }
 ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
+knit = { id = "org.jetbrains.kotlinx.knit", version.ref = "knit" }

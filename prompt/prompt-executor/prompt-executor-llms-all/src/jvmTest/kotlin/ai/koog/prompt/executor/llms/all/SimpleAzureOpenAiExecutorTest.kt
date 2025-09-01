@@ -17,6 +17,7 @@ class SimpleAzureOpenAiExecutorTest {
         val mockResponses = mapOf(
             "https://azure-resource-name.openai.azure.com/openai/deployments/azure-deployment-name/chat/completions?api-version=2025-01-01-preview" to
                 MockResponse(
+                    //language=json
                     content = """{
                     "choices": [
                         {

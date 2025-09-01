@@ -1,11 +1,14 @@
 package ai.koog.agents.features.opentelemetry.event
 
+import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute
+import ai.koog.agents.features.opentelemetry.extension.bodyFieldsToBodyAttribute
 import ai.koog.agents.features.opentelemetry.mock.MockEventBodyField
 import ai.koog.agents.features.opentelemetry.mock.MockGenAIAgentEvent
 import ai.koog.agents.features.opentelemetry.mock.UnsupportedType
+import ai.koog.agents.utils.HiddenString
 import kotlin.test.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 
 class EventBodyFieldTest {
 
@@ -17,7 +20,6 @@ class EventBodyFieldTest {
             verbose = true,
             expectedKey = "body",
             expectedValue = "{\"testKey\":\"testValue\"}",
-            expectedVerbose = true,
         )
     }
 
@@ -29,7 +31,6 @@ class EventBodyFieldTest {
             verbose = true,
             expectedKey = "body",
             expectedValue = "{\"testKey\":\"c\"}",
-            expectedVerbose = true,
         )
     }
 
@@ -41,7 +42,6 @@ class EventBodyFieldTest {
             verbose = true,
             expectedKey = "body",
             expectedValue = "{\"testKey\":true}",
-            expectedVerbose = true,
         )
     }
 
@@ -53,7 +53,6 @@ class EventBodyFieldTest {
             verbose = true,
             expectedKey = "body",
             expectedValue = "{\"testKey\":42}",
-            expectedVerbose = true,
         )
     }
 
@@ -65,7 +64,6 @@ class EventBodyFieldTest {
             verbose = true,
             expectedKey = "body",
             expectedValue = "{\"testKey\":42}",
-            expectedVerbose = true,
         )
     }
 
@@ -77,7 +75,6 @@ class EventBodyFieldTest {
             verbose = true,
             expectedKey = "body",
             expectedValue = "{\"testKey\":42.5}",
-            expectedVerbose = true,
         )
     }
 
@@ -89,7 +86,6 @@ class EventBodyFieldTest {
             verbose = true,
             expectedKey = "body",
             expectedValue = "{\"testKey\":42.5}",
-            expectedVerbose = true,
         )
     }
 
@@ -105,7 +101,6 @@ class EventBodyFieldTest {
             expectedValue = "{\"testKey\":${list.joinToString(separator = ",", prefix = "[", postfix = "]") {
                 "\"$it\""
             }}}",
-            expectedVerbose = true,
         )
     }
 
@@ -119,12 +114,11 @@ class EventBodyFieldTest {
             verbose = true,
             expectedKey = "body",
             expectedValue = "{\"testKey\":${list.joinToString(separator = ",", prefix = "[", postfix = "]") { "$it"}}}",
-            expectedVerbose = true
         )
     }
 
     @Test
-    fun `test  toAttribute for the LIST OF INTEGERS`() {
+    fun `test toAttribute for the LIST OF INTEGERS`() {
         val list = listOf(1, 2, 3)
 
         testToAttributeConversion(
@@ -133,7 +127,6 @@ class EventBodyFieldTest {
             verbose = true,
             expectedKey = "body",
             expectedValue = "{\"testKey\":${list.joinToString(separator = ",", prefix = "[", postfix = "]") { "$it"}}}",
-            expectedVerbose = true
         )
     }
 
@@ -148,8 +141,7 @@ class EventBodyFieldTest {
             value = list,
             verbose = true,
             expectedKey = "body",
-            expectedValue = "{\"testKey\":${list.joinToString(separator = ",", prefix = "[", postfix = "]") { "$it"}}}",
-            expectedVerbose = true,
+            expectedValue = "{\"testKey\":${list.joinToString(separator = ",", prefix = "[", postfix = "]") { "\"$it\""}}}",
         )
     }
 
@@ -165,7 +157,6 @@ class EventBodyFieldTest {
             expectedValue = "{\"testKey\":${map.entries.joinToString(separator = ",", prefix = "{", postfix = "}") {
                 "\"${it.key}\":\"${it.value}\""
             }}}",
-            expectedVerbose = true,
         )
     }
 
@@ -178,8 +169,7 @@ class EventBodyFieldTest {
             value = unsupportedType,
             verbose = true,
             expectedKey = "body",
-            expectedValue = "{\"testKey\":$unsupportedType}",
-            expectedVerbose = true,
+            expectedValue = "{\"testKey\":\"$unsupportedType\"}",
         )
     }
 
@@ -191,46 +181,80 @@ class EventBodyFieldTest {
             verbose = true,
             expectedKey = "body",
             expectedValue = "{\"testKey\":\"testValue\"}",
-            expectedVerbose = true,
         )
     }
 
     @Test
-    fun `test toAttribute throws exception when bodyFields is empty`() {
-        val field = MockGenAIAgentEvent(fields = emptyList(), verbose = true)
+    fun `test toAttribute do nothing when bodyFields is empty`() {
+        val event = MockGenAIAgentEvent(fields = emptyList())
+        assertEquals(0, event.attributes.size)
+        assertEquals(0, event.bodyFields.size)
 
-        val exception = assertFailsWith<IllegalStateException> {
-            field.bodyFieldsAsAttribute()
-        }
+        event.bodyFieldsToBodyAttribute(verbose = true)
 
-        assertEquals(
-            "Unable to convert Event Body Fields into Attribute because no body fields found",
-            exception.message
-        )
+        assertEquals(0, event.attributes.size)
+        assertEquals(0, event.bodyFields.size)
     }
 
     @Test
-    fun `test toAttribute filter body fields when verbose is false`() {
+    fun `test toAttribute filter body fields with string value when verbose is false`() {
         val bodyField = MockEventBodyField("testKey", "testValue")
         val bodyFieldContent = MockEventBodyField("testContent", "testContentValue")
-        val field = MockGenAIAgentEvent(fields = listOf(bodyField, bodyFieldContent), verbose = false)
+        val event = MockGenAIAgentEvent(fields = listOf(bodyField, bodyFieldContent))
 
-        val actualAttribute = field.bodyFieldsAsAttribute()
+        event.bodyFieldsToBodyAttribute(verbose = false)
 
-        assertEquals("body", actualAttribute.key)
-        assertEquals("{\"testKey\":\"testValue\"}", actualAttribute.value)
+        val actualAttributes = event.attributes
+
+        val expectedAttributes = listOf(
+            CustomAttribute("body", "{\"testKey\":\"testValue\",\"testContent\":\"testContentValue\"}")
+        )
+
+        assertEquals(expectedAttributes.size, actualAttributes.size)
+        assertContentEquals(expectedAttributes, actualAttributes)
     }
 
     @Test
     fun `test toAttribute does not filter body fields when verbose is true`() {
         val bodyField = MockEventBodyField("testKey", "testValue")
         val bodyFieldContent = MockEventBodyField("testContent", "testContentValue")
-        val field = MockGenAIAgentEvent(fields = listOf(bodyField, bodyFieldContent), verbose = true)
+        val event = MockGenAIAgentEvent(fields = listOf(bodyField, bodyFieldContent))
 
-        val actualAttribute = field.bodyFieldsAsAttribute()
+        event.bodyFieldsToBodyAttribute(verbose = true)
 
-        assertEquals("body", actualAttribute.key)
-        assertEquals("{\"testKey\":\"testValue\",\"testContent\":\"testContentValue\"}", actualAttribute.value)
+        val actualAttributes = event.attributes
+
+        val expectedAttributes = listOf(
+            CustomAttribute(
+                key = "body",
+                value = "{\"testKey\":\"testValue\",\"testContent\":\"testContentValue\"}",
+            )
+        )
+
+        assertEquals(expectedAttributes.size, actualAttributes.size)
+        assertContentEquals(expectedAttributes, actualAttributes)
+    }
+
+    @Test
+    fun `test toAttribute for HIDDEN STRING when verbose is true`() {
+        testToAttributeConversion(
+            key = "testKey",
+            value = HiddenString("secret"),
+            verbose = true,
+            expectedKey = "body",
+            expectedValue = "{\"testKey\":\"secret\"}",
+        )
+    }
+
+    @Test
+    fun `test toAttribute for HIDDEN STRING when verbose is false`() {
+        testToAttributeConversion(
+            key = "testKey",
+            value = HiddenString("secret"),
+            verbose = false,
+            expectedKey = "body",
+            expectedValue = "{\"testKey\":\"${HiddenString.HIDDEN_STRING_PLACEHOLDER}\"}",
+        )
     }
 
     //region Private Methods
@@ -240,16 +264,16 @@ class EventBodyFieldTest {
         value: Any,
         verbose: Boolean,
         expectedKey: String,
-        expectedValue: Any,
-        expectedVerbose: Boolean
+        expectedValue: Any
     ) {
         val bodyField = MockEventBodyField(key, value)
-        val field = MockGenAIAgentEvent(fields = listOf(bodyField), verbose = verbose)
-        val actualAttribute = field.bodyFieldsAsAttribute()
+        val event = MockGenAIAgentEvent(fields = listOf(bodyField))
+
+        event.bodyFieldsToBodyAttribute(verbose = verbose)
+        val actualAttribute = event.attributes.single()
 
         assertEquals(expectedKey, actualAttribute.key)
         assertEquals(expectedValue, actualAttribute.value)
-        assertEquals(expectedVerbose, actualAttribute.verbose)
     }
 
     //endregion Private Methods

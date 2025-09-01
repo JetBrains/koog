@@ -1,16 +1,27 @@
 package ai.koog.agents.features.opentelemetry.event
 
 import ai.koog.agents.features.opentelemetry.attribute.Attribute
-import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute
+import io.github.oshai.kotlinlogging.KotlinLogging
 
-internal interface GenAIAgentEvent {
+internal abstract class GenAIAgentEvent {
 
-    val verbose: Boolean
+    companion object {
+        private val logger = KotlinLogging.logger { }
+    }
 
-    val name: String
+    open val name: String
         get() = "gen_ai"
 
+    private val _attributes: MutableList<Attribute> = mutableListOf()
+
+    private val _bodyFields: MutableList<EventBodyField> = mutableListOf()
+
+    /**
+     * Provides a list of attributes associated with this event. These attributes are typically
+     * used to provide metadata or additional contextual information.
+     */
     val attributes: List<Attribute>
+        get() = _attributes
 
     /**
      * The body field for the event.
@@ -20,18 +31,27 @@ internal interface GenAIAgentEvent {
      *       Fields are merged with attributes when creating the event.
      */
     val bodyFields: List<EventBodyField>
+        get() = _bodyFields
+
+    fun addAttribute(attribute: Attribute) {
+        logger.debug { "Adding attribute to event (name: $name): ${attribute.key}" }
+        _attributes.add(attribute)
+    }
+
+    fun addAttributes(attributes: List<Attribute>) {
+        logger.debug { "Adding ${attributes.size} attributes to event (name: $name):\n${attributes.joinToString("\n") { "- ${it.key}" }}" }
+        _attributes.addAll(attributes)
+    }
+
+    fun addBodyField(eventField: EventBodyField) {
+        logger.debug { "Adding body field to event (name: $name): ${eventField.key}" }
+        _bodyFields.add(eventField)
+    }
+
+    fun removeBodyField(eventField: EventBodyField): Boolean {
+        logger.debug { "Removing body field from event (name: $name): ${eventField.key}" }
+        return _bodyFields.remove(eventField)
+    }
 
     fun String.concatName(other: String): String = "$this.$other"
-
-    fun bodyFieldsAsAttribute(): Attribute {
-        check(bodyFields.isNotEmpty()) {
-            "Unable to convert Event Body Fields into Attribute because no body fields found"
-        }
-
-        val value = bodyFields.joinToString(separator = ",", prefix = "{", postfix = "}") { bodyField ->
-            "\"${bodyField.key}\":${bodyField.valueString}"
-        }
-
-        return CustomAttribute("body", value, verbose)
-    }
 }

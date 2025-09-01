@@ -1,6 +1,13 @@
 package ai.koog.agents.features.opentelemetry.event
 
+import ai.koog.agents.utils.HiddenString
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 
 /**
  * Represents an abstract field to be included in an event's body. Each field is characterized
@@ -16,38 +23,45 @@ internal abstract class EventBodyField {
 
     abstract val value: Any
 
-    val valueString: String
-        get() = convertValueToString(key, value)
+    fun valueString(verbose: Boolean): String {
+        return Json.encodeToString(JsonElement.serializer(), convertValueToJsonElement(value, verbose))
+    }
 
     //region Private Methods
 
-    private fun convertValueToString(key: Any, value: Any): String {
+    fun convertValueToJsonElement(value: Any, verbose: Boolean): JsonElement {
         return when (value) {
-            is CharSequence, is Char -> {
-                "\"${value}\""
+            is HiddenString -> {
+                JsonPrimitive(
+                    if (verbose) {
+                        value.value
+                    } else {
+                        value.toString()
+                    }
+                )
             }
-            is Boolean,
+            is CharSequence -> JsonPrimitive(value.toString())
+            is Char -> JsonPrimitive(value.toString())
+            is Boolean -> JsonPrimitive(value)
             is Int, is Long,
             is Double, is Float -> {
-                value.toString()
+                JsonPrimitive(value)
             }
-            is List<*> -> {
-                value.filterNotNull().joinToString(separator = ",", prefix = "[", postfix = "]") { item ->
-                    convertValueToString(key, item)
-                }
-            }
-
-            is Map<*, *> -> {
+            is List<*> -> JsonArray(
+                value
+                    .filterNotNull()
+                    .map { convertValueToJsonElement(it, verbose) }
+            )
+            is Map<*, *> -> JsonObject(
                 value.entries
-                    .filter { it.key != null && it.value != null }
-                    .joinToString(separator = ",", prefix = "{", postfix = "}") { entry ->
-                        "\"${entry.key}\":${convertValueToString(entry.key!!, entry.value!!)}"
+                    .filter { it.key != null }
+                    .associate { (k, v) ->
+                        k.toString() to (v?.let { convertValueToJsonElement(it, verbose) } ?: JsonNull)
                     }
-            }
-
+            )
             else -> {
                 logger.debug { "$key: Custom type for event body: ${value::class.simpleName}. Use toString()" }
-                value.toString()
+                JsonPrimitive(value.toString())
             }
         }
     }

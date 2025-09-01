@@ -24,7 +24,7 @@ fun main(): Unit = runBlocking {
     }
     val agent = AIAgent(
         executor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey),
-        llmModel = OpenAIModels.Reasoning.GPT4oMini,
+        llmModel = OpenAIModels.CostOptimized.GPT4oMini,
         systemPrompt = "You're responsible for running a Switch and perform operations on it by request",
         temperature = 0.0,
         toolRegistry = toolRegistry

@@ -25,6 +25,7 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import io.mockk.coEvery
@@ -60,6 +61,7 @@ class AIAgentMemoryTest {
 
     private val testModel = mockk<LLModel> {
         every { id } returns "test-model"
+        every { provider } returns mockk<LLMProvider>()
     }
 
     private val testClock: Clock = object : Clock {

@@ -1,5 +1,6 @@
 package ai.koog.prompt.params
 
+import ai.koog.prompt.llm.LLMCapability
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 
@@ -10,26 +11,54 @@ import kotlinx.serialization.json.JsonObject
  * encourage more diverse results, while lower values produce deterministically focused outputs.
  * The value is optional and defaults to null.
  *
+ * @property maxTokens Maximum number of tokens to generate in the response.
+ * @property numberOfChoices Specifies the number of alternative completions to generate.
  * @property speculation Reserved for speculative proposition of how result would look like,
  * supported only by a number of models, but may greatly improve speed and accuracy of result.
  * For example, in OpenAI that feature is called PredictedOutput
- *
+ * @property schema Defines the structure for the model's structured response format.
  * @property toolChoice Used to switch tool calling behavior of LLM.
- *
  * @property user An optional identifier for the user making the request, which can be used for tracking purposes.
- *
- * This class also includes a nested `Builder` class to facilitate constructing instances in a more
- * customizable and incremental way.
+ * @property includeThoughts If `true`, requests the model to add reasoning blocks to the response.
+ * Defaults to `null`.
+ * When set to `true`, responses may include detailed reasoning steps.
+ * When `false` or `null`, responses are typically shorter and faster.
+ * @property thinkingBudget Hard cap for reasoning tokens.
+ * Ignored by models that don't support budgets.
+ * This can be used to limit the amount of tokens used for reasoning when `includeThoughts` is enabled.
  */
 @Serializable
-public data class LLMParams(
-    val temperature: Double? = null,
-    val numberOfChoices: Int? = null,
-    val speculation: String? = null,
-    val schema: Schema? = null,
-    val toolChoice: ToolChoice? = null,
-    val user: String? = null,
+public open class LLMParams(
+    public val temperature: Double? = null,
+    public val maxTokens: Int? = null,
+    public val numberOfChoices: Int? = null,
+    public val speculation: String? = null,
+    public val schema: Schema? = null,
+    public val toolChoice: ToolChoice? = null,
+    public val user: String? = null,
+    public val includeThoughts: Boolean? = null,
+    public val thinkingBudget: Int? = null,
 ) {
+    init {
+        temperature?.let { temp ->
+            require(temp in 0.0..2.0) { "Temperature must be between 0.0 and 2.0, but was $temp" }
+        }
+        numberOfChoices?.let { choices ->
+            require(choices > 0) { "Number of choices must be greater than 0, but was $choices" }
+        }
+        speculation?.let { spec ->
+            require(spec.isNotBlank()) { "Speculation must not be empty or blank" }
+        }
+        user?.let { userId ->
+            require(userId.isNotBlank()) { "User must not be empty or blank" }
+        }
+        toolChoice?.let { choice ->
+            if (choice is ToolChoice.Named) {
+                require(choice.name.isNotBlank()) { "Tool choice name must not be empty or blank" }
+            }
+        }
+    }
+
     /**
      * Combines the parameters of the current `LLMParams` instance with the provided default `LLMParams`
      * to produce a new instance. Fields that are null in the current instance are replaced by the
@@ -40,65 +69,160 @@ public data class LLMParams(
      */
     public fun default(default: LLMParams): LLMParams = copy(
         temperature = temperature ?: default.temperature,
+        maxTokens = maxTokens ?: default.maxTokens,
         numberOfChoices = numberOfChoices ?: default.numberOfChoices,
         speculation = speculation ?: default.speculation,
         schema = schema ?: default.schema,
+        toolChoice = toolChoice ?: default.toolChoice,
         user = user ?: default.user,
+        includeThoughts = includeThoughts ?: default.includeThoughts,
+        thinkingBudget = thinkingBudget ?: default.thinkingBudget,
     )
 
     /**
-     * Represents a generic schema for structured data, defining a common contract
-     * for schemas.
-     * This is a sealed interface, enabling a restrictive set of implementations.
+     * Creates a copy of this instance with the ability to modify any of its properties.
+     */
+    public open fun copy(
+        temperature: Double? = this.temperature,
+        maxTokens: Int? = this.maxTokens,
+        numberOfChoices: Int? = this.numberOfChoices,
+        speculation: String? = this.speculation,
+        schema: Schema? = this.schema,
+        toolChoice: ToolChoice? = this.toolChoice,
+        user: String? = this.user,
+        includeThoughts: Boolean? = this.includeThoughts,
+        thinkingBudget: Int? = this.thinkingBudget,
+    ): LLMParams = LLMParams(
+        temperature = temperature,
+        maxTokens = maxTokens,
+        numberOfChoices = numberOfChoices,
+        speculation = speculation,
+        schema = schema,
+        toolChoice = toolChoice,
+        user = user,
+        includeThoughts = includeThoughts,
+        thinkingBudget = thinkingBudget,
+    )
+
+    /**
+     * Component functions for destructuring declarations
+     */
+    public operator fun component1(): Double? = temperature
+    public operator fun component2(): Int? = maxTokens
+    public operator fun component3(): Int? = numberOfChoices
+    public operator fun component4(): String? = speculation
+    public operator fun component5(): Schema? = schema
+    public operator fun component6(): ToolChoice? = toolChoice
+    public operator fun component7(): String? = user
+    public operator fun component8(): Boolean? = includeThoughts
+    public operator fun component9(): Int? = thinkingBudget
+
+    override fun equals(other: Any?): Boolean = when {
+        this === other -> true
+        other !is LLMParams -> false
+        else ->
+            temperature == other.temperature &&
+                maxTokens == other.maxTokens &&
+                numberOfChoices == other.numberOfChoices &&
+                speculation == other.speculation &&
+                schema == other.schema &&
+                toolChoice == other.toolChoice &&
+                user == other.user &&
+                includeThoughts == other.includeThoughts &&
+                thinkingBudget == other.thinkingBudget
+    }
+
+    override fun hashCode(): Int = listOf(
+        temperature, maxTokens, numberOfChoices,
+        speculation, schema, toolChoice,
+        user, includeThoughts, thinkingBudget
+    ).fold(0) { acc, element ->
+        31 * acc + (element?.hashCode() ?: 0)
+    }
+
+    override fun toString(): String = buildString {
+        append("LLMParams(")
+        append("temperature=$temperature")
+        append(", maxTokens=$maxTokens")
+        append(", numberOfChoices=$numberOfChoices")
+        append(", speculation=$speculation")
+        append(", schema=$schema")
+        append(", toolChoice=$toolChoice")
+        append(", user=$user")
+        append(", includeThoughts=$includeThoughts")
+        append(", thinkingBudget=$thinkingBudget")
+        append(")")
+    }
+
+    /**
+     * Represents a schema for the structured response.
      */
     @Serializable
     public sealed interface Schema {
         /**
-         * Represents a person's name as a string.
-         * This variable is intended to store the full name or a specific format of a name.
+         * Name identifier of the schema.
          */
         public val name: String
 
         /**
-         * Represents a sealed interface JSON that defines a schema entity.
-         * It extends the Schema interface and has a property for schema representation.
+         * Related LLM capability that has to be supported for a particular schema type.
+         */
+        public val capability: LLMCapability.Schema
+
+        /**
+         * Represents a schema in JSON format.
          */
         @Serializable
         public sealed interface JSON : Schema {
             /**
-             * Represents the JSON schema definition as a JsonObject.
-             *
-             * This property is used to store and define the structure or format of a JSON-based data schema,
-             * enabling serialization, validation, and adherence to a specific format. It is commonly utilized
-             * within implementations that require a structured schema for processing or validating JSON data.
+             * JSON schema definition as [JsonObject].
              */
             public val schema: JsonObject
 
             /**
-             * Represents a simplified JSON structure with a schema definition.
+             * Represents a basic JSON schema.
+             * Used to specify lightweight or fundamental JSON processing capabilities.
+             * This format primarily focuses on nested data definitions without advanced JSON Schema functionalities.
              *
-             * This data class implements the `JSON` interface and provides a basic representation
-             * of a JSON structure using a `name` and its corresponding `schema` in the form of a `JsonObject`.
+             * @property name Name identifier for the JSON schema structure.
+             * @property schema JSON schema definition as [JsonObject].
              *
-             * Use this class when a lightweight, minimal representation of a JSON schema is sufficient.
-             *
-             * @property name The identifier or name of the JSON structure.
-             * @property schema The JSON schema associated with the structure.
+             * @see [LLMCapability.Schema.JSON.Basic]
              */
             @Serializable
-            public data class Simple(override val name: String, override val schema: JsonObject) : JSON
+            public data class Basic(
+                override val name: String,
+                override val schema: JsonObject
+            ) : JSON {
+                override val capability: LLMCapability.Schema = LLMCapability.Schema.JSON.Basic
+
+                init {
+                    require(name.isNotBlank()) { "Schema name must not be empty or blank" }
+                }
+            }
 
             /**
-             * Represents a complete JSON schema structure.
+             * Represents a standard JSON schema, according to https://json-schema.org/.
+             * This format is a proper subset of the official JSON Schema specification.
              *
-             * This data class implements the `JSON` interface and provides a representation
-             * for a fully described JSON schema object, including its associated name and schema data.
+             * **Note**: the flavor across different LLM providers might vary, since not all of them support full JSON schemas.
              *
-             * @property name The name identifier for the JSON schema structure.
-             * @property schema The JSON schema definition as a `JsonObject`.
+             * @property name Name identifier for the JSON schema structure.
+             * @property schema JSON schema definition as [JsonObject].
+             *
+             * @see [LLMCapability.Schema.JSON.Standard]
              */
             @Serializable
-            public data class Full(override val name: String, override val schema: JsonObject) : JSON
+            public data class Standard(
+                override val name: String,
+                override val schema: JsonObject
+            ) : JSON {
+                override val capability: LLMCapability.Schema = LLMCapability.Schema.JSON.Standard
+
+                init {
+                    require(name.isNotBlank()) { "Schema name must not be empty or blank" }
+                }
+            }
         }
     }
 
@@ -111,7 +235,11 @@ public data class LLMParams(
          *  LLM will call the tool [name] as a response
          */
         @Serializable
-        public data class Named(val name: String) : ToolChoice()
+        public data class Named(val name: String) : ToolChoice() {
+            init {
+                require(name.isNotBlank()) { "Tool choice name must not be empty or blank" }
+            }
+        }
 
         /**
          * LLM will not call tools at all, and only generate text

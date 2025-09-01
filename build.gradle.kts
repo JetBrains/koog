@@ -1,16 +1,24 @@
 import ai.koog.gradle.fixups.DisableDistTasks.disableDistTasks
+import ai.koog.gradle.plugins.CheckSplitPackagesExtension
+import ai.koog.gradle.plugins.CheckSplitPackagesPlugin
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.asRequestBody
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
-import java.util.*
+import org.gradle.kotlin.dsl.apply
+import org.gradle.kotlin.dsl.getByType
+import org.jetbrains.kotlin.gradle.targets.js.ir.KotlinJsIrLink
+import org.jetbrains.kotlin.gradle.tasks.BaseKotlinCompile
+import org.jlleitschuh.gradle.ktlint.KtlintExtension
+import java.util.Base64
+import kotlin.apply
 
 group = "ai.koog"
 version = run {
     // our version follows the semver specification
 
-    val main = "0.3.0"
+    val main = "0.4.1"
 
     val feat = run {
         val releaseBuild = !System.getenv("BRANCH_KOOG_IS_RELEASING_FROM").isNullOrBlank()
@@ -27,6 +35,7 @@ version = run {
                         throw GradleException("Custom version is not allowed during release from the main branch")
                     }
                 }
+
                 "develop" -> {
                     if (!customVersion.isNullOrBlank()) {
                         throw GradleException("Custom version is not allowed during release from the develop branch")
@@ -36,6 +45,7 @@ version = run {
                         ".$tcCounter"
                     }
                 }
+
                 else -> {
                     if (!customVersion.isNullOrBlank()) {
                         "-feat-$customVersion"
@@ -71,6 +81,8 @@ allprojects {
     }
 }
 
+apply<CheckSplitPackagesPlugin>()
+
 disableDistTasks()
 
 // Apply Kover and ktlint to all subprojects
@@ -80,6 +92,11 @@ subprojects {
 }
 
 subprojects {
+    extensions.configure<KtlintExtension> {
+        outputToConsole = true
+        coloredOutput = true
+    }
+
     tasks.withType<Test> {
         testLogging {
             showStandardStreams = true
@@ -94,6 +111,7 @@ subprojects {
                 "OPEN_ROUTER_API_TEST_KEY" to System.getenv("OPEN_ROUTER_API_TEST_KEY"),
                 "AWS_SECRET_ACCESS_KEY" to System.getenv("AWS_SECRET_ACCESS_KEY"),
                 "AWS_ACCESS_KEY_ID" to System.getenv("AWS_ACCESS_KEY_ID"),
+                "DEEPSEEK_API_TEST_KEY" to System.getenv("DEEPSEEK_API_TEST_KEY"),
             )
         )
     }
@@ -171,13 +189,13 @@ tasks {
 
 dependencies {
     dokka(project(":agents:agents-core"))
-    dokka(project(":agents:agents-features:agents-features-common"))
+    dokka(project(":agents:agents-features:agents-features-debugger"))
+    dokka(project(":agents:agents-features:agents-features-event-handler"))
     dokka(project(":agents:agents-features:agents-features-memory"))
     dokka(project(":agents:agents-features:agents-features-opentelemetry"))
+    dokka(project(":agents:agents-features:agents-features-snapshot"))
     dokka(project(":agents:agents-features:agents-features-trace"))
     dokka(project(":agents:agents-features:agents-features-tokenizer"))
-    dokka(project(":agents:agents-features:agents-features-event-handler"))
-    dokka(project(":agents:agents-features:agents-features-snapshot"))
     dokka(project(":agents:agents-mcp"))
     dokka(project(":agents:agents-test"))
     dokka(project(":agents:agents-tools"))
@@ -191,11 +209,13 @@ dependencies {
     dokka(project(":prompt:prompt-executor:prompt-executor-cached"))
     dokka(project(":prompt:prompt-executor:prompt-executor-clients"))
     dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-anthropic-client"))
-    dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-google-client"))
-    dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
-    dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openrouter-client"))
-    dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-ollama-client"))
     dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-bedrock-client"))
+    dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-deepseek-client"))
+    dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-google-client"))
+    dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-ollama-client"))
+    dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
+    dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-model"))
+    dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openrouter-client"))
     dokka(project(":prompt:prompt-executor:prompt-executor-llms"))
     dokka(project(":prompt:prompt-executor:prompt-executor-llms-all"))
     dokka(project(":prompt:prompt-executor:prompt-executor-model"))
@@ -215,7 +235,8 @@ kover {
     val excludedProjects = setOf(
         ":integration-tests",
         ":examples",
-        ":buildSrc"
+        ":buildSrc",
+        ":docs",
     )
     merge {
         subprojects {
@@ -229,4 +250,34 @@ kover {
             }
         }
     }
+}
+
+fun Project.getKotlinCompileTasks(sourceSetName: String): List<Task> {
+    return this.tasks
+        .withType<BaseKotlinCompile>()
+        // Filtering JS linking tasks, additional overhead and not needed for verification. Not used by assemble task.
+        .filter { it !is KotlinJsIrLink }
+        .filter { it.sourceSetName.get() == sourceSetName }
+}
+
+tasks.register("compileKotlinAll") {
+    description = """
+    Compiles all main Kotlin sources in all subprojects. Useful to verify that everything compiles for all supported platforms.
+    """.trimIndent()
+
+    dependsOn(subprojects.map { it.getKotlinCompileTasks("main") })
+}
+
+tasks.register("compileTestKotlinAll") {
+    description = """
+    Compiles all test Kotlin sources in all subprojects. Useful to verify that everything compiles for all supported platforms.
+    """.trimIndent()
+
+    dependsOn(subprojects.map { it.getKotlinCompileTasks("test") })
+}
+
+extensions.getByType<CheckSplitPackagesExtension>().apply {
+    includeProjects = setOf(":agents:", ":embeddings:", ":prompt:", ":koog-spring-boot-starter", ":rag:")
+    failOnError = false
+    includePackages = setOf("ai.koog")
 }

@@ -31,6 +31,12 @@ kotlin {
             }
         }
 
+        appleMain {
+            dependencies {
+                api(libs.ktor.client.darwin)
+            }
+        }
+
         jsMain {
             dependencies {
                 api(libs.ktor.client.js)

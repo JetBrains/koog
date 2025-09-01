@@ -36,15 +36,17 @@ class AIAgentPipelineTest {
     fun `test pipeline interceptors for node events`() = runTest {
         val interceptedEvents = mutableListOf<String>()
 
+        val agentInput = "Hello World!"
+        val agentResult = "Done"
+
         val dummyNodeName = "dummy node"
         val strategy = strategy<String, String>("test-interceptors-strategy") {
             val dummyNode by nodeDoNothing<Unit>(dummyNodeName)
 
             edge(nodeStart forwardTo dummyNode transformed { })
-            edge(dummyNode forwardTo nodeFinish transformed { "Done" })
+            edge(dummyNode forwardTo nodeFinish transformed { agentResult })
         }
 
-        val agentInput = "Hello World!"
         createAgent(strategy = strategy) {
             install(TestFeature) { events = interceptedEvents }
         }.use { agent ->
@@ -57,6 +59,8 @@ class AIAgentPipelineTest {
             "Node: finish node (name: __start__, input: $agentInput, output: $agentInput)",
             "Node: start node (name: $dummyNodeName, input: kotlin.Unit)",
             "Node: finish node (name: $dummyNodeName, input: kotlin.Unit, output: kotlin.Unit)",
+            "Node: start node (name: __finish__, input: $agentResult)",
+            "Node: finish node (name: __finish__, input: $agentResult, output: $agentResult)",
         )
 
         assertEquals(
