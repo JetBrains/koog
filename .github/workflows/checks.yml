@@ -158,7 +158,7 @@ jobs:
           path: .qodana/code-coverage
 
       - name: 'Qodana Scan'
-        uses: JetBrains/qodana-action@v2025.1
+        uses: JetBrains/qodana-action@v2025.2
         with:
           pr-mode: false
           args: --apply-fixes,--baseline,qodana.sarif.json
