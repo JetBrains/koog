@@ -37,14 +37,14 @@ public suspend fun <Input, Output> RoutingContext.aiAgent(
     tools: ToolRegistry = ToolRegistry.EMPTY,
 ): AIAgent<Input, Output> {
     val plugin = requireNotNull(call.application.pluginOrNull(Koog)) { "Plugin $Koog is not configured" }
-
+    val agentConfig = plugin.agentConfig(model)
     return GraphAIAgent(
         inputType = inputType,
         outputType = outputType,
         promptExecutor = plugin.promptExecutor,
         strategy = strategy,
-        agentConfig = plugin.agentConfig(model),
-        toolRegistry = plugin.agentConfig.toolRegistry + tools,
+        agentConfig = agentConfig,
+        toolRegistry = agentConfig.toolRegistry + tools,
     ) {
         for (feature in plugin.agentFeatures) {
             this.feature()
