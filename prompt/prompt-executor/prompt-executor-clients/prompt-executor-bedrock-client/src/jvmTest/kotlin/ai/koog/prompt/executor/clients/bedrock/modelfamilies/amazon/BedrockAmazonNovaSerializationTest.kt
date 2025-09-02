@@ -282,7 +282,7 @@ class BedrockAmazonNovaSerializationTest {
         )
         val tools = listOf(tool)
 
-        val prompt = Prompt.build("test", params = LLMParams(toolChoice = LLMParams.ToolChoice.Auto)) {
+        val prompt = Prompt.build("test") {
             system("You are a helpful assistant that can use tools.")
             user("What's the weather in Paris?")
         }

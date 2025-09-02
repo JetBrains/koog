@@ -14,6 +14,23 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
+private fun ToolDescriptor.asNovaToolSpec() = NovaToolSpec(
+    toolSpec = NovaToolSpecDetails(
+        name = name,
+        description = description,
+        inputSchema = NovaInputSchema(
+            json = NovaJsonSchema(
+                properties = buildJsonObject {
+                    (requiredParameters + optionalParameters).forEach { param ->
+                        put(param.name, BedrockToolSerialization.buildToolParameterSchema(param))
+                    }
+                },
+                required = requiredParameters.map { it.name }
+            )
+        )
+    )
+)
+
 internal object BedrockAmazonNovaSerialization {
 
     private val logger = KotlinLogging.logger {}
@@ -84,24 +101,7 @@ internal object BedrockAmazonNovaSerialization {
 
         val novaToolConfig = if (tools.isNotEmpty()) {
             NovaToolConfig(
-                tools = tools.map { tool ->
-                    NovaToolSpec(
-                        toolSpec = NovaToolSpecDetails(
-                            name = tool.name,
-                            description = tool.description,
-                            inputSchema = NovaInputSchema(
-                                json = NovaJsonSchema(
-                                    properties = buildJsonObject {
-                                        (tool.requiredParameters + tool.optionalParameters).forEach { param ->
-                                            put(param.name, BedrockToolSerialization.buildToolParameterSchema(param))
-                                        }
-                                    },
-                                    required = tool.requiredParameters.map { it.name }
-                                )
-                            )
-                        )
-                    )
-                }
+                tools = tools.map { tool -> tool.asNovaToolSpec() }
             )
         } else {
             null
