@@ -80,17 +80,23 @@ class ReadFileToolJvmTest {
     }
 
     @Test
-    fun `throws IllegalArgumentException for invalid line ranges`() {
-        val file = createTestFile("valid.txt", "content")
+    fun `buildContent validates arguments`() {
+        val file = createTestFile("valid.txt", "line1\nline2\nline3\nline4")
 
-        assertThrows<IllegalArgumentException> {
-            runBlocking { readFile(file, startLine = -1) }
+        assertThrows<ToolException.ValidationFailure>("startLine must be < the whole file lines count") {
+            runBlocking { readFile(file, 10, -1) }
         }
-        assertThrows<IllegalArgumentException> {
-            runBlocking { readFile(file, startLine = 0, endLine = -5) }
+
+        assertThrows<ToolException.ValidationFailure>("startLine must be >= 0") {
+            runBlocking { readFile(file, -5, 2) }
         }
-        assertThrows<IllegalArgumentException> {
-            runBlocking { readFile(file, startLine = 2, endLine = 1) }
+
+        assertThrows<ToolException.ValidationFailure>("endLine must be >= -1") {
+            runBlocking { readFile(file, 0, -5) }
+        }
+
+        assertThrows<ToolException.ValidationFailure>("endLine must be > startLine") {
+            runBlocking { readFile(file, 1, 1) }
         }
     }
 

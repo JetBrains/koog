@@ -14,6 +14,7 @@ import ai.koog.agents.file.tools.render.file
 import ai.koog.prompt.text.text
 import ai.koog.rag.base.files.FileMetadata
 import ai.koog.rag.base.files.FileSystemProvider
+import ai.koog.rag.base.files.readText
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 
@@ -79,12 +80,12 @@ public class ReadFileTool<Path>(private val fs: FileSystemProvider.ReadOnly<Path
      * Performs validation before reading:
      * - Verifies the path exists in the filesystem
      * - Confirms the path points to a file
-     *  - Confirms the file is a text file
+     * - Confirms the file is a text file
      *
      * @param args arguments specifying the file path and optional line range
      * @return [Result] containing the file with its content and metadata
-     * @throws [ToolException.ValidationFailure] if the file doesn't exist, is a directory, or is not a text file
-     * @throws [IllegalArgumentException] if line range parameters are invalid
+     * @throws [ToolException.ValidationFailure] if the file doesn't exist, is a directory, or is not a text file, or
+     *          if line range parameters are invalid
      */
     override suspend fun execute(args: Args): Result {
         val path = fs.fromAbsolutePathString(args.path)
@@ -97,6 +98,15 @@ public class ReadFileTool<Path>(private val fs: FileSystemProvider.ReadOnly<Path
         validate(contentType == FileMetadata.FileContentType.Text) {
             "File is not a text file: ${args.path}"
         }
+
+        val content = fs.readText(path)
+        validate(args.startLine >= 0) { "startLine must be >= 0, but was ${args.startLine}" }
+        validate(args.endLine >= -1) { "endLine must be >= -1, but was ${args.endLine}" }
+        validate(args.endLine == -1 || args.endLine > args.startLine) {
+            "endLine must be > startLine or -1, but startLine=${args.startLine}, endLine=${args.endLine}"
+        }
+        val fileLinesCount = content.lines().size
+        validate(args.startLine < fileLinesCount) { "startLine=${args.startLine} must be strictly smaller than the whole fileLinesCount=$fileLinesCount" }
 
         return Result(
             buildTextFileEntry(

@@ -27,7 +27,6 @@ import ai.koog.rag.base.files.readText
  * @param startLine the starting line index (0-based, inclusive) for content extraction
  * @param endLine the ending line index (0-based, exclusive) for content extraction, or -1 for the end of the file
  * @return a file entry containing the requested content range and file attributes
- * @throws IllegalArgumentException when contentType is not [FileMetadata.FileContentType.Text]
  */
 public suspend fun <Path> buildTextFileEntry(
     fs: FileSystemProvider.ReadOnly<Path>,
@@ -63,21 +62,13 @@ public suspend fun <Path> buildTextFileEntry(
  * @param startLine first line to include (0-based, inclusive)
  * @param endLine first line to exclude (0-based, exclusive), or -1 for the end of the file
  * @return [Text] when the whole file is selected, otherwise [Excerpt]
- * @throws IllegalArgumentException if `startLine < 0`, `endLine < -1`,
- *   (`endLine != -1` and `endLine <= startLine`), or startLine > fileLinesCount
  */
 internal fun buildContent(
     content: String,
     startLine: Int,
     endLine: Int,
 ): Content {
-    require(startLine >= 0) { "startLine must be >= 0: $startLine" }
-    require(endLine >= -1) { "endLine must be >= -1: $endLine" }
-    require(endLine == -1 || endLine > startLine) {
-        "endLine must be > startLine or -1: startLine=$startLine, endLine=$endLine"
-    }
     val fileLinesCount = content.lines().size
-    require(startLine < fileLinesCount) { "startLine=$startLine must be strictly smaller than the whole fileLinesCount=$fileLinesCount" }
 
     val endLine = if (endLine == -1) fileLinesCount else endLine.coerceAtMost(fileLinesCount)
 

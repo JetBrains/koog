@@ -12,7 +12,6 @@ import kotlin.io.path.writeBytes
 import kotlin.io.path.writeText
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
@@ -45,29 +44,6 @@ class ReadFileUtilJvmTest {
         assertEquals("line1\nline2\n", result.snippets[0].text)
         assertEquals(DocumentProvider.Position(1, 0), result.snippets[0].range.start)
         assertEquals(DocumentProvider.Position(3, 0), result.snippets[0].range.end)
-    }
-
-    @Test
-    fun `buildContent validates arguments`() {
-        assertFailsWith<IllegalArgumentException>("startLine=10 must be strictly smaller than the whole file length=2") {
-            buildContent("line1\nline2", 10, -1) as FileSystemEntry.File.Content.Excerpt
-        }
-
-        assertFailsWith<IllegalArgumentException>("negative startLine") {
-            buildContent("content", -1, -1)
-        }
-
-        assertFailsWith<IllegalArgumentException>("invalid endLine") {
-            buildContent("content", 0, -5)
-        }
-
-        assertFailsWith<IllegalArgumentException>("endLine <= startLine") {
-            buildContent("content", 2, 1)
-        }
-
-        assertFailsWith<IllegalArgumentException>("endLine == startLine") {
-            buildContent("content", 1, 1)
-        }
     }
 
     @Test
