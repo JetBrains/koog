@@ -48,18 +48,11 @@ class ReadFileUtilJvmTest {
     }
 
     @Test
-    fun `buildContent handles startLine beyond file length`() {
-        val content = "line1\nline2"
-
-        val result = buildContent(content, 10, -1) as FileSystemEntry.File.Content.Excerpt
-
-        assertEquals("", result.snippets[0].text)
-        assertEquals(DocumentProvider.Position(2, 0), result.snippets[0].range.start)
-        assertEquals(DocumentProvider.Position(2, 0), result.snippets[0].range.end)
-    }
-
-    @Test
     fun `buildContent validates arguments`() {
+        assertFailsWith<IllegalArgumentException>("startLine=10 must be strictly smaller than the whole file length=2") {
+            buildContent("line1\nline2", 10, -1) as FileSystemEntry.File.Content.Excerpt
+        }
+
         assertFailsWith<IllegalArgumentException>("negative startLine") {
             buildContent("content", -1, -1)
         }

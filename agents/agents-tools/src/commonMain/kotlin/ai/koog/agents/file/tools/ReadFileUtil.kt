@@ -64,7 +64,7 @@ public suspend fun <Path> buildTextFileEntry(
  * @param endLine first line to exclude (0-based, exclusive), or -1 for the end of the file
  * @return [Text] when the whole file is selected, otherwise [Excerpt]
  * @throws IllegalArgumentException if `startLine < 0`, `endLine < -1`,
- *   or (`endLine != -1` and `endLine <= startLine`)
+ *   (`endLine != -1` and `endLine <= startLine`), or startLine > fileLinesCount
  */
 internal fun buildContent(
     content: String,
@@ -76,19 +76,12 @@ internal fun buildContent(
     require(endLine == -1 || endLine > startLine) {
         "endLine must be > startLine or -1: startLine=$startLine, endLine=$endLine"
     }
+    val fileLinesCount = content.lines().size
+    require(startLine < fileLinesCount) { "startLine=$startLine must be strictly smaller than the whole fileLinesCount=$fileLinesCount" }
 
-    val lines = content.lines()
+    val endLine = if (endLine == -1) fileLinesCount else endLine.coerceAtMost(fileLinesCount)
 
-    if (startLine >= lines.size) {
-        // Return the empty excerpt at EOF when the start is past the end
-        val eof = DocumentProvider.Position(lines.size, 0)
-        val emptyRange = DocumentProvider.DocumentRange(eof, eof)
-        return Excerpt(listOf(Excerpt.Snippet("", emptyRange)))
-    }
-
-    val endLine = if (endLine == -1) lines.size else endLine.coerceAtMost(lines.size)
-
-    if (startLine == 0 && endLine >= lines.size) return Text(content)
+    if (startLine == 0 && endLine >= fileLinesCount) return Text(content)
 
     val start = DocumentProvider.Position(startLine, 0)
     val end = DocumentProvider.Position(endLine, 0)
