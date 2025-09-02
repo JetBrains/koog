@@ -26,12 +26,6 @@ internal data class NovaMessage(
     @SerialName("content")
     val content: List<NovaContent>
 ) {
-    init {
-        content.forEach {
-            if (it.isToolUse) require(role == "assistant")
-            if (it.isToolResult) require(role == "user")
-        }
-    }
 
     internal constructor(
         role: String,
@@ -47,21 +41,7 @@ internal data class NovaContent(
     val toolUse: NovaToolUse? = null,
     @SerialName("toolResult")
     val toolResult: NovaToolResult? = null
-) {
-    init {
-        require(isText || isToolUse || isToolResult) { "At least one of text, toolUse, or toolResult must be provided" }
-        require(listOf(isText, isToolUse, isToolResult).count { it } == 1) { "Only one of text, toolUse, or toolResult can be provided" }
-    }
-
-    internal val isText: Boolean
-        get() = text != null
-
-    internal val isToolUse: Boolean
-        get() = toolUse != null
-
-    internal val isToolResult: Boolean
-        get() = toolResult != null
-}
+)
 
 @Serializable
 internal data class NovaToolUse(
