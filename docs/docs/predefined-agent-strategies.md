@@ -56,18 +56,6 @@ val chatAgent = AIAgent(
 ```
 <!--- KNIT example-predefined-strategies-01.kt -->
 
-### Implementation details
-
-The Chat agent strategy is implemented with the following components:
-
-1. _Nodes_:
-    - `nodeCallLLM`: makes requests to the LLM with the user input
-    - `nodeExecuteTool`: runs tools called by the LLM
-    - `nodeSendToolResult`: sends tool results back to the LLM
-    - `giveFeedbackToCallTools`: provides feedback if the LLM tries to respond with plain text instead of using tools
-
-2. _Edges_ that define the flow between nodes.
-
 ### When to use the Chat agent strategy
 
 The Chat agent strategy is particularly useful for:
@@ -187,20 +175,6 @@ The `reActStrategy` function takes the following parameters:
 |---------------------|--------|----------|---------------------------------------------------------------------|
 | `reasoningInterval` | Int    | 1        | Specifies the interval for reasoning steps. Must be greater than 0. |
 | `name`              | String | `re_act` | The name of the strategy.                                           |
-
-### Implementation details
-
-The ReAct strategy is implemented with the following components:
-
-1. _Storage_: keeps track of the reasoning step count
-2. _Nodes_:
-    - `nodeSetup`: initializes the reasoning step counter
-    - `nodeCallLLM`: makes requests to the LLM
-    - `nodeExecuteTool`: runs tools called by the LLM
-    - `nodeCallLLMReasonInput`: sends the initial user input and reasoning prompt to the LLM
-    - `nodeCallLLMReason`: processes tool results and periodically prompts for reasoning
-
-3. _Edges_ that define the flow between nodes.
 
 ### Example use case
 
