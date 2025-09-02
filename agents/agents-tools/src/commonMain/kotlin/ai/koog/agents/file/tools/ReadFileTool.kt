@@ -89,9 +89,7 @@ public class ReadFileTool<Path>(private val fs: FileSystemProvider.ReadOnly<Path
      */
     override suspend fun execute(args: Args): Result {
         val path = fs.fromAbsolutePathString(args.path)
-        validate(fs.exists(path)) { "File not found: ${args.path}" }
-
-        val metadata = validateNotNull(fs.metadata(path)) { "Cannot read metadata: ${args.path}" }
+        val metadata = validateNotNull(fs.metadata(path)) { "File not found: ${args.path}" }
         validate(metadata.type == FileMetadata.FileType.File) { "Not a file: ${args.path}" }
 
         val contentType = fs.getFileContentType(path)
