@@ -1,7 +1,7 @@
 [versions]
 annotations = "26.0.2"
 assertj="3.27.4"
-aws-sdk-kotlin = "1.4.119"
+aws-sdk-kotlin = "1.5.16"
 dokka = "2.0.0"
 jetsign = "45.47"
 junit = "5.8.2"

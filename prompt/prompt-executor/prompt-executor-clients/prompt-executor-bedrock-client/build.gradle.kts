@@ -34,7 +34,7 @@ kotlin {
                 implementation(
                     project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-anthropic-client")
                 )
-                implementation(libs.aws.sdk.kotlin.bedrockruntime)
+                api(libs.aws.sdk.kotlin.bedrockruntime)
             }
         }
 
