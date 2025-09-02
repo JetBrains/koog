@@ -35,6 +35,7 @@ import io.ktor.http.headersOf
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -154,6 +155,12 @@ class HttpJSONRPCClientTransportTest {
             expectedResponse = expectedResponse,
             invoke = { sendMessage(it) }
         )
+    }
+
+    @Ignore
+    @Test
+    fun testSendMessageStreaming() = runTest {
+        // FIXME Can't test it, MockEngine doesn't support SSE capability
     }
 
     @Test
