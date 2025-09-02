@@ -39,7 +39,7 @@ public class PromptExecutorProxy(
         return responses
     }
 
-    override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
+    override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
         logger.debug { "Executing LLM streaming call (prompt: $prompt)" }
         val stream = executor.executeStreaming(prompt, model)
 

@@ -11,7 +11,7 @@ import ai.koog.prompt.tokenizer.Tokenizer
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.flow
 import kotlinx.datetime.Clock
 
 /**
@@ -20,7 +20,8 @@ import kotlinx.datetime.Clock
  * @param TResponse The type of the response associated with the matches.
  * @property partialMatches A map of strings to responses where the key partially matches an input string.
  * @property exactMatches A map of strings to responses where the key must match an input string exactly.
- * @property conditional A map of predicate functions to responses, where the response is determined by the first predicate that returns true for the input string.
+ * @property conditional A map of predicate functions to responses, where the response is determined
+ *  by the first predicate that returns true for the input string.
  * @property defaultResponse The default response returned when no other match is found.
  */
 internal class ResponseMatcher<TResponse>(
@@ -88,9 +89,9 @@ internal class MockLLMExecutor(
      * @param model The LLM model to use (ignored in mock implementation)
      * @return A flow containing a single string response
      */
-    override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
+    override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> = flow {
         val response = execute(prompt = prompt, model = model).single()
-        return flowOf(response.content)
+        emit(response.content)
     }
 
     /**
@@ -134,7 +135,7 @@ internal class MockLLMExecutor(
      * @param prompt The prompt to handle
      * @return The appropriate response based on the configured matches
      */
-    suspend fun handlePrompt(prompt: Prompt): List<Message.Response> {
+    fun handlePrompt(prompt: Prompt): List<Message.Response> {
         logger.debug { "Handling prompt with messages:" }
         prompt.messages.forEach { logger.debug { "Message content: ${it.content.take(300)}..." } }
 

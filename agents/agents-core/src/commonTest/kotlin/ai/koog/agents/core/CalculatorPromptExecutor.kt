@@ -51,7 +51,7 @@ object CalculatorChatExecutor : PromptExecutor {
         return listOf(result)
     }
 
-    override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> =
+    override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> =
         flow {
             try {
                 val response = execute(prompt, model).single()

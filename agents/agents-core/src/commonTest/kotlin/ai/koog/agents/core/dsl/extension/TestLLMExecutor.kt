@@ -35,9 +35,10 @@ class TestLLMExecutor : PromptExecutor {
         return listOf(handlePrompt(prompt))
     }
 
-    override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> = flow {
+    override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> = flow {
         emit(handlePrompt(prompt).content)
     }
+
     override suspend fun moderate(
         prompt: Prompt,
         model: LLModel
