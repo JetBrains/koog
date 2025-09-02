@@ -12,6 +12,7 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
+                api(libs.jetbrains.annotations)
                 api(libs.kotlinx.coroutines.core)
                 implementation(libs.ktor.client.core)
                 implementation(libs.oshai.kotlin.logging)

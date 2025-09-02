@@ -3,6 +3,7 @@ package ai.koog.agents.utils
 import io.github.oshai.kotlinlogging.KLogger
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.call.body
+import io.ktor.client.engine.HttpClientEngineConfig
 import io.ktor.client.plugins.sse.SSEClientException
 import io.ktor.client.plugins.sse.sse
 import io.ktor.client.request.accept
@@ -20,6 +21,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
+import org.jetbrains.annotations.ApiStatus.Experimental
+import kotlin.jvm.JvmOverloads
 import kotlin.reflect.KClass
 
 /**
@@ -37,11 +40,12 @@ import kotlin.reflect.KClass
  * @param configurer A lambda function to configure the base Ktor HttpClient instance.
  * The configuration is applied using the Ktor `HttpClient.config` method.
  */
-public class KtorHttpClient(
+@Experimental
+internal class KoogKtorHttpClient internal constructor(
     private val clientName: String,
     private val logger: KLogger,
     baseClient: io.ktor.client.HttpClient = io.ktor.client.HttpClient(),
-    configurer: HttpClientConfig<*>.() -> Unit
+    configurer: HttpClientConfig<out HttpClientEngineConfig>.() -> Unit
 ) : KoogHttpClient {
 
     /**
@@ -54,9 +58,9 @@ public class KtorHttpClient(
      * POST requests and Server-Sent Events (SSE) streaming, supporting request and response
      * serialization and deserialization for different data types.
      */
-    public val ktorClient: io.ktor.client.HttpClient = baseClient.config(configurer)
+    val ktorClient: io.ktor.client.HttpClient = baseClient.config(configurer)
 
-    public override suspend fun <T : Any, R : Any> post(
+    override suspend fun <T : Any, R : Any> post(
         path: String,
         request: T,
         requestBodyType: KClass<T>,
@@ -85,7 +89,7 @@ public class KtorHttpClient(
         }
     }
 
-    public override fun <T : Any, R : Any> sse(
+    override fun <T : Any, R : Any> sse(
         path: String,
         request: T,
         requestBodyType: KClass<T>,
@@ -133,3 +137,25 @@ public class KtorHttpClient(
         }
     }
 }
+
+/**
+ * Creates a new instance of `KoogHttpClient` using a Ktor-based HTTP client for performing HTTP operations.
+ *
+ * This function allows configuring the underlying Ktor `HttpClient` through the provided configuration lambda
+ * and enables enhanced logging, flexibility, and customization in HTTP interactions.
+ *
+ * @param clientName The name of the client instance, used for identifying or logging client operations.
+ * @param logger A `KLogger` instance used for logging client events and errors.
+ * @param baseClient The base Ktor `HttpClient` instance to be used. Defaults to a new Ktor `HttpClient` instance.
+ * @param configurer A lambda function to configure the base Ktor `HttpClient` instance. It is applied using
+ * Ktor’s `HttpClientConfig`.
+ * @return An instance of `KoogHttpClient` configured with the provided parameters.
+ */
+@Experimental
+@JvmOverloads
+public fun KoogHttpClient.Companion.fromKtorClient(
+    clientName: String,
+    logger: KLogger,
+    baseClient: io.ktor.client.HttpClient = io.ktor.client.HttpClient(),
+    configurer: HttpClientConfig<out HttpClientEngineConfig>.() -> Unit
+): KoogHttpClient = KoogKtorHttpClient(clientName, logger, baseClient, configurer)

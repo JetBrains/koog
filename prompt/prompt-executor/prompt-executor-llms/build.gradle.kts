@@ -32,11 +32,12 @@ kotlin {
                 implementation(libs.kotlinx.coroutines.test)
             }
         }
+
         jvmTest {
             dependencies {
-                implementation(kotlin("test-junit5"))
-
-                implementation(libs.ktor.client.cio)
+                implementation(project(":test-utils"))
+                implementation(libs.mockito.junit.jupiter)
+                implementation(libs.assertj.core)
             }
         }
     }

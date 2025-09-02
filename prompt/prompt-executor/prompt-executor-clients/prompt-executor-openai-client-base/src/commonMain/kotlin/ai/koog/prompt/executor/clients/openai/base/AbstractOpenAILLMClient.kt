@@ -1,9 +1,10 @@
 package ai.koog.prompt.executor.clients.openai.base
+
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.utils.KoogHttpClient
-import ai.koog.agents.utils.KtorHttpClient
+import ai.koog.agents.utils.fromKtorClient
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
@@ -99,7 +100,7 @@ public abstract class AbstractOpenAILLMClient<
         namingStrategy = JsonNamingStrategy.SnakeCase
     }
 
-    protected val httpClient: KoogHttpClient = KtorHttpClient(
+    protected val httpClient: KoogHttpClient = KoogHttpClient.fromKtorClient(
         clientName = clientName,
         logger = logger,
         baseClient = baseClient

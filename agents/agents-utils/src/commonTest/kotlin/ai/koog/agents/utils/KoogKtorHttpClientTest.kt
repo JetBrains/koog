@@ -21,7 +21,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.fail
 
-class KtorHttpClientTest {
+class KoogKtorHttpClientTest {
 
     private val logger = KotlinLogging.logger("TestLogger")
 
@@ -41,7 +41,7 @@ class KtorHttpClientTest {
             )
         }
         val base = HttpClient(engine) {}
-        val client = KtorHttpClient(
+        val client = KoogHttpClient.fromKtorClient(
             clientName = "TestClient",
             logger = logger,
             baseClient = base
@@ -79,7 +79,7 @@ class KtorHttpClientTest {
             )
         }
         val base = HttpClient(engine) {}
-        val client = KtorHttpClient(
+        val client = KoogKtorHttpClient(
             clientName = "TestClient",
             logger = logger,
             baseClient = base
@@ -114,7 +114,7 @@ class KtorHttpClientTest {
             )
         }
         val base = HttpClient(engine) {}
-        val client = KtorHttpClient(
+        val client = KoogKtorHttpClient(
             clientName = "TestClient",
             logger = logger,
             baseClient = base
@@ -146,7 +146,7 @@ class KtorHttpClientTest {
             )
         }
         val base = HttpClient(engine) {}
-        val client = KtorHttpClient(
+        val client = KoogKtorHttpClient(
             clientName = "TestClient",
             logger = logger,
             baseClient = base

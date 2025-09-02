@@ -1,6 +1,7 @@
 package ai.koog.agents.utils
 
 import kotlinx.coroutines.flow.Flow
+import org.jetbrains.annotations.ApiStatus.Experimental
 import kotlin.reflect.KClass
 
 /**
@@ -9,6 +10,7 @@ import kotlin.reflect.KClass
  *
  * Implementations are supposed to use a particular library or framework.
  */
+@Experimental
 public interface KoogHttpClient {
 
     /**
@@ -70,4 +72,6 @@ public interface KoogHttpClient {
         decodeStreamingResponse: (String) -> R,
         processStreamingChunk: (R) -> String?
     ): Flow<String>
+
+    public companion object
 }
