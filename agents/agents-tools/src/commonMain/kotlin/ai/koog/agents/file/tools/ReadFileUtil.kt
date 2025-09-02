@@ -119,7 +119,7 @@ public suspend fun <Path> buildFileSize(
     }
 
     val text = fs.readText(path)
-    val lineCount = if (text.trim().isEmpty()) {
+    val lineCount = if (text.isBlank()) {
         0
     } else {
         val newlines = text.count { it == '\n' }
