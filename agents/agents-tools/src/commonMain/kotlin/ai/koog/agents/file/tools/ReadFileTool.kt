@@ -99,11 +99,10 @@ public class ReadFileTool<Path>(private val fs: FileSystemProvider.ReadOnly<Path
         }
 
         return Result(
-            buildFileEntry(
+            buildTextFileEntry(
                 fs = fs,
                 path = path,
                 metadata = metadata,
-                contentType = contentType,
                 startLine = args.startLine,
                 endLine = args.endLine,
             )

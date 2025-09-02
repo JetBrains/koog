@@ -29,17 +29,13 @@ import ai.koog.rag.base.files.readText
  * @return a file entry containing the requested content range and file attributes
  * @throws IllegalArgumentException when contentType is not [FileMetadata.FileContentType.Text]
  */
-public suspend fun <Path> buildFileEntry(
+public suspend fun <Path> buildTextFileEntry(
     fs: FileSystemProvider.ReadOnly<Path>,
     path: Path,
     metadata: FileMetadata,
-    contentType: FileMetadata.FileContentType,
     startLine: Int,
     endLine: Int
 ): FileSystemEntry.File {
-    require(contentType == FileMetadata.FileContentType.Text) {
-        "buildFileEntry requires a text file, but was: $contentType"
-    }
     val name = fs.name(path)
     return FileSystemEntry.File(
         name = name,
@@ -52,7 +48,7 @@ public suspend fun <Path> buildFileEntry(
         ),
         size = buildFileSize(fs, path),
         hidden = metadata.hidden,
-        contentType = contentType,
+        contentType = FileMetadata.FileContentType.Text,
     )
 }
 
