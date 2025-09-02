@@ -23,7 +23,13 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
 /**
+ * Implementation of a JSON-RPC client transport using HTTP as the underlying communication protocol.
  *
+ * This transport sends JSON-RPC requests over HTTP and processes the responses. It also supports
+ * both standard requests and Server-Sent Events (SSE) for streaming responses.
+ *
+ * @param url The URL of the JSON-RPC server endpoint.
+ * @param baseHttpClient The base [HttpClient] instance, which will be configured internally.
  */
 public class HttpJSONRPCClientTransport(
     url: String,
