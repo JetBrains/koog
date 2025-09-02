@@ -61,7 +61,7 @@ class ReflectionArgsSerializerTest {
         @LLMDescription("arg Double") val argDouble: Double
     )
 
-    class MySpecificTool() {
+    class MySpecificTool {
         @Tool
         @LLMDescription("Specific tool")
         suspend fun execute(@LLMDescription("arg Long") argLong: Long): String {

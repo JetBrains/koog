@@ -11,7 +11,6 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 
 /**
  * MultiLLMPromptExecutor is a class responsible for executing prompts
@@ -125,6 +124,7 @@ public open class MultiLLMPromptExecutor(
                 fallback.fallbackModel,
                 tools
             )
+
             else -> throw IllegalArgumentException("No client found for provider: $provider")
         }
 
@@ -139,17 +139,13 @@ public open class MultiLLMPromptExecutor(
      * @param prompt The prompt to execute, containing the messages and parameters.
      * @param model The LLM model to use for execution.
      **/
-    override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> = flow {
+    override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
         logger.debug { "Executing streaming prompt: $prompt with model: $model" }
 
         val provider = model.provider
-        val client = llmClients[provider] ?: throw IllegalArgumentException("No client found for provider: $provider")
+        val client = requireNotNull(llmClients[model.provider]) { "No client found for provider: $provider" }
 
-        val responseFlow = client.executeStreaming(prompt, model)
-
-        responseFlow.collect { chunk ->
-            emit(chunk)
-        }
+        return client.executeStreaming(prompt, model)
     }
 
     /**
@@ -177,6 +173,7 @@ public open class MultiLLMPromptExecutor(
                 fallback.fallbackModel,
                 tools
             )
+
             else -> throw IllegalArgumentException("No client found for provider: $provider")
         }
 

@@ -479,7 +479,7 @@ public class AIAgentLLMWriteSession internal constructor(
      * in constructing the prompt for the language model request.
      * @return a flow of strings that streams the responses from the language model.
      */
-    public suspend fun requestLLMStreaming(definition: StructuredDataDefinition? = null): Flow<String> {
+    public fun requestLLMStreaming(definition: StructuredDataDefinition? = null): Flow<String> {
         if (definition != null) {
             val prompt = prompt(prompt, clock) {
                 user {

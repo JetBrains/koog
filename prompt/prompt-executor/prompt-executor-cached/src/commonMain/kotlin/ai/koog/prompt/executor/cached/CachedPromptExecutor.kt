@@ -33,7 +33,7 @@ public class CachedPromptExecutor(
         return getOrPut(prompt, tools, model)
     }
 
-    override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> =
+    override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> =
         flow { emit(getOrPut(prompt, model).content) }
 
     private suspend fun getOrPut(prompt: Prompt, model: LLModel): Message.Assistant {

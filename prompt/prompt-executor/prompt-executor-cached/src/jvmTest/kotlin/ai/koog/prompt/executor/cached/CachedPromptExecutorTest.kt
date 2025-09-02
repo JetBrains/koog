@@ -66,7 +66,7 @@ class CachedPromptExecutorTest {
             return testResponse
         }
 
-        override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
+        override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
             executeStreamingCalled = true
             return flowOf("Streaming response from executor")
         }

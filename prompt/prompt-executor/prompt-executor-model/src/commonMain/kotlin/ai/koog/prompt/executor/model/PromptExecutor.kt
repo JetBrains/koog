@@ -39,7 +39,7 @@ public interface PromptExecutor {
      * @param model The language model to be used for processing the prompt.
      * @return A flow emitting strings that represent the streaming output of the language model.
      */
-    public suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String>
+    public fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String>
 
     /**
      * Receives multiple independent choices from the LLM.
