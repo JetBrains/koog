@@ -1,16 +1,16 @@
 package ai.koog.prompt.executor.clients.deepseek.models
 
-import ai.koog.prompt.executor.clients.openai.models.OpenAIBaseLLMRequest
-import ai.koog.prompt.executor.clients.openai.models.OpenAIBaseLLMResponse
-import ai.koog.prompt.executor.clients.openai.models.OpenAIBaseLLMStreamResponse
-import ai.koog.prompt.executor.clients.openai.models.OpenAIChoice
-import ai.koog.prompt.executor.clients.openai.models.OpenAIMessage
-import ai.koog.prompt.executor.clients.openai.models.OpenAIResponseFormat
-import ai.koog.prompt.executor.clients.openai.models.OpenAIStreamChoice
-import ai.koog.prompt.executor.clients.openai.models.OpenAIStreamOptions
-import ai.koog.prompt.executor.clients.openai.models.OpenAITool
-import ai.koog.prompt.executor.clients.openai.models.OpenAIToolChoice
-import ai.koog.prompt.executor.clients.openai.models.OpenAIUsage
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIBaseLLMRequest
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIBaseLLMResponse
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIBaseLLMStreamResponse
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIChoice
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIMessage
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIResponseFormat
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIStreamChoice
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIStreamOptions
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAITool
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolChoice
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIUsage
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

@@ -7,7 +7,6 @@ plugins {
     id("ai.kotlin.multiplatform")
     alias(libs.plugins.kotlin.serialization)
 }
-
 kotlin {
     sourceSets {
         commonMain {
@@ -19,7 +18,6 @@ kotlin {
                 implementation(libs.oshai.kotlin.logging)
             }
         }
-
         jvmMain {
             dependencies {
                 api(libs.ktor.client.cio)

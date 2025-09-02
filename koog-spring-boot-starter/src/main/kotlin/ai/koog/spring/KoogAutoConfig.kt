@@ -27,7 +27,14 @@ import org.springframework.context.annotation.Bean
  * [SingleLLMPromptExecutor] instance backed by a respective client implementation.
  */
 @AutoConfiguration
-@EnableConfigurationProperties(KoogProperties::class)
+@EnableConfigurationProperties(
+    OpenAIKoogProperties::class,
+    AnthropicKoogProperties::class,
+    GoogleKoogProperties::class,
+    OllamaKoogProperties::class,
+    DeepSeekKoogProperties::class,
+    OpenRouterKoogProperties::class
+)
 public class KoogAutoConfiguration {
 
     /**
@@ -38,13 +45,12 @@ public class KoogAutoConfiguration {
      * @return An instance of [SingleLLMPromptExecutor] configured with [AnthropicLLMClient].
      */
     @Bean
-    @ConditionalOnProperty(prefix = KoogProperties.PREFIX, name = ["anthropic.api-key"])
-    public fun anthropicExecutor(properties: KoogProperties): SingleLLMPromptExecutor {
-        val props = properties.anthropicClientProperties
+    @ConditionalOnProperty(prefix = AnthropicKoogProperties.PREFIX, name = ["api-key"])
+    public fun anthropicExecutor(properties: AnthropicKoogProperties): SingleLLMPromptExecutor {
         return SingleLLMPromptExecutor(
             AnthropicLLMClient(
-                apiKey = props.apiKey,
-                settings = AnthropicClientSettings(baseUrl = props.baseUrl)
+                apiKey = properties.apiKey,
+                settings = AnthropicClientSettings(baseUrl = properties.baseUrl)
             )
         )
     }
@@ -57,13 +63,12 @@ public class KoogAutoConfiguration {
      * @return A [SingleLLMPromptExecutor] instance configured with a [GoogleLLMClient].
      */
     @Bean
-    @ConditionalOnProperty(prefix = KoogProperties.PREFIX, name = ["google.api-key"])
-    public fun googleExecutor(properties: KoogProperties): SingleLLMPromptExecutor {
-        val props = properties.googleClientProperties
+    @ConditionalOnProperty(prefix = GoogleKoogProperties.PREFIX, name = ["api-key"])
+    public fun googleExecutor(properties: GoogleKoogProperties): SingleLLMPromptExecutor {
         return SingleLLMPromptExecutor(
             GoogleLLMClient(
-                apiKey = props.apiKey,
-                settings = GoogleClientSettings(baseUrl = props.baseUrl)
+                apiKey = properties.apiKey,
+                settings = GoogleClientSettings(baseUrl = properties.baseUrl)
             )
         )
     }
@@ -71,18 +76,17 @@ public class KoogAutoConfiguration {
     /**
      * Creates and configures a [SingleLLMPromptExecutor] instance using Ollama properties.
      *
-     * The method initializes an [OllamaClient] with the base URL derived from the provided [KoogProperties]
+     * The method initializes an [OllamaClient] with the base URL derived from the provided [OllamaKoogProperties]
      * and uses it to construct the [SingleLLMPromptExecutor].
      *
      * @param properties the configuration properties containing Ollama client settings such as the base URL.
      * @return a [SingleLLMPromptExecutor] configured to use the Ollama client.
      */
     @Bean
-    @ConditionalOnProperty(prefix = KoogProperties.PREFIX, name = ["ollama"])
-    public fun ollamaExecutor(properties: KoogProperties): SingleLLMPromptExecutor {
-        val props = properties.ollamaClientProperties
+    @ConditionalOnProperty(prefix = OllamaKoogProperties.PREFIX, name = ["base-url"])
+    public fun ollamaExecutor(properties: OllamaKoogProperties): SingleLLMPromptExecutor {
         return SingleLLMPromptExecutor(
-            OllamaClient(baseUrl = props.baseUrl)
+            OllamaClient(baseUrl = properties.baseUrl)
         )
     }
 
@@ -94,13 +98,12 @@ public class KoogAutoConfiguration {
      * @return An instance of [SingleLLMPromptExecutor] initialized with the OpenAI client.
      */
     @Bean
-    @ConditionalOnProperty(prefix = KoogProperties.PREFIX, name = ["openai.api-key"])
-    public fun openAIExecutor(properties: KoogProperties): SingleLLMPromptExecutor {
-        val props = properties.openAIClientProperties
+    @ConditionalOnProperty(prefix = OpenAIKoogProperties.PREFIX, name = ["api-key"])
+    public fun openAIExecutor(properties: OpenAIKoogProperties): SingleLLMPromptExecutor {
         return SingleLLMPromptExecutor(
             OpenAILLMClient(
-                apiKey = props.apiKey,
-                settings = OpenAIClientSettings(baseUrl = props.baseUrl)
+                apiKey = properties.apiKey,
+                settings = OpenAIClientSettings(baseUrl = properties.baseUrl)
             )
         )
     }
@@ -115,13 +118,12 @@ public class KoogAutoConfiguration {
      * @return A [SingleLLMPromptExecutor] initialized with an OpenRouter LLM client.
      */
     @Bean
-    @ConditionalOnProperty(prefix = KoogProperties.PREFIX, name = ["openrouter.api-key"])
-    public fun openRouterExecutor(properties: KoogProperties): SingleLLMPromptExecutor {
-        val props = properties.openRouterClientProperties
+    @ConditionalOnProperty(prefix = OpenRouterKoogProperties.PREFIX, name = ["api-key"])
+    public fun openRouterExecutor(properties: OpenRouterKoogProperties): SingleLLMPromptExecutor {
         return SingleLLMPromptExecutor(
             OpenRouterLLMClient(
-                props.apiKey,
-                settings = OpenRouterClientSettings(baseUrl = props.baseUrl)
+                properties.apiKey,
+                settings = OpenRouterClientSettings(baseUrl = properties.baseUrl)
             )
         )
     }
@@ -136,13 +138,12 @@ public class KoogAutoConfiguration {
      * @return A [SingleLLMPromptExecutor] initialized with an DeepSeek LLM client.
      */
     @Bean
-    @ConditionalOnProperty(prefix = KoogProperties.PREFIX, name = ["deepseek.api-key"])
-    public fun deepSeekExecutor(properties: KoogProperties): SingleLLMPromptExecutor {
-        val props = properties.deepSeekClientProperties
+    @ConditionalOnProperty(prefix = DeepSeekKoogProperties.PREFIX, name = ["api-key"])
+    public fun deepSeekExecutor(properties: DeepSeekKoogProperties): SingleLLMPromptExecutor {
         return SingleLLMPromptExecutor(
             DeepSeekLLMClient(
-                props.apiKey,
-                settings = DeepSeekClientSettings(baseUrl = props.baseUrl)
+                properties.apiKey,
+                settings = DeepSeekClientSettings(baseUrl = properties.baseUrl)
             )
         )
     }

@@ -17,6 +17,12 @@ kotlin {
                 api(libs.oshai.kotlin.logging)
             }
         }
+
+        jvmMain {
+            dependencies {
+                api(libs.kotlinx.coroutines.jdk8)
+            }
+        }
     }
 
     explicitApi()

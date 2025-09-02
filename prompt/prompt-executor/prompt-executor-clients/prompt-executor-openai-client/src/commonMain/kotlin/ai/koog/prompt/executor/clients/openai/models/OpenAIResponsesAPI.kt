@@ -1,5 +1,10 @@
 package ai.koog.prompt.executor.clients.openai.models
 
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIBaseLLMRequest
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIBaseLLMResponse
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIChoiceLogProbs
+import ai.koog.prompt.executor.clients.openai.base.models.ReasoningEffort
+import ai.koog.prompt.executor.clients.openai.base.models.ServiceTier
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
