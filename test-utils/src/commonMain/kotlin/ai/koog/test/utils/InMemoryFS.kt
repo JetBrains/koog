@@ -2,6 +2,7 @@ package ai.koog.test.utils
 
 import ai.koog.rag.base.files.FileMetadata
 import ai.koog.rag.base.files.FileSystemProvider
+import kotlinx.io.IOException
 import kotlinx.io.Sink
 import kotlinx.io.Source
 
@@ -26,9 +27,10 @@ public class InMemoryFS : FileSystemProvider.ReadWrite<String> {
         directories.contains(path) -> FileMetadata(FileMetadata.FileType.Directory, hidden = false)
         else -> null
     }
-    override suspend fun size(path: String): Long = files[path]?.size?.toLong() ?: 0L
+    override suspend fun size(path: String): Long =
+        files[path]?.size?.toLong() ?: throw IOException("No such file: $path")
 
-    override suspend fun readBytes(path: String): ByteArray = files[path] ?: throw IllegalStateException("No such file: $path")
+    override suspend fun readBytes(path: String): ByteArray = files[path] ?: throw IOException("No such file: $path")
     override suspend fun writeBytes(path: String, data: ByteArray) {
         parent(path)?.let { directories.add(it) }
         files[path] = data
@@ -49,10 +51,10 @@ public class InMemoryFS : FileSystemProvider.ReadWrite<String> {
     }
     override suspend fun move(source: String, target: String) {
         val data = files.remove(source)
-        if (data != null) files[target] = data else throw IllegalStateException("No such file: $source")
+        if (data != null) files[target] = data else throw IOException("No such file: $source")
     }
     override suspend fun copy(source: String, target: String) {
-        val data = files[source] ?: throw IllegalStateException("No such file: $source")
+        val data = files[source] ?: throw IOException("No such file: $source")
         files[target] = data.copyOf()
     }
     override suspend fun list(directory: String): List<String> =

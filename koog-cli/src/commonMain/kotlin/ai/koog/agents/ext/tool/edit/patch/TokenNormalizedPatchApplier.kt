@@ -26,10 +26,25 @@ internal fun applyTokenNormalizedPatch(content: String, patch: FilePatch): Patch
     }
 }
 
-internal sealed interface PatchApplyResult {
-    data class Success(val updatedContent: String) : PatchApplyResult
-    sealed class Failure(val reason: String) : PatchApplyResult {
-        object OriginalNotFound : Failure(
+/**
+ * Represents the result of applying a patch to a file
+ */
+public sealed interface PatchApplyResult {
+
+    /**
+     * Represents a successful patch application
+     */
+    public data class Success(val updatedContent: String) : PatchApplyResult
+
+    /**
+     * Represents a failed patch application, including the reason for the failure
+     */
+    public sealed class Failure(public val reason: String) : PatchApplyResult {
+
+        /**
+         * Represents a failure to find the original text in the file content
+         */
+        public object OriginalNotFound : Failure(
             """
             The original text to replace was not found in the file content. 
             Consider re-reading the file to check if the original as changed since last read.

@@ -18,19 +18,39 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 
-internal class EditFileTool<Path>(
+/**
+ * Tool to enable the agent to edit files.
+ *
+ * Takes a file path and two strings: original and replacement.
+ * And searches for the original string in the file and replaces it with the replacement.
+ *
+ * Also handles case and white space mismatches in the original string.
+ */
+public class EditFileTool<Path>(
     private val fs: FileSystemProvider.ReadWrite<Path>
 ) : Tool<EditFileTool.Args, EditFileTool.Result>() {
 
+    /**
+     * Arguments required to perform a single edit operation on a file.
+     *
+     * @property path Absolute path to the file to modify or create.
+     * @property original The text block to be replaced. Use empty string for new files or full rewrites.
+     * @property replacement The text that will replace the original block.
+     */
     @Serializable
-    data class Args(
+    public data class Args(
         val path: String,
         val original: String,
         val replacement: String
     ) : ToolArgs
 
+    /**
+     * Result of applying the edit patch to the target file.
+     *
+     * @property applied True when the patch was successfully applied and written.
+     */
     @Serializable
-    data class Result(
+    public data class Result(
         private val patchApplyResult: PatchApplyResult
     ) : ToolResult.JSONSerializable<Result> {
         @Serializable
@@ -38,7 +58,10 @@ internal class EditFileTool<Path>(
 
         override fun getSerializer(): KSerializer<Result> = serializer()
 
-        fun toMarkdown(): String = markdown {
+        /**
+         * Converts the result to a markdown string for reporting to the LLM.
+         */
+        public fun toMarkdown(): String = markdown {
             if (patchApplyResult.isSuccess()) {
                 line {
                     bold("Successfully").text(" edited file (patch applied)")
@@ -56,10 +79,16 @@ internal class EditFileTool<Path>(
         override fun toString(): String = toStringDefault()
     }
 
-    companion object {
+    /**
+     * Descriptor for the edit file tool.
+     */
+    public companion object {
         private val logger = KotlinLogging.logger { }
 
-        val descriptor: ToolDescriptor = ToolDescriptor(
+        /**
+         * Descriptor for the edit file tool.
+         */
+        public val descriptor: ToolDescriptor = ToolDescriptor(
             name = "edit_file",
             description = markdown {
                 +"Makes an edit to a target file by applying a single text replacement patch."
@@ -185,7 +214,7 @@ internal class EditFileTool<Path>(
         )
     }
 
-    override val argsSerializer = Args.serializer()
+    override val argsSerializer: KSerializer<Args> = Args.serializer()
 
     override val descriptor: ToolDescriptor = EditFileTool.descriptor
 

@@ -12,12 +12,9 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                // This module provides reusable CLI/edit-tool components
                 api(project(":agents:agents-core"))
-                api(project(":agents:agents-tools"))
-                api(project(":agents:agents-utils"))
 
-                api(libs.kotlinx.serialization.json)
+                api(libs.kotlinx.serialization.core)
             }
         }
         commonTest {

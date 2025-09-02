@@ -14,6 +14,7 @@ val excluded = setOf(
     ":test-utils",
     ":koog-spring-boot-starter",
     ":koog-ktor",
+    ":koog-cli",
     ":docs",
     project.path, // the current project should not depend on itself
 )
@@ -56,8 +57,7 @@ val included = setOf(
     ":prompt:prompt-tokenizer",
     ":prompt:prompt-xml",
     ":rag:rag-base",
-    ":rag:vector-storage",
-    ":koog-cli"
+    ":rag:vector-storage"
 )
 
 kotlin {
