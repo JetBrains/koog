@@ -31,6 +31,7 @@ public abstract class JsonSchemaGenerator {
      * during schema generation processing.
      * @property descriptionOverrides A map of user-defined properties and types descriptions to override [LLMDescription]
      * from the provided class.
+     * @property excludedProperties A set of property names to exclude from the schema generation.
      * @property currentDescription Description for the current element
      */
     public data class GenerationContext(
@@ -39,6 +40,7 @@ public abstract class JsonSchemaGenerator {
         public val processedTypeDefs: MutableMap<SerialDescriptor, JsonObject>,
         public val currentDefPath: List<SerialDescriptor>,
         public val descriptionOverrides: Map<String, String>,
+        public val excludedProperties: Set<String>,
         public val currentDescription: String?,
     ) {
         /**
@@ -89,12 +91,14 @@ public abstract class JsonSchemaGenerator {
      * @param name The name of the schema.
      * @param serializer The serializer for the type for which the schema has to be generated.
      * @param descriptionOverrides A map containing overrides for [LLMDescription].
+     * @param excludedProperties A set of property names to exclude from the schema generation.
      */
     public abstract fun generate(
         json: Json,
         name: String,
         serializer: KSerializer<*>,
         descriptionOverrides: Map<String, String>,
+        excludedProperties: Set<String> = emptySet(),
     ): LLMParams.Schema.JSON
 
     /**
