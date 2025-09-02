@@ -19,7 +19,7 @@ kotlin {
         jvmMain {
             dependencies {
                 api(kotlin("test-junit5"))
-                implementation(libs.junit.jupiter.params)
+                api(libs.junit.jupiter.params)
                 runtimeOnly(libs.slf4j.simple)
             }
         }

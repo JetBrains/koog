@@ -6,6 +6,7 @@ import ai.koog.prompt.params.LLMParams.Schema
 import ai.koog.prompt.params.LLMParams.ToolChoice
 import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
+import kotlin.jvm.JvmOverloads
 import kotlin.time.Duration
 
 /**
@@ -18,7 +19,7 @@ import kotlin.time.Duration
  */
 // FIXME move it from dsl package up to the module root package?
 @Serializable
-public data class Prompt(
+public data class Prompt @JvmOverloads constructor(
     val messages: List<Message>,
     val id: String,
     val params: LLMParams = LLMParams()
@@ -46,6 +47,7 @@ public data class Prompt(
          * @param init The initialization logic applied to the `PromptBuilder`.
          * @return The constructed `Prompt` object.
          */
+        @JvmOverloads
         public fun build(
             id: String,
             params: LLMParams = LLMParams(),

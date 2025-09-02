@@ -39,7 +39,8 @@ public open class StandardJsonSchemaGenerator : GenericJsonSchemaGenerator() {
         json: Json,
         name: String,
         serializer: KSerializer<*>,
-        descriptionOverrides: Map<String, String>
+        descriptionOverrides: Map<String, String>,
+        excludedProperties: Set<String>,
     ): LLMParams.Schema.JSON.Standard {
         val descriptorKind = serializer.descriptor.kind
 
@@ -56,6 +57,7 @@ public open class StandardJsonSchemaGenerator : GenericJsonSchemaGenerator() {
             processedTypeDefs = mutableMapOf(),
             currentDefPath = listOf(),
             descriptionOverrides = descriptionOverrides,
+            excludedProperties = excludedProperties,
             currentDescription = null
         )
 

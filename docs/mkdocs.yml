@@ -14,8 +14,9 @@ nav:
           - Class-based tools: class-based-tools.md
       - Agent events: agent-events.md
       - Agent strategies:
-          - Custom strategy graphs: custom-strategy-graphs.md
           - Pre-defined nodes and components: nodes-and-components.md
+          - Predefined strategies: predefined-agent-strategies.md
+          - Custom strategy graphs: custom-strategy-graphs.md
           - Parallel node execution: parallel-node-execution.md
           - Data transfer between nodes: data-transfer-between-nodes.md
       - History compression: history-compression.md

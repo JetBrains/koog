@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
+import kotlin.jvm.JvmOverloads
 
 /**
  * Represents a message exchanged in a chat with LLM. Messages can be categorized
@@ -107,10 +108,10 @@ public sealed interface Message {
      * @property role The role of the message, which is fixed as [Role.User] for this implementation.
      */
     @Serializable
-    public data class User(
+    public data class User @JvmOverloads constructor(
         override val content: String,
         override val metaInfo: RequestMetaInfo,
-        override val attachments: List<Attachment> = emptyList(),
+        override val attachments: List<Attachment> = emptyList()
     ) : Request, WithAttachments {
         override val role: Role = Role.User
     }

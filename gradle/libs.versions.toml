@@ -1,37 +1,42 @@
 [versions]
 annotations = "26.0.2"
+assertj="3.27.4"
+aws-sdk-kotlin = "1.4.119"
+dokka = "2.0.0"
+jetsign = "45.47"
 junit = "5.8.2"
+knit = "0.5.0"
 kotlin = "2.1.21"
 kotlinx-coroutines = "1.10.2"
 kotlinx-datetime = "0.6.2"
 kotlinx-io = "0.7.0"
 kotlinx-serialization = "1.8.1" # check with IJ
+kover = "0.9.1"
+ktlint = "13.0.0"
 ktor3 = "3.2.2"
 lettuce = "6.5.5.RELEASE"
 logback = "1.5.13"
-oshai-logging = "7.0.7"
+mcp = "0.6.0"
+mockito="5.19.0"
 mockk = "1.13.8"
+opentelemetry = "1.51.0"
+oshai-logging = "7.0.7"
 shadow = "8.1.1"
 slf4j = "2.0.17"
-mcp = "0.6.0"
-dokka = "2.0.0"
-jetsign = "45.47"
-testcontainers = "1.19.7"
-kover = "0.9.1"
 spring-boot = "3.5.3"
 spring-management = "1.1.7"
-opentelemetry = "1.51.0"
-aws-sdk-kotlin = "1.4.119"
-ktlint = "13.0.0"
-knit = "0.5.0"
+testcontainers = "1.19.7"
 
 [libraries]
 jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "annotations" }
+mockito-junit-jupiter = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mockito" }
+assertj-core = { module = "org.assertj:assertj-core", version.ref = "assertj" }
 junit-jupiter-params = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "junit" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
 kotlin-bom = { module = "org.jetbrains.kotlin:kotlin-bom", version.ref = "kotlin" }
 kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
+kotlinx-coroutines-jdk8 = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-jdk8", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutines-reactive = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-reactive", version.ref = "kotlinx-coroutines" }
 kotlinx-coroutines-reactor = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-reactor" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
