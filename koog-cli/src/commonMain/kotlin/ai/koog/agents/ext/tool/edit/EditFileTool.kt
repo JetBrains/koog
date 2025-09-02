@@ -148,7 +148,7 @@ public class EditFileTool<Path>(
                             text(", ")
                             code("C:\\Users\\user\\project\\main.py")
                             text(", ")
-                            code("./config/settings.json")
+                            code("/home/user/project/config/settings.json")
                         }
                     },
                     type = ToolParameterType.String
