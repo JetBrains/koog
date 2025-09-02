@@ -19,8 +19,7 @@ kotlin {
         jvmMain {
             dependencies {
                 api(kotlin("test-junit5"))
-                implementation(libs.junit.jupiter.params)
-                implementation(libs.kotlinx.coroutines.test)
+                api(libs.junit.jupiter.params)
             }
         }
     }
