@@ -20,13 +20,13 @@ import kotlinx.serialization.json.encodeToJsonElement
  * Abstract transport implementation for JSON-RPC-based server communication.
  * Handles receiving JSON-RPC requests, processing them, and sending responses.
  */
-public abstract class JSONRCPServerTransport : ServerTransport {
+public abstract class JSONRPCServerTransport : ServerTransport {
     /**
      * Handles a JSON-RPC request and returns the corresponding response.
      *
      * @throws A2AException if there's an error processing the request.
      */
-    public suspend fun onRequest(
+    protected suspend fun onRequest(
         request: JSONRPCRequest,
         ctx: ServerCallContext,
     ): JSONRPCSuccessResponse {
@@ -64,7 +64,7 @@ public abstract class JSONRCPServerTransport : ServerTransport {
      *
      * @throws A2AException if there's an error processing the request.
      */
-    public suspend fun onRequestStreaming(
+    protected fun onRequestStreaming(
         request: JSONRPCRequest,
         ctx: ServerCallContext,
     ): Flow<JSONRPCSuccessResponse> {

@@ -36,7 +36,7 @@ public abstract class JSONRPCClientTransport : ClientTransport {
      *
      * @throws A2AException if server returned an error.
      */
-    public abstract suspend fun request(
+    protected abstract suspend fun request(
         request: JSONRPCRequest,
         ctx: ClientCallContext,
     ): JSONRPCResponse
@@ -46,7 +46,7 @@ public abstract class JSONRPCClientTransport : ClientTransport {
      *
      * @throws A2AException if server returned an error.
      */
-    public abstract fun requestStreaming(
+    protected abstract fun requestStreaming(
         request: JSONRPCRequest,
         ctx: ClientCallContext,
     ): Flow<JSONRPCResponse>

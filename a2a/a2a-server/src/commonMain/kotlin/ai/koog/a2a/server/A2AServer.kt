@@ -33,7 +33,7 @@ public class A2AServer : RequestHandler {
         TODO("Not yet implemented")
     }
 
-    override suspend fun onSendMessageStreaming(
+    override fun onSendMessageStreaming(
         request: Request<MessageSendParams>,
         ctx: ServerCallContext
     ): Flow<Response<UpdateEvent>> {
