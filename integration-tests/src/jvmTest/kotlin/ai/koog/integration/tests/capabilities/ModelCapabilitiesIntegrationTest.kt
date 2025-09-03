@@ -173,7 +173,7 @@ class ModelCapabilitiesIntegrationTest {
                     val prompt = prompt("cap-vision-image-positive") {
                         system("You are a helpful assistant that can describe images.")
                         user {
-                            markdown { +"Describe the image succinctly." }
+                            markdown { +"Describe the image in 5-10 words." }
                             attachments {
                                 image(
                                     Attachment.Image(
@@ -227,7 +227,7 @@ class ModelCapabilitiesIntegrationTest {
                     val prompt = prompt("cap-document-positive") {
                         system("You are a helpful assistant that can read attached documents.")
                         user {
-                            markdown { +"Summarize the attached text file in one sentence." }
+                            markdown { +"Summarize the attached text file in 5-10 words." }
                             attachments { textFile(KtPath(file.pathString), "text/plain") }
                         }
                     }
@@ -255,7 +255,7 @@ class ModelCapabilitiesIntegrationTest {
                         params = LLMParams(numberOfChoices = 2)
                     ) {
                         system("You are a helpful assistant. Provide concise answers.")
-                        user("Name a popular programming language.")
+                        user("Provide multiple distinct options for a team name.")
                     }
                     withRetry(times = 3, testName = "positive_multiple_choices[${'$'}{model.id}]") {
                         val choices = executor.executeMultipleChoices(prompt, model, emptyList())
@@ -353,7 +353,7 @@ class ModelCapabilitiesIntegrationTest {
                 LLMCapability.Completion -> {
                     val prompt = prompt("cap-completion-negative") {
                         system("You are a helpful assistant.")
-                        user("This should fail because the model is not a chat completion model.")
+                        user("Say hello in one short sentence.")
                     }
                     withRetry(times = 3, testName = "negative_completion[${model.id}]") {
                         val ex = assertFailsWith<Exception> {
@@ -370,8 +370,8 @@ class ModelCapabilitiesIntegrationTest {
                 LLMCapability.Tools -> {
                     val tools = calculatorToolDescriptor
                     val prompt = prompt("cap-tools-negative", params = LLMParams(toolChoice = ToolChoice.Required)) {
-                        system("You are a helpful assistant with tools.")
-                        user("Try to use a tool.")
+                        system("You are a helpful assistant with a calculator tool. Always use the tool.")
+                        user("Compute 2 + 3.")
                     }
                     withRetry(times = 3, testName = "negative_tools[${model.id}]") {
                         val ex = assertFailsWith<Exception> {
@@ -388,8 +388,8 @@ class ModelCapabilitiesIntegrationTest {
                     val tools = calculatorToolDescriptor
                     val prompt =
                         prompt("cap-toolchoice-negative", params = LLMParams(toolChoice = ToolChoice.Required)) {
-                            system("You are a helpful assistant with tools.")
-                            user("Try to use a tool.")
+                            system("You are a helpful assistant with tools. Always choose to use a tool when required.")
+                            user("Compute 2 + 3.")
                         }
                     withRetry(times = 3, testName = "negative_toolchoice[${model.id}]") {
                         val ex = assertFailsWith<Exception> {
@@ -412,9 +412,9 @@ class ModelCapabilitiesIntegrationTest {
                     )
                     val base64 = Base64.encode(imagePath.readBytes())
                     val prompt = prompt("cap-vision-image-negative") {
-                        system("You are a helpful assistant.")
+                        system("You are a helpful assistant that can describe images.")
                         user {
-                            markdown { +"This should fail due to unsupported image capability." }
+                            markdown { +"Describe the image in 5-10 words." }
                             attachments {
                                 image(
                                     Attachment.Image(
@@ -440,19 +440,19 @@ class ModelCapabilitiesIntegrationTest {
 
                 LLMCapability.Audio -> {
                     val audioPath = createAudioFileForScenario(
-                        MediaTestScenarios.AudioTestScenario.BASIC_WAV,
+                        MediaTestScenarios.AudioTestScenario.BASIC_MP3,
                         testResourcesDir
                     )
                     val base64 = Base64.encode(audioPath.readBytes())
                     val prompt = prompt("cap-audio-negative") {
-                        system("You are a helpful assistant.")
+                        system("You are a helpful assistant that can transcribe audio.")
                         user {
-                            markdown { +"This should fail because audio is unsupported." }
+                            markdown { +"Transcribe the attached audio in 5-10 words." }
                             attachments {
                                 audio(
                                     Attachment.Audio(
                                         AttachmentContent.Binary.Base64(base64),
-                                        format = "wav"
+                                        format = "mp3"
                                     )
                                 )
                             }
@@ -476,9 +476,9 @@ class ModelCapabilitiesIntegrationTest {
                         testResourcesDir
                     )
                     val prompt = prompt("cap-document-negative") {
-                        system("You are a helpful assistant.")
+                        system("You are a helpful assistant that can read attached documents.")
                         user {
-                            markdown { +"This should fail due to file attachment on unsupported model." }
+                            markdown { +"Summarize the attached text file in 5-10 words." }
                             attachments { textFile(KtPath(file.pathString), "text/plain") }
                         }
                     }
@@ -497,7 +497,7 @@ class ModelCapabilitiesIntegrationTest {
 
                 LLMCapability.Moderation -> {
                     val prompt = prompt("cap-moderation-negative") {
-                        user("Is this content allowed?")
+                        user("This is a harmless request about the weather.")
                     }
                     withRetry(times = 3, testName = "negative_moderation[${model.id}]") {
                         val ex = assertFailsWith<Exception> {
@@ -532,18 +532,18 @@ class ModelCapabilitiesIntegrationTest {
                 }
 
                 LLMCapability.Vision.Video -> {
-                    val fakeVideoBytes = ByteArray(64) { 0 }
-                    val base64 = Base64.encode(fakeVideoBytes)
-                    val prompt = prompt("cap-vision-video-negative") {
-                        system("You are a helpful assistant.")
+                    val videoPath = createVideoFileForScenario(testResourcesDir)
+                    val base64 = Base64.encode(videoPath.readBytes())
+                    val prompt = prompt("cap-vision-video-positive") {
+                        system("You are a helpful assistant that can analyze short videos.")
                         user {
-                            markdown { +"This should fail due to unsupported video capability." }
+                            markdown { +"Describe in 5-10 words what you can infer from the attached video." }
                             attachments {
                                 video(
                                     Attachment.Video(
                                         content = AttachmentContent.Binary.Base64(base64),
                                         format = "mp4",
-                                        mimeType = "video/mp4"
+                                        mimeType = "video/mp4",
                                     )
                                 )
                             }
@@ -564,7 +564,7 @@ class ModelCapabilitiesIntegrationTest {
                 LLMCapability.Embed -> {
                     withRetry(times = 3, testName = "negative_embed[${model.id}]") {
                         val ex = assertFailsWith<Exception> {
-                            openAIClient.embed("this should fail for non-embedding models", model)
+                            openAIClient.embed("Provide an embedding for this sentence.", model)
                         }
                         assertExceptionMessageContains(
                             ex,
@@ -582,8 +582,8 @@ class ModelCapabilitiesIntegrationTest {
                         "cap-json-basic-negative",
                         params = LLMParams(schema = LLMParams.Schema.JSON.Basic(name = "XSchema", schema = schema))
                     ) {
-                        system("Reply strictly as JSON.")
-                        user("Return an integer x.")
+                        system("Reply strictly as JSON. Only include the JSON object.")
+                        user("Return an integer x field with any small integer.")
                     }
                     withRetry(times = 3, testName = "negative_json_basic[${model.id}]") {
                         val ex = assertFailsWith<Exception> {
@@ -605,8 +605,8 @@ class ModelCapabilitiesIntegrationTest {
                         "cap-json-standard-negative",
                         params = LLMParams(schema = LLMParams.Schema.JSON.Standard(name = "YSchema", schema = schema))
                     ) {
-                        system("Reply strictly as JSON.")
-                        user("Return a string y.")
+                        system("Reply strictly as JSON. Only include the JSON object.")
+                        user("Return a string y field.")
                     }
                     withRetry(times = 3, testName = "negative_json_standard[${model.id}]") {
                         val ex = assertFailsWith<Exception> {

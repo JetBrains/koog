@@ -314,14 +314,8 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
                     )
                     OpenAIContentPart.File(fileData)
                 }
-
                 is AttachmentContent.PlainText -> {
-                    val header = buildString {
-                        append("Attached file content")
-                        if (!fileName.isNullOrBlank()) append(" (\"").append(fileName).append("\")")
-                        append(" [").append(mimeType).append("]:\n")
-                    }
-                    OpenAIContentPart.Text(header + attachmentContent.text)
+                    OpenAIContentPart.Text(attachmentContent.text)
                 }
 
                 else -> throw IllegalArgumentException("Unsupported file attachment content: ${attachmentContent::class}")
