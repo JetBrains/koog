@@ -122,7 +122,7 @@ public interface ClientTransport : AutoCloseable {
  * @property additionalHeaders Additional call-specific headers associated with the call.
  */
 public class ClientCallContext(
-    public val additionalHeaders: Map<String, String> = emptyMap(),
+    public val additionalHeaders: Map<String, List<String>> = emptyMap(),
 ) {
     @Suppress("MissingKDocForPublicAPI")
     public companion object {

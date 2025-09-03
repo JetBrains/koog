@@ -33,8 +33,6 @@ import kotlinx.serialization.json.encodeToJsonElement
 public abstract class JSONRPCClientTransport : ClientTransport {
     /**
      * Sends a JSON-RPC request and returns the corresponding response.
-     *
-     * @throws A2AException if server returned an error.
      */
     protected abstract suspend fun request(
         request: JSONRPCRequest,
@@ -43,8 +41,6 @@ public abstract class JSONRPCClientTransport : ClientTransport {
 
     /**
      * Sends a JSON-RPC request and returns the corresponding response stream.
-     *
-     * @throws A2AException if server returned an error.
      */
     protected abstract fun requestStreaming(
         request: JSONRPCRequest,

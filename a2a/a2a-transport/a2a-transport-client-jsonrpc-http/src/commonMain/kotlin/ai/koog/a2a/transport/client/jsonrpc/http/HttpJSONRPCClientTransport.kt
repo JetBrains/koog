@@ -56,8 +56,8 @@ public class HttpJSONRPCClientTransport(
     ): JSONRPCResponse {
         val response = httpClient.post {
             headers {
-                ctx.additionalHeaders.forEach { (key, value) ->
-                    append(key, value)
+                ctx.additionalHeaders.forEach { (key, values) ->
+                    appendAll(key, values)
                 }
             }
 
@@ -77,8 +77,8 @@ public class HttpJSONRPCClientTransport(
                 accept(ContentType.Text.EventStream)
 
                 headers {
-                    ctx.additionalHeaders.forEach { (key, value) ->
-                        append(key, value)
+                    ctx.additionalHeaders.forEach { (key, values) ->
+                        appendAll(key, values)
                     }
                 }
 
