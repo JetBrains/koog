@@ -77,10 +77,7 @@ public abstract class OpenAIBasedSettings(
  * @param baseClient The HTTP client to use for API requests. Defaults to a new HttpClient instance.
  * @param clock Clock instance used for tracking response metadata timestamps. Defaults to Clock.System.
  */
-public abstract class AbstractOpenAILLMClient<
-    TResponse : OpenAIBaseLLMResponse,
-    TStreamResponse : OpenAIBaseLLMStreamResponse
-    >(
+public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse, TStreamResponse : OpenAIBaseLLMStreamResponse>(
     private val apiKey: String,
     settings: OpenAIBasedSettings,
     baseClient: HttpClient = HttpClient(),

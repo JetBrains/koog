@@ -45,21 +45,16 @@ kotlin {
 
         commonTest {
             dependencies {
-                implementation(kotlin("test"))
+                implementation(project(":test-utils"))
                 implementation(project(":agents:agents-features:agents-features-event-handler"))
-                implementation(libs.kotlinx.coroutines.core)
-                implementation(libs.kotlinx.coroutines.test)
             }
         }
 
         jvmTest {
             dependencies {
-                implementation(kotlin("test-junit5"))
-                implementation(libs.kotlinx.coroutines.test)
                 implementation(project(":agents:agents-core"))
                 implementation(project(":agents:agents-features:agents-features-event-handler"))
                 implementation(project(":agents:agents-features:agents-features-trace"))
-                implementation(project(":integration-tests"))
             }
         }
     }

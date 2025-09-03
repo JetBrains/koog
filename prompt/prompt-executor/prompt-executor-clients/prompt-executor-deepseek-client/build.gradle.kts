@@ -19,16 +19,12 @@ kotlin {
 
         commonTest {
             dependencies {
-                implementation(kotlin("test"))
-                implementation(libs.kotlinx.coroutines.test)
-                implementation(libs.kotlinx.serialization.core)
-                implementation(libs.kotlinx.serialization.json)
+                implementation(project(":test-utils"))
             }
         }
 
         jvmTest {
             dependencies {
-                implementation(project(":test-utils"))
                 implementation(libs.ktor.client.mock)
             }
         }
