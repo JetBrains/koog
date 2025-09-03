@@ -1,5 +1,7 @@
 package ai.koog.a2a.transport.client.jsonrpc.http
 
+import ai.koog.a2a.exceptions.A2AErrorCode
+import ai.koog.a2a.exceptions.A2AInvalidParamsException
 import ai.koog.a2a.model.AgentCapabilities
 import ai.koog.a2a.model.AgentCard
 import ai.koog.a2a.model.AgentSkill
@@ -21,6 +23,8 @@ import ai.koog.a2a.transport.Request
 import ai.koog.a2a.transport.RequestId
 import ai.koog.a2a.transport.Response
 import ai.koog.a2a.transport.jsonrpc.A2AMethod
+import ai.koog.a2a.transport.jsonrpc.model.JSONRPCError
+import ai.koog.a2a.transport.jsonrpc.model.JSONRPCErrorResponse
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCJson
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCRequest
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCSuccessResponse
@@ -38,6 +42,7 @@ import kotlinx.serialization.json.encodeToJsonElement
 import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.fail
 
 class HttpJSONRPCClientTransportTest {
 
@@ -372,5 +377,64 @@ class HttpJSONRPCClientTransportTest {
             expectedResponse = expectedResponse,
             invoke = { deleteTaskPushNotificationConfig(it) }
         )
+    }
+
+    @Test
+    fun testSendMessageError() = runTest {
+        val id = RequestId.StringId("test-error-1")
+
+        val testMessage = Message(
+            role = Role.User,
+            parts = listOf(TextPart("Hello, agent!")),
+            taskId = "invalid-task-id"
+        )
+
+        val messageSendParams = MessageSendParams(
+            message = testMessage
+        )
+
+        val request = Request(
+            id = id,
+            data = messageSendParams,
+        )
+
+        val mockEngine = MockEngine { receivedRequest ->
+            assertEquals(HttpMethod.Post, receivedRequest.method)
+            assertEquals(ContentType.Application.Json, receivedRequest.body.contentType)
+
+            val requestBodyText = (receivedRequest.body as TextContent).text
+            val jsonRpcRequest = json.decodeFromString<JSONRPCRequest>(requestBodyText)
+
+            assertEquals(A2AMethod.SendMessage.value, jsonRpcRequest.method)
+            assertEquals(request.id, jsonRpcRequest.id)
+            assertEquals(request.data, json.decodeFromJsonElement(jsonRpcRequest.params))
+
+            val jsonRpcErrorResponse = JSONRPCErrorResponse(
+                id = id,
+                error = JSONRPCError(
+                    code = A2AErrorCode.INVALID_PARAMS.value,
+                    message = "Invalid method parameters",
+                    data = json.encodeToJsonElement("The message parameters are invalid")
+                )
+            )
+
+            respond(
+                content = json.encodeToString(jsonRpcErrorResponse),
+                headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()),
+            )
+        }
+
+        val httpClient = HttpClient(mockEngine)
+        val transport = HttpJSONRPCClientTransport("https://api.example.com/a2a", httpClient)
+
+        try {
+            transport.sendMessage(request)
+            fail("Expected A2AInvalidParamsException to be thrown")
+        } catch (e: A2AInvalidParamsException) {
+            assertEquals("Invalid method parameters", e.message)
+            assertEquals(-32602, e.errorCode)
+        }
+
+        transport.close()
     }
 }
