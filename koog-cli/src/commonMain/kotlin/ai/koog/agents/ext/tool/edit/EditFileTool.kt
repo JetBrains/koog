@@ -6,11 +6,13 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.ToolResult
+import ai.koog.agents.core.tools.validate
 import ai.koog.agents.ext.tool.edit.patch.FilePatch
 import ai.koog.agents.ext.tool.edit.patch.PatchApplyResult
 import ai.koog.agents.ext.tool.edit.patch.applyTokenNormalizedPatch
 import ai.koog.agents.ext.tool.edit.patch.isSuccess
 import ai.koog.prompt.markdown.markdown
+import ai.koog.rag.base.files.FileMetadata
 import ai.koog.rag.base.files.FileSystemProvider
 import ai.koog.rag.base.files.readText
 import ai.koog.rag.base.files.writeText
@@ -220,6 +222,10 @@ public class EditFileTool<Path>(
 
     override suspend fun execute(args: Args): Result {
         val path = fs.fromAbsolutePathString(args.path)
+        val fileContentType = fs.getFileContentType(path)
+        validate(fileContentType == FileMetadata.FileContentType.Text) {
+            "Can not edit non-text files, tried editing: $path, which is a $fileContentType"
+        }
         val content = if (fs.exists(path)) fs.readText(path) else ""
 
         val patch = FilePatch(args.original, args.replacement)

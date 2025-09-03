@@ -8,7 +8,6 @@ import kotlinx.io.Source
 
 /**
  * Minimal in-memory filesystem for tests. Implements ReadWrite<String> and stores text as ByteArray.
- * Shared across integration tests to avoid duplication.
  */
 public class InMemoryFS : FileSystemProvider.ReadWrite<String> {
     private val files = mutableMapOf<String, ByteArray>()
@@ -40,25 +39,51 @@ public class InMemoryFS : FileSystemProvider.ReadWrite<String> {
     override suspend fun outputStream(path: String, append: Boolean): Sink = throw UnsupportedOperationException("Not used in tests")
 
     override suspend fun create(path: String, type: FileMetadata.FileType) {
+        require(exists(parent(path) ?: "")) { "Parent directory does not exist: $path" }
+        require(!exists(path)) { "File already exists: $path"}
         when (type) {
             FileMetadata.FileType.File -> if (!files.containsKey(path)) files[path] = ByteArray(0)
             FileMetadata.FileType.Directory -> directories.add(path)
         }
     }
     override suspend fun delete(path: String) {
+        require(exists(path)) { "File does not exist: $path" }
         files.remove(path)
         directories.remove(path)
     }
     override suspend fun move(source: String, target: String) {
+        require(exists(source)) { "File does not exist: $source" }
+        require(!exists(target)) { "File already exists: $target" }
         val data = files.remove(source)
         if (data != null) files[target] = data else throw IOException("No such file: $source")
     }
     override suspend fun copy(source: String, target: String) {
+        require(exists(source)) { "File does not exist: $source" }
+        require(!exists(target)) { "File already exists: $target" }
         val data = files[source] ?: throw IOException("No such file: $source")
         files[target] = data.copyOf()
     }
-    override suspend fun list(directory: String): List<String> =
-        files.keys.filter { it.startsWith(if (directory.endsWith("/")) directory else "$directory/") }
+    override suspend fun list(directory: String): List<String> {
+        require(exists(directory)) { "Directory does not exist: $directory" }
+        require(metadata(directory)?.type == FileMetadata.FileType.Directory) { "Not a directory: $directory" }
+
+        val children = mutableSetOf<String>()
+        for (filePath in files.keys) {
+            if (parent(filePath) == directory) {
+                children.add(filePath)
+            }
+        }
+        for (dirPath in directories) {
+            if (parent(dirPath) == directory) {
+                children.add(dirPath)
+            }
+        }
+        return children.sorted()
+    }
+
     override fun relativize(root: String, path: String): String = path.removePrefix(if (root.endsWith("/")) root else "$root/")
-    override suspend fun getFileContentType(path: String): FileMetadata.FileContentType = FileMetadata.FileContentType.Text
+    override suspend fun getFileContentType(path: String): FileMetadata.FileContentType {
+        require(exists(path)) { "File does not exist: $path" }
+        return FileMetadata.FileContentType.Text
+    }
 }
