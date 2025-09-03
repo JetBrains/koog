@@ -133,6 +133,8 @@ public open class AIAgent<Input, Output>(
 
     private val pipeline = AIAgentPipeline()
 
+    // Uuid.random is using secure random, therefore, must be initialized at runtime when performing a native build
+    // More about Java secure random and GrallVM: https://www.graalvm.org/jdk24/reference-manual/native-image/dynamic-features/JCASecurityServices/
     override val id: String by lazy { id ?: Uuid.random().toString() }
 
     init {
@@ -459,7 +461,7 @@ public inline fun <reified Input, reified Output> AIAgent(
     promptExecutor: PromptExecutor,
     strategy: AIAgentStrategy<Input, Output>,
     agentConfig: AIAgentConfigBase,
-    id: String = Uuid.random().toString(),
+    id: String? = null,
     toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     clock: Clock = Clock.System,
     noinline installFeatures: FeatureContext.() -> Unit = {},
@@ -493,7 +495,7 @@ public inline fun <reified Input, reified Output> AIAgent(
 public fun AIAgent(
     executor: PromptExecutor,
     llmModel: LLModel,
-    id: String = Uuid.random().toString(),
+    id: String? = null,
     strategy: AIAgentStrategy<String, String> = singleRunStrategy(),
     systemPrompt: String = "",
     temperature: Double = 1.0,
