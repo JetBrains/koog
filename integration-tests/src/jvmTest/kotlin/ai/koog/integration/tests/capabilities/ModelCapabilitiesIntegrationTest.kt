@@ -1,8 +1,5 @@
 package ai.koog.integration.tests.capabilities
 
-import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.agents.core.tools.ToolParameterDescriptor
-import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.integration.tests.utils.MediaTestScenarios
 import ai.koog.integration.tests.utils.MediaTestUtils.createAudioFileForScenario
 import ai.koog.integration.tests.utils.MediaTestUtils.createTextFileForScenario
@@ -113,25 +110,6 @@ class ModelCapabilitiesIntegrationTest {
                     .filter { capability -> !model.capabilities.contains(capability) }
                     .map { capability -> Arguments.of(model, capability) }
             }
-
-        @JvmStatic
-        fun toolDescriptors(): Stream<Arguments> = Stream.of(
-            Arguments.of(
-                ToolDescriptor(
-                    name = "calculator",
-                    description = "Perform basic arithmetic",
-                    requiredParameters = listOf(
-                        ToolParameterDescriptor(
-                            "operation",
-                            "Arithmetic operation to perform",
-                            ToolParameterType.Enum(arrayOf("ADD"))
-                        ),
-                        ToolParameterDescriptor("a", "First number", ToolParameterType.Integer),
-                        ToolParameterDescriptor("b", "Second number", ToolParameterType.Integer),
-                    )
-                )
-            )
-        )
     }
 
     private fun isValidJson(str: String): Boolean = try {
