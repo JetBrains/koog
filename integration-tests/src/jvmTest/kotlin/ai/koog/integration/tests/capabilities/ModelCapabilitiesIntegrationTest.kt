@@ -4,17 +4,24 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.integration.tests.utils.MediaTestScenarios
-import ai.koog.integration.tests.utils.MediaTestUtils
+import ai.koog.integration.tests.utils.MediaTestUtils.createAudioFileForScenario
+import ai.koog.integration.tests.utils.MediaTestUtils.createTextFileForScenario
+import ai.koog.integration.tests.utils.MediaTestUtils.createVideoFileForScenario
+import ai.koog.integration.tests.utils.MediaTestUtils.getImageFileForScenario
 import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.RetryUtils.withRetry
-import ai.koog.integration.tests.utils.TestUtils
+import ai.koog.integration.tests.utils.TestUtils.CalculatorTool.calculatorToolDescriptor
+import ai.koog.integration.tests.utils.TestUtils.assertExceptionMessageContains
+import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
+import ai.koog.integration.tests.utils.TestUtils.readTestGoogleAIKeyFromEnv
+import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
+import ai.koog.integration.tests.utils.TestUtils.singlePropertyObjectSchema
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.llms.all.DefaultMultiLLMPromptExecutor
 import ai.koog.prompt.llm.LLMCapability
-import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.message.Attachment
@@ -25,9 +32,6 @@ import ai.koog.prompt.params.LLMParams.ToolChoice
 import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.buildJsonArray
-import kotlinx.serialization.json.buildJsonObject
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
@@ -39,7 +43,6 @@ import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.io.path.pathString
 import kotlin.io.path.readBytes
-import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
@@ -59,9 +62,9 @@ class ModelCapabilitiesIntegrationTest {
 
     @BeforeAll
     fun setup() {
-        val openAIKey = TestUtils.readTestOpenAIKeyFromEnv()
-        val anthropicKey = TestUtils.readTestAnthropicKeyFromEnv()
-        val googleKey = TestUtils.readTestGoogleAIKeyFromEnv()
+        val openAIKey = readTestOpenAIKeyFromEnv()
+        val anthropicKey = readTestAnthropicKeyFromEnv()
+        val googleKey = readTestGoogleAIKeyFromEnv()
 
         openAIClient = OpenAILLMClient(openAIKey)
         anthropicClient = AnthropicLLMClient(anthropicKey)
@@ -131,13 +134,6 @@ class ModelCapabilitiesIntegrationTest {
         )
     }
 
-    private fun clientFor(model: LLModel) = when (model.provider) {
-        is LLMProvider.OpenAI -> openAIClient
-        is LLMProvider.Anthropic -> anthropicClient
-        is LLMProvider.Google -> googleClient
-        else -> openAIClient
-    }
-
     private fun isValidJson(str: String): Boolean = try {
         Json.parseToJsonElement(str)
         true
@@ -164,36 +160,34 @@ class ModelCapabilitiesIntegrationTest {
                 }
 
                 LLMCapability.Tools -> {
-                    val tools = toolDescriptors().findFirst().get().get()[0] as ToolDescriptor
+                    val tools = calculatorToolDescriptor
                     val prompt = prompt("cap-tools-positive", params = LLMParams(toolChoice = ToolChoice.Required)) {
                         system("You are a helpful assistant with a calculator tool. Always use the tool.")
                         user("Compute 2 + 3.")
                     }
                     withRetry(times = 3, testName = "positive_tools[${'$'}{model.id}]") {
-                        val client = clientFor(model)
-                        val responses = client.execute(prompt, model, listOf(tools))
+                        val responses = executor.execute(prompt, model, listOf(tools))
                         assertTrue(responses.isNotEmpty())
                         assertTrue(responses.any { it is Message.Tool.Call } || responses.any { it is Message.Assistant })
                     }
                 }
 
                 LLMCapability.ToolChoice -> {
-                    val tools = toolDescriptors().findFirst().get().get()[0] as ToolDescriptor
+                    val tools = calculatorToolDescriptor
                     val prompt =
                         prompt("cap-toolchoice-positive", params = LLMParams(toolChoice = ToolChoice.Required)) {
                             system("You are a helpful assistant with tools. Always choose to use a tool when required.")
                             user("Compute 2 + 3.")
                         }
                     withRetry(times = 3, testName = "positive_toolchoice[${'$'}{model.id}]") {
-                        val client = clientFor(model)
-                        val responses = client.execute(prompt, model, listOf(tools))
+                        val responses = executor.execute(prompt, model, listOf(tools))
                         assertTrue(responses.isNotEmpty())
                         assertTrue(responses.any { it is Message.Tool.Call } || responses.any { it is Message.Assistant })
                     }
                 }
 
                 LLMCapability.Vision.Image -> {
-                    val imagePath = MediaTestUtils.getImageFileForScenario(
+                    val imagePath = getImageFileForScenario(
                         MediaTestScenarios.ImageTestScenario.BASIC_PNG,
                         testResourcesDir
                     )
@@ -221,7 +215,7 @@ class ModelCapabilitiesIntegrationTest {
                 }
 
                 LLMCapability.Audio -> {
-                    val audioPath = MediaTestUtils.createAudioFileForScenario(
+                    val audioPath = createAudioFileForScenario(
                         MediaTestScenarios.AudioTestScenario.BASIC_MP3,
                         testResourcesDir
                     )
@@ -248,7 +242,7 @@ class ModelCapabilitiesIntegrationTest {
                 }
 
                 LLMCapability.Document -> {
-                    val file = MediaTestUtils.createTextFileForScenario(
+                    val file = createTextFileForScenario(
                         MediaTestScenarios.TextTestScenario.BASIC_TEXT,
                         testResourcesDir
                     )
@@ -286,8 +280,7 @@ class ModelCapabilitiesIntegrationTest {
                         user("Name a popular programming language.")
                     }
                     withRetry(times = 3, testName = "positive_multiple_choices[${'$'}{model.id}]") {
-                        val client = clientFor(model)
-                        val choices = client.executeMultipleChoices(prompt, model, emptyList())
+                        val choices = executor.executeMultipleChoices(prompt, model, emptyList())
                         assertTrue(choices.size >= 2, "Expected at least 2 choices, got ${'$'}{choices.size}")
                         choices.forEach { choice ->
                             assertTrue(choice.isNotEmpty(), "Each choice should contain at least one response")
@@ -299,7 +292,7 @@ class ModelCapabilitiesIntegrationTest {
                 }
 
                 LLMCapability.Vision.Video -> {
-                    val videoPath = MediaTestUtils.createVideoFileForScenario(testResourcesDir)
+                    val videoPath = createVideoFileForScenario(testResourcesDir)
                     val base64 = Base64.encode(videoPath.readBytes())
                     val prompt = prompt("cap-vision-video-positive") {
                         system("You are a helpful assistant that can analyze short videos.")
@@ -324,46 +317,15 @@ class ModelCapabilitiesIntegrationTest {
                 }
 
                 LLMCapability.Embed -> {
-                    val client = clientFor(model)
                     withRetry(times = 3, testName = "positive_embed[${'$'}{model.id}]") {
-                        if (client is OpenAILLMClient) {
-                            val vector = client.embed("Provide an embedding for this sentence.", model)
-                            assertTrue(vector.isNotEmpty(), "Embedding vector should not be empty")
-                            assertTrue(vector.any { it != 0.0 }, "Embedding vector should contain non-zero values")
-                        } else {
-                            // If embedding is supported for this model, its client should provide an embed method.
-                            // For now, we just assert true to avoid false negatives for providers without a dedicated embed API here.
-                            assertTrue(true)
-                        }
+                        val vector = openAIClient.embed("Provide an embedding for this sentence.", model)
+                        assertTrue(vector.isNotEmpty(), "Embedding vector should not be empty")
+                        assertTrue(vector.any { it != 0.0 }, "Embedding vector should contain non-zero values")
                     }
                 }
 
                 LLMCapability.Schema.JSON.Basic -> {
-                    val schema = if (model.provider is LLMProvider.Google) {
-                        // Google response_schema does not support additionalProperties at the root
-                        buildJsonObject {
-                            put("type", JsonPrimitive("object"))
-                            put(
-                                "properties",
-                                buildJsonObject {
-                                    put("x", buildJsonObject { put("type", JsonPrimitive("integer")) })
-                                }
-                            )
-                            put("required", buildJsonArray { add(JsonPrimitive("x")) })
-                        }
-                    } else {
-                        buildJsonObject {
-                            put("type", JsonPrimitive("object"))
-                            put(
-                                "properties",
-                                buildJsonObject {
-                                    put("x", buildJsonObject { put("type", JsonPrimitive("integer")) })
-                                }
-                            )
-                            put("required", buildJsonArray { add(JsonPrimitive("x")) })
-                            put("additionalProperties", JsonPrimitive(false))
-                        }
-                    }
+                    val schema = singlePropertyObjectSchema(model.provider, "x", "integer")
                     val prompt = prompt(
                         "cap-json-basic-positive",
                         params = LLMParams(schema = LLMParams.Schema.JSON.Basic(name = "XSchema", schema = schema))
@@ -381,31 +343,7 @@ class ModelCapabilitiesIntegrationTest {
                 }
 
                 LLMCapability.Schema.JSON.Standard -> {
-                    val schema = if (model.provider is LLMProvider.Google) {
-                        // Google response_schema does not support additionalProperties at the root
-                        buildJsonObject {
-                            put("type", JsonPrimitive("object"))
-                            put(
-                                "properties",
-                                buildJsonObject {
-                                    put("y", buildJsonObject { put("type", JsonPrimitive("string")) })
-                                }
-                            )
-                            put("required", buildJsonArray { add(JsonPrimitive("y")) })
-                        }
-                    } else {
-                        buildJsonObject {
-                            put("type", JsonPrimitive("object"))
-                            put(
-                                "properties",
-                                buildJsonObject {
-                                    put("y", buildJsonObject { put("type", JsonPrimitive("string")) })
-                                }
-                            )
-                            put("required", buildJsonArray { add(JsonPrimitive("y")) })
-                            put("additionalProperties", JsonPrimitive(false))
-                        }
-                    }
+                    val schema = singlePropertyObjectSchema(model.provider, "y", "string")
                     val prompt = prompt(
                         "cap-json-standard-positive",
                         params = LLMParams(schema = LLMParams.Schema.JSON.Standard(name = "YSchema", schema = schema))
@@ -443,34 +381,33 @@ class ModelCapabilitiesIntegrationTest {
                         val ex = assertFailsWith<Exception> {
                             executor.execute(prompt, model)
                         }
-                        assertEquals(
-                            true,
-                            ex.message?.contains("does not support chat completions", ignoreCase = true),
-                            "Exception message doesn't contain expected error: ${ex.message}"
+                        assertExceptionMessageContains(
+                            ex,
+                            "does not support chat completions",
+                            "not a chat completion"
                         )
                     }
                 }
 
                 LLMCapability.Tools -> {
-                    val tools = toolDescriptors().findFirst().get().get()[0] as ToolDescriptor
+                    val tools = calculatorToolDescriptor
                     val prompt = prompt("cap-tools-negative", params = LLMParams(toolChoice = ToolChoice.Required)) {
                         system("You are a helpful assistant with tools.")
                         user("Try to use a tool.")
                     }
                     withRetry(times = 3, testName = "negative_tools[${model.id}]") {
                         val ex = assertFailsWith<Exception> {
-                            clientFor(model).execute(prompt, model, listOf(tools))
+                            executor.execute(prompt, model, listOf(tools))
                         }
-                        assertEquals(
-                            true,
-                            ex.message?.contains("does not support tools", ignoreCase = true),
-                            "Exception message doesn't contain expected error: ${ex.message}"
+                        assertExceptionMessageContains(
+                            ex,
+                            "does not support tools"
                         )
                     }
                 }
 
                 LLMCapability.ToolChoice -> {
-                    val tools = toolDescriptors().findFirst().get().get()[0] as ToolDescriptor
+                    val tools = calculatorToolDescriptor
                     val prompt =
                         prompt("cap-toolchoice-negative", params = LLMParams(toolChoice = ToolChoice.Required)) {
                             system("You are a helpful assistant with tools.")
@@ -478,22 +415,20 @@ class ModelCapabilitiesIntegrationTest {
                         }
                     withRetry(times = 3, testName = "negative_toolchoice[${model.id}]") {
                         val ex = assertFailsWith<Exception> {
-                            clientFor(model).execute(prompt, model, listOf(tools))
+                            executor.execute(prompt, model, listOf(tools))
                         }
-                        val msg = ex.message ?: ""
-                        assertEquals(
-                            true,
-                            msg.contains("does not support tool choice", ignoreCase = true) ||
-                                msg.contains("does not support tools", ignoreCase = true) ||
-                                msg.contains("toolchoice", ignoreCase = true) ||
-                                msg.contains("tool choice is not supported", ignoreCase = true),
-                            "Exception message doesn't contain expected error: ${ex.message}"
+                        assertExceptionMessageContains(
+                            ex,
+                            "does not support tool choice",
+                            "does not support tools",
+                            "toolchoice",
+                            "tool choice is not supported"
                         )
                     }
                 }
 
                 LLMCapability.Vision.Image -> {
-                    val imagePath = MediaTestUtils.getImageFileForScenario(
+                    val imagePath = getImageFileForScenario(
                         MediaTestScenarios.ImageTestScenario.BASIC_PNG,
                         testResourcesDir
                     )
@@ -517,22 +452,16 @@ class ModelCapabilitiesIntegrationTest {
                         val ex = assertFailsWith<Exception> {
                             executor.execute(prompt, model)
                         }
-                        assertEquals(
-                            true,
-                            ex.message?.let {
-                                it.contains(
-                                    "does not support image",
-                                    ignoreCase = true
-                                ) ||
-                                    it.contains("Unsupported attachment type", ignoreCase = true)
-                            },
-                            "Exception message doesn't contain expected error: ${ex.message}"
+                        assertExceptionMessageContains(
+                            ex,
+                            "does not support image",
+                            "Unsupported attachment type"
                         )
                     }
                 }
 
                 LLMCapability.Audio -> {
-                    val audioPath = MediaTestUtils.createAudioFileForScenario(
+                    val audioPath = createAudioFileForScenario(
                         MediaTestScenarios.AudioTestScenario.BASIC_WAV,
                         testResourcesDir
                     )
@@ -555,22 +484,16 @@ class ModelCapabilitiesIntegrationTest {
                         val ex = assertFailsWith<Exception> {
                             executor.execute(prompt, model)
                         }
-                        assertEquals(
-                            true,
-                            ex.message?.let {
-                                it.contains(
-                                    "does not support audio",
-                                    ignoreCase = true
-                                ) ||
-                                    it.contains("Unsupported attachment type", ignoreCase = true)
-                            },
-                            "Exception message doesn't contain expected error: ${ex.message}"
+                        assertExceptionMessageContains(
+                            ex,
+                            "does not support audio",
+                            "Unsupported attachment type"
                         )
                     }
                 }
 
                 LLMCapability.Document -> {
-                    val file = MediaTestUtils.createTextFileForScenario(
+                    val file = createTextFileForScenario(
                         MediaTestScenarios.TextTestScenario.BASIC_TEXT,
                         testResourcesDir
                     )
@@ -585,14 +508,11 @@ class ModelCapabilitiesIntegrationTest {
                         val ex = assertFailsWith<Exception> {
                             executor.execute(prompt, model)
                         }
-                        assertEquals(
-                            true,
-                            ex.message?.let {
-                                it.contains("does not support files", ignoreCase = true) ||
-                                    it.contains("Unsupported attachment type", ignoreCase = true) ||
-                                    it.contains("does not support document", ignoreCase = true)
-                            },
-                            "Exception message doesn't contain expected error: ${ex.message}"
+                        assertExceptionMessageContains(
+                            ex,
+                            "does not support files",
+                            "Unsupported attachment type",
+                            "does not support document"
                         )
                     }
                 }
@@ -605,12 +525,10 @@ class ModelCapabilitiesIntegrationTest {
                         val ex = assertFailsWith<Exception> {
                             executor.moderate(prompt, model)
                         }
-                        val msg = ex.message ?: ""
-                        assertEquals(
-                            true,
-                            msg.contains("does not support moderation", ignoreCase = true) ||
-                                msg.contains("Moderation is not supported by", ignoreCase = true),
-                            "Exception message doesn't contain expected error: ${ex.message}"
+                        assertExceptionMessageContains(
+                            ex,
+                            "does not support moderation",
+                            "Moderation is not supported by"
                         )
                     }
                 }
@@ -625,15 +543,12 @@ class ModelCapabilitiesIntegrationTest {
                     }
                     withRetry(times = 3, testName = "negative_multiple_choices[${model.id}]") {
                         val ex = assertFailsWith<Throwable> {
-                            val client = clientFor(model)
-                            client.executeMultipleChoices(prompt, model, emptyList())
+                            executor.executeMultipleChoices(prompt, model, emptyList())
                         }
-                        val msg = ex.message ?: ""
-                        assertEquals(
-                            true,
-                            msg.contains("does not support multiple choices", ignoreCase = true) ||
-                                msg.contains("Not implemented for this client", ignoreCase = true),
-                            "Exception message doesn't contain expected error: ${ex.message}"
+                        assertExceptionMessageContains(
+                            ex,
+                            "does not support multiple choices",
+                            "Not implemented for this client"
                         )
                     }
                 }
@@ -660,52 +575,31 @@ class ModelCapabilitiesIntegrationTest {
                         val ex = assertFailsWith<Exception> {
                             executor.execute(prompt, model)
                         }
-                        val msg = ex.message ?: ""
-                        assertEquals(
-                            true,
-                            msg.contains("does not support video", ignoreCase = true) ||
-                                msg.contains("Unsupported attachment type", ignoreCase = true),
-                            "Exception message doesn't contain expected error: ${ex.message}"
+                        assertExceptionMessageContains(
+                            ex,
+                            "does not support video",
+                            "Unsupported attachment type"
                         )
                     }
                 }
 
                 LLMCapability.Embed -> {
-                    val client = clientFor(model)
                     withRetry(times = 3, testName = "negative_embed[${model.id}]") {
                         val ex = assertFailsWith<Exception> {
-                            if (client is OpenAILLMClient) {
-                                client.embed("this should fail for non-embedding models", model)
-                            } else {
-                                error("Model ${model.id} does not support embeddings")
-                            }
+                            openAIClient.embed("this should fail for non-embedding models", model)
                         }
-                        val msg = ex.message ?: ""
-                        assertEquals(
-                            true,
-                            msg.contains("does not support", ignoreCase = true) ||
-                                msg.contains("embedding", ignoreCase = true) ||
-                                msg.contains("does not have the Embed capability", ignoreCase = true) ||
-                                msg.contains("Unsupported", ignoreCase = true),
-                            "Exception message doesn't contain expected error: ${ex.message}"
+                        assertExceptionMessageContains(
+                            ex,
+                            "does not support",
+                            "embedding",
+                            "does not have the Embed capability",
+                            "Unsupported"
                         )
                     }
                 }
 
                 LLMCapability.Schema.JSON.Basic -> {
-                    val schema = buildJsonObject {
-                        put("type", JsonPrimitive("object"))
-                        put(
-                            "properties",
-                            buildJsonObject {
-                                put(
-                                    "x",
-                                    buildJsonObject { put("type", JsonPrimitive("integer")) }
-                                )
-                            }
-                        )
-                        put("required", buildJsonArray { add(JsonPrimitive("x")) })
-                    }
+                    val schema = singlePropertyObjectSchema(model.provider, "x", "integer")
                     val prompt = prompt(
                         "cap-json-basic-negative",
                         params = LLMParams(schema = LLMParams.Schema.JSON.Basic(name = "XSchema", schema = schema))
@@ -717,35 +611,18 @@ class ModelCapabilitiesIntegrationTest {
                         val ex = assertFailsWith<Exception> {
                             executor.execute(prompt, model)
                         }
-                        val msg = ex.message ?: ""
-                        assertEquals(
-                            true,
-                            msg.contains("does not support structured output schema", ignoreCase = true) ||
-                                msg.contains("does not support", ignoreCase = true) ||
-                                msg.contains("structured output", ignoreCase = true) ||
-                                msg.contains(
-                                    "Anthropic does not currently support native structured output",
-                                    ignoreCase = true
-                                ),
-                            "Exception message doesn't contain expected error: ${ex.message}"
+                        assertExceptionMessageContains(
+                            ex,
+                            "does not support structured output schema",
+                            "does not support",
+                            "structured output",
+                            "Anthropic does not currently support native structured output"
                         )
                     }
                 }
 
                 LLMCapability.Schema.JSON.Standard -> {
-                    val schema = buildJsonObject {
-                        put("type", JsonPrimitive("object"))
-                        put(
-                            "properties",
-                            buildJsonObject {
-                                put(
-                                    "y",
-                                    buildJsonObject { put("type", JsonPrimitive("string")) }
-                                )
-                            }
-                        )
-                        put("required", buildJsonArray { add(JsonPrimitive("y")) })
-                    }
+                    val schema = singlePropertyObjectSchema(model.provider, "y", "string")
                     val prompt = prompt(
                         "cap-json-standard-negative",
                         params = LLMParams(schema = LLMParams.Schema.JSON.Standard(name = "YSchema", schema = schema))
@@ -757,17 +634,12 @@ class ModelCapabilitiesIntegrationTest {
                         val ex = assertFailsWith<Exception> {
                             executor.execute(prompt, model)
                         }
-                        val msg = ex.message ?: ""
-                        assertEquals(
-                            true,
-                            msg.contains("does not support structured output schema", ignoreCase = true) ||
-                                msg.contains("does not support", ignoreCase = true) ||
-                                msg.contains("structured output", ignoreCase = true) ||
-                                msg.contains(
-                                    "Anthropic does not currently support native structured output",
-                                    ignoreCase = true
-                                ),
-                            "Exception message doesn't contain expected error: ${ex.message}"
+                        assertExceptionMessageContains(
+                            ex,
+                            "does not support structured output schema",
+                            "does not support",
+                            "structured output",
+                            "Anthropic does not currently support native structured output"
                         )
                     }
                 }
