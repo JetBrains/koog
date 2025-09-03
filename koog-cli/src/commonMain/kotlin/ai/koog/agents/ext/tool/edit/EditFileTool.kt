@@ -222,9 +222,11 @@ public class EditFileTool<Path>(
 
     override suspend fun execute(args: Args): Result {
         val path = fs.fromAbsolutePathString(args.path)
-        val fileContentType = fs.getFileContentType(path)
-        validate(fileContentType == FileMetadata.FileContentType.Text) {
-            "Can not edit non-text files, tried editing: $path, which is a $fileContentType"
+        if (fs.exists(path)) {
+            val fileContentType = fs.getFileContentType(path)
+            validate(fileContentType == FileMetadata.FileContentType.Text) {
+                "Can not edit non-text files, tried editing: $path, which is a $fileContentType"
+            }
         }
         val content = if (fs.exists(path)) fs.readText(path) else ""
 
