@@ -3,7 +3,8 @@ package ai.koog.prompt.executor.clients.openai.base
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
-import ai.koog.agents.utils.SuitableForIO
+import ai.koog.agents.utils.KoogHttpClient
+import ai.koog.agents.utils.fromKtorClient
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
@@ -35,25 +36,11 @@ import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.sse.SSE
-import io.ktor.client.plugins.sse.SSEClientException
-import io.ktor.client.plugins.sse.sse
-import io.ktor.client.request.accept
 import io.ktor.client.request.header
-import io.ktor.client.request.headers
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
-import io.ktor.client.statement.bodyAsText
-import io.ktor.client.statement.readRawBytes
 import io.ktor.http.ContentType
-import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpMethod
 import io.ktor.http.contentType
-import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNamingStrategy
@@ -94,10 +81,9 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
     private val apiKey: String,
     settings: OpenAIBasedSettings,
     baseClient: HttpClient = HttpClient(),
-    protected val clock: Clock = Clock.System
+    protected val clock: Clock = Clock.System,
+    protected val logger: KLogger
 ) : LLMClient {
-
-    protected abstract val logger: KLogger
 
     protected open val clientName: String = this::class.simpleName ?: "UnknownClient"
 
@@ -111,7 +97,11 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
         namingStrategy = JsonNamingStrategy.SnakeCase
     }
 
-    protected val httpClient: HttpClient = baseClient.config {
+    protected val httpClient: KoogHttpClient = KoogHttpClient.fromKtorClient(
+        clientName = clientName,
+        logger = logger,
+        baseClient = baseClient
+    ) {
         defaultRequest {
             url(settings.baseUrl)
             contentType(ContentType.Application.Json)
@@ -130,6 +120,7 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
      * Creates a provider-specific request from the common parameters.
      * Must be implemented by concrete client classes.
      */
+    @Suppress("LongParameterList")
     protected abstract fun serializeProviderChatRequest(
         messages: List<OpenAIMessage>,
         model: LLModel,
@@ -168,7 +159,7 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
         return processProviderChatResponse(response).first()
     }
 
-    override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> = flow {
+    override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
         logger.debug { "Executing streaming prompt: $prompt with model: $model" }
         model.requireCapability(LLMCapability.Completion)
 
@@ -182,38 +173,14 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
             stream = true
         )
 
-        try {
-            httpClient.sse(
-                urlString = chatCompletionsPath,
-                request = {
-                    method = HttpMethod.Post
-                    accept(ContentType.Text.EventStream)
-                    headers {
-                        append(HttpHeaders.CacheControl, "no-cache")
-                        append(HttpHeaders.Connection, "keep-alive")
-                    }
-                    setBody(request)
-                }
-            ) {
-                incoming.collect { event ->
-                    event
-                        .takeIf { it.data != "[DONE]" }
-                        ?.data?.trim()
-                        ?.let(::decodeStreamingResponse)
-                        ?.let(::processStreamingChunk)
-                        ?.let { emit(it) }
-                }
-            }
-        } catch (e: SSEClientException) {
-            e.response?.let { response ->
-                val body = response.readRawBytes().decodeToString()
-                logger.error(e) { "Error from $clientName API: ${response.status}: ${e.message}.\nBody:\n$body" }
-                error("Error from $clientName API: ${response.status}: ${e.message}")
-            }
-        } catch (e: Exception) {
-            logger.error { "Exception during streaming from $clientName: $e" }
-            error(e.message ?: "Unknown error during streaming from $clientName: $e")
-        }
+        return httpClient.sse(
+            path = chatCompletionsPath,
+            request = request,
+            requestBodyType = String::class,
+            dataFilter = { it != "[DONE]" },
+            decodeStreamingResponse = ::decodeStreamingResponse,
+            processStreamingChunk = ::processStreamingChunk
+        )
     }
 
     override suspend fun executeMultipleChoices(
@@ -245,19 +212,11 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
             stream = false
         )
 
-        return withContext(Dispatchers.SuitableForIO) {
-            val response = httpClient.post(chatCompletionsPath) {
-                setBody(request)
-            }
-
-            if (response.status.isSuccess()) {
-                response.bodyAsText().let(::decodeResponse)
-            } else {
-                val errorBody = response.bodyAsText()
-                logger.error { "Error from $clientName API: ${response.status}: $errorBody" }
-                error("Error from $clientName API: ${response.status}: $errorBody")
-            }
-        }
+        return httpClient.post(
+            path = chatCompletionsPath,
+            request = request
+        )
+            .let(::decodeResponse)
     }
 
     @OptIn(ExperimentalUuidApi::class)

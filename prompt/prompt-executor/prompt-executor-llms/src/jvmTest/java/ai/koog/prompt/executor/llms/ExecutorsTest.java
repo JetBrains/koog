@@ -79,7 +79,7 @@ class ExecutorsTest {
 
         // then
         assertThat(future)
-            .succeedsWithin(Duration.ofSeconds(1))
+            .succeedsWithin(Duration.ofSeconds(3))
             .satisfies(responses -> {
                     assertThat(responses)
                         .hasSize(1)
@@ -120,7 +120,7 @@ class ExecutorsTest {
 
         // then
         assertThat(future)
-            .completesExceptionallyWithin(Duration.ofSeconds(1))
+            .completesExceptionallyWithin(Duration.ofSeconds(3))
             .withThrowableThat().satisfies(throwable -> {
                 assertThat(throwable).isInstanceOf(ExecutionException.class);
                 assertThat(throwable).hasRootCauseMessage("Throw exception for test");

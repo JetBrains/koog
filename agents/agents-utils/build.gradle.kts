@@ -12,7 +12,10 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
+                api(libs.jetbrains.annotations)
                 api(libs.kotlinx.coroutines.core)
+                implementation(libs.ktor.client.core)
+                implementation(libs.oshai.kotlin.logging)
             }
         }
 
@@ -21,8 +24,10 @@ kotlin {
 
         commonTest {
             dependencies {
-                implementation(kotlin("test"))
-                implementation(libs.kotlinx.coroutines.test)
+                implementation(project(":test-utils"))
+                implementation(libs.ktor.serialization.kotlinx.json)
+                implementation(libs.ktor.client.content.negotiation)
+                implementation(libs.ktor.client.mock)
             }
         }
 

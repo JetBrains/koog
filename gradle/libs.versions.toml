@@ -49,6 +49,8 @@ ktor-client-js = { module = "io.ktor:ktor-client-js", version.ref = "ktor3" }
 ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor3" }
 ktor-client-winhttp = { module = "io.ktor:ktor-client-winhttp", version.ref = "ktor3" }
 ktor-client-curl = { module = "io.ktor:ktor-client-curl", version.ref = "ktor3" }
+ktor-bom = { module = "io.ktor:ktor-bom", version.ref = "ktor3" }
+ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor3" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor3" }
 ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktor3" }
 ktor-client-sse = { module = "io.ktor:ktor-server-sse", version.ref = "ktor3" }

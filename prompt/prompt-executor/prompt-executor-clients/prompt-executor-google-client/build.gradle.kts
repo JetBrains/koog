@@ -40,16 +40,12 @@ kotlin {
 
         commonTest {
             dependencies {
-                implementation(kotlin("test"))
-                implementation(libs.kotlinx.coroutines.test)
-                implementation(libs.kotlinx.serialization.core)
-                implementation(libs.kotlinx.serialization.json)
+                implementation(project(":test-utils"))
             }
         }
 
         jvmTest {
             dependencies {
-                implementation(kotlin("test-junit5"))
                 implementation(libs.ktor.client.mock)
             }
         }
