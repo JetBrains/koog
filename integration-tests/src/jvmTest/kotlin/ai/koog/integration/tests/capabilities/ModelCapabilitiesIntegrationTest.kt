@@ -248,11 +248,6 @@ class ModelCapabilitiesIntegrationTest {
                 }
 
                 LLMCapability.Document -> {
-                    // Skip Google and OpenAI models due to known bug with PlainText attachments (documented in BUG.md)
-                    if (model.provider is LLMProvider.Google || model.provider is LLMProvider.OpenAI) {
-                        return@runTest
-                    }
-
                     val file = MediaTestUtils.createTextFileForScenario(
                         MediaTestScenarios.TextTestScenario.BASIC_TEXT,
                         testResourcesDir
@@ -344,10 +339,6 @@ class ModelCapabilitiesIntegrationTest {
                 }
 
                 LLMCapability.Schema.JSON.Basic -> {
-                    if (model.provider is LLMProvider.OpenAI && (model.id.startsWith("o1") || model.id.startsWith("o3"))) {
-                        // Some OpenAI reasoning models currently do not support json_schema response_format. Skip positive test.
-                        return@runTest
-                    }
                     val schema = if (model.provider is LLMProvider.Google) {
                         // Google response_schema does not support additionalProperties at the root
                         buildJsonObject {
@@ -390,10 +381,6 @@ class ModelCapabilitiesIntegrationTest {
                 }
 
                 LLMCapability.Schema.JSON.Standard -> {
-                    if (model.provider is LLMProvider.OpenAI && (model.id.startsWith("o1") || model.id.startsWith("o3"))) {
-                        // Some OpenAI reasoning models currently do not support json_schema response_format. Skip positive test.
-                        return@runTest
-                    }
                     val schema = if (model.provider is LLMProvider.Google) {
                         // Google response_schema does not support additionalProperties at the root
                         buildJsonObject {
