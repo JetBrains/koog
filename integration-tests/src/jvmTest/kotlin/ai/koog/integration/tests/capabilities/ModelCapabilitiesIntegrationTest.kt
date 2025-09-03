@@ -13,7 +13,6 @@ import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.llms.all.DefaultMultiLLMPromptExecutor
-import ai.koog.prompt.executor.model.PromptExecutorExt.execute
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -142,7 +141,7 @@ class ModelCapabilitiesIntegrationTest {
     private fun isValidJson(str: String): Boolean = try {
         Json.parseToJsonElement(str)
         true
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         false
     }
 
@@ -158,9 +157,9 @@ class ModelCapabilitiesIntegrationTest {
                         user("Say hello in one short sentence.")
                     }
                     withRetry(times = 3, testName = "positive_completion[${'$'}{model.id}]") {
-                        val resp = executor.execute(prompt, model)
-                        assertTrue(resp.content.isNotBlank())
-                        assertTrue(resp is Message.Assistant)
+                        val responses = executor.execute(prompt, model)
+                        val text = responses.filterIsInstance<Message.Assistant>().joinToString("\n") { it.content }
+                        assertTrue(text.isNotBlank())
                     }
                 }
 
@@ -215,9 +214,9 @@ class ModelCapabilitiesIntegrationTest {
                         }
                     }
                     withRetry(times = 3, testName = "positive_vision_image[${'$'}{model.id}]") {
-                        val resp = executor.execute(prompt, model)
-                        assertTrue(resp.content.isNotBlank())
-                        assertTrue(resp is Message.Assistant)
+                        val responses = executor.execute(prompt, model)
+                        val text = responses.filterIsInstance<Message.Assistant>().joinToString("\n") { it.content }
+                        assertTrue(text.isNotBlank())
                     }
                 }
 
@@ -242,8 +241,9 @@ class ModelCapabilitiesIntegrationTest {
                         }
                     }
                     withRetry(times = 3, testName = "positive_audio[${'$'}{model.id}]") {
-                        val resp = executor.execute(prompt, model)
-                        assertTrue(resp.content.isNotBlank())
+                        val responses = executor.execute(prompt, model)
+                        val text = responses.filterIsInstance<Message.Assistant>().joinToString("\n") { it.content }
+                        assertTrue(text.isNotBlank())
                     }
                 }
 
@@ -265,8 +265,9 @@ class ModelCapabilitiesIntegrationTest {
                         }
                     }
                     withRetry(times = 3, testName = "positive_document[${'$'}{model.id}]") {
-                        val resp = executor.execute(prompt, model)
-                        assertTrue(resp.content.isNotBlank())
+                        val responses = executor.execute(prompt, model)
+                        val text = responses.filterIsInstance<Message.Assistant>().joinToString("\n") { it.content }
+                        assertTrue(text.isNotBlank())
                     }
                 }
 
@@ -314,15 +315,16 @@ class ModelCapabilitiesIntegrationTest {
                                     Attachment.Video(
                                         content = AttachmentContent.Binary.Base64(base64),
                                         format = "mp4",
+                                        mimeType = "video/mp4",
                                     )
                                 )
                             }
                         }
                     }
                     withRetry(times = 3, testName = "positive_vision_video[${'$'}{model.id}]") {
-                        val resp = executor.execute(prompt, model)
-                        assertTrue(resp.content.isNotBlank())
-                        assertTrue(resp is Message.Assistant)
+                        val responses = executor.execute(prompt, model)
+                        val text = responses.filterIsInstance<Message.Assistant>().joinToString("\n") { it.content }
+                        assertTrue(text.isNotBlank())
                     }
                 }
 
@@ -379,10 +381,11 @@ class ModelCapabilitiesIntegrationTest {
                         user("Return an integer x field with any small integer.")
                     }
                     withRetry(times = 3, testName = "positive_json_basic[${'$'}{model.id}]") {
-                        val resp = executor.execute(prompt, model)
-                        assertTrue(resp.content.isNotBlank())
-                        assertTrue(isValidJson(resp.content), "Response should be valid JSON")
-                        assertTrue(resp.content.contains("\"x\""), "Response should contain key \"x\"")
+                        val responses = executor.execute(prompt, model)
+                        val text = responses.filterIsInstance<Message.Assistant>().joinToString("\n") { it.content }
+                        assertTrue(text.isNotBlank())
+                        assertTrue(isValidJson(text), "Response should be valid JSON")
+                        assertTrue(text.contains("\"x\""), "Response should contain key \"x\"")
                     }
                 }
 
@@ -424,10 +427,11 @@ class ModelCapabilitiesIntegrationTest {
                         user("Return a string y field.")
                     }
                     withRetry(times = 3, testName = "positive_json_standard[${'$'}{model.id}]") {
-                        val resp = executor.execute(prompt, model)
-                        assertTrue(resp.content.isNotBlank())
-                        assertTrue(isValidJson(resp.content), "Response should be valid JSON")
-                        assertTrue(resp.content.contains("\"y\""), "Response should contain key \"y\"")
+                        val responses = executor.execute(prompt, model)
+                        val text = responses.filterIsInstance<Message.Assistant>().joinToString("\n") { it.content }
+                        assertTrue(text.isNotBlank())
+                        assertTrue(isValidJson(text), "Response should be valid JSON")
+                        assertTrue(text.contains("\"y\""), "Response should contain key \"y\"")
                     }
                 }
 
@@ -530,7 +534,7 @@ class ModelCapabilitiesIntegrationTest {
                             true,
                             ex.message?.let {
                                 it.contains(
-                                    "does not support images",
+                                    "does not support image",
                                     ignoreCase = true
                                 ) ||
                                     it.contains("Unsupported attachment type", ignoreCase = true)
@@ -597,12 +601,9 @@ class ModelCapabilitiesIntegrationTest {
                         assertEquals(
                             true,
                             ex.message?.let {
-                                it.contains(
-                                    "does not support files",
-                                    ignoreCase = true
-                                ) ||
+                                it.contains("does not support files", ignoreCase = true) ||
                                     it.contains("Unsupported attachment type", ignoreCase = true) ||
-                                    it.contains("does not support documents", ignoreCase = true)
+                                    it.contains("does not support document", ignoreCase = true)
                             },
                             "Exception message doesn't contain expected error: ${ex.message}"
                         )
