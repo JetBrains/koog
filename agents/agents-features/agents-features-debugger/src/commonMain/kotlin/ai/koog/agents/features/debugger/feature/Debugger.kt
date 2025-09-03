@@ -19,7 +19,6 @@ import ai.koog.agents.core.feature.model.ToolCallFailureEvent
 import ai.koog.agents.core.feature.model.ToolCallResultEvent
 import ai.koog.agents.core.feature.model.ToolValidationErrorEvent
 import ai.koog.agents.core.feature.model.toAgentError
-import ai.koog.agents.core.feature.remote.server.config.AIAgentFeatureServerConnectionConfig
 import ai.koog.agents.core.feature.remote.server.config.DefaultServerConnectionConfig
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolArgs
@@ -73,11 +72,10 @@ public class Debugger {
             // Config that will be used to connect to the debugger server where
             // port is taken from environment variables if not set explicitly
 
-            val port = config.port ?: readPortFromEnvironmentVariables() ?: DefaultServerConnectionConfig.DEFAULT_PORT
+            val port = config.port ?: readPortFromEnvironmentVariables()
             logger.debug { "Debugger Feature. Use debugger port: $port" }
 
-            val debuggerServerConfig = AIAgentFeatureServerConnectionConfig(
-                host = DefaultServerConnectionConfig.DEFAULT_HOST,
+            val debuggerServerConfig = DefaultServerConnectionConfig(
                 port = port,
                 waitConnection = true
             )

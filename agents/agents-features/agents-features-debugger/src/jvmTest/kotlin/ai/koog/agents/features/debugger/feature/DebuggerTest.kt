@@ -18,7 +18,7 @@ import ai.koog.agents.core.feature.model.BeforeLLMCallEvent
 import ai.koog.agents.core.feature.model.ToolCallEvent
 import ai.koog.agents.core.feature.model.ToolCallResultEvent
 import ai.koog.agents.core.feature.remote.client.FeatureMessageRemoteClient
-import ai.koog.agents.core.feature.remote.client.config.AIAgentFeatureClientConnectionConfig
+import ai.koog.agents.core.feature.remote.client.config.DefaultClientConnectionConfig
 import ai.koog.agents.core.feature.remote.server.config.DefaultServerConnectionConfig
 import ai.koog.agents.core.feature.writer.FeatureMessageRemoteWriter
 import ai.koog.agents.core.tools.ToolRegistry
@@ -118,7 +118,7 @@ class DebuggerTest {
 
         // Test Data
         val port = findAvailablePort()
-        val clientConfig = AIAgentFeatureClientConnectionConfig(host = HOST, port = port, protocol = URLProtocol.HTTP)
+        val clientConfig = DefaultClientConnectionConfig(host = HOST, port = port, protocol = URLProtocol.HTTP)
 
         val isClientFinished = CompletableDeferred<Boolean>()
         val isServerStarted = CompletableDeferred<Boolean>()
@@ -348,8 +348,7 @@ class DebuggerTest {
         val port = EnvironmentVariablesReader.getEnvironmentVariable("KOOG_DEBUGGER_PORT")
         assertNotNull(port, "'KOOG_DEBUGGER_PORT' env variable is not set")
 
-        val clientConfig =
-            AIAgentFeatureClientConnectionConfig(host = HOST, port = port.toInt(), protocol = URLProtocol.HTTP)
+        val clientConfig = DefaultClientConnectionConfig(host = HOST, port = port.toInt(), protocol = URLProtocol.HTTP)
 
         val isClientFinished = CompletableDeferred<Boolean>()
 
@@ -451,7 +450,7 @@ class DebuggerTest {
         val isDefaultPortAvailable = NetUtil.isPortAvailable(DefaultServerConnectionConfig.DEFAULT_PORT)
         assertTrue(isDefaultPortAvailable, "Default port ${DefaultServerConnectionConfig.DEFAULT_PORT} is not available")
 
-        val clientConfig = AIAgentFeatureClientConnectionConfig(
+        val clientConfig = DefaultClientConnectionConfig(
             host = HOST,
             port = DefaultServerConnectionConfig.DEFAULT_PORT,
             protocol = URLProtocol.HTTP
