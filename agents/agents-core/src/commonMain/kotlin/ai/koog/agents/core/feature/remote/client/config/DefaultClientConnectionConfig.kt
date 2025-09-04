@@ -28,7 +28,7 @@ public class DefaultClientConnectionConfig(
     host: String = DEFAULT_HOST,
     port: Int? = DEFAULT_PORT,
     protocol: URLProtocol? = null,
-    headers: Map<String, String>? = null,
+    headers: Map<String, List<String>>? = null,
     reconnectionDelay: Duration? = null,
     requestTimeout: Duration? = defaultRequestTimeout,
     connectTimeout: Duration? = defaultConnectionTimeout,

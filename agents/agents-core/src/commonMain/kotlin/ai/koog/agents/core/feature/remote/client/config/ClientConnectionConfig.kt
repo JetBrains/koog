@@ -27,7 +27,7 @@ public abstract class ClientConnectionConfig(
     public val host: String,
     port: Int? = null,
     protocol: URLProtocol? = null,
-    headers: Map<String, String>? = null,
+    headers: Map<String, List<String>>? = null,
     public val reconnectionDelay: Duration? = null,
     public val requestTimeout: Duration? = null,
     public val connectTimeout: Duration? = null,
@@ -77,7 +77,7 @@ public abstract class ClientConnectionConfig(
      * If no headers are explicitly defined, this map defaults to an empty state, ensuring that
      * requests do not include unnecessary headers.
      */
-    public val headers: Map<String, String> = headers ?: emptyMap()
+    public val headers: Map<String, List<String>> = headers ?: emptyMap()
 
     /**
      * Provides the base URL for the current connection configuration.
