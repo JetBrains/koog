@@ -18,6 +18,7 @@ import ai.koog.a2a.transport.jsonrpc.model.JSONRPCSuccessResponse
 import ai.koog.a2a.utils.runCatchingCancellable
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.decodeFromJsonElement
@@ -39,7 +40,8 @@ public abstract class JSONRPCServerTransport : ServerTransport {
         return runCatchingCancellable {
             when (request.method) {
                 A2AMethod.GetAuthenticatedExtendedAgentCard.value ->
-                    requestHandler.onGetAuthenticatedExtendedAgentCard(request.toRequest(), ctx).toJSONRPCSuccessResponse()
+                    requestHandler.onGetAuthenticatedExtendedAgentCard(request.toRequest(), ctx)
+                        .toJSONRPCSuccessResponse()
 
                 A2AMethod.SendMessage.value ->
                     requestHandler.onSendMessage(request.toRequest(), ctx).toJSONRPCSuccessResponse()
@@ -60,9 +62,11 @@ public abstract class JSONRPCServerTransport : ServerTransport {
                     requestHandler.onListTaskPushNotificationConfig(request.toRequest(), ctx).toJSONRPCSuccessResponse()
 
                 A2AMethod.DeleteTaskPushNotificationConfig.value ->
-                    requestHandler.onDeleteTaskPushNotificationConfig(request.toRequest(), ctx).toJSONRPCSuccessResponse()
+                    requestHandler.onDeleteTaskPushNotificationConfig(request.toRequest(), ctx)
+                        .toJSONRPCSuccessResponse()
 
-                else -> throw A2AMethodNotFoundException(request.method)
+                else ->
+                    throw A2AMethodNotFoundException(request.method)
             }
         }.getOrElse { it.toJSONRPCErrorResponse(request.id) }
     }
@@ -78,13 +82,15 @@ public abstract class JSONRPCServerTransport : ServerTransport {
     ): Flow<JSONRPCResponse> {
         return when (request.method) {
             A2AMethod.SendMessageStreaming.value ->
-                requestHandler
-                    .onSendMessageStreaming(request.toRequest(), ctx)
-                    .map { it.toJSONRPCSuccessResponse() as JSONRPCResponse }
-                    .catch { emit(it.toJSONRPCErrorResponse(request.id)) }
+                requestHandler.onSendMessageStreaming(request.toRequest(), ctx)
 
-            else -> throw A2AMethodNotFoundException(request.method)
-        }
+            A2AMethod.ResubscribeTask.value ->
+                requestHandler.onResubscribeTask(request.toRequest(), ctx)
+
+            else ->
+                flow { throw A2AMethodNotFoundException(request.method) }
+        }.map { it.toJSONRPCSuccessResponse() as JSONRPCResponse }
+            .catch { emit(it.toJSONRPCErrorResponse(request.id)) }
     }
 
     /**
@@ -95,8 +101,8 @@ public abstract class JSONRPCServerTransport : ServerTransport {
     protected inline fun <reified T> JSONRPCRequest.toRequest(): Request<T> {
         val data = try {
             JSONRPCJson.decodeFromJsonElement<T>(params)
-        } catch (_: SerializationException) {
-            throw A2AInvalidParamsException("Cannot parse request params to ${T::class}")
+        } catch (e: SerializationException) {
+            throw A2AInvalidParamsException("Cannot parse request params:\n${e.message}")
         }
 
         return Request(

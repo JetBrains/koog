@@ -9,6 +9,7 @@ public enum class A2AMethod(public val value: String) {
     SendMessageStreaming("message/stream"),
     GetTask("tasks/get"),
     CancelTask("tasks/cancel"),
+    ResubscribeTask("tasks/resubscribe"),
     SetTaskPushNotificationConfig("tasks/pushNotificationConfig/set"),
     GetTaskPushNotificationConfig("tasks/pushNotificationConfig/get"),
     ListTaskPushNotificationConfig("tasks/pushNotificationConfig/list"),

@@ -1,21 +1,22 @@
 package ai.koog.a2a.exceptions
 
 /**
- * Enum containing all A2A error codes.
+ * Object containing all A2A error codes.
  */
-public enum class A2AErrorCode(public val value: Int) {
-    PARSE_ERROR(-32700),
-    INVALID_REQUEST(-32600),
-    METHOD_NOT_FOUND(-32601),
-    INVALID_PARAMS(-32602),
-    INTERNAL_ERROR(-32603),
-    TASK_NOT_FOUND(-32001),
-    TASK_NOT_CANCELABLE(-32002),
-    PUSH_NOTIFICATION_NOT_SUPPORTED(-32003),
-    UNSUPPORTED_OPERATION(-32004),
-    CONTENT_TYPE_NOT_SUPPORTED(-32005),
-    INVALID_AGENT_RESPONSE(-32006),
-    AUTHENTICATED_EXTENDED_CARD_NOT_CONFIGURED(-32007)
+@Suppress("MissingKDocForPublicAPI")
+public object A2AErrorCodes {
+    public const val PARSE_ERROR: Int = -32700
+    public const val INVALID_REQUEST: Int = -32600
+    public const val METHOD_NOT_FOUND: Int = -32601
+    public const val INVALID_PARAMS: Int = -32602
+    public const val INTERNAL_ERROR: Int = -32603
+    public const val TASK_NOT_FOUND: Int = -32001
+    public const val TASK_NOT_CANCELABLE: Int = -32002
+    public const val PUSH_NOTIFICATION_NOT_SUPPORTED: Int = -32003
+    public const val UNSUPPORTED_OPERATION: Int = -32004
+    public const val CONTENT_TYPE_NOT_SUPPORTED: Int = -32005
+    public const val INVALID_AGENT_RESPONSE: Int = -32006
+    public const val AUTHENTICATED_EXTENDED_CARD_NOT_CONFIGURED: Int = -32007
 }
 
 /**
@@ -31,35 +32,35 @@ public sealed class A2AException(
  */
 public class A2AParseException(
     message: String = "Invalid JSON payload",
-) : A2AException(message, errorCode = -32700)
+) : A2AException(message, errorCode = A2AErrorCodes.PARSE_ERROR)
 
 /**
  * The JSON payload was valid JSON, but not a valid JSON-RPC Request object.
  */
 public class A2AInvalidRequestException(
     message: String = "Invalid JSON-RPC Request",
-) : A2AException(message, errorCode = -32600)
+) : A2AException(message, errorCode = A2AErrorCodes.INVALID_REQUEST)
 
 /**
  * The requested A2A RPC method does not exist or is not supported.
  */
 public class A2AMethodNotFoundException(
     message: String = "Method not found",
-) : A2AException(message, errorCode = -32601)
+) : A2AException(message, errorCode = A2AErrorCodes.METHOD_NOT_FOUND)
 
 /**
  * The params provided for the method are invalid.
  */
 public class A2AInvalidParamsException(
     message: String = "Invalid method parameters",
-) : A2AException(message, errorCode = -32602)
+) : A2AException(message, errorCode = A2AErrorCodes.INVALID_PARAMS)
 
 /**
  * An unexpected error occurred on the server during processing.
  */
 public class A2AInternalErrorException(
     message: String = "Internal server error",
-) : A2AException(message, errorCode = -32603)
+) : A2AException(message, errorCode = A2AErrorCodes.INTERNAL_ERROR)
 
 /**
  * Reserved for implementation-defined server exceptions. A2A-specific exceptions use this range.
@@ -79,7 +80,7 @@ public sealed class A2AServerException(
  */
 public class A2ATaskNotFoundException(
     message: String = "Task not found",
-) : A2AServerException(message, errorCode = -32001)
+) : A2AServerException(message, errorCode = A2AErrorCodes.TASK_NOT_FOUND)
 
 /**
  * An attempt was made to cancel a task that is not in a cancelable state.
@@ -87,7 +88,7 @@ public class A2ATaskNotFoundException(
  */
 public class A2ATaskNotCancelableException(
     message: String = "Task cannot be canceled",
-) : A2AServerException(message, errorCode = -32002)
+) : A2AServerException(message, errorCode = A2AErrorCodes.TASK_NOT_CANCELABLE)
 
 /**
  * Client attempted to use push notification features but the server agent does not support them.
@@ -95,7 +96,7 @@ public class A2ATaskNotCancelableException(
  */
 public class A2APushNotificationNotSupportedException(
     message: String = "Push Notification is not supported",
-) : A2AServerException(message, errorCode = -32003)
+) : A2AServerException(message, errorCode = A2AErrorCodes.PUSH_NOTIFICATION_NOT_SUPPORTED)
 
 /**
  * The requested operation or a specific aspect of it is not supported by this server agent implementation.
@@ -103,7 +104,7 @@ public class A2APushNotificationNotSupportedException(
  */
 public class A2AUnsupportedOperationException(
     message: String = "This operation is not supported",
-) : A2AServerException(message, errorCode = -32004)
+) : A2AServerException(message, errorCode = A2AErrorCodes.UNSUPPORTED_OPERATION)
 
 /**
  * A Media Type provided in the request's message.parts or implied for an artifact is not supported
@@ -111,21 +112,21 @@ public class A2AUnsupportedOperationException(
  */
 public class A2AContentTypeNotSupportedException(
     message: String = "Incompatible content types",
-) : A2AServerException(message, errorCode = -32005)
+) : A2AServerException(message, errorCode = A2AErrorCodes.CONTENT_TYPE_NOT_SUPPORTED)
 
 /**
  * Agent generated an invalid response for the requested method.
  */
 public class A2AInvalidAgentResponseException(
     message: String = "Invalid agent response type",
-) : A2AServerException(message, errorCode = -32006)
+) : A2AServerException(message, errorCode = A2AErrorCodes.INVALID_AGENT_RESPONSE)
 
 /**
  * The agent does not have an Authenticated Extended Card configured.
  */
 public class A2AAuthenticatedExtendedCardNotConfiguredException(
     message: String = "Authenticated Extended Card not configured",
-) : A2AServerException(message, errorCode = -32007)
+) : A2AServerException(message, errorCode = A2AErrorCodes.AUTHENTICATED_EXTENDED_CARD_NOT_CONFIGURED)
 
 /**
  * Server returned some unknown error code.
@@ -143,18 +144,18 @@ public fun createA2AException(
     errorCode: Int,
 ): A2AException {
     return when (errorCode) {
-        A2AErrorCode.PARSE_ERROR.value -> A2AParseException(message)
-        A2AErrorCode.INVALID_REQUEST.value -> A2AInvalidRequestException(message)
-        A2AErrorCode.METHOD_NOT_FOUND.value -> A2AMethodNotFoundException(message)
-        A2AErrorCode.INVALID_PARAMS.value -> A2AInvalidParamsException(message)
-        A2AErrorCode.INTERNAL_ERROR.value -> A2AInternalErrorException(message)
-        A2AErrorCode.TASK_NOT_FOUND.value -> A2ATaskNotFoundException(message)
-        A2AErrorCode.TASK_NOT_CANCELABLE.value -> A2ATaskNotCancelableException(message)
-        A2AErrorCode.PUSH_NOTIFICATION_NOT_SUPPORTED.value -> A2APushNotificationNotSupportedException(message)
-        A2AErrorCode.UNSUPPORTED_OPERATION.value -> A2AUnsupportedOperationException(message)
-        A2AErrorCode.CONTENT_TYPE_NOT_SUPPORTED.value -> A2AContentTypeNotSupportedException(message)
-        A2AErrorCode.INVALID_AGENT_RESPONSE.value -> A2AInvalidAgentResponseException(message)
-        A2AErrorCode.AUTHENTICATED_EXTENDED_CARD_NOT_CONFIGURED.value -> A2AAuthenticatedExtendedCardNotConfiguredException(message)
+        A2AErrorCodes.PARSE_ERROR -> A2AParseException(message)
+        A2AErrorCodes.INVALID_REQUEST -> A2AInvalidRequestException(message)
+        A2AErrorCodes.METHOD_NOT_FOUND -> A2AMethodNotFoundException(message)
+        A2AErrorCodes.INVALID_PARAMS -> A2AInvalidParamsException(message)
+        A2AErrorCodes.INTERNAL_ERROR -> A2AInternalErrorException(message)
+        A2AErrorCodes.TASK_NOT_FOUND -> A2ATaskNotFoundException(message)
+        A2AErrorCodes.TASK_NOT_CANCELABLE -> A2ATaskNotCancelableException(message)
+        A2AErrorCodes.PUSH_NOTIFICATION_NOT_SUPPORTED -> A2APushNotificationNotSupportedException(message)
+        A2AErrorCodes.UNSUPPORTED_OPERATION -> A2AUnsupportedOperationException(message)
+        A2AErrorCodes.CONTENT_TYPE_NOT_SUPPORTED -> A2AContentTypeNotSupportedException(message)
+        A2AErrorCodes.INVALID_AGENT_RESPONSE -> A2AInvalidAgentResponseException(message)
+        A2AErrorCodes.AUTHENTICATED_EXTENDED_CARD_NOT_CONFIGURED -> A2AAuthenticatedExtendedCardNotConfiguredException(message)
         else -> A2AUnknownException(message, errorCode)
     }
 }

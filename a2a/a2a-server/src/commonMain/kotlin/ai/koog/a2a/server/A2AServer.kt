@@ -54,6 +54,13 @@ public class A2AServer : RequestHandler {
         TODO("Not yet implemented")
     }
 
+    override fun onResubscribeTask(
+        request: Request<TaskIdParams>,
+        ctx: ServerCallContext
+    ): Flow<Response<UpdateEvent>> {
+        TODO("Not yet implemented")
+    }
+
     override suspend fun onSetTaskPushNotificationConfig(
         request: Request<TaskPushNotificationConfig>,
         ctx: ServerCallContext
@@ -78,7 +85,7 @@ public class A2AServer : RequestHandler {
     override suspend fun onDeleteTaskPushNotificationConfig(
         request: Request<TaskPushNotificationConfigParams>,
         ctx: ServerCallContext
-    ): Response<Unit> {
+    ): Response<Nothing?> {
         TODO("Not yet implemented")
     }
 }

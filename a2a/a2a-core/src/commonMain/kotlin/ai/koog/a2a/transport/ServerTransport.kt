@@ -77,6 +77,16 @@ public interface RequestHandler {
     ): Response<Task>
 
     /**
+     * Handles [tasks/resubscribe](https://a2a-protocol.org/latest/specification/#79-tasksresubscribe)
+     *
+     * @throws A2AException if there is an error with processsing the request.
+     */
+    public fun onResubscribeTask(
+        request: Request<TaskIdParams>,
+        ctx: ServerCallContext
+    ): Flow<Response<UpdateEvent>>
+
+    /**
      * Handles [tasks/cancel](https://a2a-protocol.org/latest/specification/#74-taskscancel)
      *
      * @throws A2AException if there is an error with processsing the request.
@@ -124,7 +134,7 @@ public interface RequestHandler {
     public suspend fun onDeleteTaskPushNotificationConfig(
         request: Request<TaskPushNotificationConfigParams>,
         ctx: ServerCallContext
-    ): Response<Unit>
+    ): Response<Nothing?>
 }
 
 /**

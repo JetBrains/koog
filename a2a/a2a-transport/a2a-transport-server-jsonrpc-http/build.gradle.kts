@@ -27,9 +27,10 @@ kotlin {
         jvmMain {
             dependencies {
                 api(libs.ktor.server.core)
-                api(libs.ktor.server.sse)
-                api(libs.ktor.server.content.negotiation)
-                api(libs.ktor.serialization.kotlinx.json)
+                implementation(libs.ktor.server.sse)
+                implementation(libs.ktor.server.content.negotiation)
+                implementation(libs.ktor.serialization.kotlinx.json)
+                implementation(libs.ktor.server.netty)
             }
         }
 
@@ -42,6 +43,7 @@ kotlin {
         jvmTest {
             dependencies {
                 implementation(kotlin("test-junit5"))
+                implementation(libs.ktor.server.test.host)
             }
         }
 

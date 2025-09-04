@@ -138,6 +138,12 @@ public abstract class JSONRPCClientTransport : ClientTransport {
     ): Response<Task> =
         request(A2AMethod.CancelTask, request, ctx)
 
+    override fun resubscribeTask(
+        request: Request<TaskIdParams>,
+        ctx: ClientCallContext
+    ): Flow<Response<UpdateEvent>> =
+        requestStreaming(A2AMethod.ResubscribeTask, request, ctx)
+
     override suspend fun setTaskPushNotificationConfig(
         request: Request<TaskPushNotificationConfig>,
         ctx: ClientCallContext
@@ -159,6 +165,6 @@ public abstract class JSONRPCClientTransport : ClientTransport {
     override suspend fun deleteTaskPushNotificationConfig(
         request: Request<TaskPushNotificationConfigParams>,
         ctx: ClientCallContext
-    ): Response<Unit> =
+    ): Response<Nothing?> =
         request(A2AMethod.DeleteTaskPushNotificationConfig, request, ctx)
 }

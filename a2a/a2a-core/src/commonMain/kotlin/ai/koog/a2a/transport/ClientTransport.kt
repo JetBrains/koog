@@ -76,6 +76,16 @@ public interface ClientTransport : AutoCloseable {
     ): Response<Task>
 
     /**
+     * Implements [tasks/resubscribe](https://a2a-protocol.org/latest/specification/#79-tasksresubscribe)
+     *
+     * @throws A2AException if server returned an error.
+     */
+    public fun resubscribeTask(
+        request: Request<TaskIdParams>,
+        ctx: ClientCallContext = ClientCallContext.Default
+    ): Flow<Response<UpdateEvent>>
+
+    /**
      * Implements [tasks/pushNotificationConfig/set](https://a2a-protocol.org/latest/specification/#75-taskspushnotificationconfigset)
      *
      * @throws A2AException if server returned an error.
@@ -113,7 +123,7 @@ public interface ClientTransport : AutoCloseable {
     public suspend fun deleteTaskPushNotificationConfig(
         request: Request<TaskPushNotificationConfigParams>,
         ctx: ClientCallContext = ClientCallContext.Default
-    ): Response<Unit>
+    ): Response<Nothing?>
 }
 
 /**
