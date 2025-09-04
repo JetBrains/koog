@@ -40,7 +40,7 @@ public class InMemoryFS : FileSystemProvider.ReadWrite<String> {
 
     override suspend fun create(path: String, type: FileMetadata.FileType) {
         require(exists(parent(path) ?: "")) { "Parent directory does not exist: $path" }
-        require(!exists(path)) { "File already exists: $path"}
+        require(!exists(path)) { "File already exists: $path" }
         when (type) {
             FileMetadata.FileType.File -> if (!files.containsKey(path)) files[path] = ByteArray(0)
             FileMetadata.FileType.Directory -> directories.add(path)
