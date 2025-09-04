@@ -46,6 +46,7 @@ nav:
                   - Langfuse Exporter: opentelemetry-langfuse-exporter.md
                   - Weave Exporter: opentelemetry-weave-exporter.md
       - Testing: testing.md
+  - Why Koog: why-koog.md
   - Examples:
       - Overview: examples.md
       - Attachments: examples/Attachments.md
