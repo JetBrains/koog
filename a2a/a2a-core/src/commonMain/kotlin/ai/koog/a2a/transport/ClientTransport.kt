@@ -113,7 +113,7 @@ public interface ClientTransport : AutoCloseable {
     public suspend fun deleteTaskPushNotificationConfig(
         request: Request<TaskPushNotificationConfigParams>,
         ctx: ClientCallContext = ClientCallContext.Default
-    ): Response<Unit>
+    ): Response<Nothing?>
 }
 
 /**

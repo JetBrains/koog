@@ -12,7 +12,8 @@ import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.pluginOrNull
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.server.request.receive
+import io.ktor.server.request.receiveText
+import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.application
 import io.ktor.server.routing.post
@@ -22,7 +23,6 @@ import io.ktor.server.sse.send
 import io.ktor.server.sse.sse
 import io.ktor.util.toMap
 import kotlinx.serialization.SerializationException
-import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.serializer
 
@@ -57,12 +57,14 @@ public class HttpJSONRPCServerTransport(
         }
 
         post {
-            runCatchingCancellable {
+            val response = runCatchingCancellable {
                 onRequest(
                     request = call.receiveJSONRPCRequest(),
                     ctx = call.toServerCallContext()
                 )
             }.getOrElse { it.toJSONRPCErrorResponse() }
+
+            call.respond(response)
         }
 
         sse(
@@ -77,9 +79,7 @@ public class HttpJSONRPCServerTransport(
                     request = call.receiveJSONRPCRequest(),
                     ctx = call.toServerCallContext()
                 ).collect { response -> send(response) }
-            }.getOrElse {
-                send(it.toJSONRPCErrorResponse())
-            }
+            }.getOrElse { it.toJSONRPCErrorResponse() }
         }
     }
 
@@ -88,7 +88,8 @@ public class HttpJSONRPCServerTransport(
      */
     private suspend fun ApplicationCall.receiveJSONRPCRequest(): JSONRPCRequest {
         val jsonBody = try {
-            receive<JsonElement>()
+            val rawBody = receiveText()
+            JSONRPCJson.parseToJsonElement(rawBody)
         } catch (e: SerializationException) {
             throw A2AParseException("Cannot parse request body to JSON:\n${e.message}")
         }

@@ -124,7 +124,7 @@ public interface RequestHandler {
     public suspend fun onDeleteTaskPushNotificationConfig(
         request: Request<TaskPushNotificationConfigParams>,
         ctx: ServerCallContext
-    ): Response<Unit>
+    ): Response<Nothing?>
 }
 
 /**

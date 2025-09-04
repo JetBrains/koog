@@ -42,6 +42,7 @@ kotlin {
         jvmTest {
             dependencies {
                 implementation(kotlin("test-junit5"))
+                implementation(libs.ktor.server.test.host)
             }
         }
 

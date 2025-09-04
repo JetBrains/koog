@@ -368,7 +368,7 @@ class HttpJSONRPCClientTransportTest {
 
         val expectedResponse = Response(
             id = id,
-            data = Unit
+            data = null
         )
 
         testAPIMethod(

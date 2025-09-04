@@ -31,35 +31,35 @@ public sealed class A2AException(
  */
 public class A2AParseException(
     message: String = "Invalid JSON payload",
-) : A2AException(message, errorCode = -32700)
+) : A2AException(message, errorCode = A2AErrorCode.PARSE_ERROR.value)
 
 /**
  * The JSON payload was valid JSON, but not a valid JSON-RPC Request object.
  */
 public class A2AInvalidRequestException(
     message: String = "Invalid JSON-RPC Request",
-) : A2AException(message, errorCode = -32600)
+) : A2AException(message, errorCode = A2AErrorCode.INVALID_REQUEST.value)
 
 /**
  * The requested A2A RPC method does not exist or is not supported.
  */
 public class A2AMethodNotFoundException(
     message: String = "Method not found",
-) : A2AException(message, errorCode = -32601)
+) : A2AException(message, errorCode = A2AErrorCode.METHOD_NOT_FOUND.value)
 
 /**
  * The params provided for the method are invalid.
  */
 public class A2AInvalidParamsException(
     message: String = "Invalid method parameters",
-) : A2AException(message, errorCode = -32602)
+) : A2AException(message, errorCode = A2AErrorCode.INVALID_PARAMS.value)
 
 /**
  * An unexpected error occurred on the server during processing.
  */
 public class A2AInternalErrorException(
     message: String = "Internal server error",
-) : A2AException(message, errorCode = -32603)
+) : A2AException(message, errorCode = A2AErrorCode.INTERNAL_ERROR.value)
 
 /**
  * Reserved for implementation-defined server exceptions. A2A-specific exceptions use this range.
@@ -79,7 +79,7 @@ public sealed class A2AServerException(
  */
 public class A2ATaskNotFoundException(
     message: String = "Task not found",
-) : A2AServerException(message, errorCode = -32001)
+) : A2AServerException(message, errorCode = A2AErrorCode.TASK_NOT_FOUND.value)
 
 /**
  * An attempt was made to cancel a task that is not in a cancelable state.
@@ -87,7 +87,7 @@ public class A2ATaskNotFoundException(
  */
 public class A2ATaskNotCancelableException(
     message: String = "Task cannot be canceled",
-) : A2AServerException(message, errorCode = -32002)
+) : A2AServerException(message, errorCode = A2AErrorCode.TASK_NOT_CANCELABLE.value)
 
 /**
  * Client attempted to use push notification features but the server agent does not support them.
@@ -95,7 +95,7 @@ public class A2ATaskNotCancelableException(
  */
 public class A2APushNotificationNotSupportedException(
     message: String = "Push Notification is not supported",
-) : A2AServerException(message, errorCode = -32003)
+) : A2AServerException(message, errorCode = A2AErrorCode.PUSH_NOTIFICATION_NOT_SUPPORTED.value)
 
 /**
  * The requested operation or a specific aspect of it is not supported by this server agent implementation.
@@ -103,7 +103,7 @@ public class A2APushNotificationNotSupportedException(
  */
 public class A2AUnsupportedOperationException(
     message: String = "This operation is not supported",
-) : A2AServerException(message, errorCode = -32004)
+) : A2AServerException(message, errorCode = A2AErrorCode.UNSUPPORTED_OPERATION.value)
 
 /**
  * A Media Type provided in the request's message.parts or implied for an artifact is not supported
@@ -111,21 +111,21 @@ public class A2AUnsupportedOperationException(
  */
 public class A2AContentTypeNotSupportedException(
     message: String = "Incompatible content types",
-) : A2AServerException(message, errorCode = -32005)
+) : A2AServerException(message, errorCode = A2AErrorCode.CONTENT_TYPE_NOT_SUPPORTED.value)
 
 /**
  * Agent generated an invalid response for the requested method.
  */
 public class A2AInvalidAgentResponseException(
     message: String = "Invalid agent response type",
-) : A2AServerException(message, errorCode = -32006)
+) : A2AServerException(message, errorCode = A2AErrorCode.INVALID_AGENT_RESPONSE.value)
 
 /**
  * The agent does not have an Authenticated Extended Card configured.
  */
 public class A2AAuthenticatedExtendedCardNotConfiguredException(
     message: String = "Authenticated Extended Card not configured",
-) : A2AServerException(message, errorCode = -32007)
+) : A2AServerException(message, errorCode = A2AErrorCode.AUTHENTICATED_EXTENDED_CARD_NOT_CONFIGURED.value)
 
 /**
  * Server returned some unknown error code.
