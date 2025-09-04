@@ -78,7 +78,7 @@ public class A2AServer : RequestHandler {
     override suspend fun onDeleteTaskPushNotificationConfig(
         request: Request<TaskPushNotificationConfigParams>,
         ctx: ServerCallContext
-    ): Response<Unit> {
+    ): Response<Nothing?> {
         TODO("Not yet implemented")
     }
 }

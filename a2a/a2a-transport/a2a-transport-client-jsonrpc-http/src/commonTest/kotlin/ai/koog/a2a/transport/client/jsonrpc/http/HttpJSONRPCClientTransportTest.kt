@@ -1,6 +1,6 @@
 package ai.koog.a2a.transport.client.jsonrpc.http
 
-import ai.koog.a2a.exceptions.A2AErrorCode
+import ai.koog.a2a.exceptions.A2AErrorCodes
 import ai.koog.a2a.exceptions.A2AInvalidParamsException
 import ai.koog.a2a.model.AgentCapabilities
 import ai.koog.a2a.model.AgentCard
@@ -412,7 +412,7 @@ class HttpJSONRPCClientTransportTest {
             val jsonRpcErrorResponse = JSONRPCErrorResponse(
                 id = id,
                 error = JSONRPCError(
-                    code = A2AErrorCode.INVALID_PARAMS.value,
+                    code = A2AErrorCodes.INVALID_PARAMS,
                     message = "Invalid method parameters",
                     data = json.encodeToJsonElement("The message parameters are invalid")
                 )

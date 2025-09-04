@@ -1,6 +1,6 @@
 package ai.koog.a2a.transport.server.jsonrpc.http
 
-import ai.koog.a2a.exceptions.A2AErrorCode
+import ai.koog.a2a.exceptions.A2AErrorCodes
 import ai.koog.a2a.model.AgentCapabilities
 import ai.koog.a2a.model.AgentCard
 import ai.koog.a2a.model.AgentSkill
@@ -481,7 +481,7 @@ class HttpJSONRPCServerTransportTest {
 
             val jsonRpcResponse = json.decodeFromString<JSONRPCErrorResponse>(response.bodyAsText())
             assertEquals(requestId, jsonRpcResponse.id)
-            assertEquals(A2AErrorCode.METHOD_NOT_FOUND.value, jsonRpcResponse.error.code)
+            assertEquals(A2AErrorCodes.METHOD_NOT_FOUND, jsonRpcResponse.error.code)
         }
     }
 
@@ -507,7 +507,7 @@ class HttpJSONRPCServerTransportTest {
 
             val jsonRpcResponse = json.decodeFromString<JSONRPCErrorResponse>(response.bodyAsText())
             assertNull(jsonRpcResponse.id)
-            assertEquals(A2AErrorCode.PARSE_ERROR.value, jsonRpcResponse.error.code)
+            assertEquals(A2AErrorCodes.PARSE_ERROR, jsonRpcResponse.error.code)
         }
     }
 
