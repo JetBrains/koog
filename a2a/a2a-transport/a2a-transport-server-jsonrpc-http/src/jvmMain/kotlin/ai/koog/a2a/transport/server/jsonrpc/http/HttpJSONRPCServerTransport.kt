@@ -56,6 +56,7 @@ public class HttpJSONRPCServerTransport(
             json(JSONRPCJson)
         }
 
+        // Regular JSON-RPC requests
         post {
             val response = runCatchingCancellable {
                 onRequest(
@@ -67,6 +68,7 @@ public class HttpJSONRPCServerTransport(
             call.respond(response)
         }
 
+        // Streaming JSON-RPC requests
         sse(
             serialize = { typeInfo, it ->
                 val kType = typeInfo.kotlinType ?: throw IllegalArgumentException("Null KType for value: $it")
