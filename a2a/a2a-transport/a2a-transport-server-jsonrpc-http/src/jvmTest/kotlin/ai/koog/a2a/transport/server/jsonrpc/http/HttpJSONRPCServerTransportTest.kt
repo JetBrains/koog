@@ -28,6 +28,7 @@ import ai.koog.a2a.transport.jsonrpc.model.JSONRPCErrorResponse
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCJson
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCRequest
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCSuccessResponse
+import io.ktor.client.plugins.sse.sse
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
@@ -46,6 +47,7 @@ import kotlinx.serialization.json.encodeToJsonElement
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import io.ktor.client.plugins.sse.SSE as SSEClient
 
 class HttpJSONRPCServerTransportTest {
     private object MockRequestHandler : RequestHandler {
@@ -253,6 +255,60 @@ class HttpJSONRPCServerTransportTest {
         }
     }
 
+    private inline fun <reified TRequest, reified TResponse> testServerMethodStreaming(
+        method: A2AMethod,
+        request: Request<TRequest>,
+        expectedResponses: List<Response<TResponse>>,
+    ) {
+        testApplication {
+            install(SSE)
+
+            val client = createClient {
+                install(SSEClient)
+            }
+
+            val transport = HttpJSONRPCServerTransport(MockRequestHandler)
+
+            routing {
+                with(transport) {
+                    transportRoutes("/a2a")
+                }
+            }
+
+            val jsonRpcRequest = JSONRPCRequest(
+                id = request.id,
+                method = method.value,
+                params = json.encodeToJsonElement(request.data)
+            )
+
+            val jsonrpcResponses = buildList {
+                client.sse(
+                    urlString = "/a2a",
+                    request = {
+                        contentType(ContentType.Application.Json)
+                        setBody(json.encodeToString(jsonRpcRequest))
+                    },
+                ) {
+                    assertEquals(HttpStatusCode.OK, call.response.status)
+
+                    incoming
+                        .map { event -> JSONRPCJson.decodeFromString<JSONRPCSuccessResponse>(event.data!!) }
+                        .collect { add(it) }
+                }
+            }
+
+            val actualResponses = jsonrpcResponses.map {
+                Response(
+                    id = it.id,
+                    data = json.decodeFromJsonElement<TResponse>(it.result)
+                )
+            }
+
+            assertEquals(expectedResponses.map { it.id }, actualResponses.map { it.id })
+            assertEquals(expectedResponses.map { it.data }, actualResponses.map { it.data })
+        }
+    }
+
     @Test
     fun testGetAuthenticatedExtendedAgentCard() = runTest {
         val requestId = RequestId.StringId("test-1")
@@ -301,6 +357,38 @@ class HttpJSONRPCServerTransportTest {
             method = A2AMethod.SendMessage,
             request = request,
             expectedResponse = expectedResponse,
+        )
+    }
+
+    @Test
+    fun testSendMessageStreaming() = runTest {
+        val requestId = RequestId.StringId("test-2")
+
+        val messageSendParams = MessageSendParams(
+            message = Message(
+                messageId = "msg-1",
+                role = Role.User,
+                parts = listOf(TextPart("Hello, agent!")),
+                taskId = "task-1"
+            )
+        )
+
+        val request = Request(
+            id = requestId,
+            data = messageSendParams,
+        )
+
+        val expectedResponses = MockRequestHandler.updateEvents.map {
+            Response(
+                id = requestId,
+                data = it,
+            )
+        }
+
+        testServerMethodStreaming(
+            method = A2AMethod.SendMessageStreaming,
+            request = request,
+            expectedResponses = expectedResponses,
         )
     }
 
@@ -510,7 +598,4 @@ class HttpJSONRPCServerTransportTest {
             assertEquals(A2AErrorCodes.PARSE_ERROR, jsonRpcResponse.error.code)
         }
     }
-
-    // @Test
-    // fun testSendMessageStreaming() = runTest { ... }
 }
