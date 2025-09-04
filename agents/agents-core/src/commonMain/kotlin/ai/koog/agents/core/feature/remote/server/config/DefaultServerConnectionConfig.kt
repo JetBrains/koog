@@ -1,7 +1,5 @@
 package ai.koog.agents.core.feature.remote.server.config
 
-import ai.koog.agents.core.feature.agentFeatureMessageSerializersModule
-
 /**
  * Default implementation of the server connection configuration.
  *
@@ -58,9 +56,5 @@ public class DefaultServerConnectionConfig(
          * for the `waitConnection` parameter in the `DefaultServerConnectionConfig` class.
          */
         public const val DEFAULT_WAIT_CONNECTION: Boolean = false
-    }
-
-    init {
-        appendSerializersModule(agentFeatureMessageSerializersModule)
     }
 }

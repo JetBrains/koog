@@ -1,6 +1,5 @@
 package ai.koog.agents.core.feature.remote.client.config
 
-import ai.koog.agents.core.feature.agentFeatureMessageSerializersModule
 import io.ktor.http.URLProtocol
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -64,9 +63,5 @@ public class DefaultClientConnectionConfig(
          * Represents the default connection timeout used for client connections.
          */
         public val defaultConnectionTimeout: Duration = 15.seconds
-    }
-
-    init {
-        appendSerializersModule(agentFeatureMessageSerializersModule)
     }
 }
