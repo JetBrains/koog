@@ -142,6 +142,7 @@ public class BedrockLLMClient(
         ignoreUnknownKeys = true
         isLenient = true
         explicitNulls = false
+        encodeDefaults = true
     }
 
     internal fun getBedrockModelFamily(model: LLModel): BedrockModelFamilies {
@@ -172,27 +173,7 @@ public class BedrockLLMClient(
             throw IllegalArgumentException("Model ${model.id} does not support tools")
         }
 
-        val requestBody = when (modelFamily) {
-            is BedrockModelFamilies.AI21Jamba -> json.encodeToString(
-                JambaRequest.serializer(),
-                BedrockAI21JambaSerialization.createJambaRequest(prompt, model, tools)
-            )
-
-            is BedrockModelFamilies.AmazonNova -> json.encodeToString(
-                NovaRequest.serializer(),
-                BedrockAmazonNovaSerialization.createNovaRequest(prompt, model)
-            )
-
-            is BedrockModelFamilies.AnthropicClaude -> json.encodeToString(
-                AnthropicMessageRequest.serializer(),
-                BedrockAnthropicClaudeSerialization.createAnthropicRequest(prompt, model, tools)
-            )
-
-            is BedrockModelFamilies.Meta -> json.encodeToString(
-                LlamaRequest.serializer(),
-                BedrockMetaLlamaSerialization.createLlamaRequest(prompt, model)
-            )
-        }
+        val requestBody = createRequestBody(prompt, model, tools)
 
         val invokeRequest = InvokeModelRequest {
             this.modelId = model.id
@@ -246,27 +227,7 @@ public class BedrockLLMClient(
             "Model ${model.id} does not support chat completions"
         }
 
-        val requestBody = when (modelFamily) {
-            is BedrockModelFamilies.AI21Jamba -> json.encodeToString(
-                JambaRequest.serializer(),
-                BedrockAI21JambaSerialization.createJambaRequest(prompt, model, emptyList())
-            )
-
-            is BedrockModelFamilies.AmazonNova -> json.encodeToString(
-                NovaRequest.serializer(),
-                BedrockAmazonNovaSerialization.createNovaRequest(prompt, model)
-            )
-
-            is BedrockModelFamilies.AnthropicClaude -> json.encodeToString(
-                AnthropicMessageRequest.serializer(),
-                BedrockAnthropicClaudeSerialization.createAnthropicRequest(prompt, model, emptyList())
-            )
-
-            is BedrockModelFamilies.Meta -> json.encodeToString(
-                LlamaRequest.serializer(),
-                BedrockMetaLlamaSerialization.createLlamaRequest(prompt, model)
-            )
-        }
+        val requestBody = createRequestBody(prompt, model, emptyList())
 
         val streamRequest = InvokeModelWithResponseStreamRequest {
             this.modelId = model.id
@@ -323,6 +284,29 @@ public class BedrockLLMClient(
             }
         }
     }
+
+    private fun createRequestBody(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): String =
+        when (getBedrockModelFamily(model)) {
+            is BedrockModelFamilies.AI21Jamba -> json.encodeToString(
+                JambaRequest.serializer(),
+                BedrockAI21JambaSerialization.createJambaRequest(prompt, model, tools)
+            )
+
+            is BedrockModelFamilies.AmazonNova -> json.encodeToString(
+                NovaRequest.serializer(),
+                BedrockAmazonNovaSerialization.createNovaRequest(prompt, model, tools)
+            )
+
+            is BedrockModelFamilies.AnthropicClaude -> json.encodeToString(
+                AnthropicMessageRequest.serializer(),
+                BedrockAnthropicClaudeSerialization.createAnthropicRequest(prompt, model, tools)
+            )
+
+            is BedrockModelFamilies.Meta -> json.encodeToString(
+                LlamaRequest.serializer(),
+                BedrockMetaLlamaSerialization.createLlamaRequest(prompt, model)
+            )
+        }
 
     /**
      * Moderates the provided prompt using specified moderation guardrails settings.

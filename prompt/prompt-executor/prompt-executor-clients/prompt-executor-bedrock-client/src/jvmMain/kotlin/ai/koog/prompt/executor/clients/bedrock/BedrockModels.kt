@@ -115,6 +115,11 @@ public object BedrockModels : LLModelDefinitions {
         LLMCapability.Schema.JSON.Standard
     )
 
+    // Capabilities of the nova models
+    private val novaCapabilities: List<LLMCapability> = standardCapabilities + listOf(
+        LLMCapability.Tools,
+    )
+
     // Full capabilities (multimodal + tools)
     private val fullCapabilities: List<LLMCapability> = standardCapabilities + listOf(
         LLMCapability.Tools,
@@ -293,7 +298,7 @@ public object BedrockModels : LLModelDefinitions {
         LLModel(
             provider = LLMProvider.Bedrock,
             id = "amazon.nova-micro-v1:0",
-            capabilities = standardCapabilities,
+            capabilities = novaCapabilities,
             contextLength = 128_000,
         ),
     ).effectiveModel
@@ -313,7 +318,7 @@ public object BedrockModels : LLModelDefinitions {
         LLModel(
             provider = LLMProvider.Bedrock,
             id = "amazon.nova-lite-v1:0",
-            capabilities = standardCapabilities,
+            capabilities = novaCapabilities,
             contextLength = 300_000,
         ),
     ).effectiveModel
@@ -333,7 +338,7 @@ public object BedrockModels : LLModelDefinitions {
         LLModel(
             provider = LLMProvider.Bedrock,
             id = "amazon.nova-pro-v1:0",
-            capabilities = standardCapabilities,
+            capabilities = novaCapabilities,
             contextLength = 300_000,
         ),
     ).effectiveModel
@@ -353,7 +358,7 @@ public object BedrockModels : LLModelDefinitions {
         LLModel(
             provider = LLMProvider.Bedrock,
             id = "amazon.nova-premier-v1:0",
-            capabilities = standardCapabilities,
+            capabilities = novaCapabilities,
             contextLength = 1_000_000,
         ),
     ).effectiveModel
