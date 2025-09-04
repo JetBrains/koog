@@ -14,7 +14,6 @@ import ai.koog.agents.file.tools.render.file
 import ai.koog.prompt.text.text
 import ai.koog.rag.base.files.FileMetadata
 import ai.koog.rag.base.files.FileSystemProvider
-import ai.koog.rag.base.files.readText
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 
@@ -89,32 +88,29 @@ public class ReadFileTool<Path>(private val fs: FileSystemProvider.ReadOnly<Path
      */
     override suspend fun execute(args: Args): Result {
         val path = fs.fromAbsolutePathString(args.path)
-        val metadata = validateNotNull(fs.metadata(path)) { "File not found: ${args.path}" }
+        val metadata = validateNotNull(fs.metadata(path)) { "File not found: ${args.path} (ensure the path is absolute)" }
         validate(metadata.type == FileMetadata.FileType.File) { "Not a file: ${args.path}" }
-
-        val contentType = fs.getFileContentType(path)
-        validate(contentType == FileMetadata.FileContentType.Text) {
+        validate(fs.getFileContentType(path) == FileMetadata.FileContentType.Text) {
             "File is not a text file: ${args.path}"
         }
 
-        val content = fs.readText(path)
-        validate(args.startLine >= 0) { "startLine must be >= 0, but was ${args.startLine}" }
-        validate(args.endLine >= -1) { "endLine must be >= -1, but was ${args.endLine}" }
-        validate(args.endLine == -1 || args.endLine > args.startLine) {
-            "endLine must be > startLine or -1, but startLine=${args.startLine}, endLine=${args.endLine}"
-        }
-        val fileLinesCount = content.lines().size
-        validate(args.startLine < fileLinesCount) { "startLine=${args.startLine} must be strictly smaller than the whole fileLinesCount=$fileLinesCount" }
-
-        return Result(
-            buildTextFileEntry(
-                fs = fs,
-                path = path,
-                metadata = metadata,
-                startLine = args.startLine,
-                endLine = args.endLine,
+        return runCatching {
+            Result(
+                buildTextFileEntry(
+                    fs = fs,
+                    path = path,
+                    metadata = metadata,
+                    startLine = args.startLine,
+                    endLine = args.endLine,
+                )
             )
-        )
+        }.onFailure { e ->
+            if (e is IllegalArgumentException) {
+                throw ToolException.ValidationFailure(
+                    e.message ?: "Invalid line range: startLine=${args.startLine}, endLine=${args.endLine}"
+                )
+            }
+        }.getOrThrow()
     }
 
     public companion object {

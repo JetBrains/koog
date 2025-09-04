@@ -1,13 +1,8 @@
 package ai.koog.agents.file.tools
 
-import ai.koog.agents.file.tools.model.FileSize
-import ai.koog.agents.file.tools.model.FileSize.Bytes
-import ai.koog.agents.file.tools.model.FileSize.Companion.MIB
-import ai.koog.agents.file.tools.model.FileSize.Lines
-import ai.koog.agents.file.tools.model.FileSystemEntry
+import ai.koog.agents.file.tools.model.FileSystemEntry.File
 import ai.koog.agents.file.tools.model.FileSystemEntry.File.Content
-import ai.koog.agents.file.tools.model.FileSystemEntry.File.Content.Excerpt
-import ai.koog.agents.file.tools.model.FileSystemEntry.File.Content.Text
+import ai.koog.agents.file.tools.model.buildFileSize
 import ai.koog.rag.base.files.DocumentProvider
 import ai.koog.rag.base.files.FileMetadata
 import ai.koog.rag.base.files.FileSystemProvider
@@ -16,105 +11,76 @@ import ai.koog.rag.base.files.readText
 /**
  * Constructs a text file entry with content and metadata from the filesystem.
  *
- * Reads the file content and creates a [FileSystemEntry.File] with the specified line range.
+ * Reads the file content and creates a [File] with the specified line range.
  * For full file content, pass `startLine = 0` and `endLine = -1`. The content will be
- * represented as either [Text] for complete files or [Excerpt] for partial ranges.
+ * represented as either [Content.Text] for complete files or [Content.Excerpt] for partial ranges.
  *
  * @param Path the filesystem path type
  * @param fs the filesystem provider used to read file content and attributes
- * @param path the absolute path to the file
+ * @param path the path to the file
  * @param metadata the pre-fetched metadata for the file at [path]
  * @param startLine the starting line index (0-based, inclusive) for content extraction
  * @param endLine the ending line index (0-based, exclusive) for content extraction, or -1 for the end of the file
  * @return a file entry containing the requested content range and file attributes
+ * @throws IllegalArgumentException if startLine < 0, endLine < -1, startLine >= lineCount,
+ *         endLine <= startLine (when not -1), startLine >= lineCount, or endLine > lineCount
  */
-public suspend fun <Path> buildTextFileEntry(
+internal suspend fun <Path> buildTextFileEntry(
     fs: FileSystemProvider.ReadOnly<Path>,
     path: Path,
     metadata: FileMetadata,
     startLine: Int,
     endLine: Int
-): FileSystemEntry.File {
-    val name = fs.name(path)
-    return FileSystemEntry.File(
-        name = name,
+): File {
+    require(startLine >= 0) { "startLine must be >= 0, but was $startLine" }
+    require(endLine >= -1) { "endLine must be >= -1, but was $endLine" }
+    require(endLine == -1 || endLine > startLine) {
+        "endLine must be > startLine or -1, but startLine=$startLine, endLine=$endLine"
+    }
+
+    val content = fs.readText(path)
+    val lineCount = content.lines().size
+
+    require(startLine < lineCount) {
+        "startLine=$startLine must be < lineCount=$lineCount"
+    }
+    require(endLine == -1 || endLine <= lineCount) {
+        "endLine=$endLine must be <= lineCount=$lineCount"
+    }
+
+    return File(
+        name = fs.name(path),
         extension = fs.extension(path),
         path = fs.toAbsolutePathString(path),
-        content = buildContent(
-            fs.readText(path),
-            startLine,
-            endLine
-        ),
+        content = buildContent(content, startLine, if (endLine == -1) lineCount else endLine),
         size = buildFileSize(fs, path),
         hidden = metadata.hidden,
         contentType = FileMetadata.FileContentType.Text,
     )
 }
 
-/**
- * Creates [Content] from a line range in a text.
- *
- * - Lines are 0-based. The `endLine` is exclusive, and `-1` means end of the file.
- * - Returns [Text] if the range spans the whole file.
- * - Returns [Excerpt] with one snippet otherwise.
- *
- * @param content full file text
- * @param startLine first line to include (0-based, inclusive)
- * @param endLine first line to exclude (0-based, exclusive), or -1 for the end of the file
- * @return [Text] when the whole file is selected, otherwise [Excerpt]
- */
-internal fun buildContent(
+// Creates content (full text or excerpt) from a validated line range
+private fun buildContent(
     content: String,
     startLine: Int,
     endLine: Int,
 ): Content {
-    val fileLinesCount = content.lines().size
+    val lines = content.lines()
 
-    val endLine = if (endLine == -1) fileLinesCount else endLine.coerceAtMost(fileLinesCount)
-
-    if (startLine == 0 && endLine >= fileLinesCount) return Text(content)
+    if (startLine == 0 && endLine == lines.size) {
+        return Content.Text(content)
+    }
 
     val start = DocumentProvider.Position(startLine, 0)
     val end = DocumentProvider.Position(endLine, 0)
     val range = DocumentProvider.DocumentRange(start, end)
 
-    return Excerpt(
+    return Content.Excerpt(
         listOf(
-            Excerpt.Snippet(
+            Content.Excerpt.Snippet(
                 text = range.substring(content),
                 range = range,
             )
         )
     )
-}
-
-/**
- * Creates [FileSize] representations for the given file.
- *
- * Always returns a [Bytes] instance. For text files ≤ 1 MiB, also returns a [Lines] instance.
- * For files > 1 MiB or non-text files, only [Bytes] is returned to avoid loading large or
- * unsupported content.
- *
- * @param Path the filesystem path type
- * @param path the file path to measure
- * @param fs the filesystem provider used to access the file
- * @return a list containing at least a [Bytes] instance and optionally a [Lines] instance
- */
-public suspend fun <Path> buildFileSize(
-    fs: FileSystemProvider.ReadOnly<Path>,
-    path: Path
-): List<FileSize> {
-    val bytes = Bytes(fs.size(path))
-    if (bytes.bytes > MIB || fs.getFileContentType(path) != FileMetadata.FileContentType.Text) {
-        return listOf(bytes)
-    }
-
-    val text = fs.readText(path)
-    val lineCount = if (text.isBlank()) {
-        0
-    } else {
-        val newlines = text.count { it == '\n' }
-        newlines + if (text.last() != '\n') 1 else 0
-    }
-    return listOf(bytes, Lines(lineCount))
 }
