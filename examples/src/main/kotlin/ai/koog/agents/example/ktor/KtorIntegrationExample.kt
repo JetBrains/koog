@@ -84,7 +84,7 @@ fun Application.configureKoog() {
             }
 
             install(OpenTelemetry) {
-                addSpanExporter(LoggingSpanExporter())
+                addSpanExporter(LoggingSpanExporter.create())
             }
         }
     }
