@@ -1,4 +1,4 @@
-# Why choose Koog
+# Why Koog
 
 Koog is designed to solve real-world problems with JetBrains-level quality.
 It provides advanced AI algorithms, out-of-the-box proven techniques, a Kotlin DSL, and robust multi-platform
@@ -62,12 +62,3 @@ and educational resources to empower developers.
 * Build your first Koog agent with our [Getting started](https://docs.koog.ai/single-run-agents/) guide.
 * See the latest updates in Koog [release notes](https://github.com/JetBrains/koog/blob/main/CHANGELOG.md).
 * Learn from [Examples](https://docs.koog.ai/examples/).
-
-
-
-
-
-
-
-
-
