@@ -1,4 +1,6 @@
 import ai.koog.gradle.fixups.DisableDistTasks.disableDistTasks
+import ai.koog.gradle.plugins.CheckSplitPackagesExtension
+import ai.koog.gradle.plugins.CheckSplitPackagesPlugin
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -7,6 +9,7 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
 import org.jetbrains.kotlin.gradle.targets.js.ir.KotlinJsIrLink
 import org.jetbrains.kotlin.gradle.tasks.BaseKotlinCompile
 import org.jlleitschuh.gradle.ktlint.KtlintExtension
+import java.time.Clock
 import java.util.Base64
 
 group = "ai.koog"
@@ -17,11 +20,23 @@ version = run {
 
     val feat = run {
         val releaseBuild = !System.getenv("BRANCH_KOOG_IS_RELEASING_FROM").isNullOrBlank()
+        val nightlyBuild = System.getenv("IS_NIGHTLY_BUILD")?.toBoolean() ?: false
         val branch = System.getenv("BRANCH_KOOG_IS_RELEASING_FROM")
         val customVersion = System.getenv("CE_CUSTOM_VERSION")
         val tcCounter = System.getenv("TC_BUILD_COUNTER")
 
-        if (releaseBuild) {
+        if (nightlyBuild) {
+            if (branch != "develop") {
+                throw GradleException("Nightly builds are allowed only from the develop branch")
+            }
+            val date = Clock.systemUTC().instant().atZone(java.time.ZoneId.of("CET"))
+                .format(java.time.format.DateTimeFormatter.ISO_LOCAL_DATE)
+            if (!customVersion.isNullOrBlank()) {
+                "-$branch-$date-$customVersion"
+            } else {
+                "-$branch-$date"
+            }
+        } else if (releaseBuild) {
             when (branch) {
                 "main" -> {
                     if (customVersion.isNullOrBlank()) {
@@ -207,7 +222,7 @@ dependencies {
     dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-google-client"))
     dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-ollama-client"))
     dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
-    dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-model"))
+    dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client-base"))
     dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openrouter-client"))
     dokka(project(":prompt:prompt-executor:prompt-executor-llms"))
     dokka(project(":prompt:prompt-executor:prompt-executor-llms-all"))
@@ -267,4 +282,12 @@ tasks.register("compileTestKotlinAll") {
     """.trimIndent()
 
     dependsOn(subprojects.map { it.getKotlinCompileTasks("test") })
+}
+
+apply<CheckSplitPackagesPlugin>()
+
+extensions.getByType<CheckSplitPackagesExtension>().apply {
+    includeProjects = setOf(":agents:", ":embeddings:", ":prompt:", ":koog-spring-boot-starter", ":rag:")
+    failOnError = true
+    includePackages = setOf("ai.koog")
 }

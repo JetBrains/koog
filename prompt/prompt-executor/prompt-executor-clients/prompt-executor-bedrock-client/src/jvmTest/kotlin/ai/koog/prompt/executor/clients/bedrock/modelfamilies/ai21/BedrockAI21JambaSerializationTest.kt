@@ -179,7 +179,9 @@ class BedrockAI21JambaSerializationTest {
 
     @Test
     fun `parseJambaResponse with text content`() {
+        // language=text
         val responseContent = "Paris is the capital of France"
+        // language=json
         val responseJson = """
             {
                 "id": "resp_01234567",
@@ -219,6 +221,7 @@ class BedrockAI21JambaSerializationTest {
 
     @Test
     fun `parseJambaResponse with tool call content`() {
+        // language=text
         val callId = "call_01234567"
         // language=json
         val responseJson = """
@@ -269,7 +272,9 @@ class BedrockAI21JambaSerializationTest {
 
     @Test
     fun `parseJambaResponse with both text and tool calls`() {
+        // language=text
         val message = "I'll check the weather for you."
+        // language=text
         val callId = "call_01234567"
 
         // language=json

@@ -21,10 +21,8 @@ dependencies {
     api(libs.bundles.spring.boot.core)
     api(libs.reactor.kotlin.extensions)
 
-    compileOnly(libs.bundles.spring.boot.web)
-    compileOnly(libs.bundles.spring.boot.security)
-    compileOnly(libs.spring.boot.actuator)
-    compileOnly(libs.spring.boot.processor)
+    testImplementation(libs.spring.boot.starter.test)
+    testRuntimeOnly(libs.junit.platform.launcher)
 }
 
 publishToMaven()

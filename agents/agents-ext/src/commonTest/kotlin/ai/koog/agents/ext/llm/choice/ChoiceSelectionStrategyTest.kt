@@ -64,7 +64,7 @@ class ChoiceSelectionStrategyTest {
                 )
             }
 
-            override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> = flow {
+            override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> = flow {
                 emit("Default streaming response")
             }
 

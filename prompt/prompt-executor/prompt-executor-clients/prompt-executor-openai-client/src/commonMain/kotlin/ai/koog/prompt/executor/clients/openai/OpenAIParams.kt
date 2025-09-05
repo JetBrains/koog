@@ -1,10 +1,10 @@
 package ai.koog.prompt.executor.clients.openai
 
-import ai.koog.prompt.executor.clients.openai.models.OpenAIAudioConfig
-import ai.koog.prompt.executor.clients.openai.models.OpenAIWebSearchOptions
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIAudioConfig
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIWebSearchOptions
+import ai.koog.prompt.executor.clients.openai.base.models.ReasoningEffort
+import ai.koog.prompt.executor.clients.openai.base.models.ServiceTier
 import ai.koog.prompt.executor.clients.openai.models.ReasoningConfig
-import ai.koog.prompt.executor.clients.openai.models.ReasoningEffort
-import ai.koog.prompt.executor.clients.openai.models.ServiceTier
 import ai.koog.prompt.executor.clients.openai.models.Truncation
 import ai.koog.prompt.params.LLMParams
 import org.jetbrains.annotations.ApiStatus.Experimental

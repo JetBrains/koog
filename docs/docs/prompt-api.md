@@ -153,7 +153,7 @@ classes are supported:
   Provides file content from the specified URL. Takes the following parameter:
 
   | Name   | Data type | Required | Description                      |
-          |--------|-----------|----------|----------------------------------|
+  |--------|-----------|----------|----------------------------------|
   | `url`  | String    | Yes      | The URL of the provided content. |
 
   See also [API reference](https://api.koog.ai/prompt/prompt-model/ai.koog.prompt.message/-attachment-content/-u-r-l/index.html).
@@ -163,7 +163,7 @@ classes are supported:
   Provides file content as a byte array. Takes the following parameter:
 
   | Name   | Data type | Required | Description                                |
-          |--------|-----------|----------|--------------------------------------------|
+  |--------|-----------|----------|--------------------------------------------|
   | `data` | ByteArray | Yes      | The file content provided as a byte array. |
 
   See also [API reference](https://api.koog.ai/prompt/prompt-model/ai.koog.prompt.message/-attachment-content/-binary/index.html).
@@ -173,19 +173,20 @@ classes are supported:
   Provides file content encoded as a Base64 string. Takes the following parameter:
 
   | Name     | Data type | Required | Description                             |
-          |----------|-----------|----------|-----------------------------------------|
+  |----------|-----------|----------|-----------------------------------------|
   | `base64` | String    | Yes      | The Base64 string containing file data. |
 
   See also [API reference](https://api.koog.ai/prompt/prompt-model/ai.koog.prompt.message/-attachment-content/-binary/index.html).
 
 * `AttachmentContent.PlainText(val text: String)`
 
-  !!! tip
-  Applies only if the attachment type is `Attachment.File`.
+!!! tip
+    Applies only if the attachment type is `Attachment.File`.
+
   Provides content from a plain text file (such as the `text/plain` MIME type). Takes the following parameter:
 
   | Name   | Data type | Required | Description              |
-          |--------|-----------|----------|--------------------------|
+  |--------|-----------|----------|--------------------------|
   | `text` | String    | Yes      | The content of the file. |
 
   See also [API reference](https://api.koog.ai/prompt/prompt-model/ai.koog.prompt.message/-attachment-content/-plain-text/index.html).
@@ -237,12 +238,14 @@ Koog provides the following LLM clients:
 * [AnthropicLLMClient](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/prompt-executor-anthropic-client/ai.koog.prompt.executor.clients.anthropic/-anthropic-l-l-m-client/index.html)
 * [GoogleLLMClient](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/prompt-executor-google-client/ai.koog.prompt.executor.clients.google/-google-l-l-m-client/index.html)
 * [OpenRouterLLMClient](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/prompt-executor-openrouter-client/ai.koog.prompt.executor.clients.openrouter/-open-router-l-l-m-client/index.html)
+* [DeepSeekLLMClient](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/prompt-executor-deepseek-client/ai.koog.prompt.executor.clients.deepseek/-deep-seek-l-l-m-client/index.html)
 * [OllamaClient](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/prompt-executor-ollama-client/ai.koog.prompt.executor.ollama.client/-ollama-client/index.html)
 * [BedrockLLMClient](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/prompt-executor-bedrock-client/ai.koog.prompt.executor.clients.bedrock/-bedrock-l-l-m-client/index.html) (JVM only)
 
 To run a prompt using an LLM client, perform the following:
 
-1. Create the LLM client that handles the connection between your application and LLM providers. For example:
+1) Create the LLM client that handles the connection between your application and LLM providers. For example:
+
 <!--- INCLUDE
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 const val apiKey = "apikey"
@@ -253,7 +256,8 @@ val client = OpenAILLMClient(apiKey)
 ```
 <!--- KNIT example-prompt-api-06.kt -->
 
-2. Call the `execute` method with the prompt and LLM as arguments.
+2) Call the `execute` method with the prompt and LLM as arguments.
+
 <!--- INCLUDE
 import ai.koog.agents.example.examplePromptApi01.prompt
 import ai.koog.agents.example.examplePromptApi06.client
@@ -261,11 +265,11 @@ import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import kotlinx.coroutines.runBlocking
 
 fun main() {
-    runBlocking {
+runBlocking {
 -->
 <!--- SUFFIX
-        }
-    }
+}
+}
 -->
 ```kotlin
 // Execute the prompt
@@ -346,7 +350,7 @@ These are implementations of the [`PromtExecutor`](https://api.koog.ai/prompt/pr
 
 To create a prompt executor for a specific LLM provider, perform the following:
 
-1. Configure an LLM client for a specific provider with the corresponding API key:
+1) Configure an LLM client for a specific provider with the corresponding API key:
 <!--- INCLUDE
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 -->
@@ -354,7 +358,7 @@ import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 val openAIClient = OpenAILLMClient(System.getenv("OPENAI_KEY"))
 ```
 <!--- KNIT example-prompt-api-09.kt -->
-2. Create a prompt executor using [`SingleLLMPromptExecutor`](https://api.koog.ai/prompt/prompt-executor/prompt-executor-llms/ai.koog.prompt.executor.llms/-single-l-l-m-prompt-executor/index.html):
+2) Create a prompt executor using [`SingleLLMPromptExecutor`](https://api.koog.ai/prompt/prompt-executor/prompt-executor-llms/ai.koog.prompt.executor.llms/-single-l-l-m-prompt-executor/index.html):
 <!--- INCLUDE
 import ai.koog.agents.example.examplePromptApi09.openAIClient
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
@@ -368,7 +372,7 @@ val promptExecutor = SingleLLMPromptExecutor(openAIClient)
 
 To create a prompt executor that works with multiple LLM providers, do the following:
 
-1. Configure clients for the required LLM providers with the corresponding API keys:
+1) Configure clients for the required LLM providers with the corresponding API keys:
 <!--- INCLUDE
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.ollama.client.OllamaClient
@@ -379,7 +383,7 @@ val ollamaClient = OllamaClient()
 ```
 <!--- KNIT example-prompt-api-11.kt -->
 
-2. Pass the configured clients to the `MultiLLMPromptExecutor` class constructor to create a prompt executor with multiple LLM providers:
+2) Pass the configured clients to the `MultiLLMPromptExecutor` class constructor to create a prompt executor with multiple LLM providers:
 <!--- INCLUDE
 import ai.koog.agents.example.examplePromptApi11.openAIClient
 import ai.koog.agents.example.examplePromptApi11.ollamaClient
@@ -481,7 +485,7 @@ It lets you store responses from previously executed prompts and retrieve them w
 
 To create a cached prompt executor, perform the following:
 
-1. Create a prompt executor for which you want to cache responses:
+1) Create a prompt executor for which you want to cache responses:
 <!--- INCLUDE
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
@@ -492,7 +496,7 @@ val promptExecutor = SingleLLMPromptExecutor(client)
 ```
 <!--- KNIT example-prompt-api-15.kt -->
 
-2. Create a `CachedPromptExecutor` instance with the desired cache and provide the created prompt executor:
+2) Create a `CachedPromptExecutor` instance with the desired cache and provide the created prompt executor:
 <!--- INCLUDE
 import ai.koog.agents.example.examplePromptApi15.promptExecutor
 import ai.koog.prompt.cache.files.FilePromptCache
@@ -508,7 +512,7 @@ val cachedExecutor = CachedPromptExecutor(
 ```
 <!--- KNIT example-prompt-api-16.kt -->
 
-3. Run the cached prompt executor with the desired prompt and model:
+3) Run the cached prompt executor with the desired prompt and model:
 <!--- INCLUDE
 import ai.koog.prompt.dsl.prompt
 import ai.koog.agents.example.examplePromptApi16.cachedExecutor

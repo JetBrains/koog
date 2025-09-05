@@ -75,13 +75,13 @@ public class Aes256GCMEncryptor(secretKey: String) : Encryption {
         return String(plaintext)
     }
 
-    override fun encrypt(value: String): String {
-        val (nonce, ciphertext) = encryptImpl(value)
+    override fun encrypt(text: String): String {
+        val (nonce, ciphertext) = encryptImpl(text)
         return Base64.getEncoder().encodeToString(nonce + ciphertext)
     }
 
-    override fun decrypt(value: String): String {
-        val valueBytes = Base64.getDecoder().decode(value)
+    override fun decrypt(text: String): String {
+        val valueBytes = Base64.getDecoder().decode(text)
         val nonce = valueBytes.take(GCM_NONCE_LENGTH).toByteArray()
         val ciphertext = valueBytes.drop(GCM_NONCE_LENGTH).toByteArray()
 

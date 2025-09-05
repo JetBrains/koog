@@ -11,8 +11,10 @@ val excluded = setOf(
     ":agents:agents-test",
     ":examples",
     ":integration-tests",
+    ":test-utils",
     ":koog-spring-boot-starter",
     ":koog-ktor",
+    ":koog-cli",
     ":docs",
     project.path, // the current project should not depend on itself
 )
@@ -43,7 +45,7 @@ val included = setOf(
     ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-google-client",
     ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-ollama-client",
     ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client",
-    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-model",
+    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client-base",
     ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openrouter-client",
     ":prompt:prompt-executor:prompt-executor-llms",
     ":prompt:prompt-executor:prompt-executor-llms-all",

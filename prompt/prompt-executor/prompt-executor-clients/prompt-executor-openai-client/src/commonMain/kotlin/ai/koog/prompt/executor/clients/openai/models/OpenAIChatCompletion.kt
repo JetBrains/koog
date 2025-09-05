@@ -1,5 +1,22 @@
 package ai.koog.prompt.executor.clients.openai.models
 
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIAudioConfig
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIBaseLLMRequest
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIBaseLLMResponse
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIBaseLLMStreamResponse
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIChoice
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIMessage
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIModalities
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIResponseFormat
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIStaticContent
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIStreamChoice
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIStreamOptions
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAITool
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolChoice
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIUsage
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIWebSearchOptions
+import ai.koog.prompt.executor.clients.openai.base.models.ReasoningEffort
+import ai.koog.prompt.executor.clients.openai.base.models.ServiceTier
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

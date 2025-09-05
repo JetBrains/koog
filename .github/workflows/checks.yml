@@ -12,6 +12,11 @@ on:
     branches: [ "main", "develop" ]
   pull_request:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  # Cancel only when the run is not on main
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' || github.ref != 'refs/heads/develop' }}
+
 jobs:
   compilation:
 
@@ -23,9 +28,9 @@ jobs:
       - name: Configure Git
         run: |
           git config --global core.autocrlf input
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: '17'
           distribution: 'corretto'
@@ -51,7 +56,7 @@ jobs:
       - name: Configure Git
         run: |
           git config --global core.autocrlf input
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -79,9 +84,9 @@ jobs:
       - name: Configure Git
         run: |
           git config --global core.autocrlf input
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: '17'
           distribution: 'corretto'
@@ -93,14 +98,20 @@ jobs:
 
       - name: JvmTest with Gradle Wrapper and Kover coverage
         if: matrix.os == 'ubuntu-latest'
-        run: ./gradlew jvmTest :koverBinaryReport --continue
+        run: |-
+          ./gradlew jvmTest :koverBinaryReport --continue
+
+      - name: Check Split Packages
+        if:  matrix.os == 'ubuntu-latest' && github.event.pull_request.draft == false
+        run: |-
+          ./gradlew jvmJar && ./gradlew checkSplitPackages
 
       - name: JvmTest with Gradle Wrapper
         if: matrix.os != 'ubuntu-latest'
         run: ./gradlew jvmTest --continue
 
       - name: iosSimulatorArm64Test with Gradle Wrapper
-        if: matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-latest' && github.event.pull_request.draft == false && github.repository == 'jetbrains/koog'
         run: ./gradlew linkIosSimulatorArm64 iosSimulatorArm64Test --continue
 
       - name: Archive coverage data
@@ -126,7 +137,7 @@ jobs:
       pull-requests: write
       checks: write
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
         with:
           ref: ${{ github.event.pull_request.head.sha }}  # to check out the actual pull request commit, not the merge commit
           fetch-depth: 0  # a full history is required for pull request analysis
@@ -134,7 +145,7 @@ jobs:
 
       # Add Java setup step
       - name: Set up JDK 17
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v5
         with:
           java-version: '17'
           distribution: 'temurin'  # Popular OpenJDK distribution
@@ -159,8 +170,8 @@ jobs:
   knit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: 17

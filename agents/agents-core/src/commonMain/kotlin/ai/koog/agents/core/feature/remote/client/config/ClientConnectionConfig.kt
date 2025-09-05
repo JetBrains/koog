@@ -3,36 +3,61 @@ package ai.koog.agents.core.feature.remote.client.config
 import ai.koog.agents.core.feature.remote.ConnectionConfig
 import io.ktor.http.URLProtocol
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.seconds
 
 /**
- * Configuration details for managing client connections.
+ * Base configuration class for managing client-side connections in a remote communication setup.
  *
- * @property host The hostname or IP address of the server to connect to.
- * @property port The port number used for establishing the connection.
- * @property protocol The protocol used for the connection, such as "http" or "https".
- * @property headers A map of custom headers to include with each request.
- * @property reconnectionDelay An optional delay duration before attempting to reconnect after a connection loss.
- * @property requestTimeout The maximum duration to wait for an individual HTTP request to complete.
- *                          Defaults to 5 seconds.
- * @property connectTimeout The maximum duration to wait while establishing a connection to the server.
- *                          Defaults to 15 seconds.
+ * This abstract class is designed to provide configuration settings required to establish a client connection,
+ * such as protocol, host, port, custom headers, and timeout options. It includes utility properties for
+ * constructing URL endpoints corresponding to specific functionalities like Server-Sent Events (SSE),
+ * health checks, and message handling.
  *
- * @property url A computed property that constructs the base URL for this connection
- *               using the protocol, host, and port.
- * @property sseUrl A computed property that constructs the URL endpoint for Server-Sent Events (SSE).
- * @property healthCheckUrl A computed property that constructs the URL endpoint for health check requests.
- * @property messageUrl A computed property that constructs the URL endpoint for sending or receiving messages.
+ * Subclasses can extend this base configuration to implement more specific connection requirements or initialize
+ * predefined settings suitable for particular use cases.
+ *
+ * @property host The hostname or IP address of the target server to connect to.
+ * @property port The port number for the connection, using the default for the specified protocol if not provided.
+ * @property protocol The URL protocol (e.g., HTTP, HTTPS) used for the connection.
+ * @property headers Optional HTTP headers to include in requests, defaulting to an empty map.
+ * @property reconnectionDelay The delay between attempts to reconnect, if applicable, defaulting to null.
+ * @property requestTimeout The timeout duration for requests, defaulting to null.
+ * @property connectTimeout The timeout duration for establishing a connection, defaulting to null.
  */
 public abstract class ClientConnectionConfig(
     public val host: String,
     port: Int? = null,
-    public val protocol: URLProtocol = URLProtocol.HTTPS,
-    public val headers: Map<String, String> = emptyMap(),
+    protocol: URLProtocol? = null,
+    headers: Map<String, List<String>>? = null,
     public val reconnectionDelay: Duration? = null,
-    public val requestTimeout: Duration? = 5.seconds,
-    public val connectTimeout: Duration? = 15.seconds,
+    public val requestTimeout: Duration? = null,
+    public val connectTimeout: Duration? = null,
 ) : ConnectionConfig() {
+
+    /**
+     * Companion object for the `ClientConnectionConfig` class.
+     *
+     * Provides default configuration settings such as the default protocol
+     * used across instances of `ClientConnectionConfig` or its subclasses.
+     */
+    public companion object {
+
+        /**
+         * The default protocol used for establishing a client connection.
+         *
+         * This value is set to `URLProtocol.HTTPS`, ensuring secure communication by default.
+         * It is used in classes such as `ClientConnectionConfig` and its implementations
+         * for initializing the protocol property when no specific protocol is provided.
+         */
+        public val defaultProtocol: URLProtocol = URLProtocol.HTTPS
+    }
+
+    /**
+     * The protocol used for the client connection.
+     *
+     * This property determines the URL protocol (e.g., HTTP or HTTPS) used to establish the connection.
+     * If a specific protocol is not provided during the configuration, the default protocol is used.
+     */
+    public val protocol: URLProtocol = protocol ?: defaultProtocol
 
     /**
      * The port number used for establishing a client connection.
@@ -41,7 +66,18 @@ public abstract class ClientConnectionConfig(
      * If no explicit port is specified during the configuration, the default port for the
      * specified protocol (e.g., 80 for HTTP, 443 for HTTPS) will be used.
      */
-    public val port: Int = port ?: protocol.defaultPort
+    public val port: Int = port ?: this.protocol.defaultPort
+
+    /**
+     * A collection of headers to be applied to HTTP requests made by the client.
+     *
+     * This map with headers can be used to provide additional metadata, authentication information,
+     * or other HTTP-specific data required by the server.
+     *
+     * If no headers are explicitly defined, this map defaults to an empty state, ensuring that
+     * requests do not include unnecessary headers.
+     */
+    public val headers: Map<String, List<String>> = headers ?: emptyMap()
 
     /**
      * Provides the base URL for the current connection configuration.

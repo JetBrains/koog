@@ -189,7 +189,7 @@ val agent = AIAgent(
 The following code snippets demonstrate the basic setup of a memory storage and how facts are saved to and loaded from
 the memory.
 
-1. Set up memory storage
+1) Set up memory storage
 <!--- INCLUDE
 import ai.koog.agents.memory.providers.LocalFileMemoryProvider
 import ai.koog.agents.memory.providers.LocalMemoryConfig
@@ -208,7 +208,7 @@ val memoryProvider = LocalFileMemoryProvider(
 ```
 <!--- KNIT example-agent-memory-06.kt -->
 
-2. Store a fact in the memory
+2) Store a fact in the memory
 <!--- INCLUDE
 import ai.koog.agents.example.exampleAgentMemory03.MemorySubjects
 import ai.koog.agents.example.exampleAgentMemory06.memoryProvider
@@ -236,7 +236,7 @@ memoryProvider.save(
 ```
 <!--- KNIT example-agent-memory-07.kt -->
 
-3. Retrieve the fact
+3) Retrieve the fact
 <!--- INCLUDE
 import ai.koog.agents.example.exampleAgentMemory03.MemorySubjects
 import ai.koog.agents.example.exampleAgentMemory06.memoryProvider
@@ -438,19 +438,40 @@ In the example above, the LLM would search for the user-related facts and projec
     - Keep related information under the same subject
 
 3. **Handle Errors**
-   <!--- INCLUDE
-    import ai.koog.agents.core.agent.AIAgent
-    -->
-   ```kotlin
-    try {
-        memoryProvider.save(fact, subject)
-    } catch (e: Exception) {
-        println("Oops! Couldn't save: ${e.message}")
-    }
-   ```
-   <!--- KNIT example-agent-memory-14.kt -->
+<!--- INCLUDE
+import ai.koog.agents.example.exampleAgentMemory03.MemorySubjects
+import ai.koog.agents.example.exampleAgentMemory06.memoryProvider
+import ai.koog.agents.memory.model.Concept
+import ai.koog.agents.memory.model.DefaultTimeProvider
+import ai.koog.agents.memory.model.FactType
+import ai.koog.agents.memory.model.MemoryScope
+import ai.koog.agents.memory.model.SingleFact
+import kotlinx.coroutines.runBlocking
 
-   For more details on error handling, see [Error handling and edge cases](#error-handling-and-edge-cases).
+fun main() {
+    runBlocking {
+        val fact = SingleFact(
+            concept = Concept("preferred-language", "What programming language is preferred by the user?", FactType.SINGLE),
+            value = "Kotlin",
+            timestamp = DefaultTimeProvider.getCurrentTimestamp()
+        )
+        val subject = MemorySubjects.User
+        val scope = MemoryScope.Product("my-app")
+-->
+<!--- SUFFIX
+    }
+}
+-->
+```kotlin
+try {
+    memoryProvider.save(fact, subject, scope)
+} catch (e: Exception) {
+    println("Oops! Couldn't save: ${e.message}")
+}
+```
+<!--- KNIT example-agent-memory-14.kt -->
+
+For more details on error handling, see [Error handling and edge cases](#error-handling-and-edge-cases).
 
 ## Error handling and edge cases
 
@@ -528,7 +549,7 @@ class MyCustomMemoryProvider : AgentMemoryProvider {
     }
 }
 ```
-<!--- KNIT example-agent-memory-14.kt -->
+<!--- KNIT example-agent-memory-15.kt -->
 
 ### How are facts prioritized when loading from multiple subjects?
 
@@ -548,6 +569,6 @@ val concept = Concept(
     factType = FactType.MULTIPLE
 )
 ```
-<!--- KNIT example-agent-memory-15.kt -->
+<!--- KNIT example-agent-memory-16.kt -->
 
 This lets you store multiple values for the concept, which is retrieved as a list.

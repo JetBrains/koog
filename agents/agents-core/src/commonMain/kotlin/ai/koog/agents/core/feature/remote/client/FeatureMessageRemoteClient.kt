@@ -265,7 +265,7 @@ public class FeatureMessageRemoteClient(
     private fun applyHeaders() {
         headers {
             connectionConfig.headers.forEach { (key, value) ->
-                append(key, value)
+                appendAll(key, value)
             }
         }
     }

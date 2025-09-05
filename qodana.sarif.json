@@ -114632,14 +114632,14 @@
           "kind": "fail",
           "level": "warning",
           "message": {
-            "text": "Class 'AIAgentFeatureClientConnectionConfig' coverage is below the threshold 50%",
-            "markdown": "Class `AIAgentFeatureClientConnectionConfig` coverage is below the threshold 50%"
+            "text": "Class 'DefaultClientConnectionConfig' coverage is below the threshold 50%",
+            "markdown": "Class `DefaultClientConnectionConfig` coverage is below the threshold 50%"
           },
           "locations": [
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "agents/agents-core/src/commonMain/kotlin/ai/koog/agents/core/feature/remote/client/config/AIAgentFeatureClientConnectionConfig.kt",
+                  "uri": "agents/agents-core/src/commonMain/kotlin/ai/koog/agents/core/feature/remote/client/config/DefaultClientConnectionConfig.kt",
                   "uriBaseId": "SRCROOT"
                 },
                 "region": {
@@ -114648,7 +114648,7 @@
                   "charOffset": 258,
                   "charLength": 36,
                   "snippet": {
-                    "text": "AIAgentFeatureClientConnectionConfig"
+                    "text": "DefaultClientConnectionConfig"
                   },
                   "sourceLanguage": "kotlin"
                 },
@@ -114658,7 +114658,7 @@
                   "charOffset": 245,
                   "charLength": 50,
                   "snippet": {
-                    "text": "public class AIAgentFeatureClientConnectionConfig("
+                    "text": "public class DefaultClientConnectionConfig("
                   },
                   "sourceLanguage": "kotlin"
                 }
@@ -129944,14 +129944,14 @@
           "kind": "fail",
           "level": "warning",
           "message": {
-            "text": "Constructor 'AIAgentFeatureClientConnectionConfig' coverage is below the threshold 50%",
-            "markdown": "Constructor `AIAgentFeatureClientConnectionConfig` coverage is below the threshold 50%"
+            "text": "Constructor 'ClientConnectionConfig' coverage is below the threshold 50%",
+            "markdown": "Constructor `DefaultClientConnectionConfig` coverage is below the threshold 50%"
           },
           "locations": [
             {
               "physicalLocation": {
                 "artifactLocation": {
-                  "uri": "agents/agents-core/src/commonMain/kotlin/ai/koog/agents/core/feature/remote/client/config/AIAgentFeatureClientConnectionConfig.kt",
+                  "uri": "agents/agents-core/src/commonMain/kotlin/ai/koog/agents/core/feature/remote/client/config/DefaultClientConnectionConfig.kt",
                   "uriBaseId": "SRCROOT"
                 },
                 "region": {
@@ -129970,7 +129970,7 @@
                   "charOffset": 245,
                   "charLength": 50,
                   "snippet": {
-                    "text": "public class AIAgentFeatureClientConnectionConfig("
+                    "text": "public class DefaultClientConnectionConfig("
                   },
                   "sourceLanguage": "kotlin"
                 }

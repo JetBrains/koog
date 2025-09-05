@@ -22,10 +22,8 @@ class MockLLMExecutor : PromptExecutor {
         return listOf(handlePrompt(prompt))
     }
 
-    override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
-        return flow {
-            emit(handlePrompt(prompt).content)
-        }
+    override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> = flow {
+        emit(handlePrompt(prompt).content)
     }
 
     private fun handlePrompt(prompt: Prompt): Message.Response {

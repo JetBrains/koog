@@ -20,8 +20,8 @@ import ai.koog.agents.core.feature.model.DefinedFeatureEvent
 import ai.koog.agents.core.feature.model.ToolCallEvent
 import ai.koog.agents.core.feature.model.ToolCallResultEvent
 import ai.koog.agents.core.feature.remote.client.FeatureMessageRemoteClient
-import ai.koog.agents.core.feature.remote.client.config.AIAgentFeatureClientConnectionConfig
-import ai.koog.agents.core.feature.remote.server.config.AIAgentFeatureServerConnectionConfig
+import ai.koog.agents.core.feature.remote.client.config.DefaultClientConnectionConfig
+import ai.koog.agents.core.feature.remote.server.config.DefaultServerConnectionConfig
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.tracing.eventString
 import ai.koog.agents.features.tracing.feature.Tracing
@@ -71,9 +71,8 @@ class TraceFeatureMessageRemoteWriterTest {
     @Test
     fun `test health check on agent run`() = runBlocking {
         val port = findAvailablePort()
-        val serverConfig = AIAgentFeatureServerConnectionConfig(host = HOST, port = port)
-        val clientConfig =
-            AIAgentFeatureClientConnectionConfig(host = HOST, port = port, protocol = URLProtocol.HTTP)
+        val serverConfig = DefaultServerConnectionConfig(host = HOST, port = port)
+        val clientConfig = DefaultClientConnectionConfig(host = HOST, port = port, protocol = URLProtocol.HTTP)
 
         val isServerStarted = CompletableDeferred<Boolean>()
         val isClientFinished = CompletableDeferred<Boolean>()
@@ -172,8 +171,8 @@ class TraceFeatureMessageRemoteWriterTest {
 
         // Test Data
         val port = findAvailablePort()
-        val serverConfig = AIAgentFeatureServerConnectionConfig(host = HOST, port = port)
-        val clientConfig = AIAgentFeatureClientConnectionConfig(host = HOST, port = port, protocol = URLProtocol.HTTP)
+        val serverConfig = DefaultServerConnectionConfig(host = HOST, port = port)
+        val clientConfig = DefaultClientConnectionConfig(host = HOST, port = port, protocol = URLProtocol.HTTP)
 
         val actualEvents = mutableListOf<DefinedFeatureEvent>()
 
@@ -393,9 +392,8 @@ class TraceFeatureMessageRemoteWriterTest {
         val strategyName = "tracing-test-strategy"
 
         val port = findAvailablePort()
-        val serverConfig = AIAgentFeatureServerConnectionConfig(host = HOST, port = port)
-        val clientConfig =
-            AIAgentFeatureClientConnectionConfig(host = HOST, port = port, protocol = URLProtocol.HTTP)
+        val serverConfig = DefaultServerConnectionConfig(host = HOST, port = port)
+        val clientConfig = DefaultClientConnectionConfig(host = HOST, port = port, protocol = URLProtocol.HTTP)
 
         val actualEvents = mutableListOf<FeatureMessage>()
 
@@ -523,8 +521,8 @@ class TraceFeatureMessageRemoteWriterTest {
 
         // Test Data
         val port = findAvailablePort()
-        val serverConfig = AIAgentFeatureServerConnectionConfig(host = HOST, port = port)
-        val clientConfig = AIAgentFeatureClientConnectionConfig(host = HOST, port = port, protocol = URLProtocol.HTTP)
+        val serverConfig = DefaultServerConnectionConfig(host = HOST, port = port)
+        val clientConfig = DefaultClientConnectionConfig(host = HOST, port = port, protocol = URLProtocol.HTTP)
 
         val actualEvents = mutableListOf<DefinedFeatureEvent>()
 

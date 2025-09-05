@@ -1,5 +1,4 @@
 package ai.koog.prompt.executor.clients.deepseek
-
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
@@ -7,15 +6,14 @@ import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.deepseek.models.DeepSeekChatCompletionRequest
 import ai.koog.prompt.executor.clients.deepseek.models.DeepSeekChatCompletionResponse
 import ai.koog.prompt.executor.clients.deepseek.models.DeepSeekChatCompletionStreamResponse
-import ai.koog.prompt.executor.clients.openai.AbstractOpenAILLMClient
-import ai.koog.prompt.executor.clients.openai.OpenAIBasedSettings
-import ai.koog.prompt.executor.clients.openai.models.OpenAIMessage
-import ai.koog.prompt.executor.clients.openai.models.OpenAITool
-import ai.koog.prompt.executor.clients.openai.models.OpenAIToolChoice
+import ai.koog.prompt.executor.clients.openai.base.AbstractOpenAILLMClient
+import ai.koog.prompt.executor.clients.openai.base.OpenAIBasedSettings
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIMessage
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAITool
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolChoice
 import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
-import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import kotlin.time.Clock
@@ -49,14 +47,13 @@ public class DeepSeekLLMClient(
     apiKey,
     settings,
     baseClient,
-    clock
+    clock,
+    staticLogger
 ) {
 
     private companion object {
         private val staticLogger = KotlinLogging.logger { }
     }
-
-    override val logger: KLogger = staticLogger
 
     override fun serializeProviderChatRequest(
         messages: List<OpenAIMessage>,

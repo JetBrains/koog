@@ -13,7 +13,7 @@ kotlin {
         commonMain {
             dependencies {
                 api(libs.jetbrains.annotations)
-                api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-model"))
+                api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client-base"))
                 api(project(":prompt:prompt-structure"))
                 implementation(libs.oshai.kotlin.logging)
             }
@@ -21,17 +21,12 @@ kotlin {
 
         commonTest {
             dependencies {
-                implementation(kotlin("test"))
-                implementation(libs.kotlinx.coroutines.test)
-                implementation(libs.kotlinx.serialization.core)
-                implementation(libs.kotlinx.serialization.json)
+                implementation(project(":test-utils"))
             }
         }
 
         jvmTest {
             dependencies {
-                implementation(kotlin("test-junit5"))
-                implementation(libs.junit.jupiter.params)
             }
         }
     }
