@@ -7,8 +7,8 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
-import ai.koog.prompt.streaming.StreamChunk
-import ai.koog.prompt.streaming.toStreamingFrame
+import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.streaming.toStreamFrame
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.datetime.Clock
@@ -22,8 +22,8 @@ class TestLLMExecutor(val clock: Clock) : PromptExecutor {
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
-    ): Flow<StreamChunk> =
-        flowOf(handlePrompt(prompt).toStreamingFrame())
+    ): Flow<StreamFrame> =
+        flowOf(handlePrompt(prompt).toStreamFrame())
 
     private fun handlePrompt(prompt: Prompt): Message.Response {
         // For a compression test, return a summary

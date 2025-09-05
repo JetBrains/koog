@@ -21,7 +21,7 @@ import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
-import ai.koog.prompt.streaming.StreamChunk
+import ai.koog.prompt.streaming.StreamFrame
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
@@ -222,16 +222,16 @@ internal object BedrockAnthropicClaudeSerialization {
         }
     }
 
-    internal fun parseAnthropicStreamChunk(chunkJsonString: String): List<StreamChunk> {
+    internal fun parseAnthropicStreamChunk(chunkJsonString: String): List<StreamFrame> {
         val streamResponse = json.decodeFromString<AnthropicStreamResponse>(chunkJsonString)
 
         return when (streamResponse.type) {
             "content_block_delta" -> {
                 streamResponse.delta?.let {
                     buildList {
-                        it.text?.let(StreamChunk::Append)?.let(::add)
+                        it.text?.let(StreamFrame::Append)?.let(::add)
                         it.toolUse?.let { toolUse ->
-                            StreamChunk.ToolCall(
+                            StreamFrame.ToolCall(
                                 id = toolUse.id,
                                 name = toolUse.name,
                                 content = toolUse.input.toString()
@@ -245,9 +245,9 @@ internal object BedrockAnthropicClaudeSerialization {
                 streamResponse.message?.content?.map { content ->
                     when (content) {
                         is AnthropicResponseContent.Text ->
-                            StreamChunk.Append(content.text)
+                            StreamFrame.Append(content.text)
                         is AnthropicResponseContent.ToolUse ->
-                            StreamChunk.ToolCall(content.id, content.name, content.input.toString())
+                            StreamFrame.ToolCall(content.id, content.name, content.input.toString())
                     }
                 } ?: emptyList()
             }

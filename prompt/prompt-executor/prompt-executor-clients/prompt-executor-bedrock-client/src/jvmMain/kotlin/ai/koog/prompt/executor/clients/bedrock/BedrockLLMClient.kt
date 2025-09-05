@@ -22,7 +22,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Attachment
 import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.Message
-import ai.koog.prompt.streaming.StreamChunk
+import ai.koog.prompt.streaming.StreamFrame
 import aws.sdk.kotlin.runtime.auth.credentials.StaticCredentialsProvider
 import aws.sdk.kotlin.services.bedrockruntime.BedrockRuntimeClient
 import aws.sdk.kotlin.services.bedrockruntime.applyGuardrail
@@ -225,7 +225,7 @@ public class BedrockLLMClient(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
-    ): Flow<StreamChunk> {
+    ): Flow<StreamFrame> {
         logger.debug { "Executing streaming prompt for model: ${model.id}" }
         val modelFamily = getBedrockModelFamily(model)
 

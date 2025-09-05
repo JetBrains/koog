@@ -43,7 +43,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
-import ai.koog.prompt.streaming.StreamChunk
+import ai.koog.prompt.streaming.StreamFrame
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.channels.Channel
@@ -109,7 +109,7 @@ internal class ReportingLLMLLMClient(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
-    ): Flow<StreamChunk> = flow {
+    ): Flow<StreamFrame> = flow {
         coroutineScope {
             eventsChannel.send(
                 Event.Message(

@@ -9,8 +9,8 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
-import ai.koog.prompt.streaming.StreamChunk
-import ai.koog.prompt.streaming.toStreamingFrame
+import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.streaming.toStreamFrame
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.datetime.Clock
@@ -39,10 +39,10 @@ public class CachedPromptExecutor(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
-    ): Flow<StreamChunk> =
+    ): Flow<StreamFrame> =
         flow {
             getOrPut(prompt, tools, model).forEach {
-                emit(it.toStreamingFrame())
+                emit(it.toStreamFrame())
             }
          }
 

@@ -11,7 +11,7 @@ import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
-import ai.koog.prompt.streaming.StreamChunk
+import ai.koog.prompt.streaming.StreamFrame
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
@@ -43,8 +43,8 @@ class MultiLLMPromptExecutorTest {
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>
-        ): Flow<StreamChunk> =
-            flowOf("Anthropic", " streaming", " response").map(StreamChunk::Append)
+        ): Flow<StreamFrame> =
+            flowOf("Anthropic", " streaming", " response").map(StreamFrame::Append)
 
         override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
             throw UnsupportedOperationException("Moderation is not supported by mock client.")
@@ -65,8 +65,8 @@ class MultiLLMPromptExecutorTest {
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>
-        ): Flow<StreamChunk> =
-            flowOf("Gemini", " streaming", " response").map(StreamChunk::Append)
+        ): Flow<StreamFrame> =
+            flowOf("Gemini", " streaming", " response").map(StreamFrame::Append)
 
         override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
             throw UnsupportedOperationException("Moderation is not supported by mock client.")

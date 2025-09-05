@@ -29,7 +29,7 @@ import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
-import ai.koog.prompt.streaming.StreamChunk
+import ai.koog.prompt.streaming.StreamFrame
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -224,7 +224,7 @@ public class OllamaClient(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
-    ): Flow<StreamChunk> = flow {
+    ): Flow<StreamFrame> = flow {
         require(model.provider == LLMProvider.Ollama) { "Model not supported by Ollama" }
 
         val response = client.post(DEFAULT_MESSAGE_PATH) {
@@ -249,9 +249,9 @@ public class OllamaClient(
                 chunk.message?.let { message ->
                     message.content
                         .takeIf { it.isNotEmpty() }
-                        ?.let { emit(StreamChunk.Append(it)) }
+                        ?.let { emit(StreamFrame.Append(it)) }
                     message.toolCalls?.map { toolCall ->
-                        StreamChunk.ToolCall(
+                        StreamFrame.ToolCall(
                             id = null,
                             name = toolCall.function.name,
                             content = toolCall.function.arguments.toString()

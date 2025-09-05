@@ -30,7 +30,7 @@ import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
-import ai.koog.prompt.streaming.StreamChunk
+import ai.koog.prompt.streaming.StreamFrame
 import io.github.oshai.kotlinlogging.KLogger
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.HttpTimeout
@@ -154,7 +154,7 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
      * Processes a provider-specific streaming response chunk.
      * Must be implemented by concrete client classes.
      */
-    protected abstract fun processStreamingChunk(chunk: TStreamResponse): List<StreamChunk>
+    protected abstract fun processStreamingChunk(chunk: TStreamResponse): List<StreamFrame>
 
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         val response = getResponse(prompt, model, tools)
@@ -165,7 +165,7 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
-    ): Flow<StreamChunk> {
+    ): Flow<StreamFrame> {
         logger.debug { "Executing streaming prompt: $prompt with model: $model" }
         model.requireCapability(LLMCapability.Completion)
 

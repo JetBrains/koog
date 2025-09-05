@@ -11,7 +11,7 @@ import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
-import ai.koog.prompt.streaming.StreamChunk
+import ai.koog.prompt.streaming.StreamFrame
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
@@ -47,8 +47,8 @@ class MultipleLLMPromptExecutorMockTest {
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>
-        ): Flow<StreamChunk> =
-            flowOf("OpenAI", " streaming", " response").map(StreamChunk::Append)
+        ): Flow<StreamFrame> =
+            flowOf("OpenAI", " streaming", " response").map(StreamFrame::Append)
     }
 
     // Mock client for Anthropic
@@ -65,8 +65,8 @@ class MultipleLLMPromptExecutorMockTest {
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>
-        ): Flow<StreamChunk> =
-            flowOf("Anthropic", " streaming", " response").map(StreamChunk::Append)
+        ): Flow<StreamFrame> =
+            flowOf("Anthropic", " streaming", " response").map(StreamFrame::Append)
     }
 
     // Mock client for Anthropic
@@ -83,8 +83,8 @@ class MultipleLLMPromptExecutorMockTest {
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>
-        ): Flow<StreamChunk> =
-            flowOf("Gemini", " streaming", " response").map(StreamChunk::Append)
+        ): Flow<StreamFrame> =
+            flowOf("Gemini", " streaming", " response").map(StreamFrame::Append)
     }
 
     private lateinit var executor: DefaultMultiLLMPromptExecutor

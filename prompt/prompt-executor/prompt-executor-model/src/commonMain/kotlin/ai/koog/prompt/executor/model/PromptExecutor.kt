@@ -5,7 +5,7 @@ import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
-import ai.koog.prompt.streaming.StreamChunk
+import ai.koog.prompt.streaming.StreamFrame
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.map
@@ -44,7 +44,7 @@ public interface PromptExecutor {
      */
     public fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> =
         executeStreamingWithTools(prompt, model, emptyList())
-            .filterIsInstance<StreamChunk.Append>()
+            .filterIsInstance<StreamFrame.Append>()
             .map { append -> append.text }
 
     /**
@@ -59,7 +59,7 @@ public interface PromptExecutor {
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor> = emptyList()
-    ): Flow<StreamChunk>
+    ): Flow<StreamFrame>
 
     /**
      * Receives multiple independent choices from the LLM.

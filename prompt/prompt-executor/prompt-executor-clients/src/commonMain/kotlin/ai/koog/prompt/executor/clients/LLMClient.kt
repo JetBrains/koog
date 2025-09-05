@@ -6,7 +6,7 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
-import ai.koog.prompt.streaming.StreamChunk
+import ai.koog.prompt.streaming.StreamFrame
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.map
@@ -39,7 +39,7 @@ public interface LLMClient {
      */
     public fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> =
         executeStreamingWithTools(prompt, model, emptyList())
-            .filterIsInstance<StreamChunk.Append>()
+            .filterIsInstance<StreamFrame.Append>()
             .map { append -> append.text }
 
     /**
@@ -54,7 +54,7 @@ public interface LLMClient {
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
-    ) : Flow<StreamChunk> = error("Not implemented for this client")
+    ) : Flow<StreamFrame> = error("Not implemented for this client")
 
     /**
      * Executes a prompt and returns a list of LLM choices.

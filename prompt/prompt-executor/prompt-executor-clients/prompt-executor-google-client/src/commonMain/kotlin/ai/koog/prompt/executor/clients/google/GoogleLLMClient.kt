@@ -20,7 +20,7 @@ import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
-import ai.koog.prompt.streaming.StreamChunk
+import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.structure.RegisteredBasicJsonSchemaGenerators
 import ai.koog.prompt.structure.RegisteredStandardJsonSchemaGenerators
 import ai.koog.prompt.structure.annotations.InternalStructuredOutputApi
@@ -146,7 +146,7 @@ public open class GoogleLLMClient(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
-    ): Flow<StreamChunk> = flow {
+    ): Flow<StreamFrame> = flow {
         logger.debug { "Executing streaming prompt: $prompt with model: $model" }
         require(model.capabilities.contains(LLMCapability.Completion)) {
             "Model ${model.id} does not support chat completions"
@@ -175,8 +175,8 @@ public open class GoogleLLMClient(
                         ?.candidates?.firstOrNull()?.content
                         ?.parts?.forEach { part ->
                             when(part) {
-                                is GooglePart.FunctionCall -> emit(StreamChunk.ToolCall(part.functionCall.id, part.functionCall.name, part.functionCall.args?.toString()?:"{}"))
-                                is GooglePart.Text -> emit(StreamChunk.Append(part.text))
+                                is GooglePart.FunctionCall -> emit(StreamFrame.ToolCall(part.functionCall.id, part.functionCall.name, part.functionCall.args?.toString()?:"{}"))
+                                is GooglePart.Text -> emit(StreamFrame.Append(part.text))
                                 else -> Unit
                             }
                         }

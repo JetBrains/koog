@@ -7,8 +7,8 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
-import ai.koog.prompt.streaming.StreamChunk
-import ai.koog.prompt.streaming.toStreamingFrame
+import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.streaming.toStreamFrame
 import ai.koog.prompt.tokenizer.Tokenizer
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -96,9 +96,9 @@ internal class MockLLMExecutor(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
-    ): Flow<StreamChunk> = flow {
+    ): Flow<StreamFrame> = flow {
         execute(prompt = prompt, model = model).forEach {
-            emit(it.toStreamingFrame())
+            emit(it.toStreamFrame())
         }
     }
 
