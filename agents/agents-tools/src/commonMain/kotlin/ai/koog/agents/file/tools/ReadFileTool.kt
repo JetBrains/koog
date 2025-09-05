@@ -88,7 +88,8 @@ public class ReadFileTool<Path>(private val fs: FileSystemProvider.ReadOnly<Path
      */
     override suspend fun execute(args: Args): Result {
         val path = fs.fromAbsolutePathString(args.path)
-        val metadata = validateNotNull(fs.metadata(path)) { "File not found: ${args.path} (ensure the path is absolute)" }
+        val metadata =
+            validateNotNull(fs.metadata(path)) { "File not found: ${args.path} (ensure the path is absolute)" }
         validate(metadata.type == FileMetadata.FileType.File) { "Not a file: ${args.path}" }
         validate(fs.getFileContentType(path) == FileMetadata.FileContentType.Text) {
             "File is not a text file: ${args.path}"
@@ -122,32 +123,35 @@ public class ReadFileTool<Path>(private val fs: FileSystemProvider.ReadOnly<Path
          */
         public val descriptor: ToolDescriptor = ToolDescriptor(
             name = "__read_file__",
-            description = text {
-                +"Reads a text file (throws if non-text) with optional line range selection."
-                +"Returns file content along with metadata (path, size, line count, hidden status)."
-                +"Uses 0-based line indexing."
-            },
+            description = """
+                Reads a text file (throws if non-text) with optional line range selection. TEXT-ONLY - never reads binary files.
+                
+                Use this to:
+                - Read entire text files or specific line ranges
+                - Get file content along with metadata
+                - Extract portions of files using 0-based line indexing
+                
+                Returns file content and metadata (name, extension, path, hidden, size, contentType).
+            """.trimIndent(),
             requiredParameters = listOf(
                 ToolParameterDescriptor(
                     name = "path",
-                    description = text { +"Absolute path to target file." },
-                    type = ToolParameterType.String,
+                    description = "Absolute path to the text file you want to read (e.g., /home/user/file.txt)",
+                    type = ToolParameterType.String
                 )
             ),
             optionalParameters = listOf(
                 ToolParameterDescriptor(
                     name = "startLine",
-                    description = text { +"First line to include (0-based, inclusive)." },
-                    type = ToolParameterType.Integer,
+                    description = "First line to include (0-based, inclusive). Default is 0 to start from beginning",
+                    type = ToolParameterType.Integer
                 ),
                 ToolParameterDescriptor(
                     name = "endLine",
-                    description = text {
-                        +"First line to exclude (0-based, exclusive). Use -1 for end."
-                    },
-                    type = ToolParameterType.Integer,
-                ),
-            ),
+                    description = "First line to exclude (0-based, exclusive). Use -1 to read until end. Default is -1",
+                    type = ToolParameterType.Integer
+                )
+            )
         )
     }
 }
