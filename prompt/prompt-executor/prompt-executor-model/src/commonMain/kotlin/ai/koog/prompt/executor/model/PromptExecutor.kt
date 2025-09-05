@@ -48,12 +48,12 @@ public interface PromptExecutor {
             .map { append -> append.text }
 
     /**
-     * Executes a given prompt using the specified language model and returns a stream of output as a flow of `StreamingFrame` objects.
+     * Executes a given prompt using the specified language model and returns a stream of output as a flow of `StreamFrame` objects.
      *
      * @param prompt The prompt containing input messages and parameters to guide the language model execution.
      * @param model The language model to be used for processing the prompt.
      * @param tools A list of `ToolDescriptor` objects that define the tools available for the execution.
-     * @return A flow emitting `StreamingFrame` objects that represent the streaming output of the language model.
+     * @return A flow emitting `StreamFrame` objects that represent the streaming output of the language model.
      */
     public fun executeStreamingWithTools(
         prompt: Prompt,
