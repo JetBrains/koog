@@ -1,6 +1,8 @@
 package ai.koog.agents.ext.agent
 
 import ai.koog.agents.core.agent.context.AIAgentContext
+import ai.koog.agents.core.agent.context.AIAgentGraphContext
+import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
 import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.dsl.builder.AIAgentBuilderDslMarker
@@ -82,7 +84,7 @@ public val Boolean.asConditionResult: ConditionResult
  */
 @AIAgentBuilderDslMarker
 public inline fun <reified Input : Any, reified Output> AIAgentSubgraphBuilderBase<*, *>.subgraphWithRetry(
-    noinline condition: suspend AIAgentContext.(Output) -> ConditionResult,
+    noinline condition: suspend AIAgentGraphContextBase.(Output) -> ConditionResult,
     maxRetries: Int,
     conditionDescription: String? = null,
     toolSelectionStrategy: ToolSelectionStrategy = ToolSelectionStrategy.ALL,

@@ -1,6 +1,7 @@
 package ai.koog.agents.core.dsl.builder
 
 import ai.koog.agents.core.agent.context.AIAgentContext
+import ai.koog.agents.core.agent.context.AIAgentGraphContext
 import ai.koog.agents.core.agent.entity.AIAgentEdge
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase
 import ai.koog.agents.core.utils.Option
@@ -57,7 +58,7 @@ public class AIAgentEdgeBuilder<IncomingOutput, OutgoingInput, CompatibleOutput 
 public class AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput> internal constructor(
     internal val fromNode: AIAgentNodeBase<*, IncomingOutput>,
     internal val toNode: AIAgentNodeBase<OutgoingInput, *>,
-    internal val forwardOutputComposition: suspend (AIAgentContext, IncomingOutput) -> Option<IntermediateOutput>
+    internal val forwardOutputComposition: suspend (AIAgentGraphContext, IncomingOutput) -> Option<IntermediateOutput>
 ) {
     /**
      * Filters the intermediate outputs of the [ai.koog.agents.core.agent.entity.AIAgentNode] based on a specified condition.
@@ -69,7 +70,7 @@ public class AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, 
      */
     @EdgeTransformationDslMarker
     public infix fun onCondition(
-        block: suspend AIAgentContext.(output: IntermediateOutput) -> Boolean
+        block: suspend AIAgentGraphContext.(output: IntermediateOutput) -> Boolean
     ): AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput> {
         return AIAgentEdgeBuilderIntermediate(
             fromNode = fromNode,
@@ -90,7 +91,7 @@ public class AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, 
      */
     @EdgeTransformationDslMarker
     public infix fun <NewIntermediateOutput> transformed(
-        block: suspend AIAgentContext.(IntermediateOutput) -> NewIntermediateOutput
+        block: suspend AIAgentGraphContext.(IntermediateOutput) -> NewIntermediateOutput
     ): AIAgentEdgeBuilderIntermediate<IncomingOutput, NewIntermediateOutput, OutgoingInput> {
         return AIAgentEdgeBuilderIntermediate(
             fromNode = fromNode,

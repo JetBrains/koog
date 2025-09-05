@@ -44,7 +44,7 @@ public class FunctionalAIAgent<Input, Output>(
     public val agentConfig: AIAgentConfigBase,
     public val toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     public val strategy: AIAgentFunctionalStrategy<Input, Output>,
-    override val id: String = Uuid.random().toString(),
+    private val _id: String? = null,
     public val clock: Clock = Clock.System,
     public val featureContext: FeatureContext.() -> Unit = {}
 ) : AIAgent<Input, Output> {
@@ -52,6 +52,8 @@ public class FunctionalAIAgent<Input, Output>(
     private companion object {
         private val logger = KotlinLogging.logger {}
     }
+
+    override val id: String by lazy { _id ?: Uuid.random().toString() }
 
     private val pipeline = AIAgentNonGraphPipeline()
 
@@ -105,6 +107,7 @@ public class FunctionalAIAgent<Input, Output>(
             isRunning = true
         }
 
+        pipeline.prepareFeatures()
         val runId = Uuid.random().toString()
 
         val llm = AIAgentLLMContext(

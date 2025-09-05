@@ -5,7 +5,7 @@ import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
-import ai.koog.agents.core.dsl.builder.AIAgentStrategyBuilder
+import ai.koog.agents.core.dsl.builder.AIAgentGraphStrategyBuilder
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.tools.ToolRegistry
@@ -23,7 +23,7 @@ class ParallelNodesMergeContextTest {
 
     private val testKey = AIAgentStorageKey<String>("testKey")
 
-    private fun AIAgentStrategyBuilder<String, String>.testNode(
+    private fun AIAgentGraphStrategyBuilder<String, String>.testNode(
         name: String,
         value: String
     ): AIAgentNodeDelegate<Unit, String> {

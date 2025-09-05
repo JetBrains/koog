@@ -1,6 +1,7 @@
 package ai.koog.agents.ext.agent
 
 import ai.koog.agents.core.agent.context.AIAgentContext
+import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
 import ai.koog.agents.core.dsl.builder.AIAgentBuilderDslMarker
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
@@ -204,7 +205,7 @@ public inline fun <reified Input, reified ProvidedResult : SubgraphResult> AIAge
     finishTool: ProvideSubgraphResult<ProvidedResult>,
     llmModel: LLModel? = null,
     llmParams: LLMParams? = null,
-    noinline defineTask: suspend AIAgentContext.(input: Input) -> String
+    noinline defineTask: suspend AIAgentGraphContextBase.(input: Input) -> String
 ): AIAgentSubgraphDelegate<Input, ProvidedResult> = subgraph(
     toolSelectionStrategy = toolSelectionStrategy,
     llmModel = llmModel,
