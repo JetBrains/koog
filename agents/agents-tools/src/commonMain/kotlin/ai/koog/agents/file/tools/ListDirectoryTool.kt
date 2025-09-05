@@ -19,23 +19,21 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 
 /**
- * Tool that lists directory contents as a hierarchical tree.
+ * Provides functionality to list directory contents with configurable depth and glob filtering parameters,
+ * returning a structured directory tree with file and folder metadata.
  *
- * Reads directory structure without modifying anything. Supports depth control
- * and glob pattern filtering to focus on specific files.
- *
- * @param Path the filesystem path type
- * @property fs filesystem provider for read-only directory access
+ * @param Path the filesystem path type used by the provider
+ * @property fs read-only filesystem provider for accessing directories
  */
 public class ListDirectoryTool<Path>(private val fs: FileSystemProvider.ReadOnly<Path>) :
     Tool<ListDirectoryTool.Args, ListDirectoryTool.Result>() {
 
     /**
-     * Parameters for listing a directory.
+     * Specifies which directory to list and how to traverse its contents.
      *
-     * @property path absolute path to the directory to list
-     * @property depth how many levels deep to traverse (1 = direct children only, 2 = include subdirectories, etc.)
-     * @property filter glob pattern to match specific files/folders (e.g., "*.kt" for Kotlin files)
+     * @property path absolute filesystem path to the target directory
+     * @property depth how many levels deep to traverse (1 = direct children only, 2 = include subdirectories, etc.), defaults to 1
+     * @property filter glob pattern to match specific files/folders (e.g., "*.kt" for Kotlin files), defaults to null
      */
     @Serializable
     public data class Args(
@@ -45,10 +43,11 @@ public class ListDirectoryTool<Path>(private val fs: FileSystemProvider.ReadOnly
     ) : ToolArgs
 
     /**
-     * The directory listing result containing a tree of files and folders.
+     * Contains the successfully listed directory with its hierarchical structure and metadata.
      *
-     * Contains a [FileSystemEntry.Folder] representing the listed directory
-     * with all its contents organized hierarchically.
+     * The result encapsulates a [FileSystemEntry.Folder] which includes:
+     * - Directory metadata (name, path, hidden status)
+     * - Child entries organized hierarchically with their metadata
      *
      * @property root the directory tree starting from the requested path
      */
@@ -57,10 +56,12 @@ public class ListDirectoryTool<Path>(private val fs: FileSystemProvider.ReadOnly
         override fun getSerializer(): KSerializer<Result> = serializer()
 
         /**
-         * Formats the tree as indented text for display.
+         * Converts the result to a structured text representation.
          *
-         * Shows files with size/line counts and marks hidden files.
-         * Directories end with `/` and indent increases by 2 spaces per level.
+         * Renders the directory tree in the following format:
+         * - Directory paths end with `/` and increase indent by 2 spaces per level
+         * - File paths with metadata in parentheses (size, line count if available, "hidden" if the file is hidden)
+         * - Filtered results show only matching entries
          *
          * Example:
          * ```
@@ -71,6 +72,8 @@ public class ListDirectoryTool<Path>(private val fs: FileSystemProvider.ReadOnly
          *   README.md (2.1 KiB, 67 lines)
          *   .gitignore (0.1 KiB, 12 lines, hidden)
          * ```
+         *
+         * @return formatted text representation of the directory tree
          */
         override fun toStringDefault(): String = text { folder(root) }
     }
@@ -79,11 +82,16 @@ public class ListDirectoryTool<Path>(private val fs: FileSystemProvider.ReadOnly
     override val descriptor: ToolDescriptor = Companion.descriptor
 
     /**
-     * Lists the directory and returns its contents as a tree.
+     * Lists directory contents from the filesystem with optional depth and pattern filtering.
      *
-     * @param args the directory path, depth, and optional filter
-     * @return tree structure of the directory contents
-     * @throws ToolException.ValidationFailure if a path doesn't exist, isn't a directory,
+     * Performs validation before listing:
+     * - Validates the depth parameter is positive
+     * - Verifies the path exists in the filesystem
+     * - Confirms the path points to a directory
+     *
+     * @param args arguments specifying the directory path, depth, and optional filter
+     * @return [Result] containing the directory tree with its contents and metadata
+     * @throws ToolException.ValidationFailure if the path doesn't exist, isn't a directory,
      *         depth is invalid, or filter matches nothing
      */
     override suspend fun execute(args: Args): Result {
@@ -112,6 +120,11 @@ public class ListDirectoryTool<Path>(private val fs: FileSystemProvider.ReadOnly
     }
 
     public companion object {
+        /**
+         * Tool descriptor for the list directory operation.
+         *
+         * Defines the tool interface for listing directories with depth control and pattern filtering.
+         */
         public val descriptor: ToolDescriptor = ToolDescriptor(
             name = "__list_directory__",
             description = """
