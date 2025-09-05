@@ -39,14 +39,15 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
+import ai.koog.prompt.tokenizer.SimpleRegexBasedTokenizer
 import io.opentelemetry.sdk.trace.export.SpanExporter
-import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import org.junit.jupiter.api.Disabled
-import org.junit.jupiter.api.Test
+import kotlin.test.Ignore
+import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -55,7 +56,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
     private val json = Json { allowStructuredMapKeys = true }
 
     @Test
-    fun testSingleLLMCall() = runTest {
+    fun testSingleLLMCall() = runBlocking {
         MockSpanExporter().use { mockSpanExporter ->
 
             val strategy = strategy("single-llm-call-strategy") {
@@ -158,7 +159,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
     ): Map<String, Any>
 
     @Test
-    fun testLLMCallToolCallLLMCall() = runTest {
+    fun testLLMCallToolCallLLMCall() = runBlocking {
         MockSpanExporter().use { mockSpanExporter ->
             val strategy = strategy("llm-tool-llm-strategy") {
                 val llmRequest by nodeLLMRequest("LLM Request", allowToolCalls = true)
@@ -296,7 +297,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
     }
 
     @Test
-    fun testMultipleToolCalls() = runTest {
+    fun testMultipleToolCalls() = runBlocking {
         MockSpanExporter().use { mockSpanExporter ->
             val strategy = strategy("multiple-tool-calls-strategy") {
                 val llmRequest by nodeLLMRequest("Initial LLM Request", allowToolCalls = true)
@@ -400,7 +401,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
     }
 
     @Test
-    fun testSubgraphWithFinishTool() = runTest {
+    fun testSubgraphWithFinishTool() = runBlocking {
         MockSpanExporter().use { mockSpanExporter ->
             val strategy = strategy("subgraph-finish-tool-strategy") {
                 val sg by subgraphWithTask<String>(
@@ -463,7 +464,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
     }
 
     @Test
-    fun `test adapter customizes spans after creation`() = runTest {
+    fun `test adapter customizes spans after creation`() = runBlocking {
         MockSpanExporter().use { mockExporter ->
             val systemPrompt = "You are the application that predicts weather"
             val userPrompt = "What's the weather in Paris?"
@@ -542,7 +543,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
     }
 
     @Test
-    fun testStructuredDataLLMCall() = runTest {
+    fun testStructuredDataLLMCall() = runBlocking {
         MockSpanExporter().use { mockSpanExporter ->
             @Serializable
             @SerialName("SimpleWeatherForecast")
@@ -625,10 +626,149 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
         }
     }
 
-    @Disabled("KG-288")
+    abstract fun testTokensCountAttributesGetExpectedInitialLLMCallSpanAttributes(
+        model: LLModel,
+        temperature: Double,
+        maxTokens: Long,
+        systemPrompt: String,
+        userPrompt: String,
+        runId: String,
+        toolCallId: String,
+        outputTokens: Long
+    ): Map<String, Any>
+
+    abstract fun testTokensCountAttributesGetExpectedFinalLLMCallSpansAttributes(
+        model: LLModel,
+        temperature: Double,
+        maxTokens: Long,
+        systemPrompt: String,
+        userPrompt: String,
+        runId: String,
+        toolCallId: String,
+        toolResponse: String,
+        finalResponse: String,
+        outputTokens: Long
+    ): Map<String, Any>
+
+    @Test
+    fun testTokensCountAttributes() = runBlocking {
+        MockSpanExporter().use { mockSpanExporter ->
+            val strategy = strategy("llm-tool-llm-strategy") {
+                val llmRequest by nodeLLMRequest("LLM Request", allowToolCalls = true)
+                val executeTool by nodeExecuteTool("Execute Tool")
+                val sendToolResult by nodeLLMSendToolResult("Send Tool Result")
+
+                edge(nodeStart forwardTo llmRequest)
+                edge(llmRequest forwardTo executeTool onToolCall { true })
+                edge(executeTool forwardTo sendToolResult)
+                edge(sendToolResult forwardTo nodeFinish onAssistantMessage { true })
+            }
+
+            val model = OpenAIModels.Chat.GPT4o
+            val temperature = 0.4
+            val maxTokens = 123
+            val systemPrompt = "You are the application that predicts weather"
+            val userPrompt = "What's the weather in Paris?"
+            val toolCallArgs = TestGetWeatherTool.Args("Paris")
+            val toolResponse = TestGetWeatherTool.DEFAULT_PARIS_RESULT
+            val finalResponse = "The weather in Paris is rainy and overcast, with temperatures around 57°F"
+
+            val toolCallId = "get-weather-tool-call-id"
+            val tokenizer = SimpleRegexBasedTokenizer()
+
+            // Set tokenizer explicitly to calculate output tokens and return the value in responses
+            val mockExecutor = getMockExecutor(tokenizer = tokenizer) {
+                mockLLMToolCall(
+                    tool = TestGetWeatherTool,
+                    args = toolCallArgs,
+                    toolCallId = toolCallId
+                ) onRequestEquals userPrompt
+                mockLLMAnswer(response = finalResponse) onRequestContains toolResponse
+            }
+
+            val toolRegistry = ToolRegistry {
+                tool(TestGetWeatherTool)
+            }
+
+            runAgentWithStrategy(
+                strategy = strategy,
+                promptExecutor = mockExecutor,
+                toolRegistry = toolRegistry,
+                systemPrompt = systemPrompt,
+                userPrompt = userPrompt,
+                model = model,
+                temperature = temperature,
+                maxTokens = maxTokens,
+                spanExporter = mockSpanExporter
+            )
+
+            // Assert collected spans
+            val actualSpans = mockSpanExporter.collectedSpans
+
+            // Assert LLM Calls
+            // Initial call
+            val llmRequestNode = actualSpans.firstOrNull { it.name == "node.LLM Request" }
+            assertNotNull(llmRequestNode)
+
+            val llmSpans = actualSpans.filter { it.name == "llm.test-prompt-id" }
+            assertEquals(2, llmSpans.size)
+
+            val actualInitialLLMCallSpan = llmSpans.firstOrNull { it.parentSpanId == llmRequestNode.spanId }
+            assertNotNull(actualInitialLLMCallSpan)
+
+            val actualInitialLLMCallSpanAttributes =
+                actualInitialLLMCallSpan.attributes.asMap().map { (key, value) -> key.key to value }.toMap()
+
+            val expectedInitialLLMCallSpansAttributes =
+                testTokensCountAttributesGetExpectedInitialLLMCallSpanAttributes(
+                    model = model,
+                    temperature = temperature,
+                    maxTokens = maxTokens.toLong(),
+                    systemPrompt = systemPrompt,
+                    userPrompt = userPrompt,
+                    runId = mockSpanExporter.lastRunId,
+                    toolCallId = toolCallId,
+                    outputTokens = tokenizer.countTokens(
+                        text = TestGetWeatherTool.encodeArgsToString(TestGetWeatherTool.Args("Paris"))
+                    ).toLong()
+                )
+
+            assertEquals(expectedInitialLLMCallSpansAttributes.size, actualInitialLLMCallSpanAttributes.size)
+            assertMapsEqual(expectedInitialLLMCallSpansAttributes, actualInitialLLMCallSpanAttributes)
+
+            // Final LLM response
+            val sendToolResultNode = actualSpans.firstOrNull { it.name == "node.Send Tool Result" }
+            assertNotNull(sendToolResultNode)
+
+            val actualFinalLLMCallSpan = llmSpans.firstOrNull { it.parentSpanId == sendToolResultNode.spanId }
+            assertNotNull(actualFinalLLMCallSpan)
+
+            val actualFinalLLMCallSpanAttributes =
+                actualFinalLLMCallSpan.attributes.asMap().map { (key, value) -> key.key to value }.toMap()
+
+            val expectedFinalLLMCallSpansAttributes =
+                testTokensCountAttributesGetExpectedFinalLLMCallSpansAttributes(
+                    model = model,
+                    temperature = temperature,
+                    maxTokens = maxTokens.toLong(),
+                    systemPrompt = systemPrompt,
+                    userPrompt = userPrompt,
+                    runId = mockSpanExporter.lastRunId,
+                    toolCallId = toolCallId,
+                    toolResponse = toolResponse,
+                    finalResponse = finalResponse,
+                    outputTokens = tokenizer.countTokens(text = finalResponse).toLong(),
+                )
+
+            assertEquals(expectedFinalLLMCallSpansAttributes.size, actualFinalLLMCallSpanAttributes.size)
+            assertMapsEqual(expectedFinalLLMCallSpansAttributes, actualFinalLLMCallSpanAttributes)
+        }
+    }
+
+    @Ignore("KG-288")
     @OptIn(DetachedPromptExecutorAPI::class)
     @Test
-    fun testContentModerationEventOnLLMSpan() = runTest {
+    fun testContentModerationEventOnLLMSpan() = runBlocking {
         MockSpanExporter().use { mockSpanExporter ->
             val strategy = strategy<String, String>("moderation-strategy") {
                 val moderate by node<String, String>("moderate-message") { input ->
@@ -695,9 +835,9 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
         }
     }
 
-    @Disabled("KG-288")
+    @Ignore("KG-288")
     @Test
-    fun testEmbeddingsTracingWithOpenAI() = runTest {
+    fun testEmbeddingsTracingWithOpenAI() = runBlocking {
         MockSpanExporter().use { mockSpanExporter ->
             val model = OpenAIModels.Embeddings.TextEmbeddingAda002
             val openaiKey = System.getenv("OPENAI_API_KEY")
@@ -744,6 +884,8 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
         }
     }
 
+    //region Private Methods
+
     /**
      * Runs an agent with the given strategy and verifies the spans.
      */
@@ -755,6 +897,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
         toolRegistry: ToolRegistry? = null,
         model: LLModel? = null,
         temperature: Double? = null,
+        maxTokens: Int? = null,
         spanExporter: SpanExporter? = null,
         verbose: Boolean = true
     ) {
@@ -770,6 +913,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
             model = model,
             clock = testClock,
             temperature = temperature,
+            maxTokens = maxTokens,
             systemPrompt = systemPrompt,
             toolRegistry = toolRegistry,
         ) {
@@ -782,4 +926,6 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
             agent.run(userPrompt ?: "User prompt message")
         }
     }
+
+    //endregion Private Methods
 }

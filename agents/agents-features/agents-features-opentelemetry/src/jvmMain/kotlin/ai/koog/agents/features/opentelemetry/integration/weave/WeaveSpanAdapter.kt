@@ -1,6 +1,7 @@
 package ai.koog.agents.features.opentelemetry.integration.weave
 
 import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute
+import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes
 import ai.koog.agents.features.opentelemetry.event.AssistantMessageEvent
 import ai.koog.agents.features.opentelemetry.event.ChoiceEvent
 import ai.koog.agents.features.opentelemetry.event.EventBodyFields
@@ -12,6 +13,7 @@ import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfig
 import ai.koog.agents.features.opentelemetry.integration.SpanAdapter
 import ai.koog.agents.features.opentelemetry.integration.bodyFieldsToCustomAttribute
 import ai.koog.agents.features.opentelemetry.integration.isSdkArrayPrimitive
+import ai.koog.agents.features.opentelemetry.integration.replaceAttributes
 import ai.koog.agents.features.opentelemetry.integration.replaceBodyFields
 import ai.koog.agents.features.opentelemetry.span.GenAIAgentSpan
 import ai.koog.agents.features.opentelemetry.span.InferenceSpan
@@ -137,6 +139,15 @@ internal class WeaveSpanAdapter(private val openTelemetryConfig: OpenTelemetryCo
     }
 
     private fun AssistantMessageEvent.convertToCompletion(span: InferenceSpan, index: Int) {
+        // Convert token attributes to Weave format
+        span.replaceAttributes<SpanAttributes.Usage.InputTokens> { attribute ->
+            CustomAttribute("gen_ai.usage.prompt_tokens", attribute.value)
+        }
+
+        span.replaceAttributes<SpanAttributes.Usage.OutputTokens> { attribute ->
+            CustomAttribute("gen_ai.usage.completion_tokens", attribute.value)
+        }
+
         // Convert event data fields into the span attributes
         span.bodyFieldsToCustomAttribute<EventBodyFields.Role>(this) { role ->
             CustomAttribute("gen_ai.completion.$index.${role.key}", role.value)
@@ -176,6 +187,15 @@ internal class WeaveSpanAdapter(private val openTelemetryConfig: OpenTelemetryCo
     }
 
     private fun ChoiceEvent.convertToCompletion(span: InferenceSpan, index: Int) {
+        // Convert tokens attributes to Weave format
+        span.replaceAttributes<SpanAttributes.Usage.InputTokens> { attribute ->
+            CustomAttribute("gen_ai.usage.prompt_tokens", attribute.value)
+        }
+
+        span.replaceAttributes<SpanAttributes.Usage.OutputTokens> { attribute ->
+            CustomAttribute("gen_ai.usage.completion_tokens", attribute.value)
+        }
+
         // Convert event data fields into the span attributes
         span.bodyFieldsToCustomAttribute<EventBodyFields.Role>(this) { role ->
             // Weave expects to have an assistant message for correct displaying the responses from LLM.

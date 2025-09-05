@@ -26,13 +26,21 @@ internal object OpenTelemetryTestAPI {
         model: LLModel? = null,
         clock: Clock = Clock.System,
         temperature: Double? = 0.0,
+        maxTokens: Int? = null,
         systemPrompt: String? = null,
         userPrompt: String? = null,
         assistantPrompt: String? = null,
         installFeatures: GraphAIAgent.FeatureContext.() -> Unit = { }
     ): AIAgent<String, String> {
         val agentConfig = AIAgentConfig(
-            prompt = prompt(promptId ?: "Test prompt", clock = clock, params = LLMParams(temperature = temperature)) {
+            prompt = prompt(
+                id = promptId ?: "Test prompt",
+                clock = clock,
+                params = LLMParams(
+                    temperature = temperature,
+                    maxTokens = maxTokens
+                )
+            ) {
                 systemPrompt?.let { system(systemPrompt) }
                 userPrompt?.let { user(userPrompt) }
                 assistantPrompt?.let { assistant(assistantPrompt) }

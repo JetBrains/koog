@@ -51,6 +51,22 @@ internal inline fun <reified TBodyField> GenAIAgentSpan.replaceBodyFields(
     eventBodyFields.forEach { bodyField -> event.removeBodyField(bodyField) }
 }
 
+internal inline fun <reified TAttribute : Attribute> GenAIAgentSpan.replaceAttributes(
+    processAttributeAction: GenAIAgentSpan.(TAttribute) -> Attribute
+) {
+    val attributesToReplace = this.attributes.filterIsInstance<TAttribute>()
+
+    if (attributesToReplace.isEmpty()) {
+        return
+    }
+
+    attributesToReplace.forEach { attributeToReplace ->
+        val newAttribute = processAttributeAction(attributeToReplace)
+        removeAttribute(attributeToReplace)
+        addAttribute(newAttribute)
+    }
+}
+
 internal val Any.isSdkArrayPrimitive
     get() = this is HiddenString ||
         this is CharSequence ||
