@@ -4,6 +4,7 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.utils.mapTextOnly
 import ai.koog.agents.example.ApiKeyService
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
@@ -19,7 +20,7 @@ fun main(): Unit = runBlocking {
 
             llm.writeSession {
                 updatePrompt { user(input) }
-                val markdownStream = requestLLMStreaming(mdDefinition)
+                val markdownStream = requestLLMStreamingWithTools(mdDefinition).mapTextOnly()
                 parseMarkdownStreamToBooks(markdownStream).collect { book ->
                     books.add(book)
                     println("Parsed Book: ${book.bookName} by ${book.author}")

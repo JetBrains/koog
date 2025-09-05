@@ -12,11 +12,13 @@ import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolResult
+import ai.koog.agents.core.utils.mapTextOnly
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.PromptBuilder
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.structure.StructureFixingParser
 import ai.koog.prompt.structure.StructuredDataDefinition
 import ai.koog.prompt.structure.StructuredOutputConfig
@@ -229,6 +231,32 @@ public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStr
         }
     }
 
+
+/**
+ * A node that appends a user message to the LLM prompt, streams LLM response and transforms the stream data.
+ *
+ * @param name Optional node name.
+ * @param structureDefinition Optional structure to guide the LLM response.
+ * @param transformStreamData Function to process the streamed data.
+ */
+@AIAgentBuilderDslMarker
+public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStreamingWithTools(
+    name: String? = null,
+    structureDefinition: StructuredDataDefinition? = null,
+    transformStreamData: suspend (Flow<StreamFrame>) -> Flow<T>
+): AIAgentNodeDelegate<String, Flow<T>> =
+    node(name) { message ->
+        llm.writeSession {
+            updatePrompt {
+                user(message)
+            }
+
+            val stream = requestLLMStreamingWithTools(structureDefinition)
+
+            transformStreamData(stream)
+        }
+    }
+
 /**
  * A node that appends a user message to the LLM prompt, streams LLM response and transforms the stream data.
  *
@@ -242,16 +270,8 @@ public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStreaming(
     structureDefinition: StructuredDataDefinition? = null,
     transformStreamData: suspend (Flow<String>) -> Flow<T>
 ): AIAgentNodeDelegate<String, Flow<T>> =
-    node(name) { message ->
-        llm.writeSession {
-            updatePrompt {
-                user(message)
-            }
-
-            val stream = requestLLMStreaming(structureDefinition)
-
-            transformStreamData(stream)
-        }
+    nodeLLMRequestStreamingWithTools(name, structureDefinition) {
+        transformStreamData(it.mapTextOnly())
     }
 
 /**
