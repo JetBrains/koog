@@ -62,7 +62,7 @@ object CalculatorChatExecutor : PromptExecutor {
     ): Flow<StreamingFrame> =
         flow {
             try {
-                execute(prompt, model).forEach {
+                execute(prompt, model, tools).forEach {
                     emit(it.toStreamingFrame())
                 }
             } catch (t: CancellationException) {
