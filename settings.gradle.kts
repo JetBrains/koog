@@ -66,4 +66,6 @@ include(":koog-spring-boot-starter")
 include(":koog-ktor")
 include(":docs")
 
+include(":koog-cli")
+
 include(":test-utils")

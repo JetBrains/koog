@@ -10,6 +10,7 @@ The following built-in tools are available:
 | AskUser      | `__ask_user__`                      | Lets the agent ask the user for input. It prints the agent message to the console and waits for user response.           |
 | ExitTool     | `__exit__`                          | Lets the agent finish the conversation and terminate the session.                                                        |
 | ReadFileTool | `__read_file__`                     | Reads text file with optional line range selection. Returns formatted content with metadata using 0-based line indexing. |
+| EditFileTool | `__edit_file__`                     | Makes a single, targeted text replacement in a file; can also create new files or fully replace contents.               |
 
 
 ## Registering built-in tools
