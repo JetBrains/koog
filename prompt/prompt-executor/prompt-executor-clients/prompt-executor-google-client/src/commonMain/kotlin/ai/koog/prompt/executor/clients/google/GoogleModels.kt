@@ -14,13 +14,13 @@ import ai.koog.prompt.llm.LLModel
  * Google Gemini models and their capabilities.
  * See https://ai.google.dev/gemini-api/docs for more information.
  *
- * | Name                        | Speed     | Price (per 1M tokens)        | Input                            | Output              |
- * |-----------------------------|-----------|------------------------------|----------------------------------|---------------------|
- * | [Gemini2_0Flash]            | Fast      | $0.10-$0.70 / $0.40          | Audio, Image, Video, Text, Tools | Text, Tools         |
- * | [Gemini2_0Flash001]         | Fast      | $0.10-$0.70 / $0.40          | Audio, Image, Video, Text, Tools | Text, Tools         |
- * | [Gemini2_0FlashLite]        | Very fast | $0.075 / $0.30               | Audio, Image, Video, Text, Tools | Text, Tools         |
- * | [Gemini2_5Pro]              | Slow      | $1.25-$2.50 / $10.00-$15.00² | Audio, Image, Video, Text, Tools | Text, Tools         |
- * | [Gemini2_5Flash]            | Medium    | $0.15-$1.00 / $0.60-$3.50³   | Audio, Image, Video, Text, Tools | Text, Tools         |
+ * | Name                        | Speed     | Price (per 1M tokens)        | Input                                      | Output              |
+ * |-----------------------------|-----------|------------------------------|--------------------------------------------|---------------------|
+ * | [Gemini2_0Flash]            | Fast      | $0.10-$0.70 / $0.40          | Audio, Image, Video, Text, Tools, Document | Text, Tools         |
+ * | [Gemini2_0Flash001]         | Fast      | $0.10-$0.70 / $0.40          | Audio, Image, Video, Text, Tools, Document | Text, Tools         |
+ * | [Gemini2_0FlashLite]        | Very fast | $0.075 / $0.30               | Audio, Image, Video, Text, Tools, Document | Text, Tools         |
+ * | [Gemini2_5Pro]              | Slow      | $1.25-$2.50 / $10.00-$15.00² | Audio, Image, Video, Text, Tools, Document | Text, Tools         |
+ * | [Gemini2_5Flash]            | Medium    | $0.15-$1.00 / $0.60-$3.50³   | Audio, Image, Video, Text, Tools, Document | Text, Tools         |
  *
  * @see <a href="modelcards.withgoogle.com/model-cards">
  */
@@ -33,7 +33,7 @@ public object GoogleModels : LLModelDefinitions {
         LLMCapability.Schema.JSON.Basic,
         LLMCapability.Schema.JSON.Standard,
         LLMCapability.Completion,
-        LLMCapability.MultipleChoices,
+        LLMCapability.MultipleChoices
     )
 
     /**
@@ -48,7 +48,7 @@ public object GoogleModels : LLModelDefinitions {
      * Multimodal capabilities including vision (without tools)
      */
     private val multimodalCapabilities: List<LLMCapability> =
-        standardCapabilities + listOf(LLMCapability.Vision.Image, LLMCapability.Vision.Video, LLMCapability.Audio)
+        standardCapabilities + listOf(LLMCapability.Vision.Image, LLMCapability.Vision.Video, LLMCapability.Audio, LLMCapability.Document)
 
     /**
      * Full capabilities including multimodal and tools
