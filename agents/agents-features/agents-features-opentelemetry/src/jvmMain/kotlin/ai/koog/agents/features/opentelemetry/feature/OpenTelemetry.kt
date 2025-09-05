@@ -270,8 +270,9 @@ public class OpenTelemetry {
                     parent = nodeExecuteSpan,
                     runId = runId,
                     model = model,
-                    temperature = temperature,
                     promptId = promptId,
+                    temperature = temperature,
+                    maxTokens = eventContext.prompt.params.maxTokens,
                 )
 
                 // Add events to the InferenceSpan after the span is created
@@ -326,16 +327,33 @@ public class OpenTelemetry {
 
                 val provider = eventContext.model.provider
 
+                // Add attributes to the InferenceSpan before finishing the span
+                val attributesToAdd = buildList {
+                    eventContext.responses.lastOrNull()?.let { message ->
+                        message.metaInfo.inputTokensCount?.let { inputTokensCount ->
+                            add(SpanAttributes.Usage.InputTokens(inputTokensCount))
+                        }
+                        message.metaInfo.outputTokensCount?.let { outputTokensCount ->
+                            add(SpanAttributes.Usage.OutputTokens(outputTokensCount))
+                        }
+                        message.metaInfo.totalTokensCount?.let { totalTokensCount ->
+                            add(SpanAttributes.Usage.TotalTokens(totalTokensCount))
+                        }
+                    }
+                }
+
+                inferenceSpan.addAttributes(attributesToAdd)
+
                 // Add events to the InferenceSpan before finishing the span
                 val eventsToAdd = buildList {
                     eventContext.responses.mapIndexed { index, message ->
                         when (message) {
-                            is Message.Assistant -> add(
-                                AssistantMessageEvent(provider, message)
-                            )
-                            is Message.Tool.Call -> add(
-                                ChoiceEvent(provider, message, arguments = message.contentJson, index = index)
-                            )
+                            is Message.Assistant -> {
+                                add(AssistantMessageEvent(provider, message))
+                            }
+                            is Message.Tool.Call -> {
+                                add(ChoiceEvent(provider, message, arguments = message.contentJson, index = index))
+                            }
                         }
                     }
 
