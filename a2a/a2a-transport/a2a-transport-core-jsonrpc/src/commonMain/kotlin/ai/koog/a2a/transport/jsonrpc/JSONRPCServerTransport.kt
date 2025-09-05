@@ -95,8 +95,8 @@ public abstract class JSONRPCServerTransport : ServerTransport {
     protected inline fun <reified T> JSONRPCRequest.toRequest(): Request<T> {
         val data = try {
             JSONRPCJson.decodeFromJsonElement<T>(params)
-        } catch (_: SerializationException) {
-            throw A2AInvalidParamsException("Cannot parse request params to ${T::class}")
+        } catch (e: SerializationException) {
+            throw A2AInvalidParamsException("Cannot parse request params:\n${e.message}")
         }
 
         return Request(
