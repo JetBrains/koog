@@ -1,0 +1,27 @@
+name: Dependency Submission
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+permissions:
+  contents: write
+
+jobs:
+  dependency-submission:
+    if: github.repository == 'jetbrains/koog'
+    name: Generate and submit dependency graph
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v5
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: 21
+          cache: 'gradle'
+      - name: Generate and submit dependency graph
+        uses: gradle/actions/dependency-submission@v4
