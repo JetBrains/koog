@@ -9,8 +9,8 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.json.Json
-import kotlin.time.Clock
 import kotlinx.serialization.json.buildJsonObject
+import kotlin.time.Clock
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 

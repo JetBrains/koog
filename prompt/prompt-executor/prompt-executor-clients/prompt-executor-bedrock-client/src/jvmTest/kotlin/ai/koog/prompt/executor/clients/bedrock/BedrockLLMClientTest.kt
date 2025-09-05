@@ -44,7 +44,6 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.time.Clock
-import kotlin.time.Instant
 
 class BedrockLLMClientTest {
     @Test

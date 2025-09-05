@@ -9,8 +9,8 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.datetime.Clock
 import kotlin.jvm.JvmOverloads
+import kotlin.time.Clock
 
 internal class MockOpenAILLMClient @JvmOverloads constructor(
     private val executeResponseContent: String = "OpenAI response",

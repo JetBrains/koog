@@ -11,7 +11,7 @@ import org.gradle.process.internal.ExecException
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
-import java.util.*
+import java.util.Properties
 
 /**
  * This plugin provides a way to read properties file while attempting to inject credentials using 1password CLI.
