@@ -23,9 +23,15 @@ opentelemetry = "1.51.0"
 oshai-logging = "7.0.7"
 shadow = "8.1.1"
 slf4j = "2.0.17"
+testcontainers = "1.19.7"
+exposed = "0.58.0"
+hikaricp = "6.2.1"
+postgresql = "42.7.4"
+mysql = "8.0.33"
+h2 = "2.2.224"
+sqlite = "3.46.1.3"
 spring-boot = "3.5.3"
 spring-management = "1.1.7"
-testcontainers = "1.19.7"
 
 [libraries]
 jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "annotations" }
@@ -68,6 +74,18 @@ mcp = { module = "io.modelcontextprotocol:kotlin-sdk", version.ref = "mcp" }
 slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
 jetsign-gradle-plugin = { module = "com.jetbrains:jet-sign", version.ref = "jetsign" }
 testcontainers = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }
+testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.ref = "testcontainers" }
+testcontainers-mysql = { module = "org.testcontainers:mysql", version.ref = "testcontainers" }
+exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
+exposed-dao = { module = "org.jetbrains.exposed:exposed-dao", version.ref = "exposed" }
+exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed" }
+exposed-json = { module = "org.jetbrains.exposed:exposed-json", version.ref = "exposed" }
+exposed-kotlin-datetime = { module = "org.jetbrains.exposed:exposed-kotlin-datetime", version.ref = "exposed" }
+hikaricp = { module = "com.zaxxer:HikariCP", version.ref = "hikaricp" }
+postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
+mysql = { module = "com.mysql:mysql-connector-j", version.ref = "mysql" }
+h2 = { module = "com.h2database:h2", version.ref = "h2" }
+sqlite = { module = "org.xerial:sqlite-jdbc", version.ref = "sqlite" }
 opentelemetry-bom = { module = "io.opentelemetry:opentelemetry-bom", version.ref = "opentelemetry" }
 opentelemetry-sdk = { module = "io.opentelemetry:opentelemetry-sdk" }
 opentelemetry-exporter-otlp = { module = "io.opentelemetry:opentelemetry-exporter-otlp" }
