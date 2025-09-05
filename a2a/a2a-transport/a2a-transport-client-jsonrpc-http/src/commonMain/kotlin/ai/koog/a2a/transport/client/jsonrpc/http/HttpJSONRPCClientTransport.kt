@@ -33,7 +33,7 @@ import kotlinx.coroutines.flow.flow
  */
 public class HttpJSONRPCClientTransport(
     url: String,
-    baseHttpClient: HttpClient
+    baseHttpClient: HttpClient = HttpClient(),
 ) : JSONRPCClientTransport() {
     private val httpClient: HttpClient = baseHttpClient.config {
         defaultRequest {

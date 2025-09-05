@@ -1,4 +1,3 @@
-import ai.koog.gradle.publish.maven.Publishing.publishToMaven
 
 group = rootProject.group
 version = rootProject.version
@@ -7,20 +6,15 @@ plugins {
     id("ai.kotlin.multiplatform")
     alias(libs.plugins.kotlin.serialization)
 }
-
 kotlin {
     jvm()
-
-    js(IR) {
-        browser()
-    }
-
     sourceSets {
         commonMain {
             dependencies {
-                api(project(":a2a:a2a-core"))
-                api(libs.kotlinx.serialization.json)
-                api(libs.kotlinx.coroutines.core)
+                implementation(project(":a2a:a2a-client"))
+                implementation(project(":a2a:a2a-server"))
+                implementation(project(":a2a:a2a-transport:a2a-transport-client-jsonrpc-http"))
+                implementation(project(":a2a:a2a-transport:a2a-transport-server-jsonrpc-http"))
             }
         }
 
@@ -33,22 +27,14 @@ kotlin {
         jvmTest {
             dependencies {
                 implementation(kotlin("test-junit5"))
-                implementation("me.kpavlov.aimocks:ai-mocks-a2a-jvm:0.4.6")
-                implementation(libs.ktor.client.cio)
-                implementation(project(":a2a:a2a-transport:a2a-transport-client-jsonrpc-http"))
                 implementation(libs.kotlinx.coroutines.test)
+                implementation(libs.oshai.kotlin.logging)
                 runtimeOnly(libs.slf4j.simple)
-            }
-        }
-
-        jsTest {
-            dependencies {
-                implementation(kotlin("test-js"))
+                implementation(libs.ktor.server.cio)
+                runtimeOnly(libs.ktor.client.cio)
             }
         }
     }
 
     explicitApi()
 }
-
-publishToMaven()

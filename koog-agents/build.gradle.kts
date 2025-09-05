@@ -26,6 +26,7 @@ val excluded = setOf(
     ":a2a:a2a-transport:a2a-transport-core-rest",
     ":a2a:a2a-transport:a2a-transport-server-rest",
     ":a2a:a2a-transport:a2a-transport-client-rest",
+    ":a2a:a2a-integration-tests",
 
     project.path, // the current project should not depend on itself
 )

@@ -44,7 +44,9 @@ public interface RequestHandler {
     public suspend fun onGetAuthenticatedExtendedAgentCard(
         request: Request<Nothing?>,
         ctx: ServerCallContext
-    ): Response<AgentCard>
+    ): Response<AgentCard> {
+        TODO("onGetAuthenticatedExtendedAgentCard: Not yet implemented")
+    }
 
     /**
      * Handles [message/send](https://a2a-protocol.org/latest/specification/#71-messagesend).
@@ -54,7 +56,9 @@ public interface RequestHandler {
     public suspend fun onSendMessage(
         request: Request<MessageSendParams>,
         ctx: ServerCallContext
-    ): Response<CommunicationEvent>
+    ): Response<CommunicationEvent>{
+        TODO("onSendMessage: Not yet implemented")
+    }
 
     /**
      * Handles [message/stream](https://a2a-protocol.org/latest/specification/#72-messagestream)
@@ -64,7 +68,9 @@ public interface RequestHandler {
     public fun onSendMessageStreaming(
         request: Request<MessageSendParams>,
         ctx: ServerCallContext
-    ): Flow<Response<UpdateEvent>>
+    ): Flow<Response<UpdateEvent>> {
+        TODO("onSendMessageStreaming: Not yet implemented")
+    }
 
     /**
      * Handles [tasks/get](https://a2a-protocol.org/latest/specification/#73-tasksget)
@@ -74,7 +80,9 @@ public interface RequestHandler {
     public suspend fun onGetTask(
         request: Request<TaskQueryParams>,
         ctx: ServerCallContext
-    ): Response<Task>
+    ): Response<Task> {
+        TODO("onGetTask: Not yet implemented")
+    }
 
     /**
      * Handles [tasks/cancel](https://a2a-protocol.org/latest/specification/#74-taskscancel)
@@ -84,7 +92,9 @@ public interface RequestHandler {
     public suspend fun onCancelTask(
         request: Request<TaskIdParams>,
         ctx: ServerCallContext
-    ): Response<Task>
+    ): Response<Task> {
+        TODO("onCancelTask: Not yet implemented")
+    }
 
     /**
      * Handles [tasks/pushNotificationConfig/set](https://a2a-protocol.org/latest/specification/#75-taskspushnotificationconfigset)
@@ -94,7 +104,9 @@ public interface RequestHandler {
     public suspend fun onSetTaskPushNotificationConfig(
         request: Request<TaskPushNotificationConfig>,
         ctx: ServerCallContext
-    ): Response<TaskPushNotificationConfig>
+    ): Response<TaskPushNotificationConfig> {
+        TODO("onSetTaskPushNotificationConfig: Not yet implemented")
+    }
 
     /**
      * Handles [tasks/pushNotificationConfig/get](https://a2a-protocol.org/latest/specification/#76-taskspushnotificationconfigget)
@@ -104,7 +116,9 @@ public interface RequestHandler {
     public suspend fun onGetTaskPushNotificationConfig(
         request: Request<TaskPushNotificationConfigParams>,
         ctx: ServerCallContext
-    ): Response<TaskPushNotificationConfig>
+    ): Response<TaskPushNotificationConfig> {
+        TODO("onGetTaskPushNotificationConfig: Not yet implemented")
+    }
 
     /**
      * Handles [tasks/pushNotificationConfig/list](https://a2a-protocol.org/latest/specification/#77-taskspushnotificationconfiglist)
@@ -114,7 +128,9 @@ public interface RequestHandler {
     public suspend fun onListTaskPushNotificationConfig(
         request: Request<TaskIdParams>,
         ctx: ServerCallContext
-    ): Response<List<TaskPushNotificationConfig>>
+    ): Response<List<TaskPushNotificationConfig>> {
+        TODO("onListTaskPushNotificationConfig: Not yet implemented")
+    }
 
     /**
      * Handles [tasks/pushNotificationConfig/delete](https://a2a-protocol.org/latest/specification/#78-taskspushnotificationconfigdelete)
@@ -124,7 +140,9 @@ public interface RequestHandler {
     public suspend fun onDeleteTaskPushNotificationConfig(
         request: Request<TaskPushNotificationConfigParams>,
         ctx: ServerCallContext
-    ): Response<Nothing?>
+    ): Response<Nothing?> {
+        TODO("onDeleteTaskPushNotificationConfig: Not yet implemented")
+    }
 }
 
 /**

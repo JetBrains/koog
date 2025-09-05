@@ -43,13 +43,25 @@ public class HttpJSONRPCServerTransport(
 
     /**
      * Routes for handling JSON-RPC HTTP requests.
+     *
+     * Used internally by the transport to register the routes.
+     *
+     * @param route The parent route for the transport routes.
+     * @param path JSON-RPC endpoint path.
+     */
+    internal fun transportRoutesInternal(route: Route, path: String): Route {
+        return route.transportRoutes(path)
+    }
+
+    /**
+     * Routes for handling JSON-RPC HTTP requests.
      * Follows A2A specification in error handling.
      *
      * @param path JSON-RPC endpoint path.
      */
     public fun Route.transportRoutes(path: String): Route = route(path) {
-        if (application.pluginOrNull(SSE) == null) {
-            throw IllegalStateException("SSE plugin must be installed in the application to add these routes.")
+        requireNotNull(application.pluginOrNull(SSE)) {
+            "SSE plugin must be installed in the application to add these routes."
         }
 
         install(ContentNegotiation) {

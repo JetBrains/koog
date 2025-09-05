@@ -21,13 +21,8 @@ kotlin {
                 api(project(":a2a:a2a-transport:a2a-transport-core-jsonrpc"))
                 api(libs.kotlinx.serialization.json)
                 api(libs.kotlinx.coroutines.core)
-            }
-        }
-
-        jvmMain {
-            dependencies {
-                api(libs.ktor.server.core)
                 api(libs.ktor.server.sse)
+                api(libs.ktor.server.core)
                 api(libs.ktor.server.content.negotiation)
                 api(libs.ktor.serialization.kotlinx.json)
             }
@@ -43,6 +38,7 @@ kotlin {
             dependencies {
                 implementation(kotlin("test-junit5"))
                 implementation(libs.ktor.server.test.host)
+                runtimeOnly(libs.slf4j.simple)
             }
         }
 
