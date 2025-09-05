@@ -1,5 +1,3 @@
-@file:Suppress("MissingKDocForPublicAPI")
-
 package ai.koog.agents.core.agent.entity
 
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
@@ -18,13 +16,13 @@ import kotlinx.serialization.serializer
  * @property nodeFinish The finishing node of the strategy, marking the subgraph's endpoint.
  * @property toolSelectionStrategy The strategy responsible for determining the toolset available during subgraph execution.
  */
-public class AIAgentGraphStrategy<Input, Output>(
+public class AIAgentGraphStrategy<TInput, TOutput>(
     override val name: String,
-    public val nodeStart: StartNode<Input>,
-    public val nodeFinish: FinishNode<Output>,
+    public val nodeStart: StartNode<TInput>,
+    public val nodeFinish: FinishNode<TOutput>,
     toolSelectionStrategy: ToolSelectionStrategy,
     private val serializer: Json = Json { prettyPrint = true }
-) : AIAgentStrategy<Input, Output, AIAgentGraphContextBase>, AIAgentSubgraph<Input, Output>(
+) : AIAgentStrategy<TInput, TOutput, AIAgentGraphContextBase>, AIAgentSubgraph<TInput, TOutput>(
     name,
     nodeStart,
     nodeFinish,
@@ -43,7 +41,7 @@ public class AIAgentGraphStrategy<Input, Output>(
     public lateinit var metadata: SubgraphMetadata
 
     @OptIn(InternalAgentsApi::class)
-    override suspend fun execute(context: AIAgentGraphContextBase, input: Input): Output? {
+    override suspend fun execute(context: AIAgentGraphContextBase, input: TInput): TOutput? {
         return runCatchingCancellable {
             context.pipeline.onStrategyStarted(this, context)
             val result = super.execute(context = context, input = input)

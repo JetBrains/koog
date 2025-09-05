@@ -10,11 +10,11 @@ import ai.koog.agents.core.agent.context.AIAgentContext
  * mechanism to encapsulate various decision-making, learning, or processing
  * approaches used by the agent in a flexible manner.
  *
- * @param Input The type of input data that the strategy will process.
- * @param Output The type of output data that the strategy will generate.
+ * @param TInput The type of input data that the strategy will process.
+ * @param TOutput The type of output data that the strategy will generate.
  * @param TContext The type of context in which the strategy is executed, extending [AIAgentContext].
  */
-public interface AIAgentStrategy<Input, Output, TContext : AIAgentContext> {
+public interface AIAgentStrategy<TInput, TOutput, TContext : AIAgentContext> {
     /**
      * The name of the AI agent strategy.
      *
@@ -40,5 +40,5 @@ public interface AIAgentStrategy<Input, Output, TContext : AIAgentContext> {
      * @return The output produced by the AI agent's strategy, or null if no output is generated.
      * The output type is defined by the strategy's implementation.
      */
-    public suspend fun execute(context: TContext, input: Input): Output?
+    public suspend fun execute(context: TContext, input: TInput): TOutput?
 }

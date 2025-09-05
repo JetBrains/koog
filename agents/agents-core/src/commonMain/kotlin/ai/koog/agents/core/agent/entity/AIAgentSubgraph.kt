@@ -28,8 +28,8 @@ import kotlin.reflect.KType
  * segment containing a defined starting and ending point. The subgraph is responsible for executing tasks
  * in a step-by-step manner, managing iterations, and handling tool selection strategies.
  *
- * @param Input The type of input data accepted by the subgraph.
- * @param Output The type of output data returned by the subgraph.
+ * @param TInput The type of input data accepted by the subgraph.
+ * @param TOutput The type of output data returned by the subgraph.
  * @param name The name of the subgraph.
  * @param start The starting node of the subgraph, which initiates the processing.
  * @param finish The finishing node of the subgraph, which concludes the processing.
@@ -37,14 +37,14 @@ import kotlin.reflect.KType
  * @param llmModel Optional [LLModel] override for the subgraph execution.
  * @param llmParams Optional [LLMParams] override for the prompt for the subgraph execution.
  */
-public open class AIAgentSubgraph<Input, Output>(
+public open class AIAgentSubgraph<TInput, TOutput>(
     override val name: String,
-    public val start: StartNode<Input>,
-    public val finish: FinishNode<Output>,
+    public val start: StartNode<TInput>,
+    public val finish: FinishNode<TOutput>,
     private val toolSelectionStrategy: ToolSelectionStrategy,
     private val llmModel: LLModel? = null,
     private val llmParams: LLMParams? = null,
-) : AIAgentNodeBase<Input, Output>(), ExecutionPointNode {
+) : AIAgentNodeBase<TInput, TOutput>(), ExecutionPointNode {
     override val inputType: KType = start.inputType
     override val outputType: KType = finish.outputType
 
@@ -129,7 +129,7 @@ public open class AIAgentSubgraph<Input, Output>(
      * @return The output of the AI agent execution, generated after processing the input.
      */
     @OptIn(InternalAgentsApi::class, DetachedPromptExecutorAPI::class)
-    override suspend fun execute(context: AIAgentGraphContextBase, input: Input): Output? {
+    override suspend fun execute(context: AIAgentGraphContextBase, input: TInput): TOutput? {
         val newTools = selectTools(context)
 
         // Copy inner context with new tools, model and LLM params.
@@ -162,7 +162,7 @@ public open class AIAgentSubgraph<Input, Output>(
     }
 
     @OptIn(InternalAgentsApi::class)
-    private suspend fun executeWithInnerContext(context: AIAgentGraphContextBase, initialInput: Input): Output? {
+    private suspend fun executeWithInnerContext(context: AIAgentGraphContextBase, initialInput: TInput): TOutput? {
         logger.info { formatLog(context, "Executing subgraph $name") }
 
         var currentNode: AIAgentNodeBase<*, *> = start
@@ -223,7 +223,7 @@ public open class AIAgentSubgraph<Input, Output>(
 
         logger.info { formatLog(context, "Completed subgraph $name") }
         @Suppress("UNCHECKED_CAST")
-        val result = (currentInput as? Output) ?: run {
+        val result = (currentInput as? TOutput) ?: run {
             logger.error {
                 formatLog(
                     context,
