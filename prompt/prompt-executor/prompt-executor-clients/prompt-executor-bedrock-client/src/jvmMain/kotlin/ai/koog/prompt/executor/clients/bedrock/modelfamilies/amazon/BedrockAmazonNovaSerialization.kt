@@ -7,7 +7,7 @@ import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
-import ai.koog.prompt.streaming.StreamingFrame
+import ai.koog.prompt.streaming.StreamChunk
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
@@ -150,11 +150,11 @@ internal object BedrockAmazonNovaSerialization {
         }
     }
 
-    internal fun parseNovaStreamChunk(chunkJsonString: String): List<StreamingFrame> {
+    internal fun parseNovaStreamChunk(chunkJsonString: String): List<StreamChunk> {
         val chunk = json.decodeFromString<NovaStreamChunk>(chunkJsonString)
         return chunk.contentBlockDelta?.delta?.let {
             buildList {
-                it.text?.let(StreamingFrame::Append)?.let(::add)
+                it.text?.let(StreamChunk::Append)?.let(::add)
             }
         }?:emptyList()
     }

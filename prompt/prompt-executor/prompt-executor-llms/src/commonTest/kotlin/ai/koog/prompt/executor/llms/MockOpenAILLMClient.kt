@@ -7,7 +7,7 @@ import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
-import ai.koog.prompt.streaming.StreamingFrame
+import ai.koog.prompt.streaming.StreamChunk
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.datetime.Clock
@@ -40,8 +40,8 @@ internal class MockOpenAILLMClient @JvmOverloads constructor(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
-    ): Flow<StreamingFrame> =
-        flowOf("OpenAI", " streaming", " response").map(StreamingFrame::Append)
+    ): Flow<StreamChunk> =
+        flowOf("OpenAI", " streaming", " response").map(StreamChunk::Append)
 
     override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
         throw UnsupportedOperationException("Moderation is not supported by mock client.")

@@ -11,7 +11,7 @@ import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
-import ai.koog.prompt.streaming.StreamingFrame
+import ai.koog.prompt.streaming.StreamChunk
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -239,7 +239,7 @@ class RetryingLLMClientTest {
     @Test
     fun testStreamingSucceedOnFirstAttempt() = runTest {
         val mockClient = MockLLMClient(
-            streamResponse = flowOf("chunk1", "chunk2").map(StreamingFrame::Append),
+            streamResponse = flowOf("chunk1", "chunk2").map(StreamChunk::Append),
             streamFailuresBeforeSuccess = 0
         )
 
@@ -259,7 +259,7 @@ class RetryingLLMClientTest {
     @Test
     fun testStreamingWithRetry() = runTest {
         val mockClient = MockLLMClient(
-            streamResponse = flowOf("chunk1", "chunk2").map(StreamingFrame::Append),
+            streamResponse = flowOf("chunk1", "chunk2").map(StreamChunk::Append),
             streamFailuresBeforeSuccess = 1,
             failureMessage = "Error: 503"
         )
@@ -283,7 +283,7 @@ class RetryingLLMClientTest {
         // Mock that emits one token then fails
         val mockClient = MockLLMClient(
             streamResponse = flow {
-                emit(StreamingFrame.Append("first-token"))
+                emit(StreamChunk.Append("first-token"))
                 throw RuntimeException("Connection lost after first token")
             }
         )
@@ -361,7 +361,7 @@ class RetryingLLMClientTest {
     // Mock LLMClient for testing
     private class MockLLMClient(
         private val executeResponse: List<Message.Response> = emptyList(),
-        private val streamResponse: Flow<StreamingFrame> = flowOf(),
+        private val streamResponse: Flow<StreamChunk> = flowOf(),
         private val multipleChoicesResponse: List<LLMChoice> = emptyList(),
         private val moderateResponse: ModerationResult = ModerationResult(false, emptyMap()),
         private var failuresBeforeSuccess: Int = 0,
@@ -403,7 +403,7 @@ class RetryingLLMClientTest {
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>
-        ): Flow<StreamingFrame> = flow {
+        ): Flow<StreamChunk> = flow {
             streamCalls++
 
             if (streamFailures < streamFailuresBeforeSuccess) {

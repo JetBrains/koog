@@ -14,7 +14,7 @@ import ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolChoice
 import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
-import ai.koog.prompt.streaming.StreamingFrame
+import ai.koog.prompt.streaming.StreamChunk
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import kotlinx.datetime.Clock
@@ -98,12 +98,12 @@ public class DeepSeekLLMClient(
     override fun decodeResponse(data: String): DeepSeekChatCompletionResponse =
         json.decodeFromString(data)
 
-    override fun processStreamingChunk(chunk: DeepSeekChatCompletionStreamResponse): List<StreamingFrame> =
+    override fun processStreamingChunk(chunk: DeepSeekChatCompletionStreamResponse): List<StreamChunk> =
         chunk.choices.firstOrNull()?.delta?.let {
             buildList {
-                it.content?.let(StreamingFrame::Append)?.let(::add)
+                it.content?.let(StreamChunk::Append)?.let(::add)
                 it.toolCalls?.map { toolCall ->
-                    StreamingFrame.ToolCall(
+                    StreamChunk.ToolCall(
                         id = toolCall.id,
                         name = toolCall.function.name,
                         content = toolCall.function.arguments

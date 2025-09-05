@@ -10,9 +10,8 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.llm.OllamaModels
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
-import ai.koog.prompt.streaming.StreamingFrame
+import ai.koog.prompt.streaming.StreamChunk
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
@@ -70,8 +69,8 @@ class ChoiceSelectionStrategyTest {
                 prompt: Prompt,
                 model: LLModel,
                 tools: List<ToolDescriptor>
-            ): Flow<StreamingFrame> =
-                flowOf(StreamingFrame.Append("Default streaming response"))
+            ): Flow<StreamChunk> =
+                flowOf(StreamChunk.Append("Default streaming response"))
 
             override suspend fun executeMultipleChoices(
                 prompt: Prompt,

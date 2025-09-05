@@ -43,7 +43,7 @@ import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
-import ai.koog.prompt.streaming.StreamingFrame
+import ai.koog.prompt.streaming.StreamChunk
 import ai.koog.prompt.structure.RegisteredBasicJsonSchemaGenerators
 import ai.koog.prompt.structure.RegisteredStandardJsonSchemaGenerators
 import ai.koog.prompt.structure.annotations.InternalStructuredOutputApi
@@ -219,12 +219,12 @@ public open class OpenAILLMClient(
     override fun decodeResponse(data: String): OpenAIChatCompletionResponse =
         json.decodeFromString(data)
 
-    override fun processStreamingChunk(chunk: OpenAIChatCompletionStreamResponse): List<StreamingFrame> =
+    override fun processStreamingChunk(chunk: OpenAIChatCompletionStreamResponse): List<StreamChunk> =
         chunk.choices.firstOrNull()?.delta?.let {
             buildList {
-                it.content?.let(StreamingFrame::Append)?.let(::add)
+                it.content?.let(StreamChunk::Append)?.let(::add)
                 it.toolCalls?.map { openAIToolCall ->
-                    StreamingFrame.ToolCall(
+                    StreamChunk.ToolCall(
                         id = openAIToolCall.id,
                         name = openAIToolCall.function.name,
                         content = openAIToolCall.function.arguments
@@ -250,14 +250,14 @@ public open class OpenAILLMClient(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
-    ): Flow<StreamingFrame> = selectExecutionStrategy(prompt, model) { params ->
+    ): Flow<StreamChunk> = selectExecutionStrategy(prompt, model) { params ->
         when (params) {
             is OpenAIResponsesParams -> executeResponsesStreaming(prompt, model, params)
             is OpenAIChatParams -> super.executeStreamingWithTools(prompt, model, tools)
         }
     }
 
-    private fun executeResponsesStreaming(prompt: Prompt, model: LLModel, params: OpenAIResponsesParams): Flow<StreamingFrame> {
+    private fun executeResponsesStreaming(prompt: Prompt, model: LLModel, params: OpenAIResponsesParams): Flow<StreamChunk> {
         logger.debug { "Executing streaming prompt: $prompt with model: $model" }
 
         val messages = convertPromptToInput(prompt, model)
@@ -278,7 +278,7 @@ public open class OpenAILLMClient(
             processStreamingChunk = {
                 // TODO: handle tool calls, not sure if this is supported by the OpenAI Streaming API yet
                 (it as? OpenAIStreamEvent.ResponseOutputTextDelta)?.delta
-                    ?.let(StreamingFrame::Append)
+                    ?.let(StreamChunk::Append)
                     ?.let(::listOf)
                     ?:emptyList()
             }

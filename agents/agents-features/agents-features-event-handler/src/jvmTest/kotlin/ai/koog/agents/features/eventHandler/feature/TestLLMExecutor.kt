@@ -7,10 +7,9 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
-import ai.koog.prompt.streaming.StreamingFrame
+import ai.koog.prompt.streaming.StreamChunk
 import ai.koog.prompt.streaming.toStreamingFrame
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.datetime.Clock
 
@@ -23,7 +22,7 @@ class TestLLMExecutor(val clock: Clock) : PromptExecutor {
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
-    ): Flow<StreamingFrame> =
+    ): Flow<StreamChunk> =
         flowOf(handlePrompt(prompt).toStreamingFrame())
 
     private fun handlePrompt(prompt: Prompt): Message.Response {

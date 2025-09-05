@@ -6,19 +6,19 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 
 @Serializable
-public sealed interface StreamingFrame {
+public sealed interface StreamChunk {
 
     @Serializable
     public data class Append(
         val text: String
-    ) : StreamingFrame
+    ) : StreamChunk
 
     @Serializable
     public data class ToolCall(
         val id: String?,
         val name: String,
         val content: String
-    ) : StreamingFrame {
+    ) : StreamChunk {
 
         /**
          * Lazily parses the content of the tool call as a JSON object.

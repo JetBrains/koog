@@ -16,7 +16,7 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
-import ai.koog.prompt.streaming.StreamingFrame
+import ai.koog.prompt.streaming.StreamChunk
 import ai.koog.prompt.structure.StructureFixingParser
 import ai.koog.prompt.structure.StructuredDataDefinition
 import ai.koog.prompt.structure.StructuredOutputConfig
@@ -484,7 +484,7 @@ public class AIAgentLLMWriteSession internal constructor(
      */
     public fun requestLLMStreaming(definition: StructuredDataDefinition? = null): Flow<String> =
         requestLLMStreamingWithTools(definition)
-            .filterIsInstance<StreamingFrame.Append>()
+            .filterIsInstance<StreamChunk.Append>()
             .map { append -> append.text }
 
     /**
@@ -494,7 +494,7 @@ public class AIAgentLLMWriteSession internal constructor(
      * in constructing the prompt for the language model request.
      * @return a flow of `StreamingFrame` objects that streams the responses from the language model.
      */
-    public fun requestLLMStreamingWithTools(definition: StructuredDataDefinition? = null): Flow<StreamingFrame> {
+    public fun requestLLMStreamingWithTools(definition: StructuredDataDefinition? = null): Flow<StreamChunk> {
         if (definition != null) {
             val prompt = prompt(prompt, clock) {
                 user {
