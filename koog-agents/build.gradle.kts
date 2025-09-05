@@ -14,6 +14,7 @@ val excluded = setOf(
     ":test-utils",
     ":koog-spring-boot-starter",
     ":koog-ktor",
+    ":koog-cli",
     ":docs",
     project.path, // the current project should not depend on itself
 )
