@@ -7,9 +7,13 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.prompt.streaming.StreamingFrame
+import ai.koog.prompt.streaming.toStreamingFrame
 import io.ktor.utils.io.CancellationException
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.json.Json
@@ -51,11 +55,16 @@ object CalculatorChatExecutor : PromptExecutor {
         return listOf(result)
     }
 
-    override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> =
+    override fun executeStreamingWithTools(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>
+    ): Flow<StreamingFrame> =
         flow {
             try {
-                val response = execute(prompt, model).single()
-                emit(response.content)
+                execute(prompt, model).forEach {
+                    emit(it.toStreamingFrame())
+                }
             } catch (t: CancellationException) {
                 throw t
             } catch (t: Throwable) {

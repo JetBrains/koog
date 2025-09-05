@@ -14,6 +14,7 @@ import ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolChoice
 import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.streaming.StreamingFrame
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import kotlinx.datetime.Clock
@@ -97,8 +98,19 @@ public class DeepSeekLLMClient(
     override fun decodeResponse(data: String): DeepSeekChatCompletionResponse =
         json.decodeFromString(data)
 
-    override fun processStreamingChunk(chunk: DeepSeekChatCompletionStreamResponse): String? =
-        chunk.choices.firstOrNull()?.delta?.content
+    override fun processStreamingChunk(chunk: DeepSeekChatCompletionStreamResponse): List<StreamingFrame> =
+        chunk.choices.firstOrNull()?.delta?.let {
+            buildList {
+                it.content?.let(StreamingFrame::Append)?.let(::add)
+                it.toolCalls?.map { toolCall ->
+                    StreamingFrame.ToolCall(
+                        id = toolCall.id,
+                        name = toolCall.function.name,
+                        content = toolCall.function.arguments
+                    )
+                }?.let(::addAll)
+            }
+        }?:emptyList()
 
     public override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
         logger.warn { "Moderation is not supported by DeepSeek API" }

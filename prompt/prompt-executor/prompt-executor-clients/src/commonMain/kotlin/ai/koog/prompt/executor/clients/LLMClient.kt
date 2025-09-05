@@ -6,7 +6,10 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.streaming.StreamingFrame
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.map
 
 /**
  * Common interface for direct communication with LLM providers.
@@ -34,7 +37,17 @@ public interface LLMClient {
      * @param model The LLM model to use
      * @return Flow of response chunks
      */
-    public fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String>
+    @Deprecated("Use executeStreamingWithTools instead")
+    public fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> =
+        executeStreamingWithTools(prompt, model, emptyList())
+            .filterIsInstance<StreamingFrame.Append>()
+            .map { append -> append.text }
+
+    public fun executeStreamingWithTools(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>
+    ) : Flow<StreamingFrame> = error("Not implemented for this client")
 
     /**
      * Executes a prompt and returns a list of LLM choices.

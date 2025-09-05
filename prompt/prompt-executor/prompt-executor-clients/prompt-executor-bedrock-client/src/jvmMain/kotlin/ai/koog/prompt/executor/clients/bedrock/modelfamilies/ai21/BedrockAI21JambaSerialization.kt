@@ -7,6 +7,7 @@ import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.prompt.streaming.StreamingFrame
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
@@ -181,9 +182,19 @@ internal object BedrockAI21JambaSerialization {
         }
     }
 
-    internal fun parseJambaStreamChunk(chunkJsonString: String): String {
+    internal fun parseJambaStreamChunk(chunkJsonString: String): List<StreamingFrame> {
         val streamResponse = json.decodeFromString<JambaStreamResponse>(chunkJsonString)
-
-        return streamResponse.choices.firstOrNull()?.delta?.content ?: ""
+        return streamResponse.choices.firstOrNull()?.delta?.let {
+            buildList {
+                it.content?.let(StreamingFrame::Append)?.let(::add)
+                it.toolCalls?.map { jambaToolCall ->
+                    StreamingFrame.ToolCall(
+                        id = jambaToolCall.id,
+                        name = jambaToolCall.function.name,
+                        content = jambaToolCall.function.arguments
+                    )
+                }?.let(::addAll)
+            }
+        }?:emptyList()
     }
 }

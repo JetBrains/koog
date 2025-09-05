@@ -16,13 +16,16 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.streaming.StreamingFrame
 import ai.koog.prompt.structure.StructureFixingParser
 import ai.koog.prompt.structure.StructuredDataDefinition
 import ai.koog.prompt.structure.StructuredOutputConfig
 import ai.koog.prompt.structure.StructuredResponse
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import kotlinx.datetime.Clock
 import kotlinx.serialization.KSerializer
 import kotlin.reflect.KClass
@@ -479,7 +482,13 @@ public class AIAgentLLMWriteSession internal constructor(
      * in constructing the prompt for the language model request.
      * @return a flow of strings that streams the responses from the language model.
      */
-    public fun requestLLMStreaming(definition: StructuredDataDefinition? = null): Flow<String> {
+    @Deprecated("Use requestLLMStreamingWithTools instead")
+    public fun requestLLMStreaming(definition: StructuredDataDefinition? = null): Flow<String> =
+        requestLLMStreamingWithTools(definition)
+            .filterIsInstance<StreamingFrame.Append>()
+            .map { append -> append.text }
+
+    public fun requestLLMStreamingWithTools(definition: StructuredDataDefinition? = null): Flow<StreamingFrame> {
         if (definition != null) {
             val prompt = prompt(prompt, clock) {
                 user {
@@ -488,7 +497,6 @@ public class AIAgentLLMWriteSession internal constructor(
             }
             this.prompt = prompt
         }
-
-        return executor.executeStreaming(prompt, model)
+        return executor.executeStreamingWithTools(prompt, model, tools)
     }
 }

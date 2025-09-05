@@ -14,6 +14,7 @@ import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.streaming.StreamingFrame
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -37,7 +38,9 @@ import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
@@ -144,7 +147,11 @@ public open class AnthropicLLMClient(
         }
     }
 
-    override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> = flow {
+    override fun executeStreamingWithTools(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>
+    ): Flow<StreamingFrame> = flow {
         logger.debug { "Executing streaming prompt: $prompt with model: $model without tools" }
         require(model.capabilities.contains(LLMCapability.Completion)) {
             "Model ${model.id} does not support chat completions"
@@ -169,7 +176,10 @@ public open class AnthropicLLMClient(
                     event
                         .takeIf { it.event == "content_block_delta" }
                         ?.data?.trim()?.let { json.decodeFromString<AnthropicStreamResponse>(it) }
-                        ?.delta?.text?.let { emit(it) }
+                        ?.delta?.let { delta ->
+                            delta.text?.let { emit(StreamingFrame.Append(it)) }
+                            delta.toolUse?.let { emit(StreamingFrame.ToolCall(it.id, it.name, it.input.toString())) }
+                        }
                 }
             }
         } catch (e: SSEClientException) {

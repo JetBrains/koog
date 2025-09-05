@@ -7,6 +7,7 @@ import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.streaming.StreamingFrame
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
@@ -50,16 +51,17 @@ public class RetryingLLMClient(
 
     // Streaming retry: Only retries connection failures before the first token is received.
     // Once streaming starts, errors are passed through to avoid content duplication.
-    override fun executeStreaming(
+    override fun executeStreamingWithTools(
         prompt: Prompt,
-        model: LLModel
-    ): Flow<String> {
-        return flow {
+        model: LLModel,
+        tools: List<ToolDescriptor>
+    ): Flow<StreamingFrame> =
+        flow {
             repeat(config.maxAttempts) { attempt ->
-                var firstTokenReceived = false
+                var firstFrameReceived = false
                 try {
-                    delegate.executeStreaming(prompt, model).collect { chunk ->
-                        firstTokenReceived = true
+                    delegate.executeStreamingWithTools(prompt, model, tools).collect { chunk ->
+                        firstFrameReceived = true
                         emit(chunk)
                     }
                     return@flow
@@ -67,7 +69,7 @@ public class RetryingLLMClient(
                     throw e // Never retry cancellations
                 } catch (e: Throwable) {
                     // If we already received tokens, don't retry - pass error through
-                    if (firstTokenReceived) {
+                    if (firstFrameReceived) {
                         throw e
                     }
 
@@ -84,7 +86,6 @@ public class RetryingLLMClient(
                 }
             }
         }
-    }
 
     override suspend fun executeMultipleChoices(
         prompt: Prompt,

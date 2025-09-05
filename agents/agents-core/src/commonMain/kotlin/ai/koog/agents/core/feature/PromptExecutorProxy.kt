@@ -7,6 +7,7 @@ import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.streaming.StreamingFrame
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
 
@@ -39,11 +40,13 @@ public class PromptExecutorProxy(
         return responses
     }
 
-    override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
-        logger.debug { "Executing LLM streaming call (prompt: $prompt)" }
-        val stream = executor.executeStreaming(prompt, model)
-
-        return stream
+    override fun executeStreamingWithTools(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>
+    ): Flow<StreamingFrame> {
+        logger.debug { "Executing LLM streaming call (prompt: $prompt, tools: [${tools.joinToString { it.name }}])" }
+        return executor.executeStreamingWithTools(prompt, model, tools)
     }
 
     override suspend fun executeMultipleChoices(

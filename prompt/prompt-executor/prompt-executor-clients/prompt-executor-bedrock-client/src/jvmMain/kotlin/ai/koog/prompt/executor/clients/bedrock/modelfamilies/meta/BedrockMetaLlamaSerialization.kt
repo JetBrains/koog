@@ -5,6 +5,7 @@ import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.prompt.streaming.StreamingFrame
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
@@ -60,8 +61,8 @@ internal object BedrockMetaLlamaSerialization {
         )
     }
 
-    internal fun parseLlamaStreamChunk(chunkJsonString: String): String {
+    internal fun parseLlamaStreamChunk(chunkJsonString: String): List<StreamingFrame> {
         val chunk = json.decodeFromString<LlamaStreamChunk>(chunkJsonString)
-        return chunk.generation ?: ""
+        return chunk.generation?.let(StreamingFrame::Append)?.let(::listOf) ?: emptyList()
     }
 }

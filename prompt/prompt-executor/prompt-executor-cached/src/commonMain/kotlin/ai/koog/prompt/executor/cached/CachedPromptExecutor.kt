@@ -9,8 +9,13 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.streaming.StreamingFrame
+import ai.koog.prompt.streaming.toStreamingFrame
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import kotlinx.datetime.Clock
 
 /**
@@ -33,8 +38,16 @@ public class CachedPromptExecutor(
         return getOrPut(prompt, tools, model)
     }
 
-    override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> =
-        flow { emit(getOrPut(prompt, model).content) }
+    override fun executeStreamingWithTools(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>
+    ): Flow<StreamingFrame> =
+        flow {
+            getOrPut(prompt, tools, model).forEach {
+                emit(it.toStreamingFrame())
+            }
+         }
 
     private suspend fun getOrPut(prompt: Prompt, model: LLModel): Message.Assistant {
         return cache.get(prompt, emptyList(), clock)

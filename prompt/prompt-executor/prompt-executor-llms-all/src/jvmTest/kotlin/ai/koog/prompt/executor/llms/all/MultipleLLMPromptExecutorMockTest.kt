@@ -11,8 +11,10 @@ import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.prompt.streaming.StreamingFrame
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
@@ -41,9 +43,12 @@ class MultipleLLMPromptExecutorMockTest {
             return listOf(Message.Assistant("OpenAI response", ResponseMetaInfo.create(mockClock)))
         }
 
-        override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
-            return flowOf("OpenAI", " streaming", " response")
-        }
+        override fun executeStreamingWithTools(
+            prompt: Prompt,
+            model: LLModel,
+            tools: List<ToolDescriptor>
+        ): Flow<StreamingFrame> =
+            flowOf("OpenAI", " streaming", " response").map(StreamingFrame::Append)
     }
 
     // Mock client for Anthropic
@@ -56,9 +61,12 @@ class MultipleLLMPromptExecutorMockTest {
             return listOf(Message.Assistant("Anthropic response", ResponseMetaInfo.create(mockClock)))
         }
 
-        override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
-            return flowOf("Anthropic", " streaming", " response")
-        }
+        override fun executeStreamingWithTools(
+            prompt: Prompt,
+            model: LLModel,
+            tools: List<ToolDescriptor>
+        ): Flow<StreamingFrame> =
+            flowOf("Anthropic", " streaming", " response").map(StreamingFrame::Append)
     }
 
     // Mock client for Anthropic
@@ -71,9 +79,12 @@ class MultipleLLMPromptExecutorMockTest {
             return listOf(Message.Assistant("Gemini response", ResponseMetaInfo.create(mockClock)))
         }
 
-        override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
-            return flowOf("Gemini", " streaming", " response")
-        }
+        override fun executeStreamingWithTools(
+            prompt: Prompt,
+            model: LLModel,
+            tools: List<ToolDescriptor>
+        ): Flow<StreamingFrame> =
+            flowOf("Gemini", " streaming", " response").map(StreamingFrame::Append)
     }
 
     private lateinit var executor: DefaultMultiLLMPromptExecutor

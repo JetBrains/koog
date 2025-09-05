@@ -30,6 +30,7 @@ import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.streaming.StreamingFrame
 import io.github.oshai.kotlinlogging.KLogger
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.HttpTimeout
@@ -41,6 +42,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.transform
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNamingStrategy
@@ -152,14 +154,18 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
      * Processes a provider-specific streaming response chunk.
      * Must be implemented by concrete client classes.
      */
-    protected abstract fun processStreamingChunk(chunk: TStreamResponse): String?
+    protected abstract fun processStreamingChunk(chunk: TStreamResponse): List<StreamingFrame>
 
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         val response = getResponse(prompt, model, tools)
         return processProviderChatResponse(response).first()
     }
 
-    override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
+    override fun executeStreamingWithTools(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>
+    ): Flow<StreamingFrame> {
         logger.debug { "Executing streaming prompt: $prompt with model: $model" }
         model.requireCapability(LLMCapability.Completion)
 
@@ -180,7 +186,11 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
             dataFilter = { it != "[DONE]" },
             decodeStreamingResponse = ::decodeStreamingResponse,
             processStreamingChunk = ::processStreamingChunk
-        )
+        ).transform { frames ->
+            frames.forEach {
+                emit(it)
+            }
+        }
     }
 
     override suspend fun executeMultipleChoices(
