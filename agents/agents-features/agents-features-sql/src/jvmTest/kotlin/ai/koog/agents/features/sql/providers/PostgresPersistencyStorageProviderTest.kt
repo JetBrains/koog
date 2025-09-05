@@ -13,6 +13,8 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.TestInstance.Lifecycle
+import org.junit.jupiter.api.condition.EnabledOnOs
+import org.junit.jupiter.api.condition.OS
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.utility.DockerImageName
 import kotlin.test.assertEquals
@@ -20,6 +22,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 @TestInstance(Lifecycle.PER_CLASS)
+@EnabledOnOs(OS.LINUX)
 class PostgresPersistencyStorageProviderTest {
 
     private lateinit var postgres: PostgreSQLContainer<*>

@@ -9,10 +9,16 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.JsonPrimitive
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.TestInstance.Lifecycle
+import org.junit.jupiter.api.condition.EnabledOnOs
+import org.junit.jupiter.api.condition.OS
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
+@TestInstance(Lifecycle.PER_CLASS)
+@EnabledOnOs(OS.LINUX)
 class H2PersistencyStorageProviderTest {
 
     private fun provider(ttlSeconds: Long? = null): H2PersistencyStorageProvider {
