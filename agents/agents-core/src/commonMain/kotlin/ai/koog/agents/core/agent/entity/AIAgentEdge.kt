@@ -1,6 +1,5 @@
 package ai.koog.agents.core.agent.entity
 
-import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AIAgentGraphContext
 import ai.koog.agents.core.utils.Option
 

@@ -145,7 +145,7 @@ public open class AIAgentNode<TInput, TOutput> internal constructor(
     override val inputType: KType,
     override val outputType: KType,
     public val execute: suspend AIAgentGraphContextBase.(input: TInput) -> TOutput,
-    ) : AIAgentNodeBase<TInput, TOutput>() {
+) : AIAgentNodeBase<TInput, TOutput>() {
 
     private companion object {
         private val logger = KotlinLogging.logger { }
