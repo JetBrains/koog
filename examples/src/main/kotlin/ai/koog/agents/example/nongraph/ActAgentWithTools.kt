@@ -1,11 +1,11 @@
 package ai.koog.agents.example.nongraph
 
-import ai.koog.agents.core.agent.actAIAgent
 import ai.koog.agents.core.agent.asAssistantMessage
 import ai.koog.agents.core.agent.compressHistory
 import ai.koog.agents.core.agent.containsToolCalls
 import ai.koog.agents.core.agent.executeMultipleTools
 import ai.koog.agents.core.agent.extractToolCalls
+import ai.koog.agents.core.agent.functionalAIAgent
 import ai.koog.agents.core.agent.latestTokenUsage
 import ai.koog.agents.core.agent.requestLLMMultiple
 import ai.koog.agents.core.agent.sendMultipleToolResults
@@ -25,7 +25,7 @@ fun main(): Unit = runBlocking {
         tools(SwitchTools(switch).asTools())
     }
 
-    val actAgent = actAIAgent<String, String>(
+    val actAgent = functionalAIAgent<String, String>(
         prompt = "You're responsible for running a Switch device and perform operations on it by request.",
         promptExecutor = promptExec,
         model = OllamaModels.Meta.LLAMA_3_2,
@@ -51,7 +51,7 @@ fun main(): Unit = runBlocking {
             responses = sendMultipleToolResults(results)
         }
 
-        return@actAIAgent responses.single().asAssistantMessage().content
+        return@functionalAIAgent responses.single().asAssistantMessage().content
     }
 
     actAgent.run("Turn switch on")

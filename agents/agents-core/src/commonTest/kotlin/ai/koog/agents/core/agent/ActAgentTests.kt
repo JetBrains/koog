@@ -33,7 +33,7 @@ class ActAgentTests {
             mockLLMMixedResponse(toolCalls, assistantResponses) onRequestEquals "Solve task"
         }
 
-        val agent = actAIAgent<String, String>(
+        val agent = functionalAIAgent<String, String>(
             prompt = "You are helpful",
             promptExecutor = mockLLMApi,
             model = OllamaModels.Meta.LLAMA_3_2,
@@ -77,7 +77,7 @@ class ActAgentTests {
         }
 
         // install feature using featureContext overload builder
-        val agent = actAIAgent<String, String>(
+        val agent = functionalAIAgent<String, String>(
             prompt = "You are helpful",
             promptExecutor = mockLLMApi,
             model = OllamaModels.Meta.LLAMA_3_2,
@@ -116,7 +116,7 @@ class ActAgentTests {
             mockLLMToolCall(CreateTool, CreateTool.Args("solve")) onRequestEquals "Solve task"
         }
 
-        val agent = actAIAgent<String, String>(
+        val agent = functionalAIAgent<String, String>(
             prompt = "You are helpful",
             promptExecutor = mockLLMApi,
             model = OllamaModels.Meta.LLAMA_3_2,

@@ -55,7 +55,7 @@ fun main(): Unit = runBlocking {
     val promptExecutor = PromptExecutorWithChoiceSelection(basePromptExecutor, askChoiceStrategy)
 
     val agent = AIAgent(
-        executor = promptExecutor,
+        promptExecutor = promptExecutor,
         strategy = strategy,
         llmModel = OpenAIModels.Reasoning.O3Mini,
         systemPrompt = """

@@ -2,7 +2,7 @@
 
 package ai.koog.agents.core.agent
 
-import ai.koog.agents.core.agent.ActAIAgent.FeatureContext
+import ai.koog.agents.core.agent.FunctionalAIAgent.FeatureContext
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.config.AIAgentConfigBase
 import ai.koog.agents.core.agent.context.AIAgentLLMContext
@@ -39,12 +39,12 @@ import kotlin.uuid.Uuid
  * @param toolRegistry The registry of tools available for the agent. Defaults to an empty registry if not specified.
  */
 @ExperimentalUuidApi
-public class ActAIAgent<Input, Output>(
+public class FunctionalAIAgent<Input, Output>(
     public val promptExecutor: PromptExecutor,
     public val agentConfig: AIAgentConfigBase,
-    override val id: String = Uuid.random().toString(),
     public val toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
-    public val strategy: AIAgentLoopStrategy<Input, Output>,
+    public val strategy: AIAgentFunctionalStrategy<Input, Output>,
+    override val id: String = Uuid.random().toString(),
     public val clock: Clock = Clock.System,
     public val featureContext: FeatureContext.() -> Unit = {}
 ) : AIAgent<Input, Output> {
@@ -67,7 +67,7 @@ public class ActAIAgent<Input, Output>(
      * Represents a context for managing and configuring features in an AI agent.
      * Provides functionality to install and configure features into a specific instance of an AI agent.
      */
-    public class FeatureContext internal constructor(private val agent: ActAIAgent<*, *>) {
+    public class FeatureContext internal constructor(private val agent: FunctionalAIAgent<*, *>) {
         /**
          * Installs and configures a feature into the current AI agent context.
          *
@@ -92,9 +92,11 @@ public class ActAIAgent<Input, Output>(
     ) {
         pipeline.install(feature, configure)
     }
+
     init {
         FeatureContext(this).featureContext()
     }
+
     override suspend fun run(agentInput: Input): Output {
         runningMutex.withLock {
             if (isRunning) {
@@ -120,7 +122,7 @@ public class ActAIAgent<Input, Output>(
             clock = clock
         )
 
-        val context = AIAgentLoopContext(
+        val context = AIAgentFunctionalContext(
             environment,
             id,
             runId,
@@ -168,17 +170,17 @@ public class ActAIAgent<Input, Output>(
  *  an output of type `Output`.
  * @return A `LoopAIAgent` instance initialized with the specified prompt executor, configuration, tool registry, and loop strategy.
  */
-public fun <Input, Output> actAIAgent(
+public fun <Input, Output> functionalAIAgent(
     promptExecutor: PromptExecutor,
     agentConfig: AIAgentConfigBase,
     toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
-    loop: suspend AIAgentLoopContext.(input: Input) -> Output
+    loop: suspend AIAgentFunctionalContext.(input: Input) -> Output
 ): AIAgent<Input, Output> {
-    return ActAIAgent(
+    return FunctionalAIAgent(
         promptExecutor = promptExecutor,
         agentConfig = agentConfig,
         toolRegistry = toolRegistry,
-        strategy = loopStrategy(
+        strategy = functionalStrategy(
             loop = loop
         )
     )
@@ -195,19 +197,19 @@ public fun <Input, Output> actAIAgent(
  *        and produces an output.
  * @return A configured `LoopAIAgent` instance capable of processing the specified logic using the provided inputs.
  */
-public fun <Input, Output> actAIAgent(
-    prompt: String,
+public fun <Input, Output> functionalAIAgent(
     promptExecutor: PromptExecutor,
-    model: LLModel = OpenAIModels.Chat.GPT4o,
     toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
+    prompt: String = "",
+    model: LLModel = OpenAIModels.Chat.GPT4o,
     featureContext: FeatureContext.() -> Unit = {},
-    loop: suspend AIAgentLoopContext.(input: Input) -> Output,
+    loop: suspend AIAgentFunctionalContext.(input: Input) -> Output,
 ): AIAgent<Input, Output> {
-    return ActAIAgent(
+    return FunctionalAIAgent(
         promptExecutor = promptExecutor,
         agentConfig = AIAgentConfig.withSystemPrompt(prompt, model),
         toolRegistry = toolRegistry,
-        strategy = loopStrategy(loop = loop),
+        strategy = functionalStrategy(loop = loop),
         featureContext = featureContext
     )
 }

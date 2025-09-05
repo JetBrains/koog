@@ -5,22 +5,22 @@ import ai.koog.agents.core.agent.entity.AIAgentStrategy
 /**
  * A strategy for implementing AI agent behavior that operates in a loop-based manner.
  *
- * The [AIAgentLoopStrategy] class allows for the definition of a custom looping logic
- * that processes input and produces output by utilizing an [AIAgentLoopContext]. This strategy
+ * The [AIAgentFunctionalStrategy] class allows for the definition of a custom looping logic
+ * that processes input and produces output by utilizing an [AIAgentFunctionalContext]. This strategy
  * can be used to define iterative decision-making or execution processes for AI agents.
  *
  * @param Input The type of input data processed by the strategy.
  * @param Output The type of output data produced by the strategy.
  * @property name The name of the strategy, providing a way to identify and describe the strategy.
  * @property loop A suspending function representing the loop logic for the strategy. It accepts
- * input data of type [Input] and an [AIAgentLoopContext] to execute the loop and produce the output.
+ * input data of type [Input] and an [AIAgentFunctionalContext] to execute the loop and produce the output.
  */
-public class AIAgentLoopStrategy<Input, Output>(
+public class AIAgentFunctionalStrategy<Input, Output>(
     override val name: String,
-    public val loop: suspend AIAgentLoopContext.(Input) -> Output
-) : AIAgentStrategy<Input, Output, AIAgentLoopContext> {
+    public val loop: suspend AIAgentFunctionalContext.(Input) -> Output
+) : AIAgentStrategy<Input, Output, AIAgentFunctionalContext> {
     override suspend fun execute(
-        context: AIAgentLoopContext,
+        context: AIAgentFunctionalContext,
         input: Input
     ): Output = context.loop(input)
 }
@@ -38,5 +38,5 @@ public class AIAgentLoopStrategy<Input, Output>(
  *             It takes an input of type `Any?` and an `AIAgentLoopContext`, and produces an output of type `Any?`.
  * @return An `AIAgentLoopStrategy` configured with the provided name and loop function.
  */
-public fun <Input, Output> loopStrategy(name: String = "loopStrategy", loop: suspend AIAgentLoopContext.(input: Input) -> Output): AIAgentLoopStrategy<Input, Output> =
-    AIAgentLoopStrategy(name, loop)
+public fun <Input, Output> functionalStrategy(name: String = "funStrategy", loop: suspend AIAgentFunctionalContext.(input: Input) -> Output): AIAgentFunctionalStrategy<Input, Output> =
+    AIAgentFunctionalStrategy(name, loop)

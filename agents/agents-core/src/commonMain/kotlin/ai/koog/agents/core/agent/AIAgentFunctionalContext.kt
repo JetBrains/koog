@@ -33,7 +33,7 @@ import ai.koog.prompt.message.Message
  * during execution.
  */
 @Suppress("UNCHECKED_CAST")
-public class AIAgentLoopContext(
+public class AIAgentFunctionalContext(
     override val environment: AIAgentEnvironment,
     override val agentId: String,
     override val runId: String,

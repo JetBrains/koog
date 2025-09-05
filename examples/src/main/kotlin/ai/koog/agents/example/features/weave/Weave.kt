@@ -30,7 +30,7 @@ fun main() = runBlocking {
     val projectName = System.getenv()["WEAVE_PROJECT_NAME"] ?: "koog-tracing"
 
     val agent = AIAgent(
-        executor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey),
+        promptExecutor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey),
         llmModel = OpenAIModels.Reasoning.O4Mini,
         systemPrompt = "You are a code assistant. Provide concise code examples."
     ) {

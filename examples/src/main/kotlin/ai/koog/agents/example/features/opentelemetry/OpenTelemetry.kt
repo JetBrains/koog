@@ -32,7 +32,7 @@ import kotlinx.coroutines.runBlocking
  */
 fun main() = runBlocking {
     val agent = AIAgent(
-        executor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey),
+        promptExecutor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey),
         llmModel = OpenAIModels.Reasoning.O4Mini,
         systemPrompt = "You are a code assistant. Provide concise code examples."
     ) {

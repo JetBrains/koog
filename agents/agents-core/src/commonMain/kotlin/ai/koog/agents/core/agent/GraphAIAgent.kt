@@ -56,10 +56,10 @@ public open class GraphAIAgent<Input, Output>(
     public val inputType: KType,
     public val outputType: KType,
     public val promptExecutor: PromptExecutor,
-    private val strategy: AIAgentGraphStrategy<Input, Output>,
     public val agentConfig: AIAgentConfigBase,
-    override val id: String = Uuid.random().toString(),
     public val toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
+    private val strategy: AIAgentGraphStrategy<Input, Output>,
+    override val id: String = Uuid.random().toString(),
     public val clock: Clock = Clock.System,
     private val installFeatures: FeatureContext.() -> Unit = {},
 ) : AIAgent<Input, Output>, Closeable {

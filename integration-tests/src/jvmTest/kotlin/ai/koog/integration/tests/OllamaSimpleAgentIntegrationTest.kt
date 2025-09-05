@@ -121,7 +121,7 @@ class OllamaSimpleAgentIntegrationTest {
         """.trimIndent()
 
         val agent = AIAgent(
-            executor = ollamaSimpleExecutor,
+            promptExecutor = ollamaSimpleExecutor,
             systemPrompt = bookwormPrompt,
             llmModel = ollamaModel,
             temperature = 0.0,

@@ -25,7 +25,7 @@ import kotlinx.serialization.serializer
  * @param message The content of the message to be sent to the LLM.
  * @param allowToolCalls Specifies whether tool calls are allowed during the LLM interaction. Defaults to `true`.
  */
-public suspend fun AIAgentLoopContext.requestLLM(
+public suspend fun AIAgentFunctionalContext.requestLLM(
     message: String,
     allowToolCalls: Boolean = true
 ): Message.Response {
@@ -48,7 +48,7 @@ public suspend fun AIAgentLoopContext.requestLLM(
  * @param response The response message to evaluate, which may or may not be of type [Message.Assistant].
  * @param action A lambda function to execute if the response is an instance of [Message.Assistant].
  */
-public inline fun AIAgentLoopContext.onAssistantMessage(
+public inline fun AIAgentFunctionalContext.onAssistantMessage(
     response: Message.Response,
     action: (Message.Assistant) -> Unit
 ) {
@@ -93,7 +93,7 @@ public fun Message.Response.asAssistantMessage(): Message.Assistant = this as Me
  * @param response A list of response messages to be checked for tool call messages.
  * @param action A lambda function to be executed with the list of filtered tool call messages, if any exist.
  */
-public inline fun AIAgentLoopContext.onMultipleToolCalls(
+public inline fun AIAgentFunctionalContext.onMultipleToolCalls(
     response: List<Message.Response>,
     action: (List<Message.Tool.Call>) -> Unit
 ) {
@@ -108,7 +108,7 @@ public inline fun AIAgentLoopContext.onMultipleToolCalls(
  * @param response A list of response messages to filter, potentially containing various types of responses.
  * @return A list of messages specifically representing tool calls, which are instances of [Message.Tool.Call].
  */
-public fun AIAgentLoopContext.extractToolCalls(
+public fun AIAgentFunctionalContext.extractToolCalls(
     response: List<Message.Response>
 ): List<Message.Tool.Call> = response.filterIsInstance<Message.Tool.Call>()
 
@@ -119,7 +119,7 @@ public fun AIAgentLoopContext.extractToolCalls(
  * @param response A list of response messages to be processed. Only those of type `Message.Assistant` will be considered.
  * @param action A lambda function to execute on the list of assistant messages if the filtered list is not empty.
  */
-public inline fun AIAgentLoopContext.onMultipleAssistantMessages(
+public inline fun AIAgentFunctionalContext.onMultipleAssistantMessages(
     response: List<Message.Response>,
     action: (List<Message.Assistant>) -> Unit
 ) {
@@ -133,7 +133,7 @@ public inline fun AIAgentLoopContext.onMultipleAssistantMessages(
  *
  * @return The latest token usage information as an integer.
  */
-public suspend fun AIAgentLoopContext.latestTokenUsage(): Int {
+public suspend fun AIAgentFunctionalContext.latestTokenUsage(): Int {
     return llm.readSession { prompt.latestTokenUsage }
 }
 
@@ -147,7 +147,7 @@ public suspend fun AIAgentLoopContext.latestTokenUsage(): Int {
  * @param fixingModel LLM used for error correction.
  * @return Result containing the structured response if successful, or an error if parsing failed.
  */
-public suspend inline fun <reified T> AIAgentLoopContext.requestLLMStructured(
+public suspend inline fun <reified T> AIAgentFunctionalContext.requestLLMStructured(
     message: String,
     examples: List<T> = emptyList(),
     fixingParser: StructureFixingParser? = null
@@ -173,7 +173,7 @@ public suspend inline fun <reified T> AIAgentLoopContext.requestLLMStructured(
  * @param structureDefinition Optional structure to guide the LLM response.
  * @return A flow of string chunks from the LLM response.
  */
-public suspend fun AIAgentLoopContext.requestLLMStreaming(
+public suspend fun AIAgentFunctionalContext.requestLLMStreaming(
     message: String,
     structureDefinition: StructuredDataDefinition? = null
 ): Flow<String> {
@@ -193,7 +193,7 @@ public suspend fun AIAgentLoopContext.requestLLMStreaming(
  * @param message The content of the message to be sent to the LLM.
  * @return A list of LLM responses.
  */
-public suspend fun AIAgentLoopContext.requestLLMMultiple(message: String): List<Message.Response> {
+public suspend fun AIAgentFunctionalContext.requestLLMMultiple(message: String): List<Message.Response> {
     return llm.writeSession {
         updatePrompt {
             user(message)
@@ -210,7 +210,7 @@ public suspend fun AIAgentLoopContext.requestLLMMultiple(message: String): List<
  * @param message The content of the message to be sent to the LLM.
  * @return The LLM response containing tool calls.
  */
-public suspend fun AIAgentLoopContext.requestLLMOnlyCallingTools(message: String): Message.Response {
+public suspend fun AIAgentFunctionalContext.requestLLMOnlyCallingTools(message: String): Message.Response {
     return llm.writeSession {
         updatePrompt {
             user(message)
@@ -228,7 +228,7 @@ public suspend fun AIAgentLoopContext.requestLLMOnlyCallingTools(message: String
  * @param tool The tool descriptor that the LLM must use.
  * @return The LLM response containing the tool call.
  */
-public suspend fun AIAgentLoopContext.requestLLMForceOneTool(
+public suspend fun AIAgentFunctionalContext.requestLLMForceOneTool(
     message: String,
     tool: ToolDescriptor
 ): Message.Response {
@@ -249,7 +249,7 @@ public suspend fun AIAgentLoopContext.requestLLMForceOneTool(
  * @param tool The tool that the LLM must use.
  * @return The LLM response containing the tool call.
  */
-public suspend fun AIAgentLoopContext.requestLLMForceOneTool(
+public suspend fun AIAgentFunctionalContext.requestLLMForceOneTool(
     message: String,
     tool: Tool<*, *>
 ): Message.Response {
@@ -268,7 +268,7 @@ public suspend fun AIAgentLoopContext.requestLLMForceOneTool(
  * @param toolCall The tool call to execute.
  * @return The result of the tool execution.
  */
-public suspend fun AIAgentLoopContext.executeTool(toolCall: Message.Tool.Call): ReceivedToolResult {
+public suspend fun AIAgentFunctionalContext.executeTool(toolCall: Message.Tool.Call): ReceivedToolResult {
     return environment.executeTool(toolCall)
 }
 
@@ -280,7 +280,7 @@ public suspend fun AIAgentLoopContext.executeTool(toolCall: Message.Tool.Call): 
  * @param parallelTools Specifies whether tools should be executed in parallel, defaults to false.
  * @return A list of results from the executed tool calls.
  */
-public suspend fun AIAgentLoopContext.executeMultipleTools(
+public suspend fun AIAgentFunctionalContext.executeMultipleTools(
     toolCalls: List<Message.Tool.Call>,
     parallelTools: Boolean = false
 ): List<ReceivedToolResult> {
@@ -297,7 +297,7 @@ public suspend fun AIAgentLoopContext.executeMultipleTools(
  * @param toolResult The tool result to add to the prompt.
  * @return The LLM response.
  */
-public suspend fun AIAgentLoopContext.sendToolResult(toolResult: ReceivedToolResult): Message.Response {
+public suspend fun AIAgentFunctionalContext.sendToolResult(toolResult: ReceivedToolResult): Message.Response {
     return llm.writeSession {
         updatePrompt {
             tool {
@@ -315,7 +315,7 @@ public suspend fun AIAgentLoopContext.sendToolResult(toolResult: ReceivedToolRes
  * @param results The list of tool results to add to the prompt.
  * @return A list of LLM responses.
  */
-public suspend fun AIAgentLoopContext.sendMultipleToolResults(
+public suspend fun AIAgentFunctionalContext.sendMultipleToolResults(
     results: List<ReceivedToolResult>
 ): List<Message.Response> {
     return llm.writeSession {
@@ -337,7 +337,7 @@ public suspend fun AIAgentLoopContext.sendMultipleToolResults(
  * @param doUpdatePrompt Specifies whether to add tool call details to the prompt.
  * @return The result of the tool execution.
  */
-public suspend inline fun <reified ToolArg : ToolArgs, reified TResult : ToolResult> AIAgentLoopContext.executeSingleTool(
+public suspend inline fun <reified ToolArg : ToolArgs, reified TResult : ToolResult> AIAgentFunctionalContext.executeSingleTool(
     tool: Tool<ToolArg, TResult>,
     toolArgs: ToolArg,
     doUpdatePrompt: Boolean = true
@@ -376,7 +376,7 @@ public suspend inline fun <reified ToolArg : ToolArgs, reified TResult : ToolRes
  * @param preserveMemory Specifies whether to retain message memory after compression.
  * @return The input value, unchanged.
  */
-public suspend fun AIAgentLoopContext.compressHistory(
+public suspend fun AIAgentFunctionalContext.compressHistory(
     strategy: HistoryCompressionStrategy = HistoryCompressionStrategy.WholeHistory,
     preserveMemory: Boolean = true
 ) {

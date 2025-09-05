@@ -1,6 +1,6 @@
 package ai.koog.agents.example.chat
 
-import ai.koog.agents.core.agent.actAIAgent
+import ai.koog.agents.core.agent.functionalAIAgent
 import ai.koog.agents.core.agent.requestLLM
 import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
 import ai.koog.prompt.llm.OllamaModels
@@ -9,7 +9,7 @@ import kotlin.uuid.ExperimentalUuidApi
 
 @OptIn(ExperimentalUuidApi::class)
 fun main(): Unit = runBlocking {
-    val loopAgent = actAIAgent<String, Unit>(
+    val loopAgent = functionalAIAgent<String, Unit>(
         prompt = "You're a simple chat agent",
         promptExecutor = simpleOllamaAIExecutor(),
         model = OllamaModels.Meta.LLAMA_3_2

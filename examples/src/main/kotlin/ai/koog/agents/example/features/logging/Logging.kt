@@ -95,7 +95,7 @@ class Logging(val logger: Logger) {
 @Suppress("unused")
 fun installLogging(coroutineScope: CoroutineScope, logName: String = "agent-logs") {
     val agent = AIAgent(
-        executor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey),
+        promptExecutor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey),
         llmModel = OpenAIModels.CostOptimized.GPT4oMini,
         systemPrompt = "You are a code assistant. Provide concise code examples."
     ) {

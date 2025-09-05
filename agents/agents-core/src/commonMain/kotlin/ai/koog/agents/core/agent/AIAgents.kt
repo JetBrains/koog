@@ -30,10 +30,10 @@ import kotlin.uuid.Uuid
 @OptIn(ExperimentalUuidApi::class)
 public inline fun <reified Input, reified Output> AIAgent(
     promptExecutor: PromptExecutor,
-    strategy: AIAgentGraphStrategy<Input, Output>,
     agentConfig: AIAgentConfigBase,
-    id: String = Uuid.random().toString(),
     toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
+    strategy: AIAgentGraphStrategy<Input, Output>,
+    id: String = Uuid.random().toString(),
     clock: Clock = Clock.System,
     noinline installFeatures: FeatureContext.() -> Unit = {},
 ): AIAgent<Input, Output> = GraphAIAgent(
@@ -51,7 +51,7 @@ public inline fun <reified Input, reified Output> AIAgent(
 /**
  * Convenience builder that creates an instance of an [AIAgent] with string input and output and the specified parameters.
  *
- * @param executor The [PromptExecutor] responsible for executing prompts.
+ * @param promptExecutor The [PromptExecutor] responsible for executing prompts.
  * @param strategy The [AIAgentGraphStrategy] defining the agent's behavior. Default is a single-run strategy.
  * @param systemPrompt The system-level prompt context for the agent. Default is an empty string.
  * @param llmModel The language model to be used by the agent.
@@ -64,19 +64,19 @@ public inline fun <reified Input, reified Output> AIAgent(
  */
 @OptIn(ExperimentalUuidApi::class)
 public fun AIAgent(
-    executor: PromptExecutor,
+    promptExecutor: PromptExecutor,
     llmModel: LLModel,
-    id: String = Uuid.random().toString(),
     strategy: AIAgentGraphStrategy<String, String> = singleRunStrategy(),
+    toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
+    id: String = Uuid.random().toString(),
     systemPrompt: String = "",
     temperature: Double = 1.0,
     numberOfChoices: Int = 1,
-    toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     maxIterations: Int = 50,
     installFeatures: FeatureContext.() -> Unit = {}
 ): AIAgent<String, String> = AIAgent(
     id = id,
-    promptExecutor = executor,
+    promptExecutor = promptExecutor,
     strategy = strategy,
     agentConfig = AIAgentConfig(
         prompt = prompt(
