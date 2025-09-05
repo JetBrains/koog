@@ -93,7 +93,7 @@ val agent = createAgent(
 }
 
 // Client configuration
-val clientConfig = AIAgentFeatureClientConnectionConfig(
+val clientConfig = DefaultClientConnectionConfig(
     host = "127.0.0.1", 
     port = port
 )
