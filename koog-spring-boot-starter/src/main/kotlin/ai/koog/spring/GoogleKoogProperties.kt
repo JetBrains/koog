@@ -15,7 +15,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 @ConfigurationProperties(prefix = GoogleKoogProperties.PREFIX)
 public class GoogleKoogProperties(
     public val apiKey: String = "",
-    public val baseUrl: String = "https://generativelanguage.googleapis.com"
+    public val baseUrl: String = "https://generativelanguage.googleapis.com",
+    public val retry: RetryConfigKoogProperties? = null
 ) {
     /**
      * Companion object for the GoogleKoogProperties class, providing constant values and

@@ -13,7 +13,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties
  */
 @ConfigurationProperties(prefix = OllamaKoogProperties.PREFIX)
 public class OllamaKoogProperties(
-    public val baseUrl: String = "http://localhost:11434"
+    public val baseUrl: String = "http://localhost:11434",
+    public val retry: RetryConfigKoogProperties? = null
 ) {
     /**
      * Companion object for the OllamaKoogProperties class, providing constant values and

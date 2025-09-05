@@ -15,7 +15,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 @ConfigurationProperties(prefix = OpenRouterKoogProperties.PREFIX)
 public class OpenRouterKoogProperties(
     public val apiKey: String = "",
-    public val baseUrl: String = "https://openrouter.ai"
+    public val baseUrl: String = "https://openrouter.ai",
+    public val retry: RetryConfigKoogProperties? = null
 ) {
     /**
      * Companion object for the OpenRouterKoogProperties class, providing constant values and
