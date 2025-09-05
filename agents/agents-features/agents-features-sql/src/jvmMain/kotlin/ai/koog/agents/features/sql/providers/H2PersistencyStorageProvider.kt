@@ -14,12 +14,8 @@ public class H2PersistencyStorageProvider(
     database: Database,
     tableName: String = "agent_checkpoints",
     ttlSeconds: Long? = null,
-    private val migrator: ExposedSQLMigrator = H2ExposedMigrator(database, tableName)
-) : ExposedPersistencyStorageProvider(persistenceId, database, tableName, ttlSeconds) {
-
-    override suspend fun migrate() {
-        migrator.migrate()
-    }
+    migrator: SQLPersistenceSchemaMigrator = H2PersistenceSchemaMigrator(database, tableName)
+) : ExposedPersistencyStorageProvider(persistenceId, database, tableName, ttlSeconds, migrator) {
 
     public override suspend fun <T> transaction(block: suspend () -> T): T =
         newSuspendedTransaction(Dispatchers.IO, database) {
@@ -108,7 +104,7 @@ public class H2PersistencyStorageProvider(
 }
 
 /**
- * H2-specific implementation of the [ExposedSQLMigrator] interface.
+ * H2-specific implementation of the [SQLPersistenceSchemaMigrator] interface.
  *
  * This class is responsible for managing and executing schema migrations
  * for an H2 database using the Exposed SQL library. It allows for the creation
@@ -124,7 +120,7 @@ public class H2PersistencyStorageProvider(
  * Use this class when working with H2 as your database provider and schema migrations
  * are required during the application's lifecycle.
  */
-public class H2ExposedMigrator(private val database: Database, private val tableName: String) : ExposedSQLMigrator {
+public class H2PersistenceSchemaMigrator(private val database: Database, private val tableName: String) : SQLPersistenceSchemaMigrator {
     override suspend fun migrate() {
         transaction(database) {
             // Execute the raw PostgreSQL DDL

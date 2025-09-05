@@ -16,8 +16,8 @@ public class PostgresPersistencyStorageProvider(
     database: Database,
     tableName: String = "agent_checkpoints",
     ttlSeconds: Long? = null,
-    private val migrator: ExposedSQLMigrator = PostgresExposedMigrator(database, tableName)
-) : ExposedPersistencyStorageProvider(persistenceId, database, tableName, ttlSeconds) {
+    migrator: SQLPersistenceSchemaMigrator = PostgresPersistenceSchemaMigrator(database, tableName)
+) : ExposedPersistencyStorageProvider(persistenceId, database, tableName, ttlSeconds, migrator) {
 
     override suspend fun <T> transaction(block: suspend () -> T): T =
         newSuspendedTransaction(Dispatchers.IO, database) { block() }
@@ -32,12 +32,10 @@ public class PostgresPersistencyStorageProvider(
      * Note: Currently uses TEXT for JSON storage. Future versions may use JSONB when Exposed adds better support.
      */
     public class PostgresCheckpointsTable(tableName: String) : CheckpointsTable(tableName)
-
-    override suspend fun migrate(): Unit = migrator.migrate()
 }
 
 /**
- * Implementation of [ExposedSQLMigrator] for handling schema migrations in PostgreSQL
+ * Implementation of [SQLPersistenceSchemaMigrator] for handling schema migrations in PostgreSQL
  * databases using the Exposed SQL library.
  *
  * This class focuses on PostgreSQL-specific schema migration requirements and provides
@@ -50,8 +48,8 @@ public class PostgresPersistencyStorageProvider(
  * Designed to work with PostgreSQL, this migrator ensures that schema operations
  * respect PostgreSQL constraints, data types, and optimizations.
  */
-public class PostgresExposedMigrator(private val database: Database, private val tableName: String) :
-    ExposedSQLMigrator {
+public class PostgresPersistenceSchemaMigrator(private val database: Database, private val tableName: String) :
+    SQLPersistenceSchemaMigrator {
     override suspend fun migrate() {
         transaction(database) {
             // Execute the raw PostgreSQL DDL

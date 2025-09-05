@@ -36,7 +36,8 @@ import kotlinx.serialization.json.Json
 public abstract class SQLPersistencyStorageProvider(
     protected val persistenceId: String,
     protected val tableName: String = "agent_checkpoints",
-    protected val ttlSeconds: Long? = null
+    protected val ttlSeconds: Long? = null,
+    protected val migrator: SQLPersistenceSchemaMigrator
 ) : PersistencyStorageProvider {
 
     protected val json: Json = Json {
@@ -48,7 +49,9 @@ public abstract class SQLPersistencyStorageProvider(
      * Initializes the database schema if it doesn't exist.
      * This should be called once during provider initialization.
      */
-    public abstract suspend fun migrate()
+    public open suspend fun migrate() {
+        migrator.migrate()
+    }
 
     /**
      * Executes a database transaction with the given operations.

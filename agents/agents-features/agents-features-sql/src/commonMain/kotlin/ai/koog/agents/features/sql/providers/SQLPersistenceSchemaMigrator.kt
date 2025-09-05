@@ -12,7 +12,7 @@ package ai.koog.agents.features.sql.providers
  * The primary function to be implemented is [migrate], which encapsulates the details of performing
  * the required schema update or adjustments based on the application's requirements.
  */
-public interface ExposedSQLMigrator {
+public interface SQLPersistenceSchemaMigrator {
     /**
      * Performs a database schema migration asynchronously.
      */
@@ -20,15 +20,15 @@ public interface ExposedSQLMigrator {
 }
 
 /**
- * A no-operation implementation of the [ExposedSQLMigrator] interface.
+ * A no-operation implementation of the [SQLPersistenceSchemaMigrator] interface.
  *
  * This class is designed to be used in scenarios where schema migrations are not required
  * or are managed externally. It provides an empty implementation of the [migrate] method,
  * effectively acting as a placeholder.
  *
- * Use this class if you need to satisfy the dependency on [ExposedSQLMigrator] but do not
+ * Use this class if you need to satisfy the dependency on [SQLPersistenceSchemaMigrator] but do not
  * want to perform any migration actions.
  */
-public class NoOpExposedSQLMigrator : ExposedSQLMigrator {
+public object NoOpSQLPersistenceSchemaMigrator : SQLPersistenceSchemaMigrator {
     override suspend fun migrate() { }
 }

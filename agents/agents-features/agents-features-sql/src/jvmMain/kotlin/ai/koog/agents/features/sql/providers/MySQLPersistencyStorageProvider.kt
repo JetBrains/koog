@@ -39,12 +39,8 @@ public class MySQLPersistencyStorageProvider(
     database: Database,
     tableName: String = "agent_checkpoints",
     ttlSeconds: Long? = null,
-    private val migrator: ExposedSQLMigrator = MySqlExposedMigrator(database, tableName)
-) : ExposedPersistencyStorageProvider(persistenceId, database, tableName, ttlSeconds) {
-
-    override suspend fun migrate() {
-        migrator.migrate()
-    }
+    migrator: SQLPersistenceSchemaMigrator = MySqlPersistenceSchemaMigrator(database, tableName)
+) : ExposedPersistencyStorageProvider(persistenceId, database, tableName, ttlSeconds, migrator) {
 
     override suspend fun <T> transaction(block: suspend () -> T): T =
         newSuspendedTransaction(Dispatchers.IO, database) {
@@ -67,7 +63,7 @@ public class MySQLPersistencyStorageProvider(
  * @param database The connection to the MySQL database where migrations will be applied
  * @param tableName The name of the table to be created or updated during migration
  */
-public class MySqlExposedMigrator(private val database: Database, private val tableName: String) : ExposedSQLMigrator {
+public class MySqlPersistenceSchemaMigrator(private val database: Database, private val tableName: String) : SQLPersistenceSchemaMigrator {
     override suspend fun migrate() {
         transaction(database) {
             exec(

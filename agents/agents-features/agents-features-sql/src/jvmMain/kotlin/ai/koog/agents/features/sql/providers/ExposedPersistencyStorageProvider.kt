@@ -115,11 +115,13 @@ public abstract class ExposedPersistencyStorageProvider(
     persistenceId: String,
     protected val database: Database,
     tableName: String = "agent_checkpoints",
-    ttlSeconds: Long? = null
+    ttlSeconds: Long? = null,
+    migrator: SQLPersistenceSchemaMigrator
 ) : SQLPersistencyStorageProvider(
     persistenceId = persistenceId,
     tableName = tableName,
-    ttlSeconds = ttlSeconds
+    ttlSeconds = ttlSeconds,
+    migrator
 ) {
     /**
      * The Exposed table definition for checkpoints.
