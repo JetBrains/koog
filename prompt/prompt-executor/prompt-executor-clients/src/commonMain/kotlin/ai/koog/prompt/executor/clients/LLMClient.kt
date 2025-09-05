@@ -37,12 +37,19 @@ public interface LLMClient {
      * @param model The LLM model to use
      * @return Flow of response chunks
      */
-    @Deprecated("Use executeStreamingWithTools instead")
     public fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> =
         executeStreamingWithTools(prompt, model, emptyList())
             .filterIsInstance<StreamingFrame.Append>()
             .map { append -> append.text }
 
+    /**
+     * Executes a prompt and returns a streaming flow of response chunks.
+     *
+     * @param prompt The prompt to execute
+     * @param model The LLM model to use
+     * @param tools Optional list of tools that can be used by the LLM
+     * @return Flow of response chunks
+     */
     public fun executeStreamingWithTools(
         prompt: Prompt,
         model: LLModel,

@@ -482,12 +482,18 @@ public class AIAgentLLMWriteSession internal constructor(
      * in constructing the prompt for the language model request.
      * @return a flow of strings that streams the responses from the language model.
      */
-    @Deprecated("Use requestLLMStreamingWithTools instead")
     public fun requestLLMStreaming(definition: StructuredDataDefinition? = null): Flow<String> =
         requestLLMStreamingWithTools(definition)
             .filterIsInstance<StreamingFrame.Append>()
             .map { append -> append.text }
 
+    /**
+     * Streams the result of a request to a language model.
+     *
+     * @param definition an optional parameter to define a structured data format. When provided, it will be used
+     * in constructing the prompt for the language model request.
+     * @return a flow of `StreamingFrame` objects that streams the responses from the language model.
+     */
     public fun requestLLMStreamingWithTools(definition: StructuredDataDefinition? = null): Flow<StreamingFrame> {
         if (definition != null) {
             val prompt = prompt(prompt, clock) {

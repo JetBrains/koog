@@ -42,12 +42,19 @@ public interface PromptExecutor {
      * @param model The language model to be used for processing the prompt.
      * @return A flow emitting strings that represent the streaming output of the language model.
      */
-    @Deprecated("Use executeStreamingWithTools instead")
     public fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> =
         executeStreamingWithTools(prompt, model, emptyList())
             .filterIsInstance<StreamingFrame.Append>()
             .map { append -> append.text }
 
+    /**
+     * Executes a given prompt using the specified language model and returns a stream of output as a flow of `StreamingFrame` objects.
+     *
+     * @param prompt The prompt containing input messages and parameters to guide the language model execution.
+     * @param model The language model to be used for processing the prompt.
+     * @param tools A list of `ToolDescriptor` objects that define the tools available for the execution.
+     * @return A flow emitting `StreamingFrame` objects that represent the streaming output of the language model.
+     */
     public fun executeStreamingWithTools(
         prompt: Prompt,
         model: LLModel,
