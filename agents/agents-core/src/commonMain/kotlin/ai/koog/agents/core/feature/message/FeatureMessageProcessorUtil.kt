@@ -16,7 +16,7 @@ public object FeatureMessageProcessorUtil {
 
     internal suspend fun FeatureMessageProcessor.onMessageSafe(message: FeatureMessage) {
         try {
-            this.processMessage(message)
+            this.onMessage(message)
         } catch (t: Throwable) {
             logger.error(t) { "Error while processing the provider onMessage handler: ${message.messageType.value}" }
         }

@@ -80,7 +80,7 @@ class FeatureMessageFileWriterTest {
             val jobs = List(jobCount) { number ->
                 cs.launch(Dispatchers.Default) {
                     writer.initialize()
-                    writer.processMessage(FeatureStringMessage("Test message $number"))
+                    writer.onMessage(FeatureStringMessage("Test message $number"))
                 }
             }
 
@@ -104,7 +104,7 @@ class FeatureMessageFileWriterTest {
         val writer = TestFeatureMessageFileWriter(tempDir)
 
         val throwable = assertThrows<IllegalStateException> {
-            writer.processMessage(message = FeatureStringMessage("test-message"))
+            writer.onMessage(message = FeatureStringMessage("test-message"))
         }
 
         val expectedError = "Writer is not initialized. Please make sure you call method 'initialize()' before."
@@ -120,8 +120,8 @@ class FeatureMessageFileWriterTest {
             val stringMessage = FeatureStringMessage("Test message")
             val eventMessage = TestFeatureEventMessage("Test event")
 
-            writer.processMessage(stringMessage)
-            writer.processMessage(eventMessage)
+            writer.onMessage(stringMessage)
+            writer.onMessage(eventMessage)
 
             val expectedContent = listOf(
                 "[${stringMessage.messageType.value}] ${stringMessage.message}",
@@ -147,7 +147,7 @@ class FeatureMessageFileWriterTest {
                 val message = FeatureStringMessage("Test message $number")
 
                 cs.launch(Dispatchers.Default) {
-                    writer.processMessage(message)
+                    writer.onMessage(message)
                 }
             }
 
@@ -206,7 +206,7 @@ class FeatureMessageFileWriterTest {
         assertFalse(writer.isOpen.value)
 
         val throwable = assertThrows<IllegalStateException> {
-            writer.processMessage(message = FeatureStringMessage("test-message"))
+            writer.onMessage(message = FeatureStringMessage("test-message"))
         }
 
         val expectedError = "Writer is not initialized. Please make sure you call method 'initialize()' before."

@@ -88,6 +88,35 @@ install(TraceFeature) {
 
 The `FeatureMessageProcessor` class contains methods for initialization of a concrete processor instance and properly closing it when finished.
 
+#### Filtering messages with setMessageFilter
+
+Every `FeatureMessageProcessor` now supports message filtering via `setMessageFilter`. By default, all messages are processed. You can supply a predicate to process only specific messages. The filter is evaluated for each incoming `FeatureMessage` before it is passed to the processor.
+
+Example: only process LLM call start/end events
+```kotlin
+myFeatureMessageProcessor.setMessageFilter { message ->
+    message is BeforeLLMCallEvent ||
+    message is AfterLLMCallEvent
+}
+```
+
+You can use the same approach with any concrete processor implementation (e.g., `FeatureMessageLogWriter`, `FeatureMessageFileWriter`, or `FeatureMessageRemoteWriter`):
+```kotlin
+val logWriter = MyFeatureMessageLogWriter(targetLogger = KotlinLogger.logger("my.feature.logger"))
+logWriter.initialize()
+logWriter.setMessageFilter { message -> 
+    message is AfterLLMCallEvent && message.content.contains("keyword")
+}
+
+install(MyFeature) {
+    addMessageProcessor(logWriter)
+}
+```
+
+Notes:
+- If you do not set a filter, all messages are processed (default behavior).
+- You can change the filter at runtime by calling `setMessageFilter` again; the new predicate will be applied to subsequent messages.
+
 ### Using FeatureMessageFileWriter
 
 For more advanced message processing, you can use `FeatureMessageFileWriter` to write feature messages to files. This abstract class provides functionality to convert and write feature messages to a target file using a specified file system provider.

@@ -61,7 +61,7 @@ class FeatureMessageRemoteWriterTest {
 
         val writer = TestFeatureMessageRemoteWriter(serverConfig)
         val throwable = assertThrows<IllegalStateException> {
-            writer.processMessage(FeatureStringMessage("test message"))
+            writer.onMessage(FeatureStringMessage("test message"))
         }
 
         val expectedError = "Writer is not initialized. Please make sure you call method 'initialize()' before."
@@ -161,7 +161,7 @@ class FeatureMessageRemoteWriterTest {
                 writer.initialize()
                 isServerStarted.complete(true)
 
-                writer.processMessage(testServerMessage)
+                writer.onMessage(testServerMessage)
 
                 isClientFinished.await()
                 logger.info { "Server is finished successfully" }
@@ -230,7 +230,7 @@ class FeatureMessageRemoteWriterTest {
                 writer.initialize()
                 isServerStarted.complete(true)
 
-                writer.processMessage(message = testServerMessage)
+                writer.onMessage(message = testServerMessage)
 
                 isClientFinished.await()
                 logger.info { "Server is finished successfully" }

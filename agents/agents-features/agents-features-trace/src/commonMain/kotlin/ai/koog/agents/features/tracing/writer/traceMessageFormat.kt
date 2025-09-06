@@ -58,10 +58,10 @@ internal val AIAgentNodeExecutionEndEvent.nodeExecutionEndEventFormat
 internal val AIAgentNodeExecutionErrorEvent.nodeExecutionErrorEventFormat
     get() = "$eventId (run id: $runId, node: $nodeName, error: ${error.message})"
 
-internal val BeforeLLMCallEvent.llmCallStartEventFormat
+internal val BeforeLLMCallEvent.beforeLLMCallEventFormat
     get() = "$eventId (run id: $runId, prompt: ${prompt.traceString}, model: $model, tools: [${tools.joinToString()}])"
 
-internal val AfterLLMCallEvent.llmCallEndEventFormat
+internal val AfterLLMCallEvent.afterLLMCallEventFormat
     get() = "$eventId (run id: $runId, prompt: ${prompt.traceString}, model: $model, responses: [${
         responses.joinToString {
             "{${it.traceString}}"
@@ -92,8 +92,8 @@ internal val FeatureMessage.traceMessage: String
             is AIAgentNodeExecutionStartEvent -> this.nodeExecutionStartEventFormat
             is AIAgentNodeExecutionEndEvent -> this.nodeExecutionEndEventFormat
             is AIAgentNodeExecutionErrorEvent -> this.nodeExecutionErrorEventFormat
-            is BeforeLLMCallEvent -> this.llmCallStartEventFormat
-            is AfterLLMCallEvent -> this.llmCallEndEventFormat
+            is BeforeLLMCallEvent -> this.beforeLLMCallEventFormat
+            is AfterLLMCallEvent -> this.afterLLMCallEventFormat
             is ToolCallEvent -> this.toolCallEventFormat
             is ToolValidationErrorEvent -> this.toolValidationErrorEventFormat
             is ToolCallFailureEvent -> this.toolCallFailureEventFormat

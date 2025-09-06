@@ -55,7 +55,7 @@ class FeatureMessageLogWriterTest {
 
         TestFeatureMessageLogWriter(targetLogger).use { writer ->
 
-            messages.forEach { message -> writer.processMessage(message) }
+            messages.forEach { message -> writer.onMessage(message) }
 
             val expectedLogMessages = messages.map { originalMessage ->
                 "[INFO] Received feature message [${originalMessage.messageType.value}]: message: ${originalMessage.message}"
@@ -76,7 +76,7 @@ class FeatureMessageLogWriterTest {
 
         TestFeatureMessageLogWriter(targetLogger).use { writer ->
 
-            messages.forEach { message -> writer.processMessage(message) }
+            messages.forEach { message -> writer.onMessage(message) }
 
             val expectedLogMessages = messages.map { originalMessage ->
                 "[INFO] Received feature message [${originalMessage.messageType.value}]: event id: ${originalMessage.eventId}"
@@ -97,7 +97,7 @@ class FeatureMessageLogWriterTest {
 
         TestFeatureMessageLogWriter(targetLogger).use { writer ->
 
-            messages.forEach { message -> writer.processMessage(message) }
+            messages.forEach { message -> writer.onMessage(message) }
 
             val expectedLogMessages = listOf(
                 "[INFO] Received feature message [${messages[0].messageType.value}]: message: ${(messages[0] as FeatureStringMessage).message}",
@@ -118,7 +118,7 @@ class FeatureMessageLogWriterTest {
         )
 
         TestFeatureMessageLogWriter(targetLogger, LogLevel.DEBUG).use { writer ->
-            messages.forEach { message -> writer.processMessage(message) }
+            messages.forEach { message -> writer.onMessage(message) }
 
             val expectedLogMessages = messages.map { originalMessage ->
                 "[DEBUG] Received feature message [${originalMessage.messageType.value}]: message: ${originalMessage.message}"
@@ -138,7 +138,7 @@ class FeatureMessageLogWriterTest {
         )
 
         TestFeatureMessageLogWriter(targetLogger, LogLevel.DEBUG).use { writer ->
-            messages.forEach { message -> writer.processMessage(message) }
+            messages.forEach { message -> writer.onMessage(message) }
 
             val expectedLogMessages = messages.map { originalMessage ->
                 "[DEBUG] Received feature message [${originalMessage.messageType.value}]: event id: ${originalMessage.eventId}"
@@ -161,7 +161,7 @@ class FeatureMessageLogWriterTest {
 
         // Even though we set LogLevel.DEBUG, messages should be added as debug logs.
         TestFeatureMessageLogWriter(testLogger, LogLevel.DEBUG).use { writer ->
-            messages.forEach { message -> writer.processMessage(message) }
+            messages.forEach { message -> writer.onMessage(message) }
             assertEquals(2, testLogger.messages.size)
         }
     }
@@ -177,7 +177,7 @@ class FeatureMessageLogWriterTest {
 
         // Even though we set LogLevel.INFO, messages should be added as info logs.
         TestFeatureMessageLogWriter(testLogger, LogLevel.INFO).use { writer ->
-            messages.forEach { message -> writer.processMessage(message) }
+            messages.forEach { message -> writer.onMessage(message) }
             assertEquals(2, testLogger.messages.size)
         }
     }

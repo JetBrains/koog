@@ -55,10 +55,15 @@ import io.github.oshai.kotlinlogging.KotlinLogging
  *     install(Tracing) {
  *         // Configure message processors to handle trace events
  *         addMessageProcessor(TraceFeatureMessageLogWriter(logger))
- *         addMessageProcessor(TraceFeatureMessageFileWriter(outputFile, fileSystem::sink))
+
+ *         val fileWriter = TraceFeatureMessageFileWriter(
+ *             outputFile,
+ *             { path: Path -> SystemFileSystem.sink(path).buffered() }
+ *         )
+ *         addMessageProcessor(fileWriter)
  *
  *         // Optionally filter messages
- *         messageFilter = { message ->
+ *         fileWriter.setMessageFilter { message ->
  *             // Only trace LLM calls and tool calls
  *             message is BeforeLLMCallEvent || message is ToolCallEvent
  *         }
@@ -323,10 +328,6 @@ public class Tracing {
         //region Private Methods
 
         private suspend fun processMessage(config: TraceFeatureConfig, message: FeatureMessage) {
-            if (!config.messageFilter(message)) {
-                return
-            }
-
             config.messageProcessors.onMessageForEachSafe(message)
         }
 

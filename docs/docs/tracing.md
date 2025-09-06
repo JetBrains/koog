@@ -55,25 +55,18 @@ val outputPath = Path("/path/to/trace.log")
 
 // Creating an agent
 val agent = AIAgent(
-   promptExecutor = simpleOllamaAIExecutor(),
-   llmModel = OllamaModels.Meta.LLAMA_3_2,
+    promptExecutor = simpleOllamaAIExecutor(),
+    llmModel = OllamaModels.Meta.LLAMA_3_2,
 ) {
-   install(Tracing) {
-      // Configure message processors to handle trace events
-      addMessageProcessor(TraceFeatureMessageLogWriter(logger))
-      addMessageProcessor(
-         TraceFeatureMessageFileWriter(
+    install(Tracing) {
+
+        // Configure message processors to handle trace events
+        addMessageProcessor(TraceFeatureMessageLogWriter(logger))
+        addMessageProcessor(TraceFeatureMessageFileWriter(
             outputPath,
             { path: Path -> SystemFileSystem.sink(path).buffered() }
-         )
-      )
-
-      // Optionally filter messages
-      messageFilter = { message ->
-         // Only trace LLM calls and tool calls
-         message is AfterLLMCallEvent || message is ToolCallEvent
-      }
-   }
+        ))
+    }
 }
 ```
 <!--- KNIT example-tracing-01.kt -->
@@ -87,28 +80,41 @@ agent runs:
 <!--- INCLUDE
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.feature.model.events.*
+import ai.koog.agents.example.exampleTracing01.outputPath
 import ai.koog.agents.features.tracing.feature.Tracing
+import ai.koog.agents.features.tracing.writer.TraceFeatureMessageFileWriter
 import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
 import ai.koog.prompt.llm.OllamaModels
+import kotlinx.io.buffered
+import kotlinx.io.files.Path
+import kotlinx.io.files.SystemFileSystem
 
 val agent = AIAgent(
-   promptExecutor = simpleOllamaAIExecutor(),
-   llmModel = OllamaModels.Meta.LLAMA_3_2,
+    promptExecutor = simpleOllamaAIExecutor(),
+    llmModel = OllamaModels.Meta.LLAMA_3_2,
 ) {
-   install(Tracing) {
+    install(Tracing) {
 -->
 <!--- SUFFIX
    }
 }
 -->
 ```kotlin
+
+val fileWriter = TraceFeatureMessageFileWriter(
+    outputPath,
+    { path: Path -> SystemFileSystem.sink(path).buffered() }
+)
+
+addMessageProcessor(fileWriter)
+
 // Filter for LLM-related events only
-messageFilter = { message -> 
+fileWriter.setMessageFilter { message ->
     message is BeforeLLMCallEvent || message is AfterLLMCallEvent
 }
 
 // Filter for tool-related events only
-messageFilter = { message -> 
+fileWriter.setMessageFilter { message -> 
     message is ToolCallEvent ||
            message is ToolCallResultEvent ||
            message is ToolValidationErrorEvent ||
@@ -116,7 +122,7 @@ messageFilter = { message ->
 }
 
 // Filter for node execution events only
-messageFilter = { message -> 
+fileWriter.setMessageFilter { message -> 
     message is AIAgentNodeExecutionStartEvent || message is AIAgentNodeExecutionEndEvent
 }
 ```
@@ -154,10 +160,8 @@ Tracing
     ├── AIAgentStrategyFinishedEvent
     ├── AIAgentNodeExecutionStartEvent
     ├── AIAgentNodeExecutionEndEvent
-    ├── LLMCallStartEvent
-    ├── LLMCallWithToolsStartEvent
-    ├── LLMCallEndEvent
-    ├── LLMCallWithToolsEndEvent
+    ├── BeforeLLMCallEvent
+    ├── AfterLLMCallEvent
     ├── ToolCallEvent
     ├── ToolValidationErrorEvent
     ├── ToolCallFailureEvent
@@ -298,11 +302,17 @@ fun main() {
 -->
 ```kotlin
 install(Tracing) {
+    
+    val fileWriter = TraceFeatureMessageFileWriter(
+        outputPath, 
+        { path: Path -> SystemFileSystem.sink(path).buffered() }
+    )
+    addMessageProcessor(fileWriter)
+    
     // Only trace LLM calls
-    messageFilter = { message ->
+    fileWriter.setMessageFilter { message ->
         message is BeforeLLMCallEvent || message is AfterLLMCallEvent
     }
-    addMessageProcessor(writer)
 }
 ```
 <!--- KNIT example-tracing-05.kt -->
@@ -458,11 +468,16 @@ fun main() {
 -->
 ```kotlin
 install(Tracing) {
-   // Only trace LLM calls
-   messageFilter = { message ->
-      message is BeforeLLMCallEvent || message is AfterLLMCallEvent
-   }
-   addMessageProcessor(writer)
+    val fileWriter = TraceFeatureMessageFileWriter(
+        outputPath, 
+        { path: Path -> SystemFileSystem.sink(path).buffered() }
+    )
+    addMessageProcessor(fileWriter)
+    
+    // Only trace LLM calls
+    fileWriter.setMessageFilter { message ->
+        message is BeforeLLMCallEvent || message is AfterLLMCallEvent
+    }
 }
 ```
 <!--- KNIT example-tracing-08.kt -->
@@ -493,12 +508,12 @@ val logger = KotlinLogging.logger {}
 val connectionConfig = DefaultServerConnectionConfig(host = ai.koog.agents.example.exampleTracing06.host, port = ai.koog.agents.example.exampleTracing06.port)
 
 fun main() {
-   runBlocking {
-      // Creating an agent
-      val agent = AIAgent(
-         promptExecutor = simpleOllamaAIExecutor(),
-         llmModel = OllamaModels.Meta.LLAMA_3_2,
-      ) {
+    runBlocking {
+        // Creating an agent
+        val agent = AIAgent(
+            promptExecutor = simpleOllamaAIExecutor(),
+            llmModel = OllamaModels.Meta.LLAMA_3_2,
+        ) {
 -->
 <!--- SUFFIX
         }
@@ -533,12 +548,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 fun main() {
-   runBlocking {
-      // Creating an agent
-      val agent = AIAgent(
-         promptExecutor = simpleOllamaAIExecutor(),
-         llmModel = OllamaModels.Meta.LLAMA_3_2,
-      ) {
+    runBlocking {
+        // Creating an agent
+        val agent = AIAgent(
+            promptExecutor = simpleOllamaAIExecutor(),
+            llmModel = OllamaModels.Meta.LLAMA_3_2,
+        ) {
 -->
 <!--- SUFFIX
         }
@@ -562,8 +577,8 @@ class CustomTraceProcessor : FeatureMessageProcessor() {
             }
 
             is AfterLLMCallEvent -> {
-                // Process LLM call end event
-           }
+                // Process LLM call end event 
+            }
             // Handle other event types 
         }
     }
@@ -679,15 +694,15 @@ Represents the end of a node run. Includes the following fields:
 
 ### LLM call events
 
-#### LLMCallStartEvent
+#### BeforeLLMCallEvent
 
 Represents the start of an LLM call. Includes the following fields:
 
-| Name      | Data type          | Required | Default             | Description                                                                        |
-|-----------|--------------------|----------|---------------------|------------------------------------------------------------------------------------|
-| `prompt`  | Prompt             | Yes      |                     | The prompt that is sent to the model. For more information, see [Prompt](#prompt). |
-| `tools`   | List&lt;String&gt; | Yes      |                     | The list of tools that the model can call.                                         |
-| `eventId` | String             | No       | `LLMCallStartEvent` | The identifier of the event. Usually the `simpleName` of the event class.          |
+| Name      | Data type          | Required | Default              | Description                                                                        |
+|-----------|--------------------|----------|----------------------|------------------------------------------------------------------------------------|
+| `prompt`  | Prompt             | Yes      |                      | The prompt that is sent to the model. For more information, see [Prompt](#prompt). |
+| `tools`   | List&lt;String&gt; | Yes      |                      | The list of tools that the model can call.                                         |
+| `eventId` | String             | No       | `BeforeLLMCallEvent` | The identifier of the event. Usually the `simpleName` of the event class.          |
 
 <a id="prompt"></a>
 The `Prompt` class represents a data structure for a prompt, consisting of a list of messages, a unique identifier, and
@@ -699,14 +714,14 @@ optional parameters for language model settings. Includes the following fields:
 | `id`       | String              | Yes      |             | The unique identifier for the prompt.                        |
 | `params`   | LLMParams           | No       | LLMParams() | The settings that control the way the LLM generates content. |
 
-#### LLMCallEndEvent
+#### AfterLLMCallEvent
 
 Represents the end of an LLM call. Includes the following fields:
 
-| Name        | Data type                    | Required | Default           | Description                                                               |
-|-------------|------------------------------|----------|-------------------|---------------------------------------------------------------------------|
-| `responses` | List&lt;Message.Response&gt; | Yes      |                   | One or more responses returned by the model.                              |
-| `eventId`   | String                       | No       | `LLMCallEndEvent` | The identifier of the event. Usually the `simpleName` of the event class. |
+| Name        | Data type                    | Required | Default             | Description                                                               |
+|-------------|------------------------------|----------|---------------------|---------------------------------------------------------------------------|
+| `responses` | List&lt;Message.Response&gt; | Yes      |                     | One or more responses returned by the model.                              |
+| `eventId`   | String                       | No       | `AfterLLMCallEvent` | The identifier of the event. Usually the `simpleName` of the event class. |
 
 ### Tool call events
 
