@@ -16,7 +16,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 /**
  * Configuration settings for connecting to the DeepSeek API.

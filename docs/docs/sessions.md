@@ -274,7 +274,7 @@ In a write session, you can update the prompt (conversation history) using the `
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 val myToolResult = Message.Tool.Result(
     id = "",

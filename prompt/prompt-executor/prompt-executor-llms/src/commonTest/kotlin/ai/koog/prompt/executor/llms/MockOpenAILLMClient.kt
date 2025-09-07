@@ -9,7 +9,7 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlin.jvm.JvmOverloads
 
 internal class MockOpenAILLMClient @JvmOverloads constructor(

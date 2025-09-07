@@ -20,7 +20,7 @@ import ai.koog.agents.utils.use
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import org.junit.jupiter.api.Assertions.assertEquals
 import kotlin.test.AfterTest
 import kotlin.test.Test

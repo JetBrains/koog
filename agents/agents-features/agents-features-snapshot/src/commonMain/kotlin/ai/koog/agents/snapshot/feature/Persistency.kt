@@ -11,13 +11,12 @@ import ai.koog.agents.core.feature.InterceptContext
 import ai.koog.agents.snapshot.providers.PersistencyStorageProvider
 import ai.koog.prompt.message.Message
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.serializer
 import kotlin.reflect.KType
-import kotlin.time.ExperimentalTime
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -36,7 +35,7 @@ import kotlin.uuid.Uuid
  * @property persistencyStorageProvider The provider responsible for storing and retrieving checkpoints
  * @property currentNodeId The ID of the node currently being executed
  */
-@OptIn(ExperimentalUuidApi::class, ExperimentalTime::class, InternalAgentsApi::class)
+@OptIn(ExperimentalUuidApi::class, InternalAgentsApi::class)
 public class Persistency(private val persistencyStorageProvider: PersistencyStorageProvider) {
     /**
      * Represents the identifier of the current node being executed within the agent pipeline.

@@ -5,7 +5,7 @@ package ai.koog.agents.snapshot.feature
 import ai.koog.agents.core.agent.context.AgentContextData
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.prompt.message.Message
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 

@@ -43,6 +43,9 @@ kotlin {
             }
         }
     }
+    compilerOptions {
+        freeCompilerArgs.add("-opt-in=kotlin.time.ExperimentalTime")
+    }
 }
 
 val envs = credentialsResolver.resolve(

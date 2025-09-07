@@ -3,7 +3,7 @@ package ai.koog.agents.core.dsl.extension
 import ai.koog.agents.core.agent.session.AIAgentLLMWriteSession
 import ai.koog.agents.core.prompt.Prompts.summarizeInTLDR
 import ai.koog.prompt.message.Message
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 
 /**
  * Represents an abstract strategy for compressing the history of messages in a `AIAgentLLMWriteSession`.

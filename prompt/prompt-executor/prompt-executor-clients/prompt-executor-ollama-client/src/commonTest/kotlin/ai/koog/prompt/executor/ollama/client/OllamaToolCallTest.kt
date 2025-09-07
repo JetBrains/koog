@@ -5,7 +5,7 @@ import ai.koog.prompt.executor.ollama.client.dto.OllamaToolCallDTO
 import ai.koog.prompt.executor.ollama.client.dto.getFirstToolCall
 import ai.koog.prompt.executor.ollama.client.dto.getToolCalls
 import ai.koog.prompt.message.ResponseMetaInfo
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlin.test.Test

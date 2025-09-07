@@ -2,7 +2,7 @@ package ai.koog.agents.core.feature.mock
 
 import ai.koog.agents.core.feature.message.FeatureEvent
 import ai.koog.agents.core.feature.message.FeatureMessage
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 internal class TestFeatureEventMessage(id: String) : FeatureEvent {
     override val eventId: String = id

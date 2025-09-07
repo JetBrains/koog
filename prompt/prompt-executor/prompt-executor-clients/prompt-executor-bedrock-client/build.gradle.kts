@@ -53,6 +53,7 @@ kotlin {
     explicitApi()
     compilerOptions {
         freeCompilerArgs.add("-opt-in=ai.koog.prompt.executor.clients.InternalLLMClientApi")
+        freeCompilerArgs.add("-opt-in=kotlin.time.ExperimentalTime")
     }
 }
 

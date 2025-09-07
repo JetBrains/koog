@@ -52,6 +52,9 @@ kotlin {
     }
 
     explicitApi()
+    compilerOptions {
+        freeCompilerArgs.add("-opt-in=kotlin.time.ExperimentalTime")
+    }
 }
 
 publishToMaven()

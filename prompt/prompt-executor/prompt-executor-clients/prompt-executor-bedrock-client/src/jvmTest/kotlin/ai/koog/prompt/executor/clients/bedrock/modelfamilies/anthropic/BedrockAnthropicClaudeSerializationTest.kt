@@ -10,8 +10,8 @@ import ai.koog.prompt.executor.clients.anthropic.AnthropicToolChoice
 import ai.koog.prompt.executor.clients.bedrock.BedrockModels
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
+import kotlin.time.Clock
+import kotlin.time.Instant
 import kotlinx.serialization.json.jsonObject
 import kotlin.test.Test
 import kotlin.test.assertContains
