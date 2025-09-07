@@ -11,7 +11,7 @@ plugins {
 // FIXME Kotlin MCP SDK only supports JVM target for now, so we only provide JVM target for this module too. Fix later
 kotlin {
     sourceSets {
-        jvmMain {
+        commonMain {
             dependencies {
                 api(project(":agents:agents-tools"))
                 api(project(":agents:agents-core"))
@@ -30,11 +30,16 @@ kotlin {
             }
         }
 
+        commonTest {
+            dependencies {
+                implementation(project(":test-utils"))
+                implementation(libs.ktor.client.cio)
+            }
+        }
+
         jvmTest {
             dependencies {
-                implementation(kotlin("test-junit5"))
                 implementation(project(":agents:agents-test"))
-                implementation(libs.kotlinx.coroutines.test)
             }
         }
     }

@@ -12,8 +12,8 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
-import org.junit.jupiter.api.Test
 import kotlin.test.Ignore
+import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
@@ -358,7 +358,8 @@ class DefaultMcpToolDescriptorParserTest {
         }
     }
 
-    @Ignore("until https://github.com/JetBrains/koog/issues/307 is fixed")
+    // Ignore until https://github.com/JetBrains/koog/issues/307 is fixed
+    @Ignore
     @Test
     fun `test parsing enum parameter type with complex values`() {
         // Create an SDK Tool with an enum parameter that has complex values (JsonArray)

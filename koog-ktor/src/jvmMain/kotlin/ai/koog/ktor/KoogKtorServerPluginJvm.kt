@@ -5,6 +5,7 @@ import ai.koog.agents.mcp.McpToolDescriptorParser
 import ai.koog.agents.mcp.McpToolRegistryProvider
 import ai.koog.agents.mcp.McpToolRegistryProvider.DEFAULT_MCP_CLIENT_NAME
 import ai.koog.agents.mcp.McpToolRegistryProvider.DEFAULT_MCP_CLIENT_VERSION
+import ai.koog.agents.mcp.defaultStdioTransport
 import io.modelcontextprotocol.kotlin.sdk.client.Client
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex

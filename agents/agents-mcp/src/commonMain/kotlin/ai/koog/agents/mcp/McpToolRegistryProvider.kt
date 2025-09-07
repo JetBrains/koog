@@ -7,11 +7,7 @@ import io.ktor.client.plugins.sse.SSE
 import io.modelcontextprotocol.kotlin.sdk.Implementation
 import io.modelcontextprotocol.kotlin.sdk.client.Client
 import io.modelcontextprotocol.kotlin.sdk.client.SseClientTransport
-import io.modelcontextprotocol.kotlin.sdk.client.StdioClientTransport
 import io.modelcontextprotocol.kotlin.sdk.shared.Transport
-import kotlinx.io.asSink
-import kotlinx.io.asSource
-import kotlinx.io.buffered
 
 /**
  * A provider for creating tool registries that connect to Model Context Protocol (MCP) servers.
@@ -23,7 +19,7 @@ import kotlinx.io.buffered
  * 4. Registering the transformed tools in a ToolRegistry
  */
 public object McpToolRegistryProvider {
-    private val logger = KotlinLogging.logger(McpToolRegistryProvider::class.qualifiedName!!)
+    private val logger = KotlinLogging.logger {}
 
     /**
      * Default name for the MCP client when connecting to an MCP server.
@@ -34,19 +30,6 @@ public object McpToolRegistryProvider {
      * Default version for the MCP client when connecting to an MCP server.
      */
     public const val DEFAULT_MCP_CLIENT_VERSION: String = "1.0.0"
-
-    /**
-     * Creates a default standard input/output transport for a provided process.
-     *
-     * @param process The process whose input and output streams will be used for communication.
-     * @return A `StdioClientTransport` configured to communicate with the process using its standard input and output.
-     */
-    public fun defaultStdioTransport(process: Process): StdioClientTransport {
-        return StdioClientTransport(
-            input = process.inputStream.asSource().buffered(),
-            output = process.outputStream.asSink().buffered()
-        )
-    }
 
     /**
      * Creates a default server-sent events (SSE) transport from a provided URL.
