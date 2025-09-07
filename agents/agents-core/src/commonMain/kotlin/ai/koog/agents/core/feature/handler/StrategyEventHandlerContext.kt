@@ -24,7 +24,9 @@ public class StrategyStartContext<TFeature>(
     public val strategy: AIAgentStrategy<*, *, *>,
     public val feature: TFeature,
     public val context: AIAgentContext,
-) : StrategyEventHandlerContext
+) : StrategyEventHandlerContext {
+    override val eventType: AgentEventType = AgentEventType.StrategyStart
+}
 
 /**
  * Represents the context associated with the completion of an AI agent strategy execution.
@@ -42,4 +44,6 @@ public class StrategyFinishContext<TFeature>(
     public val feature: TFeature,
     public val result: Any?,
     public val resultType: KType,
-) : StrategyEventHandlerContext
+) : StrategyEventHandlerContext {
+    override val eventType: AgentEventType = AgentEventType.StrategyFinished
+}

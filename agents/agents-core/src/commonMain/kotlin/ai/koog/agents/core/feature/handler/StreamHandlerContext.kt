@@ -24,7 +24,9 @@ public data class BeforeStreamContext(
     val prompt: Prompt,
     val model: LLModel,
     val tools: List<ToolDescriptor>,
-) : StreamHandlerContext
+) : StreamHandlerContext {
+    override val eventType: AgentEventType = AgentEventType.BeforeStream
+}
 
 /**
  * Represents the context for handling individual stream frame events.
@@ -36,7 +38,9 @@ public data class BeforeStreamContext(
 public data class StreamFrameContext(
     val runId: String,
     val streamFrame: StreamFrame,
-) : StreamHandlerContext
+) : StreamHandlerContext {
+    override val eventType: AgentEventType = AgentEventType.StreamFrame
+}
 
 /**
  * Represents the context for handling an error event during streaming.
@@ -48,7 +52,9 @@ public data class StreamFrameContext(
 public data class StreamErrorContext(
     val runId: String,
     val error: Throwable
-) : StreamHandlerContext
+) : StreamHandlerContext {
+    override val eventType: AgentEventType = AgentEventType.StreamError
+}
 
 /**
  * Represents the context for handling an after-stream event.
@@ -64,4 +70,6 @@ public data class AfterStreamContext(
     val prompt: Prompt,
     val model: LLModel,
     val tools: List<ToolDescriptor>
-) : StreamHandlerContext
+) : StreamHandlerContext {
+    override val eventType: AgentEventType = AgentEventType.AfterStream
+}

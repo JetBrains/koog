@@ -1,5 +1,6 @@
 package ai.koog.agents.core.feature.config
 
+import ai.koog.agents.core.feature.handler.EventHandlerContext
 import ai.koog.agents.core.feature.message.FeatureMessageProcessor
 
 /**
@@ -13,6 +14,8 @@ public abstract class FeatureConfig {
 
     private val _messageProcessors = mutableListOf<FeatureMessageProcessor>()
 
+    private var _eventFilter: (EventHandlerContext) -> Boolean = { true }
+
     /**
      * Provides a read-only list of `FeatureMessageProcessor` instances registered with the feature configuration.
      */
@@ -20,9 +23,36 @@ public abstract class FeatureConfig {
         get() = _messageProcessors.toList()
 
     /**
+     * A filter for events to be processed by a feature.
+     */
+    public val eventFilter: (EventHandlerContext) -> Boolean
+        get() = _eventFilter
+
+    /**
      * Adds a message processor to the configuration.
      */
     public fun addMessageProcessor(processor: FeatureMessageProcessor) {
         _messageProcessors.add(processor)
+    }
+
+    /**
+     * A filter for messages to be sent to the tracing message processors.
+     *
+     * This function is called for each trace event before it's sent to the message processors.
+     * If the function returns true, the event is processed; if it returns false, the event is ignored.
+     *
+     * By default, all messages are processed (the filter returns true for all messages).
+     *
+     * Example:
+     * ```kotlin
+     * // Only trace LLM-related events
+     * setMessageFilter { message ->
+     *     message is LLMCallStartEvent ||
+     *     message is LLMCallEndEvent
+     * }
+     * ```
+     */
+    public fun setEventFilter(filter: (EventHandlerContext) -> Boolean) {
+        _eventFilter = filter
     }
 }

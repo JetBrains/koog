@@ -25,11 +25,60 @@ import kotlin.reflect.KType
  * @property clock The clock used for time-based operations within the pipeline
  */
 public class AIAgentGraphPipeline(clock: Clock = Clock.System) : AIAgentPipeline(clock) {
+
     /**
      * Map of node execution handlers registered for different features.
      * Keys are feature storage keys, values are node execution handlers.
      */
     private val executeNodeHandlers: MutableMap<AIAgentStorageKey<*>, ExecuteNodeHandler> = mutableMapOf()
+
+    /**
+     * Installs a feature into the pipeline with the provided configuration.
+     *
+     * This method initializes the feature with a custom configuration and registers it in the pipeline.
+     * The feature's message processors are initialized during installation.
+     *
+     * @param Config The type of the feature configuration
+     * @param Feature The type of the feature being installed
+     * @param feature The feature implementation to be installed
+     * @param configure A lambda to customize the feature configuration
+     */
+    public fun <Config : FeatureConfig, Feature : Any> install(
+        feature: AIAgentGraphFeature<Config, Feature>,
+        configure: Config.() -> Unit
+    ) {
+        val config = feature.createInitialConfig().apply { configure() }
+        feature.install(
+            config = config,
+            pipeline = this,
+        )
+
+        registeredFeatures[feature.key] = config
+    }
+
+    //region Trigger Node Handlers
+
+    /**
+     * Transforms the agent environment by applying all registered environment transformers.
+     *
+     * This method allows features to modify or enhance the agent's environment before it starts execution.
+     * Each registered handler can apply its own transformations to the environment in sequence.
+     *
+     * @param strategy The strategy associated with the agent
+     * @param agent The agent instance for which the environment is being transformed
+     * @param baseEnvironment The initial environment to be transformed
+     * @return The transformed environment after all handlers have been applied
+     */
+    public fun transformEnvironment(
+        strategy: AIAgentGraphStrategy<*, *>,
+        agent: GraphAIAgent<*, *>,
+        baseEnvironment: AIAgentEnvironment
+    ): AIAgentEnvironment {
+        return agentHandlers.values.fold(baseEnvironment) { environment, handler ->
+            val eventContext = AgentTransformEnvironmentContext(strategy = strategy, agent = agent, feature = handler.feature)
+            handler.transformEnvironmentUnsafe(eventContext, environment)
+        }
+    }
 
     /**
      * Notifies all registered node handlers before a node is executed.
@@ -84,6 +133,10 @@ public class AIAgentGraphPipeline(clock: Clock = Clock.System) : AIAgentPipeline
         executeNodeHandlers.values.forEach { handler -> handler.nodeExecutionErrorHandler.handle(eventContext) }
     }
 
+    //endregion Trigger Node Handlers
+
+    //region Interceptors
+
     /**
      * Intercepts node execution before it starts.
      *
@@ -102,7 +155,10 @@ public class AIAgentGraphPipeline(clock: Clock = Clock.System) : AIAgentPipeline
     ) {
         val existingHandler = executeNodeHandlers.getOrPut(interceptContext.feature.key) { ExecuteNodeHandler() }
 
-        existingHandler.beforeNodeHandler = BeforeNodeHandler { eventContext: NodeBeforeExecuteContext ->
+        existingHandler.beforeNodeHandler = BeforeNodeHandler handler@{ eventContext: NodeBeforeExecuteContext ->
+            if (!registeredFeatures[interceptContext.feature.key].isAccepted(eventContext)) {
+                return@handler
+            }
             with(interceptContext.featureImpl) { handle(eventContext) }
         }
     }
@@ -125,7 +181,10 @@ public class AIAgentGraphPipeline(clock: Clock = Clock.System) : AIAgentPipeline
     ) {
         val existingHandler = executeNodeHandlers.getOrPut(interceptContext.feature.key) { ExecuteNodeHandler() }
 
-        existingHandler.afterNodeHandler = AfterNodeHandler { eventContext: NodeAfterExecuteContext ->
+        existingHandler.afterNodeHandler = AfterNodeHandler handler@{ eventContext: NodeAfterExecuteContext ->
+            if (!registeredFeatures[interceptContext.feature.key].isAccepted(eventContext)) {
+                return@handler
+            }
             with(interceptContext.featureImpl) { handle(eventContext) }
         }
     }
@@ -149,56 +208,13 @@ public class AIAgentGraphPipeline(clock: Clock = Clock.System) : AIAgentPipeline
     ) {
         val existingHandler = executeNodeHandlers.getOrPut(interceptContext.feature.key) { ExecuteNodeHandler() }
 
-        existingHandler.nodeExecutionErrorHandler =
-            NodeExecutionErrorHandler { eventContext: NodeExecutionErrorContext ->
-                with(interceptContext.featureImpl) { handle(eventContext) }
+        existingHandler.nodeExecutionErrorHandler = NodeExecutionErrorHandler handler@{ eventContext: NodeExecutionErrorContext ->
+            if (!registeredFeatures[interceptContext.feature.key].isAccepted(eventContext)) {
+                return@handler
             }
-    }
-
-    /**
-     * Installs a feature into the pipeline with the provided configuration.
-     *
-     * This method initializes the feature with a custom configuration and registers it in the pipeline.
-     * The feature's message processors are initialized during installation.
-     *
-     * @param Config The type of the feature configuration
-     * @param Feature The type of the feature being installed
-     * @param feature The feature implementation to be installed
-     * @param configure A lambda to customize the feature configuration
-     */
-    public fun <Config : FeatureConfig, Feature : Any> install(
-        feature: AIAgentGraphFeature<Config, Feature>,
-        configure: Config.() -> Unit
-    ) {
-        val config = feature.createInitialConfig().apply { configure() }
-        feature.install(
-            config = config,
-            pipeline = this,
-        )
-
-        registeredFeatures[feature.key] = config
-    }
-
-    /**
-     * Transforms the agent environment by applying all registered environment transformers.
-     *
-     * This method allows features to modify or enhance the agent's environment before it starts execution.
-     * Each registered handler can apply its own transformations to the environment in sequence.
-     *
-     * @param strategy The strategy associated with the agent
-     * @param agent The agent instance for which the environment is being transformed
-     * @param baseEnvironment The initial environment to be transformed
-     * @return The transformed environment after all handlers have been applied
-     */
-    public fun transformEnvironment(
-        strategy: AIAgentGraphStrategy<*, *>,
-        agent: GraphAIAgent<*, *>,
-        baseEnvironment: AIAgentEnvironment
-    ): AIAgentEnvironment {
-        return agentHandlers.values.fold(baseEnvironment) { environment, handler ->
-            val eventContext =
-                AgentTransformEnvironmentContext(strategy = strategy, agent = agent, feature = handler.feature)
-            handler.transformEnvironmentUnsafe(eventContext, environment)
+            with(interceptContext.featureImpl) { handle(eventContext) }
         }
     }
+
+    //endregion Interceptors
 }

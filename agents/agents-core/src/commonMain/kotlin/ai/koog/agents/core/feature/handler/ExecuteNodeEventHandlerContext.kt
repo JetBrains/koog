@@ -22,7 +22,9 @@ public data class NodeBeforeExecuteContext(
     val context: AIAgentContext,
     val input: Any?,
     val inputType: KType,
-) : NodeEventHandlerContext
+) : NodeEventHandlerContext {
+    override val eventType: AgentEventType = AgentEventType.BeforeNodeExecute
+}
 
 /**
  * Represents the context for handling an after node execution event.
@@ -41,7 +43,9 @@ public data class NodeAfterExecuteContext(
     val output: Any?,
     val inputType: KType,
     val outputType: KType,
-) : NodeEventHandlerContext
+) : NodeEventHandlerContext {
+    override val eventType: AgentEventType = AgentEventType.AfterNodeExecute
+}
 
 /**
  * Represents the context for handling errors during the execution of an AI agent node.
@@ -60,4 +64,6 @@ public data class NodeExecutionErrorContext(
     val node: AIAgentNodeBase<*, *>,
     val context: AIAgentContext,
     val throwable: Throwable
-) : NodeEventHandlerContext
+) : NodeEventHandlerContext {
+    override val eventType: AgentEventType = AgentEventType.NodeExecutionError
+}

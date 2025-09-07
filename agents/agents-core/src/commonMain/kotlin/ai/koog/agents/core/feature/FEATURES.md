@@ -62,6 +62,72 @@ val agent = AIAgent(
 }
 ```
 
+## Filtering agent events with setEventFilter
+
+In addition to per-processor message filtering, you can filter which agent events a feature will handle using FeatureConfig.setEventFilter. This filter works for any feature and is evaluated before events are passed to any FeatureMessageProcessor.
+
+Key points:
+- The predicate receives an EventHandlerContext and must return true to let the event be handled; false will skip it.
+- EventHandlerContext exposes eventType and has useful subtypes you can match on (e.g., LLMEventHandlerContext, NodeEventHandlerContext, ToolEventHandlerContext, StrategyEventHandlerContext).
+- If you do not set a filter, all events are allowed (default behavior).
+- You can change the filter at runtime by calling setEventFilter again; the new predicate is applied to subsequent events.
+- This event-level filter composes with per-processor setMessageFilter. Both must allow the item for it to be processed and emitted.
+
+Example: allow only LLM call start/end events for a feature
+```kotlin
+install(TraceFeature) {
+    setEventFilter { context ->
+        context.eventType is AgentEventType.BeforeLLMCall ||
+            context.eventType is AgentEventType.AfterLLMCall
+    }
+}
+```
+
+Equivalent using context type checks
+```kotlin
+
+install(TraceFeature) {
+    setEventFilter { context -> context is LLMEventHandlerContext }
+}
+```
+
+Example: filter node-related events by node name
+```kotlin
+
+install(MyFeature) {
+    setEventFilter { context ->
+        when (context) {
+            is NodeBeforeExecuteContext -> context.node.name == "Summarize"
+            is NodeAfterExecuteContext -> context.node.name == "Summarize"
+            is NodeExecutionErrorContext -> context.node.name == "Summarize"
+            else -> true // allow all other event types
+        }
+    }
+}
+```
+
+Example: combine setEventFilter with per-processor setMessageFilter
+```kotlin
+val logWriter = MyFeatureMessageLogWriter(targetLogger = KotlinLogger.logger("my.feature.logger")).apply {
+    initialize()
+    setMessageFilter { message ->
+        // Only log AfterLLMCall messages
+        message is AfterLLMCallEvent
+    }
+}
+
+install(TraceFeature) {
+    // Only allow LLM events for this feature instance
+    setEventFilter { context -> 
+        context.eventType is AgentEventType.BeforeLLMCall || 
+            context.eventType is AgentEventType.AfterLLMCall 
+    }
+
+    // Then add a processor with its own, more granular, message filter
+    addMessageProcessor(logWriter)
+}
+```
+
 ### Using FeatureMessageProcessor
 
 You can provide a list of `FeatureMessageProcessor` implementations when configuring a feature. These processors can be accessed by the feature configuration. A configuration class should inherit from `FeatureConfig` class to get access to the `messageProcessor` property:
