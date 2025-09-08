@@ -2,6 +2,7 @@ package ai.koog.agents.core.utils
 
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -28,7 +29,7 @@ class RWLockTest {
         }
 
         // Wait for all readers to complete
-        jobs.forEach { it.join() }
+        jobs.joinAll()
 
         // Counter should be 0 after all readers have completed
         assertEquals(0, counter)
@@ -131,7 +132,7 @@ class RWLockTest {
             }
         }
 
-        readerJobs.forEach { it.join() }
+        readerJobs.joinAll()
         writerJob.join()
 
         assertTrue(maxActiveReaders > 1, "Multiple readers should have been active concurrently")
@@ -147,7 +148,7 @@ class RWLockTest {
             rwLock.withReadLock {
                 throw RuntimeException("Test exception")
             }
-        } catch (e: RuntimeException) {
+        } catch (_: RuntimeException) {
             // Expected exception
         }
 

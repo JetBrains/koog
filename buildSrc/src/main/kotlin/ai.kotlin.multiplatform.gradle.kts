@@ -10,6 +10,7 @@ plugins {
     `maven-publish`
     id("ai.kotlin.configuration")
     id("ai.kotlin.dokka")
+    id("com.android.library")
     id("signing")
 }
 
@@ -23,6 +24,9 @@ kotlin {
     iosArm64()
 
     // Tier 3
+
+    // Android
+    androidTarget()
 
     // jvm & js
     jvm {
@@ -42,6 +46,26 @@ kotlin {
         nodejs()
         binaries.library()
     }
+
+    sourceSets {
+        androidUnitTest {
+            dependencies {
+                implementation(kotlin("test-junit"))
+            }
+        }
+    }
+}
+
+android {
+    compileSdk = 36
+    namespace = "${project.group.toString().replace('-', '.')}.${project.name.replace('-', '.')}"
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+
 }
 
 configureJvmJarManifest("jvmJar")

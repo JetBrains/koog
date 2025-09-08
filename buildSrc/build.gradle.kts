@@ -1,4 +1,5 @@
 repositories {
+    google()
     mavenCentral()
     maven(url = "https://packages.jetbrains.team/maven/p/jcs/maven")
 }
@@ -11,6 +12,7 @@ dependencies {
     implementation(libs.kotlin.gradle.plugin)
     implementation(libs.dokka.gradle.plugin)
     implementation(libs.jetsign.gradle.plugin)
+    implementation(libs.android.tools.gradle)
 
     // Somewhat hacky way to access libs.version.toml in convention plugins.
     // IntelliJ can mark this code red, but it actually compiles.
