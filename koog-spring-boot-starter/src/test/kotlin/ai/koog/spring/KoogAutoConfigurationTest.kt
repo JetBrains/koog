@@ -1,5 +1,6 @@
 package ai.koog.spring
 
+import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicClientSettings
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.deepseek.DeepSeekLLMClient
@@ -16,8 +17,11 @@ import ai.koog.prompt.executor.ollama.client.OllamaClient
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.assertInstanceOf
 import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import org.springframework.beans.factory.NoSuchBeanDefinitionException
 import org.springframework.beans.factory.getBean
 import org.springframework.beans.factory.getBeanNamesForType
@@ -25,6 +29,15 @@ import org.springframework.boot.autoconfigure.AutoConfigurations
 import org.springframework.boot.test.context.runner.ApplicationContextRunner
 import kotlin.time.Duration.Companion.seconds
 
+private const val PROVIDERS = """
+    openai, ai.koog.prompt.executor.clients.openai.OpenAILLMClient,
+    google, ai.koog.prompt.executor.clients.google.GoogleLLMClient,
+    openrouter, ai.koog.prompt.executor.clients.openrouter.OpenRouterLLMClient,
+    deepseek, ai.koog.prompt.executor.clients.deepseek.DeepSeekLLMClient,
+    ollama, ai.koog.prompt.executor.ollama.client.OllamaClient,
+"""
+
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class KoogAutoConfigurationTest {
     private val defaultRetryConfig = RetryConfig()
 
@@ -78,12 +91,17 @@ class KoogAutoConfigurationTest {
             }
     }
 
-    @Test
-    fun `should supply OpenAI executor bean with retry client and default config`() {
+    @ParameterizedTest
+    @CsvSource(PROVIDERS)
+    fun `should supply OpenAI executor bean with retry client and default config`(
+        provider: String,
+        clazz: Class<LLMClient>
+    ) {
         ApplicationContextRunner()
             .withConfiguration(AutoConfigurations.of(KoogAutoConfiguration::class.java))
-            .withPropertyValues("ai.koog.openai.api-key=some_api_key")
-            .withPropertyValues("ai.koog.openai.retry.enabled=true")
+            .withPropertyValues("ai.koog.$provider.api-key=some_api_key")
+            .withPropertyValues("ai.koog.$provider.retry.enabled=true")
+            .withPropertyValues("ai.koog.$provider.base-url=http://localhost:9876")
             .run { context ->
                 val executor = context.getBean<SingleLLMPromptExecutor>()
                 val retryingClient = getPrivateFieldValue(executor, "llmClient")
@@ -97,12 +115,16 @@ class KoogAutoConfigurationTest {
                 assertEquals(defaultRetryConfig.jitterFactor, config.jitterFactor)
 
                 val llmClient = getPrivateFieldValue(retryingClient, "delegate")
-                assertInstanceOf<OpenAILLMClient>(llmClient)
+                assertEquals(clazz, llmClient!!.javaClass)
             }
     }
 
-    @Test
-    fun `should supply OpenAI executor bean with retry client and full custom config`() {
+    @ParameterizedTest
+    @CsvSource(PROVIDERS)
+    fun `should supply executor bean with retry client and full custom config`(
+        provider: String,
+        clazz: Class<LLMClient>
+    ) {
         val maxAttempts = 5
         val initialDelay = 10
         val maxDelay = 60
@@ -110,13 +132,14 @@ class KoogAutoConfigurationTest {
         val jitterFactor = 0.5
         ApplicationContextRunner()
             .withConfiguration(AutoConfigurations.of(KoogAutoConfiguration::class.java))
-            .withPropertyValues("ai.koog.openai.api-key=some_api_key")
-            .withPropertyValues("ai.koog.openai.retry.enabled=true")
-            .withPropertyValues("ai.koog.openai.retry.max-attempts=$maxAttempts")
-            .withPropertyValues("ai.koog.openai.retry.initial-delay=$initialDelay")
-            .withPropertyValues("ai.koog.openai.retry.max-delay=$maxDelay")
-            .withPropertyValues("ai.koog.openai.retry.backoff-multiplier=$backoffMultiplier")
-            .withPropertyValues("ai.koog.openai.retry.jitter-factor=$jitterFactor")
+            .withPropertyValues("ai.koog.$provider.api-key=some_api_key")
+            .withPropertyValues("ai.koog.$provider.base-url=http://localhost:9876")
+            .withPropertyValues("ai.koog.$provider.retry.enabled=true")
+            .withPropertyValues("ai.koog.$provider.retry.max-attempts=$maxAttempts")
+            .withPropertyValues("ai.koog.$provider.retry.initial-delay=$initialDelay")
+            .withPropertyValues("ai.koog.$provider.retry.max-delay=$maxDelay")
+            .withPropertyValues("ai.koog.$provider.retry.backoff-multiplier=$backoffMultiplier")
+            .withPropertyValues("ai.koog.$provider.retry.jitter-factor=$jitterFactor")
             .run { context ->
                 val executor = context.getBean<SingleLLMPromptExecutor>()
                 val retryingClient = getPrivateFieldValue(executor, "llmClient")
@@ -130,20 +153,24 @@ class KoogAutoConfigurationTest {
                 assertEquals(jitterFactor, config.jitterFactor)
 
                 val llmClient = getPrivateFieldValue(retryingClient, "delegate")
-                assertInstanceOf<OpenAILLMClient>(llmClient)
+                assertEquals(clazz, llmClient!!.javaClass)
             }
     }
 
-    @Test
-    fun `should supply OpenAI executor bean with retry client and partial custom config`() {
+    @ParameterizedTest
+    @CsvSource(PROVIDERS)
+    fun `should supply executor bean with retry client and partial custom config`(
+        provider: String,
+        clazz: Class<LLMClient>
+    ) {
         val maxAttempts = 5
         val initialDelay = 10
         ApplicationContextRunner()
             .withConfiguration(AutoConfigurations.of(KoogAutoConfiguration::class.java))
-            .withPropertyValues("ai.koog.openai.api-key=some_api_key")
-            .withPropertyValues("ai.koog.openai.retry.enabled=true")
-            .withPropertyValues("ai.koog.openai.retry.max-attempts=$maxAttempts")
-            .withPropertyValues("ai.koog.openai.retry.initial-delay=$initialDelay")
+            .withPropertyValues("ai.koog.$provider.api-key=some_api_key")
+            .withPropertyValues("ai.koog.$provider.retry.enabled=true")
+            .withPropertyValues("ai.koog.$provider.retry.max-attempts=$maxAttempts")
+            .withPropertyValues("ai.koog.$provider.retry.initial-delay=$initialDelay")
             .run { context ->
                 val executor = context.getBean<SingleLLMPromptExecutor>()
                 val retryingClient = getPrivateFieldValue(executor, "llmClient")
@@ -157,7 +184,7 @@ class KoogAutoConfigurationTest {
                 assertEquals(defaultRetryConfig.jitterFactor, config.jitterFactor)
 
                 val llmClient = getPrivateFieldValue(retryingClient, "delegate")
-                assertInstanceOf<OpenAILLMClient>(llmClient)
+                assertEquals(clazz, llmClient!!.javaClass)
             }
     }
 
@@ -446,14 +473,16 @@ class KoogAutoConfigurationTest {
                 "ai.koog.anthropic.api-key=some_api_key",
                 "ai.koog.google.api-key=some_api_key",
                 "ai.koog.deepseek.api-key=some_api_key",
+                "ai.koog.ollama.base-url=http://localhist:8765",
             )
             .run { context ->
                 val beanNames = context.getBeanNamesForType<SingleLLMPromptExecutor>()
-                assertEquals(4, beanNames.size)
+                assertEquals(5, beanNames.size)
                 assertTrue("openAIExecutor" in beanNames)
                 assertTrue("anthropicExecutor" in beanNames)
                 assertTrue("googleExecutor" in beanNames)
                 assertTrue("deepSeekExecutor" in beanNames)
+                assertTrue("ollamaExecutor" in beanNames)
             }
     }
 
