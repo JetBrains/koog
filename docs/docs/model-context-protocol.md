@@ -58,6 +58,7 @@ This protocol is used when an MCP server runs as a separate process. Here is an 
 
 <!--- INCLUDE
 import ai.koog.agents.mcp.McpToolRegistryProvider
+import ai.koog.agents.mcp.defaultStdioTransport
 -->
 ```kotlin
 // Start an MCP server (for example, as a process)
@@ -293,6 +294,7 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.mcp.McpToolRegistryProvider
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+import ai.koog.agents.mcp.defaultStdioTransport
 import kotlinx.coroutines.runBlocking
 
 const val googleMapsApiKey = ""
