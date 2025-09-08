@@ -82,7 +82,7 @@ import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 ```kotlin
 // Agent initialization
 val agent = AIAgent(
-    executor = simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")),
+    promptExecutor = simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")),
     systemPrompt = "You are a helpful assistant with strong mathematical skills.",
     llmModel = OpenAIModels.Chat.GPT4o,
     // Pass your tool registry to the agent
@@ -210,7 +210,7 @@ val analysisToolRegistry = ToolRegistry {}
 ```kotlin
 // Create a specialized agent
 val analysisAgent = AIAgent(
-    executor = simpleOpenAIExecutor(apiKey),
+    promptExecutor = simpleOpenAIExecutor(apiKey),
     llmModel = OpenAIModels.Chat.GPT4o,
     systemPrompt = "You are a financial analysis specialist.",
     toolRegistry = analysisToolRegistry
@@ -246,7 +246,7 @@ const val apiKey = ""
 ```kotlin
 // Create a coordinator agent that can use specialized agents as tools
 val coordinatorAgent = AIAgent(
-    executor = simpleOpenAIExecutor(apiKey),
+    promptExecutor = simpleOpenAIExecutor(apiKey),
     llmModel = OpenAIModels.Chat.GPT4o,
     systemPrompt = "You coordinate different specialized services.",
     toolRegistry = ToolRegistry {
