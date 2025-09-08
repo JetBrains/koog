@@ -1,4 +1,4 @@
-package ai.koog.agents.example.nongraph
+package ai.koog.agents.example.funApi
 
 import ai.koog.agents.core.agent.asAssistantMessage
 import ai.koog.agents.core.agent.functionalAIAgent

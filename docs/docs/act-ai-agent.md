@@ -1,12 +1,12 @@
-# ActAIAgent: How to build a single‑run agent step by step
+# FunctionalAIAgent: How to build a single‑run agent step by step
 
-ActAIAgent is a lightweight, non‑graph agent that you control with a simple loop. Use it when you want to:
+FunctionalAIAgent is a lightweight, non‑graph agent that you control with a simple loop. Use it when you want to:
 - Call an LLM once or a few times in a custom loop;
 - Optionally call tools between LLM turns;
 - Return a final value (string, data class, etc.) without building a full strategy graph.
 
 What you’ll do in this guide:
-1) Create a “Hello, World” ActAIAgent.
+1) Create a “Hello, World” FunctionalAIAgent.
 2) Add a tool and let the agent call it.
 3) Add a feature (event handler) to observe behavior.
 4) Keep context under control with history compression.
@@ -32,7 +32,7 @@ That’s it — we’ll inject both into the agent factory.
 Goal: Send the user’s text to the LLM and return a single assistant message as a string.
 
 ```kotlin
-val agent = actAIAgent<String, String>(
+val agent = functionalAIAgent<String, String>(
     prompt = "You are a helpful assistant.",
     promptExecutor = exec,
     model = model
@@ -72,7 +72,7 @@ class SwitchTools(private val sw: Switch) {
 val sw = Switch()
 val tools = ToolRegistry { tools(SwitchTools(sw).asTools()) }
 
-val toolAgent = actAIAgent<String, String>(
+val toolAgent = functionalAIAgent<String, String>(
     prompt = "You're responsible for running a Switch device and perform operations on it by request.",
     promptExecutor = exec,
     model = model,
@@ -105,7 +105,7 @@ How it works
 Goal: Print every tool call to the console.
 
 ```kotlin
-val observed = actAIAgent<String, String>(
+val observed = functionalAIAgent<String, String>(
     prompt = "...",
     promptExecutor = exec,
     model = model,
@@ -156,12 +156,12 @@ Use a threshold appropriate for your model and prompt size.
 - One agent instance per request
   - Each agent instance is single‑run at a time. Create new instances if you need concurrency.
 - Custom Output type
-  - Change actAIAgent<String, MyResult> and return a data class from the loop.
+  - Change functionalAIAgent<String, MyResult> and return a data class from the loop.
 
 
 ## Troubleshooting & pitfalls
 - “Agent is already running”
-  - ActAIAgent prevents concurrent runs on the same instance. Don’t share one instance across parallel coroutines; create a fresh agent per run or await completion.
+  - FunctionalAIAgent prevents concurrent runs on the same instance. Don’t share one instance across parallel coroutines; create a fresh agent per run or await completion.
 - Empty or unexpected model output
   - Check your system prompt. Print intermediate responses. Consider adding few‑shot examples.
 - Loop never ends
@@ -174,29 +174,29 @@ Use a threshold appropriate for your model and prompt size.
 Constructors
 
 ```kotlin
-fun <Input, Output> actAIAgent(
+fun <Input, Output> functionalAIAgent(
     promptExecutor: PromptExecutor,
     agentConfig: AIAgentConfigBase,
     toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
-    loop: suspend AIAgentLoopContext.(input: Input) -> Output
+    loop: suspend AIAgentFunctionalContext.(input: Input) -> Output
 ): AIAgent<Input, Output>
 
-fun <Input, Output> actAIAgent(
-    prompt: String,
+fun <Input, Output> functionalAIAgent(
     promptExecutor: PromptExecutor,
-    model: LLModel = OpenAIModels.Chat.GPT4o,
     toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
+    prompt: String = "",
+    model: LLModel = OpenAIModels.Chat.GPT4o,
     featureContext: FeatureContext.() -> Unit = {},
-    loop: suspend AIAgentLoopContext.(input: Input) -> Output,
+    func: suspend AIAgentFunctionalContext.(input: Input) -> Output,
 ): AIAgent<Input, Output>
 ```
 
 Important types
-- ActAIAgent<Input, Output>
-- AIAgentLoopContext
+- FunctionalAIAgent<Input, Output>
+- AIAgentFunctionalContext
 - AIAgentConfig / AIAgentConfigBase
 - PromptExecutor
 - ToolRegistry
 - FeatureContext and feature interfaces
 
-See source: agents/agents-core/src/commonMain/kotlin/ai/koog/agents/core/agent/ActAIAgent.kt
+See source: agents/agents-core/src/commonMain/kotlin/ai/koog/agents/core/agent/FunctionalAIAgent.kt

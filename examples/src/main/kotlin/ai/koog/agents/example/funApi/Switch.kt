@@ -1,4 +1,4 @@
-package ai.koog.agents.example.nongraph
+package ai.koog.agents.example.funApi
 
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.core.tools.annotations.Tool

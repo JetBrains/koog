@@ -10,9 +10,9 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 @OptIn(kotlin.uuid.ExperimentalUuidApi::class)
-class ActAgentTests {
+class FunctionalAIAgentTest {
     @Test
-    fun test_ActAgent_MixedResults() = runTest {
+    fun mixedTools_thenAssistantMessage() = runTest {
         val actualToolCalls = mutableListOf<String>()
 
         val testToolRegistry = ToolRegistry {
@@ -62,7 +62,7 @@ class ActAgentTests {
     }
 
     @Test
-    fun test_ActAgent_Single_AssistantMessages() = runTest {
+    fun assistantOnly_thenFinalMessage() = runTest {
         val actualToolCalls = mutableListOf<String>()
 
         val testToolRegistry = ToolRegistry {
@@ -76,7 +76,7 @@ class ActAgentTests {
             mockLLMAnswer("I don't know how to answer that.").asDefaultResponse
         }
 
-        // install feature using featureContext overload builder
+        // Install EventHandler feature via the featureContext builder overload
         val agent = functionalAIAgent<String, String>(
             prompt = "You are helpful",
             promptExecutor = mockLLMApi,
@@ -102,7 +102,7 @@ class ActAgentTests {
     }
 
     @Test
-    fun test_ActAgent_Single_WithToolCall() = runTest {
+    fun singleTool_thenFollowUpMessage() = runTest {
         val actualToolCalls = mutableListOf<String>()
 
         val testToolRegistry = ToolRegistry {

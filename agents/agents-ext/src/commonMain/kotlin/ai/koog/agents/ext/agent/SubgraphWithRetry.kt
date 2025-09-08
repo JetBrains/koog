@@ -1,6 +1,5 @@
 package ai.koog.agents.ext.agent
 
-import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
 import ai.koog.agents.core.agent.entity.createStorageKey
@@ -95,7 +94,7 @@ public inline fun <reified Input : Any, reified Output> AIAgentSubgraphBuilderBa
     return subgraph(name = name) {
         val retriesKey = createStorageKey<Int>("${name}_retires")
         val initialInputKey = createStorageKey<Any>("${name}_initial_input")
-        val initialContextKey = createStorageKey<AIAgentContext>("${name}_initial_context")
+        val initialContextKey = createStorageKey<AIAgentGraphContextBase>("${name}_initial_context")
 
         val beforeAction by node<Input, Input> { input ->
             val retries = storage.get(retriesKey) ?: 0
@@ -210,7 +209,7 @@ public inline fun <reified Input : Any, reified Output> AIAgentSubgraphBuilderBa
  */
 @AIAgentBuilderDslMarker
 public inline fun <reified Input : Any, reified Output> AIAgentSubgraphBuilderBase<*, *>.subgraphWithRetrySimple(
-    noinline condition: suspend AIAgentContext.(Output) -> ConditionResult,
+    noinline condition: suspend AIAgentGraphContextBase.(Output) -> ConditionResult,
     maxRetries: Int,
     conditionDescription: String? = null,
     toolSelectionStrategy: ToolSelectionStrategy = ToolSelectionStrategy.ALL,

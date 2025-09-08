@@ -59,7 +59,7 @@ public open class GraphAIAgent<Input, Output>(
     public val agentConfig: AIAgentConfigBase,
     public val toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     private val strategy: AIAgentGraphStrategy<Input, Output>,
-    override val id: String = Uuid.random().toString(),
+    id: String? = null,
     public val clock: Clock = Clock.System,
     private val installFeatures: FeatureContext.() -> Unit = {},
 ) : AIAgent<Input, Output>, Closeable {
@@ -68,10 +68,12 @@ public open class GraphAIAgent<Input, Output>(
         private val logger = KotlinLogging.logger {}
     }
 
+    override val id: String by lazy { id ?: Uuid.random().toString() }
+
     private val pipeline = AIAgentGraphPipeline()
 
     private val environment = GenericAgentEnvironment(
-        id,
+        this@GraphAIAgent.id,
         strategy.name,
         logger,
         toolRegistry,
@@ -124,7 +126,7 @@ public open class GraphAIAgent<Input, Output>(
 
         return withContext(
             AgentRunInfoContextElement(
-                agentId = id,
+                agentId = this@GraphAIAgent.id,
                 runId = runId,
                 agentConfig = agentConfig,
                 strategyName = strategy.name
@@ -162,10 +164,10 @@ public open class GraphAIAgent<Input, Output>(
                 runId = runId,
                 strategyName = strategy.name,
                 pipeline = pipeline,
-                agentId = id,
+                agentId = this@GraphAIAgent.id,
             )
 
-            logger.debug { formatLog(agentId = id, runId = runId, message = "Starting agent execution") }
+            logger.debug { formatLog(agentId = this@GraphAIAgent.id, runId = runId, message = "Starting agent execution") }
 
             pipeline.onBeforeAgentStarted(
                 runId = runId,
@@ -185,12 +187,12 @@ public open class GraphAIAgent<Input, Output>(
                 strategyResult
             } catch (e: Throwable) {
                 logger.error(e) { "Execution exception reported by server!" }
-                pipeline.onAgentRunError(agentId = id, runId = runId, throwable = e)
+                pipeline.onAgentRunError(agentId = this@GraphAIAgent.id, runId = runId, throwable = e)
                 throw e
             }
 
-            logger.debug { formatLog(agentId = id, runId = runId, message = "Finished agent execution") }
-            pipeline.onAgentFinished(agentId = id, runId = runId, result = result, resultType = outputType)
+            logger.debug { formatLog(agentId = this@GraphAIAgent.id, runId = runId, message = "Finished agent execution") }
+            pipeline.onAgentFinished(agentId = this@GraphAIAgent.id, runId = runId, result = result, resultType = outputType)
 
             runningMutex.withLock {
                 isRunning = false
@@ -218,7 +220,7 @@ public open class GraphAIAgent<Input, Output>(
     }
 
     override suspend fun close() {
-        pipeline.onAgentBeforeClosed(agentId = id)
+        pipeline.onAgentBeforeClosed(agentId = this@GraphAIAgent.id)
         pipeline.closeFeaturesStreamProviders()
     }
 

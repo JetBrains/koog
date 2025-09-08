@@ -44,7 +44,7 @@ public class FunctionalAIAgent<Input, Output>(
     public val agentConfig: AIAgentConfigBase,
     public val toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     public val strategy: AIAgentFunctionalStrategy<Input, Output>,
-    private val _id: String? = null,
+    id: String? = null,
     public val clock: Clock = Clock.System,
     public val featureContext: FeatureContext.() -> Unit = {}
 ) : AIAgent<Input, Output> {
@@ -53,12 +53,12 @@ public class FunctionalAIAgent<Input, Output>(
         private val logger = KotlinLogging.logger {}
     }
 
-    override val id: String by lazy { _id ?: Uuid.random().toString() }
+    override val id: String by lazy { id ?: Uuid.random().toString() }
 
     private val pipeline = AIAgentNonGraphPipeline()
 
     private val environment = GenericAgentEnvironment(
-        id,
+        this@FunctionalAIAgent.id,
         strategy.name,
         logger,
         toolRegistry,
@@ -127,7 +127,7 @@ public class FunctionalAIAgent<Input, Output>(
 
         val context = AIAgentFunctionalContext(
             environment,
-            id,
+            this@FunctionalAIAgent.id,
             runId,
             agentInput,
             agentConfig,
@@ -140,7 +140,7 @@ public class FunctionalAIAgent<Input, Output>(
 
         val result = withContext(
             AgentRunInfoContextElement(
-                agentId = id,
+                agentId = this@FunctionalAIAgent.id,
                 runId = runId,
                 agentConfig = agentConfig,
                 strategyName = strategy.name
@@ -157,21 +157,21 @@ public class FunctionalAIAgent<Input, Output>(
     }
 
     override suspend fun close() {
-        pipeline.onAgentBeforeClosed(agentId = id)
+        pipeline.onAgentBeforeClosed(agentId = this@FunctionalAIAgent.id)
         pipeline.closeFeaturesStreamProviders()
     }
 }
 
 /**
- * Creates a new instance of `LoopAIAgent` to manage and execute AI-driven loops with a specific configuration,
+ * Creates a new instance of [FunctionalAIAgent] to manage and execute AI-driven loops with a specific configuration,
  * tool registry, and strategy for handling operations.
  *
  * @param promptExecutor The `PromptExecutor` responsible for processing language model prompts and managing interactions with the AI model.
  * @param agentConfig The `AIAgentConfigBase` defining the configuration for the AI agent, including prompts, model details, and iteration limits.
  * @param toolRegistry A `ToolRegistry` specifying the tools available to the agent. If no tools are provided, it defaults to an empty registry.
- * @param loop A suspendable lambda function representing the custom loop execution strategy. It takes an input of type `Input` and a context of type `AIAgentLoopContext`, and returns
+ * @param loop A suspendable lambda function representing the custom loop execution strategy. It takes an input of type `Input` and a context of type [AIAgentFunctionalStrategy], and returns
  *  an output of type `Output`.
- * @return A `LoopAIAgent` instance initialized with the specified prompt executor, configuration, tool registry, and loop strategy.
+ * @return A [FunctionalAIAgent] instance initialized with the specified prompt executor, configuration, tool registry, and loop strategy.
  */
 public fun <Input, Output> functionalAIAgent(
     promptExecutor: PromptExecutor,
@@ -184,7 +184,7 @@ public fun <Input, Output> functionalAIAgent(
         agentConfig = agentConfig,
         toolRegistry = toolRegistry,
         strategy = functionalStrategy(
-            loop = loop
+            func = loop
         )
     )
 }
@@ -196,9 +196,9 @@ public fun <Input, Output> functionalAIAgent(
  * @param promptExecutor The executor responsible for processing prompts with the language model.
  * @param prompt The system-level prompt used to configure the agent's behavior.
  * @param toolRegistry A registry containing tools available to the agent during execution. Defaults to `ToolRegistry.EMPTY`.
- * @param loop A suspendable function representing the loop logic. It takes an input and an `AIAgentLoopContext`
+ * @param func A suspendable function representing the loop logic. It takes an input and an [AIAgentFunctionalContext]
  *        and produces an output.
- * @return A configured `LoopAIAgent` instance capable of processing the specified logic using the provided inputs.
+ * @return A configured `FunctionalAIAgent` instance capable of processing the specified logic using the provided inputs.
  */
 public fun <Input, Output> functionalAIAgent(
     promptExecutor: PromptExecutor,
@@ -206,13 +206,13 @@ public fun <Input, Output> functionalAIAgent(
     prompt: String = "",
     model: LLModel = OpenAIModels.Chat.GPT4o,
     featureContext: FeatureContext.() -> Unit = {},
-    loop: suspend AIAgentFunctionalContext.(input: Input) -> Output,
+    func: suspend AIAgentFunctionalContext.(input: Input) -> Output,
 ): AIAgent<Input, Output> {
     return FunctionalAIAgent(
         promptExecutor = promptExecutor,
         agentConfig = AIAgentConfig.withSystemPrompt(prompt, model),
         toolRegistry = toolRegistry,
-        strategy = functionalStrategy(loop = loop),
+        strategy = functionalStrategy(func = func),
         featureContext = featureContext
     )
 }

@@ -13,7 +13,7 @@ import ai.koog.agents.core.feature.AIAgentNonGraphPipeline
 import ai.koog.prompt.message.Message
 
 /**
- * AIAgentLoopContext represents the execution context for an AI agent operating in a loop.
+ * Represents the execution context for an AI agent operating in a loop.
  * It provides access to critical components such as the environment, configuration, large language model (LLM) context,
  * state management, and storage. Additionally, it enables the agent to store, retrieve, and manage context-specific data
  * during its execution lifecycle.
