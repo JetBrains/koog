@@ -20,7 +20,7 @@ public interface StrategyEventHandlerContext : EventHandlerContext
  */
 public class StrategyStartContext<TFeature>(
     public val runId: String,
-    public val strategy: AIAgentStrategy<*, *>,
+    public val strategy: AIAgentStrategy<*, *, *>,
     public val feature: TFeature
 ) : StrategyEventHandlerContext
 
@@ -36,7 +36,7 @@ public class StrategyStartContext<TFeature>(
  */
 public class StrategyFinishContext<TFeature>(
     public val runId: String,
-    public val strategy: AIAgentStrategy<*, *>,
+    public val strategy: AIAgentStrategy<*, *, *>,
     public val feature: TFeature,
     public val result: Any?,
     public val resultType: KType,

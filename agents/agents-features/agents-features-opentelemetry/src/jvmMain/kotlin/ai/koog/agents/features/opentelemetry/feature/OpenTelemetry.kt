@@ -3,8 +3,8 @@ package ai.koog.agents.features.opentelemetry.feature
 import ai.koog.agents.core.agent.context.element.getAgentRunInfoElementOrThrow
 import ai.koog.agents.core.agent.context.element.getNodeInfoElement
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
-import ai.koog.agents.core.feature.AIAgentFeature
-import ai.koog.agents.core.feature.AIAgentPipeline
+import ai.koog.agents.core.feature.AIAgentGraphFeature
+import ai.koog.agents.core.feature.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.InterceptContext
 import ai.koog.agents.features.opentelemetry.attribute.CommonAttributes
 import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes
@@ -47,7 +47,7 @@ public class OpenTelemetry {
      * The implementation includes private utility methods for ensuring spans are handled
      * correctly and resources are properly released.
      */
-    public companion object Feature : AIAgentFeature<OpenTelemetryConfig, OpenTelemetry> {
+    public companion object Feature : AIAgentGraphFeature<OpenTelemetryConfig, OpenTelemetry> {
 
         private val logger = KotlinLogging.logger { }
 
@@ -59,7 +59,7 @@ public class OpenTelemetry {
 
         override fun install(
             config: OpenTelemetryConfig,
-            pipeline: AIAgentPipeline
+            pipeline: AIAgentGraphPipeline
         ) {
             val interceptContext = InterceptContext(this, OpenTelemetry())
             val tracer = config.tracer

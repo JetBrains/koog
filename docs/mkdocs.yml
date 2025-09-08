@@ -5,6 +5,7 @@ nav:
       - Key concepts: key-concepts.md
       - Getting started:
           - Single-run agents: single-run-agents.md
+          - Act Agent API: act-ai-agent.md
           - Complex workflow agents: complex-workflow-agents.md
       - Prompt API: prompt-api.md
       - Tools:

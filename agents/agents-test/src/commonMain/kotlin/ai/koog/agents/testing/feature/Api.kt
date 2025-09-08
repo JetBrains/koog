@@ -1,6 +1,6 @@
 package ai.koog.agents.testing.feature
 
-import ai.koog.agents.core.agent.AIAgent.FeatureContext
+import ai.koog.agents.core.agent.GraphAIAgent.FeatureContext
 
 /**
  * Configures the Testing feature for graph testing.

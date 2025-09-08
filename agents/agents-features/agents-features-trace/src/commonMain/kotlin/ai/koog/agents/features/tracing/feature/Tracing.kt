@@ -2,7 +2,8 @@ package ai.koog.agents.features.tracing.feature
 
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.feature.AIAgentFeature
-import ai.koog.agents.core.feature.AIAgentPipeline
+import ai.koog.agents.core.feature.AIAgentGraphFeature
+import ai.koog.agents.core.feature.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.InterceptContext
 import ai.koog.agents.core.feature.message.FeatureMessage
 import ai.koog.agents.core.feature.message.FeatureMessageProcessorUtil.onMessageForEachSafe
@@ -95,7 +96,7 @@ public class Tracing {
      * }
      * ```
      */
-    public companion object Feature : AIAgentFeature<TraceFeatureConfig, Tracing> {
+    public companion object Feature : AIAgentGraphFeature<TraceFeatureConfig, Tracing> {
 
         private val logger = KotlinLogging.logger { }
 
@@ -106,7 +107,7 @@ public class Tracing {
 
         override fun install(
             config: TraceFeatureConfig,
-            pipeline: AIAgentPipeline,
+            pipeline: AIAgentGraphPipeline,
         ) {
             logger.info { "Start installing feature: ${Tracing::class.simpleName}" }
 

@@ -1,12 +1,13 @@
 package ai.koog.agents.snapshot.feature
 
-import ai.koog.agents.core.agent.context.AIAgentContextBase
+import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AgentContextData
 import ai.koog.agents.core.agent.context.store
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.feature.AIAgentFeature
-import ai.koog.agents.core.feature.AIAgentPipeline
+import ai.koog.agents.core.feature.AIAgentGraphFeature
+import ai.koog.agents.core.feature.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.InterceptContext
 import ai.koog.agents.snapshot.providers.PersistencyStorageProvider
 import ai.koog.prompt.message.Message
@@ -55,7 +56,7 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
     /**
      * Feature companion object that implements [AIAgentFeature] for the checkpoint functionality.
      */
-    public companion object Feature : AIAgentFeature<PersistencyFeatureConfig, Persistency> {
+    public companion object Feature : AIAgentGraphFeature<PersistencyFeatureConfig, Persistency> {
         private val logger = KotlinLogging.logger { }
 
         private val json = Json {
@@ -88,7 +89,7 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
          */
         override fun install(
             config: PersistencyFeatureConfig,
-            pipeline: AIAgentPipeline
+            pipeline: AIAgentGraphPipeline
         ) {
             val featureImpl = Persistency(config.storage)
             val interceptContext = InterceptContext(this, featureImpl)
@@ -140,7 +141,7 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
      * @return The created checkpoint data
      */
     public suspend fun createCheckpoint(
-        agentContext: AIAgentContextBase,
+        agentContext: AIAgentContext,
         nodeId: String,
         lastInput: Any?,
         lastInputType: KType,
@@ -215,7 +216,7 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
      * @param input The input data to set for the agent
      */
     public fun setExecutionPoint(
-        agentContext: AIAgentContextBase,
+        agentContext: AIAgentContext,
         nodeId: String,
         messageHistory: List<Message>,
         input: JsonElement
@@ -235,7 +236,7 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
      */
     public suspend fun rollbackToCheckpoint(
         checkpointId: String,
-        agentContext: AIAgentContextBase
+        agentContext: AIAgentContext
     ): AgentCheckpointData? {
         val checkpoint: AgentCheckpointData? = getCheckpointById(checkpointId)
         if (checkpoint != null) {
@@ -254,7 +255,7 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
      * @return The checkpoint data that was restored or null if no checkpoint was found
      */
     public suspend fun rollbackToLatestCheckpoint(
-        agentContext: AIAgentContextBase
+        agentContext: AIAgentContext
     ): AgentCheckpointData? {
         val checkpoint: AgentCheckpointData? = getLatestCheckpoint()
         if (checkpoint != null) {
@@ -270,7 +271,7 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
  * @return The [Persistency] feature instance for this agent
  * @throws IllegalStateException if the checkpoint feature is not installed
  */
-public fun AIAgentContextBase.persistency(): Persistency = featureOrThrow(Persistency.Feature)
+public fun AIAgentContext.persistency(): Persistency = featureOrThrow(Persistency.Feature)
 
 /**
  * Extension function to perform an action with the checkpoint feature.
@@ -283,7 +284,7 @@ public fun AIAgentContextBase.persistency(): Persistency = featureOrThrow(Persis
  * @param action The action to perform with the checkpoint feature
  * @return The result of the action
  */
-public suspend fun <T> AIAgentContextBase.withPersistency(
-    context: AIAgentContextBase,
-    action: suspend Persistency.(AIAgentContextBase) -> T
+public suspend fun <T> AIAgentContext.withPersistency(
+    context: AIAgentContext,
+    action: suspend Persistency.(AIAgentContext) -> T
 ): T = persistency().action(context)

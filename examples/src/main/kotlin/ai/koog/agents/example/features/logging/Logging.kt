@@ -3,8 +3,8 @@ package ai.koog.agents.example.features.logging
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.entity.createStorageKey
-import ai.koog.agents.core.feature.AIAgentFeature
-import ai.koog.agents.core.feature.AIAgentPipeline
+import ai.koog.agents.core.feature.AIAgentGraphFeature
+import ai.koog.agents.core.feature.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.InterceptContext
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.handler.BeforeNodeHandler
@@ -34,7 +34,7 @@ class Logging(val logger: Logger) {
      * This feature supports configuration via the [Config] class,
      * which allows specifying custom logger names.
      */
-    companion object Feature : AIAgentFeature<Config, Logging> {
+    companion object Feature : AIAgentGraphFeature<Config, Logging> {
         override val key: AIAgentStorageKey<Logging> = createStorageKey("logging-feature")
 
         override fun createInitialConfig(): Config = Config()
@@ -51,7 +51,7 @@ class Logging(val logger: Logger) {
          */
         override fun install(
             config: Config,
-            pipeline: AIAgentPipeline
+            pipeline: AIAgentGraphPipeline
         ) {
             val logging = Logging(LoggerFactory.getLogger(config.loggerName))
             val interceptContext = InterceptContext(this, logging)
@@ -95,7 +95,7 @@ class Logging(val logger: Logger) {
 @Suppress("unused")
 fun installLogging(coroutineScope: CoroutineScope, logName: String = "agent-logs") {
     val agent = AIAgent(
-        executor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey),
+        promptExecutor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey),
         llmModel = OpenAIModels.CostOptimized.GPT4oMini,
         systemPrompt = "You are a code assistant. Provide concise code examples."
     ) {

@@ -1,6 +1,6 @@
 package ai.koog.agents.core.feature.handler
 
-import ai.koog.agents.core.agent.context.AIAgentContextBase
+import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase
 import kotlin.reflect.KType
 
@@ -19,7 +19,7 @@ public interface NodeEventHandlerContext : EventHandlerContext
  */
 public data class NodeBeforeExecuteContext(
     val node: AIAgentNodeBase<*, *>,
-    val context: AIAgentContextBase,
+    val context: AIAgentContext,
     val input: Any?,
     val inputType: KType,
 ) : NodeEventHandlerContext
@@ -36,7 +36,7 @@ public data class NodeBeforeExecuteContext(
  */
 public data class NodeAfterExecuteContext(
     val node: AIAgentNodeBase<*, *>,
-    val context: AIAgentContextBase,
+    val context: AIAgentContext,
     val input: Any?,
     val output: Any?,
     val inputType: KType,
@@ -52,12 +52,12 @@ public data class NodeAfterExecuteContext(
  * execution context, and the specific error itself.
  *
  * @property node The AI agent node where the error occurred. This is an instance of [AIAgentNodeBase].
- * @property context The execution context, encapsulated by [AIAgentContextBase], which provides
+ * @property context The execution context, encapsulated by [AIAgentContext], which provides
  * runtime information and utilities for executing the node.
  * @property throwable The exception or error encountered during the node execution.
  */
 public data class NodeExecutionErrorContext(
     val node: AIAgentNodeBase<*, *>,
-    val context: AIAgentContextBase,
+    val context: AIAgentContext,
     val throwable: Throwable
 ) : NodeEventHandlerContext

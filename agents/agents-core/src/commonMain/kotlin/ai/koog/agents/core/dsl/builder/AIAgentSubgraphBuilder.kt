@@ -2,10 +2,11 @@
 
 package ai.koog.agents.core.dsl.builder
 
-import ai.koog.agents.core.agent.context.AIAgentContextBase
+import ai.koog.agents.core.agent.context.AIAgentContext
+import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.context.getAgentContextData
+import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase
-import ai.koog.agents.core.agent.entity.AIAgentStrategy
 import ai.koog.agents.core.agent.entity.AIAgentSubgraph
 import ai.koog.agents.core.agent.entity.FinishNode
 import ai.koog.agents.core.agent.entity.StartNode
@@ -71,7 +72,7 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
      */
     public inline fun <reified Input, reified Output> node(
         name: String? = null,
-        noinline execute: suspend AIAgentContextBase.(input: Input) -> Output
+        noinline execute: suspend AIAgentGraphContextBase.(input: Input) -> Output
     ): AIAgentNodeDelegate<Input, Output> {
         return AIAgentNodeDelegate(
             name = name,
@@ -183,7 +184,7 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
         return "$parentPath:${node.id}"
     }
 
-    internal fun buildSubgraphMetadata(start: StartNode<Input>, parentName: String, strategy: AIAgentStrategy<Input, Output>): SubgraphMetadata {
+    internal fun buildSubgraphMetadata(start: StartNode<Input>, parentName: String, strategy: AIAgentGraphStrategy<Input, Output>): SubgraphMetadata {
         val subgraphNodes = buildSubGraphNodesMap(start, parentName)
         subgraphNodes[parentName] = strategy
 
@@ -334,7 +335,7 @@ public open class AIAgentSubgraphDelegate<Input, Output> internal constructor(
  * @property output The output value produced by the node execution.
  * @property context The agent context in which the node was executed, containing any state changes.
  */
-public data class ParallelNodeExecutionResult<Output>(val output: Output, val context: AIAgentContextBase)
+public data class ParallelNodeExecutionResult<Output>(val output: Output, val context: AIAgentContext)
 
 /**
  * Represents the completed result of a parallel node execution.
@@ -371,7 +372,7 @@ public class AIAgentParallelNodeBuilder<Input, Output> internal constructor(
     inputType = nodes.first().inputType,
     outputType = nodes.first().outputType,
     execute = { input ->
-        val initialContext: AIAgentContextBase = this
+        val initialContext: AIAgentGraphContextBase = this
 
         // Execute all nodes in parallel using the provided dispatcher
         val nodeResults = supervisorScope {

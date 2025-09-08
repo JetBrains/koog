@@ -41,13 +41,13 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 
 val apiKey = System.getenv("OPENAI_API_KEY") ?: error("Please set OPENAI_API_KEY environment variable")
-val promptExecutor = simpleOpenAIExecutor(apiKey)
+val promptExecutor =simpleOpenAIExecutor(apiKey)
 val toolRegistry = ToolRegistry.EMPTY
 val model =  OpenAIModels.Reasoning.O4Mini
 -->
 ```kotlin
 val chatAgent = AIAgent(
-    executor = promptExecutor,
+    promptExecutor = promptExecutor,
     toolRegistry = toolRegistry,
     llmModel = model,
     // Set chatAgentStrategy as the agent strategy
@@ -82,13 +82,13 @@ typealias searchTool = AskUser
 typealias weatherTool = SayToUser
 
 val apiKey = System.getenv("OPENAI_API_KEY") ?: error("Please set OPENAI_API_KEY environment variable")
-val promptExecutor = simpleOpenAIExecutor(apiKey)
+val promptExecutor =simpleOpenAIExecutor(apiKey)
 val toolRegistry = ToolRegistry.EMPTY
 val model =  OpenAIModels.Reasoning.O4Mini
 -->
 ```kotlin
 val chatAgent = AIAgent(
-    executor = promptExecutor,
+    promptExecutor = promptExecutor,
     llmModel = model,
     // Use chatAgentStrategy as the agent strategy
     strategy = chatAgentStrategy(),
@@ -154,7 +154,7 @@ val model =  OpenAIModels.Reasoning.O4Mini
 -->
 ```kotlin hl_lines="5-10"
 val reActAgent = AIAgent(
-    executor = promptExecutor,
+    promptExecutor = promptExecutor,
     toolRegistry = toolRegistry,
     llmModel = model,
     // Set reActStrategy as the agent strategy
@@ -288,7 +288,7 @@ val model =  OpenAIModels.Reasoning.O4Mini
 -->
 ```kotlin
 val bankingAgent = AIAgent(
-    executor = promptExecutor,
+    promptExecutor = promptExecutor,
     llmModel = model,
     // Use reActStrategy as the agent strategy
     strategy = reActStrategy(

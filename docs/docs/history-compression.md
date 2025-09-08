@@ -35,7 +35,7 @@ Depending on which step you decide to perform compression, the following scenari
 * To compress the history when it becomes too long, you can define a helper function and add the `nodeLLMCompressHistory` node to your strategy graph with the following logic:
 
 <!--- INCLUDE
-import ai.koog.agents.core.agent.context.AIAgentContextBase
+import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeExecuteTool
@@ -48,7 +48,7 @@ import ai.koog.agents.core.environment.ReceivedToolResult
 -->
 ```kotlin
 // Define that the history is too long if there are more than 100 messages
-private suspend fun AIAgentContextBase.historyIsTooLong(): Boolean = llm.readSession { prompt.messages.size > 100 }
+private suspend fun AIAgentContext.historyIsTooLong(): Boolean = llm.readSession { prompt.messages.size > 100 }
 
 val strategy = strategy<String, String>("execute-with-history-compression") {
     val callLLM by nodeLLMRequest()

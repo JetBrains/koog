@@ -162,7 +162,7 @@ fun main() {
 ```kotlin
 // Create an agent with the tools
 val agent = AIAgent(
-    executor = executor,
+    promptExecutor = executor,
     strategy = strategy,
     llmModel = OpenAIModels.Chat.GPT4o,
     toolRegistry = toolRegistry
@@ -319,7 +319,7 @@ val toolRegistry = McpToolRegistryProvider.fromTransport(
 
 // Create and run the agent
 val agent = AIAgent(
-    executor = simpleOpenAIExecutor(openAIApiToken),
+    promptExecutor = simpleOpenAIExecutor(openAIApiToken),
     llmModel = OpenAIModels.Chat.GPT4o,
     toolRegistry = toolRegistry,
 )
@@ -361,7 +361,7 @@ val toolRegistry = McpToolRegistryProvider.fromTransport(
 
 // Create and run the agent
 val agent = AIAgent(
-    executor = simpleOpenAIExecutor(openAIApiToken),
+    promptExecutor = simpleOpenAIExecutor(openAIApiToken),
     llmModel = OpenAIModels.Chat.GPT4o,
     toolRegistry = toolRegistry,
 )

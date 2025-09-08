@@ -216,7 +216,7 @@ fun main() {
         // Create an agent with your tools
 
         val agent = AIAgent(
-            executor = simpleOpenAIExecutor(apiToken),
+            promptExecutor = simpleOpenAIExecutor(apiToken),
             systemPrompt = "Provide weather information for a given location.",
             llmModel = OpenAIModels.Chat.GPT4o,
             toolRegistry = ToolRegistry {

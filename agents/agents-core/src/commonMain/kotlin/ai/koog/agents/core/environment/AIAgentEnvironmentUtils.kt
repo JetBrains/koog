@@ -2,8 +2,6 @@ package ai.koog.agents.core.environment
 
 import ai.koog.agents.core.agent.AIAgentTerminationByClientException
 import ai.koog.agents.core.engine.UnexpectedAIAgentMessageException
-import ai.koog.agents.core.engine.UnexpectedDoubleInitializationException
-import ai.koog.agents.core.model.message.AIAgentEnvironmentToAgentInitializeMessage
 import ai.koog.agents.core.model.message.EnvironmentToAgentErrorMessage
 import ai.koog.agents.core.model.message.EnvironmentToAgentMessage
 import ai.koog.agents.core.model.message.EnvironmentToAgentTerminationMessage
@@ -29,10 +27,6 @@ internal object AIAgentEnvironmentUtils {
                 throw AIAgentTerminationByClientException(
                     this.content?.message ?: this.error?.message ?: ""
                 )
-            }
-
-            is AIAgentEnvironmentToAgentInitializeMessage -> {
-                throw UnexpectedDoubleInitializationException()
             }
 
             else -> {
