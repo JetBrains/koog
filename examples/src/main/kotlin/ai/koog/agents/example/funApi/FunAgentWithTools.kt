@@ -25,7 +25,7 @@ fun main(): Unit = runBlocking {
         tools(SwitchTools(switch).asTools())
     }
 
-    val actAgent = functionalAIAgent<String, String>(
+    val functionalAgent = functionalAIAgent<String, String>(
         prompt = "You're responsible for running a Switch device and perform operations on it by request.",
         promptExecutor = promptExec,
         model = OllamaModels.Meta.LLAMA_3_2,
@@ -54,6 +54,6 @@ fun main(): Unit = runBlocking {
         return@functionalAIAgent responses.single().asAssistantMessage().content
     }
 
-    actAgent.run("Turn switch on")
+    functionalAgent.run("Turn switch on")
     println("Switch is ${if (switch.isOn()) "on" else "off"}")
 }

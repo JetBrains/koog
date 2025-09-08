@@ -169,7 +169,7 @@ public class FunctionalAIAgent<Input, Output>(
  * @param promptExecutor The `PromptExecutor` responsible for processing language model prompts and managing interactions with the AI model.
  * @param agentConfig The `AIAgentConfigBase` defining the configuration for the AI agent, including prompts, model details, and iteration limits.
  * @param toolRegistry A `ToolRegistry` specifying the tools available to the agent. If no tools are provided, it defaults to an empty registry.
- * @param loop A suspendable lambda function representing the custom loop execution strategy. It takes an input of type `Input` and a context of type [AIAgentFunctionalStrategy], and returns
+ * @param func A suspendable lambda function representing the custom loop execution strategy. It takes an input of type `Input` and a context of type [AIAgentFunctionalStrategy], and returns
  *  an output of type `Output`.
  * @return A [FunctionalAIAgent] instance initialized with the specified prompt executor, configuration, tool registry, and loop strategy.
  */
@@ -177,20 +177,20 @@ public fun <Input, Output> functionalAIAgent(
     promptExecutor: PromptExecutor,
     agentConfig: AIAgentConfigBase,
     toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
-    loop: suspend AIAgentFunctionalContext.(input: Input) -> Output
+    func: suspend AIAgentFunctionalContext.(input: Input) -> Output
 ): AIAgent<Input, Output> {
     return FunctionalAIAgent(
         promptExecutor = promptExecutor,
         agentConfig = agentConfig,
         toolRegistry = toolRegistry,
         strategy = functionalStrategy(
-            func = loop
+            func = func
         )
     )
 }
 
 /**
- * Creates a `LoopAIAgent` that continuously performs actions based on the input, a context, and a defined loop logic.
+ * Creates a [FunctionalAIAgent] that continuously performs actions based on the input, a context, and a defined loop logic.
  *
  * @param model The large language model to be used for the agent's configuration.
  * @param promptExecutor The executor responsible for processing prompts with the language model.
@@ -198,7 +198,7 @@ public fun <Input, Output> functionalAIAgent(
  * @param toolRegistry A registry containing tools available to the agent during execution. Defaults to `ToolRegistry.EMPTY`.
  * @param func A suspendable function representing the loop logic. It takes an input and an [AIAgentFunctionalContext]
  *        and produces an output.
- * @return A configured `FunctionalAIAgent` instance capable of processing the specified logic using the provided inputs.
+ * @return A configured [FunctionalAIAgent] instance capable of processing the specified logic using the provided inputs.
  */
 public fun <Input, Output> functionalAIAgent(
     promptExecutor: PromptExecutor,

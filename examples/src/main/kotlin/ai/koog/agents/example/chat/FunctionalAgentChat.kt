@@ -9,7 +9,7 @@ import kotlin.uuid.ExperimentalUuidApi
 
 @OptIn(ExperimentalUuidApi::class)
 fun main(): Unit = runBlocking {
-    val loopAgent = functionalAIAgent<String, Unit>(
+    val funcAgent = functionalAIAgent<String, Unit>(
         prompt = "You're a simple chat agent",
         promptExecutor = simpleOllamaAIExecutor(),
         model = OllamaModels.Meta.LLAMA_3_2
@@ -24,5 +24,5 @@ fun main(): Unit = runBlocking {
 
     println("Simple chat agent started\nUse /bye to quit\nEnter your message:")
     val input = readln()
-    loopAgent.run(input)
+    funcAgent.run(input)
 }
