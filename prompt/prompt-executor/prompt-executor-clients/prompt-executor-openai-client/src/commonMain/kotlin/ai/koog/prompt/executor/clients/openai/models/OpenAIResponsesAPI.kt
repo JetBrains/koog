@@ -914,6 +914,15 @@ internal class OpenAIPromptReference(
 @Serializable
 public class ReasoningConfig(public val effort: ReasoningEffort? = null, public val summary: ReasoningSummary? = null)
 
+/**
+ * Represents different levels of reasoning summary that can be used to specify the desired detail
+ * in responses.
+ *
+ * The levels include:
+ * - AUTO: Automatically determines the level of reasoning detail.
+ * - CONCISE: Provides a brief and to-the-point reasoning.
+ * - DETAILED: Provides extensive and thorough reasoning.
+ */
 @Serializable
 public enum class ReasoningSummary {
     @SerialName("auto")
@@ -989,6 +998,11 @@ internal sealed interface OpenAIOutputFormat {
     class JsonObject() : OpenAIOutputFormat
 }
 
+/**
+ * Represents the verbosity level for text output.
+ *
+ * The verbosity levels determine the amount of detail included in the text.
+ */
 @Serializable
 public enum class TextVerbosity {
     @SerialName("low")
@@ -1267,6 +1281,13 @@ internal sealed interface OpenAIResponsesTool {
     }
 }
 
+/**
+ * Represents the truncation behavior for processing inputs.
+ *
+ * This enum defines the following modes:
+ * - AUTO: Automatically handles truncation of inputs based on predefined logic.
+ * - DISABLED: Disables truncation, requiring inputs to fit within allowed limits.
+ */
 @Serializable
 public enum class Truncation {
     @SerialName("auto")

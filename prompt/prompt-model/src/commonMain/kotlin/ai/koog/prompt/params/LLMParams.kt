@@ -115,32 +115,59 @@ public open class LLMParams(
     )
 
     /**
-     * Component functions for destructuring declarations
+     * Retrieves the value of the temperature as a nullable Double.
+     * This function is typically used in destructuring declarations.
+     *
+     * @return the temperature value, which may be null
      */
     public operator fun component1(): Double? = temperature
-
-    @Suppress("MissingKDocForPublicAPI")
+    /**
+     * Provides the second component of the object, corresponding to maxTokens.
+     *
+     * @return The value of maxTokens, or null if not set.
+     */
     public operator fun component2(): Int? = maxTokens
-
-    @Suppress("MissingKDocForPublicAPI")
+    /**
+     * Retrieves the third component of the data structure, representing the number of choices.
+     *
+     * @return The number of choices as an [Int] if available, or null otherwise.
+     */
     public operator fun component3(): Int? = numberOfChoices
-
-    @Suppress("MissingKDocForPublicAPI")
+    /**
+     * Retrieves the fourth component of the data structure.
+     *
+     * @return the fourth component of the data as a nullable String, or null if not available.
+     */
     public operator fun component4(): String? = speculation
-
-    @Suppress("MissingKDocForPublicAPI")
+    /**
+     * Provides the fifth component of the data structure, represented by the `schema` property.
+     *
+     * @return The `schema` of type `Schema?`, or null if it is not set.
+     */
     public operator fun component5(): Schema? = schema
-
-    @Suppress("MissingKDocForPublicAPI")
+    /**
+     * Retrieves the sixth component of a destructured object, which represents a tool choice.
+     *
+     * @return The tool choice associated with this component, or null if not set.
+     */
     public operator fun component6(): ToolChoice? = toolChoice
-
-    @Suppress("MissingKDocForPublicAPI")
+    /**
+     * Retrieves the seventh component of the data class, typically used for destructuring declarations.
+     *
+     * @return The seventh component as a nullable String, or null if not available.
+     */
     public operator fun component7(): String? = user
-
-    @Suppress("MissingKDocForPublicAPI")
+    /**
+     * Retrieves the eighth component of the data class, typically used for destructuring declarations.
+     *
+     * @return A Boolean value or null representing the state of the eighth component.
+     */
     public operator fun component8(): Boolean? = includeThoughts
-
-    @Suppress("MissingKDocForPublicAPI")
+    /**
+     * Provides the ninth component of a destructured object, specifically the thinking budget.
+     *
+     * @return The value of the `thinkingBudget` as an optional integer, or null if not set.
+     */
     public operator fun component9(): Int? = thinkingBudget
 
     @Suppress("MissingKDocForPublicAPI")

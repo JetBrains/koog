@@ -2,6 +2,7 @@ package ai.koog.agents.ext.tool.file.model
 
 import ai.koog.rag.base.files.DocumentProvider
 import ai.koog.rag.base.files.FileMetadata
+import ai.koog.rag.base.files.FileSystemProvider
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -15,9 +16,33 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 public sealed interface FileSystemEntry {
+    /**
+     * Represents the name associated with an entity.
+     * This variable typically holds a descriptive or identifying string value.
+     */
     public val name: String
+    /**
+     * The file extension of this entry, or `null` if the entry does not have an extension.
+     *
+     * The extension is the portion of the file name after the last dot (`.`) character,
+     * excluding the dot itself. Hidden files (e.g., `.hidden`) or files without dots
+     * (e.g., `README`) yield `null`.
+     */
     public val extension: String?
+    /**
+     * The absolute or relative path of the file system entry.
+     *
+     * This value uniquely identifies the location of the file system entry
+     * within its storage system. It can be an absolute path starting from
+     * the root of the file system or a relative path depending on the context.
+     */
     public val path: String
+    /**
+     * Indicates whether the file system entry is hidden.
+     *
+     * Hidden entries are typically not displayed by default in file explorers or user interfaces.
+     * This property is determined by the file system's hidden attribute for the entry.
+     */
     public val hidden: Boolean
 
     /**
@@ -103,6 +128,85 @@ public sealed interface FileSystemEntry {
                     val range: DocumentProvider.DocumentRange,
                 )
             }
+
+            /**
+             * Companion object for the `Content` class.
+             * Provides utility functions for creating specific types of `Content`
+             * based on provided parameters.
+             */
+            public companion object {
+                /**
+                 * Creates file content from a line range.
+                 *
+                 * @param content file text to extract from
+                 * @param startLine first line to include (0-based, inclusive)
+                 * @param endLine first line to exclude (0-based, exclusive) or -1 for the end of the file
+                 * @return [Text] if range covers the entire file, otherwise [Excerpt] with single snippet
+                 * @throws IllegalArgumentException if startLine < 0, endLine < -1, or endLine <= startLine when endLine != -1
+                 */
+                public fun of(content: String, startLine: Int, endLine: Int): Content {
+                    require(startLine >= 0) { "startLine must be >= 0: $startLine" }
+                    require(endLine >= -1) { "endLine must be >= -1: $endLine" }
+                    require(endLine == -1 || endLine > startLine) {
+                        "endLine must be > startLine or -1: startLine=$startLine, endLine=$endLine"
+                    }
+
+                    val lines = content.lines()
+                    val startIndex = startLine.coerceAtLeast(0)
+                    val endIndex = if (endLine == -1) lines.size else endLine.coerceAtMost(lines.size)
+
+                    if (startIndex == 0 && endIndex >= lines.size) {
+                        return Text(content)
+                    }
+
+                    val start = DocumentProvider.Position(startIndex, 0)
+                    val end = DocumentProvider.Position(endIndex, 0)
+                    val range = DocumentProvider.DocumentRange(start, end)
+
+                    return Excerpt(
+                        listOf(
+                            Excerpt.Snippet(
+                                text = range.substring(content),
+                                range = range,
+                            )
+                        )
+                    )
+                }
+            }
+        }
+
+        /**
+         * Companion object for the `File` class.
+         * Provides utility functions for creating and handling files based on the filesystem path.
+         */
+        public companion object {
+            /**
+             * Creates a [File] from a filesystem path.
+             *
+             * @param Path the provider's path type
+             * @param path the file path to examine
+             * @param content the file content, defaults to [Content.None]
+             * @param fs the filesystem provider
+             * @return [File] if the path exists and is a file, otherwise null
+             * @throws kotlinx.io.IOException if I/O error occurs while accessing filesystem
+             */
+            public suspend fun <Path> of(
+                path: Path,
+                content: Content = Content.None,
+                fs: FileSystemProvider.ReadOnly<Path>,
+            ): File? {
+                val metadata = fs.metadata(path) ?: return null
+                if (metadata.type != FileMetadata.FileType.File) return null
+                return File(
+                    name = fs.name(path),
+                    extension = fs.extension(path).takeIf { it.isNotEmpty() },
+                    path = fs.toAbsolutePathString(path),
+                    hidden = metadata.hidden,
+                    contentType = fs.getFileContentType(path),
+                    size = FileSize.of(path, fs),
+                    content = content,
+                )
+            }
         }
     }
 
@@ -122,15 +226,84 @@ public sealed interface FileSystemEntry {
         override val extension: String? = null
 
         /**
-         * Visits this folder and its descendants up to the specified depth.
+         * Visits this folder and its descendants.
          *
-         * @param depth how deep to traverse (0 = this folder only, negative values treated as 0)
-         * @param visitor function called for each visited entry
+         * @param depth maximum recursion depth
+         * @param visitor function called for each visited [FileSystemEntry]
          */
         override suspend fun visit(depth: Int, visitor: suspend (FileSystemEntry) -> Unit) {
             visitor(this)
-            if (depth <= 0) return
+            if (depth == 0) return
             entries?.forEach { it.visit(depth - 1, visitor) }
+        }
+
+        /**
+         * Companion object for the Folder class, providing utility functions.
+         */
+        public companion object {
+            /**
+             * Creates a [Folder] from a filesystem path.
+             *
+             * @param Path the provider's path type
+             * @param path the directory path
+             * @param entries child entries for this folder
+             * @param fs the filesystem provider
+             * @return [Folder] if the path exists and is a directory, otherwise null
+             * @throws kotlinx.io.IOException if I/O error occurs while accessing filesystem
+             */
+            public suspend fun <Path> of(
+                path: Path,
+                entries: List<FileSystemEntry>? = null,
+                fs: FileSystemProvider.ReadOnly<Path>,
+            ): Folder? {
+                val metadata = fs.metadata(path) ?: return null
+                if (metadata.type != FileMetadata.FileType.Directory) return null
+                return Folder(
+                    name = fs.name(path),
+                    path = fs.toAbsolutePathString(path),
+                    hidden = metadata.hidden,
+                    entries = entries,
+                )
+            }
+        }
+    }
+
+    /**
+     * A companion object providing utility functions for creating instances of [FileSystemEntry].
+     */
+    public companion object {
+        /**
+         * Creates the appropriate [FileSystemEntry] subtype from a path.
+         *
+         * @param Path the provider's path type
+         * @param path the filesystem path to examine
+         * @param fs the filesystem provider
+         * @return [File] for files, [Folder] for directories, or null if the path does not exist
+         * @throws kotlinx.io.IOException if I/O error occurs while accessing the filesystem
+         */
+        public suspend fun <Path> of(
+            path: Path,
+            fs: FileSystemProvider.ReadOnly<Path>,
+        ): FileSystemEntry? {
+            val metadata = fs.metadata(path) ?: return null
+            return when (metadata.type) {
+                FileMetadata.FileType.File ->
+                    File(
+                        name = fs.name(path),
+                        extension = fs.extension(path).takeIf { it.isNotEmpty() },
+                        path = fs.toAbsolutePathString(path),
+                        hidden = metadata.hidden,
+                        contentType = fs.getFileContentType(path),
+                        size = FileSize.of(path, fs),
+                    )
+
+                FileMetadata.FileType.Directory ->
+                    Folder(
+                        name = fs.name(path),
+                        path = fs.toAbsolutePathString(path),
+                        hidden = metadata.hidden,
+                    )
+            }
         }
     }
 }
