@@ -365,7 +365,7 @@ public open class GoogleLLMClient(
             responseJsonSchema = responseFormat?.responseJsonSchema,
             temperature = if (model.capabilities.contains(LLMCapability.Temperature)) prompt.params.temperature else null,
             candidateCount = if (model.capabilities.contains(LLMCapability.MultipleChoices)) prompt.params.numberOfChoices else null,
-            maxOutputTokens = 2048,
+            maxOutputTokens = prompt.params.maxTokens,
             thinkingConfig = GoogleThinkingConfig(
                 includeThoughts = prompt.params.includeThoughts.takeIf { it == true },
                 thinkingBudget = prompt.params.thinkingBudget
