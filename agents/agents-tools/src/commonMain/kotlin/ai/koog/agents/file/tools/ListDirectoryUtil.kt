@@ -66,13 +66,10 @@ private suspend fun <Path> buildNode(
         return buildFolderEntry(fs, currentPath, metadata, entries = null)
     }
 
-    // Build entries for visible children
     val entries = mutableListOf<FileSystemEntry>()
-
     for ((childPath, childMeta) in visibleChildren) {
         when (childMeta.type) {
             FileMetadata.FileType.File -> {
-                // File already passed filter check in visibleChildren
                 entries += buildFileEntry(fs, childPath, childMeta)
             }
 
@@ -88,7 +85,6 @@ private suspend fun <Path> buildNode(
         }
     }
 
-    // Prune empty directories when filtering
     if (filter != null && entries.isEmpty()) {
         return null
     }
