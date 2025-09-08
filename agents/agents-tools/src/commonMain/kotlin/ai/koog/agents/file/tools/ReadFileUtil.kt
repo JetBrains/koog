@@ -18,10 +18,10 @@ import ai.koog.rag.base.files.readText
  * @param Path the filesystem path type
  * @param fs the filesystem provider used to read file content and attributes
  * @param path the path to the file
- * @param metadata the pre-fetched metadata for the file at [path]
+ * @param metadata metadata for the file
  * @param startLine the starting line index (0-based, inclusive) for content extraction
  * @param endLine the ending line index (0-based, exclusive) for content extraction, or -1 for the end of the file
- * @return a file entry containing the requested content range and file attributes
+ * @return a [File] entry containing the requested content range and file attributes
  * @throws IllegalArgumentException if startLine < 0, endLine < -1, startLine >= lineCount,
  *         endLine <= startLine (when not -1), startLine >= lineCount, or endLine > lineCount
  */
@@ -39,7 +39,7 @@ internal suspend fun <Path> buildTextFileEntry(
     }
 
     val content = fs.readText(path)
-    val lineCount = content.lines().size
+    val lineCount = content.lineSequence().count()
 
     require(startLine < lineCount) {
         "startLine=$startLine must be < lineCount=$lineCount"
@@ -52,22 +52,20 @@ internal suspend fun <Path> buildTextFileEntry(
         name = fs.name(path),
         extension = fs.extension(path),
         path = fs.toAbsolutePathString(path),
-        content = buildContent(content, startLine, if (endLine == -1) lineCount else endLine),
-        size = buildFileSize(fs, path),
         hidden = metadata.hidden,
+        size = buildFileSize(fs, path, FileMetadata.FileContentType.Text),
         contentType = FileMetadata.FileContentType.Text,
+        content = buildContent(content, startLine, if (endLine == -1) lineCount else endLine, lineCount)
     )
 }
 
-// Creates content (full text or excerpt) from a validated line range
 private fun buildContent(
     content: String,
     startLine: Int,
     endLine: Int,
+    lineCount: Int
 ): Content {
-    val lines = content.lines()
-
-    if (startLine == 0 && endLine == lines.size) {
+    if (startLine == 0 && endLine == lineCount) {
         return Content.Text(content)
     }
 

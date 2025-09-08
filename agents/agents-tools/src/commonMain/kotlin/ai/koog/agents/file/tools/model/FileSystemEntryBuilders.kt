@@ -21,13 +21,14 @@ public suspend fun <Path> buildFileEntry(
     path: Path,
     metadata: FileMetadata
 ): File {
+    val type = fs.getFileContentType(path)
     return File(
         name = fs.name(path),
         extension = fs.extension(path),
         path = fs.toAbsolutePathString(path),
         hidden = metadata.hidden,
-        size = buildFileSize(fs, path),
-        contentType = fs.getFileContentType(path),
+        size = buildFileSize(fs, path, type),
+        contentType = type,
         content = Content.None,
     )
 }
@@ -79,7 +80,7 @@ public suspend fun <Path> buildFileSystemEntry(
             buildFileEntry(
                 fs = fs,
                 path = path,
-                metadata = metadata,
+                metadata = metadata
             )
         }
 
@@ -103,20 +104,22 @@ public suspend fun <Path> buildFileSystemEntry(
  * to avoid loading large or unsupported content.
  *
  * @param Path the filesystem path type
- * @param path the file path to measure
  * @param fs the filesystem provider used to access the file
- * @return a list containing at least a [FileSize.Bytes] instance and
- *         optionally a [FileSize.Lines] instance
+ * @param path the file path to measure
+ * @param contentType optional file content type
+ * @return a list containing [FileSize.Bytes] and, for small text files, [FileSize.Lines]
  */
 public suspend fun <Path> buildFileSize(
     fs: FileSystemProvider.ReadOnly<Path>,
-    path: Path
+    path: Path,
+    contentType: FileMetadata.FileContentType? = null,
 ): List<FileSize> {
     val bytes = FileSize.Bytes(fs.size(path))
-    if (bytes.bytes > FileSize.MIB || fs.getFileContentType(path) != FileMetadata.FileContentType.Text) {
+    val type = contentType ?: fs.getFileContentType(path)
+
+    if (bytes.bytes > FileSize.MIB || type != FileMetadata.FileContentType.Text) {
         return listOf(bytes)
     }
 
-    val lineCount = fs.readText(path).lineSequence().count()
-    return listOf(bytes, FileSize.Lines(lineCount))
+    return listOf(bytes, FileSize.Lines(fs.readText(path).lineSequence().count()))
 }

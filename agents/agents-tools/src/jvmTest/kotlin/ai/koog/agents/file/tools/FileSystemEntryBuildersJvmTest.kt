@@ -176,4 +176,26 @@ class FileSystemEntryBuildersJvmTest {
         assertEquals(1, sizes.size)
         assertEquals(2L, sizes.filterIsInstance<FileSize.Bytes>().single().bytes)
     }
+
+    @Test
+    fun `buildFileSize - explicit Binary contentType returns only Bytes on small binary file`() = runTest {
+        val binary = tempDir.resolve("binary.dat").apply {
+            createFile()
+            writeBytes(byteArrayOf(0xFF.toByte(), 0xFE.toByte()))
+        }
+        val sizes = buildFileSize(fs, binary, FileMetadata.FileContentType.Binary)
+
+        assertEquals(1, sizes.size)
+        assertEquals(2L, sizes.filterIsInstance<FileSize.Bytes>().single().bytes)
+    }
+
+    @Test
+    fun `buildFileSize - explicit Text contentType returns Bytes and Lines`() = runTest {
+        val textFile = createTestFile("text.txt", "a\nb\nc")
+        val sizes = buildFileSize(fs, textFile, FileMetadata.FileContentType.Text)
+
+        assertEquals(2, sizes.size)
+        assertEquals(5L, sizes.filterIsInstance<FileSize.Bytes>().single().bytes)
+        assertEquals(3, sizes.filterIsInstance<FileSize.Lines>().single().lines)
+    }
 }

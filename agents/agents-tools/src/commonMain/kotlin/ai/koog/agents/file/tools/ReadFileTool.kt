@@ -91,9 +91,9 @@ public class ReadFileTool<Path>(private val fs: FileSystemProvider.ReadOnly<Path
         val metadata =
             validateNotNull(fs.metadata(path)) { "File not found: ${args.path} (ensure the path is absolute)" }
         validate(metadata.type == FileMetadata.FileType.File) { "Not a file: ${args.path}" }
-        validate(fs.getFileContentType(path) == FileMetadata.FileContentType.Text) {
-            "File is not a text file: ${args.path}"
-        }
+
+        val type = fs.getFileContentType(path)
+        validate(type == FileMetadata.FileContentType.Text) { "File is not a text file: ${args.path}" }
 
         return runCatching {
             Result(
