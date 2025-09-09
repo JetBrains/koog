@@ -41,7 +41,7 @@ import kotlin.uuid.Uuid
 @ExperimentalUuidApi
 public class FunctionalAIAgent<Input, Output>(
     public val promptExecutor: PromptExecutor,
-    public val agentConfig: AIAgentConfigBase,
+    override val agentConfig: AIAgentConfigBase,
     public val toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     public val strategy: AIAgentFunctionalStrategy<Input, Output>,
     id: String? = null,

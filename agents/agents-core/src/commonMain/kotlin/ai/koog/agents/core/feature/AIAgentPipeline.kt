@@ -1,5 +1,6 @@
 package ai.koog.agents.core.feature
 
+import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
@@ -17,7 +18,9 @@ import ai.koog.agents.core.feature.handler.AgentFinishedHandler
 import ai.koog.agents.core.feature.handler.AgentHandler
 import ai.koog.agents.core.feature.handler.AgentRunErrorContext
 import ai.koog.agents.core.feature.handler.AgentRunErrorHandler
+import ai.koog.agents.core.feature.handler.AgentStartContext
 import ai.koog.agents.core.feature.handler.AgentTransformEnvironmentContext
+import ai.koog.agents.core.feature.handler.BeforeAgentStartedHandler
 import ai.koog.agents.core.feature.handler.BeforeLLMCallContext
 import ai.koog.agents.core.feature.handler.BeforeLLMCallHandler
 import ai.koog.agents.core.feature.handler.ExecuteLLMHandler
@@ -141,6 +144,31 @@ public abstract class AIAgentPipeline {
     //region Trigger Agent Handlers
 
     /**
+     * Notifies all registered handlers that an agent has started execution.
+     *
+     * @param runId The unique identifier for the agent run
+     * @param agent The agent instance for which the execution has started
+     * @param context The context of the agent execution, providing access to the agent environment and context features
+     */
+    @OptIn(InternalAgentsApi::class)
+    public suspend fun <TInput, TOutput> onBeforeAgentStarted(
+        runId: String,
+        agent: AIAgent<*, *>,
+        context: AIAgentContext
+    ) {
+        agentHandlers.values.forEach { handler ->
+            val eventContext =
+                AgentStartContext(
+                    agent = agent,
+                    runId = runId,
+                    feature = handler.feature,
+                    context = context
+                )
+            handler.handleBeforeAgentStartedUnsafe(eventContext)
+        }
+    }
+
+    /**
      * Notifies all registered handlers that an agent has finished execution.
      *
      * @param agentId The unique identifier of the agent that finished execution
@@ -214,8 +242,12 @@ public abstract class AIAgentPipeline {
     @OptIn(InternalAgentsApi::class)
     public suspend fun onStrategyStarted(strategy: AIAgentStrategy<*, *, *>, context: AIAgentContext) {
         strategyHandlers.values.forEach { handler ->
-            val eventContext =
-                StrategyStartContext(runId = context.runId, strategy = strategy, feature = handler.feature)
+            val eventContext = StrategyStartContext(
+                runId = context.runId,
+                strategy = strategy,
+                feature = handler.feature,
+                context = context
+            )
             handler.handleStrategyStartedUnsafe(eventContext)
         }
     }
@@ -414,6 +446,34 @@ public abstract class AIAgentPipeline {
                 ?: return
 
         existingHandler.environmentTransformer = AgentEnvironmentTransformer { context, env -> context.transform(env) }
+    }
+
+    /**
+     * Intercepts on before an agent started to modify or enhance the agent.
+     *
+     * @param handle The handler that processes agent creation events
+     *
+     * Example:
+     * ```
+     * pipeline.interceptBeforeAgentStarted(InterceptContext) {
+     *     readStages { stages ->
+     *         // Inspect agent stages
+     *     }
+     * }
+     * ```
+     */
+    public fun <TFeature : Any> interceptBeforeAgentStarted(
+        context: InterceptContext<TFeature>,
+        handle: suspend (AgentStartContext<TFeature>) -> Unit
+    ) {
+        @Suppress("UNCHECKED_CAST")
+        val existingHandler: AgentHandler<TFeature> =
+            agentHandlers.getOrPut(context.feature.key) { AgentHandler(context.featureImpl) } as? AgentHandler<TFeature>
+                ?: return
+
+        existingHandler.beforeAgentStartedHandler = BeforeAgentStartedHandler { context ->
+            handle(context)
+        }
     }
 
     /**

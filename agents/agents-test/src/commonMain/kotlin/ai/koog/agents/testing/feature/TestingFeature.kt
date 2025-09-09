@@ -2,6 +2,7 @@
 
 package ai.koog.agents.testing.feature
 
+import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.GraphAIAgent.FeatureContext
 import ai.koog.agents.core.agent.config.AIAgentConfigBase
@@ -112,7 +113,7 @@ public sealed class NodeReference<Input, Output> {
          * The method performs a depth-first traversal starting from the subgraph's start node.
          *
          * @param subgraph The AI Agent subgraph to traverse in search of the matching node.
-         * @return The resolved node that matches the current node's name of type [AIAgentNodeBase<Input, Output>].
+         * @return The resolved node that matches the current node's name of a type [AIAgentNodeBase<Input, Output>].
          * @throws IllegalArgumentException If no node with the specified name is found within the subgraph.
          */
         @Suppress("UNCHECKED_CAST")
@@ -291,7 +292,7 @@ public data class UnconditionalEdgeAssertion(
  * @property from The starting node reference for the reachability assertion.
  * @property to The target node reference for the reachability assertion.
  *
- * This assertion helps validate correctness and connectivity properties of constructed graphs.
+ * This assertion helps validate the correctness and connectivity properties of constructed graphs.
  */
 @TestOnly
 public data class ReachabilityAssertion(val from: NodeReference<*, *>, val to: NodeReference<*, *>)
@@ -568,7 +569,7 @@ public class Testing {
              * `StageAssertionsBuilder` context, allowing users to define node-specific assertions
              * and add them to this collection.
              *
-             * The collected assertions are later utilized during the construction of the
+             * The collected assertions are later used during the construction of the
              * `StageAssertions` object to verify node output behavior.
              */
             private val nodeOutputs = mutableListOf<NodeOutputAssertion<*, *>>()
@@ -580,7 +581,7 @@ public class Testing {
              * stage, including the originating node, its output, the target node, and the
              * execution context in which the assertion was made.
              *
-             * This property is utilized during the edge validation process to ensure the
+             * This property is used during the edge validation process to ensure the
              * stage conforms to its designed behavior regarding node-to-node transitions.
              * The assertions are collected through the `EdgeAssertionsBuilder` and
              * integrated into the final `StageAssertions` object for the stage.
@@ -963,15 +964,30 @@ public class Testing {
             if (config.enableGraphTesting) {
                 feature.graphAssertions.add(config.getAssertions())
 
+                var agent: AIAgent<*, *>? = null
+
                 pipeline.interceptBeforeAgentStarted(interceptContext) { eventContext ->
-                    val strategyGraph = eventContext.strategy
+                    agent = eventContext.agent
+                }
+
+                pipeline.interceptStrategyStarted(interceptContext) { eventContext ->
+                    val agentToUse = agent as GraphAIAgent<*, *>
+                    val strategyGraph = eventContext.strategy as AIAgentGraphStrategy<*, *>
+
                     val strategyAssertions = feature.graphAssertions.find { it.name == strategyGraph.name }
                     config.assert(
                         strategyAssertions != null,
                         "Assertions for strategyGraph with name `${strategyGraph.name}` not found in configuration."
                     )
                     strategyAssertions!!
-                    verifyGraph(eventContext.agent, strategyAssertions, strategyGraph, pipeline, config)
+
+                    verifyGraph(
+                        agent = agentToUse,
+                        graphAssertions = strategyAssertions,
+                        graph = strategyGraph,
+                        pipeline = pipeline,
+                        config = config
+                    )
                 }
             }
         }

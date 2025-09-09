@@ -44,7 +44,7 @@ class Logging(val logger: Logger) {
          *
          * The method integrates the feature capabilities into the agent pipeline by setting up interceptors
          * to log information during agent creation, before processing nodes, and after processing nodes by a predefined
-         * hooks, e.g. [BeforeNodeHandler], etc.
+         * hook, e.g. [BeforeNodeHandler], etc.
          *
          * @param config The configuration for the LoggingFeature, providing logger details.
          * @param pipeline The agent pipeline where logging functionality will be installed.
@@ -56,7 +56,7 @@ class Logging(val logger: Logger) {
             val logging = Logging(LoggerFactory.getLogger(config.loggerName))
             val interceptContext = InterceptContext(this, logging)
             pipeline.interceptBeforeAgentStarted(interceptContext) { eventContext ->
-                logging.logger.info("Agent is going to be started with strategy: ${eventContext.strategy.name}.")
+                logging.logger.info("Agent is going to be started (id: ${eventContext.agent.id})")
             }
 
             pipeline.interceptStrategyStarted(interceptContext) { eventContext ->

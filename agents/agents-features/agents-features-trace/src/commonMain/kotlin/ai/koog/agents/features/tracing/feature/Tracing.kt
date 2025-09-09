@@ -125,7 +125,6 @@ public class Tracing {
                 val event = AIAgentStartedEvent(
                     agentId = eventContext.agent.id,
                     runId = eventContext.runId,
-                    strategyName = eventContext.strategy.name,
                 )
                 processMessage(config, event)
             }

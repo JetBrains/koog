@@ -1,15 +1,22 @@
 package ai.koog.agents.core.agent
 
+import ai.koog.agents.core.agent.config.AIAgentConfigBase
 import ai.koog.agents.utils.Closeable
 
 /**
  * Represents a basic interface for AI agent.
  */
 public interface AIAgent<Input, Output> : Closeable {
+
     /**
      * Represents the unique identifier for the AI agent.
      */
     public val id: String
+
+    /**
+     * The configuration for the AI agent.
+     */
+    public val agentConfig: AIAgentConfigBase
 
     /**
      * Executes the AI agent with the given input and retrieves the resulting output.

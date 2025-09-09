@@ -104,7 +104,6 @@ public class OpenTelemetry {
                     provider = eventContext.agent.agentConfig.model.provider,
                     agentId = eventContext.agent.id,
                     runId = eventContext.runId,
-                    strategyName = eventContext.strategy.name
                 )
 
                 spanAdapter?.onBeforeSpanStarted(invokeAgentSpan)

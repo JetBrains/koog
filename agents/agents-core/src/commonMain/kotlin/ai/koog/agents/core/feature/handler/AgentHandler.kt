@@ -93,7 +93,7 @@ public class AgentHandler<TFeature : Any>(public val feature: TFeature) {
      * @param context The context containing necessary information about the agent,
      *                strategy, and feature to be processed before the agent starts.
      */
-    public suspend fun handleBeforeAgentStarted(context: GraphAgentStartContext<TFeature>) {
+    public suspend fun handleBeforeAgentStarted(context: AgentStartContext<TFeature>) {
         beforeAgentStartedHandler.handle(context)
     }
 
@@ -106,8 +106,8 @@ public class AgentHandler<TFeature : Any>(public val feature: TFeature) {
      */
     @Suppress("UNCHECKED_CAST")
     @InternalAgentsApi
-    public suspend fun handleBeforeAgentStartedUnsafe(eventContext: GraphAgentStartContext<*>) {
-        handleBeforeAgentStarted(eventContext as GraphAgentStartContext<TFeature>)
+    public suspend fun handleBeforeAgentStartedUnsafe(eventContext: AgentStartContext<*>) {
+        handleBeforeAgentStarted(eventContext as AgentStartContext<TFeature>)
     }
 }
 
@@ -161,7 +161,7 @@ public fun interface BeforeAgentStartedHandler<TFeature : Any> {
      *
      * @param context The context that encapsulates the agent, its strategy, and the associated feature
      */
-    public suspend fun handle(context: GraphAgentStartContext<TFeature>)
+    public suspend fun handle(context: AgentStartContext<TFeature>)
 }
 
 /**

@@ -1,8 +1,6 @@
 package ai.koog.agents.core.agent.context.element
 
 import ai.koog.agents.core.agent.config.AIAgentConfigBase
-import ai.koog.agents.core.agent.config.MissingToolsConversionStrategy
-import ai.koog.agents.core.agent.config.ToolCallDescriber
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.llm.LLModel
