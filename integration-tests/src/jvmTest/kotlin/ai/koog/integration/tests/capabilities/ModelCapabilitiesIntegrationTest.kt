@@ -18,9 +18,12 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
+import ai.koog.prompt.executor.clients.openai.OpenAIChatParams
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
+import ai.koog.prompt.executor.clients.openai.OpenAIResponsesParams
 import ai.koog.prompt.executor.llms.all.DefaultMultiLLMPromptExecutor
 import ai.koog.prompt.llm.LLMCapability
+import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.message.Attachment
@@ -28,8 +31,8 @@ import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.ToolChoice
-import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
@@ -58,8 +61,6 @@ class ModelCapabilitiesIntegrationTest {
     private lateinit var googleClient: GoogleLLMClient
     private lateinit var executor: DefaultMultiLLMPromptExecutor
     private lateinit var testResourcesDir: Path
-
-    private val logger = logger { }
 
     @BeforeAll
     fun setup() {
@@ -98,7 +99,6 @@ class ModelCapabilitiesIntegrationTest {
             LLMCapability.Schema.JSON.Basic,
             LLMCapability.Schema.JSON.Standard,
             LLMCapability.PromptCaching,
-            // OpenAI endpoint capabilities
             LLMCapability.OpenAIEndpoint.Completions,
             LLMCapability.OpenAIEndpoint.Responses,
         )
@@ -325,8 +325,31 @@ class ModelCapabilitiesIntegrationTest {
                     }
                 }
 
+                LLMCapability.OpenAIEndpoint.Completions -> {
+                    assumeTrue(model.provider is LLMProvider.OpenAI)
+                    val prompt = prompt("cap-openai-endpoint-completions-positive", params = OpenAIChatParams()) {
+                        system("You are a helpful assistant.")
+                        user("Say hello in one short sentence.")
+                    }
+                    withRetry {
+                        checkAssistantResponse(prompt, model)
+                    }
+                }
+
+                LLMCapability.OpenAIEndpoint.Responses -> {
+                    assumeTrue(model.provider is LLMProvider.OpenAI)
+                    val prompt =
+                        prompt("cap-openai-endpoint-responses-positive", params = OpenAIResponsesParams()) {
+                            system("You are a helpful assistant.")
+                            user("Say hello in one short sentence.")
+                        }
+                    withRetry {
+                        checkAssistantResponse(prompt, model)
+                    }
+                }
+
                 else -> {
-                    logger.warn { "Skipping hard-to-verify capability verification for $capability on $model" }
+                    assumeTrue(false, "Skipping hard-to-verify capability verification for $capability on ${model.id}")
                 }
             }
         }
@@ -574,8 +597,43 @@ class ModelCapabilitiesIntegrationTest {
                     }
                 }
 
+                LLMCapability.OpenAIEndpoint.Completions -> {
+                    assumeTrue(model.provider is LLMProvider.OpenAI)
+                    val prompt = prompt("cap-openai-endpoint-completions-negative", params = OpenAIChatParams()) {
+                        system("You are a helpful assistant.")
+                        user("Say hello in one short sentence.")
+                    }
+                    withRetry {
+                        val ex = assertFails(prompt, model)
+                        assertExceptionMessageContains(
+                            ex,
+                            EXPECTED_ERROR,
+                            "Unsupported OpenAI API endpoint",
+                            "not a chat completion",
+                            "Unsupported"
+                        )
+                    }
+                }
+
+                LLMCapability.OpenAIEndpoint.Responses -> {
+                    assumeTrue(model.provider is LLMProvider.OpenAI)
+                    val prompt = prompt("cap-openai-endpoint-responses-negative", params = OpenAIResponsesParams()) {
+                        system("You are a helpful assistant.")
+                        user("Say hello in one short sentence.")
+                    }
+                    withRetry {
+                        val ex = assertFails(prompt, model)
+                        assertExceptionMessageContains(
+                            ex,
+                            EXPECTED_ERROR,
+                            "Unsupported OpenAI API endpoint",
+                            "Unsupported"
+                        )
+                    }
+                }
+
                 else -> {
-                    logger.warn { "Skipping hard-to-verify capability verification for $capability on $model" }
+                    assumeTrue(false, "Skipping hard-to-verify capability verification for $capability on ${model.id}")
                 }
             }
         }
