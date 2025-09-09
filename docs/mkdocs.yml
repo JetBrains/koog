@@ -28,7 +28,7 @@ nav:
           - Ktor: ktor-plugin.md
           - Spring Boot: spring-boot.md
       - Advanced usage:
-          - Structured data: structured-data.md
+          - Structured output: structured-output.md
           - Streaming API: streaming-api.md
           - Custom nodes: custom-nodes.md
           - LLM sessions and manual history management: sessions.md
