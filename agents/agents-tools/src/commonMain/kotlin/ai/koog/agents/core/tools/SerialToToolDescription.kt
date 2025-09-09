@@ -13,35 +13,37 @@ private fun SerialDescriptor.description(): String =
 
 /**
  * Convert a [SerialDescriptor] to a [ToolDescriptor].
+ *
+ * The tool would have name = [toolName] and single argument with type defined by the current [SerialDescriptor]
  */
 @InternalAgentToolsApi
-public fun SerialDescriptor.toolDescription(name: String): ToolDescriptor {
+public fun SerialDescriptor.asToolDescriptor(toolName: String): ToolDescriptor {
     val description = description()
 
     return when (kind) {
-        PrimitiveKind.STRING -> ToolParameterType.String.asValueTool(name, description)
-        PrimitiveKind.BOOLEAN -> ToolParameterType.Boolean.asValueTool(name, description)
-        PrimitiveKind.CHAR -> ToolParameterType.String.asValueTool(name, description)
+        PrimitiveKind.STRING -> ToolParameterType.String.asValueTool(toolName, description)
+        PrimitiveKind.BOOLEAN -> ToolParameterType.Boolean.asValueTool(toolName, description)
+        PrimitiveKind.CHAR -> ToolParameterType.String.asValueTool(toolName, description)
         PrimitiveKind.BYTE,
         PrimitiveKind.SHORT,
         PrimitiveKind.INT,
-        PrimitiveKind.LONG -> ToolParameterType.Integer.asValueTool(name, description)
+        PrimitiveKind.LONG -> ToolParameterType.Integer.asValueTool(toolName, description)
 
         PrimitiveKind.FLOAT,
-        PrimitiveKind.DOUBLE -> ToolParameterType.Float.asValueTool(name, description)
+        PrimitiveKind.DOUBLE -> ToolParameterType.Float.asValueTool(toolName, description)
 
         StructureKind.LIST -> ToolParameterType.List(
             getElementDescriptor(0).toToolParameterType()
-        ).asValueTool(name, description)
+        ).asValueTool(toolName, description)
 
         SerialKind.ENUM -> ToolParameterType.Enum(Array(elementsCount, ::getElementName))
-            .asValueTool(name, description)
+            .asValueTool(toolName, description)
 
         StructureKind.CLASS -> {
             val required = mutableListOf<String>()
             val properties = parameterDescriptors(required)
             ToolDescriptor(
-                name,
+                toolName,
                 description,
                 requiredParameters = properties.filter { required.contains(it.name) },
                 optionalParameters = properties.filterNot { required.contains(it.name) }
@@ -54,7 +56,7 @@ public fun SerialDescriptor.toolDescription(name: String): ToolDescriptor {
         SerialKind.CONTEXTUAL,
         PolymorphicKind.OPEN,
         StructureKind.MAP -> ToolDescriptor(
-            name = name,
+            name = toolName,
             description = description,
             requiredParameters = emptyList(),
             optionalParameters = emptyList()

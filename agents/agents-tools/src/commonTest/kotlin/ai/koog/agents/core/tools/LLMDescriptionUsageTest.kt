@@ -21,7 +21,7 @@ class LLMDescriptionUsageTest {
 
     @Test
     fun class_level_llm_description_applies_to_tool_and_fields() {
-        val desc = MyData.serializer().descriptor.toolDescription("my_data")
+        val desc = MyData.serializer().descriptor.asToolDescriptor("my_data")
 
         // Tool-level description
         assertEquals("my_data", desc.name)
@@ -42,7 +42,7 @@ class LLMDescriptionUsageTest {
 
     @Test
     fun property_level_llm_description_is_used_for_param_descriptions() {
-        val desc = PropertyAnnotated.serializer().descriptor.toolDescription("prop_annotated")
+        val desc = PropertyAnnotated.serializer().descriptor.asToolDescriptor("prop_annotated")
         // Per implementation, param descriptions are taken from class-level descriptor annotations
         assertEquals(
             "INT property desc",
@@ -64,7 +64,7 @@ class LLMDescriptionUsageTest {
 
     @Test
     fun type_use_llm_description_on_property_type_is_ignored_for_param_descriptions() {
-        val desc = TypeUseAnnotated.serializer().descriptor.toolDescription("type_use")
+        val desc = TypeUseAnnotated.serializer().descriptor.asToolDescriptor("type_use")
         val params = (desc.requiredParameters + desc.optionalParameters).associateBy { it.name }
         assertEquals("Name type desc", params.getValue("name").description)
         assertEquals("", params.getValue("age").description)
@@ -77,7 +77,7 @@ class LLMDescriptionUsageTest {
 
     @Test
     fun enum_level_llm_description_applied_to_value_tool_descriptor() {
-        val desc = DescribedColor.serializer().descriptor.toolDescription("color")
+        val desc = DescribedColor.serializer().descriptor.asToolDescriptor("color")
         assertEquals("Color enum description", desc.description)
         // Required single "value" parameter of Enum type
         val param = desc.requiredParameters.single()
@@ -92,7 +92,7 @@ class LLMDescriptionUsageTest {
 
     @Test
     fun object_level_llm_description_applied_to_free_form_descriptor() {
-        val desc = DescribedSingleton.serializer().descriptor.toolDescription("singleton")
+        val desc = DescribedSingleton.serializer().descriptor.asToolDescriptor("singleton")
         assertEquals("Singleton object description", desc.description)
         assertTrue(desc.requiredParameters.isEmpty())
         assertTrue(desc.optionalParameters.isEmpty())
@@ -115,7 +115,7 @@ class LLMDescriptionUsageTest {
 
     @Test
     fun nested_class_property_descriptions_follow_class_level_annotations() {
-        val desc = ParentWithNested.serializer().descriptor.toolDescription("parent_nested")
+        val desc = ParentWithNested.serializer().descriptor.asToolDescriptor("parent_nested")
 
         // Parent-level: required/optional split isn't the goal; check descriptions
         val nestedParam = (desc.requiredParameters + desc.optionalParameters).first { it.name == "nested" }
