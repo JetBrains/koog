@@ -6,10 +6,11 @@ import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.prompt.message.Message
 
-class TestFeature(val events: MutableList<String>) {
+class TestFeature(val events: MutableList<String>, val runIds: MutableList<String>) {
 
     class Config : FeatureConfig() {
         var events: MutableList<String>? = null
+        var runIds: MutableList<String>? = null
     }
 
     companion object Feature : AIAgentGraphFeature<Config, TestFeature> {
@@ -21,11 +22,16 @@ class TestFeature(val events: MutableList<String>) {
             config: Config,
             pipeline: AIAgentGraphPipeline
         ) {
-            val feature = TestFeature(events = config.events ?: mutableListOf())
+            val feature = TestFeature(
+                events = config.events ?: mutableListOf(),
+                runIds = config.runIds ?: mutableListOf()
+            )
+
             val context = InterceptContext(this, feature)
 
             pipeline.interceptBeforeAgentStarted(context) { eventContext ->
-                feature.events += "Agent: before agent started (strategy name: ${eventContext.strategy.name})"
+                feature.runIds += eventContext.runId
+                feature.events += "Agent: before agent started (id: ${eventContext.agent.id}, run id: ${eventContext.runId})"
             }
 
             pipeline.interceptStrategyStarted(context) { eventContext ->
@@ -34,7 +40,7 @@ class TestFeature(val events: MutableList<String>) {
 
             pipeline.interceptContextAgentFeature(this) { _: AIAgentContext ->
                 feature.events += "Agent Context: request features from agent context"
-                TestFeature(mutableListOf())
+                TestFeature(mutableListOf(), mutableListOf())
             }
 
             pipeline.interceptBeforeLLMCall(context) { event ->

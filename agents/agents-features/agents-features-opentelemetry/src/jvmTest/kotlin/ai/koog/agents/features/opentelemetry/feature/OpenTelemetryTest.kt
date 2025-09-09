@@ -192,7 +192,6 @@ class OpenTelemetryTest {
                     "run.${mockExporter.lastRunId}" to mapOf(
                         "attributes" to mapOf(
                             "gen_ai.operation.name" to "invoke_agent",
-                            "koog.agent.strategy.name" to "test-strategy",
                             "gen_ai.system" to model.provider.id,
                             "gen_ai.agent.id" to agentId,
                             "gen_ai.conversation.id" to mockExporter.lastRunId
@@ -348,7 +347,6 @@ class OpenTelemetryTest {
                     "run.${mockExporter.runIds[1]}" to mapOf(
                         "attributes" to mapOf(
                             "gen_ai.operation.name" to "invoke_agent",
-                            "koog.agent.strategy.name" to "test-strategy",
                             "gen_ai.system" to model.provider.id,
                             "gen_ai.agent.id" to agentId,
                             "gen_ai.conversation.id" to mockExporter.runIds[1]
@@ -422,7 +420,6 @@ class OpenTelemetryTest {
                     "run.${mockExporter.runIds[0]}" to mapOf(
                         "attributes" to mapOf(
                             "gen_ai.operation.name" to "invoke_agent",
-                            "koog.agent.strategy.name" to "test-strategy",
                             "gen_ai.system" to model.provider.id,
                             "gen_ai.agent.id" to agentId,
                             "gen_ai.conversation.id" to mockExporter.runIds[0]
@@ -579,7 +576,6 @@ class OpenTelemetryTest {
                             "gen_ai.agent.id" to agentId,
                             "gen_ai.conversation.id" to mockExporter.lastRunId,
                             "gen_ai.operation.name" to "invoke_agent",
-                            "koog.agent.strategy.name" to "test-strategy",
                         ),
                         "events" to emptyMap()
                     )
@@ -802,7 +798,6 @@ class OpenTelemetryTest {
                             "gen_ai.agent.id" to agentId,
                             "gen_ai.conversation.id" to mockExporter.lastRunId,
                             "gen_ai.operation.name" to "invoke_agent",
-                            "koog.agent.strategy.name" to "test-strategy",
                         ),
                         "events" to emptyMap()
                     )
@@ -1189,7 +1184,6 @@ class OpenTelemetryTest {
                         "attributes" to mapOf(
                             "gen_ai.operation.name" to "invoke_agent",
                             "gen_ai.response.finish_reasons" to listOf(FinishReasonType.Error.id),
-                            "koog.agent.strategy.name" to "test-strategy",
                             "gen_ai.system" to model.provider.id,
                             "gen_ai.agent.id" to agentId,
                             "gen_ai.conversation.id" to mockExporter.lastRunId
@@ -1289,7 +1283,6 @@ class OpenTelemetryTest {
 
                     "run.${mockExporter.lastRunId}" to mapOf(
                         "attributes" to mapOf(
-                            "koog.agent.strategy.name" to strategyName,
                             "gen_ai.conversation.id" to mockExporter.lastRunId,
                             customBeforeStartAttribute.key to customBeforeStartAttribute.value,
                             customBeforeFinishAttribute.key to customBeforeFinishAttribute.value,

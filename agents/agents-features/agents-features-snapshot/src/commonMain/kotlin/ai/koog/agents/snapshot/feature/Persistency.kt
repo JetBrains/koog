@@ -3,6 +3,7 @@ package ai.koog.agents.snapshot.feature
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AgentContextData
 import ai.koog.agents.core.agent.context.store
+import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.feature.AIAgentFeature
@@ -98,8 +99,9 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
                 return@interceptContextAgentFeature featureImpl
             }
 
-            pipeline.interceptBeforeAgentStarted(interceptContext) { ctx ->
-                require(ctx.strategy.metadata.uniqueNames) {
+            pipeline.interceptStrategyStarted(interceptContext) { ctx ->
+                val strategy = ctx.strategy as AIAgentGraphStrategy<*, *>
+                require(strategy.metadata.uniqueNames) {
                     "Checkpoint feature requires unique node names in the strategy metadata"
                 }
                 val checkpoint = ctx.feature.rollbackToLatestCheckpoint(ctx.context)

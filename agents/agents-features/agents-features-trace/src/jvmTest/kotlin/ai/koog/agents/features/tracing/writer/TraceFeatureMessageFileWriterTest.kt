@@ -154,7 +154,7 @@ class TraceFeatureMessageFileWriterTest {
             }
 
             val expectedMessages = listOf(
-                "${AIAgentStartedEvent::class.simpleName} (agent id: $agentId, run id: $runId, strategy: $strategyName)",
+                "${AIAgentStartedEvent::class.simpleName} (agent id: $agentId, run id: $runId)",
                 "${AIAgentStrategyStartEvent::class.simpleName} (run id: $runId, strategy: $strategyName)",
                 "${AIAgentNodeExecutionStartEvent::class.simpleName} (run id: $runId, node: __start__, input: $userPrompt)",
                 "${AIAgentNodeExecutionEndEvent::class.simpleName} (run id: $runId, node: __start__, input: $userPrompt, output: $userPrompt)",
@@ -265,11 +265,10 @@ class TraceFeatureMessageFileWriterTest {
 
         val agentId = "test-agent-id"
         val runId = "test-run-id"
-        val strategyName = "test-strategy"
 
         val messagesToProcess = listOf(
             FeatureStringMessage("Test string message"),
-            AIAgentStartedEvent(agentId = agentId, runId = runId, strategyName = strategyName)
+            AIAgentStartedEvent(agentId = agentId, runId = runId)
         )
 
         val expectedMessages = listOf(

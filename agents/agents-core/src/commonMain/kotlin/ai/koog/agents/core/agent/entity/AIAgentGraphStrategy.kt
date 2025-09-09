@@ -1,6 +1,8 @@
 package ai.koog.agents.core.agent.entity
 
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
+import ai.koog.agents.core.agent.context.getAgentContextData
+import ai.koog.agents.core.agent.context.removeAgentContextData
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.utils.runCatchingCancellable
 import kotlinx.serialization.json.Json
@@ -44,12 +46,37 @@ public class AIAgentGraphStrategy<TInput, TOutput>(
     override suspend fun execute(context: AIAgentGraphContextBase, input: TInput): TOutput? {
         return runCatchingCancellable {
             context.pipeline.onStrategyStarted(this, context)
-            val result = super.execute(context = context, input = input)
+            setExecutionPointIfNeeded(context)
+
+            var result: TOutput? = super.execute(context = context, input = input)
+
+            while (result == null && context.getAgentContextData() != null) {
+                setExecutionPointIfNeeded(context)
+                result = super.execute(context = context, input = input)
+            }
+
             context.pipeline.onStrategyFinished(this, context, result, outputType)
             result
         }.onFailure {
             context.environment.reportProblem(it)
         }.getOrThrow()
+    }
+
+    @OptIn(InternalAgentsApi::class)
+    private suspend fun setExecutionPointIfNeeded(
+        agentContext: AIAgentGraphContextBase
+    ) {
+        val additionalContextData = agentContext.getAgentContextData() ?: return
+
+        val nodeId = additionalContextData.nodeId
+        setExecutionPoint(nodeId, additionalContextData.lastInput)
+
+        val messages = additionalContextData.messageHistory
+        agentContext.llm.withPrompt {
+            this.withMessages { (messages).sortedBy { m -> m.metaInfo.timestamp } }
+        }
+
+        agentContext.removeAgentContextData()
     }
 
     /**

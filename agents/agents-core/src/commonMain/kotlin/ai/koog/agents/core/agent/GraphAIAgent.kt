@@ -6,8 +6,6 @@ import ai.koog.agents.core.agent.config.AIAgentConfigBase
 import ai.koog.agents.core.agent.context.AIAgentGraphContext
 import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.agents.core.agent.context.element.AgentRunInfoContextElement
-import ai.koog.agents.core.agent.context.getAgentContextData
-import ai.koog.agents.core.agent.context.removeAgentContextData
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
@@ -56,7 +54,7 @@ public open class GraphAIAgent<Input, Output>(
     public val inputType: KType,
     public val outputType: KType,
     public val promptExecutor: PromptExecutor,
-    public val agentConfig: AIAgentConfigBase,
+    override val agentConfig: AIAgentConfigBase,
     public val toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     private val strategy: AIAgentGraphStrategy<Input, Output>,
     id: String? = null,
@@ -169,22 +167,14 @@ public open class GraphAIAgent<Input, Output>(
 
             logger.debug { formatLog(agentId = this@GraphAIAgent.id, runId = runId, message = "Starting agent execution") }
 
-            pipeline.onBeforeAgentStarted(
+            pipeline.onBeforeAgentStarted<Input, Output>(
                 runId = runId,
                 agent = this@GraphAIAgent,
-                strategy = strategy,
                 context = agentContext
             )
 
-            setExecutionPointIfNeeded(agentContext)
-
             val result = try {
-                var strategyResult = strategy.execute(context = agentContext, input = agentInput)
-                while (strategyResult == null && agentContext.getAgentContextData() != null) {
-                    setExecutionPointIfNeeded(agentContext)
-                    strategyResult = strategy.execute(context = agentContext, input = agentInput)
-                }
-                strategyResult
+                strategy.execute(context = agentContext, input = agentInput)
             } catch (e: Throwable) {
                 logger.error(e) { "Execution exception reported by server!" }
                 pipeline.onAgentRunError(agentId = this@GraphAIAgent.id, runId = runId, throwable = e)
@@ -200,23 +190,6 @@ public open class GraphAIAgent<Input, Output>(
 
             return@withContext result ?: error("result is null")
         }
-    }
-
-    private suspend fun setExecutionPointIfNeeded(
-        agentContext: AIAgentGraphContext
-    ) {
-        val additionalContextData = agentContext.getAgentContextData() ?: return
-
-        additionalContextData.let { contextData ->
-            val nodeId = contextData.nodeId
-            strategy.setExecutionPoint(nodeId, contextData.lastInput)
-            val messages = contextData.messageHistory
-            agentContext.llm.withPrompt {
-                this.withMessages { (messages).sortedBy { m -> m.metaInfo.timestamp } }
-            }
-        }
-
-        agentContext.removeAgentContextData()
     }
 
     override suspend fun close() {

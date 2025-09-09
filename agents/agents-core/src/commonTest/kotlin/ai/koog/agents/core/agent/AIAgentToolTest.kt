@@ -1,13 +1,13 @@
 package ai.koog.agents.core.agent
 
-import ai.koog.agents.core.CalculatorChatExecutor.testClock
+import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.agent.config.AIAgentConfigBase
 import ai.koog.agents.core.tools.DirectToolCallsEnabler
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
-import ai.koog.agents.testing.tools.getMockExecutor
-import ai.koog.agents.testing.tools.mockLLMAnswer
-import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.dsl.prompt
+import ai.koog.prompt.llm.OllamaModels
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -23,13 +23,20 @@ object Enabler : DirectToolCallsEnabler
 class AIAgentToolTest {
 
     private class MockAgent(
-        private val executor: PromptExecutor,
         private val expectedResponse: String
     ) : AIAgent<String, String> {
         override val id: String = "mock_agent_id"
         override suspend fun run(agentInput: String): String {
             return expectedResponse
         }
+
+        override val agentConfig: AIAgentConfigBase = AIAgentConfig(
+            prompt = prompt("test-prompt-id") {
+                system("You are a helpful assistant.")
+            },
+            model = OllamaModels.Meta.LLAMA_3_2,
+            maxAgentIterations = 5
+        )
 
         override suspend fun close() {
         }
@@ -38,13 +45,11 @@ class AIAgentToolTest {
     companion object {
         const val RESPONSE = "This is the agent's response"
         private fun createMockAgent(): AIAgent<String, String> {
-            val mockExecutor = getMockExecutor(clock = testClock) {
-                mockLLMAnswer(RESPONSE).asDefaultResponse
-            }
-            return MockAgent(mockExecutor, RESPONSE)
+            return MockAgent(RESPONSE)
         }
 
-        val agent = createMockAgent()
+        private val agent = createMockAgent()
+
         val tool = agent.asTool(
             agentName = "testAgent",
             agentDescription = "Test agent description",
@@ -109,12 +114,21 @@ class AIAgentToolTest {
     @OptIn(InternalAgentToolsApi::class)
     @Test
     fun testAsToolErrorHandling() = runTest {
+        val testError = IllegalStateException("Test error")
         val agent = object : AIAgent<String, String> {
 
             override val id: String = "mock_agent_id"
 
+            override val agentConfig = AIAgentConfig(
+                prompt = prompt("test-prompt-id") {
+                    system("You are a helpful assistant.")
+                },
+                model = OllamaModels.Meta.LLAMA_3_2,
+                maxAgentIterations = 5
+            )
+
             override suspend fun run(agentInput: String): String {
-                throw IllegalStateException("Test error")
+                throw testError
             }
 
             override suspend fun close() {
@@ -136,7 +150,11 @@ class AIAgentToolTest {
 
         assertEquals(false, result.successful)
         assertEquals(null, result.result)
-        assertTrue(result.errorMessage?.contains("Test error") == true)
+
+        val expectedErrorMessage =
+            "Error happened: ${testError::class.simpleName}(${testError.message})\n${testError.stackTraceToString().take(100)}"
+
+        assertEquals(expectedErrorMessage, result.errorMessage)
     }
 
     @OptIn(InternalAgentToolsApi::class)

@@ -27,7 +27,7 @@ class OllamaSimpleAgentIntegrationTest {
     val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
         onBeforeAgentStarted { eventContext ->
             println(
-                "Agent started: strategy=${eventContext.strategy.javaClass.simpleName}, agent=${eventContext.agent.javaClass.simpleName}"
+                "Agent started: agentId=${eventContext.agent.javaClass.simpleName}"
             )
         }
 

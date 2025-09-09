@@ -196,7 +196,6 @@ class DebuggerTest {
                     AIAgentStartedEvent(
                         agentId = agentId,
                         runId = clientEventsCollector.runId,
-                        strategyName = strategyName
                     ),
                     AIAgentStrategyStartEvent(
                         runId = clientEventsCollector.runId,
@@ -388,7 +387,6 @@ class DebuggerTest {
                     AIAgentStartedEvent(
                         agentId = agentId,
                         runId = clientEventsCollector.runId,
-                        strategyName = strategyName
                     ),
                     AIAgentStrategyStartEvent(
                         runId = clientEventsCollector.runId,
@@ -494,7 +492,6 @@ class DebuggerTest {
                     AIAgentStartedEvent(
                         agentId = agentId,
                         runId = clientEventsCollector.runId,
-                        strategyName = strategyName
                     ),
                     AIAgentStrategyStartEvent(
                         runId = clientEventsCollector.runId,

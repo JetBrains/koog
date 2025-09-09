@@ -91,7 +91,6 @@ public class Debugger {
                 val event = AIAgentStartedEvent(
                     agentId = eventContext.agent.id,
                     runId = eventContext.runId,
-                    strategyName = eventContext.strategy.name,
                 )
                 writer.processMessage(event)
             }
