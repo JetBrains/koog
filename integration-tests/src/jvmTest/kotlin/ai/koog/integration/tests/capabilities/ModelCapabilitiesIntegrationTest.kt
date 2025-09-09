@@ -30,7 +30,6 @@ import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.ToolChoice
 import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import kotlinx.coroutines.test.runTest
-import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
@@ -99,6 +98,9 @@ class ModelCapabilitiesIntegrationTest {
             LLMCapability.Schema.JSON.Basic,
             LLMCapability.Schema.JSON.Standard,
             LLMCapability.PromptCaching,
+            // OpenAI endpoint capabilities
+            LLMCapability.OpenAIEndpoint.Completions,
+            LLMCapability.OpenAIEndpoint.Responses,
         )
 
         @JvmStatic
@@ -123,7 +125,6 @@ class ModelCapabilitiesIntegrationTest {
     @OptIn(ExperimentalEncodingApi::class)
     fun integration_positiveCapabilityShouldWork(model: LLModel, capability: LLMCapability) =
         runTest(timeout = 300.seconds) {
-            assumeTrue(capability is LLMCapability.PromptCaching)
             when (capability) {
                 LLMCapability.Completion -> {
                     val prompt = prompt("cap-completion-positive") {
