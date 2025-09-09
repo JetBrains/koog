@@ -5,8 +5,8 @@ import ai.koog.prompt.executor.clients.google.GoogleModels.Gemini2_0Flash
 import ai.koog.prompt.executor.clients.google.GoogleModels.Gemini2_0Flash001
 import ai.koog.prompt.executor.clients.google.GoogleModels.Gemini2_0FlashLite
 import ai.koog.prompt.executor.clients.google.GoogleModels.Gemini2_5Flash
-import ai.koog.prompt.executor.clients.google.GoogleModels.Gemini2_5Pro
 import ai.koog.prompt.executor.clients.google.GoogleModels.Gemini2_5FlashLite
+import ai.koog.prompt.executor.clients.google.GoogleModels.Gemini2_5Pro
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
