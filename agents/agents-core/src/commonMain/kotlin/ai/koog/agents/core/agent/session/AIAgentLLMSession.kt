@@ -1,6 +1,6 @@
 package ai.koog.agents.core.agent.session
 
-import ai.koog.agents.core.agent.config.AIAgentConfigBase
+import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.utils.ActiveProperty
@@ -34,7 +34,7 @@ public sealed class AIAgentLLMSession(
     tools: List<ToolDescriptor>,
     prompt: Prompt,
     model: LLModel,
-    protected val config: AIAgentConfigBase,
+    protected val config: AIAgentConfig,
 ) : AutoCloseable {
     /**
      * Represents the current prompt associated with the LLM session.

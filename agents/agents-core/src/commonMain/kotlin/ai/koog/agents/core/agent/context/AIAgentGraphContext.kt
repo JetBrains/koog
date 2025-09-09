@@ -1,6 +1,6 @@
 package ai.koog.agents.core.agent.context
 
-import ai.koog.agents.core.agent.config.AIAgentConfigBase
+import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
@@ -50,7 +50,7 @@ public interface AIAgentGraphContextBase : AIAgentContext {
      * Creates a copy of the current [AIAgentGraphContext], allowing for selective overriding of its properties.
      *
      * @param environment The [AIAgentEnvironment] to be used in the new context, or `null` to retain the current one.
-     * @param config The [AIAgentConfigBase] for the new context, or `null` to retain the current configuration.
+     * @param config The [AIAgentConfig] for the new context, or `null` to retain the current configuration.
      * @param llm The [AIAgentLLMContext] to be used, or `null` to retain the current LLM context.
      * @param stateManager The [AIAgentStateManager] to be used, or `null` to retain the current state manager.
      * @param storage The [AIAgentStorage] to be used, or `null` to retain the current storage.
@@ -62,7 +62,7 @@ public interface AIAgentGraphContextBase : AIAgentContext {
         environment: AIAgentEnvironment = this.environment,
         agentInput: Any? = this.agentInput,
         agentInputType: KType = this.agentInputType,
-        config: AIAgentConfigBase = this.config,
+        config: AIAgentConfig = this.config,
         llm: AIAgentLLMContext = this.llm,
         stateManager: AIAgentStateManager = this.stateManager,
         storage: AIAgentStorage = this.storage,
@@ -121,7 +121,7 @@ public class AIAgentGraphContext(
     override val environment: AIAgentEnvironment,
     override val agentInputType: KType,
     override val agentInput: Any?,
-    override val config: AIAgentConfigBase,
+    override val config: AIAgentConfig,
     llm: AIAgentLLMContext,
     stateManager: AIAgentStateManager,
     storage: AIAgentStorage,

@@ -5,7 +5,7 @@ package ai.koog.agents.testing.feature
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.GraphAIAgent.FeatureContext
-import ai.koog.agents.core.agent.config.AIAgentConfigBase
+import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
@@ -755,7 +755,7 @@ public class Testing {
                     environment: AIAgentEnvironment?,
                     agentInput: Any?,
                     agentInputType: KType?,
-                    config: AIAgentConfigBase?,
+                    config: AIAgentConfig?,
                     llm: AIAgentLLMContext?,
                     stateManager: AIAgentStateManager?,
                     storage: AIAgentStorage?,
@@ -863,7 +863,7 @@ public class Testing {
                     environment: AIAgentEnvironment?,
                     agentInput: Any?,
                     agentInputType: KType?,
-                    config: AIAgentConfigBase?,
+                    config: AIAgentConfig?,
                     llm: AIAgentLLMContext?,
                     stateManager: AIAgentStateManager?,
                     storage: AIAgentStorage?,

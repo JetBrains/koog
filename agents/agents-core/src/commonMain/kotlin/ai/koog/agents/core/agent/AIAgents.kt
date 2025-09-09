@@ -2,7 +2,6 @@ package ai.koog.agents.core.agent
 
 import ai.koog.agents.core.agent.GraphAIAgent.FeatureContext
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.agent.config.AIAgentConfigBase
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.dsl.prompt
@@ -30,7 +29,7 @@ import kotlin.uuid.Uuid
 @OptIn(ExperimentalUuidApi::class)
 public inline fun <reified Input, reified Output> AIAgent(
     promptExecutor: PromptExecutor,
-    agentConfig: AIAgentConfigBase,
+    agentConfig: AIAgentConfig,
     toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     strategy: AIAgentGraphStrategy<Input, Output>,
     id: String = Uuid.random().toString(),

@@ -41,7 +41,7 @@ class NodeInfoContextElementTest {
     fun testGetNodeInfoElement() = runTest {
         val element = NodeInfoContextElement(nodeName = nodeName)
 
-        // Test with element in context
+        // Test with an element in context
         withContext(element) {
             val retrievedElement = coroutineContext.getNodeInfoElement()
             assertNotNull(retrievedElement)
@@ -58,7 +58,6 @@ class NodeInfoContextElementTest {
         val nodeElement = NodeInfoContextElement(nodeName = nodeName)
         val testPrompt = prompt("test-prompt") {}
         val testModel = OllamaModels.Meta.LLAMA_3_2
-        val testStrategy = MissingToolsConversionStrategy.All(ToolCallDescriber.JSON)
 
         val agentElement = AgentRunInfoContextElement(
             agentId = "test-agent",
@@ -66,8 +65,6 @@ class NodeInfoContextElementTest {
             agentConfig = object : AIAgentConfigBase {
                 override val prompt: Prompt = testPrompt
                 override val model: LLModel = testModel
-                override val maxAgentIterations: Int = 10
-                override val missingToolsConversionStrategy: MissingToolsConversionStrategy = testStrategy
             },
             strategyName = "test-strategy"
         )

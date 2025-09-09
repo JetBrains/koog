@@ -1,6 +1,6 @@
 package ai.koog.agents.core.agent
 
-import ai.koog.agents.core.agent.config.AIAgentConfigBase
+import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
@@ -14,7 +14,7 @@ import ai.koog.prompt.message.Message
 
 /**
  * Represents the execution context for an AI agent operating in a loop.
- * It provides access to critical components such as the environment, configuration, large language model (LLM) context,
+ * It provides access to critical parts such as the environment, configuration, large language model (LLM) context,
  * state management, and storage. Additionally, it enables the agent to store, retrieve, and manage context-specific data
  * during its execution lifecycle.
  *
@@ -38,7 +38,7 @@ public class AIAgentFunctionalContext(
     override val agentId: String,
     override val runId: String,
     override val agentInput: Any?,
-    override val config: AIAgentConfigBase,
+    override val config: AIAgentConfig,
     override val llm: AIAgentLLMContext,
     override val stateManager: AIAgentStateManager,
     override val storage: AIAgentStorage,

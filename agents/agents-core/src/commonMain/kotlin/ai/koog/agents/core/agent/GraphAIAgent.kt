@@ -2,7 +2,7 @@
 
 package ai.koog.agents.core.agent
 
-import ai.koog.agents.core.agent.config.AIAgentConfigBase
+import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.AIAgentGraphContext
 import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.agents.core.agent.context.element.AgentRunInfoContextElement
@@ -54,7 +54,7 @@ public open class GraphAIAgent<Input, Output>(
     public val inputType: KType,
     public val outputType: KType,
     public val promptExecutor: PromptExecutor,
-    override val agentConfig: AIAgentConfigBase,
+    override val agentConfig: AIAgentConfig,
     public val toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     private val strategy: AIAgentGraphStrategy<Input, Output>,
     id: String? = null,
