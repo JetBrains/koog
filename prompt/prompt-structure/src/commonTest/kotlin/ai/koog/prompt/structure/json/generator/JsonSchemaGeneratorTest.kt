@@ -19,7 +19,7 @@ class JsonSchemaGeneratorTest {
         isLenient = true
         ignoreUnknownKeys = true
         prettyPrintIndent = "  "
-        classDiscriminator = "#type"
+        classDiscriminator = "kind"
         classDiscriminatorMode = ClassDiscriminatorMode.POLYMORPHIC
 
         serializersModule = SerializersModule {
@@ -648,14 +648,14 @@ class JsonSchemaGeneratorTest {
                       "type": "string",
                       "description": "Property 1 for subclass 1"
                     },
-                    "#type": {
+                    "kind": {
                       "const": "ClosedSubclass1"
                     }
                   },
                   "required": [
                     "id",
                     "property1",
-                    "#type"
+                    "kind"
                   ],
                   "additionalProperties": false
                 },
@@ -680,7 +680,7 @@ class JsonSchemaGeneratorTest {
                         }
                       ]
                     },
-                    "#type": {
+                    "kind": {
                       "const": "ClosedSubclass2"
                     }
                   },
@@ -688,7 +688,7 @@ class JsonSchemaGeneratorTest {
                     "id",
                     "property2",
                     "recursiveTypeProperty",
-                    "#type"
+                    "kind"
                   ],
                   "additionalProperties": false
                 }
@@ -740,14 +740,14 @@ class JsonSchemaGeneratorTest {
                       "type": "string",
                       "description": "Property 1 for subclass 1"
                     },
-                    "#type": {
+                    "kind": {
                       "const": "OpenSubclass1"
                     }
                   },
                   "required": [
                     "id",
                     "property1",
-                    "#type"
+                    "kind"
                   ],
                   "additionalProperties": false
                 },
@@ -772,7 +772,7 @@ class JsonSchemaGeneratorTest {
                         }
                       ]
                     },
-                    "#type": {
+                    "kind": {
                       "const": "OpenSubclass2"
                     }
                   },
@@ -780,7 +780,7 @@ class JsonSchemaGeneratorTest {
                     "id",
                     "property2",
                     "recursiveTypeProperty",
-                    "#type"
+                    "kind"
                   ],
                   "additionalProperties": false
                 }
