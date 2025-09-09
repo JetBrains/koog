@@ -151,7 +151,7 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
             inputType = nodes.first().inputType,
             outputType = nodes.first().outputType,
             execute = { input ->
-                val initialContext: AIAgentContextBase = this
+                val initialContext: AIAgentGraphContextBase = this
 
                 // Execute all nodes in parallel using the provided dispatcher
                 val nodeResults = supervisorScope {

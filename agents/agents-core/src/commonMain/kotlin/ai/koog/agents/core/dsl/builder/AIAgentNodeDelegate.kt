@@ -1,6 +1,5 @@
 package ai.koog.agents.core.dsl.builder
 
-import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.entity.AIAgentNode
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase
@@ -45,7 +44,7 @@ public open class AIAgentNodeDelegate<Input, Output>(
     public val name: String?,
     public val inputType: KType,
     public val outputType: KType,
-    public val execute: suspend AIAgentContextBase.(Input) -> Output
+    public val execute: suspend AIAgentGraphContextBase.(Input) -> Output
 ) {
     private var node: AIAgentNodeBase<Input, Output>? = null
 
