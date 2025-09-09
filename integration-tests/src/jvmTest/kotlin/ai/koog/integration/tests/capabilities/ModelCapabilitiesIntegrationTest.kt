@@ -9,10 +9,12 @@ import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.RetryUtils.withRetry
 import ai.koog.integration.tests.utils.TestUtils.CalculatorTool.calculatorToolDescriptor
 import ai.koog.integration.tests.utils.TestUtils.assertExceptionMessageContains
+import ai.koog.integration.tests.utils.TestUtils.isValidJson
 import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestGoogleAIKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.singlePropertyObjectSchema
+import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
@@ -28,7 +30,6 @@ import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.ToolChoice
 import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import kotlinx.coroutines.test.runTest
-import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
@@ -40,12 +41,15 @@ import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.io.path.pathString
 import kotlin.io.path.readBytes
+import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.io.files.Path as KtPath
+
+private const val EXPECTED_ERROR = "does not support"
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ModelCapabilitiesIntegrationTest {
@@ -93,6 +97,7 @@ class ModelCapabilitiesIntegrationTest {
             LLMCapability.Moderation,
             LLMCapability.Schema.JSON.Basic,
             LLMCapability.Schema.JSON.Standard,
+            LLMCapability.Temperature,
         )
 
         @JvmStatic
@@ -112,13 +117,6 @@ class ModelCapabilitiesIntegrationTest {
             }
     }
 
-    private fun isValidJson(str: String): Boolean = try {
-        Json.parseToJsonElement(str)
-        true
-    } catch (_: Exception) {
-        false
-    }
-
     @ParameterizedTest
     @MethodSource("positiveModelCapabilityCombinations")
     @OptIn(ExperimentalEncodingApi::class)
@@ -131,13 +129,11 @@ class ModelCapabilitiesIntegrationTest {
                         user("Say hello in one short sentence.")
                     }
                     withRetry {
-                        val responses = executor.execute(prompt, model)
-                        val text = responses.filterIsInstance<Message.Assistant>().joinToString("\n") { it.content }
-                        assertTrue(text.isNotBlank())
+                        checkAssistantResponse(prompt, model)
                     }
                 }
 
-                LLMCapability.Tools -> {
+                LLMCapability.Tools, LLMCapability.ToolChoice -> {
                     val tools = calculatorToolDescriptor
                     val prompt = prompt("cap-tools-positive", params = LLMParams(toolChoice = ToolChoice.Required)) {
                         system("You are a helpful assistant with a calculator tool. Always use the tool.")
@@ -146,21 +142,7 @@ class ModelCapabilitiesIntegrationTest {
                     withRetry {
                         val responses = executor.execute(prompt, model, listOf(tools))
                         assertTrue(responses.isNotEmpty())
-                        assertTrue(responses.any { it is Message.Tool.Call } || responses.any { it is Message.Assistant })
-                    }
-                }
-
-                LLMCapability.ToolChoice -> {
-                    val tools = calculatorToolDescriptor
-                    val prompt =
-                        prompt("cap-toolchoice-positive", params = LLMParams(toolChoice = ToolChoice.Required)) {
-                            system("You are a helpful assistant with tools. Always choose to use a tool when required.")
-                            user("Compute 2 + 3.")
-                        }
-                    withRetry {
-                        val responses = executor.execute(prompt, model, listOf(tools))
-                        assertTrue(responses.isNotEmpty())
-                        assertTrue(responses.any { it is Message.Tool.Call } || responses.any { it is Message.Assistant })
+                        assertTrue(responses.any { it is Message.Tool.Call })
                     }
                 }
 
@@ -186,9 +168,7 @@ class ModelCapabilitiesIntegrationTest {
                         }
                     }
                     withRetry {
-                        val responses = executor.execute(prompt, model)
-                        val text = responses.filterIsInstance<Message.Assistant>().joinToString("\n") { it.content }
-                        assertTrue(text.isNotBlank())
+                        checkAssistantResponse(prompt, model)
                     }
                 }
 
@@ -213,9 +193,7 @@ class ModelCapabilitiesIntegrationTest {
                         }
                     }
                     withRetry {
-                        val responses = executor.execute(prompt, model)
-                        val text = responses.filterIsInstance<Message.Assistant>().joinToString("\n") { it.content }
-                        assertTrue(text.isNotBlank())
+                        checkAssistantResponse(prompt, model)
                     }
                 }
 
@@ -232,9 +210,7 @@ class ModelCapabilitiesIntegrationTest {
                         }
                     }
                     withRetry {
-                        val responses = executor.execute(prompt, model)
-                        val text = responses.filterIsInstance<Message.Assistant>().joinToString("\n") { it.content }
-                        assertTrue(text.isNotBlank())
+                        checkAssistantResponse(prompt, model)
                     }
                 }
 
@@ -259,10 +235,10 @@ class ModelCapabilitiesIntegrationTest {
                     }
                     withRetry {
                         val choices = executor.executeMultipleChoices(prompt, model, emptyList())
-                        assertTrue(choices.size >= 2, "Expected at least 2 choices, got ${'$'}{choices.size}")
+                        assertEquals(2, choices.size, "Expected at least 2 choices, got ${'$'}{choices.size}")
                         choices.forEach { choice ->
                             assertTrue(choice.isNotEmpty(), "Each choice should contain at least one response")
-                            val assistant = choice.firstOrNull { it is Message.Assistant } as? Message.Assistant
+                            val assistant = choice.firstOrNull { it is Message.Assistant }
                             assertNotNull(assistant, "Each choice should contain an assistant message")
                             assertTrue(assistant.content.isNotBlank(), "Assistant content should not be blank")
                         }
@@ -288,9 +264,7 @@ class ModelCapabilitiesIntegrationTest {
                         }
                     }
                     withRetry {
-                        val responses = executor.execute(prompt, model)
-                        val text = responses.filterIsInstance<Message.Assistant>().joinToString("\n") { it.content }
-                        assertTrue(text.isNotBlank())
+                        checkAssistantResponse(prompt, model)
                     }
                 }
 
@@ -339,7 +313,7 @@ class ModelCapabilitiesIntegrationTest {
                 }
 
                 else -> {
-                    // skip other hard-to-verify capabilities
+                    logger.warn { "Skipping hard-to-verify capability verification for $capability on $model" }
                 }
             }
         }
@@ -356,18 +330,16 @@ class ModelCapabilitiesIntegrationTest {
                         user("Say hello in one short sentence.")
                     }
                     withRetry {
-                        val ex = assertFailsWith<Exception> {
-                            executor.execute(prompt, model)
-                        }
+                        val ex = assertFails(prompt, model)
                         assertExceptionMessageContains(
                             ex,
-                            "does not support chat completions",
+                            "EXPECTED_ERROR chat completions",
                             "not a chat completion"
                         )
                     }
                 }
 
-                LLMCapability.Tools -> {
+                LLMCapability.Tools, LLMCapability.ToolChoice -> {
                     val tools = calculatorToolDescriptor
                     val prompt = prompt("cap-tools-negative", params = LLMParams(toolChoice = ToolChoice.Required)) {
                         system("You are a helpful assistant with a calculator tool. Always use the tool.")
@@ -379,28 +351,7 @@ class ModelCapabilitiesIntegrationTest {
                         }
                         assertExceptionMessageContains(
                             ex,
-                            "does not support tools"
-                        )
-                    }
-                }
-
-                LLMCapability.ToolChoice -> {
-                    val tools = calculatorToolDescriptor
-                    val prompt =
-                        prompt("cap-toolchoice-negative", params = LLMParams(toolChoice = ToolChoice.Required)) {
-                            system("You are a helpful assistant with tools. Always choose to use a tool when required.")
-                            user("Compute 2 + 3.")
-                        }
-                    withRetry {
-                        val ex = assertFailsWith<Exception> {
-                            executor.execute(prompt, model, listOf(tools))
-                        }
-                        assertExceptionMessageContains(
-                            ex,
-                            "does not support tool choice",
-                            "does not support tools",
-                            "toolchoice",
-                            "tool choice is not supported"
+                            "$EXPECTED_ERROR tools"
                         )
                     }
                 }
@@ -427,12 +378,10 @@ class ModelCapabilitiesIntegrationTest {
                         }
                     }
                     withRetry {
-                        val ex = assertFailsWith<Exception> {
-                            executor.execute(prompt, model)
-                        }
+                        val ex = assertFails(prompt, model)
                         assertExceptionMessageContains(
                             ex,
-                            "does not support image",
+                            "$EXPECTED_ERROR image",
                             "Unsupported attachment type"
                         )
                     }
@@ -459,12 +408,10 @@ class ModelCapabilitiesIntegrationTest {
                         }
                     }
                     withRetry {
-                        val ex = assertFailsWith<Exception> {
-                            executor.execute(prompt, model)
-                        }
+                        val ex = assertFails(prompt, model)
                         assertExceptionMessageContains(
                             ex,
-                            "does not support audio",
+                            "$EXPECTED_ERROR audio",
                             "Unsupported attachment type"
                         )
                     }
@@ -483,14 +430,12 @@ class ModelCapabilitiesIntegrationTest {
                         }
                     }
                     withRetry {
-                        val ex = assertFailsWith<Exception> {
-                            executor.execute(prompt, model)
-                        }
+                        val ex = assertFails(prompt, model)
                         assertExceptionMessageContains(
                             ex,
-                            "does not support files",
+                            "$EXPECTED_ERROR files",
                             "Unsupported attachment type",
-                            "does not support document"
+                            "$EXPECTED_ERROR document"
                         )
                     }
                 }
@@ -505,7 +450,7 @@ class ModelCapabilitiesIntegrationTest {
                         }
                         assertExceptionMessageContains(
                             ex,
-                            "does not support moderation",
+                            "$EXPECTED_ERROR moderation",
                             "Moderation is not supported by"
                         )
                     }
@@ -525,7 +470,7 @@ class ModelCapabilitiesIntegrationTest {
                         }
                         assertExceptionMessageContains(
                             ex,
-                            "does not support multiple choices",
+                            "$EXPECTED_ERROR multiple choices",
                             "Not implemented for this client"
                         )
                     }
@@ -550,12 +495,10 @@ class ModelCapabilitiesIntegrationTest {
                         }
                     }
                     withRetry {
-                        val ex = assertFailsWith<Exception> {
-                            executor.execute(prompt, model)
-                        }
+                        val ex = assertFails(prompt, model)
                         assertExceptionMessageContains(
                             ex,
-                            "does not support video",
+                            "$EXPECTED_ERROR video",
                             "Unsupported attachment type"
                         )
                     }
@@ -568,7 +511,7 @@ class ModelCapabilitiesIntegrationTest {
                         }
                         assertExceptionMessageContains(
                             ex,
-                            "does not support",
+                            EXPECTED_ERROR,
                             "embedding",
                             "does not have the Embed capability",
                             "Unsupported"
@@ -586,13 +529,11 @@ class ModelCapabilitiesIntegrationTest {
                         user("Return an integer x field with any small integer.")
                     }
                     withRetry {
-                        val ex = assertFailsWith<Exception> {
-                            executor.execute(prompt, model)
-                        }
+                        val ex = assertFails(prompt, model)
                         assertExceptionMessageContains(
                             ex,
-                            "does not support structured output schema",
-                            "does not support",
+                            "$EXPECTED_ERROR structured output schema",
+                            EXPECTED_ERROR,
                             "structured output",
                             "Anthropic does not currently support native structured output"
                         )
@@ -609,13 +550,11 @@ class ModelCapabilitiesIntegrationTest {
                         user("Return a string y field.")
                     }
                     withRetry {
-                        val ex = assertFailsWith<Exception> {
-                            executor.execute(prompt, model)
-                        }
+                        val ex = assertFails(prompt, model)
                         assertExceptionMessageContains(
                             ex,
-                            "does not support structured output schema",
-                            "does not support",
+                            "$EXPECTED_ERROR structured output schema",
+                            EXPECTED_ERROR,
                             "structured output",
                             "Anthropic does not currently support native structured output"
                         )
@@ -627,4 +566,14 @@ class ModelCapabilitiesIntegrationTest {
                 }
             }
         }
+
+    private suspend fun assertFails(prompt: Prompt, model: LLModel): Exception = assertFailsWith<Exception> {
+        executor.execute(prompt, model)
+    }
+
+    private suspend fun checkAssistantResponse(prompt: Prompt, model: LLModel) {
+        val responses = executor.execute(prompt, model)
+        val text = responses.filterIsInstance<Message.Assistant>().joinToString("\n") { it.content }
+        assertTrue(text.isNotBlank())
+    }
 }

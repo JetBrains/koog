@@ -412,4 +412,11 @@ object TestUtils {
         val matches = substrings.any { needle -> msg.contains(needle, ignoreCase = true) }
         assertTrue(matches, "Exception message doesn't contain expected error: ${ex.message}")
     }
+
+    fun isValidJson(str: String): Boolean = try {
+        Json.parseToJsonElement(str)
+        true
+    } catch (_: Exception) {
+        false
+    }
 }
