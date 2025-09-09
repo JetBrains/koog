@@ -38,6 +38,9 @@ kotlin {
         jvmTest {
             dependencies {
                 implementation(kotlin("test-junit5"))
+                implementation("me.kpavlov.aimocks:ai-mocks-a2a-jvm:0.5.0-Alpha1")
+                implementation(libs.ktor.client.cio)
+                runtimeOnly(libs.slf4j.simple)
             }
         }
 
