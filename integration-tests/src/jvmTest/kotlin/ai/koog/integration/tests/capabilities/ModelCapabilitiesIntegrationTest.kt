@@ -68,8 +68,8 @@ class ModelCapabilitiesIntegrationTest {
         googleClient = GoogleLLMClient(googleKey)
         executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
 
-        val resourceUrl = this::class.java.getResource("/media")
-        testResourcesDir = Path.of(resourceUrl!!.toURI())
+        val resourceUrl = this::class.java.getResource("/media") ?: error("Resource folder '/media' not found.")
+        testResourcesDir = Path.of(resourceUrl.toURI())
     }
 
     companion object {
