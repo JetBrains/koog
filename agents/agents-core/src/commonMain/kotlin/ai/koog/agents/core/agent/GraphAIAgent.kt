@@ -25,7 +25,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlin.reflect.KType
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
