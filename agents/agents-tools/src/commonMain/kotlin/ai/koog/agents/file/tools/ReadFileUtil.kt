@@ -32,22 +32,6 @@ internal suspend fun <Path> buildTextFileEntry(
     startLine: Int,
     endLine: Int
 ): File {
-    require(startLine >= 0) { "startLine must be >= 0, but was $startLine" }
-    require(endLine >= -1) { "endLine must be >= -1, but was $endLine" }
-    require(endLine == -1 || endLine > startLine) {
-        "endLine must be > startLine or -1, but startLine=$startLine, endLine=$endLine"
-    }
-
-    val content = fs.readText(path)
-    val lineCount = content.lineSequence().count()
-
-    require(startLine < lineCount) {
-        "startLine=$startLine must be < lineCount=$lineCount"
-    }
-    require(endLine == -1 || endLine <= lineCount) {
-        "endLine=$endLine must be <= lineCount=$lineCount"
-    }
-
     return File(
         name = fs.name(path),
         extension = fs.extension(path),
@@ -55,16 +39,25 @@ internal suspend fun <Path> buildTextFileEntry(
         hidden = metadata.hidden,
         size = buildFileSize(fs, path, FileMetadata.FileContentType.Text),
         contentType = FileMetadata.FileContentType.Text,
-        content = buildContent(content, startLine, if (endLine == -1) lineCount else endLine, lineCount)
+        content = buildContent(fs.readText(path), startLine, endLine)
     )
 }
 
 private fun buildContent(
     content: String,
     startLine: Int,
-    endLine: Int,
-    lineCount: Int
+    endLine: Int
 ): Content {
+    require(startLine >= 0) { "startLine=$startLine must be >= 0" }
+    val lineCount = content.lineSequence().count()
+    require(startLine < lineCount) { "startLine=$startLine must be < lineCount=$lineCount" }
+
+    require(endLine >= -1) { "endLine=$endLine must be >= -1" }
+    require(endLine == -1 || endLine > startLine) { "endLine=$endLine must be > startLine=$startLine or -1" }
+    require(endLine == -1 || endLine <= lineCount) { "endLine=$endLine must be <= lineCount=$lineCount or -1" }
+
+    val endLine = if (endLine == -1) lineCount else endLine
+
     if (startLine == 0 && endLine == lineCount) {
         return Content.Text(content)
     }

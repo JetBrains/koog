@@ -88,12 +88,16 @@ internal fun TextContentBuilder.file(file: FileSystemEntry.File, parent: FileSys
     renderFileContent(file.content, file.extension)
 }
 
+internal fun String.norm(): String = replace('\\', '/')
+
 private fun calculateDisplayPath(path: String, name: String, parent: FileSystemEntry?): String {
     return when (parent) {
-        null -> path
+        null -> path.norm()
         else -> {
-            val relativePath = path.removePrefix(parent.path).trimStart('/', '\\')
-            relativePath.ifEmpty { name }
+            val rel = path.removePrefix(parent.path)
+                .trimStart('/', '\\')
+                .ifEmpty { name }
+            rel.norm()
         }
     }
 }

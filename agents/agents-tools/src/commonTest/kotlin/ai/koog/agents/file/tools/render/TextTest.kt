@@ -344,7 +344,7 @@ class TextTest {
 
         val actual = text { file(file, parent) }
 
-        assertEquals("path/with\\mixed/separators/test.txt (<0.1 KiB)", actual)
+        assertEquals("path/with/mixed/separators/test.txt (<0.1 KiB)", actual)
     }
 
     @Test
@@ -364,7 +364,7 @@ class TextTest {
 
         val actual = text { folder(folder, parent) }
 
-        assertEquals("path/with\\mixed/separators/", actual)
+        assertEquals("path/with/mixed/separators/", actual)
     }
 
     @Test

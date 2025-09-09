@@ -3,6 +3,7 @@ package ai.koog.agents.file.tools
 import ai.koog.agents.core.tools.DirectToolCallsEnabler
 import ai.koog.agents.core.tools.ToolException
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
+import ai.koog.agents.file.tools.render.norm
 import ai.koog.rag.base.files.JVMFileSystemProvider
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
@@ -74,13 +75,12 @@ class ListDirectoryToolJvmTest {
         // empty/ (empty directory)
         val empty = createDir("empty")
 
-        val result = list(empty, depth = 1)
-        val text = result.toStringDefault().trim()
+        val resultText = list(empty, depth = 1).toStringDefault()
 
         // Expected: /path/to/empty/
-        val expectedText = "${empty.toAbsolutePath()}/"
+        val expectedText = "${empty.toAbsolutePath().toString().norm()}/"
 
-        assertEquals(expectedText, text)
+        assertEquals(expectedText, resultText)
     }
 
     @Test
@@ -91,13 +91,12 @@ class ListDirectoryToolJvmTest {
         val dir = createDir("project")
         val readmeFile = dir.resolve("README.md").createFile().apply { writeText("hello world") }
 
-        val result = list(dir, depth = 1)
-        val text = result.toStringDefault().trim()
+        val resultText = list(dir, depth = 1).toStringDefault()
 
         // Expected: /path/to/project/README.md (<0.1 KiB, 1 line)
-        val expectedText = "${readmeFile.toAbsolutePath()} (<0.1 KiB, 1 line)"
+        val expectedText = "${readmeFile.toAbsolutePath().toString().norm()} (<0.1 KiB, 1 line)"
 
-        assertEquals(expectedText, text)
+        assertEquals(expectedText, resultText)
     }
 
     @Test
@@ -110,20 +109,19 @@ class ListDirectoryToolJvmTest {
         dir.resolve("README.md").createFile().writeText("hello") // 5 bytes
         dir.resolve("LICENSE.txt").createFile().writeText("MIT") // 3 bytes
 
-        val result = list(dir, depth = 2)
-        val text = result.toStringDefault().trim()
+        val resultText = list(dir, depth = 2).toStringDefault()
 
         // Expected:
         // /path/to/project/
         //   LICENSE.txt (<0.1 KiB, 1 line)
         //   README.md (<0.1 KiB, 1 line)
         val expectedText = """
-            ${dir.toAbsolutePath()}/
+            ${dir.toAbsolutePath().toString().norm()}/
               LICENSE.txt (<0.1 KiB, 1 line)
               README.md (<0.1 KiB, 1 line)
         """.trimIndent()
 
-        assertEquals(expectedText, text)
+        assertEquals(expectedText, resultText)
     }
 
     @Test
@@ -134,13 +132,12 @@ class ListDirectoryToolJvmTest {
         val root = createDir("root")
         val srcDir = root.resolve("src").createDirectories()
 
-        val result = list(root, depth = 1)
-        val text = result.toStringDefault().trim()
+        val resultText = list(root, depth = 1).toStringDefault()
 
         // Expected: /path/to/root/src/
-        val expectedText = "${srcDir.toAbsolutePath()}/"
+        val expectedText = "${srcDir.toAbsolutePath().toString().norm()}/"
 
-        assertEquals(expectedText, text)
+        assertEquals(expectedText, resultText)
     }
 
     @Test
@@ -153,13 +150,12 @@ class ListDirectoryToolJvmTest {
         root.resolve("src").createDirectories()
         root.resolve("test").createDirectories()
 
-        val result = list(root, depth = 1)
-        val text = result.toStringDefault().trim()
+        val resultText = list(root, depth = 1).toStringDefault()
 
         // Expected: /path/to/root/
-        val expectedText = "${root.toAbsolutePath()}/"
+        val expectedText = "${root.toAbsolutePath().toString().norm()}/"
 
-        assertEquals(expectedText, text)
+        assertEquals(expectedText, resultText)
     }
 
     @Test
@@ -176,13 +172,12 @@ class ListDirectoryToolJvmTest {
         val kotlin = main.resolve("kotlin").createDirectories()
         val mainFile = kotlin.resolve("Main.kt").createFile().apply { writeText("fun main() {}") }
 
-        val result = list(project, depth = 1)
-        val text = result.toStringDefault().trim()
+        val resultText = list(project, depth = 1).toStringDefault()
 
         // Expected: /path/to/project/src/main/kotlin/Main.kt (<0.1 KiB, 1 line)
-        val expectedText = "${mainFile.toAbsolutePath()} (<0.1 KiB, 1 line)"
+        val expectedText = "${mainFile.toAbsolutePath().toString().norm()} (<0.1 KiB, 1 line)"
 
-        assertEquals(expectedText, text)
+        assertEquals(expectedText, resultText)
     }
 
     @Test
@@ -201,12 +196,11 @@ class ListDirectoryToolJvmTest {
         kotlin.resolve("Main.kt").createFile().writeText("fun main() {}")
         kotlin.resolve("Utils.kt").createFile().writeText("class Utils")
 
-        val result = list(project, depth = 1)
-        val text = result.toStringDefault().trim()
+        val resultText = list(project, depth = 1).toStringDefault()
 
         // Expected: /path/to/project/src/main/kotlin/
-        val expectedText = "${kotlin.toAbsolutePath()}/"
-        assertEquals(expectedText, text)
+        val expectedText = "${kotlin.toAbsolutePath().toString().norm()}/"
+        assertEquals(expectedText, resultText)
     }
 
     @Test
@@ -225,12 +219,11 @@ class ListDirectoryToolJvmTest {
         kotlin.resolve("Main.kt").createFile().writeText("fun main() {}")
         kotlin.resolve("utils").createDirectories()
 
-        val result = list(project, depth = 1)
-        val text = result.toStringDefault().trim()
+        val resultText = list(project, depth = 1).toStringDefault()
 
         // Expected: /path/to/project/src/main/kotlin/
-        val expectedText = "${kotlin.toAbsolutePath()}/"
-        assertEquals(expectedText, text)
+        val expectedText = "${kotlin.toAbsolutePath().toString().norm()}/"
+        assertEquals(expectedText, resultText)
     }
 
     @Test
@@ -251,13 +244,12 @@ class ListDirectoryToolJvmTest {
         val kotlin = main.resolve("kotlin").createDirectories()
         kotlin.resolve("Main.kt").createFile().writeText("fun main() {}")
 
-        val result = list(project, depth = 1)
-        val text = result.toStringDefault().trim()
+        val resultText = list(project, depth = 1).toStringDefault()
 
         // Expected: /path/to/project/
-        val expectedText = "${project.toAbsolutePath()}/"
+        val expectedText = "${project.toAbsolutePath().toString().norm()}/"
 
-        assertEquals(expectedText, text)
+        assertEquals(expectedText, resultText)
     }
 
     @Test
@@ -274,13 +266,12 @@ class ListDirectoryToolJvmTest {
         val c = b.resolve("c").createDirectories()
         val d = c.resolve("d").createDirectories()
 
-        val result = list(project, depth = 1)
-        val text = result.toStringDefault().trim()
+        val resultText = list(project, depth = 1).toStringDefault()
 
         // Expected: /path/to/project/a/b/c/d/
-        val expectedText = "${d.toAbsolutePath()}/"
+        val expectedText = "${d.toAbsolutePath().toString().norm()}/"
 
-        assertEquals(expectedText, text)
+        assertEquals(expectedText, resultText)
     }
 
     @Test
@@ -299,20 +290,19 @@ class ListDirectoryToolJvmTest {
         kotlin.resolve("Main.kt").createFile().writeText("fun main() {}")
         kotlin.resolve("Utils.kt").createFile().writeText("class Utils")
 
-        val result = list(project, depth = 2)
-        val text = result.toStringDefault().trim()
+        val resultText = list(project, depth = 2).toStringDefault()
 
         // Expected:
         // /path/to/project/src/main/kotlin/
         //   Main.kt (<0.1 KiB, 1 line)
         //   Utils.kt (<0.1 KiB, 1 line)
         val expectedText = """
-            ${kotlin.toAbsolutePath()}/
+            ${kotlin.toAbsolutePath().toString().norm()}/
               Main.kt (<0.1 KiB, 1 line)
               Utils.kt (<0.1 KiB, 1 line)
         """.trimIndent()
 
-        assertEquals(expectedText, text)
+        assertEquals(expectedText, resultText)
     }
 
     @Test
@@ -331,20 +321,19 @@ class ListDirectoryToolJvmTest {
         val kotlin = main.resolve("kotlin").createDirectories()
         kotlin.resolve("Main.kt").createFile().writeText("fun main(){}\n")
 
-        val result = list(project, depth = 4)
-        val text = result.toStringDefault().trim()
+        val resultText = list(project, depth = 4).toStringDefault()
 
         // Expected:
         // /path/to/project/
         //   README.md (<0.1 KiB, 2 lines)
         //   src/main/kotlin/Main.kt (<0.1 KiB, 1 line)
         val expectedText = """
-            ${project.toAbsolutePath()}/
+            ${project.toAbsolutePath().toString().norm()}/
               README.md (<0.1 KiB, 2 lines)
               src/main/kotlin/Main.kt (<0.1 KiB, 2 lines)
         """.trimIndent()
 
-        assertEquals(expectedText, text)
+        assertEquals(expectedText, resultText)
     }
 
     @Test
@@ -359,13 +348,12 @@ class ListDirectoryToolJvmTest {
         dir.resolve("Main.java").createFile().writeText("java")
         dir.resolve("README.md").createFile().writeText("readme")
 
-        val result = list(dir, depth = 1, filter = "*.kt")
-        val text = result.toStringDefault().trim()
+        val resultText = list(dir, depth = 1, filter = "*.kt").toStringDefault()
 
         // Expected: /path/to/project/Main.kt (<0.1 KiB, 1 line)
-        val expectedText = "${mainKtFile.toAbsolutePath()} (<0.1 KiB, 1 line)"
+        val expectedText = "${mainKtFile.toAbsolutePath().toString().norm()} (<0.1 KiB, 1 line)"
 
-        assertEquals(expectedText, text)
+        assertEquals(expectedText, resultText)
     }
 
     @Test
@@ -403,20 +391,19 @@ class ListDirectoryToolJvmTest {
         src.resolve("Utils.kt").createFile().writeText("utils")
         src.resolve("Test.java").createFile().writeText("test")
 
-        val result = list(project, depth = 2, filter = "*/*.kt")
-        val text = result.toStringDefault().trim()
+        val resultText = list(project, depth = 2, filter = "*/*.kt").toStringDefault()
 
         // Expected:
         // /path/to/project/src/
         //   Main.kt (<0.1 KiB, 1 line)
         //   Utils.kt (<0.1 KiB, 1 line)
         val expectedText = """
-            ${src.toAbsolutePath()}/
+            ${src.toAbsolutePath().toString().norm()}/
               Main.kt (<0.1 KiB, 1 line)
               Utils.kt (<0.1 KiB, 1 line)
         """.trimIndent()
 
-        assertEquals(expectedText, text)
+        assertEquals(expectedText, resultText)
     }
 
     @Test
@@ -435,13 +422,12 @@ class ListDirectoryToolJvmTest {
         val srcDir = project.resolve("src").createDirectories()
         srcDir.resolve("Main.kt").createFile().writeText("main")
 
-        val result = list(project, depth = 2, filter = "*/Test*")
-        val text = result.toStringDefault().trim()
+        val resultText = list(project, depth = 2, filter = "*/Test*").toStringDefault()
 
         // Expected: /path/to/project/test/TestMain.kt (<0.1 KiB, 1 line)
-        val expectedText = "${testMainFile.toAbsolutePath()} (<0.1 KiB, 1 line)"
+        val expectedText = "${testMainFile.toAbsolutePath().toString().norm()} (<0.1 KiB, 1 line)"
 
-        assertEquals(expectedText, text)
+        assertEquals(expectedText, resultText)
     }
 
     @Test
@@ -472,8 +458,7 @@ class ListDirectoryToolJvmTest {
         val test = src.resolve("test").createDirectories()
         test.resolve("TestUtils.kt").createFile().writeText("test") // 4 bytes
 
-        val result = list(project, depth = 3)
-        val text = result.toStringDefault().trim()
+        val resultText = list(project, depth = 3).toStringDefault()
 
         // Expected:
         // /path/to/project/
@@ -482,14 +467,14 @@ class ListDirectoryToolJvmTest {
         //     main/kotlin/com/example/
         //     test/TestUtils.kt (<0.1 KiB, 1 line)
         val expectedText = """
-            ${project.toAbsolutePath()}/
+            ${project.toAbsolutePath().toString().norm()}/
               README.md (<0.1 KiB, 1 line)
               src/
                 main/kotlin/com/example/
                 test/TestUtils.kt (<0.1 KiB, 1 line)
         """.trimIndent()
 
-        assertEquals(expectedText, text)
+        assertEquals(expectedText, resultText)
     }
 
     @Test
@@ -506,12 +491,11 @@ class ListDirectoryToolJvmTest {
         b.resolve("c1").createDirectories()
         b.resolve("c2").createDirectories()
 
-        val result = list(project, depth = 1)
-        val text = result.toStringDefault().trim()
+        val resultText = list(project, depth = 1).toStringDefault()
 
         // Expected: /path/to/project/a/b/
-        val expectedText = "${b.toAbsolutePath()}/"
+        val expectedText = "${b.toAbsolutePath().toString().norm()}/"
 
-        assertEquals(expectedText, text)
+        assertEquals(expectedText, resultText)
     }
 }

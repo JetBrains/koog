@@ -4,6 +4,7 @@ import ai.koog.agents.file.tools.filter.GlobPattern
 import ai.koog.agents.file.tools.model.FileSystemEntry
 import ai.koog.agents.file.tools.model.buildFileEntry
 import ai.koog.agents.file.tools.model.buildFolderEntry
+import ai.koog.agents.file.tools.render.norm
 import ai.koog.rag.base.files.FileMetadata
 import ai.koog.rag.base.files.FileSystemProvider
 
@@ -101,7 +102,7 @@ private fun <Path> getRelativePath(
     rootPath: Path,
     path: Path
 ): String {
-    return (fs.relativize(rootPath, path) ?: fs.name(path)).replace('\\', '/')
+    return (fs.relativize(rootPath, path) ?: fs.name(path)).norm()
 }
 
 /**
