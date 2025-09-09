@@ -767,7 +767,7 @@ public class OpenAIUserLocation(
  */
 @Serializable
 public class OpenAIChoice(
-    public val finishReason: String,
+    public val finishReason: String? = null,
     public val index: Int,
     public val logprobs: OpenAIChoiceLogProbs? = null,
     public val message: OpenAIMessage,
