@@ -30,6 +30,7 @@ import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.ToolChoice
 import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
@@ -97,7 +98,7 @@ class ModelCapabilitiesIntegrationTest {
             LLMCapability.Moderation,
             LLMCapability.Schema.JSON.Basic,
             LLMCapability.Schema.JSON.Standard,
-            LLMCapability.Temperature,
+            LLMCapability.PromptCaching,
         )
 
         @JvmStatic
@@ -122,6 +123,7 @@ class ModelCapabilitiesIntegrationTest {
     @OptIn(ExperimentalEncodingApi::class)
     fun integration_positiveCapabilityShouldWork(model: LLModel, capability: LLMCapability) =
         runTest(timeout = 300.seconds) {
+            assumeTrue(capability is LLMCapability.PromptCaching)
             when (capability) {
                 LLMCapability.Completion -> {
                     val prompt = prompt("cap-completion-positive") {
@@ -309,6 +311,16 @@ class ModelCapabilitiesIntegrationTest {
                         assertTrue(text.isNotBlank())
                         assertTrue(isValidJson(text), "Response should be valid JSON")
                         assertTrue(text.contains("\"y\""), "Response should contain key \"y\"")
+                    }
+                }
+
+                LLMCapability.PromptCaching -> {
+                    val prompt = prompt("cap-prompt-caching-positive") {
+                        system("You are a helpful assistant. Consider this a cached-system setup.")
+                        user("Say hello in one short sentence.")
+                    }
+                    withRetry {
+                        checkAssistantResponse(prompt, model)
                     }
                 }
 
