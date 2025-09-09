@@ -4,7 +4,6 @@ package ai.koog.agents.core.agent
 
 import ai.koog.agents.core.agent.FunctionalAIAgent.FeatureContext
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.agent.config.AIAgentConfigBase
 import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.agents.core.agent.context.element.AgentRunInfoContextElement
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
@@ -41,7 +40,7 @@ import kotlin.uuid.Uuid
 @ExperimentalUuidApi
 public class FunctionalAIAgent<Input, Output>(
     public val promptExecutor: PromptExecutor,
-    override val agentConfig: AIAgentConfigBase,
+    override val agentConfig: AIAgentConfig,
     public val toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     public val strategy: AIAgentFunctionalStrategy<Input, Output>,
     id: String? = null,
@@ -175,7 +174,7 @@ public class FunctionalAIAgent<Input, Output>(
  */
 public fun <Input, Output> functionalAIAgent(
     promptExecutor: PromptExecutor,
-    agentConfig: AIAgentConfigBase,
+    agentConfig: AIAgentConfig,
     toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     func: suspend AIAgentFunctionalContext.(input: Input) -> Output
 ): AIAgent<Input, Output> {

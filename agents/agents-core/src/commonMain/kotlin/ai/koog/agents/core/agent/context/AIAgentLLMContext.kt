@@ -2,7 +2,7 @@
 
 package ai.koog.agents.core.agent.context
 
-import ai.koog.agents.core.agent.config.AIAgentConfigBase
+import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.session.AIAgentLLMReadSession
 import ai.koog.agents.core.agent.session.AIAgentLLMWriteSession
 import ai.koog.agents.core.environment.AIAgentEnvironment
@@ -56,7 +56,7 @@ public class AIAgentLLMContext(
     @property:DetachedPromptExecutorAPI
     public val promptExecutor: PromptExecutor,
     private val environment: AIAgentEnvironment,
-    private val config: AIAgentConfigBase,
+    private val config: AIAgentConfig,
     private val clock: Clock
 ) {
     /**
@@ -108,7 +108,7 @@ public class AIAgentLLMContext(
         model: LLModel = this.model,
         promptExecutor: PromptExecutor = this.promptExecutor,
         environment: AIAgentEnvironment = this.environment,
-        config: AIAgentConfigBase = this.config,
+        config: AIAgentConfig = this.config,
         clock: Clock = this.clock,
     ): AIAgentLLMContext = rwLock.withReadLock {
         AIAgentLLMContext(
@@ -168,7 +168,7 @@ public class AIAgentLLMContext(
         model: LLModel = this.model,
         promptExecutor: PromptExecutor = this.promptExecutor,
         environment: AIAgentEnvironment = this.environment,
-        config: AIAgentConfigBase = this.config,
+        config: AIAgentConfig = this.config,
         clock: Clock = this.clock
     ): AIAgentLLMContext {
         return AIAgentLLMContext(tools, toolRegistry, prompt, model, promptExecutor, environment, config, clock)

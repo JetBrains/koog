@@ -2,7 +2,7 @@
 
 package ai.koog.agents.testing.tools
 
-import ai.koog.agents.core.agent.config.AIAgentConfigBase
+import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.context.AIAgentLLMContext
@@ -52,7 +52,7 @@ public class DummyAIAgentContext(
     private var _environment: AIAgentEnvironment? = builder.environment
     private var _agentInput: Any? = builder.agentInput
     private var _agentInputType: KType? = builder.agentInputType
-    private var _config: AIAgentConfigBase? = builder.config
+    private var _config: AIAgentConfig? = builder.config
     private var _llm: AIAgentLLMContext? = builder.llm
     private var _stateManager: AIAgentStateManager? = builder.stateManager
     private var _storage: AIAgentStorage? = builder.storage
@@ -65,13 +65,13 @@ public class DummyAIAgentContext(
     override val environment: AIAgentEnvironment
         get() = _environment ?: throw NotImplementedError("Environment is not mocked")
 
-    override val agentInput: Any?
+    override val agentInput: Any
         get() = _agentInput ?: throw NotImplementedError("Agent input is not mocked")
 
     override val agentInputType: KType
         get() = _agentInputType ?: throw NotImplementedError("Agent input type is not mocked")
 
-    override val config: AIAgentConfigBase
+    override val config: AIAgentConfig
         get() = _config ?: throw NotImplementedError("Config is not mocked")
 
     override val llm: AIAgentLLMContext
@@ -97,7 +97,7 @@ public class DummyAIAgentContext(
         throw NotImplementedError("store() is not supported for mock")
     }
 
-    override fun <T> get(key: AIAgentStorageKey<*>): T? {
+    override fun <T> get(key: AIAgentStorageKey<*>): T {
         throw NotImplementedError("get() is not supported for mock")
     }
 
@@ -105,10 +105,10 @@ public class DummyAIAgentContext(
         throw NotImplementedError("remove() is not supported for mock")
     }
 
-    override fun <Feature : Any> feature(key: AIAgentStorageKey<Feature>): Feature? =
+    override fun <Feature : Any> feature(key: AIAgentStorageKey<Feature>): Feature =
         throw NotImplementedError("feature() getting in runtime is not supported for mock")
 
-    override fun <Feature : Any> feature(feature: AIAgentFeature<*, Feature>): Feature? =
+    override fun <Feature : Any> feature(feature: AIAgentFeature<*, Feature>): Feature =
         throw NotImplementedError("feature()  getting in runtime is not supported for mock")
 
     override suspend fun getHistory(): List<Message> = emptyList()
@@ -121,7 +121,7 @@ public class DummyAIAgentContext(
      * @param agentInput The input object provided to the AI agent, representing data or context for the agent to process.
      * @param agentInputType The type of the agent input, used to interpret the structure or nature of the input.
      * @param config The configuration settings for the AI agent, such as model specifics and operational limits.
-     * @param llm The language model context utilized by the AI agent for generating responses or processing input.
+     * @param llm The language model context used by the AI agent for generating responses or processing input.
      * @param stateManager The state management associated with the AI agent, responsible for tracking execution state and history.
      * @param storage A storage mechanism for the AI agent, enabling persistence of key-value information.
      * @param runId A unique identifier for the current execution or operational instance of the AI agent.
@@ -133,7 +133,7 @@ public class DummyAIAgentContext(
         environment: AIAgentEnvironment,
         agentInput: Any?,
         agentInputType: KType,
-        config: AIAgentConfigBase,
+        config: AIAgentConfig,
         llm: AIAgentLLMContext,
         stateManager: AIAgentStateManager,
         storage: AIAgentStorage,
@@ -206,14 +206,14 @@ public interface AIAgentContextMockBuilderBase : BaseBuilder<AIAgentContext> {
     /**
      * Specifies the configuration for the AI agent.
      *
-     * This property allows setting an instance of [AIAgentConfigBase], which defines various parameters
+     * This property allows setting an instance of [AIAgentConfig], which defines various parameters
      * and settings for the AI agent, such as the model, prompt structure, execution strategies, and constraints.
      * It provides the core configuration required for the agent's setup and behavior.
      *
      * If null, the configuration will not be explicitly defined, and the agent may rely on default or externally
      * supplied configurations.
      */
-    public var config: AIAgentConfigBase?
+    public var config: AIAgentConfig?
 
     /**
      * Represents the LLM context associated with an AI agent during testing scenarios.
@@ -277,7 +277,7 @@ public interface AIAgentContextMockBuilderBase : BaseBuilder<AIAgentContext> {
         environment: AIAgentEnvironment? = this.environment,
         agentInput: Any? = this.agentInput,
         agentInputType: KType? = this.agentInputType,
-        config: AIAgentConfigBase? = this.config,
+        config: AIAgentConfig? = this.config,
         llm: AIAgentLLMContext? = this.llm,
         stateManager: AIAgentStateManager? = this.stateManager,
         storage: AIAgentStorage? = this.storage,
@@ -320,7 +320,7 @@ public class AIAgentContextMockBuilder() : AIAgentContextMockBuilderBase {
      * Represents the agent's input data used in constructing or testing the agent's context.
      *
      * This property is optional and can be null, indicating that no specific input is provided for the agent.
-     * It is utilized during the construction or copying of an agent's context to define the data the agent operates on.
+     * It is used during the construction or copying of an agent's context to define the data the agent operates on.
      */
     override var agentInput: Any? = null
 
@@ -334,13 +334,13 @@ public class AIAgentContextMockBuilder() : AIAgentContextMockBuilderBase {
      *
      * This property holds the agent's configuration, which may include the parameters for prompts,
      * the language model to be used, iteration limits, and strategies for handling missing tools.
-     * It is utilized in constructing or copying an AI agent context during testing or mock setup.
+     * It is used in constructing or copying an AI agent context during testing or mock setup.
      *
-     * The configuration, represented by [AIAgentConfigBase], can be modified or replaced
+     * The configuration, represented by [AIAgentConfig], can be modified or replaced
      * depending on the requirements of the mock or testing scenario. A `null` value indicates
      * the absence of a specific configuration.
      */
-    override var config: AIAgentConfigBase? = null
+    override var config: AIAgentConfig? = null
 
     /**
      * Represents the context for accessing and managing an AI agent's LLM (Large Language Model) configuration
@@ -349,7 +349,7 @@ public class AIAgentContextMockBuilder() : AIAgentContextMockBuilderBase {
      *
      * Can be used for dependency injection, mock testing, or modifying the LLM behavior dynamically during
      * runtime. If set to `null`, it indicates that no specific LLM context is defined, and defaults or
-     * fallback mechanisms may be utilized by the containing class.
+     * fallback mechanisms may be used by the containing class.
      */
     override var llm: AIAgentLLMContext? = null
 
@@ -411,7 +411,7 @@ public class AIAgentContextMockBuilder() : AIAgentContextMockBuilderBase {
         environment: AIAgentEnvironment?,
         agentInput: Any?,
         agentInputType: KType?,
-        config: AIAgentConfigBase?,
+        config: AIAgentConfig?,
         llm: AIAgentLLMContext?,
         stateManager: AIAgentStateManager?,
         storage: AIAgentStorage?,
@@ -513,7 +513,7 @@ public class AIAgentContextMockBuilder() : AIAgentContextMockBuilderBase {
                  * @throws IllegalStateException This function always throws an exception indicating unimplemented property access.
                  */
                 @Suppress("UNUSED_PARAMETER")
-                operator fun get(propertyName: String): Any? {
+                operator fun get(propertyName: String): Any {
                     error("Unimplemented property access: $name.$propertyName")
                 }
 
@@ -528,7 +528,7 @@ public class AIAgentContextMockBuilder() : AIAgentContextMockBuilderBase {
                  * @return This function does not return a value as it throws an error instead.
                  */
                 @Suppress("UNUSED_PARAMETER")
-                fun invoke(methodName: String, vararg args: Any?): Any? {
+                fun invoke(methodName: String, vararg args: Any?): Any {
                     error("Unimplemented method call: $name.$methodName(${args.joinToString()})")
                 }
             } as T

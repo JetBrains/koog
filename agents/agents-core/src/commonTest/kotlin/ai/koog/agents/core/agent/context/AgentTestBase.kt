@@ -2,7 +2,6 @@ package ai.koog.agents.core.agent.context
 
 import ai.koog.agents.core.CalculatorChatExecutor.testClock
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.agent.config.AIAgentConfigBase
 import ai.koog.agents.core.agent.config.MissingToolsConversionStrategy
 import ai.koog.agents.core.agent.config.ToolCallDescriber
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
@@ -37,7 +36,7 @@ open class AgentTestBase {
         }
     }
 
-    protected fun createTestConfig(id: String = "test-config"): AIAgentConfigBase {
+    protected fun createTestConfig(id: String = "test-config"): AIAgentConfig {
         return AIAgentConfig(
             prompt = createTestPrompt(),
             model = OllamaModels.Meta.LLAMA_3_2,
@@ -76,7 +75,7 @@ open class AgentTestBase {
 
     protected open fun createTestContext(
         environment: AIAgentEnvironment = createTestEnvironment(),
-        config: AIAgentConfigBase = createTestConfig(),
+        config: AIAgentConfig = createTestConfig(),
         llmContext: AIAgentLLMContext = createTestLLMContext(),
         stateManager: AIAgentStateManager = createTestStateManager(),
         storage: AIAgentStorage = createTestStorage(),
