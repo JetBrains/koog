@@ -2,23 +2,24 @@
 
 package ai.koog.agents.testing.feature
 
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.agent.AIAgent.FeatureContext
+import ai.koog.agents.core.agent.GraphAIAgent
+import ai.koog.agents.core.agent.GraphAIAgent.FeatureContext
 import ai.koog.agents.core.agent.config.AIAgentConfigBase
-import ai.koog.agents.core.agent.context.AIAgentContextBase
+import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.context.AIAgentLLMContext
+import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
-import ai.koog.agents.core.agent.entity.AIAgentStrategy
 import ai.koog.agents.core.agent.entity.AIAgentSubgraph
 import ai.koog.agents.core.agent.entity.FinishNode
 import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.environment.ReceivedToolResult
-import ai.koog.agents.core.feature.AIAgentFeature
+import ai.koog.agents.core.feature.AIAgentGraphFeature
+import ai.koog.agents.core.feature.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.AIAgentPipeline
 import ai.koog.agents.core.feature.InterceptContext
 import ai.koog.agents.core.feature.PromptExecutorProxy
@@ -185,16 +186,16 @@ public sealed class NodeReference<Input, Output> {
          * @throws IllegalStateException If the subgraph is not of type `AIAgentStrategy`.
          */
         @Suppress("UNCHECKED_CAST")
-        override fun resolve(subgraph: AIAgentSubgraph<*, *>): AIAgentStrategy<Input, Output> {
+        override fun resolve(subgraph: AIAgentSubgraph<*, *>): AIAgentGraphStrategy<Input, Output> {
             if (subgraph.name != name) {
                 throw IllegalArgumentException("Strategy with name '$name' was expected")
             }
 
-            if (subgraph !is AIAgentStrategy) {
+            if (subgraph !is AIAgentGraphStrategy) {
                 throw IllegalStateException("Resolving a strategy is not possible from a subgraph")
             }
 
-            return subgraph as AIAgentStrategy<Input, Output>
+            return subgraph as AIAgentGraphStrategy<Input, Output>
         }
     }
 }
@@ -260,7 +261,7 @@ public data class NodeOutputAssertion<Input, Output>(
 @TestOnly
 public data class EdgeAssertion<Input, Output>(
     val node: NodeReference<Input, Output>,
-    val context: AIAgentContextBase,
+    val context: AIAgentGraphContextBase,
     val output: Output,
     val expectedNode: NodeReference<*, *>
 )
@@ -850,7 +851,7 @@ public class Testing {
                  * such as when defining relationships or validating graph behavior.
                  */
                 public val unconditionalEdgeAssertions: MutableList<UnconditionalEdgeAssertion> =
-                    mutableListOf<UnconditionalEdgeAssertion>()
+                    mutableListOf()
 
                 /**
                  * Creates a deep copy of the current EdgeAssertionsBuilder instance, duplicating its state and context.
@@ -927,7 +928,7 @@ public class Testing {
      * reachability, outputs, and edges within an AI agent pipeline.
      */
     @TestOnly
-    public companion object Feature : AIAgentFeature<Config, Testing> {
+    public companion object Feature : AIAgentGraphFeature<Config, Testing> {
         /**
          * A storage key uniquely identifying the `Testing` feature within the local agent's storage.
          * The key is generated using the `createStorageKey` function and associates the
@@ -951,7 +952,7 @@ public class Testing {
          */
         override fun install(
             config: Config,
-            pipeline: AIAgentPipeline
+            pipeline: AIAgentGraphPipeline
         ) {
             val feature = Testing()
             val interceptContext = InterceptContext(this, feature)
@@ -976,7 +977,7 @@ public class Testing {
         }
 
         private suspend fun <Input, Output> verifyGraph(
-            agent: AIAgent<Input, Output>,
+            agent: GraphAIAgent<Input, Output>,
             graphAssertions: GraphAssertions,
             graph: AIAgentSubgraph<*, *>,
             pipeline: AIAgentPipeline,

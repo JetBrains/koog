@@ -1,4 +1,5 @@
 [versions]
+agp = "8.11.1"
 annotations = "26.0.2"
 assertj="3.27.4"
 aws-sdk-kotlin = "1.5.16"
@@ -93,6 +94,7 @@ opentelemetry-exporter-logging = { module = "io.opentelemetry:opentelemetry-expo
 aws-sdk-kotlin-bedrock = { module = "aws.sdk.kotlin:bedrock", version.ref = "aws-sdk-kotlin" }
 aws-sdk-kotlin-bedrockruntime = { module = "aws.sdk.kotlin:bedrockruntime", version.ref = "aws-sdk-kotlin" }
 aws-sdk-kotlin-sts = { module = "aws.sdk.kotlin:sts", version.ref = "aws-sdk-kotlin" }
+android-tools-gradle={ module = "com.android.tools.build:gradle", version.ref="agp"}
 
 # Spring
 spring-boot-bom = { module = "org.springframework.boot:spring-boot-dependencies", version.ref = "spring-boot" }
@@ -109,10 +111,13 @@ spring-boot-core = [
 ]
 
 [plugins]
-kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
-shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadow" }
-kotlinx-kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
-kotlin-spring = { id = "org.jetbrains.kotlin.plugin.spring", version.ref = "kotlin" }
-spring-management = { id = "io.spring.dependency-management", version.ref = "spring-management" }
-ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
+android-application = { id = "com.android.application", version.ref = "agp" }
+android-library = { id = "com.android.library", version.ref = "agp" }
 knit = { id = "org.jetbrains.kotlinx.knit", version.ref = "knit" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+kotlin-spring = { id = "org.jetbrains.kotlin.plugin.spring", version.ref = "kotlin" }
+kotlinx-kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
+ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
+shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadow" }
+spring-management = { id = "io.spring.dependency-management", version.ref = "spring-management" }

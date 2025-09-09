@@ -1,8 +1,8 @@
 package ai.koog.agents.core.feature.handler
 
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.agent.context.AIAgentContextBase
-import ai.koog.agents.core.agent.entity.AIAgentStrategy
+import ai.koog.agents.core.agent.GraphAIAgent
+import ai.koog.agents.core.agent.context.AIAgentContext
+import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import kotlin.reflect.KType
 
 /**
@@ -24,8 +24,8 @@ public interface AgentEventHandlerContext : EventHandlerContext
  * @property feature An additional feature or configuration associated with the context.
  */
 public class AgentTransformEnvironmentContext<TFeature>(
-    public val strategy: AIAgentStrategy<*, *>,
-    public val agent: AIAgent<*, *>,
+    public val strategy: AIAgentGraphStrategy<*, *>,
+    public val agent: GraphAIAgent<*, *>,
     public val feature: TFeature
 ) : AgentEventHandlerContext
 
@@ -37,12 +37,12 @@ public class AgentTransformEnvironmentContext<TFeature>(
  * @property agent The AI agent associated with this context.
  * @property feature The feature-specific data associated with this context.
  */
-public data class AgentStartContext<TFeature>(
-    public val agent: AIAgent<*, *>,
+public data class GraphAgentStartContext<TFeature>(
+    public val agent: GraphAIAgent<*, *>,
     public val runId: String,
-    public val strategy: AIAgentStrategy<*, *>,
+    public val strategy: AIAgentGraphStrategy<*, *>,
     public val feature: TFeature,
-    public val context: AIAgentContextBase,
+    public val context: AIAgentContext,
 ) : AgentEventHandlerContext
 
 /**

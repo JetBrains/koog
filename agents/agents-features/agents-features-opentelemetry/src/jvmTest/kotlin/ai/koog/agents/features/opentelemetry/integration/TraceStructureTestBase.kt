@@ -1,7 +1,7 @@
 package ai.koog.agents.features.opentelemetry.integration
 
 import ai.koog.agents.core.agent.context.DetachedPromptExecutorAPI
-import ai.koog.agents.core.agent.entity.AIAgentStrategy
+import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
@@ -748,7 +748,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
      * Runs an agent with the given strategy and verifies the spans.
      */
     private suspend fun runAgentWithStrategy(
-        strategy: AIAgentStrategy<String, String>,
+        strategy: AIAgentGraphStrategy<String, String>,
         systemPrompt: String? = null,
         userPrompt: String? = null,
         promptExecutor: PromptExecutor? = null,

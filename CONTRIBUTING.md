@@ -54,6 +54,8 @@ This library is built with Gradle.
 You can import this project into IDEA, but you have to delegate build actions
 to Gradle (in Preferences -> Build, Execution, Deployment -> Build Tools -> Gradle -> Build and run).
 
+**Note:** Please make sure you have Node.js installed to build Kotlin/JS targets.
+
 ## Running tests
 
 Please find more information in the [TESTING.md](TESTING.md).

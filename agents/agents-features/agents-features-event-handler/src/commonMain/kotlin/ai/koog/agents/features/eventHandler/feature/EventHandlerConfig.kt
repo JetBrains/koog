@@ -1,16 +1,16 @@
 package ai.koog.agents.features.eventHandler.feature
 
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.agent.context.AIAgentContextBase
+import ai.koog.agents.core.agent.GraphAIAgent
+import ai.koog.agents.core.agent.context.AIAgentContext
+import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase
-import ai.koog.agents.core.agent.entity.AIAgentStrategy
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.handler.AfterLLMCallContext
 import ai.koog.agents.core.feature.handler.AgentBeforeCloseContext
 import ai.koog.agents.core.feature.handler.AgentFinishedContext
 import ai.koog.agents.core.feature.handler.AgentRunErrorContext
-import ai.koog.agents.core.feature.handler.AgentStartContext
 import ai.koog.agents.core.feature.handler.BeforeLLMCallContext
+import ai.koog.agents.core.feature.handler.GraphAgentStartContext
 import ai.koog.agents.core.feature.handler.NodeAfterExecuteContext
 import ai.koog.agents.core.feature.handler.NodeBeforeExecuteContext
 import ai.koog.agents.core.feature.handler.NodeExecutionErrorContext
@@ -57,7 +57,7 @@ public class EventHandlerConfig : FeatureConfig() {
 
     //region Agent Handlers
 
-    private var _onBeforeAgentStarted: suspend (eventHandler: AgentStartContext<EventHandler>) -> Unit = { _ -> }
+    private var _onBeforeAgentStarted: suspend (eventHandler: GraphAgentStartContext<EventHandler>) -> Unit = { _ -> }
 
     private var _onAgentFinished: suspend (eventHandler: AgentFinishedContext) -> Unit = { _ -> }
 
@@ -122,9 +122,9 @@ public class EventHandlerConfig : FeatureConfig() {
         replaceWith = ReplaceWith("onBeforeAgentStarted(handler)")
     )
     public var onBeforeAgentStarted: suspend (
-        strategy: AIAgentStrategy<*, *>,
-        agent: AIAgent<*, *>
-    ) -> Unit = { strategy: AIAgentStrategy<*, *>, agent: AIAgent<*, *> -> }
+        strategy: AIAgentGraphStrategy<*, *>,
+        agent: GraphAIAgent<*, *>
+    ) -> Unit = { _: AIAgentGraphStrategy<*, *>, _: GraphAIAgent<*, *> -> }
         set(value) {
             this.onBeforeAgentStarted { eventContext ->
                 value(eventContext.strategy, eventContext.agent)
@@ -164,7 +164,7 @@ public class EventHandlerConfig : FeatureConfig() {
         strategyName: String,
         sessionUuid: Uuid?,
         throwable: Throwable
-    ) -> Unit = { strategyName: String, sessionUuid: Uuid?, throwable: Throwable -> }
+    ) -> Unit = { _: String, _: Uuid?, _: Throwable -> }
         set(value) {
             this.onAgentRunError { eventContext ->
                 value("", Uuid.parse(eventContext.runId), eventContext.throwable)
@@ -172,54 +172,6 @@ public class EventHandlerConfig : FeatureConfig() {
         }
 
     //endregion Deprecated Agent Handlers
-
-    //region Deprecated Strategy Handlers
-
-    /**
-     * A suspendable handler invoked when a strategy starts execution in the AI Agent workflow.
-     *
-     * This property is deprecated and replaced by the `onStrategyStarted(handler)` function for appending handlers.
-     *
-     * The handler receives an `AIAgentStrategy` instance, which represents the strategy being executed.
-     *
-     * @deprecated Use `onStrategyStarted(handler)` instead for appending multiple handlers.
-     * Replace this property with the `onStrategyStarted(handler)` function for better extensibility.
-     */
-    @Deprecated(
-        message = "Please use onStrategyStarted() instead",
-        replaceWith = ReplaceWith("onStrategyStarted(handler)")
-    )
-    public var onStrategyStarted: suspend (
-        strategy: AIAgentStrategy<*, *>
-    ) -> Unit = { strategy: AIAgentStrategy<*, *> -> }
-        set(value) {
-            this.onStrategyStarted { eventContext ->
-                value(eventContext.strategy)
-            }
-        }
-
-    /**
-     * A deprecated variable that defines a handler to be invoked when a strategy finishes execution.
-     * Replaced by the `onStrategyFinished(handler)` method to provide a more structured and extensible approach.
-     *
-     * @deprecated Use `onStrategyFinished(handler)` instead for appending handlers.
-     * This variable is retained for backward compatibility but is not the recommended approach.
-     */
-    @Deprecated(
-        message = "Please use onStrategyFinished() instead",
-        replaceWith = ReplaceWith("onStrategyFinished(handler)")
-    )
-    public var onStrategyFinished: suspend (
-        strategy: AIAgentStrategy<*, *>,
-        result: Any?
-    ) -> Unit = { strategy: AIAgentStrategy<*, *>, result: Any? -> }
-        set(value) {
-            this.onStrategyFinished { eventContext ->
-                value(eventContext.strategy, eventContext.result)
-            }
-        }
-
-    //endregion Deprecated Strategy Handlers
 
     //region Deprecated Node Handlers
 
@@ -237,9 +189,9 @@ public class EventHandlerConfig : FeatureConfig() {
     @Deprecated(message = "Please use onBeforeNode() instead", replaceWith = ReplaceWith("onBeforeNode(handler)"))
     public var onBeforeNode: suspend (
         node: AIAgentNodeBase<*, *>,
-        context: AIAgentContextBase,
+        context: AIAgentContext,
         input: Any?
-    ) -> Unit = { node: AIAgentNodeBase<*, *>, context: AIAgentContextBase, input: Any? -> }
+    ) -> Unit = { _: AIAgentNodeBase<*, *>, _: AIAgentContext, _: Any? -> }
         set(value) {
             this.onBeforeNode { eventContext ->
                 value(eventContext.node, eventContext.context, eventContext.input)
@@ -262,10 +214,10 @@ public class EventHandlerConfig : FeatureConfig() {
     @Deprecated(message = "Please use onAfterNode() instead", replaceWith = ReplaceWith("onAfterNode(handler)"))
     public var onAfterNode: suspend (
         node: AIAgentNodeBase<*, *>,
-        context: AIAgentContextBase,
+        context: AIAgentContext,
         input: Any?,
         output: Any?
-    ) -> Unit = { node: AIAgentNodeBase<*, *>, context: AIAgentContextBase, input: Any?, output: Any? -> }
+    ) -> Unit = { node: AIAgentNodeBase<*, *>, context: AIAgentContext, input: Any?, output: Any? -> }
         set(value) {
             this.onAfterNode { eventContext ->
                 value(eventContext.node, eventContext.context, eventContext.input, eventContext.output)
@@ -291,7 +243,7 @@ public class EventHandlerConfig : FeatureConfig() {
         tools: List<ToolDescriptor>,
         model: LLModel,
         sessionUuid: Uuid
-    ) -> Unit = { prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, sessionUuid: Uuid -> }
+    ) -> Unit = { _: Prompt, _: List<ToolDescriptor>, _: LLModel, _: Uuid -> }
         set(value) {
             this.onBeforeLLMCall { eventContext ->
                 value(eventContext.prompt, eventContext.tools, eventContext.model, Uuid.parse(eventContext.runId))
@@ -321,11 +273,11 @@ public class EventHandlerConfig : FeatureConfig() {
         responses: List<Message.Response>,
         sessionUuid: Uuid
     ) -> Unit = {
-            prompt: Prompt,
-            tools: List<ToolDescriptor>,
-            model: LLModel,
-            responses: List<Message.Response>,
-            sessionUuid: Uuid
+            _: Prompt,
+            _: List<ToolDescriptor>,
+            _: LLModel,
+            _: List<Message.Response>,
+            _: Uuid
         ->
     }
         set(value) {
@@ -355,7 +307,7 @@ public class EventHandlerConfig : FeatureConfig() {
     public var onToolCall: suspend (
         tool: Tool<*, *>,
         toolArgs: ToolArgs
-    ) -> Unit = { tool: Tool<*, *>, toolArgs: ToolArgs -> }
+    ) -> Unit = { _: Tool<*, *>, _: ToolArgs -> }
         set(value) {
             this.onToolCall { eventContext ->
                 value(eventContext.tool, eventContext.toolArgs)
@@ -440,7 +392,7 @@ public class EventHandlerConfig : FeatureConfig() {
     /**
      * Append handler called when an agent is started.
      */
-    public fun onBeforeAgentStarted(handler: suspend (eventContext: AgentStartContext<*>) -> Unit) {
+    public fun onBeforeAgentStarted(handler: suspend (eventContext: GraphAgentStartContext<*>) -> Unit) {
         val originalHandler = this._onBeforeAgentStarted
         this._onBeforeAgentStarted = { eventContext ->
             originalHandler(eventContext)
@@ -626,7 +578,7 @@ public class EventHandlerConfig : FeatureConfig() {
     /**
      * Invoke handlers for an event when an agent is started.
      */
-    internal suspend fun invokeOnBeforeAgentStarted(eventContext: AgentStartContext<EventHandler>) {
+    internal suspend fun invokeOnBeforeAgentStarted(eventContext: GraphAgentStartContext<EventHandler>) {
         _onBeforeAgentStarted.invoke(eventContext)
     }
 

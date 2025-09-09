@@ -626,7 +626,7 @@ class AIAgentMultipleLLMIntegrationTest {
             val llmModel = AnthropicModels.Sonnet_3_7
             Models.assumeAvailable(llmModel.provider)
             val agent = AIAgent(
-                executor = simpleAnthropicExecutor(anthropicApiKey),
+                promptExecutor = simpleAnthropicExecutor(anthropicApiKey),
                 llmModel = llmModel,
                 systemPrompt = "You are a calculator with access to the calculator tools. Please call tools!!!",
                 toolRegistry = ToolRegistry {

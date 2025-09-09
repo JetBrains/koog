@@ -1,8 +1,8 @@
 package ai.koog.agents.core.feature.handler
 
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.agent.context.AIAgentContextBase
-import ai.koog.agents.core.agent.entity.AIAgentStrategy
+import ai.koog.agents.core.agent.GraphAIAgent
+import ai.koog.agents.core.agent.context.AIAgentContext
+import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 
@@ -93,7 +93,7 @@ public class AgentHandler<TFeature : Any>(public val feature: TFeature) {
      * @param context The context containing necessary information about the agent,
      *                strategy, and feature to be processed before the agent starts.
      */
-    public suspend fun handleBeforeAgentStarted(context: AgentStartContext<TFeature>) {
+    public suspend fun handleBeforeAgentStarted(context: GraphAgentStartContext<TFeature>) {
         beforeAgentStartedHandler.handle(context)
     }
 
@@ -106,8 +106,8 @@ public class AgentHandler<TFeature : Any>(public val feature: TFeature) {
      */
     @Suppress("UNCHECKED_CAST")
     @InternalAgentsApi
-    public suspend fun handleBeforeAgentStartedUnsafe(eventContext: AgentStartContext<*>) {
-        handleBeforeAgentStarted(eventContext as AgentStartContext<TFeature>)
+    public suspend fun handleBeforeAgentStartedUnsafe(eventContext: GraphAgentStartContext<*>) {
+        handleBeforeAgentStarted(eventContext as GraphAgentStartContext<TFeature>)
     }
 }
 
@@ -144,7 +144,7 @@ public fun interface AgentContextHandler<FeatureT : Any> {
      * @param context The stage context where the feature will be used
      * @return A new instance of the feature
      */
-    public fun handle(context: AIAgentContextBase): FeatureT
+    public fun handle(context: AIAgentContext): FeatureT
 }
 
 /**
@@ -161,7 +161,7 @@ public fun interface BeforeAgentStartedHandler<TFeature : Any> {
      *
      * @param context The context that encapsulates the agent, its strategy, and the associated feature
      */
-    public suspend fun handle(context: AgentStartContext<TFeature>)
+    public suspend fun handle(context: GraphAgentStartContext<TFeature>)
 }
 
 /**
@@ -202,8 +202,8 @@ public fun interface AgentRunErrorHandler {
  * @property feature An additional feature or configuration associated with the context.
  */
 public class AgentCreateContext<FeatureT>(
-    public val strategy: AIAgentStrategy<*, *>,
-    public val agent: AIAgent<*, *>,
+    public val strategy: AIAgentGraphStrategy<*, *>,
+    public val agent: GraphAIAgent<*, *>,
     public val feature: FeatureT
 ) {
     /**
@@ -211,7 +211,7 @@ public class AgentCreateContext<FeatureT>(
      *
      * @param block A suspending lambda function that receives the `AIAgentStrategy` instance.
      */
-    public suspend fun readStrategy(block: suspend (AIAgentStrategy<*, *>) -> Unit) {
+    public suspend fun readStrategy(block: suspend (AIAgentGraphStrategy<*, *>) -> Unit) {
         block(strategy)
     }
 }

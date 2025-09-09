@@ -42,7 +42,7 @@ val toolRegistry = ToolRegistry {
 
 // Pass the registry when creating an agent
 val agent = AIAgent(
-    executor = simpleOpenAIExecutor(apiToken),
+    promptExecutor = simpleOpenAIExecutor(apiToken),
     systemPrompt = "You are a helpful assistant.",
     llmModel = OpenAIModels.Chat.GPT4o,
     toolRegistry = toolRegistry

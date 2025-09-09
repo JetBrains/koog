@@ -1,6 +1,6 @@
 package ai.koog.ktor
 
-import ai.koog.agents.core.agent.AIAgent.FeatureContext
+import ai.koog.agents.core.agent.GraphAIAgent.FeatureContext
 import ai.koog.agents.core.agent.config.MissingToolsConversionStrategy
 import ai.koog.agents.core.agent.config.ToolCallDescriber
 import ai.koog.agents.core.feature.AIAgentFeature

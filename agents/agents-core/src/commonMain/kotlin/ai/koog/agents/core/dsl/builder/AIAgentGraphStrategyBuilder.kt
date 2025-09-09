@@ -1,6 +1,6 @@
 package ai.koog.agents.core.dsl.builder
 
-import ai.koog.agents.core.agent.entity.AIAgentStrategy
+import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.FinishNode
 import ai.koog.agents.core.agent.entity.StartNode
 import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
@@ -15,17 +15,17 @@ import kotlin.reflect.typeOf
  * @param name The name of the strategy being built, serving as a unique identifier.
  * @param toolSelectionStrategy The strategy used to determine the subset of tools available during subgraph execution.
  */
-public class AIAgentStrategyBuilder<Input, Output>(
+public class AIAgentGraphStrategyBuilder<TInput, TOutput>(
     private val name: String,
     inputType: KType,
     outputType: KType,
     private val toolSelectionStrategy: ToolSelectionStrategy,
-) : AIAgentSubgraphBuilderBase<Input, Output>(), BaseBuilder<AIAgentStrategy<Input, Output>> {
-    public override val nodeStart: StartNode<Input> = StartNode(type = inputType)
-    public override val nodeFinish: FinishNode<Output> = FinishNode(type = outputType)
+) : AIAgentSubgraphBuilderBase<TInput, TOutput>(), BaseBuilder<AIAgentGraphStrategy<TInput, TOutput>> {
+    public override val nodeStart: StartNode<TInput> = StartNode(type = inputType)
+    public override val nodeFinish: FinishNode<TOutput> = FinishNode(type = outputType)
 
-    override fun build(): AIAgentStrategy<Input, Output> {
-        val strategy = AIAgentStrategy(
+    override fun build(): AIAgentGraphStrategy<TInput, TOutput> {
+        val strategy = AIAgentGraphStrategy(
             name = name,
             nodeStart = nodeStart,
             nodeFinish = nodeFinish,
@@ -48,9 +48,9 @@ public class AIAgentStrategyBuilder<Input, Output>(
 public inline fun <reified Input, reified Output> strategy(
     name: String,
     toolSelectionStrategy: ToolSelectionStrategy = ToolSelectionStrategy.ALL,
-    init: AIAgentStrategyBuilder<Input, Output>.() -> Unit,
-): AIAgentStrategy<Input, Output> {
-    return AIAgentStrategyBuilder<Input, Output>(
+    init: AIAgentGraphStrategyBuilder<Input, Output>.() -> Unit,
+): AIAgentGraphStrategy<Input, Output> {
+    return AIAgentGraphStrategyBuilder<Input, Output>(
         name = name,
         inputType = typeOf<Input>(),
         outputType = typeOf<Output>(),

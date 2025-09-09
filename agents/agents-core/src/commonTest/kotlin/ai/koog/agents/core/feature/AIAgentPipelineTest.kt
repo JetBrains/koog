@@ -3,9 +3,9 @@ package ai.koog.agents.core.feature
 import ai.koog.agents.core.CalculatorChatExecutor
 import ai.koog.agents.core.CalculatorTools
 import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.agent.AIAgent.FeatureContext
+import ai.koog.agents.core.agent.GraphAIAgent.FeatureContext
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.agent.entity.AIAgentStrategy
+import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeDoNothing
@@ -326,7 +326,7 @@ class AIAgentPipelineTest {
     }
 
     private fun createAgent(
-        strategy: AIAgentStrategy<String, String>,
+        strategy: AIAgentGraphStrategy<String, String>,
         userPrompt: String? = null,
         systemPrompt: String? = null,
         assistantPrompt: String? = null,

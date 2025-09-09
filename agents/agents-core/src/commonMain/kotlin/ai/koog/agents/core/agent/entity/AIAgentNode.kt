@@ -1,6 +1,6 @@
 package ai.koog.agents.core.agent.entity
 
-import ai.koog.agents.core.agent.context.AIAgentContextBase
+import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.context.element.NodeInfoContextElement
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -12,11 +12,11 @@ import kotlin.uuid.ExperimentalUuidApi
  * Represents an abstract node in an AI agent strategy graph, responsible for executing a specific
  * operation and managing directed edges to other nodes.
  *
- * @param Input The type of input data this node processes.
- * @param Output The type of output data this node produces.
+ * @param TInput The type of input data this node processes.
+ * @param TOutput The type of output data this node produces.
  */
 @OptIn(ExperimentalUuidApi::class)
-public abstract class AIAgentNodeBase<Input, Output> internal constructor() {
+public abstract class AIAgentNodeBase<TInput, TOutput> internal constructor() {
     /**
      * The name of the AI agent node.
      * This property serves as a unique identifier for the node within the strategy graph
@@ -25,12 +25,12 @@ public abstract class AIAgentNodeBase<Input, Output> internal constructor() {
     public abstract val name: String
 
     /**
-     * The [KType] of the [Input]
+     * The [KType] of the [TInput]
      */
     public abstract val inputType: KType
 
     /**
-     * The [KType] of the [Output]
+     * The [KType] of the [TOutput]
      */
     public abstract val outputType: KType
 
@@ -50,7 +50,7 @@ public abstract class AIAgentNodeBase<Input, Output> internal constructor() {
      * @property edges A list of [AIAgentEdge] describing the connections from this node
      * to other nodes in the strategy graph.
      */
-    public var edges: List<AIAgentEdge<Output, *>> = emptyList()
+    public var edges: List<AIAgentEdge<TOutput, *>> = emptyList()
         private set
 
     /**
@@ -60,7 +60,7 @@ public abstract class AIAgentNodeBase<Input, Output> internal constructor() {
      * @param edge The edge to be added, representing a connection from this node's output
      * to another node in the strategy graph.
      */
-    public open fun addEdge(edge: AIAgentEdge<Output, *>) {
+    public open fun addEdge(edge: AIAgentEdge<TOutput, *>) {
         edges = edges + edge
     }
 
@@ -86,8 +86,8 @@ public abstract class AIAgentNodeBase<Input, Output> internal constructor() {
      * @return A `ResolvedEdge` containing the matched edge and its output, or null if no edge matches.
      */
     public suspend fun resolveEdge(
-        context: AIAgentContextBase,
-        nodeOutput: Output
+        context: AIAgentGraphContextBase,
+        nodeOutput: TOutput
     ): ResolvedEdge? {
         for (currentEdge in edges) {
             val output = currentEdge.forwardOutputUnsafe(nodeOutput, context)
@@ -104,8 +104,8 @@ public abstract class AIAgentNodeBase<Input, Output> internal constructor() {
      * @suppress
      */
     @Suppress("UNCHECKED_CAST")
-    public suspend fun resolveEdgeUnsafe(context: AIAgentContextBase, nodeOutput: Any?): ResolvedEdge? =
-        resolveEdge(context, nodeOutput as Output)
+    public suspend fun resolveEdgeUnsafe(context: AIAgentGraphContextBase, nodeOutput: Any?): ResolvedEdge? =
+        resolveEdge(context, nodeOutput as TOutput)
 
     /**
      * Executes a specific operation based on the given context and input.
@@ -114,7 +114,7 @@ public abstract class AIAgentNodeBase<Input, Output> internal constructor() {
      * @param input The input data required to perform the execution.
      * @return The result of the execution as an Output object.
      */
-    public abstract suspend fun execute(context: AIAgentContextBase, input: Input): Output?
+    public abstract suspend fun execute(context: AIAgentGraphContextBase, input: TInput): TOutput?
 
     /**
      * Executes the node operation using the provided execution context and input, bypassing type safety checks.
@@ -126,34 +126,33 @@ public abstract class AIAgentNodeBase<Input, Output> internal constructor() {
      * @return The result of the execution, which may be of any type depending on the implementation.
      */
     @Suppress("UNCHECKED_CAST")
-    public suspend fun executeUnsafe(context: AIAgentContextBase, input: Any?): Any? =
-        execute(context, input as Input)
+    public suspend fun executeUnsafe(context: AIAgentGraphContextBase, input: Any?): Any? =
+        execute(context, input as TInput)
 }
 
 /**
  * Represents a simple implementation of an AI agent node, encapsulating a specific execution
  * logic that processes the input data and produces an output.
  *
- * @param Input The type of input data this node processes.
- * @param Output The type of output data this node produces.
+ * @param TInput The type of input data this node processes.
+ * @param TOutput The type of output data this node produces.
  * @property name The name of the node, used for identification and debugging.
  * @property execute A suspending function that defines the execution logic for the node. It
  * processes the provided input within the given execution context and produces an output.
  */
-public open class AIAgentNode<Input, Output> internal constructor(
+public open class AIAgentNode<TInput, TOutput> internal constructor(
     override val name: String,
     override val inputType: KType,
     override val outputType: KType,
-    public val execute: suspend AIAgentContextBase.(input: Input) -> Output,
-
-) : AIAgentNodeBase<Input, Output>() {
+    public val execute: suspend AIAgentGraphContextBase.(input: TInput) -> TOutput,
+) : AIAgentNodeBase<TInput, TOutput>() {
 
     private companion object {
         private val logger = KotlinLogging.logger { }
     }
 
     @InternalAgentsApi
-    override suspend fun execute(context: AIAgentContextBase, input: Input): Output =
+    override suspend fun execute(context: AIAgentGraphContextBase, input: TInput): TOutput =
         withContext(NodeInfoContextElement(nodeName = name)) {
             logger.debug { "Start executing node (name: $name)" }
             context.pipeline.onBeforeNode(this@AIAgentNode, context, input, inputType)
@@ -183,14 +182,14 @@ public open class AIAgentNode<Input, Output> internal constructor(
  * the prefix "__start__" and the optional subgraph name, enabling traceability of
  * execution flow in multi-subgraph setups.
  *
- * @param Input The type of input data this node processes and produces as output.
+ * @param TInput The type of input data this node processes and produces as output.
  * @param subgraphName The name of the related subgraph
- * @param type [KType] representing [Input]
+ * @param type [KType] representing [TInput]
  */
-public class StartNode<Input> internal constructor(
+public class StartNode<TInput> internal constructor(
     subgraphName: String? = null,
     type: KType,
-) : AIAgentNode<Input, Input>(
+) : AIAgentNode<TInput, TInput>(
     name = subgraphName?.let { "__start__$it" } ?: "__start__",
     inputType = type,
     outputType = type,
@@ -209,20 +208,20 @@ public class StartNode<Input> internal constructor(
  * the prefix "__finish__" and the optional subgraph name, enabling traceability of
  * execution flow in multi-subgraph setups.
  *
- * @param Output The type of data this node processes and produces.
+ * @param TOutput The type of data this node processes and produces.
  * @param subgraphName The name of the related subgraph
- * @param type [KType] representing [Output]
+ * @param type [KType] representing [TOutput]
  */
-public class FinishNode<Output> internal constructor(
+public class FinishNode<TOutput> internal constructor(
     subgraphName: String? = null,
     type: KType,
-) : AIAgentNode<Output, Output>(
+) : AIAgentNode<TOutput, TOutput>(
     name = subgraphName?.let { "__finish__$it" } ?: "__finish__",
     inputType = type,
     outputType = type,
     execute = { input -> input }
 ) {
-    override fun addEdge(edge: AIAgentEdge<Output, *>) {
+    override fun addEdge(edge: AIAgentEdge<TOutput, *>) {
         throw IllegalStateException("${this::class.simpleName} cannot have outgoing edges")
     }
 }

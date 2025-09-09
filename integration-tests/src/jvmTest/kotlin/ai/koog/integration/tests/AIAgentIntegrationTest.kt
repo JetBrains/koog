@@ -384,7 +384,7 @@ class AIAgentIntegrationTest {
             val executor = getExecutor(model)
 
             val agent = AIAgent(
-                executor = executor,
+                promptExecutor = executor,
                 systemPrompt = systemPrompt,
                 llmModel = model,
                 temperature = 1.0,
@@ -411,7 +411,7 @@ class AIAgentIntegrationTest {
             val executor = getExecutor(model)
 
             val agent = AIAgent(
-                executor = executor,
+                promptExecutor = executor,
                 systemPrompt = systemPrompt + "You MUST use tools.",
                 llmModel = model,
                 temperature = 1.0,
@@ -444,7 +444,7 @@ class AIAgentIntegrationTest {
             val executor = getExecutor(model)
 
             val agent = AIAgent(
-                executor = executor,
+                promptExecutor = executor,
                 systemPrompt = systemPrompt + "You MUST use tools.",
                 llmModel = model,
                 strategy = singleRunStrategy(ToolCalls.PARALLEL),
@@ -486,7 +486,7 @@ class AIAgentIntegrationTest {
             val executor = getExecutor(model)
 
             val agent = AIAgent(
-                executor = executor,
+                promptExecutor = executor,
                 systemPrompt = "You are a helpful assistant that can analyze images.",
                 llmModel = model,
                 temperature = 1.0,

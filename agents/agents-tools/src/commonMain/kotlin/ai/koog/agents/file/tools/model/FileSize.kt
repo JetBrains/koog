@@ -1,6 +1,5 @@
 package ai.koog.agents.file.tools.model
 
-import ai.koog.rag.base.files.FileSystemProvider
 import kotlinx.serialization.Serializable
 import kotlin.math.pow
 
@@ -8,7 +7,7 @@ import kotlin.math.pow
  * Provides human-readable file size information.
  *
  * Represents sizes as [Bytes] (in bytes, kibibytes, or mebibyte) or as [Lines] (a count of text
- * lines). Use [of] to create the appropriate instances for a file.
+ * lines).
  */
 @Serializable
 public sealed interface FileSize {
@@ -22,31 +21,6 @@ public sealed interface FileSize {
 
         /** Defines 1 mebibyte as 1024 × 1024 bytes */
         public const val MIB: Long = KIB * 1024L
-
-        /**
-         * Creates [FileSize] representations for the given file.
-         *
-         * Always returns a [Bytes] instance. For files ≤ 1 MiB, also returns a [Lines] instance.
-         * For files > 1 MiB, only [Bytes] is returned to avoid loading large content.
-         *
-         * @param Path the filesystem path type
-         * @param path the file path to measure
-         * @param fs the filesystem provider used to access the file
-         * @return a list containing at least a [Bytes] instance and optionally a [Lines] instance
-         */
-        public suspend fun <Path> of(
-            path: Path,
-            fs: FileSystemProvider.ReadOnly<Path>,
-        ): List<FileSize> {
-            val bytes = Bytes(fs.size(path))
-            return if (bytes.bytes > MIB) {
-                listOf(bytes)
-            } else {
-                val content = fs.readBytes(path).decodeToString()
-                val lines = if (content.isEmpty()) 0 else content.lines().size
-                listOf(bytes, Lines(lines))
-            }
-        }
 
         private fun Double.formatDecimals(decimals: Int): String {
             val roundedToDecimals =

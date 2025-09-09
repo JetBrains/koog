@@ -1,6 +1,6 @@
 package ai.koog.agents.ext.agent
 
-import ai.koog.agents.core.agent.entity.AIAgentStrategy
+import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
@@ -16,12 +16,12 @@ import ai.koog.prompt.message.Message
 // FIXME improve this strategy to use Message.Assistant to chat, it works better than tools
 
 /**
- * Creates and configures a [ai.koog.agents.core.agent.entity.AIAgentStrategy] for executing a chat interaction process.
+ * Creates and configures a [ai.koog.agents.core.agent.entity.AIAgentGraphStrategy] for executing a chat interaction process.
  * The agent orchestrates interactions between different stages, nodes, and tools to
  * handle user input, execute tools, and provide responses.
  * Allows the agent to interact with the user in a chat-like manner.
  */
-public fun chatAgentStrategy(): AIAgentStrategy<String, String> = strategy("chat") {
+public fun chatAgentStrategy(): AIAgentGraphStrategy<String, String> = strategy("chat") {
     val nodeCallLLM by nodeLLMRequest("sendInput")
     val nodeExecuteTool by nodeExecuteTool("nodeExecuteTool")
     val nodeSendToolResult by nodeLLMSendToolResult("nodeSendToolResult")
@@ -63,7 +63,7 @@ public fun chatAgentStrategy(): AIAgentStrategy<String, String> = strategy("chat
  * to dynamically process tasks and request outputs from an LLM.
  *
  * @param reasoningInterval Specifies the interval for reasoning steps.
- * @return An instance of [AIAgentStrategy] that defines the ReAct strategy.
+ * @return An instance of [AIAgentGraphStrategy] that defines the ReAct strategy.
  *
  *
  * +-------+             +---------------+             +---------------+             +--------+
@@ -112,7 +112,7 @@ public fun chatAgentStrategy(): AIAgentStrategy<String, String> = strategy("chat
 public fun reActStrategy(
     reasoningInterval: Int = 1,
     name: String = "re_act"
-): AIAgentStrategy<String, String> = strategy(name) {
+): AIAgentGraphStrategy<String, String> = strategy(name) {
     require(reasoningInterval > 0) { "Reasoning interval must be greater than 0" }
     val reasoningStepKey = createStorageKey<Int>("reasoning_step")
     val nodeSetup by node<String, String> {

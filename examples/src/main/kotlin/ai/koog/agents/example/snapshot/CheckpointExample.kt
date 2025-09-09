@@ -33,7 +33,7 @@ fun main() = runBlocking {
         persistenceId = persistenceId
     )
     val agent = AIAgent(
-        executor = executor,
+        promptExecutor = executor,
         llmModel = OllamaModels.Meta.LLAMA_3_2,
         strategy = singleRunStrategy(ToolCalls.SEQUENTIAL),
         toolRegistry = brokenToolRegistry,
@@ -65,7 +65,7 @@ fun main() = runBlocking {
     println("Snapshot provider state after first run: $checkpoints")
 
     val agent2 = AIAgent(
-        executor = executor,
+        promptExecutor = executor,
         llmModel = OllamaModels.Meta.LLAMA_3_2,
         toolRegistry = correctToolRegistry,
         strategy = singleRunStrategy(ToolCalls.SEQUENTIAL),

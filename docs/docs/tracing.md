@@ -55,7 +55,7 @@ val outputPath = Path("/path/to/trace.log")
 
 // Creating an agent
 val agent = AIAgent(
-   executor = simpleOllamaAIExecutor(),
+   promptExecutor = simpleOllamaAIExecutor(),
    llmModel = OllamaModels.Meta.LLAMA_3_2,
 ) {
    install(Tracing) {
@@ -92,7 +92,7 @@ import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
 import ai.koog.prompt.llm.OllamaModels
 
 val agent = AIAgent(
-   executor = simpleOllamaAIExecutor(),
+   promptExecutor = simpleOllamaAIExecutor(),
    llmModel = OllamaModels.Meta.LLAMA_3_2,
 ) {
    install(Tracing) {
@@ -185,7 +185,7 @@ fun main() {
     runBlocking {
        // Create an agent with tracing
        val agent = AIAgent(
-          executor = simpleOllamaAIExecutor(),
+          promptExecutor = simpleOllamaAIExecutor(),
           llmModel = OllamaModels.Meta.LLAMA_3_2,
        ) {
           install(Tracing) {
@@ -242,7 +242,7 @@ fun main() {
 ```kotlin
 // Creating an agent
 val agent = AIAgent(
-    executor = simpleOllamaAIExecutor(),
+    promptExecutor = simpleOllamaAIExecutor(),
     llmModel = OllamaModels.Meta.LLAMA_3_2,
 ) {
     val writer = TraceFeatureMessageFileWriter(
@@ -283,7 +283,7 @@ fun main() {
     runBlocking {
         // Creating an agent
         val agent = AIAgent(
-            executor = simpleOllamaAIExecutor(),
+            promptExecutor = simpleOllamaAIExecutor(),
             llmModel = OllamaModels.Meta.LLAMA_3_2,
         ) {
             val writer = TraceFeatureMessageFileWriter(
@@ -336,7 +336,7 @@ fun main() {
 ```kotlin
 // Creating an agent
 val agent = AIAgent(
-    executor = simpleOllamaAIExecutor(),
+    promptExecutor = simpleOllamaAIExecutor(),
     llmModel = OllamaModels.Meta.LLAMA_3_2,
 ) {
     val connectionConfig = DefaultServerConnectionConfig(host = host, port = port)
@@ -443,7 +443,7 @@ fun main() {
     runBlocking {
         // Creating an agent
         val agent = AIAgent(
-            executor = simpleOllamaAIExecutor(),
+            promptExecutor = simpleOllamaAIExecutor(),
             llmModel = OllamaModels.Meta.LLAMA_3_2,
         ) {
             val writer = TraceFeatureMessageFileWriter(
@@ -496,7 +496,7 @@ fun main() {
    runBlocking {
       // Creating an agent
       val agent = AIAgent(
-         executor = simpleOllamaAIExecutor(),
+         promptExecutor = simpleOllamaAIExecutor(),
          llmModel = OllamaModels.Meta.LLAMA_3_2,
       ) {
 -->
@@ -536,7 +536,7 @@ fun main() {
    runBlocking {
       // Creating an agent
       val agent = AIAgent(
-         executor = simpleOllamaAIExecutor(),
+         promptExecutor = simpleOllamaAIExecutor(),
          llmModel = OllamaModels.Meta.LLAMA_3_2,
       ) {
 -->

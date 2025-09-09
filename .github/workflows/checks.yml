@@ -158,12 +158,12 @@ jobs:
           path: .qodana/code-coverage
 
       - name: 'Qodana Scan'
-        uses: JetBrains/qodana-action@v2025.1
+        uses: JetBrains/qodana-action@v2025.2
         with:
           pr-mode: false
-          args: --apply-fixes,--baseline,qodana.sarif.json
-          push-fixes: branch
-          use-caches: 'false'
+          args: --baseline,qodana.sarif.json
+          use-caches: true
+          cache-default-branch-only: true
         env:
           QODANA_TOKEN: ${{ secrets.QODANA_TOKEN_1399872884 }}
           QODANA_ENDPOINT: 'https://qodana.cloud'

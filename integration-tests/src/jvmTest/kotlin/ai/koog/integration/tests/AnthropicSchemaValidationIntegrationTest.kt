@@ -214,7 +214,7 @@ class AnthropicSchemaValidationIntegrationTest {
         runBlocking {
             // Create an agent with the Anthropic API and the complex nested tool
             val agent = AIAgent(
-                executor = simpleAnthropicExecutor(anthropicApiKey!!),
+                promptExecutor = simpleAnthropicExecutor(anthropicApiKey!!),
                 llmModel = AnthropicModels.Sonnet_3_7,
                 systemPrompt = "You are a helpful assistant that can process user profiles. Please use the complex_nested_tool to process the user profile I provide.",
                 toolRegistry = ToolRegistry {

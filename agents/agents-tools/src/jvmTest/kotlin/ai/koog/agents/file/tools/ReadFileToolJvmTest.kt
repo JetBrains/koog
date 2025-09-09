@@ -3,21 +3,18 @@ package ai.koog.agents.file.tools
 import ai.koog.agents.core.tools.DirectToolCallsEnabler
 import ai.koog.agents.core.tools.ToolException
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
-import ai.koog.agents.file.tools.model.FileSystemEntry
 import ai.koog.rag.base.files.JVMFileSystemProvider
 import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import org.junit.jupiter.api.condition.DisabledOnOs
-import org.junit.jupiter.api.condition.OS
 import org.junit.jupiter.api.io.TempDir
 import java.nio.file.Path
 import kotlin.io.path.createDirectories
 import kotlin.io.path.createFile
+import kotlin.io.path.writeBytes
 import kotlin.io.path.writeText
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 
 @OptIn(InternalAgentToolsApi::class)
 class ReadFileToolJvmTest {
@@ -33,343 +30,278 @@ class ReadFileToolJvmTest {
         tempDir.resolve(name).createFile().apply { writeText(content) }
 
     private suspend fun readFile(path: Path, startLine: Int = 0, endLine: Int = -1): ReadFileTool.Result =
-        tool.executeUnsafe(ReadFileTool.Args(path.toString(), startLine, endLine), enabler)
+        tool.execute(ReadFileTool.Args(path.toString(), startLine, endLine), enabler)
 
     @Test
-    fun `reads entire file content successfully`() = runBlocking {
-        val file = createTestFile("simple.txt", "Hello, World!")
-
-        val result = readFile(file)
-
-        assertTrue(result.file.content is FileSystemEntry.File.Content.Text)
-        assertEquals("Hello, World!", result.file.content.text)
-        assertEquals("simple.txt", result.file.name)
-        assertEquals("txt", result.file.extension)
+    fun `Args uses correct defaults`() {
+        val args = ReadFileTool.Args("/tmp/test.txt")
+        assertEquals("/tmp/test.txt", args.path)
+        assertEquals(0, args.startLine)
+        assertEquals(-1, args.endLine)
     }
 
     @Test
-    fun `reads empty file successfully`() = runBlocking {
-        val file = createTestFile("empty.txt", "")
-
-        val result = readFile(file)
-
-        assertTrue(result.file.content is FileSystemEntry.File.Content.Text)
-        assertEquals("", result.file.content.text)
-        assertEquals("empty.txt", result.file.name)
+    fun `descriptor is configured correctly`() {
+        val descriptor = ReadFileTool.descriptor
+        assertEquals("__read_file__", descriptor.name)
+        assertTrue(descriptor.description.isNotEmpty())
+        assertEquals(listOf("path"), descriptor.requiredParameters.map { it.name })
+        assertEquals(setOf("startLine", "endLine"), descriptor.optionalParameters.map { it.name }.toSet())
     }
 
     @Test
-    fun `reads file without extension`() = runBlocking {
-        val file = createTestFile("next", "content without extension")
-
-        val result = readFile(file)
-
-        assertEquals("next", result.file.name)
-        assertEquals(null, result.file.extension)
-        assertEquals("content without extension", (result.file.content as FileSystemEntry.File.Content.Text).text)
-    }
-
-    @Test
-    @DisabledOnOs(OS.WINDOWS)
-    fun `identifies hidden files correctly`() = runBlocking {
-        val file = createTestFile(".hidden", "secret content")
-
-        val result = readFile(file)
-
-        assertTrue(result.file.hidden)
-        assertEquals(".hidden", result.file.name)
-        assertEquals("secret content", (result.file.content as FileSystemEntry.File.Content.Text).text)
-    }
-
-    @Test
-    fun `reads specific line range correctly`() = runBlocking {
-        val content = "line0\nline1\nline2\nline3\nline4"
-        val file = createTestFile("lines.txt", content)
-
-        val result = readFile(file, startLine = 1, endLine = 4)
-
-        assertTrue(result.file.content is FileSystemEntry.File.Content.Excerpt)
-        assertEquals("line1\nline2\nline3\n", result.file.content.snippets[0].text)
-    }
-
-    @Test
-    fun `reads from start line to end when endLine is -1`() = runBlocking {
-        val file = createTestFile("partial.txt", "start\nmiddle\nend")
-
-        val result = readFile(file, startLine = 0, endLine = -1)
-
-        assertTrue(result.file.content is FileSystemEntry.File.Content.Text)
-        assertEquals("start\nmiddle\nend", result.file.content.text)
-    }
-
-    @Test
-    fun `reads single line correctly`() = runBlocking {
-        val file = createTestFile("multiline.txt", "first\nsecond\nthird")
-
-        val result = readFile(file, startLine = 1, endLine = 2)
-
-        assertTrue(result.file.content is FileSystemEntry.File.Content.Excerpt)
-        assertEquals("second\n", result.file.content.snippets[0].text)
-    }
-
-    @Test
-    fun `returns full content when endLine exceeds file length`() = runBlocking {
-        val file = createTestFile("short.txt", "line1\nline2\nline3")
-
-        val result = readFile(file, startLine = 0, endLine = 100)
-
-        assertTrue(result.file.content is FileSystemEntry.File.Content.Text)
-        assertEquals("line1\nline2\nline3", result.file.content.text)
-    }
-
-    @Test
-    fun `returns empty content when startLine exceeds file length`() = runBlocking {
-        val file = createTestFile("short.txt", "line1\nline2")
-
-        val result = readFile(file, startLine = 10, endLine = -1)
-
-        assertTrue(result.file.content is FileSystemEntry.File.Content.Excerpt)
-        assertEquals("", result.file.content.snippets[0].text)
-    }
-
-    @Test
-    fun `handles unicode content correctly`() = runBlocking {
-        val file = createTestFile("unicode.txt", "café ñoño 中文 🚀")
-
-        val result = readFile(file)
-
-        assertEquals("café ñoño 中文 🚀", (result.file.content as FileSystemEntry.File.Content.Text).text)
-    }
-
-    @Test
-    fun `handles mixed line endings`() = runBlocking {
-        val file = createTestFile("mixed.txt", "line1\r\nline2\nline3\r")
-
-        val result = readFile(file, startLine = 1, endLine = 2)
-
-        assertTrue(result.file.content is FileSystemEntry.File.Content.Excerpt)
-        assertEquals("line2\n", result.file.content.snippets[0].text)
-    }
-
-    @Test
-    fun `handles whitespace-only content`() = runBlocking {
-        val file = createTestFile("whitespace.txt", "   \n  \n\t\n")
-
-        val result = readFile(file, startLine = 1, endLine = 3)
-
-        assertTrue(result.file.content is FileSystemEntry.File.Content.Excerpt)
-        assertEquals("  \n\t\n", result.file.content.snippets[0].text)
-    }
-
-    @Test
-    fun `handles file with only newlines`() = runBlocking {
-        val file = createTestFile("newlines.txt", "\n\n\n")
-
-        val result = readFile(file)
-
-        assertEquals("\n\n\n", (result.file.content as FileSystemEntry.File.Content.Text).text)
-    }
-
-    @Test
-    fun `handles single character file`() = runBlocking {
-        val file = createTestFile("single.txt", "x")
-
-        val result = readFile(file)
-
-        assertEquals("x", (result.file.content as FileSystemEntry.File.Content.Text).text)
-    }
-
-    @Test
-    fun `handles file with special characters in name`() = runBlocking {
-        val file = createTestFile("special@#$%.txt", "special content")
-
-        val result = readFile(file)
-
-        assertEquals("special@#$%.txt", result.file.name)
-        assertEquals("special content", (result.file.content as FileSystemEntry.File.Content.Text).text)
-    }
-
-    @Test
-    fun `handles tabs and indentation`() = runBlocking {
-        val file = createTestFile("tabs.txt", "\t\tindented\n    spaces")
-
-        val result = readFile(file, startLine = 0, endLine = 1)
-
-        assertTrue(result.file.content is FileSystemEntry.File.Content.Excerpt)
-        assertEquals("\t\tindented\n", result.file.content.snippets[0].text)
-    }
-
-    @Test
-    fun `throws ValidationFailure for non-existent file`() {
-        val nonExistent = tempDir.resolve("missing.txt")
-
+    fun `throws ValidationFailure for non-existent path`() {
+        val missing = tempDir.resolve("missing.txt")
         assertThrows<ToolException.ValidationFailure> {
-            runBlocking { readFile(nonExistent) }
+            runBlocking { readFile(missing) }
         }
     }
 
     @Test
-    fun `throws ValidationFailure for directory path`() {
-        val dir = tempDir.resolve("directory").createDirectories()
-
+    fun `throws ValidationFailure when path points to a directory`() {
+        val dir = tempDir.resolve("dir").createDirectories()
         assertThrows<ToolException.ValidationFailure> {
             runBlocking { readFile(dir) }
         }
     }
 
     @Test
-    fun `throws IllegalArgumentException for negative startLine`() {
-        val file = createTestFile("valid.txt", "content")
-
-        assertThrows<IllegalArgumentException> {
-            runBlocking { readFile(file, startLine = -1) }
+    fun `throws ValidationFailure when file is not a text file`() {
+        val bin = tempDir.resolve("bin.dat").createFile().apply { writeBytes(byteArrayOf(0x00, 0xFF.toByte())) }
+        assertThrows<ToolException.ValidationFailure> {
+            runBlocking { readFile(bin) }
         }
     }
 
     @Test
-    fun `throws IllegalArgumentException for invalid endLine`() {
-        val file = createTestFile("valid.txt", "content")
+    fun `full file render shows path size and line count and full text`() = runBlocking {
+        val f = createTestFile("notes.md", "hello\nworld")
 
-        assertThrows<IllegalArgumentException> {
-            runBlocking { readFile(file, startLine = 0, endLine = -5) }
+        val result = readFile(f)
+
+        val expected = """
+            ${"${f.toAbsolutePath()} (<0.1 KiB, 2 lines)"}
+            Content:
+            ```markdown
+            hello
+            world
+            ```
+        """.trimIndent()
+
+        assertEquals(expected, result.toStringDefault())
+    }
+
+    @Test
+    fun `excerpt render shows header with lines and excerpt section`() = runBlocking {
+        val f = createTestFile(
+            "code.kt",
+            """
+            fun a() {}
+            fun b() {}
+            fun c() {}
+            """.trimIndent()
+        )
+
+        val result = readFile(f, startLine = 1, endLine = 3)
+
+        val expected = """
+            ${"${f.toAbsolutePath()} (<0.1 KiB, 3 lines)"}
+            Excerpt:
+            Lines 1-3:
+            ```kotlin
+            fun b() {}
+            fun c() {}
+            ```
+        """.trimIndent()
+
+        assertEquals(expected, result.toStringDefault())
+    }
+
+    @Test
+    fun `whole-file explicit range renders full text not excerpt`() = runBlocking {
+        val f = createTestFile("todo.txt", "a\nb\nc")
+
+        val result = readFile(f, startLine = 0, endLine = 3)
+
+        val expected = """
+            ${"${f.toAbsolutePath()} (<0.1 KiB, 3 lines)"}
+            Content:
+            a
+            b
+            c
+        """.trimIndent()
+
+        assertEquals(expected, result.toStringDefault())
+    }
+
+    @Test
+    fun `language mapping renders yaml fence for yml`() = runBlocking {
+        val f = createTestFile("config.yml", "a: 1\nb: 2")
+        val result = readFile(f)
+        val expected = """
+            ${"${f.toAbsolutePath()} (<0.1 KiB, 2 lines)"}
+            Content:
+            ```yaml
+            a: 1
+            b: 2
+            ```
+        """.trimIndent()
+        assertEquals(expected, result.toStringDefault())
+    }
+
+    @Test
+    fun `language mapping handles uppercase extension for python`() = runBlocking {
+        val f = createTestFile("SCRIPT.PY", "print('hi')")
+        val result = readFile(f)
+        val expected = """
+            ${"${f.toAbsolutePath()} (<0.1 KiB, 1 line)"}
+            Content:
+            ```python
+            print('hi')
+            ```
+        """.trimIndent()
+        assertEquals(expected, result.toStringDefault())
+    }
+
+    @Test
+    fun `language mapping maps ps1 to powershell`() = runBlocking {
+        val f = createTestFile("run.PS1", "Write-Host 'hello'")
+        val result = readFile(f)
+        val expected = """
+            ${"${f.toAbsolutePath()} (<0.1 KiB, 1 line)"}
+            Content:
+            ```powershell
+            Write-Host 'hello'
+            ```
+        """.trimIndent()
+        assertEquals(expected, result.toStringDefault())
+    }
+
+    @Test
+    fun `language mapping maps gradle to groovy`() = runBlocking {
+        val f = createTestFile("build.gradle", "task hello { }")
+        val result = readFile(f)
+        val expected = """
+            ${"${f.toAbsolutePath()} (<0.1 KiB, 1 line)"}
+            Content:
+            ```groovy
+            task hello { }
+            ```
+        """.trimIndent()
+        assertEquals(expected, result.toStringDefault())
+    }
+
+    @Test
+    fun `language mapping maps bat to batch`() = runBlocking {
+        val f = createTestFile("RUN.BAT", "echo hello")
+        val result = readFile(f)
+        val expected = """
+            ${"${f.toAbsolutePath()} (<0.1 KiB, 1 line)"}
+            Content:
+            ```batch
+            echo hello
+            ```
+        """.trimIndent()
+        assertEquals(expected, result.toStringDefault())
+    }
+
+    @Test
+    fun `throws ValidationFailure when reading empty markdown file`() {
+        val f = createTestFile("empty.md", "")
+        assertThrows<ToolException.ValidationFailure> {
+            runBlocking { readFile(f) }
         }
     }
 
     @Test
-    fun `throws IllegalArgumentException when endLine less than startLine`() {
-        val file = createTestFile("valid.txt", "line1\nline2\nline3")
+    fun `excerpt with endLine -1 clamps to EOF and is fenced`() = runBlocking {
+        val f = createTestFile(
+            "main.kt",
+            """
+            fun a() = 1
+            fun b() = 2
+            fun c() = 3
+            """.trimIndent()
+        )
+        val result = readFile(f, startLine = 1, endLine = -1)
+        val expected = """
+            ${"${f.toAbsolutePath()} (<0.1 KiB, 3 lines)"}
+            Excerpt:
+            Lines 1-3:
+            ```kotlin
+            fun b() = 2
+            fun c() = 3
+            ```
+        """.trimIndent()
+        assertEquals(expected, result.toStringDefault())
+    }
 
-        assertThrows<IllegalArgumentException> {
-            runBlocking { readFile(file, startLine = 2, endLine = 1) }
+    @Test
+    fun `file with only newline characters renders empty fenced block with correct line count`() = runBlocking {
+        val f = createTestFile("blank.md", "\n\n\n")
+        val result = readFile(f)
+        val expected = """
+            ${"${f.toAbsolutePath()} (<0.1 KiB, 4 lines)"}
+            Content:
+            ```markdown
+            ```
+        """.trimIndent()
+        assertEquals(expected, result.toStringDefault())
+    }
+
+    @Test
+    fun `throws ValidationFailure when reading empty kotlin file`() {
+        val f = createTestFile("Empty.kt", "")
+        assertThrows<ToolException.ValidationFailure> {
+            runBlocking { readFile(f) }
         }
     }
 
     @Test
-    fun `throws IllegalArgumentException when startLine equals endLine`() {
-        val file = createTestFile("valid.txt", "line1\nline2\nline3")
-
-        assertThrows<IllegalArgumentException> {
-            runBlocking { readFile(file, startLine = 1, endLine = 1) }
+    fun `throws ValidationFailure for endLine less than startLine`() {
+        val f = createTestFile("a.txt", "x\ny\nz")
+        assertThrows<ToolException.ValidationFailure> {
+            runBlocking { readFile(f, startLine = 2, endLine = 1) }
         }
     }
 
     @Test
-    fun `Args uses correct default values`() {
-        val args = ReadFileTool.Args("/test/path")
-
-        assertEquals("/test/path", args.path)
-        assertEquals(0, args.startLine)
-        assertEquals(-1, args.endLine)
+    fun `throws ValidationFailure when startLine equals total lines`() {
+        val f = createTestFile("lines.txt", "a\nb\nc")
+        assertThrows<ToolException.ValidationFailure> {
+            runBlocking { readFile(f, startLine = 3, endLine = -1) }
+        }
     }
 
     @Test
-    fun `Args accepts custom values`() {
-        val args = ReadFileTool.Args("/test/path", startLine = 5, endLine = 10)
-
-        assertEquals("/test/path", args.path)
-        assertEquals(5, args.startLine)
-        assertEquals(10, args.endLine)
+    fun `throws ValidationFailure when endLine equals startLine`() {
+        val f = createTestFile("same.txt", "a\nb\nc")
+        assertThrows<ToolException.ValidationFailure> {
+            runBlocking { readFile(f, startLine = 1, endLine = 1) }
+        }
     }
 
     @Test
-    fun `Result provides correct serializer`() = runBlocking {
-        val file = createTestFile("serialize.txt", "content")
-        val result = readFile(file)
-
-        assertEquals(ReadFileTool.Result.serializer(), result.getSerializer())
+    fun `throws ValidationFailure when endLine equals startLine at zero`() {
+        val f = createTestFile("zero.txt", "only one line")
+        assertThrows<ToolException.ValidationFailure> {
+            runBlocking { readFile(f, startLine = 0, endLine = 0) }
+        }
     }
 
     @Test
-    fun `Result toStringDefault produces exact expected format`() = runBlocking {
-        val file = createTestFile("format.txt", "test content")
-        val result = readFile(file)
-
-        val stringRepresentation = result.toStringDefault()
-        val expectedString = "${file.toAbsolutePath()} (<0.1 KiB, 1 line)\nContent:\ntest content"
-        assertEquals(expectedString, stringRepresentation)
+    fun `throws ValidationFailure for startLine beyond file`() {
+        val f = createTestFile("beyond.txt", "l1\nl2")
+        assertThrows<ToolException.ValidationFailure> {
+            runBlocking { readFile(f, startLine = 5, endLine = -1) }
+        }
     }
 
     @Test
-    fun `descriptor has correct configuration`() {
-        val descriptor = ReadFileTool.descriptor
-
-        assertEquals("__read_file__", descriptor.name)
-        assertTrue(descriptor.description.isNotEmpty())
-
-        assertEquals(1, descriptor.requiredParameters.size)
-        assertEquals("path", descriptor.requiredParameters[0].name)
-
-        assertEquals(2, descriptor.optionalParameters.size)
-        val optionalParamNames = descriptor.optionalParameters.map { it.name }
-        assertTrue(optionalParamNames.contains("startLine"))
-        assertTrue(optionalParamNames.contains("endLine"))
-    }
-
-    @Test
-    fun `descriptor parameters have correct types and descriptions`() {
-        val descriptor = ReadFileTool.descriptor
-
-        val pathParam = descriptor.requiredParameters.find { it.name == "path" }
-        assertNotNull(pathParam)
-        assertTrue(pathParam.description.isNotEmpty())
-
-        val startLineParam = descriptor.optionalParameters.find { it.name == "startLine" }
-        assertNotNull(startLineParam)
-        assertTrue(startLineParam.description.isNotEmpty())
-
-        val endLineParam = descriptor.optionalParameters.find { it.name == "endLine" }
-        assertNotNull(endLineParam)
-        assertTrue(endLineParam.description.isNotEmpty())
-    }
-
-    @Test
-    fun `handles extremely large line numbers`() = runBlocking {
-        val file = createTestFile("small.txt", "only one line")
-
-        val result = readFile(file, startLine = 1000, endLine = 2000)
-
-        assertTrue(result.file.content is FileSystemEntry.File.Content.Excerpt)
-        val excerpt = result.file.content
-        assertEquals("", excerpt.snippets[0].text)
-    }
-
-    @Test
-    fun `handles zero-byte file with line range`() = runBlocking {
-        val file = createTestFile("zero.txt", "")
-
-        val result = readFile(file, startLine = 0, endLine = 1)
-
-        assertTrue(result.file.content is FileSystemEntry.File.Content.Text)
-        assertEquals("", result.file.content.text)
-    }
-
-    @Test
-    fun `handles file ending with multiple newlines`() = runBlocking {
-        val file = createTestFile("trailing.txt", "content\n\n\n")
-
-        val result = readFile(file, startLine = 1, endLine = -1)
-
-        assertTrue(result.file.content is FileSystemEntry.File.Content.Excerpt)
-        val excerpt = result.file.content
-        assertEquals("\n\n", excerpt.snippets[0].text)
-    }
-
-    @Test
-    fun `handles very long single line`() = runBlocking {
-        val longLine = "x".repeat(1000)
-        val file = createTestFile("long.txt", longLine)
-
-        val result = readFile(file)
-
-        assertEquals(longLine, (result.file.content as FileSystemEntry.File.Content.Text).text)
-    }
-
-    @Test
-    fun `handles binary-like content as text`() = runBlocking {
-        val file = createTestFile("binary.txt", "\u0000\u0001\u0002text")
-
-        val result = readFile(file)
-
-        assertEquals("\u0000\u0001\u0002text", (result.file.content as FileSystemEntry.File.Content.Text).text)
+    fun `throws ValidationFailure for invalid endLine less than -1`() {
+        val f = createTestFile("neg.txt", "content")
+        assertThrows<ToolException.ValidationFailure> {
+            runBlocking { readFile(f, startLine = 0, endLine = -2) }
+        }
     }
 }
