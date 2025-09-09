@@ -37,7 +37,6 @@ import kotlin.uuid.Uuid
  * @param agentConfig The configuration for the agent, including the prompt structure and execution parameters.
  * @param toolRegistry The registry of tools available for the agent. Defaults to an empty registry if not specified.
  */
-@ExperimentalUuidApi
 public class FunctionalAIAgent<Input, Output>(
     public val promptExecutor: PromptExecutor,
     override val agentConfig: AIAgentConfig,
@@ -159,59 +158,4 @@ public class FunctionalAIAgent<Input, Output>(
         pipeline.onAgentBeforeClosed(agentId = this@FunctionalAIAgent.id)
         pipeline.closeFeaturesStreamProviders()
     }
-}
-
-/**
- * Creates a new instance of [FunctionalAIAgent] to manage and execute AI-driven loops with a specific configuration,
- * tool registry, and strategy for handling operations.
- *
- * @param promptExecutor The `PromptExecutor` responsible for processing language model prompts and managing interactions with the AI model.
- * @param agentConfig The `AIAgentConfigBase` defining the configuration for the AI agent, including prompts, model details, and iteration limits.
- * @param toolRegistry A `ToolRegistry` specifying the tools available to the agent. If no tools are provided, it defaults to an empty registry.
- * @param func A suspendable lambda function representing the custom loop execution strategy. It takes an input of type `Input` and a context of type [AIAgentFunctionalStrategy], and returns
- *  an output of type `Output`.
- * @return A [FunctionalAIAgent] instance initialized with the specified prompt executor, configuration, tool registry, and loop strategy.
- */
-public fun <Input, Output> functionalAIAgent(
-    promptExecutor: PromptExecutor,
-    agentConfig: AIAgentConfig,
-    toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
-    func: suspend AIAgentFunctionalContext.(input: Input) -> Output
-): AIAgent<Input, Output> {
-    return FunctionalAIAgent(
-        promptExecutor = promptExecutor,
-        agentConfig = agentConfig,
-        toolRegistry = toolRegistry,
-        strategy = functionalStrategy(
-            func = func
-        )
-    )
-}
-
-/**
- * Creates a [FunctionalAIAgent] that continuously performs actions based on the input, a context, and a defined loop logic.
- *
- * @param model The large language model to be used for the agent's configuration.
- * @param promptExecutor The executor responsible for processing prompts with the language model.
- * @param prompt The system-level prompt used to configure the agent's behavior.
- * @param toolRegistry A registry containing tools available to the agent during execution. Defaults to `ToolRegistry.EMPTY`.
- * @param func A suspendable function representing the loop logic. It takes an input and an [AIAgentFunctionalContext]
- *        and produces an output.
- * @return A configured [FunctionalAIAgent] instance capable of processing the specified logic using the provided inputs.
- */
-public fun <Input, Output> functionalAIAgent(
-    promptExecutor: PromptExecutor,
-    toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
-    prompt: String = "",
-    model: LLModel = OpenAIModels.Chat.GPT4o,
-    featureContext: FeatureContext.() -> Unit = {},
-    func: suspend AIAgentFunctionalContext.(input: Input) -> Output,
-): AIAgent<Input, Output> {
-    return FunctionalAIAgent(
-        promptExecutor = promptExecutor,
-        agentConfig = AIAgentConfig.withSystemPrompt(prompt, model),
-        toolRegistry = toolRegistry,
-        strategy = functionalStrategy(func = func),
-        featureContext = featureContext
-    )
 }

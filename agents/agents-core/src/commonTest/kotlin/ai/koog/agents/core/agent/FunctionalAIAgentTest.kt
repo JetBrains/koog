@@ -1,10 +1,12 @@
 package ai.koog.agents.core.agent
 
+import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.agents.testing.tools.mockLLMAnswer
 import ai.koog.prompt.llm.OllamaModels
+import io.ktor.client.request.invoke
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -33,12 +35,12 @@ class FunctionalAIAgentTest {
             mockLLMMixedResponse(toolCalls, assistantResponses) onRequestEquals "Solve task"
         }
 
-        val agent = functionalAIAgent<String, String>(
-            prompt = "You are helpful",
+        val agent = AIAgent<String, String>(
+            systemPrompt = "You are helpful",
             promptExecutor = mockLLMApi,
-            model = OllamaModels.Meta.LLAMA_3_2,
+            llmModel = OllamaModels.Meta.LLAMA_3_2,
             toolRegistry = testToolRegistry,
-            featureContext = {
+            installFeatures = {
                 install(EventHandler) {
                     onToolCall { eventContext -> actualToolCalls += eventContext.toolArgs.toString() }
                 }
@@ -77,12 +79,12 @@ class FunctionalAIAgentTest {
         }
 
         // Install EventHandler feature via the featureContext builder overload
-        val agent = functionalAIAgent<String, String>(
-            prompt = "You are helpful",
+        val agent = AIAgent<String, String>(
+            systemPrompt = "You are helpful",
             promptExecutor = mockLLMApi,
-            model = OllamaModels.Meta.LLAMA_3_2,
+            llmModel = OllamaModels.Meta.LLAMA_3_2,
             toolRegistry = testToolRegistry,
-            featureContext = {
+            installFeatures = {
                 install(EventHandler) {
                     onToolCall { eventContext -> actualToolCalls += eventContext.toolArgs.toString() }
                 }
@@ -116,17 +118,17 @@ class FunctionalAIAgentTest {
             mockLLMToolCall(CreateTool, CreateTool.Args("solve")) onRequestEquals "Solve task"
         }
 
-        val agent = functionalAIAgent<String, String>(
-            prompt = "You are helpful",
-            promptExecutor = mockLLMApi,
-            model = OllamaModels.Meta.LLAMA_3_2,
+        val agent = AIAgent(
+            mockLLMApi,
+            OllamaModels.Meta.LLAMA_3_2,
             toolRegistry = testToolRegistry,
-            featureContext = {
+            installFeatures = {
                 install(EventHandler) {
                     onToolCall { eventContext -> actualToolCalls += eventContext.toolArgs.toString() }
                 }
             }
-        ) { inputParam ->
+        )
+        { inputParam: String ->
             var responses = requestLLMMultiple(inputParam)
 
             while (responses.containsToolCalls()) {
