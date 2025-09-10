@@ -57,7 +57,7 @@ public open class GraphAIAgent<Input, Output>(
     override val agentConfig: AIAgentConfig,
     public val toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     private val strategy: AIAgentGraphStrategy<Input, Output>,
-    id: String? = null,
+    id: String? = null, // If null, ID will be initialized as a random UUID lazily
     public val clock: Clock = Clock.System,
     private val installFeatures: FeatureContext.() -> Unit = {},
 ) : AIAgent<Input, Output>, Closeable {
@@ -66,6 +66,7 @@ public open class GraphAIAgent<Input, Output>(
         private val logger = KotlinLogging.logger {}
     }
 
+    // Random UUID should be invoked lazily, so when compiling a native image, it will happen on runtime
     override val id: String by lazy { id ?: Uuid.random().toString() }
 
     private val pipeline = AIAgentGraphPipeline()

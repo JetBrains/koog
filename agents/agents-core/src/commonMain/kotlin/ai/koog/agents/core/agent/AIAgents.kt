@@ -32,7 +32,7 @@ public inline fun <reified Input, reified Output> AIAgent(
     agentConfig: AIAgentConfig,
     toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     strategy: AIAgentGraphStrategy<Input, Output>,
-    id: String = Uuid.random().toString(),
+    id: String? = null, // If null, ID will be initialized as a random UUID lazily
     clock: Clock = Clock.System,
     noinline installFeatures: FeatureContext.() -> Unit = {},
 ): AIAgent<Input, Output> = GraphAIAgent(
@@ -67,7 +67,7 @@ public fun AIAgent(
     llmModel: LLModel,
     strategy: AIAgentGraphStrategy<String, String> = singleRunStrategy(),
     toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
-    id: String = Uuid.random().toString(),
+    id: String? = null, // If null, ID will be initialized as a random UUID lazily
     systemPrompt: String = "",
     temperature: Double = 1.0,
     numberOfChoices: Int = 1,
