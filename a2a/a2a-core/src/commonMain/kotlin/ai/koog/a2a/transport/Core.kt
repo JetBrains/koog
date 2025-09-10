@@ -1,6 +1,8 @@
 package ai.koog.a2a.transport
 
 import kotlinx.serialization.Serializable
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 /**
  * A uniquely identifying ID for a request.
@@ -26,9 +28,10 @@ public sealed interface RequestId {
  * @property id The unique identifier for the request.
  * @property data The data payload of the request.
  */
+@OptIn(ExperimentalUuidApi::class)
 public class Request<T>(
-    public val id: RequestId,
     public val data: T,
+    public val id: RequestId = RequestId.StringId(Uuid.random().toString()),
 )
 
 /**
@@ -37,7 +40,8 @@ public class Request<T>(
  * @property id The unique identifier for the request associated with this response.
  * @property data The response data payload.
  */
+@OptIn(ExperimentalUuidApi::class)
 public class Response<T>(
-    public val id: RequestId,
     public val data: T,
+    public val id: RequestId = RequestId.StringId(Uuid.random().toString()),
 )

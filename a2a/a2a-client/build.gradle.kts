@@ -30,6 +30,7 @@ kotlin {
         commonTest {
             dependencies {
                 implementation(kotlin("test"))
+                implementation(libs.kotest.assertions)
                 implementation(libs.kotlinx.coroutines.test)
             }
         }
@@ -39,9 +40,9 @@ kotlin {
                 implementation(kotlin("test-junit5"))
                 implementation(project(":a2a:a2a-transport:a2a-transport-client-jsonrpc-http"))
 
-                implementation(libs.mokksy.a2a)
                 implementation(libs.ktor.client.cio)
                 implementation(libs.ktor.client.logging)
+                implementation(libs.testcontainers.junit)
                 runtimeOnly(libs.slf4j.simple)
             }
         }
@@ -57,3 +58,14 @@ kotlin {
 }
 
 publishToMaven()
+
+tasks.register<Exec>("dockerBuildTestPythonA2AServer") {
+    group = "docker"
+    description = "Build Python A2A test server image"
+    workingDir = file("../test-python-a2a-server")
+    commandLine = listOf("docker", "build", "-t", "test-python-a2a-server", ".")
+}
+
+tasks.named("jvmTest") {
+    dependsOn("dockerBuildTestPythonA2AServer")
+}

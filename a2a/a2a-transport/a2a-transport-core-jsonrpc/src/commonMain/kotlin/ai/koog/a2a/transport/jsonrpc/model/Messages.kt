@@ -41,7 +41,7 @@ public data class JSONRPCNotification(
 @Serializable
 public data class JSONRPCSuccessResponse(
     public val id: RequestId,
-    public val result: JsonElement,
+    public val result: JsonElement = JsonNull,
     @EncodeDefault
     override val jsonrpc: String = JSONRPC_VERSION,
 ) : JSONRPCResponse

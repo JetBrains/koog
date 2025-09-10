@@ -70,7 +70,7 @@ public sealed class A2AServerException(
     errorCode: Int,
 ) : A2AException(message, errorCode) {
     init {
-        require(errorCode in -32000..-32099) { "Server error code must be in -32000..-32099" }
+        require(errorCode in -32099..-32000) { "Server error code must be in -32099..-32000" }
     }
 }
 

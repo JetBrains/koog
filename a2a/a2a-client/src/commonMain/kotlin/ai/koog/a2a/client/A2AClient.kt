@@ -29,8 +29,9 @@ public open class A2AClient(
      * Shouldn't be used directly to read values from it, since it can be updated by the [loadAgentCard] method.
      * Always use [getAgentCard] instead.
      */
+    @Suppress("PropertyName")
     @Volatile
-    protected open lateinit var agentCard: AgentCard
+    protected open lateinit var _agentCard: AgentCard
 
     /**
      * Resolve agent card from the provided [agentCardResolver] and cache it.
@@ -38,14 +39,14 @@ public open class A2AClient(
      */
     public open suspend fun loadAgentCard(): AgentCard {
         return agentCardResolver.resolve().also {
-            agentCard = it
+            _agentCard = it
         }
     }
 
     /**
      * Get current cached version of agent card.
      */
-    public open fun getAgentCard(): AgentCard = agentCard
+    public open fun getAgentCard(): AgentCard = _agentCard
 
     /**
      * Calls [agent/getAuthenticatedExtendedCard](https://a2a-protocol.org/latest/specification/#710-agentgetauthenticatedextendedcard)
@@ -61,7 +62,7 @@ public open class A2AClient(
         }
 
         return transport.getAuthenticatedExtendedAgentCard(request, ctx).also {
-            agentCard = it.data
+            _agentCard = it.data
         }
     }
 

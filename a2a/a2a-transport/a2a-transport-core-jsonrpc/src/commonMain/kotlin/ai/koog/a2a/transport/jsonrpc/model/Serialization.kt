@@ -35,9 +35,8 @@ internal object JSONRPCResponseSerializer : JsonContentPolymorphicSerializer<JSO
         val jsonObject = element.jsonObject
 
         return when {
-            "result" in jsonObject -> JSONRPCSuccessResponse.serializer()
             "error" in jsonObject -> JSONRPCErrorResponse.serializer()
-            else -> error("Invalid JSON format")
+            else -> JSONRPCSuccessResponse.serializer()
         }
     }
 }
