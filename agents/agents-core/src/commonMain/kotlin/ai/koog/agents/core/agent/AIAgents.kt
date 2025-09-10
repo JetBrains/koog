@@ -11,7 +11,6 @@ import ai.koog.prompt.params.LLMParams
 import kotlinx.datetime.Clock
 import kotlin.reflect.typeOf
 import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 /**
  * Convenience builder that creates an instance of [AIAgent], automatically deducing [GraphAIAgent.inputType] and [GraphAIAgent.outputType]
