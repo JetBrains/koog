@@ -73,7 +73,7 @@ jobs:
       - name: Build docs
         working-directory: ./docs
         run: |
-          uv sync --locked --all-extras
+          uv sync --frozen --all-extras
           uv run mkdocs build
 
   tests:

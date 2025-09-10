@@ -34,5 +34,5 @@ jobs:
       - name: Deploy docs
         working-directory: ./docs
         run: |
-          uv sync --locked --all-extras
+          uv sync --frozen --all-extras
           uv run mkdocs gh-deploy --force

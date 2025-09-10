@@ -132,7 +132,7 @@ wheels = [
 
 [[package]]
 name = "koog-docs"
-version = "0.1.0"
+version = "0.4.1"
 source = { virtual = "." }
 dependencies = [
     { name = "mkdocs-material" },
@@ -141,8 +141,8 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "mkdocs-material", specifier = ">=9.6.19" },
-    { name = "mkdocs-redirects", specifier = ">=1.2.2" },
+    { name = "mkdocs-material", specifier = "==9.6.19" },
+    { name = "mkdocs-redirects", specifier = "==1.2.2" },
 ]
 
 [[package]]

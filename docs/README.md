@@ -20,7 +20,7 @@ To run the documentation website locally, you need to have [uv](https://docs.ast
 
 1. Sync the project (this will create proper .venv and install dependencies, no manual Python setup required):
    ```bash
-   uv sync --locked --all-extras
+   uv sync --frozen --all-extras
    ```
 
 2. Start the local documentation server:
