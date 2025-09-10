@@ -10,6 +10,7 @@ plugins {
 val excluded = setOf(
     ":agents:agents-test",
     ":agents:agents-features:agents-features-sql", // Optional SQL persistence provider
+    ":agents:agents-mcp-server",
     ":examples",
     ":integration-tests",
     ":test-utils",
@@ -81,7 +82,7 @@ kotlin {
 
                 val notIncluded = projectsPaths - included
                 require(notIncluded.isEmpty()) {
-                    "There are modules that are not listed for '${project.name}' main jar dependencies," +
+                    "There are modules that are not listed for '${project.name}' main jar dependencies, " +
                         "please add them to 'included' or 'excluded' in ${project.name}/build.gradle.kts:\n" +
                         notIncluded.joinToString(",\n") { "\"$it\"" }
                 }
