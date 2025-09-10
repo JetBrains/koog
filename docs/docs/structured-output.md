@@ -160,47 +160,6 @@ sealed class WeatherAlert {
 ```
 <!--- KNIT example-structured-data-05.kt -->
 
-## Generating JSON schemas
-
-Once you have defined your data structures, you can generate JSON schemas from them using the `JsonStructuredData` class:
-
-<!--- INCLUDE
-import ai.koog.agents.example.exampleStructuredData03.WeatherForecast
-import ai.koog.agents.example.exampleStructuredData07.exampleForecasts
-import ai.koog.prompt.structure.json.generator.BasicJsonSchemaGenerator
-import ai.koog.prompt.structure.json.JsonStructuredData
--->
-```kotlin
-val weatherForecastStructure = JsonStructuredData.createJsonStructure<WeatherForecast>(
-    schemaGenerator = BasicJsonSchemaGenerator.Default,
-    examples = exampleForecasts
-)
-```
-<!--- KNIT example-structured-data-06.kt -->
-
-### Schema format options
-
-- `JsonSchema`: standard JSON Schema format.
-- `Simple`: a simplified schema format that may work better with some models but has limitations such as no 
-polymorphism support.
-
-### Schema type options
-
-The following schema types are supported
-
-* `SIMPLE`: a simplified schema type:
-    - Supports only standard JSON fields
-    - Does not support definitions, URL references, and recursive checks
-    - **Does not support polymorphism**
-    - Supported by a larger number of language models
-    - Used for simpler data structures
-
-* `FULL`: a more comprehensive schema type:
-    - Supports advanced JSON Schema capabilities, including definitions, URL references, and recursive checks
-    - **Supports polymorphism**: can work with sealed classes or interfaces and their implementations
-    - Supported by fewer language models
-    - Used for complex data structures with inheritance hierarchies
-
 ### Providing examples
 
 You can provide examples to help the LLM understand the expected format:
@@ -231,7 +190,7 @@ val exampleForecasts = listOf(
 )
 
 ```
-<!--- KNIT example-structured-data-07.kt -->
+<!--- KNIT example-structured-data-06.kt -->
 
 ## Requesting structured responses
 
@@ -256,7 +215,7 @@ Here is an example of using the `executeStructured` method:
 
 <!--- INCLUDE
 import ai.koog.agents.example.exampleStructuredData03.WeatherForecast
-import ai.koog.agents.example.exampleStructuredData07.exampleForecasts
+import ai.koog.agents.example.exampleStructuredData06.exampleForecasts
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
@@ -300,7 +259,7 @@ val structuredResponse = promptExecutor.executeStructured<WeatherForecast>(
         )
     )
 ```
-<!--- KNIT example-structured-data-08.kt -->
+<!--- KNIT example-structured-data-07.kt -->
 
 The `executeStructured` method takes the following arguments:
 
@@ -323,7 +282,7 @@ Use the `requestLLMStructured` method within a `writeSession` for agent-based in
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.example.exampleStructuredData03.WeatherForecast
-import ai.koog.agents.example.exampleStructuredData07.exampleForecasts
+import ai.koog.agents.example.exampleStructuredData06.exampleForecasts
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.structure.StructureFixingParser
 
@@ -345,7 +304,7 @@ val structuredResponse = llm.writeSession {
     )
 }
 ```
-<!--- KNIT example-structured-data-09.kt -->
+<!--- KNIT example-structured-data-08.kt -->
 
 The `fixingParser` parameter specifies configuration for handling malformed responses through auxiliary LLM processing during retries. This helps ensure that you always get a valid response.
 
@@ -387,7 +346,7 @@ val agentStrategy = strategy("weather-forecast") {
     edge(getStructuredForecast forwardTo nodeFinish)
 }
 ```
-<!--- KNIT example-structured-data-10.kt -->
+<!--- KNIT example-structured-data-09.kt -->
 
 ### Layer 3: Node layer
 
@@ -407,7 +366,7 @@ import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStructured
 import ai.koog.agents.example.exampleStructuredData03.WeatherForecast
-import ai.koog.agents.example.exampleStructuredData07.exampleForecasts
+import ai.koog.agents.example.exampleStructuredData06.exampleForecasts
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.structure.StructuredResponse
 import ai.koog.prompt.structure.StructureFixingParser
@@ -447,7 +406,7 @@ val agentStrategy = strategy("weather-forecast") {
     edge(processResult forwardTo nodeFinish)
 }
 ```
-<!--- KNIT example-structured-data-11.kt -->
+<!--- KNIT example-structured-data-10.kt -->
 
 #### Full code sample
 
@@ -553,7 +512,7 @@ fun main(): Unit = runBlocking {
     runner.run("Get weather forecast for Paris")
 }
 ```
-<!--- KNIT example-structured-data-12.kt -->
+<!--- KNIT example-structured-data-11.kt -->
 
 ## Advanced Usage
 
@@ -573,7 +532,7 @@ The key difference is that instead of passing simple parameters like `examples` 
 
 <!--- INCLUDE
 import ai.koog.agents.example.exampleStructuredData03.WeatherForecast
-import ai.koog.agents.example.exampleStructuredData07.exampleForecasts
+import ai.koog.agents.example.exampleStructuredData06.exampleForecasts
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
@@ -628,7 +587,7 @@ val structuredResponse = promptExecutor.executeStructured(
     )
 )
 ```
-<!--- KNIT example-structured-data-13.kt -->
+<!--- KNIT example-structured-data-12.kt -->
 
 ### Schema Generators
 
