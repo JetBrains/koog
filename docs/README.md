@@ -14,6 +14,22 @@ The docs module is organized as follows:
 | **src/**       | Knit generated source code from documentation code snippets, should not be commited. |
 
 
+## Local Development
+
+To run the documentation website locally, you need to have [uv](https://docs.astral.sh/uv/getting-started/installation/) installed.
+
+1. Sync the project (this will create proper .venv and install dependencies, no manual Python setup required):
+   ```bash
+   uv sync --frozen --all-extras
+   ```
+
+2. Start the local documentation server:
+   ```bash
+   uv run mkdocs serve
+   ```
+
+The documentation will be available at the URL printed in the output and will automatically reload when you make changes to the documentation files.
+
 ## Documentation System
 
 ### MkDocs
