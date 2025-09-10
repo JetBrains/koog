@@ -40,11 +40,7 @@ class AgentCardSerializationTest {
                 "url": "https://api.example.com/a2a",
                 "preferredTransport": "JSONRPC",
                 "version": "1.0.0",
-                "capabilities": {
-                    "streaming": false,
-                    "pushNotifications": false,
-                    "stateTransitionHistory": false
-                },
+                "capabilities": {},
                 "defaultInputModes": [
                     "text/plain"
                 ],
@@ -60,8 +56,7 @@ class AgentCardSerializationTest {
                             "test"
                         ]
                     }
-                ],
-                "supportsAuthenticatedExtendedCard": false
+                ]
             }
         """.trimIndent()
 
@@ -437,11 +432,7 @@ class AgentCardSerializationTest {
         val defaultCapabilities = AgentCapabilities()
         //language=JSON
         val defaultJson = """
-            {
-                "streaming": false,
-                "pushNotifications": false,
-                "stateTransitionHistory": false
-            }
+            {}
         """.trimIndent()
         assertEquals(defaultJson, TestJson.encodeToString(defaultCapabilities))
 

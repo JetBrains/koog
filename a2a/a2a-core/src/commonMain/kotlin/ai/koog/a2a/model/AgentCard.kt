@@ -92,7 +92,6 @@ public data class AgentCard(
     public val defaultInputModes: List<String>,
     public val defaultOutputModes: List<String>,
     public val skills: List<AgentSkill>,
-    @EncodeDefault
     public val supportsAuthenticatedExtendedCard: Boolean? = false,
     public val signatures: List<AgentCardSignature>? = null
 ) {
@@ -178,12 +177,9 @@ public data class AgentProvider(
  */
 @Serializable
 public data class AgentCapabilities(
-    @EncodeDefault
-    public val streaming: Boolean = false,
-    @EncodeDefault
-    public val pushNotifications: Boolean = false,
-    @EncodeDefault
-    public val stateTransitionHistory: Boolean = false,
+    public val streaming: Boolean? = null,
+    public val pushNotifications: Boolean? = null,
+    public val stateTransitionHistory: Boolean? = null,
     public val extensions: List<AgentExtension>? = null
 )
 

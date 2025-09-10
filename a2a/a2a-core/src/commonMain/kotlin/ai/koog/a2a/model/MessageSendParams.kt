@@ -1,6 +1,5 @@
 package ai.koog.a2a.model
 
-import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 
@@ -29,8 +28,7 @@ public data class MessageSendParams(
  */
 @Serializable
 public data class MessageSendConfiguration(
-    @EncodeDefault
-    public val blocking: Boolean = false,
+    public val blocking: Boolean? = null,
     public val acceptedOutputModes: List<String>? = null,
     public val historyLength: Int? = null,
     public val pushNotificationConfig: PushNotificationConfig? = null,

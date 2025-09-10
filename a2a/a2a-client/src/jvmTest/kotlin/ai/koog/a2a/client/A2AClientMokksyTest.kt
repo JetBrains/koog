@@ -37,7 +37,7 @@ class A2AClientMokksyTest {
     )
 
     @Test
-    fun `Should get Card`() = runTest {
+    fun `should get card`() = runTest {
         // given
         val agentCard = AgentCard.create {
             name = "test-agent"
@@ -79,7 +79,7 @@ class A2AClientMokksyTest {
         }
 
         // when
-        val actualAgentCard = client.connect()
+        val actualAgentCard = client.loadAgentCard()
 
         // then
         actualAgentCard shouldNotBeNull {

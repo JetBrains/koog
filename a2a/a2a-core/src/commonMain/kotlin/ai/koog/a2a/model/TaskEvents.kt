@@ -42,8 +42,7 @@ public data class TaskArtifactUpdateEvent(
     public val taskId: String,
     public val contextId: String,
     public val artifact: Artifact,
-    @EncodeDefault
-    public val append: Boolean = false,
+    public val append: Boolean? = null,
     public val lastChunk: Boolean? = null,
     public val metadata: JsonObject? = null,
 ) : UpdateEvent {
