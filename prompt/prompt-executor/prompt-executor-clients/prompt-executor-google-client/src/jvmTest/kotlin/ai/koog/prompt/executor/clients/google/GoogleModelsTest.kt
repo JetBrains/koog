@@ -1,17 +1,24 @@
 package ai.koog.prompt.executor.clients.google
 
+import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.list
 import ai.koog.prompt.llm.LLMProvider
+import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.content.TextContent
 import io.ktor.http.headersOf
 import io.ktor.utils.io.ByteReadChannel
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.int
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertSame
@@ -43,6 +50,34 @@ private val badRequest: String = """
       "responseId": "B0esaJmqKv-0xN8P-dzlwQY"
     }
 """.trimIndent()
+
+// Ordinary text response from Gemini
+private val response = """
+    {
+      "candidates" : [ {
+        "content" : {
+          "parts" : [ {
+            "text" : "pong"
+          } ],
+          "role" : "model"
+        },
+        "finishReason" : "STOP",
+        "index" : 0
+      } ],
+      "usageMetadata" : {
+        "promptTokenCount" : 456,
+        "candidatesTokenCount" : 1,
+        "totalTokenCount" : 457,
+        "promptTokensDetails" : [ {
+          "modality" : "TEXT",
+          "tokenCount" : 456
+        } ]
+      },
+      "modelVersion" : "gemini-2.5-flash",
+      "responseId" : "Vk_aBRaCaDABRAIPrvGj2Q8"
+    }
+""".trimIndent()
+
 
 class GoogleModelsTest {
 
@@ -87,4 +122,62 @@ class GoogleModelsTest {
         assertEquals(36, responses.single().metaInfo.inputTokensCount)
         assertEquals(146, responses.single().metaInfo.totalTokensCount)
     }
+
+    @Test
+    fun `createGoogleRequest uses prompt params maxTokens when present`() = runTest {
+        val customMax = 1234
+        val p =
+            Prompt.build("test", params = ai.koog.prompt.params.LLMParams(maxTokens = customMax)) {
+                user("Hello")
+            }
+
+        val capturedBody = executeAndCaptureRequestBody(p, GoogleModels.Gemini2_5Flash)
+
+        val json = Json.parseToJsonElement(capturedBody).jsonObject
+        val genCfg = json["generationConfig"]!!.jsonObject
+        val max = genCfg["maxOutputTokens"]!!.jsonPrimitive.int
+        assertEquals(customMax, max, "maxOutputTokens should be populated from prompt")
+    }
+
+    @Test
+    fun `createGoogleRequest uses model maxOutputTokens when prompt maxTokens is absent`() = runTest {
+        val p = Prompt.build("test") {
+            user("Hello")
+        }
+
+        val capturedBody = executeAndCaptureRequestBody(p, GoogleModels.Gemini2_5Flash)
+
+        val json = Json.parseToJsonElement(capturedBody).jsonObject
+        val max = json["generationConfig"]!!.jsonObject["maxOutputTokens"]!!.jsonPrimitive.int
+        assertEquals(65_536, max, "maxOutputTokens should be populated from model")
+    }
+
+    @Test
+    fun `createGoogleRequest uses default 2048 when neither prompt nor model specify max tokens`() = runTest {
+        val prompt = Prompt.build("test") { user("Hello") }
+        val model = GoogleModels.Gemini2_5Flash.copy(maxOutputTokens = null)
+
+        val capturedBody: String = executeAndCaptureRequestBody(prompt, model)
+
+        val json = Json.parseToJsonElement(capturedBody).jsonObject
+        val max = json["generationConfig"]!!.jsonObject["maxOutputTokens"]!!.jsonPrimitive.int
+        assertEquals(2048, max, "maxOutputTokens should fall back to default")
+    }
+
+    private suspend fun executeAndCaptureRequestBody(p: Prompt, modelWithoutMax: LLModel): String {
+        var capturedBody: String? = null
+        val mockEngine = MockEngine { request ->
+            capturedBody = (request.body as TextContent).text
+            respond(
+                content = ByteReadChannel(response),
+                status = HttpStatusCode.OK,
+                headers = headersOf(HttpHeaders.ContentType, "application/json")
+            )
+        }
+        val client = GoogleLLMClient(apiKey = "test-key", baseClient = HttpClient(mockEngine))
+
+        client.execute(prompt = p, model = modelWithoutMax)
+        return capturedBody!!
+    }
+
 }
