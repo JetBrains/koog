@@ -62,6 +62,7 @@ object Models {
             GoogleModels.Gemini2_0FlashLite,
             GoogleModels.Gemini2_0FlashLite001,
             GoogleModels.Gemini2_5Flash,
+            GoogleModels.Gemini2_5FlashLite,
         )
     }
 

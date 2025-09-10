@@ -189,6 +189,11 @@ class ModelIdentifierParsingTest {
         assertNotNull(gemini25Pro)
         assertEquals(LLMProvider.Google, gemini25Pro.provider)
         assertEquals(GoogleModels.Gemini2_5Pro, gemini25Pro)
+
+        val gemini25FlashLite = getModelFromIdentifier("google.gemini2_5flashlite")
+        assertNotNull(gemini25FlashLite)
+        assertEquals(LLMProvider.Google, gemini25FlashLite.provider)
+        assertEquals(GoogleModels.Gemini2_5FlashLite, gemini25FlashLite)
     }
 
     // OpenRouter model identifier tests

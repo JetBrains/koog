@@ -232,6 +232,7 @@ private val GOOGLE_MODELS_MAP = mapOf(
     "gemini2_0flashlite001" to GoogleModels.Gemini2_0FlashLite001,
     "gemini2_5pro" to GoogleModels.Gemini2_5Pro,
     "gemini2_5flash" to GoogleModels.Gemini2_5Flash,
+    "gemini2_5flashlite" to GoogleModels.Gemini2_5FlashLite,
 )
 
 private val OPENROUTER_MODELS_MAP = mapOf(
