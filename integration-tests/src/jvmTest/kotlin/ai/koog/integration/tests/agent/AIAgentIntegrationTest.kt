@@ -1,4 +1,4 @@
-package ai.koog.integration.tests
+package ai.koog.integration.tests.agent
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.ToolCalls
@@ -59,6 +59,7 @@ import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.util.Base64
 import java.util.stream.Stream
 import kotlin.io.path.readBytes
 import kotlin.reflect.typeOf
@@ -472,7 +473,7 @@ class AIAgentIntegrationTest {
         val imageFile = testResourcesDir.resolve("test.png")
 
         val imageBytes = imageFile.readBytes()
-        val base64Image = java.util.Base64.getEncoder().encodeToString(imageBytes)
+        val base64Image = Base64.getEncoder().encodeToString(imageBytes)
 
         val promptWithImage = """
             I'm sending you an image encoded in base64 format.

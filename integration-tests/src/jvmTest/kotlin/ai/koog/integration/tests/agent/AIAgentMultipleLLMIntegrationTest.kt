@@ -1,4 +1,4 @@
-package ai.koog.integration.tests
+package ai.koog.integration.tests.agent
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.AIAgentException
@@ -22,7 +22,7 @@ import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
 import ai.koog.agents.features.tracing.feature.Tracing
-import ai.koog.integration.tests.ReportingLLMLLMClient.Event
+import ai.koog.integration.tests.agent.ReportingLLMLLMClient.Event
 import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.RetryUtils.withRetry
 import ai.koog.integration.tests.utils.TestLogPrinter
@@ -60,6 +60,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import java.io.File
+import java.util.Base64
 import java.util.stream.Stream
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
@@ -676,7 +677,7 @@ class AIAgentMultipleLLMIntegrationTest {
         assertTrue(imageFile.exists(), "Image test file should exist")
 
         val imageBytes = imageFile.readBytes()
-        val base64Image = java.util.Base64.getEncoder().encodeToString(imageBytes)
+        val base64Image = Base64.getEncoder().encodeToString(imageBytes)
 
         withRetry {
             val agent = createTestMultiLLMAgent(

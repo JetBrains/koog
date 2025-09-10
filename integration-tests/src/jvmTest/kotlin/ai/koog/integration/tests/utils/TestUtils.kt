@@ -7,6 +7,7 @@ import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.structure.RegisteredStandardJsonSchemaGenerators
 import ai.koog.prompt.structure.StructureFixingParser
@@ -21,6 +22,9 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -386,5 +390,33 @@ object TestUtils {
                 "Humidity should be a valid percentage, got: ${response.humidity}"
             )
         }
+    }
+
+    fun singlePropertyObjectSchema(provider: LLMProvider, propName: String, type: String) = buildJsonObject {
+        put("type", JsonPrimitive("object"))
+        put(
+            "properties",
+            buildJsonObject {
+                put(propName, buildJsonObject { put("type", JsonPrimitive(type)) })
+            }
+        )
+        put("required", buildJsonArray { add(JsonPrimitive(propName)) })
+        if (provider !is LLMProvider.Google) {
+            // Google response_schema does not support additionalProperties at the root
+            put("additionalProperties", JsonPrimitive(false))
+        }
+    }
+
+    fun assertExceptionMessageContains(ex: Throwable, vararg substrings: String) {
+        val msg = ex.message ?: ""
+        val matches = substrings.any { needle -> msg.contains(needle, ignoreCase = true) }
+        assertTrue(matches, "Exception message doesn't contain expected error: ${ex.message}")
+    }
+
+    fun isValidJson(str: String): Boolean = try {
+        Json.parseToJsonElement(str)
+        true
+    } catch (_: Exception) {
+        false
     }
 }
