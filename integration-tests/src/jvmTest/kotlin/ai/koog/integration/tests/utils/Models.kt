@@ -42,6 +42,7 @@ object Models {
         return Stream.of(
             AnthropicModels.Opus_3,
             AnthropicModels.Opus_4,
+            AnthropicModels.Opus_4_1,
 
             AnthropicModels.Haiku_3,
             AnthropicModels.Haiku_3_5,

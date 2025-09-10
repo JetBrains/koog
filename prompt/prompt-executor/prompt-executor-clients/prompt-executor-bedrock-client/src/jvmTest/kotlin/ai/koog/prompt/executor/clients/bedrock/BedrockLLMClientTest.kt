@@ -133,6 +133,7 @@ class BedrockLLMClientTest {
         // Test Claude 4 models with full capabilities
         val claude4Models = listOf(
             BedrockModels.AnthropicClaude4Opus,
+            BedrockModels.AnthropicClaude41Opus,
             BedrockModels.AnthropicClaude4Sonnet
         )
 
@@ -232,6 +233,7 @@ class BedrockLLMClientTest {
     fun `model IDs follow expected patterns`() {
         // Verify Anthropic model IDs
         assertTrue(BedrockModels.AnthropicClaude4Opus.id.contains("anthropic.claude-opus-4-20250514-v1:0"))
+        assertTrue(BedrockModels.AnthropicClaude41Opus.id.contains("anthropic.claude-opus-4-1-20250805-v1:0"))
         assertTrue(BedrockModels.AnthropicClaude4Sonnet.id.contains("anthropic.claude-sonnet-4-20250514-v1:0"))
         assertTrue(BedrockModels.AnthropicClaude35SonnetV2.id.contains("anthropic.claude-3-5-sonnet-20241022-v2:0"))
         assertTrue(BedrockModels.AnthropicClaude35Haiku.id.contains("anthropic.claude-3-5-haiku-20241022-v1:0"))
@@ -289,9 +291,12 @@ class BedrockLLMClientTest {
 
         // Test that Claude 4 models support tools (with advanced capabilities)
         val claude4Opus = BedrockModels.AnthropicClaude4Opus
+        val claude41Opus = BedrockModels.AnthropicClaude41Opus
         val claude4Sonnet = BedrockModels.AnthropicClaude4Sonnet
         assertTrue(claude4Opus.capabilities.contains(LLMCapability.Tools))
         assertTrue(claude4Opus.capabilities.contains(LLMCapability.ToolChoice))
+        assertTrue(claude41Opus.capabilities.contains(LLMCapability.Tools))
+        assertTrue(claude41Opus.capabilities.contains(LLMCapability.ToolChoice))
         assertTrue(claude4Sonnet.capabilities.contains(LLMCapability.Tools))
         assertTrue(claude4Sonnet.capabilities.contains(LLMCapability.ToolChoice))
 
@@ -314,10 +319,14 @@ class BedrockLLMClientTest {
     fun testModelToolCapabilities() {
         // Verify Claude 4 models have the most advanced capabilities
         val claude4Opus = BedrockModels.AnthropicClaude4Opus
+        val claude41Opus = BedrockModels.AnthropicClaude41Opus
         val claude4Sonnet = BedrockModels.AnthropicClaude4Sonnet
         assertTrue(claude4Opus.capabilities.contains(LLMCapability.Tools))
         assertTrue(claude4Opus.capabilities.contains(LLMCapability.ToolChoice))
         assertTrue(claude4Opus.capabilities.contains(LLMCapability.Vision.Image))
+        assertTrue(claude41Opus.capabilities.contains(LLMCapability.Tools))
+        assertTrue(claude41Opus.capabilities.contains(LLMCapability.ToolChoice))
+        assertTrue(claude41Opus.capabilities.contains(LLMCapability.Vision.Image))
         assertTrue(claude4Sonnet.capabilities.contains(LLMCapability.Tools))
         assertTrue(claude4Sonnet.capabilities.contains(LLMCapability.ToolChoice))
         assertTrue(claude4Sonnet.capabilities.contains(LLMCapability.Vision.Image))
