@@ -3,6 +3,7 @@ package ai.koog.agents.file.tools
 import ai.koog.agents.core.tools.DirectToolCallsEnabler
 import ai.koog.agents.core.tools.ToolException
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
+import ai.koog.agents.file.tools.render.norm
 import ai.koog.rag.base.files.JVMFileSystemProvider
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
@@ -65,7 +66,7 @@ class WriteFileToolJvmTest {
         // /tempDir/nested/dir/notes.md (<0.1 KiB, 1 line)
         val expected = listOf(
             "Written",
-            "${p.toAbsolutePath()} (<0.1 KiB, 1 line)"
+            "${p.toAbsolutePath().toString().norm()} (<0.1 KiB, 1 line)"
         ).joinToString("\n")
         assertEquals(expected, result.toStringDefault())
     }
@@ -83,7 +84,7 @@ class WriteFileToolJvmTest {
         // /tempDir/file.txt (<0.1 KiB, 1 line)
         val expected = listOf(
             "Written",
-            "${p.toAbsolutePath()} (<0.1 KiB, 1 line)"
+            "${p.toAbsolutePath().toString().norm()} (<0.1 KiB, 1 line)"
         ).joinToString("\n")
         assertEquals(expected, result.toStringDefault())
         assertEquals("new content", p.readText())
@@ -101,7 +102,7 @@ class WriteFileToolJvmTest {
         // /tempDir/multi/lines.txt (<0.1 KiB, 3 lines)
         val expected = listOf(
             "Written",
-            "${p.toAbsolutePath()} (<0.1 KiB, 3 lines)"
+            "${p.toAbsolutePath().toString().norm()} (<0.1 KiB, 3 lines)"
         ).joinToString("\n")
         assertEquals(expected, result.toStringDefault())
         assertTrue(p.exists())
