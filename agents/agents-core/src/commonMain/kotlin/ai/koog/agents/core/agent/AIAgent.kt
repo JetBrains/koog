@@ -91,17 +91,20 @@ public interface AIAgent<Input, Output> : Closeable {
          */
         public operator fun invoke(
             promptExecutor: PromptExecutor,
-            agentConfig: AIAgentConfigBase,
+            agentConfig: AIAgentConfig,
             strategy: AIAgentGraphStrategy<String, String> = singleRunStrategy(),
             toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
             id: String? = null,
             installFeatures: FeatureContext.() -> Unit = {},
-        ): AIAgent<String, String> = AIAgent(
-            id = id,
+        ): AIAgent<String, String> = GraphAIAgent(
+            inputType = typeOf<String>(),
+            outputType = typeOf<String>(),
             promptExecutor = promptExecutor,
-            strategy = strategy,
             agentConfig = agentConfig,
             toolRegistry = toolRegistry,
+            strategy = strategy,
+            id = id,
+            clock = Clock.System,
             installFeatures = installFeatures
         )
 
