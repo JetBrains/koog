@@ -3,7 +3,6 @@ package ai.koog.agents.core.agent
 import ai.koog.agents.core.agent.config.AIAgentConfigBase
 import ai.koog.agents.core.agent.GraphAIAgent.FeatureContext
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.agent.config.AIAgentConfigBase
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.utils.Closeable
@@ -59,7 +58,7 @@ public interface AIAgent<Input, Output> : Closeable {
          */
         public inline operator fun <reified Input, reified Output> invoke(
             promptExecutor: PromptExecutor,
-            agentConfig: AIAgentConfigBase,
+            agentConfig: AIAgentConfig,
             strategy: AIAgentGraphStrategy<Input, Output>,
             toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
             id: String? = null,
@@ -119,7 +118,7 @@ public interface AIAgent<Input, Output> : Closeable {
          */
         public operator fun <Input, Output> invoke(
             promptExecutor: PromptExecutor,
-            agentConfig: AIAgentConfigBase,
+            agentConfig: AIAgentConfig,
             func: suspend AIAgentFunctionalContext.(input: Input) -> Output,
             toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
             id: String? = null,
@@ -161,7 +160,7 @@ public interface AIAgent<Input, Output> : Closeable {
             numberOfChoices: Int = 1,
             maxIterations: Int = 50,
             installFeatures: FeatureContext.() -> Unit = {}
-        ): AIAgent<*, *> = AIAgent(
+        ): AIAgent<String, String> = AIAgent(
             id = id,
             promptExecutor = promptExecutor,
             strategy = strategy,
