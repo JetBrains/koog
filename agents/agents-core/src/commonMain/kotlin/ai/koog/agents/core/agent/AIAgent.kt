@@ -262,7 +262,7 @@ public interface AIAgent<Input, Output> : Closeable {
             temperature: Double = 1.0,
             numberOfChoices: Int = 1,
             maxIterations: Int = 50,
-            installFeatures: FeatureContext.() -> Unit = {},
+            installFeatures: FunctionalAIAgent.FeatureContext.() -> Unit = {},
             func: suspend AIAgentFunctionalContext.(input: Input) -> Output,
         ): AIAgent<Input, Output> = FunctionalAIAgent(
             promptExecutor = promptExecutor,
@@ -279,6 +279,7 @@ public interface AIAgent<Input, Output> : Closeable {
                 model = llmModel,
                 maxAgentIterations = maxIterations,
             ),
+            featureContext = installFeatures,
             toolRegistry = toolRegistry,
             strategy = functionalStrategy(
                 func = func
