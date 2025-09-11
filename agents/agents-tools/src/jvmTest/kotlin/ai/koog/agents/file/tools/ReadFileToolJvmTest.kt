@@ -3,6 +3,7 @@ package ai.koog.agents.file.tools
 import ai.koog.agents.core.tools.DirectToolCallsEnabler
 import ai.koog.agents.core.tools.ToolException
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
+import ai.koog.agents.file.tools.render.norm
 import ai.koog.rag.base.files.JVMFileSystemProvider
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -80,7 +81,7 @@ class ReadFileToolJvmTest {
         val result = readFile(f)
 
         val expected = """
-            ${"${f.toAbsolutePath()} (<0.1 KiB, 2 lines)"}
+            ${"${f.toAbsolutePath().toString().norm()} (<0.1 KiB, 2 lines)"}
             Content:
             ```markdown
             hello
@@ -105,7 +106,7 @@ class ReadFileToolJvmTest {
         val result = readFile(f, startLine = 1, endLine = 3)
 
         val expected = """
-            ${"${f.toAbsolutePath()} (<0.1 KiB, 3 lines)"}
+            ${"${f.toAbsolutePath().toString().norm()} (<0.1 KiB, 3 lines)"}
             Excerpt:
             Lines 1-3:
             ```kotlin
@@ -124,7 +125,7 @@ class ReadFileToolJvmTest {
         val result = readFile(f, startLine = 0, endLine = 3)
 
         val expected = """
-            ${"${f.toAbsolutePath()} (<0.1 KiB, 3 lines)"}
+            ${"${f.toAbsolutePath().toString().norm()} (<0.1 KiB, 3 lines)"}
             Content:
             a
             b
@@ -139,7 +140,7 @@ class ReadFileToolJvmTest {
         val f = createTestFile("config.yml", "a: 1\nb: 2")
         val result = readFile(f)
         val expected = """
-            ${"${f.toAbsolutePath()} (<0.1 KiB, 2 lines)"}
+            ${"${f.toAbsolutePath().toString().norm()} (<0.1 KiB, 2 lines)"}
             Content:
             ```yaml
             a: 1
@@ -154,7 +155,7 @@ class ReadFileToolJvmTest {
         val f = createTestFile("SCRIPT.PY", "print('hi')")
         val result = readFile(f)
         val expected = """
-            ${"${f.toAbsolutePath()} (<0.1 KiB, 1 line)"}
+            ${"${f.toAbsolutePath().toString().norm()} (<0.1 KiB, 1 line)"}
             Content:
             ```python
             print('hi')
@@ -168,7 +169,7 @@ class ReadFileToolJvmTest {
         val f = createTestFile("run.PS1", "Write-Host 'hello'")
         val result = readFile(f)
         val expected = """
-            ${"${f.toAbsolutePath()} (<0.1 KiB, 1 line)"}
+            ${"${f.toAbsolutePath().toString().norm()} (<0.1 KiB, 1 line)"}
             Content:
             ```powershell
             Write-Host 'hello'
@@ -182,7 +183,7 @@ class ReadFileToolJvmTest {
         val f = createTestFile("build.gradle", "task hello { }")
         val result = readFile(f)
         val expected = """
-            ${"${f.toAbsolutePath()} (<0.1 KiB, 1 line)"}
+            ${"${f.toAbsolutePath().toString().norm()} (<0.1 KiB, 1 line)"}
             Content:
             ```groovy
             task hello { }
@@ -196,7 +197,7 @@ class ReadFileToolJvmTest {
         val f = createTestFile("RUN.BAT", "echo hello")
         val result = readFile(f)
         val expected = """
-            ${"${f.toAbsolutePath()} (<0.1 KiB, 1 line)"}
+            ${"${f.toAbsolutePath().toString().norm()} (<0.1 KiB, 1 line)"}
             Content:
             ```batch
             echo hello
@@ -225,7 +226,7 @@ class ReadFileToolJvmTest {
         )
         val result = readFile(f, startLine = 1, endLine = -1)
         val expected = """
-            ${"${f.toAbsolutePath()} (<0.1 KiB, 3 lines)"}
+            ${"${f.toAbsolutePath().toString().norm()} (<0.1 KiB, 3 lines)"}
             Excerpt:
             Lines 1-3:
             ```kotlin
@@ -241,7 +242,7 @@ class ReadFileToolJvmTest {
         val f = createTestFile("blank.md", "\n\n\n")
         val result = readFile(f)
         val expected = """
-            ${"${f.toAbsolutePath()} (<0.1 KiB, 4 lines)"}
+            ${"${f.toAbsolutePath().toString().norm()} (<0.1 KiB, 4 lines)"}
             Content:
             ```markdown
             ```

@@ -4,13 +4,14 @@ The Koog framework provides built-in tools that handle common scenarios of agent
 
 The following built-in tools are available:
 
-| Tool         | <div style="width:115px">Name</div> | Description                                                                                                              |
-|--------------|-------------------------------------|--------------------------------------------------------------------------------------------------------------------------|
-| SayToUser    | `__say_to_user__`                   | Lets the agent send a message to the user. It prints the agent message to the console with the `Agent says: ` prefix.    |
-| AskUser      | `__ask_user__`                      | Lets the agent ask the user for input. It prints the agent message to the console and waits for user response.           |
-| ExitTool     | `__exit__`                          | Lets the agent finish the conversation and terminate the session.                                                        |
-| ReadFileTool | `__read_file__`                     | Reads text file with optional line range selection. Returns formatted content with metadata using 0-based line indexing. |
-| EditFileTool | `__edit_file__`                     | Makes a single, targeted text replacement in a file; can also create new files or fully replace contents.               |
+| Tool              | <div style="width:115px">Name</div> | Description                                                                                                               |
+|-------------------|-------------------------------------|---------------------------------------------------------------------------------------------------------------------------|
+| SayToUser         | `__say_to_user__`                   | Lets the agent send a message to the user. It prints the agent message to the console with the `Agent says: ` prefix.     |
+| AskUser           | `__ask_user__`                      | Lets the agent ask the user for input. It prints the agent message to the console and waits for user response.            |
+| ExitTool          | `__exit__`                          | Lets the agent finish the conversation and terminate the session.                                                         |
+| ReadFileTool      | `__read_file__`                     | Reads text file with optional line range selection. Returns formatted content with metadata using 0-based line indexing.  |
+| EditFileTool      | `__edit_file__`                     | Makes a single, targeted text replacement in a file; can also create new files or fully replace contents.                 |
+| ListDirectoryTool | `__list_directory__`                | Lists directory contents as a hierarchical tree with optional depth control and glob filtering.                           |
 
 
 ## Registering built-in tools
@@ -23,6 +24,7 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.agents.ext.tool.AskUser
 import ai.koog.agents.ext.tool.ExitTool
+import ai.koog.agents.file.tools.ListDirectoryTool
 import ai.koog.agents.file.tools.ReadFileTool
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
@@ -38,6 +40,7 @@ val toolRegistry = ToolRegistry {
     tool(AskUser)
     tool(ExitTool)
     tool(ReadFileTool(JVMFileSystemProvider.ReadOnly))
+    tool(ListDirectoryTool(JVMFileSystemProvider.ReadOnly))
 }
 
 // Pass the registry when creating an agent
