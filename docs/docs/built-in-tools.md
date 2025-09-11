@@ -25,9 +25,9 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.agents.ext.tool.AskUser
 import ai.koog.agents.ext.tool.ExitTool
-import ai.koog.agents.file.tools.ListDirectoryTool
-import ai.koog.agents.file.tools.ReadFileTool
-import ai.koog.agents.file.tools.WriteFileTool
+import ai.koog.agents.ext.tool.file.ListDirectoryTool
+import ai.koog.agents.ext.tool.file.ReadFileTool
+import ai.koog.agents.ext.tool.file.WriteFileTool
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.koog.rag.base.files.JVMFileSystemProvider
