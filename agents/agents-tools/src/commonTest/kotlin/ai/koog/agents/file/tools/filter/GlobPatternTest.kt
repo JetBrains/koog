@@ -7,7 +7,7 @@ import kotlin.test.assertTrue
 class GlobPatternTest {
     @Test
     fun testBasicMatching() {
-        val pattern = GlobPattern.compile("*.txt")
+        val pattern = GlobPattern("*.txt")
         assertTrue(pattern.matches("file.txt"))
         assertTrue(pattern.matches("test.txt"))
         assertFalse(pattern.matches("file.doc"))
@@ -16,7 +16,7 @@ class GlobPatternTest {
 
     @Test
     fun testDirectoryMatching() {
-        val pattern = GlobPattern.compile("src/**/*.kt")
+        val pattern = GlobPattern("src/**/*.kt")
         assertTrue(pattern.matches("src/main/kotlin/File.kt"))
         assertTrue(pattern.matches("src/test/kotlin/Test.kt"))
         assertFalse(pattern.matches("test/src/File.kt"))
@@ -25,7 +25,7 @@ class GlobPatternTest {
 
     @Test
     fun testDirectoryPathMatching() {
-        val pattern = GlobPattern.compile("src/**/kotlin")
+        val pattern = GlobPattern("src/**/kotlin")
         assertTrue(pattern.matches("src/main/kotlin"))
         assertTrue(pattern.matches("src/test/kotlin"))
         assertFalse(pattern.matches("test/src/kotlin"))
@@ -34,7 +34,7 @@ class GlobPatternTest {
 
     @Test
     fun testWildcardMatching() {
-        val pattern = GlobPattern.compile("test-?.txt")
+        val pattern = GlobPattern("test-?.txt")
         assertTrue(pattern.matches("test-1.txt"))
         assertTrue(pattern.matches("test-a.txt"))
         assertFalse(pattern.matches("test-12.txt"))
@@ -43,7 +43,7 @@ class GlobPatternTest {
 
     @Test
     fun testCharacterSetMatching() {
-        val pattern = GlobPattern.compile("file-[abc].txt")
+        val pattern = GlobPattern("file-[abc].txt")
         assertTrue(pattern.matches("file-a.txt"))
         assertTrue(pattern.matches("file-b.txt"))
         assertTrue(pattern.matches("file-c.txt"))
@@ -52,7 +52,7 @@ class GlobPatternTest {
 
     @Test
     fun testMultiplePatterns() {
-        val pattern = GlobPattern.compile("src/**/*.[jk]t")
+        val pattern = GlobPattern("src/**/*.[jk]t")
         assertTrue(pattern.matches("src/main/kotlin/File.kt"))
         assertTrue(pattern.matches("src/test/java/Test.jt"))
         assertFalse(pattern.matches("src/main/kotlin/File.txt"))
@@ -60,7 +60,7 @@ class GlobPatternTest {
 
     @Test
     fun testAlternativesMatching() {
-        val pattern = GlobPattern.compile("file.{txt,doc,pdf}")
+        val pattern = GlobPattern("file.{txt,doc,pdf}")
         assertTrue(pattern.matches("file.txt"))
         assertTrue(pattern.matches("file.doc"))
         assertTrue(pattern.matches("file.pdf"))
@@ -70,7 +70,7 @@ class GlobPatternTest {
 
     @Test
     fun testAlternativesWithGlobPatterns() {
-        val pattern = GlobPattern.compile("src/{test,main}/**/*.{kt,java}")
+        val pattern = GlobPattern("src/{test,main}/**/*.{kt,java}")
         assertTrue(pattern.matches("src/test/kotlin/Test.kt"))
         assertTrue(pattern.matches("src/main/java/Main.java"))
         assertTrue(pattern.matches("src/test/nested/File.kt"))
@@ -80,7 +80,7 @@ class GlobPatternTest {
 
     @Test
     fun testDoubleStarPrefix() {
-        val pattern = GlobPattern.compile("**/a")
+        val pattern = GlobPattern("**/a")
         assertTrue(pattern.matches("a"))
         assertTrue(pattern.matches("/a"))
         assertTrue(pattern.matches("b/a"))
@@ -91,7 +91,7 @@ class GlobPatternTest {
 
     @Test
     fun testRegexElementsMatching() {
-        val pattern = GlobPattern.compile("*$")
+        val pattern = GlobPattern("*$")
         assertFalse(pattern.matches("a"))
         assertTrue(pattern.matches("a$"))
     }

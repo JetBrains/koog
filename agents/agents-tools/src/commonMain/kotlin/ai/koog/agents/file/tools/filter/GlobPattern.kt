@@ -11,9 +11,11 @@ package ai.koog.agents.file.tools.filter
  * - [!abc] matches any character not in the set
  * - {a,b,c} matches any of the alternatives a, b, or c
  *
+ * @param pattern the glob pattern string
+ * @param caseSensitive whether the pattern matching should be case-sensitive (default: `true`)
  * @property regex the compiled regular expression used for matching
  */
-public class GlobPattern private constructor(pattern: String, caseSensitive: Boolean = true) {
+public class GlobPattern(pattern: String, caseSensitive: Boolean = true) {
     private val regex: Regex = convertGlobToRegex(pattern, caseSensitive)
 
     /**
@@ -28,17 +30,7 @@ public class GlobPattern private constructor(pattern: String, caseSensitive: Boo
         /**
          * A pattern that matches any path.
          */
-        public val ANY: GlobPattern = compile("**", caseSensitive = false)
-
-        /**
-         * Converts a glob pattern string into a [GlobPattern] matcher.
-         *
-         * @param pattern the glob pattern string to compile
-         * @param caseSensitive whether the pattern matching should be case-sensitive (default: `true`)
-         * @return A compiled [GlobPattern] ready for matching paths
-         */
-        public fun compile(pattern: String, caseSensitive: Boolean = true): GlobPattern =
-            GlobPattern(pattern, caseSensitive)
+        public val ANY: GlobPattern = GlobPattern("**", caseSensitive = false)
 
         private fun convertGlobToRegex(glob: String, caseSensitive: Boolean): Regex {
             val escaped = glob.escape()

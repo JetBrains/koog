@@ -90,7 +90,7 @@ class ListDirectoryUtilJvmTest {
         d.resolve("a.md").createFile().writeText("a")
         d.resolve("b.txt").createFile().writeText("b")
 
-        val pattern = GlobPattern.compile("*.txt", caseSensitive = false)
+        val pattern = GlobPattern("*.txt", caseSensitive = false)
         val dMeta = assertNotNull(fs.metadata(d))
         val entry = buildDirectoryTree(fs, d, dMeta, maxDepth = 2, filter = pattern) as FileSystemEntry.Folder
 
@@ -108,7 +108,7 @@ class ListDirectoryUtilJvmTest {
         // Structure: document.md
         val file = createFile("document.md", "content")
         val metadata = assertNotNull(fs.metadata(file))
-        val pattern = GlobPattern.compile("*.txt", caseSensitive = false)
+        val pattern = GlobPattern("*.txt", caseSensitive = false)
 
         val entry = buildDirectoryTree(fs, file, metadata, maxDepth = 1, filter = pattern)
 
