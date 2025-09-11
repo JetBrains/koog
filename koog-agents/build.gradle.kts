@@ -9,20 +9,19 @@ plugins {
 
 val excluded = setOf(
     ":agents:agents-test",
+    ":agents:agents-ext",
     ":agents:agents-features:agents-features-sql", // Optional SQL persistence provider
     ":examples",
     ":integration-tests",
     ":test-utils",
     ":koog-spring-boot-starter",
     ":koog-ktor",
-    ":koog-cli",
     ":docs",
     project.path, // the current project should not depend on itself
 )
 
 val included = setOf(
     ":agents:agents-core",
-    ":agents:agents-ext",
     ":agents:agents-features:agents-features-debugger",
     ":agents:agents-features:agents-features-event-handler",
     ":agents:agents-features:agents-features-memory",
