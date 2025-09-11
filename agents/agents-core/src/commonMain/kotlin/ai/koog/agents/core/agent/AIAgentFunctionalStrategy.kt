@@ -39,5 +39,6 @@ public class AIAgentFunctionalStrategy<TInput, TOutput>(
  */
 public fun <Input, Output> functionalStrategy(
     name: String = "funStrategy",
-    func: suspend AIAgentFunctionalContext.(input: Input) -> Output): AIAgentFunctionalStrategy<Input, Output> =
+    func: suspend AIAgentFunctionalContext.(input: Input) -> Output
+): AIAgentFunctionalStrategy<Input, Output> =
     AIAgentFunctionalStrategy(name, func)

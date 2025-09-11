@@ -1,12 +1,10 @@
 package ai.koog.agents.core.agent
 
-import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.agents.testing.tools.mockLLMAnswer
 import ai.koog.prompt.llm.OllamaModels
-import io.ktor.client.request.invoke
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -127,8 +125,7 @@ class FunctionalAIAgentTest {
                     onToolCall { eventContext -> actualToolCalls += eventContext.toolArgs.toString() }
                 }
             }
-        )
-        { inputParam: String ->
+        ) { inputParam: String ->
             var responses = requestLLMMultiple(inputParam)
 
             while (responses.containsToolCalls()) {

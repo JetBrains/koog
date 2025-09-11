@@ -83,7 +83,6 @@ public interface AIAgent<Input, Output> : Closeable {
          * Operator function to create and invoke an AI agent with the given parameters.
          *
          * @param promptExecutor The executor responsible for running the prompt and generating outputs.
-         * @param llmModel The language model to be used by the AI agent.
          * @param prompt The prompt to be processed by the AI agent.
          * @param agentConfig Configuration settings for the AI agent.
          * @param strategy The strategy to be used for the AI agent's execution graph. Defaults to a single-run strategy.
