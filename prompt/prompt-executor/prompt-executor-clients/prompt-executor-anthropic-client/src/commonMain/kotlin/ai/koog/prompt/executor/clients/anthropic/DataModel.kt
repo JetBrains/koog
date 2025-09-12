@@ -259,7 +259,7 @@ public sealed interface DocumentSource {
 public data class AnthropicTool(
     val name: String,
     val description: String,
-    val inputSchema: AnthropicToolSchema
+    @SerialName("input_schema") val inputSchema: AnthropicToolSchema
 )
 
 /**
