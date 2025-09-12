@@ -28,6 +28,20 @@ jobs:
     strategy:
       matrix:
         os: [ ubuntu-latest ]
+        include:
+          - test-group: "ai.koog.integration.tests.agent.*"
+            artifact-name: "agent-tests"
+          - test-group: "ai.koog.integration.tests.executor.*"
+            artifact-name: "executor-tests"
+          - test-group: "ai.koog.integration.tests.capabilities.*"
+            artifact-name: "capabilities-tests"
+          - test-group: "ai.koog.integration.tests.*Embeddings*"
+            artifact-name: "embeddings-test"
+          - test-group: "ai.koog.integration.tests.*BedrockCredentials*"
+            artifact-name: "bedrock-credentials-test"
+          - test-group: "ai.koog.integration.tests.*AnthropicSchemaValidation*"
+            artifact-name: "anthropic-schema-test"
+      fail-fast: false
 
     steps:
       - name: Configure Git
@@ -79,14 +93,14 @@ jobs:
           ANTHROPIC_API_TEST_KEY: ${{ secrets.ANTHROPIC_API_TEST_KEY }}
           OPEN_AI_API_TEST_KEY: ${{ secrets.OPEN_AI_API_TEST_KEY }}
           GEMINI_API_TEST_KEY: ${{ secrets.GEMINI_API_TEST_KEY }}
-          OPEN_ROUTER_API_TEST_KEY: ${{ vars.OPEN_ROUTER_API_TEST_KEY }}
-          DEEPSEEK_API_TEST_KEY: ${{ vars.DEEPSEEK_API_TEST_KEY }}
-        run: ./gradlew jvmIntegrationTest --continue
+          OPEN_ROUTER_API_TEST_KEY: ${{ secrets.OPEN_ROUTER_API_TEST_KEY }}
+          DEEPSEEK_API_TEST_KEY: ${{ secrets.DEEPSEEK_API_TEST_KEY }}
+        run: ./gradlew jvmIntegrationTest --tests "${{ matrix.test-group }}" --continue
 
       - name: Collect reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: reports-${{ matrix.os }}
+          name: reports-${{ matrix.os }}-${{ matrix.artifact-name }}
           path: |
             **/build/reports/
