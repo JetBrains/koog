@@ -175,8 +175,12 @@ public open class GoogleLLMClient(
                         ?.candidates?.firstOrNull()?.content
                         ?.parts?.forEach { part ->
                             when(part) {
-                                is GooglePart.FunctionCall -> emit(StreamFrame.ToolCall(part.functionCall.id, part.functionCall.name, part.functionCall.args?.toString()?:"{}"))
-                                is GooglePart.Text -> emit(StreamFrame.Append(part.text))
+                                is GooglePart.FunctionCall -> emit(StreamFrame.ToolCall(
+                                    id = part.functionCall.id,
+                                    name = part.functionCall.name,
+                                    content = part.functionCall.args?.toString()?:"{}")
+                                )
+                                is GooglePart.Text -> emit(StreamFrame.Append(part.text, finishReason = null))
                                 else -> Unit
                             }
                         }

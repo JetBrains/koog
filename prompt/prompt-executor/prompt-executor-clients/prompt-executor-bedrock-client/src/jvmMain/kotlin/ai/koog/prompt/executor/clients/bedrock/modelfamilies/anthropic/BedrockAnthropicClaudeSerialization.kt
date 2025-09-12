@@ -247,7 +247,11 @@ internal object BedrockAnthropicClaudeSerialization {
                         is AnthropicResponseContent.Text ->
                             StreamFrame.Append(content.text)
                         is AnthropicResponseContent.ToolUse ->
-                            StreamFrame.ToolCall(content.id, content.name, content.input.toString())
+                            StreamFrame.ToolCall(
+                                id = content.id,
+                                name = content.name,
+                                content = content.input.toString()
+                            )
                     }
                 } ?: emptyList()
             }

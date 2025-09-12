@@ -9,6 +9,7 @@ import ai.koog.prompt.streaming.StreamFrame
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
 
 public typealias LLMChoice = List<Message.Response>
 
@@ -45,7 +46,7 @@ public interface PromptExecutor {
     public fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> =
         executeStreamingWithTools(prompt, model, emptyList())
             .filterIsInstance<StreamFrame.Append>()
-            .map { append -> append.text }
+            .mapNotNull { append -> append.text }
 
     /**
      * Executes a given prompt using the specified language model and returns a stream of output as a flow of `StreamFrame` objects.

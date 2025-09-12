@@ -296,6 +296,24 @@ public class OpenAIToolCall(
 }
 
 /**
+ * Represents a tool call in the OpenAI stream, specifying the function invoked and its related metadata.
+ *
+ * @property id The unique identifier associated with the tool call. This value can be null.
+ * @property function The function object containing the name and arguments of the function invoked.
+ * This value can be null if no function call is associated.
+ * @property type The type of the tool call. This is always set to "function" for denoting function-based calls.
+ */
+@Serializable
+public class OpenAIStreamToolCall(
+    public val index: Int,
+    public val id: String?,
+    public val function: OpenAIStreamFunction?
+) {
+    /** The type of the tool. Currently, only `function` is supported. */
+    public val type: String = "function"
+}
+
+/**
  * Function call from an OpenAI model, containing the function name and arguments.
  *
  * @property name The name of the function to call
@@ -308,6 +326,18 @@ public class OpenAIToolCall(
 public class OpenAIFunction(
     public val name: String,
     public val arguments: String
+)
+
+/**
+ * Represents a function object used in OpenAI stream tool calls.
+ *
+ * @property name The name of the function that was called.
+ * @property arguments The arguments that were passed to the function call.
+ */
+@Serializable
+public class OpenAIStreamFunction(
+    public val name: String?,
+    public val arguments: String?
 )
 
 /**
@@ -887,7 +917,7 @@ public class OpenAIStreamDelta(
     public val content: String? = null,
     public val refusal: String? = null,
     public val role: String? = null,
-    public val toolCalls: List<OpenAIToolCall>? = null
+    public val toolCalls: List<OpenAIStreamToolCall>? = null
 )
 
 internal object ContentSerializer : KSerializer<Content> {

@@ -10,6 +10,7 @@ import ai.koog.prompt.streaming.StreamFrame
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
 
 /**
  * Common interface for direct communication with LLM providers.
@@ -40,7 +41,7 @@ public interface LLMClient {
     public fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> =
         executeStreamingWithTools(prompt, model, emptyList())
             .filterIsInstance<StreamFrame.Append>()
-            .map { append -> append.text }
+            .mapNotNull { append -> append.text }
 
     /**
      * Executes a prompt and returns a streaming flow of response chunks.

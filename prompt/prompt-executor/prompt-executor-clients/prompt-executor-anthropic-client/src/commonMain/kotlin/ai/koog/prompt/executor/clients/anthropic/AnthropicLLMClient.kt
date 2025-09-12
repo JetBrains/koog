@@ -174,9 +174,14 @@ public open class AnthropicLLMClient(
                     event
                         .takeIf { it.event == "content_block_delta" }
                         ?.data?.trim()?.let { json.decodeFromString<AnthropicStreamResponse>(it) }
-                        ?.delta?.let { delta ->
-                            delta.text?.let { emit(StreamFrame.Append(it)) }
-                            delta.toolUse?.let { emit(StreamFrame.ToolCall(it.id, it.name, it.input.toString())) }
+                        ?.let { response ->
+                            response.delta?.text?.let { emit(StreamFrame.Append(it, response.message?.stopReason)) }
+                            response.delta?.toolUse?.let { emit(StreamFrame.ToolCall(
+                                    id = it.id,
+                                    name = it.name,
+                                    content = it.input.toString())
+                                )
+                            }
                         }
                 }
             }

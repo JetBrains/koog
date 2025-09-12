@@ -235,11 +235,12 @@ public class PromptBuilder internal constructor(
          * The tool call represents a request to execute a specific tool with the provided parameters.
          *
          * @param id The unique identifier for the tool call message.
+         * @param index The index of the tool call.
          * @param tool The name of the tool being called.
          * @param content The content or payload of the tool call.
          */
-        public fun call(id: String?, tool: String, content: String) {
-            call(Message.Tool.Call(id, tool, content, ResponseMetaInfo.create(clock)))
+        public fun call(id: String?, index: Int, tool: String, content: String) {
+            call(Message.Tool.Call(id, index, tool, content, ResponseMetaInfo.create(clock)))
         }
 
         /**

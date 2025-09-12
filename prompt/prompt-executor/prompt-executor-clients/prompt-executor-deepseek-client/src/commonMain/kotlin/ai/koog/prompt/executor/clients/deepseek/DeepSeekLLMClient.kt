@@ -105,8 +105,8 @@ public class DeepSeekLLMClient(
                 it.toolCalls?.map { toolCall ->
                     StreamFrame.ToolCall(
                         id = toolCall.id,
-                        name = toolCall.function.name,
-                        content = toolCall.function.arguments
+                        name = toolCall.function?.name,
+                        content = toolCall.function?.arguments
                     )
                 }?.let(::addAll)
             }

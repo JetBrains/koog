@@ -173,7 +173,7 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
         val request = serializeProviderChatRequest(
             messages = messages,
             model = model,
-            tools = emptyList(),
+            tools = tools.map { it.toOpenAIChatTool() },
             toolChoice = prompt.params.toolChoice?.toOpenAIToolChoice(),
             params = prompt.params,
             stream = true

@@ -19,6 +19,7 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.streaming.toMessageResponses
 import ai.koog.prompt.structure.StructureFixingParser
 import ai.koog.prompt.structure.StructuredDataDefinition
 import ai.koog.prompt.structure.StructuredOutputConfig
@@ -272,6 +273,43 @@ public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStreaming(
 ): AIAgentNodeDelegate<String, Flow<T>> =
     nodeLLMRequestStreamingWithTools(name, structureDefinition) {
         transformStreamData(it.mapTextOnly())
+    }
+
+@AIAgentBuilderDslMarker
+public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestsStreamingWithTools(
+    name: String? = null,
+    structureDefinition: StructuredDataDefinition? = null,
+    onEvent: suspend (StreamFrame) -> Unit
+): AIAgentNodeDelegate<List<Message.Request>, List<Message.Response>> =
+    node(name) { input ->
+        llm.writeSession {
+            updatePrompt {
+                input.filterIsInstance<Message.User>()
+                    .forEach {
+                        user(it.content)
+                    }
+
+                tool {
+                    input.filterIsInstance<Message.Tool.Result>()
+                        .forEach {
+                            result(it)
+                        }
+                }
+            }
+
+            val stream = requestLLMStreamingWithTools(structureDefinition)
+            val streamCollector = mutableListOf<StreamFrame>()
+            stream.collect {
+                onEvent(it)
+                streamCollector.add(it)
+            }
+
+            val messages = streamCollector.toMessageResponses()
+            updatePrompt {
+                messages(messages)
+            }
+            messages
+        }
     }
 
 /**

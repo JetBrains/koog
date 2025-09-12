@@ -118,8 +118,8 @@ public class OpenRouterLLMClient(
                 it.toolCalls?.map { openAIToolCall ->
                     StreamFrame.ToolCall(
                         id = openAIToolCall.id,
-                        name = openAIToolCall.function.name,
-                        content = openAIToolCall.function.arguments
+                        name = openAIToolCall.function?.name,
+                        content = openAIToolCall.function?.arguments
                     )
                 }?.let(::addAll)
             }

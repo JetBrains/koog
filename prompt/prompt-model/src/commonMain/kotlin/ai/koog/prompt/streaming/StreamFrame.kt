@@ -18,7 +18,8 @@ public sealed interface StreamFrame {
      */
     @Serializable
     public data class Append(
-        val text: String
+        val text: String?,
+        val finishReason: String? = null,
     ) : StreamFrame
 
     /**
@@ -31,15 +32,16 @@ public sealed interface StreamFrame {
     @Serializable
     public data class ToolCall(
         val id: String?,
-        val name: String,
-        val content: String
+        val index: Int = 0,
+        val name: String?,
+        val content: String?
     ) : StreamFrame {
 
         /**
          * Lazily parses the content of the tool call as a JSON object.
          */
         val contentJson: JsonObject by lazy {
-            Json.parseToJsonElement(content).jsonObject
+            Json.parseToJsonElement(content ?: "").jsonObject
         }
     }
 }

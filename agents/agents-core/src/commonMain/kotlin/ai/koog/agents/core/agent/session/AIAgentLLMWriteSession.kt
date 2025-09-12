@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.datetime.Clock
 import kotlinx.serialization.KSerializer
 import kotlin.reflect.KClass
@@ -485,7 +486,7 @@ public class AIAgentLLMWriteSession internal constructor(
     public fun requestLLMStreaming(definition: StructuredDataDefinition? = null): Flow<String> =
         requestLLMStreamingWithTools(definition)
             .filterIsInstance<StreamFrame.Append>()
-            .map { append -> append.text }
+            .mapNotNull { append -> append.text }
 
     /**
      * Streams the result of a request to a language model.

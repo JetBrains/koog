@@ -220,14 +220,17 @@ public open class OpenAILLMClient(
         json.decodeFromString(data)
 
     override fun processStreamingChunk(chunk: OpenAIChatCompletionStreamResponse): List<StreamFrame> =
-        chunk.choices.firstOrNull()?.delta?.let {
+        chunk.choices.firstOrNull()?.let { choice ->
             buildList {
-                it.content?.let(StreamFrame::Append)?.let(::add)
-                it.toolCalls?.map { openAIToolCall ->
+                choice.delta.content?.let {
+                    add(StreamFrame.Append(it, choice.finishReason))
+                }
+                choice.delta.toolCalls?.map { openAIToolCall ->
                     StreamFrame.ToolCall(
                         id = openAIToolCall.id,
-                        name = openAIToolCall.function.name,
-                        content = openAIToolCall.function.arguments
+                        index = openAIToolCall.index,
+                        name = openAIToolCall.function?.name,
+                        content = openAIToolCall.function?.arguments
                     )
                 }?.let(::addAll)
             }
