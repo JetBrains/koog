@@ -80,7 +80,7 @@ class A2AClientIntegrationTest {
 
     @BeforeTest
     fun initClient() = runTest {
-        client.loadAgentCard()
+        client.connect()
     }
 
     @Test

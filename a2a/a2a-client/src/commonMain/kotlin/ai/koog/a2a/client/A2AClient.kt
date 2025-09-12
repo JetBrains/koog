@@ -24,32 +24,39 @@ public open class A2AClient(
     private val transport: ClientTransport,
     private val agentCardResolver: AgentCardResolver,
 ) {
-    /**
-     * Currently cached version of the agent card.
-     * Shouldn't be used directly to read values from it, since it can be updated by the [loadAgentCard] method.
-     * Always use [getAgentCard] instead.
-     */
-    @Suppress("PropertyName")
     @Volatile
-    protected open lateinit var _agentCard: AgentCard
+    protected var agentCard: AgentCard? = null
 
     /**
-     * Resolve agent card from the provided [agentCardResolver] and cache it.
-     * Can be called multiple times, to update cached version of the agent card.
+     * Performs initialization logic.
+     * Currently only retrieves the [AgentCard].
      */
-    public open suspend fun loadAgentCard(): AgentCard {
+    public open suspend fun connect() {
+        getAgentCard()
+    }
+
+    /**
+     * Retrieves [AgentCard] by calling [AgentCardResolver.resolve].
+     * Saves it to the cache.
+     */
+    public open suspend fun getAgentCard(): AgentCard {
         return agentCardResolver.resolve().also {
-            _agentCard = it
+            agentCard = it
         }
     }
 
     /**
-     * Get current cached version of agent card.
+     * Retrieves currently cached [AgentCard]
+     *
+     * @throws [IllegalStateException] if it's not initialized
      */
-    public open fun getAgentCard(): AgentCard = _agentCard
+    public open fun cachedAgentCard(): AgentCard {
+        return checkNotNull(agentCard) { "Agent card is not initialized." }
+    }
 
     /**
-     * Calls [agent/getAuthenticatedExtendedCard](https://a2a-protocol.org/latest/specification/#710-agentgetauthenticatedextendedcard)
+     * Calls [agent/getAuthenticatedExtendedCard](https://a2a-protocol.org/latest/specification/#710-agentgetauthenticatedextendedcard).
+     * Updates cached [AgentCard].
      *
      * @throws A2AException if server returned an error.
      */
@@ -62,7 +69,7 @@ public open class A2AClient(
         }
 
         return transport.getAuthenticatedExtendedAgentCard(request, ctx).also {
-            _agentCard = it.data
+            agentCard = it.data
         }
     }
 
@@ -87,7 +94,7 @@ public open class A2AClient(
         request: Request<MessageSendParams>,
         ctx: ClientCallContext = ClientCallContext.Default
     ): Flow<Response<UpdateEvent>> {
-        check(getAgentCard().capabilities.streaming == true) {
+        check(cachedAgentCard().capabilities.streaming == true) {
             "Agent card reports that streaming is not supported."
         }
 
@@ -186,8 +193,8 @@ public open class A2AClient(
         return transport.deleteTaskPushNotificationConfig(request, ctx)
     }
 
-    private fun checkPushNotificationsSupported() {
-        check(getAgentCard().capabilities.pushNotifications == true) {
+    protected fun checkPushNotificationsSupported() {
+        check(cachedAgentCard().capabilities.pushNotifications == true) {
             "Agent card reports that push notifications are not supported."
         }
     }
