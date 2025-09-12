@@ -1,11 +1,5 @@
-package ai.koog.agents.ext.tool.file
+package ai.koog.agents.ext.tool.file.model
 
-import ai.koog.agents.ext.tool.file.model.FileSize
-import ai.koog.agents.ext.tool.file.model.FileSystemEntry
-import ai.koog.agents.ext.tool.file.model.buildFileEntry
-import ai.koog.agents.ext.tool.file.model.buildFileSize
-import ai.koog.agents.ext.tool.file.model.buildFileSystemEntry
-import ai.koog.agents.ext.tool.file.model.buildFolderEntry
 import ai.koog.rag.base.files.FileMetadata
 import ai.koog.rag.base.files.JVMFileSystemProvider
 import kotlinx.coroutines.test.runTest
