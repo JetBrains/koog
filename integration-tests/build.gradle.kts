@@ -2,7 +2,7 @@ group = "${rootProject.group}.integration-tests"
 version = rootProject.version
 
 plugins {
-    id("ai.kotlin.multiplatform")
+    id("ai.kotlin.multiplatform.server")
     alias(libs.plugins.kotlin.serialization)
     id("ai.koog.gradle.plugins.credentialsresolver")
 }

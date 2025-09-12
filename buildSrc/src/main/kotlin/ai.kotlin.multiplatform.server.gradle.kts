@@ -3,8 +3,10 @@
 import ai.koog.gradle.publish.maven.configureJvmJarManifest
 import ai.koog.gradle.tests.configureTests
 import jetbrains.sign.GpgSignSignatoryProvider
+import org.gradle.accessors.dm.LibrariesForLibs
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 
+val libs = the<LibrariesForLibs>()
 plugins {
     kotlin("multiplatform")
     `maven-publish`
@@ -19,7 +21,7 @@ kotlin {
     }
 
     compilerOptions {
-        coreLibrariesVersion = "2.1.21"
+        coreLibrariesVersion = libs.versions.kotlinStdlib.get()
     }
 }
 
