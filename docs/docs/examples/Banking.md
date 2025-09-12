@@ -505,14 +505,11 @@ data class ClassifiedBankRequest(
 
 
 ```kotlin
-import ai.koog.agents.ext.agent.ProvideStringSubgraphResult
-
 // Create a comprehensive tool registry for the multi-agent system
 val toolRegistry = ToolRegistry {
     tool(AskUser)  // Allow agents to ask for clarification
     tools(MoneyTransferTools().asTools())
     tools(TransactionAnalysisTools().asTools())
-    tool(ProvideStringSubgraphResult)
 }
 ```
 
@@ -582,7 +579,7 @@ val strategy = strategy<String, String>("banking assistant") {
     }
 
     // Subgraph for handling money transfers
-    val transferMoney by subgraphWithTask<ClassifiedBankRequest>(
+    val transferMoney by subgraphWithTask<ClassifiedBankRequest, String>(
         tools = MoneyTransferTools().asTools() + AskUser,
         llmModel = OpenAIModels.Chat.GPT4o  // Use more capable model for transfers
     ) { request ->
@@ -594,7 +591,7 @@ val strategy = strategy<String, String>("banking assistant") {
     }
 
     // Subgraph for transaction analysis
-    val transactionAnalysis by subgraphWithTask<ClassifiedBankRequest>(
+    val transactionAnalysis by subgraphWithTask<ClassifiedBankRequest, String>(
         tools = TransactionAnalysisTools().asTools() + AskUser,
     ) { request ->
         """
@@ -615,8 +612,8 @@ val strategy = strategy<String, String>("banking assistant") {
         onCondition { it.requestType == RequestType.Analytics })
 
     // Route results to finish node
-    edge(transferMoney forwardTo nodeFinish transformed { it.result })
-    edge(transactionAnalysis forwardTo nodeFinish transformed { it.result })
+    edge(transferMoney forwardTo nodeFinish)
+    edge(transactionAnalysis forwardTo nodeFinish)
 }
 ```
 

@@ -3,19 +3,20 @@ package ai.koog.agents.example.subgraphwithtask
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.tools.Tool
-import ai.koog.agents.ext.agent.ProvideVerifiedSubgraphResult
+import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.ext.agent.VerifiedSubgraphResult
 import ai.koog.agents.ext.agent.subgraphWithTask
 import ai.koog.agents.ext.agent.subgraphWithVerification
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 
+@OptIn(InternalAgentToolsApi::class)
 fun customWizardStrategy(
     generateTools: List<Tool<*, *>>,
     verifyTools: List<Tool<*, *>>,
     fixTools: List<Tool<*, *>>
 ) = strategy<String, String>("wizard-with-checkstyle") {
-    val generate by subgraphWithTask<Unit>(
+    val generate by subgraphWithTask<Unit, String>(
         generateTools,
         llmModel = OpenAIModels.Chat.GPT4o,
     ) { input ->
@@ -33,7 +34,7 @@ fun customWizardStrategy(
         """.trimIndent()
     }
 
-    val fix by subgraphWithTask<VerifiedSubgraphResult>(
+    val fix by subgraphWithTask<VerifiedSubgraphResult, String>(
         tools = fixTools,
         llmModel = AnthropicModels.Sonnet_3_7,
     ) { verificationResult ->
@@ -60,7 +61,7 @@ fun customWizardStrategy(
     
                 YOU CAN ALSO READ FILES AND DIRECTORIES IF YOU LIKE.
                 
-                Once you are finished and 100% sure the project is correct, provide the result by calling the `${ProvideVerifiedSubgraphResult.name}` tool.
+                Once you are finished and 100% sure the project is correct, provide the result by calling the finalization tool.
         """.trimIndent()
     }
 
@@ -68,5 +69,5 @@ fun customWizardStrategy(
     edge(generate forwardTo verify transformed { "Project is generated and is ready for verification." })
     edge(verify forwardTo fix onCondition { !it.correct })
     edge(verify forwardTo nodeFinish onCondition { it.correct } transformed { "Project is correct." })
-    edge(fix forwardTo verify transformed { it.result })
+    edge(fix forwardTo verify)
 }

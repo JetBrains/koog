@@ -19,9 +19,11 @@ import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.core.tools.asToolDescriptor
+import ai.koog.agents.ext.agent.SubgraphWithTaskUtils.FINALIZE_SUBGRAPH_TOOL_NAME
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
@@ -40,16 +42,75 @@ public data class VerifiedSubgraphResult(
 
 
 /**
- * Represents the identifier of a tool used for finalizing task results.
- * This constant is part of the internal API, intended for managing finalization steps
- * in agent or tool-related processes.
- *
- * Note: This variable is annotated with [InternalAgentToolsApi], indicating that it is
- * an unstable or internal API not intended for general use and subject to change
- * without notice.
+ * Utility object providing tools and methods for working with subgraphs and tasks in a controlled
+ * and structured way. These utilities are designed to help finalize subgraph-related tasks and
+ * encapsulate result handling within tool constructs.
  */
-@InternalAgentToolsApi
-public const val FAKE_FINALIZE_SUBGRAPH_TOOL_NAME: String = "finalize_task_result"
+public object SubgraphWithTaskUtils {
+    /**
+     * Represents the name of the internal tool used for finalizing subgraph task results
+     * within an AI agent's execution flow. This constant is primarily intended for internal
+     * use in the implementation of tools and agents.
+     *
+     * Usage of this tool name is subject to the constraints and opt-in requirements
+     * specified by the `InternalAgentToolsApi` annotation, indicating potential instability
+     * and the possibility of breaking changes in future updates.
+     *
+     * Value: "finalize_task_result".
+     */
+    @InternalAgentToolsApi
+    public const val FINALIZE_SUBGRAPH_TOOL_NAME: String = "finalize_task_result"
+
+    /**
+     * Creates and returns a `Tool` instance with serializers and a descriptor for processing.
+     *
+     * @return A `Tool` instance where the input arguments and results share the same type `T`. The tool uses serializers and a descriptor based on the generic type `T`.
+     */
+    @OptIn(InternalAgentToolsApi::class)
+    public inline fun <reified T> finishTool(): Tool<T, T> = object : Tool<T, T>() {
+        /**
+         * Provides a serializer for the argument type of the tool.
+         *
+         * This property is used to serialize the data to be passed as arguments for the tool's execution.
+         * The generic type `T` represents the type of the arguments, and its serializer is resolved at runtime.
+         *
+         * It ensures that the arguments can be properly encoded and decoded, facilitating communication
+         * between different components or systems handling the serialized data.
+         */
+        override val argsSerializer: KSerializer<T> = serializer()
+        /**
+         * Serializer used to encode and decode the results of the tool's execution.
+         * This property defines how the result type `T` should be serialized, enabling the transfer
+         * and persistence of the execution output in a structured and type-safe manner.
+         *
+         * It leverages Kotlin serialization features to automatically provide a mechanism
+         * for converting the result into a serializable format and reconstructing it
+         * during deserialization.
+         */
+        override val resultSerializer: KSerializer<T> = serializer()
+
+        /**
+         * The descriptor for the tool, derived from the serializer's [SerialDescriptor],
+         * and converted to a [ToolDescriptor] using the provided tool name.
+         *
+         * This property defines the metadata of the tool, such as its name and associated parameters,
+         * and leverages the `asToolDescriptor` function for the conversion process.
+         *
+         * The tool name used for this descriptor is defined as `FINALIZE_SUBGRAPH_TOOL_NAME`.
+         */
+        override val descriptor: ToolDescriptor =
+            serializer<T>().descriptor.asToolDescriptor(toolName = FINALIZE_SUBGRAPH_TOOL_NAME)
+
+        /**
+         * Executes the given argument and returns it as the result. This is a simple pass-through
+         * implementation that processes input and directly returns it without modification.
+         *
+         * @param args The input argument of type [T] to be processed.
+         * @return The same input argument [args] of type [T] as the result.
+         */
+        override suspend fun execute(args: T): T = args
+    }
+}
 
 /**
  * Creates a subgraph, which performs one specific task, defined by [defineTask],
@@ -84,7 +145,7 @@ public inline fun <reified Input, reified Output> AIAgentSubgraphBuilderBase<*, 
     llmParams = llmParams,
 ) {
     val finishToolDescriptor =
-        serializer<Output>().descriptor.asToolDescriptor(toolName = FAKE_FINALIZE_SUBGRAPH_TOOL_NAME)
+        serializer<Output>().descriptor.asToolDescriptor(toolName = FINALIZE_SUBGRAPH_TOOL_NAME)
 
     setupSubgraphWithTask<Input, Output, Output>(finishToolDescriptor, defineTask)
 }
@@ -278,7 +339,7 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
      * it doesn't execute it.
      * */
     val callToolHacked by node<Message.Tool.Call, ReceivedToolResult>() { toolCall ->
-        if (toolCall.tool == FAKE_FINALIZE_SUBGRAPH_TOOL_NAME) {
+        if (toolCall.tool == FINALIZE_SUBGRAPH_TOOL_NAME) {
             val toolResult = Json.decodeFromString(serializer<Output>(), toolCall.content)
 
             // Append final tool call result to the prompt for further LLM calls to see it (otherwise they would fail)
@@ -292,7 +353,7 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
 
             ReceivedToolResult(
                 id = toolCall.id,
-                tool = FAKE_FINALIZE_SUBGRAPH_TOOL_NAME,
+                tool = FINALIZE_SUBGRAPH_TOOL_NAME,
                 content = toolCall.content,
                 result = toolResult
             )

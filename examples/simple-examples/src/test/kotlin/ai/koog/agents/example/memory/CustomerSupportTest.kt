@@ -5,8 +5,7 @@ import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.core.tools.annotations.Tool
 import ai.koog.agents.core.tools.reflect.ToolSet
 import ai.koog.agents.core.tools.reflect.asTools
-import ai.koog.agents.ext.agent.ProvideStringSubgraphResult
-import ai.koog.agents.ext.agent.StringSubgraphResult
+import ai.koog.agents.ext.agent.SubgraphWithTaskUtils
 import ai.koog.agents.memory.model.Concept
 import ai.koog.agents.memory.model.Fact
 import ai.koog.agents.memory.model.MemoryScope
@@ -299,20 +298,20 @@ class CustomerSupportTest {
 
             // Final result
             mockLLMToolCall(
-                ProvideStringSubgraphResult,
-                StringSubgraphResult("I've analyzed the information and stored it in memory for future reference.")
+                SubgraphWithTaskUtils.finishTool<String>(),
+                "I've analyzed the information and stored it in memory for future reference."
             ) onRequestContains
                 "I need to provide a summary of my findings"
 
             // Instead of text responses, mock tool calls directly
             mockLLMToolCall(
-                ProvideStringSubgraphResult,
-                StringSubgraphResult("I've analyzed your device issue and here are the diagnostic results...")
+                SubgraphWithTaskUtils.finishTool<String>(),
+                "I've analyzed your device issue and here are the diagnostic results..."
             ) onRequestContains
                 "I'm getting error ERR-1001 on my device"
             mockLLMToolCall(
-                ProvideStringSubgraphResult,
-                StringSubgraphResult("I've analyzed your product issue and here is the product information...")
+                SubgraphWithTaskUtils.finishTool<String>(),
+                "I've analyzed your product issue and here is the product information..."
             ) onRequestContains
                 "I'm from Acme Corp and we're having issues with product prod789"
 
@@ -326,8 +325,8 @@ class CustomerSupportTest {
             mockLLMToolCall(MockKnowledgeBaseToolSet()::searchSolutions, "connectivity issues") onRequestContains
                 "I need to search for solutions for the first time"
             mockLLMToolCall(
-                ProvideStringSubgraphResult,
-                StringSubgraphResult("I've analyzed your issue and here's what I found...")
+                SubgraphWithTaskUtils.finishTool<String>(),
+                "I've analyzed your issue and here's what I found..."
             ) onRequestContains
                 "I'm having trouble with my device"
 
@@ -335,10 +334,8 @@ class CustomerSupportTest {
             mockLLMToolCall(MockUserInfoToolSet()::getUserContactInfo, "user-789") onRequestContains
                 "I need to get user contact info again"
             mockLLMToolCall(
-                ProvideStringSubgraphResult,
-                StringSubgraphResult(
-                    "I've analyzed your issue again and here's what I found using the information from memory..."
-                )
+                SubgraphWithTaskUtils.finishTool<String>(),
+                "I've analyzed your issue again and here's what I found using the information from memory..."
             ) onRequestContains
                 "I'm having the same issue again"
         }
@@ -515,30 +512,30 @@ class CustomerSupportTest {
 
             // Final result
             mockLLMToolCall(
-                ProvideStringSubgraphResult,
-                StringSubgraphResult("I've analyzed the information and stored it in memory for future reference.")
+                SubgraphWithTaskUtils.finishTool<String>(),
+                "I've analyzed the information and stored it in memory for future reference."
             ) onRequestContains
                 "I need to provide a summary of my findings"
 
             // Instead of text responses, mock tool calls directly
             mockLLMToolCall(
-                ProvideStringSubgraphResult,
-                StringSubgraphResult("I've analyzed your device issue and here are the diagnostic results...")
+                SubgraphWithTaskUtils.finishTool<String>(),
+                "I've analyzed your device issue and here are the diagnostic results..."
             ) onRequestContains
                 "I'm getting error ERR-1001 on my device"
             mockLLMToolCall(
-                ProvideStringSubgraphResult,
-                StringSubgraphResult("I've analyzed your product issue and here is the product information...")
+                SubgraphWithTaskUtils.finishTool<String>(),
+                "I've analyzed your product issue and here is the product information..."
             ) onRequestContains
                 "I'm from Acme Corp and we're having issues with product prod789"
             mockLLMToolCall(
-                ProvideStringSubgraphResult,
-                StringSubgraphResult("I've analyzed your issue and here's what I found...")
+                SubgraphWithTaskUtils.finishTool<String>(),
+                "I've analyzed your issue and here's what I found..."
             ) onRequestContains
                 "I'm having trouble with my device"
             mockLLMToolCall(
-                ProvideStringSubgraphResult,
-                StringSubgraphResult("I've analyzed your issue again and here's what I found...")
+                SubgraphWithTaskUtils.finishTool<String>(),
+                "I've analyzed your issue again and here's what I found..."
             ) onRequestContains
                 "I'm having the same issue again"
 

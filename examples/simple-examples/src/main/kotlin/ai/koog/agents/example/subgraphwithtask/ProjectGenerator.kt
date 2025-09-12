@@ -11,8 +11,6 @@ import ai.koog.agents.example.subgraphwithtask.ProjectGeneratorTools.DeleteFileT
 import ai.koog.agents.example.subgraphwithtask.ProjectGeneratorTools.LSDirectoriesTool
 import ai.koog.agents.example.subgraphwithtask.ProjectGeneratorTools.ReadFileTool
 import ai.koog.agents.example.subgraphwithtask.ProjectGeneratorTools.RunCommand
-import ai.koog.agents.ext.agent.ProvideStringSubgraphResult
-import ai.koog.agents.ext.agent.ProvideVerifiedSubgraphResult
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
@@ -54,9 +52,6 @@ fun main() {
     val toolRegistry = ToolRegistry {
         verifyTools.forEach { tool(it) }
         fixTools.forEach { tool(it) }
-
-        tool(ProvideStringSubgraphResult)
-        tool(ProvideVerifiedSubgraphResult)
     }
 
     runBlocking {
