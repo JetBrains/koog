@@ -17,6 +17,7 @@ kotlin {
                 implementation(libs.ktor.server.netty)
                 implementation(kotlin("test"))
                 implementation(kotlin("test-junit5"))
+                runtimeOnly(libs.ktor.client.apache5)
                 runtimeOnly(libs.slf4j.simple)
             }
         }
@@ -51,7 +52,7 @@ kotlin {
 }
 
 configurations.all {
-    // make sure we have netty, not CIO
+    // make sure we have Netty as a server, not CIO
     exclude(group = "io.ktor", module = "ktor-server-cio")
 }
 
