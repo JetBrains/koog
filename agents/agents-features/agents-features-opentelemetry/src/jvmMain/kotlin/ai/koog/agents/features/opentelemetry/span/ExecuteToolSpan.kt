@@ -10,7 +10,7 @@ import io.opentelemetry.api.trace.SpanKind
 internal class ExecuteToolSpan(
     parent: NodeExecuteSpan,
     tool: Tool<*, *>,
-    private val toolArgs: Any?
+    private val toolArgs: Any?,
     toolCallId: String?,
 ) : GenAIAgentSpan(parent) {
 
