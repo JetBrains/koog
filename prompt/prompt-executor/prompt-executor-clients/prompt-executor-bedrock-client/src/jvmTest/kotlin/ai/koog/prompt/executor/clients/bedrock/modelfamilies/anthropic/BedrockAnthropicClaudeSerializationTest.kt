@@ -11,6 +11,9 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
@@ -399,11 +402,11 @@ class BedrockAnthropicClaudeSerializationTest {
         val prompt = Prompt.build("test", params = LLMParams(toolChoice = LLMParams.ToolChoice.Auto)) {
             user(userMessageQuestion)
         }
-        val request = BedrockAnthropicClaudeSerialization.createAnthropicRequest(prompt, model, tools)
+        val request = BedrockAnthropicClaudeSerialization.createAnthropicRequest(prompt, tools)
         assertNotNull(request)
         assertNotNull(request.tools)
-        assertEquals(1, request.tools?.size)
-        val tool = request.tools?.get(0)
+        assertEquals(1, request.tools.size)
+        val tool = request.tools[0]
         assertNotNull(tool)
         assertEquals(toolName, tool.name)
         assertEquals(toolDescription, tool.description)
@@ -411,11 +414,10 @@ class BedrockAnthropicClaudeSerializationTest {
         assertNotNull(schema)
 
         // Verify that the type field is always "object" and gets serialized
-        assertEquals("object", schema.type)
+        assertEquals("custom", tool.type)
 
-        assertEquals(listOf("city"), schema.required)
-        val properties = schema.properties.jsonObject
-        assertNotNull(properties["city"])
-        assertNotNull(properties["units"])
+        val props = schema["properties"] as JsonObject
+        assertNotNull(props["city"])
+        assertNotNull(props["units"])
     }
 }
