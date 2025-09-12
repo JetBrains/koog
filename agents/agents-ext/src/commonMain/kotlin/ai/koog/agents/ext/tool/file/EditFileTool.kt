@@ -218,6 +218,8 @@ public class EditFileTool<Path>(
 
     override val argsSerializer: KSerializer<Args> = Args.serializer()
 
+    override val resultSerializer: KSerializer<Result> = Result.serializer()
+
     override val descriptor: ToolDescriptor = EditFileTool.descriptor
 
     override suspend fun execute(args: Args): Result {
