@@ -17,7 +17,7 @@ ktlint = "13.0.0"
 ktor3 = "3.2.2"
 lettuce = "6.5.5.RELEASE"
 logback = "1.5.13"
-mcp = "0.6.0"
+mcp = "0.7.0"
 mockito="5.19.0"
 mockk = "1.13.8"
 opentelemetry = "1.51.0"
@@ -71,7 +71,8 @@ logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "lo
 oshai-kotlin-logging = { module = "io.github.oshai:kotlin-logging", version.ref = "oshai-logging" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 dokka-gradle-plugin = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version.ref = "dokka" }
-mcp = { module = "io.modelcontextprotocol:kotlin-sdk", version.ref = "mcp" }
+mcp-client = { module = "io.modelcontextprotocol:kotlin-sdk-client", version.ref = "mcp" }
+mcp-server = { module = "io.modelcontextprotocol:kotlin-sdk-server", version.ref = "mcp" }
 slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
 jetsign-gradle-plugin = { module = "com.jetbrains:jet-sign", version.ref = "jetsign" }
 testcontainers = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }

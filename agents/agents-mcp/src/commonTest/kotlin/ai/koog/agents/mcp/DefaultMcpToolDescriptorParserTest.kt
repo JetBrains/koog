@@ -569,6 +569,7 @@ class DefaultMcpToolDescriptorParserTest {
             ),
             outputSchema = null,
             annotations = null,
+            title = null,
         )
     }
 }

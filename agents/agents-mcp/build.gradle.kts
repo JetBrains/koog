@@ -20,7 +20,7 @@ kotlin {
                 api(project(":prompt:prompt-executor:prompt-executor-llms"))
                 api(project(":prompt:prompt-executor:prompt-executor-llms-all"))
 
-                api(libs.mcp)
+                api(libs.mcp.client)
                 api(libs.kotlinx.serialization.json)
                 api(libs.kotlinx.io.core)
                 api(libs.kotlinx.coroutines.core)
@@ -40,6 +40,7 @@ kotlin {
         jvmTest {
             dependencies {
                 implementation(project(":agents:agents-test"))
+                implementation(libs.mcp.server)
             }
         }
     }
