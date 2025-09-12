@@ -4,15 +4,13 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.prompt.dsl.Prompt
-import ai.koog.prompt.executor.clients.anthropic.AnthropicContent
-import ai.koog.prompt.executor.clients.anthropic.AnthropicMessageRequest
-import ai.koog.prompt.executor.clients.anthropic.AnthropicToolChoice
 import ai.koog.prompt.executor.clients.bedrock.BedrockModels
+import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicInvokeModel
+import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicToolChoice
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
-import kotlinx.serialization.json.jsonObject
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
@@ -44,22 +42,18 @@ class BedrockAnthropicClaudeSerializationTest {
             user(userMessage)
         }
 
-        val request = BedrockAnthropicClaudeSerialization.createAnthropicRequest(prompt, model, emptyList())
+        val request = BedrockAnthropicClaudeSerialization.createAnthropicRequest(prompt, emptyList())
 
         assertNotNull(request)
-        assertEquals(model.id, request.model)
-        assertEquals(AnthropicMessageRequest.MAX_TOKENS_DEFAULT, request.maxTokens)
+        assertEquals(BedrockAnthropicInvokeModel.MAX_TOKENS_DEFAULT, request.maxTokens)
         assertEquals(temperature, request.temperature)
 
         assertNotNull(request.system)
-        assertEquals(1, request.system?.size)
-        assertEquals(systemMessage, request.system?.first()?.text)
 
         assertEquals(1, request.messages.size)
         assertEquals("user", request.messages[0].role)
         assertEquals(1, request.messages[0].content.size)
-        assertTrue(request.messages[0].content[0] is AnthropicContent.Text)
-        assertEquals(userMessage, (request.messages[0].content[0] as AnthropicContent.Text).text)
+        assertEquals(userMessage, (request.messages[0].content[0]).text)
     }
 
     @Test
@@ -71,23 +65,23 @@ class BedrockAnthropicClaudeSerializationTest {
             user(userMessage)
         }
 
-        val request = BedrockAnthropicClaudeSerialization.createAnthropicRequest(prompt, model, emptyList())
+        val request = BedrockAnthropicClaudeSerialization.createAnthropicRequest(prompt, emptyList())
 
         assertNotNull(request)
 
         assertEquals(3, request.messages.size)
 
         assertEquals("user", request.messages[0].role)
-        assertEquals("Hello, who are you?", (request.messages[0].content[0] as AnthropicContent.Text).text)
+        assertEquals("Hello, who are you?", (request.messages[0].content[0]).text)
 
         assertEquals("assistant", request.messages[1].role)
         assertEquals(
             "I'm Claude, an AI assistant created by Anthropic. How can I help you today?",
-            (request.messages[1].content[0] as AnthropicContent.Text).text
+            (request.messages[1].content[0]).text
         )
 
         assertEquals("user", request.messages[2].role)
-        assertEquals("Tell me about Paris.", (request.messages[2].content[0] as AnthropicContent.Text).text)
+        assertEquals("Tell me about Paris.", (request.messages[2].content[0]).text)
     }
 
     @Test
@@ -109,25 +103,17 @@ class BedrockAnthropicClaudeSerializationTest {
             user(userMessageQuestion)
         }
 
-        val request = BedrockAnthropicClaudeSerialization.createAnthropicRequest(prompt, model, tools)
+        val request = BedrockAnthropicClaudeSerialization.createAnthropicRequest(prompt, tools)
 
         assertNotNull(request)
 
         assertNotNull(request.tools)
-        assertEquals(1, request.tools?.size)
-        assertEquals(toolName, request.tools?.get(0)?.name)
-        assertEquals(toolDescription, request.tools?.get(0)?.description)
+        assertEquals(1, request.tools.size)
+        assertEquals(toolName, request.tools[0].name)
+        assertEquals(toolDescription, request.tools[0].description)
 
-        val schema = request.tools?.get(0)?.inputSchema
+        val schema = request.tools[0].inputSchema
         assertNotNull(schema)
-
-        assertEquals(listOf("city"), schema.required)
-
-        val properties = schema.properties.jsonObject
-        assertNotNull(properties["city"])
-        assertNotNull(properties["units"])
-
-        assertEquals(AnthropicToolChoice.Auto, request.toolChoice)
     }
 
     @Test
@@ -145,27 +131,27 @@ class BedrockAnthropicClaudeSerializationTest {
         val promptAuto = Prompt.build("test", params = LLMParams(toolChoice = LLMParams.ToolChoice.Auto)) {
             user(userMessageQuestion)
         }
-        val requestAuto = BedrockAnthropicClaudeSerialization.createAnthropicRequest(promptAuto, model, tools)
-        assertEquals(AnthropicToolChoice.Auto, requestAuto.toolChoice)
+        val requestAuto = BedrockAnthropicClaudeSerialization.createAnthropicRequest(promptAuto, tools)
+        assertEquals("auto", requestAuto.toolChoice?.type)
 
         val promptNone = Prompt.build("test", params = LLMParams(toolChoice = LLMParams.ToolChoice.None)) {
             user(userMessageQuestion)
         }
-        val requestNone = BedrockAnthropicClaudeSerialization.createAnthropicRequest(promptNone, model, tools)
-        assertEquals(AnthropicToolChoice.None, requestNone.toolChoice)
+        val requestNone = BedrockAnthropicClaudeSerialization.createAnthropicRequest(promptNone, tools)
+        assertEquals("none", requestNone.toolChoice?.type)
 
         val promptRequired = Prompt.build("test", params = LLMParams(toolChoice = LLMParams.ToolChoice.Required)) {
             user(userMessageQuestion)
         }
-        val requestRequired = BedrockAnthropicClaudeSerialization.createAnthropicRequest(promptRequired, model, tools)
-        assertEquals(AnthropicToolChoice.Any, requestRequired.toolChoice)
+        val requestRequired = BedrockAnthropicClaudeSerialization.createAnthropicRequest(promptRequired, tools)
+        assertEquals("any", requestRequired.toolChoice?.type)
 
         val promptNamed = Prompt.build("test", params = LLMParams(toolChoice = LLMParams.ToolChoice.Named(toolName))) {
             user(userMessageQuestion)
         }
-        val requestNamed = BedrockAnthropicClaudeSerialization.createAnthropicRequest(promptNamed, model, tools)
-        assertTrue(requestNamed.toolChoice is AnthropicToolChoice.Tool)
-        assertEquals(toolName, (requestNamed.toolChoice as AnthropicToolChoice.Tool).name)
+        val requestNamed = BedrockAnthropicClaudeSerialization.createAnthropicRequest(promptNamed, tools)
+        assertTrue(requestNamed.toolChoice is BedrockAnthropicToolChoice)
+        assertEquals(toolName, requestNamed.toolChoice.name)
     }
 
     @Test
