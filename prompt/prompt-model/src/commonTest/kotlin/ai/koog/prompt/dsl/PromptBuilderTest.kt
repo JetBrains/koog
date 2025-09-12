@@ -193,7 +193,7 @@ class PromptBuilderTest {
             }
 
             tool {
-                call("tool_1", "code_analyzer", "Analyzing the code example...")
+                call("tool_1", 0, "code_analyzer", "Analyzing the code example...")
                 result("tool_1", "code_analyzer", "The code looks correct.")
             }
         }
