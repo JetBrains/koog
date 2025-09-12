@@ -14,7 +14,8 @@ public sealed interface StreamFrame {
     /**
      * Represents a frame of a streaming response from a LLM that appends some text.
      *
-     * @property text The text to append to the response.
+     * @property text The text to append to the response. Can be null for non-text frames.
+     * @property finishReason Optional reason for finishing the stream (e.g., "stop", "length").
      */
     @Serializable
     public data class Append(
@@ -25,9 +26,10 @@ public sealed interface StreamFrame {
     /**
      * Represents a frame of a streaming response from a LLM that contains a tool call.
      *
-     * @property id The ID of the tool call.
-     * @property name The name of the tool call.
-     * @property content The content of the tool call.
+     * @property id The ID of the tool call. Can be null for partial frames.
+     * @property index The index of this tool call in the sequence, used for ordering and grouping chunks.
+     * @property name The name of the tool being called. Can be null for partial frames.
+     * @property content The content/arguments of the tool call. Can be null for partial frames.
      */
     @Serializable
     public data class ToolCall(

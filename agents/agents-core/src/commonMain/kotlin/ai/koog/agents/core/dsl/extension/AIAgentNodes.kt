@@ -275,6 +275,17 @@ public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStreaming(
         transformStreamData(it.mapTextOnly())
     }
 
+/**
+ * A node that processes a list of request messages and streams the LLM response with tool support.
+ * This node handles both user messages and tool results, collecting the streamed response frames
+ * and converting them back to proper response messages.
+ *
+ * @param name Optional node name for identification.
+ * @param structureDefinition Optional structure definition to guide the LLM response format.
+ * @param onEvent Callback invoked for each [StreamFrame] received during streaming, allowing
+ *                real-time processing of both text and tool call chunks.
+ * @return A delegate that processes request messages and returns the complete response messages.
+ */
 @AIAgentBuilderDslMarker
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestsStreamingWithTools(
     name: String? = null,
