@@ -67,11 +67,14 @@ internal class GenericAgentEnvironment(
         logger.debug {
             "Received results from tools call (" +
                 "tools: [${toolCalls.joinToString(", ") { it.tool }}], " +
-                "results: [${results.joinToString(", ") { it.result?.toStringDefault() ?: "null" }}])"
+                "results: [${results.joinToString(", ") { it.resultString() }}])"
         }
 
         return results
     }
+
+    private fun ReceivedToolResult.resultString(): String =
+        toolRegistry.tools.firstOrNull { it.name == tool }?.encodeResultToStringUnsafe(result) ?: "null"
 
     override suspend fun reportProblem(exception: Throwable) {
         val agentRunInfo = currentCoroutineContext().getAgentRunInfoElementOrThrow()
@@ -87,7 +90,7 @@ internal class GenericAgentEnvironment(
         toolName: String,
         agentId: String,
         message: String,
-        result: ToolResult?
+        result: Any?
     ): EnvironmentToolResultToAgentContent = AIAgentEnvironmentToolResultToAgentContent(
         toolCallId = toolCallId,
         toolName = toolName,
@@ -120,7 +123,7 @@ internal class GenericAgentEnvironment(
 
             val toolResult = try {
                 @Suppress("UNCHECKED_CAST")
-                (tool as Tool<ToolArgs, ToolResult>).execute(toolArgs, toolEnabler)
+                (tool as Tool<Any?, Any?>).execute(toolArgs, toolEnabler)
             } catch (e: ToolException) {
                 pipeline.onToolValidationFailed(content.runId, content.toolCallId, tool, toolArgs, e.message)
 
@@ -153,7 +156,7 @@ internal class GenericAgentEnvironment(
                 toolCallId = content.toolCallId,
                 toolName = content.toolName,
                 agentId = strategyId,
-                message = toolResult.toStringDefault(),
+                message = tool.encodeResultToStringUnsafe(toolResult),
                 result = toolResult
             )
         }
