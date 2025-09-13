@@ -1,5 +1,6 @@
 package ai.koog.a2a.client
 
+import ai.koog.a2a.consts.A2AConsts
 import ai.koog.a2a.model.AgentCard
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -36,14 +37,9 @@ public class ExplicitAgentCardResolver(public val agentCard: AgentCard) : AgentC
  */
 public class UrlAgentCardResolver(
     public val baseUrl: String,
-    public val path: String = wellKnownPath,
+    public val path: String = A2AConsts.AGENT_CARD_WELL_KNOWN_PATH,
     baseHttpClient: HttpClient = HttpClient(),
 ) : AgentCardResolver {
-    public companion object {
-        @Suppress("ConstPropertyName")
-        public const val wellKnownPath: String = "/.well-known/agent-card.json"
-    }
-
     private val httpClient: HttpClient = baseHttpClient.config {
         defaultRequest {
             url(baseUrl)

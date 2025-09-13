@@ -16,12 +16,12 @@ import kotlinx.serialization.json.JsonObject
  */
 @Serializable
 public data class TaskStatusUpdateEvent(
-    public val taskId: String,
-    public val contextId: String,
+    override val taskId: String,
+    override val contextId: String,
     public val status: TaskStatus,
     public val final: Boolean,
     public val metadata: JsonObject? = null,
-) : UpdateEvent {
+) : TaskEvent {
     @EncodeDefault
     override val kind: String = "status-update"
 }
@@ -39,13 +39,13 @@ public data class TaskStatusUpdateEvent(
  */
 @Serializable
 public data class TaskArtifactUpdateEvent(
-    public val taskId: String,
-    public val contextId: String,
+    override val taskId: String,
+    override val contextId: String,
     public val artifact: Artifact,
     public val append: Boolean? = null,
     public val lastChunk: Boolean? = null,
     public val metadata: JsonObject? = null,
-) : UpdateEvent {
+) : TaskEvent {
     @EncodeDefault
     override val kind: String = "artifact-update"
 }

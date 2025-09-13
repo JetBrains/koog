@@ -4,13 +4,13 @@ import ai.koog.a2a.exceptions.A2AException
 import ai.koog.a2a.exceptions.createA2AException
 import ai.koog.a2a.model.AgentCard
 import ai.koog.a2a.model.CommunicationEvent
+import ai.koog.a2a.model.Event
 import ai.koog.a2a.model.MessageSendParams
 import ai.koog.a2a.model.Task
 import ai.koog.a2a.model.TaskIdParams
 import ai.koog.a2a.model.TaskPushNotificationConfig
 import ai.koog.a2a.model.TaskPushNotificationConfigParams
 import ai.koog.a2a.model.TaskQueryParams
-import ai.koog.a2a.model.UpdateEvent
 import ai.koog.a2a.transport.ClientCallContext
 import ai.koog.a2a.transport.ClientTransport
 import ai.koog.a2a.transport.Request
@@ -123,7 +123,7 @@ public abstract class JSONRPCClientTransport : ClientTransport {
     override fun sendMessageStreaming(
         request: Request<MessageSendParams>,
         ctx: ClientCallContext
-    ): Flow<Response<UpdateEvent>> =
+    ): Flow<Response<Event>> =
         requestStreaming(A2AMethod.SendMessageStreaming, request, ctx)
 
     override suspend fun getTask(
@@ -141,7 +141,7 @@ public abstract class JSONRPCClientTransport : ClientTransport {
     override fun resubscribeTask(
         request: Request<TaskIdParams>,
         ctx: ClientCallContext
-    ): Flow<Response<UpdateEvent>> =
+    ): Flow<Response<Event>> =
         requestStreaming(A2AMethod.ResubscribeTask, request, ctx)
 
     override suspend fun setTaskPushNotificationConfig(

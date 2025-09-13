@@ -48,15 +48,17 @@ internal object FileSerializer : JsonContentPolymorphicSerializer<File>(File::cl
     }
 }
 
-internal object UpdateEventSerializer : JsonContentPolymorphicSerializer<UpdateEvent>(UpdateEvent::class) {
-    override fun selectDeserializer(element: JsonElement): DeserializationStrategy<UpdateEvent> {
+internal object EventSerializer : JsonContentPolymorphicSerializer<Event>(Event::class) {
+    override fun selectDeserializer(element: JsonElement): DeserializationStrategy<Event> {
         val jsonObject = element.jsonObject
         val kind = jsonObject["kind"]?.jsonPrimitive?.content ?: error("Missing 'kind' field in Event")
 
         return when (kind) {
             "status-update" -> TaskStatusUpdateEvent.serializer()
             "artifact-update" -> TaskArtifactUpdateEvent.serializer()
-            else -> CommunicationEventSerializer
+            "task" -> Task.serializer()
+            "message" -> Message.serializer()
+            else -> error("Unknown kind: $kind")
         }
     }
 }
@@ -64,11 +66,25 @@ internal object UpdateEventSerializer : JsonContentPolymorphicSerializer<UpdateE
 internal object CommunicationEventSerializer : JsonContentPolymorphicSerializer<CommunicationEvent>(CommunicationEvent::class) {
     override fun selectDeserializer(element: JsonElement): DeserializationStrategy<CommunicationEvent> {
         val jsonObject = element.jsonObject
-        val kind = jsonObject["kind"]?.jsonPrimitive?.content ?: error("Missing 'kind' field in Communication")
+        val kind = jsonObject["kind"]?.jsonPrimitive?.content ?: error("Missing 'kind' field in CommunicationEvent")
 
         return when (kind) {
             "task" -> Task.serializer()
             "message" -> Message.serializer()
+            else -> error("Unknown kind: $kind")
+        }
+    }
+}
+
+internal object TaskEventSerializer : JsonContentPolymorphicSerializer<TaskEvent>(TaskEvent::class) {
+    override fun selectDeserializer(element: JsonElement): DeserializationStrategy<TaskEvent> {
+        val jsonObject = element.jsonObject
+        val kind = jsonObject["kind"]?.jsonPrimitive?.content ?: error("Missing 'kind' field in TaskEvent")
+
+        return when (kind) {
+            "task" -> Task.serializer()
+            "status-update" -> TaskStatusUpdateEvent.serializer()
+            "artifact-update" -> TaskArtifactUpdateEvent.serializer()
             else -> error("Unknown kind: $kind")
         }
     }

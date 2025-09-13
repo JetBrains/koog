@@ -1,5 +1,6 @@
 package ai.koog.a2a.utils
 
+import ai.koog.a2a.annotations.InternalA2AApi
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -8,8 +9,9 @@ import kotlinx.coroutines.sync.withLock
 /**
  * A KMP read-write lock implementation that allows concurrent read access but ensures exclusive write access.
  *
- * This implementation uses `kotlinx.coroutines.sync.Mutex` to coordinate access for both readers and writers.
+ * This implementation uses [Mutex] to coordinate access for both readers and writers.
  */
+@InternalA2AApi
 public class RWLock {
     private val writeMutex = Mutex()
     private var readersCount = 0

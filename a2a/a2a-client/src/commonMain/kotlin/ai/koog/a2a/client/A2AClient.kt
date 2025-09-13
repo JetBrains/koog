@@ -3,13 +3,13 @@ package ai.koog.a2a.client
 import ai.koog.a2a.exceptions.A2AException
 import ai.koog.a2a.model.AgentCard
 import ai.koog.a2a.model.CommunicationEvent
+import ai.koog.a2a.model.Event
 import ai.koog.a2a.model.MessageSendParams
 import ai.koog.a2a.model.Task
 import ai.koog.a2a.model.TaskIdParams
 import ai.koog.a2a.model.TaskPushNotificationConfig
 import ai.koog.a2a.model.TaskPushNotificationConfigParams
 import ai.koog.a2a.model.TaskQueryParams
-import ai.koog.a2a.model.UpdateEvent
 import ai.koog.a2a.transport.ClientCallContext
 import ai.koog.a2a.transport.ClientTransport
 import ai.koog.a2a.transport.Request
@@ -93,7 +93,7 @@ public open class A2AClient(
     public fun sendMessageStreaming(
         request: Request<MessageSendParams>,
         ctx: ClientCallContext = ClientCallContext.Default
-    ): Flow<Response<UpdateEvent>> {
+    ): Flow<Response<Event>> {
         check(cachedAgentCard().capabilities.streaming == true) {
             "Agent card reports that streaming is not supported."
         }
@@ -133,7 +133,7 @@ public open class A2AClient(
     public fun resubscribeTask(
         request: Request<TaskIdParams>,
         ctx: ClientCallContext = ClientCallContext.Default
-    ): Flow<Response<UpdateEvent>> {
+    ): Flow<Response<Event>> {
         return transport.resubscribeTask(request, ctx)
     }
 

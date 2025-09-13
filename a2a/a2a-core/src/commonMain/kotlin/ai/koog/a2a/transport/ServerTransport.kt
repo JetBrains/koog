@@ -4,13 +4,13 @@ import ai.koog.a2a.exceptions.A2AException
 import ai.koog.a2a.exceptions.A2AInternalErrorException
 import ai.koog.a2a.model.AgentCard
 import ai.koog.a2a.model.CommunicationEvent
+import ai.koog.a2a.model.Event
 import ai.koog.a2a.model.MessageSendParams
 import ai.koog.a2a.model.Task
 import ai.koog.a2a.model.TaskIdParams
 import ai.koog.a2a.model.TaskPushNotificationConfig
 import ai.koog.a2a.model.TaskPushNotificationConfigParams
 import ai.koog.a2a.model.TaskQueryParams
-import ai.koog.a2a.model.UpdateEvent
 import kotlinx.coroutines.flow.Flow
 
 /**
@@ -64,7 +64,7 @@ public interface RequestHandler {
     public fun onSendMessageStreaming(
         request: Request<MessageSendParams>,
         ctx: ServerCallContext
-    ): Flow<Response<UpdateEvent>>
+    ): Flow<Response<Event>>
 
     /**
      * Handles [tasks/get](https://a2a-protocol.org/latest/specification/#73-tasksget)
@@ -84,7 +84,7 @@ public interface RequestHandler {
     public fun onResubscribeTask(
         request: Request<TaskIdParams>,
         ctx: ServerCallContext
-    ): Flow<Response<UpdateEvent>>
+    ): Flow<Response<Event>>
 
     /**
      * Handles [tasks/cancel](https://a2a-protocol.org/latest/specification/#74-taskscancel)
@@ -141,12 +141,53 @@ public interface RequestHandler {
  * Represents the server context of a call.
  *
  * @property headers Headers associated with the call.
+ * @property state State associated with the call, allows storing arbitrary values. To get typed value from the state,
+ * use [getFromState] or [getFromStateOrNull] with appropriate [StateKey].
  */
 public class ServerCallContext(
     public val headers: Map<String, List<String>> = emptyMap(),
+    public val state: Map<StateKey<*>, Any> = emptyMap()
 ) {
-    @Suppress("MissingKDocForPublicAPI")
-    public companion object {
-        public val Default: ServerCallContext = ServerCallContext()
+    /**
+     * Retrieves a value of type [T] associated with the specified [key] from the [state] map.
+     * If the [key] is not found in the state, returns `null`.
+     *
+     * Performs unsafe cast under the hood, so make sure the value is of the expected type.
+     *
+     * @param key The state key for which the associated value needs to be retrieved.
+     */
+    public fun <T> getFromStateOrNull(key: StateKey<T>): T? {
+        return state[key]?.let {
+            @Suppress("UNCHECKED_CAST")
+            it as T
+        }
     }
+
+    /**
+     * Retrieves a value of type [T] associated with the specified [key] from the [state] map.
+     *
+     * Performs unsafe cast under the hood, so make sure the value is of the expected type.
+     *
+     * @param key The state key for which the associated value needs to be retrieved.
+     * @throws NoSuchElementException if the [key] is not found in the state.
+     */
+    public fun <T> getFromState(key: StateKey<T>): T {
+        return getFromStateOrNull(key) ?: throw NoSuchElementException("State key $key not found")
+    }
+
+    /**
+     * Creates a copy of this [ServerCallContext].
+     */
+    public fun copy(
+        headers: Map<String, List<String>> = this.headers,
+        state: Map<StateKey<*>, Any> = this.state,
+    ): ServerCallContext = ServerCallContext(headers, state)
+}
+
+/**
+ * Helper class to be used with [ServerCallContext.state] to store and retrieve values associated with a key in a typed
+ * manner.
+ */
+public class StateKey<@Suppress("unused") T>(public val name: String) {
+    override fun toString(): String = "${super.toString()}(name=$name)"
 }

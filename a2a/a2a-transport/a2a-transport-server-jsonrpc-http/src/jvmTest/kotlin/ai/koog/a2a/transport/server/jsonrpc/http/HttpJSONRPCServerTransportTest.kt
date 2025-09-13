@@ -5,6 +5,7 @@ import ai.koog.a2a.model.AgentCapabilities
 import ai.koog.a2a.model.AgentCard
 import ai.koog.a2a.model.AgentSkill
 import ai.koog.a2a.model.CommunicationEvent
+import ai.koog.a2a.model.Event
 import ai.koog.a2a.model.Message
 import ai.koog.a2a.model.MessageSendParams
 import ai.koog.a2a.model.PushNotificationConfig
@@ -17,7 +18,6 @@ import ai.koog.a2a.model.TaskQueryParams
 import ai.koog.a2a.model.TaskState
 import ai.koog.a2a.model.TaskStatus
 import ai.koog.a2a.model.TextPart
-import ai.koog.a2a.model.UpdateEvent
 import ai.koog.a2a.transport.Request
 import ai.koog.a2a.transport.RequestHandler
 import ai.koog.a2a.transport.RequestId
@@ -145,7 +145,7 @@ class HttpJSONRPCServerTransportTest {
         override fun onSendMessageStreaming(
             request: Request<MessageSendParams>,
             ctx: ServerCallContext
-        ): Flow<Response<UpdateEvent>> {
+        ): Flow<Response<Event>> {
             return updateEvents
                 .asFlow()
                 .map {
@@ -179,7 +179,7 @@ class HttpJSONRPCServerTransportTest {
         override fun onResubscribeTask(
             request: Request<TaskIdParams>,
             ctx: ServerCallContext
-        ): Flow<Response<UpdateEvent>> {
+        ): Flow<Response<Event>> {
             return updateEvents
                 .asFlow()
                 .map {

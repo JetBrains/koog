@@ -23,14 +23,16 @@ import kotlin.uuid.Uuid
 public data class Task(
     @EncodeDefault
     public val id: String = Uuid.random().toString(),
-    public val contextId: String,
+    override val contextId: String,
     public val status: TaskStatus,
     public val history: List<Message>? = null,
     public val artifacts: List<Artifact>? = null,
     public val metadata: JsonObject? = null,
-) : CommunicationEvent {
+) : CommunicationEvent, TaskEvent {
     @EncodeDefault
     override val kind: String = "task"
+
+    override val taskId: String get() = id
 }
 
 /**

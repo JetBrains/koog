@@ -1,7 +1,10 @@
 package ai.koog.a2a.transport.server.jsonrpc.http
 
+import ai.koog.a2a.annotations.InternalA2AApi
+import ai.koog.a2a.consts.A2AConsts
 import ai.koog.a2a.exceptions.A2AInvalidRequestException
 import ai.koog.a2a.exceptions.A2AParseException
+import ai.koog.a2a.model.AgentCard
 import ai.koog.a2a.transport.RequestHandler
 import ai.koog.a2a.transport.ServerCallContext
 import ai.koog.a2a.transport.jsonrpc.JSONRPCServerTransport
@@ -20,6 +23,7 @@ import io.ktor.server.request.receiveText
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.application
+import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
@@ -44,7 +48,7 @@ import kotlinx.serialization.serializer
  *     requestHandler = A2AServer(...)
  * )
  *
- * transport.start(port = 8080, path = "/my-agent")
+ * transport.start(port = 8080, path = "/my-agent", agentCard = AgentCard(...), agentCardPath = "/my-agent-card.json")
  * transport.stop()
  * ```
  *
@@ -91,26 +95,42 @@ public class HttpJSONRPCServerTransport(
      * Can be used to start a standalone server for quick prototyping or when no integration into the existing server is required.
      * The routing consists only of [transportRoutes].
      *
+     * Can also optionally serve [AgentCard] at the specified [agentCardPath].
+     *
      * If you need to integrate A2A request handling logic into existing Ktor application,
      * use [transportRoutes] method to mount the transport routes into existing [Route] configuration block.
      *
-     * @param port The port on which the server will listen.
-     * @param path The JSON-RPC endpoint path to handle incoming requests.
+     * @param port A port on which the server will listen.
+     * @param path A JSON-RPC endpoint path to handle incoming requests.
+     * @param agentCard An optional [AgentCard] that will be served at the specified [agentCardPath].
+     * @param agentCardPath The path at which the [agentCard] will be served, if specified.
+     * Defaults to [A2AConsts.AGENT_CARD_WELL_KNOWN_PATH].
      *
      * @throws IllegalStateException if the server is already running.
      *
      * @see [transportRoutes]
      */
-    public suspend fun start(port: Int, path: String): Unit = serverMutex.withLock {
+    public suspend fun start(
+        port: Int,
+        path: String,
+        agentCard: AgentCard? = null,
+        agentCardPath: String = A2AConsts.AGENT_CARD_WELL_KNOWN_PATH,
+    ): Unit = serverMutex.withLock {
         check(server == null) { "Server is already configured and running. Stop it before starting a new one." }
 
-        embeddedServer(Netty, port) {
+        server = embeddedServer(Netty, port) {
             install(SSE)
 
             routing {
                 transportRoutes(this, path)
+
+                if (agentCard != null) {
+                    get(agentCardPath) {
+                        call.respond(agentCard)
+                    }
+                }
             }
-        }.startSuspend(wait = true)
+        }.startSuspend(wait = false)
     }
 
     /**
@@ -155,6 +175,7 @@ public class HttpJSONRPCServerTransport(
      * @param route The base route to which the transport routes should be mounted.
      * @param path JSON-RPC endpoint path that will be mounted under the base [route].
      */
+    @OptIn(InternalA2AApi::class)
     public fun transportRoutes(route: Route, path: String): Route = route.route(path) {
         if (application.pluginOrNull(SSE) == null) {
             throw IllegalStateException("SSE plugin must be installed in the application to add these routes.")

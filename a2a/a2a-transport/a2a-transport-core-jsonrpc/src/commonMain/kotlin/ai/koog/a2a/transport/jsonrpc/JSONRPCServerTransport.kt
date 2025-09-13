@@ -1,5 +1,6 @@
 package ai.koog.a2a.transport.jsonrpc
 
+import ai.koog.a2a.annotations.InternalA2AApi
 import ai.koog.a2a.exceptions.A2AException
 import ai.koog.a2a.exceptions.A2AInternalErrorException
 import ai.koog.a2a.exceptions.A2AInvalidParamsException
@@ -33,6 +34,7 @@ public abstract class JSONRPCServerTransport : ServerTransport {
      * Handles a JSON-RPC request and returns the corresponding response
      * Handles exceptions, mapping all non [A2AException]s to [A2AInternalErrorException], and then converting them to [JSONRPCErrorResponse].
      */
+    @OptIn(InternalA2AApi::class)
     protected suspend fun onRequest(
         request: JSONRPCRequest,
         ctx: ServerCallContext,

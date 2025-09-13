@@ -79,6 +79,7 @@ async def do_cancelable_task(
         new_task(message),
     )
 
+
 async def do_long_running_task(
     event_queue: EventQueue,
     message: Message
@@ -124,17 +125,19 @@ class HelloWorldAgentExecutor(AgentExecutor):
         context: RequestContext,
         event_queue: EventQueue,
     ) -> None:
+        user_input = context.get_user_input()
+
         # Test scenarios to test various aspects of A2A
-        if "hello world" in context.get_user_input():
+        if "hello world" in user_input:
             await say_hello(event_queue, context.message)
 
-        elif "do task" in context.get_user_input():
+        elif "do task" in user_input:
             await do_task(event_queue, context.message)
 
-        elif "do cancelable task" in context.get_user_input():
+        elif "do cancelable task" in user_input:
             await do_cancelable_task(event_queue, context.message)
 
-        elif "do long-running task" in context.get_user_input():
+        elif "do long-running task" in user_input:
             await do_long_running_task(event_queue, context.message)
 
         else:

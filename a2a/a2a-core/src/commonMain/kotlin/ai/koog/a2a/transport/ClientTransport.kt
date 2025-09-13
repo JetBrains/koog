@@ -3,13 +3,13 @@ package ai.koog.a2a.transport
 import ai.koog.a2a.exceptions.A2AException
 import ai.koog.a2a.model.AgentCard
 import ai.koog.a2a.model.CommunicationEvent
+import ai.koog.a2a.model.Event
 import ai.koog.a2a.model.MessageSendParams
 import ai.koog.a2a.model.Task
 import ai.koog.a2a.model.TaskIdParams
 import ai.koog.a2a.model.TaskPushNotificationConfig
 import ai.koog.a2a.model.TaskPushNotificationConfigParams
 import ai.koog.a2a.model.TaskQueryParams
-import ai.koog.a2a.model.UpdateEvent
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.SerializationException
 
@@ -53,7 +53,7 @@ public interface ClientTransport : AutoCloseable {
     public fun sendMessageStreaming(
         request: Request<MessageSendParams>,
         ctx: ClientCallContext = ClientCallContext.Default
-    ): Flow<Response<UpdateEvent>>
+    ): Flow<Response<Event>>
 
     /**
      * Calls [tasks/get](https://a2a-protocol.org/latest/specification/#73-tasksget)
@@ -83,7 +83,7 @@ public interface ClientTransport : AutoCloseable {
     public fun resubscribeTask(
         request: Request<TaskIdParams>,
         ctx: ClientCallContext = ClientCallContext.Default
-    ): Flow<Response<UpdateEvent>>
+    ): Flow<Response<Event>>
 
     /**
      * Calls [tasks/pushNotificationConfig/set](https://a2a-protocol.org/latest/specification/#75-taskspushnotificationconfigset)
