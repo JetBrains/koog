@@ -1,6 +1,7 @@
 package ai.koog.prompt.executor.llms
 
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.agents.core.utils.filterTextOnly
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.LLMClient
@@ -13,6 +14,7 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
@@ -39,7 +41,7 @@ class MultiLLMPromptExecutorTest {
             return listOf(Message.Assistant("Anthropic response", ResponseMetaInfo.create(clock = mockClock)))
         }
 
-        override fun executeStreamingWithTools(
+        override fun executeStreaming(
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>
@@ -61,7 +63,7 @@ class MultiLLMPromptExecutorTest {
             return listOf(Message.Assistant("Gemini response", ResponseMetaInfo.create(clock = mockClock)))
         }
 
-        override fun executeStreamingWithTools(
+        override fun executeStreaming(
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>
@@ -144,7 +146,9 @@ class MultiLLMPromptExecutorTest {
             user("What is the capital of France?")
         }
 
-        val responseChunks = executor.executeStreaming(prompt, model).toList()
+        val responseChunks = executor.executeStreaming(prompt, model)
+            .filterTextOnly()
+            .toList()
         assertEquals(3, responseChunks.size, "Response should have three chunks")
         assertEquals(
             "OpenAI streaming response",
@@ -167,7 +171,9 @@ class MultiLLMPromptExecutorTest {
             user("What is the capital of France?")
         }
 
-        val responseChunks = executor.executeStreaming(prompt, model).toList()
+        val responseChunks = executor.executeStreaming(prompt, model)
+            .filterTextOnly()
+            .toList()
         assertEquals(3, responseChunks.size, "Response should have three chunks")
         assertEquals(
             "Anthropic streaming response",
@@ -190,7 +196,9 @@ class MultiLLMPromptExecutorTest {
             user("What is the capital of France?")
         }
 
-        val responseChunks = executor.executeStreaming(prompt, model).toList()
+        val responseChunks = executor.executeStreaming(prompt, model)
+            .filterTextOnly()
+            .toList()
         assertEquals(3, responseChunks.size, "Response should have three chunks")
         assertEquals(
             "Gemini streaming response",
@@ -224,7 +232,7 @@ class MultiLLMPromptExecutorTest {
         }
 
         assertFailsWith<IllegalArgumentException>("Should throw IllegalArgumentException for unsupported provider") {
-            executor.executeStreaming(prompt, model).toList()
+            executor.executeStreaming(prompt, model).collect()
         }
     }
 }

@@ -1,6 +1,7 @@
 package ai.koog.agents.core.dsl.builder
 
-import ai.koog.agents.core.agent.context.AIAgentContextBase
+import ai.koog.agents.core.agent.context.AIAgentContext
+import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.entity.AIAgentNode
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase
 import ai.koog.agents.core.utils.Some
@@ -20,13 +21,13 @@ import kotlin.reflect.KType
  * @param outputType [KType] of the [Output]
  * @constructor Used internally to create a new builder with the provided execution logic.
  * @param execute A suspending function to define the execution logic of the node. This function will be called
- * in the scope of [AIAgentContextBase], where it has access to the AI agent's context and tools relevant
+ * in the scope of [AIAgentContext], where it has access to the AI agent's context and tools relevant
  * to its operation.
  */
 public open class AIAgentNodeBuilder<Input, Output>(
     private val inputType: KType,
     private val outputType: KType,
-    private val execute: suspend AIAgentContextBase.(Input) -> Output
+    private val execute: suspend AIAgentGraphContextBase.(Input) -> Output
 ) : BaseBuilder<AIAgentNodeBase<Input, Output>> {
     /**
      * The name of the AI agent node being built.

@@ -166,7 +166,7 @@ class SimpleAgentMockedTest {
             llmModel = OpenAIModels.CostOptimized.GPT4oMini,
             temperature = 1.0,
             maxIterations = 10,
-            executor = testExecutor,
+            promptExecutor = testExecutor,
             installFeatures = { install(EventHandler, eventHandlerConfig) }
         )
 
@@ -193,7 +193,7 @@ class SimpleAgentMockedTest {
             temperature = 1.0,
             toolRegistry = toolRegistry,
             maxIterations = 10,
-            executor = testExecutor,
+            promptExecutor = testExecutor,
             installFeatures = { install(EventHandler, eventHandlerConfig) }
         )
 
@@ -217,7 +217,7 @@ class SimpleAgentMockedTest {
             temperature = 1.0,
             toolRegistry = toolRegistry,
             maxIterations = 10,
-            executor = testExecutor,
+            promptExecutor = testExecutor,
             installFeatures = { install(EventHandler, eventHandlerConfig) }
         )
 
@@ -243,7 +243,7 @@ class SimpleAgentMockedTest {
             temperature = 1.0,
             toolRegistry = toolRegistry,
             maxIterations = 10,
-            executor = testExecutor,
+            promptExecutor = testExecutor,
             installFeatures = { install(EventHandler, eventHandlerConfig) }
         )
 
@@ -273,7 +273,7 @@ class SimpleAgentMockedTest {
             temperature = 1.0,
             toolRegistry = toolRegistry,
             maxIterations = 10,
-            executor = testExecutor,
+            promptExecutor = testExecutor,
             installFeatures = { install(EventHandler, eventHandlerConfig) }
         )
 
@@ -301,7 +301,7 @@ class SimpleAgentMockedTest {
             temperature = 1.0,
             toolRegistry = toolRegistry,
             maxIterations = 2,
-            executor = loopExecutor,
+            promptExecutor = loopExecutor,
             installFeatures = { install(EventHandler, eventHandlerConfig) }
         )
 

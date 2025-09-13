@@ -1,40 +1,46 @@
 package ai.koog.agents.core.feature
 
-import ai.koog.agents.core.agent.context.AIAgentContextBase
+import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.prompt.message.Message
 
-class TestFeature(val events: MutableList<String>) {
+class TestFeature(val events: MutableList<String>, val runIds: MutableList<String>) {
 
     class Config : FeatureConfig() {
         var events: MutableList<String>? = null
+        var runIds: MutableList<String>? = null
     }
 
-    companion object Feature : AIAgentFeature<Config, TestFeature> {
+    companion object Feature : AIAgentGraphFeature<Config, TestFeature> {
         override val key: AIAgentStorageKey<TestFeature> = createStorageKey("test-feature")
 
         override fun createInitialConfig(): Config = Config()
 
         override fun install(
             config: Config,
-            pipeline: AIAgentPipeline
+            pipeline: AIAgentGraphPipeline
         ) {
-            val feature = TestFeature(events = config.events ?: mutableListOf())
+            val feature = TestFeature(
+                events = config.events ?: mutableListOf(),
+                runIds = config.runIds ?: mutableListOf()
+            )
+
             val context = InterceptContext(this, feature)
 
             pipeline.interceptBeforeAgentStarted(context) { eventContext ->
-                feature.events += "Agent: before agent started (strategy name: ${eventContext.strategy.name})"
+                feature.runIds += eventContext.runId
+                feature.events += "Agent: before agent started (id: ${eventContext.agent.id}, run id: ${eventContext.runId})"
             }
 
             pipeline.interceptStrategyStarted(context) { eventContext ->
                 feature.events += "Agent: strategy started (strategy name: ${eventContext.strategy.name})"
             }
 
-            pipeline.interceptContextAgentFeature(this) { _: AIAgentContextBase ->
+            pipeline.interceptContextAgentFeature(this) { _: AIAgentContext ->
                 feature.events += "Agent Context: request features from agent context"
-                TestFeature(mutableListOf())
+                TestFeature(mutableListOf(), mutableListOf())
             }
 
             pipeline.interceptBeforeLLMCall(context) { event ->

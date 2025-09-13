@@ -15,7 +15,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 @ConfigurationProperties(prefix = AnthropicKoogProperties.PREFIX)
 public class AnthropicKoogProperties(
     public val apiKey: String = "",
-    public val baseUrl: String = "https://api.anthropic.com"
+    public val baseUrl: String = "https://api.anthropic.com",
+    public val retry: RetryConfigKoogProperties? = null
 ) {
     /**
      * Companion object for the AnthropicKoogProperties class, providing constant values and

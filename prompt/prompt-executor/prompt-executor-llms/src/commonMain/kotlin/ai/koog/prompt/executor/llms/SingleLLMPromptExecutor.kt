@@ -37,13 +37,13 @@ public open class SingleLLMPromptExecutor(
         return response
     }
 
-    override fun executeStreamingWithTools(
+    override fun executeStreaming(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
     ): Flow<StreamFrame> {
         logger.debug { "Executing streaming prompt: $prompt with tools: $tools and model: $model" }
-        return llmClient.executeStreamingWithTools(prompt, model, tools)
+        return llmClient.executeStreaming(prompt, model, tools)
     }
 
     override suspend fun executeMultipleChoices(

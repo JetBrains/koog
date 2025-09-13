@@ -14,6 +14,7 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
@@ -252,7 +253,7 @@ class RetryingLLMClientTest {
 
         val result = retryingClient.executeStreaming(testPrompt, testModel).toList()
 
-        assertEquals(listOf("chunk1", "chunk2"), result)
+        assertEquals(listOf("chunk1", "chunk2").map(StreamFrame::Append), result)
         assertEquals(1, mockClient.streamCalls)
     }
 
@@ -274,7 +275,7 @@ class RetryingLLMClientTest {
 
         val result = retryingClient.executeStreaming(testPrompt, testModel).toList()
 
-        assertEquals(listOf("chunk1", "chunk2"), result)
+        assertEquals(listOf("chunk1", "chunk2").map(StreamFrame::Append), result)
         assertEquals(2, mockClient.streamCalls)
     }
 
@@ -297,7 +298,7 @@ class RetryingLLMClientTest {
 
         // Should not retry because we already received a token
         val exception = assertFailsWith<RuntimeException> {
-            retryingClient.executeStreaming(testPrompt, testModel).toList()
+            retryingClient.executeStreaming(testPrompt, testModel).collect()
         }
 
         assertEquals("Connection lost after first token", exception.message)
@@ -399,7 +400,7 @@ class RetryingLLMClientTest {
             return executeResponse
         }
 
-        override fun executeStreamingWithTools(
+        override fun executeStreaming(
             prompt: Prompt,
             model: LLModel,
             tools: List<ToolDescriptor>

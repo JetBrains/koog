@@ -23,7 +23,7 @@ fun main(): Unit = runBlocking {
         tools(SwitchTools(switch).asTools())
     }
     val agent = AIAgent(
-        executor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey),
+        promptExecutor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey),
         llmModel = OpenAIModels.CostOptimized.GPT4oMini,
         systemPrompt = "You're responsible for running a Switch and perform operations on it by request",
         temperature = 0.0,

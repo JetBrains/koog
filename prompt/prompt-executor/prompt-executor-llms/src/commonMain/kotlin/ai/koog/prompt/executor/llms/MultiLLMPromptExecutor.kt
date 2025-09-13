@@ -141,7 +141,7 @@ public open class MultiLLMPromptExecutor(
      * @param model The LLM model to use for execution.
      * @param tools A list of `ToolDescriptor` objects representing external tools available for use during execution.
      **/
-    override fun executeStreamingWithTools(
+    override fun executeStreaming(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
@@ -151,7 +151,7 @@ public open class MultiLLMPromptExecutor(
         val provider = model.provider
         val client = requireNotNull(llmClients[model.provider]) { "No client found for provider: $provider" }
 
-        return client.executeStreamingWithTools(prompt, model, tools)
+        return client.executeStreaming(prompt, model, tools)
     }
 
     /**

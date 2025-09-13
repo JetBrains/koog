@@ -21,7 +21,7 @@ fun main() = runBlocking {
     val openAIExecutor = simpleOpenAIExecutor(apiKey)
 
     val transferAgent = AIAgent(
-        executor = openAIExecutor,
+        promptExecutor = openAIExecutor,
         llmModel = OpenAIModels.CostOptimized.GPT4oMini,
         systemPrompt = bankingAssistantSystemPrompt,
         temperature = 0.0,
@@ -29,7 +29,7 @@ fun main() = runBlocking {
     )
 
     val analysisAgent = AIAgent(
-        executor = openAIExecutor,
+        promptExecutor = openAIExecutor,
         llmModel = OpenAIModels.CostOptimized.GPT4oMini,
         systemPrompt = bankingAssistantSystemPrompt + transactionAnalysisPrompt,
         temperature = 0.0,
@@ -37,7 +37,7 @@ fun main() = runBlocking {
     )
 
     val classifierAgent = AIAgent(
-        executor = openAIExecutor,
+        promptExecutor = openAIExecutor,
         llmModel = OpenAIModels.CostOptimized.GPT4oMini,
         toolRegistry = ToolRegistry {
             tool(AskUser)

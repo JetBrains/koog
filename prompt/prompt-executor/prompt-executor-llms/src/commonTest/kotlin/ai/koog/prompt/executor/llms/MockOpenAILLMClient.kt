@@ -10,6 +10,7 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.datetime.Clock
 import kotlin.jvm.JvmOverloads
 
@@ -36,7 +37,7 @@ internal class MockOpenAILLMClient @JvmOverloads constructor(
         }
     }
 
-    override fun executeStreamingWithTools(
+    override fun executeStreaming(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>

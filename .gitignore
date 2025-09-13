@@ -9,3 +9,4 @@ local.properties
 /kotlin-js-store/yarn.lock
 docs/src/main/kotlin/*.kt
 **/.env
+.venv

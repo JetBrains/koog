@@ -15,7 +15,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 @ConfigurationProperties(prefix = DeepSeekKoogProperties.PREFIX)
 public class DeepSeekKoogProperties(
     public val apiKey: String = "",
-    public val baseUrl: String = "https://api.deepseek.com"
+    public val baseUrl: String = "https://api.deepseek.com",
+    public val retry: RetryConfigKoogProperties? = null
 ) {
     /**
      * Companion object for the DeepSeekKoogProperties class, providing constant values and

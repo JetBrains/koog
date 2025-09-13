@@ -49,7 +49,7 @@ class EventHandlerTest {
         val runId = eventsCollector.runId
 
         val expectedEvents = listOf(
-            "OnBeforeAgentStarted (agent id: test-agent-id, run id: $runId, strategy: $strategyName)",
+            "OnBeforeAgentStarted (agent id: test-agent-id, run id: $runId)",
             "OnStrategyStarted (run id: $runId, strategy: $strategyName)",
             "OnBeforeNode (run id: $runId, node: __start__, input: $agentInput)",
             "OnAfterNode (run id: $runId, node: __start__, input: $agentInput, output: $agentInput)",
@@ -93,7 +93,7 @@ class EventHandlerTest {
         val runId = eventsCollector.runId
 
         val expectedEvents = listOf(
-            "OnBeforeAgentStarted (agent id: test-agent-id, run id: $runId, strategy: $strategyName)",
+            "OnBeforeAgentStarted (agent id: test-agent-id, run id: $runId)",
             "OnStrategyStarted (run id: $runId, strategy: $strategyName)",
             "OnBeforeNode (run id: $runId, node: __start__, input: $agentInput)",
             "OnAfterNode (run id: $runId, node: __start__, input: $agentInput, output: $agentInput)",
@@ -162,7 +162,7 @@ class EventHandlerTest {
         val runId = eventsCollector.runId
 
         val expectedEvents = listOf(
-            "OnBeforeAgentStarted (agent id: $agentId, run id: $runId, strategy: $strategyName)",
+            "OnBeforeAgentStarted (agent id: $agentId, run id: $runId)",
             "OnStrategyStarted (run id: $runId, strategy: $strategyName)",
             "OnBeforeNode (run id: $runId, node: __start__, input: $userPrompt)",
             "OnAfterNode (run id: $runId, node: __start__, input: $userPrompt, output: $userPrompt)",
@@ -219,7 +219,7 @@ class EventHandlerTest {
         val runId = eventsCollector.runId
 
         val expectedEvents = listOf(
-            "OnBeforeAgentStarted (agent id: test-agent-id, run id: $runId, strategy: $strategyName)",
+            "OnBeforeAgentStarted (agent id: test-agent-id, run id: $runId)",
             "OnStrategyStarted (run id: $runId, strategy: $strategyName)",
             "OnBeforeNode (run id: $runId, node: __start__, input: $agentInput)",
             "OnAfterNode (run id: $runId, node: __start__, input: $agentInput, output: $agentInput)",
@@ -277,7 +277,7 @@ class EventHandlerTest {
         val runId = eventsCollector.runId
 
         val expectedEvents = listOf(
-            "OnBeforeAgentStarted (agent id: $agentId, run id: $runId, strategy: $strategyName)",
+            "OnBeforeAgentStarted (agent id: $agentId, run id: $runId)",
             "OnStrategyStarted (run id: $runId, strategy: $strategyName)",
             "OnBeforeNode (run id: $runId, node: __start__, input: $agentInput)",
             "OnAfterNode (run id: $runId, node: __start__, input: $agentInput, output: $agentInput)",
@@ -304,19 +304,20 @@ class EventHandlerTest {
         var runId = ""
 
         val agent = createAgent(
+            agentId = "test-agent-id",
             strategy = strategy,
             installFeatures = {
                 install(EventHandler) {
                     onBeforeAgentStarted { eventContext ->
                         runId = eventContext.runId
                         collectedEvents.add(
-                            "OnBeforeAgentStarted first (agent id: ${eventContext.agent.id}, strategy: ${eventContext.strategy.name})"
+                            "OnBeforeAgentStarted first (agent id: ${eventContext.agent.id})"
                         )
                     }
 
                     onBeforeAgentStarted { eventContext ->
                         collectedEvents.add(
-                            "OnBeforeAgentStarted second (agent id: ${eventContext.agent.id}, strategy: ${eventContext.strategy.name})"
+                            "OnBeforeAgentStarted second (agent id: ${eventContext.agent.id})"
                         )
                     }
 
@@ -333,9 +334,9 @@ class EventHandlerTest {
         agent.run(agentInput)
 
         val expectedEvents = listOf(
-            "OnBeforeAgentStarted first (agent id: test-agent-id, strategy: $strategyName)",
-            "OnBeforeAgentStarted second (agent id: test-agent-id, strategy: $strategyName)",
-            "OnAgentFinished (agent id: test-agent-id, run id: $runId, result: $agentResult)",
+            "OnBeforeAgentStarted first (agent id: ${agent.id})",
+            "OnBeforeAgentStarted second (agent id: ${agent.id})",
+            "OnAgentFinished (agent id: ${agent.id}, run id: $runId, result: $agentResult)",
         )
 
         assertEquals(expectedEvents.size, collectedEvents.size)

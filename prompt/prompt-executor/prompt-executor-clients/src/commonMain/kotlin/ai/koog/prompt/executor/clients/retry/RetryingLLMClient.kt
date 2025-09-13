@@ -51,7 +51,7 @@ public class RetryingLLMClient(
 
     // Streaming retry: Only retries connection failures before the first token is received.
     // Once streaming starts, errors are passed through to avoid content duplication.
-    override fun executeStreamingWithTools(
+    override fun executeStreaming(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
@@ -60,7 +60,7 @@ public class RetryingLLMClient(
             repeat(config.maxAttempts) { attempt ->
                 var firstFrameReceived = false
                 try {
-                    delegate.executeStreamingWithTools(prompt, model, tools).collect { chunk ->
+                    delegate.executeStreaming(prompt, model, tools).collect { chunk ->
                         firstFrameReceived = true
                         emit(chunk)
                     }

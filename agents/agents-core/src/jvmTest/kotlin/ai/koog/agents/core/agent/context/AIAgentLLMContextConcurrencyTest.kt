@@ -2,7 +2,6 @@ package ai.koog.agents.core.agent.context
 
 import ai.koog.agents.core.CalculatorChatExecutor
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.agent.config.AIAgentConfigBase
 import ai.koog.agents.core.agent.config.MissingToolsConversionStrategy
 import ai.koog.agents.core.agent.config.ToolCallDescriber
 import ai.koog.agents.core.environment.AIAgentEnvironment
@@ -176,7 +175,7 @@ class AIAgentLLMContextConcurrencyTest {
         }
     }
 
-    private fun createTestConfig(): AIAgentConfigBase {
+    private fun createTestConfig(): AIAgentConfig {
         return AIAgentConfig(
             prompt = createTestPrompt(),
             model = OllamaModels.Meta.LLAMA_3_2,

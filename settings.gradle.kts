@@ -13,11 +13,13 @@ include(":agents:agents-features:agents-features-debugger")
 include(":agents:agents-features:agents-features-event-handler")
 include(":agents:agents-features:agents-features-memory")
 include(":agents:agents-features:agents-features-opentelemetry")
+include(":agents:agents-features:agents-features-sql")
 include(":agents:agents-features:agents-features-trace")
 include(":agents:agents-features:agents-features-tokenizer")
 include(":agents:agents-features:agents-features-snapshot")
 
 include(":agents:agents-mcp")
+include(":agents:agents-mcp-server")
 include(":agents:agents-test")
 include(":agents:agents-tools")
 include(":agents:agents-utils")
@@ -65,7 +67,5 @@ include(":koog-spring-boot-starter")
 
 include(":koog-ktor")
 include(":docs")
-
-include(":koog-cli")
 
 include(":test-utils")

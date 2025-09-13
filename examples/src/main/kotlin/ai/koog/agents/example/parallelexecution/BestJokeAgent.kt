@@ -2,8 +2,8 @@ package ai.koog.agents.example.parallelexecution
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.agent.context.AIAgentContextBase
-import ai.koog.agents.core.agent.entity.AIAgentStrategy
+import ai.koog.agents.core.agent.context.AIAgentContext
+import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.LLMDescription
@@ -68,7 +68,7 @@ fun main() = runBlocking {
     println("Final result: $result")
 }
 
-fun bestJokeStrategy(): AIAgentStrategy<String, String> = strategy("best-joke") {
+fun bestJokeStrategy(): AIAgentGraphStrategy<String, String> = strategy("best-joke") {
     val nodeOpenAI by node<String, String> { topic ->
         requestAJoke(OpenAIModels.Chat.GPT4_1, topic)
     }
@@ -123,7 +123,7 @@ fun bestJokeStrategy(): AIAgentStrategy<String, String> = strategy("best-joke") 
     nodeStart then nodeGenerateBestJoke then nodeFinish
 }
 
-private suspend fun AIAgentContextBase.requestAJoke(
+private suspend fun AIAgentContext.requestAJoke(
     model: LLModel,
     topic: String
 ): String = llm.writeSession {
@@ -138,7 +138,7 @@ private suspend fun AIAgentContextBase.requestAJoke(
     response.content
 }
 
-private suspend fun AIAgentContextBase.findTheBestJoke(
+private suspend fun AIAgentContext.findTheBestJoke(
     jokes: List<String>
 ): Int = llm.writeSession {
     // Another LLM (ex: GPT4o) would find the funniest joke:

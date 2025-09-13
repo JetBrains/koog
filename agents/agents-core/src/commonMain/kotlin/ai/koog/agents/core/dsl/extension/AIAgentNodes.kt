@@ -12,7 +12,6 @@ import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolResult
-import ai.koog.agents.core.utils.mapTextOnly
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.PromptBuilder
 import ai.koog.prompt.dsl.prompt
@@ -241,7 +240,7 @@ public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStr
  * @param transformStreamData Function to process the streamed data.
  */
 @AIAgentBuilderDslMarker
-public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStreamingWithTools(
+public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStreaming(
     name: String? = null,
     structureDefinition: StructuredDataDefinition? = null,
     transformStreamData: suspend (Flow<StreamFrame>) -> Flow<T>
@@ -252,27 +251,10 @@ public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStreamingWithTools
                 user(message)
             }
 
-            val stream = requestLLMStreamingWithTools(structureDefinition)
+            val stream = requestLLMStreaming(structureDefinition)
 
             transformStreamData(stream)
         }
-    }
-
-/**
- * A node that appends a user message to the LLM prompt, streams LLM response and transforms the stream data.
- *
- * @param name Optional node name.
- * @param structureDefinition Optional structure to guide the LLM response.
- * @param transformStreamData Function to process the streamed data.
- */
-@AIAgentBuilderDslMarker
-public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStreaming(
-    name: String? = null,
-    structureDefinition: StructuredDataDefinition? = null,
-    transformStreamData: suspend (Flow<String>) -> Flow<T>
-): AIAgentNodeDelegate<String, Flow<T>> =
-    nodeLLMRequestStreamingWithTools(name, structureDefinition) {
-        transformStreamData(it.mapTextOnly())
     }
 
 /**
@@ -305,7 +287,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestsStreamingWithTools(
                 }
             }
 
-            val stream = requestLLMStreamingWithTools(structureDefinition)
+            val stream = requestLLMStreaming(structureDefinition)
             val streamCollector = mutableListOf<StreamFrame>()
             stream.collect {
                 streamCollector.add(it)
@@ -329,7 +311,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestsStreamingWithTools(
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStreaming(
     name: String? = null,
     structureDefinition: StructuredDataDefinition? = null,
-): AIAgentNodeDelegate<String, Flow<String>> = nodeLLMRequestStreaming(name, structureDefinition) { it }
+): AIAgentNodeDelegate<String, Flow<StreamFrame>> = nodeLLMRequestStreaming(name, structureDefinition) { it }
 
 /**
  * A node that appends a user message to the LLM prompt and gets multiple LLM responses with tool calls enabled.

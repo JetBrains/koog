@@ -32,7 +32,7 @@ internal val FeatureStringMessage.featureStringMessage
     get() = "Feature string message (message: $message)"
 
 internal val AIAgentStartedEvent.agentStartedEventFormat
-    get() = "$eventId (agent id: $agentId, run id: $runId, strategy: $strategyName)"
+    get() = "$eventId (agent id: $agentId, run id: $runId)"
 
 internal val AIAgentFinishedEvent.agentFinishedEventFormat
     get() = "$eventId (agent id: $agentId, run id: $runId, result: $result)"

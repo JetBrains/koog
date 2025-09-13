@@ -55,7 +55,7 @@ fun main(): Unit = runBlocking {
 
     // Create a chat agent with a system prompt and the tool registry
     val agent = AIAgent(
-        executor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey),
+        promptExecutor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey),
         strategy = strategy,
         llmModel = OpenAIModels.Reasoning.O3Mini,
         systemPrompt = """

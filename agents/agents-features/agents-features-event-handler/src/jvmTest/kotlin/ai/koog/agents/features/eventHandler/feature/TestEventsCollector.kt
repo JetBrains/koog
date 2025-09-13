@@ -20,7 +20,7 @@ class TestEventsCollector {
         onBeforeAgentStarted { eventContext ->
             runId = eventContext.runId
             _collectedEvents.add(
-                "OnBeforeAgentStarted (agent id: ${eventContext.agent.id}, run id: ${eventContext.runId}, strategy: ${eventContext.strategy.name})"
+                "OnBeforeAgentStarted (agent id: ${eventContext.agent.id}, run id: ${eventContext.runId})"
             )
         }
 

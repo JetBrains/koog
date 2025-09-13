@@ -249,14 +249,14 @@ public open class OpenAILLMClient(
         }
     }
 
-    override fun executeStreamingWithTools(
+    override fun executeStreaming(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
     ): Flow<StreamFrame> = selectExecutionStrategy(prompt, model) { params ->
         when (params) {
             is OpenAIResponsesParams -> executeResponsesStreaming(prompt, model, params)
-            is OpenAIChatParams -> super.executeStreamingWithTools(prompt, model, tools)
+            is OpenAIChatParams -> super.executeStreaming(prompt, model, tools)
         }
     }
 

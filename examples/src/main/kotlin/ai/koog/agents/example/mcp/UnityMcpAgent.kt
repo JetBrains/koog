@@ -12,6 +12,7 @@ import ai.koog.agents.ext.agent.subgraphWithTask
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.tracing.feature.Tracing
 import ai.koog.agents.mcp.McpToolRegistryProvider
+import ai.koog.agents.mcp.defaultStdioTransport
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
@@ -92,7 +93,7 @@ fun main() {
 
                 edge(
                     nodeStart forwardTo nodePlanIngredients transformed {
-                        "Create detailed plan for " + agentInput + "" +
+                        "Create detailed plan for $agentInput" +
                             "unsing next tools: ${toolRegistry.tools.joinToString("\n") {
                                 it.name + "\ndescription:" + it.descriptor
                             }}"

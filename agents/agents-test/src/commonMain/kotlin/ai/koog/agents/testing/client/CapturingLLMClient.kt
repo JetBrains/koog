@@ -79,7 +79,7 @@ public class CapturingLLMClient(
      * Simulates a streaming LLM execution.
      * Captures input parameters and emits the predefined [streamingChunks].
      */
-    override fun executeStreamingWithTools(
+    override fun executeStreaming(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>

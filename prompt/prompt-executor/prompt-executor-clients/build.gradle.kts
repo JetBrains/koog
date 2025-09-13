@@ -17,6 +17,11 @@ kotlin {
                 api(libs.kotlinx.coroutines.core)
             }
         }
+        androidMain {
+            dependencies {
+                runtimeOnly(libs.slf4j.simple)
+            }
+        }
         jvmMain {
             dependencies {
                 api(kotlin("reflect"))
@@ -24,14 +29,11 @@ kotlin {
         }
         commonTest {
             dependencies {
-                implementation(kotlin("test"))
-                implementation(libs.kotlinx.coroutines.test)
+                implementation(project(":test-utils"))
             }
         }
         jvmTest {
             dependencies {
-                implementation(kotlin("test-junit5"))
-                implementation(libs.slf4j.simple)
             }
         }
     }

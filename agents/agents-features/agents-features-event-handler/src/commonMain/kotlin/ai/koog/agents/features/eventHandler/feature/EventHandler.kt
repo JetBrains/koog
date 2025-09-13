@@ -1,8 +1,12 @@
 package ai.koog.agents.features.eventHandler.feature
 
-import ai.koog.agents.core.agent.AIAgent.FeatureContext
+import ai.koog.agents.core.agent.GraphAIAgent.FeatureContext
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.feature.AIAgentFeature
+import ai.koog.agents.core.feature.AIAgentGraphFeature
+import ai.koog.agents.core.feature.AIAgentGraphPipeline
+import ai.koog.agents.core.feature.AIAgentNonGraphFeature
+import ai.koog.agents.core.feature.AIAgentNonGraphPipeline
 import ai.koog.agents.core.feature.AIAgentPipeline
 import ai.koog.agents.core.feature.InterceptContext
 import ai.koog.agents.core.feature.handler.AfterLLMCallContext
@@ -63,7 +67,7 @@ public class EventHandler {
      *     }
      * }
      */
-    public companion object Feature : AIAgentFeature<EventHandlerConfig, EventHandler> {
+    public companion object Feature : AIAgentGraphFeature<EventHandlerConfig, EventHandler>, AIAgentNonGraphFeature<EventHandlerConfig, EventHandler> {
 
         private val logger = KotlinLogging.logger { }
 
@@ -74,46 +78,24 @@ public class EventHandler {
 
         override fun install(
             config: EventHandlerConfig,
-            pipeline: AIAgentPipeline,
+            pipeline: AIAgentGraphPipeline,
         ) {
             logger.info { "Start installing feature: ${EventHandler::class.simpleName}" }
 
             val featureImpl = EventHandler()
-            val interceptContext = InterceptContext(this, featureImpl)
+            val interceptContext: InterceptContext<EventHandler> = InterceptContext(this, featureImpl)
+            registerCommonPipelineHandlers(config, pipeline, interceptContext)
+            registerGraphPipelineHandlers(config, pipeline, interceptContext)
+        }
 
-            //region Intercept Agent Events
-
+        private fun registerGraphPipelineHandlers(
+            config: EventHandlerConfig,
+            pipeline: AIAgentGraphPipeline,
+            interceptContext: InterceptContext<EventHandler>
+        ) {
             pipeline.interceptBeforeAgentStarted(interceptContext) intercept@{ eventContext ->
                 config.invokeOnBeforeAgentStarted(eventContext)
             }
-
-            pipeline.interceptAgentFinished(interceptContext) intercept@{ eventContext ->
-                config.invokeOnAgentFinished(eventContext)
-            }
-
-            pipeline.interceptAgentRunError(interceptContext) intercept@{ eventContext ->
-                config.invokeOnAgentRunError(eventContext)
-            }
-
-            pipeline.interceptAgentBeforeClosed(interceptContext) intercept@{ eventContext ->
-                config.invokeOnAgentBeforeClose(eventContext)
-            }
-
-            //endregion Intercept Agent Events
-
-            //region Intercept Strategy Events
-
-            pipeline.interceptStrategyStarted(interceptContext) intercept@{ eventContext ->
-                config.invokeOnStrategyStarted(eventContext)
-            }
-
-            pipeline.interceptStrategyFinished(interceptContext) intercept@{ eventContext ->
-                config.invokeOnStrategyFinished(eventContext)
-            }
-
-            //endregion Intercept Strategy Events
-
-            //region Intercept Node Events
 
             pipeline.interceptBeforeNode(interceptContext) intercept@{ eventContext: NodeBeforeExecuteContext ->
                 config.invokeOnBeforeNode(eventContext)
@@ -128,10 +110,32 @@ public class EventHandler {
             ) intercept@{ eventContext: NodeExecutionErrorContext ->
                 config.invokeOnNodeExecutionError(eventContext)
             }
+        }
 
-            //endregion Intercept Node Events
+        private fun registerCommonPipelineHandlers(
+            config: EventHandlerConfig,
+            pipeline: AIAgentPipeline,
+            interceptContext: InterceptContext<EventHandler>
+        ) {
+            pipeline.interceptAgentFinished(interceptContext) intercept@{ eventContext ->
+                config.invokeOnAgentFinished(eventContext)
+            }
 
-            //region Intercept LLM Call Events
+            pipeline.interceptAgentRunError(interceptContext) intercept@{ eventContext ->
+                config.invokeOnAgentRunError(eventContext)
+            }
+
+            pipeline.interceptAgentBeforeClosed(interceptContext) intercept@{ eventContext ->
+                config.invokeOnAgentBeforeClose(eventContext)
+            }
+
+            pipeline.interceptStrategyStarted(interceptContext) intercept@{ eventContext ->
+                config.invokeOnStrategyStarted(eventContext)
+            }
+
+            pipeline.interceptStrategyFinished(interceptContext) intercept@{ eventContext ->
+                config.invokeOnStrategyFinished(eventContext)
+            }
 
             pipeline.interceptBeforeLLMCall(interceptContext) intercept@{ eventContext: BeforeLLMCallContext ->
                 config.invokeOnBeforeLLMCall(eventContext)
@@ -140,10 +144,6 @@ public class EventHandler {
             pipeline.interceptAfterLLMCall(interceptContext) intercept@{ eventContext: AfterLLMCallContext ->
                 config.invokeOnAfterLLMCall(eventContext)
             }
-
-            //endregion Intercept LLM Call Events
-
-            //region Intercept Tool Call Events
 
             pipeline.interceptToolCall(interceptContext) intercept@{ eventContext: ToolCallContext ->
                 config.invokeOnToolCall(eventContext)
@@ -183,7 +183,15 @@ public class EventHandler {
             }
 
             //endregion Intercept Stream Events
+        }
 
+        override fun install(
+            config: EventHandlerConfig,
+            pipeline: AIAgentNonGraphPipeline
+        ) {
+            val featureImpl = EventHandler()
+            val interceptContext: InterceptContext<EventHandler> = InterceptContext(this, featureImpl)
+            registerCommonPipelineHandlers(config, pipeline, interceptContext)
         }
     }
 }

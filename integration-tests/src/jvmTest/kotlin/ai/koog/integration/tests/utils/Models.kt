@@ -42,6 +42,7 @@ object Models {
         return Stream.of(
             AnthropicModels.Opus_3,
             AnthropicModels.Opus_4,
+            AnthropicModels.Opus_4_1,
 
             AnthropicModels.Haiku_3,
             AnthropicModels.Haiku_3_5,
@@ -61,6 +62,7 @@ object Models {
             GoogleModels.Gemini2_0FlashLite,
             GoogleModels.Gemini2_0FlashLite001,
             GoogleModels.Gemini2_5Flash,
+            GoogleModels.Gemini2_5FlashLite,
         )
     }
 

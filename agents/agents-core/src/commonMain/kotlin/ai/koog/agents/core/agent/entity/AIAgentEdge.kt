@@ -1,6 +1,6 @@
 package ai.koog.agents.core.agent.entity
 
-import ai.koog.agents.core.agent.context.AIAgentContextBase
+import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.utils.Option
 
 /**
@@ -17,9 +17,9 @@ import ai.koog.agents.core.utils.Option
  */
 public class AIAgentEdge<IncomingOutput, OutgoingInput> internal constructor(
     public val toNode: AIAgentNodeBase<OutgoingInput, *>,
-    internal val forwardOutput: suspend (context: AIAgentContextBase, output: IncomingOutput) -> Option<OutgoingInput>,
+    internal val forwardOutput: suspend (context: AIAgentGraphContextBase, output: IncomingOutput) -> Option<OutgoingInput>,
 ) {
     @Suppress("UNCHECKED_CAST")
-    internal suspend fun forwardOutputUnsafe(output: Any?, context: AIAgentContextBase): Option<OutgoingInput> =
+    internal suspend fun forwardOutputUnsafe(output: Any?, context: AIAgentGraphContextBase): Option<OutgoingInput> =
         forwardOutput(context, output as IncomingOutput)
 }

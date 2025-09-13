@@ -142,7 +142,7 @@ public open class GoogleLLMClient(
         return processGoogleResponse(response).first()
     }
 
-    override fun executeStreamingWithTools(
+    override fun executeStreaming(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
@@ -225,14 +225,6 @@ public open class GoogleLLMClient(
      * @return The raw response from the Google AI API
      */
     private suspend fun getGoogleResponse(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): GoogleResponse {
-        logger.debug { "Getting Google response for prompt: $prompt with tools: $tools and model: $model" }
-        require(model.capabilities.contains(LLMCapability.Completion)) {
-            "Model ${model.id} does not support chat completions"
-        }
-        require(model.capabilities.contains(LLMCapability.Tools) || tools.isEmpty()) {
-            "Model ${model.id} does not support tools"
-        }
-
         val request = createGoogleRequest(prompt, model, tools)
 
         val response = withContext(Dispatchers.SuitableForIO) {

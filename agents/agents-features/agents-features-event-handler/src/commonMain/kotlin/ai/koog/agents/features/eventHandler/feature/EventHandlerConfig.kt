@@ -1,9 +1,5 @@
 package ai.koog.agents.features.eventHandler.feature
 
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.agent.context.AIAgentContextBase
-import ai.koog.agents.core.agent.entity.AIAgentNodeBase
-import ai.koog.agents.core.agent.entity.AIAgentStrategy
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.handler.AfterLLMCallContext
 import ai.koog.agents.core.feature.handler.AfterStreamContext
@@ -23,15 +19,6 @@ import ai.koog.agents.core.feature.handler.ToolCallContext
 import ai.koog.agents.core.feature.handler.ToolCallFailureContext
 import ai.koog.agents.core.feature.handler.ToolCallResultContext
 import ai.koog.agents.core.feature.handler.ToolValidationErrorContext
-import ai.koog.agents.core.tools.Tool
-import ai.koog.agents.core.tools.ToolArgs
-import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.agents.core.tools.ToolResult
-import ai.koog.prompt.dsl.Prompt
-import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.message.Message
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 /**
  * Configuration class for the EventHandler feature.

@@ -1,5 +1,6 @@
 package ai.koog.agents.core.feature.handler
 
+import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
 import kotlin.reflect.KType
 
@@ -20,8 +21,9 @@ public interface StrategyEventHandlerContext : EventHandlerContext
  */
 public class StrategyStartContext<TFeature>(
     public val runId: String,
-    public val strategy: AIAgentStrategy<*, *>,
-    public val feature: TFeature
+    public val strategy: AIAgentStrategy<*, *, *>,
+    public val feature: TFeature,
+    public val context: AIAgentContext,
 ) : StrategyEventHandlerContext
 
 /**
@@ -36,7 +38,7 @@ public class StrategyStartContext<TFeature>(
  */
 public class StrategyFinishContext<TFeature>(
     public val runId: String,
-    public val strategy: AIAgentStrategy<*, *>,
+    public val strategy: AIAgentStrategy<*, *, *>,
     public val feature: TFeature,
     public val result: Any?,
     public val resultType: KType,

@@ -1,6 +1,6 @@
 package ai.koog.agents.core.agent.session
 
-import ai.koog.agents.core.agent.config.AIAgentConfigBase
+import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
@@ -23,5 +23,5 @@ public class AIAgentLLMReadSession internal constructor(
     executor: PromptExecutor,
     prompt: Prompt,
     model: LLModel,
-    config: AIAgentConfigBase,
+    config: AIAgentConfig,
 ) : AIAgentLLMSession(executor, tools, prompt, model, config)

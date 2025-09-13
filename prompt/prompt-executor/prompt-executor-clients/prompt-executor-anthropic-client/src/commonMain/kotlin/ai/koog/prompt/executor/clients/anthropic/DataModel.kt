@@ -266,20 +266,23 @@ public data class AnthropicTool(
  * Represents a schema definition for an Anthropic tool utilized in LLM clients. This data class
  * defines the structure expected for tools, including the type of schema, properties, and required fields.
  *
- * This API is internal and should not be used outside of its intended scope, as it might be subject
+ * This API is internal and should not be used outside its intended scope, as it might be subject
  * to changes or removal without notice.
  *
- * @property type The type of the schema, defaulting to "object".
  * @property properties A JSON object representing the properties within this schema.
  * @property required A list of property names that are mandatory within this schema.
  */
 @InternalLLMClientApi
 @Serializable
 public data class AnthropicToolSchema(
-    val type: String = "object",
     val properties: JsonObject,
     val required: List<String>
-)
+) {
+    /**
+     * The type of the schema. Always returns "object" for Anthropic tool schemas.
+     */
+    val type: String = "object"
+}
 
 /**
  * Represents the response structure from an Anthropic API call.
