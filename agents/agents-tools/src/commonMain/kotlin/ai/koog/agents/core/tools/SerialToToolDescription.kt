@@ -11,14 +11,89 @@ import kotlinx.serialization.descriptors.StructureKind
 private fun SerialDescriptor.description(): String =
     annotations.filterIsInstance<LLMDescription>().firstOrNull()?.description ?: ""
 
+
 /**
- * Convert a [SerialDescriptor] to a [ToolDescriptor].
+ * Converts a [SerialDescriptor] into a [ToolDescriptor] with metadata about a tool,
+ * including its name, description, and parameters.
  *
- * The tool would have name = [toolName] and single argument with type defined by the current [SerialDescriptor]
+ * @param toolName The name to assign to the resulting tool descriptor.
+ * @param toolDescription An optional custom description for the tool. Defaults to the descriptor's annotation-based description if null.
+ * @return A [ToolDescriptor] representing the tool's schema, including its name, description, and any parameters.
+ *
+ *
+ *
+ * **Example:** if the current [SerialDescriptor] represents the following class:
+ * ```kotlin
+ * @Serializable
+ * class Person(
+ *      val name: String,
+ *      @property:LLMDescription("Age of the user (between 5 and 99)")
+ *      val age: Int
+ * )
+ * ```
+ * ,then
+ * ```kotlin
+ * serializer<Person>().descriptor
+ *     .asToolDescriptor(
+ *         toolName = "getLocation",
+ *         toolDescription = "Finds where the given Person is located"
+ *     )
+ * ```
+ * would return the following `ToolDescriptor` :
+ * ```kotlin
+ * ToolDescriptor(
+ *     name = "getLocation",
+ *     description = "Finds where the given Person is located",
+ *     requiredParameters = listOf(
+ *         ToolParameterDescriptor(
+ *             name = "name",
+ *             description = "name",
+ *             type = ToolParameterType.String
+ *         ),
+ *         ToolParameterDescriptor(
+ *             name = "age",
+ *             description = "Age of the user (between 5 and 99)",
+ *             type = ToolParameterType.Integer
+ *         )
+ *     )
+ * )
+ * ```
+ *
+ * Or, alternatively, you can ommit the `toolDescription` parameter but provide it via `@LLMDescription` annotation of your class:
+ *
+ * ```kotlin
+ * @Serializable
+ * @LLMDescription("A tool to compile the final plan of the trip accepted by the user")
+ * class TripPlan(
+ *     @property:LLMDescription("Steps of the plan, containing destination, start date and end date of each jorney")
+ *     val steps: List<PlanStep>,
+ * )
+ * ```
+ * ,then
+ * ```kotlin
+ * serializer<TripPlan>().descriptor
+ *     .asToolDescriptor(toolName = "provideTripPlan")
+ * ```
+ * would return the following `ToolDescriptor` :
+ * ```kotlin
+ * ToolDescriptor(
+ *     name = "provideTripPlan",
+ *     description = "A tool to compile the final plan of the trip accepted by the user",
+ *     requiredParameters = listOf(
+ *         ToolParameterDescriptor(
+ *             name = "steps",
+ *             description = "Steps of the plan, containing destination, start date and end date of each jorney",
+ *             type = ToolParameterType.List(itemType = ToolParameterType.Object(
+ *                ... // fields of `PlanStep`
+ *             ))
+ *         )
+ *     )
+ * )
+ * ```
  */
 @InternalAgentToolsApi
-public fun SerialDescriptor.asToolDescriptor(toolName: String): ToolDescriptor {
-    val description = description()
+public fun SerialDescriptor.asToolDescriptor(toolName: String, toolDescription: String? = null): ToolDescriptor {
+    val description = toolDescription ?: description()
 
     return when (kind) {
         PrimitiveKind.STRING -> ToolParameterType.String.asValueTool(toolName, description)
@@ -113,7 +188,12 @@ private fun SerialDescriptor.parameterDescriptors(required: MutableList<String>)
     List(elementsCount) { i ->
         val name = getElementName(i)
         val descriptor = getElementDescriptor(i)
-        if (!isElementOptional(i) || !descriptor.isNullable) required.add(name)
+        val isOptional = isElementOptional(i) || descriptor.isNullable
+
+        if (!isOptional) {
+            required.add(name)
+        }
+
         ToolParameterDescriptor(
             name,
             getElementAnnotations(i).filterIsInstance<LLMDescription>().firstOrNull()?.description ?: "",
