@@ -116,7 +116,7 @@ private fun SerialDescriptor.parameterDescriptors(required: MutableList<String>)
         if (!isElementOptional(i) || !descriptor.isNullable) required.add(name)
         ToolParameterDescriptor(
             name,
-            annotations.filterIsInstance<LLMDescription>().firstOrNull()?.description ?: "",
+            getElementAnnotations(i).filterIsInstance<LLMDescription>().firstOrNull()?.description ?: "",
             getElementDescriptor(i).toToolParameterType()
         )
     }
