@@ -1,7 +1,7 @@
 package ai.koog.prompt.executor.llms
 
 import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.agents.core.utils.filterTextOnly
+import ai.koog.prompt.streaming.filterTextOnly
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.LLMClient
