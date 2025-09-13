@@ -14,13 +14,21 @@ public sealed interface StreamFrame {
     /**
      * Represents a frame of a streaming response from a LLM that appends some text.
      *
-     * @property text The text to append to the response. Can be null for non-text frames.
-     * @property finishReason Optional reason for finishing the stream (e.g., "stop", "length").
+     * @property text The text to append to the response.
      */
     @Serializable
     public data class Append(
-        val text: String?,
-        val finishReason: String? = null,
+        val text: String
+    ) : StreamFrame
+
+    /**
+     * Represents the end of a streaming response from a language model.
+     *
+     * @property finishReason Indicates the reason why the generation or streaming process was concluded.
+     */
+    @Serializable
+    public data class End(
+        val finishReason: String
     ) : StreamFrame
 
     /**

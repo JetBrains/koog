@@ -8,8 +8,8 @@ import ai.koog.prompt.message.ResponseMetaInfo
  */
 public fun Message.Response.toStreamFrame(): StreamFrame =
     when(this) {
-        is Message.Assistant -> StreamFrame.Append(content, finishReason)
-        is Message.Tool.Call -> StreamFrame.ToolCall(id, index, tool, content)
+        is Message.Assistant -> StreamFrame.Append(content)
+        is Message.Tool.Call -> StreamFrame.ToolCall(id, 0, tool, content)
     }
 
 /**
@@ -40,14 +40,13 @@ public fun List<StreamFrame>.toTools(): List<Message.Tool.Call> {
     return filterIsInstance<StreamFrame.ToolCall>()
         // Group chunks by tool call index to reconstruct complete calls
         .groupBy { it.index }
-        .map { (index, toolChunks) ->
+        .map { (_, toolChunks) ->
             // Concatenate all partial data for each tool call
             val toolId = toolChunks.joinToString(separator = "") { it.id ?: "" }
             val functionName = toolChunks.joinToString(separator = "") { it.name ?: "" }
             val functionArguments = toolChunks.joinToString(separator = "") { it.content ?: "" }
             Message.Tool.Call(
                 id = toolId,
-                index = index,
                 tool = functionName,
                 content = functionArguments,
                 metaInfo = ResponseMetaInfo.Empty
@@ -63,22 +62,23 @@ public fun List<StreamFrame>.toTools(): List<Message.Tool.Call> {
  * @return A `Message.Assistant` object containing the concatenated content and finish reason
  * of all `StreamFrame.Append` elements, or `null` if the list contains no `StreamFrame.Append` elements.
  */
-public fun List<StreamFrame>.toAssistant(): Message.Assistant? {
-    return filterIsInstance<StreamFrame.Append>()
-        .let { assistants ->
-            when {
-                assistants.isEmpty() -> {
-                    return@let null
-                }
-                else -> {
-                    val content = assistants.joinToString(separator = "") { it.text ?: "" }
-                    val finishReason = assistants.joinToString(separator = "") { it.finishReason ?: "" }
-                    return@let Message.Assistant(
-                        content = content,
-                        finishReason = finishReason,
-                        metaInfo = ResponseMetaInfo.Empty
-                    )
-                }
-            }
+public fun Iterable<StreamFrame>.toAssistant(): Message.Assistant? {
+    var content: String? = null
+    var finishReason: String? = null
+    forEach { frame ->
+        when (frame) {
+            is StreamFrame.Append -> content = content?.plus(frame.text) ?: frame.text
+            is StreamFrame.ToolCall -> Unit
+            is StreamFrame.End -> finishReason = frame.finishReason
         }
+    }
+    return if (content.isNullOrBlank() && finishReason.isNullOrBlank()) {
+        null
+    } else {
+        Message.Assistant(
+            content = content ?: "",
+            finishReason = finishReason,
+            metaInfo = ResponseMetaInfo.Empty
+        )
+    }
 }

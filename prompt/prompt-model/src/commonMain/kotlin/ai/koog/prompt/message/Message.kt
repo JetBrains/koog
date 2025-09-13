@@ -164,7 +164,6 @@ public sealed interface Message {
         @Serializable
         public data class Call(
             override val id: String?,
-            val index: Int = 0,
             override val tool: String,
             override val content: String,
             override val metaInfo: ResponseMetaInfo

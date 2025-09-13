@@ -180,7 +180,7 @@ public open class GoogleLLMClient(
                                     name = part.functionCall.name,
                                     content = part.functionCall.args?.toString()?:"{}")
                                 )
-                                is GooglePart.Text -> emit(StreamFrame.Append(part.text, finishReason = null))
+                                is GooglePart.Text -> emit(StreamFrame.Append(part.text))
                                 else -> Unit
                             }
                         }

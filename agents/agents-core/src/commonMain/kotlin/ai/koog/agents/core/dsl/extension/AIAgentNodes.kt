@@ -258,50 +258,6 @@ public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStreaming(
     }
 
 /**
- * A node that processes a list of request messages and streams the LLM response with tool support.
- * This node handles both user messages and tool results, collecting the streamed response frames
- * and converting them back to proper response messages.
- *
- * @param name Optional node name for identification.
- * @param structureDefinition Optional structure definition to guide the LLM response format.
- * @return A delegate that processes request messages and returns the complete response messages.
- */
-@AIAgentBuilderDslMarker
-public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestsStreaming(
-    name: String? = null,
-    structureDefinition: StructuredDataDefinition? = null
-): AIAgentNodeDelegate<List<Message.Request>, List<Message.Response>> =
-    node(name) { input ->
-        llm.writeSession {
-            updatePrompt {
-                input.filterIsInstance<Message.User>()
-                    .forEach {
-                        user(it.content)
-                    }
-
-                tool {
-                    input.filterIsInstance<Message.Tool.Result>()
-                        .forEach {
-                            result(it)
-                        }
-                }
-            }
-
-            val stream = requestLLMStreaming(structureDefinition)
-            val streamCollector = mutableListOf<StreamFrame>()
-            stream.collect {
-                streamCollector.add(it)
-            }
-
-            val messages = streamCollector.toMessageResponses()
-            updatePrompt {
-                messages(messages)
-            }
-            messages
-        }
-    }
-
-/**
  * A node that appends a user message to the LLM prompt and streams LLM response without transformation.
  *
  * @param name Optional node name.

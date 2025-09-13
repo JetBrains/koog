@@ -223,7 +223,10 @@ public open class OpenAILLMClient(
         chunk.choices.firstOrNull()?.let { choice ->
             buildList {
                 choice.delta.content?.let {
-                    add(StreamFrame.Append(it, choice.finishReason))
+                    add(StreamFrame.Append(it))
+                }
+                choice.finishReason?.let {
+                    add(StreamFrame.End(it))
                 }
                 choice.delta.toolCalls?.map { openAIToolCall ->
                     StreamFrame.ToolCall(

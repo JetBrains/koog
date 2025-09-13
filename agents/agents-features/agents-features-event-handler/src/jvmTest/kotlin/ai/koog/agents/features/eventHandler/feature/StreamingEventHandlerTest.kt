@@ -2,11 +2,9 @@ package ai.koog.agents.features.eventHandler.feature
 
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.nodeLLMRequestsStreaming
+import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreaming
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.agents.testing.tools.mockLLMAnswer
-import ai.koog.prompt.message.Message
-import ai.koog.prompt.message.RequestMetaInfo
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertTrue
@@ -25,15 +23,20 @@ class StreamingEventHandlerTest {
         val userMessage = "Test streaming"
         val assistantResponse = "Streaming response"
 
-        // Using nodeLLMRequestsStreaming to actually test streaming events
+        // Using nodeLLMRequestStreaming to actually test streaming events
         val strategy = strategy<String, String>(strategyName) {
-            val llmNode by nodeLLMRequestsStreaming("streaming-llm-node")
+            val llmNode by nodeLLMRequestStreaming("streaming-llm-node")
 
-            edge(nodeStart forwardTo llmNode transformed { userMessage ->
-                listOf(Message.User(userMessage, RequestMetaInfo.create(testClock)))
-            })
-            edge(llmNode forwardTo nodeFinish transformed { responses ->
-                responses.map { it.content }.joinToString(", ")
+            edge(nodeStart forwardTo llmNode)
+            edge(llmNode forwardTo nodeFinish transformed { stream ->
+                // Collect the stream and return as a string
+                val frames = mutableListOf<String>()
+                stream.collect { frame ->
+                    if (frame is ai.koog.prompt.streaming.StreamFrame.Append) {
+                        frames.add(frame.text)
+                    }
+                }
+                frames.joinToString("")
             })
         }
 
@@ -51,8 +54,6 @@ class StreamingEventHandlerTest {
 
         agent.run(userMessage)
         agent.close()
-
-        val runId = eventsCollector.runId
 
         // Verify events are captured
         assertTrue(eventsCollector.collectedEvents.isNotEmpty(), "Should have collected events")
@@ -80,13 +81,18 @@ class StreamingEventHandlerTest {
 
         // Create an agent that actually uses streaming nodes
         val strategy = strategy<String, String>("streaming-test-strategy-2") {
-            val streamingNode by nodeLLMRequestsStreaming("actual-streaming-node")
+            val streamingNode by nodeLLMRequestStreaming("actual-streaming-node")
 
-            edge(nodeStart forwardTo streamingNode transformed { userMessage ->
-                listOf(Message.User(userMessage, RequestMetaInfo.create(testClock)))
-            })
-            edge(streamingNode forwardTo nodeFinish transformed { responses ->
-                responses.firstOrNull()?.content ?: "No response"
+            edge(nodeStart forwardTo streamingNode)
+            edge(streamingNode forwardTo nodeFinish transformed { stream ->
+                // Collect the stream and return as a string
+                val frames = mutableListOf<String>()
+                stream.collect { frame ->
+                    if (frame is ai.koog.prompt.streaming.StreamFrame.Append) {
+                        frames.add(frame.text)
+                    }
+                }
+                frames.joinToString("")
             })
         }
 
