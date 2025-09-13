@@ -2,7 +2,7 @@ package ai.koog.agents.features.eventHandler.feature
 
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.nodeLLMRequestsStreamingWithTools
+import ai.koog.agents.core.dsl.extension.nodeLLMRequestsStreaming
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.agents.testing.tools.mockLLMAnswer
 import ai.koog.prompt.message.Message
@@ -25,14 +25,14 @@ class StreamingEventHandlerTest {
         val userMessage = "Test streaming"
         val assistantResponse = "Streaming response"
 
-        // Using nodeLLMRequestsStreamingWithTools to actually test streaming events
+        // Using nodeLLMRequestsStreaming to actually test streaming events
         val strategy = strategy<String, String>(strategyName) {
-            val llmNode by nodeLLMRequestsStreamingWithTools("streaming-llm-node")
+            val llmNode by nodeLLMRequestsStreaming("streaming-llm-node")
 
             edge(nodeStart forwardTo llmNode transformed { userMessage ->
                 listOf(Message.User(userMessage, RequestMetaInfo.create(testClock)))
             })
-            edge(llmNode forwardTo nodeFinish transformed { responses -> 
+            edge(llmNode forwardTo nodeFinish transformed { responses ->
                 responses.map { it.content }.joinToString(", ")
             })
         }
@@ -57,15 +57,15 @@ class StreamingEventHandlerTest {
         // Verify events are captured
         assertTrue(eventsCollector.collectedEvents.isNotEmpty(), "Should have collected events")
 
-        // Verify streaming events are captured when using nodeLLMRequestsStreamingWithTools
+        // Verify streaming events are captured when using nodeLLMRequestsStreaming
         val beforeStreamEvents = eventsCollector.collectedEvents.filter { it.contains("OnBeforeStream") }
         val streamFrameEvents = eventsCollector.collectedEvents.filter { it.contains("OnStreamFrame") }
         val afterStreamEvents = eventsCollector.collectedEvents.filter { it.contains("OnAfterStream") }
-        
+
         assertTrue(beforeStreamEvents.isNotEmpty(), "Should have OnBeforeStream events")
         assertTrue(streamFrameEvents.isNotEmpty(), "Should have OnStreamFrame events")
         assertTrue(afterStreamEvents.isNotEmpty(), "Should have OnAfterStream events")
-        
+
         // Verify the stream frame contains the expected response
         val frameWithContent = streamFrameEvents.firstOrNull { it.contains(assistantResponse) }
         assertTrue(frameWithContent != null, "Stream frame should contain the assistant response")
@@ -80,12 +80,12 @@ class StreamingEventHandlerTest {
 
         // Create an agent that actually uses streaming nodes
         val strategy = strategy<String, String>("streaming-test-strategy-2") {
-            val streamingNode by nodeLLMRequestsStreamingWithTools("actual-streaming-node")
+            val streamingNode by nodeLLMRequestsStreaming("actual-streaming-node")
 
             edge(nodeStart forwardTo streamingNode transformed { userMessage ->
                 listOf(Message.User(userMessage, RequestMetaInfo.create(testClock)))
             })
-            edge(streamingNode forwardTo nodeFinish transformed { responses -> 
+            edge(streamingNode forwardTo nodeFinish transformed { responses ->
                 responses.firstOrNull()?.content ?: "No response"
             })
         }
