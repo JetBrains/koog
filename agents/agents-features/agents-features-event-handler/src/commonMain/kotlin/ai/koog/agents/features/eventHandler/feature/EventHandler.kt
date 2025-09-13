@@ -6,10 +6,13 @@ import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentPipeline
 import ai.koog.agents.core.feature.InterceptContext
 import ai.koog.agents.core.feature.handler.AfterLLMCallContext
+import ai.koog.agents.core.feature.handler.AfterStreamContext
 import ai.koog.agents.core.feature.handler.BeforeLLMCallContext
+import ai.koog.agents.core.feature.handler.BeforeStreamContext
 import ai.koog.agents.core.feature.handler.NodeAfterExecuteContext
 import ai.koog.agents.core.feature.handler.NodeBeforeExecuteContext
 import ai.koog.agents.core.feature.handler.NodeExecutionErrorContext
+import ai.koog.agents.core.feature.handler.StreamFrameContext
 import ai.koog.agents.core.feature.handler.ToolCallContext
 import ai.koog.agents.core.feature.handler.ToolCallFailureContext
 import ai.koog.agents.core.feature.handler.ToolCallResultContext
@@ -161,6 +164,26 @@ public class EventHandler {
             }
 
             //endregion Intercept Tool Call Events
+
+            //region Intercept Stream Events
+            
+            // Intercept before streaming starts to allow preprocessing or logging
+            pipeline.interceptBeforeStream(interceptContext) intercept@{ eventContext: BeforeStreamContext ->
+                config.invokeOnBeforeStream(eventContext)
+            }
+
+            // Intercept individual stream frames as they are received for real-time processing
+            pipeline.interceptOnStreamFrame(interceptContext) intercept@{ eventContext: StreamFrameContext ->
+                config.invokeOnStreamFrame(eventContext)
+            }
+
+            // Intercept after streaming completes for post-processing or cleanup
+            pipeline.interceptAfterStream(interceptContext) intercept@{ eventContext: AfterStreamContext ->
+                config.invokeOnAfterStream(eventContext)
+            }
+
+            //endregion Intercept Stream Events
+
         }
     }
 }

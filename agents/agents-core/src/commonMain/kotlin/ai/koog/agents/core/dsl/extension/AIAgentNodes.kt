@@ -282,15 +282,12 @@ public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStreaming(
  *
  * @param name Optional node name for identification.
  * @param structureDefinition Optional structure definition to guide the LLM response format.
- * @param onEvent Callback invoked for each [StreamFrame] received during streaming, allowing
- *                real-time processing of both text and tool call chunks.
  * @return A delegate that processes request messages and returns the complete response messages.
  */
 @AIAgentBuilderDslMarker
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestsStreamingWithTools(
     name: String? = null,
-    structureDefinition: StructuredDataDefinition? = null,
-    onEvent: suspend (StreamFrame) -> Unit
+    structureDefinition: StructuredDataDefinition? = null
 ): AIAgentNodeDelegate<List<Message.Request>, List<Message.Response>> =
     node(name) { input ->
         llm.writeSession {
@@ -311,7 +308,6 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestsStreamingWithTools(
             val stream = requestLLMStreamingWithTools(structureDefinition)
             val streamCollector = mutableListOf<StreamFrame>()
             stream.collect {
-                onEvent(it)
                 streamCollector.add(it)
             }
 
