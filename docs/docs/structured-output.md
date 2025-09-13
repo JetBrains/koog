@@ -206,7 +206,7 @@ The prompt executor layer provides the most direct way to make structured LLM ca
 
 This method executes a prompt and ensures the response is properly structured by:
 
-- Automatically selecting the best structured output approach based on model capabilities
+- Automatically selecting the best structured output approach based on [model capabilities](./model-capabilities.md)
 - Injecting structured output instructions into the original prompt when needed
 - Using native structured output support when available
 - Providing automatic error correction through an auxiliary LLM when parsing fails
@@ -306,7 +306,7 @@ val structuredResponse = llm.writeSession {
 ```
 <!--- KNIT example-structured-data-08.kt -->
 
-The `fixingParser` parameter specifies configuration for handling malformed responses through auxiliary LLM processing during retries. This helps ensure that you always get a valid response.
+The `fixingParser` parameter specifies a configuration for handling malformed responses through auxiliary LLM processing during retries. This helps ensure that you always get a valid response.
 
 #### Integrating with agent strategies
 
@@ -514,12 +514,12 @@ fun main(): Unit = runBlocking {
 ```
 <!--- KNIT example-structured-data-11.kt -->
 
-## Advanced Usage
+## Advanced usage
 
 The examples above demonstrate the simplified API that automatically selects the best structured output approach based on model capabilities. 
 For more control over the structured output process, you can use the advanced API with manual schema creation and provider-specific configurations.
 
-### Manual Schema Creation and Configuration
+### Manual schema creation and configuration
 
 Instead of relying on automatic schema generation, you can create schemas explicitly using `JsonStructuredData.createJsonStructure` and configure structured output behavior manually via the `StructuredOutput` class.
 
@@ -589,7 +589,7 @@ val structuredResponse = promptExecutor.executeStructured(
 ```
 <!--- KNIT example-structured-data-12.kt -->
 
-### Schema Generators
+### Schema generators
 
 Different schema generators are available depending on your needs:
 
@@ -597,7 +597,7 @@ Different schema generators are available depending on your needs:
 - **BasicJsonSchemaGenerator**: Simplified schema without polymorphism support, compatible with more models  
 - **Provider-specific generators**: Optimized schemas for specific LLM providers (OpenAI, Google, etc.)
 
-### Usage Across All Layers
+### Usage across all layers
 
 The advanced configuration works consistently across all three layers of the API. The method names remain the same, only the parameter changes from simple arguments to the more advanced `StructuredOutputConfig`:
 
