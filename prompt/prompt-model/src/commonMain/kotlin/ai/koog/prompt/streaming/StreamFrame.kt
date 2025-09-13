@@ -42,4 +42,14 @@ public sealed interface StreamFrame {
             Json.parseToJsonElement(content).jsonObject
         }
     }
+
+    /**
+     * Represents a frame of a streaming response from a LLM that signals the end of the stream.
+     *
+     * @property finishReason The reason for the stream to end.
+     */
+    @Serializable
+    public data class End(
+        val finishReason: String? = null
+    ) : StreamFrame
 }

@@ -12,12 +12,14 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.streaming.emitAppend
+import ai.koog.prompt.streaming.streamFrameFlow
+import ai.koog.prompt.streaming.streamFrameFlowOf
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
@@ -240,7 +242,7 @@ class RetryingLLMClientTest {
     @Test
     fun testStreamingSucceedOnFirstAttempt() = runTest {
         val mockClient = MockLLMClient(
-            streamResponse = flowOf("chunk1", "chunk2").map(StreamFrame::Append),
+            streamResponse = streamFrameFlowOf("chunk1", "chunk2"),
             streamFailuresBeforeSuccess = 0
         )
 
@@ -260,7 +262,7 @@ class RetryingLLMClientTest {
     @Test
     fun testStreamingWithRetry() = runTest {
         val mockClient = MockLLMClient(
-            streamResponse = flowOf("chunk1", "chunk2").map(StreamFrame::Append),
+            streamResponse = streamFrameFlowOf("chunk1", "chunk2"),
             streamFailuresBeforeSuccess = 1,
             failureMessage = "Error: 503"
         )
@@ -283,8 +285,8 @@ class RetryingLLMClientTest {
     fun testStreamingNoRetryAfterFirstToken() = runTest {
         // Mock that emits one token then fails
         val mockClient = MockLLMClient(
-            streamResponse = flow {
-                emit(StreamFrame.Append("first-token"))
+            streamResponse = streamFrameFlow {
+                emitAppend("first-token")
                 throw RuntimeException("Connection lost after first token")
             }
         )

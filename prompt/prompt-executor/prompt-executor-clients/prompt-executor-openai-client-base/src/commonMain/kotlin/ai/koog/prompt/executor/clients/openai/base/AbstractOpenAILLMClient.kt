@@ -42,6 +42,8 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flatten
+import kotlinx.coroutines.flow.flattenConcat
 import kotlinx.coroutines.flow.transform
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
@@ -154,7 +156,7 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
      * Processes a provider-specific streaming response chunk.
      * Must be implemented by concrete client classes.
      */
-    protected abstract fun processStreamingChunk(chunk: TStreamResponse): List<StreamFrame>
+    protected abstract fun processStreamingChunk(chunk: TStreamResponse): Flow<StreamFrame>
 
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         val response = getResponse(prompt, model, tools)
@@ -186,11 +188,7 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
             dataFilter = { it != "[DONE]" },
             decodeStreamingResponse = ::decodeStreamingResponse,
             processStreamingChunk = ::processStreamingChunk
-        ).transform { frames ->
-            frames.forEach {
-                emit(it)
-            }
-        }
+        ).flattenConcat()
     }
 
     override suspend fun executeMultipleChoices(
