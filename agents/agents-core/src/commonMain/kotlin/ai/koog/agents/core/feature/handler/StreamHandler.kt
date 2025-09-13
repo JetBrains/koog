@@ -61,7 +61,7 @@ public fun interface BeforeStreamHandler {
      *
      * @param eventContext The context for the before-stream event
      */
-    public fun handle(eventContext: BeforeStreamContext)
+    public suspend fun handle(eventContext: BeforeStreamContext)
 }
 
 /**
@@ -75,7 +75,7 @@ public fun interface StreamFrameHandler {
      *
      * @param eventContext The context for the stream frame event
      */
-    public fun handle(eventContext: StreamFrameContext)
+    public suspend fun handle(eventContext: StreamFrameContext)
 }
 
 /**
@@ -90,5 +90,5 @@ public fun interface AfterStreamHandler {
      *
      * @param eventContext The context for the after-stream event
      */
-    public fun handle(eventContext: AfterStreamContext)
+    public suspend fun handle(eventContext: AfterStreamContext)
 }

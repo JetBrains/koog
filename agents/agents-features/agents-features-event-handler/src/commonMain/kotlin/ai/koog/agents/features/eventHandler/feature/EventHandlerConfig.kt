@@ -110,11 +110,11 @@ public class EventHandlerConfig : FeatureConfig() {
 
     //region Stream Handlers
 
-    private var _onBeforeStream: (eventHandler: BeforeStreamContext) -> Unit = { _ -> }
+    private var _onBeforeStream: suspend (eventHandler: BeforeStreamContext) -> Unit = { _ -> }
 
-    private var _onStreamFrame: (eventHandler: StreamFrameContext) -> Unit = { _ -> }
+    private var _onStreamFrame: suspend (eventHandler: StreamFrameContext) -> Unit = { _ -> }
 
-    private var _onAfterStream: (eventHandler: AfterStreamContext) -> Unit = { _ -> }
+    private var _onAfterStream: suspend (eventHandler: AfterStreamContext) -> Unit = { _ -> }
 
     //endregion Stream Handlers
 
@@ -653,7 +653,7 @@ public class EventHandlerConfig : FeatureConfig() {
      * }
      * ```
      */
-    public fun onBeforeStream(handler: (eventContext: BeforeStreamContext) -> Unit) {
+    public fun onBeforeStream(handler: suspend (eventContext: BeforeStreamContext) -> Unit) {
         val originalHandler = this._onBeforeStream
         this._onBeforeStream = { eventContext ->
             originalHandler(eventContext)
@@ -680,7 +680,7 @@ public class EventHandlerConfig : FeatureConfig() {
      * }
      * ```
      */
-    public fun onStreamFrame(handler: (eventContext: StreamFrameContext) -> Unit) {
+    public fun onStreamFrame(handler: suspend (eventContext: StreamFrameContext) -> Unit) {
         val originalHandler = this._onStreamFrame
         this._onStreamFrame = { eventContext ->
             originalHandler(eventContext)
@@ -705,7 +705,7 @@ public class EventHandlerConfig : FeatureConfig() {
      * }
      * ```
      */
-    public fun onAfterStream(handler: (eventContext: AfterStreamContext) -> Unit) {
+    public fun onAfterStream(handler: suspend (eventContext: AfterStreamContext) -> Unit) {
         val originalHandler = this._onAfterStream
         this._onAfterStream = { eventContext ->
             originalHandler(eventContext)
@@ -841,34 +841,34 @@ public class EventHandlerConfig : FeatureConfig() {
     //endregion Invoke Tool Call Handlers
 
     //region Invoke Stream Handlers
-    
+
     /**
      * Invokes the handler associated with the event that occurs before streaming starts.
-     * 
+     *
      * @param eventContext The context containing information about the streaming session about to begin
      */
-    internal fun invokeOnBeforeStream(eventContext: BeforeStreamContext) {
+    internal suspend fun invokeOnBeforeStream(eventContext: BeforeStreamContext) {
         _onBeforeStream.invoke(eventContext)
     }
 
     /**
      * Invokes the handler associated with stream frame events during streaming.
-     * 
+     *
      * @param eventContext The context containing the stream frame data
      */
-    internal fun invokeOnStreamFrame(eventContext: StreamFrameContext) {
+    internal suspend fun invokeOnStreamFrame(eventContext: StreamFrameContext) {
         _onStreamFrame.invoke(eventContext)
     }
 
     /**
      * Invokes the handler associated with the event that occurs after streaming completes.
-     * 
+     *
      * @param eventContext The context containing information about the completed streaming session
      */
-    internal fun invokeOnAfterStream(eventContext: AfterStreamContext) {
+    internal suspend fun invokeOnAfterStream(eventContext: AfterStreamContext) {
         _onAfterStream.invoke(eventContext)
     }
-    
+
     //endregion Invoke Stream Handlers
 
 }

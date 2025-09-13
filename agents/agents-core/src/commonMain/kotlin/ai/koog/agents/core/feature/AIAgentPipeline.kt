@@ -268,7 +268,7 @@ public class AIAgentPipeline {
      * @param model The language model being used for streaming
      * @param tools The list of available tool descriptors for this streaming session
      */
-    public fun onBeforeStream(runId: String, prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>) {
+    public suspend fun onBeforeStream(runId: String, prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>) {
         val eventContext = BeforeStreamContext(runId, prompt, model, tools)
         streamHandlers.values.forEach { handler -> handler.beforeStreamHandler.handle(eventContext) }
     }
@@ -282,7 +282,7 @@ public class AIAgentPipeline {
      * @param runId The unique identifier for this streaming session
      * @param streamFrame The individual stream frame containing partial response data
      */
-    public fun onStreamFrame(runId: String, streamFrame: StreamFrame) {
+    public suspend fun onStreamFrame(runId: String, streamFrame: StreamFrame) {
         val eventContext = StreamFrameContext(runId, streamFrame)
         streamHandlers.values.forEach { handler -> handler.streamFrameHandler.handle(eventContext) }
     }
@@ -298,7 +298,7 @@ public class AIAgentPipeline {
      * @param model The language model that was used for streaming
      * @param tools The list of tool descriptors that were available for this streaming session
      */
-    public fun onAfterStream(
+    public suspend fun onAfterStream(
         runId: String,
         prompt: Prompt,
         model: LLModel,
@@ -928,7 +928,7 @@ public class AIAgentPipeline {
      */
     public fun <TFeature : Any> interceptBeforeStream(
         interceptContext: InterceptContext<TFeature>,
-        handle: TFeature.(eventContext: BeforeStreamContext) -> Unit
+        handle: suspend TFeature.(eventContext: BeforeStreamContext) -> Unit
     ) {
         val existingHandler = streamHandlers.getOrPut(interceptContext.feature.key) { StreamHandler() }
 
@@ -955,7 +955,7 @@ public class AIAgentPipeline {
      */
     public fun <TFeature : Any> interceptOnStreamFrame(
         interceptContext: InterceptContext<TFeature>,
-        handle: TFeature.(eventContext: StreamFrameContext) -> Unit
+        handle: suspend TFeature.(eventContext: StreamFrameContext) -> Unit
     ) {
         val existingHandler = streamHandlers.getOrPut(interceptContext.feature.key) { StreamHandler() }
 
@@ -982,7 +982,7 @@ public class AIAgentPipeline {
      */
     public fun <TFeature : Any> interceptAfterStream(
         interceptContext: InterceptContext<TFeature>,
-        handle: TFeature.(eventContext: AfterStreamContext) -> Unit
+        handle: suspend TFeature.(eventContext: AfterStreamContext) -> Unit
     ) {
         val existingHandler = streamHandlers.getOrPut(interceptContext.feature.key) { StreamHandler() }
 

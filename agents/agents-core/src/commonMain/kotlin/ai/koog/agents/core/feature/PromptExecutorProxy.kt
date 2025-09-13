@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.onStart
 
 /**
  * A wrapper around [ai.koog.prompt.executor.model.PromptExecutor] that allows for adding internal functionality to the executor
@@ -62,8 +63,10 @@ public class PromptExecutorProxy(
         tools: List<ToolDescriptor>
     ): Flow<StreamFrame> {
         logger.debug { "Executing LLM streaming call (prompt: $prompt, tools: [${tools.joinToString { it.name }}])" }
-        pipeline.onBeforeStream(runId, prompt, model, tools)
         return executor.executeStreamingWithTools(prompt, model, tools)
+            .onStart {
+                pipeline.onBeforeStream(runId, prompt, model, tools)
+            }
             .onEach {
                 pipeline.onStreamFrame(runId, it)
             }
