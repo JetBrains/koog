@@ -66,7 +66,7 @@ class ToolMessageEventTest {
 
         val expectedBodyFields = listOf(
             EventBodyFields.Role(role = Message.Role.Tool),
-            EventBodyFields.Content(content ="Test result")
+            EventBodyFields.Content(content = "Test result")
         )
 
         assertEquals(expectedBodyFields.size, toolMessageEvent.bodyFields.size)
