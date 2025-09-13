@@ -9,12 +9,9 @@ import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.handler.AfterLLMCallContext
 import ai.koog.agents.core.feature.handler.AfterLLMCallHandler
-<<<<<<< HEAD
 import ai.koog.agents.core.feature.handler.AfterNodeHandler
 import ai.koog.agents.core.feature.handler.AfterStreamContext
 import ai.koog.agents.core.feature.handler.AfterStreamHandler
-=======
->>>>>>> upstream/streaming-tools
 import ai.koog.agents.core.feature.handler.AgentBeforeCloseContext
 import ai.koog.agents.core.feature.handler.AgentBeforeCloseHandler
 import ai.koog.agents.core.feature.handler.AgentContextHandler
@@ -29,23 +26,17 @@ import ai.koog.agents.core.feature.handler.AgentTransformEnvironmentContext
 import ai.koog.agents.core.feature.handler.BeforeAgentStartedHandler
 import ai.koog.agents.core.feature.handler.BeforeLLMCallContext
 import ai.koog.agents.core.feature.handler.BeforeLLMCallHandler
-<<<<<<< HEAD
 import ai.koog.agents.core.feature.handler.BeforeNodeHandler
 import ai.koog.agents.core.feature.handler.BeforeStreamContext
 import ai.koog.agents.core.feature.handler.BeforeStreamHandler
-=======
->>>>>>> upstream/streaming-tools
 import ai.koog.agents.core.feature.handler.ExecuteLLMHandler
 import ai.koog.agents.core.feature.handler.ExecuteToolHandler
-<<<<<<< HEAD
 import ai.koog.agents.core.feature.handler.NodeAfterExecuteContext
 import ai.koog.agents.core.feature.handler.NodeBeforeExecuteContext
 import ai.koog.agents.core.feature.handler.NodeExecutionErrorContext
 import ai.koog.agents.core.feature.handler.NodeExecutionErrorHandler
 import ai.koog.agents.core.feature.handler.StreamFrameContext
 import ai.koog.agents.core.feature.handler.StreamFrameHandler
-=======
->>>>>>> upstream/streaming-tools
 import ai.koog.agents.core.feature.handler.StrategyFinishContext
 import ai.koog.agents.core.feature.handler.StrategyFinishedHandler
 import ai.koog.agents.core.feature.handler.StrategyHandler
@@ -144,31 +135,7 @@ public abstract class AIAgentPipeline {
      * Map of feature storage keys to their stream handlers.
      * These handlers manage the streaming lifecycle events (before, during, and after streaming).
      */
-    private val streamHandlers: MutableMap<AIAgentStorageKey<*>, StreamHandler> = mutableMapOf()
-
-    /**
-     * Installs a feature into the pipeline with the provided configuration.
-     *
-     * This method initializes the feature with a custom configuration and registers it in the pipeline.
-     * The feature's message processors are initialized during installation.
-     *
-     * @param Config The type of the feature configuration
-     * @param Feature The type of the feature being installed
-     * @param feature The feature implementation to be installed
-     * @param configure A lambda to customize the feature configuration
-     */
-    public fun <Config : FeatureConfig, Feature : Any> install(
-        feature: AIAgentFeature<Config, Feature>,
-        configure: Config.() -> Unit
-    ) {
-        val config = feature.createInitialConfig().apply { configure() }
-        feature.install(
-            config = config,
-            pipeline = this,
-        )
-
-        registeredFeatures[feature.key] = config
-    }
+    protected val streamHandlers: MutableMap<AIAgentStorageKey<*>, StreamHandler> = mutableMapOf()
 
     internal suspend fun prepareFeatures() {
         withContext(featurePrepareDispatcher) {
