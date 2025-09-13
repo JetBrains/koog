@@ -18,6 +18,7 @@ public fun streamFrameFlowOf(vararg content: String): Flow<StreamFrame.Append> =
  *
  * @see emitAppend for emitting a [StreamFrame.Append] object.
  * @see emitToolCall for emitting a [StreamFrame.ToolCall] object.
+ * @see emitEnd for emitting a [StreamFrame.End] object.
  */
 @OptIn(ExperimentalTypeInference::class)
 public fun streamFrameFlow(@BuilderInference block: suspend FlowCollector<StreamFrame>.() -> Unit): Flow<StreamFrame> =
@@ -37,6 +38,7 @@ public suspend fun FlowCollector<StreamFrame>.emitEnd(finishReason: String? = nu
 
 /**
  * Emits a [StreamFrame.ToolCall] with the given [id], [name] and [content].
+ * @param index Only used for tool calls with partial data streaming support.
  */
-public suspend fun FlowCollector<StreamFrame>.emitToolCall(id: String?, name: String, content: String): Unit =
-    emit(StreamFrame.ToolCall(id, name, content))
+public suspend fun FlowCollector<StreamFrame>.emitToolCall(id: String?, index: Int? = null, name: String?, content: String?): Unit =
+    emit(StreamFrame.ToolCall(id, index?:0, name, content))

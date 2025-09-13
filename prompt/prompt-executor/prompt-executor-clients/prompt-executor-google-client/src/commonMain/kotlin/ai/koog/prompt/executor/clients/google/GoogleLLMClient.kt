@@ -22,6 +22,7 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.emitAppend
+import ai.koog.prompt.streaming.emitEnd
 import ai.koog.prompt.streaming.emitToolCall
 import ai.koog.prompt.streaming.streamFrameFlow
 import ai.koog.prompt.structure.RegisteredBasicJsonSchemaGenerators
@@ -182,12 +183,13 @@ public open class GoogleLLMClient(
                         ?.data?.trim()?.let { json.decodeFromString<GoogleResponse>(it) }
                         ?.candidates?.firstOrNull()?.content
                         ?.parts?.forEach { part ->
-                            when(part) {
+                            when (part) {
                                 is GooglePart.FunctionCall -> emitToolCall(
-                                    part.functionCall.id,
-                                    part.functionCall.name,
-                                    part.functionCall.args?.toString() ?: "{}"
+                                    id = part.functionCall.id,
+                                    name = part.functionCall.name,
+                                    content = part.functionCall.args?.toString() ?: "{}"
                                 )
+
                                 is GooglePart.Text -> emitAppend(part.text)
                                 else -> Unit
                             }

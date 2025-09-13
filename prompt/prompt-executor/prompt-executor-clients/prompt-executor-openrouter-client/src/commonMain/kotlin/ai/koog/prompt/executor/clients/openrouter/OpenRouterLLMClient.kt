@@ -122,6 +122,7 @@ public class OpenRouterLLMClient(
                 choice.delta.toolCalls?.forEach { openAIToolCall ->
                     emitToolCall(
                         id = openAIToolCall.id,
+                        index = openAIToolCall.index,
                         name = openAIToolCall.function?.name,
                         content = openAIToolCall.function?.arguments
                     )

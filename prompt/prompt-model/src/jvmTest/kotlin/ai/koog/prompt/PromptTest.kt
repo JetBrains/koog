@@ -7,14 +7,12 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
-import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
@@ -66,7 +64,7 @@ class PromptTest {
                 )
             )
             tool {
-                call(toolCallId, 0, toolName, toolCallContent)
+                call(toolCallId, toolName, toolCallContent)
                 result(toolCallId, toolName, toolResultContent)
             }
         }
@@ -107,7 +105,7 @@ class PromptTest {
             user(userMessage)
             assistant(assistantMessage)
             tool {
-                call(toolCallId, 0, toolName, toolContent)
+                call(toolCallId, toolName, toolContent)
                 result(toolCallId, toolName, toolResult)
             }
         }
@@ -339,7 +337,7 @@ class PromptTest {
         val emptySystemMessage = Message.System("", testReqMetaInfo)
         val emptyUserMessage = Message.User("", testReqMetaInfo)
         val emptyAssistantMessage = Message.Assistant("", testRespMetaInfo)
-        val emptyToolCallMessage = Message.Tool.Call(toolCallId, 0, toolName, "", testRespMetaInfo)
+        val emptyToolCallMessage = Message.Tool.Call(toolCallId, toolName, "", testRespMetaInfo)
         val emptyToolResultMessage = Message.Tool.Result(toolCallId, toolName, "", testReqMetaInfo)
 
         assertEquals("", emptySystemMessage.content)
@@ -353,7 +351,7 @@ class PromptTest {
             user("")
             assistant("")
             tool {
-                call(toolCallId, 0, toolName, "")
+                call(toolCallId, toolName, "")
                 result(toolCallId, toolName, "")
             }
         }
@@ -374,7 +372,7 @@ class PromptTest {
 
     @Test
     fun testToolMessagesWithNullId() {
-        val toolCallWithNullId = Message.Tool.Call(null, 0, toolName, toolCallContent, testRespMetaInfo)
+        val toolCallWithNullId = Message.Tool.Call(null, toolName, toolCallContent, testRespMetaInfo)
         val toolResultWithNullId = Message.Tool.Result(null, toolName, toolCallContent, testReqMetaInfo)
 
         assertNull(toolCallWithNullId.id)
@@ -382,7 +380,7 @@ class PromptTest {
 
         val prompt = Prompt.build(promptId) {
             tool {
-                call(null, 0, toolName, toolCallContent)
+                call(null, toolName, toolCallContent)
                 result(null, toolName, toolCallContent)
             }
         }
@@ -423,7 +421,7 @@ class PromptTest {
     fun testInvalidToolCallJsonContent() {
         // contentJson property is now on StreamFrame.ToolCall, not Message.Tool.Call
         // This test is no longer applicable for Message.Tool.Call
-        val toolCallWithInvalidJson = Message.Tool.Call(toolCallId, 0, toolName, "invalid json", testRespMetaInfo)
+        val toolCallWithInvalidJson = Message.Tool.Call(toolCallId, toolName, "invalid json", testRespMetaInfo)
         
         // Just verify the content is stored as-is
         assertEquals("invalid json", toolCallWithInvalidJson.content)
@@ -500,7 +498,7 @@ class PromptTest {
 
     @Test
     fun testToolMessagesWithEmptyToolName() {
-        val toolCallWithEmptyName = Message.Tool.Call(toolCallId, 0, schemaName, toolCallContent, testRespMetaInfo)
+        val toolCallWithEmptyName = Message.Tool.Call(toolCallId, schemaName, toolCallContent, testRespMetaInfo)
         val toolResultWithEmptyName = Message.Tool.Result(toolCallId, schemaName, toolCallContent, testReqMetaInfo)
 
         val prompt = Prompt.build(promptId) {

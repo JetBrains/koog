@@ -125,7 +125,7 @@ class AIAgentLLMWriteSessionTest {
             user("I have some text that needs processing.")
             assistant("I'll use the test-tool to process your text.")
             tool {
-                call("call_1", 0, "test-tool", """{"input":"sample data"}""")
+                call("call_1", "test-tool", """{"input":"sample data"}""")
                 result("call_1", "test-tool", "Processed: sample data")
             }
             assistant(
@@ -134,7 +134,7 @@ class AIAgentLLMWriteSessionTest {
             user("Can you also use the custom tool to process this data?")
             assistant("Sure, I'll use the custom tool for additional processing.")
             tool {
-                call("call_2", 0, "custom-tool", """{"input":"additional processing"}""")
+                call("call_2", "custom-tool", """{"input":"additional processing"}""")
                 result("call_2", "custom-tool", """{"output":"Custom processed: additional processing"}""")
             }
             assistant(

@@ -22,16 +22,6 @@ public sealed interface StreamFrame {
     ) : StreamFrame
 
     /**
-     * Represents the end of a streaming response from a language model.
-     *
-     * @property finishReason Indicates the reason why the generation or streaming process was concluded.
-     */
-    @Serializable
-    public data class End(
-        val finishReason: String
-    ) : StreamFrame
-
-    /**
      * Represents a frame of a streaming response from a LLM that contains a tool call.
      *
      * @property id The ID of the tool call. Can be null for partial frames.
