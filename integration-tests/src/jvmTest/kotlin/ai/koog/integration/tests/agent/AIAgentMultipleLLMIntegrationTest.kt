@@ -106,7 +106,7 @@ internal class ReportingLLMLLMClient(
         return underlyingClient.execute(prompt, model, tools)
     }
 
-    override fun executeStreamingWithTools(
+    override fun executeStreaming(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
@@ -122,7 +122,7 @@ internal class ReportingLLMLLMClient(
                 )
             )
         }
-        underlyingClient.executeStreamingWithTools(prompt, model, tools)
+        underlyingClient.executeStreaming(prompt, model, tools)
             .collect(this)
     }
 

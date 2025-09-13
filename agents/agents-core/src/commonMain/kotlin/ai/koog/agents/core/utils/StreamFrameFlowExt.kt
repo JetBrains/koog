@@ -8,5 +8,5 @@ import kotlinx.coroutines.flow.map
 /**
  * Map a [Flow] of [StreamFrame] to a [Flow] of [String] containing only the text content.
  */
-public fun Flow<StreamFrame>.mapTextOnly(): Flow<String> =
+public fun Flow<StreamFrame>.filterTextOnly(): Flow<String> =
     filterIsInstance<StreamFrame.Append>().map { append -> append.text }

@@ -221,7 +221,7 @@ public class BedrockLLMClient(
     }
 
     @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
-    override fun executeStreamingWithTools(
+    override fun executeStreaming(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>

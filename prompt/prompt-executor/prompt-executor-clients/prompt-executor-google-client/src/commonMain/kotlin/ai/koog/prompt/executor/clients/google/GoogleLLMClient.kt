@@ -142,7 +142,7 @@ public open class GoogleLLMClient(
         return processGoogleResponse(response).first()
     }
 
-    override fun executeStreamingWithTools(
+    override fun executeStreaming(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>

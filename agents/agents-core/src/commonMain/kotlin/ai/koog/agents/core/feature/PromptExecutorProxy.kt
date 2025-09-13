@@ -40,13 +40,13 @@ public class PromptExecutorProxy(
         return responses
     }
 
-    override fun executeStreamingWithTools(
+    override fun executeStreaming(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
     ): Flow<StreamFrame> {
         logger.debug { "Executing LLM streaming call (prompt: $prompt, tools: [${tools.joinToString { it.name }}])" }
-        return executor.executeStreamingWithTools(prompt, model, tools)
+        return executor.executeStreaming(prompt, model, tools)
     }
 
     override suspend fun executeMultipleChoices(

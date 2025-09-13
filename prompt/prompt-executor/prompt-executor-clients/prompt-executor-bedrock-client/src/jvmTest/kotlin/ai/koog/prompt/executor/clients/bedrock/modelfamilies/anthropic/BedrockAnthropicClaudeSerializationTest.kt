@@ -10,6 +10,7 @@ import ai.koog.prompt.executor.clients.anthropic.AnthropicToolChoice
 import ai.koog.prompt.executor.clients.bedrock.BedrockModels
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.streaming.StreamFrame
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.json.jsonObject
@@ -313,7 +314,7 @@ class BedrockAnthropicClaudeSerializationTest {
         """.trimIndent()
 
         val content = BedrockAnthropicClaudeSerialization.parseAnthropicStreamChunk(chunkJson)
-        assertEquals("Paris is ", content)
+        assertEquals(listOf("Paris is ").map(StreamFrame::Append), content)
     }
 
     @Test
@@ -341,7 +342,7 @@ class BedrockAnthropicClaudeSerializationTest {
         """.trimIndent()
 
         val content = BedrockAnthropicClaudeSerialization.parseAnthropicStreamChunk(chunkJson)
-        assertEquals("the capital of France.", content)
+        assertEquals(listOf("the capital of France.").map(StreamFrame::Append), content)
     }
 
     @Test
@@ -364,7 +365,7 @@ class BedrockAnthropicClaudeSerializationTest {
         """.trimIndent()
 
         val content = BedrockAnthropicClaudeSerialization.parseAnthropicStreamChunk(chunkJson)
-        assertEquals("", content)
+        assertEquals(emptyList(), content)
     }
 
     @Test
@@ -393,7 +394,7 @@ class BedrockAnthropicClaudeSerializationTest {
         """.trimIndent()
 
         val content = BedrockAnthropicClaudeSerialization.parseAnthropicStreamChunk(chunkJson)
-        assertEquals("", content)
+        assertEquals(emptyList(), content)
     }
 
     @Test

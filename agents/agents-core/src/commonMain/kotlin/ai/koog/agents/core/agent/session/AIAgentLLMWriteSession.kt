@@ -22,10 +22,8 @@ import ai.koog.prompt.structure.StructuredDataDefinition
 import ai.koog.prompt.structure.StructuredOutputConfig
 import ai.koog.prompt.structure.StructuredResponse
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.flatMapMerge
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.map
 import kotlinx.datetime.Clock
 import kotlinx.serialization.KSerializer
 import kotlin.reflect.KClass
@@ -480,21 +478,9 @@ public class AIAgentLLMWriteSession internal constructor(
      *
      * @param definition an optional parameter to define a structured data format. When provided, it will be used
      * in constructing the prompt for the language model request.
-     * @return a flow of strings that streams the responses from the language model.
-     */
-    public fun requestLLMStreaming(definition: StructuredDataDefinition? = null): Flow<String> =
-        requestLLMStreamingWithTools(definition)
-            .filterIsInstance<StreamFrame.Append>()
-            .map { append -> append.text }
-
-    /**
-     * Streams the result of a request to a language model.
-     *
-     * @param definition an optional parameter to define a structured data format. When provided, it will be used
-     * in constructing the prompt for the language model request.
      * @return a flow of `StreamingFrame` objects that streams the responses from the language model.
      */
-    public fun requestLLMStreamingWithTools(definition: StructuredDataDefinition? = null): Flow<StreamFrame> {
+    public fun requestLLMStreaming(definition: StructuredDataDefinition? = null): Flow<StreamFrame> {
         if (definition != null) {
             val prompt = prompt(prompt, clock) {
                 user {
@@ -503,6 +489,6 @@ public class AIAgentLLMWriteSession internal constructor(
             }
             this.prompt = prompt
         }
-        return executor.executeStreamingWithTools(prompt, model, tools)
+        return executor.executeStreaming(prompt, model, tools)
     }
 }

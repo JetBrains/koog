@@ -145,7 +145,7 @@ public open class AnthropicLLMClient(
         }
     }
 
-    override fun executeStreamingWithTools(
+    override fun executeStreaming(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>

@@ -11,6 +11,7 @@ import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.streaming.StreamFrame
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlin.test.Test
@@ -213,7 +214,7 @@ class BedrockAmazonNovaSerializationTest {
         """.trimIndent()
 
         val content = BedrockAmazonNovaSerialization.parseNovaStreamChunk(chunkJson)
-        assertEquals(chunkContent, content)
+        assertEquals(listOf(chunkContent).map(StreamFrame::Append), content)
     }
 
     @Test
@@ -229,7 +230,7 @@ class BedrockAmazonNovaSerializationTest {
         """.trimIndent()
 
         val content = BedrockAmazonNovaSerialization.parseNovaStreamChunk(chunkJson)
-        assertEquals("", content)
+        assertEquals(listOf("").map(StreamFrame::Append), content)
     }
 
     @Test
@@ -245,7 +246,7 @@ class BedrockAmazonNovaSerializationTest {
         """.trimIndent()
 
         val content = BedrockAmazonNovaSerialization.parseNovaStreamChunk(chunkJson)
-        assertEquals("", content)
+        assertEquals(emptyList(), content)
     }
 
     @Test
@@ -264,7 +265,7 @@ class BedrockAmazonNovaSerializationTest {
         """.trimIndent()
 
         val content = BedrockAmazonNovaSerialization.parseNovaStreamChunk(chunkJson)
-        assertEquals("", content)
+        assertEquals(emptyList(), content)
     }
 
     @Test

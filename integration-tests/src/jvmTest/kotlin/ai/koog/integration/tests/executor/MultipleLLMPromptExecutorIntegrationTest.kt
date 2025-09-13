@@ -3,6 +3,7 @@ package ai.koog.integration.tests.executor
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
+import ai.koog.agents.core.utils.filterTextOnly
 import ai.koog.integration.tests.utils.MediaTestScenarios
 import ai.koog.integration.tests.utils.MediaTestScenarios.AudioTestScenario
 import ai.koog.integration.tests.utils.MediaTestScenarios.ImageTestScenario
@@ -43,6 +44,7 @@ import ai.koog.prompt.message.Attachment
 import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams.ToolChoice
+import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.structure.executeStructured
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
@@ -200,7 +202,9 @@ class MultipleLLMPromptExecutorIntegrationTest {
         }
 
         withRetry(times = 3, testName = "integration_testExecuteStreaming[${model.id}]") {
-            val responseChunks = executor.executeStreaming(prompt, model).toList()
+            val responseChunks = executor.executeStreaming(prompt, model)
+                .filterTextOnly()
+                .toList()
 
             assertNotNull(responseChunks, "Response chunks should not be null")
             assertTrue(responseChunks.isNotEmpty(), "Response chunks should not be empty")
@@ -490,7 +494,7 @@ class MultipleLLMPromptExecutorIntegrationTest {
             user("Count from 1 to 5.")
         }
 
-        val responseChunks = mutableListOf<String>()
+        val responseChunks = mutableListOf<StreamFrame>()
         val client = when (model.provider) {
             is LLMProvider.Anthropic -> anthropicClient
             is LLMProvider.Google -> googleClient
