@@ -110,9 +110,8 @@ public class DeepSeekLLMClient(
                 choice.delta.toolCalls?.forEach { toolCall ->
                     emitToolCall(
                         id = toolCall.id,
-                        index = toolCall.index,
-                        name = toolCall.function?.name,
-                        content = toolCall.function?.arguments
+                        name = toolCall.function?.name?:return@forEach,
+                        content = toolCall.function?.arguments?:"{}"
                     )
                 }
                 choice.finishReason?.let { emitEnd(it) }

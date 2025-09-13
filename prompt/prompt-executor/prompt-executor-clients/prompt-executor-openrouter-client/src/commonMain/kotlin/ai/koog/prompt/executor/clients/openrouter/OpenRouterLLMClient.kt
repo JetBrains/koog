@@ -120,11 +120,11 @@ public class OpenRouterLLMClient(
             chunk.choices.firstOrNull()?.let { choice ->
                 choice.delta.content?.let { emitAppend(it) }
                 choice.delta.toolCalls?.forEach { openAIToolCall ->
+                    val function = openAIToolCall.function?:return@forEach
                     emitToolCall(
                         id = openAIToolCall.id,
-                        index = openAIToolCall.index,
-                        name = openAIToolCall.function?.name,
-                        content = openAIToolCall.function?.arguments
+                        name = function.name?:return@forEach,
+                        content = function.arguments?:"{}",
                     )
                 }
                 choice.finishReason?.let { emitAppend(it) }

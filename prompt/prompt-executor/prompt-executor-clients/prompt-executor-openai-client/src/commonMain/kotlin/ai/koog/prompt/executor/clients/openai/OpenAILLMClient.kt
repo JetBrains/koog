@@ -54,7 +54,7 @@ import ai.koog.prompt.structure.annotations.InternalStructuredOutputApi
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.transform
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.datetime.Clock
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.uuid.ExperimentalUuidApi
@@ -228,11 +228,11 @@ public open class OpenAILLMClient(
             chunk.choices.firstOrNull()?.let { choice ->
                 choice.delta.content?.let { emitAppend(it) }
                 choice.delta.toolCalls?.forEach { openAIToolCall ->
+                    openAIToolCall.function
                     emitToolCall(
                         id = openAIToolCall.id,
-                        index = openAIToolCall.index,
-                        name = openAIToolCall.function?.name,
-                        content = openAIToolCall.function?.arguments
+                        name = openAIToolCall.function?.name?:return@forEach,
+                        content = openAIToolCall.function?.arguments?:"{}"
                     )
                 }
                 choice.finishReason?.let { emitEnd(it) }
@@ -287,16 +287,22 @@ public open class OpenAILLMClient(
             decodeStreamingResponse = { json.decodeFromString<OpenAIStreamEvent>(it) },
             processStreamingChunk = {
                 // TODO: handle tool calls, not sure if this is supported by the OpenAI Streaming API yet
-                (it as? OpenAIStreamEvent.ResponseOutputTextDelta)?.delta
-                    ?.let(StreamFrame::Append)
-                    ?.let(::listOf)
-                    ?: emptyList()
+                when (it) {
+                    is OpenAIStreamEvent.ResponseOutputItemDone -> {
+                        when (val item = it.item) {
+                            is Item.FunctionToolCall -> StreamFrame.ToolCall(item.id, item.name, item.arguments)
+                            else -> null
+                        }
+                    }
+
+                    is OpenAIStreamEvent.ResponseOutputTextDelta -> {
+                        StreamFrame.Append(it.delta)
+                    }
+
+                    else -> null
+                }
             }
-        ).transform { frames ->
-            frames.forEach {
-                emit(it)
-            }
-        }
+        ).filterNotNull()
     }
 
     override suspend fun executeMultipleChoices(

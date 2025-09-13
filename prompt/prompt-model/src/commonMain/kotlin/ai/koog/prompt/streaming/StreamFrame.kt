@@ -25,23 +25,21 @@ public sealed interface StreamFrame {
      * Represents a frame of a streaming response from a LLM that contains a tool call.
      *
      * @property id The ID of the tool call. Can be null for partial frames.
-     * @property index The index of this tool call in the sequence, used for ordering and grouping chunks.
      * @property name The name of the tool being called. Can be null for partial frames.
      * @property content The content/arguments of the tool call. Can be null for partial frames.
      */
     @Serializable
     public data class ToolCall(
         val id: String?,
-        val index: Int = 0,
-        val name: String?,
-        val content: String?
+        val name: String,
+        val content: String
     ) : StreamFrame {
 
         /**
          * Lazily parses the content of the tool call as a JSON object.
          */
         val contentJson: JsonObject by lazy {
-            Json.parseToJsonElement(content ?: "").jsonObject
+            Json.parseToJsonElement(content).jsonObject
         }
     }
 

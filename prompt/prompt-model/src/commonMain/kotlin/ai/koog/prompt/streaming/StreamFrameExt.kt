@@ -7,9 +7,9 @@ import ai.koog.prompt.message.ResponseMetaInfo
  * Convert a [Message.Response] to a [StreamFrame].
  */
 public fun Message.Response.toStreamFrame(): StreamFrame =
-    when(this) {
+    when (this) {
         is Message.Assistant -> StreamFrame.Append(content)
-        is Message.Tool.Call -> StreamFrame.ToolCall(id, 0, tool, content)
+        is Message.Tool.Call -> StreamFrame.ToolCall(id, tool, content)
     }
 
 /**
@@ -36,23 +36,16 @@ public fun List<StreamFrame>.toMessageResponses(): List<Message.Response> {
  * @return A list of `Message.Tool.Call` objects, each representing a reconstructed tool call
  *         with concatenated `id`, `tool`, and `content` fields.
  */
-public fun List<StreamFrame>.toTools(): List<Message.Tool.Call> {
-    return filterIsInstance<StreamFrame.ToolCall>()
-        // Group chunks by tool call index to reconstruct complete calls
-        .groupBy { it.index }
-        .map { (_, toolChunks) ->
-            // Concatenate all partial data for each tool call
-            val toolId = toolChunks.joinToString(separator = "") { it.id ?: "" }
-            val functionName = toolChunks.joinToString(separator = "") { it.name ?: "" }
-            val functionArguments = toolChunks.joinToString(separator = "") { it.content ?: "" }
+public fun List<StreamFrame>.toTools(): List<Message.Tool.Call> =
+    filterIsInstance<StreamFrame.ToolCall>()
+        .mapNotNull {
             Message.Tool.Call(
-                id = toolId,
-                tool = functionName,
-                content = functionArguments,
+                id = it.id,
+                tool = it.name ?: return@mapNotNull null,
+                content = it.content ?: return@mapNotNull null,
                 metaInfo = ResponseMetaInfo.Empty
             )
         }
-}
 
 /**
  * Converts a list of `StreamFrame` objects into a `Message.Assistant` instance.
