@@ -113,6 +113,28 @@ class TestEventsCollector {
                 "OnToolCallResult (run id: ${eventContext.runId}, tool: ${eventContext.tool.name}, args: ${eventContext.toolArgs}, result: ${eventContext.result})"
             )
         }
+
+        onBeforeStream { eventContext ->
+            _collectedEvents.add(
+                "OnBeforeStream (run id: ${eventContext.runId}, prompt: ${eventContext.prompt.traceString}, model: ${eventContext.model.eventString}, tools: [${
+                    eventContext.tools.joinToString { it.name }
+                }])"
+            )
+        }
+
+        onStreamFrame { eventContext ->
+            _collectedEvents.add(
+                "OnStreamFrame (run id: ${eventContext.runId}, frame: ${eventContext.streamFrame})"
+            )
+        }
+
+        onAfterStream { eventContext ->
+            _collectedEvents.add(
+                "OnAfterStream (run id: ${eventContext.runId}, prompt: ${eventContext.prompt.traceString}, model: ${eventContext.model.eventString}, tools: [${
+                    eventContext.tools.joinToString { it.name }
+                }])"
+            )
+        }
     }
 
     @Suppress("unused")
