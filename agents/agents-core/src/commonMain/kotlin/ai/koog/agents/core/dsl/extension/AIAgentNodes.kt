@@ -267,7 +267,7 @@ public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStreaming(
  * @return A delegate that processes request messages and returns the complete response messages.
  */
 @AIAgentBuilderDslMarker
-public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestsStreamingWithTools(
+public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestsStreaming(
     name: String? = null,
     structureDefinition: StructuredDataDefinition? = null
 ): AIAgentNodeDelegate<List<Message.Request>, List<Message.Response>> =
