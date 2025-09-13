@@ -1,4 +1,5 @@
 [versions]
+agp = "8.11.1"
 annotations = "26.0.2"
 assertj="3.27.4"
 aws-sdk-kotlin = "1.5.16"
@@ -6,7 +7,7 @@ dokka = "2.0.0"
 jetsign = "45.47"
 junit = "5.8.2"
 knit = "0.5.0"
-kotlin = "2.1.21"
+kotlin = "2.2.10"
 kotlinx-coroutines = "1.10.2"
 kotlinx-datetime = "0.6.2"
 kotlinx-io = "0.7.0"
@@ -16,16 +17,22 @@ ktlint = "13.0.0"
 ktor3 = "3.2.2"
 lettuce = "6.5.5.RELEASE"
 logback = "1.5.13"
-mcp = "0.6.0"
+mcp = "0.7.0"
 mockito="5.19.0"
 mockk = "1.13.8"
 opentelemetry = "1.51.0"
 oshai-logging = "7.0.7"
 shadow = "8.1.1"
 slf4j = "2.0.17"
+testcontainers = "1.19.7"
+exposed = "0.58.0"
+hikaricp = "6.2.1"
+postgresql = "42.7.4"
+mysql = "8.0.33"
+h2 = "2.2.224"
+sqlite = "3.46.1.3"
 spring-boot = "3.5.3"
 spring-management = "1.1.7"
-testcontainers = "1.19.7"
 
 [libraries]
 jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "annotations" }
@@ -64,10 +71,23 @@ logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "lo
 oshai-kotlin-logging = { module = "io.github.oshai:kotlin-logging", version.ref = "oshai-logging" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 dokka-gradle-plugin = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version.ref = "dokka" }
-mcp = { module = "io.modelcontextprotocol:kotlin-sdk", version.ref = "mcp" }
+mcp-client = { module = "io.modelcontextprotocol:kotlin-sdk-client", version.ref = "mcp" }
+mcp-server = { module = "io.modelcontextprotocol:kotlin-sdk-server", version.ref = "mcp" }
 slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
 jetsign-gradle-plugin = { module = "com.jetbrains:jet-sign", version.ref = "jetsign" }
 testcontainers = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }
+testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.ref = "testcontainers" }
+testcontainers-mysql = { module = "org.testcontainers:mysql", version.ref = "testcontainers" }
+exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
+exposed-dao = { module = "org.jetbrains.exposed:exposed-dao", version.ref = "exposed" }
+exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed" }
+exposed-json = { module = "org.jetbrains.exposed:exposed-json", version.ref = "exposed" }
+exposed-kotlin-datetime = { module = "org.jetbrains.exposed:exposed-kotlin-datetime", version.ref = "exposed" }
+hikaricp = { module = "com.zaxxer:HikariCP", version.ref = "hikaricp" }
+postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
+mysql = { module = "com.mysql:mysql-connector-j", version.ref = "mysql" }
+h2 = { module = "com.h2database:h2", version.ref = "h2" }
+sqlite = { module = "org.xerial:sqlite-jdbc", version.ref = "sqlite" }
 opentelemetry-bom = { module = "io.opentelemetry:opentelemetry-bom", version.ref = "opentelemetry" }
 opentelemetry-sdk = { module = "io.opentelemetry:opentelemetry-sdk" }
 opentelemetry-exporter-otlp = { module = "io.opentelemetry:opentelemetry-exporter-otlp" }
@@ -75,6 +95,7 @@ opentelemetry-exporter-logging = { module = "io.opentelemetry:opentelemetry-expo
 aws-sdk-kotlin-bedrock = { module = "aws.sdk.kotlin:bedrock", version.ref = "aws-sdk-kotlin" }
 aws-sdk-kotlin-bedrockruntime = { module = "aws.sdk.kotlin:bedrockruntime", version.ref = "aws-sdk-kotlin" }
 aws-sdk-kotlin-sts = { module = "aws.sdk.kotlin:sts", version.ref = "aws-sdk-kotlin" }
+android-tools-gradle={ module = "com.android.tools.build:gradle", version.ref="agp"}
 
 # Spring
 spring-boot-bom = { module = "org.springframework.boot:spring-boot-dependencies", version.ref = "spring-boot" }
@@ -91,10 +112,13 @@ spring-boot-core = [
 ]
 
 [plugins]
-kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
-shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadow" }
-kotlinx-kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
-kotlin-spring = { id = "org.jetbrains.kotlin.plugin.spring", version.ref = "kotlin" }
-spring-management = { id = "io.spring.dependency-management", version.ref = "spring-management" }
-ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
+android-application = { id = "com.android.application", version.ref = "agp" }
+android-library = { id = "com.android.library", version.ref = "agp" }
 knit = { id = "org.jetbrains.kotlinx.knit", version.ref = "knit" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+kotlin-spring = { id = "org.jetbrains.kotlin.plugin.spring", version.ref = "kotlin" }
+kotlinx-kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
+ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
+shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadow" }
+spring-management = { id = "io.spring.dependency-management", version.ref = "spring-management" }

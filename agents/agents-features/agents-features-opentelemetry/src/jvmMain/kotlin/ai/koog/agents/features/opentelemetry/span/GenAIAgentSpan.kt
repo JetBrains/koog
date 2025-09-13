@@ -96,6 +96,11 @@ internal abstract class GenAIAgentSpan(
         _attributes.addAll(attributes)
     }
 
+    fun removeAttribute(attribute: Attribute): Boolean {
+        logger.debug { "Removing attribute from span (name: $name, id: $spanId): ${attribute.key}" }
+        return _attributes.remove(attribute)
+    }
+
     fun addEvent(event: GenAIAgentEvent) {
         logger.debug { "Adding event to span (name: $name, id: $spanId): ${event.name}" }
         _events.add(event)

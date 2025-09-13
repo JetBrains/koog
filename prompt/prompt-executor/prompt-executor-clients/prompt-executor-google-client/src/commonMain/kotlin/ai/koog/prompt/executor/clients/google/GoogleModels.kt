@@ -5,6 +5,7 @@ import ai.koog.prompt.executor.clients.google.GoogleModels.Gemini2_0Flash
 import ai.koog.prompt.executor.clients.google.GoogleModels.Gemini2_0Flash001
 import ai.koog.prompt.executor.clients.google.GoogleModels.Gemini2_0FlashLite
 import ai.koog.prompt.executor.clients.google.GoogleModels.Gemini2_5Flash
+import ai.koog.prompt.executor.clients.google.GoogleModels.Gemini2_5FlashLite
 import ai.koog.prompt.executor.clients.google.GoogleModels.Gemini2_5Pro
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
@@ -21,6 +22,7 @@ import ai.koog.prompt.llm.LLModel
  * | [Gemini2_0FlashLite]        | Very fast | $0.075 / $0.30               | Audio, Image, Video, Text, Tools | Text, Tools         |
  * | [Gemini2_5Pro]              | Slow      | $1.25-$2.50 / $10.00-$15.00² | Audio, Image, Video, Text, Tools | Text, Tools         |
  * | [Gemini2_5Flash]            | Medium    | $0.15-$1.00 / $0.60-$3.50³   | Audio, Image, Video, Text, Tools | Text, Tools         |
+ * | [Gemini2_5FlashLite]        | Fast      | $0.10-$0.30 / $0.40          | Audio, Image, Video, Text, Tools | Text, Tools         |
  *
  * @see <a href="modelcards.withgoogle.com/model-cards">
  */
@@ -124,6 +126,19 @@ public object GoogleModels : LLModelDefinitions {
     public val Gemini2_5Flash: LLModel = LLModel(
         provider = LLMProvider.Google,
         id = "gemini-2.5-flash",
+        capabilities = fullCapabilities,
+        contextLength = 1_048_576,
+        maxOutputTokens = 65_536,
+    )
+
+    /**
+     * A Gemini 2.5 Flash model optimized for cost-efficiency and high throughput.
+     *
+     * @see <a href="storage.googleapis.com/deepmind-media/Model-Cards/Gemini-2-5-Flash-Lite-Model-Card.pdf">
+     */
+    public val Gemini2_5FlashLite: LLModel = LLModel(
+        provider = LLMProvider.Google,
+        id = "gemini-2.5-flash-lite",
         capabilities = fullCapabilities,
         contextLength = 1_048_576,
         maxOutputTokens = 65_536,

@@ -227,7 +227,7 @@ fun main() {
 ```kotlin
 // Create the agent with testing enabled
 AIAgent(
-    executor = mockLLMApi,
+    promptExecutor = mockLLMApi,
     toolRegistry = toolRegistry,
     llmModel = llmModel
 ) {
@@ -272,7 +272,7 @@ fun main() {
 ```kotlin
 AIAgent(
     // Constructor arguments
-    executor = mockLLMApi,
+    promptExecutor = mockLLMApi,
     toolRegistry = toolRegistry,
     llmModel = llmModel
 ) {
@@ -332,7 +332,7 @@ fun main() {
 
     AIAgent(
         // Constructor arguments
-        executor = mockLLMApi,
+        promptExecutor = mockLLMApi,
         toolRegistry = toolRegistry,
         llmModel = llmModel
     ) {
@@ -414,7 +414,7 @@ fun main() {
 
     AIAgent(
         // Constructor arguments
-        executor = mockLLMApi,
+        promptExecutor = mockLLMApi,
         toolRegistry = toolRegistry,
         llmModel = llmModel
     ) {
@@ -493,7 +493,7 @@ fun main() {
 
     AIAgent(
         // Constructor arguments
-        executor = mockLLMApi,
+        promptExecutor = mockLLMApi,
         toolRegistry = toolRegistry,
         llmModel = llmModel
     ) {
@@ -573,7 +573,7 @@ fun main() {
 
     AIAgent(
         // Constructor arguments
-        executor = mockLLMApi,
+        promptExecutor = mockLLMApi,
         toolRegistry = toolRegistry,
         llmModel = llmModel
     ) {
@@ -633,7 +633,7 @@ fun main() {
 
     AIAgent(
         // Constructor arguments
-        executor = mockLLMApi,
+        promptExecutor = mockLLMApi,
         toolRegistry = toolRegistry,
         llmModel = llmModel
     ) {
@@ -684,7 +684,7 @@ fun main() {
 
     AIAgent(
         // Constructor arguments
-        executor = mockLLMApi,
+        promptExecutor = mockLLMApi,
         toolRegistry = toolRegistry,
         llmModel = llmModel
     ) {
@@ -731,7 +731,7 @@ fun main() {
 
     AIAgent(
         // Constructor arguments
-        executor = mockLLMApi,
+        promptExecutor = mockLLMApi,
         toolRegistry = toolRegistry,
         llmModel = llmModel
     ) {
@@ -777,7 +777,7 @@ fun main() {
 
     AIAgent(
         // Constructor arguments
-        executor = mockLLMApi,
+        promptExecutor = mockLLMApi,
         toolRegistry = toolRegistry,
         llmModel = llmModel
     ) {
@@ -1099,7 +1099,7 @@ val llmModel = OpenAIModels.Chat.GPT4o
 fun main() {
     AIAgent(
         // Constructor arguments
-        executor = mockLLMApi,
+        promptExecutor = mockLLMApi,
         toolRegistry = toolRegistry,
         llmModel = llmModel
     ) {
@@ -1137,7 +1137,7 @@ Use pattern matching methods:
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.agents.testing.tools.mockLLMAnswer
 
-val executor = 
+val promptExecutor = 
 -->
 ```kotlin
 getMockExecutor {

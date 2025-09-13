@@ -33,7 +33,7 @@ fun main(): Unit = runBlocking {
     )
 
     val agent = AIAgent(
-        executor = executor,
+        promptExecutor = executor,
         llmModel = BedrockModels.AnthropicClaude35SonnetV2, // Use Claude 3.5 Sonnet
         systemPrompt = "You're responsible for running a Switch and perform operations on it by request",
         temperature = 0.0,

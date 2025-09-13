@@ -29,7 +29,7 @@ kotlin {
 
         jvmMain {
             dependencies {
-                api(libs.ktor.client.cio)
+                // SQL dependencies moved to agents-features-sql module
             }
         }
 
@@ -38,6 +38,8 @@ kotlin {
                 implementation(kotlin("test-junit5"))
                 implementation(project(":agents:agents-test"))
                 implementation(libs.mockk)
+                implementation(libs.testcontainers)
+                implementation(libs.testcontainers.postgresql)
             }
         }
     }

@@ -145,7 +145,7 @@ public object BedrockModels : LLModelDefinitions {
     ).effectiveModel
 
     /**
-     * Claude 4 Opus - Anthropic's most powerful and intelligent model yet
+     * Claude 4 Opus - Anthropic's previous flagship model
      *
      * This model sets new standards in:
      * - Complex reasoning and advanced coding
@@ -159,6 +159,23 @@ public object BedrockModels : LLModelDefinitions {
     public val AnthropicClaude4Opus: LLModel = BedrockModel(
         AnthropicModels.Opus_4,
         "anthropic.claude-opus-4-20250514-v1:0",
+    ).effectiveModel
+
+    /**
+     * Claude 4.1 Opus - Anthropic's most capable model
+     *
+     * This model sets new standards in:
+     * - Complex reasoning and advanced coding
+     * - Autonomous management of complex, multi-step tasks
+     * - Extended thinking for deeper reasoning
+     * - AI agent capabilities for orchestrating workflows
+     * - Multimodal understanding (text and images)
+     * - Tool/function calling with parallel execution
+     * - Memory capabilities for maintaining continuity
+     */
+    public val AnthropicClaude41Opus: LLModel = BedrockModel(
+        AnthropicModels.Opus_4_1,
+        "anthropic.claude-opus-4-1-20250805-v1:0",
     ).effectiveModel
 
     /**

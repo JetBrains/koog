@@ -10,6 +10,7 @@ import ai.koog.agents.core.feature.model.AIAgentNodeExecutionErrorEvent
 import ai.koog.agents.core.feature.model.BeforeLLMCallEvent
 import ai.koog.agents.core.feature.model.ToolCallEvent
 import ai.koog.agents.core.feature.model.ToolCallResultEvent
+import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.tracing.feature.Tracing
 import ai.koog.agents.features.tracing.mock.RecursiveTool
 import ai.koog.agents.features.tracing.mock.TestFeatureMessageWriter
@@ -179,8 +180,10 @@ class TraceFeatureMessageTestWriterTest {
 
         val messageProcessor = TestFeatureMessageWriter()
 
+        val toolRegistry = ToolRegistry.EMPTY
         val agent = createAgent(
             strategy = strategy,
+            toolRegistry = toolRegistry
         ) {
             install(Tracing) {
                 addMessageProcessor(messageProcessor)
@@ -216,8 +219,10 @@ class TraceFeatureMessageTestWriterTest {
 
         val messageProcessor = TestFeatureMessageWriter()
 
+        val toolRegistry = ToolRegistry.EMPTY
         val agent = createAgent(
             strategy = strategy,
+            toolRegistry = toolRegistry
         ) {
             install(Tracing) {
                 addMessageProcessor(messageProcessor)

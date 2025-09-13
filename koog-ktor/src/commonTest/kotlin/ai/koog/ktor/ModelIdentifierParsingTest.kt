@@ -139,6 +139,12 @@ class ModelIdentifierParsingTest {
         assertEquals(LLMProvider.Anthropic, opus4.provider)
         assertEquals(AnthropicModels.Opus_4, opus4)
 
+        // Test Opus 4.1
+        val opus4_1 = getModelFromIdentifier("anthropic.opus_4_1")
+        assertNotNull(opus4_1)
+        assertEquals(LLMProvider.Anthropic, opus4_1.provider)
+        assertEquals(AnthropicModels.Opus_4_1, opus4_1)
+
         // Test Haiku 3
         val haiku3 = getModelFromIdentifier("anthropic.haiku_3")
         assertNotNull(haiku3)
@@ -183,6 +189,11 @@ class ModelIdentifierParsingTest {
         assertNotNull(gemini25Pro)
         assertEquals(LLMProvider.Google, gemini25Pro.provider)
         assertEquals(GoogleModels.Gemini2_5Pro, gemini25Pro)
+
+        val gemini25FlashLite = getModelFromIdentifier("google.gemini2_5flashlite")
+        assertNotNull(gemini25FlashLite)
+        assertEquals(LLMProvider.Google, gemini25FlashLite.provider)
+        assertEquals(GoogleModels.Gemini2_5FlashLite, gemini25FlashLite)
     }
 
     // OpenRouter model identifier tests

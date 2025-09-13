@@ -254,6 +254,13 @@ internal object SpanAttributes {
             override val key: String = super.key.concatKey("output_tokens")
             override val value: Int = tokens
         }
+
+        // gen_ai.usage.total_tokens
+        // Note: Non-semantic attribute
+        data class TotalTokens(private val tokens: Int) : Usage {
+            override val key: String = super.key.concatKey("total_tokens")
+            override val value: Int = tokens
+        }
     }
 
     // gen_ai.tool

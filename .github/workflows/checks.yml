@@ -14,7 +14,7 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  # Cancel only when the run is not on main
+  # Cancel only when the run is not on main or develop
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' || github.ref != 'refs/heads/develop' }}
 
 jobs:
@@ -58,17 +58,23 @@ jobs:
           git config --global core.autocrlf input
       - uses: actions/checkout@v5
 
+      # Using setup-python on CI to install Python might be faster than with uv (official uv recommendation)
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: 3.x
+          python-version-file: "./docs/.python-version"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.8.15"
+          enable-cache: true
 
       - name: Build docs
+        working-directory: ./docs
         run: |
-          cd ./docs
-          pip install mkdocs-material
-          pip install mkdocs-redirects
-          mkdocs build
+          uv sync --frozen --all-extras
+          uv run mkdocs build
 
   tests:
 
@@ -158,12 +164,12 @@ jobs:
           path: .qodana/code-coverage
 
       - name: 'Qodana Scan'
-        uses: JetBrains/qodana-action@v2025.1
+        uses: JetBrains/qodana-action@v2025.2
         with:
           pr-mode: false
-          args: --apply-fixes,--baseline,qodana.sarif.json
-          push-fixes: branch
-          use-caches: 'false'
+          args: --baseline,qodana.sarif.json
+          use-caches: true
+          cache-default-branch-only: true
         env:
           QODANA_TOKEN: ${{ secrets.QODANA_TOKEN_1399872884 }}
           QODANA_ENDPOINT: 'https://qodana.cloud'

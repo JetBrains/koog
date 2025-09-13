@@ -19,14 +19,20 @@ jobs:
           git config --global core.autocrlf input
       - uses: actions/checkout@v5
 
+      # Using setup-python on CI to install Python might be faster than with uv (official uv recommendation)
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: 3.x
+          python-version-file: "./docs/.python-version"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.8.15"
+          enable-cache: true
 
       - name: Deploy docs
+        working-directory: ./docs
         run: |
-          cd ./docs
-          pip install mkdocs-material
-          pip install mkdocs-redirects
-          mkdocs gh-deploy --force
+          uv sync --frozen --all-extras
+          uv run mkdocs gh-deploy --force

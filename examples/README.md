@@ -29,18 +29,18 @@ Each example includes both **interactive Jupyter notebooks** and **complete Kotl
 
 ### Core Examples
 
-| Example          | Description                                                                | Notebook                                    | Project                                                          |
-|------------------|----------------------------------------------------------------------------|---------------------------------------------|------------------------------------------------------------------|
-| **Attachments**  | Learn how to use structured Markdown and attachments in prompts            | [📓 Notebook](notebooks/Attachments.ipynb)  | [🚀 Project](src/main/kotlin/ai/koog/agents/example/attachments) |
-| **Banking**      | Build a comprehensive AI banking assistant with routing capabilities       | [📓 Notebook](notebooks/Banking.ipynb)      | [🚀 Project](src/main/kotlin/ai/koog/agents/example/banking)     |
-| **BedrockAgent** | Create intelligent AI agents using AWS Bedrock integration                 | [📓 Notebook](notebooks/BedrockAgent.ipynb) | [🚀 Project](src/main/kotlin/ai/koog/agents/example/client)      |
-| **Calculator**   | Build a calculator agent with parallel tool calls and event logging        | [📓 Notebook](notebooks/Calculator.ipynb)   | [🚀 Project](src/main/kotlin/ai/koog/agents/example/calculator)  |
-| **Chess**        | Build an intelligent chess-playing agent with interactive choice selection | [📓 Notebook](notebooks/Chess.ipynb)        | [🚀 Project](src/main/kotlin/ai/koog/agents/example/chess)       |
-| **GoogleMapsMcp** | Connect to Google Maps MCP server and perform geocoding and elevation queries | [📓 Notebook](notebooks/GoogleMapsMcp.ipynb) | [🚀 Project](src/main/kotlin/ai/koog/agents/example/mcp)    |
-| **Guesser**      | Build a number-guessing agent implementing binary search strategy          | [📓 Notebook](notebooks/Guesser.ipynb)      | [🚀 Project](src/main/kotlin/ai/koog/agents/example/guesser)     |
-| **PlaywrightMcp** | Drive browsers with Playwright MCP for web automation tasks              | [📓 Notebook](notebooks/PlaywrightMcp.ipynb) | [🚀 Project](src/main/kotlin/ai/koog/agents/example/mcp)    |
-| **UnityMcp**     | Control Unity game development through MCP server integration             | [📓 Notebook](notebooks/UnityMcp.ipynb)     | [🚀 Project](src/main/kotlin/ai/koog/agents/example/mcp)         |
-| **VaccumAgent**  | Implementation of a basic reflex agent for cleaning tasks                  | [📓 Notebook](notebooks/VaccumAgent.ipynb)  | [🚀 Project](src/main/kotlin/ai/koog/agents/example/simpleapi)   |
+| Example           | Description                                                                   | Notebook                                     | Project                                                          |
+|-------------------|-------------------------------------------------------------------------------|----------------------------------------------|------------------------------------------------------------------|
+| **Attachments**   | Learn how to use structured Markdown and attachments in prompts               | [📓 Notebook](notebooks/Attachments.ipynb)   | [🚀 Project](src/main/kotlin/ai/koog/agents/example/attachments) |
+| **Banking**       | Build a comprehensive AI banking assistant with routing capabilities          | [📓 Notebook](notebooks/Banking.ipynb)       | [🚀 Project](src/main/kotlin/ai/koog/agents/example/banking)     |
+| **BedrockAgent**  | Create intelligent AI agents using AWS Bedrock integration                    | [📓 Notebook](notebooks/BedrockAgent.ipynb)  | [🚀 Project](src/main/kotlin/ai/koog/agents/example/client)      |
+| **Calculator**    | Build a calculator agent with parallel tool calls and event logging           | [📓 Notebook](notebooks/Calculator.ipynb)    | [🚀 Project](src/main/kotlin/ai/koog/agents/example/calculator)  |
+| **Chess**         | Build an intelligent chess-playing agent with interactive choice selection    | [📓 Notebook](notebooks/Chess.ipynb)         | [🚀 Project](src/main/kotlin/ai/koog/agents/example/chess)       |
+| **GoogleMapsMcp** | Connect to Google Maps MCP server and perform geocoding and elevation queries | [📓 Notebook](notebooks/GoogleMapsMcp.ipynb) | [🚀 Project](src/main/kotlin/ai/koog/agents/example/mcp)         |
+| **Guesser**       | Build a number-guessing agent implementing binary search strategy             | [📓 Notebook](notebooks/Guesser.ipynb)       | [🚀 Project](src/main/kotlin/ai/koog/agents/example/guesser)     |
+| **PlaywrightMcp** | Drive browsers with Playwright MCP for web automation tasks                   | [📓 Notebook](notebooks/PlaywrightMcp.ipynb) | [🚀 Project](src/main/kotlin/ai/koog/agents/example/mcp)         |
+| **UnityMcp**      | Control Unity game development through MCP server integration                 | [📓 Notebook](notebooks/UnityMcp.ipynb)      | [🚀 Project](src/main/kotlin/ai/koog/agents/example/mcp)         |
+| **VaccumAgent**   | Implementation of a basic reflex agent for cleaning tasks                     | [📓 Notebook](notebooks/VaccumAgent.ipynb)   | [🚀 Project](src/main/kotlin/ai/koog/agents/example/simpleapi)   |
 
 ### Advanced Features
 
@@ -54,6 +54,11 @@ Each example includes both **interactive Jupyter notebooks** and **complete Kotl
 | **Planner**         | Task planning with execution trees                              | -                                            | [🚀 Project](src/main/kotlin/ai/koog/agents/example/planner)                |
 | **Structured Data** | JSON-based structured output                                    | -                                            | [🚀 Project](src/main/kotlin/ai/koog/agents/example/structuredoutput)       |
 | **Tone Analysis**   | Text tone analysis agent                                        | -                                            | [🚀 Project](src/main/kotlin/ai/koog/agents/example/tone)                   |
+
+### Integration Examples
+
+- [**Spring Boot Java with Koog**](spring-boot-java/README.md) - A Spring Boot application that integrates Koog AI
+  capabilities, providing a REST API endpoint for chat interactions using OpenAI's GPT models
 
 ---
 

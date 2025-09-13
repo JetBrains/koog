@@ -58,6 +58,7 @@ This protocol is used when an MCP server runs as a separate process. Here is an 
 
 <!--- INCLUDE
 import ai.koog.agents.mcp.McpToolRegistryProvider
+import ai.koog.agents.mcp.defaultStdioTransport
 -->
 ```kotlin
 // Start an MCP server (for example, as a process)
@@ -162,7 +163,7 @@ fun main() {
 ```kotlin
 // Create an agent with the tools
 val agent = AIAgent(
-    executor = executor,
+    promptExecutor = executor,
     strategy = strategy,
     llmModel = OpenAIModels.Chat.GPT4o,
     toolRegistry = toolRegistry
@@ -293,6 +294,7 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.mcp.McpToolRegistryProvider
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+import ai.koog.agents.mcp.defaultStdioTransport
 import kotlinx.coroutines.runBlocking
 
 const val googleMapsApiKey = ""
@@ -319,7 +321,7 @@ val toolRegistry = McpToolRegistryProvider.fromTransport(
 
 // Create and run the agent
 val agent = AIAgent(
-    executor = simpleOpenAIExecutor(openAIApiToken),
+    promptExecutor = simpleOpenAIExecutor(openAIApiToken),
     llmModel = OpenAIModels.Chat.GPT4o,
     toolRegistry = toolRegistry,
 )
@@ -361,7 +363,7 @@ val toolRegistry = McpToolRegistryProvider.fromTransport(
 
 // Create and run the agent
 val agent = AIAgent(
-    executor = simpleOpenAIExecutor(openAIApiToken),
+    promptExecutor = simpleOpenAIExecutor(openAIApiToken),
     llmModel = OpenAIModels.Chat.GPT4o,
     toolRegistry = toolRegistry,
 )

@@ -1,8 +1,9 @@
 package ai.koog.agents.features.opentelemetry
 
 import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.agent.entity.AIAgentStrategy
+import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
@@ -18,20 +19,28 @@ internal object OpenTelemetryTestAPI {
 
     internal fun createAgent(
         agentId: String = "test-agent-id",
-        strategy: AIAgentStrategy<String, String>,
+        strategy: AIAgentGraphStrategy<String, String>,
         promptId: String? = null,
         promptExecutor: PromptExecutor? = null,
         toolRegistry: ToolRegistry? = null,
         model: LLModel? = null,
         clock: Clock = Clock.System,
         temperature: Double? = 0.0,
+        maxTokens: Int? = null,
         systemPrompt: String? = null,
         userPrompt: String? = null,
         assistantPrompt: String? = null,
-        installFeatures: AIAgent.FeatureContext.() -> Unit = { }
+        installFeatures: GraphAIAgent.FeatureContext.() -> Unit = { }
     ): AIAgent<String, String> {
         val agentConfig = AIAgentConfig(
-            prompt = prompt(promptId ?: "Test prompt", clock = clock, params = LLMParams(temperature = temperature)) {
+            prompt = prompt(
+                id = promptId ?: "Test prompt",
+                clock = clock,
+                params = LLMParams(
+                    temperature = temperature,
+                    maxTokens = maxTokens
+                )
+            ) {
                 systemPrompt?.let { system(systemPrompt) }
                 userPrompt?.let { user(userPrompt) }
                 assistantPrompt?.let { assistant(assistantPrompt) }

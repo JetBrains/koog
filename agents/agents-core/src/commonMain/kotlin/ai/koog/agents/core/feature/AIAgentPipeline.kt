@@ -1,8 +1,7 @@
 package ai.koog.agents.core.feature
 
 import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.agent.context.AIAgentContextBase
-import ai.koog.agents.core.agent.entity.AIAgentNodeBase
+import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
 import ai.koog.agents.core.annotation.InternalAgentsApi
@@ -10,7 +9,6 @@ import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.handler.AfterLLMCallContext
 import ai.koog.agents.core.feature.handler.AfterLLMCallHandler
-import ai.koog.agents.core.feature.handler.AfterNodeHandler
 import ai.koog.agents.core.feature.handler.AgentBeforeCloseContext
 import ai.koog.agents.core.feature.handler.AgentBeforeCloseHandler
 import ai.koog.agents.core.feature.handler.AgentContextHandler
@@ -25,14 +23,8 @@ import ai.koog.agents.core.feature.handler.AgentTransformEnvironmentContext
 import ai.koog.agents.core.feature.handler.BeforeAgentStartedHandler
 import ai.koog.agents.core.feature.handler.BeforeLLMCallContext
 import ai.koog.agents.core.feature.handler.BeforeLLMCallHandler
-import ai.koog.agents.core.feature.handler.BeforeNodeHandler
 import ai.koog.agents.core.feature.handler.ExecuteLLMHandler
-import ai.koog.agents.core.feature.handler.ExecuteNodeHandler
 import ai.koog.agents.core.feature.handler.ExecuteToolHandler
-import ai.koog.agents.core.feature.handler.NodeAfterExecuteContext
-import ai.koog.agents.core.feature.handler.NodeBeforeExecuteContext
-import ai.koog.agents.core.feature.handler.NodeExecutionErrorContext
-import ai.koog.agents.core.feature.handler.NodeExecutionErrorHandler
 import ai.koog.agents.core.feature.handler.StrategyFinishContext
 import ai.koog.agents.core.feature.handler.StrategyFinishedHandler
 import ai.koog.agents.core.feature.handler.StrategyHandler
@@ -75,7 +67,7 @@ import kotlin.reflect.KType
  * through a flexible interception system. Features can be installed with custom configurations
  * and can hook into different stages of the agent's execution lifecycle.
  */
-public class AIAgentPipeline {
+public abstract class AIAgentPipeline {
 
     /**
      * Companion object for the AIAgentPipeline class.
@@ -93,67 +85,37 @@ public class AIAgentPipeline {
      * Map of registered features and their configurations.
      * Keys are feature storage keys, values are feature configurations.
      */
-    private val registeredFeatures: MutableMap<AIAgentStorageKey<*>, FeatureConfig> = mutableMapOf()
+    protected val registeredFeatures: MutableMap<AIAgentStorageKey<*>, FeatureConfig> = mutableMapOf()
 
     /**
      * Map of agent handlers registered for different features.
      * Keys are feature storage keys, values are agent handlers.
      */
-    private val agentHandlers: MutableMap<AIAgentStorageKey<*>, AgentHandler<*>> = mutableMapOf()
+    protected val agentHandlers: MutableMap<AIAgentStorageKey<*>, AgentHandler<*>> = mutableMapOf()
 
     /**
      * Map of strategy handlers registered for different features.
      * Keys are feature storage keys, values are strategy handlers.
      */
-    private val strategyHandlers: MutableMap<AIAgentStorageKey<*>, StrategyHandler<*>> = mutableMapOf()
+    protected val strategyHandlers: MutableMap<AIAgentStorageKey<*>, StrategyHandler<*>> = mutableMapOf()
 
     /**
      * Map of agent context handlers registered for different features.
      * Keys are feature storage keys, values are agent context handlers.
      */
-    private val agentContextHandler: MutableMap<AIAgentStorageKey<*>, AgentContextHandler<*>> = mutableMapOf()
-
-    /**
-     * Map of node execution handlers registered for different features.
-     * Keys are feature storage keys, values are node execution handlers.
-     */
-    private val executeNodeHandlers: MutableMap<AIAgentStorageKey<*>, ExecuteNodeHandler> = mutableMapOf()
+    protected val agentContextHandler: MutableMap<AIAgentStorageKey<*>, AgentContextHandler<*>> = mutableMapOf()
 
     /**
      * Map of tool execution handlers registered for different features.
      * Keys are feature storage keys, values are tool execution handlers.
      */
-    private val executeToolHandlers: MutableMap<AIAgentStorageKey<*>, ExecuteToolHandler> = mutableMapOf()
+    protected val executeToolHandlers: MutableMap<AIAgentStorageKey<*>, ExecuteToolHandler> = mutableMapOf()
 
     /**
      * Map of LLM execution handlers registered for different features.
      * Keys are feature storage keys, values are LLM execution handlers.
      */
-    private val executeLLMHandlers: MutableMap<AIAgentStorageKey<*>, ExecuteLLMHandler> = mutableMapOf()
-
-    /**
-     * Installs a feature into the pipeline with the provided configuration.
-     *
-     * This method initializes the feature with a custom configuration and registers it in the pipeline.
-     * The feature's message processors are initialized during installation.
-     *
-     * @param Config The type of the feature configuration
-     * @param Feature The type of the feature being installed
-     * @param feature The feature implementation to be installed
-     * @param configure A lambda to customize the feature configuration
-     */
-    public fun <Config : FeatureConfig, Feature : Any> install(
-        feature: AIAgentFeature<Config, Feature>,
-        configure: Config.() -> Unit
-    ) {
-        val config = feature.createInitialConfig().apply { configure() }
-        feature.install(
-            config = config,
-            pipeline = this,
-        )
-
-        registeredFeatures[feature.key] = config
-    }
+    protected val executeLLMHandlers: MutableMap<AIAgentStorageKey<*>, ExecuteLLMHandler> = mutableMapOf()
 
     internal suspend fun prepareFeatures() {
         withContext(featurePrepareDispatcher) {
@@ -186,21 +148,19 @@ public class AIAgentPipeline {
      *
      * @param runId The unique identifier for the agent run
      * @param agent The agent instance for which the execution has started
-     * @param strategy The strategy being executed by the agent
+     * @param context The context of the agent execution, providing access to the agent environment and context features
      */
     @OptIn(InternalAgentsApi::class)
-    public suspend fun onBeforeAgentStarted(
+    public suspend fun <TInput, TOutput> onBeforeAgentStarted(
         runId: String,
         agent: AIAgent<*, *>,
-        strategy: AIAgentStrategy<*, *>,
-        context: AIAgentContextBase
+        context: AIAgentContext
     ) {
         agentHandlers.values.forEach { handler ->
             val eventContext =
                 AgentStartContext(
                     agent = agent,
                     runId = runId,
-                    strategy = strategy,
                     feature = handler.feature,
                     context = context
                 )
@@ -255,29 +215,6 @@ public class AIAgentPipeline {
     }
 
     /**
-     * Transforms the agent environment by applying all registered environment transformers.
-     *
-     * This method allows features to modify or enhance the agent's environment before it starts execution.
-     * Each registered handler can apply its own transformations to the environment in sequence.
-     *
-     * @param strategy The strategy associated with the agent
-     * @param agent The agent instance for which the environment is being transformed
-     * @param baseEnvironment The initial environment to be transformed
-     * @return The transformed environment after all handlers have been applied
-     */
-    public fun transformEnvironment(
-        strategy: AIAgentStrategy<*, *>,
-        agent: AIAgent<*, *>,
-        baseEnvironment: AIAgentEnvironment
-    ): AIAgentEnvironment {
-        return agentHandlers.values.fold(baseEnvironment) { environment, handler ->
-            val eventContext =
-                AgentTransformEnvironmentContext(strategy = strategy, agent = agent, feature = handler.feature)
-            handler.transformEnvironmentUnsafe(eventContext, environment)
-        }
-    }
-
-    /**
      * Retrieves all features associated with the given agent context.
      *
      * This method collects features from all registered agent context handlers
@@ -286,7 +223,7 @@ public class AIAgentPipeline {
      * @param context The agent context for which to retrieve features
      * @return A map of feature keys to their corresponding feature instances
      */
-    public fun getAgentFeatures(context: AIAgentContextBase): Map<AIAgentStorageKey<*>, Any> {
+    public fun getAgentFeatures(context: AIAgentContext): Map<AIAgentStorageKey<*>, Any> {
         return agentContextHandler.mapValues { (_, featureProvider) ->
             featureProvider.handle(context)
         }
@@ -303,10 +240,14 @@ public class AIAgentPipeline {
      * @param context The context of the strategy execution
      */
     @OptIn(InternalAgentsApi::class)
-    public suspend fun onStrategyStarted(strategy: AIAgentStrategy<*, *>, context: AIAgentContextBase) {
+    public suspend fun onStrategyStarted(strategy: AIAgentStrategy<*, *, *>, context: AIAgentContext) {
         strategyHandlers.values.forEach { handler ->
-            val eventContext =
-                StrategyStartContext(runId = context.runId, strategy = strategy, feature = handler.feature)
+            val eventContext = StrategyStartContext(
+                runId = context.runId,
+                strategy = strategy,
+                feature = handler.feature,
+                context = context
+            )
             handler.handleStrategyStartedUnsafe(eventContext)
         }
     }
@@ -320,8 +261,8 @@ public class AIAgentPipeline {
      */
     @OptIn(InternalAgentsApi::class)
     public suspend fun onStrategyFinished(
-        strategy: AIAgentStrategy<*, *>,
-        context: AIAgentContextBase,
+        strategy: AIAgentStrategy<*, *, *>,
+        context: AIAgentContext,
         result: Any?,
         resultType: KType,
     ) {
@@ -340,59 +281,6 @@ public class AIAgentPipeline {
     //endregion Trigger Strategy Handlers
 
     //region Trigger Node Handlers
-
-    /**
-     * Notifies all registered node handlers before a node is executed.
-     *
-     * @param node The node that is about to be executed
-     * @param context The agent context in which the node is being executed
-     * @param input The input data for the node execution
-     */
-    public suspend fun onBeforeNode(
-        node: AIAgentNodeBase<*, *>,
-        context: AIAgentContextBase,
-        input: Any?,
-        inputType: KType
-    ) {
-        val eventContext = NodeBeforeExecuteContext(node, context, input, inputType)
-        executeNodeHandlers.values.forEach { handler -> handler.beforeNodeHandler.handle(eventContext) }
-    }
-
-    /**
-     * Notifies all registered node handlers after a node has been executed.
-     *
-     * @param node The node that was executed
-     * @param context The agent context in which the node was executed
-     * @param input The input data that was provided to the node
-     * @param output The output data produced by the node execution
-     */
-    public suspend fun onAfterNode(
-        node: AIAgentNodeBase<*, *>,
-        context: AIAgentContextBase,
-        input: Any?,
-        output: Any?,
-        inputType: KType,
-        outputType: KType,
-    ) {
-        val eventContext = NodeAfterExecuteContext(node, context, input, output, inputType, outputType)
-        executeNodeHandlers.values.forEach { handler -> handler.afterNodeHandler.handle(eventContext) }
-    }
-
-    /**
-     * Handles errors occurring during the execution of a node by invoking all registered node execution error handlers.
-     *
-     * @param node The instance of the node where the error occurred.
-     * @param context The context associated with the AI agent executing the node.
-     * @param throwable The exception or error that occurred during node execution.
-     */
-    public suspend fun onNodeExecutionError(
-        node: AIAgentNodeBase<*, *>,
-        context: AIAgentContextBase,
-        throwable: Throwable
-    ) {
-        val eventContext = NodeExecutionErrorContext(node, context, throwable)
-        executeNodeHandlers.values.forEach { handler -> handler.nodeExecutionErrorHandler.handle(eventContext) }
-    }
 
     //endregion Trigger Node Handlers
 
@@ -462,7 +350,8 @@ public class AIAgentPipeline {
         toolArgs: ToolArgs,
         error: String
     ) {
-        val eventContext = ToolValidationErrorContext(runId, toolCallId, tool, toolArgs, error)
+        val eventContext =
+            ToolValidationErrorContext(runId, toolCallId, tool, toolArgs, error)
         executeToolHandlers.values.forEach { handler -> handler.toolValidationErrorHandler.handle(eventContext) }
     }
 
@@ -724,77 +613,6 @@ public class AIAgentPipeline {
         existingHandler.strategyFinishedHandler = StrategyFinishedHandler { eventContext ->
             handle(eventContext)
         }
-    }
-
-    /**
-     * Intercepts node execution before it starts.
-     *
-     * @param handle The handler that processes before-node events
-     *
-     * Example:
-     * ```
-     * pipeline.interceptBeforeNode(InterceptContext) { eventContext ->
-     *     logger.info("Node ${eventContext.node.name} is about to execute with input: ${eventContext.input}")
-     * }
-     * ```
-     */
-    public fun <TFeature : Any> interceptBeforeNode(
-        interceptContext: InterceptContext<TFeature>,
-        handle: suspend TFeature.(eventContext: NodeBeforeExecuteContext) -> Unit
-    ) {
-        val existingHandler = executeNodeHandlers.getOrPut(interceptContext.feature.key) { ExecuteNodeHandler() }
-
-        existingHandler.beforeNodeHandler = BeforeNodeHandler { eventContext: NodeBeforeExecuteContext ->
-            with(interceptContext.featureImpl) { handle(eventContext) }
-        }
-    }
-
-    /**
-     * Intercepts node execution after it completes.
-     *
-     * @param handle The handler that processes after-node events
-     *
-     * Example:
-     * ```
-     * pipeline.interceptAfterNode(InterceptContext) { eventContext ->
-     *     logger.info("Node ${eventContext.node.name} executed with input: ${eventContext.input} and produced output: ${eventContext.output}")
-     * }
-     * ```
-     */
-    public fun <TFeature : Any> interceptAfterNode(
-        interceptContext: InterceptContext<TFeature>,
-        handle: suspend TFeature.(eventContext: NodeAfterExecuteContext) -> Unit
-    ) {
-        val existingHandler = executeNodeHandlers.getOrPut(interceptContext.feature.key) { ExecuteNodeHandler() }
-
-        existingHandler.afterNodeHandler = AfterNodeHandler { eventContext: NodeAfterExecuteContext ->
-            with(interceptContext.featureImpl) { handle(eventContext) }
-        }
-    }
-
-    /**
-     * Intercepts and handles node execution errors for a given feature.
-     *
-     * @param interceptContext The context containing the feature and its implementation required for interception.
-     * @param handle A suspend function that processes the node execution error within the scope of the provided feature.
-     *
-     * Example:
-     * ```
-     * pipeline.interceptNodeExecutionError(InterceptContext) { eventContext ->
-     *     logger.error("Node ${eventContext.node.name} execution failed with error: ${eventContext.throwable}")
-     * }
-     * ```
-     */
-    public fun <TFeature : Any> interceptNodeExecutionError(
-        interceptContext: InterceptContext<TFeature>,
-        handle: suspend TFeature.(eventContext: NodeExecutionErrorContext) -> Unit
-    ) {
-        val existingHandler = executeNodeHandlers.getOrPut(interceptContext.feature.key) { ExecuteNodeHandler() }
-
-        existingHandler.nodeExecutionErrorHandler =
-            NodeExecutionErrorHandler { eventContext: NodeExecutionErrorContext ->
-                with(interceptContext.featureImpl) { handle(eventContext) }
-            }
     }
 
     /**

@@ -395,4 +395,41 @@ class BedrockAnthropicClaudeSerializationTest {
         val content = BedrockAnthropicClaudeSerialization.parseAnthropicStreamChunk(chunkJson)
         assertEquals("", content)
     }
+
+    @Test
+    fun `createAnthropicRequest with tools serializes type field correctly`() {
+        val tools = listOf(
+            ToolDescriptor(
+                name = toolName,
+                description = toolDescription,
+                requiredParameters = listOf(
+                    ToolParameterDescriptor("city", "The city name", ToolParameterType.String)
+                ),
+                optionalParameters = listOf(
+                    ToolParameterDescriptor("units", "Temperature units", ToolParameterType.String)
+                )
+            )
+        )
+        val prompt = Prompt.build("test", params = LLMParams(toolChoice = LLMParams.ToolChoice.Auto)) {
+            user(userMessageQuestion)
+        }
+        val request = BedrockAnthropicClaudeSerialization.createAnthropicRequest(prompt, model, tools)
+        assertNotNull(request)
+        assertNotNull(request.tools)
+        assertEquals(1, request.tools?.size)
+        val tool = request.tools?.get(0)
+        assertNotNull(tool)
+        assertEquals(toolName, tool.name)
+        assertEquals(toolDescription, tool.description)
+        val schema = tool.inputSchema
+        assertNotNull(schema)
+
+        // Verify that the type field is always "object" and gets serialized
+        assertEquals("object", schema.type)
+
+        assertEquals(listOf("city"), schema.required)
+        val properties = schema.properties.jsonObject
+        assertNotNull(properties["city"])
+        assertNotNull(properties["units"])
+    }
 }

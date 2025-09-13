@@ -1,6 +1,6 @@
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.agent.entity.AIAgentStrategy
+import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.dsl.builder.forwardTo
@@ -39,7 +39,7 @@ class NodeUniquenessCheckpointTest {
      * Creates a strategy with non-unique node names.
      * This is achieved by creating two nodes with the same name at the same level in the graph.
      */
-    private fun createNonUniqueNodesStrategy(): AIAgentStrategy<String, String> = strategy("non-unique-nodes-test") {
+    private fun createNonUniqueNodesStrategy(): AIAgentGraphStrategy<String, String> = strategy("non-unique-nodes-test") {
         // Create two nodes with the same name
         val node1 by simpleNode(
             "DuplicateNode",
@@ -74,8 +74,8 @@ class NodeUniquenessCheckpointTest {
     }
 
     /**
-     * Test that verifies an error is produced when AgentCheckpoint feature is present
-     * and graph's nodes are non-unique.
+     * Test that verifies an error is produced when the AgentCheckpoint feature is present
+     * and the graph's nodes are non-unique.
      */
     @Test
     fun `test error when AgentCheckpoint feature is present and nodes are non-unique`() = runTest {

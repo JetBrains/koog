@@ -3,8 +3,8 @@ package ai.koog.agents.features.opentelemetry.feature
 import ai.koog.agents.core.agent.context.element.getAgentRunInfoElementOrThrow
 import ai.koog.agents.core.agent.context.element.getNodeInfoElement
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
-import ai.koog.agents.core.feature.AIAgentFeature
-import ai.koog.agents.core.feature.AIAgentPipeline
+import ai.koog.agents.core.feature.AIAgentGraphFeature
+import ai.koog.agents.core.feature.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.InterceptContext
 import ai.koog.agents.features.opentelemetry.attribute.CommonAttributes
 import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes
@@ -47,7 +47,7 @@ public class OpenTelemetry {
      * The implementation includes private utility methods for ensuring spans are handled
      * correctly and resources are properly released.
      */
-    public companion object Feature : AIAgentFeature<OpenTelemetryConfig, OpenTelemetry> {
+    public companion object Feature : AIAgentGraphFeature<OpenTelemetryConfig, OpenTelemetry> {
 
         private val logger = KotlinLogging.logger { }
 
@@ -59,7 +59,7 @@ public class OpenTelemetry {
 
         override fun install(
             config: OpenTelemetryConfig,
-            pipeline: AIAgentPipeline
+            pipeline: AIAgentGraphPipeline
         ) {
             val interceptContext = InterceptContext(this, OpenTelemetry())
             val tracer = config.tracer
@@ -104,7 +104,6 @@ public class OpenTelemetry {
                     provider = eventContext.agent.agentConfig.model.provider,
                     agentId = eventContext.agent.id,
                     runId = eventContext.runId,
-                    strategyName = eventContext.strategy.name
                 )
 
                 spanAdapter?.onBeforeSpanStarted(invokeAgentSpan)
@@ -270,8 +269,9 @@ public class OpenTelemetry {
                     parent = nodeExecuteSpan,
                     runId = runId,
                     model = model,
-                    temperature = temperature,
                     promptId = promptId,
+                    temperature = temperature,
+                    maxTokens = eventContext.prompt.params.maxTokens,
                 )
 
                 // Add events to the InferenceSpan after the span is created
@@ -326,16 +326,33 @@ public class OpenTelemetry {
 
                 val provider = eventContext.model.provider
 
+                // Add attributes to the InferenceSpan before finishing the span
+                val attributesToAdd = buildList {
+                    eventContext.responses.lastOrNull()?.let { message ->
+                        message.metaInfo.inputTokensCount?.let { inputTokensCount ->
+                            add(SpanAttributes.Usage.InputTokens(inputTokensCount))
+                        }
+                        message.metaInfo.outputTokensCount?.let { outputTokensCount ->
+                            add(SpanAttributes.Usage.OutputTokens(outputTokensCount))
+                        }
+                        message.metaInfo.totalTokensCount?.let { totalTokensCount ->
+                            add(SpanAttributes.Usage.TotalTokens(totalTokensCount))
+                        }
+                    }
+                }
+
+                inferenceSpan.addAttributes(attributesToAdd)
+
                 // Add events to the InferenceSpan before finishing the span
                 val eventsToAdd = buildList {
                     eventContext.responses.mapIndexed { index, message ->
                         when (message) {
-                            is Message.Assistant -> add(
-                                AssistantMessageEvent(provider, message)
-                            )
-                            is Message.Tool.Call -> add(
-                                ChoiceEvent(provider, message, arguments = message.contentJson, index = index)
-                            )
+                            is Message.Assistant -> {
+                                add(AssistantMessageEvent(provider, message))
+                            }
+                            is Message.Tool.Call -> {
+                                add(ChoiceEvent(provider, message, arguments = message.contentJson, index = index))
+                            }
                         }
                     }
 

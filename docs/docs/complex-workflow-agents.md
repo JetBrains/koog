@@ -321,7 +321,7 @@ import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
 import ai.koog.prompt.llm.OllamaModels
 
 val agent = AIAgent(
-    executor = simpleOllamaAIExecutor(),
+    promptExecutor = simpleOllamaAIExecutor(),
     llmModel = OllamaModels.Meta.LLAMA_3_2,
 -->
 <!--- SUFFIX
@@ -332,7 +332,7 @@ val agent = AIAgent(
 installFeatures = {
     install(EventHandler) {
         onBeforeAgentStarted { eventContext: AgentStartContext<*> ->
-            println("Starting strategy: ${eventContext.strategy.name}")
+            println("Starting agent: ${eventContext.agent.id}")
         }
         onAgentFinished { eventContext: AgentFinishedContext ->
             println("Result: ${eventContext.result}")
@@ -367,7 +367,7 @@ val agent = AIAgent(
     installFeatures = {
         install(EventHandler) {
             onBeforeAgentStarted { eventContext: AgentStartContext<*> ->
-                println("Starting strategy: ${eventContext.strategy.name}")
+                println("Starting agent: ${eventContext.agent.id}")
             }
             onAgentFinished { eventContext: AgentFinishedContext ->
                 println("Result: ${eventContext.result}")
@@ -510,7 +510,7 @@ val agent = AIAgent(
     installFeatures = {
         install(EventHandler) {
             onBeforeAgentStarted { eventContext: AgentStartContext<*> ->
-                println("Starting strategy: ${eventContext.strategy.name}")
+                println("Starting agent: ${eventContext.agent.id}")
             }
             onAgentFinished { eventContext: AgentFinishedContext ->
                 println("Result: ${eventContext.result}")

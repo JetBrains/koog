@@ -1,6 +1,6 @@
 package ai.koog.ktor
 
-import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.utils.SuitableForIO
 import ai.koog.ktor.utils.loadAgentsConfig
@@ -30,7 +30,7 @@ public class Koog(
     public val application: Application,
     public val promptExecutor: PromptExecutor,
     public val agentConfig: KoogAgentsConfig.AgentConfig,
-    public val agentFeatures: List<AIAgent.FeatureContext.() -> Unit>,
+    public val agentFeatures: List<GraphAIAgent.FeatureContext.() -> Unit>,
     private val job: CompletableJob
 ) {
 
