@@ -89,6 +89,7 @@ internal object BedrockAnthropicClaudeSerialization {
                                     }
                                     contentParts.add(AnthropicContent.Image(source = imageSource))
                                 }
+
                                 else -> throw IllegalArgumentException(
                                     "Unsupported attachment type: ${attachment::class.simpleName}"
                                 )
@@ -238,7 +239,7 @@ internal object BedrockAnthropicClaudeSerialization {
                             )
                         }?.let(::add)
                     }
-                }?:emptyList()
+                } ?: emptyList()
             }
 
             "message_delta" -> {
@@ -246,6 +247,7 @@ internal object BedrockAnthropicClaudeSerialization {
                     when (content) {
                         is AnthropicResponseContent.Text ->
                             StreamFrame.Append(content.text)
+
                         is AnthropicResponseContent.ToolUse ->
                             StreamFrame.ToolCall(content.id, content.name, content.input.toString())
                     }
@@ -264,7 +266,7 @@ internal object BedrockAnthropicClaudeSerialization {
                 emptyList()
             }
 
-            else ->  emptyList()
+            else -> emptyList()
         }
     }
 }

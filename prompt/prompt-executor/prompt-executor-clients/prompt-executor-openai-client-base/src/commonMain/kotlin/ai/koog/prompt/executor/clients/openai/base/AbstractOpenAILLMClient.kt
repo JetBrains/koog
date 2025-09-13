@@ -42,9 +42,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flatten
 import kotlinx.coroutines.flow.flattenConcat
-import kotlinx.coroutines.flow.transform
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNamingStrategy
@@ -322,6 +320,7 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
                     )
                     OpenAIContentPart.File(fileData)
                 }
+
                 is AttachmentContent.PlainText -> {
                     OpenAIContentPart.Text(attachmentContent.text)
                 }

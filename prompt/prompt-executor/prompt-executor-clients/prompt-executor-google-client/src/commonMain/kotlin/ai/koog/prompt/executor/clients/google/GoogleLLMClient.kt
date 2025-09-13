@@ -50,7 +50,6 @@ import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
@@ -177,8 +176,13 @@ public open class GoogleLLMClient(
                         ?.data?.trim()?.let { json.decodeFromString<GoogleResponse>(it) }
                         ?.candidates?.firstOrNull()?.content
                         ?.parts?.forEach { part ->
-                            when(part) {
-                                is GooglePart.FunctionCall -> emitToolCall(part.functionCall.id, part.functionCall.name, part.functionCall.args?.toString()?:"{}")
+                            when (part) {
+                                is GooglePart.FunctionCall -> emitToolCall(
+                                    part.functionCall.id,
+                                    part.functionCall.name,
+                                    part.functionCall.args?.toString() ?: "{}"
+                                )
+
                                 is GooglePart.Text -> emitAppend(part.text)
                                 else -> Unit
                             }

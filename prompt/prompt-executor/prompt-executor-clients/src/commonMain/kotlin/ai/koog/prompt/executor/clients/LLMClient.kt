@@ -40,7 +40,7 @@ public interface LLMClient {
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor> = emptyList()
-    ) : Flow<StreamFrame> = error("Not implemented for this client")
+    ): Flow<StreamFrame> = error("Not implemented for this client")
 
     /**
      * Executes a prompt and returns a list of LLM choices.

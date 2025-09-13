@@ -262,7 +262,11 @@ public open class OpenAILLMClient(
         }
     }
 
-    private fun executeResponsesStreaming(prompt: Prompt, model: LLModel, params: OpenAIResponsesParams): Flow<StreamFrame> {
+    private fun executeResponsesStreaming(
+        prompt: Prompt,
+        model: LLModel,
+        params: OpenAIResponsesParams
+    ): Flow<StreamFrame> {
         logger.debug { "Executing streaming prompt: $prompt with model: $model" }
 
         val messages = convertPromptToInput(prompt, model)
@@ -285,7 +289,7 @@ public open class OpenAILLMClient(
                 (it as? OpenAIStreamEvent.ResponseOutputTextDelta)?.delta
                     ?.let(StreamFrame::Append)
                     ?.let(::listOf)
-                    ?:emptyList()
+                    ?: emptyList()
             }
         ).transform { frames ->
             frames.forEach {

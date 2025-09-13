@@ -156,6 +156,6 @@ internal object BedrockAmazonNovaSerialization {
             buildList {
                 it.text?.let(StreamFrame::Append)?.let(::add)
             }
-        }?:emptyList()
+        } ?: emptyList()
     }
 }

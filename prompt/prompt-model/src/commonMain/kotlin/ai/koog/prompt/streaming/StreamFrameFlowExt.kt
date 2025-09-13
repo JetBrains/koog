@@ -5,7 +5,6 @@ import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.fold
 import kotlinx.coroutines.flow.map
 
-
 // Filters
 
 /**

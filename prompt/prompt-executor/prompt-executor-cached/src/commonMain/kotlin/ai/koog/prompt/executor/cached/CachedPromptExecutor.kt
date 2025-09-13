@@ -44,7 +44,7 @@ public class CachedPromptExecutor(
             getOrPut(prompt, tools, model).forEach {
                 emit(it.toStreamFrame())
             }
-         }
+        }
 
     private suspend fun getOrPut(prompt: Prompt, model: LLModel): Message.Assistant {
         return cache.get(prompt, emptyList(), clock)
