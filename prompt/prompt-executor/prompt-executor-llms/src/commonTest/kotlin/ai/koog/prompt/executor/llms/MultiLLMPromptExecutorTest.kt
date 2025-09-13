@@ -1,7 +1,6 @@
 package ai.koog.prompt.executor.llms
 
 import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.agents.core.utils.filterTextOnly
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.LLMClient
@@ -13,6 +12,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.streaming.filterTextOnly
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flowOf

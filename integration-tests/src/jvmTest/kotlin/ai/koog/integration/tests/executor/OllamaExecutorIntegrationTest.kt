@@ -3,7 +3,6 @@ package ai.koog.integration.tests.executor
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
-import ai.koog.agents.core.utils.filterTextOnly
 import ai.koog.integration.tests.InjectOllamaTestFixture
 import ai.koog.integration.tests.OllamaTestFixture
 import ai.koog.integration.tests.OllamaTestFixtureExtension
@@ -21,6 +20,7 @@ import ai.koog.prompt.llm.LLMCapability.Tools
 import ai.koog.prompt.llm.LLMCapability.Vision
 import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.streaming.filterTextOnly
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.runTest

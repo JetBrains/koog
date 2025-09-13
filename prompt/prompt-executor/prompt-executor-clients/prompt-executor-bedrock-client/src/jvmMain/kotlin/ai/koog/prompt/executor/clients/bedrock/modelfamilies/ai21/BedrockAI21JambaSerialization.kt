@@ -195,6 +195,6 @@ internal object BedrockAI21JambaSerialization {
                     )
                 }?.let(::addAll)
             }
-        }?:emptyList()
+        } ?: emptyList()
     }
 }

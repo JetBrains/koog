@@ -3,7 +3,6 @@ package ai.koog.integration.tests.executor
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
-import ai.koog.agents.core.utils.filterTextOnly
 import ai.koog.integration.tests.utils.MediaTestScenarios
 import ai.koog.integration.tests.utils.MediaTestScenarios.AudioTestScenario
 import ai.koog.integration.tests.utils.MediaTestScenarios.ImageTestScenario
@@ -52,6 +51,7 @@ import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams.ToolChoice
 import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.streaming.filterTextOnly
 import ai.koog.prompt.structure.executeStructured
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest

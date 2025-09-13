@@ -44,6 +44,10 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.streaming.emitAppend
+import ai.koog.prompt.streaming.emitEnd
+import ai.koog.prompt.streaming.emitToolCall
+import ai.koog.prompt.streaming.streamFrameFlow
 import ai.koog.prompt.structure.RegisteredBasicJsonSchemaGenerators
 import ai.koog.prompt.structure.RegisteredStandardJsonSchemaGenerators
 import ai.koog.prompt.structure.annotations.InternalStructuredOutputApi
@@ -219,25 +223,21 @@ public open class OpenAILLMClient(
     override fun decodeResponse(data: String): OpenAIChatCompletionResponse =
         json.decodeFromString(data)
 
-    override fun processStreamingChunk(chunk: OpenAIChatCompletionStreamResponse): List<StreamFrame> =
-        chunk.choices.firstOrNull()?.let { choice ->
-            buildList {
-                choice.delta.content?.let {
-                    add(StreamFrame.Append(it))
-                }
-                choice.finishReason?.let {
-                    add(StreamFrame.End(it))
-                }
-                choice.delta.toolCalls?.map { openAIToolCall ->
-                    StreamFrame.ToolCall(
+    override fun processStreamingChunk(chunk: OpenAIChatCompletionStreamResponse): Flow<StreamFrame> =
+        streamFrameFlow {
+            chunk.choices.firstOrNull()?.let { choice ->
+                choice.delta.content?.let { emitAppend(it) }
+                choice.delta.toolCalls?.forEach { openAIToolCall ->
+                    emitToolCall(
                         id = openAIToolCall.id,
                         index = openAIToolCall.index,
                         name = openAIToolCall.function?.name,
                         content = openAIToolCall.function?.arguments
                     )
-                }?.let(::addAll)
+                }
+                choice.finishReason?.let { emitEnd(it) }
             }
-        }?:emptyList()
+        }
 
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         return selectExecutionStrategy(prompt, model) { params ->
@@ -263,7 +263,11 @@ public open class OpenAILLMClient(
         }
     }
 
-    private fun executeResponsesStreaming(prompt: Prompt, model: LLModel, params: OpenAIResponsesParams): Flow<StreamFrame> {
+    private fun executeResponsesStreaming(
+        prompt: Prompt,
+        model: LLModel,
+        params: OpenAIResponsesParams
+    ): Flow<StreamFrame> {
         logger.debug { "Executing streaming prompt: $prompt with model: $model" }
 
         val messages = convertPromptToInput(prompt, model)
@@ -286,7 +290,7 @@ public open class OpenAILLMClient(
                 (it as? OpenAIStreamEvent.ResponseOutputTextDelta)?.delta
                     ?.let(StreamFrame::Append)
                     ?.let(::listOf)
-                    ?:emptyList()
+                    ?: emptyList()
             }
         ).transform { frames ->
             frames.forEach {

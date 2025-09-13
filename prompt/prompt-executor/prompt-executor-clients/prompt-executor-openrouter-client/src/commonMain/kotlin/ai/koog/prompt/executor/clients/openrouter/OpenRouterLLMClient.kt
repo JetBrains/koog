@@ -18,8 +18,12 @@ import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.streaming.emitAppend
+import ai.koog.prompt.streaming.emitToolCall
+import ai.koog.prompt.streaming.streamFrameFlow
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
+import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.Clock
 
 /**
@@ -111,19 +115,20 @@ public class OpenRouterLLMClient(
     override fun decodeResponse(data: String): OpenRouterChatCompletionResponse =
         json.decodeFromString(data)
 
-    override fun processStreamingChunk(chunk: OpenRouterChatCompletionStreamResponse): List<StreamFrame> =
-        chunk.choices.firstOrNull()?.delta?.let {
-            buildList {
-                it.content?.let(StreamFrame::Append)?.let(::add)
-                it.toolCalls?.map { openAIToolCall ->
-                    StreamFrame.ToolCall(
+    override fun processStreamingChunk(chunk: OpenRouterChatCompletionStreamResponse): Flow<StreamFrame> =
+        streamFrameFlow {
+            chunk.choices.firstOrNull()?.let { choice ->
+                choice.delta.content?.let { emitAppend(it) }
+                choice.delta.toolCalls?.forEach { openAIToolCall ->
+                    emitToolCall(
                         id = openAIToolCall.id,
                         name = openAIToolCall.function?.name,
                         content = openAIToolCall.function?.arguments
                     )
-                }?.let(::addAll)
+                }
+                choice.finishReason?.let { emitAppend(it) }
             }
-        }?:emptyList()
+        }
 
     public override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
         logger.warn { "Moderation is not supported by OpenRouter API" }

@@ -231,7 +231,6 @@ public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStr
         }
     }
 
-
 /**
  * A node that appends a user message to the LLM prompt, streams LLM response and transforms the stream data.
  *
