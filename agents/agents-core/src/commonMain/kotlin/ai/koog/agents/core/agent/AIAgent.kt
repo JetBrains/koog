@@ -10,7 +10,7 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlin.reflect.typeOf
 
 /**
