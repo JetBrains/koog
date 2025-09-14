@@ -7,6 +7,7 @@ import ai.koog.agents.core.tools.ToolException
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.ToolResult
+import ai.koog.agents.core.tools.ToolResultUtils
 import ai.koog.agents.core.tools.validate
 import ai.koog.agents.core.tools.validateNotNull
 import ai.koog.agents.ext.tool.file.filter.GlobPattern
@@ -52,9 +53,7 @@ public class ListDirectoryTool<Path>(private val fs: FileSystemProvider.ReadOnly
      * @property root the directory tree starting from the requested path
      */
     @Serializable
-    public data class Result(val root: FileSystemEntry.Folder) : ToolResult.JSONSerializable<Result> {
-        override fun getSerializer(): KSerializer<Result> = serializer()
-
+    public data class Result(val root: FileSystemEntry.Folder) : ToolResult.TextSerializable() {
         /**
          * Converts the result to a structured text representation.
          *
@@ -75,10 +74,11 @@ public class ListDirectoryTool<Path>(private val fs: FileSystemProvider.ReadOnly
          *
          * @return formatted text representation of the directory tree
          */
-        override fun toStringDefault(): String = text { folder(root) }
+        override fun textForLLM(): String = text { folder(root) }
     }
 
     override val argsSerializer: KSerializer<Args> = Args.serializer()
+    override val resultSerializer: KSerializer<Result> = ToolResultUtils.toTextSerializer()
     override val descriptor: ToolDescriptor = Companion.descriptor
 
     /**

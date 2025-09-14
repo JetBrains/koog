@@ -6,6 +6,7 @@ import ai.koog.agents.core.tools.ToolException
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.ToolResult
+import ai.koog.agents.core.tools.ToolResultUtils
 import ai.koog.agents.core.tools.validate
 import ai.koog.agents.core.tools.validateNotNull
 import ai.koog.agents.ext.tool.file.model.FileSystemEntry
@@ -52,9 +53,7 @@ public class ReadFileTool<Path>(private val fs: FileSystemProvider.ReadOnly<Path
      * @property file the file entry containing metadata and content
      */
     @Serializable
-    public data class Result(val file: FileSystemEntry.File) : ToolResult.JSONSerializable<Result> {
-        override fun getSerializer(): KSerializer<Result> = serializer()
-
+    public data class Result(val file: FileSystemEntry.File) : ToolResult.TextSerializable() {
         /**
          * Converts the result to a structured text representation.
          *
@@ -67,11 +66,11 @@ public class ReadFileTool<Path>(private val fs: FileSystemProvider.ReadOnly<Path
          *
          * @return formatted text representation of the file
          */
-        override fun toStringDefault(): String = text { file(file) }
+        override fun textForLLM(): String = text { file(file) }
     }
 
     override val argsSerializer: KSerializer<Args> = Args.serializer()
-    override val resultSerializer: KSerializer<Result> = Result.serializer()
+    override val resultSerializer: KSerializer<Result> = ToolResultUtils.toTextSerializer()
     override val descriptor: ToolDescriptor = Companion.descriptor
 
     /**

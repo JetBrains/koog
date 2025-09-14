@@ -6,6 +6,7 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.ToolResult
+import ai.koog.agents.core.tools.ToolResultUtils
 import ai.koog.agents.core.tools.validate
 import ai.koog.agents.ext.tool.file.patch.FilePatch
 import ai.koog.agents.ext.tool.file.patch.PatchApplyResult
@@ -54,16 +55,11 @@ public class EditFileTool<Path>(
     @Serializable
     public data class Result(
         private val patchApplyResult: PatchApplyResult
-    ) : ToolResult.JSONSerializable<Result> {
+    ) : ToolResult.TextSerializable() {
         @Serializable
         val applied: Boolean = patchApplyResult.isSuccess()
 
-        override fun getSerializer(): KSerializer<Result> = serializer()
-
-        /**
-         * Converts the result to a markdown string for reporting to the LLM.
-         */
-        public fun toMarkdown(): String = markdown {
+        override fun textForLLM(): String = markdown {
             if (patchApplyResult.isSuccess()) {
                 line {
                     bold("Successfully").text(" edited file (patch applied)")
@@ -77,8 +73,7 @@ public class EditFileTool<Path>(
             }
         }
 
-        override fun toStringDefault(): String = toMarkdown()
-        override fun toString(): String = toStringDefault()
+        override fun toString(): String = textForLLM()
     }
 
     /**
@@ -218,7 +213,7 @@ public class EditFileTool<Path>(
 
     override val argsSerializer: KSerializer<Args> = Args.serializer()
 
-    override val resultSerializer: KSerializer<Result> = Result.serializer()
+    override val resultSerializer: KSerializer<Result> = ToolResultUtils.toTextSerializer<Result>()
 
     override val descriptor: ToolDescriptor = EditFileTool.descriptor
 

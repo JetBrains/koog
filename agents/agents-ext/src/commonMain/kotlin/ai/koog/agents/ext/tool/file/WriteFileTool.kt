@@ -7,6 +7,7 @@ import ai.koog.agents.core.tools.ToolException
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.ToolResult
+import ai.koog.agents.core.tools.ToolResultUtils
 import ai.koog.agents.core.tools.validate
 import ai.koog.agents.core.tools.validateNotNull
 import ai.koog.agents.ext.tool.file.model.FileSystemEntry
@@ -51,9 +52,7 @@ public class WriteFileTool<Path>(private val fs: FileSystemProvider.ReadWrite<Pa
      * @property file the written file entry containing metadata
      */
     @Serializable
-    public data class Result(val file: FileSystemEntry.File) : ToolResult.JSONSerializable<Result> {
-        override fun getSerializer(): KSerializer<Result> = serializer()
-
+    public data class Result(val file: FileSystemEntry.File) : ToolResult.TextSerializable() {
         /**
          * Converts the result to a confirmation message with file metadata.
          *
@@ -63,13 +62,15 @@ public class WriteFileTool<Path>(private val fs: FileSystemProvider.ReadWrite<Pa
          *
          * @return formatted text representation after writing the file
          */
-        override fun toStringDefault(): String = text {
+        override fun textForLLM(): String = text {
             +"Written"
             entry(file)
         }
     }
 
     override val argsSerializer: KSerializer<Args> = Args.serializer()
+    override val resultSerializer: KSerializer<Result> = ToolResultUtils.toTextSerializer()
+
     override val descriptor: ToolDescriptor = Companion.descriptor
 
     /**
@@ -101,6 +102,12 @@ public class WriteFileTool<Path>(private val fs: FileSystemProvider.ReadWrite<Pa
         return Result(fileEntry)
     }
 
+    /**
+     * Companion object for the WriteFileTool class.
+     *
+     * Provides a tool descriptor that defines the behavior, required parameters, and functionality
+     * for the tool, specifically for performing file write operations with text content.
+     */
     public companion object {
         /**
          * Provides a tool descriptor for the write file operation.
