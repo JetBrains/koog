@@ -1,0 +1,40 @@
+name: Spring Boot Java Example
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+    paths:
+      - 'examples/spring-boot-java/**'
+  pull_request:
+    paths:
+      - 'examples/spring-boot-java/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  # Cancel only when the run is not on main or develop
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' || github.ref != 'refs/heads/develop' }}
+
+jobs:
+  spring-boot-java-example:
+
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Configure Git
+        run: |
+          git config --global core.autocrlf input
+      - uses: actions/checkout@v5
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          java-version: 17
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Run the Maven verify phase
+        working-directory: ./examples/spring-boot-java/
+        run: mvn --batch-mode verify
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPEN_AI_API_TEST_KEY }}

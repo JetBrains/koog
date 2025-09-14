@@ -306,15 +306,20 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
 
         is Attachment.File -> {
             model.requireCapability(LLMCapability.Document)
-            val fileData = when (val attachmentContent = content) {
-                is AttachmentContent.Binary -> OpenAIContentPart.FileData(
-                    fileData = "data:$mimeType;base64,${attachmentContent.base64}",
-                    filename = fileName
-                )
+            when (val attachmentContent = content) {
+                is AttachmentContent.Binary -> {
+                    val fileData = OpenAIContentPart.FileData(
+                        fileData = "data:$mimeType;base64,${attachmentContent.base64}",
+                        filename = fileName
+                    )
+                    OpenAIContentPart.File(fileData)
+                }
+                is AttachmentContent.PlainText -> {
+                    OpenAIContentPart.Text(attachmentContent.text)
+                }
 
                 else -> throw IllegalArgumentException("Unsupported file attachment content: ${attachmentContent::class}")
             }
-            OpenAIContentPart.File(fileData)
         }
 
         else -> throw IllegalArgumentException("Unsupported attachment type: $this")

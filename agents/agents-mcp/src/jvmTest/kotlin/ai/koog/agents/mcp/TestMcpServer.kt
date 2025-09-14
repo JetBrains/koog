@@ -1,5 +1,6 @@
 package ai.koog.agents.mcp
 
+import ai.koog.agents.utils.SuitableForIO
 import io.ktor.server.cio.CIO
 import io.ktor.server.engine.embeddedServer
 import io.modelcontextprotocol.kotlin.sdk.CallToolResult
@@ -88,7 +89,7 @@ class TestMcpServer(private val port: Int) {
     fun start() {
         if (isRunning) return
 
-        serverJob = CoroutineScope(Dispatchers.IO).launch {
+        serverJob = CoroutineScope(Dispatchers.SuitableForIO).launch {
             embeddedServer(CIO, host = "0.0.0.0", port = port) {
                 mcp {
                     return@mcp configureServer()

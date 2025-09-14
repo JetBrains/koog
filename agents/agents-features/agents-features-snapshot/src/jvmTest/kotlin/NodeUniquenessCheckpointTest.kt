@@ -74,8 +74,8 @@ class NodeUniquenessCheckpointTest {
     }
 
     /**
-     * Test that verifies an error is produced when AgentCheckpoint feature is present
-     * and graph's nodes are non-unique.
+     * Test that verifies an error is produced when the AgentCheckpoint feature is present
+     * and the graph's nodes are non-unique.
      */
     @Test
     fun `test error when AgentCheckpoint feature is present and nodes are non-unique`() = runTest {

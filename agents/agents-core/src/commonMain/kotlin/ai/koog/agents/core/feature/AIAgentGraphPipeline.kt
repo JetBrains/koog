@@ -5,16 +5,12 @@ import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
-import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.handler.AfterNodeHandler
-import ai.koog.agents.core.feature.handler.AgentHandler
 import ai.koog.agents.core.feature.handler.AgentTransformEnvironmentContext
-import ai.koog.agents.core.feature.handler.BeforeAgentStartedHandler
 import ai.koog.agents.core.feature.handler.BeforeNodeHandler
 import ai.koog.agents.core.feature.handler.ExecuteNodeHandler
-import ai.koog.agents.core.feature.handler.GraphAgentStartContext
 import ai.koog.agents.core.feature.handler.NodeAfterExecuteContext
 import ai.koog.agents.core.feature.handler.NodeBeforeExecuteContext
 import ai.koog.agents.core.feature.handler.NodeExecutionErrorContext
@@ -181,33 +177,6 @@ public class AIAgentGraphPipeline : AIAgentPipeline() {
     }
 
     /**
-     * Notifies all registered handlers that an agent has started execution.
-     *
-     * @param runId The unique identifier for the agent run
-     * @param agent The agent instance for which the execution has started
-     * @param strategy The strategy being executed by the agent
-     */
-    @OptIn(InternalAgentsApi::class)
-    public suspend fun onBeforeAgentStarted(
-        runId: String,
-        agent: GraphAIAgent<*, *>,
-        strategy: AIAgentGraphStrategy<*, *>,
-        context: AIAgentContext
-    ) {
-        agentHandlers.values.forEach { handler ->
-            val eventContext =
-                GraphAgentStartContext(
-                    agent = agent,
-                    runId = runId,
-                    strategy = strategy,
-                    feature = handler.feature,
-                    context = context
-                )
-            handler.handleBeforeAgentStartedUnsafe(eventContext)
-        }
-    }
-
-    /**
      * Transforms the agent environment by applying all registered environment transformers.
      *
      * This method allows features to modify or enhance the agent's environment before it starts execution.
@@ -227,34 +196,6 @@ public class AIAgentGraphPipeline : AIAgentPipeline() {
             val eventContext =
                 AgentTransformEnvironmentContext(strategy = strategy, agent = agent, feature = handler.feature)
             handler.transformEnvironmentUnsafe(eventContext, environment)
-        }
-    }
-
-    /**
-     * Intercepts on before an agent started to modify or enhance the agent.
-     *
-     * @param handle The handler that processes agent creation events
-     *
-     * Example:
-     * ```
-     * pipeline.interceptBeforeAgentStarted(InterceptContext) {
-     *     readStages { stages ->
-     *         // Inspect agent stages
-     *     }
-     * }
-     * ```
-     */
-    public fun <TFeature : Any> interceptBeforeAgentStarted(
-        context: InterceptContext<TFeature>,
-        handle: suspend (GraphAgentStartContext<TFeature>) -> Unit
-    ) {
-        @Suppress("UNCHECKED_CAST")
-        val existingHandler: AgentHandler<TFeature> =
-            agentHandlers.getOrPut(context.feature.key) { AgentHandler(context.featureImpl) } as? AgentHandler<TFeature>
-                ?: return
-
-        existingHandler.beforeAgentStartedHandler = BeforeAgentStartedHandler { context ->
-            handle(context)
         }
     }
 }

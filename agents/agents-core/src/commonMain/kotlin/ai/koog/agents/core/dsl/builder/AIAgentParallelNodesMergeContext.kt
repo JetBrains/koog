@@ -1,6 +1,6 @@
 package ai.koog.agents.core.dsl.builder
 
-import ai.koog.agents.core.agent.config.AIAgentConfigBase
+import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.context.AIAgentLLMContext
@@ -35,7 +35,7 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
     override val agentId: String get() = underlyingContextBase.agentId
     override val agentInput: Any? get() = underlyingContextBase.agentInput
     override val agentInputType: KType get() = underlyingContextBase.agentInputType
-    override val config: AIAgentConfigBase get() = underlyingContextBase.config
+    override val config: AIAgentConfig get() = underlyingContextBase.config
     override val llm: AIAgentLLMContext get() = underlyingContextBase.llm
     override val stateManager: AIAgentStateManager get() = underlyingContextBase.stateManager
     override val storage: AIAgentStorage get() = underlyingContextBase.storage
@@ -74,7 +74,7 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
         environment: AIAgentEnvironment,
         agentInput: Any?,
         agentInputType: KType,
-        config: AIAgentConfigBase,
+        config: AIAgentConfig,
         llm: AIAgentLLMContext,
         stateManager: AIAgentStateManager,
         storage: AIAgentStorage,

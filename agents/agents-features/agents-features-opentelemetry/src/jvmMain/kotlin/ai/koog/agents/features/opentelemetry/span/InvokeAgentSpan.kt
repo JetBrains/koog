@@ -1,7 +1,6 @@
 package ai.koog.agents.features.opentelemetry.span
 
 import ai.koog.agents.features.opentelemetry.attribute.CommonAttributes
-import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute
 import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes
 import ai.koog.prompt.llm.LLMProvider
 import io.opentelemetry.api.trace.SpanKind
@@ -14,7 +13,6 @@ internal class InvokeAgentSpan(
     provider: LLMProvider,
     runId: String,
     agentId: String,
-    strategyName: String,
 ) : GenAIAgentSpan(parent) {
 
     companion object {
@@ -72,8 +70,5 @@ internal class InvokeAgentSpan(
 
         // gen_ai.conversation.id
         addAttribute(SpanAttributes.Conversation.Id(runId))
-
-        // custom: strategy name
-        addAttribute(CustomAttribute("koog.agent.strategy.name", strategyName))
     }
 }

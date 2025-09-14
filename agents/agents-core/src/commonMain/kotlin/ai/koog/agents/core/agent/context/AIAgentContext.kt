@@ -1,6 +1,6 @@
 package ai.koog.agents.core.agent.context
 
-import ai.koog.agents.core.agent.config.AIAgentConfigBase
+import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
@@ -50,11 +50,11 @@ public interface AIAgentContext {
     /**
      * Represents the configuration for an AI agent.
      *
-     * This configuration is utilized during the execution to enforce constraints
+     * This configuration is used during the execution to enforce constraints
      * such as the maximum number of iterations an agent can perform, as well as providing
      * the agent's prompt configuration.
      */
-    public val config: AIAgentConfigBase
+    public val config: AIAgentConfig
 
     /**
      * Represents the AI agent's LLM context, providing mechanisms for managing tools, prompts,

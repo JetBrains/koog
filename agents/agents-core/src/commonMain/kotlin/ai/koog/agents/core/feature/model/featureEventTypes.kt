@@ -55,13 +55,11 @@ public sealed class DefinedFeatureEvent() : FeatureEvent {
  *
  * @property agentId The unique identifier of the AI agent;
  * @property runId The unique identifier of the AI agen run;
- * @property strategyName The name of the strategy that the AI agent has started executing.
  */
 @Serializable
 public data class AIAgentStartedEvent(
     val agentId: String,
     val runId: String,
-    val strategyName: String,
     override val eventId: String = AIAgentStartedEvent::class.simpleName!!,
 ) : DefinedFeatureEvent()
 

@@ -15,7 +15,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties
 @ConfigurationProperties(prefix = OpenAIKoogProperties.PREFIX)
 public class OpenAIKoogProperties(
     public val apiKey: String = "",
-    public val baseUrl: String = "https://api.openai.com"
+    public val baseUrl: String = "https://api.openai.com",
+    public val retry: RetryConfigKoogProperties? = null
 ) {
     /**
      * Companion object for the OpenAIKoogProperties class, providing constant values and

@@ -9,20 +9,20 @@ plugins {
 
 val excluded = setOf(
     ":agents:agents-test",
+    ":agents:agents-ext",
     ":agents:agents-features:agents-features-sql", // Optional SQL persistence provider
+    ":agents:agents-mcp-server",
     ":examples",
     ":integration-tests",
     ":test-utils",
     ":koog-spring-boot-starter",
     ":koog-ktor",
-    ":koog-cli",
     ":docs",
     project.path, // the current project should not depend on itself
 )
 
 val included = setOf(
     ":agents:agents-core",
-    ":agents:agents-ext",
     ":agents:agents-features:agents-features-debugger",
     ":agents:agents-features:agents-features-event-handler",
     ":agents:agents-features:agents-features-memory",
@@ -81,7 +81,7 @@ kotlin {
 
                 val notIncluded = projectsPaths - included
                 require(notIncluded.isEmpty()) {
-                    "There are modules that are not listed for '${project.name}' main jar dependencies," +
+                    "There are modules that are not listed for '${project.name}' main jar dependencies, " +
                         "please add them to 'included' or 'excluded' in ${project.name}/build.gradle.kts:\n" +
                         notIncluded.joinToString(",\n") { "\"$it\"" }
                 }

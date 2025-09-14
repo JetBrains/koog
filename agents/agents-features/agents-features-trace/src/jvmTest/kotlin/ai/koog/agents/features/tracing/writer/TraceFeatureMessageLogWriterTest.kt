@@ -143,7 +143,7 @@ class TraceFeatureMessageLogWriterTest {
             }
 
             val expectedLogMessages = listOf(
-                "[INFO] Received feature message [event]: ${AIAgentStartedEvent::class.simpleName} (agent id: $agentId, run id: $runId, strategy: $strategyName)",
+                "[INFO] Received feature message [event]: ${AIAgentStartedEvent::class.simpleName} (agent id: $agentId, run id: $runId)",
                 "[INFO] Received feature message [event]: ${AIAgentStrategyStartEvent::class.simpleName} (run id: $runId, strategy: $strategyName)",
                 "[INFO] Received feature message [event]: ${AIAgentNodeExecutionStartEvent::class.simpleName} (run id: $runId, node: __start__, input: $userPrompt)",
                 "[INFO] Received feature message [event]: ${AIAgentNodeExecutionEndEvent::class.simpleName} (run id: $runId, node: __start__, input: $userPrompt, output: $userPrompt)",
@@ -252,11 +252,10 @@ class TraceFeatureMessageLogWriterTest {
 
         val agentId = "test-agent-id"
         val runId = "test-run-id"
-        val strategyName = "test-strategy"
 
         val actualMessages = listOf(
             FeatureStringMessage("Test string message"),
-            AIAgentStartedEvent(agentId = agentId, runId = runId, strategyName = strategyName)
+            AIAgentStartedEvent(agentId = agentId, runId = runId)
         )
 
         val expectedMessages = listOf(

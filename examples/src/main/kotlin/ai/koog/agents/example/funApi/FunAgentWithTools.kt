@@ -1,11 +1,11 @@
 package ai.koog.agents.example.funApi
 
+import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.asAssistantMessage
 import ai.koog.agents.core.agent.compressHistory
 import ai.koog.agents.core.agent.containsToolCalls
 import ai.koog.agents.core.agent.executeMultipleTools
 import ai.koog.agents.core.agent.extractToolCalls
-import ai.koog.agents.core.agent.functionalAIAgent
 import ai.koog.agents.core.agent.latestTokenUsage
 import ai.koog.agents.core.agent.requestLLMMultiple
 import ai.koog.agents.core.agent.sendMultipleToolResults
@@ -25,12 +25,12 @@ fun main(): Unit = runBlocking {
         tools(SwitchTools(switch).asTools())
     }
 
-    val functionalAgent = functionalAIAgent<String, String>(
-        prompt = "You're responsible for running a Switch device and perform operations on it by request.",
+    val functionalAgent = AIAgent<String, String>(
+        systemPrompt = "You're responsible for running a Switch device and perform operations on it by request.",
         promptExecutor = promptExec,
-        model = OllamaModels.Meta.LLAMA_3_2,
+        llmModel = OllamaModels.Meta.LLAMA_3_2,
         toolRegistry = toolRegistry,
-        featureContext = {
+        installFeatures = {
             install(EventHandler) {
                 onToolCall { eventContext ->
                     println("Tool called: tool ${eventContext.tool.name}, args ${eventContext.toolArgs}")
@@ -51,7 +51,7 @@ fun main(): Unit = runBlocking {
             responses = sendMultipleToolResults(results)
         }
 
-        return@functionalAIAgent responses.single().asAssistantMessage().content
+        return@AIAgent responses.single().asAssistantMessage().content
     }
 
     functionalAgent.run("Turn switch on")

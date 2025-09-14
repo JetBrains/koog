@@ -1,5 +1,6 @@
 package ai.koog.agents.core.feature.handler
 
+import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
@@ -33,14 +34,12 @@ public class AgentTransformEnvironmentContext<TFeature>(
  * Represents the context available during the start of an AI agent.
  *
  * @param TFeature The type of the feature object associated with this context.
- * @property strategy The AI agent strategy that defines the workflow and execution logic.
  * @property agent The AI agent associated with this context.
  * @property feature The feature-specific data associated with this context.
  */
-public data class GraphAgentStartContext<TFeature>(
-    public val agent: GraphAIAgent<*, *>,
+public data class AgentStartContext<TFeature>(
+    public val agent: AIAgent<*, *>,
     public val runId: String,
-    public val strategy: AIAgentGraphStrategy<*, *>,
     public val feature: TFeature,
     public val context: AIAgentContext,
 ) : AgentEventHandlerContext

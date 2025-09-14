@@ -28,7 +28,7 @@ nav:
           - Ktor: ktor-plugin.md
           - Spring Boot: spring-boot.md
       - Advanced usage:
-          - Structured data: structured-data.md
+          - Structured output: structured-output.md
           - Streaming API: streaming-api.md
           - Custom nodes: custom-nodes.md
           - LLM sessions and manual history management: sessions.md
@@ -47,6 +47,7 @@ nav:
                   - Langfuse Exporter: opentelemetry-langfuse-exporter.md
                   - Weave Exporter: opentelemetry-weave-exporter.md
       - Testing: testing.md
+  - Why Koog: why-koog.md
   - Examples:
       - Overview: examples.md
       - Attachments: examples/Attachments.md
