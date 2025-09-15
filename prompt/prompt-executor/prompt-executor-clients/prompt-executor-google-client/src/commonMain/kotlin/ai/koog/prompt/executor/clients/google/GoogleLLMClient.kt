@@ -51,7 +51,6 @@ import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
@@ -172,27 +171,24 @@ public open class GoogleLLMClient(
                     setBody(request)
                 }
             ) {
-                incoming.onCompletion {
-                    if (it == null)
-                        emitEnd() // TODO: finishReason?
-                    else
-                        throw it
-                }.collect { event ->
+                incoming.collect { event ->
                     event
                         .takeIf { it.data != "[DONE]" }
                         ?.data?.trim()?.let { json.decodeFromString<GoogleResponse>(it) }
-                        ?.candidates?.firstOrNull()?.content
-                        ?.parts?.forEach { part ->
-                            when (part) {
-                                is GooglePart.FunctionCall -> emitToolCall(
-                                    id = part.functionCall.id,
-                                    name = part.functionCall.name,
-                                    content = part.functionCall.args?.toString() ?: "{}"
-                                )
+                        ?.candidates?.firstOrNull()?.let { candidate ->
+                            candidate.content?.parts?.forEach { part ->
+                                when (part) {
+                                    is GooglePart.FunctionCall -> emitToolCall(
+                                        id = part.functionCall.id,
+                                        name = part.functionCall.name,
+                                        content = part.functionCall.args?.toString() ?: "{}"
+                                    )
 
-                                is GooglePart.Text -> emitAppend(part.text)
-                                else -> Unit
+                                    is GooglePart.Text -> emitAppend(part.text)
+                                    else -> Unit
+                                }
                             }
+                            candidate.finishReason?.let { emitEnd(it) }
                         }
                 }
             }
