@@ -10,10 +10,8 @@ import ai.koog.agents.core.model.message.EnvironmentToolResultMultipleToAgentMes
 import ai.koog.agents.core.model.message.EnvironmentToolResultToAgentContent
 import ai.koog.agents.core.tools.DirectToolCallsEnabler
 import ai.koog.agents.core.tools.Tool
-import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolException
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.prompt.message.Message
 import io.github.oshai.kotlinlogging.KLogger

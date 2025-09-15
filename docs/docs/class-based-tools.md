@@ -150,5 +150,82 @@ object CastToDoubleTool : SimpleTool<CastToDoubleTool.Args>() {
 ```
 <!--- KNIT example-class-based-tools-02.kt --> 
 
+### Sending Tool Result to LLM in Custom Format
+
+If you are not happy with JSON results sent to LLM (in some cases, LLMs can work better if tool output is structured as Markdown, for instance), you have to follow the following steps:
+1. Implement `ToolResult.TextSerializable` interface, and override `textForLLM()` method
+2. Override `resultSerializer` using `ToolResultUtils.toTextSerializer<T>()`
+
+#### Example
+
+<!--- INCLUDE
+import ai.koog.agents.core.tools.SimpleTool
+import ai.koog.agents.core.tools.ToolArgs
+import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.agents.core.tools.ToolParameterDescriptor
+import ai.koog.agents.core.tools.ToolParameterType
+import kotlinx.serialization.Serializable
+import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.prompt.markdown.markdown
+-->
+```kotlin
+// A tool that edits file
+object EditFile : Tool<EditFile.Args, EditFile.Result>() {
+    // Define tool arguments
+    @Serializable
+    public data class Args(
+        val path: String,
+        val original: String,
+        val replacement: String
+    )
+
+    @Serializable
+    public data class Result(
+        private val patchApplyResult: PatchApplyResult
+    ) : ToolResult.TextSerializable() {
+
+        @Serializable
+        public sealed interface PatchApplyResult {
+            @Serializable
+            public data class Success(val updatedContent: String) : PatchApplyResult
+            
+            @Serializable
+            public sealed class Failure(public val reason: String) : PatchApplyResult
+        }
+        
+        // Textual output (in Markdown format) that will be visible to the LLM after the tool finishes.
+        override fun textForLLM(): String = markdown {
+            if (patchApplyResult is PatchApplyResult.Success) {
+                line {
+                    bold("Successfully").text(" edited file (patch applied)")
+                }
+            } else {
+                line {
+                    text("File was ")
+                        .bold("not")
+                        .text(" modified (patch application failed: ${patchApplyResult.reason})")
+                }
+            }
+        }
+
+        override fun toString(): String = textForLLM()
+    }
+
+    // Serializer for the Args class
+    override val argsSerializer = Args.serializer()
+
+    // Description of the tool, visible to LLM
+    override val toolDescription = "Edits the given file"
+    
+    // Function that executes the tool with the provided arguments
+    override suspend fun execute(args: Args): Result {
+        return TODO("Implement file edit")
+    }
+}
+```
+<!--- KNIT example-class-based-tools-02.kt -->
+
+
+
 After implementing your tool, you need to add it to a tool registry and then use it with an agent.
 For details, see [Tool registry](tools-overview.md#tool-registry).

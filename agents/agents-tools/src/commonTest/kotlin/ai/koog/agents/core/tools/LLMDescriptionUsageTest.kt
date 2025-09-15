@@ -30,7 +30,7 @@ class LLMDescriptionUsageTest {
         // All parameters use class-level description per current implementation
         val params = desc.requiredParameters + desc.optionalParameters
         assertEquals("a", params[0].description)
-        assertEquals("b", params[0].description)
+        assertEquals("b", params[1].description)
     }
 
     // 2) Property-level LLMDescription does NOT override parameter descriptions currently

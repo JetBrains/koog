@@ -46,7 +46,6 @@ public inline fun <reified Input, reified Output> AIAgent<Input, Output>.asTool(
     json = json,
 )
 
-
 /**
  * AIAgentTool is a generic tool that wraps an AI agent to facilitate integration
  * with the context of a tool execution framework. It enables the serialization,

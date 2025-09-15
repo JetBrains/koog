@@ -1,6 +1,5 @@
 package ai.koog.agents.core.model.message
 
-
 /**
  * Represents the content of tool result messages sent to an agent after a tool call is executed within
  * the local environment. This provides the result of the tool execution alongside metadata such as

@@ -133,7 +133,7 @@ public object AnalyzeTool : Tool<AnalyzeTool.Args, String>() {
     override val name = "message"
     override val toolDescription = "Service tool, used by the agent to talk with user"
 
-    override suspend fun execute(args: Args): String = args.message
+    override suspend fun execute(args: Args): String = args.query
 }
 
 typealias PositiveToneTool = SayToUser
@@ -430,10 +430,12 @@ object AnalyzeTool : Tool<AnalyzeTool.Args, String>() {
     @Serializable
     data class Args(
         @property:LLMDescription("Message from the agent")
-        val query: String
+        val query: String,
+        val depth: Int
     )
 
     override val argsSerializer: KSerializer<Args> = Args.serializer()
+    override val resultSerializer: KSerializer<String> = String.serializer()
  
     override val name = "message"
     override val toolDescription = "Service tool, used by the agent to talk with user"
@@ -499,7 +501,15 @@ object AnalyzeTool : Tool<AnalyzeTool.Args, AnalyzeTool.Result>() {
         val depth: Int
     )
 
+    @Serializable
+    data class Result(
+        val analysis: String,
+        val confidence: Double,
+        val metadata: Map<String, String> = mapOf()
+    )
+
     override val argsSerializer: KSerializer<Args> = Args.serializer()
+    override val resultSerializer: KSerializer<String> = Result.serializer()
  
     override val name = "message"
     override val toolDescription = "Service tool, used by the agent to talk with user"

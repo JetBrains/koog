@@ -215,11 +215,7 @@ val analysisAgent = AIAgent(
 val analysisAgentTool = analysisAgent.asTool(
     agentName = "analyzeTransactions",
     agentDescription = "Performs financial transaction analysis",
-    inputDescriptor = ToolParameterDescriptor(
-        name = "request",
-        description = "Transaction analysis request",
-        type = ToolParameterType.String
-    )
+    inputDescription = "Transaction analysis request",
 )
 ```
 <!--- KNIT example-tools-overview-05.kt -->
