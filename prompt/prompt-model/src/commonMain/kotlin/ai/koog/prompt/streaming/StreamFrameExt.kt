@@ -38,11 +38,11 @@ public fun List<StreamFrame>.toMessageResponses(): List<Message.Response> {
  */
 public fun List<StreamFrame>.toTools(): List<Message.Tool.Call> =
     filterIsInstance<StreamFrame.ToolCall>()
-        .mapNotNull {
+        .map {
             Message.Tool.Call(
                 id = it.id,
-                tool = it.name ?: return@mapNotNull null,
-                content = it.content ?: return@mapNotNull null,
+                tool = it.name,
+                content = it.content,
                 metaInfo = ResponseMetaInfo.Empty
             )
         }
