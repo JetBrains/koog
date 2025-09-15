@@ -5,8 +5,8 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicResponseContent
 import ai.koog.prompt.executor.clients.anthropic.AnthropicStreamResponse
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicInvokeModel
+import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicInvokeModelContent
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicInvokeModelMessage
-import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicInvokeModelTextContent
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicInvokeModelTool
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicResponse
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicToolChoice
@@ -17,7 +17,9 @@ import ai.koog.prompt.params.LLMParams
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.put
 import kotlin.uuid.ExperimentalUuidApi
 
@@ -31,11 +33,7 @@ internal object BedrockAnthropicClaudeSerialization {
         explicitNulls = false
     }
 
-    internal fun createAnthropicRequest(
-        prompt: Prompt,
-        tools: List<ToolDescriptor>
-    ): BedrockAnthropicInvokeModel {
-        val systemText = prompt.messages.filterIsInstance<Message.System>().joinToString("\n") { it.content }
+    private fun buildMessagesHistory(prompt: Prompt): MutableList<BedrockAnthropicInvokeModelMessage> {
         val messages = mutableListOf<BedrockAnthropicInvokeModelMessage>()
         prompt.messages.forEach { msg ->
             when (msg) {
@@ -47,7 +45,7 @@ internal object BedrockAnthropicClaudeSerialization {
                         messages.add(
                             BedrockAnthropicInvokeModelMessage(
                                 role = "user",
-                                content = listOf(BedrockAnthropicInvokeModelTextContent(text = msg.content))
+                                content = listOf(BedrockAnthropicInvokeModelContent.Text(text = msg.content))
                             )
                         )
                     }
@@ -58,7 +56,7 @@ internal object BedrockAnthropicClaudeSerialization {
                         messages.add(
                             BedrockAnthropicInvokeModelMessage(
                                 role = "assistant",
-                                content = listOf(BedrockAnthropicInvokeModelTextContent(text = msg.content))
+                                content = listOf(BedrockAnthropicInvokeModelContent.Text(text = msg.content))
                             )
                         )
                     }
@@ -69,7 +67,12 @@ internal object BedrockAnthropicClaudeSerialization {
                         messages.add(
                             BedrockAnthropicInvokeModelMessage(
                                 role = "user",
-                                content = listOf(BedrockAnthropicInvokeModelTextContent(text = json.encodeToString(msg)))
+                                content = listOf(
+                                    BedrockAnthropicInvokeModelContent.ToolResult(
+                                        toolUseId = msg.id!!,
+                                        content = msg.content
+                                    )
+                                )
                             )
                         )
                     }
@@ -80,7 +83,13 @@ internal object BedrockAnthropicClaudeSerialization {
                         messages.add(
                             BedrockAnthropicInvokeModelMessage(
                                 role = "assistant",
-                                content = listOf(BedrockAnthropicInvokeModelTextContent(text = json.encodeToString(msg)))
+                                content = listOf(
+                                    BedrockAnthropicInvokeModelContent.ToolCall(
+                                        msg.id!!,
+                                        msg.tool,
+                                        json.decodeFromString(msg.content)
+                                    )
+                                )
                             )
                         )
                     }
@@ -89,6 +98,16 @@ internal object BedrockAnthropicClaudeSerialization {
                 is Message.System -> {} // skip
             }
         }
+
+        return messages
+    }
+
+    internal fun createAnthropicRequest(
+        prompt: Prompt,
+        tools: List<ToolDescriptor>
+    ): BedrockAnthropicInvokeModel {
+        val systemText = prompt.messages.filterIsInstance<Message.System>().joinToString("\n") { it.content }
+        val messages = buildMessagesHistory(prompt)
 
         val params: LLMParams = prompt.params
         val temperature = params.temperature
@@ -106,6 +125,14 @@ internal object BedrockAnthropicClaudeSerialization {
                             buildJsonObject {
                                 (tool.requiredParameters + tool.optionalParameters).forEach { param ->
                                     put(param.name, BedrockToolSerialization.buildToolParameterSchema(param))
+                                }
+                            }
+                        )
+                        put(
+                            "required",
+                            buildJsonArray {
+                                tool.requiredParameters.forEach { param ->
+                                    add(json.encodeToJsonElement(param.name))
                                 }
                             }
                         )

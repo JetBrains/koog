@@ -6,6 +6,7 @@ import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.bedrock.BedrockModels
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicInvokeModel
+import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicInvokeModelMessage
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicToolChoice
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
@@ -51,10 +52,11 @@ class BedrockAnthropicClaudeSerializationTest {
 
         assertNotNull(request.system)
 
+        val userMessageActual = request.messages[0] as BedrockAnthropicInvokeModelMessage
         assertEquals(1, request.messages.size)
-        assertEquals("user", request.messages[0].role)
-        assertEquals(1, request.messages[0].content.size)
-        assertEquals(userMessage, (request.messages[0].content[0]).text)
+        assertEquals("user", userMessageActual.role)
+        assertEquals(1, userMessageActual.content.size)
+        assertEquals(userMessage, (userMessageActual.content[0]).text)
     }
 
     @Test
@@ -71,18 +73,20 @@ class BedrockAnthropicClaudeSerializationTest {
         assertNotNull(request)
 
         assertEquals(3, request.messages.size)
+        val userMessageActual = request.messages[0] as BedrockAnthropicInvokeModelMessage
+        val userMessageActual2 = request.messages[2] as BedrockAnthropicInvokeModelMessage
+        val assistantMessage = request.messages[1] as BedrockAnthropicInvokeModelMessage
+        assertEquals("user", userMessageActual.role)
+        assertEquals("Hello, who are you?", (userMessageActual.content[0]).text)
 
-        assertEquals("user", request.messages[0].role)
-        assertEquals("Hello, who are you?", (request.messages[0].content[0]).text)
-
-        assertEquals("assistant", request.messages[1].role)
+        assertEquals("assistant", assistantMessage.role)
         assertEquals(
             "I'm Claude, an AI assistant created by Anthropic. How can I help you today?",
-            (request.messages[1].content[0]).text
+            (assistantMessage.content[0]).text
         )
 
-        assertEquals("user", request.messages[2].role)
-        assertEquals("Tell me about Paris.", (request.messages[2].content[0]).text)
+        assertEquals("user", userMessageActual2.role)
+        assertEquals("Tell me about Paris.", (userMessageActual2.content[0]).text)
     }
 
     @Test

@@ -3,6 +3,7 @@ package ai.koog.prompt.executor.clients.bedrock.modelfamilies
 import ai.koog.prompt.executor.clients.anthropic.AnthropicResponseContent
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNames
 import kotlinx.serialization.json.JsonObject
 
@@ -14,16 +15,13 @@ import kotlinx.serialization.json.JsonObject
  */
 @Serializable
 public data class BedrockAnthropicInvokeModel(
-    @SerialName("anthropic_version")
-    val anthropicVersion: String = "bedrock-2023-05-31", // The anthropic version. The value must be bedrock-2023-05-31. See https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-anthropic-claude-messages-request-response.html
-    @SerialName("max_tokens")
-    val maxTokens: Int = MAX_TOKENS_DEFAULT,
+    @SerialName("anthropic_version") val anthropicVersion: String = "bedrock-2023-05-31", // The anthropic version. The value must be bedrock-2023-05-31. See https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-anthropic-claude-messages-request-response.html
+    @SerialName("max_tokens") val maxTokens: Int = MAX_TOKENS_DEFAULT,
     val system: String = "",
     val temperature: Double? = 1.0,
     val messages: List<BedrockAnthropicInvokeModelMessage> = emptyList(),
     val tools: List<BedrockAnthropicInvokeModelTool>? = null,
-    @SerialName("tool_choice")
-    val toolChoice: BedrockAnthropicToolChoice? = null,
+    @SerialName("tool_choice") val toolChoice: BedrockAnthropicToolChoice? = null,
 ) {
     /**
      * Provides shared logic and utility functions for managing and interacting with the
@@ -49,7 +47,7 @@ public data class BedrockAnthropicInvokeModel(
 @Serializable
 public data class BedrockAnthropicInvokeModelMessage(
     val role: String,
-    val content: List<BedrockAnthropicInvokeModelTextContent>,
+    val content: List<BedrockAnthropicInvokeModelContent>,
 )
 
 /**
@@ -68,8 +66,7 @@ public data class BedrockAnthropicInvokeModelTool(
     val type: String = "custom",
     val name: String,
     val description: String? = null,
-    @SerialName("input_schema")
-    val inputSchema: JsonObject? = null,
+    @SerialName("input_schema") val inputSchema: JsonObject? = null,
 )
 
 /**
@@ -82,9 +79,68 @@ public data class BedrockAnthropicInvokeModelTool(
  * @property text The actual text content of the message.
  */
 @Serializable
-public data class BedrockAnthropicInvokeModelTextContent(
-    val type: String = "text",
-    val text: String,
+public sealed class BedrockAnthropicInvokeModelContent {
+    /**
+     * Represents the text content in a model invocation for the Bedrock Anthropic API.
+     *
+     * This class extends the `BedrockAnthropicInvokeModelContent` and is used to encapsulate the text
+     * response or content associated with the invocation process.
+     *
+     * @property text The textual content associated with this invocation.
+     */
+    @Serializable
+    @SerialName("text")
+    public class Text(public val text: String) : BedrockAnthropicInvokeModelContent()
+
+    /**
+     * Represents the result of a tool invocation in the context of Bedrock's Anthropic API.
+     *
+     * This class is a specialized type of `BedrockAnthropicInvokeModelContent`, intended to encapsulate
+     * the response from a tool invoked as part of the model's execution. It contains metadata about the
+     * tool's usage and the returned content.
+     *
+     * @property toolUseId The unique identifier for the specific tool invocation. This can be used to trace or debug the usage of tools.
+     * @property content The content or result returned by the tool after execution.
+     */
+    @Serializable
+    @SerialName("tool_result")
+    public class ToolResult(
+        @SerialName("tool_use_id") public val toolUseId: String,
+        public val content: String
+    ) : BedrockAnthropicInvokeModelContent()
+
+    /**
+     * Represents a tool call instruction which is part of the model invocation content.
+     *
+     * This class is designed to capture the details of a tool usage scenario during the communication
+     * or execution process. A ToolCall includes an identifier, the name of the tool being invoked,
+     * and the specific input provided to the tool in the form of JSON objects.
+     *
+     * The class is serializable using kotlinx.serialization and uses a custom serial name `tool_use`.
+     *
+     * @property id The unique identifier for the tool call invocation.
+     * @property name The name of the tool being invoked.
+     * @property input A JSON object containing the input parameters or configuration for the tool.
+     */
+    @Serializable
+    @SerialName("tool_use")
+    public class ToolCall(public val id: String, public val name: String, public val input: JsonElement) :
+        BedrockAnthropicInvokeModelContent()
+}
+
+/**
+ * Represents the result of invoking a Bedrock Anthropic model tool.
+ *
+ * This data class contains the essential information returned by the tool invocation process.
+ *
+ * @property type The type of the result, indicating its purpose or category.
+ * @property toolUseId An identifier associated with the tool usage, allowing correlation with specific tool executions.
+ * @property content The content or output generated from the tool invocation.
+ */
+public data class BedrockAnthropicInvokeModelToolResultContent(
+    val type: String = "tool_result",
+    @SerialName("tool_use_id") val toolUseId: String,
+    val content: String,
 )
 
 /**
@@ -117,8 +173,7 @@ public data class BedrockAnthropicResponse(
     val role: String,
     val content: List<AnthropicResponseContent>,
     val model: String,
-    @JsonNames("stopReason", "stop_reason")
-    val stopReason: String? = null,
+    @JsonNames("stop_reason") val stopReason: String? = null,
     val usage: BedrockAnthropicUsage? = null
 )
 
@@ -133,10 +188,6 @@ public data class BedrockAnthropicResponse(
  */
 @Serializable
 public data class BedrockAnthropicUsage(
-    @SerialName("input_tokens")
-    @JsonNames("inputTokens", "input_tokens")
-    val inputTokens: Int,
-    @SerialName("output_tokens")
-    @JsonNames("outputTokens", "output_tokens")
-    val outputTokens: Int
+    @SerialName("input_tokens") @JsonNames("inputTokens", "input_tokens") val inputTokens: Int,
+    @SerialName("output_tokens") @JsonNames("outputTokens", "output_tokens") val outputTokens: Int
 )
