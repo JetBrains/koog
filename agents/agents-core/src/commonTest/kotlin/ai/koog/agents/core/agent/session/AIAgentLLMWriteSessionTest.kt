@@ -232,7 +232,7 @@ class AIAgentLLMWriteSessionTest {
         val result = session.callTool("test-tool", TestTool.Args("test input"))
 
         assertTrue(result.isSuccessful())
-        assertEquals("Processed: test input", (result.asSuccessful().result as ToolResult.Text).text)
+        assertEquals("Processed: test input", result.asSuccessful().result)
     }
 
     @Test

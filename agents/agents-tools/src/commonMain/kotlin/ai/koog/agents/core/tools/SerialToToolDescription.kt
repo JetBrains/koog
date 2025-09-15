@@ -190,7 +190,7 @@ private fun ToolParameterType.asValueTool(name: String, description: String, val
     ToolDescriptor(
         name = name,
         description = description,
-        requiredParameters = listOf(ToolParameterDescriptor(name = "input", description = valueDescription ?: "", this))
+        requiredParameters = listOf(ToolParameterDescriptor(name = "value", description = valueDescription ?: "", this))
     )
 
 private fun SerialDescriptor.parameterDescriptors(required: MutableList<String>): List<ToolParameterDescriptor> =

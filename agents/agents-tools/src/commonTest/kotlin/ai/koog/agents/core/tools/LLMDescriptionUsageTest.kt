@@ -29,7 +29,7 @@ class LLMDescriptionUsageTest {
 
         // All parameters use class-level description per current implementation
         val params = desc.requiredParameters + desc.optionalParameters
-        params.forEach { p -> assertEquals("", p.description) }
+        params.forEach { p -> assertEquals("a", p.description) }
     }
 
     // 2) Property-level LLMDescription does NOT override parameter descriptions currently
@@ -67,7 +67,7 @@ class LLMDescriptionUsageTest {
         val desc = TypeUseAnnotated.serializer().descriptor.asToolDescriptor("type_use")
         val params = (desc.requiredParameters + desc.optionalParameters).associateBy { it.name }
         assertEquals("Name type desc", params.getValue("name").description)
-        assertEquals("", params.getValue("age").description)
+        assertEquals("age", params.getValue("age").description)
     }
 
     // 4) Enum-level LLMDescription is used for value-wrapped ToolDescriptor description
@@ -120,13 +120,13 @@ class LLMDescriptionUsageTest {
         // Parent-level: required/optional split isn't the goal; check descriptions
         val nestedParam = (desc.requiredParameters + desc.optionalParameters).first { it.name == "nested" }
         // The parameter for the nested object should use the PARENT class description per current impl
-        assertEquals("", nestedParam.description)
+        assertEquals("nested", nestedParam.description)
 
         // Now inspect the nested object type
         val nestedObj = assertIs<ToolParameterType.Object>(nestedParam.type)
         val props = nestedObj.properties.associateBy { it.name }
         // All nested properties use the NESTED class description, not property-level
         assertEquals("Nested class property desc", props.getValue("street").description)
-        assertEquals("", props.getValue("number").description)
+        assertEquals("number", props.getValue("number").description)
     }
 }

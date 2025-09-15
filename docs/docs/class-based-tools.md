@@ -58,7 +58,9 @@ object CalculatorTool : Tool<CalculatorTool.Args, Int>() {
     // Arguments for the calculator tool
     @Serializable
     data class Args(
+        @property:LLMDescription("The first digit to add (0-9)")
         val digit1: Int,
+        @property:LLMDescription("The second digit to add (0-9)")
         val digit2: Int
     ) {
         init {
@@ -70,6 +72,12 @@ object CalculatorTool : Tool<CalculatorTool.Args, Int>() {
     // Serializer for the Args class
     override val argsSerializer = Args.serializer()
     override val resultSerializer = Int.serializer()
+    
+    // Name of the tool, visible to LLM (by default will be derrived from the class name)
+    override val name = "calculator"
+    // Description of the tool, visible to LLM. Required
+    override val description = "A simple calculator that can add two digits (0-9)."
+    
 
     // Tool descriptor
     override val descriptor: ToolDescriptor = ToolDescriptor(

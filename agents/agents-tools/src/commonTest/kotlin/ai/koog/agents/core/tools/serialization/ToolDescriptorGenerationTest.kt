@@ -13,7 +13,7 @@ import kotlin.test.assertEquals
  * Address type enum.
  */
 @Serializable
-enum class AddressType {
+enum class  AddressType {
     HOME,
     WORK,
     OTHER
@@ -128,12 +128,14 @@ class ToolDescriptorGenerationTest {
                                                 type = ToolParameterType.String
                                             )
                                         ),
-                                        requiredProperties = listOf("type", "street", "city", "state", "zipCode")
+                                        requiredProperties = listOf("type", "street", "city", "state", "zipCode"),
+                                        additionalProperties = false
                                     )
                                 )
                             )
                         ),
-                        requiredProperties = listOf("name", "email", "addresses")
+                        requiredProperties = listOf("name", "email", "addresses"),
+                        additionalProperties = false
                     )
                 )
             )

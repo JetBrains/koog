@@ -6,7 +6,6 @@ import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.onAssistantMessage
-import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.agent.subgraphWithTask
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.tracing.feature.Tracing

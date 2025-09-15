@@ -82,7 +82,13 @@ public abstract class Tool<TArgs, TResult> {
      * and how it should be used.
      */
     @OptIn(InternalAgentToolsApi::class)
-    public open val descriptor: ToolDescriptor = argsSerializer.descriptor.asToolDescriptor(name, toolDescription)
+    public open val descriptor: ToolDescriptor by lazy {
+        // Needs to be calculated lazily because argsSerializer from the subclass might be unavailable on initialization of the base class:
+        argsSerializer.descriptor.asToolDescriptor(
+            name,
+            toolDescription
+        )
+    }
 
     /**
      * Executes the tool's logic with the provided arguments.

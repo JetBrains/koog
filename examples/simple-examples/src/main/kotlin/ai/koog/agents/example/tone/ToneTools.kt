@@ -59,8 +59,8 @@ object ToneTools {
      * Tool that analyzes if text has a positive tone.
      */
     object PositiveToneTool : ToneTool(
-        name =  "positive_tone_analyzer",
-        toolDescription =  "Analyzes if the given text has a positive tone.",
+        name = "positive_tone_analyzer",
+        toolDescription = "Analyzes if the given text has a positive tone.",
         toneType = "positive"
     )
 
@@ -68,8 +68,8 @@ object ToneTools {
      * Tool that analyzes if text has a negative tone.
      */
     object NegativeToneTool : ToneTool(
-        name =  "negative_tone_analyzer",
-        toolDescription =  "Analyzes if the given text has a negative tone.",
+        name = "negative_tone_analyzer",
+        toolDescription = "Analyzes if the given text has a negative tone.",
         toneType = "negative"
     )
 
@@ -77,8 +77,8 @@ object ToneTools {
      * Tool that analyzes if text has a neutral tone.
      */
     object NeutralToneTool : ToneTool(
-        name =  "neutral_tone_analyzer",
-        toolDescription =  "Analyzes if the given text has a neutral tone.",
+        name = "neutral_tone_analyzer",
+        toolDescription = "Analyzes if the given text has a neutral tone.",
         toneType = "neutral"
     )
 

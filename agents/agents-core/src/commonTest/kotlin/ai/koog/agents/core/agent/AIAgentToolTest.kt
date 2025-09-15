@@ -57,7 +57,7 @@ class AIAgentToolTest {
         )
 
         val argsJson = buildJsonObject {
-            put("request", "Test input")
+            put("value", "Test input")
         }
     }
 
@@ -72,7 +72,7 @@ class AIAgentToolTest {
         assertEquals("testAgent", tool.descriptor.name)
         assertEquals("Test agent description", tool.descriptor.description)
         assertEquals(1, tool.descriptor.requiredParameters.size)
-        assertEquals("request", tool.descriptor.requiredParameters[0].name)
+        assertEquals("value", tool.descriptor.requiredParameters[0].name)
         assertEquals("Test request description", tool.descriptor.requiredParameters[0].description)
         assertEquals(ToolParameterType.String, tool.descriptor.requiredParameters[0].type)
     }
