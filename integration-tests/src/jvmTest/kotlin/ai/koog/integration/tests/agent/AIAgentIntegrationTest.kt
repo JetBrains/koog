@@ -10,10 +10,8 @@ import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.onAssistantMessage
 import ai.koog.agents.core.tools.SimpleTool
-import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.agents.core.tools.ToolParameterDescriptor
-import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.ext.agent.reActStrategy
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
@@ -82,10 +80,9 @@ class AIAgentIntegrationTest {
     private object CalculatorToolNoArgs : SimpleTool<Unit>() {
         override val argsSerializer = Unit.serializer()
 
-        override val descriptor = ToolDescriptor(
-            name = "calculator",
-            description = "A simple calculator that performs basic calculations. No parameters needed.",
-        )
+        override val name: String = "calculator"
+        override val toolDescription: String =
+            "A simple calculator that performs basic calculations. No parameters needed."
 
         override suspend fun doExecute(args: Unit): String {
             return "The result of 123 + 456 is 579"
@@ -94,29 +91,17 @@ class AIAgentIntegrationTest {
 
     @Serializable
     data class GetTransactionsArgs(
+        @property:LLMDescription("Start date in format YYYY-MM-DD")
         val startDate: String,
+        @property:LLMDescription("End date in format YYYY-MM-DD")
         val endDate: String
     )
 
     object GetTransactionsTool : SimpleTool<GetTransactionsArgs>() {
         override val argsSerializer = GetTransactionsArgs.serializer()
 
-        override val descriptor = ToolDescriptor(
-            name = "get_transactions",
-            description = "Get all transactions between two dates",
-            requiredParameters = listOf(
-                ToolParameterDescriptor(
-                    name = "startDate",
-                    description = "Start date in format YYYY-MM-DD",
-                    type = ToolParameterType.String
-                ),
-                ToolParameterDescriptor(
-                    name = "endDate",
-                    description = "End date in format YYYY-MM-DD",
-                    type = ToolParameterType.String
-                )
-            )
-        )
+        override val name: String = "get_transactions"
+        override val toolDescription: String = "Get all transactions between two dates"
 
         override suspend fun doExecute(args: GetTransactionsArgs): String {
             // Simulate returning transactions
@@ -133,23 +118,15 @@ class AIAgentIntegrationTest {
 
     @Serializable
     data class CalculateSumArgs(
+        @property:LLMDescription("List of amounts to sum")
         val amounts: List<Double>
     )
 
     object CalculateSumTool : SimpleTool<CalculateSumArgs>() {
         override val argsSerializer = CalculateSumArgs.serializer()
 
-        override val descriptor = ToolDescriptor(
-            name = "calculate_sum",
-            description = "Calculate the sum of a list of amounts",
-            requiredParameters = listOf(
-                ToolParameterDescriptor(
-                    name = "amounts",
-                    description = "List of amounts to sum",
-                    type = ToolParameterType.List(ToolParameterType.Float)
-                )
-            )
-        )
+        override val name: String = "calculate_sum"
+        override val toolDescription: String = "Calculate the sum of a list of amounts"
 
         override suspend fun doExecute(args: CalculateSumArgs): String {
             val sum = args.amounts.sum()

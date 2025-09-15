@@ -2,8 +2,6 @@ package ai.koog.agents.example.banking.routing
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.asTool
-import ai.koog.agents.core.tools.ToolParameterDescriptor
-import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.reflect.asTools
 import ai.koog.agents.example.ApiKeyService
@@ -45,18 +43,14 @@ fun main() = runBlocking {
                 transferAgent.asTool(
                     agentName = "transferMoney",
                     agentDescription = "Transfers money and solves all arising problems",
-                    inputDescriptor = ToolParameterDescriptor("request", "Transfer request", ToolParameterType.String)
+                    inputDescription = "Transfer request"
                 )
             )
             tool(
                 analysisAgent.asTool(
                     agentName = "analyzeTransactions",
                     agentDescription = "Performs analytics for user transactions",
-                    inputDescriptor = ToolParameterDescriptor(
-                        "request",
-                        "Transaction analytics request",
-                        ToolParameterType.String
-                    )
+                    inputDescription = "Transaction analytics request"
                 )
             )
         },

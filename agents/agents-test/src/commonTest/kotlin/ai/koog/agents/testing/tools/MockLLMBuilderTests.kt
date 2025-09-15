@@ -26,10 +26,8 @@ class MockLLMBuilderTests {
         override val argsSerializer: KSerializer<Args> = serializer()
         override val resultSerializer: KSerializer<String> = serializer()
 
-        override val descriptor: ToolDescriptor = ToolDescriptor(
-            name = "test_tool",
-            description = "A test tool for testing"
-        )
+        override val name: String = "test_tool"
+        override val toolDescription: String = "A test tool for testing"
 
         override suspend fun execute(args: Args): String =
             "Executed with: ${args.input}"

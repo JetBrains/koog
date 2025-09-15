@@ -2,11 +2,9 @@ package ai.koog.agents.test
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.tools.SimpleTool
-import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolException
-import ai.koog.agents.core.tools.ToolParameterDescriptor
-import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.ext.tool.ExitTool
 import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.agents.features.eventHandler.feature.EventHandler
@@ -111,21 +109,15 @@ class SimpleAgentMockedTest {
 
     object ErrorTool : SimpleTool<ErrorTool.Args>() {
         @Serializable
-        data class Args(val message: String)
+        data class Args(
+            @property:LLMDescription("Message for the error")
+            val message: String
+        )
 
         override val argsSerializer: KSerializer<Args> = Args.serializer()
 
-        override val descriptor: ToolDescriptor = ToolDescriptor(
-            name = "error_tool",
-            description = "A tool that always throws an exception",
-            requiredParameters = listOf(
-                ToolParameterDescriptor(
-                    name = "message",
-                    description = "Message for the error",
-                    type = ToolParameterType.String
-                )
-            )
-        )
+        override val name: String = "error_tool"
+        override val toolDescription: String = "A tool that always throws an exception"
 
         override suspend fun doExecute(args: Args): String {
             throw ToolException.ValidationFailure("This tool always fails")
@@ -134,21 +126,15 @@ class SimpleAgentMockedTest {
 
     object ConditionalTool : SimpleTool<ConditionalTool.Args>() {
         @Serializable
-        data class Args(val condition: String)
+        data class Args(
+            @property:LLMDescription("Condition that determines if the tool will succeed or fail")
+            val condition: String
+        )
 
         override val argsSerializer: KSerializer<Args> = Args.serializer()
 
-        override val descriptor: ToolDescriptor = ToolDescriptor(
-            name = "conditional_tool",
-            description = "A tool that conditionally throws an exception",
-            requiredParameters = listOf(
-                ToolParameterDescriptor(
-                    name = "condition",
-                    description = "Condition that determines if the tool will succeed or fail",
-                    type = ToolParameterType.String
-                )
-            )
-        )
+        override val name: String = "conditional_tool"
+        override val toolDescription: String = "A tool that conditionally throws an exception"
 
         override suspend fun doExecute(args: Args): String {
             if (args.condition == "error") {

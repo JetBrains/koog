@@ -101,6 +101,9 @@ public object SubgraphWithTaskUtils {
         override val descriptor: ToolDescriptor =
             serializer<T>().descriptor.asToolDescriptor(toolName = FINALIZE_SUBGRAPH_TOOL_NAME)
 
+        override val name: String get() = descriptor.name
+        override val toolDescription: String get() = descriptor.description
+
         /**
          * Executes the given argument and returns it as the result. This is a simple pass-through
          * implementation that processes input and directly returns it without modification.

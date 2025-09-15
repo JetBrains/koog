@@ -7,7 +7,7 @@ import ai.koog.agents.core.tools.ToolParameterType
 import kotlinx.serialization.Serializable
 
 abstract class GuesserTool(
-    name: String,
+    toolName: String,
     description: String,
 ) : SimpleTool<GuesserTool.Args>() {
     @Serializable
@@ -15,17 +15,8 @@ abstract class GuesserTool(
 
     final override val argsSerializer = Args.serializer()
 
-    final override val descriptor = ToolDescriptor(
-        name = name,
-        description = description,
-        requiredParameters = listOf(
-            ToolParameterDescriptor(
-                name = "value",
-                description = "A value to compare the guessed number with.",
-                type = ToolParameterType.Integer,
-            )
-        )
-    )
+    final override val name: String = toolName
+    final override val toolDescription: String = description
 
     protected fun ask(question: String, value: Int): String {
         print("$question [Y/n]: ")
@@ -46,7 +37,7 @@ abstract class GuesserTool(
  */
 
 object LessThanTool : GuesserTool(
-    name = "less_than",
+    toolName = "less_than",
     description = "Asks the user if his number is STRICTLY less than a given value.",
 ) {
     override suspend fun doExecute(args: Args): String {
@@ -55,7 +46,7 @@ object LessThanTool : GuesserTool(
 }
 
 object GreaterThanTool : GuesserTool(
-    name = "greater_than",
+    toolName = "greater_than",
     description = "Asks the user if his number is STRICTLY greater than a given value.",
 ) {
     override suspend fun doExecute(args: Args): String {
@@ -64,7 +55,7 @@ object GreaterThanTool : GuesserTool(
 }
 
 object ProposeNumberTool : GuesserTool(
-    name = "propose_number",
+    toolName = "propose_number",
     description = "Asks the user if his number is EXACTLY equal to the given number. Only use this tool once you've narrowed down your answer.",
 ) {
     override suspend fun doExecute(args: Args): String {

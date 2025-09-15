@@ -25,6 +25,9 @@ class BookTool() : SimpleTool<Book>() {
         const val NAME = "book"
     }
 
+    override val name: String = "book"
+    override val toolDescription: String = "A tool to parse book information from markdown"
+
     override suspend fun doExecute(args: Book): String {
         println("${args.bookName} by ${args.author}:\n ${args.description}")
         return "Done"
@@ -32,13 +35,7 @@ class BookTool() : SimpleTool<Book>() {
 
     override val argsSerializer: KSerializer<Book>
         get() = Book.serializer()
-    override val descriptor: ToolDescriptor
-        get() = ToolDescriptor(
-            name = NAME,
-            description = "A tool to parse book information from markdown",
-            requiredParameters = listOf(),
-            optionalParameters = listOf()
-        )
+
 }
 
 /**

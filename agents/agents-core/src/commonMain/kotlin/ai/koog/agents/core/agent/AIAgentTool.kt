@@ -4,7 +4,8 @@ import ai.koog.agents.core.agent.AIAgentTool.AgentToolArgs
 import ai.koog.agents.core.agent.AIAgentTool.AgentToolResult
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.agents.core.tools.ToolParameterDescriptor
+import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
+import ai.koog.agents.core.tools.asToolDescriptor
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.SerialDescriptor
@@ -20,7 +21,9 @@ import kotlinx.serialization.serializer
  *
  * @param agentName Agent name that would be a tool name for this agent tool.
  * @param agentDescription Agent description that would be a tool description for this agent tool.
- * @param inputDescriptor Descriptor for the agent input.
+ * @param inputDescription An optional description of the agent's input. Required for primitive types only!
+ *  * If not specified for a primitive input type (ex: String, Int, ...), an empty input description will be sent to LLM.
+ *  * Does not have any effect for non-primitive [Input] type with @LLMDescription annotations.
  * @param inputSerializer Serializer to deserialize tool arguments to agent input.
  * @param outputSerializer Serializer to serialize agent output to tool result.
  * @param json Optional [Json] instance to customize de/serialization behavior.
@@ -29,7 +32,7 @@ import kotlinx.serialization.serializer
 public inline fun <reified Input, reified Output> AIAgent<Input, Output>.asTool(
     agentName: String,
     agentDescription: String,
-    inputDescriptor: ToolParameterDescriptor,
+    inputDescription: String? = null,
     inputSerializer: KSerializer<Input> = serializer(),
     outputSerializer: KSerializer<Output> = serializer(),
     json: Json = Json.Default,
@@ -37,30 +40,35 @@ public inline fun <reified Input, reified Output> AIAgent<Input, Output>.asTool(
     agent = this,
     agentName = agentName,
     agentDescription = agentDescription,
-    inputDescriptor = inputDescriptor,
+    inputDescription = inputDescription,
     inputSerializer = inputSerializer,
     outputSerializer = outputSerializer,
     json = json,
 )
 
+
 /**
- * AIAgentTool is a specialized tool that integrates an AI agent for processing tasks
- * by leveraging input arguments and producing corresponding results.
+ * AIAgentTool is a generic tool that wraps an AI agent to facilitate integration
+ * with the context of a tool execution framework. It enables the serialization,
+ * deserialization, and execution of an AI agent's operations.
  *
- * This class extends the generic Tool interface with custom argument and result types.
- *
- * @constructor Creates an instance of AIAgentTool with the specified AI agent, its name,
- * description, and an optional description for the request parameter.
- *
- * @param agent The AI agent that implements the AIAgentBase interface and handles task execution.
- * @param agentName A name assigned to the tool that helps identify it.
- * @param agentDescription A brief description of what the tool does.
+ * @param Input The type of input expected by the AI agent.
+ * @param Output The type of output produced by the AI agent.
+ * @property agent The AI agent to be executed.
+ * @property agentName A unique name for the agent.
+ * @property agentDescription A brief description of the agent's functionality.
+ * @property inputDescription An optional description of the agent's input. Required for primitive types only!
+ * If not specified for a primitive input type (ex: String, Int, ...), an empty input description will be sent to LLM.
+ * Does not have any effect for non-primitive [Input] type with @LLMDescription annotations.
+ * @property inputSerializer A serializer for converting the input type to/from JSON.
+ * @property outputSerializer A serializer for converting the output type to/from JSON.
+ * @property json The JSON configuration used for serialization and deserialization.
  */
 public class AIAgentTool<Input, Output>(
     private val agent: AIAgent<Input, Output>,
     private val agentName: String,
     private val agentDescription: String,
-    private val inputDescriptor: ToolParameterDescriptor,
+    private val inputDescription: String? = null,
     private val inputSerializer: KSerializer<Input>,
     private val outputSerializer: KSerializer<Output>,
     private val json: Json = Json.Default,
@@ -104,15 +112,19 @@ public class AIAgentTool<Input, Output>(
         }
     }
 
-    override val descriptor: ToolDescriptor = ToolDescriptor(
-        name = agentName,
-        description = agentDescription,
-        requiredParameters = listOf(inputDescriptor)
-    )
+    override val name: String = agentName
+    override val toolDescription: String = agentDescription
+
+    @OptIn(InternalAgentToolsApi::class)
+    override val descriptor: ToolDescriptor =
+        inputSerializer.descriptor.asToolDescriptor(name, toolDescription, inputDescription)
 
     override suspend fun execute(args: AgentToolArgs): AgentToolResult {
         return try {
-            val input = json.decodeFromJsonElement(inputSerializer, args.args.getValue(inputDescriptor.name))
+            val input = json.decodeFromJsonElement(
+                inputSerializer,
+                args.args.getValue(descriptor.requiredParameters.first().name)
+            )
             val result = agent.run(input)
 
             AgentToolResult(
@@ -122,9 +134,11 @@ public class AIAgentTool<Input, Output>(
         } catch (e: Throwable) {
             AgentToolResult(
                 successful = false,
-                errorMessage = "Error happened: ${e::class.simpleName}(${e.message})\n${e.stackTraceToString().take(
-                    100
-                )}"
+                errorMessage = "Error happened: ${e::class.simpleName}(${e.message})\n${
+                    e.stackTraceToString().take(
+                        100
+                    )
+                }"
             )
         }
     }

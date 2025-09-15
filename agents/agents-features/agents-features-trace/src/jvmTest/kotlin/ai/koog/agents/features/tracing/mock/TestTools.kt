@@ -15,11 +15,8 @@ internal class TestTool(private val executor: PromptExecutor) : SimpleTool<TestT
 
     override val argsSerializer = Args.serializer()
 
-    override val descriptor = ToolDescriptor(
-        name = "test-tool",
-        description = "Test tool",
-        requiredParameters = emptyList()
-    )
+    override val name: String = "test-tool"
+    override val toolDescription: String = "Test tool"
 
     override suspend fun doExecute(args: Args): String {
         val prompt = Prompt.build("test") {
@@ -41,11 +38,8 @@ internal class RecursiveTool : SimpleTool<RecursiveTool.Args>() {
 
     override val argsSerializer = Args.serializer()
 
-    override val descriptor = ToolDescriptor(
-        name = "recursive",
-        description = "Recursive tool for testing",
-        requiredParameters = emptyList()
-    )
+    override val name: String = "recursive"
+    override val toolDescription: String = "Recursive tool for testing"
 
     override suspend fun doExecute(args: Args): String {
         return "Dummy tool result: ${DummyTool().doExecute(DummyTool.Args())}"
@@ -61,11 +55,8 @@ internal class LLMCallTool : SimpleTool<LLMCallTool.Args>() {
 
     override val argsSerializer = Args.serializer()
 
-    override val descriptor = ToolDescriptor(
-        name = "recursive",
-        description = "Recursive tool for testing",
-        requiredParameters = emptyList()
-    )
+    override val name: String = "recursive"
+    override val toolDescription: String = "Recursive tool for testing"
 
     override suspend fun doExecute(args: Args): String {
         val prompt = Prompt.build("test") {

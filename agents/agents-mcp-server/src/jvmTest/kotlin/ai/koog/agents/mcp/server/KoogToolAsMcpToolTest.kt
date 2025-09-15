@@ -133,7 +133,7 @@ class KoogToolAsMcpToolTest {
                 logger.info { "Result: ${mcpTool.encodeResultToString(result)}" }
 
                 val content = result.promptMessageContents.first() as TextContent
-                assertEquals("${origin.last?.getOrNull()?.result}", content.text)
+                assertEquals("${origin.last?.getOrNull()}", content.text)
             }
         }
     }

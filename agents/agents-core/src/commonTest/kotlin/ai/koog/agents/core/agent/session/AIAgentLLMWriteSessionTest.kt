@@ -13,6 +13,7 @@ import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
+import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.agents.testing.tools.mockLLMAnswer
 import ai.koog.prompt.dsl.Prompt
@@ -64,21 +65,15 @@ class AIAgentLLMWriteSessionTest {
 
     class TestTool : SimpleTool<TestTool.Args>() {
         @Serializable
-        data class Args(val input: String)
+        data class Args(
+            @property:LLMDescription("Input parameter")
+            val input: String
+        )
 
         override val argsSerializer: KSerializer<Args> = Args.serializer()
 
-        override val descriptor: ToolDescriptor = ToolDescriptor(
-            name = "test-tool",
-            description = "A test tool",
-            requiredParameters = listOf(
-                ToolParameterDescriptor(
-                    name = "input",
-                    description = "Input parameter",
-                    type = ToolParameterType.String
-                )
-            )
-        )
+        override val name: String = "test-tool"
+        override val toolDescription: String = "A test tool"
 
         override suspend fun doExecute(args: Args): String {
             return "Processed: ${args.input}"
@@ -90,10 +85,16 @@ class AIAgentLLMWriteSessionTest {
         data class Args(val input: String)
 
         @Serializable
-        data class Result(val output: String)
+        data class Result(
+            @property:LLMDescription("Input parameter")
+            val output: String
+        )
 
         override val argsSerializer: KSerializer<Args> = Args.serializer()
         override val resultSerializer: KSerializer<Result> = Result.serializer()
+
+        override val name: String = "custom-tool"
+        override val toolDescription: String = "A custom tool"
 
         override val descriptor: ToolDescriptor = ToolDescriptor(
             name = "custom-tool",

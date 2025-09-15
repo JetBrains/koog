@@ -8,6 +8,7 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.SerialKind
 import kotlinx.serialization.descriptors.StructureKind
 
+
 private fun SerialDescriptor.description(): String =
     annotations.filterIsInstance<LLMDescription>().firstOrNull()?.description ?: ""
 
@@ -18,6 +19,9 @@ private fun SerialDescriptor.description(): String =
  *
  * @param toolName The name to assign to the resulting tool descriptor.
  * @param toolDescription An optional custom description for the tool. Defaults to the descriptor's annotation-based description if null.
+ * @param valueDescription An optional description for value parameters of primitive types (not required for class-based
+ * parameters with @LLMDescription annotation but recommended for String/Int/Float/List etc. tool parameters). If not
+ * specified for a primitive input type, an empty description will be passed to LLM.
  * @return A [ToolDescriptor] representing the tool's schema, including its name, description, and any parameters.
  *
  *
@@ -92,27 +96,31 @@ private fun SerialDescriptor.description(): String =
  * ```
  */
 @InternalAgentToolsApi
-public fun SerialDescriptor.asToolDescriptor(toolName: String, toolDescription: String? = null): ToolDescriptor {
+public fun SerialDescriptor.asToolDescriptor(
+    toolName: String,
+    toolDescription: String? = null,
+    valueDescription: String? = null
+): ToolDescriptor {
     val description = toolDescription ?: description()
 
     return when (kind) {
-        PrimitiveKind.STRING -> ToolParameterType.String.asValueTool(toolName, description)
-        PrimitiveKind.BOOLEAN -> ToolParameterType.Boolean.asValueTool(toolName, description)
-        PrimitiveKind.CHAR -> ToolParameterType.String.asValueTool(toolName, description)
+        PrimitiveKind.STRING -> ToolParameterType.String.asValueTool(toolName, description, valueDescription)
+        PrimitiveKind.BOOLEAN -> ToolParameterType.Boolean.asValueTool(toolName, description, valueDescription)
+        PrimitiveKind.CHAR -> ToolParameterType.String.asValueTool(toolName, description, valueDescription)
         PrimitiveKind.BYTE,
         PrimitiveKind.SHORT,
         PrimitiveKind.INT,
-        PrimitiveKind.LONG -> ToolParameterType.Integer.asValueTool(toolName, description)
+        PrimitiveKind.LONG -> ToolParameterType.Integer.asValueTool(toolName, description, valueDescription)
 
         PrimitiveKind.FLOAT,
-        PrimitiveKind.DOUBLE -> ToolParameterType.Float.asValueTool(toolName, description)
+        PrimitiveKind.DOUBLE -> ToolParameterType.Float.asValueTool(toolName, description, valueDescription)
 
         StructureKind.LIST -> ToolParameterType.List(
             getElementDescriptor(0).toToolParameterType()
-        ).asValueTool(toolName, description)
+        ).asValueTool(toolName, description, valueDescription)
 
         SerialKind.ENUM -> ToolParameterType.Enum(Array(elementsCount, ::getElementName))
-            .asValueTool(toolName, description)
+            .asValueTool(toolName, description, valueDescription)
 
         StructureKind.CLASS -> {
             val required = mutableListOf<String>()
@@ -178,11 +186,12 @@ private fun SerialDescriptor.toToolParameterType(): ToolParameterType = when (ki
     )
 }
 
-private fun ToolParameterType.asValueTool(name: String, description: String) = ToolDescriptor(
-    name = name,
-    description = description,
-    requiredParameters = listOf(ToolParameterDescriptor(name = "value", description = "", this))
-)
+private fun ToolParameterType.asValueTool(name: String, description: String, valueDescription: String? = null) =
+    ToolDescriptor(
+        name = name,
+        description = description,
+        requiredParameters = listOf(ToolParameterDescriptor(name = "input", description = valueDescription ?: "", this))
+    )
 
 private fun SerialDescriptor.parameterDescriptors(required: MutableList<String>): List<ToolParameterDescriptor> =
     List(elementsCount) { i ->
@@ -196,7 +205,7 @@ private fun SerialDescriptor.parameterDescriptors(required: MutableList<String>)
 
         ToolParameterDescriptor(
             name,
-            getElementAnnotations(i).filterIsInstance<LLMDescription>().firstOrNull()?.description ?: "",
+            getElementAnnotations(i).filterIsInstance<LLMDescription>().firstOrNull()?.description ?: name,
             getElementDescriptor(i).toToolParameterType()
         )
     }

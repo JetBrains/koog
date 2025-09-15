@@ -3,7 +3,6 @@ package ai.koog.agents.core.agent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.config.AIAgentConfigBase
 import ai.koog.agents.core.tools.DirectToolCallsEnabler
-import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.prompt.dsl.prompt
@@ -54,11 +53,7 @@ class AIAgentToolTest {
         val tool = agent.asTool(
             agentName = "testAgent",
             agentDescription = "Test agent description",
-            inputDescriptor = ToolParameterDescriptor(
-                name = "request",
-                description = "Test request description",
-                type = ToolParameterType.String
-            )
+            inputDescription = "Test request description"
         )
 
         val argsJson = buildJsonObject {
@@ -71,11 +66,7 @@ class AIAgentToolTest {
         val tool = agent.asTool(
             agentName = "testAgent",
             agentDescription = "Test agent description",
-            inputDescriptor = ToolParameterDescriptor(
-                name = "request",
-                description = "Test request description",
-                type = ToolParameterType.String
-            )
+            inputDescription = "Test request description"
         )
 
         assertEquals("testAgent", tool.descriptor.name)
@@ -91,11 +82,7 @@ class AIAgentToolTest {
         val tool = agent.asTool(
             agentName = "testAgent",
             agentDescription = "Test agent description",
-            inputDescriptor = ToolParameterDescriptor(
-                name = "request",
-                description = "Test request description",
-                type = ToolParameterType.String
-            )
+            inputDescription = "Test request description"
         )
         assertEquals("testAgent", tool.descriptor.name)
     }
@@ -139,11 +126,7 @@ class AIAgentToolTest {
         val tool = agent.asTool(
             agentName = "testAgent",
             agentDescription = "Test agent description",
-            inputDescriptor = ToolParameterDescriptor(
-                name = "request",
-                description = "Test request description",
-                type = ToolParameterType.String
-            )
+            inputDescription = "Test request description"
         )
 
         val args = tool.decodeArgs(argsJson)
@@ -164,11 +147,7 @@ class AIAgentToolTest {
         val tool = agent.asTool(
             agentName = "testAgent",
             agentDescription = "Test agent description",
-            inputDescriptor = ToolParameterDescriptor(
-                name = "request",
-                description = "Test request description",
-                type = ToolParameterType.String
-            )
+            inputDescription = "Test request description"
         )
 
         val args = tool.decodeArgs(argsJson)

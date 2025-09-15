@@ -2,12 +2,13 @@ package ai.koog.agents.mcp
 
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.agents.core.tools.ToolResult
+import ai.koog.agents.core.tools.ToolResultUtils
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.modelcontextprotocol.kotlin.sdk.TextContent
+import io.modelcontextprotocol.kotlin.sdk.PromptMessageContent
 import io.modelcontextprotocol.kotlin.sdk.client.Client
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
@@ -29,11 +30,14 @@ import kotlinx.serialization.json.JsonObject
 public class McpTool(
     private val mcpClient: Client,
     override val descriptor: ToolDescriptor,
-) : Tool<McpTool.Args, String>() {
+) : Tool<McpTool.Args, McpTool.Result>() {
 
     private companion object {
         private val logger = KotlinLogging.logger { }
     }
+
+    override val name: String = descriptor.name
+    override val toolDescription: String = descriptor.description
 
     /**
      * Arguments for an MCP tool call.
@@ -92,8 +96,38 @@ public class McpTool(
         }
     }
 
+    /**
+     * Result of an MCP tool call.
+     *
+     * This class wraps a list of PromptMessageContent objects returned by an MCP tool.
+     * It implements the ToolResult interface to make it compatible with the agent framework.
+     *
+     * @property promptMessageContents The list of content items returned by the MCP tool.
+     */
+    @Serializable
+    public class Result(public val promptMessageContents: List<PromptMessageContent>) : ToolResult.TextSerializable() {
+        /**
+         * Converts the result to a string representation.
+         *
+         * This method provides a formatted string representation of the result content.
+         * If the content is empty, it returns a message indicating no content.
+         *
+         * @return A string representation of the result.
+         */
+        override fun textForLLM(): String {
+            if (promptMessageContents.isEmpty()) {
+                return "[No content]"
+            }
+
+            // Format each content item and join them with newlines
+            return promptMessageContents.joinToString("\n") { content ->
+                content.toString()
+            }
+        }
+    }
+
     override val argsSerializer: KSerializer<Args> = ArgsSerializer()
-    override val resultSerializer: KSerializer<String> = String.serializer()
+    override val resultSerializer: KSerializer<Result> = ToolResultUtils.toTextSerializer()
 
     /**
      * Executes the MCP tool with the given arguments.
@@ -104,18 +138,11 @@ public class McpTool(
      * @param args The arguments for the MCP tool call.
      * @return The result of the MCP tool call.
      */
-    override suspend fun execute(args: Args): String {
+    override suspend fun execute(args: Args): McpTool.Result {
         val result = mcpClient.callTool(
             name = descriptor.name,
             arguments = args.arguments
         )
-        val promptMessageContents = result?.content ?: emptyList()
-        return if (promptMessageContents.isEmpty()) {
-            "[No content]"
-        } else {
-            promptMessageContents.joinToString("\n") { content ->
-                (content as TextContent).text ?: ""
-            }
-        }
+        return Result(result?.content ?: emptyList())
     }
 }

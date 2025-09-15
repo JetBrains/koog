@@ -4,25 +4,20 @@ import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
+import ai.koog.agents.core.tools.annotations.LLMDescription
 import kotlinx.serialization.Serializable
 
 class Move(val game: ChessGame) : SimpleTool<Move.Args>() {
     @Serializable
-    data class Args(val notation: String)
+    data class Args(
+        @property:LLMDescription("The notation of the piece to move")
+        val notation: String
+    )
 
     override val argsSerializer = Args.serializer()
 
-    override val descriptor = ToolDescriptor(
-        name = "move",
-        description = "Moves a piece according to the notation:\n${game.moveNotation}",
-        requiredParameters = listOf(
-            ToolParameterDescriptor(
-                name = "notation",
-                description = "The notation of the piece to move",
-                type = ToolParameterType.String,
-            )
-        )
-    )
+    override val name: String = "move"
+    override val toolDescription: String = "Moves a piece according to the notation:\n${game.moveNotation}"
 
     override suspend fun doExecute(args: Args): String {
         game.move(args.notation)

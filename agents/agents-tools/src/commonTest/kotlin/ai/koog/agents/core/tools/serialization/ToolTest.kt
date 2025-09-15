@@ -3,9 +3,6 @@ package ai.koog.agents.core.tools.serialization
 import ai.koog.agents.core.tools.DirectToolCallsEnabler
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.Tool
-import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.agents.core.tools.ToolParameterDescriptor
-import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import kotlinx.coroutines.test.runTest
@@ -32,10 +29,8 @@ class ToolTest {
     private object UnstructuredTool : SimpleTool<Unit>() {
         override val argsSerializer = Unit.serializer()
 
-        override val descriptor = ToolDescriptor(
-            name = "unstructured_tool",
-            description = "Unstructured tool"
-        )
+        override val name: String = "unstructured_tool"
+        override val toolDescription: String = "Unstructured tool"
 
         override suspend fun doExecute(args: Unit): String = "Simple result"
     }
@@ -60,22 +55,8 @@ class ToolTest {
         override val argsSerializer = Args.serializer()
         override val resultSerializer: KSerializer<Result> = Result.serializer()
 
-        override val descriptor = ToolDescriptor(
-            name = "structured_tool",
-            description = "Structured tool",
-            requiredParameters = listOf(
-                ToolParameterDescriptor(
-                    name = "arg1",
-                    description = "arg1",
-                    type = ToolParameterType.String
-                ),
-                ToolParameterDescriptor(
-                    name = "arg2",
-                    description = "arg2",
-                    type = ToolParameterType.Integer
-                )
-            )
-        )
+        override val name: String = "structured_tool"
+        override val toolDescription: String = "Structured tool"
 
         override suspend fun execute(args: Args): Result = Result("result", 1)
     }
@@ -120,10 +101,8 @@ class ToolTest {
         override val argsSerializer = Unit.serializer()
         override val resultSerializer: KSerializer<Result> = Result.serializer()
 
-        override val descriptor = ToolDescriptor(
-            name = "custom_format_tool",
-            description = "Custom format tool",
-        )
+        override val name: String = "custom_format_tool"
+        override val toolDescription: String = "Custom format tool"
 
         override suspend fun execute(args: Unit): Result {
             return Result("first result", "second result")

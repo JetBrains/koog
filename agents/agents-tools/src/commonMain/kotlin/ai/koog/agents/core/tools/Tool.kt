@@ -5,7 +5,6 @@ import ai.koog.agents.core.tools.serialization.ToolJson
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.StringFormat
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 
@@ -62,19 +61,28 @@ public abstract class Tool<TArgs, TResult> {
     protected open val format: StringFormat = ToolJson
 
     /**
+     * The name of the tool.
+     *
+     * This property provides a descriptive name (visible to the LLM) that can be used to identify the tool.
+     */
+    public open val name: String =
+        this::class.simpleName ?: throw IllegalStateException("Class ${this::class} doesn't have a name")
+
+    /**
+     * Describes the functionality and purpose of the tool.
+     *
+     * This property provides a textual explanation of what the tool does and how it can be utilized (for the LLM).
+     */
+    public abstract val toolDescription: String
+
+    /**
      * Provides a descriptor detailing the tool's metadata, including its name,
      * description, and parameter requirements. This property defines the structure
      * and characteristics of the tool, offering an overview of its functionality
      * and how it should be used.
      */
-    public abstract val descriptor: ToolDescriptor
-
-    /**
-     * Represents the name property of the tool, derived from the tool's descriptor.
-     * This property provides an immutable reference to the tool's unique name,
-     * which is used for identification within tool registries.
-     */
-    public val name: String get() = descriptor.name
+    @OptIn(InternalAgentToolsApi::class)
+    public open val descriptor: ToolDescriptor = argsSerializer.descriptor.asToolDescriptor(name, toolDescription)
 
     /**
      * Executes the tool's logic with the provided arguments.
