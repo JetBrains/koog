@@ -509,7 +509,7 @@ object AnalyzeTool : Tool<AnalyzeTool.Args, AnalyzeTool.Result>() {
     )
 
     override val argsSerializer: KSerializer<Args> = Args.serializer()
-    override val resultSerializer: KSerializer<String> = Result.serializer()
+    override val resultSerializer: KSerializer<Result> = Result.serializer()
  
     override val name = "message"
     override val toolDescription = "Service tool, used by the agent to talk with user"
