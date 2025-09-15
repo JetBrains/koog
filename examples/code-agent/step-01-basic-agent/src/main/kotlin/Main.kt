@@ -38,7 +38,13 @@ val agent = AIAgent(
     }
 }
 
-fun main() = runBlocking {
-    val result = agent.run("Create a Vue/TS todo app in the /tmp/todo dir")
+fun main(args: Array<String>) = runBlocking {
+    val task = args.getOrNull(0) ?: run {
+        println("Error: Please provide a task as the first argument")
+        return@runBlocking
+    }
+
+    println("Task: $task")
+    val result = agent.run(task)
     println(result)
 }
