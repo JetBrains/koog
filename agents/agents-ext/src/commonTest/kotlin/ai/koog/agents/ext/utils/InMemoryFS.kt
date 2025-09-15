@@ -1,4 +1,4 @@
-package ai.koog.test.utils
+package ai.koog.agents.ext.utils
 
 import ai.koog.rag.base.files.FileMetadata
 import ai.koog.rag.base.files.FileSystemProvider
@@ -9,7 +9,7 @@ import kotlinx.io.Source
 /**
  * Minimal in-memory filesystem for tests. Implements ReadWrite<String> and stores text as ByteArray.
  */
-public class InMemoryFS : FileSystemProvider.ReadWrite<String> {
+class InMemoryFS : FileSystemProvider.ReadWrite<String> {
     private val files = mutableMapOf<String, ByteArray>()
     private val directories = mutableSetOf<String>()
 
