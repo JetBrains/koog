@@ -1,4 +1,5 @@
 site_name: Koog
+site_url: https://docs.koog.ai/
 nav:
   - Documentation:
       - Overview: index.md
@@ -77,8 +78,8 @@ markdown_extensions:
   - attr_list
   - admonition
   - pymdownx.emoji:
-      emoji_index: !!python/name:materialx.emoji.twemoji
-      emoji_generator: !!python/name:materialx.emoji.to_svg
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
 
 plugins:
   - search
@@ -86,6 +87,73 @@ plugins:
       redirect_maps:
         'simple-api-getting-started.md': 'index.md'
         'advanced-tool-implementation.md': 'class-based-tools.md'
+  - llmstxt:
+      markdown_description: Koog is a Kotlin-based framework designed to build and run AI agents entirely in idiomatic Kotlin.
+      full_output: llms-full.txt
+      # List of sections and pages with descriptions, to be included in llms.txt
+      sections:
+        Documentation:
+          - index.md: This page provides a general overview of the Koog framework, its key features and setup.
+          - key-concepts.md: This page provides explanations of key terms and concepts related to Koog and agentic development.
+        Getting started:
+          - single-run-agents.md: This guide lets you quickly build a single-run agent with minimum required configuration.
+          - act-ai-agent.md: This guide shows you how to build a lightweight, non‑graph agent that you control with a simple loop.
+          - complex-workflow-agents.md: This page explains how you can create agents that handle complex workflows by defining custom strategies, tools, configurations, and custom input and output types.
+        Prompt API:
+          - prompt-api.md: This page includes detailed instructions about the use of Prompt API, which provides a comprehensive toolkit for interacting with Large Language Models in production applications.
+        Tools:
+          - tools-overview.md: This page provides a broad overview of the implementation of tools in Koog.
+          - built-in-tools.md: This page provides details about built-in tools that handle common scenarios of agent-user interaction.
+          - annotation-based-tools.md: This page shows you how you can use annotations to expose functions as tools for large language models (LLMs). This approach is useful when you need to expose existing functionality to LLMs without implementing tool descriptions manually.
+          - class-based-tools.md: This page explains the implementation of class-based tools, which provides enhanced flexibility and customized behavior. With this approach, you have full control over a tool, including its parameters, metadata, execution logic, and how it is registered and invoked.
+        Agent events:
+          - agent-events.md: This page describes agent events, which are actions or interactions that occur as part of an agent workflow.
+        Agent strategies:
+          - nodes-and-components.md: This page provides a quick reference of readily available nodes and components as fundamental building blocks of agent workflows in Koog.
+          - predefined-agent-strategies.md: This page lists agent strategies that are readily available for use in Koog, and provides examples of their implementation in AI agents.
+          - custom-strategy-graphs.md: This page explains how you can create a custom strategy graph that lets you tailor the behavior of an agent to your specific needs.
+          - parallel-node-execution.md: This guide provides a basic reference and examples of using parallel node execution to run multiple AI agent nodes concurrently, improving performance and enabling complex workflows.
+          - data-transfer-between-nodes.md: This page explains how you can store and pass data using AIAgentStorage, which is a key-value storage system designed as a type-safe way to pass data between different nodes or even subgraphs.
+        History compression:
+          - history-compression.md: This page provides details about different implementations and different types of history compression strategies to reduce history size and token usage.
+        Model Context Protocol:
+          - model-context-protocol.md: This page provides details about Koog integration with MCP servers, which allows you to incorporate MCP tools into your Koog agents.
+        Model capabilities:
+          - model-capabilities.md: This page provides an overview of different features or parameters that the models support, referred to as model capabilities.
+        Content moderation:
+          - content-moderation.md: This page provides details about content moderation in Koog. The page includes a general overview of content moderation, types of moderated content, list of supported providers and models, moderation categories, and examples of moderation results.
+        Backend framework integrations:
+          - ktor-plugin.md: This guide provides instructions on how to add the Koog plugin to Ktor. The guide includes a quickstart, and details about the configuration and use of the Ktor plugin.
+          - spring-boot.md: This guide provides instructions on how to use Koog and Spring Boot integration to incorporate AI agents into your Spring Boot applications with minimal setup.
+        Advanced usage:
+          - structured-output.md: This page explains how to use the Structured Output API to define data structures, generate schemas, and request structured responses from LLMs.
+          - streaming-api.md: This page explains how to use the Streaming API to efficiently handle streamed responses that include structured data in Markdown format.
+          - custom-nodes.md: This page provides detailed instructions on how to implement your own custom nodes in the Koog framework. It provides details about the basic implementation, as well as the implementation of nodes with arguments and parametrized nodes.
+          - sessions.md: This page provides detailed information about LLM sessions, including how to work with read and write sessions, manage conversation history, and make requests to language models.
+        Subgraphs:
+          - subgraphs-overview.md: This page provides detailed information about subgraphs in the Koog framework. It lets you understand what subgraphs are and provides information about subgraph context.
+          - custom-subgraphs.md: This guide provides code templates and common patterns in the creation of custom subgraphs for agentic workflows in Koog.
+        Embeddings:
+          - embeddings.md: This page provides information on how to generate and compare embeddings of text and code. The page includes a getting started section for local embeddings, details about OpenAI embeddings and examples of comparison of embeddings.
+        Ranked document storage:
+          - ranked-document-storage.md: This guide provides details about the implementation and use of Resource-Augmented Generation (RAG) systems in Koog. The page includes sections about existing RAG implementations and how to implement your own RAG systems in Koog.
+        Features:
+          - features-overview.md: This page provides a short overview of features as a way to extend and enhance the functionality of AI agents.
+          - tracing.md: This page includes details about the Tracing feature, which provides comprehensive tracing capabilities for AI agents. The page includes configuration and initialization details, examples and quickstart, details about error handling and FAQ and troubleshooting.
+          - agent-memory.md: This page provides details about the AgentMemory feature which lets AI agents store, retrieve, and use information across conversations. The page includes configuration and initialization details, examples and quickstart, best practices, error handling and FAQ and troubleshooting.
+          - agent-persistency.md: This page describes Agent Persistency, which is a feature that lets you save and restore the state of an agent at specific points during execution. The page includes key concepts, prerequisites, installation instructions, configuration, and basic and advanced usage guides.
+        OpenTelemetry:
+          - opentelemetry-support.md: This page provides details about the support for OpenTelemetry with the Koog agentic framework for tracing and monitoring AI agents. The page includes details about installation and configuration, span types and attributes, and common exporters.
+          - opentelemetry-langfuse-exporter.md: This page provides information about Koog's built-in support for exporting agent traces to Langfuse, a platform for observability and analytics of AI applications. The page provides details about LangFuse integration configuration and an example of its use.
+          - opentelemetry-weave-exporter.md: This page provides details about W&B Weave integration in Koog to capture prompts, completions, system context, and execution traces and visualize them directly in a W&B workspace. The page provides details about W&B Weave integration setup, configuration and an example of its use.
+        Testing:
+          - testing.md: This guide provides a detailed overview of the Testing feature that provides a comprehensive framework for testing AI agent pipelines, subgraphs, and tool interactions in Koog. The page includes configuration and initialization details, basic and advanced examples and an FAQ and troubleshooting section.
+        Why Koog:
+          - why-koog.md: This page provides an overview of reasons why you should select Koog as a framework for building AI agents.
+        Examples:
+          - examples.md: This page provides a list of examples to help you understand how to implement AI agents for different use cases. These examples demonstrate key features and patterns that you can adapt for your own applications.
+          - examples/*.md
+
 
 theme:
   name: material
