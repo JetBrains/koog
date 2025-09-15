@@ -318,6 +318,50 @@ public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMCompressHi
     input
 }
 
+/**
+ * A node that performs LLM streaming, collects all stream frames, converts them to response messages,
+ * and updates the prompt with the results.
+ *
+ * This node is useful when you want to:
+ * - Stream responses from the LLM for real-time feedback
+ * - Collect the complete streamed response as messages
+ * - Automatically update the conversation history with the streamed responses
+ *
+ * The node will:
+ * 1. Initiate a streaming request to the LLM
+ * 2. Collect all stream frames (text, tool calls, etc.)
+ * 3. Convert the collected frames into proper Message.Response objects
+ * 4. Update the prompt with these messages for conversation continuity
+ * 5. Return the collected messages
+ *
+ * @param T The type of input this node accepts (passed through without modification)
+ * @param name Optional node name for identification in the agent graph
+ * @param structureDefinition Optional structure definition to guide the LLM's response format
+ * @return A node delegate that accepts input of type T and returns a list of response messages
+ *
+ * @see nodeLLMRequestStreaming for streaming without automatic prompt updates
+ * @see requestLLMStreaming for the underlying streaming functionality
+ */
+@AIAgentBuilderDslMarker
+public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStreamingAndSendResults(
+    name: String? = null,
+    structureDefinition: StructuredDataDefinition? = null
+): AIAgentNodeDelegate<T, List<Message.Response>> = node(name) { input ->
+    llm.writeSession {
+        val stream = requestLLMStreaming(structureDefinition)
+        val streamCollector = mutableListOf<StreamFrame>()
+        stream.collect {
+            streamCollector.add(it)
+        }
+
+        val messages = streamCollector.toMessageResponses()
+        updatePrompt {
+            messages(messages)
+        }
+        messages
+    }
+}
+
 // ==========
 // Tool nodes
 // ==========
