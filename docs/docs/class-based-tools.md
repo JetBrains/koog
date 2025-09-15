@@ -50,6 +50,7 @@ import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer
+import ai.koog.agents.core.tools.annotations.LLMDescription
 -->
 ```kotlin
 // Implement a simple calculator tool that adds two digits
@@ -76,26 +77,7 @@ object CalculatorTool : Tool<CalculatorTool.Args, Int>() {
     // Name of the tool, visible to LLM (by default will be derrived from the class name)
     override val name = "calculator"
     // Description of the tool, visible to LLM. Required
-    override val description = "A simple calculator that can add two digits (0-9)."
-    
-
-    // Tool descriptor
-    override val descriptor: ToolDescriptor = ToolDescriptor(
-        name = "calculator",
-        description = "A simple calculator that can add two digits (0-9).",
-        requiredParameters = listOf(
-            ToolParameterDescriptor(
-                name = "digit1",
-                description = "The first digit to add (0-9)",
-                type = ToolParameterType.Integer
-            ),
-            ToolParameterDescriptor(
-                name = "digit2",
-                description = "The second digit to add (0-9)",
-                type = ToolParameterType.Integer
-            )
-        )
-    )
+    override val toolDescription = "A simple calculator that can add two digits (0-9)."
 
     // Function to add two digits
     override suspend fun execute(args: Args): Int = args.digit1 + args.digit2
@@ -135,34 +117,25 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import kotlinx.serialization.Serializable
+import ai.koog.agents.core.tools.annotations.LLMDescription
 -->
 ```kotlin
 // Create a tool that casts a string expression to a double value
 object CastToDoubleTool : SimpleTool<CastToDoubleTool.Args>() {
     // Define tool arguments
     @Serializable
-    data class Args(val expression: String, val comment: String)
+    data class Args(
+        @property:LLMDescription("An expression to case to double")
+        val expression: String,
+        @property:LLMDescription("A comment on how to process the expression")
+        val comment: String
+    )
 
     // Serializer for the Args class
     override val argsSerializer = Args.serializer()
 
-    // Tool descriptor
-    override val descriptor = ToolDescriptor(
-        name = "cast_to_double",
-        description = "casts the passed expression to double or returns 0.0 if the expression is not castable",
-        requiredParameters = listOf(
-            ToolParameterDescriptor(
-                name = "expression", description = "An expression to case to double", type = ToolParameterType.String
-            )
-        ),
-        optionalParameters = listOf(
-            ToolParameterDescriptor(
-                name = "comment",
-                description = "A comment on how to process the expression",
-                type = ToolParameterType.String
-            )
-        )
-    )
+    // Description of the tool, visible to LLM
+    override val toolDescription = "casts the passed expression to double or returns 0.0 if the expression is not castable"
     
     // Function that executes the tool with the provided arguments
     override suspend fun doExecute(args: Args): String {

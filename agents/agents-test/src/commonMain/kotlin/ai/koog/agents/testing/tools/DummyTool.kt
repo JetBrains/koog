@@ -32,6 +32,7 @@ public class DummyTool : SimpleTool<DummyTool.Args>() {
 
     override val argsSerializer: KSerializer<Args> = Args.serializer()
 
+    override val name: String = "dummy"
     override val toolDescription: String = "Dummy tool for testing"
 
     override suspend fun doExecute(args: Args): String = result

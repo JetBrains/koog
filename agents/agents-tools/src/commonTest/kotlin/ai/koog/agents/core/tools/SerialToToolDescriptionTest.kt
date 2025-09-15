@@ -141,7 +141,7 @@ class SerialToToolDescriptionTest {
 
         // Property descriptions currently mirror class-level description per implementation
         (personDesc.requiredParameters + personDesc.optionalParameters).forEach { param ->
-            assertEquals("name", param.description)
+            assertEquals(param.name, param.description)
         }
 
         // Nested object type for address

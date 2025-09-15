@@ -1277,7 +1277,7 @@ public fun <Result> toolResult(tool: Tool<*, Result>, result: Result): ReceivedT
  * ```
  */
 public fun toolResult(tool: SimpleTool<*>, result: String): ReceivedToolResult =
-    toolResult(tool, result)
+    ReceivedToolResult(null, tool.name, result, result)
 
 /**
  * Enables and configures the Testing feature for a Kotlin AI Agent instance.

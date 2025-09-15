@@ -146,13 +146,8 @@ class BookTool() : SimpleTool<Book>() {
     override val argsSerializer: KSerializer<Book>
         get() = Book.serializer()
 
-    override val descriptor: ToolDescriptor
-        get() = ToolDescriptor(
-            name = NAME,
-            description = "A tool to parse book information from Markdown",
-            requiredParameters = listOf(),
-            optionalParameters = listOf()
-        )
+    override val name = NAME
+    override val toolDescription = "A tool to parse book information from Markdown"
 }
 
 val strategy = strategy<Unit, Unit>("strategy-name") {

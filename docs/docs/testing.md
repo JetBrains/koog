@@ -70,79 +70,68 @@ import ai.koog.agents.testing.tools.getMockExecutor
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer
+import ai.koog.agents.core.tools.annotations.LLMDescription
 
 public object CreateTool : Tool<CreateTool.Args, String>() {
-/**
-* Represents the arguments for the [AskUser] tool
-*
-* @property message The message to be used as an argument for the tool's execution.
-*/
-@Serializable
-public data class Args(val message: String)
+    /**
+    * Represents the arguments for the [AskUser] tool
+    *
+    * @property message The message to be used as an argument for the tool's execution.
+    */
+    @Serializable
+    public data class Args(
+        @property:LLMDescription("Message from the agent")
+        val message: String
+    )
 
     override val argsSerializer: KSerializer<Args> = Args.serializer()
     override val resultSerializer: KSerializer<String> = String.serializer()
 
-    override val descriptor: ToolDescriptor = ToolDescriptor(
-        name = "message",
-        description = "Service tool, used by the agent to talk with user",
-        requiredParameters = listOf(
-            ToolParameterDescriptor(
-                name = "message", description = "Message from the agent", type = ToolParameterType.String
-            )
-        )
-    )
+    override val name = "message"
+    override val toolDescription = "Service tool, used by the agent to talk with user"
 
     override suspend fun execute(args: Args): String = args.message
 }
 
 public object SearchTool : Tool<SearchTool.Args, String>() {
-/**
-* Represents the arguments for the [AskUser] tool
-*
-* @property message The message to be used as an argument for the tool's execution.
-*/
-@Serializable
-public data class Args(val query: String)
+    /**
+    * Represents the arguments for the [AskUser] tool
+    *
+    * @property message The message to be used as an argument for the tool's execution.
+    */
+    @Serializable
+    public data class Args(
+        @property:LLMDescription("Message from the agent")
+        val query: String
+    )
 
     override val argsSerializer: KSerializer<Args> = Args.serializer()
     override val resultSerializer: KSerializer<String> = String.serializer()
 
-    override val descriptor: ToolDescriptor = ToolDescriptor(
-        name = "message",
-        description = "Service tool, used by the agent to talk with user",
-        requiredParameters = listOf(
-            ToolParameterDescriptor(
-                name = "message", description = "Message from the agent", type = ToolParameterType.String
-            )
-        )
-    )
+    override val name = "message"
+    override val toolDescription = "Service tool, used by the agent to talk with user"
 
     override suspend fun execute(args: Args): String = args.query
 }
 
 
 public object AnalyzeTool : Tool<AnalyzeTool.Args, String>() {
-/**
-* Represents the arguments for the [AskUser] tool
-*
-* @property message The message to be used as an argument for the tool's execution.
-*/
-@Serializable
-public data class Args(val message: String)
+    /**
+    * Represents the arguments for the [AskUser] tool
+    *
+    * @property message The message to be used as an argument for the tool's execution.
+    */
+    @Serializable
+    public data class Args(
+        @property:LLMDescription("Message from the agent")
+        val query: String
+    )
 
     override val argsSerializer: KSerializer<Args> = Args.serializer()
     override val resultSerializer: KSerializer<String> = String.serializer()
 
-    override val descriptor: ToolDescriptor = ToolDescriptor(
-        name = "message",
-        description = "Service tool, used by the agent to talk with user",
-        requiredParameters = listOf(
-            ToolParameterDescriptor(
-                name = "message", description = "Message from the agent", type = ToolParameterType.String
-            )
-        )
-    )
+    override val name = "message"
+    override val toolDescription = "Service tool, used by the agent to talk with user"
 
     override suspend fun execute(args: Args): String = args.message
 }
@@ -364,22 +353,19 @@ import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.message.Message
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import ai.koog.agents.core.tools.annotations.LLMDescription
 
 object SolveTool : SimpleTool<SolveTool.Args>() {
     @Serializable
-    data class Args(val message: String)
+    data class Args(
+        @property:LLMDescription("Message from the agent")
+        val message: String
+    )
 
     override val argsSerializer: KSerializer<Args> = Args.serializer()
-
-    override val descriptor: ToolDescriptor = ToolDescriptor(
-        name = "message",
-        description = "Service tool, used by the agent to talk with user",
-        requiredParameters = listOf(
-            ToolParameterDescriptor(
-                name = "message", description = "Message from the agent", type = ToolParameterType.String
-            )
-        )
-    )
+ 
+    override val name = "message"
+    override val toolDescription = "Service tool, used by the agent to talk with user"
 
     override suspend fun doExecute(args: Args): String {
         return args.message
@@ -437,24 +423,20 @@ import ai.koog.prompt.message.Message
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer
+import ai.koog.agents.core.tools.annotations.LLMDescription
 
 object AnalyzeTool : Tool<AnalyzeTool.Args, String>() {
 
     @Serializable
-    data class Args(val query: String, val depth: Int)
+    data class Args(
+        @property:LLMDescription("Message from the agent")
+        val query: String
+    )
 
     override val argsSerializer: KSerializer<Args> = Args.serializer()
-    override val resultSerializer: KSerializer<String> = String.serializer()
-
-    override val descriptor: ToolDescriptor = ToolDescriptor(
-        name = "message",
-        description = "Service tool, used by the agent to talk with user",
-        requiredParameters = listOf(
-            ToolParameterDescriptor(
-                name = "message", description = "Message from the agent", type = ToolParameterType.String
-            )
-        )
-    )
+ 
+    override val name = "message"
+    override val toolDescription = "Service tool, used by the agent to talk with user"
 
     override suspend fun execute(args: Args): String = args.query
 }
@@ -512,23 +494,15 @@ import kotlinx.serialization.Serializable
 
 object AnalyzeTool : Tool<AnalyzeTool.Args, AnalyzeTool.Result>() {
     @Serializable
-    data class Args(val query: String, val depth: Int)
-
-    @Serializable
-    data class Result(val analysis: String, val confidence: Double, val metadata: Map<String, String> = emptyMap())
+    data class Args(
+        val query: String,
+        val depth: Int
+    )
 
     override val argsSerializer: KSerializer<Args> = Args.serializer()
-    override val resultSerializer: KSerializer<Result> = Result.serializer()
-
-    override val descriptor: ToolDescriptor = ToolDescriptor(
-        name = "message",
-        description = "Service tool, used by the agent to talk with user",
-        requiredParameters = listOf(
-            ToolParameterDescriptor(
-                name = "message", description = "Message from the agent", type = ToolParameterType.String
-            )
-        )
-    )
+ 
+    override val name = "message"
+    override val toolDescription = "Service tool, used by the agent to talk with user"
 
     override suspend fun execute(args: Args): Result {
         return Result(
