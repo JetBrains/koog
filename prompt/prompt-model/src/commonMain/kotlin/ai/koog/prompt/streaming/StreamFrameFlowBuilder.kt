@@ -1,5 +1,6 @@
 package ai.koog.prompt.streaming
 
+import ai.koog.prompt.message.ResponseMetaInfo
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.asFlow
@@ -35,8 +36,8 @@ public suspend fun FlowCollector<StreamFrame>.emitAppend(text: String): Unit =
 /**
  * Emits a [StreamFrame.End] with the given [finishReason].
  */
-public suspend fun FlowCollector<StreamFrame>.emitEnd(finishReason: String? = null): Unit =
-    emit(StreamFrame.End(finishReason))
+public suspend fun FlowCollector<StreamFrame>.emitEnd(finishReason: String? = null, metaInfo: ResponseMetaInfo? = null): Unit =
+    emit(StreamFrame.End(finishReason, metaInfo?: ResponseMetaInfo.Empty))
 
 /**
  * Emits a [StreamFrame.ToolCall] with the given [id], [name] and [content].
@@ -78,9 +79,9 @@ public class StreamFrameFlowBuilder(
     /**
      * Emits a [StreamFrame.End] with the given [finishReason].
      */
-    public suspend fun emitEnd(finishReason: String? = null) {
+    public suspend fun emitEnd(finishReason: String? = null, metaInfo: ResponseMetaInfo? = null) {
         tryEmitPendingToolCall()
-        flowCollector.emitEnd(finishReason)
+        flowCollector.emitEnd(finishReason, metaInfo)
     }
 
     /**

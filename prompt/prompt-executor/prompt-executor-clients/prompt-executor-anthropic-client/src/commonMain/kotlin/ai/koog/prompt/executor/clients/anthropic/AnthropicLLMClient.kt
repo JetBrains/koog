@@ -178,6 +178,7 @@ public open class AnthropicLLMClient(
                         .takeIf { it.event == "content_block_delta" }
                         ?.data?.trim()?.let { json.decodeFromString<AnthropicStreamResponse>(it) }
                         ?.let { response ->
+
                             response.delta?.text?.let { emitAppend(it) }
                             response.delta?.toolUse?.let {
                                 emitToolCall(
@@ -186,7 +187,15 @@ public open class AnthropicLLMClient(
                                     content = it.input.toString()
                                 )
                             }
-                            response.message?.stopReason?.let { emitEnd(it) }
+                            val meta = response.message?.usage?.let {
+                                ResponseMetaInfo.create(
+                                    clock = clock,
+                                    totalTokensCount = it.inputTokens + it.outputTokens,
+                                    inputTokensCount = it.inputTokens,
+                                    outputTokensCount = it.outputTokens,
+                                )
+                            }
+                            response.message?.stopReason?.let { emitEnd(it, meta) }
                         }
                 }
             }

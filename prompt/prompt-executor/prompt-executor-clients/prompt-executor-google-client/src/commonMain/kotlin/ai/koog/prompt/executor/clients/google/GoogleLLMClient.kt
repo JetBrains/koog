@@ -175,20 +175,30 @@ public open class GoogleLLMClient(
                     event
                         .takeIf { it.data != "[DONE]" }
                         ?.data?.trim()?.let { json.decodeFromString<GoogleResponse>(it) }
-                        ?.candidates?.firstOrNull()?.let { candidate ->
-                            candidate.content?.parts?.forEach { part ->
-                                when (part) {
-                                    is GooglePart.FunctionCall -> emitToolCall(
-                                        id = part.functionCall.id,
-                                        name = part.functionCall.name,
-                                        content = part.functionCall.args?.toString() ?: "{}"
-                                    )
-
-                                    is GooglePart.Text -> emitAppend(part.text)
-                                    else -> Unit
-                                }
+                        ?.let { response ->
+                            val meta = response.usageMetadata?.let {
+                                ResponseMetaInfo.create(
+                                    clock = clock,
+                                    totalTokensCount = it.totalTokenCount,
+                                    inputTokensCount = it.promptTokenCount,
+                                    outputTokensCount = it.candidatesTokenCount,
+                                )
                             }
-                            candidate.finishReason?.let { emitEnd(it) }
+                            response.candidates.firstOrNull()?.let { candidate ->
+                                candidate.content?.parts?.forEach { part ->
+                                    when (part) {
+                                        is GooglePart.FunctionCall -> emitToolCall(
+                                            id = part.functionCall.id,
+                                            name = part.functionCall.name,
+                                            content = part.functionCall.args?.toString() ?: "{}"
+                                        )
+
+                                        is GooglePart.Text -> emitAppend(part.text)
+                                        else -> Unit
+                                    }
+                                }
+                                candidate.finishReason?.let { emitEnd(it, meta) }
+                            }
                         }
                 }
             }
