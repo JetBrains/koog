@@ -44,16 +44,6 @@ public suspend fun FlowCollector<StreamFrame>.emitEnd(finishReason: String? = nu
 public suspend fun FlowCollector<StreamFrame>.emitToolCall(id: String?, name: String, content: String): Unit =
     emit(StreamFrame.ToolCall(id, name, content))
 
-private data class ToolCallState(
-    val id: String?,
-    val name: String?,
-    val contents: String?
-) : CoroutineContext.Element {
-    override val key: CoroutineContext.Key<*> = Key
-
-    companion object Key : CoroutineContext.Key<ToolCallState>
-}
-
 /**
  * Builds a [Flow] of [StreamFrame] objects.
  */
@@ -80,7 +70,7 @@ public class StreamFrameFlowBuilder(
     public suspend fun append(text: String): CoroutineContext {
         tryEmitPendingToolCall()
         flowCollector.emitAppend(text)
-        return coroutineContext.minusKey(ExpectingToolCallArguments.Key)
+        return coroutineContext.minusKey(ToolCallContext.Key)
     }
 
     /**
@@ -89,11 +79,11 @@ public class StreamFrameFlowBuilder(
     public suspend fun end(finishReason: String?): CoroutineContext {
         tryEmitPendingToolCall()
         flowCollector.emitEnd(finishReason)
-        return coroutineContext.minusKey(ExpectingToolCallArguments.Key)
+        return coroutineContext.minusKey(ToolCallContext.Key)
     }
 
     private suspend fun tryEmitPendingToolCall() {
-        val context = coroutineContext[ExpectingToolCallArguments.Key]
+        val context = coroutineContext[ToolCallContext.Key]
         if (context != null)
             flowCollector.emitToolCall(context.id, context.name ?: "", context.argumentsDelta ?: "")
     }
@@ -107,11 +97,11 @@ public class StreamFrameFlowBuilder(
         name: String?,
         argumentsDelta: String? = null
     ): CoroutineContext {
-        val context = coroutineContext[ExpectingToolCallArguments.Key]
+        val context = coroutineContext[ToolCallContext.Key]
         return if (context == null) {
             if (id == null)
                 error("No tool call is in progress, and no tool call id was provided.")
-            ExpectingToolCallArguments(id, name, argumentsDelta)
+            ToolCallContext(id, name, argumentsDelta)
         } else {
             if (id != null && id != context.id)
                 error("Tool call id mismatch. Expected ${context.id}, but received $id.")
@@ -119,7 +109,7 @@ public class StreamFrameFlowBuilder(
         }.let(coroutineContext::plus)
     }
 
-    private data class ExpectingToolCallArguments(
+    private data class ToolCallContext(
         val id: String,
         val name: String?,
         val argumentsDelta: String?
@@ -127,6 +117,6 @@ public class StreamFrameFlowBuilder(
 
         override val key: CoroutineContext.Key<*> = Key
 
-        companion object Key : CoroutineContext.Key<ExpectingToolCallArguments>
+        companion object Key : CoroutineContext.Key<ToolCallContext>
     }
 }
