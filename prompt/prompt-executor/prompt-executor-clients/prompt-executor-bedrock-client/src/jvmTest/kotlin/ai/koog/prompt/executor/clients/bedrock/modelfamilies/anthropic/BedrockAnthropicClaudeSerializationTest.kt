@@ -4,9 +4,8 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.prompt.dsl.Prompt
-import ai.koog.prompt.executor.clients.bedrock.BedrockModels
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicInvokeModel
-import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicInvokeModelMessage
+import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicInvokeModelContent
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicToolChoice
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
@@ -25,7 +24,6 @@ class BedrockAnthropicClaudeSerializationTest {
         override fun now(): Instant = Clock.System.now()
     }
 
-    private val model = BedrockModels.AnthropicClaude3Sonnet
     private val systemMessage = "You are a helpful assistant."
     private val userMessage = "Tell me about Paris."
     private val userMessageQuestion = "What's the weather in Paris?"
@@ -52,11 +50,11 @@ class BedrockAnthropicClaudeSerializationTest {
 
         assertNotNull(request.system)
 
-        val userMessageActual = request.messages[0] as BedrockAnthropicInvokeModelMessage
+        val userMessageActual = request.messages[0]
         assertEquals(1, request.messages.size)
         assertEquals("user", userMessageActual.role)
         assertEquals(1, userMessageActual.content.size)
-        assertEquals(userMessage, (userMessageActual.content[0]).text)
+        assertEquals(userMessage, (userMessageActual.content[0] as BedrockAnthropicInvokeModelContent.Text).text)
     }
 
     @Test
@@ -73,20 +71,20 @@ class BedrockAnthropicClaudeSerializationTest {
         assertNotNull(request)
 
         assertEquals(3, request.messages.size)
-        val userMessageActual = request.messages[0] as BedrockAnthropicInvokeModelMessage
-        val userMessageActual2 = request.messages[2] as BedrockAnthropicInvokeModelMessage
-        val assistantMessage = request.messages[1] as BedrockAnthropicInvokeModelMessage
+        val userMessageActual = request.messages[0]
+        val userMessageActual2 = request.messages[2]
+        val assistantMessage = request.messages[1]
         assertEquals("user", userMessageActual.role)
-        assertEquals("Hello, who are you?", (userMessageActual.content[0]).text)
+        assertEquals("Hello, who are you?", (userMessageActual.content[0] as BedrockAnthropicInvokeModelContent.Text).text)
 
         assertEquals("assistant", assistantMessage.role)
         assertEquals(
             "I'm Claude, an AI assistant created by Anthropic. How can I help you today?",
-            (assistantMessage.content[0]).text
+            (assistantMessage.content[0] as BedrockAnthropicInvokeModelContent.Text).text
         )
 
         assertEquals("user", userMessageActual2.role)
-        assertEquals("Tell me about Paris.", (userMessageActual2.content[0]).text)
+        assertEquals("Tell me about Paris.", (userMessageActual2.content[0] as BedrockAnthropicInvokeModelContent.Text).text)
     }
 
     @Test
@@ -191,8 +189,7 @@ class BedrockAnthropicClaudeSerializationTest {
         assertTrue(message is Message.Assistant)
         assertContains(message.content, "Paris is the capital of France")
 
-        val assistant = message
-        assertEquals(stopReason, assistant.finishReason)
+        assertEquals(stopReason, message.finishReason)
 
         assertEquals(25, message.metaInfo.inputTokensCount)
         assertEquals(20, message.metaInfo.outputTokensCount)

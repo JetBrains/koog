@@ -70,13 +70,12 @@ public data class BedrockAnthropicInvokeModelTool(
 )
 
 /**
- * Represents the text content of a model invocation message for the Bedrock Anthropic API.
+ * Represents a class for constructing various types of content used in invoking models
+ * via the Bedrock Anthropic API.
  *
- * This data class is intended to encapsulate the content of a message that is sent to or received from a model.
- * It is used along with the `BedrockAnthropicInvokeModelMessage` class to provide structured message content.
- *
- * @property type The type of the content. Defaults to "text".
- * @property text The actual text content of the message.
+ * This sealed class acts as the base type for different kinds of invocation-related content such as
+ * textual responses, tool results, and tool call instructions. It enables a structured approach to
+ * managing the diverse data types utilized in interactions with the Bedrock Anthropic API.
  */
 @Serializable
 public sealed class BedrockAnthropicInvokeModelContent {
