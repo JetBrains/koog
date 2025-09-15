@@ -126,7 +126,7 @@ plugins:
           - ktor-plugin.md: This guide provides instructions on how to add the Koog plugin to Ktor. The guide includes a quickstart, and details about the configuration and use of the Ktor plugin.
           - spring-boot.md: This guide provides instructions on how to use Koog and Spring Boot integration to incorporate AI agents into your Spring Boot applications with minimal setup.
         Advanced usage:
-          - structured-data.md: This page explains how to use the Structured Output API to define data structures, generate schemas, and request structured responses from LLMs.
+          - structured-output.md: This page explains how to use the Structured Output API to define data structures, generate schemas, and request structured responses from LLMs.
           - streaming-api.md: This page explains how to use the Streaming API to efficiently handle streamed responses that include structured data in Markdown format.
           - custom-nodes.md: This page provides detailed instructions on how to implement your own custom nodes in the Koog framework. It provides details about the basic implementation, as well as the implementation of nodes with arguments and parametrized nodes.
           - sessions.md: This page provides detailed information about LLM sessions, including how to work with read and write sessions, manage conversation history, and make requests to language models.
