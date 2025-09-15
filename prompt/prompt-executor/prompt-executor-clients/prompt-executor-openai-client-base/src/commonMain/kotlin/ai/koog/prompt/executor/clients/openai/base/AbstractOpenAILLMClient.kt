@@ -159,7 +159,7 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
      * Processes a provider-specific streaming response chunk.
      * Must be implemented by concrete client classes.
      */
-    protected abstract suspend fun StreamFrameFlowBuilder.processStreamingChunk(chunk: TStreamResponse): CoroutineContext
+    protected abstract suspend fun StreamFrameFlowBuilder.processStreamingChunk(chunk: TStreamResponse)
 
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         val response = getResponse(prompt, model, tools)
@@ -192,10 +192,8 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
                 dataFilter = { it != "[DONE]" },
                 decodeStreamingResponse = ::decodeStreamingResponse,
                 processStreamingChunk = { it }
-            ).fold(currentCoroutineContext()) { acc, response ->
-                withContext(acc) {
-                    processStreamingChunk(response)
-                }
+            ).collect {
+                processStreamingChunk(it)
             }
         }
     }

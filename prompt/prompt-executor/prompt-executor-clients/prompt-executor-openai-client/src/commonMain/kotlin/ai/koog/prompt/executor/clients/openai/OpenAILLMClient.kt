@@ -50,13 +50,10 @@ import ai.koog.prompt.structure.RegisteredStandardJsonSchemaGenerators
 import ai.koog.prompt.structure.annotations.InternalStructuredOutputApi
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
-import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
-import kotlin.coroutines.CoroutineContext
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -223,21 +220,18 @@ public open class OpenAILLMClient(
     override fun decodeResponse(data: String): OpenAIChatCompletionResponse =
         json.decodeFromString(data)
 
-    override suspend fun StreamFrameFlowBuilder.processStreamingChunk(chunk: OpenAIChatCompletionStreamResponse): CoroutineContext {
-        return chunk.choices.firstOrNull()?.let { choice ->
-            var context = choice.delta.content?.let { append(it) } ?: currentCoroutineContext()
+    override suspend fun StreamFrameFlowBuilder.processStreamingChunk(chunk: OpenAIChatCompletionStreamResponse) {
+        chunk.choices.firstOrNull()?.let { choice ->
+            choice.delta.content?.let { emitAppend(it) }
             choice.delta.toolCalls?.forEach { openAIToolCall ->
+                val index = openAIToolCall.index
                 val id = openAIToolCall.id
                 val functionName = openAIToolCall.function?.name
                 val functionArgs = openAIToolCall.function?.arguments
-                context = withContext(context) {
-                    startOrCompleteToolCall(id, functionName, functionArgs)
-                }
+                appendToolCall(index, id, functionName, functionArgs)
             }
-            withContext(context) {
-                choice.finishReason?.let { end(it) } ?: context
-            }
-        } ?: currentCoroutineContext()
+            choice.finishReason?.let { emitEnd(it) }
+        }
     }
 
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {

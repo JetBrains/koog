@@ -20,10 +20,7 @@ import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrameFlowBuilder
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
-import kotlin.coroutines.CoroutineContext
 
 /**
  * Configuration settings for connecting to the OpenRouter API.
@@ -114,21 +111,18 @@ public class OpenRouterLLMClient(
     override fun decodeResponse(data: String): OpenRouterChatCompletionResponse =
         json.decodeFromString(data)
 
-    override suspend fun StreamFrameFlowBuilder.processStreamingChunk(chunk: OpenRouterChatCompletionStreamResponse): CoroutineContext {
-        return chunk.choices.firstOrNull()?.let { choice ->
-            var context = choice.delta.content?.let { append(it) } ?: currentCoroutineContext()
+    override suspend fun StreamFrameFlowBuilder.processStreamingChunk(chunk: OpenRouterChatCompletionStreamResponse) {
+        chunk.choices.firstOrNull()?.let { choice ->
+            choice.delta.content?.let { emitAppend(it) }
             choice.delta.toolCalls?.forEach { openAIToolCall ->
+                val index = openAIToolCall.index
                 val id = openAIToolCall.id
                 val name = openAIToolCall.function?.name
                 val arguments = openAIToolCall.function?.arguments
-                context = withContext(context) {
-                    startOrCompleteToolCall(id, name, arguments)
-                }
+                appendToolCall(index, id, name, arguments)
             }
-            withContext(context) {
-                choice.finishReason?.let { end(it) } ?: context
-            }
-        } ?: currentCoroutineContext()
+            choice.finishReason?.let { emitEnd(it) }
+        }
     }
 
     public override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {

@@ -18,10 +18,7 @@ import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrameFlowBuilder
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
-import kotlin.coroutines.CoroutineContext
 
 /**
  * Configuration settings for connecting to the DeepSeek API.
@@ -102,21 +99,18 @@ public class DeepSeekLLMClient(
     override fun decodeResponse(data: String): DeepSeekChatCompletionResponse =
         json.decodeFromString(data)
 
-    override suspend fun StreamFrameFlowBuilder.processStreamingChunk(chunk: DeepSeekChatCompletionStreamResponse): CoroutineContext {
-        return chunk.choices.firstOrNull()?.let { choice ->
-            var context = choice.delta.content?.let { append(it) } ?: currentCoroutineContext()
+    override suspend fun StreamFrameFlowBuilder.processStreamingChunk(chunk: DeepSeekChatCompletionStreamResponse) {
+        chunk.choices.firstOrNull()?.let { choice ->
+            choice.delta.content?.let { emitAppend(it) }
             choice.delta.toolCalls?.forEach { toolCall ->
+                val index = toolCall.index
                 val id = toolCall.id
                 val name = toolCall.function?.name
                 val arguments = toolCall.function?.arguments
-                context = withContext(context) {
-                    startOrCompleteToolCall(id, name, arguments)
-                }
+                appendToolCall(index, id, name, arguments)
             }
-            withContext(context) {
-                choice.finishReason?.let { end(it) } ?: currentCoroutineContext()
-            }
-        } ?: currentCoroutineContext()
+            choice.finishReason?.let { emitEnd(it) }
+        }
     }
 
     public override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {

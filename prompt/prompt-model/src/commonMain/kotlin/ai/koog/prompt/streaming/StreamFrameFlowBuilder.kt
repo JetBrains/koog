@@ -5,8 +5,8 @@ import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
-import kotlin.coroutines.CoroutineContext
-import kotlin.coroutines.coroutineContext
+import kotlin.concurrent.atomics.AtomicReference
+import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.experimental.ExperimentalTypeInference
 
 /**
@@ -60,65 +60,73 @@ public fun buildStreamFrameFlow(block: suspend StreamFrameFlowBuilder.() -> Unit
  *
  * @property flowCollector The underlying [FlowCollector] used for emitting [StreamFrame] objects.
  */
+@OptIn(ExperimentalAtomicApi::class)
 public class StreamFrameFlowBuilder(
     private val flowCollector: FlowCollector<StreamFrame>,
 ) {
 
+    private val pendingToolCallRef = AtomicReference<PendingToolCall?>(null)
+
     /**
      * Emits a [StreamFrame.Append] with the given [text].
      */
-    public suspend fun append(text: String): CoroutineContext {
+    public suspend fun emitAppend(text: String) {
         tryEmitPendingToolCall()
         flowCollector.emitAppend(text)
-        return coroutineContext.minusKey(PendingToolCall.Key)
     }
 
     /**
      * Emits a [StreamFrame.End] with the given [finishReason].
      */
-    public suspend fun end(finishReason: String?): CoroutineContext {
+    public suspend fun emitEnd(finishReason: String? = null) {
         tryEmitPendingToolCall()
         flowCollector.emitEnd(finishReason)
-        return coroutineContext.minusKey(PendingToolCall.Key)
     }
 
-    private suspend fun tryEmitPendingToolCall() {
-        val context = coroutineContext[PendingToolCall.Key]
-        if (context != null)
-            flowCollector.emitToolCall(context.id, context.name ?: "", context.argumentsDelta ?: "")
+    /**
+     * Emits a [pendingToolCallRef] if it exists and then clears it.
+     */
+    public suspend fun tryEmitPendingToolCall() {
+        val pendingToolCall = pendingToolCallRef.exchange(null)
+        if (pendingToolCall != null)
+            flowCollector.emitToolCall(
+                id = pendingToolCall.id,
+                name = pendingToolCall.name ?: "",
+                content = pendingToolCall.argumentsDelta ?: "{}"
+            )
     }
 
     /**
      * Updates the coroutine context to signal we're currently combining a tool call,
      * this does not emit anything yet, that only in [tryEmitPendingToolCall].
      */
-    public suspend fun startOrCompleteToolCall(
-        id: String?,
-        name: String?,
-        argumentsDelta: String? = null
-    ): CoroutineContext {
-        val context = coroutineContext[PendingToolCall.Key]
-        return if (context == null) {
-            if (id == null)
-                error("No tool call is in progress, and no tool call id was provided.")
-            PendingToolCall(id, name, argumentsDelta)
+    public suspend fun appendToolCall(
+        index: Int,
+        id: String? = null,
+        name: String? = null,
+        args: String? = null
+    ) {
+        val new = if (id != null) {
+            tryEmitPendingToolCall()
+            PendingToolCall(index, id, name, args)
         } else {
-            if (id != null && id != context.id) {
-                tryEmitPendingToolCall()
-                PendingToolCall(id, name, argumentsDelta)
-            } else
-                context.copy(argumentsDelta = (context.argumentsDelta ?: "") + argumentsDelta)
-        }.let(coroutineContext::plus)
+            val pendingToolCall = pendingToolCallRef.load()
+            if (pendingToolCall == null)
+                error("No tool call is in progress, and no tool call id was provided.")
+            else if (pendingToolCall.index != index)
+                error("Tool call index mismatch. Expected ${pendingToolCall.index}, got $index.")
+            pendingToolCall.appendArgumentsDelta(args)
+        }
+        pendingToolCallRef.store(new)
     }
 
     private data class PendingToolCall(
+        val index: Int,
         val id: String,
         val name: String?,
         val argumentsDelta: String?
-    ) : CoroutineContext.Element {
-
-        override val key: CoroutineContext.Key<*> = Key
-
-        companion object Key : CoroutineContext.Key<PendingToolCall>
+    ) {
+        fun appendArgumentsDelta(argumentsDelta: String?): PendingToolCall =
+            copy(argumentsDelta = (this.argumentsDelta ?: "") + argumentsDelta)
     }
 }
