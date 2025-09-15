@@ -1,7 +1,6 @@
 package ai.koog.agents.example.streaming
 
 import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.agent.entity.AIAgentSubgraph
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeExecuteMultipleTools
@@ -19,23 +18,10 @@ import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
-import ch.qos.logback.classic.Level
-import ch.qos.logback.classic.Logger
 import kotlinx.coroutines.runBlocking
-import org.slf4j.LoggerFactory
 
 fun main(): Unit = runBlocking {
     val switch = Switch()
-
-    /**
-     * Turning off the logging for this agent
-     */
-    listOf(
-        AIAgentSubgraph::class.qualifiedName
-    ).forEach {
-        val logbackLogger = LoggerFactory.getLogger(it) as Logger
-        logbackLogger.level = Level.OFF
-    }
 
     /*
      *
@@ -57,6 +43,10 @@ fun main(): Unit = runBlocking {
         toolRegistry = toolRegistry
     ) {
         handleEvents {
+            onToolCall { context ->
+                println("\n🔧 Using ${context.tool.name} with ${context.toolArgs}... ")
+            }
+
             onStreamFrame { context ->
                 (context.streamFrame as? StreamFrame.Append)?.let { frame ->
                     print(frame.text)
