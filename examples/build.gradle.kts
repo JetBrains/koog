@@ -78,13 +78,14 @@ registerRunExampleTask(
 )
 registerRunExampleTask("runExampleTemplate", "ai.koog.agents.example.template.TemplateKt")
 registerRunExampleTask("runProjectAnalyzer", "ai.koog.agents.example.ProjectAnalyzerAgentKt")
+registerRunExampleTask("runExampleStructuredOutputSimple", "ai.koog.agents.example.structuredoutput.SimpleExampleKt")
 registerRunExampleTask(
-    "runExampleAdvancedSimpleStructuredOutput",
-    "ai.koog.agents.example.structuredoutput.AdvancedSimpleStructuredOutputExampleKt"
+    "runExampleStructuredOutputAdvancedWithBasicSchema",
+    "ai.koog.agents.example.structuredoutput.AdvancedWithBasicSchemaKt"
 )
 registerRunExampleTask(
-    "runExampleAdvancedFullStructuredOutput",
-    "ai.koog.agents.example.structuredoutput.AdvancedFullStructuredOutputExampleKt"
+    "runExampleStructuredOutputAdvancedWithStandardSchema",
+    "ai.koog.agents.example.structuredoutput.AdvancedWithStandardSchemaKt"
 )
 registerRunExampleTask(
     "runExampleMarkdownStreaming",

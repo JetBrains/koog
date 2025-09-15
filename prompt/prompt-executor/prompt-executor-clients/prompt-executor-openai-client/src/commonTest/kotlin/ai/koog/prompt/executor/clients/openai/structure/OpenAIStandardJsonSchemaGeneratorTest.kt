@@ -16,7 +16,7 @@ class OpenAIStandardJsonSchemaGeneratorTest {
         isLenient = true
         ignoreUnknownKeys = true
         prettyPrintIndent = "  "
-        classDiscriminator = "#type"
+        classDiscriminator = "kind"
         classDiscriminatorMode = ClassDiscriminatorMode.POLYMORPHIC
     }
 
@@ -162,7 +162,7 @@ class OpenAIStandardJsonSchemaGeneratorTest {
                       "type": "number",
                       "description": "Expected rainfall in mm"
                     },
-                    "#type": {
+                    "kind": {
                       "type": "string",
                       "enum": [
                         "FloodAlert"
@@ -173,7 +173,7 @@ class OpenAIStandardJsonSchemaGeneratorTest {
                     "severity",
                     "message",
                     "expectedRainfall",
-                    "#type"
+                    "kind"
                   ],
                   "additionalProperties": false
                 },
@@ -196,7 +196,7 @@ class OpenAIStandardJsonSchemaGeneratorTest {
                       "type": "number",
                       "description": "Wind speed in km/h"
                     },
-                    "#type": {
+                    "kind": {
                       "type": "string",
                       "enum": [
                         "StormAlert"
@@ -207,7 +207,7 @@ class OpenAIStandardJsonSchemaGeneratorTest {
                     "severity",
                     "message",
                     "windSpeed",
-                    "#type"
+                    "kind"
                   ],
                   "additionalProperties": false
                 },
@@ -234,7 +234,7 @@ class OpenAIStandardJsonSchemaGeneratorTest {
                       "type": "boolean",
                       "description": "Whether the alert is a heat warning"
                     },
-                    "#type": {
+                    "kind": {
                       "type": "string",
                       "enum": [
                         "TemperatureAlert"
@@ -246,7 +246,7 @@ class OpenAIStandardJsonSchemaGeneratorTest {
                     "message",
                     "threshold",
                     "isHeatWarning",
-                    "#type"
+                    "kind"
                   ],
                   "additionalProperties": false
                 },

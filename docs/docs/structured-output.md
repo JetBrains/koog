@@ -1,17 +1,17 @@
-# Structured data processing
+# Structured output
 
 ## Introduction
 
-The Structured Data Processing API provides a way to ensure that responses from Large Language Models (LLMs) 
+The Structured Output API provides a way to ensure that responses from Large Language Models (LLMs) 
 conform to specific data structures.
 This is crucial for building reliable AI applications where you need predictable, well-formatted data rather than free-form text.
 
-This page explains how to use the Structured Data Processing API to define data structures, generate schemas, and 
+This page explains how to use this API to define data structures, generate schemas, and 
 request structured responses from LLMs.
 
 ## Key components and concepts
 
-The Structured Data Processing API consists of several key components:
+The Structured Output API consists of several key components:
 
 1. **Data structure definition**: Kotlin data classes annotated with kotlinx.serialization and LLM-specific annotations.
 2. **JSON Schema generation**: tools to generate JSON schemas from Kotlin data classes.
@@ -20,7 +20,7 @@ The Structured Data Processing API consists of several key components:
 
 ## Defining data structures
 
-The first step in using the Structured Data Processing API is to define your data structures using Kotlin data classes.
+The first step in using the Structured Output API is to define your data structures using Kotlin data classes.
 
 ### Basic structure
 
@@ -160,47 +160,6 @@ sealed class WeatherAlert {
 ```
 <!--- KNIT example-structured-data-05.kt -->
 
-## Generating JSON schemas
-
-Once you have defined your data structures, you can generate JSON schemas from them using the `JsonStructuredData` class:
-
-<!--- INCLUDE
-import ai.koog.agents.example.exampleStructuredData03.WeatherForecast
-import ai.koog.agents.example.exampleStructuredData07.exampleForecasts
-import ai.koog.prompt.structure.json.generator.BasicJsonSchemaGenerator
-import ai.koog.prompt.structure.json.JsonStructuredData
--->
-```kotlin
-val weatherForecastStructure = JsonStructuredData.createJsonStructure<WeatherForecast>(
-    schemaGenerator = BasicJsonSchemaGenerator.Default,
-    examples = exampleForecasts
-)
-```
-<!--- KNIT example-structured-data-06.kt -->
-
-### Schema format options
-
-- `JsonSchema`: standard JSON Schema format.
-- `Simple`: a simplified schema format that may work better with some models but has limitations such as no 
-polymorphism support.
-
-### Schema type options
-
-The following schema types are supported
-
-* `SIMPLE`: a simplified schema type:
-    - Supports only standard JSON fields
-    - Does not support definitions, URL references, and recursive checks
-    - **Does not support polymorphism**
-    - Supported by a larger number of language models
-    - Used for simpler data structures
-
-* `FULL`: a more comprehensive schema type:
-    - Supports advanced JSON Schema capabilities, including definitions, URL references, and recursive checks
-    - **Supports polymorphism**: can work with sealed classes or interfaces and their implementations
-    - Supported by fewer language models
-    - Used for complex data structures with inheritance hierarchies
-
 ### Providing examples
 
 You can provide examples to help the LLM understand the expected format:
@@ -231,39 +190,36 @@ val exampleForecasts = listOf(
 )
 
 ```
-<!--- KNIT example-structured-data-07.kt -->
+<!--- KNIT example-structured-data-06.kt -->
 
 ## Requesting structured responses
 
-There are two ways to request structured responses in Koog:
+There are three main layers where you can use structured output in Koog:
 
-- Make a single LLM call using a prompt executor and its `executeStructured` or `executeStructuredOneShot` methods.
-- Create structured output requests for agent use cases and integration into agent strategies. 
+1. **Prompt executor layer**: Make direct LLM calls using a prompt executor
+2. **Agent LLM context layer**: Use within agent sessions for conversational contexts
+3. **Node layer**: Create reusable agent nodes with structured output capabilities
 
-### Using a prompt executor
+### Layer 1: Prompt executor
 
-To make a single LLM call that returns a structured output, use a prompt executor and its `executeStructured` method.
-This method executes a prompt and ensures the response is properly structured by applying automatic output coercion. The
- method enhances structured output parsing reliability by:
+The prompt executor layer provides the most direct way to make structured LLM calls. Use the `executeStructured` method for single, standalone requests:
 
-- Injecting structured output instructions into the original prompt.
-- Executing the enriched prompt to receive a raw response.
-- Using a separate LLM call to parse or coerce the response if direct parsing fails.
+This method executes a prompt and ensures the response is properly structured by:
 
-Unlike `[execute(prompt, structure)]` which simply attempts to parse the raw response and fails if the format does not
-match exactly, this method actively works to transform unstructured or malformed outputs into the expected structure
-through additional LLM processing.
+- Automatically selecting the best structured output approach based on [model capabilities](./model-capabilities.md)
+- Injecting structured output instructions into the original prompt when needed
+- Using native structured output support when available
+- Providing automatic error correction through an auxiliary LLM when parsing fails
 
 Here is an example of using the `executeStructured` method:
 
 <!--- INCLUDE
-import ai.koog.agents.example.exampleStructuredData06.weatherForecastStructure
+import ai.koog.agents.example.exampleStructuredData03.WeatherForecast
+import ai.koog.agents.example.exampleStructuredData06.exampleForecasts
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.koog.prompt.structure.executeStructured
-import ai.koog.prompt.structure.StructuredOutput
-import ai.koog.prompt.structure.StructuredOutputConfig
 import ai.koog.prompt.structure.StructureFixingParser
 import kotlinx.coroutines.runBlocking
 
@@ -279,7 +235,7 @@ fun main() {
 val promptExecutor = simpleOpenAIExecutor(System.getenv("OPENAI_KEY"))
 
 // Make an LLM call that returns a structured response
-val structuredResponse = promptExecutor.executeStructured(
+val structuredResponse = promptExecutor.executeStructured<WeatherForecast>(
         // Define the prompt (both system and user messages)
         prompt = prompt("structured-data") {
             system(
@@ -294,53 +250,40 @@ val structuredResponse = promptExecutor.executeStructured(
         },
         // Define the main model that will execute the request
         model = OpenAIModels.CostOptimized.GPT4oMini,
-        // Provide the structured data configuration
-        config = StructuredOutputConfig(
-            default = StructuredOutput.Manual(weatherForecastStructure),
-            fixingParser = StructureFixingParser(
-                fixingModel = OpenAIModels.Chat.GPT4o,
-                retries = 3
-            )
+        // Optional: provide examples to help the model understand the format
+        examples = exampleForecasts,
+        // Optional: provide a fixing parser for error correction
+        fixingParser = StructureFixingParser(
+            fixingModel = OpenAIModels.Chat.GPT4o,
+            retries = 3
         )
     )
 ```
-<!--- KNIT example-structured-data-08.kt -->
-
-The example relies on an already [generated JSON schema](#generating-json-schemas) named `weatherForecastStructure` that is based on a [defined data structure](#defining-data-structures) and [examples](#providing-examples).
+<!--- KNIT example-structured-data-07.kt -->
 
 The `executeStructured` method takes the following arguments:
 
-| Name          | Data type      | Required | Default                   | Description                                                                                                                                    |
-|---------------|----------------|----------|---------------------------|------------------------------------------------------------------------------------------------------------------------------------------------|
-| `prompt`      | Prompt         | Yes      |                           | The prompt to execute. For more information, see [Prompt API](prompt-api.md).                                                                  |
-| `structure`   | StructuredData | Yes      |                           | The structured data definition with schema and parsing logic. For more information, see [Defining data structures](#defining-data-structures). |
-| `mainModel`   | LLModel        | Yes      |                           | The main model to execute the prompt.                                                                                                          |
-| `retries`     | Integer        | No       | `1`                       | The number of attempts to parse the response into a proper structured output.                                                                  |
-| `fixingModel` | LLModel        | No       | `OpenAIModels.Chat.GPT4o` | The model that handles output coercion - transformation of malformed outputs into the expected structure.                                      |
+| Name           | Data type              | Required | Default       | Description                                                                                                     |
+|----------------|------------------------|----------|---------------|-----------------------------------------------------------------------------------------------------------------|
+| `prompt`       | Prompt                 | Yes      |               | The prompt to execute. For more information, see [Prompt API](prompt-api.md).                                   |
+| `model`        | LLModel                | Yes      |               | The main model to execute the prompt.                                                                           |
+| `examples`     | List<T>                | No       | `emptyList()` | Optional list of examples to help the model understand the expected format.                                     |
+| `fixingParser` | StructureFixingParser? | No       | `null`        | Optional parser that handles malformed responses by using an auxiliary LLM to intelligently fix parsing errors. |
 
-In addition to `executeStructured`, you can also use the `executeStructuredOneShot` method with a prompt executor. The 
-main difference is that `executeStructuredOneShot` does not handle coercion automatically, so you would have to manually
-transform malformed outputs into proper structured ones.
+The method returns a `Result<StructuredResponse<T>>` containing either the successfully parsed structured data or an error.
 
-The `executeStructuredOneShot` method takes the following arguments:
+### Layer 2: Agent LLM context
 
-| Name        | Data type      | Required | Default | Description                                                   |
-|-------------|----------------|----------|---------|---------------------------------------------------------------|
-| `prompt`    | Prompt         | Yes      |         | The prompt to execute.                                        |
-| `structure` | StructuredData | Yes      |         | The structured data definition with schema and parsing logic. |
-| `model`     | LLModel        | Yes      |         | The model to execute the prompt.                              |
+The agent LLM context layer allows you to request structured responses within agent sessions. This is useful for building conversational agents that need structured data at specific points in their flow.
 
-### Structured data responses for agent use cases
-
-To request a structured response from an LLM, use the `requestLLMStructured` method within a `writeSession`:
+Use the `requestLLMStructured` method within a `writeSession` for agent-based interactions:
 
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.example.exampleStructuredData06.weatherForecastStructure
+import ai.koog.agents.example.exampleStructuredData03.WeatherForecast
+import ai.koog.agents.example.exampleStructuredData06.exampleForecasts
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.structure.StructuredOutput
-import ai.koog.prompt.structure.StructuredOutputConfig
 import ai.koog.prompt.structure.StructureFixingParser
 
 val strategy = strategy<Unit, Unit>("strategy-name") {
@@ -352,20 +295,18 @@ val strategy = strategy<Unit, Unit>("strategy-name") {
 -->
 ```kotlin
 val structuredResponse = llm.writeSession {
-    this.requestLLMStructured(
-        config = StructuredOutputConfig(
-            default = StructuredOutput.Manual(weatherForecastStructure),
-            fixingParser = StructureFixingParser(
-                fixingModel = OpenAIModels.Chat.GPT4o,
-                retries = 3
-            )
+    requestLLMStructured<WeatherForecast>(
+        examples = exampleForecasts,
+        fixingParser = StructureFixingParser(
+            fixingModel = OpenAIModels.Chat.GPT4o,
+            retries = 3
         )
     )
 }
 ```
-<!--- KNIT example-structured-data-09.kt -->
+<!--- KNIT example-structured-data-08.kt -->
 
-The `fixingModel` parameter specifies the language model to use for reparsing or error correction during retries. This helps ensure that you always get a valid response.
+The `fixingParser` parameter specifies a configuration for handling malformed responses through auxiliary LLM processing during retries. This helps ensure that you always get a valid response.
 
 #### Integrating with agent strategies
 
@@ -375,11 +316,9 @@ You can integrate structured data processing into your agent strategies:
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
-import ai.koog.agents.example.exampleStructuredData06.weatherForecastStructure
+import ai.koog.agents.example.exampleStructuredData03.WeatherForecast
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.message.Message
-import ai.koog.prompt.structure.StructuredOutput
-import ai.koog.prompt.structure.StructuredOutputConfig
 import ai.koog.prompt.structure.StructureFixingParser
 -->
 ```kotlin
@@ -388,13 +327,10 @@ val agentStrategy = strategy("weather-forecast") {
 
     val getStructuredForecast by node<Message.Response, String> { _ ->
         val structuredResponse = llm.writeSession {
-            this.requestLLMStructured(
-                config = StructuredOutputConfig(
-                    default = StructuredOutput.Manual(weatherForecastStructure),
-                    fixingParser = StructureFixingParser(
-                        fixingModel = OpenAIModels.Chat.GPT4o,
-                        retries = 3
-                    )
+            requestLLMStructured<WeatherForecast>(
+                fixingParser = StructureFixingParser(
+                    fixingModel = OpenAIModels.Chat.GPT4o,
+                    retries = 3
                 )
             )
         }
@@ -410,11 +346,71 @@ val agentStrategy = strategy("weather-forecast") {
     edge(getStructuredForecast forwardTo nodeFinish)
 }
 ```
+<!--- KNIT example-structured-data-09.kt -->
+
+### Layer 3: Node layer
+
+The node layer provides the highest level of abstraction for structured output in agent workflows. Use `nodeLLMRequestStructured` to create reusable agent nodes that handle structured data.
+
+This creates an agent node that:
+- Accepts a `String` input (user message)
+- Appends the message to the LLM prompt
+- Requests structured output from the LLM
+- Returns `Result<StructuredResponse<MyStruct>>`
+
+#### Node layer example
+
+<!--- INCLUDE
+import ai.koog.agents.core.dsl.builder.forwardTo
+import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.extension.nodeLLMRequest
+import ai.koog.agents.core.dsl.extension.nodeLLMRequestStructured
+import ai.koog.agents.example.exampleStructuredData03.WeatherForecast
+import ai.koog.agents.example.exampleStructuredData06.exampleForecasts
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.structure.StructuredResponse
+import ai.koog.prompt.structure.StructureFixingParser
+-->
+```kotlin
+val agentStrategy = strategy("weather-forecast") {
+    val setup by node<Unit, String> { _ ->
+        "Please provide a weather forecast for Amsterdam"
+    }
+    
+    // Create a structured output node using delegate syntax
+    val getWeatherForecast by nodeLLMRequestStructured<WeatherForecast>(
+        name = "forecast-node",
+        examples = exampleForecasts,
+        fixingParser = StructureFixingParser(
+            fixingModel = OpenAIModels.Chat.GPT4o,
+            retries = 3
+        )
+    )
+    
+    val processResult by node<Result<StructuredResponse<WeatherForecast>>, String> { result ->
+        when {
+            result.isSuccess -> {
+                val forecast = result.getOrNull()?.structure
+                "Weather forecast: $forecast"
+            }
+            result.isFailure -> {
+                "Failed to get structured forecast: ${result.exceptionOrNull()?.message}"
+            }
+            else -> "Unknown result state"
+        }
+    }
+
+    edge(nodeStart forwardTo setup)
+    edge(setup forwardTo getWeatherForecast)
+    edge(getWeatherForecast forwardTo processResult)
+    edge(processResult forwardTo nodeFinish)
+}
+```
 <!--- KNIT example-structured-data-10.kt -->
 
 #### Full code sample
 
-Here is a full example of using the Structured Data Processing API:
+Here is a full example of using the Structured Output API:
 
 <!--- INCLUDE
 import ai.koog.agents.core.agent.AIAgent
@@ -477,7 +473,7 @@ fun main(): Unit = runBlocking {
   
         val getStructuredForecast by node<Message.Response, String> { _ ->
             val structuredResponse = llm.writeSession {
-                this.requestLLMStructured<SimpleWeatherForecast>()
+                requestLLMStructured<SimpleWeatherForecast>()
             }
   
             """
@@ -517,6 +513,99 @@ fun main(): Unit = runBlocking {
 }
 ```
 <!--- KNIT example-structured-data-11.kt -->
+
+## Advanced usage
+
+The examples above demonstrate the simplified API that automatically selects the best structured output approach based on model capabilities. 
+For more control over the structured output process, you can use the advanced API with manual schema creation and provider-specific configurations.
+
+### Manual schema creation and configuration
+
+Instead of relying on automatic schema generation, you can create schemas explicitly using `JsonStructuredData.createJsonStructure` and configure structured output behavior manually via the `StructuredOutput` class.
+
+The key difference is that instead of passing simple parameters like `examples` and `fixingParser`, you create a `StructuredOutputConfig` object that allows fine-grained control over:
+
+- **Schema generation**: Choose specific generators (Standard, Basic, or Provider-specific)
+- **Output modes**: Native structured output support vs Manual prompting
+- **Provider mapping**: Different configurations for different LLM providers
+- **Fallback strategies**: Default behavior when provider-specific config is unavailable
+
+<!--- INCLUDE
+import ai.koog.agents.example.exampleStructuredData03.WeatherForecast
+import ai.koog.agents.example.exampleStructuredData06.exampleForecasts
+import ai.koog.prompt.dsl.prompt
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
+import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+import ai.koog.prompt.structure.executeStructured
+import ai.koog.prompt.structure.StructuredOutput
+import ai.koog.prompt.structure.StructuredOutputConfig
+import ai.koog.prompt.structure.StructureFixingParser
+import ai.koog.prompt.structure.json.JsonStructuredData
+import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
+import ai.koog.prompt.executor.clients.openai.structure.OpenAIBasicJsonSchemaGenerator
+import ai.koog.prompt.llm.LLMProvider
+import kotlinx.coroutines.runBlocking
+
+fun main() {
+    runBlocking {
+-->
+<!--- SUFFIX
+    }
+}
+-->
+```kotlin
+// Create different schema structures with different generators
+val genericStructure = JsonStructuredData.createJsonStructure<WeatherForecast>(
+    schemaGenerator = StandardJsonSchemaGenerator,
+    examples = exampleForecasts
+)
+
+val openAiStructure = JsonStructuredData.createJsonStructure<WeatherForecast>(
+    schemaGenerator = OpenAIBasicJsonSchemaGenerator,
+    examples = exampleForecasts
+)
+
+val promptExecutor = simpleOpenAIExecutor(System.getenv("OPENAI_KEY"))
+
+// The advanced API uses StructuredOutputConfig instead of simple parameters
+val structuredResponse = promptExecutor.executeStructured(
+    prompt = prompt("structured-data") {
+        system("You are a weather forecasting assistant.")
+        user("What is the weather forecast for Amsterdam?")
+    },
+    model = OpenAIModels.CostOptimized.GPT4oMini,
+    config = StructuredOutputConfig(
+        byProvider = mapOf(
+            LLMProvider.OpenAI to StructuredOutput.Native(openAiStructure),
+        ),
+        default = StructuredOutput.Manual(genericStructure),
+        fixingParser = StructureFixingParser(
+            fixingModel = AnthropicModels.Haiku_3_5,
+            retries = 2
+        )
+    )
+)
+```
+<!--- KNIT example-structured-data-12.kt -->
+
+### Schema generators
+
+Different schema generators are available depending on your needs:
+
+- **StandardJsonSchemaGenerator**: Full JSON Schema with support for polymorphism, definitions, and recursive references
+- **BasicJsonSchemaGenerator**: Simplified schema without polymorphism support, compatible with more models  
+- **Provider-specific generators**: Optimized schemas for specific LLM providers (OpenAI, Google, etc.)
+
+### Usage across all layers
+
+The advanced configuration works consistently across all three layers of the API. The method names remain the same, only the parameter changes from simple arguments to the more advanced `StructuredOutputConfig`:
+
+- **Prompt executor**: `executeStructured(prompt, model, config: StructuredOutputConfig<T>)`
+- **Agent LLM context**: `requestLLMStructured(config: StructuredOutputConfig<T>)`
+- **Node layer**: `nodeLLMRequestStructured(config: StructuredOutputConfig<T>)`
+
+The simplified API (using just `examples` and `fixingParser` parameters) is recommended for most use cases, while the advanced API provides additional control when needed.
 
 ## Best practices
 

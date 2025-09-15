@@ -3,7 +3,6 @@ package ai.koog.prompt.structure.json
 import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.structure.StructuredData
-import ai.koog.prompt.structure.json.generator.BasicJsonSchemaGenerator
 import ai.koog.prompt.structure.json.generator.JsonSchemaGenerator
 import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
 import ai.koog.prompt.structure.structure
@@ -56,7 +55,7 @@ public class JsonStructuredData<TStruct>(
             explicitNulls = false
             isLenient = true
             ignoreUnknownKeys = true
-            classDiscriminator = "#type"
+            classDiscriminator = "kind"
             classDiscriminatorMode = ClassDiscriminatorMode.POLYMORPHIC
         }
 
@@ -203,7 +202,9 @@ public class JsonStructuredData<TStruct>(
          * Check non-inline version of `createJsonStructure` for detailed information.
          *
          * @param json JSON configuration instance used for serialization.
-         * @param schemaGenerator JSON schema generator
+         * @param schemaGenerator JSON schema generator.
+         * Make sure to select the correct one for the LLM you are using this structure with, since different models have
+         * slightly different formats.
          * @param descriptionOverrides Optional map of serial class names and property names to descriptions.
          * If a property/type is already described with [ai.koog.agents.core.tools.annotations.LLMDescription] annotation, value from the map will override this description.
          * @param examples List of example data items that conform to the structure, used for demonstrating valid formats.
@@ -212,7 +213,7 @@ public class JsonStructuredData<TStruct>(
          */
         public inline fun <reified TStruct> createJsonStructure(
             json: Json = defaultJson,
-            schemaGenerator: JsonSchemaGenerator = BasicJsonSchemaGenerator.Default,
+            schemaGenerator: JsonSchemaGenerator = StandardJsonSchemaGenerator.Default,
             descriptionOverrides: Map<String, String> = emptyMap(),
             examples: List<TStruct> = emptyList(),
             noinline definitionPrompt: (

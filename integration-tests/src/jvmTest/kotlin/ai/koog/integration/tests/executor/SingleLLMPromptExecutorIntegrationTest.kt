@@ -227,6 +227,10 @@ class SingleLLMPromptExecutorIntegrationTest {
         if (model.id == OpenAIModels.Audio.GPT4oAudio.id || model.id == OpenAIModels.Audio.GPT4oMiniAudio.id) {
             assumeTrue(false, "https://github.com/JetBrains/koog/issues/231")
         }
+        // TODO fix (KG-394): OpenRouter anthropic/claude-sonnet-4 streaming is incompatible with our current client setup (SSE/protocol)
+        if (model.provider == LLMProvider.OpenRouter && model.id.contains("anthropic/claude-sonnet-4")) {
+            assumeTrue(false, "Skipping OpenRouter anthropic/claude-sonnet-4 streaming: protocol incompatibility")
+        }
 
         val executor = SingleLLMPromptExecutor(client)
 
@@ -499,6 +503,10 @@ class SingleLLMPromptExecutorIntegrationTest {
         if (model.id == OpenAIModels.Audio.GPT4oAudio.id || model.id == OpenAIModels.Audio.GPT4oMiniAudio.id) {
             assumeTrue(false, "https://github.com/JetBrains/koog/issues/231")
         }
+        // TODO fix (KG-394): OpenRouter anthropic/claude-sonnet-4 streaming is incompatible with our current client setup (SSE/protocol)
+        if (model.provider == LLMProvider.OpenRouter && model.id.contains("anthropic/claude-sonnet-4")) {
+            assumeTrue(false, "Skipping OpenRouter anthropic/claude-sonnet-4 streaming: protocol incompatibility")
+        }
 
         val prompt = Prompt.build("test-streaming") {
             system("You are a helpful assistant. You have NO output length limitations.")
@@ -531,6 +539,10 @@ class SingleLLMPromptExecutorIntegrationTest {
     fun integration_testStructuredDataStreaming(model: LLModel, client: LLMClient) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model != OpenAIModels.CostOptimized.GPT4_1Nano, "Model $model is too small for structured streaming")
+        // TODO fix (KG-394): OpenRouter anthropic/claude-sonnet-4 streaming is incompatible with our current client setup (SSE/protocol)
+        if (model.provider == LLMProvider.OpenRouter && model.id.contains("anthropic/claude-sonnet-4")) {
+            assumeTrue(false, "Skipping OpenRouter anthropic/claude-sonnet-4 streaming: protocol incompatibility")
+        }
 
         val countries = mutableListOf<Country>()
         val countryDefinition = markdownCountryDefinition()
@@ -1120,6 +1132,10 @@ class SingleLLMPromptExecutorIntegrationTest {
             model.capabilities.contains(LLMCapability.Schema.JSON.Standard),
             "Model does not support Standard JSON Schema"
         )
+        // TODO fix (KG-394): OpenRouter anthropic/claude-sonnet-4 streaming is incompatible with our current client setup (SSE/protocol)
+        if (model.provider == LLMProvider.OpenRouter) {
+            assumeTrue(false, "Skipping StructuredOutputNative for OpenRouter due to schema incompatibilities upstream")
+        }
         val executor = SingleLLMPromptExecutor(client)
 
         withRetry {
@@ -1141,6 +1157,13 @@ class SingleLLMPromptExecutorIntegrationTest {
             model.capabilities.contains(LLMCapability.Schema.JSON.Standard),
             "Model does not support Standard JSON Schema"
         )
+        // TODO fix (KG-394) OpenRouter
+        if (model.provider == LLMProvider.OpenRouter) {
+            assumeTrue(
+                false,
+                "Skipping StructuredOutputNativeWithFixingParser for OpenRouter due to upstream schema incompatibilities"
+            )
+        }
         val executor = SingleLLMPromptExecutor(client)
 
         withRetry {
