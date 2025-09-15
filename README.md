@@ -18,7 +18,7 @@ Koog is a Kotlin-based framework designed to build and run AI agents entirely in
 Key features of Koog include:
 
 - **Multiplatform development**: Deploy agents across JVM, JS, WasmJS, Android, and iOS targets using Kotlin Multiplatform.
-- **Reliability and fault-tolerance**: Handle failures with built-in retries and restore full agent state machines with the agent persistence feature.
+- **Reliability and fault-tolerance**: Handle failures with built-in retries and restore the agent state at specific points during execution with the agent persistence feature.
 - **Intelligent history compression**: Optimize token usage while maintaining context in long-running conversations using advanced built-in history compression techniques.
 - **Enterprise-ready integrations**: Utilize integration with popular JVM frameworks such as Spring Boot and Ktor to embed Koog into your applications.
 - **Observability with OpenTelemetry exporters**: Monitor and debug applications with built-in support for popular observability providers (W&B Weave, Langfuse).
