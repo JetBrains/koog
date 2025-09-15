@@ -70,7 +70,7 @@ public class StreamFrameFlowBuilder(
     public suspend fun append(text: String): CoroutineContext {
         tryEmitPendingToolCall()
         flowCollector.emitAppend(text)
-        return coroutineContext.minusKey(ToolCallContext.Key)
+        return coroutineContext.minusKey(PendingToolCall.Key)
     }
 
     /**
@@ -79,11 +79,11 @@ public class StreamFrameFlowBuilder(
     public suspend fun end(finishReason: String?): CoroutineContext {
         tryEmitPendingToolCall()
         flowCollector.emitEnd(finishReason)
-        return coroutineContext.minusKey(ToolCallContext.Key)
+        return coroutineContext.minusKey(PendingToolCall.Key)
     }
 
     private suspend fun tryEmitPendingToolCall() {
-        val context = coroutineContext[ToolCallContext.Key]
+        val context = coroutineContext[PendingToolCall.Key]
         if (context != null)
             flowCollector.emitToolCall(context.id, context.name ?: "", context.argumentsDelta ?: "")
     }
@@ -97,19 +97,21 @@ public class StreamFrameFlowBuilder(
         name: String?,
         argumentsDelta: String? = null
     ): CoroutineContext {
-        val context = coroutineContext[ToolCallContext.Key]
+        val context = coroutineContext[PendingToolCall.Key]
         return if (context == null) {
             if (id == null)
                 error("No tool call is in progress, and no tool call id was provided.")
-            ToolCallContext(id, name, argumentsDelta)
+            PendingToolCall(id, name, argumentsDelta)
         } else {
-            if (id != null && id != context.id)
-                error("Tool call id mismatch. Expected ${context.id}, but received $id.")
-            context.copy(argumentsDelta = (context.argumentsDelta ?: "") + argumentsDelta)
+            if (id != null && id != context.id) {
+                tryEmitPendingToolCall()
+                PendingToolCall(id, name, argumentsDelta)
+            } else
+                context.copy(argumentsDelta = (context.argumentsDelta ?: "") + argumentsDelta)
         }.let(coroutineContext::plus)
     }
 
-    private data class ToolCallContext(
+    private data class PendingToolCall(
         val id: String,
         val name: String?,
         val argumentsDelta: String?
@@ -117,6 +119,6 @@ public class StreamFrameFlowBuilder(
 
         override val key: CoroutineContext.Key<*> = Key
 
-        companion object Key : CoroutineContext.Key<ToolCallContext>
+        companion object Key : CoroutineContext.Key<PendingToolCall>
     }
 }
