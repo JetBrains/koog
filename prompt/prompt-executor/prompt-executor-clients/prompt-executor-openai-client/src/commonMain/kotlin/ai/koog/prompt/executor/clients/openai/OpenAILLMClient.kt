@@ -44,19 +44,19 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
-import ai.koog.prompt.streaming.emitAppend
-import ai.koog.prompt.streaming.emitEnd
-import ai.koog.prompt.streaming.emitToolCall
-import ai.koog.prompt.streaming.streamFrameFlow
+import ai.koog.prompt.streaming.StreamFrameFlowBuilder
 import ai.koog.prompt.structure.RegisteredBasicJsonSchemaGenerators
 import ai.koog.prompt.structure.RegisteredStandardJsonSchemaGenerators
 import ai.koog.prompt.structure.annotations.InternalStructuredOutputApi
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
+import kotlin.coroutines.CoroutineContext
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -223,21 +223,22 @@ public open class OpenAILLMClient(
     override fun decodeResponse(data: String): OpenAIChatCompletionResponse =
         json.decodeFromString(data)
 
-    override fun processStreamingChunk(chunk: OpenAIChatCompletionStreamResponse): Flow<StreamFrame> =
-        streamFrameFlow {
-            chunk.choices.firstOrNull()?.let { choice ->
-                choice.delta.content?.let { emitAppend(it) }
-                choice.delta.toolCalls?.forEach { openAIToolCall ->
-                    openAIToolCall.function
-                    emitToolCall(
-                        id = openAIToolCall.id,
-                        name = openAIToolCall.function?.name?:return@forEach,
-                        content = openAIToolCall.function?.arguments?:"{}"
-                    )
+    override suspend fun StreamFrameFlowBuilder.processStreamingChunk(chunk: OpenAIChatCompletionStreamResponse): CoroutineContext {
+        return chunk.choices.firstOrNull()?.let { choice ->
+            var context = choice.delta.content?.let { append(it) } ?: currentCoroutineContext()
+            choice.delta.toolCalls?.forEach { openAIToolCall ->
+                val id = openAIToolCall.id
+                val functionName = openAIToolCall.function?.name
+                val functionArgs = openAIToolCall.function?.arguments
+                context = withContext(context) {
+                    startOrCompleteToolCall(id, functionName, functionArgs)
                 }
-                choice.finishReason?.let { emitEnd(it) }
             }
-        }
+            withContext(context) {
+                choice.finishReason?.let { end(it) } ?: context
+            }
+        } ?: currentCoroutineContext()
+    }
 
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         return selectExecutionStrategy(prompt, model) { params ->

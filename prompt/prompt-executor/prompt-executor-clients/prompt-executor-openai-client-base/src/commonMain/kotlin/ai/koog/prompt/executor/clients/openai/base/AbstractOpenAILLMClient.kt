@@ -31,6 +31,8 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.streaming.StreamFrameFlowBuilder
+import ai.koog.prompt.streaming.buildStreamFrameFlow
 import io.github.oshai.kotlinlogging.KLogger
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.HttpTimeout
@@ -41,8 +43,10 @@ import io.ktor.client.request.header
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flattenConcat
+import kotlinx.coroutines.flow.fold
+import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNamingStrategy
@@ -53,6 +57,7 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
+import kotlin.coroutines.CoroutineContext
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -154,7 +159,7 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
      * Processes a provider-specific streaming response chunk.
      * Must be implemented by concrete client classes.
      */
-    protected abstract fun processStreamingChunk(chunk: TStreamResponse): Flow<StreamFrame>
+    protected abstract suspend fun StreamFrameFlowBuilder.processStreamingChunk(chunk: TStreamResponse): CoroutineContext
 
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         val response = getResponse(prompt, model, tools)
@@ -179,14 +184,20 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
             stream = true
         )
 
-        return httpClient.sse(
-            path = chatCompletionsPath,
-            request = request,
-            requestBodyType = String::class,
-            dataFilter = { it != "[DONE]" },
-            decodeStreamingResponse = ::decodeStreamingResponse,
-            processStreamingChunk = ::processStreamingChunk
-        ).flattenConcat()
+        return buildStreamFrameFlow {
+            httpClient.sse(
+                path = chatCompletionsPath,
+                request = request,
+                requestBodyType = String::class,
+                dataFilter = { it != "[DONE]" },
+                decodeStreamingResponse = ::decodeStreamingResponse,
+                processStreamingChunk = { it }
+            ).fold(currentCoroutineContext()) { acc, response ->
+                withContext(acc) {
+                    processStreamingChunk(response)
+                }
+            }
+        }
     }
 
     override suspend fun executeMultipleChoices(
