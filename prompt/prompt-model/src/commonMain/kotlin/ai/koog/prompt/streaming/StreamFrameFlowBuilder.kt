@@ -98,7 +98,7 @@ public class StreamFrameFlowBuilder(
 
     /**
      * Updates the coroutine context to signal we're currently combining a tool call,
-     * this does not emit anything yet, that only in [tryEmitPendingToolCall].
+     * this does not emit anything yet, that happens only in [tryEmitPendingToolCall].
      */
     public suspend fun appendToolCall(
         index: Int,
@@ -106,16 +106,16 @@ public class StreamFrameFlowBuilder(
         name: String? = null,
         args: String? = null
     ) {
-        val new = if (id != null) {
+        val new: PendingToolCall = if (id != null) {
             tryEmitPendingToolCall()
             PendingToolCall(index, id, name, args)
         } else {
-            val pendingToolCall = pendingToolCallRef.load()
-            if (pendingToolCall == null)
+            val previous = pendingToolCallRef.load()
+            if (previous == null)
                 error("No tool call is in progress, and no tool call id was provided.")
-            else if (pendingToolCall.index != index)
-                error("Tool call index mismatch. Expected ${pendingToolCall.index}, got $index.")
-            pendingToolCall.appendArgumentsDelta(args)
+            else if (previous.index != index)
+                error("Tool call index mismatch. Expected ${previous.index}, got $index.")
+            previous.appendArgumentsDelta(args)
         }
         pendingToolCallRef.store(new)
     }
