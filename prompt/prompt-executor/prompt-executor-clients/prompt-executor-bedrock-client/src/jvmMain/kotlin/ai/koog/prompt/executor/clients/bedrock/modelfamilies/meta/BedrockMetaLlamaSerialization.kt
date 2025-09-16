@@ -50,7 +50,7 @@ internal object BedrockMetaLlamaSerialization {
                 content = response.generation,
                 finishReason = response.stopReason,
                 metaInfo = ResponseMetaInfo.Companion.create(
-                    clock,
+                    clock = clock,
                     inputTokensCount = response.promptTokenCount,
                     outputTokensCount = response.generationTokenCount,
                     totalTokensCount = response.promptTokenCount?.let { input ->
@@ -61,8 +61,25 @@ internal object BedrockMetaLlamaSerialization {
         )
     }
 
-    internal fun parseLlamaStreamChunk(chunkJsonString: String): List<StreamFrame> {
+    internal fun parseLlamaStreamChunk(chunkJsonString: String, clock: Clock = Clock.System): List<StreamFrame> {
         val chunk = json.decodeFromString<LlamaStreamChunk>(chunkJsonString)
-        return chunk.generation?.let(StreamFrame::Append)?.let(::listOf) ?: emptyList()
+        return buildList {
+            chunk.generation?.let(StreamFrame::Append)?.let(::add)
+            if (chunk.stopReason != null) {
+                add(
+                    StreamFrame.End(
+                        finishReason = chunk.stopReason,
+                        metaInfo = ResponseMetaInfo.create(
+                            clock = clock,
+                            inputTokensCount = chunk.promptTokenCount,
+                            outputTokensCount = chunk.generationTokenCount,
+                            totalTokensCount = chunk.promptTokenCount?.let { input ->
+                                chunk.generationTokenCount?.let { output -> input + output }
+                            }
+                        )
+                    )
+                )
+            }
+        }
     }
 }

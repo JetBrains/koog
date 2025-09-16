@@ -203,7 +203,7 @@ internal object BedrockAnthropicClaudeSerialization {
         }
     }
 
-    internal fun parseAnthropicStreamChunk(chunkJsonString: String): List<StreamFrame> {
+    internal fun parseAnthropicStreamChunk(chunkJsonString: String, clock: Clock = Clock.System): List<StreamFrame> {
         val streamResponse = json.decodeFromString<AnthropicStreamResponse>(chunkJsonString)
 
         return when (streamResponse.type) {
@@ -245,9 +245,20 @@ internal object BedrockAnthropicClaudeSerialization {
             }
 
             "message_stop" -> {
+                val inputTokens = streamResponse.message?.usage?.inputTokens
                 val outputTokens = streamResponse.message?.usage?.outputTokens
                 logger.debug { "Bedrock stream stops. Output tokens: $outputTokens" }
-                emptyList()
+                listOf(
+                    StreamFrame.End(
+                        finishReason = streamResponse.message?.stopReason,
+                        metaInfo = ResponseMetaInfo.create(
+                            clock = clock,
+                            totalTokensCount = inputTokens?.let { it + (outputTokens ?: 0) } ?: outputTokens,
+                            inputTokensCount = inputTokens,
+                            outputTokensCount = outputTokens
+                        )
+                    )
+                )
             }
 
             else -> emptyList()

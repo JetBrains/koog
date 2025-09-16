@@ -270,19 +270,17 @@ public class BedrockLLMClient(
                 if (chunkJsonString.isBlank()) return@map emptyList()
 
                 when (modelFamily) {
-                    is BedrockModelFamilies.AI21Jamba -> BedrockAI21JambaSerialization.parseJambaStreamChunk(
-                        chunkJsonString
-                    )
+                    is BedrockModelFamilies.AI21Jamba ->
+                        BedrockAI21JambaSerialization.parseJambaStreamChunk(chunkJsonString)
 
-                    is BedrockModelFamilies.AmazonNova -> BedrockAmazonNovaSerialization.parseNovaStreamChunk(
-                        chunkJsonString
-                    )
+                    is BedrockModelFamilies.AmazonNova ->
+                        BedrockAmazonNovaSerialization.parseNovaStreamChunk(chunkJsonString)
 
-                    is BedrockModelFamilies.AnthropicClaude -> BedrockAnthropicClaudeSerialization.parseAnthropicStreamChunk(
-                        chunkJsonString
-                    )
+                    is BedrockModelFamilies.AnthropicClaude ->
+                        BedrockAnthropicClaudeSerialization.parseAnthropicStreamChunk(chunkJsonString)
 
-                    is BedrockModelFamilies.Meta -> BedrockMetaLlamaSerialization.parseLlamaStreamChunk(chunkJsonString)
+                    is BedrockModelFamilies.Meta ->
+                        BedrockMetaLlamaSerialization.parseLlamaStreamChunk(chunkJsonString)
                 }
             } catch (e: Exception) {
                 logger.warn(e) { "Failed to parse Bedrock stream chunk: $chunkJsonString" }
