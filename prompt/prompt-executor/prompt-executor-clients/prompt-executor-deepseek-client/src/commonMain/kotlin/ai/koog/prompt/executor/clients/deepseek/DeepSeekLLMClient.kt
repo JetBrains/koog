@@ -107,7 +107,7 @@ public class DeepSeekLLMClient(
                 val id = toolCall.id
                 val name = toolCall.function?.name
                 val arguments = toolCall.function?.arguments
-                appendToolCall(index, id, name, arguments)
+                upsertToolCall(index, id, name, arguments)
             }
             choice.finishReason?.let { emitEnd(it, createMetaInfo(chunk.usage)) }
         }

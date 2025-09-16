@@ -50,7 +50,7 @@ class StreamFrameFlowBuilderTest {
     @Test
     fun testAutomaticEmitOnNewToolCallId() = runTest {
         buildStreamFrameFlow {
-            appendToolCall(index = 0, id = "some_other_id", name = "some_other_tool", args = "")
+            upsertToolCall(index = 0, id = "some_other_id", name = "some_other_tool", args = "")
             appendWeatherToolAsParts(index = 1)
             tryEmitPendingToolCall()
         } assertContentEquals {
@@ -61,9 +61,9 @@ class StreamFrameFlowBuilderTest {
 
 
     private suspend fun StreamFrameFlowBuilder.appendWeatherToolAsParts(index: Int) {
-        appendToolCall(index = index, id = weatherCallId, name = weatherFunName, args = "")
+        upsertToolCall(index = index, id = weatherCallId, name = weatherFunName, args = "")
         weatherArgList.forEach {
-            appendToolCall(index = index, args = it)
+            upsertToolCall(index = index, args = it)
         }
     }
 

@@ -119,7 +119,7 @@ public class OpenRouterLLMClient(
                 val id = openAIToolCall.id
                 val name = openAIToolCall.function?.name
                 val arguments = openAIToolCall.function?.arguments
-                appendToolCall(index, id, name, arguments)
+                upsertToolCall(index, id, name, arguments)
             }
             choice.finishReason?.let { emitEnd(it, createMetaInfo(chunk.usage)) }
         }

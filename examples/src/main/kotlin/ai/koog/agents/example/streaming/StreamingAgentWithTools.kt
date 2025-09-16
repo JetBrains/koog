@@ -1,6 +1,7 @@
 package ai.koog.agents.example.streaming
 
 import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.core.agent.GraphAIAgent.FeatureContext
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeExecuteMultipleTools
@@ -13,7 +14,9 @@ import ai.koog.agents.example.ApiKeyService
 import ai.koog.agents.example.simpleapi.Switch
 import ai.koog.agents.example.simpleapi.SwitchTools
 import ai.koog.agents.features.eventHandler.feature.handleEvents
+import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.llms.all.simpleAnthropicExecutor
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
@@ -34,14 +37,7 @@ fun main(): Unit = runBlocking {
     val toolRegistry = ToolRegistry {
         tools(SwitchTools(switch).asTools())
     }
-    val agent = AIAgent(
-        promptExecutor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey),
-        strategy = streamingWithToolsStrategy(),
-        llmModel = OpenAIModels.CostOptimized.GPT4oMini,
-        systemPrompt = "You're responsible for running a Switch and perform operations on it by request",
-        temperature = 0.0,
-        toolRegistry = toolRegistry
-    ) {
+    val agent = anthropicAgent(toolRegistry) {
         handleEvents {
             onToolCall { context ->
                 println("\n🔧 Using ${context.tool.name} with ${context.toolArgs}... ")
@@ -72,6 +68,33 @@ fun main(): Unit = runBlocking {
         println("Enter your message:")
     }
 }
+
+private fun openAiAgent(
+    toolRegistry: ToolRegistry,
+    installFeatures: FeatureContext.() -> Unit = {}
+) = AIAgent(
+    promptExecutor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey),
+    strategy = streamingWithToolsStrategy(),
+    llmModel = OpenAIModels.CostOptimized.GPT4oMini,
+    systemPrompt = "You're responsible for running a Switch and perform operations on it by request",
+    temperature = 0.0,
+    toolRegistry = toolRegistry,
+    installFeatures = installFeatures
+)
+
+@Suppress("unused")
+private fun anthropicAgent(
+    toolRegistry: ToolRegistry,
+    installFeatures: FeatureContext.() -> Unit = {}
+) = AIAgent(
+    promptExecutor = simpleAnthropicExecutor(ApiKeyService.anthropicApiKey),
+    strategy = streamingWithToolsStrategy(),
+    llmModel = AnthropicModels.Sonnet_3_7,
+    systemPrompt = "You're responsible for running a Switch and perform operations on it by request",
+    temperature = 0.0,
+    toolRegistry = toolRegistry,
+    installFeatures = installFeatures
+)
 
 fun streamingWithToolsStrategy() = strategy("streaming_loop") {
     val executeMultipleTools by nodeExecuteMultipleTools(parallelTools = true)

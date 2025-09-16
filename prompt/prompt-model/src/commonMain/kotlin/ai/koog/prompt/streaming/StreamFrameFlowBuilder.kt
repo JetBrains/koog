@@ -101,7 +101,7 @@ public class StreamFrameFlowBuilder(
      * Updates the coroutine context to signal we're currently combining a tool call,
      * this does not emit anything yet, that happens only in [tryEmitPendingToolCall].
      */
-    public suspend fun appendToolCall(
+    public suspend fun upsertToolCall(
         index: Int,
         id: String? = null,
         name: String? = null,

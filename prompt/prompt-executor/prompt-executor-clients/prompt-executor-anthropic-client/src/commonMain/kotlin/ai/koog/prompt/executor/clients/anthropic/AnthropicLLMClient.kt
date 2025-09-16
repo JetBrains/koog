@@ -207,7 +207,7 @@ public open class AnthropicLLMClient(
                                         }
 
                                         is AnthropicContent.ToolUse -> {
-                                            appendToolCall(
+                                            upsertToolCall(
                                                 index = response.index ?: error("Tool index is missing"),
                                                 id = contentBlock.id,
                                                 name = contentBlock.name,
@@ -224,7 +224,7 @@ public open class AnthropicLLMClient(
                                     response.delta?.let { delta ->
                                         when (delta.type) {
                                             "input_json_delta" -> {
-                                                appendToolCall(
+                                                upsertToolCall(
                                                     index = response.index ?: error("Tool index is missing"),
                                                     args = delta.partialJson ?: error("Tool args are missing")
                                                 )

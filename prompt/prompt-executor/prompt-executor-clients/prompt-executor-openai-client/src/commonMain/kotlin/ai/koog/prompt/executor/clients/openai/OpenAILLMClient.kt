@@ -228,7 +228,7 @@ public open class OpenAILLMClient(
                 val id = openAIToolCall.id
                 val functionName = openAIToolCall.function?.name
                 val functionArgs = openAIToolCall.function?.arguments
-                appendToolCall(index, id, functionName, functionArgs)
+                upsertToolCall(index, id, functionName, functionArgs)
             }
             choice.finishReason?.let { emitEnd(it, createMetaInfo(chunk.usage)) }
         }
