@@ -65,13 +65,9 @@ public fun Iterable<StreamFrame>.toAssistant(): Message.Assistant? {
             is StreamFrame.End -> finishReason = frame.finishReason
         }
     }
-    return if (content.isNullOrBlank() && finishReason.isNullOrBlank()) {
-        null
-    } else {
-        Message.Assistant(
-            content = content ?: "",
-            finishReason = finishReason,
-            metaInfo = ResponseMetaInfo.Empty
-        )
-    }
+    return  Message.Assistant(
+        content = content?:return null,
+        finishReason = finishReason,
+        metaInfo = ResponseMetaInfo.Empty
+    )
 }
