@@ -78,7 +78,6 @@ private val response = """
     }
 """.trimIndent()
 
-
 class GoogleModelsTest {
 
     @Test
@@ -179,5 +178,4 @@ class GoogleModelsTest {
         client.execute(prompt = p, model = modelWithoutMax)
         return capturedBody!!
     }
-
 }
