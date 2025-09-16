@@ -35,21 +35,21 @@ public fun Iterable<StreamFrame>.toMessageResponses(): List<Message.Response> {
     }
 
     return buildList {
-        assistantContent?.let {
-            add(
-                Message.Assistant(
-                    content = it,
-                    finishReason = end?.finishReason,
-                    metaInfo = end?.metaInfo ?: ResponseMetaInfo.Empty
-                )
-            )
-        }
         toolCalls.forEach {
             add(
                 Message.Tool.Call(
                     id = it.id,
                     tool = it.name,
                     content = it.content,
+                    metaInfo = end?.metaInfo ?: ResponseMetaInfo.Empty
+                )
+            )
+        }
+        assistantContent?.let {
+            add(
+                Message.Assistant(
+                    content = it,
+                    finishReason = end?.finishReason,
                     metaInfo = end?.metaInfo ?: ResponseMetaInfo.Empty
                 )
             )
