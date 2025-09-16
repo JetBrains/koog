@@ -8,7 +8,7 @@ import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
-import ai.koog.prompt.executor.clients.anthropic.AnthropicMessageRequest
+import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicInvokeModel
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.ai21.BedrockAI21JambaSerialization
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.ai21.JambaRequest
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.amazon.BedrockAmazonNovaSerialization
@@ -297,10 +297,12 @@ public class BedrockLLMClient(
                 BedrockAmazonNovaSerialization.createNovaRequest(prompt, model, tools)
             )
 
-            is BedrockModelFamilies.AnthropicClaude -> json.encodeToString(
-                AnthropicMessageRequest.serializer(),
-                BedrockAnthropicClaudeSerialization.createAnthropicRequest(prompt, model, tools)
-            )
+            is BedrockModelFamilies.AnthropicClaude -> {
+                json.encodeToString(
+                    BedrockAnthropicInvokeModel.serializer(),
+                    BedrockAnthropicClaudeSerialization.createAnthropicRequest(prompt, tools)
+                )
+            }
 
             is BedrockModelFamilies.Meta -> json.encodeToString(
                 LlamaRequest.serializer(),

@@ -6,4 +6,5 @@ requires-python = ">=3.12"
 dependencies = [
     "mkdocs-material==9.6.19",
     "mkdocs-redirects==1.2.2",
+    "mkdocs-llmstxt==0.3.1",
 ]

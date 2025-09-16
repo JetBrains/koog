@@ -2,32 +2,26 @@ package ai.koog.prompt.executor.clients.bedrock.modelfamilies.anthropic
 
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.Prompt
-import ai.koog.prompt.executor.clients.anthropic.AnthropicContent
-import ai.koog.prompt.executor.clients.anthropic.AnthropicMessage
-import ai.koog.prompt.executor.clients.anthropic.AnthropicMessageRequest
-import ai.koog.prompt.executor.clients.anthropic.AnthropicResponse
 import ai.koog.prompt.executor.clients.anthropic.AnthropicResponseContent
 import ai.koog.prompt.executor.clients.anthropic.AnthropicStreamResponse
-import ai.koog.prompt.executor.clients.anthropic.AnthropicTool
-import ai.koog.prompt.executor.clients.anthropic.AnthropicToolChoice
-import ai.koog.prompt.executor.clients.anthropic.AnthropicToolSchema
-import ai.koog.prompt.executor.clients.anthropic.ImageSource
-import ai.koog.prompt.executor.clients.anthropic.SystemAnthropicMessage
+import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicInvokeModel
+import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicInvokeModelContent
+import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicInvokeModelMessage
+import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicInvokeModelTool
+import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicResponse
+import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicToolChoice
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockToolSerialization
-import ai.koog.prompt.llm.LLMCapability
-import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.message.Attachment
-import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.encodeToJsonElement
+import kotlinx.serialization.json.put
 import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 internal object BedrockAnthropicClaudeSerialization {
 
@@ -39,155 +33,142 @@ internal object BedrockAnthropicClaudeSerialization {
         explicitNulls = false
     }
 
-    // Anthropic Claude specific methods
-    @OptIn(ExperimentalUuidApi::class)
-    internal fun createAnthropicRequest(
-        prompt: Prompt,
-        model: LLModel,
-        tools: List<ToolDescriptor>
-    ): AnthropicMessageRequest {
-        val messages = mutableListOf<AnthropicMessage>()
-        val systemMessages = mutableListOf<SystemAnthropicMessage>()
-
+    private fun buildMessagesHistory(prompt: Prompt): MutableList<BedrockAnthropicInvokeModelMessage> {
+        val messages = mutableListOf<BedrockAnthropicInvokeModelMessage>()
         prompt.messages.forEach { msg ->
             when (msg) {
-                is Message.System -> systemMessages.add(SystemAnthropicMessage(text = msg.content))
                 is Message.User -> {
-                    val contentParts = mutableListOf<AnthropicContent>()
-
+                    require(msg.attachments.isEmpty()) {
+                        "Amazon Bedrock Anthropic requests currently supports text-only user messages"
+                    }
                     if (msg.content.isNotEmpty()) {
-                        contentParts.add(AnthropicContent.Text(msg.content))
-                    }
-
-                    // Check for image content if present
-                    if (msg.attachments.isNotEmpty()) {
-                        require(model.capabilities.contains(LLMCapability.Vision.Image)) {
-                            "Model ${model.id} does not support image input"
-                        }
-
-                        msg.attachments.forEach { attachment ->
-                            when (attachment) {
-                                is Attachment.Image -> {
-                                    val imageSource = when (val content = attachment.content) {
-                                        is AttachmentContent.URL -> {
-                                            throw IllegalArgumentException(
-                                                "URL images not yet supported, please provide base64 encoded images"
-                                            )
-                                        }
-
-                                        is AttachmentContent.Binary -> {
-                                            ImageSource.Base64(
-                                                data = content.base64,
-                                                mediaType = attachment.mimeType
-                                            )
-                                        }
-
-                                        else -> throw IllegalArgumentException(
-                                            "Unsupported image content type: ${content::class.simpleName}"
-                                        )
-                                    }
-                                    contentParts.add(AnthropicContent.Image(source = imageSource))
-                                }
-                                else -> throw IllegalArgumentException(
-                                    "Unsupported attachment type: ${attachment::class.simpleName}"
-                                )
-                            }
-                        }
-                    }
-
-                    messages.add(AnthropicMessage(role = "user", content = contentParts))
-                }
-
-                is Message.Assistant -> messages.add(
-                    AnthropicMessage(
-                        role = "assistant",
-                        content = listOf(AnthropicContent.Text(msg.content))
-                    )
-                )
-
-                is Message.Tool.Call -> {
-                    messages.add(
-                        AnthropicMessage(
-                            role = "assistant",
-                            content = listOf(
-                                AnthropicContent.ToolUse(
-                                    id = msg.id ?: Uuid.Companion.random().toString(),
-                                    name = msg.tool,
-                                    input = json.parseToJsonElement(msg.content).jsonObject
-                                )
+                        messages.add(
+                            BedrockAnthropicInvokeModelMessage(
+                                role = "user",
+                                content = listOf(BedrockAnthropicInvokeModelContent.Text(text = msg.content))
                             )
                         )
-                    )
+                    }
+                }
+
+                is Message.Assistant -> {
+                    if (msg.content.isNotEmpty()) {
+                        messages.add(
+                            BedrockAnthropicInvokeModelMessage(
+                                role = "assistant",
+                                content = listOf(BedrockAnthropicInvokeModelContent.Text(text = msg.content))
+                            )
+                        )
+                    }
                 }
 
                 is Message.Tool.Result -> {
-                    messages.add(
-                        AnthropicMessage(
-                            role = "user",
-                            content = listOf(
-                                AnthropicContent.ToolResult(
-                                    toolUseId = msg.id ?: Uuid.Companion.random().toString(),
-                                    content = msg.content
+                    if (msg.content.isNotEmpty()) {
+                        messages.add(
+                            BedrockAnthropicInvokeModelMessage(
+                                role = "user",
+                                content = listOf(
+                                    BedrockAnthropicInvokeModelContent.ToolResult(
+                                        toolUseId = msg.id!!,
+                                        content = msg.content
+                                    )
                                 )
                             )
                         )
-                    )
+                    }
                 }
+
+                is Message.Tool.Call -> {
+                    if (msg.content.isNotEmpty()) {
+                        messages.add(
+                            BedrockAnthropicInvokeModelMessage(
+                                role = "assistant",
+                                content = listOf(
+                                    BedrockAnthropicInvokeModelContent.ToolCall(
+                                        msg.id!!,
+                                        msg.tool,
+                                        json.decodeFromString(msg.content)
+                                    )
+                                )
+                            )
+                        )
+                    }
+                }
+
+                is Message.System -> {} // skip
             }
         }
 
-        val anthropicTools = if (tools.isNotEmpty()) {
+        return messages
+    }
+
+    internal fun createAnthropicRequest(
+        prompt: Prompt,
+        tools: List<ToolDescriptor>
+    ): BedrockAnthropicInvokeModel {
+        val systemText = prompt.messages.filterIsInstance<Message.System>().joinToString("\n") { it.content }
+        val messages = buildMessagesHistory(prompt)
+
+        val params: LLMParams = prompt.params
+        val temperature = params.temperature
+        val maxTokens = params.maxTokens ?: 4000
+
+        val bedrockTools = if (tools.isNotEmpty()) {
             tools.map { tool ->
-                AnthropicTool(
+                BedrockAnthropicInvokeModelTool(
                     name = tool.name,
                     description = tool.description,
-                    inputSchema = AnthropicToolSchema(
-                        properties = buildJsonObject {
-                            (tool.requiredParameters + tool.optionalParameters).forEach { param ->
-                                put(param.name, BedrockToolSerialization.buildToolParameterSchema(param))
+                    inputSchema = buildJsonObject {
+                        put("type", "object")
+                        put(
+                            "properties",
+                            buildJsonObject {
+                                (tool.requiredParameters + tool.optionalParameters).forEach { param ->
+                                    put(param.name, BedrockToolSerialization.buildToolParameterSchema(param))
+                                }
                             }
-                        },
-                        required = tool.requiredParameters.map { it.name }
-                    )
+                        )
+                        put(
+                            "required",
+                            buildJsonArray {
+                                tool.requiredParameters.forEach { param ->
+                                    add(json.encodeToJsonElement(param.name))
+                                }
+                            }
+                        )
+                    }
                 )
             }
         } else {
             null
         }
 
-        val toolChoice = if (tools.isNotEmpty()) {
-            when (val choice = prompt.params.toolChoice) {
-                LLMParams.ToolChoice.Auto -> AnthropicToolChoice.Auto
-                LLMParams.ToolChoice.None -> AnthropicToolChoice.None
-                LLMParams.ToolChoice.Required -> AnthropicToolChoice.Any
-                is LLMParams.ToolChoice.Named -> AnthropicToolChoice.Tool(choice.name)
+        val bedrockToolChoice = if (tools.isNotEmpty()) {
+            when (val choice = params.toolChoice) {
+                LLMParams.ToolChoice.Auto -> BedrockAnthropicToolChoice(type = "auto")
+                LLMParams.ToolChoice.None -> BedrockAnthropicToolChoice(type = "none")
+                LLMParams.ToolChoice.Required -> BedrockAnthropicToolChoice(type = "any")
+                is LLMParams.ToolChoice.Named -> BedrockAnthropicToolChoice(type = "tool", name = choice.name)
                 null -> null
             }
         } else {
             null
         }
 
-        return AnthropicMessageRequest(
-            model = model.id,
+        return BedrockAnthropicInvokeModel(
+            anthropicVersion = "bedrock-2023-05-31",
+            maxTokens = maxTokens,
+            system = systemText,
+            temperature = temperature,
             messages = messages,
-            maxTokens = prompt.params.maxTokens ?: AnthropicMessageRequest.MAX_TOKENS_DEFAULT,
-            temperature = if (model.capabilities.contains(
-                    LLMCapability.Temperature
-                )
-            ) {
-                prompt.params.temperature
-            } else {
-                null
-            },
-            system = systemMessages.takeIf { it.isNotEmpty() },
-            tools = anthropicTools,
-            toolChoice = toolChoice
+            tools = bedrockTools,
+            toolChoice = bedrockToolChoice
         )
     }
 
     @OptIn(ExperimentalUuidApi::class)
     internal fun parseAnthropicResponse(responseBody: String, clock: Clock = Clock.System): List<Message.Response> {
-        val response = json.decodeFromString<AnthropicResponse>(responseBody)
+        val response = json.decodeFromString<BedrockAnthropicResponse>(responseBody)
 
         val inputTokens = response.usage?.inputTokens
         val outputTokens = response.usage?.outputTokens
@@ -198,7 +179,7 @@ internal object BedrockAnthropicClaudeSerialization {
                 is AnthropicResponseContent.Text -> Message.Assistant(
                     content = content.text,
                     finishReason = response.stopReason,
-                    metaInfo = ResponseMetaInfo.Companion.create(
+                    metaInfo = ResponseMetaInfo.create(
                         clock,
                         totalTokensCount = totalTokens,
                         inputTokensCount = inputTokens,
@@ -210,7 +191,7 @@ internal object BedrockAnthropicClaudeSerialization {
                     id = content.id,
                     tool = content.name,
                     content = content.input.toString(),
-                    metaInfo = ResponseMetaInfo.Companion.create(
+                    metaInfo = ResponseMetaInfo.create(
                         clock,
                         totalTokensCount = totalTokens,
                         inputTokensCount = inputTokens,
