@@ -25,6 +25,7 @@ include(":agents:agents-tools")
 include(":agents:agents-utils")
 
 include(":examples")
+include(":examples:code-agent:step-01-basic-agent")
 
 include(":integration-tests")
 
