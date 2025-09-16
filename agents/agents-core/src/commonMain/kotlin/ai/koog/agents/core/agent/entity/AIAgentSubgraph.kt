@@ -48,8 +48,29 @@ public open class AIAgentSubgraph<TInput, TOutput>(
     override val inputType: KType = start.inputType
     override val outputType: KType = finish.outputType
 
-    private companion object {
+    /**
+     * Companion object for the AIAgentSubgraph class.
+     *
+     * This companion object provides predefined constants used to denote
+     * special nodes (start and finish) within the subgraph of an AI agent strategy.
+     * It also includes utilities for internal logging.
+     */
+    public companion object {
         private val logger = KotlinLogging.logger { }
+
+        /**
+         * A constant string used as a prefix to identify the starting node in an AI agent's execution graph.
+         * This prefix is utilized to ensure unique identification and separation of the start node
+         * within the graph structure or during execution-related operations.
+         */
+        public const val START_NODE_PREFIX: String = "__start__"
+
+        /**
+         * A constant string used as a prefix to identify "finish" nodes within the AI agent subgraph.
+         * Finish nodes typically signify the conclusion of a sequence or process in the graph,
+         * and this prefix is used to mark such nodes for easier recognition and handling.
+         */
+        public const val FINISH_NODE_PREFIX: String = "__finish__"
     }
 
     private var forcedNode: AIAgentNodeBase<*, *>? = null

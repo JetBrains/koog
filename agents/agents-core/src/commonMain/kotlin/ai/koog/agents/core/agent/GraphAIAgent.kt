@@ -180,14 +180,14 @@ public open class GraphAIAgent<Input, Output>(
                 logger.error(e) { "Execution exception reported by server!" }
                 pipeline.onAgentRunError(agentId = this@GraphAIAgent.id, runId = runId, throwable = e)
                 throw e
+            } finally {
+                runningMutex.withLock {
+                    isRunning = false
+                }
             }
 
             logger.debug { formatLog(agentId = this@GraphAIAgent.id, runId = runId, message = "Finished agent execution") }
             pipeline.onAgentFinished(agentId = this@GraphAIAgent.id, runId = runId, result = result, resultType = outputType)
-
-            runningMutex.withLock {
-                isRunning = false
-            }
 
             return@withContext result ?: error("result is null")
         }

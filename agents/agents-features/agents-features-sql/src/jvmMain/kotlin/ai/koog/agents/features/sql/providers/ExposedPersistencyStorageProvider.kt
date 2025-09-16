@@ -1,6 +1,7 @@
 package ai.koog.agents.features.sql.providers
 
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
+import ai.koog.agents.snapshot.providers.PersistencyUtils
 import kotlinx.datetime.Clock
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.Database
@@ -186,14 +187,14 @@ public abstract class ExposedPersistencyStorageProvider(
                 .orderBy(checkpointsTable.createdAt to SortOrder.ASC)
                 .mapNotNull { row ->
                     runCatching {
-                        json.decodeFromString<AgentCheckpointData>(row[checkpointsTable.checkpointJson])
+                        PersistencyUtils.defaultCheckpointJson.decodeFromString<AgentCheckpointData>(row[checkpointsTable.checkpointJson])
                     }.getOrNull()
                 }
         }
     }
 
     override suspend fun saveCheckpoint(agentCheckpointData: AgentCheckpointData) {
-        val checkpointJson = json.encodeToString(agentCheckpointData)
+        val checkpointJson = PersistencyUtils.defaultCheckpointJson.encodeToString(agentCheckpointData)
         val ttlTimestamp = calculateTtlTimestamp(agentCheckpointData.createdAt)
 
         transaction {
@@ -219,7 +220,7 @@ public abstract class ExposedPersistencyStorageProvider(
                 .limit(1)
                 .firstOrNull()?.let { row ->
                     runCatching {
-                        json.decodeFromString<AgentCheckpointData>(row[checkpointsTable.checkpointJson])
+                        PersistencyUtils.defaultCheckpointJson.decodeFromString<AgentCheckpointData>(row[checkpointsTable.checkpointJson])
                     }.getOrNull()
                 }
         }
