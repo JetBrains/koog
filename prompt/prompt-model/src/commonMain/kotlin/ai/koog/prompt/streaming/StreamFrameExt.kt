@@ -21,7 +21,7 @@ public fun Message.Response.toStreamFrame(): StreamFrame =
  * @return A list of [Message.Response] instances containing both tool-generated
  * and assistant-generated responses, derived from the source [StreamFrame] objects.
  */
-public fun List<StreamFrame>.toMessageResponses(): List<Message.Response> {
+public fun Iterable<StreamFrame>.toMessageResponses(): List<Message.Response> {
     return toTools() + listOfNotNull(toAssistant())
 }
 
@@ -36,7 +36,7 @@ public fun List<StreamFrame>.toMessageResponses(): List<Message.Response> {
  * @return A list of `Message.Tool.Call` objects, each representing a reconstructed tool call
  *         with concatenated `id`, `tool`, and `content` fields.
  */
-public fun List<StreamFrame>.toTools(): List<Message.Tool.Call> =
+public fun Iterable<StreamFrame>.toTools(): List<Message.Tool.Call> =
     filterIsInstance<StreamFrame.ToolCall>()
         .map {
             Message.Tool.Call(
