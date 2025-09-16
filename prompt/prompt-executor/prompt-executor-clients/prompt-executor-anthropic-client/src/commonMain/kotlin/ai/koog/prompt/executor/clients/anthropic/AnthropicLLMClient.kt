@@ -17,7 +17,6 @@ import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.emitAppend
 import ai.koog.prompt.streaming.emitEnd
-import ai.koog.prompt.streaming.emitToolCall
 import ai.koog.prompt.streaming.streamFrameFlow
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
@@ -153,12 +152,12 @@ public open class AnthropicLLMClient(
         model: LLModel,
         tools: List<ToolDescriptor>
     ): Flow<StreamFrame> = streamFrameFlow {
-        logger.debug { "Executing streaming prompt: $prompt with model: $model without tools" }
+        logger.debug { "Executing streaming prompt: $prompt with model: $model with tools: ${tools.map { it.name }}" }
         require(model.capabilities.contains(LLMCapability.Completion)) {
             "Model ${model.id} does not support chat completions"
         }
 
-        val request = createAnthropicRequest(prompt, emptyList(), model, true)
+        val request = createAnthropicRequest(prompt, tools, model, true)
 
         try {
             httpClient.sse(
@@ -174,29 +173,52 @@ public open class AnthropicLLMClient(
                 }
             ) {
                 incoming.collect { event ->
-                    event
-                        .takeIf { it.event == "content_block_delta" }
-                        ?.data?.trim()?.let { json.decodeFromString<AnthropicStreamResponse>(it) }
-                        ?.let { response ->
-
-                            response.delta?.text?.let { emitAppend(it) }
-                            response.delta?.toolUse?.let {
-                                emitToolCall(
-                                    id = it.id,
-                                    name = it.name,
-                                    content = it.input.toString()
-                                )
+                    when (event.event) {
+                        "content_block_start" -> {
+                            val response =
+                                event.data?.trim()?.let { json.decodeFromString<AnthropicStreamResponse>(it) }
+                            response?.contentBlock?.let { contentBlock ->
+                                // TODO Initialize tool call when content block starts
                             }
-                            val meta = response.message?.usage?.let {
-                                ResponseMetaInfo.create(
-                                    clock = clock,
-                                    totalTokensCount = it.inputTokens + it.outputTokens,
-                                    inputTokensCount = it.inputTokens,
-                                    outputTokensCount = it.outputTokens,
-                                )
-                            }
-                            response.message?.stopReason?.let { emitEnd(it, meta) }
                         }
+
+                        "content_block_delta" -> {
+                            val response =
+                                event.data?.trim()?.let { json.decodeFromString<AnthropicStreamResponse>(it) }
+
+                            response?.delta?.let { delta ->
+                                delta.text?.let { emitAppend(it) }
+                                delta.partialJson?.let {
+                                    // TODO handle partial json aggregation
+                                }
+                            }
+                        }
+
+                        "message_delta" -> {
+                            val response =
+                                event.data?.trim()?.let { json.decodeFromString<AnthropicStreamResponse>(it) }
+                            response?.delta?.stopReason?.let { finishReason ->
+                                val metaInfo = response.usage?.let { usage ->
+                                    ResponseMetaInfo.create(
+                                        clock = clock,
+                                        totalTokensCount = usage.inputTokens?.plus(usage.outputTokens ?: 0)
+                                            ?: usage.outputTokens,
+                                        inputTokensCount = usage.inputTokens,
+                                        outputTokensCount = usage.outputTokens,
+                                    )
+                                }
+                                emitEnd(finishReason, metaInfo)
+                            }
+                        }
+
+                        "error" -> {
+                            val response =
+                                event.data?.trim()?.let { json.decodeFromString<AnthropicStreamResponse>(it) }
+                            response?.error?.let {
+                                error("Anthropic streaming error: $it")
+                            }
+                        }
+                    }
                 }
             }
         } catch (e: SSEClientException) {
@@ -371,7 +393,7 @@ public open class AnthropicLLMClient(
         // Extract token count from the response
         val inputTokensCount = response.usage?.inputTokens
         val outputTokensCount = response.usage?.outputTokens
-        val totalTokensCount = response.usage?.let { it.inputTokens + it.outputTokens }
+        val totalTokensCount = response.usage?.let { it.inputTokens?.plus(it.outputTokens ?: 0) ?: it.outputTokens }
 
         val responses = response.content.map { content ->
             when (content) {
