@@ -4,6 +4,8 @@ plugins {
     application
 }
 
+application.mainClass.set("ai.kogi.examples.code.agent.step01.MainKt")
+
 dependencies {
     implementation(project(":agents:agents-core"))
     implementation(project(":agents:agents-tools"))
