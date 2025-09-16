@@ -5,6 +5,7 @@ import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreaming
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.agents.testing.tools.mockLLMAnswer
+import ai.koog.prompt.streaming.collectText
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertTrue
@@ -28,29 +29,20 @@ class StreamingEventHandlerTest {
             val llmNode by nodeLLMRequestStreaming("streaming-llm-node")
 
             edge(nodeStart forwardTo llmNode)
-            edge(llmNode forwardTo nodeFinish transformed { stream ->
-                // Collect the stream and return as a string
-                val frames = mutableListOf<String>()
-                stream.collect { frame ->
-                    if (frame is ai.koog.prompt.streaming.StreamFrame.Append) {
-                        frames.add(frame.text)
-                    }
+            edge(
+                llmNode forwardTo nodeFinish transformed { stream ->
+                    stream.collectText()
                 }
-                frames.joinToString("")
-            })
+            )
         }
 
         val mockExecutor = getMockExecutor(clock = testClock) {
             mockLLMAnswer(assistantResponse) onRequestContains userMessage
         }
 
-        val agent = createAgent(
-            strategy = strategy,
-            promptExecutor = mockExecutor,
-            installFeatures = {
-                install(EventHandler, eventsCollector.eventHandlerFeatureConfig)
-            }
-        )
+        val agent = createAgent(strategy, promptExecutor = mockExecutor) {
+            install(EventHandler, eventsCollector.eventHandlerFeatureConfig)
+        }
 
         agent.run(userMessage)
         agent.close()
@@ -84,29 +76,27 @@ class StreamingEventHandlerTest {
             val streamingNode by nodeLLMRequestStreaming("actual-streaming-node")
 
             edge(nodeStart forwardTo streamingNode)
-            edge(streamingNode forwardTo nodeFinish transformed { stream ->
-                // Collect the stream and return as a string
-                val frames = mutableListOf<String>()
-                stream.collect { frame ->
-                    if (frame is ai.koog.prompt.streaming.StreamFrame.Append) {
-                        frames.add(frame.text)
+            edge(
+                streamingNode forwardTo nodeFinish transformed { stream ->
+                    // Collect the stream and return as a string
+                    val frames = mutableListOf<String>()
+                    stream.collect { frame ->
+                        if (frame is ai.koog.prompt.streaming.StreamFrame.Append) {
+                            frames.add(frame.text)
+                        }
                     }
+                    frames.joinToString("")
                 }
-                frames.joinToString("")
-            })
+            )
         }
 
         val mockExecutor = getMockExecutor(clock = testClock) {
             mockLLMAnswer(testResponse) onRequestContains testMessage
         }
 
-        val agent = createAgent(
-            strategy = strategy,
-            promptExecutor = mockExecutor,
-            installFeatures = {
-                install(EventHandler, eventsCollector.eventHandlerFeatureConfig)
-            }
-        )
+        val agent = createAgent(strategy, promptExecutor = mockExecutor) {
+            install(EventHandler, eventsCollector.eventHandlerFeatureConfig)
+        }
 
         agent.run(testMessage)
         agent.close()

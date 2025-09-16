@@ -59,7 +59,6 @@ class StreamFrameFlowBuilderTest {
         }
     }
 
-
     private suspend fun StreamFrameFlowBuilder.appendWeatherToolAsParts(index: Int) {
         upsertToolCall(index = index, id = weatherCallId, name = weatherFunName, args = "")
         weatherArgList.forEach {

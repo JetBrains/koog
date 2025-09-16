@@ -9,7 +9,6 @@ import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.handler.AfterLLMCallContext
 import ai.koog.agents.core.feature.handler.AfterLLMCallHandler
-import ai.koog.agents.core.feature.handler.AfterNodeHandler
 import ai.koog.agents.core.feature.handler.AfterStreamContext
 import ai.koog.agents.core.feature.handler.AfterStreamHandler
 import ai.koog.agents.core.feature.handler.AgentBeforeCloseContext
@@ -26,22 +25,17 @@ import ai.koog.agents.core.feature.handler.AgentTransformEnvironmentContext
 import ai.koog.agents.core.feature.handler.BeforeAgentStartedHandler
 import ai.koog.agents.core.feature.handler.BeforeLLMCallContext
 import ai.koog.agents.core.feature.handler.BeforeLLMCallHandler
-import ai.koog.agents.core.feature.handler.BeforeNodeHandler
 import ai.koog.agents.core.feature.handler.BeforeStreamContext
 import ai.koog.agents.core.feature.handler.BeforeStreamHandler
 import ai.koog.agents.core.feature.handler.ExecuteLLMHandler
 import ai.koog.agents.core.feature.handler.ExecuteToolHandler
-import ai.koog.agents.core.feature.handler.NodeAfterExecuteContext
-import ai.koog.agents.core.feature.handler.NodeBeforeExecuteContext
-import ai.koog.agents.core.feature.handler.NodeExecutionErrorContext
-import ai.koog.agents.core.feature.handler.NodeExecutionErrorHandler
-import ai.koog.agents.core.feature.handler.StreamFrameContext
-import ai.koog.agents.core.feature.handler.StreamFrameHandler
 import ai.koog.agents.core.feature.handler.StrategyFinishContext
 import ai.koog.agents.core.feature.handler.StrategyFinishedHandler
 import ai.koog.agents.core.feature.handler.StrategyHandler
 import ai.koog.agents.core.feature.handler.StrategyStartContext
 import ai.koog.agents.core.feature.handler.StrategyStartedHandler
+import ai.koog.agents.core.feature.handler.StreamFrameContext
+import ai.koog.agents.core.feature.handler.StreamFrameHandler
 import ai.koog.agents.core.feature.handler.StreamHandler
 import ai.koog.agents.core.feature.handler.ToolCallContext
 import ai.koog.agents.core.feature.handler.ToolCallFailureContext
@@ -731,7 +725,6 @@ public abstract class AIAgentPipeline {
             with(interceptContext.featureImpl) { handle(eventContext) }
         }
     }
-
 
     /**
      * Intercepts streaming operations before they begin to modify or log the streaming request.

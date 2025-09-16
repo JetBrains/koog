@@ -422,7 +422,6 @@ class PromptTest {
         // contentJson property is now on StreamFrame.ToolCall, not Message.Tool.Call
         // This test is no longer applicable for Message.Tool.Call
         val toolCallWithInvalidJson = Message.Tool.Call(toolCallId, toolName, "invalid json", testRespMetaInfo)
-        
         // Just verify the content is stored as-is
         assertEquals("invalid json", toolCallWithInvalidJson.content)
     }

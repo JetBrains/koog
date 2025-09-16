@@ -163,26 +163,17 @@ public class EventHandler {
                 config.invokeOnToolCallResult(eventContext)
             }
 
-            //endregion Intercept Tool Call Events
-
-            //region Intercept Stream Events
-            
-            // Intercept before streaming starts to allow preprocessing or logging
             pipeline.interceptBeforeStream(interceptContext) intercept@{ eventContext: BeforeStreamContext ->
                 config.invokeOnBeforeStream(eventContext)
             }
 
-            // Intercept individual stream frames as they are received for real-time processing
             pipeline.interceptOnStreamFrame(interceptContext) intercept@{ eventContext: StreamFrameContext ->
                 config.invokeOnStreamFrame(eventContext)
             }
 
-            // Intercept after streaming completes for post-processing or cleanup
             pipeline.interceptAfterStream(interceptContext) intercept@{ eventContext: AfterStreamContext ->
                 config.invokeOnAfterStream(eventContext)
             }
-
-            //endregion Intercept Stream Events
         }
 
         override fun install(

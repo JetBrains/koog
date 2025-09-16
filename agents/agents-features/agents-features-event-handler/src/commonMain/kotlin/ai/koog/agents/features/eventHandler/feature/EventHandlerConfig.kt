@@ -527,5 +527,4 @@ public class EventHandlerConfig : FeatureConfig() {
     }
 
     //endregion Invoke Stream Handlers
-
 }

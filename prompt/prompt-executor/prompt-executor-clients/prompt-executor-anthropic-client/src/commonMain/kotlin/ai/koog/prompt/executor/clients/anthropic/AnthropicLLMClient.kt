@@ -173,7 +173,6 @@ public open class AnthropicLLMClient(
                         setBody(request)
                     }
                 ) {
-
                     var inputTokens: Int? = null
                     var outputTokens: Int? = null
 

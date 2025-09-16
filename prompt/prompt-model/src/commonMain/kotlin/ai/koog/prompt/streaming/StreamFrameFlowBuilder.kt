@@ -36,8 +36,11 @@ public suspend fun FlowCollector<StreamFrame>.emitAppend(text: String): Unit =
 /**
  * Emits a [StreamFrame.End] with the given [finishReason].
  */
-public suspend fun FlowCollector<StreamFrame>.emitEnd(finishReason: String? = null, metaInfo: ResponseMetaInfo? = null): Unit =
-    emit(StreamFrame.End(finishReason, metaInfo?: ResponseMetaInfo.Empty))
+public suspend fun FlowCollector<StreamFrame>.emitEnd(
+    finishReason: String? = null,
+    metaInfo: ResponseMetaInfo? = null
+): Unit =
+    emit(StreamFrame.End(finishReason, metaInfo ?: ResponseMetaInfo.Empty))
 
 /**
  * Emits a [StreamFrame.ToolCall] with the given [id], [name] and [content].
@@ -89,12 +92,13 @@ public class StreamFrameFlowBuilder(
      */
     public suspend fun tryEmitPendingToolCall() {
         val pendingToolCall = pendingToolCallRef.exchange(null)
-        if (pendingToolCall != null)
+        if (pendingToolCall != null) {
             flowCollector.emitToolCall(
                 id = pendingToolCall.id,
                 name = pendingToolCall.name ?: "",
                 content = pendingToolCall.argumentsDelta ?: "{}"
             )
+        }
     }
 
     /**
@@ -112,10 +116,11 @@ public class StreamFrameFlowBuilder(
             PendingToolCall(index, id, name, args)
         } else {
             val previous = pendingToolCallRef.load()
-            if (previous == null)
+            if (previous == null) {
                 error("No tool call is in progress, and no tool call id was provided.")
-            else if (previous.index != index)
+            } else if (previous.index != index) {
                 error("Tool call index mismatch. Expected ${previous.index}, got $index.")
+            }
             previous.appendArgumentsDelta(args)
         }
         pendingToolCallRef.store(new)

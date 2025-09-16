@@ -83,7 +83,6 @@ internal class StreamFrameExtTest {
     }
 }
 
-
 private fun toolCallFrame(id: String, name: String, content: String) =
     StreamFrame.ToolCall(id, name, content)
 

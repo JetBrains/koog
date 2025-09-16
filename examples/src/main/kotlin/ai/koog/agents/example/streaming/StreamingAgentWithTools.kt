@@ -37,7 +37,7 @@ fun main(): Unit = runBlocking {
     val toolRegistry = ToolRegistry {
         tools(SwitchTools(switch).asTools())
     }
-    val agent = anthropicAgent(toolRegistry) {
+    val agent = openAiAgent(toolRegistry) {
         handleEvents {
             onToolCall { context ->
                 println("\n🔧 Using ${context.tool.name} with ${context.toolArgs}... ")
@@ -56,7 +56,7 @@ fun main(): Unit = runBlocking {
 
     println("Streaming chat agent started\nUse /quit to quit\nEnter your message:")
     var input = ""
-    while(input != "/quit") {
+    while (input != "/quit") {
         input = readln()
 
         // Example message:
@@ -133,7 +133,9 @@ fun streamingWithToolsStrategy() = strategy("streaming_loop") {
     edge(nodeStreaming forwardTo executeMultipleTools onMultipleToolCalls { true })
     edge(executeMultipleTools forwardTo mapToolCallsToRequests)
     edge(mapToolCallsToRequests forwardTo applyRequestToSession)
-    edge(nodeStreaming forwardTo nodeFinish onCondition {
-        it.filterIsInstance<Message.Tool.Call>().isEmpty()
-    })
+    edge(
+        nodeStreaming forwardTo nodeFinish onCondition {
+            it.filterIsInstance<Message.Tool.Call>().isEmpty()
+        }
+    )
 }
