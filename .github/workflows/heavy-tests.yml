@@ -18,7 +18,7 @@ env:
 
 jobs:
   integration-tests:
-
+    name: ${{ matrix.job-name }}
     runs-on: ${{ matrix.os }}
     permissions:
       contents: read
@@ -27,20 +27,31 @@ jobs:
 
     strategy:
       matrix:
-        os: [ ubuntu-latest ]
         include:
-          - test-group: "ai.koog.integration.tests.agent.*"
+          - job-name: "agent-tests"
+            test-group: "ai.koog.integration.tests.agent.*"
             artifact-name: "agent-tests"
-          - test-group: "ai.koog.integration.tests.executor.*"
+            os: ubuntu-latest
+          - job-name: "executor-tests"
+            test-group: "ai.koog.integration.tests.executor.*"
             artifact-name: "executor-tests"
-          - test-group: "ai.koog.integration.tests.capabilities.*"
+            os: ubuntu-latest
+          - job-name: "capabilities-tests"
+            test-group: "ai.koog.integration.tests.capabilities.*"
             artifact-name: "capabilities-tests"
-          - test-group: "ai.koog.integration.tests.*Embeddings*"
+            os: ubuntu-latest
+          - job-name: "embeddings-tests"
+            test-group: "ai.koog.integration.tests.*Embeddings*"
             artifact-name: "embeddings-test"
-          - test-group: "ai.koog.integration.tests.*BedrockCredentials*"
+            os: ubuntu-latest
+          - job-name: "bedrock-credentials-tests"
+            test-group: "ai.koog.integration.tests.*BedrockCredentials*"
             artifact-name: "bedrock-credentials-test"
-          - test-group: "ai.koog.integration.tests.*AnthropicSchemaValidation*"
+            os: ubuntu-latest
+          - job-name: "anthropic-schema-tests"
+            test-group: "ai.koog.integration.tests.*AnthropicSchemaValidation*"
             artifact-name: "anthropic-schema-test"
+            os: ubuntu-latest
       fail-fast: false
 
     steps:
