@@ -7,7 +7,7 @@ import ai.koog.integration.tests.utils.MediaTestUtils.createVideoFileForScenario
 import ai.koog.integration.tests.utils.MediaTestUtils.getImageFileForScenario
 import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.RetryUtils.withRetry
-import ai.koog.integration.tests.utils.TestUtils.CalculatorTool.calculatorToolDescriptor
+import ai.koog.integration.tests.utils.TestUtils.CalculatorTool
 import ai.koog.integration.tests.utils.TestUtils.assertExceptionMessageContains
 import ai.koog.integration.tests.utils.TestUtils.isValidJson
 import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
@@ -137,7 +137,7 @@ class ModelCapabilitiesIntegrationTest {
                 }
 
                 LLMCapability.Tools, LLMCapability.ToolChoice -> {
-                    val tools = calculatorToolDescriptor
+                    val tools = CalculatorTool.descriptor
                     val prompt = prompt("cap-tools-positive", params = LLMParams(toolChoice = ToolChoice.Required)) {
                         system("You are a helpful assistant with a calculator tool. Always use the tool.")
                         user("Compute 2 + 3.")
@@ -376,7 +376,7 @@ class ModelCapabilitiesIntegrationTest {
                 }
 
                 LLMCapability.Tools, LLMCapability.ToolChoice -> {
-                    val tools = calculatorToolDescriptor
+                    val tools = CalculatorTool.descriptor
                     val prompt = prompt("cap-tools-negative", params = LLMParams(toolChoice = ToolChoice.Required)) {
                         system("You are a helpful assistant with a calculator tool. Always use the tool.")
                         user("Compute 2 + 3.")
