@@ -15,9 +15,7 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
-import ai.koog.prompt.streaming.emitAppend
-import ai.koog.prompt.streaming.emitEnd
-import ai.koog.prompt.streaming.streamFrameFlow
+import ai.koog.prompt.streaming.buildStreamFrameFlow
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -39,8 +37,10 @@ import io.ktor.http.HttpMethod
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
+import io.ktor.sse.ServerSentEvent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
@@ -151,7 +151,7 @@ public open class AnthropicLLMClient(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
-    ): Flow<StreamFrame> = streamFrameFlow {
+    ): Flow<StreamFrame> {
         logger.debug { "Executing streaming prompt: $prompt with model: $model with tools: ${tools.map { it.name }}" }
         require(model.capabilities.contains(LLMCapability.Completion)) {
             "Model ${model.id} does not support chat completions"
@@ -160,62 +160,100 @@ public open class AnthropicLLMClient(
         val request = createAnthropicRequest(prompt, tools, model, true)
 
         try {
-            httpClient.sse(
-                urlString = DEFAULT_MESSAGE_PATH,
-                request = {
-                    method = HttpMethod.Post
-                    accept(ContentType.Text.EventStream)
-                    headers {
-                        append(HttpHeaders.CacheControl, "no-cache")
-                        append(HttpHeaders.Connection, "keep-alive")
-                    }
-                    setBody(request)
-                }
-            ) {
-                incoming.collect { event ->
-                    when (event.event) {
-                        "content_block_start" -> {
-                            val response =
-                                event.data?.trim()?.let { json.decodeFromString<AnthropicStreamResponse>(it) }
-                            response?.contentBlock?.let { contentBlock ->
-                                // TODO Initialize tool call when content block starts
-                            }
+            return buildStreamFrameFlow {
+                httpClient.sse(
+                    urlString = DEFAULT_MESSAGE_PATH,
+                    request = {
+                        method = HttpMethod.Post
+                        accept(ContentType.Text.EventStream)
+                        headers {
+                            append(HttpHeaders.CacheControl, "no-cache")
+                            append(HttpHeaders.Connection, "keep-alive")
                         }
+                        setBody(request)
+                    }
+                ) {
 
-                        "content_block_delta" -> {
-                            val response =
-                                event.data?.trim()?.let { json.decodeFromString<AnthropicStreamResponse>(it) }
+                    var inputTokens: Int? = null
+                    var outputTokens: Int? = null
 
-                            response?.delta?.let { delta ->
-                                delta.text?.let { emitAppend(it) }
-                                delta.partialJson?.let {
-                                    // TODO handle partial json aggregation
+                    fun decodeResponse(event: ServerSentEvent): AnthropicStreamResponse? =
+                        event.data?.trim()?.let { json.decodeFromString<AnthropicStreamResponse>(it) }
+
+                    fun updateUsage(usage: AnthropicUsage) {
+                        inputTokens = usage.inputTokens ?: inputTokens
+                        outputTokens = usage.outputTokens ?: outputTokens
+                    }
+
+                    fun getMetaInfo(): ResponseMetaInfo = ResponseMetaInfo.create(
+                        clock = clock,
+                        totalTokensCount = inputTokens?.plus(outputTokens ?: 0) ?: outputTokens,
+                        inputTokensCount = inputTokens,
+                        outputTokensCount = outputTokens,
+                    )
+
+                    incoming.collect { event ->
+
+                        when (event.event) {
+                            "message_start" -> {
+                                decodeResponse(event)?.message?.usage?.let(::updateUsage)
+                            }
+
+                            "content_block_start" -> {
+                                decodeResponse(event)?.let { response ->
+                                    when (val contentBlock = response.contentBlock) {
+                                        is AnthropicContent.Text -> {
+                                            emitAppend(contentBlock.text)
+                                        }
+
+                                        is AnthropicContent.ToolUse -> {
+                                            appendToolCall(
+                                                index = response.index ?: error("Tool index is missing"),
+                                                id = contentBlock.id,
+                                                name = contentBlock.name,
+                                            )
+                                        }
+
+                                        else -> Unit
+                                    }
                                 }
                             }
-                        }
 
-                        "message_delta" -> {
-                            val response =
-                                event.data?.trim()?.let { json.decodeFromString<AnthropicStreamResponse>(it) }
-                            response?.delta?.stopReason?.let { finishReason ->
-                                val metaInfo = response.usage?.let { usage ->
-                                    ResponseMetaInfo.create(
-                                        clock = clock,
-                                        totalTokensCount = usage.inputTokens?.plus(usage.outputTokens ?: 0)
-                                            ?: usage.outputTokens,
-                                        inputTokensCount = usage.inputTokens,
-                                        outputTokensCount = usage.outputTokens,
+                            "content_block_delta" -> {
+                                decodeResponse(event)?.let { response ->
+                                    response.delta?.let { delta ->
+                                        when (delta.type) {
+                                            "input_json_delta" -> {
+                                                appendToolCall(
+                                                    index = response.index ?: error("Tool index is missing"),
+                                                    args = delta.partialJson ?: error("Tool args are missing")
+                                                )
+                                            }
+
+                                            "text_delta" -> {
+                                                emitAppend(delta.text ?: error("Text delta is missing"))
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            "content_block_stop" -> {
+                                tryEmitPendingToolCall()
+                            }
+
+                            "message_delta" -> {
+                                decodeResponse(event)?.let { response ->
+                                    response.usage?.let(::updateUsage)
+                                    emitEnd(
+                                        finishReason = response.delta?.stopReason,
+                                        metaInfo = getMetaInfo()
                                     )
                                 }
-                                emitEnd(finishReason, metaInfo)
                             }
-                        }
 
-                        "error" -> {
-                            val response =
-                                event.data?.trim()?.let { json.decodeFromString<AnthropicStreamResponse>(it) }
-                            response?.error?.let {
-                                error("Anthropic streaming error: $it")
+                            "error" -> {
+                                error("Anthropic error: ${decodeResponse(event)?.error}")
                             }
                         }
                     }
@@ -230,6 +268,7 @@ public open class AnthropicLLMClient(
             logger.error { "Exception during streaming: $e" }
             error(e.message ?: "Unknown error during streaming")
         }
+        return emptyFlow()
     }
 
     @OptIn(ExperimentalUuidApi::class)

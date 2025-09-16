@@ -399,14 +399,16 @@ public data class AnthropicStreamResponse(
  * @property text Optional text content associated with the delta update.
  * @property partialJson Optional partial JSON content for tool use streaming.
  * @property stopReason Optional reason why the generation process was stopped, if applicable.
+ * @property toolUse Optional tool usage data associated with the delta update (deprecated).
  */
 @InternalLLMClientApi
 @Serializable
 public data class AnthropicStreamDelta(
-    val type: String,
+    val type: String? = null,
     val text: String? = null,
     val partialJson: String? = null,
-    val stopReason: String? = null
+    val stopReason: String? = null,
+    val toolUse: AnthropicResponseContent.ToolUse? = null
 )
 
 /**
