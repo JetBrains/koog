@@ -62,7 +62,7 @@ public fun Iterable<StreamFrame>.toMessageResponses(): List<Message.Response> {
  *
  * @return A list of [Message.Tool.Call] objects.
  */
-public fun Iterable<StreamFrame>.toTools(): List<Message.Tool.Call> =
+public fun Iterable<StreamFrame>.toToolCallMessages(): List<Message.Tool.Call> =
     toMessageResponses().filterIsInstance<Message.Tool.Call>()
 
 /**
@@ -70,5 +70,5 @@ public fun Iterable<StreamFrame>.toTools(): List<Message.Tool.Call> =
  *
  * @return A [Message.Assistant] object, or `null` if not found.
  */
-public fun Iterable<StreamFrame>.toAssistant(): Message.Assistant? =
+public fun Iterable<StreamFrame>.toAssistantMessageOrNull(): Message.Assistant? =
     toMessageResponses().filterIsInstance<Message.Assistant>().singleOrNull()
