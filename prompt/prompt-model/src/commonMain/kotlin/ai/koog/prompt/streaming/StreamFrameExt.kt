@@ -4,7 +4,7 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 
 /**
- * Convert a [Message.Response] to a [StreamFrame].
+ * Converts a [Message.Response] to a [StreamFrame].
  */
 public fun Message.Response.toStreamFrame(): StreamFrame =
     when (this) {
@@ -13,61 +13,62 @@ public fun Message.Response.toStreamFrame(): StreamFrame =
     }
 
 /**
- * Converts a list of [StreamFrame] objects into a list of [Message.Response].
- * The method combines the tool-related responses produced by `toTools()` with
- * the assistant response derived from `toAssistant()`. If `toAssistant()` returns
- * null, it is excluded from the resulting list.
+ * Converts frames into [Message.Response] objects.
  *
- * @return A list of [Message.Response] instances containing both tool-generated
- * and assistant-generated responses, derived from the source [StreamFrame] objects.
+ * - Collects all assistant text (`Append`) into one [Message.Assistant].
+ * - Preserves all [StreamFrame.ToolCall] as [Message.Tool.Call].
+ * - Uses the last [StreamFrame.End] (if any) for finishReason/metaInfo.
+ *
+ * @return A list of [Message.Response] objects.
  */
 public fun Iterable<StreamFrame>.toMessageResponses(): List<Message.Response> {
-    return toTools() + listOfNotNull(toAssistant())
-}
+    var assistantContent: String? = null
+    val toolCalls = mutableListOf<StreamFrame.ToolCall>()
+    var end: StreamFrame.End? = null
 
-/**
- * Transforms a list of `StreamFrame` objects into a list of `Message.Tool.Call`.
- *
- * This function filters the input list to only include instances of `StreamFrame.ToolCall`.
- * It then groups these tool call frames by their `index` to reconstruct complete tool calls.
- * Each group of tool call frames is concatenated based on their respective fields (`id`, `tool`, and `content`)
- * to produce a list of `Message.Tool.Call` objects.
- *
- * @return A list of `Message.Tool.Call` objects, each representing a reconstructed tool call
- *         with concatenated `id`, `tool`, and `content` fields.
- */
-public fun Iterable<StreamFrame>.toTools(): List<Message.Tool.Call> =
-    filterIsInstance<StreamFrame.ToolCall>()
-        .map {
-            Message.Tool.Call(
-                id = it.id,
-                tool = it.name,
-                content = it.content,
-                metaInfo = ResponseMetaInfo.Empty
-            )
-        }
-
-/**
- * Converts a list of `StreamFrame` objects into a `Message.Assistant` instance.
- * Filters only the `StreamFrame.Append` elements, concatenates their textual content and finish reasons,
- * and constructs a `Message.Assistant` object if any `Append` frames are present.
- *
- * @return A `Message.Assistant` object containing the concatenated content and finish reason
- * of all `StreamFrame.Append` elements, or `null` if the list contains no `StreamFrame.Append` elements.
- */
-public fun Iterable<StreamFrame>.toAssistant(): Message.Assistant? {
-    var content: String? = null
-    var finishReason: String? = null
     forEach { frame ->
         when (frame) {
-            is StreamFrame.Append -> content = content?.plus(frame.text) ?: frame.text
-            is StreamFrame.ToolCall -> Unit
-            is StreamFrame.End -> finishReason = frame.finishReason
+            is StreamFrame.Append -> assistantContent = (assistantContent ?: "") + frame.text
+            is StreamFrame.ToolCall -> toolCalls += frame
+            is StreamFrame.End -> end = frame
         }
     }
-    return  Message.Assistant(
-        content = content?:return null,
-        finishReason = finishReason,
-        metaInfo = ResponseMetaInfo.Empty
-    )
+
+    return buildList {
+        assistantContent?.let {
+            add(
+                Message.Assistant(
+                    content = it,
+                    finishReason = end?.finishReason,
+                    metaInfo = end?.metaInfo ?: ResponseMetaInfo.Empty
+                )
+            )
+        }
+        toolCalls.forEach {
+            add(
+                Message.Tool.Call(
+                    id = it.id,
+                    tool = it.name,
+                    content = it.content,
+                    metaInfo = end?.metaInfo ?: ResponseMetaInfo.Empty
+                )
+            )
+        }
+    }
 }
+
+/**
+ * Extracts only tool calls from frames.
+ *
+ * @return A list of [Message.Tool.Call] objects.
+ */
+public fun Iterable<StreamFrame>.toTools(): List<Message.Tool.Call> =
+    toMessageResponses().filterIsInstance<Message.Tool.Call>()
+
+/**
+ * Extracts the assistant response from frames, if any.
+ *
+ * @return A [Message.Assistant] object, or `null` if not found.
+ */
+public fun Iterable<StreamFrame>.toAssistant(): Message.Assistant? =
+    toMessageResponses().filterIsInstance<Message.Assistant>().singleOrNull()
