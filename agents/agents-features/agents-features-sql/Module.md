@@ -1,4 +1,4 @@
-# SQL Features Module
+# Module features-sql 
 
 Provides SQL-based persistence providers for agent checkpoints using JetBrains Exposed ORM with support for multiple database engines.
 
