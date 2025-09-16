@@ -24,6 +24,7 @@ import ai.koog.prompt.structure.StructuredDataDefinition
 import ai.koog.prompt.structure.StructuredOutputConfig
 import ai.koog.prompt.structure.StructuredResponse
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.toList
 
 /**
  * A pass-through node that does nothing and returns input as output
@@ -339,7 +340,7 @@ public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMCompressHi
  * @return A node delegate that accepts input of type T and returns a list of response messages
  *
  * @see nodeLLMRequestStreaming for streaming without automatic prompt updates
- * @see requestLLMStreaming for the underlying streaming functionality
+ * @see ai.koog.agents.core.agent.session.AIAgentLLMWriteSession.requestLLMStreaming for the underlying streaming functionality
  */
 @AIAgentBuilderDslMarker
 public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStreamingAndSendResults(
@@ -347,17 +348,10 @@ public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStr
     structureDefinition: StructuredDataDefinition? = null
 ): AIAgentNodeDelegate<T, List<Message.Response>> = node(name) { input ->
     llm.writeSession {
-        val stream = requestLLMStreaming(structureDefinition)
-        val streamCollector = mutableListOf<StreamFrame>()
-        stream.collect {
-            streamCollector.add(it)
-        }
-
-        val messages = streamCollector.toMessageResponses()
-        updatePrompt {
-            messages(messages)
-        }
-        messages
+        requestLLMStreaming(structureDefinition)
+            .toList()
+            .toMessageResponses()
+            .also { updatePrompt { messages(it) } }
     }
 }
 
