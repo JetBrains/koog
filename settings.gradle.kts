@@ -1,4 +1,4 @@
-rootProject.name = "koog-agents"
+rootProject.name = "koog"
 
 pluginManagement {
     repositories {
