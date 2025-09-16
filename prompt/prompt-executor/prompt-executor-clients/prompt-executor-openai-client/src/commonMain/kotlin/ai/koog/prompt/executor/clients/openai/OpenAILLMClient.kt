@@ -290,6 +290,20 @@ public open class OpenAILLMClient(
                         }
                     }
 
+                    is OpenAIStreamEvent.ResponseCompleted -> {
+                        StreamFrame.End(
+                            finishReason = null,
+                            metaInfo = it.response.usage.let { usage ->
+                                ResponseMetaInfo.create(
+                                    clock = clock,
+                                    totalTokensCount = usage?.totalTokens,
+                                    inputTokensCount = usage?.inputTokens,
+                                    outputTokensCount = usage?.outputTokens
+                                )
+                            }
+                        )
+                    }
+
                     is OpenAIStreamEvent.ResponseOutputTextDelta -> {
                         StreamFrame.Append(it.delta)
                     }
