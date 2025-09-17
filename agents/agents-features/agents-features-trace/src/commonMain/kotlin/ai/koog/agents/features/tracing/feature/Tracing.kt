@@ -7,21 +7,21 @@ import ai.koog.agents.core.feature.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.InterceptContext
 import ai.koog.agents.core.feature.message.FeatureMessage
 import ai.koog.agents.core.feature.message.FeatureMessageProcessorUtil.onMessageForEachSafe
-import ai.koog.agents.core.feature.model.AIAgentBeforeCloseEvent
-import ai.koog.agents.core.feature.model.AIAgentFinishedEvent
-import ai.koog.agents.core.feature.model.AIAgentNodeExecutionEndEvent
-import ai.koog.agents.core.feature.model.AIAgentNodeExecutionErrorEvent
-import ai.koog.agents.core.feature.model.AIAgentNodeExecutionStartEvent
-import ai.koog.agents.core.feature.model.AIAgentRunErrorEvent
-import ai.koog.agents.core.feature.model.AIAgentStartedEvent
-import ai.koog.agents.core.feature.model.AIAgentStrategyFinishedEvent
-import ai.koog.agents.core.feature.model.AIAgentStrategyStartEvent
-import ai.koog.agents.core.feature.model.AfterLLMCallEvent
-import ai.koog.agents.core.feature.model.BeforeLLMCallEvent
-import ai.koog.agents.core.feature.model.ToolCallEvent
-import ai.koog.agents.core.feature.model.ToolCallFailureEvent
-import ai.koog.agents.core.feature.model.ToolCallResultEvent
-import ai.koog.agents.core.feature.model.ToolValidationErrorEvent
+import ai.koog.agents.core.feature.model.events.AIAgentBeforeCloseEvent
+import ai.koog.agents.core.feature.model.events.AIAgentFinishedEvent
+import ai.koog.agents.core.feature.model.events.AIAgentNodeExecutionEndEvent
+import ai.koog.agents.core.feature.model.events.AIAgentNodeExecutionErrorEvent
+import ai.koog.agents.core.feature.model.events.AIAgentNodeExecutionStartEvent
+import ai.koog.agents.core.feature.model.events.AIAgentRunErrorEvent
+import ai.koog.agents.core.feature.model.events.AIAgentStartedEvent
+import ai.koog.agents.core.feature.model.events.AIAgentStrategyFinishedEvent
+import ai.koog.agents.core.feature.model.events.AIAgentStrategyStartEvent
+import ai.koog.agents.core.feature.model.events.AfterLLMCallEvent
+import ai.koog.agents.core.feature.model.events.BeforeLLMCallEvent
+import ai.koog.agents.core.feature.model.events.ToolCallEvent
+import ai.koog.agents.core.feature.model.events.ToolCallFailureEvent
+import ai.koog.agents.core.feature.model.events.ToolCallResultEvent
+import ai.koog.agents.core.feature.model.events.ToolValidationErrorEvent
 import ai.koog.agents.core.feature.model.toAgentError
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolArgs
@@ -161,7 +161,7 @@ public class Tracing {
             pipeline.interceptStrategyStarted(interceptContext) intercept@{ eventContext ->
                 val event = AIAgentStrategyStartEvent(
                     runId = eventContext.runId,
-                    strategyName = eventContext.strategy.name,
+                    strategyName = eventContext.strategy.name
                 )
                 processMessage(config, event)
             }
