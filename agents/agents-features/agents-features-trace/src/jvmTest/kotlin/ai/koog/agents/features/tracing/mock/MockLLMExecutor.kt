@@ -24,7 +24,7 @@ class MockLLMExecutor : PromptExecutor {
         return listOf(handlePrompt(prompt))
     }
 
-    override fun executeStreaming(
+    override fun executeStreamingFrames(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>

@@ -479,7 +479,7 @@ class OllamaExecutorIntegrationTest {
         }
 
         val flow = executor
-            .executeStreaming(prompt, model)
+            .executeStreamingFrames(prompt, model)
             .filterTextOnly()
 
         var totalText = ""
@@ -652,7 +652,7 @@ class OllamaExecutorIntegrationTest {
             )
         }
 
-        val markdownStream = executor.executeStreaming(prompt, model)
+        val markdownStream = executor.executeStreamingFrames(prompt, model)
 
         parseMarkdownStreamToCountries(markdownStream).collect { country ->
             countries.add(country)

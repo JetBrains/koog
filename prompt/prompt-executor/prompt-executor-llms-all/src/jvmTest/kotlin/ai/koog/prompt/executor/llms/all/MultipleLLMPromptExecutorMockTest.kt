@@ -154,7 +154,7 @@ class MultipleLLMPromptExecutorMockTest {
             user("What is the capital of France?")
         }
 
-        val responseChunks = executor.executeStreaming(prompt, OpenAIModels.Chat.GPT4o)
+        val responseChunks = executor.executeStreamingFrames(prompt, OpenAIModels.Chat.GPT4o)
             .filterTextOnly()
             .toList()
 
@@ -174,7 +174,6 @@ class MultipleLLMPromptExecutorMockTest {
         }
 
         val responseChunks = executor.executeStreaming(prompt, AnthropicModels.Sonnet_3_7)
-            .filterTextOnly()
             .toList()
 
         assertEquals(3, responseChunks.size, "Response should have three chunks")
@@ -193,7 +192,6 @@ class MultipleLLMPromptExecutorMockTest {
         }
 
         val responseChunks = executor.executeStreaming(prompt, GoogleModels.Gemini2_0Flash)
-            .filterTextOnly()
             .toList()
 
         assertEquals(3, responseChunks.size, "Response should have three chunks")

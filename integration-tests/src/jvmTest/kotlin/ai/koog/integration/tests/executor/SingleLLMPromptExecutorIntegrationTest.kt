@@ -243,7 +243,7 @@ class SingleLLMPromptExecutorIntegrationTest {
         }
 
         withRetry(times = 3, testName = "integration_testExecuteStreaming[${model.id}]") {
-            val responseChunks = executor.executeStreaming(prompt, model)
+            val responseChunks = executor.executeStreamingFrames(prompt, model)
                 .filterTextOnly()
                 .toList()
             assertNotNull(responseChunks, "Response chunks should not be null")
