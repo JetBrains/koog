@@ -17,9 +17,8 @@ val agent = AIAgent(
     promptExecutor = simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")),
     strategy = singleRunStrategy(),
     systemPrompt = """
-        You are an expert software engineering agent. 
-        Implement requested features with clean, well-tested, production-ready code following industry best practices, 
-        or provide detailed technical answers to engineering questions.
+        You are a highly skilled programmer tasked with updating the provided codebase according to the given task.
+        Your goal is to deliver production-ready code changes that integrate seamlessly with the existing codebase and solve given task.
     """.trimIndent(),
     llmModel = OpenAIModels.Chat.GPT4_1,
     temperature = 0.0,

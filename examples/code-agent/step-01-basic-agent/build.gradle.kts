@@ -1,5 +1,6 @@
 plugins {
     id("ai.kotlin.jvm")
+    alias(libs.plugins.shadow)
     application
 }
 
@@ -17,4 +18,9 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+}
+
+tasks.shadowJar {
+    archiveBaseName.set("code-agent")
+    mergeServiceFiles()
 }
