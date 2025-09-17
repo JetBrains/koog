@@ -14,6 +14,7 @@ import ai.koog.agents.core.feature.handler.NodeBeforeExecuteContext
 import ai.koog.agents.core.feature.handler.NodeExecutionErrorContext
 import ai.koog.agents.core.feature.handler.StrategyFinishContext
 import ai.koog.agents.core.feature.handler.StrategyStartContext
+import ai.koog.agents.core.feature.handler.StreamErrorContext
 import ai.koog.agents.core.feature.handler.StreamFrameContext
 import ai.koog.agents.core.feature.handler.ToolCallContext
 import ai.koog.agents.core.feature.handler.ToolCallFailureContext
@@ -100,6 +101,8 @@ public class EventHandlerConfig : FeatureConfig() {
     private var _onBeforeStream: suspend (eventHandler: BeforeStreamContext) -> Unit = { _ -> }
 
     private var _onStreamFrame: suspend (eventHandler: StreamFrameContext) -> Unit = { _ -> }
+
+    private var _onStreamError: suspend (eventHandler: StreamErrorContext) -> Unit = { _ -> }
 
     private var _onAfterStream: suspend (eventHandler: AfterStreamContext) -> Unit = { _ -> }
 
@@ -321,7 +324,7 @@ public class EventHandlerConfig : FeatureConfig() {
     /**
      * Registers a handler to be invoked when stream frames are received during streaming.
      *
-     * This handler is called for each individual stream frame as it arrives from the language model,
+     * This handler is called for each stream frame as it arrives from the language model,
      * enabling real-time processing, monitoring, or aggregation of streaming content.
      *
      * @param handler The handler function that receives a [StreamFrameContext] containing
@@ -331,7 +334,7 @@ public class EventHandlerConfig : FeatureConfig() {
      * ```
      * onStreamFrame { eventContext ->
      *     when (val frame = eventContext.streamFrame) {
-     *         is StreamFrame.TextDelta -> processText(frame.text)
+     *         is StreamFrame.Append -> processText(frame.text)
      *         is StreamFrame.ToolCall -> processTool(frame)
      *     }
      * }
@@ -340,6 +343,30 @@ public class EventHandlerConfig : FeatureConfig() {
     public fun onStreamFrame(handler: suspend (eventContext: StreamFrameContext) -> Unit) {
         val originalHandler = this._onStreamFrame
         this._onStreamFrame = { eventContext ->
+            originalHandler(eventContext)
+            handler.invoke(eventContext)
+        }
+    }
+
+    /**
+     * Registers a handler to be invoked when an error occurs during streaming.
+     *
+     * This handler is called when an error occurs during streaming,
+     * allowing you to perform error handling or logging.
+     *
+     * @param handler The handler function that receives a [StreamErrorContext] containing
+     *                the run ID, prompt, model, and tools that were used for the streaming session.
+     *
+     * Example:
+     * ```
+     * onStreamError { eventContext ->
+     *     logger.error("Stream error for run: ${eventContext.runId}")
+     * }
+     * ```
+     */
+    public fun onStreamError(handler: suspend (eventContext: StreamErrorContext) -> Unit) {
+        val originalHandler = this._onStreamError
+        this._onStreamError = { eventContext ->
             originalHandler(eventContext)
             handler.invoke(eventContext)
         }
@@ -515,6 +542,15 @@ public class EventHandlerConfig : FeatureConfig() {
      */
     internal suspend fun invokeOnStreamFrame(eventContext: StreamFrameContext) {
         _onStreamFrame.invoke(eventContext)
+    }
+
+    /**
+     * Invokes the handler associated with the event that occurs when an error occurs during streaming.
+     *
+     * @param eventContext The context containing information about the streaming session that experienced the error
+     */
+    internal suspend fun invokeOnStreamError(eventContext: StreamErrorContext) {
+        _onStreamError.invoke(eventContext)
     }
 
     /**

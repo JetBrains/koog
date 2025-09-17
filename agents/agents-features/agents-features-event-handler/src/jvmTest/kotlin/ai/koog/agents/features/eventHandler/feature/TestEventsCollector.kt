@@ -128,6 +128,12 @@ class TestEventsCollector {
             )
         }
 
+        onStreamError { eventContext ->
+            _collectedEvents.add(
+                "OnStreamError (run id: ${eventContext.runId}, error: ${eventContext.throwable.message})"
+            )
+        }
+
         onAfterStream { eventContext ->
             _collectedEvents.add(
                 "OnAfterStream (run id: ${eventContext.runId}, prompt: ${eventContext.prompt.traceString}, model: ${eventContext.model.eventString}, tools: [${

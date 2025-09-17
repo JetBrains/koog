@@ -104,6 +104,8 @@ public class StreamFrameFlowBuilder(
     /**
      * Updates the coroutine context to signal we're currently combining a tool call,
      * this does not emit anything yet, that happens only in [tryEmitPendingToolCall].
+     *
+     * @throws StreamFrameFlowBuilderError if there is
      */
     public suspend fun upsertToolCall(
         index: Int,
@@ -118,9 +120,11 @@ public class StreamFrameFlowBuilder(
             val previous: PendingToolCall? = pendingToolCallRef.load()
             when {
                 previous == null ->
-                    throw StreamFrameFlowBuilderError.NoPendingToolCall
+                    throw StreamFrameFlowBuilderError.NoPartialToolCallToComplete
+
                 previous.index != index ->
-                    throw StreamFrameFlowBuilderError.ToolCallIndexMismatch(previous.index, index)
+                    throw StreamFrameFlowBuilderError.UnexpectedPartialToolCallIndex(previous.index, index)
+
                 else ->
                     previous.appendArgumentsDelta(args)
             }

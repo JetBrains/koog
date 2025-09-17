@@ -8,7 +8,7 @@ package ai.koog.agents.core.feature.handler
 public class StreamHandler {
 
     /**
-     * A handler that is invoked before streaming from the Language Learning Model (LLM) begins.
+     * A handler invoked before streaming from the Language Learning Model (LLM) begins.
      *
      * This handler enables customization or preprocessing steps to be applied before the stream starts.
      * It accepts the prompt, a list of tools, the model, and a run ID as inputs, allowing
@@ -31,6 +31,20 @@ public class StreamHandler {
      */
     public var streamFrameHandler: StreamFrameHandler =
         StreamFrameHandler { _ -> }
+
+    /**
+     * A handler invoked when an error occurs during streaming from the language model (LLM).
+     *
+     * This variable represents a custom implementation of the `StreamErrorHandler` functional interface,
+     * allowing error handling or logging logic to be applied during streaming errors.
+     *
+     * The handler receives the error message and a unique run identifier, enabling real-time
+     * monitoring or logging of streaming errors.
+     *
+     * Customize this handler to implement specific behavior required during streaming errors.
+     */
+    public var streamErrorHandler: StreamErrorHandler =
+        StreamErrorHandler { _ -> }
 
     /**
      * A handler invoked after streaming from the language model (LLM) is complete.
@@ -76,6 +90,20 @@ public fun interface StreamFrameHandler {
      * @param eventContext The context for the stream frame event
      */
     public suspend fun handle(eventContext: StreamFrameContext)
+}
+
+/**
+ * A functional interface for handling streaming errors.
+ * The implementation of this interface provides a mechanism to perform error handling or logging
+ * based on the provided error message and run ID.
+ */
+public fun interface StreamErrorHandler {
+    /**
+     * Handles streaming errors by processing the provided error message and run ID.
+     *
+     * @param eventContext The context for the stream error event
+     */
+    public suspend fun handle(eventContext: StreamErrorContext)
 }
 
 /**

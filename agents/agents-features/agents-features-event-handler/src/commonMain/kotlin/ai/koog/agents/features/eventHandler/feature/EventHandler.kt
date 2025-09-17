@@ -171,6 +171,10 @@ public class EventHandler {
                 config.invokeOnStreamFrame(eventContext)
             }
 
+            pipeline.interceptOnStreamError(interceptContext) intercept@{ eventContext ->
+                config.invokeOnStreamError(eventContext)
+            }
+
             pipeline.interceptAfterStream(interceptContext) intercept@{ eventContext: AfterStreamContext ->
                 config.invokeOnAfterStream(eventContext)
             }

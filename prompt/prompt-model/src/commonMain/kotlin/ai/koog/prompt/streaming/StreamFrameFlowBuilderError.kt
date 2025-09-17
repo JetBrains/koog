@@ -6,14 +6,21 @@ package ai.koog.prompt.streaming
 public sealed class StreamFrameFlowBuilderError(message: String) : Throwable(message) {
 
     /**
-     * Represents an error that can occur during [StreamFrameFlowBuilder.upsertToolCall].
+     * Occurs when trying to upsert partial tool call data (e.g., parts of the tool arguments contents)
+     * when there is no pre-existing partial tool call data to append to.
+     *
+     * The first partial tool call data for a new tool call should always include the `id`.
      */
-    public object NoPendingToolCall
-        : StreamFrameFlowBuilderError("No tool call is in progress, and no tool call id was provided.")
+    public object NoPartialToolCallToComplete :
+        StreamFrameFlowBuilderError("Error constructing tool call, no tool call to complete or no tool call id was provided.")
 
     /**
-     * Represents an error that can occur during [StreamFrameFlowBuilder.upsertToolCall].
+     * Occurs when the index of a partial tool call that lacks an `id`
+     * does not match the to-be completed tool call's index.
+     *
+     * @property expectedIndex The expected index of the partial tool call.
+     * @property actualIndex The actual index of the partial tool call.
      */
-    public class ToolCallIndexMismatch(expected: Int, actual: Int) :
-        StreamFrameFlowBuilderError("Tool call index mismatch. Expected $expected, got $actual.")
+    public class UnexpectedPartialToolCallIndex(expectedIndex: Int, actualIndex: Int) :
+        StreamFrameFlowBuilderError("Error constructing tool call, expected index $expectedIndex but was $actualIndex")
 }

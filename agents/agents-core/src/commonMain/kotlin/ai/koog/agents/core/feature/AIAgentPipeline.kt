@@ -34,6 +34,8 @@ import ai.koog.agents.core.feature.handler.StrategyFinishedHandler
 import ai.koog.agents.core.feature.handler.StrategyHandler
 import ai.koog.agents.core.feature.handler.StrategyStartContext
 import ai.koog.agents.core.feature.handler.StrategyStartedHandler
+import ai.koog.agents.core.feature.handler.StreamErrorContext
+import ai.koog.agents.core.feature.handler.StreamErrorHandler
 import ai.koog.agents.core.feature.handler.StreamFrameContext
 import ai.koog.agents.core.feature.handler.StreamFrameHandler
 import ai.koog.agents.core.feature.handler.StreamHandler
@@ -244,6 +246,20 @@ public abstract class AIAgentPipeline {
     public suspend fun onStreamFrame(runId: String, streamFrame: StreamFrame) {
         val eventContext = StreamFrameContext(runId, streamFrame)
         streamHandlers.values.forEach { handler -> handler.streamFrameHandler.handle(eventContext) }
+    }
+
+    /**
+     * Invoked if an error occurs during the streaming process.
+     *
+     * This method notifies all registered stream handlers about the streaming error,
+     * allowing them to handle or log the error.
+     *
+     * @param runId The unique identifier for this streaming session
+     * @param throwable The exception that occurred during streaming, if applicable
+     */
+    public suspend fun onStreamError(runId: String, throwable: Throwable) {
+        val eventContext = StreamErrorContext(runId, throwable)
+        streamHandlers.values.forEach { handler -> handler.streamErrorHandler.handle(eventContext) }
     }
 
     /**
@@ -776,6 +792,23 @@ public abstract class AIAgentPipeline {
         val existingHandler = streamHandlers.getOrPut(interceptContext.feature.key) { StreamHandler() }
 
         existingHandler.streamFrameHandler = StreamFrameHandler { eventContext: StreamFrameContext ->
+            with(interceptContext.featureImpl) { handle(eventContext) }
+        }
+    }
+
+    /**
+     * Intercepts errors during the streaming process.
+     *
+     * @param interceptContext The context containing the feature and its implementation
+     * @param handle The handler that processes stream errors
+     */
+    public fun <TFeature : Any> interceptOnStreamError(
+        interceptContext: InterceptContext<TFeature>,
+        handle: suspend TFeature.(eventContext: StreamErrorContext) -> Unit
+    ) {
+        val existingHandler = streamHandlers.getOrPut(interceptContext.feature.key) { StreamHandler() }
+
+        existingHandler.streamErrorHandler = StreamErrorHandler { eventContext: StreamErrorContext ->
             with(interceptContext.featureImpl) { handle(eventContext) }
         }
     }

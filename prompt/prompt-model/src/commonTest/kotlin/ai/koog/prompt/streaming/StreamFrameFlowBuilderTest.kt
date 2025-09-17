@@ -63,7 +63,7 @@ class StreamFrameFlowBuilderTest {
 
     @Test
     fun `throw when upserting partial tool call without an id`() = runTest {
-        assertFailsWith<StreamFrameFlowBuilderError.NoPendingToolCall> {
+        assertFailsWith<StreamFrameFlowBuilderError.NoPartialToolCallToComplete> {
             buildStreamFrameFlow {
                 upsertToolCall(index = 0, id = null, name = "test_error", "")
             }.collect()
@@ -72,7 +72,7 @@ class StreamFrameFlowBuilderTest {
 
     @Test
     fun `throw when upserting partial tool call with index mismatch`() = runTest {
-        assertFailsWith<StreamFrameFlowBuilderError.ToolCallIndexMismatch> {
+        assertFailsWith<StreamFrameFlowBuilderError.UnexpectedPartialToolCallIndex> {
             buildStreamFrameFlow {
                 upsertToolCall(index = 0, id = "test", name = "test_error", "")
                 upsertToolCall(index = 1, id = null, name = "test_error", "")

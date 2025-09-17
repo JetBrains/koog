@@ -10,6 +10,7 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
@@ -64,12 +65,19 @@ public class PromptExecutorProxy(
         logger.debug { "Executing LLM streaming call (prompt: $prompt, tools: [${tools.joinToString { it.name }}])" }
         return executor.executeStreaming(prompt, model, tools)
             .onStart {
+                logger.debug { "Starting LLM streaming call" }
                 pipeline.onBeforeStream(runId, prompt, model, tools)
             }
             .onEach {
+                logger.debug { "Received frame from LLM streaming call: $it" }
                 pipeline.onStreamFrame(runId, it)
             }
-            .onCompletion {
+            .catch {
+                logger.debug(it) { "Error in LLM streaming call" }
+                pipeline.onStreamError(runId, it)
+            }
+            .onCompletion { error ->
+                logger.debug(error) { "Finished LLM streaming call" }
                 pipeline.onAfterStream(runId, prompt, model, tools)
             }
     }
