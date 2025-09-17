@@ -155,11 +155,13 @@ handleEvents {
     onToolCall { context ->
         println("\n🔧 Using ${context.tool.name} with ${context.toolArgs}... ")
     }
-
     onStreamFrame { context ->
         (context.streamFrame as? StreamFrame.Append)?.let { frame ->
             print(frame.text)
         }
+    }
+    onStreamError { context -> 
+        println("❌ Error: ${it.error}")
     }
     onAfterStream {
         println("")

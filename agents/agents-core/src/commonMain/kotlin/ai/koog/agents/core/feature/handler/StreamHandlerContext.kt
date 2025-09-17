@@ -43,11 +43,11 @@ public data class StreamFrameContext(
  * This context is provided when an error occurs during streaming.
  *
  * @property runId The unique identifier for this streaming session.
- * @property throwable The exception or error that occurred during streaming.
+ * @property error The exception or error that occurred during streaming.
  */
 public data class StreamErrorContext(
     val runId: String,
-    val throwable: Throwable
+    val error: Throwable
 ) : StreamHandlerContext
 
 /**

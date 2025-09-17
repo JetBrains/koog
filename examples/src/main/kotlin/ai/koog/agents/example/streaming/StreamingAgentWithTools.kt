@@ -26,14 +26,6 @@ import kotlinx.coroutines.runBlocking
 fun main(): Unit = runBlocking {
     val switch = Switch()
 
-    /*
-     *
-     * You can also use the DSL to create a tool registry:
-     *   val toolRegistry = SimpleToolRegistry {
-     *       tool(SwitchTool(switch))
-     *       tool(SwitchStateTool(switch))
-     *   }
-     * */
     val toolRegistry = ToolRegistry {
         tools(SwitchTools(switch).asTools())
     }
@@ -42,11 +34,13 @@ fun main(): Unit = runBlocking {
             onToolCall { context ->
                 println("\n🔧 Using ${context.tool.name} with ${context.toolArgs}... ")
             }
-
             onStreamFrame { context ->
                 (context.streamFrame as? StreamFrame.Append)?.let { frame ->
                     print(frame.text)
                 }
+            }
+            onStreamError {
+                println("❌ Error: ${it.error}")
             }
             onAfterStream {
                 println("")

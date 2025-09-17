@@ -130,7 +130,7 @@ class TestEventsCollector {
 
         onStreamError { eventContext ->
             _collectedEvents.add(
-                "OnStreamError (run id: ${eventContext.runId}, error: ${eventContext.throwable.message})"
+                "OnStreamError (run id: ${eventContext.runId}, error: ${eventContext.error.message})"
             )
         }
 
