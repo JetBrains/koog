@@ -12,6 +12,7 @@ import ai.koog.agents.core.feature.message.FeatureMessage
 import ai.koog.agents.core.feature.model.FeatureStringMessage
 import ai.koog.agents.core.feature.model.events.AIAgentBeforeCloseEvent
 import ai.koog.agents.core.feature.model.events.AIAgentFinishedEvent
+import ai.koog.agents.core.feature.model.events.AIAgentGraphStrategyStartEvent
 import ai.koog.agents.core.feature.model.events.AIAgentNodeExecutionEndEvent
 import ai.koog.agents.core.feature.model.events.AIAgentNodeExecutionStartEvent
 import ai.koog.agents.core.feature.model.events.AIAgentStartedEvent
@@ -281,7 +282,7 @@ class TraceFeatureMessageLogWriterTest {
 
         val expectedEvents = listOf(
             "[INFO] Received feature message [event]: CUSTOM. ${AIAgentStartedEvent::class.simpleName}",
-            "[INFO] Received feature message [event]: CUSTOM. ${AIAgentStrategyStartEvent::class.simpleName}",
+            "[INFO] Received feature message [event]: CUSTOM. ${AIAgentGraphStrategyStartEvent::class.simpleName}",
             "[INFO] Received feature message [event]: CUSTOM. ${AIAgentNodeExecutionStartEvent::class.simpleName}",
             "[INFO] Received feature message [event]: CUSTOM. ${AIAgentNodeExecutionEndEvent::class.simpleName}",
             "[INFO] Received feature message [event]: CUSTOM. ${AIAgentNodeExecutionStartEvent::class.simpleName}",

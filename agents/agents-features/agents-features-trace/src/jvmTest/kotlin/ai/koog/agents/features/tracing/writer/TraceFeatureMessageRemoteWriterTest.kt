@@ -8,12 +8,15 @@ import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
 import ai.koog.agents.core.dsl.extension.onAssistantMessage
 import ai.koog.agents.core.dsl.extension.onToolCall
 import ai.koog.agents.core.feature.message.FeatureMessage
+import ai.koog.agents.core.feature.model.events.AIAgentEventGraph
+import ai.koog.agents.core.feature.model.events.AIAgentEventGraphEdge
+import ai.koog.agents.core.feature.model.events.AIAgentEventGraphNode
 import ai.koog.agents.core.feature.model.events.AIAgentFinishedEvent
+import ai.koog.agents.core.feature.model.events.AIAgentGraphStrategyStartEvent
 import ai.koog.agents.core.feature.model.events.AIAgentNodeExecutionEndEvent
 import ai.koog.agents.core.feature.model.events.AIAgentNodeExecutionStartEvent
 import ai.koog.agents.core.feature.model.events.AIAgentStartedEvent
 import ai.koog.agents.core.feature.model.events.AIAgentStrategyFinishedEvent
-import ai.koog.agents.core.feature.model.events.AIAgentStrategyStartEvent
 import ai.koog.agents.core.feature.model.events.AfterLLMCallEvent
 import ai.koog.agents.core.feature.model.events.BeforeLLMCallEvent
 import ai.koog.agents.core.feature.model.events.DefinedFeatureEvent
@@ -124,6 +127,9 @@ class TraceFeatureMessageRemoteWriterTest {
         // Agent Config
         val agentId = "test-agent-id"
         val strategyName = "test-strategy"
+        val nodeSendLLMCallName = "test-llm-call"
+        val nodeExecuteToolName = "test-tool-call"
+        val nodeSendToolResultName = "test-node-llm-send-tool-result"
 
         val userPrompt = "Call the dummy tool with argument: test"
         val systemPrompt = "Test system prompt"
@@ -251,15 +257,48 @@ class TraceFeatureMessageRemoteWriterTest {
                 client.connect()
                 collectEventsJob.join()
 
+                val llmCallGraphNode = AIAgentEventGraphNode(id = nodeSendLLMCallName, name = nodeSendLLMCallName)
+                val executeToolGraphNode = AIAgentEventGraphNode(id = nodeExecuteToolName, name = nodeExecuteToolName)
+                val sendToolResultGraphNode = AIAgentEventGraphNode(id = nodeSendToolResultName, name = nodeSendToolResultName)
+
+                val startGraphNode = AIAgentEventGraphNode(id = "__start__", name = "__start__")
+                val finishGraphNode = AIAgentEventGraphNode(id = "__finish__", name = "__finish__")
+
                 // Correct run id will be set after the 'collect events job' is finished.
                 val expectedEvents = listOf(
                     AIAgentStartedEvent(
                         agentId = agentId,
                         runId = runId,
                     ),
-                    AIAgentStrategyStartEvent(
+                    AIAgentGraphStrategyStartEvent(
                         runId = runId,
-                        strategyName = strategyName
+                        strategyName = strategyName,
+                        graph = AIAgentEventGraph(
+                            nodes = listOf(
+                                startGraphNode,
+                                llmCallGraphNode,
+                                executeToolGraphNode,
+                                sendToolResultGraphNode,
+                                finishGraphNode,
+                            ),
+                            edges = listOf(
+                                AIAgentEventGraphEdge(sourceNode = startGraphNode, targetNode = llmCallGraphNode),
+                                AIAgentEventGraphEdge(sourceNode = llmCallGraphNode, targetNode = executeToolGraphNode),
+                                AIAgentEventGraphEdge(sourceNode = llmCallGraphNode, targetNode = finishGraphNode),
+                                AIAgentEventGraphEdge(
+                                    sourceNode = executeToolGraphNode,
+                                    targetNode = sendToolResultGraphNode
+                                ),
+                                AIAgentEventGraphEdge(
+                                    sourceNode = sendToolResultGraphNode,
+                                    targetNode = finishGraphNode
+                                ),
+                                AIAgentEventGraphEdge(
+                                    sourceNode = sendToolResultGraphNode,
+                                    targetNode = executeToolGraphNode
+                                )
+                            )
+                        )
                     ),
                     AIAgentNodeExecutionStartEvent(
                         runId = runId,

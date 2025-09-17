@@ -1,23 +1,26 @@
 package ai.koog.agents.features.debugger.feature
 
+import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.InterceptContext
 import ai.koog.agents.core.feature.model.events.AIAgentBeforeCloseEvent
 import ai.koog.agents.core.feature.model.events.AIAgentFinishedEvent
+import ai.koog.agents.core.feature.model.events.AIAgentGraphStrategyStartEvent
 import ai.koog.agents.core.feature.model.events.AIAgentNodeExecutionEndEvent
 import ai.koog.agents.core.feature.model.events.AIAgentNodeExecutionStartEvent
 import ai.koog.agents.core.feature.model.events.AIAgentRunErrorEvent
 import ai.koog.agents.core.feature.model.events.AIAgentStartedEvent
 import ai.koog.agents.core.feature.model.events.AIAgentStrategyFinishedEvent
-import ai.koog.agents.core.feature.model.events.AIAgentStrategyStartEvent
 import ai.koog.agents.core.feature.model.events.AfterLLMCallEvent
 import ai.koog.agents.core.feature.model.events.BeforeLLMCallEvent
 import ai.koog.agents.core.feature.model.events.ToolCallEvent
 import ai.koog.agents.core.feature.model.events.ToolCallFailureEvent
 import ai.koog.agents.core.feature.model.events.ToolCallResultEvent
 import ai.koog.agents.core.feature.model.events.ToolValidationErrorEvent
+import ai.koog.agents.core.feature.model.events.startNodeToGraph
 import ai.koog.agents.core.feature.model.toAgentError
 import ai.koog.agents.core.feature.remote.server.config.DefaultServerConnectionConfig
 import ai.koog.agents.core.tools.Tool
@@ -125,9 +128,14 @@ public class Debugger {
             //region Intercept Strategy Events
 
             pipeline.interceptStrategyStarted(interceptContext) intercept@{ eventContext ->
-                val event = AIAgentStrategyStartEvent(
+
+                val strategy = eventContext.strategy as AIAgentGraphStrategy
+
+                @OptIn(InternalAgentsApi::class)
+                val event = AIAgentGraphStrategyStartEvent(
                     runId = eventContext.runId,
                     strategyName = eventContext.strategy.name,
+                    graph = strategy.startNodeToGraph()
                 )
                 writer.processMessage(event)
             }
@@ -251,6 +259,8 @@ public class Debugger {
             //endregion Intercept Tool Call Events
         }
 
+        //region Private Methods
+
         private fun readPortFromEnvironmentVariables(): Int? {
             val debuggerPortVariable =
                 EnvironmentVariablesReader.getEnvironmentVariable(name = KOOG_DEBUGGER_PORT_ENV_VAR)
@@ -258,5 +268,7 @@ public class Debugger {
             logger.debug { "Debugger Feature. Reading port from environment variable: KOOG_DEBUGGER_PORT_ENV_VAR=$debuggerPortVariable" }
             return debuggerPortVariable?.toIntOrNull()
         }
+
+        //endregion Private Methods
     }
 }

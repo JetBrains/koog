@@ -6,6 +6,8 @@ import ai.koog.agents.core.feature.model.FeatureEventMessage
 import ai.koog.agents.core.feature.model.FeatureStringMessage
 import ai.koog.agents.core.feature.model.events.AIAgentBeforeCloseEvent
 import ai.koog.agents.core.feature.model.events.AIAgentFinishedEvent
+import ai.koog.agents.core.feature.model.events.AIAgentFunctionalStrategyStartEvent
+import ai.koog.agents.core.feature.model.events.AIAgentGraphStrategyStartEvent
 import ai.koog.agents.core.feature.model.events.AIAgentNodeExecutionEndEvent
 import ai.koog.agents.core.feature.model.events.AIAgentNodeExecutionErrorEvent
 import ai.koog.agents.core.feature.model.events.AIAgentNodeExecutionStartEvent
@@ -85,6 +87,7 @@ public val defaultFeatureMessageJsonConfig: Json
  */
 public val defaultFeatureMessageSerializersModule: SerializersModule
     get() = SerializersModule {
+
         polymorphic(FeatureMessage::class) {
             subclass(FeatureStringMessage::class, FeatureStringMessage.serializer())
             subclass(FeatureEventMessage::class, FeatureEventMessage.serializer())
@@ -92,7 +95,8 @@ public val defaultFeatureMessageSerializersModule: SerializersModule
             subclass(AIAgentFinishedEvent::class, AIAgentFinishedEvent.serializer())
             subclass(AIAgentBeforeCloseEvent::class, AIAgentBeforeCloseEvent.serializer())
             subclass(AIAgentRunErrorEvent::class, AIAgentRunErrorEvent.serializer())
-            subclass(AIAgentStrategyStartEvent::class, AIAgentStrategyStartEvent.serializer())
+            subclass(AIAgentGraphStrategyStartEvent::class, AIAgentGraphStrategyStartEvent.serializer())
+            subclass(AIAgentFunctionalStrategyStartEvent::class, AIAgentFunctionalStrategyStartEvent.serializer())
             subclass(AIAgentStrategyFinishedEvent::class, AIAgentStrategyFinishedEvent.serializer())
             subclass(AIAgentNodeExecutionStartEvent::class, AIAgentNodeExecutionStartEvent.serializer())
             subclass(AIAgentNodeExecutionEndEvent::class, AIAgentNodeExecutionEndEvent.serializer())
@@ -111,7 +115,8 @@ public val defaultFeatureMessageSerializersModule: SerializersModule
             subclass(AIAgentFinishedEvent::class, AIAgentFinishedEvent.serializer())
             subclass(AIAgentBeforeCloseEvent::class, AIAgentBeforeCloseEvent.serializer())
             subclass(AIAgentRunErrorEvent::class, AIAgentRunErrorEvent.serializer())
-            subclass(AIAgentStrategyStartEvent::class, AIAgentStrategyStartEvent.serializer())
+            subclass(AIAgentGraphStrategyStartEvent::class, AIAgentGraphStrategyStartEvent.serializer())
+            subclass(AIAgentFunctionalStrategyStartEvent::class, AIAgentFunctionalStrategyStartEvent.serializer())
             subclass(AIAgentStrategyFinishedEvent::class, AIAgentStrategyFinishedEvent.serializer())
             subclass(AIAgentNodeExecutionStartEvent::class, AIAgentNodeExecutionStartEvent.serializer())
             subclass(AIAgentNodeExecutionEndEvent::class, AIAgentNodeExecutionEndEvent.serializer())
@@ -129,7 +134,8 @@ public val defaultFeatureMessageSerializersModule: SerializersModule
             subclass(AIAgentFinishedEvent::class, AIAgentFinishedEvent.serializer())
             subclass(AIAgentBeforeCloseEvent::class, AIAgentBeforeCloseEvent.serializer())
             subclass(AIAgentRunErrorEvent::class, AIAgentRunErrorEvent.serializer())
-            subclass(AIAgentStrategyStartEvent::class, AIAgentStrategyStartEvent.serializer())
+            subclass(AIAgentGraphStrategyStartEvent::class, AIAgentGraphStrategyStartEvent.serializer())
+            subclass(AIAgentFunctionalStrategyStartEvent::class, AIAgentFunctionalStrategyStartEvent.serializer())
             subclass(AIAgentStrategyFinishedEvent::class, AIAgentStrategyFinishedEvent.serializer())
             subclass(AIAgentNodeExecutionStartEvent::class, AIAgentNodeExecutionStartEvent.serializer())
             subclass(AIAgentNodeExecutionEndEvent::class, AIAgentNodeExecutionEndEvent.serializer())
@@ -140,6 +146,11 @@ public val defaultFeatureMessageSerializersModule: SerializersModule
             subclass(ToolCallResultEvent::class, ToolCallResultEvent.serializer())
             subclass(BeforeLLMCallEvent::class, BeforeLLMCallEvent.serializer())
             subclass(AfterLLMCallEvent::class, AfterLLMCallEvent.serializer())
+        }
+
+        polymorphic(AIAgentStrategyStartEvent::class) {
+            subclass(AIAgentGraphStrategyStartEvent::class, AIAgentGraphStrategyStartEvent.serializer())
+            subclass(AIAgentFunctionalStrategyStartEvent::class, AIAgentFunctionalStrategyStartEvent.serializer())
         }
     }
 

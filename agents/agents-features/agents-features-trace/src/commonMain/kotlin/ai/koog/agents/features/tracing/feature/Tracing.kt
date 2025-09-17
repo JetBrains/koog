@@ -1,6 +1,8 @@
 package ai.koog.agents.features.tracing.feature
 
+import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.AIAgentGraphPipeline
@@ -9,19 +11,20 @@ import ai.koog.agents.core.feature.message.FeatureMessage
 import ai.koog.agents.core.feature.message.FeatureMessageProcessorUtil.onMessageForEachSafe
 import ai.koog.agents.core.feature.model.events.AIAgentBeforeCloseEvent
 import ai.koog.agents.core.feature.model.events.AIAgentFinishedEvent
+import ai.koog.agents.core.feature.model.events.AIAgentGraphStrategyStartEvent
 import ai.koog.agents.core.feature.model.events.AIAgentNodeExecutionEndEvent
 import ai.koog.agents.core.feature.model.events.AIAgentNodeExecutionErrorEvent
 import ai.koog.agents.core.feature.model.events.AIAgentNodeExecutionStartEvent
 import ai.koog.agents.core.feature.model.events.AIAgentRunErrorEvent
 import ai.koog.agents.core.feature.model.events.AIAgentStartedEvent
 import ai.koog.agents.core.feature.model.events.AIAgentStrategyFinishedEvent
-import ai.koog.agents.core.feature.model.events.AIAgentStrategyStartEvent
 import ai.koog.agents.core.feature.model.events.AfterLLMCallEvent
 import ai.koog.agents.core.feature.model.events.BeforeLLMCallEvent
 import ai.koog.agents.core.feature.model.events.ToolCallEvent
 import ai.koog.agents.core.feature.model.events.ToolCallFailureEvent
 import ai.koog.agents.core.feature.model.events.ToolCallResultEvent
 import ai.koog.agents.core.feature.model.events.ToolValidationErrorEvent
+import ai.koog.agents.core.feature.model.events.startNodeToGraph
 import ai.koog.agents.core.feature.model.toAgentError
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolArgs
@@ -159,9 +162,13 @@ public class Tracing {
             //region Intercept Strategy Events
 
             pipeline.interceptStrategyStarted(interceptContext) intercept@{ eventContext ->
-                val event = AIAgentStrategyStartEvent(
+                val strategy = eventContext.strategy as AIAgentGraphStrategy
+
+                @OptIn(InternalAgentsApi::class)
+                val event = AIAgentGraphStrategyStartEvent(
                     runId = eventContext.runId,
-                    strategyName = eventContext.strategy.name
+                    strategyName = eventContext.strategy.name,
+                    graph = strategy.startNodeToGraph()
                 )
                 processMessage(config, event)
             }

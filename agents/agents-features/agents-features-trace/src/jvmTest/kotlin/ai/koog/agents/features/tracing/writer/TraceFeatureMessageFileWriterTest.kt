@@ -12,6 +12,7 @@ import ai.koog.agents.core.feature.message.FeatureMessage
 import ai.koog.agents.core.feature.model.FeatureStringMessage
 import ai.koog.agents.core.feature.model.events.AIAgentBeforeCloseEvent
 import ai.koog.agents.core.feature.model.events.AIAgentFinishedEvent
+import ai.koog.agents.core.feature.model.events.AIAgentGraphStrategyStartEvent
 import ai.koog.agents.core.feature.model.events.AIAgentNodeExecutionEndEvent
 import ai.koog.agents.core.feature.model.events.AIAgentNodeExecutionStartEvent
 import ai.koog.agents.core.feature.model.events.AIAgentStartedEvent
@@ -300,7 +301,7 @@ class TraceFeatureMessageFileWriterTest {
 
         val expectedEvents = listOf(
             "CUSTOM. ${AIAgentStartedEvent::class.simpleName}",
-            "CUSTOM. ${AIAgentStrategyStartEvent::class.simpleName}",
+            "CUSTOM. ${AIAgentGraphStrategyStartEvent::class.simpleName}",
             "CUSTOM. ${AIAgentNodeExecutionStartEvent::class.simpleName}",
             "CUSTOM. ${AIAgentNodeExecutionEndEvent::class.simpleName}",
             "CUSTOM. ${AIAgentNodeExecutionStartEvent::class.simpleName}",

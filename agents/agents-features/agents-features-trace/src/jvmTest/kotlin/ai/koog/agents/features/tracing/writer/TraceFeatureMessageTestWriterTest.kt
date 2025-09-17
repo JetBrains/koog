@@ -282,7 +282,7 @@ class TraceFeatureMessageTestWriterTest {
                     AIAgentNodeExecutionErrorEvent(
                         runId = writer.runId,
                         nodeName = nodeWithErrorName,
-                        error = AIAgentError(testErrorMessage, expectedStackTrace, null)
+                        error = AIAgentError(testErrorMessage, expectedStackTrace, null),
                     )
                 )
 
