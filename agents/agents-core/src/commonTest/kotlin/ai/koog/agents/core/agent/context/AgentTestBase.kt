@@ -81,7 +81,7 @@ open class AgentTestBase {
         storage: AIAgentStorage = createTestStorage(),
         runId: String = "test-run-id",
         strategyName: String = "test-strategy",
-        pipeline: AIAgentGraphPipeline = AIAgentGraphPipeline(),
+        pipeline: AIAgentGraphPipeline = AIAgentGraphPipeline(testClock),
         agentInput: String = "test-input"
     ): AIAgentGraphContext {
         return AIAgentGraphContext(

@@ -15,13 +15,16 @@ import ai.koog.agents.core.feature.handler.NodeAfterExecuteContext
 import ai.koog.agents.core.feature.handler.NodeBeforeExecuteContext
 import ai.koog.agents.core.feature.handler.NodeExecutionErrorContext
 import ai.koog.agents.core.feature.handler.NodeExecutionErrorHandler
+import kotlinx.datetime.Clock
 import kotlin.reflect.KType
 
 /**
  * Represents a pipeline for AI agent graph execution, extending the functionality of `AIAgentPipeline`.
  * This class manages the execution of specific nodes in the pipeline using registered handlers.
+ *
+ * @property clock The clock used for time-based operations within the pipeline
  */
-public class AIAgentGraphPipeline : AIAgentPipeline() {
+public class AIAgentGraphPipeline(clock: Clock = Clock.System) : AIAgentPipeline(clock) {
     /**
      * Map of node execution handlers registered for different features.
      * Keys are feature storage keys, values are node execution handlers.

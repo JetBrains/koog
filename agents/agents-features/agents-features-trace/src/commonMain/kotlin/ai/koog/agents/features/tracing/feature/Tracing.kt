@@ -128,6 +128,7 @@ public class Tracing {
                 val event = AIAgentStartedEvent(
                     agentId = eventContext.agent.id,
                     runId = eventContext.runId,
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 processMessage(config, event)
             }
@@ -137,6 +138,7 @@ public class Tracing {
                     agentId = eventContext.agentId,
                     runId = eventContext.runId,
                     result = eventContext.result?.toString(),
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 processMessage(config, event)
             }
@@ -146,6 +148,7 @@ public class Tracing {
                     agentId = eventContext.agentId,
                     runId = eventContext.runId,
                     error = eventContext.throwable.toAgentError(),
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 processMessage(config, event)
             }
@@ -153,6 +156,7 @@ public class Tracing {
             pipeline.interceptAgentBeforeClosed(interceptContext) intercept@{ eventContext ->
                 val event = AIAgentBeforeCloseEvent(
                     agentId = eventContext.agentId,
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 processMessage(config, event)
             }
@@ -168,7 +172,8 @@ public class Tracing {
                 val event = AIAgentGraphStrategyStartEvent(
                     runId = eventContext.runId,
                     strategyName = eventContext.strategy.name,
-                    graph = strategy.startNodeToGraph()
+                    graph = strategy.startNodeToGraph(),
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 processMessage(config, event)
             }
@@ -178,6 +183,7 @@ public class Tracing {
                     runId = eventContext.runId,
                     strategyName = eventContext.strategy.name,
                     result = eventContext.result?.toString(),
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 processMessage(config, event)
             }
@@ -190,7 +196,8 @@ public class Tracing {
                 val event = AIAgentNodeExecutionStartEvent(
                     runId = eventContext.context.runId,
                     nodeName = eventContext.node.name,
-                    input = eventContext.input?.toString() ?: ""
+                    input = eventContext.input?.toString() ?: "",
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 processMessage(config, event)
             }
@@ -200,7 +207,8 @@ public class Tracing {
                     runId = eventContext.context.runId,
                     nodeName = eventContext.node.name,
                     input = eventContext.input?.toString() ?: "",
-                    output = eventContext.output?.toString() ?: ""
+                    output = eventContext.output?.toString() ?: "",
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 processMessage(config, event)
             }
@@ -209,7 +217,8 @@ public class Tracing {
                 val event = AIAgentNodeExecutionErrorEvent(
                     runId = eventContext.context.runId,
                     nodeName = eventContext.node.name,
-                    error = eventContext.throwable.toAgentError()
+                    error = eventContext.throwable.toAgentError(),
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 processMessage(config, event)
             }
@@ -223,7 +232,8 @@ public class Tracing {
                     runId = eventContext.runId,
                     prompt = eventContext.prompt,
                     model = eventContext.model.eventString,
-                    tools = eventContext.tools.map { it.name }
+                    tools = eventContext.tools.map { it.name },
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 processMessage(config, event)
             }
@@ -234,7 +244,8 @@ public class Tracing {
                     prompt = eventContext.prompt,
                     model = eventContext.model.eventString,
                     responses = eventContext.responses,
-                    moderationResponse = eventContext.moderationResponse
+                    moderationResponse = eventContext.moderationResponse,
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 processMessage(config, event)
             }
@@ -252,7 +263,8 @@ public class Tracing {
                     runId = eventContext.runId,
                     toolCallId = eventContext.toolCallId,
                     toolName = tool.name,
-                    toolArgs = tool.encodeArgs(eventContext.toolArgs)
+                    toolArgs = tool.encodeArgs(eventContext.toolArgs),
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 processMessage(config, event)
             }
@@ -267,7 +279,8 @@ public class Tracing {
                     toolCallId = eventContext.toolCallId,
                     toolName = tool.name,
                     toolArgs = tool.encodeArgs(eventContext.toolArgs),
-                    error = eventContext.error
+                    error = eventContext.error,
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 processMessage(config, event)
             }
@@ -282,7 +295,8 @@ public class Tracing {
                     toolCallId = eventContext.toolCallId,
                     toolName = tool.name,
                     toolArgs = tool.encodeArgs(eventContext.toolArgs),
-                    error = eventContext.throwable.toAgentError()
+                    error = eventContext.throwable.toAgentError(),
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 processMessage(config, event)
             }
@@ -297,7 +311,8 @@ public class Tracing {
                     toolCallId = eventContext.toolCallId,
                     toolName = tool.name,
                     toolArgs = tool.encodeArgs(eventContext.toolArgs),
-                    result = eventContext.result?.let { result -> tool.encodeResultToString(result) }
+                    result = eventContext.result?.let { result -> tool.encodeResultToString(result) },
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 processMessage(config, event)
             }

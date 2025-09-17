@@ -209,6 +209,7 @@ class DebuggerTest {
                     AIAgentStartedEvent(
                         agentId = agentId,
                         runId = clientEventsCollector.runId,
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     AIAgentGraphStrategyStartEvent(
                         runId = clientEventsCollector.runId,
@@ -238,109 +239,128 @@ class DebuggerTest {
                                     targetNode = executeToolGraphNode
                                 )
                             )
-                        )
+                        ),
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     AIAgentNodeExecutionStartEvent(
                         runId = clientEventsCollector.runId,
                         nodeName = "__start__",
-                        input = userPrompt
+                        input = userPrompt,
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     AIAgentNodeExecutionEndEvent(
                         runId = clientEventsCollector.runId,
                         nodeName = "__start__",
                         input = userPrompt,
-                        output = userPrompt
+                        output = userPrompt,
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     AIAgentNodeExecutionStartEvent(
                         runId = clientEventsCollector.runId,
                         nodeName = "test-llm-call",
-                        input = userPrompt
+                        input = userPrompt,
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     BeforeLLMCallEvent(
                         runId = clientEventsCollector.runId,
                         prompt = expectedLLMCallPrompt,
                         model = testModel.eventString,
-                        tools = listOf(dummyTool.name)
+                        tools = listOf(dummyTool.name),
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     AfterLLMCallEvent(
                         runId = clientEventsCollector.runId,
                         prompt = expectedLLMCallPrompt,
                         model = testModel.eventString,
-                        responses = listOf(toolCallMessage(dummyTool.name, content = """{"dummy":"test"}"""))
+                        responses = listOf(toolCallMessage(dummyTool.name, content = """{"dummy":"test"}""")),
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     AIAgentNodeExecutionEndEvent(
                         runId = clientEventsCollector.runId,
                         nodeName = "test-llm-call",
                         input = userPrompt,
-                        output = toolCallMessage(dummyTool.name, content = """{"dummy":"test"}""").toString()
+                        output = toolCallMessage(dummyTool.name, content = """{"dummy":"test"}""").toString(),
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     AIAgentNodeExecutionStartEvent(
                         runId = clientEventsCollector.runId,
                         nodeName = "test-tool-call",
-                        input = toolCallMessage(dummyTool.name, content = """{"dummy":"test"}""").toString()
+                        input = toolCallMessage(dummyTool.name, content = """{"dummy":"test"}""").toString(),
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     ToolCallEvent(
                         runId = clientEventsCollector.runId,
                         toolCallId = "0",
                         toolName = dummyTool.name,
-                        toolArgs = dummyTool.encodeArgs(DummyTool.Args("test"))
+                        toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     ToolCallResultEvent(
                         runId = clientEventsCollector.runId,
                         toolCallId = "0",
                         toolName = dummyTool.name,
                         toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
-                        result = dummyTool.result
+                        result = dummyTool.result,
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     AIAgentNodeExecutionEndEvent(
                         runId = clientEventsCollector.runId,
                         nodeName = "test-tool-call",
                         input = toolCallMessage(dummyTool.name, content = """{"dummy":"test"}""").toString(),
-                        output = toolResult("0", dummyTool.name, dummyTool.result, dummyTool.result).toString()
+                        output = toolResult("0", dummyTool.name, dummyTool.result, dummyTool.result).toString(),
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     AIAgentNodeExecutionStartEvent(
                         runId = clientEventsCollector.runId,
                         nodeName = "test-node-llm-send-tool-result",
-                        input = toolResult("0", dummyTool.name, dummyTool.result, dummyTool.result).toString()
+                        input = toolResult("0", dummyTool.name, dummyTool.result, dummyTool.result).toString(),
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     BeforeLLMCallEvent(
                         runId = clientEventsCollector.runId,
                         prompt = expectedLLMCallWithToolsPrompt,
                         model = testModel.eventString,
-                        tools = listOf(dummyTool.name)
+                        tools = listOf(dummyTool.name),
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     AfterLLMCallEvent(
                         runId = clientEventsCollector.runId,
                         prompt = expectedLLMCallWithToolsPrompt,
                         model = testModel.eventString,
                         responses = listOf(assistantMessage(mockResponse)),
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     AIAgentNodeExecutionEndEvent(
                         runId = clientEventsCollector.runId,
                         nodeName = "test-node-llm-send-tool-result",
                         input = toolResult("0", dummyTool.name, dummyTool.result, dummyTool.result).toString(),
-                        output = assistantMessage(mockResponse).toString()
+                        output = assistantMessage(mockResponse).toString(),
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     AIAgentNodeExecutionStartEvent(
                         runId = clientEventsCollector.runId,
                         nodeName = "__finish__",
-                        input = mockResponse
+                        input = mockResponse,
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     AIAgentNodeExecutionEndEvent(
                         runId = clientEventsCollector.runId,
                         nodeName = "__finish__",
                         input = mockResponse,
-                        output = mockResponse
+                        output = mockResponse,
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     AIAgentStrategyFinishedEvent(
                         runId = clientEventsCollector.runId,
                         strategyName = strategyName,
-                        result = mockResponse
+                        result = mockResponse,
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     AIAgentFinishedEvent(
                         agentId = agentId,
                         runId = clientEventsCollector.runId,
-                        result = mockResponse
+                        result = mockResponse,
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
                 )
 
@@ -437,28 +457,33 @@ class DebuggerTest {
                             edges = listOf(
                                 AIAgentEventGraphEdge(sourceNode = startGraphNode, targetNode = finishGraphNode)
                             )
-                        )
+                        ),
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     AIAgentNodeExecutionStartEvent(
                         runId = clientEventsCollector.runId,
                         nodeName = "__start__",
-                        input = userPrompt
+                        input = userPrompt,
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     AIAgentNodeExecutionEndEvent(
                         runId = clientEventsCollector.runId,
                         nodeName = "__start__",
                         input = userPrompt,
-                        output = userPrompt
+                        output = userPrompt,
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     AIAgentStrategyFinishedEvent(
                         runId = clientEventsCollector.runId,
                         strategyName = strategyName,
-                        result = userPrompt
+                        result = userPrompt,
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     AIAgentFinishedEvent(
                         agentId = agentId,
                         runId = clientEventsCollector.runId,
-                        result = userPrompt
+                        result = userPrompt,
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
                 )
 
@@ -542,6 +567,7 @@ class DebuggerTest {
                     AIAgentStartedEvent(
                         agentId = agentId,
                         runId = clientEventsCollector.runId,
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     AIAgentGraphStrategyStartEvent(
                         runId = clientEventsCollector.runId,
@@ -554,39 +580,46 @@ class DebuggerTest {
                             edges = listOf(
                                 AIAgentEventGraphEdge(startGraphNode, finishGraphNode)
                             )
-                        )
+                        ),
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     AIAgentNodeExecutionStartEvent(
                         runId = clientEventsCollector.runId,
                         nodeName = "__start__",
-                        input = userPrompt
+                        input = userPrompt,
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     AIAgentNodeExecutionEndEvent(
                         runId = clientEventsCollector.runId,
                         nodeName = "__start__",
                         input = userPrompt,
-                        output = userPrompt
+                        output = userPrompt,
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     AIAgentNodeExecutionStartEvent(
                         runId = clientEventsCollector.runId,
                         nodeName = "__finish__",
-                        input = userPrompt
+                        input = userPrompt,
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     AIAgentNodeExecutionEndEvent(
                         runId = clientEventsCollector.runId,
                         nodeName = "__finish__",
                         input = userPrompt,
-                        output = userPrompt
+                        output = userPrompt,
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     AIAgentStrategyFinishedEvent(
                         runId = clientEventsCollector.runId,
                         strategyName = strategyName,
-                        result = userPrompt
+                        result = userPrompt,
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     AIAgentFinishedEvent(
                         agentId = agentId,
                         runId = clientEventsCollector.runId,
-                        result = userPrompt
+                        result = userPrompt,
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
                 )
 

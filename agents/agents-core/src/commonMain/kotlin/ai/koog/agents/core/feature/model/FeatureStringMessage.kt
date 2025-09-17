@@ -17,19 +17,13 @@ import kotlinx.serialization.Serializable
  * temporal tracking for feature messages.
  *
  * @property message The textual message content encapsulated by this feature message.
+ * @property timestamp The time at which this message was created has represented in milliseconds since the epoch.
  */
 @Serializable
-public data class FeatureStringMessage(val message: String) : FeatureMessage {
-
-    /**
-     * The timestamp, represented in milliseconds since the epoch, indicating when the
-     * feature message was created.
-     *
-     * This property provides a temporal reference that can be used to track or order
-     * the occurrence of feature messages or events. The timestamp is generated using
-     * the system clock at the time of initialization.
-     */
+public data class FeatureStringMessage(
+    val message: String,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds()
+) : FeatureMessage {
 
     /**
      * Represents the type of the feature message, identifying the message's purpose or category.

@@ -16,6 +16,7 @@ import ai.koog.agents.features.tracing.mock.RecursiveTool
 import ai.koog.agents.features.tracing.mock.TestFeatureMessageWriter
 import ai.koog.agents.features.tracing.mock.TestLogger
 import ai.koog.agents.features.tracing.mock.createAgent
+import ai.koog.agents.features.tracing.mock.testClock
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.utils.use
 import ai.koog.prompt.message.Message
@@ -283,6 +284,7 @@ class TraceFeatureMessageTestWriterTest {
                         runId = writer.runId,
                         nodeName = nodeWithErrorName,
                         error = AIAgentError(testErrorMessage, expectedStackTrace, null),
+                        timestamp = testClock.now().toEpochMilliseconds()
                     )
                 )
 

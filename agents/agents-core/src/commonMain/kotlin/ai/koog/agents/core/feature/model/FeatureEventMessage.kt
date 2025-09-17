@@ -19,20 +19,13 @@ import kotlinx.serialization.Serializable
  * @property timestamp The time at which this event message was created has represented in milliseconds since the epoch.
  *                     This property implements the [ai.koog.agents.core.feature.message.FeatureMessage.timestamp] from the parent interface.
  * @property messageType The type of the message, which in this case is fixed as [Type.Event].
- *                       This property implements the [ai.koog.agents.core.feature.message.FeatureMessage.messageType] from the parent interface.
+ *                       This property implements the [ai.koog.agents.core.feature.message.FeatureMessage.messageType] from the parent interface
  */
 @Serializable
-public data class FeatureEventMessage(override val eventId: String) : FeatureEvent {
-
-    /**
-     * Represents the timestamp of when the feature event message was created.
-     *
-     * The timestamp is defined as the number of milliseconds elapsed since the Unix epoch
-     * (1970-01-01T00:00:00Z), as provided by the system clock.
-     * This value is used to record the exact time of occurrence for feature events, enabling
-     * precise tracking and ordering of event processing.
-     */
+public data class FeatureEventMessage(
+    override val eventId: String,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds()
+) : FeatureEvent {
 
     /**
      * Specifies the type of the feature message, indicating the nature of the message being processed.

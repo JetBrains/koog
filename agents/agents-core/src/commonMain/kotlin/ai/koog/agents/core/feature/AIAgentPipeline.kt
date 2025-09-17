@@ -50,6 +50,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.datetime.Clock
 import kotlin.reflect.KType
 
 /**
@@ -66,8 +67,10 @@ import kotlin.reflect.KType
  * This pipeline serves as the central mechanism for extending and customizing agent behavior
  * through a flexible interception system. Features can be installed with custom configurations
  * and can hook into different stages of the agent's execution lifecycle.
+ *
+ * @param clock Clock instance for time-related operations
  */
-public abstract class AIAgentPipeline {
+public abstract class AIAgentPipeline(public val clock: Clock) {
 
     /**
      * Companion object for the AIAgentPipeline class.

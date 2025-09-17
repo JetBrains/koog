@@ -1,15 +1,18 @@
 package ai.koog.agents.core.feature
 
 import ai.koog.agents.core.feature.config.FeatureConfig
+import kotlinx.datetime.Clock
 
 /**
  * Represents a specific implementation of an AI agent pipeline
- * that does not utilize graph-based processing. This class inherits
+ * that does not use graph-based processing. This class inherits
  * from the base AIAgentPipeline class and may be used for handling
  * workflows or data processing tasks that do not require graph-based
  * data structures.
+ *
+ * @param clock The clock used for time-based operations within the pipeline
  */
-public class AIAgentNonGraphPipeline : AIAgentPipeline() {
+public class AIAgentNonGraphPipeline(clock: Clock = Clock.System) : AIAgentPipeline(clock) {
     /**
      * Installs a non-graph feature into the pipeline with the provided configuration.
      *

@@ -94,6 +94,7 @@ public class Debugger {
                 val event = AIAgentStartedEvent(
                     agentId = eventContext.agent.id,
                     runId = eventContext.runId,
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 writer.processMessage(event)
             }
@@ -103,6 +104,7 @@ public class Debugger {
                     agentId = eventContext.agentId,
                     runId = eventContext.runId,
                     result = eventContext.result?.toString(),
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 writer.processMessage(event)
             }
@@ -112,6 +114,7 @@ public class Debugger {
                     agentId = eventContext.agentId,
                     runId = eventContext.runId,
                     error = eventContext.throwable.toAgentError(),
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 writer.processMessage(event)
             }
@@ -119,6 +122,7 @@ public class Debugger {
             pipeline.interceptAgentBeforeClosed(interceptContext) intercept@{ eventContext ->
                 val event = AIAgentBeforeCloseEvent(
                     agentId = eventContext.agentId,
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 writer.processMessage(event)
             }
@@ -135,7 +139,8 @@ public class Debugger {
                 val event = AIAgentGraphStrategyStartEvent(
                     runId = eventContext.runId,
                     strategyName = eventContext.strategy.name,
-                    graph = strategy.startNodeToGraph()
+                    graph = strategy.startNodeToGraph(),
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 writer.processMessage(event)
             }
@@ -145,6 +150,7 @@ public class Debugger {
                     runId = eventContext.runId,
                     strategyName = eventContext.strategy.name,
                     result = eventContext.result?.toString(),
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 writer.processMessage(event)
             }
@@ -157,7 +163,8 @@ public class Debugger {
                 val event = AIAgentNodeExecutionStartEvent(
                     runId = eventContext.context.runId,
                     nodeName = eventContext.node.name,
-                    input = eventContext.input?.toString() ?: ""
+                    input = eventContext.input?.toString() ?: "",
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 writer.processMessage(event)
             }
@@ -167,7 +174,8 @@ public class Debugger {
                     runId = eventContext.context.runId,
                     nodeName = eventContext.node.name,
                     input = eventContext.input?.toString() ?: "",
-                    output = eventContext.output?.toString() ?: ""
+                    output = eventContext.output?.toString() ?: "",
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 writer.processMessage(event)
             }
@@ -181,7 +189,8 @@ public class Debugger {
                     runId = eventContext.runId,
                     prompt = eventContext.prompt,
                     model = eventContext.model.eventString,
-                    tools = eventContext.tools.map { it.name }
+                    tools = eventContext.tools.map { it.name },
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 writer.processMessage(event)
             }
@@ -192,7 +201,8 @@ public class Debugger {
                     prompt = eventContext.prompt,
                     model = eventContext.model.eventString,
                     responses = eventContext.responses,
-                    moderationResponse = eventContext.moderationResponse
+                    moderationResponse = eventContext.moderationResponse,
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 writer.processMessage(event)
             }
@@ -210,6 +220,7 @@ public class Debugger {
                     toolCallId = eventContext.toolCallId,
                     toolName = eventContext.tool.name,
                     toolArgs = tool.encodeArgs(eventContext.toolArgs),
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 writer.processMessage(event)
             }
@@ -223,7 +234,8 @@ public class Debugger {
                     toolCallId = eventContext.toolCallId,
                     toolName = eventContext.tool.name,
                     toolArgs = tool.encodeArgs(eventContext.toolArgs),
-                    error = eventContext.error
+                    error = eventContext.error,
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 writer.processMessage(event)
             }
@@ -237,7 +249,8 @@ public class Debugger {
                     toolCallId = eventContext.toolCallId,
                     toolName = tool.name,
                     toolArgs = tool.encodeArgs(eventContext.toolArgs),
-                    error = eventContext.throwable.toAgentError()
+                    error = eventContext.throwable.toAgentError(),
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 writer.processMessage(event)
             }
@@ -251,7 +264,8 @@ public class Debugger {
                     toolCallId = eventContext.toolCallId,
                     toolName = eventContext.tool.name,
                     toolArgs = tool.encodeArgs(eventContext.toolArgs),
-                    result = eventContext.result?.let { result -> tool.encodeResultToString(result) }
+                    result = eventContext.result?.let { result -> tool.encodeResultToString(result) },
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 writer.processMessage(event)
             }

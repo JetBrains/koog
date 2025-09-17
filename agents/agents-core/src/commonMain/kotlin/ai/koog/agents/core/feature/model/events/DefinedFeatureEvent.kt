@@ -2,7 +2,6 @@ package ai.koog.agents.core.feature.model.events
 
 import ai.koog.agents.core.feature.message.FeatureEvent
 import ai.koog.agents.core.feature.message.FeatureMessage
-import kotlinx.datetime.Clock
 
 /**
  * Represents a sealed class for defining feature-related events in the system.
@@ -18,15 +17,6 @@ import kotlinx.datetime.Clock
  * @constructor Initializes a new instance of the `DefinedFeatureEvent` class.
  */
 public sealed class DefinedFeatureEvent : FeatureEvent {
-    /**
-     * The timestamp, represented as the number of milliseconds since the Unix epoch,
-     * indicating when the feature event was created.
-     *
-     * This property is used to track the exact creation or occurrence time of the feature event.
-     * It provides temporal context for ordering events, correlating feature messages, and
-     * performing time-based analysis within the system.
-     */
-    override val timestamp: Long = Clock.System.now().toEpochMilliseconds()
 
     /**
      * Specifies the type of the feature message for this event.

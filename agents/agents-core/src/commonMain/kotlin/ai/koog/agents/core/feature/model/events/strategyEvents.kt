@@ -2,6 +2,7 @@ package ai.koog.agents.core.feature.model.events
 
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.annotation.InternalAgentsApi
+import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
 
 /**
@@ -53,13 +54,15 @@ public abstract class AIAgentStrategyStartEvent : DefinedFeatureEvent() {
  * @property runId A unique identifier representing the specific run or instance of the strategy execution.
  * @property strategyName The name of the graph-based strategy being executed.
  * @property graph The graph structure representing the strategy's execution workflow, encompassing nodes
- *                 and their directed relationships.
+ *                 and their directed relationships;
+ * @property timestamp The timestamp of the event, in milliseconds since the Unix epoch.
  */
 @Serializable
 public data class AIAgentGraphStrategyStartEvent(
     override val runId: String,
     override val strategyName: String,
-    val graph: AIAgentEventGraph
+    val graph: AIAgentEventGraph,
+    override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
 ) : AIAgentStrategyStartEvent()
 
 /**
@@ -71,13 +74,15 @@ public data class AIAgentGraphStrategyStartEvent(
  * the lifecycle of an AI agent's processes. This class extends [AIAgentStrategyStartEvent],
  * inheriting shared properties and behavior for strategy execution events.
  *
- * @property runId A unique identifier representing the specific run or instance of the strategy execution.
- * @property strategyName The name of the functional-based strategy being executed.
+ * @property runId A unique identifier representing the specific run or instance of the strategy execution;
+ * @property strategyName The name of the functional-based strategy being executed;
+ * @property timestamp The timestamp of the event, in milliseconds since the Unix epoch.
  */
 @Serializable
 public data class AIAgentFunctionalStrategyStartEvent(
     override val runId: String,
-    override val strategyName: String
+    override val strategyName: String,
+    override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
 ) : AIAgentStrategyStartEvent()
 
 /**
@@ -86,17 +91,19 @@ public data class AIAgentFunctionalStrategyStartEvent(
  * This event captures information about the strategy that was executed and the result of its execution.
  * It is used to notify the system or consumers about the conclusion of a specific strategy.
  *
- * @property strategyName The name of the strategy that was executed.
+ * @property strategyName The name of the strategy that was executed;
  * @property result The result of the strategy execution, providing details such as success, failure,
- * or other status descriptions.
- * @property eventId A string representing the event type.
+ *           or other status descriptions;
+ * @property eventId A string representing the event type;
+ * @property timestamp The timestamp of the event, in milliseconds since the Unix epoch.
  */
 @Serializable
 public data class AIAgentStrategyFinishedEvent(
     val runId: String,
     val strategyName: String,
     val result: String?,
-    override val eventId: String = AIAgentStrategyFinishedEvent::class.simpleName!!
+    override val eventId: String = AIAgentStrategyFinishedEvent::class.simpleName!!,
+    override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent()
 
 /**
@@ -112,7 +119,7 @@ public data class AIAgentStrategyFinishedEvent(
  * and edges define dependencies between these steps.
  *
  * @property nodes A list of nodes in the graph where each node represents a specific
- *                 processing unit with defined input and output types.
+ *                 processing unit with defined input and output types;
  * @property edges A list of directed edges that define the relationships and data
  *                 flow between nodes in the graph.
  */
@@ -129,7 +136,7 @@ public data class AIAgentEventGraph(
  * and an expected output type. These nodes are components that process or transform data
  * within an AI agent system, contributing to the overall workflow of the agent.
  *
- * @property id The unique identifier of the node within the graph.
+ * @property id The unique identifier of the node within the graph;
  * @property name The descriptive name of the node.
  */
 @Serializable
@@ -145,7 +152,7 @@ public data class AIAgentEventGraphNode(
  * by specifying the source and target node identifiers. It is used to construct and represent
  * the flow or dependencies between various components or processes of an AI agent.
  *
- * @property sourceNode The unique identifier of the source node in the graph.
+ * @property sourceNode The unique identifier of the source node in the graph;
  * @property targetNode The unique identifier of the target node in the graph.
  */
 @Serializable
