@@ -12,7 +12,7 @@ import ai.koog.integration.tests.utils.TestUtils
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.ktor.server.cio.CIO
+import io.ktor.server.netty.Netty
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
@@ -38,7 +38,7 @@ class McpServerTest {
         assertIsNot<McpTool>(randomNumberTool)
 
         val (server, connectors) = startSseMcpServer(
-            factory = CIO,
+            factory = Netty,
             tools = ToolRegistry.Companion {
                 tool(randomNumberTool)
             },

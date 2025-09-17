@@ -1,7 +1,7 @@
 [versions]
 agp = "8.11.1"
 annotations = "26.0.2"
-assertj="3.27.4"
+assertj = "3.27.4"
 aws-sdk-kotlin = "1.5.16"
 dokka = "2.0.0"
 jetsign = "45.47"
@@ -18,8 +18,9 @@ ktor3 = "3.2.2"
 lettuce = "6.5.5.RELEASE"
 logback = "1.5.13"
 mcp = "0.7.0"
-mockito="5.19.0"
+mockito = "5.19.0"
 mockk = "1.13.8"
+netty = "4.2.6.Final"
 opentelemetry = "1.51.0"
 oshai-logging = "7.0.7"
 shadow = "8.1.1"
@@ -57,6 +58,7 @@ ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "kto
 ktor-client-winhttp = { module = "io.ktor:ktor-client-winhttp", version.ref = "ktor3" }
 ktor-client-curl = { module = "io.ktor:ktor-client-curl", version.ref = "ktor3" }
 ktor-bom = { module = "io.ktor:ktor-bom", version.ref = "ktor3" }
+ktor-client-apache5 = { module = "io.ktor:ktor-client-apache5", version.ref = "ktor3" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor3" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor3" }
 ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktor3" }
@@ -65,6 +67,7 @@ ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor3" 
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor3" }
 ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor3" }
 ktor-server-cio = { module = "io.ktor:ktor-server-cio", version.ref = "ktor3" }
+ktor-server-netty = { module = "io.ktor:ktor-server-netty-jvm", version.ref = "ktor3" }
 ktor-server-sse = { module = "io.ktor:ktor-server-sse", version.ref = "ktor3" }
 lettuce-core = { module = "io.lettuce:lettuce-core", version.ref = "lettuce" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
@@ -95,13 +98,13 @@ opentelemetry-exporter-logging = { module = "io.opentelemetry:opentelemetry-expo
 aws-sdk-kotlin-bedrock = { module = "aws.sdk.kotlin:bedrock", version.ref = "aws-sdk-kotlin" }
 aws-sdk-kotlin-bedrockruntime = { module = "aws.sdk.kotlin:bedrockruntime", version.ref = "aws-sdk-kotlin" }
 aws-sdk-kotlin-sts = { module = "aws.sdk.kotlin:sts", version.ref = "aws-sdk-kotlin" }
-android-tools-gradle={ module = "com.android.tools.build:gradle", version.ref="agp"}
+android-tools-gradle = { module = "com.android.tools.build:gradle", version.ref = "agp" }
 
 # Spring
 spring-boot-bom = { module = "org.springframework.boot:spring-boot-dependencies", version.ref = "spring-boot" }
-spring-boot-starter = { module = "org.springframework.boot:spring-boot-starter"}
+spring-boot-starter = { module = "org.springframework.boot:spring-boot-starter" }
 spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test" }
-jackson-module-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin"}
+jackson-module-kotlin = { module = "com.fasterxml.jackson.module:jackson-module-kotlin" }
 reactor-kotlin-extensions = { module = "io.projectreactor.kotlin:reactor-kotlin-extensions" }
 
 [bundles]

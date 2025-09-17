@@ -101,11 +101,12 @@ jobs:
 
       - name: JvmIntegrationTest with Gradle Wrapper
         env:
+          JAVA_OPTS: "-Xms8g -Xmx8g -Dfile.encoding=UTF-8 -Djava.awt.headless=true -Dkotlin.daemon.jvm.options=-Xmx6g"
           ANTHROPIC_API_TEST_KEY: ${{ secrets.ANTHROPIC_API_TEST_KEY }}
-          OPEN_AI_API_TEST_KEY: ${{ secrets.OPEN_AI_API_TEST_KEY }}
+          DEEPSEEK_API_TEST_KEY: ${{ vars.DEEPSEEK_API_TEST_KEY }}
           GEMINI_API_TEST_KEY: ${{ secrets.GEMINI_API_TEST_KEY }}
-          OPEN_ROUTER_API_TEST_KEY: ${{ secrets.OPEN_ROUTER_API_TEST_KEY }}
-          DEEPSEEK_API_TEST_KEY: ${{ secrets.DEEPSEEK_API_TEST_KEY }}
+          OPEN_AI_API_TEST_KEY: ${{ secrets.OPEN_AI_API_TEST_KEY }}
+          OPEN_ROUTER_API_TEST_KEY: ${{ vars.OPEN_ROUTER_API_TEST_KEY }}
         run: ./gradlew jvmIntegrationTest --tests "${{ matrix.test-group }}" --continue
 
       - name: Collect reports
