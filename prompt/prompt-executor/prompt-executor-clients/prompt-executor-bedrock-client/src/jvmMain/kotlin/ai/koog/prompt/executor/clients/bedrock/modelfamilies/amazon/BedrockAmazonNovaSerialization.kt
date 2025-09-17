@@ -7,7 +7,7 @@ import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
-import io.github.oshai.kotlinlogging.KotlinLogging
+import ai.koog.prompt.streaming.StreamFrame
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
@@ -32,8 +32,6 @@ private fun ToolDescriptor.asNovaToolSpec() = NovaToolSpec(
 )
 
 internal object BedrockAmazonNovaSerialization {
-
-    private val logger = KotlinLogging.logger {}
 
     private val json = Json {
         ignoreUnknownKeys = true
@@ -118,16 +116,7 @@ internal object BedrockAmazonNovaSerialization {
     @OptIn(ExperimentalUuidApi::class)
     internal fun parseNovaResponse(responseBody: String, clock: Clock = Clock.System): List<Message.Response> {
         val response = json.decodeFromString<NovaResponse>(responseBody)
-        val metaInfo = ResponseMetaInfo.create(
-            clock,
-            response.usage?.totalTokens,
-            response.usage?.inputTokens,
-            response.usage?.outputTokens,
-            additionalInfo = mapOf(
-                "cacheReadInputTokenCount" to response.usage?.cacheReadInputTokenCount.toString(),
-                "cacheWriteInputTokenCount" to response.usage?.cacheWriteInputTokenCount.toString()
-            )
-        )
+        val metaInfo = parseMetaInfo(clock, response.usage)
 
         return response.output.message.content.map { content ->
             when {
@@ -149,8 +138,32 @@ internal object BedrockAmazonNovaSerialization {
         }
     }
 
-    internal fun parseNovaStreamChunk(chunkJsonString: String): String {
+    internal fun parseNovaStreamChunk(chunkJsonString: String, clock: Clock = Clock.System): List<StreamFrame> {
         val chunk = json.decodeFromString<NovaStreamChunk>(chunkJsonString)
-        return chunk.contentBlockDelta?.delta?.text ?: ""
+        return buildList {
+            chunk.contentBlockDelta?.delta?.text?.let(StreamFrame::Append)?.let(::add)
+            chunk.messageStop?.let { stop ->
+                add(
+                    StreamFrame.End(
+                        finishReason = stop.stopReason,
+                        metaInfo = parseMetaInfo(clock, chunk.metadata?.usage)
+                    )
+                )
+            }
+        }
     }
+
+    private fun parseMetaInfo(
+        clock: Clock,
+        novaUsage: NovaUsage?
+    ): ResponseMetaInfo = ResponseMetaInfo.create(
+        clock = clock,
+        totalTokensCount = novaUsage?.totalTokens,
+        inputTokensCount = novaUsage?.inputTokens,
+        outputTokensCount = novaUsage?.outputTokens,
+        additionalInfo = mapOf(
+            "cacheReadInputTokenCount" to novaUsage?.cacheReadInputTokenCount.toString(),
+            "cacheWriteInputTokenCount" to novaUsage?.cacheWriteInputTokenCount.toString()
+        ).filterValues { it != "null" }
+    )
 }

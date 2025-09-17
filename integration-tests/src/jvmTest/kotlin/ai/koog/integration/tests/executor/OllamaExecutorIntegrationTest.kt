@@ -19,6 +19,8 @@ import ai.koog.prompt.llm.LLMCapability.Temperature
 import ai.koog.prompt.llm.LLMCapability.Tools
 import ai.koog.prompt.llm.LLMCapability.Vision
 import ai.koog.prompt.markdown.markdown
+import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.streaming.filterTextOnly
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.runTest
@@ -476,7 +478,9 @@ class OllamaExecutorIntegrationTest {
             )
         }
 
-        val flow = executor.executeStreaming(prompt, model)
+        val flow = executor
+            .executeStreaming(prompt, model)
+            .filterTextOnly()
 
         var totalText = ""
         flow.collect { chunk ->
@@ -537,10 +541,10 @@ class OllamaExecutorIntegrationTest {
         private val bulletHandler: ((String) -> Unit)?,
         private val finishHandler: (() -> Unit)?
     ) {
-        suspend fun parseStream(stream: Flow<String>) {
+        suspend fun parseStream(stream: Flow<StreamFrame>) {
             val buffer = kotlin.text.StringBuilder()
 
-            stream.collect { chunk ->
+            stream.filterTextOnly().collect { chunk ->
                 buffer.append(chunk)
                 processBuffer(buffer)
             }
@@ -589,7 +593,7 @@ class OllamaExecutorIntegrationTest {
         }
     }
 
-    fun parseMarkdownStreamToCountries(markdownStream: Flow<String>): Flow<Country> {
+    fun parseMarkdownStreamToCountries(markdownStream: Flow<StreamFrame>): Flow<Country> {
         return flow {
             val countries = mutableListOf<Country>()
             var currentCountryName = ""

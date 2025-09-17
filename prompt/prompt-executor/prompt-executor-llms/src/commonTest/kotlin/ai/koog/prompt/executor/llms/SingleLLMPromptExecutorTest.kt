@@ -11,6 +11,7 @@ import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.prompt.streaming.StreamFrame
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
@@ -58,7 +59,7 @@ class SingleLLMPromptExecutorTest {
 
     @Test
     fun testExecuteStreaming() = runTest {
-        val chunks = listOf("hello", " ", "world")
+        val chunks = listOf("hello", " ", "world").map(StreamFrame::Append)
         val client = CapturingLLMClient(streamingChunks = chunks)
         val executor = SingleLLMPromptExecutor(client)
         val prompt = Prompt.build("p2") { user("Hello!") }

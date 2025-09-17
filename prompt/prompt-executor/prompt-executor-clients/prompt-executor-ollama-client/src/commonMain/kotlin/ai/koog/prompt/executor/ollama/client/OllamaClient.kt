@@ -29,6 +29,10 @@ import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.streaming.emitAppend
+import ai.koog.prompt.streaming.emitToolCall
+import ai.koog.prompt.streaming.streamFrameFlow
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -46,7 +50,6 @@ import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.utils.io.readUTF8Line
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
 
@@ -221,8 +224,9 @@ public class OllamaClient(
 
     override fun executeStreaming(
         prompt: Prompt,
-        model: LLModel
-    ): Flow<String> = flow {
+        model: LLModel,
+        tools: List<ToolDescriptor>
+    ): Flow<StreamFrame> = streamFrameFlow {
         require(model.provider == LLMProvider.Ollama) { "Model not supported by Ollama" }
 
         val response = client.post(DEFAULT_MESSAGE_PATH) {
@@ -244,9 +248,14 @@ public class OllamaClient(
 
             try {
                 val chunk = ollamaJson.decodeFromString<OllamaChatResponseDTO>(line)
-                chunk.message?.content?.let { content ->
-                    if (content.isNotEmpty()) {
-                        emit(content)
+                chunk.message?.let { message ->
+                    emitAppend(message.content)
+                    message.toolCalls?.forEach { toolCall ->
+                        emitToolCall(
+                            id = null,
+                            name = toolCall.function.name,
+                            content = toolCall.function.arguments.toString()
+                        )
                     }
                 }
             } catch (_: Exception) {

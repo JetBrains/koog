@@ -13,6 +13,7 @@ kotlin {
         commonMain {
             dependencies {
                 api(project(":prompt:prompt-llm"))
+                api(libs.kotlinx.coroutines.core)
                 api(libs.kotlinx.serialization.json)
                 api(libs.kotlinx.datetime)
                 api(libs.kotlinx.io.core)
@@ -22,6 +23,7 @@ kotlin {
         commonTest {
             dependencies {
                 implementation(kotlin("test"))
+                implementation(libs.kotlinx.coroutines.test)
             }
         }
 

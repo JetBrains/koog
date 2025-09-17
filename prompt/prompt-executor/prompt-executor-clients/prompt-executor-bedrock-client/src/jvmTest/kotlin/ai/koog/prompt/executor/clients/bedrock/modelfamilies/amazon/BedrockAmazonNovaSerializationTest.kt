@@ -10,7 +10,9 @@ import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.streaming.StreamFrame
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlin.test.Test
@@ -23,7 +25,7 @@ import kotlin.test.assertTrue
 class BedrockAmazonNovaSerializationTest {
 
     private val mockClock = object : Clock {
-        override fun now(): Instant = Clock.System.now()
+        override fun now(): Instant = Instant.DISTANT_FUTURE
     }
 
     private val model = BedrockModels.AmazonNovaPro
@@ -213,7 +215,7 @@ class BedrockAmazonNovaSerializationTest {
         """.trimIndent()
 
         val content = BedrockAmazonNovaSerialization.parseNovaStreamChunk(chunkJson)
-        assertEquals(chunkContent, content)
+        assertEquals(listOf(chunkContent).map(StreamFrame::Append), content)
     }
 
     @Test
@@ -229,7 +231,7 @@ class BedrockAmazonNovaSerializationTest {
         """.trimIndent()
 
         val content = BedrockAmazonNovaSerialization.parseNovaStreamChunk(chunkJson)
-        assertEquals("", content)
+        assertEquals(listOf("").map(StreamFrame::Append), content)
     }
 
     @Test
@@ -245,7 +247,7 @@ class BedrockAmazonNovaSerializationTest {
         """.trimIndent()
 
         val content = BedrockAmazonNovaSerialization.parseNovaStreamChunk(chunkJson)
-        assertEquals("", content)
+        assertEquals(emptyList(), content)
     }
 
     @Test
@@ -263,8 +265,20 @@ class BedrockAmazonNovaSerializationTest {
             }
         """.trimIndent()
 
-        val content = BedrockAmazonNovaSerialization.parseNovaStreamChunk(chunkJson)
-        assertEquals("", content)
+        assertEquals(
+            expected = listOf(
+                StreamFrame.End(
+                    finishReason = "stop",
+                    metaInfo = ResponseMetaInfo.create(
+                        clock = mockClock,
+                        totalTokensCount = null,
+                        inputTokensCount = null,
+                        outputTokensCount = 20
+                    )
+                )
+            ),
+            actual = BedrockAmazonNovaSerialization.parseNovaStreamChunk(chunkJson, mockClock)
+        )
     }
 
     @Test

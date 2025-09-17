@@ -17,11 +17,14 @@ import ai.koog.prompt.dsl.PromptBuilder
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.streaming.toMessageResponses
 import ai.koog.prompt.structure.StructureFixingParser
 import ai.koog.prompt.structure.StructuredDataDefinition
 import ai.koog.prompt.structure.StructuredOutputConfig
 import ai.koog.prompt.structure.StructuredResponse
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.toList
 
 /**
  * A pass-through node that does nothing and returns input as output
@@ -240,7 +243,7 @@ public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStr
 public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStreaming(
     name: String? = null,
     structureDefinition: StructuredDataDefinition? = null,
-    transformStreamData: suspend (Flow<String>) -> Flow<T>
+    transformStreamData: suspend (Flow<StreamFrame>) -> Flow<T>
 ): AIAgentNodeDelegate<String, Flow<T>> =
     node(name) { message ->
         llm.writeSession {
@@ -264,7 +267,7 @@ public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStreaming(
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStreaming(
     name: String? = null,
     structureDefinition: StructuredDataDefinition? = null,
-): AIAgentNodeDelegate<String, Flow<String>> = nodeLLMRequestStreaming(name, structureDefinition) { it }
+): AIAgentNodeDelegate<String, Flow<StreamFrame>> = nodeLLMRequestStreaming(name, structureDefinition) { it }
 
 /**
  * A node that appends a user message to the LLM prompt and gets multiple LLM responses with tool calls enabled.
@@ -313,6 +316,43 @@ public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMCompressHi
     }
 
     input
+}
+
+/**
+ * A node that performs LLM streaming, collects all stream frames, converts them to response messages,
+ * and updates the prompt with the results.
+ *
+ * This node is useful when you want to:
+ * - Stream responses from the LLM for real-time feedback
+ * - Collect the complete streamed response as messages
+ * - Automatically update the conversation history with the streamed responses
+ *
+ * The node will:
+ * 1. Initiate a streaming request to the LLM
+ * 2. Collect all stream frames (text, tool calls, etc.)
+ * 3. Convert the collected frames into proper Message.Response objects
+ * 4. Update the prompt with these messages for conversation continuity
+ * 5. Return the collected messages
+ *
+ * @param T The type of input this node accepts (passed through without modification)
+ * @param name Optional node name for identification in the agent graph
+ * @param structureDefinition Optional structure definition to guide the LLM's response format
+ * @return A node delegate that accepts input of type T and returns a list of response messages
+ *
+ * @see nodeLLMRequestStreaming for streaming without automatic prompt updates
+ * @see ai.koog.agents.core.agent.session.AIAgentLLMWriteSession.requestLLMStreaming for the underlying streaming functionality
+ */
+@AIAgentBuilderDslMarker
+public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStreamingAndSendResults(
+    name: String? = null,
+    structureDefinition: StructuredDataDefinition? = null
+): AIAgentNodeDelegate<T, List<Message.Response>> = node(name) { input ->
+    llm.writeSession {
+        requestLLMStreaming(structureDefinition)
+            .toList()
+            .toMessageResponses()
+            .also { updatePrompt { messages(it) } }
+    }
 }
 
 // ==========

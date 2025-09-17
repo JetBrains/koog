@@ -11,8 +11,12 @@ import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.streaming.filterTextOnly
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
@@ -37,9 +41,12 @@ class MultiLLMPromptExecutorTest {
             return listOf(Message.Assistant("Anthropic response", ResponseMetaInfo.create(clock = mockClock)))
         }
 
-        override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
-            return flowOf("Anthropic", " streaming", " response")
-        }
+        override fun executeStreaming(
+            prompt: Prompt,
+            model: LLModel,
+            tools: List<ToolDescriptor>
+        ): Flow<StreamFrame> =
+            flowOf("Anthropic", " streaming", " response").map(StreamFrame::Append)
 
         override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
             throw UnsupportedOperationException("Moderation is not supported by mock client.")
@@ -56,9 +63,12 @@ class MultiLLMPromptExecutorTest {
             return listOf(Message.Assistant("Gemini response", ResponseMetaInfo.create(clock = mockClock)))
         }
 
-        override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
-            return flowOf("Gemini", " streaming", " response")
-        }
+        override fun executeStreaming(
+            prompt: Prompt,
+            model: LLModel,
+            tools: List<ToolDescriptor>
+        ): Flow<StreamFrame> =
+            flowOf("Gemini", " streaming", " response").map(StreamFrame::Append)
 
         override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
             throw UnsupportedOperationException("Moderation is not supported by mock client.")
@@ -136,7 +146,9 @@ class MultiLLMPromptExecutorTest {
             user("What is the capital of France?")
         }
 
-        val responseChunks = executor.executeStreaming(prompt, model).toList()
+        val responseChunks = executor.executeStreaming(prompt, model)
+            .filterTextOnly()
+            .toList()
         assertEquals(3, responseChunks.size, "Response should have three chunks")
         assertEquals(
             "OpenAI streaming response",
@@ -159,7 +171,9 @@ class MultiLLMPromptExecutorTest {
             user("What is the capital of France?")
         }
 
-        val responseChunks = executor.executeStreaming(prompt, model).toList()
+        val responseChunks = executor.executeStreaming(prompt, model)
+            .filterTextOnly()
+            .toList()
         assertEquals(3, responseChunks.size, "Response should have three chunks")
         assertEquals(
             "Anthropic streaming response",
@@ -182,7 +196,9 @@ class MultiLLMPromptExecutorTest {
             user("What is the capital of France?")
         }
 
-        val responseChunks = executor.executeStreaming(prompt, model).toList()
+        val responseChunks = executor.executeStreaming(prompt, model)
+            .filterTextOnly()
+            .toList()
         assertEquals(3, responseChunks.size, "Response should have three chunks")
         assertEquals(
             "Gemini streaming response",
@@ -216,7 +232,7 @@ class MultiLLMPromptExecutorTest {
         }
 
         assertFailsWith<IllegalArgumentException>("Should throw IllegalArgumentException for unsupported provider") {
-            executor.executeStreaming(prompt, model).toList()
+            executor.executeStreaming(prompt, model).collect()
         }
     }
 }

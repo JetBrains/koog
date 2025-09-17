@@ -20,6 +20,11 @@ import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.streaming.emitAppend
+import ai.koog.prompt.streaming.emitEnd
+import ai.koog.prompt.streaming.emitToolCall
+import ai.koog.prompt.streaming.streamFrameFlow
 import ai.koog.prompt.structure.RegisteredBasicJsonSchemaGenerators
 import ai.koog.prompt.structure.RegisteredStandardJsonSchemaGenerators
 import ai.koog.prompt.structure.annotations.InternalStructuredOutputApi
@@ -46,7 +51,6 @@ import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
@@ -141,7 +145,11 @@ public open class GoogleLLMClient(
         return processGoogleResponse(response).first()
     }
 
-    override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> = flow {
+    override fun executeStreaming(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>
+    ): Flow<StreamFrame> = streamFrameFlow {
         logger.debug { "Executing streaming prompt: $prompt with model: $model" }
         require(model.capabilities.contains(LLMCapability.Completion)) {
             "Model ${model.id} does not support chat completions"
@@ -167,8 +175,31 @@ public open class GoogleLLMClient(
                     event
                         .takeIf { it.data != "[DONE]" }
                         ?.data?.trim()?.let { json.decodeFromString<GoogleResponse>(it) }
-                        ?.candidates?.firstOrNull()?.content
-                        ?.parts?.forEach { part -> if (part is GooglePart.Text) emit(part.text) }
+                        ?.let { response ->
+                            val meta = response.usageMetadata?.let {
+                                ResponseMetaInfo.create(
+                                    clock = clock,
+                                    totalTokensCount = it.totalTokenCount,
+                                    inputTokensCount = it.promptTokenCount,
+                                    outputTokensCount = it.candidatesTokenCount,
+                                )
+                            }
+                            response.candidates.firstOrNull()?.let { candidate ->
+                                candidate.content?.parts?.forEach { part ->
+                                    when (part) {
+                                        is GooglePart.FunctionCall -> emitToolCall(
+                                            id = part.functionCall.id,
+                                            name = part.functionCall.name,
+                                            content = part.functionCall.args?.toString() ?: "{}"
+                                        )
+
+                                        is GooglePart.Text -> emitAppend(part.text)
+                                        else -> Unit
+                                    }
+                                }
+                                candidate.finishReason?.let { emitEnd(it, meta) }
+                            }
+                        }
                 }
             }
         } catch (e: SSEClientException) {

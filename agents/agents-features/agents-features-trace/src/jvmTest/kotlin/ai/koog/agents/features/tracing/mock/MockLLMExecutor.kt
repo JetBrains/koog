@@ -7,6 +7,8 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.streaming.toStreamFrame
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.datetime.Clock
@@ -22,9 +24,12 @@ class MockLLMExecutor : PromptExecutor {
         return listOf(handlePrompt(prompt))
     }
 
-    override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> = flow {
-        emit(handlePrompt(prompt).content)
-    }
+    override fun executeStreaming(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>
+    ): Flow<StreamFrame> =
+        flow { emit(handlePrompt(prompt).toStreamFrame()) }
 
     private fun handlePrompt(prompt: Prompt): Message.Response {
         val lastMessage = prompt.messages.last()

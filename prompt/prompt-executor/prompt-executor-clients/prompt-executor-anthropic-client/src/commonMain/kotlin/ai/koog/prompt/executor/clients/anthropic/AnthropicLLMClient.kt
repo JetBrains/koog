@@ -14,6 +14,8 @@ import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.streaming.buildStreamFrameFlow
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -35,9 +37,10 @@ import io.ktor.http.HttpMethod
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
+import io.ktor.sse.ServerSentEvent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
@@ -144,32 +147,115 @@ public open class AnthropicLLMClient(
         }
     }
 
-    override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> = flow {
-        logger.debug { "Executing streaming prompt: $prompt with model: $model without tools" }
+    override fun executeStreaming(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>
+    ): Flow<StreamFrame> {
+        logger.debug { "Executing streaming prompt: $prompt with model: $model with tools: ${tools.map { it.name }}" }
         require(model.capabilities.contains(LLMCapability.Completion)) {
             "Model ${model.id} does not support chat completions"
         }
 
-        val request = createAnthropicRequest(prompt, emptyList(), model, true)
+        val request = createAnthropicRequest(prompt, tools, model, true)
 
         try {
-            httpClient.sse(
-                urlString = DEFAULT_MESSAGE_PATH,
-                request = {
-                    method = HttpMethod.Post
-                    accept(ContentType.Text.EventStream)
-                    headers {
-                        append(HttpHeaders.CacheControl, "no-cache")
-                        append(HttpHeaders.Connection, "keep-alive")
+            return buildStreamFrameFlow {
+                httpClient.sse(
+                    urlString = DEFAULT_MESSAGE_PATH,
+                    request = {
+                        method = HttpMethod.Post
+                        accept(ContentType.Text.EventStream)
+                        headers {
+                            append(HttpHeaders.CacheControl, "no-cache")
+                            append(HttpHeaders.Connection, "keep-alive")
+                        }
+                        setBody(request)
                     }
-                    setBody(request)
-                }
-            ) {
-                incoming.collect { event ->
-                    event
-                        .takeIf { it.event == "content_block_delta" }
-                        ?.data?.trim()?.let { json.decodeFromString<AnthropicStreamResponse>(it) }
-                        ?.delta?.text?.let { emit(it) }
+                ) {
+                    var inputTokens: Int? = null
+                    var outputTokens: Int? = null
+
+                    fun decodeResponse(event: ServerSentEvent): AnthropicStreamResponse? =
+                        event.data?.trim()?.let { json.decodeFromString<AnthropicStreamResponse>(it) }
+
+                    fun updateUsage(usage: AnthropicUsage) {
+                        inputTokens = usage.inputTokens ?: inputTokens
+                        outputTokens = usage.outputTokens ?: outputTokens
+                    }
+
+                    fun getMetaInfo(): ResponseMetaInfo = ResponseMetaInfo.create(
+                        clock = clock,
+                        totalTokensCount = inputTokens?.plus(outputTokens ?: 0) ?: outputTokens,
+                        inputTokensCount = inputTokens,
+                        outputTokensCount = outputTokens,
+                    )
+
+                    incoming.collect { event ->
+
+                        when (event.event) {
+                            "message_start" -> {
+                                decodeResponse(event)?.message?.usage?.let(::updateUsage)
+                            }
+
+                            "content_block_start" -> {
+                                decodeResponse(event)?.let { response ->
+                                    when (val contentBlock = response.contentBlock) {
+                                        is AnthropicContent.Text -> {
+                                            emitAppend(contentBlock.text)
+                                        }
+
+                                        is AnthropicContent.ToolUse -> {
+                                            upsertToolCall(
+                                                index = response.index ?: error("Tool index is missing"),
+                                                id = contentBlock.id,
+                                                name = contentBlock.name,
+                                            )
+                                        }
+
+                                        else -> Unit
+                                    }
+                                }
+                            }
+
+                            "content_block_delta" -> {
+                                decodeResponse(event)?.let { response ->
+                                    response.delta?.let { delta ->
+                                        when (delta.type) {
+                                            "input_json_delta" -> {
+                                                upsertToolCall(
+                                                    index = response.index ?: error("Tool index is missing"),
+                                                    args = delta.partialJson ?: error("Tool args are missing")
+                                                )
+                                            }
+
+                                            "text_delta" -> {
+                                                emitAppend(delta.text ?: error("Text delta is missing"))
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            "content_block_stop" -> {
+                                tryEmitPendingToolCall()
+                            }
+
+                            "message_delta" -> {
+                                decodeResponse(event)?.let { response ->
+                                    response.usage?.let(::updateUsage)
+                                    emitEnd(
+                                        finishReason = response.delta?.stopReason,
+                                        metaInfo = getMetaInfo()
+                                    )
+                                }
+                            }
+
+                            "error" -> {
+                                error("Anthropic error: ${decodeResponse(event)?.error}")
+                            }
+                        }
+                    }
                 }
             }
         } catch (e: SSEClientException) {
@@ -181,6 +267,7 @@ public open class AnthropicLLMClient(
             logger.error { "Exception during streaming: $e" }
             error(e.message ?: "Unknown error during streaming")
         }
+        return emptyFlow()
     }
 
     @OptIn(ExperimentalUuidApi::class)
@@ -344,7 +431,7 @@ public open class AnthropicLLMClient(
         // Extract token count from the response
         val inputTokensCount = response.usage?.inputTokens
         val outputTokensCount = response.usage?.outputTokens
-        val totalTokensCount = response.usage?.let { it.inputTokens + it.outputTokens }
+        val totalTokensCount = response.usage?.let { it.inputTokens?.plus(it.outputTokens ?: 0) ?: it.outputTokens }
 
         val responses = response.content.map { content ->
             when (content) {

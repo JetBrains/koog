@@ -50,6 +50,8 @@ import ai.koog.prompt.message.Attachment
 import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams.ToolChoice
+import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.streaming.filterTextOnly
 import ai.koog.prompt.structure.executeStructured
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
@@ -238,7 +240,9 @@ class SingleLLMPromptExecutorIntegrationTest {
         }
 
         withRetry(times = 3, testName = "integration_testExecuteStreaming[${model.id}]") {
-            val responseChunks = executor.executeStreaming(prompt, model).toList()
+            val responseChunks = executor.executeStreaming(prompt, model)
+                .filterTextOnly()
+                .toList()
             assertNotNull(responseChunks, "Response chunks should not be null")
             assertTrue(responseChunks.isNotEmpty(), "Response chunks should not be empty")
 
@@ -509,7 +513,7 @@ class SingleLLMPromptExecutorIntegrationTest {
             user("Count from 1 to 5.")
         }
 
-        val responseChunks = mutableListOf<String>()
+        val responseChunks = mutableListOf<StreamFrame>()
 
         withRetry(times = 3, testName = "integration_testRawStringStreaming[${model.id}]") {
             client.executeStreaming(prompt, model).collect { chunk ->

@@ -22,6 +22,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Attachment
 import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.streaming.StreamFrame
 import aws.sdk.kotlin.runtime.auth.credentials.StaticCredentialsProvider
 import aws.sdk.kotlin.services.bedrockruntime.BedrockRuntimeClient
 import aws.sdk.kotlin.services.bedrockruntime.applyGuardrail
@@ -47,6 +48,7 @@ import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
@@ -219,7 +221,11 @@ public class BedrockLLMClient(
     }
 
     @OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
-    override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
+    override fun executeStreaming(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>
+    ): Flow<StreamFrame> {
         logger.debug { "Executing streaming prompt for model: ${model.id}" }
         val modelFamily = getBedrockModelFamily(model)
 
@@ -227,7 +233,7 @@ public class BedrockLLMClient(
             "Model ${model.id} does not support chat completions"
         }
 
-        val requestBody = createRequestBody(prompt, model, emptyList())
+        val requestBody = createRequestBody(prompt, model, tools)
 
         val streamRequest = InvokeModelWithResponseStreamRequest {
             this.modelId = model.id
@@ -261,26 +267,28 @@ public class BedrockLLMClient(
             }
         }.map { chunkJsonString ->
             try {
-                if (chunkJsonString.isBlank()) return@map ""
+                if (chunkJsonString.isBlank()) return@map emptyList()
 
                 when (modelFamily) {
-                    is BedrockModelFamilies.AI21Jamba -> BedrockAI21JambaSerialization.parseJambaStreamChunk(
-                        chunkJsonString
-                    )
+                    is BedrockModelFamilies.AI21Jamba ->
+                        BedrockAI21JambaSerialization.parseJambaStreamChunk(chunkJsonString)
 
-                    is BedrockModelFamilies.AmazonNova -> BedrockAmazonNovaSerialization.parseNovaStreamChunk(
-                        chunkJsonString
-                    )
+                    is BedrockModelFamilies.AmazonNova ->
+                        BedrockAmazonNovaSerialization.parseNovaStreamChunk(chunkJsonString)
 
-                    is BedrockModelFamilies.AnthropicClaude -> BedrockAnthropicClaudeSerialization.parseAnthropicStreamChunk(
-                        chunkJsonString
-                    )
+                    is BedrockModelFamilies.AnthropicClaude ->
+                        BedrockAnthropicClaudeSerialization.parseAnthropicStreamChunk(chunkJsonString)
 
-                    is BedrockModelFamilies.Meta -> BedrockMetaLlamaSerialization.parseLlamaStreamChunk(chunkJsonString)
+                    is BedrockModelFamilies.Meta ->
+                        BedrockMetaLlamaSerialization.parseLlamaStreamChunk(chunkJsonString)
                 }
             } catch (e: Exception) {
                 logger.warn(e) { "Failed to parse Bedrock stream chunk: $chunkJsonString" }
                 throw e
+            }
+        }.transform { frames ->
+            frames.forEach {
+                emit(it)
             }
         }
     }

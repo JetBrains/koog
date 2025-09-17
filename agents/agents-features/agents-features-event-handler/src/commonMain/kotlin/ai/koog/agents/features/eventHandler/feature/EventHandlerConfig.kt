@@ -2,16 +2,19 @@ package ai.koog.agents.features.eventHandler.feature
 
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.handler.AfterLLMCallContext
+import ai.koog.agents.core.feature.handler.AfterStreamContext
 import ai.koog.agents.core.feature.handler.AgentBeforeCloseContext
 import ai.koog.agents.core.feature.handler.AgentFinishedContext
 import ai.koog.agents.core.feature.handler.AgentRunErrorContext
 import ai.koog.agents.core.feature.handler.AgentStartContext
 import ai.koog.agents.core.feature.handler.BeforeLLMCallContext
+import ai.koog.agents.core.feature.handler.BeforeStreamContext
 import ai.koog.agents.core.feature.handler.NodeAfterExecuteContext
 import ai.koog.agents.core.feature.handler.NodeBeforeExecuteContext
 import ai.koog.agents.core.feature.handler.NodeExecutionErrorContext
 import ai.koog.agents.core.feature.handler.StrategyFinishContext
 import ai.koog.agents.core.feature.handler.StrategyStartContext
+import ai.koog.agents.core.feature.handler.StreamFrameContext
 import ai.koog.agents.core.feature.handler.ToolCallContext
 import ai.koog.agents.core.feature.handler.ToolCallFailureContext
 import ai.koog.agents.core.feature.handler.ToolCallResultContext
@@ -91,6 +94,16 @@ public class EventHandlerConfig : FeatureConfig() {
     private var _onToolCallResult: suspend (eventHandler: ToolCallResultContext) -> Unit = { _ -> }
 
     //endregion Tool Call Handlers
+
+    //region Stream Handlers
+
+    private var _onBeforeStream: suspend (eventHandler: BeforeStreamContext) -> Unit = { _ -> }
+
+    private var _onStreamFrame: suspend (eventHandler: StreamFrameContext) -> Unit = { _ -> }
+
+    private var _onAfterStream: suspend (eventHandler: AfterStreamContext) -> Unit = { _ -> }
+
+    //endregion Stream Handlers
 
     //region Agent Handlers
 
@@ -278,6 +291,87 @@ public class EventHandlerConfig : FeatureConfig() {
 
     //endregion Tool Call Handlers
 
+    //region Stream Handlers
+
+    /**
+     * Registers a handler to be invoked before streaming from a language model begins.
+     *
+     * This handler is called immediately before starting a streaming operation,
+     * allowing you to perform preprocessing, validation, or logging of the streaming request.
+     *
+     * @param handler The handler function that receives a [BeforeStreamContext] containing
+     *                the run ID, prompt, model, and available tools for the streaming session.
+     *
+     * Example:
+     * ```
+     * onBeforeStream { eventContext ->
+     *     logger.info("Starting stream for run: ${eventContext.runId}")
+     *     logger.debug("Prompt: ${eventContext.prompt}")
+     * }
+     * ```
+     */
+    public fun onBeforeStream(handler: suspend (eventContext: BeforeStreamContext) -> Unit) {
+        val originalHandler = this._onBeforeStream
+        this._onBeforeStream = { eventContext ->
+            originalHandler(eventContext)
+            handler.invoke(eventContext)
+        }
+    }
+
+    /**
+     * Registers a handler to be invoked when stream frames are received during streaming.
+     *
+     * This handler is called for each individual stream frame as it arrives from the language model,
+     * enabling real-time processing, monitoring, or aggregation of streaming content.
+     *
+     * @param handler The handler function that receives a [StreamFrameContext] containing
+     *                the run ID and the stream frame with partial response data.
+     *
+     * Example:
+     * ```
+     * onStreamFrame { eventContext ->
+     *     when (val frame = eventContext.streamFrame) {
+     *         is StreamFrame.TextDelta -> processText(frame.text)
+     *         is StreamFrame.ToolCall -> processTool(frame)
+     *     }
+     * }
+     * ```
+     */
+    public fun onStreamFrame(handler: suspend (eventContext: StreamFrameContext) -> Unit) {
+        val originalHandler = this._onStreamFrame
+        this._onStreamFrame = { eventContext ->
+            originalHandler(eventContext)
+            handler.invoke(eventContext)
+        }
+    }
+
+    /**
+     * Registers a handler to be invoked after streaming from a language model completes.
+     *
+     * This handler is called when the streaming operation finishes,
+     * allowing you to perform post-processing, cleanup, or final logging operations.
+     *
+     * @param handler The handler function that receives an [AfterStreamContext] containing
+     *                the run ID, prompt, model, and tools that were used for the streaming session.
+     *
+     * Example:
+     * ```
+     * onAfterStream { eventContext ->
+     *     logger.info("Stream completed for run: ${eventContext.runId}")
+     *     // Perform any cleanup or aggregation of collected stream data
+     * }
+     * ```
+     */
+    public fun onAfterStream(handler: suspend (eventContext: AfterStreamContext) -> Unit) {
+        val originalHandler = this._onAfterStream
+        this._onAfterStream = { eventContext ->
+            originalHandler(eventContext)
+            handler.invoke(eventContext)
+        }
+    }
+
+    //endregion Stream Handlers
+
     //region Invoke Agent Handlers
 
     /**
@@ -402,4 +496,35 @@ public class EventHandlerConfig : FeatureConfig() {
     }
 
     //endregion Invoke Tool Call Handlers
+
+    //region Invoke Stream Handlers
+
+    /**
+     * Invokes the handler associated with the event that occurs before streaming starts.
+     *
+     * @param eventContext The context containing information about the streaming session about to begin
+     */
+    internal suspend fun invokeOnBeforeStream(eventContext: BeforeStreamContext) {
+        _onBeforeStream.invoke(eventContext)
+    }
+
+    /**
+     * Invokes the handler associated with stream frame events during streaming.
+     *
+     * @param eventContext The context containing the stream frame data
+     */
+    internal suspend fun invokeOnStreamFrame(eventContext: StreamFrameContext) {
+        _onStreamFrame.invoke(eventContext)
+    }
+
+    /**
+     * Invokes the handler associated with the event that occurs after streaming completes.
+     *
+     * @param eventContext The context containing information about the completed streaming session
+     */
+    internal suspend fun invokeOnAfterStream(eventContext: AfterStreamContext) {
+        _onAfterStream.invoke(eventContext)
+    }
+
+    //endregion Invoke Stream Handlers
 }

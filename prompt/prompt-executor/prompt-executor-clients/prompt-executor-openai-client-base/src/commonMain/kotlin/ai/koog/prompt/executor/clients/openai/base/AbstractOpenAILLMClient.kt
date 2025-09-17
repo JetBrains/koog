@@ -30,6 +30,9 @@ import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.streaming.StreamFrameFlowBuilder
+import ai.koog.prompt.streaming.buildStreamFrameFlow
 import io.github.oshai.kotlinlogging.KLogger
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.HttpTimeout
@@ -152,14 +155,18 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
      * Processes a provider-specific streaming response chunk.
      * Must be implemented by concrete client classes.
      */
-    protected abstract fun processStreamingChunk(chunk: TStreamResponse): String?
+    protected abstract suspend fun StreamFrameFlowBuilder.processStreamingChunk(chunk: TStreamResponse)
 
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         val response = getResponse(prompt, model, tools)
         return processProviderChatResponse(response).first()
     }
 
-    override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
+    override fun executeStreaming(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>
+    ): Flow<StreamFrame> {
         logger.debug { "Executing streaming prompt: $prompt with model: $model" }
         model.requireCapability(LLMCapability.Completion)
 
@@ -167,20 +174,24 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
         val request = serializeProviderChatRequest(
             messages = messages,
             model = model,
-            tools = emptyList(),
+            tools = tools.map { it.toOpenAIChatTool() },
             toolChoice = prompt.params.toolChoice?.toOpenAIToolChoice(),
             params = prompt.params,
             stream = true
         )
 
-        return httpClient.sse(
-            path = chatCompletionsPath,
-            request = request,
-            requestBodyType = String::class,
-            dataFilter = { it != "[DONE]" },
-            decodeStreamingResponse = ::decodeStreamingResponse,
-            processStreamingChunk = ::processStreamingChunk
-        )
+        return buildStreamFrameFlow {
+            httpClient.sse(
+                path = chatCompletionsPath,
+                request = request,
+                requestBodyType = String::class,
+                dataFilter = { it != "[DONE]" },
+                decodeStreamingResponse = ::decodeStreamingResponse,
+                processStreamingChunk = { it }
+            ).collect {
+                processStreamingChunk(it)
+            }
+        }
     }
 
     override suspend fun executeMultipleChoices(
@@ -314,6 +325,7 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
                     )
                     OpenAIContentPart.File(fileData)
                 }
+
                 is AttachmentContent.PlainText -> {
                     OpenAIContentPart.Text(attachmentContent.text)
                 }
