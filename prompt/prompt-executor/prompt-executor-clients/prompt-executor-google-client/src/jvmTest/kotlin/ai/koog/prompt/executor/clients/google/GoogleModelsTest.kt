@@ -123,7 +123,7 @@ class GoogleModelsTest {
     }
 
     @Test
-    fun `createGoogleRequest uses prompt params maxTokens when present`() = runTest {
+    fun `createGoogleRequest includes maxOutputTokens in request if prompt specifies max tokens`() = runTest {
         val customMax = 1234
         val p =
             Prompt.build("test", params = ai.koog.prompt.params.LLMParams(maxTokens = customMax)) {
@@ -139,29 +139,21 @@ class GoogleModelsTest {
     }
 
     @Test
-    fun `createGoogleRequest uses model maxOutputTokens when prompt maxTokens is absent`() = runTest {
-        val p = Prompt.build("test") {
-            user("Hello")
+    fun `createGoogleRequest does not include maxOutputTokens in request if prompt does not specify specify max tokens`() =
+        runTest {
+            val prompt = Prompt.build("test") { user("Hello") }
+            val model = GoogleModels.Gemini2_5Flash.copy(maxOutputTokens = null)
+
+            val capturedBody: String = executeAndCaptureRequestBody(prompt, model)
+
+            val json = Json.parseToJsonElement(capturedBody).jsonObject
+            val generationConfig = json["generationConfig"]!!.jsonObject
+            assertEquals(
+                false,
+                generationConfig.containsKey("maxOutputTokens"),
+                "maxOutputTokens should not be present in the request"
+            )
         }
-
-        val capturedBody = executeAndCaptureRequestBody(p, GoogleModels.Gemini2_5Flash)
-
-        val json = Json.parseToJsonElement(capturedBody).jsonObject
-        val max = json["generationConfig"]!!.jsonObject["maxOutputTokens"]!!.jsonPrimitive.int
-        assertEquals(65_536, max, "maxOutputTokens should be populated from model")
-    }
-
-    @Test
-    fun `createGoogleRequest uses default 2048 when neither prompt nor model specify max tokens`() = runTest {
-        val prompt = Prompt.build("test") { user("Hello") }
-        val model = GoogleModels.Gemini2_5Flash.copy(maxOutputTokens = null)
-
-        val capturedBody: String = executeAndCaptureRequestBody(prompt, model)
-
-        val json = Json.parseToJsonElement(capturedBody).jsonObject
-        val max = json["generationConfig"]!!.jsonObject["maxOutputTokens"]!!.jsonPrimitive.int
-        assertEquals(2048, max, "maxOutputTokens should fall back to default")
-    }
 
     private suspend fun executeAndCaptureRequestBody(p: Prompt, modelWithoutMax: LLModel): String {
         var capturedBody: String? = null
