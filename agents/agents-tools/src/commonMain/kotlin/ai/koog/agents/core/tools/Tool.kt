@@ -65,8 +65,9 @@ public abstract class Tool<TArgs, TResult> {
      *
      * This property provides a descriptive name (visible to the LLM) that can be used to identify the tool.
      */
-    public open val name: String =
+    public open val name: String by lazy {
         this::class.simpleName ?: throw IllegalStateException("Class ${this::class} doesn't have a name")
+    }
 
     /**
      * Describes the functionality and purpose of the tool.

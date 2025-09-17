@@ -109,6 +109,7 @@ public class ToolFromCallable(
     override val argsSerializer: KSerializer<VarArgs>
         get() = VarArgsSerializer(callable)
 
+    override val name: String = callable.name
     override val toolDescription: String = descriptor.description
 
     /**

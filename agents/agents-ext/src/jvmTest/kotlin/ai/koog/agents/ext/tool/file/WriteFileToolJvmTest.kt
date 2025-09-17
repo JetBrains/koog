@@ -31,7 +31,7 @@ class WriteFileToolJvmTest {
 
     @Test
     fun `descriptor is configured correctly`() {
-        val descriptor = WriteFileTool.descriptor
+        val descriptor = tool.descriptor
         assertEquals("__write_file__", descriptor.name)
         assertTrue(descriptor.description.isNotEmpty())
         assertEquals(listOf("path", "content"), descriptor.requiredParameters.map { it.name })
@@ -68,7 +68,7 @@ class WriteFileToolJvmTest {
             "Written",
             "${p.toAbsolutePath().toString().norm()} (<0.1 KiB, 1 line)"
         ).joinToString("\n")
-        assertEquals(expected, result.toStringDefault())
+        assertEquals(expected, result.textForLLM())
     }
 
     @Test
@@ -86,7 +86,7 @@ class WriteFileToolJvmTest {
             "Written",
             "${p.toAbsolutePath().toString().norm()} (<0.1 KiB, 1 line)"
         ).joinToString("\n")
-        assertEquals(expected, result.toStringDefault())
+        assertEquals(expected, result.textForLLM())
         assertEquals("new content", p.readText())
     }
 
@@ -104,7 +104,7 @@ class WriteFileToolJvmTest {
             "Written",
             "${p.toAbsolutePath().toString().norm()} (<0.1 KiB, 3 lines)"
         ).joinToString("\n")
-        assertEquals(expected, result.toStringDefault())
+        assertEquals(expected, result.textForLLM())
         assertTrue(p.exists())
         assertEquals(content, p.readText())
     }
