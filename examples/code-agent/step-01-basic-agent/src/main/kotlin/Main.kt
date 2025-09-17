@@ -38,12 +38,14 @@ val agent = AIAgent(
 }
 
 fun main(args: Array<String>) = runBlocking {
-    val task = args.getOrNull(0) ?: run {
-        println("Error: Please provide a task as the first argument")
+    if (args.size < 2) {
+        println("Error: Please provide the project absolute path and task as arguments")
+        println("Usage: <path> <task>")
         return@runBlocking
     }
 
-    println("Task: $task")
-    val result = agent.run(task)
+    val (path, task) = args
+    val input = "Project path: $path\n\n$task"
+    val result = agent.run(input)
     println(result)
 }
