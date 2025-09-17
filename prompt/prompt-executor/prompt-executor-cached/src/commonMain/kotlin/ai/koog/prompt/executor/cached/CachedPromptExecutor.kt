@@ -35,7 +35,7 @@ public class CachedPromptExecutor(
         return getOrPut(prompt, tools, model)
     }
 
-    override fun executeStreaming(
+    override fun executeStreamingFrames(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>

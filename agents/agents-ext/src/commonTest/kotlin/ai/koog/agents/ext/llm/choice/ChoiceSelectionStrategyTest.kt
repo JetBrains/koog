@@ -65,7 +65,7 @@ class ChoiceSelectionStrategyTest {
                 )
             }
 
-            override fun executeStreaming(
+            override fun executeStreamingFrames(
                 prompt: Prompt,
                 model: LLModel,
                 tools: List<ToolDescriptor>

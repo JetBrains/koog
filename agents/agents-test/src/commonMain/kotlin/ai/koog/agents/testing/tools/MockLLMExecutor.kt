@@ -92,7 +92,7 @@ internal class MockLLMExecutor(
      * @param tools The list of tools available for the execution
      * @return A flow containing a single string response
      */
-    override fun executeStreaming(
+    override fun executeStreamingFrames(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>

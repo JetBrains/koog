@@ -18,6 +18,12 @@ kotlin {
             }
         }
 
+        commonTest {
+            dependencies {
+                implementation(project(":test-utils"))
+            }
+        }
+
         jvmMain {
             dependencies {
                 api(libs.kotlinx.coroutines.jdk8)

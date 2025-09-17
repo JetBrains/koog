@@ -6,7 +6,9 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.streaming.filterTextOnly
 import kotlinx.coroutines.flow.Flow
+import org.jetbrains.annotations.ApiStatus
 
 public typealias LLMChoice = List<Message.Response>
 
@@ -15,12 +17,14 @@ public typealias LLMChoice = List<Message.Response>
  * This defines methods for executing prompts against models with or without tool assistance,
  * as well as for streaming responses.
  *
- * Note: a single [PromptExecutor] might embed multiple LLM clients for different LLM providers supporting different models.
+ * Note: a single [PromptExecutor] might embed multiple LLM clients
+ * for different LLM providers supporting different models.
  */
 public interface PromptExecutor {
 
     /**
-     * Executes a given prompt using the specified language model and tools, returning a list of responses from the model.
+     * Executes a given prompt using the specified language model and tools,
+     * returning a list of responses from the model.
      *
      * @param prompt The `Prompt` object containing the messages to be used in the execution.
      * @param model The instance of `LLModel` that specifies the language model to be used.
@@ -34,18 +38,40 @@ public interface PromptExecutor {
     ): List<Message.Response>
 
     /**
-     * Executes a given prompt using the specified language model and returns a stream of output as a flow of `StreamFrame` objects.
+     * Executes a given prompt using the specified language model
+     * and returns a stream of output as a flow of `StreamFrame` objects.
      *
      * @param prompt The prompt containing input messages and parameters to guide the language model execution.
      * @param model The language model to be used for processing the prompt.
      * @param tools A list of `ToolDescriptor` objects that define the tools available for the execution.
      * @return A flow emitting `StreamFrame` objects that represent the streaming output of the language model.
      */
-    public fun executeStreaming(
+    @ApiStatus.Experimental
+    public fun executeStreamingFrames(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor> = emptyList()
     ): Flow<StreamFrame>
+
+    /**
+     * Executes a given prompt using the specified language model and returns a stream of output as a flow of strings.
+     *
+     * NB! This method might change to return the [Flow] of [StreamFrame]
+     *
+     * @param prompt The prompt containing input messages and parameters to guide the language model execution.
+     * @param model The language model to be used for processing the prompt.
+     * @return A flow emitting strings that represent the streaming output of the language model.
+     */
+    @ApiStatus.Obsolete
+    public fun executeStreaming(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor> = emptyList()
+    ): Flow<String> = executeStreamingFrames(
+        prompt = prompt,
+        model = model,
+        tools = tools,
+    ).filterTextOnly()
 
     /**
      * Receives multiple independent choices from the LLM.

@@ -146,7 +146,7 @@ class MultiLLMPromptExecutorTest {
             user("What is the capital of France?")
         }
 
-        val responseChunks = executor.executeStreaming(prompt, model)
+        val responseChunks = executor.executeStreamingFrames(prompt, model)
             .filterTextOnly()
             .toList()
         assertEquals(3, responseChunks.size, "Response should have three chunks")
@@ -171,7 +171,7 @@ class MultiLLMPromptExecutorTest {
             user("What is the capital of France?")
         }
 
-        val responseChunks = executor.executeStreaming(prompt, model)
+        val responseChunks = executor.executeStreamingFrames(prompt, model)
             .filterTextOnly()
             .toList()
         assertEquals(3, responseChunks.size, "Response should have three chunks")
@@ -196,7 +196,7 @@ class MultiLLMPromptExecutorTest {
             user("What is the capital of France?")
         }
 
-        val responseChunks = executor.executeStreaming(prompt, model)
+        val responseChunks = executor.executeStreamingFrames(prompt, model)
             .filterTextOnly()
             .toList()
         assertEquals(3, responseChunks.size, "Response should have three chunks")

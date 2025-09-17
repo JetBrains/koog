@@ -141,7 +141,7 @@ public open class MultiLLMPromptExecutor(
      * @param model The LLM model to use for execution.
      * @param tools A list of `ToolDescriptor` objects representing external tools available for use during execution.
      **/
-    override fun executeStreaming(
+    override fun executeStreamingFrames(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>

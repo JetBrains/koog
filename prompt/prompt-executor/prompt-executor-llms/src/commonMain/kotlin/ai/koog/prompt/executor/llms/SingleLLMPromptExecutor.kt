@@ -37,7 +37,7 @@ public open class SingleLLMPromptExecutor(
         return response
     }
 
-    override fun executeStreaming(
+    override fun executeStreamingFrames(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>

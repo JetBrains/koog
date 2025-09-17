@@ -53,7 +53,7 @@ object CalculatorChatExecutor : PromptExecutor {
         return listOf(result)
     }
 
-    override fun executeStreaming(
+    override fun executeStreamingFrames(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>

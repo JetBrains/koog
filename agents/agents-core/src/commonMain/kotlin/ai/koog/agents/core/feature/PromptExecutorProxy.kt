@@ -56,13 +56,13 @@ public class PromptExecutorProxy(
      * @param tools The list of available tool descriptors for the streaming call
      * @return A Flow of StreamFrame objects representing the streaming response
      */
-    override fun executeStreaming(
+    override fun executeStreamingFrames(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
     ): Flow<StreamFrame> {
         logger.debug { "Executing LLM streaming call (prompt: $prompt, tools: [${tools.joinToString { it.name }}])" }
-        return executor.executeStreaming(prompt, model, tools)
+        return executor.executeStreamingFrames(prompt, model, tools)
             .onStart {
                 pipeline.onBeforeStream(runId, prompt, model, tools)
             }

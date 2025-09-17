@@ -64,7 +64,7 @@ class SingleLLMPromptExecutorTest {
         val executor = SingleLLMPromptExecutor(client)
         val prompt = Prompt.build("p2") { user("Hello!") }
 
-        val collected = executor.executeStreaming(prompt, mockModel).toList()
+        val collected = executor.executeStreamingFrames(prompt, mockModel).toList()
 
         assertEquals(chunks, collected, "Response chunks should match, got: $collected")
         assertEquals(prompt, client.lastStreamingPrompt, "Prompt should match, got: ${client.lastStreamingPrompt}")

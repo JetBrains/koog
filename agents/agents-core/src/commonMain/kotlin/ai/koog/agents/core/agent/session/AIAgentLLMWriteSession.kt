@@ -489,6 +489,6 @@ public class AIAgentLLMWriteSession internal constructor(
             }
             this.prompt = prompt
         }
-        return executor.executeStreaming(prompt, model, tools)
+        return executor.executeStreamingFrames(prompt, model, tools)
     }
 }
