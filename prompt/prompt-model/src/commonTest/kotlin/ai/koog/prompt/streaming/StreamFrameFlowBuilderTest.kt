@@ -2,11 +2,13 @@ package ai.koog.prompt.streaming
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
+import kotlin.test.assertFailsWith
 
 class StreamFrameFlowBuilderTest {
 
@@ -16,9 +18,9 @@ class StreamFrameFlowBuilderTest {
     private val weatherArgString = weatherArgList.joinToString("")
 
     @Test
-    fun testCombiningOfPartialToolCallsWithManualEmit() = runTest {
+    fun `combine partial tool calls and manually emit as full tool call`() = runTest {
         buildStreamFrameFlow {
-            appendWeatherToolAsParts(0)
+            upsertWeatherToolCallParts(0)
             tryEmitPendingToolCall()
         } assertContentEquals {
             emitWeatherToolCall()
@@ -26,9 +28,9 @@ class StreamFrameFlowBuilderTest {
     }
 
     @Test
-    fun testCombiningOfPartialToolCallsWithAutomaticEmitOnAppend() = runTest {
+    fun `combine partial tool calls and automatically emit on append text`() = runTest {
         buildStreamFrameFlow {
-            appendWeatherToolAsParts(0)
+            upsertWeatherToolCallParts(0)
             emitAppend("emitted tool?")
         } assertContentEquals {
             emitWeatherToolCall()
@@ -37,9 +39,9 @@ class StreamFrameFlowBuilderTest {
     }
 
     @Test
-    fun testCombiningOfPartialToolCallsWithAutomaticEmitOnEnd() = runTest {
+    fun `combine partial tool calls and automatically emit on end`() = runTest {
         buildStreamFrameFlow {
-            appendWeatherToolAsParts(0)
+            upsertWeatherToolCallParts(0)
             emitEnd()
         } assertContentEquals {
             emitWeatherToolCall()
@@ -48,10 +50,10 @@ class StreamFrameFlowBuilderTest {
     }
 
     @Test
-    fun testAutomaticEmitOnNewToolCallId() = runTest {
+    fun `combine partial tool calls and automatically emit on other tool call`() = runTest {
         buildStreamFrameFlow {
             upsertToolCall(index = 0, id = "some_other_id", name = "some_other_tool", args = "")
-            appendWeatherToolAsParts(index = 1)
+            upsertWeatherToolCallParts(index = 1)
             tryEmitPendingToolCall()
         } assertContentEquals {
             emitToolCall(id = "some_other_id", name = "some_other_tool", content = "")
@@ -59,7 +61,26 @@ class StreamFrameFlowBuilderTest {
         }
     }
 
-    private suspend fun StreamFrameFlowBuilder.appendWeatherToolAsParts(index: Int) {
+    @Test
+    fun `throw when upserting partial tool call without an id`() = runTest {
+        assertFailsWith<StreamFrameFlowBuilderError.NoPendingToolCall> {
+            buildStreamFrameFlow {
+                upsertToolCall(index = 0, id = null, name = "test_error", "")
+            }.collect()
+        }
+    }
+
+    @Test
+    fun `throw when upserting partial tool call with index mismatch`() = runTest {
+        assertFailsWith<StreamFrameFlowBuilderError.ToolCallIndexMismatch> {
+            buildStreamFrameFlow {
+                upsertToolCall(index = 0, id = "test", name = "test_error", "")
+                upsertToolCall(index = 1, id = null, name = "test_error", "")
+            }.collect()
+        }
+    }
+
+    private suspend fun StreamFrameFlowBuilder.upsertWeatherToolCallParts(index: Int) {
         upsertToolCall(index = index, id = weatherCallId, name = weatherFunName, args = "")
         weatherArgList.forEach {
             upsertToolCall(index = index, args = it)

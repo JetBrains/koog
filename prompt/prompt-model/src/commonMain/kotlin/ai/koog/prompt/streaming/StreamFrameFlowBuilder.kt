@@ -115,13 +115,15 @@ public class StreamFrameFlowBuilder(
             tryEmitPendingToolCall()
             PendingToolCall(index, id, name, args)
         } else {
-            val previous = pendingToolCallRef.load()
-            if (previous == null) {
-                error("No tool call is in progress, and no tool call id was provided.")
-            } else if (previous.index != index) {
-                error("Tool call index mismatch. Expected ${previous.index}, got $index.")
+            val previous: PendingToolCall? = pendingToolCallRef.load()
+            when {
+                previous == null ->
+                    throw StreamFrameFlowBuilderError.NoPendingToolCall
+                previous.index != index ->
+                    throw StreamFrameFlowBuilderError.ToolCallIndexMismatch(previous.index, index)
+                else ->
+                    previous.appendArgumentsDelta(args)
             }
-            previous.appendArgumentsDelta(args)
         }
         pendingToolCallRef.store(new)
     }
