@@ -72,9 +72,10 @@ public class PromptExecutorProxy(
                 logger.debug { "Received frame from LLM streaming call: $it" }
                 pipeline.onStreamFrame(runId, it)
             }
-            .catch {
-                logger.debug(it) { "Error in LLM streaming call" }
-                pipeline.onStreamError(runId, it)
+            .catch { error ->
+                logger.debug(error) { "Error in LLM streaming call" }
+                pipeline.onStreamError(runId, error)
+                throw error
             }
             .onCompletion { error ->
                 logger.debug(error) { "Finished LLM streaming call" }
