@@ -39,8 +39,8 @@ val agent = AIAgent(
 
 fun main(args: Array<String>) = runBlocking {
     if (args.size < 2) {
-        println("Error: Please provide the project absolute path and task as arguments")
-        println("Usage: <path> <task>")
+        println("Error: Please provide the project absolute path and a task as arguments")
+        println("Usage: <absolute_path> <task>")
         return@runBlocking
     }
 
