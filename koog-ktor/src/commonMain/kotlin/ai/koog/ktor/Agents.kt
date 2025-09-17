@@ -46,7 +46,9 @@ public suspend fun <Input, Output> RoutingContext.aiAgent(
         agentConfig = plugin.agentConfig(model),
         toolRegistry = plugin.agentConfig.toolRegistry + tools,
     ) {
-        plugin.agentFeatures.forEach { it() }
+        for (feature in plugin.agentFeatures) {
+            this.feature()
+        }
     }
 }
 
