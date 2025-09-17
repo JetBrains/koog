@@ -125,12 +125,12 @@ class GoogleModelsTest {
     @Test
     fun `createGoogleRequest includes maxOutputTokens in request if prompt specifies max tokens`() = runTest {
         val customMax = 1234
-        val p =
+        val prompt =
             Prompt.build("test", params = ai.koog.prompt.params.LLMParams(maxTokens = customMax)) {
                 user("Hello")
             }
 
-        val capturedBody = executeAndCaptureRequestBody(p, GoogleModels.Gemini2_5Flash)
+        val capturedBody = executeAndCaptureRequestBody(prompt, GoogleModels.Gemini2_5Flash)
 
         val json = Json.parseToJsonElement(capturedBody).jsonObject
         val genCfg = json["generationConfig"]!!.jsonObject
@@ -142,9 +142,8 @@ class GoogleModelsTest {
     fun `createGoogleRequest does not include maxOutputTokens in request if prompt does not specify specify max tokens`() =
         runTest {
             val prompt = Prompt.build("test") { user("Hello") }
-            val model = GoogleModels.Gemini2_5Flash.copy(maxOutputTokens = null)
 
-            val capturedBody: String = executeAndCaptureRequestBody(prompt, model)
+            val capturedBody = executeAndCaptureRequestBody(prompt, GoogleModels.Gemini2_5Flash)
 
             val json = Json.parseToJsonElement(capturedBody).jsonObject
             val generationConfig = json["generationConfig"]!!.jsonObject
@@ -155,7 +154,7 @@ class GoogleModelsTest {
             )
         }
 
-    private suspend fun executeAndCaptureRequestBody(p: Prompt, modelWithoutMax: LLModel): String {
+    private suspend fun executeAndCaptureRequestBody(p: Prompt, model: LLModel): String {
         var capturedBody: String? = null
         val mockEngine = MockEngine { request ->
             capturedBody = (request.body as TextContent).text
@@ -167,7 +166,7 @@ class GoogleModelsTest {
         }
         val client = GoogleLLMClient(apiKey = "test-key", baseClient = HttpClient(mockEngine))
 
-        client.execute(prompt = p, model = modelWithoutMax)
+        client.execute(prompt = p, model = model)
         return capturedBody!!
     }
 }
