@@ -161,10 +161,10 @@ handleEvents {
         }
     }
     onStreamError { context -> 
-        println("❌ Error: ${it.error}")
+        println("❌ Error: ${context.error}")
     }
     onAfterStream {
-        println("")
+        println("🏁 Done")
     }
 }
 ```
