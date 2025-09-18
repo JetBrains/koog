@@ -2,11 +2,22 @@ package ai.koog.agents.core.tools
 
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.core.tools.annotations.LLMDescription
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PolymorphicKind
 import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.SerialKind
 import kotlinx.serialization.descriptors.StructureKind
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonDecoder
+import kotlinx.serialization.json.floatOrNull
+import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.longOrNull
 
 
 private fun SerialDescriptor.description(): String =
@@ -144,6 +155,44 @@ public fun SerialDescriptor.asToolDescriptor(
             requiredParameters = emptyList(),
             optionalParameters = emptyList()
         )
+    }
+}
+
+/**
+ * Provides a custom deserializer for tools using the `KSerializer` interface.
+ * Converts the current serializer into a specialized tool descriptor deserializer
+ * if the underlying descriptor has a primitive kind.
+ *
+ * Serializes and deserializes specific data structures while restricting usage of
+ * unsupported operations, such as serialization.
+ *
+ * This function is a utility to adapt serializers for internal tooling.
+ *
+ * @return A `KSerializer` that acts as*/
+@InternalAgentToolsApi
+public inline fun <reified T> KSerializer<T>.asToolDescriptorDeserializer(json: Json = Json): KSerializer<T> {
+    val kind = descriptor.kind
+
+    return if (kind is PrimitiveKind) {
+        object : KSerializer<T> {
+            override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("Primitive", kind)
+
+            override fun serialize(encoder: Encoder, value: T) {
+                throw UnsupportedOperationException("Serialization is not supported")
+            }
+
+            override fun deserialize(decoder: Decoder): T {
+                val jsonDecoder = decoder as? JsonDecoder
+                    ?: throw IllegalStateException("`asToolDescriptorDeserializer` for primitive types should be json decoder")
+
+                return json.decodeFromJsonElement(
+                    this@asToolDescriptorDeserializer,
+                    jsonDecoder.decodeJsonElement().jsonObject.getValue("value")
+                )
+            }
+        }
+    } else {
+        this
     }
 }
 

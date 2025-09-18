@@ -19,6 +19,7 @@ import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.core.tools.asToolDescriptor
+import ai.koog.agents.core.tools.asToolDescriptorDeserializer
 import ai.koog.agents.ext.agent.SubgraphWithTaskUtils.FINALIZE_SUBGRAPH_TOOL_NAME
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
@@ -78,6 +79,7 @@ public object SubgraphWithTaskUtils {
          * between different components or systems handling the serialized data.
          */
         override val argsSerializer: KSerializer<T> = serializer()
+
         /**
          * Serializer used to encode and decode the results of the tool's execution.
          * This property defines how the result type `T` should be serialized, enabling the transfer
@@ -343,7 +345,8 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
      * */
     val callToolHacked by node<Message.Tool.Call, ReceivedToolResult>() { toolCall ->
         if (toolCall.tool == FINALIZE_SUBGRAPH_TOOL_NAME) {
-            val toolResult = Json.decodeFromString(serializer<Output>(), toolCall.content)
+            val toolResult =
+                Json.decodeFromString(serializer<Output>().asToolDescriptorDeserializer(), toolCall.content)
 
             // Append final tool call result to the prompt for further LLM calls to see it (otherwise they would fail)
             llm.writeSession {
