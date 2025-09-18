@@ -146,6 +146,7 @@ public class JsonStructuredData<TStruct>(
          *
          * val weatherStructure = JsonStructuredData.createJsonStructure<WeatherForecast>(
          *     id = "WeatherForecast",
+         *     serializer = WeatherForecast.serializer(),
          *     // some models don't work well with full json schema, so you may try simple, but it has more limitations (e.g. limited polymorphism)
          *     schemaGenerator = FullJsonSchemaGenerator,
          *     descriptionOverrides = mapOf(
@@ -156,7 +157,9 @@ public class JsonStructuredData<TStruct>(
          *         // property descriptions
          *         "Weather.forecast" to "List of forecasted weather conditions for a given location", // the property doesn't have description annotation, this will add description
          *         "Weather.countryCode" to "Country code of the location in the ISO2 format", // the property has description annotation, this will override description
-         *     )
+         *     ),
+         *     // You can also exclude properties from schema generation completely
+         *     excludedProperties = setOf("Weather.cityName"),
          * )
          * ```
          *
@@ -207,6 +210,7 @@ public class JsonStructuredData<TStruct>(
          * slightly different formats.
          * @param descriptionOverrides Optional map of serial class names and property names to descriptions.
          * If a property/type is already described with [ai.koog.agents.core.tools.annotations.LLMDescription] annotation, value from the map will override this description.
+         * @param excludedProperties Optional set of property names to exclude from the schema generation.
          * @param examples List of example data items that conform to the structure, used for demonstrating valid formats.
          * @param definitionPrompt Prompt with definition, explaining the structure to the LLM when the manual mode for
          * structured output is used. Default is [JsonStructuredData.defaultDefinitionPrompt]
@@ -215,6 +219,7 @@ public class JsonStructuredData<TStruct>(
             json: Json = defaultJson,
             schemaGenerator: JsonSchemaGenerator = StandardJsonSchemaGenerator.Default,
             descriptionOverrides: Map<String, String> = emptyMap(),
+            excludedProperties: Set<String> = emptySet(),
             examples: List<TStruct> = emptyList(),
             noinline definitionPrompt: (
                 builder: TextContentBuilderBase<*>,
@@ -229,6 +234,7 @@ public class JsonStructuredData<TStruct>(
                 json = json,
                 schemaGenerator = schemaGenerator,
                 descriptionOverrides = descriptionOverrides,
+                excludedProperties = excludedProperties,
                 examples = examples,
                 definitionPrompt = definitionPrompt,
             )
