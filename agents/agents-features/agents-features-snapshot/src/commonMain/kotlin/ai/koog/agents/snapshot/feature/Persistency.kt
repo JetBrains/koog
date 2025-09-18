@@ -67,8 +67,7 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
         /**
          * The storage key used to identify this feature in the agent's feature registry.
          */
-        override val key: AIAgentStorageKey<Persistency>
-            get() = AIAgentStorageKey("agents-features-snapshot")
+        override val key: AIAgentStorageKey<Persistency> = AIAgentStorageKey("agents-features-snapshot")
 
         /**
          * Creates the default configuration for this feature.
