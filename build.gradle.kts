@@ -10,13 +10,15 @@ import org.jetbrains.kotlin.gradle.targets.js.ir.KotlinJsIrLink
 import org.jetbrains.kotlin.gradle.tasks.BaseKotlinCompile
 import org.jlleitschuh.gradle.ktlint.KtlintExtension
 import java.time.Clock
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.Base64
 
 group = "ai.koog"
 version = run {
     // our version follows the semver specification
 
-    val main = "0.4.1"
+    val main = "0.4.3"
 
     val feat = run {
         val releaseBuild = !System.getenv("BRANCH_KOOG_IS_RELEASING_FROM").isNullOrBlank()
@@ -29,8 +31,9 @@ version = run {
             if (branch != "develop") {
                 throw GradleException("Nightly builds are allowed only from the develop branch")
             }
-            val date = Clock.systemUTC().instant().atZone(java.time.ZoneId.of("CET"))
-                .format(java.time.format.DateTimeFormatter.ISO_LOCAL_DATE)
+            val date = Clock.systemUTC().instant()
+                .atZone(ZoneId.of("UTC"))
+                .format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmm"))
             if (!customVersion.isNullOrBlank()) {
                 "-$branch-$date-$customVersion"
             } else {
@@ -66,7 +69,7 @@ version = run {
             }
         } else {
             // do not care
-            ""
+            "-SNAPSHOT"
         }
     }
 
@@ -75,7 +78,7 @@ version = run {
 
 buildscript {
     dependencies {
-        classpath("com.squareup.okhttp3:okhttp:4.12.0")
+        classpath("com.squareup.okhttp3:okhttp:5.1.0")
     }
 }
 
@@ -187,7 +190,7 @@ tasks {
             client.newCall(request).execute().use { response ->
                 val statusCode = response.code
                 println("Upload status code: $statusCode")
-                println("Upload result: ${response.body!!.string()}")
+                println("Upload result: ${response.body.string()}")
                 if (statusCode != 201) {
                     error("Upload error to Central repository. Status code $statusCode.")
                 }
