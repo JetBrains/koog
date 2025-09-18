@@ -11,7 +11,7 @@ import kotlinx.coroutines.sync.withLock
  *
  * @param name The string identifier that uniquely represents the storage key.
  */
-public data class AIAgentStorageKey<T : Any>(val name: String)
+public class AIAgentStorageKey<T : Any>(public val name: String)
 
 /**
  * Creates a storage key for a specific type, allowing identification and retrieval of values associated with it.
