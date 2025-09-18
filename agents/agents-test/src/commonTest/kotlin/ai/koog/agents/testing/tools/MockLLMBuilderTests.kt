@@ -1,40 +1,51 @@
 package ai.koog.agents.testing.tools
 
 import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.tools.ToolArgs
+import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.core.tools.ToolResult
 import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.executor.ollama.client.OllamaModels
+import ai.koog.prompt.llm.OllamaModels
 import ai.koog.prompt.message.Message
-import ai.koog.serialization.kotlinx.KotlinxSerializer
+import ai.koog.prompt.streaming.emitAppend
+import ai.koog.prompt.streaming.emitEnd
+import ai.koog.prompt.streaming.streamFrameFlow
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.serializer
 import kotlin.test.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 @Suppress("USELESS_CAST")
 class MockLLMBuilderTests {
-    private val serializer = KotlinxSerializer()
 
     // Sample tool for testing
-    private object TestTool : Tool<TestTool.Args, String>(
-        argsSerializer = serializer<Args>(),
-        resultSerializer = serializer<String>(),
-        name = "test_tool",
-        description = "A test tool for testing"
-    ) {
+    private object TestTool : Tool<TestTool.Args, ToolResult.Text>() {
         @Serializable
-        data class Args(val input: String)
+        data class Args(val input: String) : ToolArgs
 
-        override suspend fun execute(args: Args): String =
-            "Executed with: ${args.input}"
+        override val argsSerializer: KSerializer<Args> = serializer()
+
+        override val descriptor: ToolDescriptor = ToolDescriptor(
+            name = "test_tool",
+            description = "A test tool for testing"
+        )
+
+        override suspend fun execute(args: Args): ToolResult.Text {
+            return ToolResult.Text("Executed with: ${args.input}")
+        }
     }
 
     @Test
     fun testBasicMockLLMAnswer() = runTest {
         // Create a mock executor with a simple response
-        val mockExecutor = getMockExecutor(serializer) {
+        val mockExecutor = getMockExecutor {
             mockLLMAnswer("Hello, world!") onRequestContains "hello"
             mockLLMAnswer("Default response").asDefaultResponse
         }
@@ -58,7 +69,7 @@ class MockLLMBuilderTests {
 
     @Test
     fun testExactMatchResponse() = runTest {
-        val mockExecutor = getMockExecutor(serializer) {
+        val mockExecutor = getMockExecutor {
             mockLLMAnswer("Exact match response") onRequestEquals "exact match query"
             mockLLMAnswer("Default response").asDefaultResponse
         }
@@ -81,7 +92,7 @@ class MockLLMBuilderTests {
 
     @Test
     fun testPartialMatchResponse() = runTest {
-        val mockExecutor = getMockExecutor(serializer) {
+        val mockExecutor = getMockExecutor {
             mockLLMAnswer("Partial match response") onRequestContains "partial match"
             mockLLMAnswer("Default response").asDefaultResponse
         }
@@ -97,7 +108,7 @@ class MockLLMBuilderTests {
 
     @Test
     fun testConditionalMatchResponse() = runTest {
-        val mockExecutor = getMockExecutor(serializer) {
+        val mockExecutor = getMockExecutor {
             mockLLMAnswer("Conditional response") onCondition { it.length > 20 }
             mockLLMAnswer("Default response").asDefaultResponse
         }
@@ -120,8 +131,33 @@ class MockLLMBuilderTests {
     }
 
     @Test
+    fun testStreamMocking() = runTest {
+        val prompt = prompt("test-stream") {
+            user("hello")
+        }
+        val expectedStream = streamFrameFlow {
+            emitAppend("hi")
+            emitAppend(", ho")
+            emitAppend("w are you?")
+            emitEnd()
+        }
+        val mockExecutor = getMockExecutor {
+            mockLLMStream(expectedStream) onRequestEquals "hello"
+        }
+        val actualStream = mockExecutor.executeStreaming(prompt, OllamaModels.Meta.LLAMA_3_2)
+        assertContentEquals(
+            expected = expectedStream.toList(),
+            actual = actualStream.toList()
+        )
+    }
+
+    @Test
     fun testToolCallMocking() = runTest {
-        val mockExecutor = getMockExecutor(serializer) {
+        val toolRegistry = ToolRegistry {
+            tool(TestTool)
+        }
+
+        val mockExecutor = getMockExecutor(toolRegistry) {
             mockLLMToolCall(TestTool, TestTool.Args("test input")) onRequestContains "use tool"
             mockLLMAnswer("Default response").asDefaultResponse
         }
@@ -138,12 +174,16 @@ class MockLLMBuilderTests {
 
     @Test
     fun testMultipleToolCallsMocking() = runTest {
+        val toolRegistry = ToolRegistry {
+            tool(TestTool)
+        }
+
         val toolCalls = listOf(
             TestTool to TestTool.Args("first input"),
             TestTool to TestTool.Args("second input")
         )
 
-        val mockExecutor = getMockExecutor(serializer) {
+        val mockExecutor = getMockExecutor(toolRegistry) {
             mockLLMToolCall(toolCalls) onRequestContains "use multiple tools"
             mockLLMAnswer("Default response").asDefaultResponse
         }
@@ -164,13 +204,17 @@ class MockLLMBuilderTests {
 
     @Test
     fun testMixedResponseMocking() = runTest {
+        val toolRegistry = ToolRegistry {
+            tool(TestTool)
+        }
+
         val mixedToolCalls = listOf(
             TestTool to TestTool.Args("mixed input")
         )
 
         val textResponses = listOf("This is a mixed response with tool calls")
 
-        val mockExecutor = getMockExecutor(serializer) {
+        val mockExecutor = getMockExecutor(toolRegistry) {
             mockLLMMixedResponse(mixedToolCalls, textResponses) onRequestContains "mixed response"
             mockLLMAnswer("Default response").asDefaultResponse
         }
@@ -195,9 +239,13 @@ class MockLLMBuilderTests {
 
     @Test
     fun testToolBehaviorMocking() = runTest {
-        val mockExecutor = getMockExecutor(serializer) {
+        val toolRegistry = ToolRegistry {
+            tool(TestTool)
+        }
+
+        val mockExecutor = getMockExecutor(toolRegistry) {
             // Mock the tool behavior
-            mockTool(TestTool) alwaysReturns "Mocked result"
+            mockTool(TestTool) alwaysReturns ToolResult.Text("Mocked result")
 
             // Set up a tool call that will use the mocked tool
             mockLLMToolCall(TestTool, TestTool.Args("test input")) onRequestContains "use tool"
@@ -215,7 +263,7 @@ class MockLLMBuilderTests {
         val toolCall = response as Message.Tool.Call
 
         // Find the tool condition that matches this call
-        val toolCondition = (mockExecutor as MockPromptExecutor).toolActions.firstOrNull {
+        val toolCondition = (mockExecutor as MockLLMExecutor).toolActions.firstOrNull {
             it.tool.name == toolCall.tool
         }
 
@@ -223,16 +271,20 @@ class MockLLMBuilderTests {
 
         // Execute the tool and check the result
         val result = toolCondition.invoke(toolCall)
-        assertTrue(result is String)
-        assertEquals("Mocked result", result)
+        assertTrue(result is ToolResult.Text)
+        assertEquals("Mocked result", (result as ToolResult.Text).text)
     }
 
     @Test
     fun testToolBehaviorWithCondition() = runTest {
-        val mockExecutor = getMockExecutor(serializer) {
+        val toolRegistry = ToolRegistry {
+            tool(TestTool)
+        }
+
+        val mockExecutor = getMockExecutor(toolRegistry) {
             // Mock the tool behavior with a condition
-            mockTool(TestTool).returns("Specific result").onArguments(TestTool.Args("specific input"))
-            mockTool(TestTool) alwaysReturns "Default result"
+            mockTool(TestTool).returns(ToolResult.Text("Specific result")).onArguments(TestTool.Args("specific input"))
+            mockTool(TestTool) alwaysReturns ToolResult.Text("Default result")
 
             // Set up tool calls
             mockLLMToolCall(TestTool, TestTool.Args("specific input")) onRequestContains "specific"
@@ -248,13 +300,13 @@ class MockLLMBuilderTests {
         assertTrue(specificResponse is Message.Tool.Call)
 
         val specificToolCall = specificResponse as Message.Tool.Call
-        val specificToolCondition = (mockExecutor as MockPromptExecutor).toolActions.first {
+        val specificToolCondition = (mockExecutor as MockLLMExecutor).toolActions.first {
             it.satisfies(specificToolCall)
         }
 
         val specificResult = specificToolCondition.invoke(specificToolCall)
-        assertTrue(specificResult is String)
-        assertEquals("Specific result", specificResult)
+        assertTrue(specificResult is ToolResult.Text)
+        assertEquals("Specific result", (specificResult as ToolResult.Text).text)
 
         // Test the default behavior
         val otherPrompt = prompt("test-other") {
@@ -265,24 +317,28 @@ class MockLLMBuilderTests {
         assertTrue(otherResponse is Message.Tool.Call)
 
         val otherToolCall = otherResponse as Message.Tool.Call
-        val otherToolCondition = (mockExecutor as MockPromptExecutor).toolActions.first {
+        val otherToolCondition = (mockExecutor as MockLLMExecutor).toolActions.first {
             it.satisfies(otherToolCall)
         }
 
         val otherResult = otherToolCondition.invoke(otherToolCall)
-        assertTrue(otherResult is String)
-        assertEquals("Default result", otherResult)
+        assertTrue(otherResult is ToolResult.Text)
+        assertEquals("Default result", (otherResult as ToolResult.Text).text)
     }
 
     @Test
     fun testToolBehaviorWithCustomAction() = runTest {
+        val toolRegistry = ToolRegistry {
+            tool(TestTool)
+        }
+
         var actionCalled = false
 
-        val mockExecutor = getMockExecutor(serializer) {
+        val mockExecutor = getMockExecutor(toolRegistry) {
             // Mock the tool behavior with a custom action
             mockTool(TestTool) alwaysDoes {
                 actionCalled = true
-                "Custom action result"
+                ToolResult.Text("Custom action result")
             }
 
             // Set up a tool call
@@ -297,13 +353,13 @@ class MockLLMBuilderTests {
         assertTrue(response is Message.Tool.Call)
 
         val toolCall = response
-        val toolCondition = (mockExecutor as MockPromptExecutor).toolActions.first {
+        val toolCondition = (mockExecutor as MockLLMExecutor).toolActions.first {
             it.satisfies(toolCall)
         }
 
         val result = toolCondition.invoke(toolCall)
         assertTrue(actionCalled)
-        assertTrue(result is String)
-        assertEquals("Custom action result", result)
+        assertTrue(result is ToolResult.Text)
+        assertEquals("Custom action result", (result as ToolResult.Text).text)
     }
 }

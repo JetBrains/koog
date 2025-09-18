@@ -7,7 +7,9 @@ import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreaming
 import ai.koog.agents.testing.tools.MockExecutorDSLBuilder
 import ai.koog.agents.testing.tools.getMockExecutor
+import ai.koog.agents.testing.tools.mockLLMStream
 import ai.koog.prompt.streaming.collectText
+import ai.koog.prompt.streaming.streamFrameFlowOf
 import ai.koog.serialization.kotlinx.KotlinxSerializer
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -27,7 +29,9 @@ class StreamingEventHandlerTest {
         // Using nodeLLMRequestStreaming to actually test streaming events
         val eventsCollector = mockStreaming(
             strategy = streamTextStrategy("streaming-test-strategy"),
-            buildLlmMock = { mockLLMAnswer(assistantResponse) onRequestContains userMessage }
+            buildLlmMock = {
+                mockLLMStream(streamFrameFlowOf(assistantResponse)) onRequestContains userMessage
+            }
         ) { agent ->
             agent.run(userMessage, null)
         }
@@ -56,7 +60,9 @@ class StreamingEventHandlerTest {
         val testResponse = "This is a response about streaming functionality"
         val eventsCollector = mockStreaming(
             strategy = streamTextStrategy("streaming-test-strategy-2"),
-            buildLlmMock = { mockLLMAnswer(testResponse) onRequestContains testMessage }
+            buildLlmMock = {
+                mockLLMStream(streamFrameFlowOf(testResponse)) onRequestContains testMessage
+            }
         ) { agent ->
             agent.run(testMessage, null)
         }
