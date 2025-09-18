@@ -9,6 +9,12 @@
 [![docs](https://img.shields.io/badge/documentation-blue)](https://docs.koog.ai)
 [![Slack channel](https://img.shields.io/badge/chat-slack-green.svg?logo=slack)](https://kotlinlang.slack.com/messages/koog-agentic-framework/)
 
+Build status:
+
+[![Checks](https://github.com/JetBrains/koog/actions/workflows/checks.yml/badge.svg?branch=develop)](https://github.com/JetBrains/koog/actions/workflows/checks.yml?query=branch%3Adevelop)
+[![Heavy Tests](https://github.com/JetBrains/koog/actions/workflows/heavy-tests.yml/badge.svg?branch=develop)](https://github.com/JetBrains/koog/actions/workflows/heavy-tests.yml?query=branch%3Adevelop)
+[![Ollama Tests](https://github.com/JetBrains/koog/actions/workflows/ollama-tests.yml/badge.svg?branch=develop)](https://github.com/JetBrains/koog/actions/workflows/ollama-tests.yml?query=branch%3Adevelop)
+
 ## Overview
 
 Koog is a Kotlin-based framework designed to build and run AI agents entirely in idiomatic Kotlin. It lets you create agents that can interact with tools, handle complex workflows, and communicate with users.
