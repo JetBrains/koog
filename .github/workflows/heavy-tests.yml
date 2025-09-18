@@ -116,3 +116,14 @@ jobs:
           name: reports-${{ matrix.os }}-${{ matrix.artifact-name }}
           path: |
             **/build/reports/
+
+      - name: Publish Test Report
+        uses: mikepenz/action-junit-report@v5
+        if: ${{ !cancelled() }} # always run even if the previous step fails
+        with:
+          report_paths: '**/test-results/**/TEST-*.xml'
+          detailed_summary: true
+          flaky_summary: true
+          include_empty_in_summary: false
+          include_time_in_summary: true
+          annotate_only: true
