@@ -7,6 +7,8 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.streaming.toStreamFrame
 import ai.koog.prompt.tokenizer.Tokenizer
 import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -87,11 +89,17 @@ internal class MockLLMExecutor(
      *
      * @param prompt The prompt to execute
      * @param model The LLM model to use (ignored in mock implementation)
+     * @param tools The list of tools available for the execution
      * @return A flow containing a single string response
      */
-    override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> = flow {
-        val response = execute(prompt = prompt, model = model).single()
-        emit(response.content)
+    override fun executeStreaming(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>
+    ): Flow<StreamFrame> = flow {
+        execute(prompt = prompt, model = model).forEach {
+            emit(it.toStreamFrame())
+        }
     }
 
     /**

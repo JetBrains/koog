@@ -18,7 +18,7 @@ env:
 
 jobs:
   integration-tests:
-
+    name: ${{ matrix.job-name }}
     runs-on: ${{ matrix.os }}
     permissions:
       contents: read
@@ -27,7 +27,32 @@ jobs:
 
     strategy:
       matrix:
-        os: [ ubuntu-latest ]
+        include:
+          - job-name: "agent-tests"
+            test-group: "ai.koog.integration.tests.agent.*"
+            artifact-name: "agent-tests"
+            os: ubuntu-latest
+          - job-name: "executor-tests"
+            test-group: "ai.koog.integration.tests.executor.*"
+            artifact-name: "executor-tests"
+            os: ubuntu-latest
+          - job-name: "capabilities-tests"
+            test-group: "ai.koog.integration.tests.capabilities.*"
+            artifact-name: "capabilities-tests"
+            os: ubuntu-latest
+          - job-name: "embeddings-tests"
+            test-group: "ai.koog.integration.tests.*Embeddings*"
+            artifact-name: "embeddings-test"
+            os: ubuntu-latest
+          - job-name: "bedrock-credentials-tests"
+            test-group: "ai.koog.integration.tests.*BedrockCredentials*"
+            artifact-name: "bedrock-credentials-test"
+            os: ubuntu-latest
+          - job-name: "anthropic-schema-tests"
+            test-group: "ai.koog.integration.tests.*AnthropicSchemaValidation*"
+            artifact-name: "anthropic-schema-test"
+            os: ubuntu-latest
+      fail-fast: false
 
     steps:
       - name: Configure Git
@@ -76,17 +101,29 @@ jobs:
 
       - name: JvmIntegrationTest with Gradle Wrapper
         env:
+          JAVA_OPTS: "-Xms8g -Xmx8g -Dfile.encoding=UTF-8 -Djava.awt.headless=true -Dkotlin.daemon.jvm.options=-Xmx6g"
           ANTHROPIC_API_TEST_KEY: ${{ secrets.ANTHROPIC_API_TEST_KEY }}
-          OPEN_AI_API_TEST_KEY: ${{ secrets.OPEN_AI_API_TEST_KEY }}
+          DEEPSEEK_API_TEST_KEY: ${{ secrets.DEEPSEEK_API_TEST_KEY }}
           GEMINI_API_TEST_KEY: ${{ secrets.GEMINI_API_TEST_KEY }}
-          OPEN_ROUTER_API_TEST_KEY: ${{ vars.OPEN_ROUTER_API_TEST_KEY }}
-          DEEPSEEK_API_TEST_KEY: ${{ vars.DEEPSEEK_API_TEST_KEY }}
-        run: ./gradlew jvmIntegrationTest --continue
+          OPEN_AI_API_TEST_KEY: ${{ secrets.OPEN_AI_API_TEST_KEY }}
+          OPEN_ROUTER_API_TEST_KEY: ${{ secrets.OPEN_ROUTER_API_TEST_KEY }}
+        run: ./gradlew jvmIntegrationTest --tests "${{ matrix.test-group }}" --continue
 
       - name: Collect reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: reports-${{ matrix.os }}
+          name: reports-${{ matrix.os }}-${{ matrix.artifact-name }}
           path: |
             **/build/reports/
+
+      - name: Publish Test Report
+        uses: mikepenz/action-junit-report@v5
+        if: ${{ !cancelled() }} # always run even if the previous step fails
+        with:
+          report_paths: '**/test-results/**/TEST-*.xml'
+          detailed_summary: true
+          flaky_summary: true
+          include_empty_in_summary: false
+          include_time_in_summary: true
+          annotate_only: true

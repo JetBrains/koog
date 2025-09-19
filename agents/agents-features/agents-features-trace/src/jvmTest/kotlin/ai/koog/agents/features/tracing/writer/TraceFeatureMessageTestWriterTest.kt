@@ -6,16 +6,17 @@ import ai.koog.agents.core.dsl.extension.nodeExecuteTool
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeUpdatePrompt
 import ai.koog.agents.core.feature.model.AIAgentError
-import ai.koog.agents.core.feature.model.AIAgentNodeExecutionErrorEvent
-import ai.koog.agents.core.feature.model.BeforeLLMCallEvent
-import ai.koog.agents.core.feature.model.ToolCallEvent
-import ai.koog.agents.core.feature.model.ToolCallResultEvent
+import ai.koog.agents.core.feature.model.events.AIAgentNodeExecutionErrorEvent
+import ai.koog.agents.core.feature.model.events.BeforeLLMCallEvent
+import ai.koog.agents.core.feature.model.events.ToolCallEvent
+import ai.koog.agents.core.feature.model.events.ToolCallResultEvent
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.tracing.feature.Tracing
 import ai.koog.agents.features.tracing.mock.RecursiveTool
 import ai.koog.agents.features.tracing.mock.TestFeatureMessageWriter
 import ai.koog.agents.features.tracing.mock.TestLogger
 import ai.koog.agents.features.tracing.mock.createAgent
+import ai.koog.agents.features.tracing.mock.testClock
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.utils.use
 import ai.koog.prompt.message.Message
@@ -282,7 +283,8 @@ class TraceFeatureMessageTestWriterTest {
                     AIAgentNodeExecutionErrorEvent(
                         runId = writer.runId,
                         nodeName = nodeWithErrorName,
-                        error = AIAgentError(testErrorMessage, expectedStackTrace, null)
+                        error = AIAgentError(testErrorMessage, expectedStackTrace, null),
+                        timestamp = testClock.now().toEpochMilliseconds()
                     )
                 )
 

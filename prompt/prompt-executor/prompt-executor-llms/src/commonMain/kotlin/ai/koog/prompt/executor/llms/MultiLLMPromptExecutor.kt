@@ -9,6 +9,7 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.streaming.StreamFrame
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
 
@@ -138,14 +139,19 @@ public open class MultiLLMPromptExecutor(
      *
      * @param prompt The prompt to execute, containing the messages and parameters.
      * @param model The LLM model to use for execution.
+     * @param tools A list of `ToolDescriptor` objects representing external tools available for use during execution.
      **/
-    override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
+    override fun executeStreaming(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>
+    ): Flow<StreamFrame> {
         logger.debug { "Executing streaming prompt: $prompt with model: $model" }
 
         val provider = model.provider
         val client = requireNotNull(llmClients[model.provider]) { "No client found for provider: $provider" }
 
-        return client.executeStreaming(prompt, model)
+        return client.executeStreaming(prompt, model, tools)
     }
 
     /**

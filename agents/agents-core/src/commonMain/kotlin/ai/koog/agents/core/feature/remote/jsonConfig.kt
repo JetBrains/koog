@@ -1,25 +1,27 @@
 package ai.koog.agents.core.feature.remote
 
 import ai.koog.agents.core.feature.message.FeatureEvent
-import ai.koog.agents.core.feature.message.FeatureEventMessage
 import ai.koog.agents.core.feature.message.FeatureMessage
-import ai.koog.agents.core.feature.message.FeatureStringMessage
-import ai.koog.agents.core.feature.model.AIAgentBeforeCloseEvent
-import ai.koog.agents.core.feature.model.AIAgentFinishedEvent
-import ai.koog.agents.core.feature.model.AIAgentNodeExecutionEndEvent
-import ai.koog.agents.core.feature.model.AIAgentNodeExecutionErrorEvent
-import ai.koog.agents.core.feature.model.AIAgentNodeExecutionStartEvent
-import ai.koog.agents.core.feature.model.AIAgentRunErrorEvent
-import ai.koog.agents.core.feature.model.AIAgentStartedEvent
-import ai.koog.agents.core.feature.model.AIAgentStrategyFinishedEvent
-import ai.koog.agents.core.feature.model.AIAgentStrategyStartEvent
-import ai.koog.agents.core.feature.model.AfterLLMCallEvent
-import ai.koog.agents.core.feature.model.BeforeLLMCallEvent
-import ai.koog.agents.core.feature.model.DefinedFeatureEvent
-import ai.koog.agents.core.feature.model.ToolCallEvent
-import ai.koog.agents.core.feature.model.ToolCallFailureEvent
-import ai.koog.agents.core.feature.model.ToolCallResultEvent
-import ai.koog.agents.core.feature.model.ToolValidationErrorEvent
+import ai.koog.agents.core.feature.model.FeatureEventMessage
+import ai.koog.agents.core.feature.model.FeatureStringMessage
+import ai.koog.agents.core.feature.model.events.AIAgentBeforeCloseEvent
+import ai.koog.agents.core.feature.model.events.AIAgentFinishedEvent
+import ai.koog.agents.core.feature.model.events.AIAgentFunctionalStrategyStartEvent
+import ai.koog.agents.core.feature.model.events.AIAgentGraphStrategyStartEvent
+import ai.koog.agents.core.feature.model.events.AIAgentNodeExecutionEndEvent
+import ai.koog.agents.core.feature.model.events.AIAgentNodeExecutionErrorEvent
+import ai.koog.agents.core.feature.model.events.AIAgentNodeExecutionStartEvent
+import ai.koog.agents.core.feature.model.events.AIAgentRunErrorEvent
+import ai.koog.agents.core.feature.model.events.AIAgentStartedEvent
+import ai.koog.agents.core.feature.model.events.AIAgentStrategyFinishedEvent
+import ai.koog.agents.core.feature.model.events.AIAgentStrategyStartEvent
+import ai.koog.agents.core.feature.model.events.AfterLLMCallEvent
+import ai.koog.agents.core.feature.model.events.BeforeLLMCallEvent
+import ai.koog.agents.core.feature.model.events.DefinedFeatureEvent
+import ai.koog.agents.core.feature.model.events.ToolCallEvent
+import ai.koog.agents.core.feature.model.events.ToolCallFailureEvent
+import ai.koog.agents.core.feature.model.events.ToolCallResultEvent
+import ai.koog.agents.core.feature.model.events.ToolValidationErrorEvent
 import io.ktor.utils.io.InternalAPI
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.KSerializer
@@ -85,6 +87,7 @@ public val defaultFeatureMessageJsonConfig: Json
  */
 public val defaultFeatureMessageSerializersModule: SerializersModule
     get() = SerializersModule {
+
         polymorphic(FeatureMessage::class) {
             subclass(FeatureStringMessage::class, FeatureStringMessage.serializer())
             subclass(FeatureEventMessage::class, FeatureEventMessage.serializer())
@@ -92,7 +95,8 @@ public val defaultFeatureMessageSerializersModule: SerializersModule
             subclass(AIAgentFinishedEvent::class, AIAgentFinishedEvent.serializer())
             subclass(AIAgentBeforeCloseEvent::class, AIAgentBeforeCloseEvent.serializer())
             subclass(AIAgentRunErrorEvent::class, AIAgentRunErrorEvent.serializer())
-            subclass(AIAgentStrategyStartEvent::class, AIAgentStrategyStartEvent.serializer())
+            subclass(AIAgentGraphStrategyStartEvent::class, AIAgentGraphStrategyStartEvent.serializer())
+            subclass(AIAgentFunctionalStrategyStartEvent::class, AIAgentFunctionalStrategyStartEvent.serializer())
             subclass(AIAgentStrategyFinishedEvent::class, AIAgentStrategyFinishedEvent.serializer())
             subclass(AIAgentNodeExecutionStartEvent::class, AIAgentNodeExecutionStartEvent.serializer())
             subclass(AIAgentNodeExecutionEndEvent::class, AIAgentNodeExecutionEndEvent.serializer())
@@ -111,7 +115,8 @@ public val defaultFeatureMessageSerializersModule: SerializersModule
             subclass(AIAgentFinishedEvent::class, AIAgentFinishedEvent.serializer())
             subclass(AIAgentBeforeCloseEvent::class, AIAgentBeforeCloseEvent.serializer())
             subclass(AIAgentRunErrorEvent::class, AIAgentRunErrorEvent.serializer())
-            subclass(AIAgentStrategyStartEvent::class, AIAgentStrategyStartEvent.serializer())
+            subclass(AIAgentGraphStrategyStartEvent::class, AIAgentGraphStrategyStartEvent.serializer())
+            subclass(AIAgentFunctionalStrategyStartEvent::class, AIAgentFunctionalStrategyStartEvent.serializer())
             subclass(AIAgentStrategyFinishedEvent::class, AIAgentStrategyFinishedEvent.serializer())
             subclass(AIAgentNodeExecutionStartEvent::class, AIAgentNodeExecutionStartEvent.serializer())
             subclass(AIAgentNodeExecutionEndEvent::class, AIAgentNodeExecutionEndEvent.serializer())
@@ -129,7 +134,8 @@ public val defaultFeatureMessageSerializersModule: SerializersModule
             subclass(AIAgentFinishedEvent::class, AIAgentFinishedEvent.serializer())
             subclass(AIAgentBeforeCloseEvent::class, AIAgentBeforeCloseEvent.serializer())
             subclass(AIAgentRunErrorEvent::class, AIAgentRunErrorEvent.serializer())
-            subclass(AIAgentStrategyStartEvent::class, AIAgentStrategyStartEvent.serializer())
+            subclass(AIAgentGraphStrategyStartEvent::class, AIAgentGraphStrategyStartEvent.serializer())
+            subclass(AIAgentFunctionalStrategyStartEvent::class, AIAgentFunctionalStrategyStartEvent.serializer())
             subclass(AIAgentStrategyFinishedEvent::class, AIAgentStrategyFinishedEvent.serializer())
             subclass(AIAgentNodeExecutionStartEvent::class, AIAgentNodeExecutionStartEvent.serializer())
             subclass(AIAgentNodeExecutionEndEvent::class, AIAgentNodeExecutionEndEvent.serializer())
@@ -140,6 +146,11 @@ public val defaultFeatureMessageSerializersModule: SerializersModule
             subclass(ToolCallResultEvent::class, ToolCallResultEvent.serializer())
             subclass(BeforeLLMCallEvent::class, BeforeLLMCallEvent.serializer())
             subclass(AfterLLMCallEvent::class, AfterLLMCallEvent.serializer())
+        }
+
+        polymorphic(AIAgentStrategyStartEvent::class) {
+            subclass(AIAgentGraphStrategyStartEvent::class, AIAgentGraphStrategyStartEvent.serializer())
+            subclass(AIAgentFunctionalStrategyStartEvent::class, AIAgentFunctionalStrategyStartEvent.serializer())
         }
     }
 

@@ -8,6 +8,7 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.example.ApiKeyService
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.streaming.filterTextOnly
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.runBlocking
 
@@ -20,7 +21,7 @@ fun main(): Unit = runBlocking {
 
             llm.writeSession {
                 updatePrompt { user(input) }
-                val markdownStream = requestLLMStreaming(mdDefinition)
+                val markdownStream = requestLLMStreaming(mdDefinition).filterTextOnly()
 
                 parseMarkdownStreamToBooks(markdownStream).collect { book ->
                     callToolRaw(BookTool.Companion.NAME, book)

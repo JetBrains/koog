@@ -134,6 +134,18 @@ jobs:
           name: reports-${{ matrix.os }}
           path: |
             **/build/reports/
+
+      - name: Publish Test Report
+        uses: mikepenz/action-junit-report@v5
+        if: ${{ !cancelled() }} # always run even if the previous step fails
+        with:
+          report_paths: '**/test-results/**/TEST-*.xml'
+          detailed_summary: true
+          flaky_summary: true
+          include_empty_in_summary: false
+          include_time_in_summary: true
+          annotate_only: true
+
   qodana:
     needs: [tests]
     if: github.repository == 'jetbrains/koog'
@@ -198,3 +210,20 @@ jobs:
 
           echo "Starting assemble..."
           ./gradlew :docs:assemble
+
+  dokka:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Verify Dokka
+        run: ./gradlew dokkaGenerate

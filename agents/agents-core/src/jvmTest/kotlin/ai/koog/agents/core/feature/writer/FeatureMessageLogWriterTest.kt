@@ -2,7 +2,7 @@ package ai.koog.agents.core.feature.writer
 
 import ai.koog.agents.core.feature.message.FeatureEvent
 import ai.koog.agents.core.feature.message.FeatureMessage
-import ai.koog.agents.core.feature.message.FeatureStringMessage
+import ai.koog.agents.core.feature.model.FeatureStringMessage
 import ai.koog.agents.core.feature.writer.FeatureMessageLogWriter.LogLevel
 import ai.koog.agents.utils.use
 import io.github.oshai.kotlinlogging.KLogger

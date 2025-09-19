@@ -69,7 +69,7 @@ public open class GraphAIAgent<Input, Output>(
     // Random UUID should be invoked lazily, so when compiling a native image, it will happen on runtime
     override val id: String by lazy { id ?: Uuid.random().toString() }
 
-    private val pipeline = AIAgentGraphPipeline()
+    private val pipeline = AIAgentGraphPipeline(clock)
 
     private val environment = GenericAgentEnvironment(
         this@GraphAIAgent.id,

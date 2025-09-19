@@ -50,7 +50,7 @@ public class FunctionalAIAgent<Input, Output>(
 
     override val id: String by lazy { id ?: Uuid.random().toString() }
 
-    private val pipeline = AIAgentNonGraphPipeline()
+    private val pipeline = AIAgentNonGraphPipeline(clock)
 
     private val environment = GenericAgentEnvironment(
         this@FunctionalAIAgent.id,

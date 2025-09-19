@@ -1,7 +1,7 @@
 package ai.koog.agents.core.feature.remote.server
 
 import ai.koog.agents.core.feature.message.FeatureMessage
-import ai.koog.agents.core.feature.message.FeatureStringMessage
+import ai.koog.agents.core.feature.model.FeatureStringMessage
 import ai.koog.agents.core.feature.remote.client.FeatureMessageRemoteClient
 import ai.koog.agents.core.feature.remote.client.config.DefaultClientConnectionConfig
 import ai.koog.agents.core.feature.remote.server.config.DefaultServerConnectionConfig

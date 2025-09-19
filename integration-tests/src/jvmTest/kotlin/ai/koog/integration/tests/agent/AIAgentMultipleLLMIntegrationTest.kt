@@ -43,6 +43,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.streaming.StreamFrame
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.channels.Channel
@@ -56,6 +57,8 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
@@ -105,7 +108,11 @@ internal class ReportingLLMLLMClient(
         return underlyingClient.execute(prompt, model, tools)
     }
 
-    override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> = flow {
+    override fun executeStreaming(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>
+    ): Flow<StreamFrame> = flow {
         coroutineScope {
             eventsChannel.send(
                 Event.Message(
@@ -117,7 +124,7 @@ internal class ReportingLLMLLMClient(
                 )
             )
         }
-        underlyingClient.executeStreaming(prompt, model)
+        underlyingClient.executeStreaming(prompt, model, tools)
             .collect(this)
     }
 
@@ -133,6 +140,7 @@ internal fun LLMClient.reportingTo(
     eventsChannel: Channel<Event>
 ) = ReportingLLMLLMClient(eventsChannel, this)
 
+@Execution(ExecutionMode.SAME_THREAD)
 class AIAgentMultipleLLMIntegrationTest {
 
     companion object {

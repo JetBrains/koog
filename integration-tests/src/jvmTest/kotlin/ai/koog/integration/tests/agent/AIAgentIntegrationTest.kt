@@ -54,6 +54,8 @@ import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.io.TempDir
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
@@ -72,6 +74,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
+@Execution(ExecutionMode.SAME_THREAD)
 class AIAgentIntegrationTest {
     val systemPrompt = "You are a helpful assistant."
 

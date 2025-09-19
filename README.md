@@ -9,6 +9,12 @@
 [![docs](https://img.shields.io/badge/documentation-blue)](https://docs.koog.ai)
 [![Slack channel](https://img.shields.io/badge/chat-slack-green.svg?logo=slack)](https://kotlinlang.slack.com/messages/koog-agentic-framework/)
 
+Build status:
+
+[![Checks](https://github.com/JetBrains/koog/actions/workflows/checks.yml/badge.svg?branch=develop)](https://github.com/JetBrains/koog/actions/workflows/checks.yml?query=branch%3Adevelop)
+[![Heavy Tests](https://github.com/JetBrains/koog/actions/workflows/heavy-tests.yml/badge.svg?branch=develop)](https://github.com/JetBrains/koog/actions/workflows/heavy-tests.yml?query=branch%3Adevelop)
+[![Ollama Tests](https://github.com/JetBrains/koog/actions/workflows/ollama-tests.yml/badge.svg?branch=develop)](https://github.com/JetBrains/koog/actions/workflows/ollama-tests.yml?query=branch%3Adevelop)
+
 ## Overview
 
 Koog is a Kotlin-based framework designed to build and run AI agents entirely in idiomatic Kotlin. It lets you create agents that can interact with tools, handle complex workflows, and communicate with users.
@@ -17,19 +23,20 @@ Koog is a Kotlin-based framework designed to build and run AI agents entirely in
 
 Key features of Koog include:
 
-- **Pure Kotlin implementation**: Build AI agents entirely in natural and idiomatic Kotlin.
-- **MCP integration**: Connect to Model Context Protocol for enhanced model management.
-- **Embedding capabilities**: Use vector embeddings for semantic search and knowledge retrieval.
-- **Custom tool creation**: Extend your agents with tools that access external systems and APIs.
-- **Ready-to-use components**: Speed up development with pre-built solutions for common AI engineering challenges.
-- **Intelligent history compression**: Optimize token usage while maintaining conversation context using various pre-built strategies.
+- **Multiplatform development**: Deploy agents across JVM, JS, WasmJS, Android, and iOS targets using Kotlin Multiplatform.
+- **Reliability and fault-tolerance**: Handle failures with built-in retries and restore the agent state at specific points during execution with the agent persistence feature.
+- **Intelligent history compression**: Optimize token usage while maintaining context in long-running conversations using advanced built-in history compression techniques.
+- **Enterprise-ready integrations**: Utilize integration with popular JVM frameworks such as Spring Boot and Ktor to embed Koog into your applications.
+- **Observability with OpenTelemetry exporters**: Monitor and debug applications with built-in support for popular observability providers (W&B Weave, Langfuse).
+- **LLM switching and seamless history adaptation**: Switch to a different LLM at any point without losing the existing conversation history, or reroute between multiple LLM providers.
+- **Integration with JVM and Kotlin applications**: Build AI agents with an idiomatic, type-safe Kotlin DSL designed specifically for JVM and Kotlin developers.
+- **Model Context Protocol integration**: Use Model Context Protocol (MCP) tools in AI agents.
+- **Knowledge retrieval and memory**: Retain and retrieve knowledge across conversations using vector embeddings, ranked document storage, and shared agent memory.
 - **Powerful Streaming API**: Process responses in real-time with streaming support and parallel tool calls.
-- **Persistent agent memory**: Enable knowledge retention across sessions and even different agents.
-- **Comprehensive tracing**: Debug and monitor agent execution with detailed and configurable tracing.
-- **Flexible graph workflows**: Design complex agent behaviors using intuitive graph-based workflows.
 - **Modular feature system**: Customize agent capabilities through a composable architecture.
-- **Scalable architecture**: Handle workloads from simple chatbots to enterprise applications.
-- **Multiplatform**: Run agents on JVM, JS, WasmJS, iOS targets with Kotlin Multiplatform.
+- **Flexible graph workflows**: Design complex agent behaviors using intuitive graph-based workflows.
+- **Custom tool creation**: Enhance your agents with tools that access external systems and APIs.
+- **Comprehensive tracing**: Debug and monitor agent execution with detailed, configurable tracing.
 
 ### Available LLM providers and platforms
 
@@ -38,8 +45,10 @@ The LLM providers and platforms whose LLMs you can use to power your agent capab
 - Google
 - OpenAI
 - Anthropic
+- DeepSeek
 - OpenRouter
 - Ollama
+- Bedrock
 
 ### Quickstart example
 
