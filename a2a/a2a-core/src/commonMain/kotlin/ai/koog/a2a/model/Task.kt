@@ -1,5 +1,6 @@
 package ai.koog.a2a.model
 
+import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.SerialName
@@ -46,7 +47,7 @@ public data class Task(
 public data class TaskStatus(
     public val state: TaskState,
     public val message: Message? = null,
-    public val timestamp: Instant? = null,
+    public val timestamp: Instant? = Clock.System.now(),
 )
 
 /**

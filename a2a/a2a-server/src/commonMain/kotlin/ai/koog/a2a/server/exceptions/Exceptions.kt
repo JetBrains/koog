@@ -16,3 +16,8 @@ public class MessageOperationException(message: String, cause: Throwable? = null
  * Indicates a failure in sending an event through the [SessionEventProcessor] because of invalid event.
  */
 public class InvalidEventException(message: String, cause: Throwable? = null) : Exception(message, cause)
+
+/**
+ * An exception that is thrown to indicate errors occurring during push notification operations.
+ */
+public class PushNotificationException(message: String, cause: Throwable? = null) : Exception(message, cause)

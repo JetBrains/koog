@@ -21,6 +21,10 @@ kotlin {
                 api(project(":a2a:a2a-core"))
                 api(libs.kotlinx.serialization.json)
                 api(libs.kotlinx.coroutines.core)
+                api(libs.ktor.client.core)
+                api(libs.ktor.client.content.negotiation)
+                api(libs.ktor.serialization.kotlinx.json)
+                implementation(libs.oshai.kotlin.logging)
             }
         }
 

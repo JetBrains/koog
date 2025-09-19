@@ -15,9 +15,10 @@ import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.install
 import io.ktor.server.application.pluginOrNull
+import io.ktor.server.engine.ApplicationEngine
+import io.ktor.server.engine.ApplicationEngineFactory
 import io.ktor.server.engine.EmbeddedServer
 import io.ktor.server.engine.embeddedServer
-import io.ktor.server.netty.Netty
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.request.receiveText
 import io.ktor.server.response.respond
@@ -48,7 +49,7 @@ import kotlinx.serialization.serializer
  *     requestHandler = A2AServer(...)
  * )
  *
- * transport.start(port = 8080, path = "/my-agent", agentCard = AgentCard(...), agentCardPath = "/my-agent-card.json")
+ * transport.start(Netty, 8080, "/my-agent", agentCard = AgentCard(...), agentCardPath = "/my-agent-card.json")
  * transport.stop()
  * ```
  *
@@ -100,6 +101,7 @@ public class HttpJSONRPCServerTransport(
      * If you need to integrate A2A request handling logic into existing Ktor application,
      * use [transportRoutes] method to mount the transport routes into existing [Route] configuration block.
      *
+     * @param engineFactory An application engine factory.
      * @param port A port on which the server will listen.
      * @param path A JSON-RPC endpoint path to handle incoming requests.
      * @param agentCard An optional [AgentCard] that will be served at the specified [agentCardPath].
@@ -110,7 +112,8 @@ public class HttpJSONRPCServerTransport(
      *
      * @see [transportRoutes]
      */
-    public suspend fun start(
+    public suspend fun <TEngine : ApplicationEngine, TConfiguration : ApplicationEngine.Configuration> start(
+        engineFactory: ApplicationEngineFactory<TEngine, TConfiguration>,
         port: Int,
         path: String,
         agentCard: AgentCard? = null,
@@ -118,7 +121,7 @@ public class HttpJSONRPCServerTransport(
     ): Unit = serverMutex.withLock {
         check(server == null) { "Server is already configured and running. Stop it before starting a new one." }
 
-        server = embeddedServer(Netty, port) {
+        server = embeddedServer(engineFactory, port) {
             install(SSE)
 
             routing {

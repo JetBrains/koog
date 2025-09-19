@@ -143,7 +143,7 @@ public class SessionEventProcessor(
             is SessionType.TaskSession -> sessionType as SessionType.TaskSession
 
             null -> {
-                val savedTask = taskStorage.get(event.taskId)
+                val savedTask = taskStorage.get(event.taskId, historyLength = 0, includeArtifacts = false)
 
                 SessionType.TaskSession(
                     taskId = event.taskId,

@@ -7,6 +7,7 @@ import ai.koog.a2a.model.TaskEvent
 import ai.koog.a2a.model.TaskStatusUpdateEvent
 import ai.koog.a2a.server.exceptions.TaskOperationException
 import ai.koog.a2a.utils.RWLock
+import kotlinx.serialization.json.JsonObject
 
 /**
  * In-memory implementation of [TaskStorage] using a thread-safe map.
@@ -54,48 +55,51 @@ public class InMemoryTaskStorage : TaskStorage {
     override suspend fun getAll(
         taskIds: List<String>,
         historyLength: Int?,
-        includeArtefacts: Boolean
+        includeArtifacts: Boolean
     ): List<Task> = rwLock.withReadLock {
         taskIds.mapNotNull { taskId ->
-            get(taskId, historyLength, includeArtefacts)
+            get(taskId, historyLength, includeArtifacts)
         }
     }
 
     override suspend fun getByContext(
         contextId: String,
         historyLength: Int?,
-        includeArtefacts: Boolean
+        includeArtifacts: Boolean
     ): List<Task> = rwLock.withReadLock {
         val contextTaskIds = tasksByContext[contextId] ?: emptySet()
         contextTaskIds.mapNotNull { taskId ->
-            get(taskId, historyLength, includeArtefacts)
+            get(taskId, historyLength, includeArtifacts)
         }
     }
 
     override suspend fun update(event: TaskEvent): Unit = rwLock.withWriteLock {
         when (event) {
             is Task -> {
-                // Store or replace the task
                 val oldTask = tasks[event.id]
+
+                if (oldTask != null && event.contextId != oldTask.contextId) {
+                    throw TaskOperationException("Cannot change context for existing task: ${event.id}")
+                }
+
+                // Store or replace the task
                 tasks[event.id] = event
 
                 // Update context index
                 tasksByContext.getOrPut(event.contextId) { mutableSetOf() }.add(event.id)
-
-                // Remove from old context if it changed
-                if (oldTask != null && oldTask.contextId != event.contextId) {
-                    tasksByContext[oldTask.contextId]?.remove(event.id)
-                    if (tasksByContext[oldTask.contextId]?.isEmpty() == true) {
-                        tasksByContext.remove(oldTask.contextId)
-                    }
-                }
             }
 
             is TaskStatusUpdateEvent -> {
                 val existingTask = tasks[event.taskId]
                     ?: throw TaskOperationException("Cannot update status for non-existing task: ${event.taskId}")
 
-                val updatedTask = existingTask.copy(status = event.status)
+                val updatedTask = existingTask.copy(
+                    status = event.status,
+                    metadata = existingTask.metadata
+                        ?.let { JsonObject(it + event.metadata.orEmpty()) }
+                        ?: event.metadata
+                )
+
                 tasks[event.taskId] = updatedTask
             }
 
@@ -118,7 +122,13 @@ public class InMemoryTaskStorage : TaskStorage {
                     currentArtifacts.add(event.artifact)
                 }
 
-                val updatedTask = existingTask.copy(artifacts = currentArtifacts)
+                val updatedTask = existingTask.copy(
+                    artifacts = currentArtifacts,
+                    metadata = existingTask.metadata
+                        ?.let { JsonObject(it + event.metadata.orEmpty()) }
+                        ?: event.metadata
+                )
+
                 tasks[event.taskId] = updatedTask
             }
         }

@@ -12,6 +12,9 @@ import ai.koog.a2a.model.TextPart
 import ai.koog.a2a.server.exceptions.TaskOperationException
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Instant
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -78,11 +81,19 @@ class InMemoryTaskStorageTest {
 
     @Test
     fun testTaskStatusUpdateEvent() = runTest {
-        // Create and store initial task
-        val task = createTask(id = "task-1", contextId = "context-1")
+        // Create and store initial task with metadata
+        val initialMetadata = buildJsonObject {
+            put("initialKey", JsonPrimitive("initialValue"))
+            put("sharedKey", JsonPrimitive("originalValue"))
+        }
+        val task = createTask(id = "task-1", contextId = "context-1", metadata = initialMetadata)
         storage.update(task)
 
-        // Create a status update event
+        // Create a status update event with additional metadata
+        val updateMetadata = buildJsonObject {
+            put("newKey", JsonPrimitive("newValue"))
+            put("sharedKey", JsonPrimitive("updatedValue"))
+        }
         val newMessage = createUserMessage("status-msg", "context-1", "Task completed successfully")
         val newStatus = TaskStatus(
             state = TaskState.Completed,
@@ -93,15 +104,24 @@ class InMemoryTaskStorageTest {
             taskId = "task-1",
             contextId = "context-1",
             status = newStatus,
+            metadata = updateMetadata,
             final = true
         )
 
         // Update task status
         storage.update(statusUpdateEvent)
 
-        // Verify the status was updated
+        // Verify the status was updated and metadata was merged
         val retrieved = storage.get("task-1")
         assertEquals(newStatus, retrieved?.status)
+
+        // Verify metadata merging: original + new with updates overriding
+        val expectedMetadata = buildJsonObject {
+            put("initialKey", JsonPrimitive("initialValue")) // preserved from original
+            put("sharedKey", JsonPrimitive("updatedValue")) // updated from event
+            put("newKey", JsonPrimitive("newValue")) // added from event
+        }
+        assertEquals(expectedMetadata, retrieved?.metadata)
     }
 
     @Test
@@ -239,7 +259,8 @@ class InMemoryTaskStorageTest {
         id: String,
         contextId: String,
         history: List<Message>? = null,
-        artifacts: List<Artifact>? = null
+        artifacts: List<Artifact>? = null,
+        metadata: JsonObject? = null
     ) = Task(
         id = id,
         contextId = contextId,
@@ -248,6 +269,7 @@ class InMemoryTaskStorageTest {
             timestamp = Instant.parse("2023-01-01T10:00:00Z")
         ),
         history = history,
-        artifacts = artifacts
+        artifacts = artifacts,
+        metadata = metadata
     )
 }
