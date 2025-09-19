@@ -4,6 +4,7 @@ package ai.koog.agents.snapshot.feature
 
 import ai.koog.agents.core.agent.context.AgentContextData
 import ai.koog.agents.core.annotation.InternalAgentsApi
+import ai.koog.agents.snapshot.providers.PersistencyUtils
 import ai.koog.prompt.message.Message
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
@@ -44,10 +45,10 @@ public fun tombstoneCheckpoint(time: Instant): AgentCheckpointData {
     return AgentCheckpointData(
         checkpointId = Uuid.random().toString(),
         createdAt = time,
-        nodeId = "tombstone",
+        nodeId = PersistencyUtils.TOMBSTONE_CHECKPOINT_NAME,
         lastInput = JsonNull,
         messageHistory = emptyList(),
-        properties = mapOf("tombstone" to JsonPrimitive(true))
+        properties = mapOf(PersistencyUtils.TOMBSTONE_CHECKPOINT_NAME to JsonPrimitive(true))
     )
 }
 
@@ -76,4 +77,4 @@ public fun AgentCheckpointData.toAgentContextData(): AgentContextData {
  * @return `true` if the `properties` map contains a key-value pair where the key is "tombstone"
  *         and the value is a JSON primitive set to `true`, otherwise `false`.
  */
-public fun AgentCheckpointData.isTombstone(): Boolean = properties?.get("tombstone") == JsonPrimitive(true)
+public fun AgentCheckpointData.isTombstone(): Boolean = properties?.get(PersistencyUtils.TOMBSTONE_CHECKPOINT_NAME) == JsonPrimitive(true)

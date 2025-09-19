@@ -19,4 +19,12 @@ public object PersistencyUtils {
         ignoreUnknownKeys = true
         explicitNulls = false
     }
+
+    /**
+     * The name used to identify tombstone checkpoints.
+     *
+     * Tombstone checkpoints are special markers indicating that an agent's session has been terminated
+     * or is no longer valid. This constant helps in recognizing such checkpoints during retrieval and processing.
+     */
+    public const val TOMBSTONE_CHECKPOINT_NAME: String = "tombstone"
 }

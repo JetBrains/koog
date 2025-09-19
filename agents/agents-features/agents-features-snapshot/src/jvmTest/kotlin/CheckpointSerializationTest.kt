@@ -1,5 +1,4 @@
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
-import ai.koog.agents.snapshot.feature.isTombstone
 import ai.koog.agents.snapshot.feature.tombstoneCheckpoint
 import ai.koog.agents.snapshot.providers.PersistencyUtils
 import ai.koog.prompt.message.Message
@@ -12,11 +11,9 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.jsonArray
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
 class CheckpointSerializationTest {
@@ -100,37 +97,7 @@ class CheckpointSerializationTest {
         val serialized = json.encodeToString(AgentCheckpointData.serializer(), checkpoint)
         val restored = json.decodeFromString(AgentCheckpointData.serializer(), serialized)
 
-        // Top-level fields
-        assertEquals("cp-2", restored.checkpointId)
-        assertEquals(now, restored.createdAt)
-        assertEquals("NodeB", restored.nodeId)
-        assertEquals(JsonObject(mapOf("inputKey" to JsonPrimitive("inputVal"))), restored.lastInput)
-        assertNotNull(restored.properties)
-
-        // Properties map content and types
-        val p = restored.properties
-        assertEquals(JsonPrimitive("value"), p["string"])
-        assertEquals(JsonPrimitive(42), p["number"])
-        assertEquals(JsonPrimitive(true), p["boolean"])
-        val nested = p["nested"] as JsonObject
-        assertEquals(JsonPrimitive(1), nested["a"])
-        assertEquals(JsonPrimitive("two"), nested["b"])
-        val arr = nested["c"]!!.jsonArray
-        assertEquals(3, arr.size)
-        assertEquals(JsonPrimitive(1), arr[0])
-        assertEquals(JsonPrimitive(2), arr[1])
-        assertEquals(JsonPrimitive(3), arr[2])
-
-        // Message history assertions
-        assertEquals(2, restored.messageHistory.size)
-        val um = restored.messageHistory[0] as Message.User
-        val am = restored.messageHistory[1] as Message.Assistant
-        assertEquals("Hello", um.content)
-        assertEquals(now, um.metaInfo.timestamp)
-        assertEquals("Hi!", am.content)
-        assertEquals(now, am.metaInfo.timestamp)
-
-        // Full equality as a final check
+        // Full equality as a check
         assertEquals(checkpoint, restored)
     }
 
@@ -140,18 +107,6 @@ class CheckpointSerializationTest {
         val json = PersistencyUtils.defaultCheckpointJson
         val serialized = json.encodeToString(AgentCheckpointData.serializer(), checkpoint)
         val restored = json.decodeFromString(AgentCheckpointData.serializer(), serialized)
-
-        // Basic invariants
-        assertEquals("tombstone", restored.nodeId)
-        assertEquals(emptyList(), restored.messageHistory)
-        assertEquals(checkpoint.createdAt, restored.createdAt)
-        assertEquals(checkpoint.checkpointId, restored.checkpointId)
-        assertEquals(true, restored.isTombstone())
-
-        // lastInput must remain JsonNull and properties must contain tombstone=true
-        assertEquals(checkpoint.lastInput, restored.lastInput)
-        assertNotNull(restored.properties)
-        assertEquals(JsonPrimitive(true), restored.properties["tombstone"])
 
         // Full equality as a final check
         assertEquals(checkpoint, restored)

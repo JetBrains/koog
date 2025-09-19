@@ -3,6 +3,7 @@ package ai.koog.agents.features.sql.providers
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
 import ai.koog.agents.snapshot.providers.PersistencyUtils
 import kotlinx.datetime.Clock
+import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SortOrder
@@ -117,7 +118,8 @@ public abstract class ExposedPersistencyStorageProvider(
     protected val database: Database,
     tableName: String = "agent_checkpoints",
     ttlSeconds: Long? = null,
-    migrator: SQLPersistenceSchemaMigrator
+    migrator: SQLPersistenceSchemaMigrator,
+    private val json: Json = PersistencyUtils.defaultCheckpointJson
 ) : SQLPersistencyStorageProvider(
     persistenceId = persistenceId,
     tableName = tableName,
@@ -187,14 +189,14 @@ public abstract class ExposedPersistencyStorageProvider(
                 .orderBy(checkpointsTable.createdAt to SortOrder.ASC)
                 .mapNotNull { row ->
                     runCatching {
-                        PersistencyUtils.defaultCheckpointJson.decodeFromString<AgentCheckpointData>(row[checkpointsTable.checkpointJson])
+                        json.decodeFromString<AgentCheckpointData>(row[checkpointsTable.checkpointJson])
                     }.getOrNull()
                 }
         }
     }
 
     override suspend fun saveCheckpoint(agentCheckpointData: AgentCheckpointData) {
-        val checkpointJson = PersistencyUtils.defaultCheckpointJson.encodeToString(agentCheckpointData)
+        val checkpointJson = json.encodeToString(agentCheckpointData)
         val ttlTimestamp = calculateTtlTimestamp(agentCheckpointData.createdAt)
 
         transaction {
@@ -220,7 +222,7 @@ public abstract class ExposedPersistencyStorageProvider(
                 .limit(1)
                 .firstOrNull()?.let { row ->
                     runCatching {
-                        PersistencyUtils.defaultCheckpointJson.decodeFromString<AgentCheckpointData>(row[checkpointsTable.checkpointJson])
+                        json.decodeFromString<AgentCheckpointData>(row[checkpointsTable.checkpointJson])
                     }.getOrNull()
                 }
         }

@@ -50,9 +50,9 @@ class PersistencyRunsTwiceTest {
         )
 
         // The latest checkpoint must be a tombstone after finishing
-        val latest1 = provider.getLatestCheckpoint() ?: error("No checkpoint found")
+        val latest1 = provider.getLatestCheckpoint()
         assertNotNull(latest1)
-        assertEquals(true, latest1.isTombstone())
+        assertEquals(true, latest1!!.isTombstone())
 
         // Act: second run with the same storage (should not resume mid-graph)
         agent.run("Start the test2")

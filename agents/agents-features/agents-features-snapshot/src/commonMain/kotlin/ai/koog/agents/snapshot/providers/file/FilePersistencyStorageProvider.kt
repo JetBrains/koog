@@ -7,6 +7,7 @@ import ai.koog.rag.base.files.FileSystemProvider
 import ai.koog.rag.base.files.createDirectory
 import ai.koog.rag.base.files.readText
 import ai.koog.rag.base.files.writeText
+import kotlinx.serialization.json.Json
 
 /**
  * A file-based implementation of [PersistencyStorageProvider] that stores agent checkpoints in a file system.
@@ -22,6 +23,7 @@ public open class FilePersistencyStorageProvider<Path>(
     private val persistenceId: String,
     private val fs: FileSystemProvider.ReadWrite<Path>,
     private val root: Path,
+    private val json: Json = PersistencyUtils.defaultCheckpointJson
 ) : PersistencyStorageProvider {
 
     /**
@@ -65,7 +67,7 @@ public open class FilePersistencyStorageProvider<Path>(
         return fs.list(agentDir).mapNotNull { path ->
             try {
                 val content = fs.readText(path)
-                PersistencyUtils.defaultCheckpointJson.decodeFromString<AgentCheckpointData>(content)
+                json.decodeFromString<AgentCheckpointData>(content)
             } catch (_: Exception) {
                 null
             }
@@ -74,7 +76,7 @@ public open class FilePersistencyStorageProvider<Path>(
 
     override suspend fun saveCheckpoint(agentCheckpointData: AgentCheckpointData) {
         val checkpointPath = checkpointPath(agentCheckpointData.checkpointId)
-        val serialized = PersistencyUtils.defaultCheckpointJson.encodeToString(AgentCheckpointData.serializer(), agentCheckpointData)
+        val serialized = json.encodeToString(AgentCheckpointData.serializer(), agentCheckpointData)
         fs.writeText(checkpointPath, serialized)
     }
 

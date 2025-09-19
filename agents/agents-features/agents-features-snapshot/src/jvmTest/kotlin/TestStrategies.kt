@@ -274,11 +274,6 @@ internal fun loggingGraphForRunFromSecondTry(collector: TestAgentLogsCollector) 
         teleportState = TeleportState(),
     )
 
-//    edge(nodeStart forwardTo node1)
-//    edge(node1 forwardTo nodeForSecondTry)
-//    edge(nodeForSecondTry forwardTo node2)
-//    edge(node2 forwardTo nodeFinish)
-
     edge(nodeStart forwardTo node1)
     edge(node1 forwardTo node2)
     edge(node2 forwardTo nodeForSecondTry)
