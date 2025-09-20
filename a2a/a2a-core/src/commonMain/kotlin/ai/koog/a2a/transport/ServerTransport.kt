@@ -140,6 +140,39 @@ public interface RequestHandler {
 /**
  * Represents the server context of a call.
  *
+ * This context has [state] associated with it, which is essentially an untyped map. It can be used to store arbitrary
+ * user-defined data. This is useful for extending the base logic with business-dependent logic, e.g., storing user
+ * information to authorize particular requests. This untyped [state] map has typed accessors for more convenient access,
+ * so it is recommended to use them when reading from state: [getFromState], [getFromStateOrNull].
+ *
+ * **Note**: Make sure the types of [StateKey] and the value match when populating [state], otherwise [getFromState]
+ * and [getFromStateOrNull] will throw [IllegalStateException].
+ *
+ * Example usage:
+ * ```kotlin
+ * // User-defined data class
+ * data class User(val id: String)
+ *
+ * // Collection of user-defined state keys
+ * object StateKeys {
+ *     val USER_KEY = StateKey<User>("42")
+ * }
+ *
+ * // On the handler side - copying supplied context and populating state
+ * override suspend fun onSendMessage(
+ *     request: Request<MessageSendParams>,
+ *     ctx: ServerCallContext
+ * ): Response<CommunicationEvent> {
+ *    val user = ctx.headers.getValue("user-id").let { User(it) }
+ *    val newCtx = ctx.copy(state = ctx.state + (StateKeys.USER_KEY to user))
+ *
+ *    super.onSendMessage(request, newCtx)
+ * }
+ *
+ * // On the business logic side - retrieving user data from context
+ * val user = ctx.getFromState(StateKeys.USER_KEY)
+ * ```
+ *
  * @property headers Headers associated with the call.
  * @property state State associated with the call, allows storing arbitrary values. To get typed value from the state,
  * use [getFromState] or [getFromStateOrNull] with appropriate [StateKey].
@@ -156,10 +189,9 @@ public class ServerCallContext(
      *
      * @param key The state key for which the associated value needs to be retrieved.
      */
-    public fun <T> getFromStateOrNull(key: StateKey<T>): T? {
+    public inline fun <reified T> getFromStateOrNull(key: StateKey<T>): T? {
         return state[key]?.let {
-            @Suppress("UNCHECKED_CAST")
-            it as T
+            it as? T ?: throw IllegalStateException("State value for key $key is not of expected type ${T::class}")
         }
     }
 
@@ -171,8 +203,8 @@ public class ServerCallContext(
      * @param key The state key for which the associated value needs to be retrieved.
      * @throws NoSuchElementException if the [key] is not found in the state.
      */
-    public fun <T> getFromState(key: StateKey<T>): T {
-        return getFromStateOrNull(key) ?: throw NoSuchElementException("State key $key not found")
+    public inline fun <reified T> getFromState(key: StateKey<T>): T {
+        return getFromStateOrNull(key) ?: throw NoSuchElementException("State key $key not found or null")
     }
 
     /**
@@ -187,6 +219,8 @@ public class ServerCallContext(
 /**
  * Helper class to be used with [ServerCallContext.state] to store and retrieve values associated with a key in a typed
  * manner.
+ *
+ * @see ServerCallContext
  */
 public class StateKey<@Suppress("unused") T>(public val name: String) {
     override fun toString(): String = "${super.toString()}(name=$name)"

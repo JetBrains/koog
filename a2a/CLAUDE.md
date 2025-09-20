@@ -94,6 +94,16 @@ The A2A (Agent-to-Agent) module is a **meta-module** within the larger Koog proj
 - Propagate errors properly in async contexts
 - Include contextual information in exception messages
 
+#### KDoc Documentation
+- **Placement**: KDoc directly above declarations (classes, functions, properties)
+- **Constructor properties**: Document using `@param` tags in class KDoc
+- **Public class properties**: Document using `@property` tags in class KDoc
+- **Cross-references**: Use `[ClassName]`, `[ClassName.propertyName]` syntax for linking components
+- **Examples**: Include practical code examples for complex APIs
+- **Validation rules**: Document constraints with bullet points and clear explanations
+- **Exception documentation**: Use `@throws` with specific conditions
+- **Required**: All public APIs must have KDoc (enforced by `explicitApi()`)
+
 ## Testing Requirements
 
 ### Mandatory Test Execution

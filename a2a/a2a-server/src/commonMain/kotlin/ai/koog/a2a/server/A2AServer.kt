@@ -54,7 +54,263 @@ import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
 /**
- * A2A server responsible for handling requests from A2A clients.
+ * Default implementation of A2A server responsible for handling requests from A2A clients according to the
+ * [A2A protocol specification](https://a2a-protocol.org/latest/specification/).
+ *
+ * This class provides a complete implementation of all A2A protocol methods including message sending, task management,
+ * and push notifications. However, it **does not** provide any authorization, authentication, or custom validation
+ * logic. For production use, you should extend this class and add your own security and business logic.
+ *
+ * The A2AServer orchestrates the interaction between transport layer, agent executor, and storage components:
+ * - Receives requests from [RequestHandler] interface methods
+ * - Delegates actual agent logic to [AgentExecutor]
+ * - Delegates event processing and persisting to [SessionEventProcessor]
+ * - Delegates session management to [SessionManager]
+ * - Handles push notifications using [PushNotificationSender]
+ *
+ * ## Production usage with authorization
+ *
+ * For production deployments, extend this class to add authorization and custom validation. You can leverage
+ * [ServerCallContext.state] to pass user-defined data through the request pipeline to the [AgentExecutor]:
+ *
+ * ```kotlin
+ * // Define your user data and state keys
+ * data class AuthenticatedUser(val id: String, val permissions: Set<String>)
+ *
+ * object AuthStateKeys {
+ *     val USER = StateKey<AuthenticatedUser>("authenticated_user")
+ * }
+ *
+ * // Extend A2AServer with authorization
+ * class AuthorizedA2AServer(
+ *     agentExecutor: AgentExecutor,
+ *     agentCard: AgentCard,
+ *     agentCardExtended: AgentCard? = null,
+ *     taskStorage: TaskStorage = InMemoryTaskStorage(),
+ *     messageStorage: MessageStorage = InMemoryMessageStorage(),
+ *     private val authService: AuthService,  // Your auth service
+ * ) : A2AServer(
+ *     agentExecutor = agentExecutor,
+ *     agentCard = agentCard,
+ *     agentCardExtended = agentCardExtended,
+ *     taskStorage = taskStorage,
+ *     messageStorage = messageStorage,
+ * ) {
+ *     // Helper method for common auth pattern
+ *     private suspend fun authenticateAndAuthorize(
+ *         ctx: ServerCallContext,
+ *         requiredPermission: String
+ *     ): AuthenticatedUser {
+ *         val token = ctx.headers["Authorization"]?.firstOrNull()
+ *             ?: throw A2AInvalidParamsException("Missing authorization token")
+ *
+ *         val user = authService.authenticate(token)
+ *             ?: throw A2AInvalidParamsException("Invalid token")
+ *
+ *         if (!user.permissions.contains(requiredPermission)) {
+ *             throw A2AUnsupportedOperationException("Insufficient permissions")
+ *         }
+ *
+ *         return user
+ *     }
+ *
+ *     override suspend fun onSendMessage(
+ *         request: Request<MessageSendParams>,
+ *         ctx: ServerCallContext
+ *     ): Response<CommunicationEvent> {
+ *         val user = authenticateAndAuthorize(ctx, requiredPermission = "send_message")
+ *
+ *         // Pass user data to the agent executor via context state
+ *         val enrichedCtx = ctx.copy(
+ *             state = ctx.state + (AuthStateKeys.USER to user)
+ *         )
+ *
+ *         // Delegate to parent implementation with enriched context
+ *         return super.onSendMessage(request, enrichedCtx)
+ *     }
+ *
+ *     override suspend fun onGetTask(
+ *         request: Request<TaskQueryParams>,
+ *         ctx: ServerCallContext
+ *     ): Response<Task> {
+ *         val user = authenticateAndAuthorize(ctx, requiredPermission = "read_task")
+ *
+ *         // Optionally validate task ownership
+ *         val task = taskStorage.get(request.data.id, historyLength = 0, includeArtifacts = false)
+ *         if (task?.metadata?.get("owner_id") != user.id) {
+ *             throw A2AUnsupportedOperationException("Access denied to task ${request.data.id}")
+ *         }
+ *
+ *         val enrichedCtx = ctx.copy(
+ *             state = ctx.state + (AuthStateKeys.USER to user)
+ *         )
+ *
+ *         return super.onGetTask(request, enrichedCtx)
+ *     }
+ * }
+ * ```
+ *
+ * ## Accessing user data in AgentExecutor
+ *
+ * The authenticated user data passed through [ServerCallContext.state] can be accessed in your [AgentExecutor]:
+ *
+ * ```kotlin
+ * class MyAgentExecutor : AgentExecutor {
+ *     override suspend fun execute(
+ *         context: RequestContext<MessageSendParams>,
+ *         eventProcessor: SessionEventProcessor
+ *     ) {
+ *         // Retrieve authenticated user from the context
+ *         val user = context.callContext.getFromState(AuthStateKeys.USER)
+ *
+ *         // Use user information for personalized agent behavior
+ *         eventProcessor.sendMessage(
+ *             Message(
+ *                 role = Role.Agent,
+ *                 contextId = context.contextId,
+ *                 parts = listOf(
+ *                     TextPart("Hello ${user.id}, how can I help you today?")
+ *                 )
+ *             )
+ *         )
+ *     }
+ *
+ *     override suspend fun cancel(
+ *         context: RequestContext<TaskIdParams>,
+ *         session: Session
+ *     ) {
+ *         // Access user data for audit logging
+ *         val user = context.callContext.getFromStateOrNull(AuthStateKeys.USER)
+ *         log.info("Task ${context.taskId} canceled by user ${user?.id}")
+ *
+ *         // Default cancellation behavior
+ *         super.cancel(context, session)
+ *     }
+ * }
+ * ```
+ *
+ * ## Complete server setup example
+ *
+ * Here's a complete example of setting up and running an A2A server from scratch:
+ *
+ * ```kotlin
+ * // 1. Create your agent executor with business logic
+ * val agentExecutor = object : AgentExecutor {
+ *     override suspend fun execute(
+ *         context: RequestContext<MessageSendParams>,
+ *         eventProcessor: SessionEventProcessor
+ *     ) {
+ *         val userMessage = context.params.message
+ *
+ *         // Process the message and create a task
+ *         val task = Task(
+ *             contextId = context.contextId,
+ *             status = TaskStatus(
+ *                 state = TaskState.Working,
+ *                 // Mark this message as belonging to the created task
+ *                 message = message.copy(taskId = task.id)
+ *                 timestamp = Clock.System.now()
+ *             ),
+ *         )
+ *
+ *         // Send task creation event
+ *         eventProcessor.sendTaskEvent(task)
+ *
+ *         // Simulate some work
+ *         delay(1000)
+ *
+ *         // Mark task as completed
+ *         eventProcessor.sendTaskEvent(
+ *             TaskStatusUpdateEvent(
+ *                 taskId = task.id,
+ *                 contextId = task.contextId,
+ *                 status = TaskStatus(
+ *                     state = TaskState.Completed,
+ *                     message = Message(
+ *                        role = Role.Agent,
+ *                        contextId = context.contextId,
+ *                        taskId = task.id,
+ *                        parts = listOf(
+ *                            TextPart("Task completed successfully!")
+ *                        )
+ *                    ),
+ *                    timestamp = Clock.System.now()
+ *                 ),
+ *                 final = true
+ *             )
+ *         )
+ *     }
+ * }
+ *
+ * // 2. Define your agent card describing capabilities
+ * val agentCard = AgentCard(...)
+ *
+ * // 3. Create the A2AServer instance (or your extended version)
+ * val a2aServer = A2AServer(...)
+ *
+ * // 4. Create HTTP JSON-RPC transport
+ * val transport = HttpJSONRPCServerTransport(
+ *     requestHandler = a2aServer
+ * )
+ *
+ * // 5. Start the server
+ * transport.start(
+ *     engineFactory = Netty,
+ *     port = 8080,
+ *     path = "/a2a",
+ *     wait = true,
+ *     agentCard = agentCard,
+ *     agentCardPath = "/.well-known/a2a/agent-card.json"
+ * )
+ * ```
+ *
+ * ## Integration with existing Ktor application
+ *
+ * If you have an existing Ktor application, you can integrate the A2A server as a route:
+ *
+ * ```kotlin
+ * val agentCard = AgentCard(...)
+ * val a2aServer = A2AServer(...)
+ * val transport = HttpJSONRPCServerTransport(a2aServer)
+ *
+ * embeddedServer(Netty, port = 8080) {
+ *     install(SSE)  // Required for streaming support
+ *
+ *     // To serve AgentCard instance
+ *     install(ContentNegotiation) {
+ *        json(Json)
+ *     }
+ *
+ *     routing {
+ *         // Your existing routes...
+ *
+ *         // Mount A2A JSON-RPC server transport
+ *         transport.transportRoutes(this, "/a2a")
+ *
+ *         // Serve agent card
+ *         get("/a2a/agent-card.json") {
+ *             call.respond(agentCard)
+ *         }
+ *     }
+ * }.start(wait = true)
+ * ```
+ *
+ * @param agentExecutor The executor containing the core agent logic
+ * @param agentCard The agent card describing this agent's capabilities and metadata
+ * @param agentCardExtended Optional extended agent card for authenticated requests
+ * @param taskStorage Storage implementation for persisting tasks (defaults to in-memory)
+ * @param messageStorage Storage implementation for persisting messages (defaults to in-memory)
+ * @param pushConfigStorage Optional storage for push notification configurations
+ * @param pushSender Optional push notification sender implementation
+ * @param coroutineScope Scope for managing all sessions, agent jobs, event processing, etc.
+ * @param clock Clock instance for timestamp generation (defaults to [Clock.System])
+ *
+ * @see AgentExecutor for implementing agent business logic
+ * @see TaskStorage for persisting tasks
+ * @see MessageStorage for persisting messages
+ * @see PushNotificationConfigStorage for persisting push notification configurations
+ * @see PushNotificationSender for sending push notifications
+ * @see ServerCallContext for passing custom state through the request pipeline
  */
 public open class A2AServer(
     protected val agentExecutor: AgentExecutor,
@@ -373,6 +629,11 @@ public open class A2AServer(
         return pushConfigStorage
     }
 
+    /**
+     * Cancels [coroutineScope] associated with this server, essentially cancelling all running jobs and sessions.
+     *
+     * @param cause Optional cause of the cancellation
+     */
     public fun cancel(cause: CancellationException? = null) {
         coroutineScope.cancel(cause)
     }

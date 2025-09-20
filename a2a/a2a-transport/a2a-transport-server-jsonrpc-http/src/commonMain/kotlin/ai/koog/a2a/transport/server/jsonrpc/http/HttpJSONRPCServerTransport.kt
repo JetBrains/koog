@@ -104,6 +104,7 @@ public class HttpJSONRPCServerTransport(
      * @param engineFactory An application engine factory.
      * @param port A port on which the server will listen.
      * @param path A JSON-RPC endpoint path to handle incoming requests.
+     * @param wait If true, the server will block until it is stopped. Defaults to false.
      * @param agentCard An optional [AgentCard] that will be served at the specified [agentCardPath].
      * @param agentCardPath The path at which the [agentCard] will be served, if specified.
      * Defaults to [A2AConsts.AGENT_CARD_WELL_KNOWN_PATH].
@@ -116,6 +117,7 @@ public class HttpJSONRPCServerTransport(
         engineFactory: ApplicationEngineFactory<TEngine, TConfiguration>,
         port: Int,
         path: String,
+        wait: Boolean = false,
         agentCard: AgentCard? = null,
         agentCardPath: String = A2AConsts.AGENT_CARD_WELL_KNOWN_PATH,
     ): Unit = serverMutex.withLock {
@@ -133,7 +135,7 @@ public class HttpJSONRPCServerTransport(
                     }
                 }
             }
-        }.startSuspend(wait = false)
+        }.startSuspend(wait = wait)
     }
 
     /**
