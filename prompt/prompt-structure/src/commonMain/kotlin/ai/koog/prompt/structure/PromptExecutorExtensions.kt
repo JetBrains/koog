@@ -48,7 +48,65 @@ public data class StructuredOutputConfig<T>(
     public val default: StructuredOutput<T>? = null,
     public val byProvider: Map<LLMProvider, StructuredOutput<T>> = emptyMap(),
     public val fixingParser: StructureFixingParser? = null
-)
+) {
+    /**
+     * Updates a given prompt to configure structured output using the specified large language model (LLM).
+     * Depending on the model's support for structured outputs, the prompt is updated either manually or natively.
+     *
+     * @param model The large language model (LLModel) used to determine the structured output configuration.
+     * @param prompt The original prompt to be updated with the structured output configuration.
+     * @return A new prompt reflecting the updated structured output configuration.
+     */
+    public fun updatePrompt(model: LLModel, prompt: Prompt): Prompt {
+        return when (val mode = structuredOutput(model)) {
+            // Don't set schema parameter in prompt and coerce the model manually with user message to provide a structured response.
+            is StructuredOutput.Manual -> {
+                prompt(prompt) {
+                    user {
+                        markdown {
+                            StructuredOutputPrompts.outputInstructionPrompt(this, mode.structure)
+                        }
+                    }
+                }
+            }
+
+            // Rely on built-in model capabilities to provide structured response.
+            is StructuredOutput.Native -> {
+                prompt.withUpdatedParams { schema = mode.structure.schema }
+            }
+        }
+    }
+
+    /**
+     * Retrieves the structured data configuration for a specific large language model (LLM).
+     *
+     * The method determines the appropriate structured data setup based on the given LLM
+     * instance, ensuring compatibility with the model's provider and capabilities.
+     *
+     * @param model The large language model (LLM) instance used to identify the structured data configuration.
+     * @return The structured data configuration represented as a `StructuredData` instance.
+     */
+    public fun structure(model: LLModel): StructuredData<T, *> {
+        return structuredOutput(model).structure
+    }
+
+    /**
+     * Retrieves the structured output configuration for a specific large language model (LLM).
+     *
+     * The method determines the appropriate structured output instance based on the model's provider.
+     * If no specific configuration is found for the provider, it falls back to the default configuration.
+     * Throws an exception if no default configuration is available.
+     *
+     * @param model The large language model (LLM) used to identify the structured output configuration.
+     * @return An instance of `StructuredOutput` that represents the structured output configuration for the model.
+     * @throws IllegalArgumentException if no configuration is found for the provider and no default configuration is set.
+     */
+    private fun structuredOutput(model: LLModel): StructuredOutput<T> {
+        return byProvider[model.provider]
+            ?: default
+            ?: throw IllegalArgumentException("No structure found for provider ${model.provider}")
+    }
+}
 
 /**
  * Defines how structured outputs should be generated.
@@ -106,42 +164,13 @@ public suspend fun <T> PromptExecutor.executeStructured(
     model: LLModel,
     config: StructuredOutputConfig<T>,
 ): Result<StructuredResponse<T>> {
-    val mode = config.byProvider[model.provider]
-        ?: config.default
-        ?: throw IllegalArgumentException("No structure found for provider ${model.provider}")
-
-    val (structure: StructuredData<T, *>, updatedPrompt: Prompt) = when (mode) {
-        // Don't set schema parameter in prompt and coerce the model manually with user message to provide a structured response.
-        is StructuredOutput.Manual -> {
-            mode.structure to prompt(prompt) {
-                user {
-                    markdown {
-                        StructuredOutputPrompts.outputInstructionPrompt(this, mode.structure)
-                    }
-                }
-            }
-        }
-
-        // Rely on built-in model capabilities to provide structured response.
-        is StructuredOutput.Native -> {
-            mode.structure to prompt.withUpdatedParams { schema = mode.structure.schema }
-        }
-    }
-
+    val updatedPrompt = config.updatePrompt(model, prompt)
     val response = this.execute(prompt = updatedPrompt, model = model).single()
 
     return runCatching {
         require(response is Message.Assistant) { "Response for structured output must be an assistant message, got ${response::class.simpleName} instead" }
 
-        // Use fixingParser if provided, otherwise parse directly
-        val structureResponse = config.fixingParser
-            ?.parse(this, structure, response.content)
-            ?: structure.parse(response.content)
-
-        StructuredResponse(
-            structure = structureResponse,
-            message = response
-        )
+        parseResponseToStructuredResponse(response, config, model)
     }
 }
 
@@ -267,5 +296,33 @@ public suspend inline fun <reified T> PromptExecutor.executeStructured(
         serializer = serializer<T>(),
         examples = examples,
         fixingParser = fixingParser,
+    )
+}
+
+/**
+ * Parses a structured response from the assistant message using the provided structured output configuration
+ * and language model. If a fixing parser is specified in the configuration, it will be used; otherwise,
+ * the structure will be parsed directly.
+ *
+ * @param T The type of the structured output.
+ * @param response The assistant's response message to be parsed.
+ * @param config The structured output configuration defining how the response should be parsed.
+ * @param model The language model to be used for parsing the structured output.
+ * @return A `StructuredResponse<T>` containing the parsed structure and the original assistant message.
+ */
+public suspend fun <T> PromptExecutor.parseResponseToStructuredResponse(
+    response: Message.Assistant,
+    config: StructuredOutputConfig<T>,
+    model: LLModel
+): StructuredResponse<T> {
+    // Use fixingParser if provided, otherwise parse directly
+    val structure = config.structure(model)
+    val structureResponse = config.fixingParser
+        ?.parse(this, structure, response.content)
+        ?: structure.parse(response.content)
+
+    return StructuredResponse(
+        structure = structureResponse,
+        message = response
     )
 }

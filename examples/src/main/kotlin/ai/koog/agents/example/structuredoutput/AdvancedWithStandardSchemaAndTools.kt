@@ -2,21 +2,19 @@ package ai.koog.agents.example.structuredoutput
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.dsl.builder.forwardTo
-import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.nodeLLMRequestStructured
-import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.core.tools.reflect.asTools
 import ai.koog.agents.example.ApiKeyService
 import ai.koog.agents.example.structuredoutput.models.FullWeatherForecast
 import ai.koog.agents.example.structuredoutput.models.FullWeatherForecastRequest
+import ai.koog.agents.example.structuredoutput.tools.WeatherTools
+import ai.koog.agents.ext.agent.structuredOutputWithToolsStrategy
 import ai.koog.agents.features.eventHandler.feature.handleEvents
 import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
-import ai.koog.prompt.executor.clients.google.GoogleLLMClient
-import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.google.structure.GoogleStandardJsonSchemaGenerator
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.clients.openai.structure.OpenAIStandardJsonSchemaGenerator
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.llm.LLMProvider
@@ -27,8 +25,6 @@ import ai.koog.prompt.structure.json.JsonStructuredData
 import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
 import ai.koog.prompt.text.text
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
 private val json = Json {
@@ -63,62 +59,59 @@ fun main(): Unit = runBlocking {
         examples = FullWeatherForecast.exampleForecasts,
     )
 
-    val agentStrategy = strategy<FullWeatherForecastRequest, FullWeatherForecast>("advanced-full-weather-forecast") {
-        val prepareRequest by node<FullWeatherForecastRequest, String> { request ->
-            text {
-                +"Requesting forecast for"
-                +"City: ${request.city}"
-                +"Country: ${request.country}"
-            }
+    val config = StructuredOutputConfig(
+        byProvider = mapOf(
+            // Native modes leveraging native structured output support in models, with custom definitions for LLM providers that might have different format.
+            LLMProvider.OpenAI to StructuredOutput.Native(openAiWeatherStructure),
+            LLMProvider.Google to StructuredOutput.Native(googleWeatherStructure),
+            // Anthropic does not support native structured output yet.
+            LLMProvider.Anthropic to StructuredOutput.Manual(genericWeatherStructure),
+        ),
+
+        // Fallback manual structured output mode, via explicit prompting with additional message, not native model support
+        default = StructuredOutput.Manual(genericWeatherStructure),
+
+        // Helper parser to attempt a fix if a malformed output is produced.
+        fixingParser = StructureFixingParser(
+            fixingModel = AnthropicModels.Haiku_3_5,
+            retries = 2,
+        ),
+    )
+
+    val agentStrategy = structuredOutputWithToolsStrategy<FullWeatherForecastRequest, FullWeatherForecast>(
+        config
+    ) { request ->
+        text {
+            +"Requesting forecast for"
+            +"City: ${request.city}"
+            +"Country: ${request.country}"
         }
-
-        @Suppress("DuplicatedCode")
-        val getStructuredForecast by nodeLLMRequestStructured(
-            config = StructuredOutputConfig(
-                byProvider = mapOf(
-                    // Native modes leveraging native structured output support in models, with custom definitions for LLM providers that might have different format.
-                    LLMProvider.OpenAI to StructuredOutput.Native(openAiWeatherStructure),
-                    LLMProvider.Google to StructuredOutput.Native(googleWeatherStructure),
-                    // Anthropic does not support native structured output yet.
-                    LLMProvider.Anthropic to StructuredOutput.Manual(genericWeatherStructure),
-                ),
-
-                // Fallback manual structured output mode, via explicit prompting with additional message, not native model support
-                default = StructuredOutput.Manual(genericWeatherStructure),
-
-                // Helper parser to attempt a fix if a malformed output is produced.
-                fixingParser = StructureFixingParser(
-                    fixingModel = AnthropicModels.Haiku_3_5,
-                    retries = 2,
-                ),
-            )
-        )
-
-        nodeStart then prepareRequest then getStructuredForecast
-        edge(getStructuredForecast forwardTo nodeFinish transformed { it.getOrThrow().structure })
     }
 
     val agentConfig = AIAgentConfig(
-        prompt = prompt("weather-forecast") {
+        prompt = prompt("weather-forecast-with-tools") {
             system(
                 """
                 You are a weather forecasting assistant.
-                When asked for a weather forecast, provide a realistic but fictional forecast.
+                When asked for a weather forecast, use the weather tools to get the weather forecast for the specified city and country.
                 """.trimIndent()
             )
         },
-        model = GoogleModels.Gemini2_5Flash,
-        maxAgentIterations = 5
+        model = OpenAIModels.Chat.GPT4_1,
+        maxAgentIterations = 10
     )
 
-    val agent = AIAgent<FullWeatherForecastRequest, FullWeatherForecast>(
+    val agent = AIAgent(
         promptExecutor = MultiLLMPromptExecutor(
             LLMProvider.OpenAI to OpenAILLMClient(ApiKeyService.openAIApiKey),
-            LLMProvider.Anthropic to AnthropicLLMClient(ApiKeyService.anthropicApiKey),
-            LLMProvider.Google to GoogleLLMClient(ApiKeyService.googleApiKey),
+//            LLMProvider.Anthropic to AnthropicLLMClient(ApiKeyService.anthropicApiKey),
+//            LLMProvider.Google to GoogleLLMClient(ApiKeyService.googleApiKey),
         ),
-        strategy = agentStrategy, // no tools needed for this example
-        agentConfig = agentConfig
+        strategy = agentStrategy,
+        agentConfig = agentConfig,
+        toolRegistry = ToolRegistry {
+            tools(WeatherTools().asTools())
+        }
     ) {
         handleEvents {
             onAgentRunError { eventContext ->
@@ -138,3 +131,4 @@ fun main(): Unit = runBlocking {
     val result: FullWeatherForecast = agent.run(FullWeatherForecastRequest(city = "New York", country = "USA"))
     println("Agent run result: $result")
 }
+
