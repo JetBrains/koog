@@ -5,7 +5,7 @@ plugins {
     id("ai.kotlin.multiplatform.server")
     alias(libs.plugins.kotlin.serialization)
     id("ai.koog.gradle.plugins.credentialsresolver")
-    `netty-convention`
+    id("netty-convention")
 }
 
 kotlin {

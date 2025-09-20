@@ -9,6 +9,7 @@ exposed = "0.58.0"
 h2 = "2.2.224"
 hikaricp = "6.2.1"
 jetsign = "45.47"
+jdkVersion = "17"
 junit = "5.8.2"
 knit = "0.5.0"
 kotest = "6.0.3"
@@ -27,6 +28,7 @@ mockito = "5.19.0"
 mockk = "1.13.8"
 mysql = "8.0.33"
 netty = "4.2.6.Final"
+okhttp = "5.1.0"
 opentelemetry = "1.51.0"
 oshai-logging = "7.0.7"
 postgresql = "42.7.4"
@@ -75,6 +77,7 @@ ktor-server-cors = { module = "io.ktor:ktor-server-cors", version.ref = "ktor3" 
 ktor-server-test-host = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor3" }
 lettuce-core = { module = "io.lettuce:lettuce-core", version.ref = "lettuce" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
+okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
 oshai-kotlin-logging = { module = "io.github.oshai:kotlin-logging", version.ref = "oshai-logging" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 mokksy-a2a = { module = "me.kpavlov.aimocks:ai-mocks-a2a", version.ref = "mokksy" }
