@@ -28,6 +28,7 @@ include(":agents:agents-tools")
 include(":agents:agents-utils")
 
 include(":examples")
+include(":examples:demo-compose-app:app")
 
 include(":integration-tests")
 

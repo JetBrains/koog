@@ -17,6 +17,10 @@ concurrency:
   # Cancel only when the run is not on main or develop
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' || github.ref != 'refs/heads/develop' }}
 
+env:
+  JAVA_VERSION: 17
+  JAVA_DISTRIBUTION: 'corretto'
+
 jobs:
   compilation:
 
@@ -29,11 +33,11 @@ jobs:
         run: |
           git config --global core.autocrlf input
       - uses: actions/checkout@v5
-      - name: Set up JDK 17
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v5
         with:
-          java-version: '17'
-          distribution: 'corretto'
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
 
       # Configure Gradle for optimal use in GitHub Actions, including caching of downloaded dependencies.
       # See: https://github.com/gradle/actions/blob/main/setup-gradle/README.md
@@ -45,6 +49,51 @@ jobs:
 
       - name: TestClasses with Gradle Wrapper
         run: ./gradlew jvmTestClasses jsTestClasses
+
+  app-compilation:
+
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        gradle-tasks: [
+          ":examples:demo-compose-app:app:lint :examples:demo-compose-app:app:assembleDebug :examples:demo-compose-app:app:assembleRelease",
+          ":examples:demo-compose-app:app:jvmJar"
+        ]
+        os: [ ubuntu-latest ]
+
+    steps:
+      - name: Configure Git
+        run: |
+          git config --global core.autocrlf input
+      - uses: actions/checkout@v5
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v5
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          cache: gradle
+
+      # Configure Gradle for optimal use in GitHub Actions, including caching of downloaded dependencies.
+      # See: https://github.com/gradle/actions/blob/main/setup-gradle/README.md
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          # Cache downloaded JDKs/konan in addition to the default directories.
+          gradle-home-cache-includes: |
+            caches
+            notifications
+            jdks
+            ~/.konan/**
+
+      # Check that demo app in examples compiles successfully.
+      # It is an independent Gradle project, so it has to be checked separately.
+      - name: Assemble target
+        run: ./gradlew ${{ matrix.gradle-tasks }} --stacktrace
+        env:
+          JAVA_OPTS: "-Xmx8g -Dfile.encoding=UTF-8 -Djava.awt.headless=true -Dkotlin.daemon.jvm.options=-Xmx6g"
 
   docs:
     runs-on: ubuntu-latest
@@ -91,11 +140,11 @@ jobs:
         run: |
           git config --global core.autocrlf input
       - uses: actions/checkout@v5
-      - name: Set up JDK 17
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v5
         with:
-          java-version: '17'
-          distribution: 'corretto'
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
 
       # Configure Gradle for optimal use in GitHub Actions, including caching of downloaded dependencies.
       # See: https://github.com/gradle/actions/blob/main/setup-gradle/README.md
@@ -108,7 +157,7 @@ jobs:
           ./gradlew jvmTest :koverBinaryReport --continue
 
       - name: Check Split Packages
-        if:  matrix.os == 'ubuntu-latest' && github.event.pull_request.draft == false
+        if: matrix.os == 'ubuntu-latest' && github.event.pull_request.draft == false
         run: |-
           ./gradlew jvmJar && ./gradlew checkSplitPackages
 
@@ -147,7 +196,7 @@ jobs:
           annotate_only: true
 
   qodana:
-    needs: [tests]
+    needs: [ tests ]
     if: github.repository == 'jetbrains/koog'
     runs-on: ubuntu-latest
     permissions:
@@ -162,11 +211,11 @@ jobs:
           persist-credentials: false  # https://github.com/orgs/community/discussions/151365
 
       # Add Java setup step
-      - name: Set up JDK 17
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v5
         with:
-          java-version: '17'
-          distribution: 'temurin'  # Popular OpenJDK distribution
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
 
       # Download the coverage data artifact
       - name: Download coverage data
@@ -191,8 +240,8 @@ jobs:
       - uses: actions/checkout@v5
       - uses: actions/setup-java@v5
         with:
-          distribution: 'temurin'
-          java-version: 17
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          java-version: ${{ env.JAVA_VERSION }}
       - uses: gradle/actions/setup-gradle@v4
       - name: Generate and verify code examples
         run: |
@@ -217,10 +266,10 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v5
-      - name: Set up JDK 17
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v5
         with:
-          java-version: '17'
+          java-version: ${{ env.JAVA_VERSION }}
           distribution: 'temurin'
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4

@@ -12,7 +12,7 @@ plugins {
 }
 
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(libs.versions.jdkVersion.get().toInt())
 
     androidTarget {
         // https://www.jetbrains.com/help/kotlin-multiplatform-dev/compose-test.html
@@ -36,14 +36,14 @@ kotlin {
             implementation(libs.jetbrains.lifecycle.viewmodel.compose)
             implementation(libs.jetbrains.navigation.compose)
             implementation(libs.koin.compose)
-            implementation(libs.koog.agents)
+            when (rootProject.name) {
+                "koog-agents" -> implementation(project(":koog-agents"))
+                "koog-demo-compose-app" -> implementation("ai.koog:koog-agents:0.4.1")
+                else -> throw Error("Unexpected project name: ${rootProject.name}")
+            }
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.serialization.core)
             implementation(libs.kotlinx.serialization.json)
-            implementation(libs.ktor.client.content.negotiation)
-            implementation(libs.ktor.client.core)
-            implementation(libs.ktor.client.logging)
-            implementation(libs.ktor.serialization.kotlinx.json)
             implementation(project.dependencies.platform(libs.koin.bom))
         }
 
@@ -62,7 +62,7 @@ kotlin {
 }
 
 android {
-    namespace = "com.jetbrains.example.kotlin_agents_demo_app"
+    namespace = "com.jetbrains.example.kotlin.agents.demo.app"
     compileSdk = 36
 
     buildFeatures {
@@ -70,7 +70,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.jetbrains.example.kotlin_agents_demo_app"
+        applicationId = "com.jetbrains.example.kotlin.agents.demo.app"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
@@ -112,7 +112,7 @@ compose.desktop {
             }
             macOS {
                 // iconFile.set(project.file("desktopAppIcons/MacosIcon.icns"))
-                bundleID = "com.jetbrains.example.kotlin_agents_demo_app.desktopApp"
+                bundleID = "com.jetbrains.example.kotlin.agents.demo.app.desktopApp"
             }
         }
     }
@@ -126,4 +126,3 @@ configurations.all {
     // FIXME exclude netty from Koog dependencies?
     exclude(group = "io.netty", module = "*")
 }
-
