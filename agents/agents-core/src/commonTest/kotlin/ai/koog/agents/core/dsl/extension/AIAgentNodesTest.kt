@@ -5,16 +5,23 @@ import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.agents.testing.tools.mockLLMAnswer
+import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.structure.StructuredOutput
+import ai.koog.prompt.structure.StructuredOutputConfig
+import ai.koog.prompt.structure.json.JsonStructuredData
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.Serializable
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class AIAgentNodesTest {
@@ -137,4 +144,97 @@ class AIAgentNodesTest {
             "Should have at least 3 execution events (agent finished, node transitions)"
         )
     }
+
+    @Test
+    fun testNodeSetStructuredOutput() = runTest {
+        @Serializable
+        data class TestOutput(
+            val message: String,
+            val code: Int
+        )
+
+        // Test Manual mode
+        val manualStructure = JsonStructuredData.createJsonStructure<TestOutput>()
+        val manualConfig = StructuredOutputConfig(
+            default = StructuredOutput.Manual(manualStructure)
+        )
+
+        var capturedPrompt: Prompt? = null
+
+        val manualStrategy = strategy<String, String>("test-manual") {
+            val setStructuredOutput by nodeSetStructuredOutput<String, TestOutput>(config = manualConfig)
+            val checkPrompt by node<String, String> { input ->
+                capturedPrompt = llm.prompt
+                input
+            }
+
+            edge(nodeStart forwardTo setStructuredOutput)
+            edge(setStructuredOutput forwardTo checkPrompt)
+            edge(checkPrompt forwardTo nodeFinish)
+        }
+
+        val testExecutor = getMockExecutor {
+            mockLLMAnswer("Test").asDefaultResponse
+        }
+
+        val agentConfig = AIAgentConfig(
+            prompt = prompt("test") {},
+            model = OpenAIModels.CostOptimized.GPT4oMini,
+            maxAgentIterations = 5
+        )
+
+        val manualAgent = AIAgent(
+            promptExecutor = testExecutor,
+            strategy = manualStrategy,
+            agentConfig = agentConfig,
+            toolRegistry = ToolRegistry { }
+        )
+
+        manualAgent.run("Test input")
+
+        // Manual mode: schema should not be set, user message should be added
+        assertNotNull(capturedPrompt, "Prompt should be captured")
+        assertEquals(null, capturedPrompt!!.params.schema, "Schema should not be set for Manual config")
+        assertTrue(
+            capturedPrompt!!.messages.any { it is ai.koog.prompt.message.Message.User },
+            "Should have user message with instructions for Manual config"
+        )
+
+        // Test Native mode
+        val nativeStructure = JsonStructuredData.createJsonStructure<TestOutput>()
+        val nativeConfig = StructuredOutputConfig(
+            default = StructuredOutput.Native(nativeStructure)
+        )
+
+        val nativeStrategy = strategy<String, String>("test-native") {
+            val setStructuredOutput by nodeSetStructuredOutput<String, TestOutput>(config = nativeConfig)
+            val checkPrompt by node<String, String> { input ->
+                capturedPrompt = llm.prompt
+                input
+            }
+
+            edge(nodeStart forwardTo setStructuredOutput)
+            edge(setStructuredOutput forwardTo checkPrompt)
+            edge(checkPrompt forwardTo nodeFinish)
+        }
+
+        val nativeAgent = AIAgent(
+            promptExecutor = testExecutor,
+            strategy = nativeStrategy,
+            agentConfig = AIAgentConfig(
+                prompt = prompt("test") {},
+                model = OpenAIModels.CostOptimized.GPT4oMini,
+                maxAgentIterations = 5
+            ),
+            toolRegistry = ToolRegistry { }
+        )
+
+        nativeAgent.run("Test input")
+
+        // Native mode: schema should be set
+        assertNotNull(capturedPrompt, "Prompt should be captured")
+        assertNotNull(capturedPrompt!!.params.schema, "Schema should be set for Native config")
+        assertEquals(nativeStructure.schema, capturedPrompt!!.params.schema, "Schema should match structure's schema")
+    }
+
 }

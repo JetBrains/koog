@@ -528,9 +528,7 @@ public inline fun <reified TInput, T> AIAgentSubgraphBuilderBase<*, *>.nodeSetSt
 ): AIAgentNodeDelegate<TInput, TInput> =
     node(name) { message ->
         llm.writeSession {
-            prompt = prompt.withUpdatedParams {
-                schema = config.structure(model).schema
-            }
+            prompt = config.updatePrompt(model, prompt)
             message
         }
     }

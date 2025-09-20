@@ -11,7 +11,9 @@ import ai.koog.agents.example.structuredoutput.tools.WeatherTools
 import ai.koog.agents.ext.agent.structuredOutputWithToolsStrategy
 import ai.koog.agents.features.eventHandler.feature.handleEvents
 import ai.koog.prompt.dsl.prompt
+import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
+import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.clients.google.structure.GoogleStandardJsonSchemaGenerator
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
@@ -104,8 +106,8 @@ fun main(): Unit = runBlocking {
     val agent = AIAgent(
         promptExecutor = MultiLLMPromptExecutor(
             LLMProvider.OpenAI to OpenAILLMClient(ApiKeyService.openAIApiKey),
-//            LLMProvider.Anthropic to AnthropicLLMClient(ApiKeyService.anthropicApiKey),
-//            LLMProvider.Google to GoogleLLMClient(ApiKeyService.googleApiKey),
+            LLMProvider.Anthropic to AnthropicLLMClient(ApiKeyService.anthropicApiKey),
+            LLMProvider.Google to GoogleLLMClient(ApiKeyService.googleApiKey),
         ),
         strategy = agentStrategy,
         agentConfig = agentConfig,
