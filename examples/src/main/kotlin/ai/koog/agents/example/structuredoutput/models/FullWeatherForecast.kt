@@ -4,7 +4,6 @@ import ai.koog.agents.core.tools.annotations.LLMDescription
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-
 /**
  * This is a more advanced example showing how to configure various parameters of structured output manually, to fine-tune
  * it for your needs when necessary.

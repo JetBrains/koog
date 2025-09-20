@@ -5,7 +5,6 @@ import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
@@ -236,5 +235,4 @@ class AIAgentNodesTest {
         assertNotNull(capturedPrompt!!.params.schema, "Schema should be set for Native config")
         assertEquals(nativeStructure.schema, capturedPrompt!!.params.schema, "Schema should match structure's schema")
     }
-
 }

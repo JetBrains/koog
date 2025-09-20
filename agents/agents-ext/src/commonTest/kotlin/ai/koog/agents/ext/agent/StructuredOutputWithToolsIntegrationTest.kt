@@ -140,22 +140,26 @@ class StructuredOutputWithToolsIntegrationTest {
         // For common tests, we need to use a simpler mock setup
         val mockExecutor = getMockExecutor {
             // Simply return the structured output directly
-            mockLLMAnswer("""
+            mockLLMAnswer(
+                """
                 {
                     "temperature": 22,
                     "conditions": "Partly Cloudy",
                     "windSpeed": 15.5,
                     "humidity": 65
                 }
-            """.trimIndent()).asDefaultResponse
+                """.trimIndent()
+            ).asDefaultResponse
         }
 
         val agentConfig = AIAgentConfig(
             prompt = prompt("weather-agent") {
-                system("""
+                system(
+                    """
                     You are a weather assistant. Use the available tools to gather weather data
                     and return a complete weather report in the specified JSON format.
-                """.trimIndent())
+                    """.trimIndent()
+                )
             },
             model = OpenAIModels.CostOptimized.GPT4oMini,
             maxAgentIterations = 10
@@ -211,22 +215,26 @@ class StructuredOutputWithToolsIntegrationTest {
 
         val mockExecutor = getMockExecutor {
             // Return structured output
-            mockLLMAnswer("""
+            mockLLMAnswer(
+                """
                 {
                     "temperature": 18,
                     "conditions": "Rainy",
                     "windSpeed": 20.0,
                     "humidity": 80
                 }
-            """.trimIndent()).asDefaultResponse
+                """.trimIndent()
+            ).asDefaultResponse
         }
 
         val agentConfig = AIAgentConfig(
             prompt = prompt("weather-agent-parallel") {
-                system("""
+                system(
+                    """
                     You are a weather assistant. Gather all weather metrics in parallel
                     and return a complete weather report.
-                """.trimIndent())
+                    """.trimIndent()
+                )
             },
             model = OpenAIModels.CostOptimized.GPT4oMini,
             maxAgentIterations = 10
@@ -275,14 +283,16 @@ class StructuredOutputWithToolsIntegrationTest {
 
         val mockExecutor = getMockExecutor {
             // LLM directly returns structured output without calling tools
-            mockLLMAnswer("""
+            mockLLMAnswer(
+                """
                 {
                     "temperature": 25,
                     "conditions": "Sunny",
                     "windSpeed": 10.0,
                     "humidity": 50
                 }
-            """.trimIndent()) onRequestContains "Generate mock weather data"
+                """.trimIndent()
+            ) onRequestContains "Generate mock weather data"
         }
 
         val agentConfig = AIAgentConfig(

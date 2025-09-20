@@ -133,4 +133,3 @@ fun main(): Unit = runBlocking {
     val result: FullWeatherForecast = agent.run(FullWeatherForecastRequest(city = "New York", country = "USA"))
     println("Agent run result: $result")
 }
-
