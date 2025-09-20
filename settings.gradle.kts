@@ -1,8 +1,11 @@
 rootProject.name = "koog-agents"
 
 pluginManagement {
+    includeBuild("convention-plugin-ai")
     repositories {
+        google()
         gradlePluginPortal()
+        maven(url = "https://packages.jetbrains.team/maven/p/jcs/maven")
     }
 }
 

@@ -78,7 +78,7 @@ version = run {
 
 buildscript {
     dependencies {
-        classpath("com.squareup.okhttp3:okhttp:5.1.0")
+        classpath(libs.okhttp)
     }
 }
 
@@ -86,6 +86,8 @@ plugins {
     id("ai.kotlin.dokka")
     alias(libs.plugins.kotlinx.kover)
     alias(libs.plugins.ktlint)
+    alias(libs.plugins.android.application).apply(false)
+    alias(libs.plugins.multiplatform).apply(false)
 }
 
 allprojects {
