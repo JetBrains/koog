@@ -26,10 +26,12 @@ import ai.koog.a2a.server.messages.InMemoryMessageStorage
 import ai.koog.a2a.server.messages.MessageStorage
 import ai.koog.a2a.server.notifications.PushNotificationConfigStorage
 import ai.koog.a2a.server.notifications.PushNotificationSender
+import ai.koog.a2a.server.session.IdGenerator
 import ai.koog.a2a.server.session.RequestContext
 import ai.koog.a2a.server.session.Session
 import ai.koog.a2a.server.session.SessionEventProcessor
 import ai.koog.a2a.server.session.SessionManager
+import ai.koog.a2a.server.session.UuidIdGenerator
 import ai.koog.a2a.server.tasks.ContextTaskStorage
 import ai.koog.a2a.server.tasks.InMemoryTaskStorage
 import ai.koog.a2a.server.tasks.TaskStorage
@@ -50,8 +52,6 @@ import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 /**
  * Default implementation of A2A server responsible for handling requests from A2A clients according to the
@@ -203,18 +203,19 @@ import kotlin.uuid.Uuid
  *         val userMessage = context.params.message
  *
  *         // Process the message and create a task
- *         val task = Task(
- *             contextId = context.contextId,
- *             status = TaskStatus(
- *                 state = TaskState.Working,
- *                 // Mark this message as belonging to the created task
- *                 message = message.copy(taskId = task.id)
- *                 timestamp = Clock.System.now()
- *             ),
- *         )
- *
  *         // Send task creation event
- *         eventProcessor.sendTaskEvent(task)
+ *         eventProcessor.sendTaskEvent(
+ *             Task(
+ *                 id = context.taskId,
+ *                 contextId = context.contextId,
+ *                 status = TaskStatus(
+ *                     state = TaskState.Working,
+ *                     // Mark this message as belonging to the created task
+ *                     message = message.copy(taskId = context.taskId)
+ *                     timestamp = Clock.System.now()
+ *                 ),
+ *             )
+ *         )
  *
  *         // Simulate some work
  *         delay(1000)
@@ -222,14 +223,14 @@ import kotlin.uuid.Uuid
  *         // Mark task as completed
  *         eventProcessor.sendTaskEvent(
  *             TaskStatusUpdateEvent(
- *                 taskId = task.id,
- *                 contextId = task.contextId,
+ *                 taskId = context.taskId,
+ *                 contextId = context.contextId,
  *                 status = TaskStatus(
  *                     state = TaskState.Completed,
  *                     message = Message(
  *                        role = Role.Agent,
  *                        contextId = context.contextId,
- *                        taskId = task.id,
+ *                        taskId = context.taskId,
  *                        parts = listOf(
  *                            TextPart("Task completed successfully!")
  *                        )
@@ -302,6 +303,7 @@ import kotlin.uuid.Uuid
  * @param messageStorage Storage implementation for persisting messages (defaults to in-memory)
  * @param pushConfigStorage Optional storage for push notification configurations
  * @param pushSender Optional push notification sender implementation
+ * @param idGenerator Generator for new task and context IDs (defaults to UUID)
  * @param coroutineScope Scope for managing all sessions, agent jobs, event processing, etc.
  * @param clock Clock instance for timestamp generation (defaults to [Clock.System])
  *
@@ -320,6 +322,7 @@ public open class A2AServer(
     protected val messageStorage: MessageStorage = InMemoryMessageStorage(),
     protected val pushConfigStorage: PushNotificationConfigStorage? = null,
     protected val pushSender: PushNotificationSender? = null,
+    protected val idGenerator: IdGenerator = UuidIdGenerator,
     protected val coroutineScope: CoroutineScope = CoroutineScope(SupervisorJob()),
     protected val clock: Clock = Clock.System,
 ) : RequestHandler {
@@ -357,10 +360,9 @@ public open class A2AServer(
         ctx: ServerCallContext
     ): Flow<Response<Event>> = channelFlow {
         val message = request.data.message
-        val taskId = message.taskId
 
         // Check if message links to a task.
-        val eventProcessor = if (taskId != null) {
+        val task: Task? = message.taskId?.let { taskId ->
             // Check if the task is still in progress, no message can be sent.
             if (sessionManager.sessionForTask(taskId) != null) {
                 throw A2AUnsupportedOperationException("Task '$taskId' is still running, can't send messages to the task that has not yielded control")
@@ -374,31 +376,28 @@ public open class A2AServer(
                 throw A2AInvalidParamsException("Message context id '${message.contextId}' doesn't match task context id '${task.contextId}'")
             }
 
-            // Create new event processor for the task.
-            SessionEventProcessor(
-                contextId = task.contextId,
-                taskStorage = taskStorage,
-                coroutineScope = coroutineScope,
-                currentTask = task
-            )
-        } else {
-            // Create new event processor without task specified.
-            @OptIn(ExperimentalUuidApi::class)
-            SessionEventProcessor(
-                contextId = message.contextId ?: Uuid.random().toString(),
-                taskStorage = taskStorage,
-                // Use specified context id or generate a new random one.
-                coroutineScope = coroutineScope,
-            )
+            task
         }
+
+        // Create event processor for the session based on the input data.
+        val eventProcessor = SessionEventProcessor(
+            contextId = task?.contextId
+                ?: message.contextId
+                ?: idGenerator.generateContextId(message),
+            taskId = task?.id ?: idGenerator.generateTaskId(message),
+            taskStorage = taskStorage,
+            task = null,
+        )
 
         // Create request context based on the request information.
         val requestContext = RequestContext(
-            contextId = eventProcessor.contextId,
             callContext = ctx,
             params = request.data,
             taskStorage = ContextTaskStorage(eventProcessor.contextId, taskStorage),
             messageStorage = ContextMessageStorage(eventProcessor.contextId, messageStorage),
+            contextId = eventProcessor.contextId,
+            taskId = eventProcessor.taskId,
+            task = task,
         )
 
         // Create agent execution session
@@ -483,13 +482,13 @@ public open class A2AServer(
         ctx: ServerCallContext
     ): Response<Task> {
         val taskParams = request.data
+
         val session = sessionManager.sessionForTask(taskParams.id)
+        val task = taskStorage.get(taskParams.id, historyLength = 0, includeArtifacts = true)
+            ?: throw A2ATaskNotFoundException("Task '${taskParams.id}' not found")
 
         // Task is not running, check if it exists in the storage.
         if (session == null) {
-            val task = taskStorage.get(taskParams.id, historyLength = 0, includeArtifacts = true)
-                ?: throw A2ATaskNotFoundException("Task '${taskParams.id}' not found")
-
             // Task exists but not running - check if it is already canceled.
             if (task.status.state == TaskState.Canceled) {
                 return Response(data = task, id = request.id)
@@ -515,11 +514,13 @@ public open class A2AServer(
         } else {
             // Create request context based on the request information.
             val requestContext = RequestContext(
-                contextId = taskParams.id,
                 callContext = ctx,
                 params = request.data,
                 taskStorage = ContextTaskStorage(session.contextId, taskStorage),
                 messageStorage = ContextMessageStorage(session.contextId, messageStorage),
+                contextId = session.contextId,
+                taskId = session.taskId,
+                task = task,
             )
 
             // Attempt to cancel the agent execution and wait until it's finished.
@@ -545,7 +546,7 @@ public open class A2AServer(
 
         val taskParams = request.data
         val session = sessionManager.sessionForTask(taskParams.id)
-            ?: throw A2AUnsupportedOperationException("Task '${taskParams.id}' is not currently running or does not exist")
+            ?: throw A2AUnsupportedOperationException("Session for task '${taskParams.id}' is not currently running or task does not exist")
 
         emitAll(
             session.events

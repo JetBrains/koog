@@ -1,23 +1,18 @@
 package ai.koog.a2a.server.session
 
 import ai.koog.a2a.annotations.InternalA2AApi
-import ai.koog.a2a.model.Message
 import ai.koog.a2a.model.TaskEvent
 import ai.koog.a2a.server.notifications.PushNotificationConfigStorage
 import ai.koog.a2a.server.notifications.PushNotificationSender
 import ai.koog.a2a.server.tasks.TaskStorage
 import ai.koog.a2a.utils.RWLock
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 
 /**
  * Manages a set of active instances of [Session], sends push notifications if configured after each session completes.
- *
- * Each session's event stream is monitored for task id associated with this session, if any, i.e., the session is processing a task,
- * and if it is a task-related session, it is added to the task sessions map.
- *
- * Automatically closes and removes the session when it is completed (whether successfully or not).
+ * Automatically closes and removes the session when agent job is completed (whether successfully or not).
  *
  * Additionally, if push notifications are configured, after each task session completes, push notifications are sent with
  * the current task state.
@@ -34,8 +29,10 @@ public class SessionManager(
     private val pushConfigStorage: PushNotificationConfigStorage? = null,
     private val pushSender: PushNotificationSender? = null,
 ) {
-    private val allSessions = mutableSetOf<Session>()
-    private val taskSessions = mutableMapOf<String, Session>()
+    /**
+     * Map of task id to session. All sessions have task id associated with them, even if the task won't be created.
+     */
+    private val sessions = mutableMapOf<String, Session>()
     private val rwLock = RWLock()
 
     /**
@@ -46,56 +43,37 @@ public class SessionManager(
      *
      * @param session The session to add.
      */
-    public fun addSession(session: Session) {
+    public suspend fun addSession(session: Session) {
+        rwLock.withWriteLock {
+            check(session.taskId !in sessions) {
+                "SessionEventProcessor for taskId '${session.taskId}' already exists."
+            }
+
+            sessions[session.taskId] = session
+        }
+
+        // Monitor for agent job completion to send push notifications and remove session from the map.
         coroutineScope.launch {
-            // Check if the first event is task related and add this session to the task sessions map.
-            when (val firstEvent = session.events.first()) {
-                is TaskEvent -> {
-                    val taskId = firstEvent.taskId
+            val firstEvent = session.events.firstOrNull()
 
-                    rwLock.withWriteLock {
-                        check(taskId !in taskSessions) {
-                            "SessionEventProcessor for taskId '${firstEvent.taskId}' already exists."
-                        }
+            // Wait for agent job to complete
+            session.agentJob.join()
 
-                        allSessions += session
-                        taskSessions[firstEvent.taskId] = session
-                    }
+            // Send push notifications with the current state of the task, after the session completion, if configured.
+            if (firstEvent is TaskEvent && pushSender != null && pushConfigStorage != null) {
+                val task = taskStorage.get(session.taskId, historyLength = 0, includeArtifacts = false)
 
-                    // Wait for the session to complete, then close and remove it from collections.
-                    session.join()
-
-                    rwLock.withWriteLock {
-                        session.close()
-                        allSessions -= session
-                        taskSessions -= taskId
-                    }
-
-                    // Send push notifications with the current state of the task, after the session completion, if configured.
-                    if (pushSender != null && pushConfigStorage != null) {
-                        val task = taskStorage.get(taskId, historyLength = 0)
-
-                        if (task != null) {
-                            pushConfigStorage.getAll(taskId).forEach { config ->
-                                pushSender.send(config, task)
-                            }
-                        }
+                if (task != null) {
+                    pushConfigStorage.getAll(session.taskId).forEach { config ->
+                        pushSender.send(config, task)
                     }
                 }
+            }
 
-                is Message -> {
-                    rwLock.withWriteLock {
-                        allSessions += session
-                    }
-
-                    // Wait for the session to complete, then close and remove it from collection.
-                    session.join()
-
-                    rwLock.withWriteLock {
-                        session.close()
-                        allSessions -= session
-                    }
-                }
+            // Close the session completely and remove it from the sessions map.
+            rwLock.withWriteLock {
+                sessions -= session.taskId
+                session.close()
             }
         }
     }
@@ -104,13 +82,13 @@ public class SessionManager(
      * Returns the session for the given task id, if any.
      */
     public suspend fun sessionForTask(taskId: String): Session? = rwLock.withReadLock {
-        taskSessions[taskId]
+        sessions[taskId]
     }
 
     /**
      * Returns the number of active sessions.
      */
     public suspend fun activeSessions(): Int = rwLock.withReadLock {
-        allSessions.size
+        sessions.size
     }
 }

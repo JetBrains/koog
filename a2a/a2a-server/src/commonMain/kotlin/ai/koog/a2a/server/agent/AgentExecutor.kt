@@ -11,7 +11,6 @@ import ai.koog.a2a.model.TaskState
 import ai.koog.a2a.server.session.RequestContext
 import ai.koog.a2a.server.session.Session
 import ai.koog.a2a.server.session.SessionEventProcessor
-import kotlin.jvm.JvmName
 
 /**
  * Implementations of this interface contain the core logic of the agent,
@@ -24,6 +23,8 @@ public interface AgentExecutor {
      * The agent should read necessary information from the [context] and publish [TaskEvent] or [Message] events to
      * the [eventProcessor]. This method should return once the agent's execution for this request is complete or
      * yields control (e.g., enters an [TaskState.InputRequired] state).
+     *
+     * All events must have context id from [RequestContext.contextId] and for task events task id from [RequestContext.taskId].
      *
      * Can throw an exception if the input is invalid or the agent fails to execute the request.
      *
@@ -94,15 +95,3 @@ public interface AgentExecutor {
      */
     public suspend fun cancel(context: RequestContext<TaskIdParams>, session: Session) {}
 }
-
-/**
- * Returns the task id from the [MessageSendParams] in the [RequestContext].
- */
-@get:JvmName("getMessageTaskId")
-public val RequestContext<MessageSendParams>.taskId: String? get() = params.message.taskId
-
-/**
- * Returns the task id from the [TaskIdParams] in the [RequestContext].
- */
-@get:JvmName("getTaskIdParamsTaskId")
-public val RequestContext<TaskIdParams>.taskId: String get() = params.id

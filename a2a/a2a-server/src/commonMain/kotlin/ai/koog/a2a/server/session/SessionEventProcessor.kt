@@ -8,15 +8,19 @@ import ai.koog.a2a.model.TaskEvent
 import ai.koog.a2a.model.TaskState
 import ai.koog.a2a.model.TaskStatusUpdateEvent
 import ai.koog.a2a.server.exceptions.InvalidEventException
+import ai.koog.a2a.server.exceptions.SessionClosedException
 import ai.koog.a2a.server.tasks.TaskStorage
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.flow.shareIn
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlin.jvm.JvmInline
 
 /**
  * A session processor responsible for handling session events.
@@ -31,25 +35,35 @@ import kotlinx.coroutines.sync.withLock
  * - **Context ID validation**: All events must have the same contextId as the session
  * - **Single message limit**: Only one [Message] can be sent per session, after which the session becomes terminal
  * - **Task initialization order**: For new tasks, the first [TaskEvent] must be of type [Task] to create the task
- * - **Task ID consistency**: Once a task session is initialized, only [TaskEvent]s with the same taskId are allowed
+ * - **Task ID consistency**: [TaskEvent] events must have task ids equal to [taskId] provided for this session.
  * - **Final event enforcement**: After a [TaskStatusUpdateEvent] with `final=true` is sent, no more events are permitted
  * - **Terminal state blocking**: No events can be sent when the task is already in a terminal state
  * - **Final flag requirement**: [TaskStatusUpdateEvent]s that set the task to a terminal state must have `final=true`
  *
- * @property contextId The contextId of the session.
+ * @property contextId The contextId associated with this session, representing either an existing context
+ * from the incoming request or a newly generated ID that must be used for all events in this session.
+ * @property taskId The taskId associated with this session, representing either an existing task
+ * from the incoming request or a newly generated ID that must be used if creating a new task.
+ * Note: This taskId might not correspond to an actually existing task initially - it serves as the
+ * identifier that will be validated against all [TaskEvent] in this session.
  * @param taskStorage The storage for tasks where task events will be saved.
- * @param coroutineScope The scope in which the event flow will be shared
- * @param currentTask The current task associated with the session, if it is a continuation of a previous task session.
+ * @param task The initial task associated with the session, if it is a continuation of a previous task session.
  *
- * @property events A shared flow of session events that can be subscribed. The flow will be closed when the session is closed.
+ * @property events A hot flow of events in this session that can be subscribed to.
  */
 public class SessionEventProcessor(
     public val contextId: String,
+    public val taskId: String,
     private val taskStorage: TaskStorage,
-    coroutineScope: CoroutineScope,
-    currentTask: Task? = null,
-) : AutoCloseable {
+    private val task: Task? = null,
+) {
     private companion object {
+        private const val SESSION_CLOSED = "Session event processor is closed, can't send events"
+
+        private const val INVALID_CONTEXT_ID = "Event contextId must be same as provided contextId"
+
+        private const val INVALID_TASK_ID = "Event taskId must be same as provided taskId"
+
         private const val MESSAGE_SENT =
             "Message has already been sent in this session. Sending message is a terminal operation and no more events " +
                 "are allowed to be sent, the session must terminate ASAP"
@@ -70,10 +84,11 @@ public class SessionEventProcessor(
         private const val TASK_DOES_NOT_EXIST =
             "Task associated with the taskId in TaskEvent does not exist yet and the event was not Task. Creating new " +
                 "task should always start with Task event."
-
-        private const val INVALID_CONTEXT_ID = "Event contextId must be same as current contextId"
     }
 
+    /**
+     * Helper interface to handle different session types.
+     */
     private sealed interface SessionType {
         object MessageSession : SessionType
 
@@ -84,13 +99,32 @@ public class SessionEventProcessor(
         ) : SessionType
     }
 
-    private val _events = Channel<Event>()
-    public val events: SharedFlow<Event> = _events
-        .receiveAsFlow()
-        .shareIn(scope = coroutineScope, started = SharingStarted.Eagerly)
+    /**
+     * Helper interface to send actual events or termination signal to cancel events stream on session closure.
+     */
+    private sealed interface FlowEvent {
+        @JvmInline
+        value class Data(val data: Event) : FlowEvent
+        object Cancel : FlowEvent
+    }
+
+    private val isClosed = MutableStateFlow(false)
+
+    private val _events = MutableSharedFlow<FlowEvent>()
+    public val events: Flow<Event>
+        get() = flow {
+            if (!isClosed.value) {
+                emitAll(
+                    _events
+                        .takeWhile { !isClosed.value }
+                        .filterIsInstance<FlowEvent.Data>()
+                        .map { it.data }
+                )
+            }
+        }
 
     private val sessionMutex = Mutex()
-    private var sessionType: SessionType? = currentTask?.let {
+    private var sessionType: SessionType? = task?.let {
         SessionType.TaskSession(
             taskId = it.id,
             taskState = it.status.state
@@ -101,11 +135,15 @@ public class SessionEventProcessor(
      * Sends a [Message] to the session event processor. Validates the message against the session context and updates
      * the session state accordingly.
      *
-     * @param message The message to be sent. Contains details such as message content, context ID, and metadata.
+     * @param message The message to be sent.
      * @throws [InvalidEventException] for invalid events.
      * Check [SessionEventProcessor] docs from info about valid events.
      */
     public suspend fun sendMessage(message: Message): Unit = sessionMutex.withLock {
+        if (isClosed.value) {
+            throw SessionClosedException(SESSION_CLOSED)
+        }
+
         if (message.contextId != contextId) {
             throw InvalidEventException(INVALID_CONTEXT_ID)
         }
@@ -116,7 +154,7 @@ public class SessionEventProcessor(
             is SessionType.TaskSession -> throw InvalidEventException(TASK_INITIALIZED)
 
             null -> {
-                _events.send(message)
+                _events.emit(FlowEvent.Data(message))
                 sessionType = SessionType.MessageSession
             }
         }
@@ -126,14 +164,23 @@ public class SessionEventProcessor(
      * Sends a [TaskEvent] to the session event processor. Validates the event against the session context and updates
      * the session state and [taskStorage] accordingly.
      *
-     * @param event The event to be sent. Contains details such as task ID, context ID, and metadata.
+     * @param event The event to be sent.
      * @throws [InvalidEventException] for invalid events.
      * Check [SessionEventProcessor] docs from info about valid events.
      */
     public suspend fun sendTaskEvent(event: TaskEvent): Unit = sessionMutex.withLock {
+        if (isClosed.value) {
+            throw SessionClosedException(SESSION_CLOSED)
+        }
+
         if (event.contextId != contextId) {
             throw InvalidEventException(INVALID_CONTEXT_ID)
         }
+
+        if (event.taskId != taskId) {
+            throw InvalidEventException(INVALID_TASK_ID)
+        }
+
         /*
           The first set of checks, to get initial task session type if it is allowed here.
          */
@@ -143,11 +190,9 @@ public class SessionEventProcessor(
             is SessionType.TaskSession -> sessionType as SessionType.TaskSession
 
             null -> {
-                val savedTask = taskStorage.get(event.taskId, historyLength = 0, includeArtifacts = false)
-
                 SessionType.TaskSession(
                     taskId = event.taskId,
-                    taskState = savedTask?.status?.state, // null - new task
+                    taskState = task?.status?.state, // null - new task
                     finalEventReceived = false
                 ).also {
                     sessionType = it
@@ -188,7 +233,7 @@ public class SessionEventProcessor(
 
         // Only if all checks passed, attempt to update and emit the event
         taskStorage.update(event)
-        _events.send(event)
+        _events.emit(FlowEvent.Data(event))
 
         when (event) {
             is TaskStatusUpdateEvent -> taskSessionType.apply {
@@ -206,7 +251,8 @@ public class SessionEventProcessor(
         }
     }
 
-    override fun close() {
-        _events.close()
+    public suspend fun close(): Unit = sessionMutex.withLock {
+        isClosed.value = true
+        _events.emit(FlowEvent.Cancel)
     }
 }

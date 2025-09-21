@@ -1,5 +1,6 @@
 package ai.koog.a2a.server.exceptions
 
+import ai.koog.a2a.server.session.Session
 import ai.koog.a2a.server.session.SessionEventProcessor
 
 /**
@@ -21,3 +22,8 @@ public class InvalidEventException(message: String, cause: Throwable? = null) : 
  * An exception that is thrown to indicate errors occurring during push notification operations.
  */
 public class PushNotificationException(message: String, cause: Throwable? = null) : Exception(message, cause)
+
+/**
+ * An exception that is thrown to indicate that a [Session] has been closed.
+ */
+public class SessionClosedException(message: String, cause: Throwable? = null) : Exception(message, cause)

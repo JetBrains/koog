@@ -86,6 +86,13 @@ public interface TaskStorage {
     public suspend fun deleteAll(taskIds: List<String>)
 }
 
+/**
+ * A specialized wrapper around [TaskStorage] for providing access to the tasks within a specific context.
+ *
+ * @param contextId the unique identifier for the current context
+ * @param taskStorage the underlying task storage implementation
+ * @see [TaskStorage]
+ */
 public class ContextTaskStorage(
     private val contextId: String,
     private val taskStorage: TaskStorage,

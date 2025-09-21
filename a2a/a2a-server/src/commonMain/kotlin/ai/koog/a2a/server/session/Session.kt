@@ -4,7 +4,8 @@ import ai.koog.a2a.model.Event
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 /**
@@ -12,15 +13,17 @@ import kotlinx.coroutines.launch
  *
  * @property eventProcessor Handles session events and provides event streaming
  * @property agentJob The coroutine job executing the agent logic
- * @property events A stream of events generated during this session
- * @property contextId Unique context identifier for this session
+ * @property contextId Unique context ID associated with this session, delegates to [SessionEventProcessor.contextId]
+ * @property taskId Unique task ID associated with this session, delegates to [SessionEventProcessor.contextId]
+ * @property events A stream of events generated during this session, delegates to [SessionEventProcessor.events]
  */
 public class Session(
     public val eventProcessor: SessionEventProcessor,
     public val agentJob: Job
 ) {
-    public val events: SharedFlow<Event> get() = eventProcessor.events
     public val contextId: String get() = eventProcessor.contextId
+    public val taskId: String get() = eventProcessor.taskId
+    public val events: Flow<Event> get() = eventProcessor.events
 
     /**
      * Starts the agent execution job.
@@ -30,16 +33,17 @@ public class Session(
     }
 
     /*
-     * Suspends until the agent job completes
+     * Suspends until the session, i.e., agent job and event stream, complete.
      */
     public suspend fun join() {
         agentJob.join()
+        events.collect()
     }
 
     /**
      * Cancels the agent job and closes the event processor
      */
-    public fun close() {
+    public suspend fun close() {
         agentJob.cancel()
         eventProcessor.close()
     }

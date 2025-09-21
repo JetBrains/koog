@@ -40,7 +40,7 @@ The A2A (Agent-to-Agent) module is a **meta-module** within the larger Koog proj
 ## Technologies & Libraries
 
 ### Core Dependencies (from gradle/libs.versions.toml)
-- **Kotlin Multiplatform**: JVM + JS (IR) support
+- **Kotlin Multiplatform**
 - **kotlinx-serialization**: JSON serialization for protocol messages
 - **kotlinx-coroutines**: Async/concurrent programming, Flow APIs
 - **kotlinx-datetime**: Timestamp handling in protocol messages
