@@ -24,9 +24,38 @@ kotlin {
                 api(libs.kotlinx.serialization.json)
                 api(libs.kotlinx.io.core)
                 api(libs.kotlinx.coroutines.core)
-                api(libs.ktor.client.cio)
                 api(libs.ktor.client.sse)
                 implementation(libs.oshai.kotlin.logging)
+            }
+        }
+
+        androidMain {
+            dependencies {
+                implementation(libs.ktor.client.android)
+            }
+        }
+
+        iosMain {
+            dependencies {
+                api(libs.ktor.client.darwin)
+            }
+        }
+
+        jsMain {
+            dependencies {
+                api(libs.ktor.client.js)
+            }
+        }
+
+        wasmJsMain {
+            dependencies {
+                api(libs.ktor.client.js)
+            }
+        }
+
+        jvmMain {
+            dependencies {
+                api(libs.ktor.client.cio)
             }
         }
 
