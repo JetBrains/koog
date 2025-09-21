@@ -23,12 +23,14 @@ import ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolChoice
 import ai.koog.prompt.executor.clients.openai.models.InputContent
 import ai.koog.prompt.executor.clients.openai.models.Item
 import ai.koog.prompt.executor.clients.openai.models.OpenAIChatCompletionRequest
+import ai.koog.prompt.executor.clients.openai.models.OpenAIChatCompletionRequestSerializer
 import ai.koog.prompt.executor.clients.openai.models.OpenAIChatCompletionResponse
 import ai.koog.prompt.executor.clients.openai.models.OpenAIChatCompletionStreamResponse
 import ai.koog.prompt.executor.clients.openai.models.OpenAIEmbeddingRequest
 import ai.koog.prompt.executor.clients.openai.models.OpenAIEmbeddingResponse
 import ai.koog.prompt.executor.clients.openai.models.OpenAIOutputFormat
 import ai.koog.prompt.executor.clients.openai.models.OpenAIResponsesAPIRequest
+import ai.koog.prompt.executor.clients.openai.models.OpenAIResponsesAPIRequestSerializer
 import ai.koog.prompt.executor.clients.openai.models.OpenAIResponsesAPIResponse
 import ai.koog.prompt.executor.clients.openai.models.OpenAIResponsesTool
 import ai.koog.prompt.executor.clients.openai.models.OpenAIResponsesToolChoice
@@ -162,9 +164,10 @@ public open class OpenAILLMClient(
             topP = chatParams.topP,
             user = chatParams.user,
             webSearchOptions = chatParams.webSearchOptions,
+            additionalProperties = chatParams.additionalProperties,
         )
 
-        return json.encodeToString(request)
+        return json.encodeToString(OpenAIChatCompletionRequestSerializer, request)
     }
 
     private fun serializeResponsesAPIRequest(
@@ -212,9 +215,10 @@ public open class OpenAILLMClient(
             topP = params.topP,
             truncation = params.truncation,
             user = params.user,
+            additionalProperties = params.additionalProperties,
         )
 
-        return json.encodeToString(request)
+        return json.encodeToString(OpenAIResponsesAPIRequestSerializer, request)
     }
 
     override fun processProviderChatResponse(response: OpenAIChatCompletionResponse): List<LLMChoice> {

@@ -276,7 +276,7 @@ public open class AnthropicLLMClient(
         tools: List<ToolDescriptor>,
         model: LLModel,
         stream: Boolean
-    ): AnthropicMessageRequest {
+    ): String {
         val systemMessage = mutableListOf<SystemAnthropicMessage>()
         val messages = mutableListOf<AnthropicMessage>()
 
@@ -365,7 +365,7 @@ public open class AnthropicLLMClient(
         }
 
         // Always include max_tokens as it's required by the API
-        return AnthropicMessageRequest(
+        val request = AnthropicMessageRequest(
             model = settings.modelVersionsMap[model]
                 ?: throw IllegalArgumentException("Unsupported model: $model"),
             messages = messages,
@@ -375,7 +375,9 @@ public open class AnthropicLLMClient(
             tools = if (tools.isNotEmpty()) anthropicTools else emptyList(), // Always provide a list for tools
             stream = stream,
             toolChoice = toolChoice,
+            additionalProperties = prompt.params.additionalProperties
         )
+        return json.encodeToString(AnthropicMessageRequestSerializer, request)
     }
 
     private fun Message.User.toAnthropicUserMessage(model: LLModel): AnthropicMessage {

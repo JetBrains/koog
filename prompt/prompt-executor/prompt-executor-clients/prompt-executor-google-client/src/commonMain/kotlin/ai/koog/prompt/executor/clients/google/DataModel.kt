@@ -4,6 +4,7 @@ import ai.koog.prompt.executor.clients.google.GoogleFunctionCallingMode.ANY
 import ai.koog.prompt.executor.clients.google.GoogleFunctionCallingMode.AUTO
 import ai.koog.prompt.executor.clients.google.GoogleFunctionCallingMode.NONE
 import ai.koog.utils.serializers.ByteArrayAsBase64Serializer
+import ai.koog.prompt.executor.clients.serialization.AdditionalPropertiesSerializer
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -32,6 +33,7 @@ internal class GoogleRequest(
     val contents: List<GoogleContent>,
     val tools: List<GoogleTool>? = null,
     val systemInstruction: GoogleContent? = null,
+    @Serializable(with = GoogleGenerationConfigSerializer::class)
     val generationConfig: GoogleGenerationConfig? = null,
     val toolConfig: GoogleToolConfig? = null,
 )
@@ -256,7 +258,8 @@ internal class GoogleGenerationConfig(
     val candidateCount: Int? = null,
     val topP: Double? = null,
     val topK: Int? = null,
-    val thinkingConfig: GoogleThinkingConfig? = null
+    val thinkingConfig: GoogleThinkingConfig? = null,
+    val additionalProperties: Map<String, JsonElement>? = null,
 )
 
 /**
@@ -415,3 +418,6 @@ internal object GooglePartSerializer : JsonContentPolymorphicSerializer<GooglePa
         }
     }
 }
+
+internal object GoogleGenerationConfigSerializer :
+    AdditionalPropertiesSerializer<GoogleGenerationConfig>(GoogleGenerationConfig.serializer())

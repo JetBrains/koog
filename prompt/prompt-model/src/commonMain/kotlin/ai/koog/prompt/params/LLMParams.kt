@@ -2,7 +2,11 @@ package ai.koog.prompt.params
 
 import ai.koog.prompt.llm.LLMCapability
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 
 /**
  * Represents configuration parameters for controlling the behavior of a language model.
@@ -26,6 +30,7 @@ import kotlinx.serialization.json.JsonObject
  * @property thinkingBudget Hard cap for reasoning tokens.
  * Ignored by models that don't support budgets.
  * This can be used to limit the amount of tokens used for reasoning when `includeThoughts` is enabled.
+ * @property additionalProperties Additional properties that can be used to store custom parameters.
  */
 @Serializable
 public open class LLMParams(
@@ -38,6 +43,7 @@ public open class LLMParams(
     public val user: String? = null,
     public val includeThoughts: Boolean? = null,
     public val thinkingBudget: Int? = null,
+    public val additionalProperties: Map<String, JsonElement>? = null,
 ) {
     init {
         temperature?.let { temp ->
@@ -108,13 +114,29 @@ public open class LLMParams(
      * Component functions for destructuring declarations
      */
     public operator fun component1(): Double? = temperature
+
+    @Suppress("MissingKDocForPublicAPI")
     public operator fun component2(): Int? = maxTokens
+
+    @Suppress("MissingKDocForPublicAPI")
     public operator fun component3(): Int? = numberOfChoices
+
+    @Suppress("MissingKDocForPublicAPI")
     public operator fun component4(): String? = speculation
+
+    @Suppress("MissingKDocForPublicAPI")
     public operator fun component5(): Schema? = schema
+
+    @Suppress("MissingKDocForPublicAPI")
     public operator fun component6(): ToolChoice? = toolChoice
+
+    @Suppress("MissingKDocForPublicAPI")
     public operator fun component7(): String? = user
+
+    @Suppress("MissingKDocForPublicAPI")
     public operator fun component8(): Boolean? = includeThoughts
+
+    @Suppress("MissingKDocForPublicAPI")
     public operator fun component9(): Int? = thinkingBudget
 
     override fun equals(other: Any?): Boolean = when {
@@ -259,4 +281,23 @@ public open class LLMParams(
         @Serializable
         public object Required : ToolChoice()
     }
+}
+
+/**
+ * Converts a variable number of pairs into a map where the values are transformed into JsonElement instances.
+ *
+ * @param pairs A variable number of key-value pairs, where the keys are strings and the values are any type.
+ * @return A map with the provided keys associated with their corresponding JsonElement representations as values.
+ */
+public fun additionalPropertiesOf(vararg pairs: Pair<String, Any>): Map<String, JsonElement> =
+    pairs.associate { (k, v) -> k to toJsonElement(v) }
+
+private fun toJsonElement(v: Any?): JsonElement = when (v) {
+    null -> JsonNull
+    is String -> JsonPrimitive(v)
+    is Number -> JsonPrimitive(v)
+    is Boolean -> JsonPrimitive(v)
+    is Iterable<*> -> JsonArray(v.map { toJsonElement(it) })
+    is Map<*, *> -> JsonObject(v.entries.associate { (k, value) -> k.toString() to toJsonElement(value) })
+    else -> JsonPrimitive(v.toString())
 }

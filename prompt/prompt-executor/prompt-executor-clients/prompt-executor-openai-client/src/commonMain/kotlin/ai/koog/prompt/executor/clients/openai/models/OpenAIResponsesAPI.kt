@@ -5,6 +5,7 @@ import ai.koog.prompt.executor.clients.openai.base.models.OpenAIBaseLLMResponse
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIChoiceLogProbs
 import ai.koog.prompt.executor.clients.openai.base.models.ReasoningEffort
 import ai.koog.prompt.executor.clients.openai.base.models.ServiceTier
+import ai.koog.prompt.executor.clients.serialization.AdditionalPropertiesSerializer
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -143,7 +144,8 @@ internal class OpenAIResponsesAPIRequest(
     override val topP: Double? = null,
     val truncation: Truncation? = null,
     @Deprecated("Use safetyIdentifier and promptCacheKey instead")
-    val user: String? = null
+    val user: String? = null,
+    val additionalProperties: Map<String, JsonElement>? = null,
 ) : OpenAIBaseLLMRequest
 
 @Serializable(with = ItemPolymorphicSerializer::class)
@@ -2338,3 +2340,6 @@ internal object OpenAIResponsesToolChoiceSerializer : KSerializer<OpenAIResponse
         }
     }
 }
+
+internal object OpenAIResponsesAPIRequestSerializer :
+    AdditionalPropertiesSerializer<OpenAIResponsesAPIRequest>(OpenAIResponsesAPIRequest.serializer())
