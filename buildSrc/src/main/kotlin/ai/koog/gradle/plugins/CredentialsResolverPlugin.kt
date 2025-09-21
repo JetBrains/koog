@@ -7,24 +7,26 @@ import org.gradle.api.logging.Logging
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Provider
 import org.gradle.kotlin.dsl.mapProperty
+import org.gradle.process.ExecOperations
 import org.gradle.process.internal.ExecException
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
-import java.util.*
+import java.util.Properties
+import javax.inject.Inject
 
 /**
  * This plugin provides a way to read properties file while attempting to inject credentials using 1password CLI.
  * More info about injection here: https://developer.1password.com/docs/cli/reference/commands/inject
  */
 @Suppress("unused")
-class CredentialsResolverPlugin : Plugin<Project> {
+class CredentialsResolverPlugin @Inject constructor(private var execOperations: ExecOperations) : Plugin<Project> {
     override fun apply(project: Project) {
-        project.extensions.add("credentialsResolver", CredentialsResolverExtension(project))
+        project.extensions.add("credentialsResolver", CredentialsResolverExtension(project, execOperations))
     }
 }
 
-class CredentialsResolverExtension(private val project: Project) {
+class CredentialsResolverExtension(private val project: Project, private var execOperations: ExecOperations) {
     private val logger = Logging.getLogger(javaClass)
 
     private fun doResolve(file: File): Map<String, String> {
@@ -35,7 +37,7 @@ class CredentialsResolverExtension(private val project: Project) {
 
         val output = try {
             ByteArrayOutputStream().use {
-                project.exec {
+                execOperations.exec {
                     commandLine("op", "inject", "-i", file.absolutePath)
                     standardOutput = it
                 }
@@ -65,3 +67,4 @@ class CredentialsResolverExtension(private val project: Project) {
         disallowChanges()
     }
 }
+
