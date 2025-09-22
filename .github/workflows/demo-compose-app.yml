@@ -9,31 +9,56 @@ on:
     paths:
       - 'examples/demo-compose-app/**'
 
+env:
+  JAVA_VERSION: 17
+  JAVA_DISTRIBUTION: 'corretto'
+
 jobs:
   app-compilation:
 
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     permissions:
       contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        gradle-tasks: [
+          "lint :app:assembleDebug :app:assembleRelease",
+          ":app:jvmJar"
+        ]
+        os: [ ubuntu-latest ]
+        include:
+          - gradle-tasks: ":app:iosSimulatorArm64Binaries"
+            os: macos-latest-xlarge
 
     steps:
       - name: Configure Git
         run: |
           git config --global core.autocrlf input
       - uses: actions/checkout@v5
-      - name: Set up JDK 17
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
         uses: actions/setup-java@v5
         with:
-          java-version: '17'
-          distribution: 'corretto'
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          cache: gradle
 
       # Configure Gradle for optimal use in GitHub Actions, including caching of downloaded dependencies.
       # See: https://github.com/gradle/actions/blob/main/setup-gradle/README.md
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
+        with:
+          # Cache downloaded JDKs/konan in addition to the default directories.
+          gradle-home-cache-includes: |
+            caches
+            notifications
+            jdks
+            ~/.konan/**
 
-      # Check that demo android app in examples compiles successfully.
+      # Check that demo app in examples compiles successfully.
       # It is an independent Gradle project, so it has to be checked separately.
-      - name: Assemble
+      - name: Assemble target
         working-directory: ./examples/demo-compose-app
-        run: ./gradlew :app:assemble
+        run: ./gradlew ${{ matrix.gradle-tasks }} --stacktrace
+        env:
+          JAVA_OPTS: "-Xmx8g -Dfile.encoding=UTF-8 -Djava.awt.headless=true -Dkotlin.daemon.jvm.options=-Xmx6g"

@@ -17,6 +17,11 @@ pluginManagement {
 
 dependencyResolutionManagement {
     repositories {
+        maven(url = "https://packages.jetbrains.team/maven/p/grazi/grazie-platform-public") {
+            mavenContent {
+                includeGroupAndSubgroups("ai.koog")
+            }
+        }
         google {
             content {
                 includeGroupByRegex("com\\.android.*")

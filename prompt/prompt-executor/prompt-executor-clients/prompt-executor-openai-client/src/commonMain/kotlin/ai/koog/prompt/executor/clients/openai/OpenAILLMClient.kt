@@ -622,7 +622,7 @@ public open class OpenAILLMClient(
 
                         val imageUrl: String = when (val content = attachment.content) {
                             is AttachmentContent.URL -> content.url
-                            is AttachmentContent.Binary -> "data:${attachment.mimeType};base64,${content.base64}"
+                            is AttachmentContent.Binary -> "data:${attachment.mimeType};base64,${content.asBase64()}"
                             else -> throw IllegalArgumentException("Unsupported image attachment content: ${content::class}")
                         }
 
@@ -633,7 +633,7 @@ public open class OpenAILLMClient(
                         model.requireCapability(LLMCapability.Document)
 
                         val fileData = when (val content = attachment.content) {
-                            is AttachmentContent.Binary -> "data:${attachment.mimeType};base64,${content.base64}"
+                            is AttachmentContent.Binary -> "data:${attachment.mimeType};base64,${content.asBase64()}"
                             else -> null
                         }
 

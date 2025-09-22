@@ -1,7 +1,9 @@
 package ai.koog.agents.features.sql.providers
 
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
+import ai.koog.agents.snapshot.providers.PersistencyUtils
 import kotlinx.datetime.Clock
+import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SortOrder
@@ -116,7 +118,8 @@ public abstract class ExposedPersistencyStorageProvider(
     protected val database: Database,
     tableName: String = "agent_checkpoints",
     ttlSeconds: Long? = null,
-    migrator: SQLPersistenceSchemaMigrator
+    migrator: SQLPersistenceSchemaMigrator,
+    private val json: Json = PersistencyUtils.defaultCheckpointJson
 ) : SQLPersistencyStorageProvider(
     persistenceId = persistenceId,
     tableName = tableName,

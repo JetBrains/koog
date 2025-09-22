@@ -1,6 +1,8 @@
 package ai.koog.agents.features.sql.providers
 
+import ai.koog.agents.snapshot.providers.PersistencyUtils
 import kotlinx.coroutines.Dispatchers
+import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransaction
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -14,8 +16,9 @@ public class H2PersistencyStorageProvider(
     database: Database,
     tableName: String = "agent_checkpoints",
     ttlSeconds: Long? = null,
-    migrator: SQLPersistenceSchemaMigrator = H2PersistenceSchemaMigrator(database, tableName)
-) : ExposedPersistencyStorageProvider(persistenceId, database, tableName, ttlSeconds, migrator) {
+    migrator: SQLPersistenceSchemaMigrator = H2PersistenceSchemaMigrator(database, tableName),
+    json: Json = PersistencyUtils.defaultCheckpointJson
+) : ExposedPersistencyStorageProvider(persistenceId, database, tableName, ttlSeconds, migrator, json) {
 
     public override suspend fun <T> transaction(block: suspend () -> T): T =
         newSuspendedTransaction(Dispatchers.IO, database) {

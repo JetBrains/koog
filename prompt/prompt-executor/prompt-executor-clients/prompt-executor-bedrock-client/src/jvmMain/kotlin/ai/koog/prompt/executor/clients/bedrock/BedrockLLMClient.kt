@@ -439,10 +439,8 @@ public class BedrockLLMClient(
                                         else -> GuardrailImageFormat.SdkUnknown(image.format)
                                     }
 
-                                    val imageContent = image.content
-
-                                    when (imageContent) {
-                                        is AttachmentContent.Binary.Base64 -> source = Bytes(imageContent.toBytes())
+                                    when (val imageContent = image.content) {
+                                        is AttachmentContent.Binary.Base64 -> source = Bytes(imageContent.asBytes())
                                         is AttachmentContent.Binary.Bytes -> source = Bytes(imageContent.data)
                                         is AttachmentContent.PlainText ->
                                             source =

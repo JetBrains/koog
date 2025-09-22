@@ -190,7 +190,7 @@ public class StartNode<TInput> internal constructor(
     subgraphName: String? = null,
     type: KType,
 ) : AIAgentNode<TInput, TInput>(
-    name = subgraphName?.let { "__start__$it" } ?: "__start__",
+    name = subgraphName?.let { "${AIAgentSubgraph.START_NODE_PREFIX}$it" } ?: AIAgentSubgraph.START_NODE_PREFIX,
     inputType = type,
     outputType = type,
     execute = { input -> input }
@@ -216,7 +216,7 @@ public class FinishNode<TOutput> internal constructor(
     subgraphName: String? = null,
     type: KType,
 ) : AIAgentNode<TOutput, TOutput>(
-    name = subgraphName?.let { "__finish__$it" } ?: "__finish__",
+    name = subgraphName?.let { "${AIAgentSubgraph.FINISH_NODE_PREFIX}$it" } ?: AIAgentSubgraph.FINISH_NODE_PREFIX,
     inputType = type,
     outputType = type,
     execute = { input -> input }

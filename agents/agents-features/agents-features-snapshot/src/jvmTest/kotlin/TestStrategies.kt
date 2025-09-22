@@ -19,6 +19,16 @@ fun AIAgentSubgraphBuilderBase<*, *>.simpleNode(
     return@node it + "\n" + output
 }
 
+internal fun AIAgentSubgraphBuilderBase<*, *>.loggingNode(
+    name: String? = null,
+    message: String,
+    collector: TestAgentLogsCollector
+): AIAgentNodeDelegate<String, String> =
+    node(name) {
+        collector.log(message)
+        return@node it
+    }
+
 fun AIAgentSubgraphBuilderBase<*, *>.collectHistoryNode(
     name: String? = null,
 ): AIAgentNodeDelegate<String, String> = node(name) {
@@ -92,6 +102,20 @@ private fun AIAgentSubgraphBuilderBase<*, *>.teleportOnceNode(
     } else {
         // If we've already teleported, just return the input
         return@node "$it\nAlready teleported, passing by"
+    }
+}
+
+private fun AIAgentSubgraphBuilderBase<*, *>.nodeForSecondTry(
+    name: String? = null,
+    teleportState: TeleportState,
+    collector: TestAgentLogsCollector,
+): AIAgentNodeDelegate<String, String> = node(name) {
+    if (teleportState.teleported) {
+        collector.log("Second try successful")
+        return@node "Second try successful"
+    } else {
+        teleportState.teleported = true
+        error("This node will be successful only on the second try")
     }
 }
 
@@ -212,6 +236,48 @@ fun straightForwardGraphNoCheckpoint() = strategy("straight-forward") {
     edge(node1 forwardTo node2)
     edge(node2 forwardTo historyNode)
     edge(historyNode forwardTo nodeFinish)
+}
+
+internal fun loggingGraphStrategy(collector: TestAgentLogsCollector) = strategy("logging-test") {
+    val node1 by loggingNode(
+        "Node1",
+        message = "First Step",
+        collector = collector
+    )
+
+    val node2 by loggingNode(
+        "Node2",
+        message = "Second Step",
+        collector = collector
+    )
+    edge(nodeStart forwardTo node1)
+    edge(node1 forwardTo node2)
+    edge(node2 forwardTo nodeFinish)
+}
+
+internal fun loggingGraphForRunFromSecondTry(collector: TestAgentLogsCollector) = strategy("logging-test") {
+    val node1 by loggingNode(
+        "Node1",
+        message = "First Step",
+        collector = collector
+    )
+
+    val node2 by loggingNode(
+        "Node2",
+        message = "Second Step",
+        collector = collector
+    )
+
+    val nodeForSecondTry by nodeForSecondTry(
+        "NodeForSecondTry",
+        collector = collector,
+        teleportState = TeleportState(),
+    )
+
+    edge(nodeStart forwardTo node1)
+    edge(node1 forwardTo node2)
+    edge(node2 forwardTo nodeForSecondTry)
+    edge(nodeForSecondTry forwardTo nodeFinish)
 }
 
 fun createSimpleTeleportSubgraphWithInnerSubgraph(teleportToId: String) = strategy("teleport-test") {

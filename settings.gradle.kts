@@ -69,3 +69,4 @@ include(":koog-ktor")
 include(":docs")
 
 include(":test-utils")
+include(":utils")
