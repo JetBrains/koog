@@ -12,6 +12,16 @@
                   <project path="$PROJECT_DIR$/buildSrc" />
                 </projects>
               </build>
+              <build path="$PROJECT_DIR$/examples/composite-build-demo" name="composite-build-demo">
+                <projects>
+                  <project path="$PROJECT_DIR$/examples/composite-build-demo" />
+                </projects>
+              </build>
+              <build path="$PROJECT_DIR$/examples/composite-build-demo/buildSrc" name="buildSrc">
+                <projects>
+                  <project path="$PROJECT_DIR$/examples/composite-build-demo/buildSrc" />
+                </projects>
+              </build>
             </builds>
           </compositeBuild>
         </compositeConfiguration>
@@ -43,143 +53,8 @@
             <option value="$PROJECT_DIR$/embeddings/embeddings-base" />
             <option value="$PROJECT_DIR$/embeddings/embeddings-llm" />
             <option value="$PROJECT_DIR$/examples" />
-            <option value="$PROJECT_DIR$/integration-tests" />
-            <option value="$PROJECT_DIR$/koog-agents" />
-            <option value="$PROJECT_DIR$/koog-ktor" />
-            <option value="$PROJECT_DIR$/koog-spring-boot-starter" />
-            <option value="$PROJECT_DIR$/prompt" />
-            <option value="$PROJECT_DIR$/prompt/prompt-cache" />
-            <option value="$PROJECT_DIR$/prompt/prompt-cache/prompt-cache-files" />
-            <option value="$PROJECT_DIR$/prompt/prompt-cache/prompt-cache-model" />
-            <option value="$PROJECT_DIR$/prompt/prompt-cache/prompt-cache-redis" />
-            <option value="$PROJECT_DIR$/prompt/prompt-executor" />
-            <option value="$PROJECT_DIR$/prompt/prompt-executor/prompt-executor-cached" />
-            <option value="$PROJECT_DIR$/prompt/prompt-executor/prompt-executor-clients" />
-            <option value="$PROJECT_DIR$/prompt/prompt-executor/prompt-executor-clients/prompt-executor-anthropic-client" />
-            <option value="$PROJECT_DIR$/prompt/prompt-executor/prompt-executor-clients/prompt-executor-bedrock-client" />
-            <option value="$PROJECT_DIR$/prompt/prompt-executor/prompt-executor-clients/prompt-executor-deepseek-client" />
-            <option value="$PROJECT_DIR$/prompt/prompt-executor/prompt-executor-clients/prompt-executor-google-client" />
-            <option value="$PROJECT_DIR$/prompt/prompt-executor/prompt-executor-clients/prompt-executor-ollama-client" />
-            <option value="$PROJECT_DIR$/prompt/prompt-executor/prompt-executor-clients/prompt-executor-openai-client" />
-            <option value="$PROJECT_DIR$/prompt/prompt-executor/prompt-executor-clients/prompt-executor-openai-client-base" />
-            <option value="$PROJECT_DIR$/prompt/prompt-executor/prompt-executor-clients/prompt-executor-openrouter-client" />
-            <option value="$PROJECT_DIR$/prompt/prompt-executor/prompt-executor-llms" />
-            <option value="$PROJECT_DIR$/prompt/prompt-executor/prompt-executor-llms-all" />
-            <option value="$PROJECT_DIR$/prompt/prompt-executor/prompt-executor-model" />
-            <option value="$PROJECT_DIR$/prompt/prompt-llm" />
-            <option value="$PROJECT_DIR$/prompt/prompt-markdown" />
-            <option value="$PROJECT_DIR$/prompt/prompt-model" />
-            <option value="$PROJECT_DIR$/prompt/prompt-structure" />
-            <option value="$PROJECT_DIR$/prompt/prompt-tokenizer" />
-            <option value="$PROJECT_DIR$/prompt/prompt-xml" />
-            <option value="$PROJECT_DIR$/rag" />
-            <option value="$PROJECT_DIR$/rag/rag-base" />
-            <option value="$PROJECT_DIR$/rag/vector-storage" />
-            <option value="$PROJECT_DIR$/test-utils" />
-          </set>
-        </option>
-      </GradleProjectSettings>
-      <GradleProjectSettings>
-        <compositeConfiguration>
-          <compositeBuild compositeDefinitionSource="SCRIPT">
-            <builds>
-              <build path="$PROJECT_DIR$" name="koog">
-                <projects>
-                  <project path="$PROJECT_DIR$" />
-                  <project path="$PROJECT_DIR$/agents" />
-                  <project path="$PROJECT_DIR$/agents/agents-core" />
-                  <project path="$PROJECT_DIR$/agents/agents-ext" />
-                  <project path="$PROJECT_DIR$/agents/agents-features" />
-                  <project path="$PROJECT_DIR$/agents/agents-features/agents-features-debugger" />
-                  <project path="$PROJECT_DIR$/agents/agents-features/agents-features-event-handler" />
-                  <project path="$PROJECT_DIR$/agents/agents-features/agents-features-memory" />
-                  <project path="$PROJECT_DIR$/agents/agents-features/agents-features-opentelemetry" />
-                  <project path="$PROJECT_DIR$/agents/agents-features/agents-features-snapshot" />
-                  <project path="$PROJECT_DIR$/agents/agents-features/agents-features-sql" />
-                  <project path="$PROJECT_DIR$/agents/agents-features/agents-features-tokenizer" />
-                  <project path="$PROJECT_DIR$/agents/agents-features/agents-features-trace" />
-                  <project path="$PROJECT_DIR$/agents/agents-mcp" />
-                  <project path="$PROJECT_DIR$/agents/agents-mcp-server" />
-                  <project path="$PROJECT_DIR$/agents/agents-test" />
-                  <project path="$PROJECT_DIR$/agents/agents-tools" />
-                  <project path="$PROJECT_DIR$/agents/agents-utils" />
-                  <project path="$PROJECT_DIR$/docs" />
-                  <project path="$PROJECT_DIR$/embeddings" />
-                  <project path="$PROJECT_DIR$/embeddings/embeddings-base" />
-                  <project path="$PROJECT_DIR$/embeddings/embeddings-llm" />
-                  <project path="$PROJECT_DIR$/examples" />
-                  <project path="$PROJECT_DIR$/integration-tests" />
-                  <project path="$PROJECT_DIR$/koog-agents" />
-                  <project path="$PROJECT_DIR$/koog-ktor" />
-                  <project path="$PROJECT_DIR$/koog-spring-boot-starter" />
-                  <project path="$PROJECT_DIR$/prompt" />
-                  <project path="$PROJECT_DIR$/prompt/prompt-cache" />
-                  <project path="$PROJECT_DIR$/prompt/prompt-cache/prompt-cache-files" />
-                  <project path="$PROJECT_DIR$/prompt/prompt-cache/prompt-cache-model" />
-                  <project path="$PROJECT_DIR$/prompt/prompt-cache/prompt-cache-redis" />
-                  <project path="$PROJECT_DIR$/prompt/prompt-executor" />
-                  <project path="$PROJECT_DIR$/prompt/prompt-executor/prompt-executor-cached" />
-                  <project path="$PROJECT_DIR$/prompt/prompt-executor/prompt-executor-clients" />
-                  <project path="$PROJECT_DIR$/prompt/prompt-executor/prompt-executor-clients/prompt-executor-anthropic-client" />
-                  <project path="$PROJECT_DIR$/prompt/prompt-executor/prompt-executor-clients/prompt-executor-bedrock-client" />
-                  <project path="$PROJECT_DIR$/prompt/prompt-executor/prompt-executor-clients/prompt-executor-deepseek-client" />
-                  <project path="$PROJECT_DIR$/prompt/prompt-executor/prompt-executor-clients/prompt-executor-google-client" />
-                  <project path="$PROJECT_DIR$/prompt/prompt-executor/prompt-executor-clients/prompt-executor-ollama-client" />
-                  <project path="$PROJECT_DIR$/prompt/prompt-executor/prompt-executor-clients/prompt-executor-openai-client" />
-                  <project path="$PROJECT_DIR$/prompt/prompt-executor/prompt-executor-clients/prompt-executor-openai-client-base" />
-                  <project path="$PROJECT_DIR$/prompt/prompt-executor/prompt-executor-clients/prompt-executor-openrouter-client" />
-                  <project path="$PROJECT_DIR$/prompt/prompt-executor/prompt-executor-llms" />
-                  <project path="$PROJECT_DIR$/prompt/prompt-executor/prompt-executor-llms-all" />
-                  <project path="$PROJECT_DIR$/prompt/prompt-executor/prompt-executor-model" />
-                  <project path="$PROJECT_DIR$/prompt/prompt-llm" />
-                  <project path="$PROJECT_DIR$/prompt/prompt-markdown" />
-                  <project path="$PROJECT_DIR$/prompt/prompt-model" />
-                  <project path="$PROJECT_DIR$/prompt/prompt-structure" />
-                  <project path="$PROJECT_DIR$/prompt/prompt-tokenizer" />
-                  <project path="$PROJECT_DIR$/prompt/prompt-xml" />
-                  <project path="$PROJECT_DIR$/rag" />
-                  <project path="$PROJECT_DIR$/rag/rag-base" />
-                  <project path="$PROJECT_DIR$/rag/vector-storage" />
-                  <project path="$PROJECT_DIR$/test-utils" />
-                </projects>
-              </build>
-              <build path="$PROJECT_DIR$/buildSrc" name="buildSrc">
-                <projects>
-                  <project path="$PROJECT_DIR$/buildSrc" />
-                </projects>
-              </build>
-            </builds>
-          </compositeBuild>
-        </compositeConfiguration>
-        <option name="externalProjectPath" value="$PROJECT_DIR$/examples/composite-build-demo" />
-        <option name="gradleJvm" value="#JAVA_HOME" />
-        <option name="modules">
-          <set>
-            <option value="$PROJECT_DIR$" />
-            <option value="$PROJECT_DIR$/agents" />
-            <option value="$PROJECT_DIR$/agents/agents-core" />
-            <option value="$PROJECT_DIR$/agents/agents-ext" />
-            <option value="$PROJECT_DIR$/agents/agents-features" />
-            <option value="$PROJECT_DIR$/agents/agents-features/agents-features-debugger" />
-            <option value="$PROJECT_DIR$/agents/agents-features/agents-features-event-handler" />
-            <option value="$PROJECT_DIR$/agents/agents-features/agents-features-memory" />
-            <option value="$PROJECT_DIR$/agents/agents-features/agents-features-opentelemetry" />
-            <option value="$PROJECT_DIR$/agents/agents-features/agents-features-snapshot" />
-            <option value="$PROJECT_DIR$/agents/agents-features/agents-features-sql" />
-            <option value="$PROJECT_DIR$/agents/agents-features/agents-features-tokenizer" />
-            <option value="$PROJECT_DIR$/agents/agents-features/agents-features-trace" />
-            <option value="$PROJECT_DIR$/agents/agents-mcp" />
-            <option value="$PROJECT_DIR$/agents/agents-mcp-server" />
-            <option value="$PROJECT_DIR$/agents/agents-test" />
-            <option value="$PROJECT_DIR$/agents/agents-tools" />
-            <option value="$PROJECT_DIR$/agents/agents-utils" />
-            <option value="$PROJECT_DIR$/buildSrc" />
-            <option value="$PROJECT_DIR$/docs" />
-            <option value="$PROJECT_DIR$/embeddings" />
-            <option value="$PROJECT_DIR$/embeddings/embeddings-base" />
-            <option value="$PROJECT_DIR$/embeddings/embeddings-llm" />
-            <option value="$PROJECT_DIR$/examples" />
             <option value="$PROJECT_DIR$/examples/composite-build-demo" />
+            <option value="$PROJECT_DIR$/examples/composite-build-demo/buildSrc" />
             <option value="$PROJECT_DIR$/integration-tests" />
             <option value="$PROJECT_DIR$/koog-agents" />
             <option value="$PROJECT_DIR$/koog-ktor" />

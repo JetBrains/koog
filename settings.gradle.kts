@@ -70,3 +70,5 @@ include(":docs")
 
 include(":test-utils")
 include(":utils")
+
+includeBuild("./examples/composite-build-demo")

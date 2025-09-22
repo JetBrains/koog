@@ -1,0 +1,15 @@
+[versions]
+kotlin = "2.2.20"
+kotlinx-serialization = "1.8.1"
+logback = "1.5.13"
+oshai-logging = "7.0.7"
+
+[libraries]
+koog-agents = { module = "ai.koog:koog-agents" } # from composite build
+kotlin-bom = { module = "org.jetbrains.kotlin:kotlin-bom", version.ref = "kotlin" }
+logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
+oshai-kotlin-logging = { module = "io.github.oshai:kotlin-logging", version.ref = "oshai-logging" }
+
+[plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
