@@ -1,4 +1,4 @@
-rootProject.name = "composite-build-demo"
+rootProject.name = "simple-examples"
 
 pluginManagement {
     repositories {

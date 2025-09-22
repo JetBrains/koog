@@ -14,9 +14,9 @@ enum class RequestType { Transfer, Analytics }
 @Serializable
 @LLMDescription("The bank request that was classified by the agent.")
 data class ClassifiedBankRequest(
-    @LLMDescription("Type of request: Transfer or Analytics")
+    @property:LLMDescription("Type of request: Transfer or Analytics")
     val requestType: RequestType,
-    @LLMDescription("Actual request to be performed by the banking application")
+    @property:LLMDescription("Actual request to be performed by the banking application")
     val userRequest: String
 ) : SerializableSubgraphResult<ClassifiedBankRequest> {
     override fun getSerializer() = serializer()

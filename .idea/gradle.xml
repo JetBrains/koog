@@ -12,14 +12,14 @@
                   <project path="$PROJECT_DIR$/buildSrc" />
                 </projects>
               </build>
-              <build path="$PROJECT_DIR$/examples/composite-build-demo" name="composite-build-demo">
+              <build path="$PROJECT_DIR$/examples/simple-examples" name="simple-examples">
                 <projects>
-                  <project path="$PROJECT_DIR$/examples/composite-build-demo" />
+                  <project path="$PROJECT_DIR$/examples/simple-examples" />
                 </projects>
               </build>
-              <build path="$PROJECT_DIR$/examples/composite-build-demo/buildSrc" name="buildSrc">
+              <build path="$PROJECT_DIR$/examples/simple-examples/buildSrc" name="buildSrc">
                 <projects>
-                  <project path="$PROJECT_DIR$/examples/composite-build-demo/buildSrc" />
+                  <project path="$PROJECT_DIR$/examples/simple-examples/buildSrc" />
                 </projects>
               </build>
             </builds>
@@ -53,8 +53,8 @@
             <option value="$PROJECT_DIR$/embeddings/embeddings-base" />
             <option value="$PROJECT_DIR$/embeddings/embeddings-llm" />
             <option value="$PROJECT_DIR$/examples" />
-            <option value="$PROJECT_DIR$/examples/composite-build-demo" />
-            <option value="$PROJECT_DIR$/examples/composite-build-demo/buildSrc" />
+            <option value="$PROJECT_DIR$/examples/simple-examples" />
+            <option value="$PROJECT_DIR$/examples/simple-examples/buildSrc" />
             <option value="$PROJECT_DIR$/integration-tests" />
             <option value="$PROJECT_DIR$/koog-agents" />
             <option value="$PROJECT_DIR$/koog-ktor" />

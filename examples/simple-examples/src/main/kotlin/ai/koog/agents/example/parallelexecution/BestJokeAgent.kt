@@ -24,9 +24,9 @@ import kotlinx.serialization.Serializable
 @Serializable
 @LLMDescription("The result of the best joke selection")
 data class JokeWinner(
-    @param:LLMDescription("Index of the winning joke from 0 to 2")
+    @property:LLMDescription("Index of the winning joke from 0 to 2")
     val index: Int,
-    @param:LLMDescription("The winning joke text")
+    @property:LLMDescription("The winning joke text")
     val jokeText: String
 )
 

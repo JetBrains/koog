@@ -24,6 +24,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.URLBuilder
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNamingStrategy
@@ -33,6 +34,7 @@ import kotlinx.serialization.json.JsonNamingStrategy
 */
 
 //region JSON instance
+@OptIn(ExperimentalSerializationApi::class)
 private val json =
     Json {
         ignoreUnknownKeys = true
