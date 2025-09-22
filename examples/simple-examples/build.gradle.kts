@@ -108,3 +108,4 @@ registerRunExampleTask("runExampleJokesWithModeration", "ai.koog.agents.example.
 registerRunExampleTask("runExampleFilePersistentAgent", "ai.koog.agents.example.snapshot.FilePersistentAgentExampleKt")
 registerRunExampleTask("runExampleSQLPersistentAgent", "ai.koog.agents.example.snapshot.sql.SQLPersistentAgentExample")
 registerRunExampleTask("runExampleWebSearchAgent", "ai.koog.agents.example.websearch.WebSearchAgentKt")
+registerRunExampleTask("runExampleStreamingWithTools", "ai.koog.agents.example.streaming.StreamingAgentWithToolsKt")
