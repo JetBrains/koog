@@ -81,7 +81,7 @@ class AIAgentNodeBuilderTransformTest {
                 input
             }.transform { "$it $it" }
 
-            val helloNode by node<String, String>("doubleNode") { input ->
+            val helloNode by node<String, String>("helloNode") { input ->
                 "Hello, $input!"
             }
 

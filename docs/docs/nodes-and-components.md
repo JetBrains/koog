@@ -325,6 +325,78 @@ edge(executeMultipleTools forwardTo sendMultipleToolResultsToLLM)
 ```
 <!--- KNIT example-nodes-and-component-09.kt -->
 
+## Node output transformation
+
+The framework provides the `transform` extension function that allows you to create transformed versions of nodes 
+that apply transformations to their output. This is useful when you need to convert the output of a node 
+to a different type or format while preserving the original node's functionality.
+
+### transform
+
+The `transform` function creates a new `AIAgentNodeDelegate` that wraps the original node and applies a transformation function to its output.
+
+<!--- INCLUDE
+/**
+-->
+<!--- SUFFIX
+**/
+-->
+```kotlin
+inline fun <reified T> AIAgentNodeDelegate<Input, Output>.transform(
+    noinline transformation: suspend (Output) -> T
+): AIAgentNodeDelegate<Input, T>
+```
+<!--- KNIT example-nodes-and-component-10.kt -->
+
+#### Custom node transformation
+
+Transform the output of a custom node to a different data type:
+
+<!--- INCLUDE
+import ai.koog.agents.core.dsl.builder.forwardTo
+import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.extension.nodeDoNothing
+
+val strategy = strategy<String, Int>("strategy_name") {
+-->
+<!--- SUFFIX
+}
+-->
+```kotlin
+val textNode by nodeDoNothing<String>("textNode").transform<Int> { text ->
+    text.split(" ").filter { it.isNotBlank() }.size
+}
+
+edge(nodeStart forwardTo textNode)
+edge(textNode forwardTo nodeFinish)
+```
+<!--- KNIT example-nodes-and-component-11.kt -->
+
+#### Built-in node transformation
+
+Transform the output of built-in nodes like `nodeLLMRequest`:
+
+<!--- INCLUDE
+import ai.koog.agents.core.dsl.builder.forwardTo
+import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.extension.nodeLLMRequest
+
+val strategy = strategy<String, Int>("strategy_name") {
+-->
+<!--- SUFFIX
+}
+-->
+```kotlin
+val lengthNode by nodeLLMRequest("llmRequest").transform<Int> { assistantMessage ->
+    assistantMessage.content.length
+}
+
+edge(nodeStart forwardTo lengthNode)
+edge(lengthNode forwardTo nodeFinish)
+```
+<!--- KNIT example-nodes-and-component-12.kt -->
+
+
 ## Predefined subgraphs
 
 The framework provides predefined subgraphs that encapsulate commonly used patterns and workflows. These subgraphs simplify the development of complex agent strategies by handling the creation of base nodes and edges automatically.
@@ -377,7 +449,7 @@ val processQuery by subgraphWithTask<String>(
     """
 }
 ```
-<!--- KNIT example-nodes-and-component-10.kt -->
+<!--- KNIT example-nodes-and-component-13.kt -->
 
 ### subgraphWithVerification
 
@@ -424,7 +496,7 @@ val verifyCode by subgraphWithVerification<String>(
     """
 }
 ```
-<!--- KNIT example-nodes-and-component-11.kt -->
+<!--- KNIT example-nodes-and-component-14.kt -->
 
 ## Predefined strategies and common strategy patterns
 
@@ -462,7 +534,7 @@ public fun singleRunStrategy(): AIAgentGraphStrategy<String, String> = strategy(
     edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCall { true })
 }
 ```
-<!--- KNIT example-nodes-and-component-12.kt -->
+<!--- KNIT example-nodes-and-component-15.kt -->
 
 ### Tool-based strategy
 
@@ -516,7 +588,7 @@ fun toolBasedStrategy(name: String, toolRegistry: ToolRegistry): AIAgentGraphStr
     }
 }
 ```
-<!--- KNIT example-nodes-and-component-13.kt -->
+<!--- KNIT example-nodes-and-component-16.kt -->
 
 ### Streaming data strategy
 
@@ -556,4 +628,4 @@ val agentStrategy = strategy<String, List<Book>>("library-assistant") {
     edge(getMdOutput forwardTo nodeFinish)
 }
 ```
-<!--- KNIT example-nodes-and-component-14.kt -->
+<!--- KNIT example-nodes-and-component-17.kt -->
