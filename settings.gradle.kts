@@ -75,4 +75,3 @@ include(":utils")
  Main Koog project (this one) build does not depend on them in any way.
  */
 includeBuild("./examples/simple-examples")
-includeBuild("./examples/demo-compose-app")
