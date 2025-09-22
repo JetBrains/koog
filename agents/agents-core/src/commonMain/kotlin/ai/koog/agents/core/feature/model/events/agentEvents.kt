@@ -16,10 +16,10 @@ import kotlinx.serialization.Serializable
  * @property timestamp The timestamp of the event, in milliseconds since the Unix epoch.
  */
 @Serializable
-public data class AIAgentStartedEvent(
+public data class AgentStartingEvent(
     val agentId: String,
     val runId: String,
-    override val eventId: String = AIAgentStartedEvent::class.simpleName!!,
+    override val eventId: String = AgentStartingEvent::class.simpleName!!,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent()
 
@@ -37,11 +37,11 @@ public data class AIAgentStartedEvent(
  * @property timestamp The timestamp of the event, in milliseconds since the Unix epoch.
  */
 @Serializable
-public data class AIAgentFinishedEvent(
+public data class AgentCompletedEvent(
     val agentId: String,
     val runId: String,
     val result: String?,
-    override val eventId: String = AIAgentFinishedEvent::class.simpleName!!,
+    override val eventId: String = AgentCompletedEvent::class.simpleName!!,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent()
 
@@ -51,7 +51,7 @@ public data class AIAgentFinishedEvent(
  * This event is used to capture error information during the execution of an AI agent
  * strategy, including details of the strategy and the encountered error.
  *
- * @constructor Creates an instance of [AIAgentRunErrorEvent].
+ * @constructor Creates an instance of [AgentExecutionFailedEvent].
  * @property agentId The unique identifier of the AI agent;
  * @property runId The unique identifier of the AI agen run;
  * @property error The [AIAgentError] instance encapsulating details about the encountered error,
@@ -60,11 +60,11 @@ public data class AIAgentFinishedEvent(
  * @property timestamp The timestamp of the event, in milliseconds since the Unix epoch.
  */
 @Serializable
-public data class AIAgentRunErrorEvent(
+public data class AgentExecutionFailedEvent(
     val agentId: String,
     val runId: String,
     val error: AIAgentError,
-    override val eventId: String = AIAgentRunErrorEvent::class.simpleName!!,
+    override val eventId: String = AgentExecutionFailedEvent::class.simpleName!!,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent()
 
@@ -77,8 +77,8 @@ public data class AIAgentRunErrorEvent(
  * @property timestamp The timestamp of the event, in milliseconds since the Unix epoch.
  */
 @Serializable
-public data class AIAgentBeforeCloseEvent(
+public data class AgentClosingEvent(
     val agentId: String,
-    override val eventId: String = AIAgentBeforeCloseEvent::class.simpleName!!,
+    override val eventId: String = AgentClosingEvent::class.simpleName!!,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent()

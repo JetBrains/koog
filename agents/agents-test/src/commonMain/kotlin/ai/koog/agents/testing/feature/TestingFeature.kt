@@ -966,11 +966,11 @@ public class Testing {
 
                 var agent: AIAgent<*, *>? = null
 
-                pipeline.interceptBeforeAgentStarted(interceptContext) { eventContext ->
+                pipeline.interceptAgentStarting(interceptContext) { eventContext ->
                     agent = eventContext.agent
                 }
 
-                pipeline.interceptStrategyStarted(interceptContext) { eventContext ->
+                pipeline.interceptStrategyStarting(interceptContext) { eventContext ->
                     val agentToUse = agent as GraphAIAgent<*, *>
                     val strategyGraph = eventContext.strategy as AIAgentGraphStrategy<*, *>
 

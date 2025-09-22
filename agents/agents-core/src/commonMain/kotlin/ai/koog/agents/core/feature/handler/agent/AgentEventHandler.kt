@@ -1,4 +1,4 @@
-package ai.koog.agents.core.feature.handler
+package ai.koog.agents.core.feature.handler.agent
 
 import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.context.AIAgentContext
@@ -12,15 +12,7 @@ import ai.koog.agents.core.environment.AIAgentEnvironment
  * @param TFeature The type of feature
  * @property feature The feature instance
  */
-public class AgentHandler<TFeature : Any>(public val feature: TFeature) {
-
-    /**
-     * Configurable transformer used to manipulate or modify an instance of AgentEnvironment.
-     * Allows customization of the environment during agent creation or updates by applying
-     * the provided transformation logic.
-     */
-    public var environmentTransformer: AgentEnvironmentTransformer<TFeature> =
-        AgentEnvironmentTransformer { _, it -> it }
+public class AgentEventHandler<TFeature : Any>(public val feature: TFeature) {
 
     /**
      * A handler invoked before an agent is started. This can be used to perform custom logic
@@ -29,8 +21,8 @@ public class AgentHandler<TFeature : Any>(public val feature: TFeature) {
      * The handler is triggered with the context of the agent start process.
      * It is intended to allow for feature-specific setup or preparation.
      */
-    public var beforeAgentStartedHandler: BeforeAgentStartedHandler<TFeature> =
-        BeforeAgentStartedHandler { _ -> }
+    public var agentStartingHandler: AgentStartingHandler<TFeature> =
+        AgentStartingHandler { _ -> }
 
     /**
      * Defines a handler invoked when an agent execution is completed.
@@ -41,15 +33,15 @@ public class AgentHandler<TFeature : Any>(public val feature: TFeature) {
      * providing a suspendable function that takes the strategy name and an
      * optional result of the execution.
      */
-    public var agentFinishedHandler: AgentFinishedHandler =
-        AgentFinishedHandler { _ -> }
+    public var agentCompletedHandler: AgentCompletedHandler =
+        AgentCompletedHandler { _ -> }
 
     /**
      * A handler invoked when an error occurs during an agent's execution.
      * This handler allows custom logic to be executed in response to execution errors.
      */
-    public var agentRunErrorHandler: AgentRunErrorHandler =
-        AgentRunErrorHandler { _ -> }
+    public var agentExecutionFailedHandler: AgentExecutionFailedHandler =
+        AgentExecutionFailedHandler { _ -> }
 
     /**
      * A handler that is triggered before an agent is closed.
@@ -61,8 +53,16 @@ public class AgentHandler<TFeature : Any>(public val feature: TFeature) {
      * Use this handler to implement custom logic, resource cleanup, or other operations that should occur
      * before the agent is terminated or closed.
      */
-    public var agentBeforeCloseHandler: AgentBeforeCloseHandler =
-        AgentBeforeCloseHandler { _ -> }
+    public var agentClosingHandler: AgentClosingHandler =
+        AgentClosingHandler { _ -> }
+
+    /**
+     * Configurable transformer used to manipulate or modify an instance of AgentEnvironment.
+     * Allows customization of the environment during agent creation or updates by applying
+     * the provided transformation logic.
+     */
+    public var agentEnvironmentTransformingHandler: AgentEnvironmentTransformingHandler<TFeature> =
+        AgentEnvironmentTransformingHandler { _, environment -> environment }
 
     /**
      * Transforms the provided AgentEnvironment using the configured environment transformer.
@@ -70,10 +70,11 @@ public class AgentHandler<TFeature : Any>(public val feature: TFeature) {
      * @param environment The AgentEnvironment to be transformed
      */
     public suspend fun transformEnvironment(
-        context: AgentTransformEnvironmentContext<TFeature>,
+        context: AgentEnvironmentTransformingContext<TFeature>,
         environment: AIAgentEnvironment
     ): AIAgentEnvironment =
-        environmentTransformer.transform(context, environment)
+        agentEnvironmentTransformingHandler.transform(context, environment)
+
 
     /**
      * Transforms the provided AgentEnvironment using the configured environment transformer.
@@ -82,10 +83,10 @@ public class AgentHandler<TFeature : Any>(public val feature: TFeature) {
      */
     @Suppress("UNCHECKED_CAST")
     internal suspend fun transformEnvironmentUnsafe(
-        context: AgentTransformEnvironmentContext<*>,
+        context: AgentEnvironmentTransformingContext<*>,
         environment: AIAgentEnvironment
     ) =
-        transformEnvironment(context as AgentTransformEnvironmentContext<TFeature>, environment)
+        transformEnvironment(context as AgentEnvironmentTransformingContext<TFeature>, environment)
 
     /**
      * Handles the logic to be executed before an agent starts.
@@ -93,8 +94,8 @@ public class AgentHandler<TFeature : Any>(public val feature: TFeature) {
      * @param context The context containing necessary information about the agent,
      *                strategy, and feature to be processed before the agent starts.
      */
-    public suspend fun handleBeforeAgentStarted(context: AgentStartContext<TFeature>) {
-        beforeAgentStartedHandler.handle(context)
+    public suspend fun handleAgentStarting(context: AgentStartingContext<TFeature>) {
+        agentStartingHandler.handle(context)
     }
 
     /**
@@ -106,8 +107,8 @@ public class AgentHandler<TFeature : Any>(public val feature: TFeature) {
      */
     @Suppress("UNCHECKED_CAST")
     @InternalAgentsApi
-    public suspend fun handleBeforeAgentStartedUnsafe(eventContext: AgentStartContext<*>) {
-        handleBeforeAgentStarted(eventContext as AgentStartContext<TFeature>)
+    public suspend fun handleAgentStartingUnsafe(eventContext: AgentStartingContext<*>) {
+        handleAgentStarting(eventContext as AgentStartingContext<TFeature>)
     }
 }
 
@@ -118,7 +119,8 @@ public class AgentHandler<TFeature : Any>(public val feature: TFeature) {
  *
  * @param TFeature The type of the feature associated with the agent.
  */
-public fun interface AgentEnvironmentTransformer<TFeature : Any> {
+public fun interface AgentEnvironmentTransformingHandler<TFeature : Any> {
+
     /**
      * Transforms the provided agent environment based on the given context.
      *
@@ -127,7 +129,7 @@ public fun interface AgentEnvironmentTransformer<TFeature : Any> {
      * @return The transformed agent environment
      */
     public suspend fun transform(
-        context: AgentTransformEnvironmentContext<TFeature>,
+        context: AgentEnvironmentTransformingContext<TFeature>,
         environment: AIAgentEnvironment
     ): AIAgentEnvironment
 }
@@ -138,6 +140,7 @@ public fun interface AgentEnvironmentTransformer<TFeature : Any> {
  * @param FeatureT The type of feature being handled
  */
 public fun interface AgentContextHandler<FeatureT : Any> {
+
     /**
      * Creates a feature instance for the given stage context.
      *
@@ -154,14 +157,15 @@ public fun interface AgentContextHandler<FeatureT : Any> {
  *
  * @param TFeature The type of the feature associated with the agent.
  */
-public fun interface BeforeAgentStartedHandler<TFeature : Any> {
+public fun interface AgentStartingHandler<TFeature : Any> {
+
     /**
      * Handles operations to be performed before an agent is started.
      * Provides access to the context containing information about the agent's strategy, feature, and related configurations.
      *
      * @param context The context that encapsulates the agent, its strategy, and the associated feature
      */
-    public suspend fun handle(context: AgentStartContext<TFeature>)
+    public suspend fun handle(context: AgentStartingContext<TFeature>)
 }
 
 /**
@@ -169,13 +173,14 @@ public fun interface BeforeAgentStartedHandler<TFeature : Any> {
  * This handler is executed when an agent has finished its work, and it provides the name
  * of the strategy that was executed along with an optional result.
  */
-public fun interface AgentFinishedHandler {
+public fun interface AgentCompletedHandler {
+
     /**
      * Handles the completion of an operation or process for the specified strategy.
      *
      * @param context The context containing information about the completed agent operation.
      */
-    public suspend fun handle(context: AgentFinishedContext)
+    public suspend fun handle(context: AgentCompletedContext)
 }
 
 /**
@@ -185,11 +190,12 @@ public fun interface AgentFinishedHandler {
  * strategy execution. It can be used to implement custom error-handling logic tailored to the
  * requirements of an agent or strategy.
  */
-public fun interface AgentRunErrorHandler {
+public fun interface AgentExecutionFailedHandler {
+
     /**
      * Handles an error that occurs during the execution of an agent's strategy.
      */
-    public suspend fun handle(eventContext: AgentRunErrorContext)
+    public suspend fun handle(eventContext: AgentExecutionFailedContext)
 }
 
 /**
@@ -206,6 +212,7 @@ public class AgentCreateContext<FeatureT>(
     public val agent: GraphAIAgent<*, *>,
     public val feature: FeatureT
 ) {
+
     /**
      * Executes a given block of code with the `AIAgentStrategy` instance of this context.
      *
@@ -224,9 +231,10 @@ public class AgentCreateContext<FeatureT>(
  * or any necessary pre-termination processes based on the context
  * provided through `AgentBeforeCloseHandlerContext`.
  *
- * @see AgentBeforeCloseContext
+ * @see AgentClosingContext
  */
-public fun interface AgentBeforeCloseHandler {
+public fun interface AgentClosingHandler {
+
     /**
      * Handles an event that occurs before an agent is closed, allowing for any necessary
      * pre-termination or cleanup operations to be executed.
@@ -234,5 +242,5 @@ public fun interface AgentBeforeCloseHandler {
      * @param eventContext The context of the agent that is about to be closed, containing
      *                     information such as the agent's identifier.
      */
-    public suspend fun handle(eventContext: AgentBeforeCloseContext)
+    public suspend fun handle(eventContext: AgentClosingContext)
 }

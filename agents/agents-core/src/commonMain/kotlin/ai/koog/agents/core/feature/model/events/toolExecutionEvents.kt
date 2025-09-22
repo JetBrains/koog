@@ -19,12 +19,12 @@ import kotlinx.serialization.json.JsonObject
  * @property timestamp The timestamp of the event, in milliseconds since the Unix epoch.
  */
 @Serializable
-public data class ToolCallEvent(
+public data class ToolExecutionStartingEvent(
     val runId: String,
     val toolCallId: String?,
     val toolName: String,
     val toolArgs: JsonObject,
-    override val eventId: String = ToolCallEvent::class.simpleName!!,
+    override val eventId: String = ToolExecutionStartingEvent::class.simpleName!!,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent()
 
@@ -41,13 +41,13 @@ public data class ToolCallEvent(
  * @property timestamp The timestamp of the event, in milliseconds since the Unix epoch.
  */
 @Serializable
-public data class ToolValidationErrorEvent(
+public data class ToolValidationFailedEvent(
     val runId: String,
     val toolCallId: String?,
     val toolName: String,
     val toolArgs: JsonObject,
     val error: String,
-    override val eventId: String = ToolValidationErrorEvent::class.simpleName!!,
+    override val eventId: String = ToolValidationFailedEvent::class.simpleName!!,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent()
 
@@ -65,13 +65,13 @@ public data class ToolValidationErrorEvent(
  * @property timestamp The timestamp of the event, in milliseconds since the Unix epoch.
  */
 @Serializable
-public data class ToolCallFailureEvent(
+public data class ToolExecutionFailedEvent(
     val runId: String,
     val toolCallId: String?,
     val toolName: String,
     val toolArgs: JsonObject,
     val error: AIAgentError,
-    override val eventId: String = ToolCallFailureEvent::class.simpleName!!,
+    override val eventId: String = ToolExecutionFailedEvent::class.simpleName!!,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent()
 
@@ -89,12 +89,12 @@ public data class ToolCallFailureEvent(
  * @property timestamp The timestamp of the event, in milliseconds since the Unix epoch.
  */
 @Serializable
-public data class ToolCallResultEvent(
+public data class ToolExecutionCompletedEvent(
     val runId: String,
     val toolCallId: String?,
     val toolName: String,
     val toolArgs: JsonObject,
     val result: String?,
-    override val eventId: String = ToolCallResultEvent::class.simpleName!!,
+    override val eventId: String = ToolExecutionCompletedEvent::class.simpleName!!,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent()

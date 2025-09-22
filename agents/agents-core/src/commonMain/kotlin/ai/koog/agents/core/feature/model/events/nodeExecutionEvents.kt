@@ -21,11 +21,11 @@ import kotlinx.serialization.Serializable
  * @property timestamp The timestamp of the event, in milliseconds since the Unix epoch.
  */
 @Serializable
-public data class AIAgentNodeExecutionStartEvent(
+public data class NodeExecutionStartingEvent(
     val runId: String,
     val nodeName: String,
     val input: String,
-    override val eventId: String = AIAgentNodeExecutionStartEvent::class.simpleName!!,
+    override val eventId: String = NodeExecutionStartingEvent::class.simpleName!!,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent()
 
@@ -43,12 +43,12 @@ public data class AIAgentNodeExecutionStartEvent(
  * @property timestamp The timestamp of the event, in milliseconds since the Unix epoch.
  */
 @Serializable
-public data class AIAgentNodeExecutionEndEvent(
+public data class NodeExecutionCompletedEvent(
     val runId: String,
     val nodeName: String,
     val input: String,
     val output: String,
-    override val eventId: String = AIAgentNodeExecutionEndEvent::class.simpleName!!,
+    override val eventId: String = NodeExecutionCompletedEvent::class.simpleName!!,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent()
 
@@ -71,10 +71,10 @@ public data class AIAgentNodeExecutionEndEvent(
  * @property timestamp The timestamp of the event, in milliseconds since the Unix epoch.
  */
 @Serializable
-public data class AIAgentNodeExecutionErrorEvent(
+public data class NodeExecutionFailedEvent(
     val runId: String,
     val nodeName: String,
     val error: AIAgentError,
-    override val eventId: String = AIAgentNodeExecutionErrorEvent::class.simpleName!!,
+    override val eventId: String = NodeExecutionFailedEvent::class.simpleName!!,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent()

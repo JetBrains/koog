@@ -12,7 +12,7 @@ import ai.koog.agents.core.dsl.extension.nodeDoNothing
 import ai.koog.agents.core.dsl.extension.nodeExecuteTool
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.onToolCall
-import ai.koog.agents.core.feature.handler.AgentEventType
+import ai.koog.agents.core.feature.handler.AgentLifecycleEventType
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
@@ -356,7 +356,7 @@ class AIAgentPipelineTest {
         createAgent(strategy = strategy) {
             install(TestFeature) {
                 setEventFilter { eventContext ->
-                    eventContext.eventType !is AgentEventType.AfterLLMCall
+                    eventContext.eventType !is AgentLifecycleEventType.LLMCallCompleted
                 }
                 events = interceptedEvents
             }

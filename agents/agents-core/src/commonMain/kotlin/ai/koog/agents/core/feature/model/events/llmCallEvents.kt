@@ -21,12 +21,12 @@ import kotlinx.serialization.Serializable
  * @property timestamp The timestamp of the event, in milliseconds since the Unix epoch.
  */
 @Serializable
-public data class BeforeLLMCallEvent(
+public data class LLMCallStartingEvent(
     val runId: String,
     val prompt: Prompt,
     val model: String,
     val tools: List<String>,
-    override val eventId: String = BeforeLLMCallEvent::class.simpleName!!,
+    override val eventId: String = LLMCallStartingEvent::class.simpleName!!,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent()
 
@@ -44,12 +44,12 @@ public data class BeforeLLMCallEvent(
  * @property timestamp The timestamp of the event, in milliseconds since the Unix epoch.
  */
 @Serializable
-public data class AfterLLMCallEvent(
+public data class LLMCallCompletedEvent(
     val runId: String,
     val prompt: Prompt,
     val model: String,
     val responses: List<Message.Response>,
     val moderationResponse: ModerationResult? = null,
-    override val eventId: String = AfterLLMCallEvent::class.simpleName!!,
+    override val eventId: String = LLMCallCompletedEvent::class.simpleName!!,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent()

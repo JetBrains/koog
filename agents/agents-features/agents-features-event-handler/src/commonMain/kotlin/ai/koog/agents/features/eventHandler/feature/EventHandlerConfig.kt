@@ -1,25 +1,25 @@
 package ai.koog.agents.features.eventHandler.feature
 
 import ai.koog.agents.core.feature.config.FeatureConfig
-import ai.koog.agents.core.feature.handler.AfterLLMCallContext
-import ai.koog.agents.core.feature.handler.AfterStreamContext
-import ai.koog.agents.core.feature.handler.AgentBeforeCloseContext
-import ai.koog.agents.core.feature.handler.AgentFinishedContext
-import ai.koog.agents.core.feature.handler.AgentRunErrorContext
-import ai.koog.agents.core.feature.handler.AgentStartContext
-import ai.koog.agents.core.feature.handler.BeforeLLMCallContext
-import ai.koog.agents.core.feature.handler.BeforeStreamContext
-import ai.koog.agents.core.feature.handler.NodeAfterExecuteContext
-import ai.koog.agents.core.feature.handler.NodeBeforeExecuteContext
-import ai.koog.agents.core.feature.handler.NodeExecutionErrorContext
-import ai.koog.agents.core.feature.handler.StrategyFinishContext
-import ai.koog.agents.core.feature.handler.StrategyStartContext
-import ai.koog.agents.core.feature.handler.StreamErrorContext
-import ai.koog.agents.core.feature.handler.StreamFrameContext
-import ai.koog.agents.core.feature.handler.ToolCallContext
-import ai.koog.agents.core.feature.handler.ToolCallFailureContext
-import ai.koog.agents.core.feature.handler.ToolCallResultContext
-import ai.koog.agents.core.feature.handler.ToolValidationErrorContext
+import ai.koog.agents.core.feature.handler.llm.LLMCallCompletedContext
+import ai.koog.agents.core.feature.handler.streaming.LLMStreamingCompletedContext
+import ai.koog.agents.core.feature.handler.agent.AgentClosingContext
+import ai.koog.agents.core.feature.handler.agent.AgentCompletedContext
+import ai.koog.agents.core.feature.handler.agent.AgentExecutionFailedContext
+import ai.koog.agents.core.feature.handler.agent.AgentStartingContext
+import ai.koog.agents.core.feature.handler.llm.LLMCallStartingContext
+import ai.koog.agents.core.feature.handler.streaming.LLMStreamingStartingContext
+import ai.koog.agents.core.feature.handler.node.NodeExecutionCompletedContext
+import ai.koog.agents.core.feature.handler.node.NodeExecutionStartingContext
+import ai.koog.agents.core.feature.handler.node.NodeExecutionFailedContext
+import ai.koog.agents.core.feature.handler.strategy.StrategyCompletedContext
+import ai.koog.agents.core.feature.handler.strategy.StrategyStartingContext
+import ai.koog.agents.core.feature.handler.streaming.LLMStreamingFailedContext
+import ai.koog.agents.core.feature.handler.streaming.LLMStreamingFrameReceivedContext
+import ai.koog.agents.core.feature.handler.tool.ToolExecutionStartingContext
+import ai.koog.agents.core.feature.handler.tool.ToolExecutionFailedContext
+import ai.koog.agents.core.feature.handler.tool.ToolExecutionCompletedContext
+import ai.koog.agents.core.feature.handler.tool.ToolValidationFailedContext
 
 /**
  * Configuration class for the EventHandler feature.
@@ -48,63 +48,63 @@ public class EventHandlerConfig : FeatureConfig() {
 
     //region Agent Handlers
 
-    private var _onBeforeAgentStarted: suspend (eventHandler: AgentStartContext<EventHandler>) -> Unit = { _ -> }
+    private var _onBeforeAgentStarted: suspend (eventHandler: AgentStartingContext<EventHandler>) -> Unit = { _ -> }
 
-    private var _onAgentFinished: suspend (eventHandler: AgentFinishedContext) -> Unit = { _ -> }
+    private var _onAgentFinished: suspend (eventHandler: AgentCompletedContext) -> Unit = { _ -> }
 
-    private var _onAgentRunError: suspend (eventHandler: AgentRunErrorContext) -> Unit = { _ -> }
+    private var _onAgentRunError: suspend (eventHandler: AgentExecutionFailedContext) -> Unit = { _ -> }
 
-    private var _onAgentBeforeClose: suspend (eventHandler: AgentBeforeCloseContext) -> Unit = { _ -> }
+    private var _onAgentBeforeClose: suspend (eventHandler: AgentClosingContext) -> Unit = { _ -> }
 
     //endregion Agent Handlers
 
     //region Strategy Handlers
 
-    private var _onStrategyStarted: suspend (eventHandler: StrategyStartContext<EventHandler>) -> Unit = { _ -> }
+    private var _onStrategyStarted: suspend (eventHandler: StrategyStartingContext<EventHandler>) -> Unit = { _ -> }
 
-    private var _onStrategyFinished: suspend (eventHandler: StrategyFinishContext<EventHandler>) -> Unit = { _ -> }
+    private var _onStrategyFinished: suspend (eventHandler: StrategyCompletedContext<EventHandler>) -> Unit = { _ -> }
 
     //endregion Strategy Handlers
 
     //region Node Handlers
 
-    private var _onBeforeNode: suspend (eventHandler: NodeBeforeExecuteContext) -> Unit = { _ -> }
+    private var _onBeforeNode: suspend (eventHandler: NodeExecutionStartingContext) -> Unit = { _ -> }
 
-    private var _onAfterNode: suspend (eventHandler: NodeAfterExecuteContext) -> Unit = { _ -> }
+    private var _onAfterNode: suspend (eventHandler: NodeExecutionCompletedContext) -> Unit = { _ -> }
 
-    private var _onNodeExecutionError: suspend (eventHandler: NodeExecutionErrorContext) -> Unit = { _ -> }
+    private var _onNodeExecutionError: suspend (eventHandler: NodeExecutionFailedContext) -> Unit = { _ -> }
 
     //endregion Node Handlers
 
     //region LLM Call Handlers
 
-    private var _onBeforeLLMCall: suspend (eventHandler: BeforeLLMCallContext) -> Unit = { _ -> }
+    private var _onBeforeLLMCall: suspend (eventHandler: LLMCallStartingContext) -> Unit = { _ -> }
 
-    private var _onAfterLLMCall: suspend (eventHandler: AfterLLMCallContext) -> Unit = { _ -> }
+    private var _onAfterLLMCall: suspend (eventHandler: LLMCallCompletedContext) -> Unit = { _ -> }
 
     //endregion LLM Call Handlers
 
     //region Tool Call Handlers
 
-    private var _onToolCall: suspend (eventHandler: ToolCallContext) -> Unit = { _ -> }
+    private var _onToolCall: suspend (eventHandler: ToolExecutionStartingContext) -> Unit = { _ -> }
 
-    private var _onToolValidationError: suspend (eventHandler: ToolValidationErrorContext) -> Unit = { _ -> }
+    private var _onToolValidationError: suspend (eventHandler: ToolValidationFailedContext) -> Unit = { _ -> }
 
-    private var _onToolCallFailure: suspend (eventHandler: ToolCallFailureContext) -> Unit = { _ -> }
+    private var _onToolCallFailure: suspend (eventHandler: ToolExecutionFailedContext) -> Unit = { _ -> }
 
-    private var _onToolCallResult: suspend (eventHandler: ToolCallResultContext) -> Unit = { _ -> }
+    private var _onToolCallResult: suspend (eventHandler: ToolExecutionCompletedContext) -> Unit = { _ -> }
 
     //endregion Tool Call Handlers
 
     //region Stream Handlers
 
-    private var _onBeforeStream: suspend (eventHandler: BeforeStreamContext) -> Unit = { _ -> }
+    private var _onBeforeStream: suspend (eventHandler: LLMStreamingStartingContext) -> Unit = { _ -> }
 
-    private var _onStreamFrame: suspend (eventHandler: StreamFrameContext) -> Unit = { _ -> }
+    private var _onStreamFrame: suspend (eventHandler: LLMStreamingFrameReceivedContext) -> Unit = { _ -> }
 
-    private var _onStreamError: suspend (eventHandler: StreamErrorContext) -> Unit = { _ -> }
+    private var _onStreamError: suspend (eventHandler: LLMStreamingFailedContext) -> Unit = { _ -> }
 
-    private var _onAfterStream: suspend (eventHandler: AfterStreamContext) -> Unit = { _ -> }
+    private var _onAfterStream: suspend (eventHandler: LLMStreamingCompletedContext) -> Unit = { _ -> }
 
     //endregion Stream Handlers
 
@@ -113,7 +113,7 @@ public class EventHandlerConfig : FeatureConfig() {
     /**
      * Append handler called when an agent is started.
      */
-    public fun onBeforeAgentStarted(handler: suspend (eventContext: AgentStartContext<*>) -> Unit) {
+    public fun onBeforeAgentStarted(handler: suspend (eventContext: AgentStartingContext<*>) -> Unit) {
         val originalHandler = this._onBeforeAgentStarted
         this._onBeforeAgentStarted = { eventContext ->
             originalHandler(eventContext)
@@ -124,7 +124,7 @@ public class EventHandlerConfig : FeatureConfig() {
     /**
      * Append handler called when an agent finishes execution.
      */
-    public fun onAgentFinished(handler: suspend (eventContext: AgentFinishedContext) -> Unit) {
+    public fun onAgentFinished(handler: suspend (eventContext: AgentCompletedContext) -> Unit) {
         val originalHandler = this._onAgentFinished
         this._onAgentFinished = { eventContext ->
             originalHandler(eventContext)
@@ -135,7 +135,7 @@ public class EventHandlerConfig : FeatureConfig() {
     /**
      * Append handler called when an error occurs during agent execution.
      */
-    public fun onAgentRunError(handler: suspend (eventContext: AgentRunErrorContext) -> Unit) {
+    public fun onAgentRunError(handler: suspend (eventContext: AgentExecutionFailedContext) -> Unit) {
         val originalHandler = this._onAgentRunError
         this._onAgentRunError = { eventContext ->
             originalHandler(eventContext)
@@ -147,7 +147,7 @@ public class EventHandlerConfig : FeatureConfig() {
      * Appends a handler called before an agent is closed. This allows for additional behavior
      * to be executed prior to the agent being closed.
      */
-    public fun onAgentBeforeClose(handler: suspend (eventContext: AgentBeforeCloseContext) -> Unit) {
+    public fun onAgentBeforeClose(handler: suspend (eventContext: AgentClosingContext) -> Unit) {
         val originalHandler = this._onAgentBeforeClose
         this._onAgentBeforeClose = { eventContext ->
             originalHandler(eventContext)
@@ -162,7 +162,7 @@ public class EventHandlerConfig : FeatureConfig() {
     /**
      * Append handler called when a strategy starts execution.
      */
-    public fun onStrategyStarted(handler: suspend (eventContext: StrategyStartContext<EventHandler>) -> Unit) {
+    public fun onStrategyStarted(handler: suspend (eventContext: StrategyStartingContext<EventHandler>) -> Unit) {
         val originalHandler = this._onStrategyStarted
         this._onStrategyStarted = { eventContext ->
             originalHandler(eventContext)
@@ -173,7 +173,7 @@ public class EventHandlerConfig : FeatureConfig() {
     /**
      * Append handler called when a strategy finishes execution.
      */
-    public fun onStrategyFinished(handler: suspend (eventContext: StrategyFinishContext<EventHandler>) -> Unit) {
+    public fun onStrategyFinished(handler: suspend (eventContext: StrategyCompletedContext<EventHandler>) -> Unit) {
         val originalHandler = this._onStrategyFinished
         this._onStrategyFinished = { eventContext ->
             originalHandler(eventContext)
@@ -188,7 +188,7 @@ public class EventHandlerConfig : FeatureConfig() {
     /**
      * Append handler called before a node in the agent's execution graph is processed.
      */
-    public fun onBeforeNode(handler: suspend (eventContext: NodeBeforeExecuteContext) -> Unit) {
+    public fun onBeforeNode(handler: suspend (eventContext: NodeExecutionStartingContext) -> Unit) {
         val originalHandler = this._onBeforeNode
         this._onBeforeNode = { eventContext ->
             originalHandler(eventContext)
@@ -199,7 +199,7 @@ public class EventHandlerConfig : FeatureConfig() {
     /**
      * Append handler called after a node in the agent's execution graph has been processed.
      */
-    public fun onAfterNode(handler: suspend (eventContext: NodeAfterExecuteContext) -> Unit) {
+    public fun onAfterNode(handler: suspend (eventContext: NodeExecutionCompletedContext) -> Unit) {
         val originalHandler = this._onAfterNode
         this._onAfterNode = { eventContext ->
             originalHandler(eventContext)
@@ -210,7 +210,7 @@ public class EventHandlerConfig : FeatureConfig() {
     /**
      * Append handler called when an error occurs during the execution of a node.
      */
-    public fun onNodeExecutionError(handler: suspend (eventContext: NodeExecutionErrorContext) -> Unit) {
+    public fun onNodeExecutionError(handler: suspend (eventContext: NodeExecutionFailedContext) -> Unit) {
         val originalHandler = this._onNodeExecutionError
         this._onNodeExecutionError = { eventContext ->
             originalHandler(eventContext)
@@ -225,7 +225,7 @@ public class EventHandlerConfig : FeatureConfig() {
     /**
      * Append handler called before a call is made to the language model.
      */
-    public fun onBeforeLLMCall(handler: suspend (eventContext: BeforeLLMCallContext) -> Unit) {
+    public fun onBeforeLLMCall(handler: suspend (eventContext: LLMCallStartingContext) -> Unit) {
         val originalHandler = this._onBeforeLLMCall
         this._onBeforeLLMCall = { eventContext ->
             originalHandler(eventContext)
@@ -236,7 +236,7 @@ public class EventHandlerConfig : FeatureConfig() {
     /**
      * Append handler called after a response is received from the language model.
      */
-    public fun onAfterLLMCall(handler: suspend (eventContext: AfterLLMCallContext) -> Unit) {
+    public fun onAfterLLMCall(handler: suspend (eventContext: LLMCallCompletedContext) -> Unit) {
         val originalHandler = this._onAfterLLMCall
         this._onAfterLLMCall = { eventContext ->
             originalHandler(eventContext)
@@ -251,7 +251,7 @@ public class EventHandlerConfig : FeatureConfig() {
     /**
      * Append handler called when a tool is about to be called.
      */
-    public fun onToolCall(handler: suspend (eventContext: ToolCallContext) -> Unit) {
+    public fun onToolCall(handler: suspend (eventContext: ToolExecutionStartingContext) -> Unit) {
         val originalHandler = this._onToolCall
         this._onToolCall = { eventContext ->
             originalHandler(eventContext)
@@ -262,7 +262,7 @@ public class EventHandlerConfig : FeatureConfig() {
     /**
      * Append handler called when a validation error occurs during a tool call.
      */
-    public fun onToolValidationError(handler: suspend (eventContext: ToolValidationErrorContext) -> Unit) {
+    public fun onToolValidationError(handler: suspend (eventContext: ToolValidationFailedContext) -> Unit) {
         val originalHandler = this._onToolValidationError
         this._onToolValidationError = { eventContext ->
             originalHandler(eventContext)
@@ -273,7 +273,7 @@ public class EventHandlerConfig : FeatureConfig() {
     /**
      * Append handler called when a tool call fails with an exception.
      */
-    public fun onToolCallFailure(handler: suspend (eventContext: ToolCallFailureContext) -> Unit) {
+    public fun onToolCallFailure(handler: suspend (eventContext: ToolExecutionFailedContext) -> Unit) {
         val originalHandler = this._onToolCallFailure
         this._onToolCallFailure = { eventContext ->
             originalHandler(eventContext)
@@ -284,7 +284,7 @@ public class EventHandlerConfig : FeatureConfig() {
     /**
      * Append handler called when a tool call completes successfully.
      */
-    public fun onToolCallResult(handler: suspend (eventContext: ToolCallResultContext) -> Unit) {
+    public fun onToolCallResult(handler: suspend (eventContext: ToolExecutionCompletedContext) -> Unit) {
         val originalHandler = this._onToolCallResult
         this._onToolCallResult = { eventContext ->
             originalHandler(eventContext)
@@ -302,7 +302,7 @@ public class EventHandlerConfig : FeatureConfig() {
      * This handler is called immediately before starting a streaming operation,
      * allowing you to perform preprocessing, validation, or logging of the streaming request.
      *
-     * @param handler The handler function that receives a [BeforeStreamContext] containing
+     * @param handler The handler function that receives a [LLMStreamingStartingContext] containing
      *                the run ID, prompt, model, and available tools for the streaming session.
      *
      * Example:
@@ -313,7 +313,7 @@ public class EventHandlerConfig : FeatureConfig() {
      * }
      * ```
      */
-    public fun onBeforeStream(handler: suspend (eventContext: BeforeStreamContext) -> Unit) {
+    public fun onBeforeStream(handler: suspend (eventContext: LLMStreamingStartingContext) -> Unit) {
         val originalHandler = this._onBeforeStream
         this._onBeforeStream = { eventContext ->
             originalHandler(eventContext)
@@ -327,7 +327,7 @@ public class EventHandlerConfig : FeatureConfig() {
      * This handler is called for each stream frame as it arrives from the language model,
      * enabling real-time processing, monitoring, or aggregation of streaming content.
      *
-     * @param handler The handler function that receives a [StreamFrameContext] containing
+     * @param handler The handler function that receives a [LLMStreamingFrameReceivedContext] containing
      *                the run ID and the stream frame with partial response data.
      *
      * Example:
@@ -340,7 +340,7 @@ public class EventHandlerConfig : FeatureConfig() {
      * }
      * ```
      */
-    public fun onStreamFrame(handler: suspend (eventContext: StreamFrameContext) -> Unit) {
+    public fun onStreamFrame(handler: suspend (eventContext: LLMStreamingFrameReceivedContext) -> Unit) {
         val originalHandler = this._onStreamFrame
         this._onStreamFrame = { eventContext ->
             originalHandler(eventContext)
@@ -354,7 +354,7 @@ public class EventHandlerConfig : FeatureConfig() {
      * This handler is called when an error occurs during streaming,
      * allowing you to perform error handling or logging.
      *
-     * @param handler The handler function that receives a [StreamErrorContext] containing
+     * @param handler The handler function that receives a [LLMStreamingFailedContext] containing
      *                the run ID, prompt, model, and tools that were used for the streaming session.
      *
      * Example:
@@ -364,7 +364,7 @@ public class EventHandlerConfig : FeatureConfig() {
      * }
      * ```
      */
-    public fun onStreamError(handler: suspend (eventContext: StreamErrorContext) -> Unit) {
+    public fun onStreamError(handler: suspend (eventContext: LLMStreamingFailedContext) -> Unit) {
         val originalHandler = this._onStreamError
         this._onStreamError = { eventContext ->
             originalHandler(eventContext)
@@ -378,7 +378,7 @@ public class EventHandlerConfig : FeatureConfig() {
      * This handler is called when the streaming operation finishes,
      * allowing you to perform post-processing, cleanup, or final logging operations.
      *
-     * @param handler The handler function that receives an [AfterStreamContext] containing
+     * @param handler The handler function that receives an [LLMStreamingCompletedContext] containing
      *                the run ID, prompt, model, and tools that were used for the streaming session.
      *
      * Example:
@@ -389,7 +389,7 @@ public class EventHandlerConfig : FeatureConfig() {
      * }
      * ```
      */
-    public fun onAfterStream(handler: suspend (eventContext: AfterStreamContext) -> Unit) {
+    public fun onAfterStream(handler: suspend (eventContext: LLMStreamingCompletedContext) -> Unit) {
         val originalHandler = this._onAfterStream
         this._onAfterStream = { eventContext ->
             originalHandler(eventContext)
@@ -404,28 +404,28 @@ public class EventHandlerConfig : FeatureConfig() {
     /**
      * Invoke handlers for an event when an agent is started.
      */
-    internal suspend fun invokeOnBeforeAgentStarted(eventContext: AgentStartContext<EventHandler>) {
+    internal suspend fun invokeOnBeforeAgentStarted(eventContext: AgentStartingContext<EventHandler>) {
         _onBeforeAgentStarted.invoke(eventContext)
     }
 
     /**
      * Invoke handlers for after a node in the agent's execution graph has been processed event.
      */
-    internal suspend fun invokeOnAgentFinished(eventContext: AgentFinishedContext) {
+    internal suspend fun invokeOnAgentFinished(eventContext: AgentCompletedContext) {
         _onAgentFinished.invoke(eventContext)
     }
 
     /**
      * Invoke handlers for an event when an error occurs during agent execution.
      */
-    internal suspend fun invokeOnAgentRunError(eventContext: AgentRunErrorContext) {
+    internal suspend fun invokeOnAgentRunError(eventContext: AgentExecutionFailedContext) {
         _onAgentRunError.invoke(eventContext)
     }
 
     /**
      * Invokes the handler associated with the event that occurs before an agent is closed.
      */
-    internal suspend fun invokeOnAgentBeforeClose(eventContext: AgentBeforeCloseContext) {
+    internal suspend fun invokeOnAgentBeforeClose(eventContext: AgentClosingContext) {
         _onAgentBeforeClose.invoke(eventContext)
     }
 
@@ -436,14 +436,14 @@ public class EventHandlerConfig : FeatureConfig() {
     /**
      * Invoke handlers for an event when strategy starts execution.
      */
-    internal suspend fun invokeOnStrategyStarted(eventContext: StrategyStartContext<EventHandler>) {
+    internal suspend fun invokeOnStrategyStarted(eventContext: StrategyStartingContext<EventHandler>) {
         _onStrategyStarted.invoke(eventContext)
     }
 
     /**
      * Invoke handlers for an event when a strategy finishes execution.
      */
-    internal suspend fun invokeOnStrategyFinished(eventContext: StrategyFinishContext<EventHandler>) {
+    internal suspend fun invokeOnStrategyFinished(eventContext: StrategyCompletedContext<EventHandler>) {
         _onStrategyFinished.invoke(eventContext)
     }
 
@@ -454,21 +454,21 @@ public class EventHandlerConfig : FeatureConfig() {
     /**
      * Invoke handlers for before a node in the agent's execution graph is processed event.
      */
-    internal suspend fun invokeOnBeforeNode(eventContext: NodeBeforeExecuteContext) {
+    internal suspend fun invokeOnBeforeNode(eventContext: NodeExecutionStartingContext) {
         _onBeforeNode.invoke(eventContext)
     }
 
     /**
      * Invoke handlers for after a node in the agent's execution graph has been processed event.
      */
-    internal suspend fun invokeOnAfterNode(eventContext: NodeAfterExecuteContext) {
+    internal suspend fun invokeOnAfterNode(eventContext: NodeExecutionCompletedContext) {
         _onAfterNode.invoke(eventContext)
     }
 
     /**
      * Invokes the error handling logic for a node execution error event.
      */
-    internal suspend fun invokeOnNodeExecutionError(interceptContext: NodeExecutionErrorContext) {
+    internal suspend fun invokeOnNodeExecutionError(interceptContext: NodeExecutionFailedContext) {
         _onNodeExecutionError.invoke(interceptContext)
     }
 
@@ -479,14 +479,14 @@ public class EventHandlerConfig : FeatureConfig() {
     /**
      * Invoke handlers for before a call is made to the language model event.
      */
-    internal suspend fun invokeOnBeforeLLMCall(eventContext: BeforeLLMCallContext) {
+    internal suspend fun invokeOnBeforeLLMCall(eventContext: LLMCallStartingContext) {
         _onBeforeLLMCall.invoke(eventContext)
     }
 
     /**
      * Invoke handlers for after a response is received from the language model event.
      */
-    internal suspend fun invokeOnAfterLLMCall(eventContext: AfterLLMCallContext) {
+    internal suspend fun invokeOnAfterLLMCall(eventContext: LLMCallCompletedContext) {
         _onAfterLLMCall.invoke(eventContext)
     }
 
@@ -497,28 +497,28 @@ public class EventHandlerConfig : FeatureConfig() {
     /**
      * Invoke handlers for the tool call event.
      */
-    internal suspend fun invokeOnToolCall(eventContext: ToolCallContext) {
+    internal suspend fun invokeOnToolCall(eventContext: ToolExecutionStartingContext) {
         _onToolCall.invoke(eventContext)
     }
 
     /**
      * Invoke handlers for a validation error during a tool call event.
      */
-    internal suspend fun invokeOnToolValidationError(eventContext: ToolValidationErrorContext) {
+    internal suspend fun invokeOnToolValidationError(eventContext: ToolValidationFailedContext) {
         _onToolValidationError.invoke(eventContext)
     }
 
     /**
      * Invoke handlers for a tool call failure with an exception event.
      */
-    internal suspend fun invokeOnToolCallFailure(eventContext: ToolCallFailureContext) {
+    internal suspend fun invokeOnToolCallFailure(eventContext: ToolExecutionFailedContext) {
         _onToolCallFailure.invoke(eventContext)
     }
 
     /**
      * Invoke handlers for an event when a tool call is completed successfully.
      */
-    internal suspend fun invokeOnToolCallResult(eventContext: ToolCallResultContext) {
+    internal suspend fun invokeOnToolCallResult(eventContext: ToolExecutionCompletedContext) {
         _onToolCallResult.invoke(eventContext)
     }
 
@@ -531,7 +531,7 @@ public class EventHandlerConfig : FeatureConfig() {
      *
      * @param eventContext The context containing information about the streaming session about to begin
      */
-    internal suspend fun invokeOnBeforeStream(eventContext: BeforeStreamContext) {
+    internal suspend fun invokeOnBeforeStream(eventContext: LLMStreamingStartingContext) {
         _onBeforeStream.invoke(eventContext)
     }
 
@@ -540,7 +540,7 @@ public class EventHandlerConfig : FeatureConfig() {
      *
      * @param eventContext The context containing the stream frame data
      */
-    internal suspend fun invokeOnStreamFrame(eventContext: StreamFrameContext) {
+    internal suspend fun invokeOnStreamFrame(eventContext: LLMStreamingFrameReceivedContext) {
         _onStreamFrame.invoke(eventContext)
     }
 
@@ -549,7 +549,7 @@ public class EventHandlerConfig : FeatureConfig() {
      *
      * @param eventContext The context containing information about the streaming session that experienced the error
      */
-    internal suspend fun invokeOnStreamError(eventContext: StreamErrorContext) {
+    internal suspend fun invokeOnStreamError(eventContext: LLMStreamingFailedContext) {
         _onStreamError.invoke(eventContext)
     }
 
@@ -558,7 +558,7 @@ public class EventHandlerConfig : FeatureConfig() {
      *
      * @param eventContext The context containing information about the completed streaming session
      */
-    internal suspend fun invokeOnAfterStream(eventContext: AfterStreamContext) {
+    internal suspend fun invokeOnAfterStream(eventContext: LLMStreamingCompletedContext) {
         _onAfterStream.invoke(eventContext)
     }
 

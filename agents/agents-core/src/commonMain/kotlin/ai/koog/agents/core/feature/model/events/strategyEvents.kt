@@ -16,7 +16,7 @@ import kotlinx.serialization.Serializable
  * @property strategyName The name of the strategy being started.
  * @property eventId A string representing the event type.
  */
-public abstract class AIAgentStrategyStartEvent : DefinedFeatureEvent() {
+public abstract class StrategyStartingEvent : DefinedFeatureEvent() {
 
     /**
      * A unique identifier associated with a specific run or execution instance of
@@ -35,8 +35,6 @@ public abstract class AIAgentStrategyStartEvent : DefinedFeatureEvent() {
      * analysis of AI agent execution processes.
      */
     public abstract val strategyName: String
-
-    override val eventId: String = AIAgentStrategyStartEvent::class.simpleName!!
 }
 
 /**
@@ -55,15 +53,17 @@ public abstract class AIAgentStrategyStartEvent : DefinedFeatureEvent() {
  * @property strategyName The name of the graph-based strategy being executed.
  * @property graph The graph structure representing the strategy's execution workflow, encompassing nodes
  *                 and their directed relationships;
+ * @property eventId A string representing the event type;
  * @property timestamp The timestamp of the event, in milliseconds since the Unix epoch.
  */
 @Serializable
-public data class AIAgentGraphStrategyStartEvent(
+public data class GraphStrategyStartingEvent(
     override val runId: String,
     override val strategyName: String,
-    val graph: AIAgentEventGraph,
+    val graph: StrategyEventGraph,
+    override val eventId: String = GraphStrategyStartingEvent::class.simpleName!!,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
-) : AIAgentStrategyStartEvent()
+) : StrategyStartingEvent()
 
 /**
  * Represents an event triggered at the start of executing a functional strategy by an AI agent.
@@ -71,19 +71,21 @@ public data class AIAgentGraphStrategyStartEvent(
  * This event provides specific information about the initiation of a functional strategy,
  * including the unique identifier of the run and the strategy name. It is intended to
  * support monitoring, debugging, and tracking of functional strategy execution within
- * the lifecycle of an AI agent's processes. This class extends [AIAgentStrategyStartEvent],
+ * the lifecycle of an AI agent's processes. This class extends [StrategyStartingEvent],
  * inheriting shared properties and behavior for strategy execution events.
  *
  * @property runId A unique identifier representing the specific run or instance of the strategy execution;
  * @property strategyName The name of the functional-based strategy being executed;
+ * @property eventId A string representing the event type;
  * @property timestamp The timestamp of the event, in milliseconds since the Unix epoch.
  */
 @Serializable
-public data class AIAgentFunctionalStrategyStartEvent(
+public data class FunctionalStrategyStartingEvent(
     override val runId: String,
     override val strategyName: String,
+    override val eventId: String = FunctionalStrategyStartingEvent::class.simpleName!!,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
-) : AIAgentStrategyStartEvent()
+) : StrategyStartingEvent()
 
 /**
  * Event that represents the completion of an AI agent's strategy execution.
@@ -98,11 +100,11 @@ public data class AIAgentFunctionalStrategyStartEvent(
  * @property timestamp The timestamp of the event, in milliseconds since the Unix epoch.
  */
 @Serializable
-public data class AIAgentStrategyFinishedEvent(
+public data class StrategyCompletedEvent(
     val runId: String,
     val strategyName: String,
     val result: String?,
-    override val eventId: String = AIAgentStrategyFinishedEvent::class.simpleName!!,
+    override val eventId: String = StrategyCompletedEvent::class.simpleName!!,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent()
 
@@ -124,9 +126,9 @@ public data class AIAgentStrategyFinishedEvent(
  *                 flow between nodes in the graph.
  */
 @Serializable
-public data class AIAgentEventGraph(
-    val nodes: List<AIAgentEventGraphNode>,
-    val edges: List<AIAgentEventGraphEdge>
+public data class StrategyEventGraph(
+    val nodes: List<StrategyEventGraphNode>,
+    val edges: List<StrategyEventGraphEdge>
 )
 
 /**
@@ -140,7 +142,7 @@ public data class AIAgentEventGraph(
  * @property name The descriptive name of the node.
  */
 @Serializable
-public data class AIAgentEventGraphNode(
+public data class StrategyEventGraphNode(
     val id: String,
     val name: String
 )
@@ -156,9 +158,9 @@ public data class AIAgentEventGraphNode(
  * @property targetNode The unique identifier of the target node in the graph.
  */
 @Serializable
-public data class AIAgentEventGraphEdge(
-    val sourceNode: AIAgentEventGraphNode,
-    val targetNode: AIAgentEventGraphNode
+public data class StrategyEventGraphEdge(
+    val sourceNode: StrategyEventGraphNode,
+    val targetNode: StrategyEventGraphNode
 )
 
 /**
@@ -173,24 +175,24 @@ public data class AIAgentEventGraphEdge(
  *         in a graph format.
  */
 @InternalAgentsApi
-public fun <TInput, TOutput> AIAgentGraphStrategy<TInput, TOutput>.startNodeToGraph(): AIAgentEventGraph {
+public fun <TInput, TOutput> AIAgentGraphStrategy<TInput, TOutput>.startNodeToGraph(): StrategyEventGraph {
     val nodes = this.metadata.nodesMap.values
 
     // Filter out the strategy node as it is not relevant for strategy graph nodes
     val nodesWithoutStrategyNode = nodes.filter { node -> node.id != this.id }
 
-    val graphEdges = mutableListOf<AIAgentEventGraphEdge>()
-    val graphNodes = mutableListOf<AIAgentEventGraphNode>()
+    val graphEdges = mutableListOf<StrategyEventGraphEdge>()
+    val graphNodes = mutableListOf<StrategyEventGraphNode>()
 
-    val startGraphNode = AIAgentEventGraphNode(id = "__start__", name = "__start__")
-    val finishGraphNode = AIAgentEventGraphNode(id = "__finish__", name = "__finish__")
+    val startGraphNode = StrategyEventGraphNode(id = "__start__", name = "__start__")
+    val finishGraphNode = StrategyEventGraphNode(id = "__finish__", name = "__finish__")
 
     // Starting node
     graphNodes.add(startGraphNode)
 
     nodesWithoutStrategyNode.forEach { node ->
         // Node
-        val graphNode = AIAgentEventGraphNode(
+        val graphNode = StrategyEventGraphNode(
             id = node.id,
             name = node.name
         )
@@ -198,13 +200,13 @@ public fun <TInput, TOutput> AIAgentGraphStrategy<TInput, TOutput>.startNodeToGr
 
         // Edge
         node.edges.forEach { edge ->
-            val targetNode = AIAgentEventGraphNode(
+            val targetNode = StrategyEventGraphNode(
                 id = edge.toNode.id,
                 name = edge.toNode.name
             )
 
             graphEdges.add(
-                AIAgentEventGraphEdge(
+                StrategyEventGraphEdge(
                     sourceNode = graphNode,
                     targetNode = targetNode
                 )
@@ -218,11 +220,11 @@ public fun <TInput, TOutput> AIAgentGraphStrategy<TInput, TOutput>.startNodeToGr
     // Link initial node with start node
     graphEdges.add(
         index = 0,
-        element = AIAgentEventGraphEdge(startGraphNode, graphNodes[1]) // Ignore the initial start node
+        element = StrategyEventGraphEdge(startGraphNode, graphNodes[1]) // Ignore the initial start node
     )
 
     // Graph
-    val graph = AIAgentEventGraph(graphNodes, graphEdges)
+    val graph = StrategyEventGraph(graphNodes, graphEdges)
 
     return graph
 }

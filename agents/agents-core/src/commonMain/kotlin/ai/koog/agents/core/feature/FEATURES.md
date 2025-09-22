@@ -396,71 +396,69 @@ Features can intercept various points in the agent execution pipeline:
    }
    ```
 
-2. **Context Stage Feature Interception**: Customize how features are provided to stage contexts
+2. **Context Agent Feature Interception**: Customize how features are provided to agent contexts
    ```kotlin
-   pipeline.interceptContextStageFeature(MyFeature) { stageContext ->
-       // Inspect stage context and return a feature instance
-       MyFeature(customizedForStage = stageContext.stageName)
+   pipeline.interceptContextAgentFeature(MyFeature) { agentContext ->
+       // Inspect agent context and return a feature instance
+       MyFeature(customizedForStage = agentContext.stageName)
    }
    ```
 
-3. **Before Agent Started Interception**: Modify or enhance the agent during creation
+3. **Agent Starting Interception**: Execute code when an agent starts
    ```kotlin
-   pipeline.interceptBeforeAgentStarted(this, feature) {
-       readStages { stages ->
-           // Inspect agent stages
-       }
+   val interceptContext = InterceptContext(this, feature)
+   pipeline.interceptAgentStarting(interceptContext) { event ->
+       // Access agent, runId, context, or feature
+       // event.agent, event.runId, event.context, event.feature
    }
    ```
 
-4. **Strategy Started Interception**: Execute code when a strategy starts
+4. **Strategy Starting Interception**: Execute code when a strategy starts
    ```kotlin
-   pipeline.interceptStrategyStarted(this, feature) {
-       readStages { stages ->
-           // Inspect agent stages when strategy starts
-       }
+   pipeline.interceptStrategyStarting(interceptContext) { event ->
+       // Inspect agent or context when strategy starts
    }
    ```
 
 5. **Before Node Execution**: Execute code before a node runs
    ```kotlin
-   pipeline.interceptBeforeNode(this, feature) { node, context, input ->
-       logger.info("Node ${node.name} is about to execute with input: $input")
+   pipeline.interceptNodeExecutionStarting(interceptContext) { event ->
+       logger.info("Node ${event.node.name} is about to execute with input: ${event.input}")
    }
    ```
 
 6. **After Node Execution**: Execute code after a node completes
    ```kotlin
-   pipeline.interceptAfterNode(this, feature) { node, context, input, output ->
-       logger.info("Node ${node.name} executed with input: $input and produced output: $output")
+   pipeline.interceptNodeExecutionCompleted(interceptContext) { event ->
+       logger.info("Node ${event.node.name} executed with input: ${event.input} and produced output: ${event.output}")
    }
    ```
 
-7. **Before LLM Call**: Execute code before a call to the language model
+7. **LLM Call Starting**: Execute code before a call to the language model
    ```kotlin
-   pipeline.interceptBeforeLLMCall(this, feature) { prompt ->
-       logger.info("About to make LLM call with prompt: ${prompt.messages.last().content}")
+   pipeline.interceptLLMCallStarting(interceptContext) { eventContext ->
+       logger.info("About to make LLM call with prompt: ${eventContext.prompt.messages.last().content}")
    }
    ```
 
-8. **Before LLM Call With Tools**: Execute code before a call to the language model with tools
+8. **LLM Call Starting (with tools)**: Tools are available via the event context
    ```kotlin
-   pipeline.interceptBeforeLLMCallWithTools(this, feature) { prompt, tools ->
-       logger.info("About to make LLM call with ${tools.size} tools")
+   pipeline.interceptLLMCallStarting(interceptContext) { eventContext ->
+       logger.info("About to make LLM call with ${eventContext.tools.size} tools")
    }
    ```
 
-9. **After LLM Call**: Execute code after a call to the language model
+9. **LLM Call Completed**: Execute code after a call to the language model
    ```kotlin
-   pipeline.interceptAfterLLMCall(this, feature) { response ->
-       logger.info("Received LLM response: $response")
+   pipeline.interceptLLMCallCompleted(interceptContext) { eventContext ->
+       logger.info("Received LLM responses: ${eventContext.responses}")
    }
    ```
 
-10. **After LLM Call With Tools**: Execute code after a call to the language model with tools
+10. **LLM Call Completed (with tools)**: Access responses and tools via the event context
     ```kotlin
-    pipeline.interceptAfterLLMCallWithTools(this, feature) { response ->
-        logger.info("Received structured LLM response with role: ${response.role}")
+    pipeline.interceptLLMCallCompleted(interceptContext) { eventContext ->
+        logger.info("Received ${eventContext.responses.size} responses (tools used: ${eventContext.tools.size})")
     }
     ```
 
@@ -485,53 +483,47 @@ class LoggingFeature(val logger: Logger) {
         ) {
             val logging = LoggingFeature(LoggerFactory.getLogger(config.loggerName))
 
-            // Intercept agent started
-            pipeline.interceptBeforeAgentStarted(this, logging) {
-                readStages { stages ->
-                    stages.forEach { stage ->
-                        feature.logger.info("Stage ${stage.name} has ${stage.start.edges.size} edges")
-                    }
-                }
+            val interceptContext = InterceptContext(this, logging)
+
+            // Intercept agent starting
+            pipeline.interceptAgentStarting(interceptContext) { event ->
+                event.feature.logger.info("Agent starting: runId=${event.runId}")
             }
 
-            // Intercept strategy started
-            pipeline.interceptStrategyStarted(this, logging) {
-                readStages { stages ->
-                    stages.forEach { stage ->
-                        feature.logger.info("Strategy started with stage ${stage.name}")
-                    }
-                }
+            // Intercept strategy starting
+            pipeline.interceptStrategyStarting(interceptContext) { event ->
+                event.feature.logger.info("Strategy starting")
             }
 
             // Intercept before node execution
-            pipeline.interceptBeforeNode(this, logging) { node, context, input ->
-                logger.info("Node ${node.name} received input: $input")
+            pipeline.interceptNodeExecutionStarting(interceptContext) { eventContext ->
+                logger.info("Node ${eventContext.node.name} received input: ${eventContext.input}")
             }
 
             // Intercept after node execution
-            pipeline.interceptAfterNode(this, logging) { node, context, input, output ->
-                logger.info("Node ${node.name} with input: $input produced output: $output")
+            pipeline.interceptNodeExecutionCompleted(interceptContext) { eventContext ->
+                logger.info("Node ${eventContext.node.name} with input: ${eventContext.input} produced output: ${eventContext.output}")
             }
 
             // Intercept LLM calls
-            pipeline.interceptBeforeLLMCall(this, logging) { prompt ->
-                logger.info("Making LLM call with prompt: ${prompt.messages.lastOrNull()?.content?.take(100)}...")
+            pipeline.interceptLLMCallStarting(interceptContext) { eventContext ->
+                logger.info("Making LLM call with prompt: ${eventContext.prompt.messages.lastOrNull()?.content?.take(100)}...")
             }
 
-            pipeline.interceptAfterLLMCall(this, logging) { response ->
-                logger.info("Received LLM response: ${response.take(100)}...")
+            pipeline.interceptLLMCallCompleted(interceptContext) { eventContext ->
+                logger.info("Received LLM responses: ${eventContext.responses}")
             }
 
-            // Intercept LLM calls with tools
-            pipeline.interceptBeforeLLMCallWithTools(this, logging) { prompt, tools ->
-                logger.info("Making LLM call with ${tools.size} tools")
-                tools.forEach { tool ->
+            // Intercept LLM calls with tools (available via eventContext.tools)
+            pipeline.interceptLLMCallStarting(interceptContext) { eventContext ->
+                logger.info("Making LLM call with ${eventContext.tools.size} tools")
+                eventContext.tools.forEach { tool ->
                     logger.info("Tool available: ${tool.name}")
                 }
             }
 
-            pipeline.interceptAfterLLMCallWithTools(this, logging) { response ->
-                logger.info("Received structured LLM response with role: ${response.role}")
+            pipeline.interceptLLMCallCompleted(interceptContext) { eventContext ->
+                logger.info("Received ${eventContext.responses.size} response(s)")
             }
         }
     }
