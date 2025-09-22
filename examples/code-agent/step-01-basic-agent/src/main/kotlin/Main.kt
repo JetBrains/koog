@@ -21,7 +21,6 @@ val agent = AIAgent(
         Your goal is to deliver production-ready code changes that integrate seamlessly with the existing codebase and solve given task.
     """.trimIndent(),
     llmModel = OpenAIModels.Chat.GPT5,
-    temperature = 0.0,
     toolRegistry = ToolRegistry {
         tool(ListDirectoryTool(JVMFileSystemProvider.ReadOnly))
         tool(ReadFileTool(JVMFileSystemProvider.ReadOnly))
