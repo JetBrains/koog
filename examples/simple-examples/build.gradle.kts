@@ -38,6 +38,10 @@ dependencies {
     testImplementation(libs.mockk)
 }
 
+tasks.withType<Test> {
+    useJUnitPlatform()
+}
+
 val envs = credentialsResolver.resolve(
     layout.projectDirectory.file(provider { "env.properties" })
 )

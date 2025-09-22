@@ -1,4 +1,9 @@
-# Koog Demo App
+# Demo Compose App
+
+> **⚡ Composite Build Notice**: This project uses Gradle's composite build feature to depend on the local root Koog project, 
+> ensuring you always have the latest development version. This provides convenience and keeps everything in sync during development.
+> For production use, you can replace these composite build dependencies with exact published versions from public repositories.
+> Check [Composite Build Information](#-composite-build-information) below for more details.
 
 ## Overview
 This is a simple demo Kotlin Multiplatform app built with Compose Multiplatform that demonstrates the capabilities of Koog, a Kotlin AI agentic framework.
@@ -36,4 +41,31 @@ Run the desktop **hot reload** application: `./gradlew :app:hotRunJvm`
 ### iOS
 To run the application on iPhone device/simulator:
 - Open `iosApp/iosApp.xcproject` in Xcode and run standard configuration
-- Or use [Kotlin Multiplatform Mobile plugin](https://plugins.jetbrains.com/plugin/14936-kotlin-multiplatform-mobile) for Android Studio  
+- Or use [Kotlin Multiplatform Mobile plugin](https://plugins.jetbrains.com/plugin/14936-kotlin-multiplatform-mobile) for Android Studio
+
+
+## 🔄 Composite Build Information
+
+This project uses Gradle's composite build feature to include the root Koog project:
+
+```kotlin
+// settings.gradle.kts
+includeBuild("../../.") {
+    name = "koog"
+}
+```
+
+This means:
+- ✅ **Development**: Always uses the latest local Koog framework code
+- ✅ **Convenience**: No need to publish and update versions during development
+- ✅ **Sync**: Changes in the main framework are immediately available
+
+**For production use**, replace composite build dependencies in `build.gradle.kts` with published versions:
+
+```kotlin
+// Replace this composite build approach:
+implementation("ai.koog:koog-agents")
+
+// With specific published versions:
+implementation("ai.koog:koog-agents:VERSION")
+```
