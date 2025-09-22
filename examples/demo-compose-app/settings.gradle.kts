@@ -1,4 +1,4 @@
-rootProject.name = "koog-demo-compose-app"
+rootProject.name = "demo-compose-app"
 
 pluginManagement {
     repositories {

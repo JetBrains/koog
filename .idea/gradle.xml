@@ -12,7 +12,7 @@
                   <project path="$PROJECT_DIR$/buildSrc" />
                 </projects>
               </build>
-              <build path="$PROJECT_DIR$/examples/demo-compose-app" name="koog-demo-compose-app">
+              <build path="$PROJECT_DIR$/examples/demo-compose-app" name="demo-compose-app">
                 <projects>
                   <project path="$PROJECT_DIR$/examples/demo-compose-app" />
                   <project path="$PROJECT_DIR$/examples/demo-compose-app/app" />
