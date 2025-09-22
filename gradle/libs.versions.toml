@@ -1,5 +1,5 @@
 [versions]
-agp = "8.11.1"
+agp = "8.13.0"
 annotations = "26.0.2"
 assertj = "3.27.4"
 aws-sdk-kotlin = "1.5.16"
