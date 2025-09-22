@@ -3,11 +3,7 @@ name: Demo Compose App
 on:
   push:
     branches: [ "main", "develop" ]
-    paths:
-      - 'examples/demo-compose-app/**'
   pull_request:
-    paths:
-      - 'examples/demo-compose-app/**'
 
 env:
   JAVA_VERSION: 17
