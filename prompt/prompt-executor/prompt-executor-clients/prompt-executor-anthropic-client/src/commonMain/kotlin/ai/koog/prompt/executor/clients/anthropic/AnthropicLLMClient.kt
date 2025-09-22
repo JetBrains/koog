@@ -393,7 +393,7 @@ public open class AnthropicLLMClient(
 
                         val imageSource: ImageSource = when (val content = attachment.content) {
                             is AttachmentContent.URL -> ImageSource.Url(content.url)
-                            is AttachmentContent.Binary -> ImageSource.Base64(content.base64, attachment.mimeType)
+                            is AttachmentContent.Binary -> ImageSource.Base64(content.asBase64(), attachment.mimeType)
                             else -> throw IllegalArgumentException(
                                 "Unsupported image attachment content: ${content::class}"
                             )
@@ -409,7 +409,7 @@ public open class AnthropicLLMClient(
 
                         val documentSource: DocumentSource = when (val content = attachment.content) {
                             is AttachmentContent.URL -> DocumentSource.Url(content.url)
-                            is AttachmentContent.Binary -> DocumentSource.Base64(content.base64, attachment.mimeType)
+                            is AttachmentContent.Binary -> DocumentSource.Base64(content.asBase64(), attachment.mimeType)
                             is AttachmentContent.PlainText -> DocumentSource.PlainText(
                                 content.text,
                                 attachment.mimeType

@@ -1,5 +1,6 @@
 package ai.koog.prompt.executor.clients.google
 
+import ai.koog.utils.serializers.ByteArrayAsBase64Serializer
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -133,7 +134,8 @@ internal sealed interface GoogleData {
     @Serializable
     class Blob(
         val mimeType: String,
-        val data: String
+        @Serializable(with = ByteArrayAsBase64Serializer::class)
+        val data: ByteArray,
     ) : GoogleData
 
     @Serializable
