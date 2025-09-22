@@ -12,6 +12,12 @@
                   <project path="$PROJECT_DIR$/buildSrc" />
                 </projects>
               </build>
+              <build path="$PROJECT_DIR$/examples/demo-compose-app" name="koog-demo-compose-app">
+                <projects>
+                  <project path="$PROJECT_DIR$/examples/demo-compose-app" />
+                  <project path="$PROJECT_DIR$/examples/demo-compose-app/app" />
+                </projects>
+              </build>
               <build path="$PROJECT_DIR$/examples/simple-examples" name="simple-examples">
                 <projects>
                   <project path="$PROJECT_DIR$/examples/simple-examples" />
@@ -52,6 +58,8 @@
             <option value="$PROJECT_DIR$/embeddings" />
             <option value="$PROJECT_DIR$/embeddings/embeddings-base" />
             <option value="$PROJECT_DIR$/embeddings/embeddings-llm" />
+            <option value="$PROJECT_DIR$/examples/demo-compose-app" />
+            <option value="$PROJECT_DIR$/examples/demo-compose-app/app" />
             <option value="$PROJECT_DIR$/examples/simple-examples" />
             <option value="$PROJECT_DIR$/examples/simple-examples/buildSrc" />
             <option value="$PROJECT_DIR$/integration-tests" />
