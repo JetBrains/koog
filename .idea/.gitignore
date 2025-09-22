@@ -12,7 +12,6 @@
 /libraries
 # Local android preferences
 /androidTestResultsUserPreferences.xml
-/deploymentTargetSelector.xml
 # Other local configs
 /compiler.xml
 /misc.xml

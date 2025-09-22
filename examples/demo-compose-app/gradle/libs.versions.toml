@@ -7,6 +7,7 @@ hotReload = "1.0.0-beta07"
 jetbrains-lifecycle = "2.9.4"
 jetbrains-navigation = "2.9.0"
 koin-bom = "4.1.1"
+koog = "0.4.2"
 kotlin = "2.2.10"
 kotlinx-serialization = "1.9.0"
 ktor = "3.2.3"
@@ -29,6 +30,10 @@ kotlinx-coroutines-swing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-
 
 # DataStore
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
+
+# Koog
+koog-agents-core = { module = "ai.koog:agents-core", version.ref = "koog" }
+koog-prompt-executor-llms-all = { module = "ai.koog:prompt-executor-llms-all", version.ref = "koog" }
 
 # Ktor
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }

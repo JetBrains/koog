@@ -95,7 +95,6 @@
             <option value="$PROJECT_DIR$/rag/rag-base" />
             <option value="$PROJECT_DIR$/rag/vector-storage" />
             <option value="$PROJECT_DIR$/test-utils" />
-            <option value="$PROJECT_DIR$/utils" />
           </set>
         </option>
       </GradleProjectSettings>
