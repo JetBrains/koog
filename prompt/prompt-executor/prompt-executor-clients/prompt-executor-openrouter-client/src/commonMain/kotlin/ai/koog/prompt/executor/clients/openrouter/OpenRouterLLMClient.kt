@@ -104,7 +104,12 @@ public class OpenRouterLLMClient(
 
     override fun processProviderChatResponse(response: OpenRouterChatCompletionResponse): List<LLMChoice> {
         require(response.choices.isNotEmpty()) { "Empty choices in response" }
-        return response.choices.map { it.toMessageResponses(createMetaInfo(response.usage)) }
+        return response.choices.map {
+            it.message.toMessageResponses(
+                it.finishReason,
+                createMetaInfo(response.usage),
+            )
+        }
     }
 
     override fun decodeStreamingResponse(data: String): OpenRouterChatCompletionStreamResponse =
@@ -116,11 +121,11 @@ public class OpenRouterLLMClient(
     override suspend fun StreamFrameFlowBuilder.processStreamingChunk(chunk: OpenRouterChatCompletionStreamResponse) {
         chunk.choices.firstOrNull()?.let { choice ->
             choice.delta.content?.let { emitAppend(it) }
-            choice.delta.toolCalls?.forEach { openAIToolCall ->
-                val index = openAIToolCall.index
+            choice.delta.toolCalls?.forEachIndexed { index, openAIToolCall ->
+                val index = index
                 val id = openAIToolCall.id
-                val name = openAIToolCall.function?.name
-                val arguments = openAIToolCall.function?.arguments
+                val name = openAIToolCall.function.name
+                val arguments = openAIToolCall.function.arguments
                 upsertToolCall(index, id, name, arguments)
             }
             choice.finishReason?.let { emitEnd(it, createMetaInfo(chunk.usage)) }

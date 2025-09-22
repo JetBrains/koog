@@ -223,7 +223,12 @@ public open class OpenAILLMClient(
 
     override fun processProviderChatResponse(response: OpenAIChatCompletionResponse): List<LLMChoice> {
         require(response.choices.isNotEmpty()) { "Empty choices in response" }
-        return response.choices.map { it.toMessageResponses(createMetaInfo(response.usage)) }
+        return response.choices.map {
+            it.message.toMessageResponses(
+                it.finishReason,
+                createMetaInfo(response.usage),
+            )
+        }
     }
 
     override fun decodeStreamingResponse(data: String): OpenAIChatCompletionStreamResponse =
