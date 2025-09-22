@@ -11,7 +11,7 @@ dependencies {
     implementation(platform(libs.kotlin.bom))
 
     /*
-     Koog dependencies from composite build.
+     Current Koog dependencies from composite build.
      You can replace them with dependencies on the exact published version instead of composite build.
      */
     //noinspection UseTomlInstead

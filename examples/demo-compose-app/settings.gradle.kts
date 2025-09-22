@@ -42,3 +42,7 @@ plugins {
 }
 
 include(":app")
+
+includeBuild("../../.") {
+    name = "koog"
+}

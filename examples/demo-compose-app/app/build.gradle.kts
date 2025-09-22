@@ -34,6 +34,15 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
+            /*
+             Current Koog dependencies from composite build.
+             You can replace them with dependencies on the exact published version instead of composite build.
+             */
+            //noinspection UseTomlInstead
+            implementation("ai.koog:agents-core")
+            //noinspection UseTomlInstead
+            implementation("ai.koog:prompt-executor-llms-all")
+
             implementation(compose.animation)
             implementation(compose.animationGraphics)
             implementation(compose.components.resources)
@@ -47,8 +56,6 @@ kotlin {
             implementation(libs.jetbrains.lifecycle.viewmodel.compose)
             implementation(libs.jetbrains.navigation.compose)
             implementation(libs.koin.compose)
-            implementation(libs.koog.agents.core)
-            implementation(libs.koog.prompt.executor.llms.all)
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.serialization.core)
             implementation(libs.kotlinx.serialization.json)
