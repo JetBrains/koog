@@ -5,7 +5,6 @@ logback = "1.5.13"
 oshai-logging = "7.0.7"
 
 [libraries]
-koog-agents = { module = "ai.koog:koog-agents" } # from composite build
 kotlin-bom = { module = "org.jetbrains.kotlin:kotlin-bom", version.ref = "kotlin" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 oshai-kotlin-logging = { module = "io.github.oshai:kotlin-logging", version.ref = "oshai-logging" }

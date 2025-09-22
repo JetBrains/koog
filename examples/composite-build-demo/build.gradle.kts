@@ -10,7 +10,9 @@ application.mainClass.set("ai.koog.example.composite_build_demo.MainKt")
 dependencies {
     implementation(platform(libs.kotlin.bom))
 
-    implementation(libs.koog.agents)
+    // From composite build
+    //noinspection UseTomlInstead
+    implementation("ai.koog:koog-agents")
 }
 
 val envs = credentialsResolver.resolve(
