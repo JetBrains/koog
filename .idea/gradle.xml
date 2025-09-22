@@ -52,7 +52,6 @@
             <option value="$PROJECT_DIR$/embeddings" />
             <option value="$PROJECT_DIR$/embeddings/embeddings-base" />
             <option value="$PROJECT_DIR$/embeddings/embeddings-llm" />
-            <option value="$PROJECT_DIR$/examples" />
             <option value="$PROJECT_DIR$/examples/simple-examples" />
             <option value="$PROJECT_DIR$/examples/simple-examples/buildSrc" />
             <option value="$PROJECT_DIR$/integration-tests" />
