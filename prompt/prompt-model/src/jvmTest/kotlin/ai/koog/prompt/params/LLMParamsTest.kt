@@ -1,5 +1,7 @@
 package ai.koog.prompt.params
 
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import org.junit.jupiter.api.Test
@@ -7,6 +9,7 @@ import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
+import kotlin.collections.mapOf
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
@@ -247,5 +250,40 @@ class LLMParamsTest {
         assertEquals(nrOfChoices, result.numberOfChoices)
         assertEquals(DEFAULT_SPECULATION, result.speculation)
         assertEquals(TEST_USER, result.user)
+    }
+
+    @Test
+    fun testCopyWithNoChanges() {
+        val originalSchema = LLMParams.Schema.JSON.Basic(
+            VALID_SCHEMA_NAME,
+            STRING_JSON_SCHEMA
+        )
+        val originalToolChoice = LLMParams.ToolChoice.Auto
+
+        val original = LLMParams(
+            temperature = 1.5,
+            maxTokens = 100,
+            numberOfChoices = 3,
+            speculation = TEST_SPECULATION,
+            schema = originalSchema,
+            toolChoice = originalToolChoice,
+            user = TEST_USER,
+            includeThoughts = true,
+            thinkingBudget = 50,
+            additionalProperties = mapOf("foo" to JsonPrimitive("bar"))
+        )
+
+        val copied = original.copy()
+
+        assertEquals(original.temperature, copied.temperature)
+        assertEquals(original.maxTokens, copied.maxTokens)
+        assertEquals(original.numberOfChoices, copied.numberOfChoices)
+        assertEquals(original.speculation, copied.speculation)
+        assertEquals(original.schema, copied.schema)
+        assertEquals(original.toolChoice, copied.toolChoice)
+        assertEquals(original.user, copied.user)
+        assertEquals(original.includeThoughts, copied.includeThoughts)
+        assertEquals(original.thinkingBudget, copied.thinkingBudget)
+        assertEquals(original.additionalProperties, copied.additionalProperties)
     }
 }
