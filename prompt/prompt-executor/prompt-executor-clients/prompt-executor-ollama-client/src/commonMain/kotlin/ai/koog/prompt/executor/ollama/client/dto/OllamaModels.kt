@@ -1,6 +1,6 @@
 package ai.koog.prompt.executor.ollama.client.dto
 
-import ai.koog.prompt.executor.clients.serialization.AdditionalPropertiesSerializer
+import ai.koog.prompt.executor.clients.serialization.AdditionalPropertiesFlatteningSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
@@ -124,4 +124,4 @@ internal data class EmbeddingResponseDTO(
 )
 
 internal object OllamaChatRequestDTOSerializer :
-    AdditionalPropertiesSerializer<OllamaChatRequestDTO>(OllamaChatRequestDTO.serializer())
+    AdditionalPropertiesFlatteningSerializer<OllamaChatRequestDTO>(OllamaChatRequestDTO.serializer())

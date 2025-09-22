@@ -1,7 +1,7 @@
 package ai.koog.prompt.executor.clients.anthropic
 
 import ai.koog.prompt.executor.clients.InternalLLMClientApi
-import ai.koog.prompt.executor.clients.serialization.AdditionalPropertiesSerializer
+import ai.koog.prompt.executor.clients.serialization.AdditionalPropertiesFlatteningSerializer
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.EncodeDefault.Mode.ALWAYS
 import kotlinx.serialization.SerialName
@@ -483,4 +483,4 @@ public sealed interface AnthropicToolChoice {
 }
 
 internal object AnthropicMessageRequestSerializer :
-    AdditionalPropertiesSerializer<AnthropicMessageRequest>(AnthropicMessageRequest.serializer())
+    AdditionalPropertiesFlatteningSerializer<AnthropicMessageRequest>(AnthropicMessageRequest.serializer())

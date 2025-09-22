@@ -18,7 +18,7 @@ import kotlin.sequences.forEach
  *
  * @param knownProperties Set of known property names for the type
  */
-public abstract class AdditionalPropertiesSerializer<T>(tSerializer: KSerializer<T>) :
+public abstract class AdditionalPropertiesFlatteningSerializer<T>(tSerializer: KSerializer<T>) :
     JsonTransformingSerializer<T>(tSerializer) {
 
     private val additionalPropertiesField = "additionalProperties"

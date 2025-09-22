@@ -5,7 +5,7 @@ import ai.koog.prompt.executor.clients.openai.base.models.OpenAIBaseLLMResponse
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIChoiceLogProbs
 import ai.koog.prompt.executor.clients.openai.base.models.ReasoningEffort
 import ai.koog.prompt.executor.clients.openai.base.models.ServiceTier
-import ai.koog.prompt.executor.clients.serialization.AdditionalPropertiesSerializer
+import ai.koog.prompt.executor.clients.serialization.AdditionalPropertiesFlatteningSerializer
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -2342,4 +2342,4 @@ internal object OpenAIResponsesToolChoiceSerializer : KSerializer<OpenAIResponse
 }
 
 internal object OpenAIResponsesAPIRequestSerializer :
-    AdditionalPropertiesSerializer<OpenAIResponsesAPIRequest>(OpenAIResponsesAPIRequest.serializer())
+    AdditionalPropertiesFlatteningSerializer<OpenAIResponsesAPIRequest>(OpenAIResponsesAPIRequest.serializer())

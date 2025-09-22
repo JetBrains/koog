@@ -11,7 +11,7 @@ import ai.koog.prompt.executor.clients.openai.base.models.OpenAIStreamOptions
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAITool
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolChoice
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIUsage
-import ai.koog.prompt.executor.clients.serialization.AdditionalPropertiesSerializer
+import ai.koog.prompt.executor.clients.serialization.AdditionalPropertiesFlatteningSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
@@ -114,4 +114,4 @@ public class DeepSeekChatCompletionStreamResponse(
 ) : OpenAIBaseLLMStreamResponse
 
 internal object DeepSeekChatCompletionRequestSerializer :
-    AdditionalPropertiesSerializer<DeepSeekChatCompletionRequest>(DeepSeekChatCompletionRequest.serializer())
+    AdditionalPropertiesFlatteningSerializer<DeepSeekChatCompletionRequest>(DeepSeekChatCompletionRequest.serializer())

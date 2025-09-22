@@ -4,7 +4,7 @@ import ai.koog.prompt.executor.clients.google.GoogleFunctionCallingMode.ANY
 import ai.koog.prompt.executor.clients.google.GoogleFunctionCallingMode.AUTO
 import ai.koog.prompt.executor.clients.google.GoogleFunctionCallingMode.NONE
 import ai.koog.utils.serializers.ByteArrayAsBase64Serializer
-import ai.koog.prompt.executor.clients.serialization.AdditionalPropertiesSerializer
+import ai.koog.prompt.executor.clients.serialization.AdditionalPropertiesFlatteningSerializer
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -420,4 +420,4 @@ internal object GooglePartSerializer : JsonContentPolymorphicSerializer<GooglePa
 }
 
 internal object GoogleGenerationConfigSerializer :
-    AdditionalPropertiesSerializer<GoogleGenerationConfig>(GoogleGenerationConfig.serializer())
+    AdditionalPropertiesFlatteningSerializer<GoogleGenerationConfig>(GoogleGenerationConfig.serializer())

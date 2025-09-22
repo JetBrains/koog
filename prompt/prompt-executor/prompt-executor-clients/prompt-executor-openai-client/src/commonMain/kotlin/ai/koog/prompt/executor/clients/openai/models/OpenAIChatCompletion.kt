@@ -17,7 +17,7 @@ import ai.koog.prompt.executor.clients.openai.base.models.OpenAIUsage
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIWebSearchOptions
 import ai.koog.prompt.executor.clients.openai.base.models.ReasoningEffort
 import ai.koog.prompt.executor.clients.openai.base.models.ServiceTier
-import ai.koog.prompt.executor.clients.serialization.AdditionalPropertiesSerializer
+import ai.koog.prompt.executor.clients.serialization.AdditionalPropertiesFlatteningSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
@@ -279,4 +279,4 @@ public class OpenAIChatCompletionStreamResponse(
 ) : OpenAIBaseLLMStreamResponse
 
 internal object OpenAIChatCompletionRequestSerializer :
-    AdditionalPropertiesSerializer<OpenAIChatCompletionRequest>(OpenAIChatCompletionRequest.serializer())
+    AdditionalPropertiesFlatteningSerializer<OpenAIChatCompletionRequest>(OpenAIChatCompletionRequest.serializer())
