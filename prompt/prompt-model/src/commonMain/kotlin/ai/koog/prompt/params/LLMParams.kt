@@ -83,6 +83,7 @@ public open class LLMParams(
         user = user ?: default.user,
         includeThoughts = includeThoughts ?: default.includeThoughts,
         thinkingBudget = thinkingBudget ?: default.thinkingBudget,
+        additionalProperties = additionalProperties ?: default.additionalProperties,
     )
 
     /**
@@ -98,6 +99,7 @@ public open class LLMParams(
         user: String? = this.user,
         includeThoughts: Boolean? = this.includeThoughts,
         thinkingBudget: Int? = this.thinkingBudget,
+        additionalProperties: Map<String, JsonElement>? = this.additionalProperties,
     ): LLMParams = LLMParams(
         temperature = temperature,
         maxTokens = maxTokens,
@@ -108,6 +110,7 @@ public open class LLMParams(
         user = user,
         includeThoughts = includeThoughts,
         thinkingBudget = thinkingBudget,
+        additionalProperties = additionalProperties,
     )
 
     /**
@@ -139,6 +142,9 @@ public open class LLMParams(
     @Suppress("MissingKDocForPublicAPI")
     public operator fun component9(): Int? = thinkingBudget
 
+    @Suppress("MissingKDocForPublicAPI")
+    public operator fun component10(): Map<String, JsonElement>? = additionalProperties
+
     override fun equals(other: Any?): Boolean = when {
         this === other -> true
         other !is LLMParams -> false
@@ -151,7 +157,8 @@ public open class LLMParams(
                 toolChoice == other.toolChoice &&
                 user == other.user &&
                 includeThoughts == other.includeThoughts &&
-                thinkingBudget == other.thinkingBudget
+                thinkingBudget == other.thinkingBudget &&
+                additionalProperties == other.additionalProperties
     }
 
     override fun hashCode(): Int = listOf(
@@ -173,6 +180,7 @@ public open class LLMParams(
         append(", user=$user")
         append(", includeThoughts=$includeThoughts")
         append(", thinkingBudget=$thinkingBudget")
+        append(", additionalProperties=$additionalProperties")
         append(")")
     }
 
