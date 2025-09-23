@@ -7,6 +7,7 @@ import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.streaming.StreamFrame
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlin.test.Test
@@ -153,7 +154,7 @@ class BedrockMetaLlamaSerializationTest {
         """.trimIndent()
 
         val content = BedrockMetaLlamaSerialization.parseLlamaStreamChunk(chunkJson)
-        assertEquals("Hello, ", content)
+        assertEquals(listOf("Hello, ").map(StreamFrame::Append), content)
     }
 
     @Test
@@ -165,7 +166,7 @@ class BedrockMetaLlamaSerializationTest {
         """.trimIndent()
 
         val content = BedrockMetaLlamaSerialization.parseLlamaStreamChunk(chunkJson)
-        assertEquals("", content)
+        assertEquals(listOf("").map(StreamFrame::Append), content)
     }
 
     @Test
@@ -177,6 +178,6 @@ class BedrockMetaLlamaSerializationTest {
         """.trimIndent()
 
         val content = BedrockMetaLlamaSerialization.parseLlamaStreamChunk(chunkJson)
-        assertEquals("", content)
+        assertEquals(emptyList(), content)
     }
 }

@@ -76,11 +76,9 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
     ): AIAgentNodeDelegate<Input, Output> {
         return AIAgentNodeDelegate(
             name = name,
-            AIAgentNodeBuilder(
-                inputType = typeOf<Input>(),
-                outputType = typeOf<Output>(),
-                execute = execute
-            )
+            inputType = typeOf<Input>(),
+            outputType = typeOf<Output>(),
+            execute = execute
         )
     }
 
@@ -148,7 +146,40 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
         name: String? = null,
         merge: suspend AIAgentParallelNodesMergeContext<Input, Output>.() -> ParallelNodeExecutionResult<Output>,
     ): AIAgentNodeDelegate<Input, Output> {
-        return AIAgentNodeDelegate(name, AIAgentParallelNodeBuilder(nodes.asList(), merge, dispatcher))
+        return AIAgentNodeDelegate(
+            name,
+            inputType = nodes.first().inputType,
+            outputType = nodes.first().outputType,
+            execute = { input ->
+                val initialContext: AIAgentGraphContextBase = this
+
+                // Execute all nodes in parallel using the provided dispatcher
+                val nodeResults = supervisorScope {
+                    nodes.map { node ->
+                        async(dispatcher) {
+                            val nodeContext = initialContext.fork()
+                            val nodeOutput = node.execute(nodeContext, input)
+
+                            if (nodeOutput == null && nodeContext.getAgentContextData() != null) {
+                                throw IllegalStateException(
+                                    "Checkpoints are not supported in parallel execution. Node: ${node.name}, Context: ${nodeContext.getAgentContextData()}"
+                                )
+                            }
+
+                            @Suppress("UNCHECKED_CAST")
+                            val executionResult = ParallelNodeExecutionResult(nodeOutput as Output, nodeContext)
+                            ParallelResult(node.name, input, executionResult)
+                        }
+                    }.awaitAll()
+                }
+
+                // Merge parallel node results
+                val mergeContext = AIAgentParallelNodesMergeContext(this, nodeResults)
+                val result = with(mergeContext) { merge() }
+                this.replace(result.context)
+                result.output
+            }
+        )
     }
 
     /**
@@ -184,7 +215,11 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
         return "$parentPath:${node.id}"
     }
 
-    internal fun buildSubgraphMetadata(start: StartNode<Input>, parentName: String, strategy: AIAgentGraphStrategy<Input, Output>): SubgraphMetadata {
+    internal fun buildSubgraphMetadata(
+        start: StartNode<Input>,
+        parentName: String,
+        strategy: AIAgentGraphStrategy<Input, Output>
+    ): SubgraphMetadata {
         val subgraphNodes = buildSubGraphNodesMap(start, parentName)
         subgraphNodes[parentName] = strategy
 
@@ -205,7 +240,10 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
         )
     }
 
-    internal fun buildSubGraphNodesMap(start: StartNode<*>, parentName: String): MutableMap<String, AIAgentNodeBase<*, *>> {
+    internal fun buildSubGraphNodesMap(
+        start: StartNode<*>,
+        parentName: String
+    ): MutableMap<String, AIAgentNodeBase<*, *>> {
         val map = mutableMapOf<String, AIAgentNodeBase<*, *>>()
 
         fun visit(node: AIAgentNodeBase<*, *>) {
@@ -354,50 +392,4 @@ public data class ParallelResult<Input, Output>(
     val nodeName: String,
     val nodeInput: Input,
     val nodeResult: ParallelNodeExecutionResult<Output>
-)
-
-/**
- * Builder for a node that executes multiple nodes in parallel.
- *
- * @param nodes List of nodes to execute in parallel
- * @param merge A suspendable lambda that defines how the outputs from the parallel nodes should be merged
- * @param dispatcher Coroutine dispatcher to use for parallel execution
- */
-public class AIAgentParallelNodeBuilder<Input, Output> internal constructor(
-    private val nodes: List<AIAgentNodeBase<Input, Output>>,
-    private val merge:
-    suspend AIAgentParallelNodesMergeContext<Input, Output>.() -> ParallelNodeExecutionResult<Output>,
-    private val dispatcher: CoroutineDispatcher
-) : AIAgentNodeBuilder<Input, Output>(
-    inputType = nodes.first().inputType,
-    outputType = nodes.first().outputType,
-    execute = { input ->
-        val initialContext: AIAgentGraphContextBase = this
-
-        // Execute all nodes in parallel using the provided dispatcher
-        val nodeResults = supervisorScope {
-            nodes.map { node ->
-                async(dispatcher) {
-                    val nodeContext = initialContext.fork()
-                    val nodeOutput = node.execute(nodeContext, input)
-
-                    if (nodeOutput == null && nodeContext.getAgentContextData() != null) {
-                        throw IllegalStateException(
-                            "Checkpoints are not supported in parallel execution. Node: ${node.name}, Context: ${nodeContext.getAgentContextData()}"
-                        )
-                    }
-
-                    @Suppress("UNCHECKED_CAST")
-                    val executionResult = ParallelNodeExecutionResult(nodeOutput as Output, nodeContext)
-                    ParallelResult(node.name, input, executionResult)
-                }
-            }.awaitAll()
-        }
-
-        // Merge parallel node results
-        val mergeContext = AIAgentParallelNodesMergeContext(this, nodeResults)
-        val result = with(mergeContext) { merge() }
-        this.replace(result.context)
-        result.output
-    }
 )

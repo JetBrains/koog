@@ -1,13 +1,13 @@
 [versions]
 agp = "8.11.1"
-compose-multiplatform = "1.8.2"
+compose-multiplatform = "1.9.0"
 coroutines = "1.10.2"
 datastore = "1.1.7"
-hotReload = "1.0.0-beta06"
-jetbrains-lifecycle = "2.9.3"
-jetbrains-navigation = "2.9.0-rc01"
+hotReload = "1.0.0-beta07"
+jetbrains-lifecycle = "2.9.4"
+jetbrains-navigation = "2.9.0"
 koin-bom = "4.1.1"
-koog = "0.4.1"
+koog = "0.4.2"
 kotlin = "2.2.10"
 kotlinx-serialization = "1.9.0"
 ktor = "3.2.3"
@@ -32,18 +32,20 @@ kotlinx-coroutines-swing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
 
 # Koog
-koog-agents = { module = "ai.koog:koog-agents", version.ref = "koog" }
+koog-agents-core = { module = "ai.koog:agents-core", version.ref = "koog" }
+koog-prompt-executor-llms-all = { module = "ai.koog:prompt-executor-llms-all", version.ref = "koog" }
 
 # Ktor
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
+ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
 ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktor" }
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
+compose = { id = "org.jetbrains.compose", version.ref = "compose-multiplatform" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 hotReload = { id = "org.jetbrains.compose.hot-reload", version.ref = "hotReload" }
-compose = { id = "org.jetbrains.compose", version.ref = "compose-multiplatform" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }

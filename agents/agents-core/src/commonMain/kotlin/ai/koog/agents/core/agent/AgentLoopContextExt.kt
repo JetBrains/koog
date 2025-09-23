@@ -11,6 +11,7 @@ import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolResult
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.structure.StructureFixingParser
 import ai.koog.prompt.structure.StructuredDataDefinition
 import ai.koog.prompt.structure.StructuredResponse
@@ -171,12 +172,12 @@ public suspend inline fun <reified T> AIAgentFunctionalContext.requestLLMStructu
  *
  * @param message The content of the message to be sent to the LLM.
  * @param structureDefinition Optional structure to guide the LLM response.
- * @return A flow of string chunks from the LLM response.
+ * @return A flow of [StreamFrame] objects from the LLM response.
  */
 public suspend fun AIAgentFunctionalContext.requestLLMStreaming(
     message: String,
     structureDefinition: StructuredDataDefinition? = null
-): Flow<String> {
+): Flow<StreamFrame> {
     return llm.writeSession {
         updatePrompt {
             user(message)

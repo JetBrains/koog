@@ -69,7 +69,7 @@ public open class GraphAIAgent<Input, Output>(
     // Random UUID should be invoked lazily, so when compiling a native image, it will happen on runtime
     override val id: String by lazy { id ?: Uuid.random().toString() }
 
-    private val pipeline = AIAgentGraphPipeline()
+    private val pipeline = AIAgentGraphPipeline(clock)
 
     private val environment = GenericAgentEnvironment(
         this@GraphAIAgent.id,
@@ -180,14 +180,14 @@ public open class GraphAIAgent<Input, Output>(
                 logger.error(e) { "Execution exception reported by server!" }
                 pipeline.onAgentRunError(agentId = this@GraphAIAgent.id, runId = runId, throwable = e)
                 throw e
+            } finally {
+                runningMutex.withLock {
+                    isRunning = false
+                }
             }
 
             logger.debug { formatLog(agentId = this@GraphAIAgent.id, runId = runId, message = "Finished agent execution") }
             pipeline.onAgentFinished(agentId = this@GraphAIAgent.id, runId = runId, result = result, resultType = outputType)
-
-            runningMutex.withLock {
-                isRunning = false
-            }
 
             return@withContext result ?: error("result is null")
         }

@@ -17,8 +17,7 @@ object CalculatorTools {
         data class Args(val a: Float, val b: Float) : ToolArgs
 
         @Serializable
-        @JvmInline
-        value class Result(val result: Float) : ToolResult {
+        class Result(val result: Float) : ToolResult {
             override fun toStringDefault(): String {
                 return result.toString()
             }

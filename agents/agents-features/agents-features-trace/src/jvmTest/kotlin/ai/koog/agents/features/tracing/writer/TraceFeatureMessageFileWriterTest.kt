@@ -9,18 +9,19 @@ import ai.koog.agents.core.dsl.extension.onAssistantMessage
 import ai.koog.agents.core.dsl.extension.onToolCall
 import ai.koog.agents.core.feature.message.FeatureEvent
 import ai.koog.agents.core.feature.message.FeatureMessage
-import ai.koog.agents.core.feature.message.FeatureStringMessage
-import ai.koog.agents.core.feature.model.AIAgentBeforeCloseEvent
-import ai.koog.agents.core.feature.model.AIAgentFinishedEvent
-import ai.koog.agents.core.feature.model.AIAgentNodeExecutionEndEvent
-import ai.koog.agents.core.feature.model.AIAgentNodeExecutionStartEvent
-import ai.koog.agents.core.feature.model.AIAgentStartedEvent
-import ai.koog.agents.core.feature.model.AIAgentStrategyFinishedEvent
-import ai.koog.agents.core.feature.model.AIAgentStrategyStartEvent
-import ai.koog.agents.core.feature.model.AfterLLMCallEvent
-import ai.koog.agents.core.feature.model.BeforeLLMCallEvent
-import ai.koog.agents.core.feature.model.ToolCallEvent
-import ai.koog.agents.core.feature.model.ToolCallResultEvent
+import ai.koog.agents.core.feature.model.FeatureStringMessage
+import ai.koog.agents.core.feature.model.events.AIAgentBeforeCloseEvent
+import ai.koog.agents.core.feature.model.events.AIAgentFinishedEvent
+import ai.koog.agents.core.feature.model.events.AIAgentGraphStrategyStartEvent
+import ai.koog.agents.core.feature.model.events.AIAgentNodeExecutionEndEvent
+import ai.koog.agents.core.feature.model.events.AIAgentNodeExecutionStartEvent
+import ai.koog.agents.core.feature.model.events.AIAgentStartedEvent
+import ai.koog.agents.core.feature.model.events.AIAgentStrategyFinishedEvent
+import ai.koog.agents.core.feature.model.events.AIAgentStrategyStartEvent
+import ai.koog.agents.core.feature.model.events.AfterLLMCallEvent
+import ai.koog.agents.core.feature.model.events.BeforeLLMCallEvent
+import ai.koog.agents.core.feature.model.events.ToolCallEvent
+import ai.koog.agents.core.feature.model.events.ToolCallResultEvent
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.tracing.eventString
 import ai.koog.agents.features.tracing.feature.Tracing
@@ -141,7 +142,7 @@ class TraceFeatureMessageFileWriterTest {
                 promptExecutor = mockExecutor
             ) {
                 install(Tracing) {
-                    messageFilter = { message ->
+                    writer.setMessageFilter { message ->
                         if (message is AIAgentStartedEvent) {
                             runId = message.runId
                         }
@@ -283,7 +284,7 @@ class TraceFeatureMessageFileWriterTest {
         ).use { writer ->
             writer.initialize()
 
-            messagesToProcess.forEach { message -> writer.processMessage(message) }
+            messagesToProcess.forEach { message -> writer.onMessage(message) }
 
             val actualMessage = writer.targetPath.readLines()
 
@@ -300,7 +301,7 @@ class TraceFeatureMessageFileWriterTest {
 
         val expectedEvents = listOf(
             "CUSTOM. ${AIAgentStartedEvent::class.simpleName}",
-            "CUSTOM. ${AIAgentStrategyStartEvent::class.simpleName}",
+            "CUSTOM. ${AIAgentGraphStrategyStartEvent::class.simpleName}",
             "CUSTOM. ${AIAgentNodeExecutionStartEvent::class.simpleName}",
             "CUSTOM. ${AIAgentNodeExecutionEndEvent::class.simpleName}",
             "CUSTOM. ${AIAgentNodeExecutionStartEvent::class.simpleName}",
@@ -336,7 +337,6 @@ class TraceFeatureMessageFileWriterTest {
 
             val agent = createAgent(strategy = strategy) {
                 install(Tracing) {
-                    messageFilter = { true }
                     addMessageProcessor(writer)
                 }
             }
@@ -367,9 +367,7 @@ class TraceFeatureMessageFileWriterTest {
             }
 
             val agent = createAgent(strategy = strategy) {
-                install(Tracing) {
-                    messageFilter = { true }
-                }
+                install(Tracing)
             }
 
             agent.run("")
@@ -461,7 +459,7 @@ class TraceFeatureMessageFileWriterTest {
                 promptExecutor = mockExecutor
             ) {
                 install(Tracing) {
-                    messageFilter = { message ->
+                    writer.setMessageFilter { message ->
                         if (message is AIAgentStartedEvent) {
                             runId = message.runId
                         }

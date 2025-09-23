@@ -64,14 +64,14 @@ public interface KoogHttpClient {
      * @return A [Flow] emitting processed strings derived from the streamed chunks of data.
      */
     @Suppress("LongParameterList")
-    public fun <T : Any, R : Any> sse(
+    public fun <T : Any, R : Any, O : Any> sse(
         path: String,
         request: T,
         requestBodyType: KClass<T>,
         dataFilter: (String?) -> Boolean = { true },
         decodeStreamingResponse: (String) -> R,
-        processStreamingChunk: (R) -> String?
-    ): Flow<String>
+        processStreamingChunk: (R) -> O?
+    ): Flow<O>
 
     public companion object
 }

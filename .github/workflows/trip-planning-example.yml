@@ -32,8 +32,6 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      # Check that demo android app in examples compiles successfully.
-      # It is an independent Gradle project, so it has to be checked separately.
       - name: Assemble
         working-directory: ./examples/trip-planning-example
         run: ./gradlew assemble

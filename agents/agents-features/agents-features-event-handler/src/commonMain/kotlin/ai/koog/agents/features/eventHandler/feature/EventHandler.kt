@@ -10,10 +10,13 @@ import ai.koog.agents.core.feature.AIAgentNonGraphPipeline
 import ai.koog.agents.core.feature.AIAgentPipeline
 import ai.koog.agents.core.feature.InterceptContext
 import ai.koog.agents.core.feature.handler.AfterLLMCallContext
+import ai.koog.agents.core.feature.handler.AfterStreamContext
 import ai.koog.agents.core.feature.handler.BeforeLLMCallContext
+import ai.koog.agents.core.feature.handler.BeforeStreamContext
 import ai.koog.agents.core.feature.handler.NodeAfterExecuteContext
 import ai.koog.agents.core.feature.handler.NodeBeforeExecuteContext
 import ai.koog.agents.core.feature.handler.NodeExecutionErrorContext
+import ai.koog.agents.core.feature.handler.StreamFrameContext
 import ai.koog.agents.core.feature.handler.ToolCallContext
 import ai.koog.agents.core.feature.handler.ToolCallFailureContext
 import ai.koog.agents.core.feature.handler.ToolCallResultContext
@@ -158,6 +161,22 @@ public class EventHandler {
 
             pipeline.interceptToolCallResult(interceptContext) intercept@{ eventContext: ToolCallResultContext ->
                 config.invokeOnToolCallResult(eventContext)
+            }
+
+            pipeline.interceptBeforeStream(interceptContext) intercept@{ eventContext: BeforeStreamContext ->
+                config.invokeOnBeforeStream(eventContext)
+            }
+
+            pipeline.interceptOnStreamFrame(interceptContext) intercept@{ eventContext: StreamFrameContext ->
+                config.invokeOnStreamFrame(eventContext)
+            }
+
+            pipeline.interceptOnStreamError(interceptContext) intercept@{ eventContext ->
+                config.invokeOnStreamError(eventContext)
+            }
+
+            pipeline.interceptAfterStream(interceptContext) intercept@{ eventContext: AfterStreamContext ->
+                config.invokeOnAfterStream(eventContext)
             }
         }
 

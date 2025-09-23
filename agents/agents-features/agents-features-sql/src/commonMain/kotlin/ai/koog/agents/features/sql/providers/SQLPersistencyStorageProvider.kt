@@ -2,7 +2,6 @@ package ai.koog.agents.features.sql.providers
 
 import ai.koog.agents.snapshot.providers.PersistencyStorageProvider
 import kotlinx.datetime.Instant
-import kotlinx.serialization.json.Json
 
 /**
  * Abstract base class for SQL-based implementations of [PersistencyStorageProvider].
@@ -39,11 +38,6 @@ public abstract class SQLPersistencyStorageProvider(
     protected val ttlSeconds: Long? = null,
     protected val migrator: SQLPersistenceSchemaMigrator
 ) : PersistencyStorageProvider {
-
-    protected val json: Json = Json {
-        prettyPrint = true
-        ignoreUnknownKeys = true
-    }
 
     /**
      * Initializes the database schema if it doesn't exist.

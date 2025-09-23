@@ -7,8 +7,11 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicInvokeModel
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicInvokeModelContent
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicToolChoice
+import ai.koog.prompt.executor.clients.bedrock.modelfamilies.anthropic.BedrockAnthropicClaudeSerialization.parseAnthropicStreamChunk
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.streaming.StreamFrame
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.json.JsonObject
@@ -21,7 +24,7 @@ import kotlin.test.assertTrue
 class BedrockAnthropicClaudeSerializationTest {
 
     private val mockClock = object : Clock {
-        override fun now(): Instant = Clock.System.now()
+        override fun now(): Instant = Instant.DISTANT_FUTURE
     }
 
     private val systemMessage = "You are a helpful assistant."
@@ -300,8 +303,8 @@ class BedrockAnthropicClaudeSerializationTest {
             }
         """.trimIndent()
 
-        val content = BedrockAnthropicClaudeSerialization.parseAnthropicStreamChunk(chunkJson)
-        assertEquals("Paris is ", content)
+        val content = parseAnthropicStreamChunk(chunkJson)
+        assertEquals(listOf("Paris is ").map(StreamFrame::Append), content)
     }
 
     @Test
@@ -328,8 +331,8 @@ class BedrockAnthropicClaudeSerializationTest {
             }
         """.trimIndent()
 
-        val content = BedrockAnthropicClaudeSerialization.parseAnthropicStreamChunk(chunkJson)
-        assertEquals("the capital of France.", content)
+        val content = parseAnthropicStreamChunk(chunkJson)
+        assertEquals(listOf("the capital of France.").map(StreamFrame::Append), content)
     }
 
     @Test
@@ -351,8 +354,8 @@ class BedrockAnthropicClaudeSerializationTest {
             }
         """.trimIndent()
 
-        val content = BedrockAnthropicClaudeSerialization.parseAnthropicStreamChunk(chunkJson)
-        assertEquals("", content)
+        val content = parseAnthropicStreamChunk(chunkJson)
+        assertEquals(emptyList(), content)
     }
 
     @Test
@@ -379,9 +382,21 @@ class BedrockAnthropicClaudeSerializationTest {
                 }
             }
         """.trimIndent()
-
-        val content = BedrockAnthropicClaudeSerialization.parseAnthropicStreamChunk(chunkJson)
-        assertEquals("", content)
+        val content = parseAnthropicStreamChunk(chunkJson, mockClock)
+        assertEquals(
+            expected = listOf(
+                StreamFrame.End(
+                    finishReason = "end_turn",
+                    metaInfo = ResponseMetaInfo.create(
+                        clock = mockClock,
+                        totalTokensCount = 45,
+                        inputTokensCount = 25,
+                        outputTokensCount = 20
+                    )
+                )
+            ),
+            actual = content
+        )
     }
 
     @Test

@@ -1,31 +1,74 @@
 # Streaming API
 
+
 ## Introduction
 
-The Streaming API in the Koog framework lets you process structured data from Large Language Models 
-(LLMs) as it arrives, rather than waiting for the entire response.
-This page explains how to use the Streaming API to efficiently handle structured data in Markdown format.
+Koog’s **Streaming API** lets you consume **LLM output incrementally** as a `Flow<StreamFrame>`. Instead of waiting for a full response, your code can:
+
+- render assistant text as it arrives,
+- detect **tool calls** live and act on them,
+- know when a stream **ends** and why.
+
+The stream carries **typed frames**:
+
+- `StreamFrame.Append(text: String)` — incremental assistant text
+- `StreamFrame.ToolCall(id: String?, name: String, content: String)` — tool invocation (combined safely)
+- `StreamFrame.End(finishReason: String?)` — end-of-stream marker
+
+Helpers are provided to extract plain text, convert frames to `Message.Response` objects, and safely **combine chunked tool calls**.
+
+---
 
 ## Streaming API overview
 
-The Streaming API enables real-time processing of structured data from LLM responses. Instead of waiting for the
-complete response, you can:
+With streaming you can:
 
-- Process data as it arrives in chunks
-- Parse structured information on the fly
-- Emit structured objects as they are completed
-- Handle these objects immediately (collect them or pass to tools)
+- Process data as it arrives (improves UI responsiveness)
+- Parse structured info on the fly (Markdown/JSON/etc.)
+- Emit objects as they complete
+- Trigger tools in real time
 
-This approach is particularly useful as it provides the following benefits:
+You can operate either on the **frames** themselves or on **plain text** derived from frames.
 
-- Improving responsiveness in user interfaces
-- Processing large responses efficiently
-- Implementing real-time data processing pipelines
+---
+## Usage
 
-The Streaming API allows parsing the output as *structured data* from the .md format or as a set of *plain text*
-chunks.
+### Working with frames directly
 
-## Working with a raw string stream
+This is the most general approach: react to each frame kind.
+
+<!--- INCLUDE
+import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.structure.markdown.MarkdownStructuredDataDefinition
+
+val strategy = strategy<String, String>("strategy_name") {
+    val node by node<Unit, Unit> {
+-->
+<!--- SUFFIX
+   }
+}
+-->
+```kotlin
+llm.writeSession {
+    updatePrompt { user("Tell me a joke, then call a tool with JSON args.") }
+
+    val stream = requestLLMStreaming() // Flow<StreamFrame>
+
+    stream.collect { frame ->
+        when (frame) {
+            is StreamFrame.Append -> print(frame.text)
+            is StreamFrame.ToolCall -> {
+                println("\n🔧 Tool call: ${frame.name} args=${frame.content}")
+                // Optionally parse lazily:
+                // val json = frame.contentJson
+            }
+            is StreamFrame.End -> println("\n[END] reason=${frame.finishReason}")
+        }
+    }
+}
+```
+<!--- KNIT example-streaming-api-01.kt -->
 
 It is important to note that you can parse the output by working directly with a raw string stream.
 This approach gives you more flexibility and control over the parsing process.
@@ -59,13 +102,17 @@ llm.writeSession {
     }
 }
 ```
-<!--- KNIT example-streaming-api-01.kt -->
+<!--- KNIT example-streaming-api-02.kt -->
 
-This is an example of a raw string stream without the definition:
+### Working with a raw text stream (derived)
+
+If you have existing streaming parsers that expect `Flow<String>`, 
+derive text chunks via `filterTextOnly()` or collect them with `collectText()`.
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.prompt.structure.markdown.MarkdownStructuredDataDefinition
+import ai.koog.prompt.streaming.filterTextOnly
+import ai.koog.prompt.streaming.collectText
 
 val strategy = strategy<String, String>("strategy_name") {
     val node by node<Unit, Unit> {
@@ -76,20 +123,68 @@ val strategy = strategy<String, String>("strategy_name") {
 -->
 ```kotlin
 llm.writeSession {
-    val stream = requestLLMStreaming()
-    // Access the raw string chunks directly
-    stream.collect { chunk ->
-        // Process each chunk of text as it arrives
-        println("Received chunk: $chunk") // The chunks will not be structured in a specific way
+    val frames = requestLLMStreaming()
+
+    // Stream text chunks as they come:
+    frames.filterTextOnly().collect { chunk -> print(chunk) }
+
+    // Or, gather all text into one String after End:
+    val fullText = frames.collectText()
+    println("\n---\n$fullText")
+}
+```
+<!--- KNIT example-streaming-api-02-01.kt -->
+
+### Listening to stream events in event handlers
+
+You can listen to stream events in [agent events](agent-events.md).
+
+<!--- INCLUDE
+import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.agent.GraphAIAgent
+import ai.koog.agents.features.eventHandler.feature.handleEvents
+import ai.koog.prompt.streaming.StreamFrame
+
+fun GraphAIAgent.FeatureContext.installStreamingApi() {
+-->
+<!--- SUFFIX
+}
+-->
+```kotlin
+handleEvents {
+    onToolCall { context ->
+        println("\n🔧 Using ${context.tool.name} with ${context.toolArgs}... ")
+    }
+    onStreamFrame { context ->
+        (context.streamFrame as? StreamFrame.Append)?.let { frame ->
+            print(frame.text)
+        }
+    }
+    onStreamError { context -> 
+        println("❌ Error: ${context.error}")
+    }
+    onAfterStream {
+        println("🏁 Done")
     }
 }
 ```
-<!--- KNIT example-streaming-api-02.kt -->
+<!--- KNIT example-streaming-api-02-02.kt -->
 
-## Working with a stream of structured data
+### Converting frames to `Message.Response`
+
+You can transform a collected list of frames to standard message objects:
+- `toAssistantMessageOrNull()`
+- `toToolCallMessages()`
+- `toMessageResponses()`
+
+---
+
+## Examples
+
+### Structured data while streaming (Markdown example)
 
 Although it is possible to work with a raw string stream,
-it is often more convenient to work with [structured data](structured-data.md).
+it is often more convenient to work with [structured data](structured-output.md).
 
 The structured data approach includes the following key components:
 
@@ -100,11 +195,12 @@ The structured data approach includes the following key components:
 
 The sections below provide step-by-step instructions and code samples related to processing a stream of structured data. 
 
-### 1. Define your data structure
+#### 1. Define your data structure
 
 First, define a data class to represent your structured data:
 
 <!--- INCLUDE
+import ai.koog.agents.core.tools.ToolArgs
 import kotlinx.serialization.Serializable
 -->
 ```kotlin
@@ -113,11 +209,11 @@ data class Book(
     val title: String,
     val author: String,
     val description: String
-)
+): ToolArgs
 ```
 <!--- KNIT example-streaming-api-03.kt -->
 
-### 2. Define the Markdown structure
+#### 2. Define the Markdown structure
 
 Create a definition that specifies how your data should be structured in Markdown with the
 `MarkdownStructuredDataDefinition` class:
@@ -149,7 +245,7 @@ fun markdownBookDefinition(): MarkdownStructuredDataDefinition {
 ```
 <!--- KNIT example-streaming-api-04.kt -->
 
-### 3. Create a parser for your data structure
+#### 3. Create a parser for your data structure
 
 The `markdownStreamingParser` provides several handlers for different Markdown elements:
 
@@ -158,7 +254,6 @@ import ai.koog.agents.example.exampleStreamingApi03.Book
 import ai.koog.prompt.structure.markdown.markdownStreamingParser
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-
 
 fun parseMarkdownStreamToBooks(markdownStream: Flow<String>): Flow<Book> {
     return flow {
@@ -169,31 +264,16 @@ fun parseMarkdownStreamToBooks(markdownStream: Flow<String>): Flow<Book> {
 -->
 ```kotlin
 markdownStreamingParser {
-    // Handle level 1 headings
-    // The heading level can be from 1 to 6
-    onHeader(1) { headerText ->
-        // Process heading text
-    }
-
+    // Handle level 1 headings (level ranges from 1 to 6)
+    onHeader(1) { headerText -> }
     // Handle bullet points
-    onBullet { bulletText ->
-        // Process bullet text
-    }
-
+    onBullet { bulletText -> }
     // Handle code blocks
-    onCodeBlock { codeBlockContent ->
-        // Process code block content
-    }
-
+    onCodeBlock { codeBlockContent -> }
     // Handle lines matching a regex pattern
-    onLineMatching(Regex("pattern")) { line ->
-        // Process matching lines
-    }
-
+    onLineMatching(Regex("pattern")) { line -> }
     // Handle the end of the stream
-    onFinishStream { remainingText ->
-        // Process any remaining text or perform cleanup
-    }
+    onFinishStream { remainingText -> }
 }
 ```
 <!--- KNIT example-streaming-api-05.kt -->
@@ -202,14 +282,16 @@ Using the defined handlers, you can implement a function that parses the Markdow
 with the `markdownStreamingParser` function.
 
 <!--- INCLUDE
-import ai.koog.agents.example.exampleStreamingApi08.Book
+import ai.koog.agents.example.exampleStreamingApi03.Book
 import ai.koog.prompt.structure.markdown.markdownStreamingParser
+import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.streaming.filterTextOnly
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
 -->
 ```kotlin
-fun parseMarkdownStreamToBooks(markdownStream: Flow<String>): Flow<Book> {
+fun parseMarkdownStreamToBooks(markdownStream: Flow<StreamFrame>): Flow<Book> {
    return flow {
       markdownStreamingParser {
          var currentBookTitle = ""
@@ -242,18 +324,18 @@ fun parseMarkdownStreamToBooks(markdownStream: Flow<String>): Flow<Book> {
                emit(Book(currentBookTitle, author, description))
             }
          }
-      }.parseStream(markdownStream)
+      }.parseStream(markdownStream.filterTextOnly())
    }
 }
 ```
 <!--- KNIT example-streaming-api-06.kt -->
 
-### 4. Use the parser in your agent strategy
+#### 4. Use the parser in your agent strategy
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.example.exampleStreamingApi08.Book
+import ai.koog.agents.example.exampleStreamingApi03.Book
 import ai.koog.agents.example.exampleStreamingApi04.markdownBookDefinition
 import ai.koog.agents.example.exampleStreamingApi06.parseMarkdownStreamToBooks
 -->
@@ -284,47 +366,40 @@ val agentStrategy = strategy<String, List<Book>>("library-assistant") {
 ```
 <!--- KNIT example-streaming-api-07.kt -->
 
-## Advanced usage: Streaming with tools
+### Advanced usage: Streaming with tools
 
-You can also use the Streaming API with tools to process data as it arrives. The following sections provide a brief
-step-by-step guide on how to define a tool and use it with streaming data.
+You can also use the Streaming API with tools to process data as it arrives. 
+The following sections provide a brief step-by-step guide on how to define a tool and use it with streaming data.
 
 ### 1. Define a tool for your data structure
 
 <!--- INCLUDE
 import ai.koog.agents.core.tools.SimpleTool
-import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.agents.example.exampleStreamingApi03.Book
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.Serializable
+
 -->
 ```kotlin
-@Serializable
-data class Book(
-   val title: String,
-   val author: String,
-   val description: String
-) : ToolArgs
-
 class BookTool(): SimpleTool<Book>() {
-   companion object {
-      const val NAME = "book"
-   }
+    
+    companion object { const val NAME = "book" }
 
-   override suspend fun doExecute(args: Book): String {
-      println("${args.title} by ${args.author}:\n ${args.description}")
-      return "Done"
-   }
+    override suspend fun doExecute(args: Book): String {
+        println("${args.title} by ${args.author}:\n ${args.description}")
+        return "Done"
+    }
 
-   override val argsSerializer: KSerializer<Book>
-      get() = Book.serializer()
-   override val descriptor: ToolDescriptor
-      get() = ToolDescriptor(
-         name = NAME,
-         description = "A tool to parse book information from Markdown",
-         requiredParameters = listOf(),
-         optionalParameters = listOf()
-      )
+    override val argsSerializer: KSerializer<Book>
+        get() = Book.serializer()
+    
+    override val descriptor: ToolDescriptor
+        get() = ToolDescriptor(
+            name = NAME,
+            description = "A tool to parse book information from Markdown",
+            requiredParameters = listOf(),
+            optionalParameters = listOf()
+        )
 }
 ```
 <!--- KNIT example-streaming-api-08.kt -->

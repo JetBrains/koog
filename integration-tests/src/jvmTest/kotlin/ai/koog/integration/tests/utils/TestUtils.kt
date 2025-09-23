@@ -9,6 +9,8 @@ import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.streaming.filterTextOnly
 import ai.koog.prompt.structure.RegisteredStandardJsonSchemaGenerators
 import ai.koog.prompt.structure.StructureFixingParser
 import ai.koog.prompt.structure.StructuredOutput
@@ -286,7 +288,7 @@ object TestUtils {
         }
     }
 
-    fun parseMarkdownStreamToCountries(markdownStream: Flow<String>): Flow<Country> {
+    fun parseMarkdownStreamToCountries(markdownStream: Flow<StreamFrame>): Flow<Country> {
         return flow {
             val countries = mutableListOf<Country>()
             var currentCountryName = ""
@@ -321,7 +323,7 @@ object TestUtils {
                 }
             }
 
-            parser.parseStream(markdownStream)
+            parser.parseStream(markdownStream.filterTextOnly())
 
             countries.forEach { emit(it) }
         }

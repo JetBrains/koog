@@ -2,22 +2,22 @@ package ai.koog.agents.features.tracing.writer
 
 import ai.koog.agents.core.feature.message.FeatureEvent
 import ai.koog.agents.core.feature.message.FeatureMessage
-import ai.koog.agents.core.feature.message.FeatureStringMessage
-import ai.koog.agents.core.feature.model.AIAgentBeforeCloseEvent
-import ai.koog.agents.core.feature.model.AIAgentFinishedEvent
-import ai.koog.agents.core.feature.model.AIAgentNodeExecutionEndEvent
-import ai.koog.agents.core.feature.model.AIAgentNodeExecutionErrorEvent
-import ai.koog.agents.core.feature.model.AIAgentNodeExecutionStartEvent
-import ai.koog.agents.core.feature.model.AIAgentRunErrorEvent
-import ai.koog.agents.core.feature.model.AIAgentStartedEvent
-import ai.koog.agents.core.feature.model.AIAgentStrategyFinishedEvent
-import ai.koog.agents.core.feature.model.AIAgentStrategyStartEvent
-import ai.koog.agents.core.feature.model.AfterLLMCallEvent
-import ai.koog.agents.core.feature.model.BeforeLLMCallEvent
-import ai.koog.agents.core.feature.model.ToolCallEvent
-import ai.koog.agents.core.feature.model.ToolCallFailureEvent
-import ai.koog.agents.core.feature.model.ToolCallResultEvent
-import ai.koog.agents.core.feature.model.ToolValidationErrorEvent
+import ai.koog.agents.core.feature.model.FeatureStringMessage
+import ai.koog.agents.core.feature.model.events.AIAgentBeforeCloseEvent
+import ai.koog.agents.core.feature.model.events.AIAgentFinishedEvent
+import ai.koog.agents.core.feature.model.events.AIAgentNodeExecutionEndEvent
+import ai.koog.agents.core.feature.model.events.AIAgentNodeExecutionErrorEvent
+import ai.koog.agents.core.feature.model.events.AIAgentNodeExecutionStartEvent
+import ai.koog.agents.core.feature.model.events.AIAgentRunErrorEvent
+import ai.koog.agents.core.feature.model.events.AIAgentStartedEvent
+import ai.koog.agents.core.feature.model.events.AIAgentStrategyFinishedEvent
+import ai.koog.agents.core.feature.model.events.AIAgentStrategyStartEvent
+import ai.koog.agents.core.feature.model.events.AfterLLMCallEvent
+import ai.koog.agents.core.feature.model.events.BeforeLLMCallEvent
+import ai.koog.agents.core.feature.model.events.ToolCallEvent
+import ai.koog.agents.core.feature.model.events.ToolCallFailureEvent
+import ai.koog.agents.core.feature.model.events.ToolCallResultEvent
+import ai.koog.agents.core.feature.model.events.ToolValidationErrorEvent
 import ai.koog.agents.features.tracing.traceString
 
 @Suppress("UnusedReceiverParameter")
@@ -58,10 +58,10 @@ internal val AIAgentNodeExecutionEndEvent.nodeExecutionEndEventFormat
 internal val AIAgentNodeExecutionErrorEvent.nodeExecutionErrorEventFormat
     get() = "$eventId (run id: $runId, node: $nodeName, error: ${error.message})"
 
-internal val BeforeLLMCallEvent.llmCallStartEventFormat
+internal val BeforeLLMCallEvent.beforeLLMCallEventFormat
     get() = "$eventId (run id: $runId, prompt: ${prompt.traceString}, model: $model, tools: [${tools.joinToString()}])"
 
-internal val AfterLLMCallEvent.llmCallEndEventFormat
+internal val AfterLLMCallEvent.afterLLMCallEventFormat
     get() = "$eventId (run id: $runId, prompt: ${prompt.traceString}, model: $model, responses: [${
         responses.joinToString {
             "{${it.traceString}}"
@@ -92,8 +92,8 @@ internal val FeatureMessage.traceMessage: String
             is AIAgentNodeExecutionStartEvent -> this.nodeExecutionStartEventFormat
             is AIAgentNodeExecutionEndEvent -> this.nodeExecutionEndEventFormat
             is AIAgentNodeExecutionErrorEvent -> this.nodeExecutionErrorEventFormat
-            is BeforeLLMCallEvent -> this.llmCallStartEventFormat
-            is AfterLLMCallEvent -> this.llmCallEndEventFormat
+            is BeforeLLMCallEvent -> this.beforeLLMCallEventFormat
+            is AfterLLMCallEvent -> this.afterLLMCallEventFormat
             is ToolCallEvent -> this.toolCallEventFormat
             is ToolValidationErrorEvent -> this.toolValidationErrorEventFormat
             is ToolCallFailureEvent -> this.toolCallFailureEventFormat

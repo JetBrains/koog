@@ -7,8 +7,13 @@ import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.streaming.StreamFrame
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.onStart
 
 /**
  * A wrapper around [ai.koog.prompt.executor.model.PromptExecutor] that allows for adding internal functionality to the executor
@@ -39,11 +44,43 @@ public class PromptExecutorProxy(
         return responses
     }
 
-    override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
-        logger.debug { "Executing LLM streaming call (prompt: $prompt)" }
-        val stream = executor.executeStreaming(prompt, model)
-
-        return stream
+    /**
+     * Executes a streaming call to the language model with tool support.
+     *
+     * This method wraps the underlying executor's streaming functionality with pipeline hooks
+     * to enable monitoring and processing of stream events. It triggers before-stream handlers
+     * before starting, stream-frame handlers for each frame received, and after-stream handlers
+     * upon completion.
+     *
+     * @param prompt The prompt to send to the language model
+     * @param model The language model to use for streaming
+     * @param tools The list of available tool descriptors for the streaming call
+     * @return A Flow of StreamFrame objects representing the streaming response
+     */
+    override fun executeStreaming(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>
+    ): Flow<StreamFrame> {
+        logger.debug { "Executing LLM streaming call (prompt: $prompt, tools: [${tools.joinToString { it.name }}])" }
+        return executor.executeStreaming(prompt, model, tools)
+            .onStart {
+                logger.debug { "Starting LLM streaming call" }
+                pipeline.onBeforeStream(runId, prompt, model, tools)
+            }
+            .onEach {
+                logger.debug { "Received frame from LLM streaming call: $it" }
+                pipeline.onStreamFrame(runId, it)
+            }
+            .catch { error ->
+                logger.debug(error) { "Error in LLM streaming call" }
+                pipeline.onStreamError(runId, error)
+                throw error
+            }
+            .onCompletion { error ->
+                logger.debug(error) { "Finished LLM streaming call" }
+                pipeline.onAfterStream(runId, prompt, model, tools)
+            }
     }
 
     override suspend fun executeMultipleChoices(

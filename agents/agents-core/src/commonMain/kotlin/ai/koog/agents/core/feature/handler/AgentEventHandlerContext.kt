@@ -28,7 +28,9 @@ public class AgentTransformEnvironmentContext<TFeature>(
     public val strategy: AIAgentGraphStrategy<*, *>,
     public val agent: GraphAIAgent<*, *>,
     public val feature: TFeature
-) : AgentEventHandlerContext
+) : AgentEventHandlerContext {
+    override val eventType: AgentEventType = AgentEventType.TransformEnvironment
+}
 
 /**
  * Represents the context available during the start of an AI agent.
@@ -42,7 +44,9 @@ public data class AgentStartContext<TFeature>(
     public val runId: String,
     public val feature: TFeature,
     public val context: AIAgentContext,
-) : AgentEventHandlerContext
+) : AgentEventHandlerContext {
+    override val eventType: AgentEventType = AgentEventType.BeforeAgentStart
+}
 
 /**
  * Represents the context for handling the completion of an agent's execution.
@@ -57,7 +61,9 @@ public data class AgentFinishedContext(
     public val runId: String,
     public val result: Any?,
     public val resultType: KType,
-) : AgentEventHandlerContext
+) : AgentEventHandlerContext {
+    override val eventType: AgentEventType = AgentEventType.BeforeAgentFinished
+}
 
 /**
  * Represents the context for handling errors that occur during the execution of an agent run.
@@ -70,7 +76,9 @@ public data class AgentRunErrorContext(
     val agentId: String,
     val runId: String,
     val throwable: Throwable
-) : AgentEventHandlerContext
+) : AgentEventHandlerContext {
+    override val eventType: AgentEventType = AgentEventType.AgentRunError
+}
 
 /**
  * Represents the context passed to the handler that is executed before an agent is closed.
@@ -79,4 +87,6 @@ public data class AgentRunErrorContext(
  */
 public data class AgentBeforeCloseContext(
     val agentId: String,
-)
+) : AgentEventHandlerContext {
+    override val eventType: AgentEventType = AgentEventType.BeforeAgentClose
+}

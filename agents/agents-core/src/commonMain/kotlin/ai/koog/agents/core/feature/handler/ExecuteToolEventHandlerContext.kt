@@ -20,7 +20,9 @@ public data class ToolCallContext(
     val toolCallId: String?,
     val tool: Tool<*, *>,
     val toolArgs: ToolArgs
-) : ToolEventHandlerContext
+) : ToolEventHandlerContext {
+    override val eventType: AgentEventType = AgentEventType.ExecuteTool
+}
 
 /**
  * Represents the context for handling validation errors that occur during the execution of a tool.
@@ -35,7 +37,9 @@ public data class ToolValidationErrorContext(
     val tool: Tool<*, *>,
     val toolArgs: ToolArgs,
     val error: String
-) : ToolEventHandlerContext
+) : ToolEventHandlerContext {
+    override val eventType: AgentEventType = AgentEventType.ExecuteToolValidationError
+}
 
 /**
  * Represents the context provided to handle a failure during the execution of a tool.
@@ -50,7 +54,9 @@ public data class ToolCallFailureContext(
     val tool: Tool<*, *>,
     val toolArgs: ToolArgs,
     val throwable: Throwable
-) : ToolEventHandlerContext
+) : ToolEventHandlerContext {
+    override val eventType: AgentEventType = AgentEventType.ExecuteToolFailure
+}
 
 /**
  * Represents the context used when handling the result of a tool call.
@@ -65,4 +71,6 @@ public data class ToolCallResultContext(
     val tool: Tool<*, *>,
     val toolArgs: ToolArgs,
     val result: ToolResult?
-) : ToolEventHandlerContext
+) : ToolEventHandlerContext {
+    override val eventType: AgentEventType = AgentEventType.ExecuteToolResult
+}

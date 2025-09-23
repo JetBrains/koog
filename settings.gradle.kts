@@ -1,4 +1,4 @@
-rootProject.name = "koog-agents"
+rootProject.name = "koog"
 
 pluginManagement {
     repositories {
@@ -23,9 +23,6 @@ include(":agents:agents-mcp-server")
 include(":agents:agents-test")
 include(":agents:agents-tools")
 include(":agents:agents-utils")
-
-include(":examples")
-include(":examples:code-agent:step-01-basic-agent")
 
 include(":integration-tests")
 
@@ -70,3 +67,12 @@ include(":koog-ktor")
 include(":docs")
 
 include(":test-utils")
+include(":utils")
+
+/*
+ Some separate Gradle projects with examples.
+ Included for convenience to be able to run them from the root project.
+ Main Koog project (this one) build does not depend on them in any way.
+ */
+includeBuild("./examples/simple-examples")
+includeBuild("./examples/code-agent/step-01-basic-agent")

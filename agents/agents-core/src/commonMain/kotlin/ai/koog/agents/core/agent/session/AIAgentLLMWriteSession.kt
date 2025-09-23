@@ -16,6 +16,7 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.structure.StructureFixingParser
 import ai.koog.prompt.structure.StructuredDataDefinition
 import ai.koog.prompt.structure.StructuredOutputConfig
@@ -477,9 +478,9 @@ public class AIAgentLLMWriteSession internal constructor(
      *
      * @param definition an optional parameter to define a structured data format. When provided, it will be used
      * in constructing the prompt for the language model request.
-     * @return a flow of strings that streams the responses from the language model.
+     * @return a flow of `StreamingFrame` objects that streams the responses from the language model.
      */
-    public fun requestLLMStreaming(definition: StructuredDataDefinition? = null): Flow<String> {
+    public fun requestLLMStreaming(definition: StructuredDataDefinition? = null): Flow<StreamFrame> {
         if (definition != null) {
             val prompt = prompt(prompt, clock) {
                 user {
@@ -488,7 +489,6 @@ public class AIAgentLLMWriteSession internal constructor(
             }
             this.prompt = prompt
         }
-
-        return executor.executeStreaming(prompt, model)
+        return executor.executeStreaming(prompt, model, tools)
     }
 }

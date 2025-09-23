@@ -50,6 +50,8 @@ import ai.koog.prompt.message.Attachment
 import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams.ToolChoice
+import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.streaming.filterTextOnly
 import ai.koog.prompt.structure.executeStructured
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
@@ -57,6 +59,8 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
@@ -72,6 +76,7 @@ import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.io.files.Path as KtPath
 
+@Execution(ExecutionMode.SAME_THREAD)
 class SingleLLMPromptExecutorIntegrationTest {
     companion object {
         private lateinit var testResourcesDir: Path
@@ -238,7 +243,9 @@ class SingleLLMPromptExecutorIntegrationTest {
         }
 
         withRetry(times = 3, testName = "integration_testExecuteStreaming[${model.id}]") {
-            val responseChunks = executor.executeStreaming(prompt, model).toList()
+            val responseChunks = executor.executeStreaming(prompt, model)
+                .filterTextOnly()
+                .toList()
             assertNotNull(responseChunks, "Response chunks should not be null")
             assertTrue(responseChunks.isNotEmpty(), "Response chunks should not be empty")
 
@@ -509,7 +516,7 @@ class SingleLLMPromptExecutorIntegrationTest {
             user("Count from 1 to 5.")
         }
 
-        val responseChunks = mutableListOf<String>()
+        val responseChunks = mutableListOf<StreamFrame>()
 
         withRetry(times = 3, testName = "integration_testRawStringStreaming[${model.id}]") {
             client.executeStreaming(prompt, model).collect { chunk ->

@@ -21,6 +21,17 @@ kotlin {
 
     jvm()
 
+    listOf(
+        // iosX64(),
+        iosArm64(),
+        iosSimulatorArm64()
+    ).forEach {
+        it.binaries.framework {
+            baseName = "ComposeApp"
+            isStatic = true
+        }
+    }
+
     sourceSets {
         commonMain.dependencies {
             implementation(compose.animation)
@@ -36,7 +47,8 @@ kotlin {
             implementation(libs.jetbrains.lifecycle.viewmodel.compose)
             implementation(libs.jetbrains.navigation.compose)
             implementation(libs.koin.compose)
-            implementation(libs.koog.agents)
+            implementation(libs.koog.agents.core)
+            implementation(libs.koog.prompt.executor.llms.all)
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.serialization.core)
             implementation(libs.kotlinx.serialization.json)
@@ -57,6 +69,11 @@ kotlin {
             implementation(compose.desktop.currentOs)
             implementation(libs.androidx.datastore.preferences)
             implementation(libs.kotlinx.coroutines.swing)
+        }
+
+        iosMain.dependencies {
+            implementation(libs.androidx.datastore.preferences)
+            implementation(libs.ktor.client.darwin)
         }
     }
 }

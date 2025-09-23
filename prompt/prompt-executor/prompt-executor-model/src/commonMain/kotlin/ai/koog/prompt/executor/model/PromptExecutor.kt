@@ -5,6 +5,7 @@ import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.streaming.StreamFrame
 import kotlinx.coroutines.flow.Flow
 
 public typealias LLMChoice = List<Message.Response>
@@ -33,13 +34,18 @@ public interface PromptExecutor {
     ): List<Message.Response>
 
     /**
-     * Executes a given prompt using the specified language model and returns a stream of output as a flow of strings.
+     * Executes a given prompt using the specified language model and returns a stream of output as a flow of `StreamFrame` objects.
      *
      * @param prompt The prompt containing input messages and parameters to guide the language model execution.
      * @param model The language model to be used for processing the prompt.
-     * @return A flow emitting strings that represent the streaming output of the language model.
+     * @param tools A list of `ToolDescriptor` objects that define the tools available for the execution.
+     * @return A flow emitting `StreamFrame` objects that represent the streaming output of the language model.
      */
-    public fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String>
+    public fun executeStreaming(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor> = emptyList()
+    ): Flow<StreamFrame>
 
     /**
      * Receives multiple independent choices from the LLM.

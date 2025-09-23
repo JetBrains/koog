@@ -1,7 +1,7 @@
 package ai.koog.agents.core.feature.writer
 
 import ai.koog.agents.core.feature.message.FeatureMessage
-import ai.koog.agents.core.feature.message.FeatureStringMessage
+import ai.koog.agents.core.feature.model.FeatureStringMessage
 import ai.koog.agents.core.feature.remote.client.FeatureMessageRemoteClient
 import ai.koog.agents.core.feature.remote.client.config.DefaultClientConnectionConfig
 import ai.koog.agents.core.feature.remote.server.config.DefaultServerConnectionConfig
@@ -61,7 +61,7 @@ class FeatureMessageRemoteWriterTest {
 
         val writer = TestFeatureMessageRemoteWriter(serverConfig)
         val throwable = assertThrows<IllegalStateException> {
-            writer.processMessage(FeatureStringMessage("test message"))
+            writer.onMessage(FeatureStringMessage("test message"))
         }
 
         val expectedError = "Writer is not initialized. Please make sure you call method 'initialize()' before."
@@ -161,7 +161,7 @@ class FeatureMessageRemoteWriterTest {
                 writer.initialize()
                 isServerStarted.complete(true)
 
-                writer.processMessage(testServerMessage)
+                writer.onMessage(testServerMessage)
 
                 isClientFinished.await()
                 logger.info { "Server is finished successfully" }
@@ -230,7 +230,7 @@ class FeatureMessageRemoteWriterTest {
                 writer.initialize()
                 isServerStarted.complete(true)
 
-                writer.processMessage(message = testServerMessage)
+                writer.onMessage(message = testServerMessage)
 
                 isClientFinished.await()
                 logger.info { "Server is finished successfully" }

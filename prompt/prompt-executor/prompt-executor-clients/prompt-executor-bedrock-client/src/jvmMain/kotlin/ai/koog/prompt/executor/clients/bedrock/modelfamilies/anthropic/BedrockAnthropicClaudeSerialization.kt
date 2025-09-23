@@ -14,6 +14,7 @@ import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockToolSerializ
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.streaming.StreamFrame
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
@@ -202,36 +203,65 @@ internal object BedrockAnthropicClaudeSerialization {
         }
     }
 
-    internal fun parseAnthropicStreamChunk(chunkJsonString: String): String {
+    internal fun parseAnthropicStreamChunk(chunkJsonString: String, clock: Clock = Clock.System): List<StreamFrame> {
         val streamResponse = json.decodeFromString<AnthropicStreamResponse>(chunkJsonString)
 
         return when (streamResponse.type) {
             "content_block_delta" -> {
-                streamResponse.delta?.text ?: ""
+                streamResponse.delta?.let {
+                    buildList {
+                        it.text?.let(StreamFrame::Append)?.let(::add)
+                        it.toolUse?.let { toolUse ->
+                            StreamFrame.ToolCall(
+                                id = toolUse.id,
+                                name = toolUse.name,
+                                content = toolUse.input.toString()
+                            )
+                        }?.let(::add)
+                    }
+                } ?: emptyList()
             }
 
             "message_delta" -> {
-                streamResponse.message?.content?.firstOrNull()?.let { content ->
+                streamResponse.message?.content?.map { content ->
                     when (content) {
-                        is AnthropicResponseContent.Text -> content.text
-                        else -> ""
+                        is AnthropicResponseContent.Text ->
+                            StreamFrame.Append(content.text)
+
+                        is AnthropicResponseContent.ToolUse ->
+                            StreamFrame.ToolCall(
+                                id = content.id,
+                                name = content.name,
+                                content = content.input.toString()
+                            )
                     }
-                } ?: ""
+                } ?: emptyList()
             }
 
             "message_start" -> {
                 val inputTokens = streamResponse.message?.usage?.inputTokens
                 logger.debug { "Bedrock stream starts. Input tokens: $inputTokens" }
-                ""
+                emptyList()
             }
 
             "message_stop" -> {
+                val inputTokens = streamResponse.message?.usage?.inputTokens
                 val outputTokens = streamResponse.message?.usage?.outputTokens
                 logger.debug { "Bedrock stream stops. Output tokens: $outputTokens" }
-                ""
+                listOf(
+                    StreamFrame.End(
+                        finishReason = streamResponse.message?.stopReason,
+                        metaInfo = ResponseMetaInfo.create(
+                            clock = clock,
+                            totalTokensCount = inputTokens?.let { it + (outputTokens ?: 0) } ?: outputTokens,
+                            inputTokensCount = inputTokens,
+                            outputTokensCount = outputTokens
+                        )
+                    )
+                )
             }
 
-            else -> ""
+            else -> emptyList()
         }
     }
 }
