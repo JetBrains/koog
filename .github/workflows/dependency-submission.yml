@@ -25,3 +25,6 @@ jobs:
           cache: 'gradle'
       - name: Generate and submit dependency graph
         uses: gradle/actions/dependency-submission@v4
+        with:
+          # This check fails with circular composite build dependency, exclude simple-examples (they are not relevant for Koog project anyway)
+          dependency-graph-exclude-projects: ':simple-examples:*'
