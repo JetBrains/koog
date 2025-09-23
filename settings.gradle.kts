@@ -68,10 +68,3 @@ include(":docs")
 
 include(":test-utils")
 include(":utils")
-
-/*
- Some separate Gradle projects with examples.
- Included for convenience to be able to run them from the root project.
- Main Koog project (this one) build does not depend on them in any way.
- */
-includeBuild("./examples/simple-examples")
