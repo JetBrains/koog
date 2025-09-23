@@ -13,6 +13,7 @@ import kotlinx.datetime.Clock
  * @param clock The clock used for time-based operations within the pipeline
  */
 public class AIAgentNonGraphPipeline(clock: Clock = Clock.System) : AIAgentPipeline(clock) {
+
     /**
      * Installs a non-graph feature into the pipeline with the provided configuration.
      *

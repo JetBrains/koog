@@ -300,7 +300,7 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
             model.requireCapability(LLMCapability.Vision.Image)
             val imageUrl = when (val attachmentContent = content) {
                 is AttachmentContent.URL -> attachmentContent.url
-                is AttachmentContent.Binary -> "data:$mimeType;base64,${attachmentContent.base64}"
+                is AttachmentContent.Binary -> "data:$mimeType;base64,${attachmentContent.asBase64()}"
                 else -> throw IllegalArgumentException("Unsupported image attachment content: ${attachmentContent::class}")
             }
             OpenAIContentPart.Image(OpenAIContentPart.ImageUrl(imageUrl))
@@ -309,7 +309,7 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
         is Attachment.Audio -> {
             model.requireCapability(LLMCapability.Audio)
             val inputAudio = when (val attachmentContent = content) {
-                is AttachmentContent.Binary -> OpenAIContentPart.InputAudio(attachmentContent.base64, format)
+                is AttachmentContent.Binary -> OpenAIContentPart.InputAudio(attachmentContent.asBase64(), format)
                 else -> throw IllegalArgumentException("Unsupported audio attachment content: ${attachmentContent::class}")
             }
             OpenAIContentPart.Audio(inputAudio)
@@ -320,7 +320,7 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
             when (val attachmentContent = content) {
                 is AttachmentContent.Binary -> {
                     val fileData = OpenAIContentPart.FileData(
-                        fileData = "data:$mimeType;base64,${attachmentContent.base64}",
+                        fileData = "data:$mimeType;base64,${attachmentContent.asBase64()}",
                         filename = fileName
                     )
                     OpenAIContentPart.File(fileData)

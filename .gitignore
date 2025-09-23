@@ -1,12 +1,12 @@
 .gradle
-.idea
-.kotlin
+**/.kotlin
+/.idea
 build
 **/.claude/settings.local.json
 env.properties
 .qodana/code-coverage
 local.properties
-/kotlin-js-store/yarn.lock
+**/kotlin-js-store
 docs/src/main/kotlin/*.kt
 **/.env
 .venv

@@ -23,7 +23,9 @@ public data class BeforeLLMCallContext(
     val prompt: Prompt,
     val model: LLModel,
     val tools: List<ToolDescriptor>,
-) : LLMEventHandlerContext
+) : LLMEventHandlerContext {
+    override val eventType: AgentEventType = AgentEventType.BeforeLLMCall
+}
 
 /**
  * Represents the context for handling an after LLM call event.
@@ -40,4 +42,6 @@ public data class AfterLLMCallContext(
     val tools: List<ToolDescriptor>,
     val responses: List<Message.Response>,
     val moderationResponse: ModerationResult?
-) : LLMEventHandlerContext
+) : LLMEventHandlerContext {
+    override val eventType: AgentEventType = AgentEventType.AfterLLMCall
+}

@@ -24,6 +24,7 @@ import ai.koog.prompt.llm.LLModel
  * | [Chat.GPT5]                      | Medium    | $1.25-$10          | Text, Image, Tools, Document | Text, Tools        |
  * | [Chat.GPT5Mini]                  | Fast      | $0.25-$2           | Text, Image, Tools, Document | Text, Tools        |
  * | [Chat.GPT5Nano]                  | Very fast | $0.05-$0.4         | Text, Image, Tools, Document | Text, Tools        |
+ * | [Audio.GptAudio]                 | Fast      | $2.5-$10           | Text, Audio, Tools           | Text, Audio, Tools |
  * | [Audio.GPT4oMiniAudio]           | Fast      | $0.15-$0.6/$10-$20 | Text, Audio, Tools           | Text, Audio, Tools |
  * | [Audio.GPT4oAudio]               | Medium    | $2.5-$10/$40-$80   | Text, Audio, Tools           | Text, Audio, Tools |
  * | [CostOptimized.O4Mini]           | Medium    | $1.1-$4.4          | Text, Image, Tools, Document | Text, Tools        |
@@ -372,6 +373,31 @@ public object OpenAIModels : LLModelDefinitions {
      * for various audio-centric applications.
      */
     public object Audio {
+
+        /**
+         * GPT Audio is a model for audio inputs and outputs.
+         *
+         * 128,000 context window
+         * 16,384 max output tokens
+         * Oct 01, 2023 knowledge cutoff
+         *
+         * @see <a href="https://platform.openai.com/docs/models/gpt-audio">
+         */
+        public val GptAudio: LLModel = LLModel(
+            provider = LLMProvider.OpenAI,
+            id = "gpt-audio",
+            capabilities = listOf(
+                LLMCapability.Temperature,
+                LLMCapability.Completion,
+                LLMCapability.Tools,
+                LLMCapability.ToolChoice,
+                LLMCapability.Audio,
+                LLMCapability.OpenAIEndpoint.Completions,
+            ),
+            contextLength = 128_000,
+            maxOutputTokens = 16_384,
+        )
+
         /**
          * GPT-4o mini Audio is a smaller,
          * more affordable version of `GPT-4o Audio` that maintains high quality while being more cost-effective.

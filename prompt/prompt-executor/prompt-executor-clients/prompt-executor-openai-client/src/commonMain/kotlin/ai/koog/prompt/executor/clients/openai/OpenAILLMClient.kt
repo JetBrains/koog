@@ -11,6 +11,9 @@ import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import ai.koog.prompt.executor.clients.openai.base.AbstractOpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.base.OpenAIBasedSettings
 import ai.koog.prompt.executor.clients.openai.base.models.Content
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIAudioConfig
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIAudioFormat
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIAudioVoice
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIContentPart
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIMessage
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIModalities
@@ -118,10 +121,15 @@ public open class OpenAILLMClient(
         stream: Boolean
     ): String {
         val chatParams = params.toOpenAIChatParams()
-        val modalities = if (chatParams.audio != null && model.supports(LLMCapability.Audio)) {
+        val modalities = if (model.supports(LLMCapability.Audio)) {
             listOf(OpenAIModalities.Text, OpenAIModalities.Audio)
         } else {
             null
+        }
+        val audioConfig = if (chatParams.audio == null && model.supports(LLMCapability.Audio)) {
+            OpenAIAudioConfig(OpenAIAudioFormat.MP3, OpenAIAudioVoice.Alloy)
+        } else {
+            chatParams.audio
         }
 
         val responseFormat = createResponseFormat(chatParams.schema, model)
@@ -129,7 +137,7 @@ public open class OpenAILLMClient(
         val request = OpenAIChatCompletionRequest(
             messages = messages,
             model = model.id,
-            audio = chatParams.audio,
+            audio = audioConfig,
             frequencyPenalty = chatParams.frequencyPenalty,
             logprobs = chatParams.logprobs,
             maxCompletionTokens = chatParams.maxTokens,
@@ -622,7 +630,7 @@ public open class OpenAILLMClient(
 
                         val imageUrl: String = when (val content = attachment.content) {
                             is AttachmentContent.URL -> content.url
-                            is AttachmentContent.Binary -> "data:${attachment.mimeType};base64,${content.base64}"
+                            is AttachmentContent.Binary -> "data:${attachment.mimeType};base64,${content.asBase64()}"
                             else -> throw IllegalArgumentException("Unsupported image attachment content: ${content::class}")
                         }
 
@@ -633,7 +641,7 @@ public open class OpenAILLMClient(
                         model.requireCapability(LLMCapability.Document)
 
                         val fileData = when (val content = attachment.content) {
-                            is AttachmentContent.Binary -> "data:${attachment.mimeType};base64,${content.base64}"
+                            is AttachmentContent.Binary -> "data:${attachment.mimeType};base64,${content.asBase64()}"
                             else -> null
                         }
 

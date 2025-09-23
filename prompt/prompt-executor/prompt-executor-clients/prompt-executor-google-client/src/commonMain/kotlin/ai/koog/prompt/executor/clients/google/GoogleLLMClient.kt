@@ -431,7 +431,7 @@ public open class GoogleLLMClient(
                         }
 
                         val blob: GoogleData.Blob = when (val content = attachment.content) {
-                            is AttachmentContent.Binary -> GoogleData.Blob(attachment.mimeType, content.base64)
+                            is AttachmentContent.Binary -> GoogleData.Blob(attachment.mimeType, content.asBytes())
                             else -> throw IllegalArgumentException(
                                 "Unsupported image attachment content: ${content::class}"
                             )
@@ -446,7 +446,7 @@ public open class GoogleLLMClient(
                         }
 
                         val blob: GoogleData.Blob = when (val content = attachment.content) {
-                            is AttachmentContent.Binary -> GoogleData.Blob(attachment.mimeType, content.base64)
+                            is AttachmentContent.Binary -> GoogleData.Blob(attachment.mimeType, content.asBytes())
                             else -> throw IllegalArgumentException(
                                 "Unsupported audio attachment content: ${content::class}"
                             )
@@ -461,7 +461,7 @@ public open class GoogleLLMClient(
                         }
 
                         val blob: GoogleData.Blob = when (val content = attachment.content) {
-                            is AttachmentContent.Binary -> GoogleData.Blob(attachment.mimeType, content.base64)
+                            is AttachmentContent.Binary -> GoogleData.Blob(attachment.mimeType, content.asBytes())
                             else -> throw IllegalArgumentException(
                                 "Unsupported file attachment content: ${content::class}"
                             )
@@ -476,7 +476,7 @@ public open class GoogleLLMClient(
                         }
 
                         val blob: GoogleData.Blob = when (val content = attachment.content) {
-                            is AttachmentContent.Binary -> GoogleData.Blob(attachment.mimeType, content.base64)
+                            is AttachmentContent.Binary -> GoogleData.Blob(attachment.mimeType, content.asBytes())
                             else -> throw IllegalArgumentException(
                                 "Unsupported video attachment content: ${content::class}"
                             )

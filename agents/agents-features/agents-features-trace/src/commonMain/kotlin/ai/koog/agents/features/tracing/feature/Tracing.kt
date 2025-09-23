@@ -8,7 +8,7 @@ import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.InterceptContext
 import ai.koog.agents.core.feature.message.FeatureMessage
-import ai.koog.agents.core.feature.message.FeatureMessageProcessorUtil.onMessageForEachSafe
+import ai.koog.agents.core.feature.message.FeatureMessageProcessorUtil.onMessageForEachCatching
 import ai.koog.agents.core.feature.model.events.AIAgentBeforeCloseEvent
 import ai.koog.agents.core.feature.model.events.AIAgentFinishedEvent
 import ai.koog.agents.core.feature.model.events.AIAgentGraphStrategyStartEvent
@@ -55,10 +55,15 @@ import io.github.oshai.kotlinlogging.KotlinLogging
  *     install(Tracing) {
  *         // Configure message processors to handle trace events
  *         addMessageProcessor(TraceFeatureMessageLogWriter(logger))
- *         addMessageProcessor(TraceFeatureMessageFileWriter(outputFile, fileSystem::sink))
+
+ *         val fileWriter = TraceFeatureMessageFileWriter(
+ *             outputFile,
+ *             { path: Path -> SystemFileSystem.sink(path).buffered() }
+ *         )
+ *         addMessageProcessor(fileWriter)
  *
  *         // Optionally filter messages
- *         messageFilter = { message ->
+ *         fileWriter.setMessageFilter { message ->
  *             // Only trace LLM calls and tool calls
  *             message is BeforeLLMCallEvent || message is ToolCallEvent
  *         }
@@ -323,11 +328,7 @@ public class Tracing {
         //region Private Methods
 
         private suspend fun processMessage(config: TraceFeatureConfig, message: FeatureMessage) {
-            if (!config.messageFilter(message)) {
-                return
-            }
-
-            config.messageProcessors.onMessageForEachSafe(message)
+            config.messageProcessors.onMessageForEachCatching(message)
         }
 
         //endregion Private Methods

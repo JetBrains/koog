@@ -96,7 +96,7 @@ public class Debugger {
                     runId = eventContext.runId,
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
-                writer.processMessage(event)
+                writer.onMessage(event)
             }
 
             pipeline.interceptAgentFinished(interceptContext) intercept@{ eventContext ->
@@ -106,7 +106,7 @@ public class Debugger {
                     result = eventContext.result?.toString(),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
-                writer.processMessage(event)
+                writer.onMessage(event)
             }
 
             pipeline.interceptAgentRunError(interceptContext) intercept@{ eventContext ->
@@ -116,7 +116,7 @@ public class Debugger {
                     error = eventContext.throwable.toAgentError(),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
-                writer.processMessage(event)
+                writer.onMessage(event)
             }
 
             pipeline.interceptAgentBeforeClosed(interceptContext) intercept@{ eventContext ->
@@ -124,7 +124,7 @@ public class Debugger {
                     agentId = eventContext.agentId,
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
-                writer.processMessage(event)
+                writer.onMessage(event)
             }
 
             //endregion Intercept Agent Events
@@ -142,7 +142,7 @@ public class Debugger {
                     graph = strategy.startNodeToGraph(),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
-                writer.processMessage(event)
+                writer.onMessage(event)
             }
 
             pipeline.interceptStrategyFinished(interceptContext) intercept@{ eventContext ->
@@ -152,7 +152,7 @@ public class Debugger {
                     result = eventContext.result?.toString(),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
-                writer.processMessage(event)
+                writer.onMessage(event)
             }
 
             //endregion Intercept Strategy Events
@@ -166,7 +166,7 @@ public class Debugger {
                     input = eventContext.input?.toString() ?: "",
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
-                writer.processMessage(event)
+                writer.onMessage(event)
             }
 
             pipeline.interceptAfterNode(interceptContext) intercept@{ eventContext ->
@@ -177,7 +177,7 @@ public class Debugger {
                     output = eventContext.output?.toString() ?: "",
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
-                writer.processMessage(event)
+                writer.onMessage(event)
             }
 
             //endregion Intercept Node Events
@@ -192,7 +192,7 @@ public class Debugger {
                     tools = eventContext.tools.map { it.name },
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
-                writer.processMessage(event)
+                writer.onMessage(event)
             }
 
             pipeline.interceptAfterLLMCall(interceptContext) intercept@{ eventContext ->
@@ -204,7 +204,7 @@ public class Debugger {
                     moderationResponse = eventContext.moderationResponse,
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
-                writer.processMessage(event)
+                writer.onMessage(event)
             }
 
             //endregion Intercept LLM Call Events
@@ -222,7 +222,7 @@ public class Debugger {
                     toolArgs = tool.encodeArgs(eventContext.toolArgs),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
-                writer.processMessage(event)
+                writer.onMessage(event)
             }
 
             pipeline.interceptToolValidationError(interceptContext) intercept@{ eventContext ->
@@ -237,7 +237,7 @@ public class Debugger {
                     error = eventContext.error,
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
-                writer.processMessage(event)
+                writer.onMessage(event)
             }
 
             pipeline.interceptToolCallFailure(interceptContext) intercept@{ eventContext ->
@@ -252,7 +252,7 @@ public class Debugger {
                     error = eventContext.throwable.toAgentError(),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
-                writer.processMessage(event)
+                writer.onMessage(event)
             }
 
             pipeline.interceptToolCallResult(interceptContext) intercept@{ eventContext ->
@@ -267,7 +267,7 @@ public class Debugger {
                     result = eventContext.result?.let { result -> tool.encodeResultToString(result) },
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
-                writer.processMessage(event)
+                writer.onMessage(event)
             }
 
             //endregion Intercept Tool Call Events

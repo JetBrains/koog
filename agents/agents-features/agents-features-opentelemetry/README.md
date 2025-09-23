@@ -10,6 +10,7 @@ OpenTelemetry is an observability framework that provides tools for generating, 
 - Debug issues in complex agent workflows
 - Visualize the execution flow of your agents
 - Track LLM calls and tool usage
+- Count tokens (input, output, and total) for LLM calls to monitor usage and costs
 - Analyze agent behavior patterns
 
 Key OpenTelemetry concepts
@@ -161,22 +162,72 @@ Some custom attributes specific to Koog are also added:
 
 ### Span Types
 
-The OpenTelemetry feature creates different types of spans for various operations:
+The OpenTelemetry feature creates different types of spans for various operations. Each span type has a distinct purpose, parent–child relationship, and set of attributes and events.
 
-1. **Create Agent Span**: Represents the creation of an agent
-   - Key attributes: `gen_ai.operation.name` (create_agent), `gen_ai.agent.id`, `gen_ai.request.model`
+1. **Create Agent Span**
+    - Purpose: Long‑lived span representing the lifecycle of an agent instance (created once per agent ID).
+    - Emitted: When an agent is first started. Closed when the agent is closed.
+    - Parent: none. Children: **Invoke Agent Span** (one per run).
+    - Useful for: Grouping all agent runs and capturing static agent configuration.
+    - Key attributes:
+        - `gen_ai.operation.name` = `create_agent`
+        - `gen_ai.agent.id`
+        - `gen_ai.request.model`
 
-2. **Invoke Agent Span**: Represents a specific agent run
-   - Key attributes: `gen_ai.operation.name` (invoke_agent), `gen_ai.agent.id`, `gen_ai.conversation.id`
+2. **Invoke Agent Span**
+    - Purpose: One concrete execution (run) of an agent.
+    - Emitted: At the start of a run. Closed on successful finish or error.
+    - Parent: Parent: **Create Agent Span**. Children: **Node Execute Span** instances, and, indirectly, LLM and Tool spans within nodes.
+    - Useful for: Measuring run‑level timing, status, and grouping of all node, tool, and LLM activity for a run.
+    - Key attributes:
+        - `gen_ai.operation.name` = `invoke_agent`
+        - `gen_ai.agent.id`
+        - `gen_ai.conversation.id`
+        - `gen_ai.system` (LLM provider)
+        - `gen_ai.response.finish_reasons` (on error)
 
-3. **Node Execute Span**: Represents the execution of a node in the agent strategy
-   - Key attributes: `gen_ai.conversation.id`, `koog.node.name`
+3. **Node Execute Span**
+    - Purpose: Execution of a single node in the agent strategy.
+    - Emitted: Immediately before a node runs. Closed after the node completes or errors.
+    - Parent: **Invoke Agent Span**. Children: **Inference Spans** and **Execute Tool Span** instances created by the node.
+    - Useful for: Understanding strategy flow and attributing LLM or tool work to a specific node.
+    - Key attributes:
+        - `gen_ai.conversation.id`
+        - `koog.node.name`
 
-4. **Inference Span**: Represents an LLM call
-   - Key attributes: `gen_ai.operation.name` (chat), `gen_ai.conversation.id`, `gen_ai.request.model`, `gen_ai.request.temperature`
+4. **Inference Span**
+    - Purpose: A single LLM call (prompt execution).
+    - Emitted: Before the LLM is invoked. Closed after responses are received.
+    - Parent: **Node Execute Span**.
+    - Events added:
+        - system, user, and assistant messages from the prompt
+        - tool choice and tool result messages
+        - moderation response (when present)
+    - Useful for: Tracking model usage, prompt parameters, messages, token usage, and finish reasons.
+    - Key attributes:
+        - `gen_ai.operation.name` = `chat`
+        - `gen_ai.system` (LLM provider)
+        - `gen_ai.conversation.id`
+        - `gen_ai.request.model`
+        - `gen_ai.request.temperature`
+        - `gen_ai.request.max_tokens` (when available)
+        - `gen_ai.usage.input_tokens` (when available)
+        - `gen_ai.usage.output_tokens` (when available)
+        - `gen_ai.usage.total_tokens` (when available)
+        - `gen_ai.response.finish_reasons` (Stop, ToolCalls, etc.)
 
-5. **Execute Tool Span**: Represents a tool call
-   - Key attributes: `gen_ai.tool.name`, `gen_ai.tool.description`
+5. **Execute Tool Span**
+    - Purpose: Execution of a tool or function call triggered by the agent or LLM.
+    - Emitted: When a tool is called. Closed after the tool returns a result or fails with an error during validation or execution.
+    - Parent: **Node Execute Span**.
+    - Useful for: Auditing tool usage, inputs and outputs, and failure causes.
+    - Key attributes:
+        - `gen_ai.tool.name`
+        - `gen_ai.tool.description`
+        - `gen_ai.tool.arguments` (when available)
+        - `gen_ai.tool.call_id` (when available)
+        - `gen_ai.tool.output` (when available)
+        - `error.type` (on failure or validation error)
 
 ## Exporters
 

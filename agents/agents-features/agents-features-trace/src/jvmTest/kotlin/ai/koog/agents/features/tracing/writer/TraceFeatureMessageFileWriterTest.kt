@@ -142,7 +142,7 @@ class TraceFeatureMessageFileWriterTest {
                 promptExecutor = mockExecutor
             ) {
                 install(Tracing) {
-                    messageFilter = { message ->
+                    writer.setMessageFilter { message ->
                         if (message is AIAgentStartedEvent) {
                             runId = message.runId
                         }
@@ -284,7 +284,7 @@ class TraceFeatureMessageFileWriterTest {
         ).use { writer ->
             writer.initialize()
 
-            messagesToProcess.forEach { message -> writer.processMessage(message) }
+            messagesToProcess.forEach { message -> writer.onMessage(message) }
 
             val actualMessage = writer.targetPath.readLines()
 
@@ -337,7 +337,6 @@ class TraceFeatureMessageFileWriterTest {
 
             val agent = createAgent(strategy = strategy) {
                 install(Tracing) {
-                    messageFilter = { true }
                     addMessageProcessor(writer)
                 }
             }
@@ -368,9 +367,7 @@ class TraceFeatureMessageFileWriterTest {
             }
 
             val agent = createAgent(strategy = strategy) {
-                install(Tracing) {
-                    messageFilter = { true }
-                }
+                install(Tracing)
             }
 
             agent.run("")
@@ -462,7 +459,7 @@ class TraceFeatureMessageFileWriterTest {
                 promptExecutor = mockExecutor
             ) {
                 install(Tracing) {
-                    messageFilter = { message ->
+                    writer.setMessageFilter { message ->
                         if (message is AIAgentStartedEvent) {
                             runId = message.runId
                         }

@@ -5,6 +5,7 @@ import ai.koog.agents.core.agent.context.AgentContextData
 import ai.koog.agents.core.agent.context.store
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
+import ai.koog.agents.core.agent.entity.AIAgentSubgraph
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
@@ -14,6 +15,7 @@ import ai.koog.agents.snapshot.providers.PersistencyStorageProvider
 import ai.koog.prompt.message.Message
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
@@ -39,7 +41,10 @@ import kotlin.uuid.Uuid
  * @property currentNodeId The ID of the node currently being executed
  */
 @OptIn(ExperimentalUuidApi::class, ExperimentalTime::class, InternalAgentsApi::class)
-public class Persistency(private val persistencyStorageProvider: PersistencyStorageProvider) {
+public class Persistency(
+    private val persistencyStorageProvider: PersistencyStorageProvider,
+    internal val clock: Clock = Clock.System,
+) {
     /**
      * Represents the identifier of the current node being executed within the agent pipeline.
      *
@@ -94,7 +99,7 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
             val featureImpl = Persistency(config.storage)
             val interceptContext = InterceptContext(this, featureImpl)
 
-            pipeline.interceptContextAgentFeature(this) { ctx ->
+            pipeline.interceptContextAgentFeature(this) { _ ->
                 return@interceptContextAgentFeature featureImpl
             }
 
@@ -108,11 +113,15 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
                 if (checkpoint != null) {
                     logger.info { "Restoring checkpoint: ${checkpoint.checkpointId} to node ${checkpoint.nodeId}" }
                 } else {
-                    logger.info { "No checkpoint found, starting from the beginning" }
+                    logger.info { "No non-tombstone checkpoint found, starting from the beginning" }
                 }
             }
 
             pipeline.interceptAfterNode(interceptContext) { eventCtx ->
+                if (isTechnicalNode(eventCtx.node.id)) {
+                    return@interceptAfterNode
+                }
+
                 if (config.enableAutomaticPersistency) {
                     createCheckpoint(
                         agentContext = eventCtx.context,
@@ -126,8 +135,16 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
             pipeline.interceptBeforeNode(interceptContext) { eventCtx ->
                 featureImpl.currentNodeId = eventCtx.node.id
             }
+
+            pipeline.interceptStrategyFinished(interceptContext) { ctx ->
+                ctx.feature.createTombstoneCheckpoint(ctx.feature.clock.now())
+            }
         }
     }
+
+    private fun isTechnicalNode(nodeId: String): Boolean =
+        nodeId.startsWith(AIAgentSubgraph.FINISH_NODE_PREFIX) ||
+            nodeId.startsWith(AIAgentSubgraph.START_NODE_PREFIX)
 
     /**
      * Creates a checkpoint of the agent's current state.
@@ -167,6 +184,22 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
             )
         }
 
+        saveCheckpoint(checkpoint)
+        return checkpoint
+    }
+
+    /**
+     * Creates and saves a tombstone checkpoint for an agent's session.
+     *
+     * A tombstone checkpoint represents a placeholder state with no interactions or messages,
+     * marking a terminated or invalid session. The method generates the tombstone checkpoint
+     * and persists it using the appropriate storage mechanism.
+     *
+     * @return The created tombstone checkpoint data.
+     */
+    @InternalAgentsApi
+    public suspend fun createTombstoneCheckpoint(time: Instant): AgentCheckpointData {
+        val checkpoint = tombstoneCheckpoint(time)
         saveCheckpoint(checkpoint)
         return checkpoint
     }
@@ -259,9 +292,11 @@ public class Persistency(private val persistencyStorageProvider: PersistencyStor
         agentContext: AIAgentContext
     ): AgentCheckpointData? {
         val checkpoint: AgentCheckpointData? = getLatestCheckpoint()
-        if (checkpoint != null) {
-            agentContext.store(checkpoint.toAgentContextData())
+        if (checkpoint?.isTombstone() ?: true) {
+            return null
         }
+
+        agentContext.store(checkpoint.toAgentContextData())
         return checkpoint
     }
 }

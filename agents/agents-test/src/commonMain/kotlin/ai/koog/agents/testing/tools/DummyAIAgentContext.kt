@@ -388,7 +388,7 @@ public class AIAgentContextMockBuilder() : AIAgentContextMockBuilderBase {
      *
      * The `runId` can be null, indicating that the session has not been associated with an identifier.
      */
-    override var runId: String? = null
+    override var runId: String? = "test-run-id-default"
 
     /**
      * Represents the identifier for the strategy to be used in the agent context.
@@ -399,7 +399,7 @@ public class AIAgentContextMockBuilder() : AIAgentContextMockBuilderBase {
      *
      * Can be null if a strategy is not explicitly defined or required.
      */
-    override var strategyName: String? = null
+    override var strategyName: String? = "test-strategy-default"
 
     /**
      * Creates and returns a new copy of the current `AIAgentContextMockBuilder` instance.

@@ -4,6 +4,7 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
 import ai.koog.agents.snapshot.feature.Persistency
+import ai.koog.agents.snapshot.feature.isTombstone
 import ai.koog.agents.snapshot.providers.file.JVMFilePersistencyStorageProvider
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
@@ -85,7 +86,7 @@ class FileCheckpointsTests {
         )
 
         // Verify that the checkpoint was saved to the file system
-        val checkpoints = provider.getCheckpoints()
+        val checkpoints = provider.getCheckpoints().filter { !it.isTombstone() }
         assertEquals(1, checkpoints.size, "Should have one checkpoint")
         assertEquals("checkpointId", checkpoints.first().checkpointId)
     }

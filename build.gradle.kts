@@ -201,20 +201,22 @@ tasks {
 
 dependencies {
     dokka(project(":agents:agents-core"))
+    dokka(project(":agents:agents-ext"))
     dokka(project(":agents:agents-features:agents-features-debugger"))
     dokka(project(":agents:agents-features:agents-features-event-handler"))
     dokka(project(":agents:agents-features:agents-features-memory"))
     dokka(project(":agents:agents-features:agents-features-opentelemetry"))
     dokka(project(":agents:agents-features:agents-features-snapshot"))
-    dokka(project(":agents:agents-features:agents-features-trace"))
     dokka(project(":agents:agents-features:agents-features-tokenizer"))
+    dokka(project(":agents:agents-features:agents-features-trace"))
     dokka(project(":agents:agents-mcp"))
     dokka(project(":agents:agents-test"))
     dokka(project(":agents:agents-tools"))
     dokka(project(":agents:agents-utils"))
-    dokka(project(":agents:agents-ext"))
     dokka(project(":embeddings:embeddings-base"))
     dokka(project(":embeddings:embeddings-llm"))
+    dokka(project(":koog-ktor"))
+    dokka(project(":koog-spring-boot-starter"))
     dokka(project(":prompt:prompt-cache:prompt-cache-files"))
     dokka(project(":prompt:prompt-cache:prompt-cache-model"))
     dokka(project(":prompt:prompt-cache:prompt-cache-redis"))
@@ -237,10 +239,9 @@ dependencies {
     dokka(project(":prompt:prompt-structure"))
     dokka(project(":prompt:prompt-tokenizer"))
     dokka(project(":prompt:prompt-xml"))
-    dokka(project(":koog-spring-boot-starter"))
-    dokka(project(":koog-ktor"))
     dokka(project(":rag:rag-base"))
     dokka(project(":rag:vector-storage"))
+    dokka(project(":utils"))
 }
 
 kover {

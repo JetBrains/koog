@@ -256,7 +256,7 @@ class AttachmentBuilderTest {
             "Local image should be recognized as Binary content"
         )
 
-        val base64String = resultImage.content.base64
+        val base64String = resultImage.content.asBase64()
         assertEquals("simulated_base64_content", base64String, "Base64 content should match")
     }
 
@@ -280,7 +280,7 @@ class AttachmentBuilderTest {
             "Local document should be recognized as Binary content"
         )
 
-        val base64String = resultDocument.content.base64
+        val base64String = resultDocument.content.asBase64()
         assertEquals("simulated_base64_content", base64String, "Base64 content should match")
     }
 
