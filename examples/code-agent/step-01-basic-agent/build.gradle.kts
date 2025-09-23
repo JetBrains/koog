@@ -1,5 +1,5 @@
 plugins {
-    id("ai.kotlin.jvm")
+    alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.shadow)
     application
 }
@@ -7,12 +7,8 @@ plugins {
 application.mainClass.set("ai.koog.agents.examples.codeagent.step01.MainKt")
 
 dependencies {
-    implementation(project(":agents:agents-core"))
-    implementation(project(":agents:agents-ext"))
-    implementation(project(":prompt:prompt-executor:prompt-executor-llms-all"))
-
+    implementation("ai.koog:koog-agents")
     implementation(libs.kotlinx.coroutines.core)
-
     implementation(libs.logback.classic)
 }
 

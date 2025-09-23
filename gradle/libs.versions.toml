@@ -23,7 +23,6 @@ mockk = "1.13.8"
 netty = "4.2.6.Final"
 opentelemetry = "1.51.0"
 oshai-logging = "7.0.7"
-shadow = "9.1.0"
 slf4j = "2.0.17"
 testcontainers = "1.19.7"
 exposed = "0.58.0"
@@ -117,5 +116,4 @@ kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", versi
 kotlin-spring = { id = "org.jetbrains.kotlin.plugin.spring", version.ref = "kotlin" }
 kotlinx-kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
 ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
-shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
 spring-management = { id = "io.spring.dependency-management", version.ref = "spring-management" }
