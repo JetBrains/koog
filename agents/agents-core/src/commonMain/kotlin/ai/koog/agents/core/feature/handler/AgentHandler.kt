@@ -69,7 +69,7 @@ public class AgentHandler<TFeature : Any>(public val feature: TFeature) {
      *
      * @param environment The AgentEnvironment to be transformed
      */
-    public fun transformEnvironment(
+    public suspend fun transformEnvironment(
         context: AgentTransformEnvironmentContext<TFeature>,
         environment: AIAgentEnvironment
     ): AIAgentEnvironment =
@@ -81,7 +81,7 @@ public class AgentHandler<TFeature : Any>(public val feature: TFeature) {
      * @param environment The AgentEnvironment to be transformed
      */
     @Suppress("UNCHECKED_CAST")
-    internal fun transformEnvironmentUnsafe(
+    internal suspend fun transformEnvironmentUnsafe(
         context: AgentTransformEnvironmentContext<*>,
         environment: AIAgentEnvironment
     ) =
@@ -126,7 +126,7 @@ public fun interface AgentEnvironmentTransformer<TFeature : Any> {
      * @param environment The current agent environment to be transformed
      * @return The transformed agent environment
      */
-    public fun transform(
+    public suspend fun transform(
         context: AgentTransformEnvironmentContext<TFeature>,
         environment: AIAgentEnvironment
     ): AIAgentEnvironment

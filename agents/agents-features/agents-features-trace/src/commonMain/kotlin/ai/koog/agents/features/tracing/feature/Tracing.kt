@@ -8,7 +8,7 @@ import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.InterceptContext
 import ai.koog.agents.core.feature.message.FeatureMessage
-import ai.koog.agents.core.feature.message.FeatureMessageProcessorUtil.onMessageForEachSafe
+import ai.koog.agents.core.feature.message.FeatureMessageProcessorUtil.onMessageForEachCatching
 import ai.koog.agents.core.feature.model.events.AIAgentBeforeCloseEvent
 import ai.koog.agents.core.feature.model.events.AIAgentFinishedEvent
 import ai.koog.agents.core.feature.model.events.AIAgentGraphStrategyStartEvent
@@ -328,7 +328,7 @@ public class Tracing {
         //region Private Methods
 
         private suspend fun processMessage(config: TraceFeatureConfig, message: FeatureMessage) {
-            config.messageProcessors.onMessageForEachSafe(message)
+            config.messageProcessors.onMessageForEachCatching(message)
         }
 
         //endregion Private Methods

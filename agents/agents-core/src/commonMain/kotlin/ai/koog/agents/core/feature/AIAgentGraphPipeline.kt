@@ -69,7 +69,7 @@ public class AIAgentGraphPipeline(clock: Clock = Clock.System) : AIAgentPipeline
      * @param baseEnvironment The initial environment to be transformed
      * @return The transformed environment after all handlers have been applied
      */
-    public fun transformEnvironment(
+    public suspend fun transformEnvironment(
         strategy: AIAgentGraphStrategy<*, *>,
         agent: GraphAIAgent<*, *>,
         baseEnvironment: AIAgentEnvironment
@@ -153,14 +153,10 @@ public class AIAgentGraphPipeline(clock: Clock = Clock.System) : AIAgentPipeline
         interceptContext: InterceptContext<TFeature>,
         handle: suspend TFeature.(eventContext: NodeBeforeExecuteContext) -> Unit
     ) {
-        val existingHandler = executeNodeHandlers.getOrPut(interceptContext.feature.key) { ExecuteNodeHandler() }
-
-        existingHandler.beforeNodeHandler = BeforeNodeHandler handler@{ eventContext: NodeBeforeExecuteContext ->
-            if (!registeredFeatures[interceptContext.feature.key].isAccepted(eventContext)) {
-                return@handler
-            }
-            with(interceptContext.featureImpl) { handle(eventContext) }
-        }
+        val handler = executeNodeHandlers.getOrPut(interceptContext.feature.key) { ExecuteNodeHandler() }
+        handler.beforeNodeHandler = BeforeNodeHandler(
+            function = createConditionalHandler(interceptContext, handle)
+        )
     }
 
     /**
@@ -179,14 +175,10 @@ public class AIAgentGraphPipeline(clock: Clock = Clock.System) : AIAgentPipeline
         interceptContext: InterceptContext<TFeature>,
         handle: suspend TFeature.(eventContext: NodeAfterExecuteContext) -> Unit
     ) {
-        val existingHandler = executeNodeHandlers.getOrPut(interceptContext.feature.key) { ExecuteNodeHandler() }
-
-        existingHandler.afterNodeHandler = AfterNodeHandler handler@{ eventContext: NodeAfterExecuteContext ->
-            if (!registeredFeatures[interceptContext.feature.key].isAccepted(eventContext)) {
-                return@handler
-            }
-            with(interceptContext.featureImpl) { handle(eventContext) }
-        }
+        val handler = executeNodeHandlers.getOrPut(interceptContext.feature.key) { ExecuteNodeHandler() }
+        handler.afterNodeHandler = AfterNodeHandler(
+            function = createConditionalHandler(interceptContext, handle)
+        )
     }
 
     /**
@@ -206,14 +198,10 @@ public class AIAgentGraphPipeline(clock: Clock = Clock.System) : AIAgentPipeline
         interceptContext: InterceptContext<TFeature>,
         handle: suspend TFeature.(eventContext: NodeExecutionErrorContext) -> Unit
     ) {
-        val existingHandler = executeNodeHandlers.getOrPut(interceptContext.feature.key) { ExecuteNodeHandler() }
-
-        existingHandler.nodeExecutionErrorHandler = NodeExecutionErrorHandler handler@{ eventContext: NodeExecutionErrorContext ->
-            if (!registeredFeatures[interceptContext.feature.key].isAccepted(eventContext)) {
-                return@handler
-            }
-            with(interceptContext.featureImpl) { handle(eventContext) }
-        }
+        val handler = executeNodeHandlers.getOrPut(interceptContext.feature.key) { ExecuteNodeHandler() }
+        handler.nodeExecutionErrorHandler = NodeExecutionErrorHandler(
+            function = createConditionalHandler(interceptContext, handle)
+        )
     }
 
     //endregion Interceptors

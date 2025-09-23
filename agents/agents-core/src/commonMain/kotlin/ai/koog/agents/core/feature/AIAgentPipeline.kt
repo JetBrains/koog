@@ -523,19 +523,16 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
      */
     public fun <TFeature : Any> interceptEnvironmentCreated(
         interceptContext: InterceptContext<TFeature>,
-        transform: AgentTransformEnvironmentContext<TFeature>.(AIAgentEnvironment) -> AIAgentEnvironment
+        transform: suspend AgentTransformEnvironmentContext<TFeature>.(AIAgentEnvironment) -> AIAgentEnvironment
     ) {
         @Suppress("UNCHECKED_CAST")
-        val existingHandler: AgentHandler<TFeature> =
+        val handler: AgentHandler<TFeature> =
             agentHandlers.getOrPut(interceptContext.feature.key) { AgentHandler(interceptContext.featureImpl) } as? AgentHandler<TFeature>
                 ?: return
 
-        existingHandler.environmentTransformer = AgentEnvironmentTransformer handler@{ eventContext, env ->
-            if (!registeredFeatures[interceptContext.feature.key].isAccepted(eventContext)) {
-                return@handler env
-            }
-            eventContext.transform(env)
-        }
+        handler.environmentTransformer = AgentEnvironmentTransformer(
+            function = createConditionalHandler(interceptContext, transform)
+        )
     }
 
     /**
@@ -557,16 +554,13 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
         handle: suspend (AgentStartContext<TFeature>) -> Unit
     ) {
         @Suppress("UNCHECKED_CAST")
-        val existingHandler: AgentHandler<TFeature> =
+        val handler: AgentHandler<TFeature> =
             agentHandlers.getOrPut(interceptContext.feature.key) { AgentHandler(interceptContext.featureImpl) } as? AgentHandler<TFeature>
                 ?: return
 
-        existingHandler.beforeAgentStartedHandler = BeforeAgentStartedHandler handler@{ eventContext: AgentStartContext<TFeature> ->
-            if (!registeredFeatures[interceptContext.feature.key].isAccepted(eventContext)) {
-                return@handler
-            }
-            handle(eventContext)
-        }
+        handler.beforeAgentStartedHandler = BeforeAgentStartedHandler(
+            function = createConditionalHandler(interceptContext, handle)
+        )
     }
 
     /**
@@ -585,14 +579,10 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
         interceptContext: InterceptContext<TFeature>,
         handle: suspend TFeature.(eventContext: AgentFinishedContext) -> Unit
     ) {
-        val existingHandler = agentHandlers.getOrPut(interceptContext.feature.key) { AgentHandler(interceptContext.featureImpl) }
-
-        existingHandler.agentFinishedHandler = AgentFinishedHandler handler@{ eventContext: AgentFinishedContext ->
-            if (!registeredFeatures[interceptContext.feature.key].isAccepted(eventContext)) {
-                return@handler
-            }
-            with(interceptContext.featureImpl) { handle(eventContext) }
-        }
+        val handler = agentHandlers.getOrPut(interceptContext.feature.key) { AgentHandler(interceptContext.featureImpl) }
+        handler.agentFinishedHandler = AgentFinishedHandler(
+            function = createConditionalHandler(interceptContext, handle)
+        )
     }
 
     /**
@@ -611,14 +601,10 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
         interceptContext: InterceptContext<TFeature>,
         handle: suspend TFeature.(eventContext: AgentRunErrorContext) -> Unit
     ) {
-        val existingHandler = agentHandlers.getOrPut(interceptContext.feature.key) { AgentHandler(interceptContext.featureImpl) }
-
-        existingHandler.agentRunErrorHandler = AgentRunErrorHandler handler@{ eventContext: AgentRunErrorContext ->
-            if (!registeredFeatures[interceptContext.feature.key].isAccepted(eventContext)) {
-                return@handler
-            }
-            with(interceptContext.featureImpl) { handle(eventContext) }
-        }
+        val handler = agentHandlers.getOrPut(interceptContext.feature.key) { AgentHandler(interceptContext.featureImpl) }
+        handler.agentRunErrorHandler = AgentRunErrorHandler(
+            function = createConditionalHandler(interceptContext, handle)
+        )
     }
 
     /**
@@ -640,14 +626,10 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
         interceptContext: InterceptContext<TFeature>,
         handle: suspend TFeature.(eventContext: AgentBeforeCloseContext) -> Unit
     ) {
-        val existingHandler = agentHandlers.getOrPut(interceptContext.feature.key) { AgentHandler(interceptContext.featureImpl) }
-
-        existingHandler.agentBeforeCloseHandler = AgentBeforeCloseHandler handler@{ eventContext: AgentBeforeCloseContext ->
-            if (!registeredFeatures[interceptContext.feature.key].isAccepted(eventContext)) {
-                return@handler
-            }
-            with(interceptContext.featureImpl) { handle(eventContext) }
-        }
+        val handler = agentHandlers.getOrPut(interceptContext.feature.key) { AgentHandler(interceptContext.featureImpl) }
+        handler.agentBeforeCloseHandler = AgentBeforeCloseHandler(
+            function = createConditionalHandler(interceptContext, handle)
+        )
     }
 
     /**
@@ -667,11 +649,10 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
         interceptContext: InterceptContext<TFeature>,
         handle: suspend (StrategyStartContext<TFeature>) -> Unit
     ) {
-        val existingHandler = strategyHandlers
-            .getOrPut(interceptContext.feature.key) { StrategyHandler(interceptContext.featureImpl) }
+        val handler = strategyHandlers.getOrPut(interceptContext.feature.key) { StrategyHandler(interceptContext.featureImpl) }
 
         @Suppress("UNCHECKED_CAST")
-        if (existingHandler as? StrategyHandler<TFeature> == null) {
+        if (handler as? StrategyHandler<TFeature> == null) {
             logger.debug {
                 "Expected to get an agent handler for feature of type <${interceptContext.featureImpl::class}>, but get a handler of type <${interceptContext.feature.key}> instead. " +
                     "Skipping adding strategy started interceptor for feature."
@@ -679,12 +660,9 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
             return
         }
 
-        existingHandler.strategyStartedHandler = StrategyStartedHandler handler@{ eventContext ->
-            if (!registeredFeatures[interceptContext.feature.key].isAccepted(eventContext)) {
-                return@handler
-            }
-            handle(eventContext)
-        }
+        handler.strategyStartedHandler = StrategyStartedHandler(
+            function = createConditionalHandler(interceptContext, handle)
+        )
     }
 
     /**
@@ -704,10 +682,10 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
         interceptContext: InterceptContext<TFeature>,
         handle: suspend (StrategyFinishContext<TFeature>) -> Unit
     ) {
-        val existingHandler = strategyHandlers.getOrPut(interceptContext.feature.key) { StrategyHandler(interceptContext.featureImpl) }
+        val handler = strategyHandlers.getOrPut(interceptContext.feature.key) { StrategyHandler(interceptContext.featureImpl) }
 
         @Suppress("UNCHECKED_CAST")
-        if (existingHandler as? StrategyHandler<TFeature> == null) {
+        if (handler as? StrategyHandler<TFeature> == null) {
             logger.debug {
                 "Expected to get an agent handler for feature of type <${interceptContext.featureImpl::class}>, " +
                     "but get a handler of type <${interceptContext.feature.key}> instead. " +
@@ -716,12 +694,9 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
             return
         }
 
-        existingHandler.strategyFinishedHandler = StrategyFinishedHandler handler@{ eventContext ->
-            if (!registeredFeatures[interceptContext.feature.key].isAccepted(eventContext)) {
-                return@handler
-            }
-            handle(eventContext)
-        }
+        handler.strategyFinishedHandler = StrategyFinishedHandler(
+            function = createConditionalHandler(interceptContext, handle)
+        )
     }
 
     /**
@@ -740,14 +715,10 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
         interceptContext: InterceptContext<TFeature>,
         handle: suspend TFeature.(eventContext: BeforeLLMCallContext) -> Unit
     ) {
-        val existingHandler = executeLLMHandlers.getOrPut(interceptContext.feature.key) { ExecuteLLMHandler() }
-
-        existingHandler.beforeLLMCallHandler = BeforeLLMCallHandler handler@{ eventContext: BeforeLLMCallContext ->
-            if (!registeredFeatures[interceptContext.feature.key].isAccepted(eventContext)) {
-                return@handler
-            }
-            with(interceptContext.featureImpl) { handle(eventContext) }
-        }
+        val handler = executeLLMHandlers.getOrPut(interceptContext.feature.key) { ExecuteLLMHandler() }
+        handler.beforeLLMCallHandler = BeforeLLMCallHandler(
+            function = createConditionalHandler(interceptContext, handle)
+        )
     }
 
     /**
@@ -766,14 +737,10 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
         interceptContext: InterceptContext<TFeature>,
         handle: suspend TFeature.(eventContext: AfterLLMCallContext) -> Unit
     ) {
-        val existingHandler = executeLLMHandlers.getOrPut(interceptContext.feature.key) { ExecuteLLMHandler() }
-
-        existingHandler.afterLLMCallHandler = AfterLLMCallHandler handler@{ eventContext: AfterLLMCallContext ->
-            if (!registeredFeatures[interceptContext.feature.key].isAccepted(eventContext)) {
-                return@handler
-            }
-            with(interceptContext.featureImpl) { handle(eventContext) }
-        }
+        val handler = executeLLMHandlers.getOrPut(interceptContext.feature.key) { ExecuteLLMHandler() }
+        handler.afterLLMCallHandler = AfterLLMCallHandler(
+            function = createConditionalHandler(interceptContext, handle)
+        )
     }
 
     /**
@@ -796,14 +763,10 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
         interceptContext: InterceptContext<TFeature>,
         handle: suspend TFeature.(eventContext: BeforeStreamContext) -> Unit
     ) {
-        val existingHandler = streamHandlers.getOrPut(interceptContext.feature.key) { StreamHandler() }
-
-        existingHandler.beforeStreamHandler = BeforeStreamHandler handler@{ eventContext: BeforeStreamContext ->
-            if (!registeredFeatures[interceptContext.feature.key].isAccepted(eventContext)) {
-                return@handler
-            }
-            with(interceptContext.featureImpl) { handle(eventContext) }
-        }
+        val handler = streamHandlers.getOrPut(interceptContext.feature.key) { StreamHandler() }
+        handler.beforeStreamHandler = BeforeStreamHandler(
+            function = createConditionalHandler(interceptContext, handle)
+        )
     }
 
     /**
@@ -826,14 +789,10 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
         interceptContext: InterceptContext<TFeature>,
         handle: suspend TFeature.(eventContext: StreamFrameContext) -> Unit
     ) {
-        val existingHandler = streamHandlers.getOrPut(interceptContext.feature.key) { StreamHandler() }
-
-        existingHandler.streamFrameHandler = StreamFrameHandler handler@{ eventContext: StreamFrameContext ->
-            if (!registeredFeatures[interceptContext.feature.key].isAccepted(eventContext)) {
-                return@handler
-            }
-            with(interceptContext.featureImpl) { handle(eventContext) }
-        }
+        val handler = streamHandlers.getOrPut(interceptContext.feature.key) { StreamHandler() }
+        handler.streamFrameHandler = StreamFrameHandler(
+            function = createConditionalHandler(interceptContext, handle)
+        )
     }
 
     /**
@@ -846,14 +805,10 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
         interceptContext: InterceptContext<TFeature>,
         handle: suspend TFeature.(eventContext: StreamErrorContext) -> Unit
     ) {
-        val existingHandler = streamHandlers.getOrPut(interceptContext.feature.key) { StreamHandler() }
-
-        existingHandler.streamErrorHandler = StreamErrorHandler handler@{ eventContext: StreamErrorContext ->
-            if (!registeredFeatures[interceptContext.feature.key].isAccepted(eventContext)) {
-                return@handler
-            }
-            with(interceptContext.featureImpl) { handle(eventContext) }
-        }
+        val handler = streamHandlers.getOrPut(interceptContext.feature.key) { StreamHandler() }
+        handler.streamErrorHandler = StreamErrorHandler(
+            function = createConditionalHandler(interceptContext, handle)
+        )
     }
 
     /**
@@ -876,14 +831,10 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
         interceptContext: InterceptContext<TFeature>,
         handle: suspend TFeature.(eventContext: AfterStreamContext) -> Unit
     ) {
-        val existingHandler = streamHandlers.getOrPut(interceptContext.feature.key) { StreamHandler() }
-
-        existingHandler.afterStreamHandler = AfterStreamHandler handler@{ eventContext: AfterStreamContext ->
-            if (!registeredFeatures[interceptContext.feature.key].isAccepted(eventContext)) {
-                return@handler
-            }
-            with(interceptContext.featureImpl) { handle(eventContext) }
-        }
+        val handler = streamHandlers.getOrPut(interceptContext.feature.key) { StreamHandler() }
+        handler.afterStreamHandler = AfterStreamHandler(
+            function = createConditionalHandler(interceptContext, handle)
+        )
     }
 
     /**
@@ -903,14 +854,10 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
         interceptContext: InterceptContext<TFeature>,
         handle: suspend TFeature.(eventContext: ToolCallContext) -> Unit
     ) {
-        val existingHandler = executeToolHandlers.getOrPut(interceptContext.feature.key) { ExecuteToolHandler() }
-
-        existingHandler.toolCallHandler = ToolCallHandler handler@{ eventContext: ToolCallContext ->
-            if (!registeredFeatures[interceptContext.feature.key].isAccepted(eventContext)) {
-                return@handler
-            }
-            with(interceptContext.featureImpl) { handle(eventContext) }
-        }
+        val handler = executeToolHandlers.getOrPut(interceptContext.feature.key) { ExecuteToolHandler() }
+        handler.toolCallHandler = ToolCallHandler(
+            function = createConditionalHandler(interceptContext, handle)
+        )
     }
 
     /**
@@ -930,14 +877,10 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
         interceptContext: InterceptContext<TFeature>,
         handle: suspend TFeature.(eventContext: ToolValidationErrorContext) -> Unit
     ) {
-        val existingHandler = executeToolHandlers.getOrPut(interceptContext.feature.key) { ExecuteToolHandler() }
-
-        existingHandler.toolValidationErrorHandler = ToolValidationErrorHandler handler@{ eventContext ->
-            if (!registeredFeatures[interceptContext.feature.key].isAccepted(eventContext)) {
-                return@handler
-            }
-            with(interceptContext.featureImpl) { handle(eventContext) }
-        }
+        val handler = executeToolHandlers.getOrPut(interceptContext.feature.key) { ExecuteToolHandler() }
+        handler.toolValidationErrorHandler = ToolValidationErrorHandler(
+            function = createConditionalHandler(interceptContext, handle)
+        )
     }
 
     /**
@@ -957,14 +900,10 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
         interceptContext: InterceptContext<TFeature>,
         handle: suspend TFeature.(eventContext: ToolCallFailureContext) -> Unit
     ) {
-        val existingHandler = executeToolHandlers.getOrPut(interceptContext.feature.key) { ExecuteToolHandler() }
-
-        existingHandler.toolCallFailureHandler = ToolCallFailureHandler handler@{ eventContext ->
-            if (!registeredFeatures[interceptContext.feature.key].isAccepted(eventContext)) {
-                return@handler
-            }
-            with(interceptContext.featureImpl) { handle(eventContext) }
-        }
+        val handler = executeToolHandlers.getOrPut(interceptContext.feature.key) { ExecuteToolHandler() }
+        handler.toolCallFailureHandler = ToolCallFailureHandler(
+            function = createConditionalHandler(interceptContext, handle)
+        )
     }
 
     /**
@@ -985,22 +924,57 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
         interceptContext: InterceptContext<TFeature>,
         handle: suspend TFeature.(eventContext: ToolCallResultContext) -> Unit
     ) {
-        val existingHandler = executeToolHandlers.getOrPut(interceptContext.feature.key) { ExecuteToolHandler() }
-
-        existingHandler.toolCallResultHandler = ToolCallResultHandler handler@{ eventContext ->
-            if (!registeredFeatures[interceptContext.feature.key].isAccepted(eventContext)) {
-                return@handler
-            }
-            with(interceptContext.featureImpl) { handle(eventContext) }
-        }
+        val handler = executeToolHandlers.getOrPut(interceptContext.feature.key) { ExecuteToolHandler() }
+        handler.toolCallResultHandler = ToolCallResultHandler(
+            function = createConditionalHandler(interceptContext, handle)
+        )
     }
 
     //endregion Interceptors
 
     //region Private Methods
 
-    protected fun FeatureConfig?.isAccepted(eventContext: EventHandlerContext): Boolean {
-        return this?.eventFilter?.invoke(eventContext) == true
+    protected inline fun <TContext : EventHandlerContext> createConditionalHandler(
+        interceptContext: InterceptContext<*>,
+        crossinline handle: suspend (TContext) -> Unit
+    ): suspend (TContext) -> Unit = handler@{ eventContext ->
+        val featureConfig = registeredFeatures[interceptContext.feature.key]
+
+        if (featureConfig != null && !featureConfig.isAccepted(eventContext)) {
+            return@handler
+        }
+
+        handle(eventContext)
+    }
+
+    protected inline fun <TFeature : Any, TContext : EventHandlerContext> createConditionalHandler(
+        interceptContext: InterceptContext<TFeature>,
+        crossinline handle: suspend TFeature.(TContext) -> Unit
+    ): suspend (TContext) -> Unit = handler@{ eventContext ->
+        val featureConfig = registeredFeatures[interceptContext.feature.key]
+
+        if (featureConfig != null && !featureConfig.isAccepted(eventContext)) {
+            return@handler
+        }
+
+        with(interceptContext.featureImpl) { handle(eventContext) }
+    }
+
+    protected inline fun <TFeature : Any> createConditionalHandler(
+        interceptContext: InterceptContext<TFeature>,
+        crossinline handle: suspend AgentTransformEnvironmentContext<TFeature>.(AIAgentEnvironment) -> AIAgentEnvironment
+    ): suspend (AgentTransformEnvironmentContext<TFeature>, AIAgentEnvironment) -> AIAgentEnvironment = handler@{ eventContext, env ->
+        val featureConfig = registeredFeatures[interceptContext.feature.key]
+
+        if (featureConfig != null && !featureConfig.isAccepted(eventContext)) {
+            return@handler env
+        }
+
+        eventContext.handle(env)
+    }
+
+    protected fun FeatureConfig.isAccepted(eventContext: EventHandlerContext): Boolean {
+        return this.eventFilter.invoke(eventContext)
     }
 
     //endregion Private Methods
