@@ -9,47 +9,47 @@ import ai.koog.agents.core.agent.entity.AIAgentStrategy
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.config.FeatureConfig
-import ai.koog.agents.core.feature.handler.llm.LLMCallCompletedContext
-import ai.koog.agents.core.feature.handler.llm.LLMCallCompletedHandler
-import ai.koog.agents.core.feature.handler.streaming.LLMStreamingCompletedContext
-import ai.koog.agents.core.feature.handler.streaming.LLMStreamingCompletedHandler
+import ai.koog.agents.core.feature.handler.AgentLifecycleEventContext
 import ai.koog.agents.core.feature.handler.agent.AgentClosingContext
 import ai.koog.agents.core.feature.handler.agent.AgentClosingHandler
-import ai.koog.agents.core.feature.handler.agent.AgentContextHandler
-import ai.koog.agents.core.feature.handler.agent.AgentEnvironmentTransformingHandler
 import ai.koog.agents.core.feature.handler.agent.AgentCompletedContext
 import ai.koog.agents.core.feature.handler.agent.AgentCompletedHandler
+import ai.koog.agents.core.feature.handler.agent.AgentContextHandler
+import ai.koog.agents.core.feature.handler.agent.AgentEnvironmentTransformingContext
+import ai.koog.agents.core.feature.handler.agent.AgentEnvironmentTransformingHandler
 import ai.koog.agents.core.feature.handler.agent.AgentEventHandler
 import ai.koog.agents.core.feature.handler.agent.AgentExecutionFailedContext
 import ai.koog.agents.core.feature.handler.agent.AgentExecutionFailedHandler
 import ai.koog.agents.core.feature.handler.agent.AgentStartingContext
-import ai.koog.agents.core.feature.handler.agent.AgentEnvironmentTransformingContext
 import ai.koog.agents.core.feature.handler.agent.AgentStartingHandler
+import ai.koog.agents.core.feature.handler.llm.LLMCallCompletedContext
+import ai.koog.agents.core.feature.handler.llm.LLMCallCompletedHandler
+import ai.koog.agents.core.feature.handler.llm.LLMCallEventHandler
 import ai.koog.agents.core.feature.handler.llm.LLMCallStartingContext
 import ai.koog.agents.core.feature.handler.llm.LLMCallStartingHandler
-import ai.koog.agents.core.feature.handler.streaming.LLMStreamingStartingContext
-import ai.koog.agents.core.feature.handler.streaming.LLMStreamingStartingHandler
-import ai.koog.agents.core.feature.handler.AgentLifecycleEventContext
-import ai.koog.agents.core.feature.handler.llm.LLMCallEventHandler
-import ai.koog.agents.core.feature.handler.tool.ToolExecutionEventHandler
 import ai.koog.agents.core.feature.handler.strategy.StrategyCompletedContext
 import ai.koog.agents.core.feature.handler.strategy.StrategyCompletedHandler
 import ai.koog.agents.core.feature.handler.strategy.StrategyEventHandler
 import ai.koog.agents.core.feature.handler.strategy.StrategyStartingContext
 import ai.koog.agents.core.feature.handler.strategy.StrategyStartingHandler
+import ai.koog.agents.core.feature.handler.streaming.LLMStreamingCompletedContext
+import ai.koog.agents.core.feature.handler.streaming.LLMStreamingCompletedHandler
+import ai.koog.agents.core.feature.handler.streaming.LLMStreamingEventHandler
 import ai.koog.agents.core.feature.handler.streaming.LLMStreamingFailedContext
 import ai.koog.agents.core.feature.handler.streaming.LLMStreamingFailedHandler
 import ai.koog.agents.core.feature.handler.streaming.LLMStreamingFrameReceivedContext
 import ai.koog.agents.core.feature.handler.streaming.LLMStreamingFrameReceivedHandler
-import ai.koog.agents.core.feature.handler.streaming.LLMStreamingEventHandler
-import ai.koog.agents.core.feature.handler.tool.ToolExecutionStartingContext
-import ai.koog.agents.core.feature.handler.tool.ToolExecutionFailedContext
+import ai.koog.agents.core.feature.handler.streaming.LLMStreamingStartingContext
+import ai.koog.agents.core.feature.handler.streaming.LLMStreamingStartingHandler
 import ai.koog.agents.core.feature.handler.tool.ToolCallFailureHandler
 import ai.koog.agents.core.feature.handler.tool.ToolCallHandler
-import ai.koog.agents.core.feature.handler.tool.ToolExecutionCompletedContext
 import ai.koog.agents.core.feature.handler.tool.ToolCallResultHandler
-import ai.koog.agents.core.feature.handler.tool.ToolValidationFailedContext
+import ai.koog.agents.core.feature.handler.tool.ToolExecutionCompletedContext
+import ai.koog.agents.core.feature.handler.tool.ToolExecutionEventHandler
+import ai.koog.agents.core.feature.handler.tool.ToolExecutionFailedContext
+import ai.koog.agents.core.feature.handler.tool.ToolExecutionStartingContext
 import ai.koog.agents.core.feature.handler.tool.ToolValidationErrorHandler
+import ai.koog.agents.core.feature.handler.tool.ToolValidationFailedContext
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolDescriptor
@@ -956,6 +956,237 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
     }
 
     //endregion Interceptors
+
+    //region Deprecated Interceptors
+
+    /**
+     * Intercepts on before an agent started to modify or enhance the agent.
+     */
+    @Deprecated(
+        message = "Please use interceptAgentStarting instead. This method is deprecated and will be removed in the next release.",
+        replaceWith = ReplaceWith(
+            expression = "interceptAgentStarting(interceptContext, handle)",
+            imports = arrayOf("ai.koog.agents.core.feature.handler.agent.AgentStartingContext")
+        )
+    )
+    public fun <TFeature : Any> interceptBeforeAgentStarted(
+        interceptContext: InterceptContext<TFeature>,
+        handle: suspend (ai.koog.agents.core.feature.handler.AgentStartContext<TFeature>) -> Unit
+    ) {
+        interceptAgentStarting(interceptContext, handle)
+    }
+
+    /**
+     * Intercepts the completion of an agent's operation and assigns a custom handler to process the result.
+     */
+    @Deprecated(
+        message = "Please use interceptAgentCompleted instead. This method is deprecated and will be removed in the next release.",
+        replaceWith = ReplaceWith(
+            expression = "interceptAgentCompleted(interceptContext, handle)",
+            imports = arrayOf(
+                "ai.koog.agents.core.feature.handler.agent.AgentCompletedContext"
+            )
+        )
+    )
+    public fun <TFeature : Any> interceptAgentFinished(
+        interceptContext: InterceptContext<TFeature>,
+        handle: suspend TFeature.(eventContext: ai.koog.agents.core.feature.handler.AgentFinishedContext) -> Unit
+    ) {
+        interceptAgentCompleted(interceptContext, handle)
+    }
+
+    /**
+     * Intercepts and handles errors occurring during the execution of an AI agent's strategy.
+     */
+    @Deprecated(
+        message = "Please use interceptAgentExecutionFailed instead. This method is deprecated and will be removed in the next release.",
+        replaceWith = ReplaceWith(
+            expression = "interceptAgentExecutionFailed(interceptContext, handle)",
+            imports = arrayOf(
+                "ai.koog.agents.core.feature.handler.agent.AgentExecutionFailedContext"
+            )
+        )
+    )
+    public fun <TFeature : Any> interceptAgentRunError(
+        interceptContext: InterceptContext<TFeature>,
+        handle: suspend TFeature.(ai.koog.agents.core.feature.handler.AgentRunErrorContext) -> Unit
+    ) {
+        interceptAgentExecutionFailed(interceptContext, handle)
+    }
+
+    /**
+     * Intercepts and sets a handler to be invoked before an agent is closed.
+     */
+    @Deprecated(
+        message = "Please use interceptAgentClosing instead. This method is deprecated and will be removed in the next release.",
+        replaceWith = ReplaceWith(
+            expression = "interceptAgentClosing(interceptContext, handle)",
+            imports = arrayOf(
+                "ai.koog.agents.core.feature.handler.agent.AgentClosingContext"
+            )
+        )
+    )
+    public fun <TFeature : Any> interceptAgentBeforeClose(
+        interceptContext: InterceptContext<TFeature>,
+        handle: suspend TFeature.(ai.koog.agents.core.feature.handler.AgentBeforeCloseContext) -> Unit
+    ) {
+        interceptAgentClosing(interceptContext, handle)
+    }
+
+    /**
+     * Intercepts strategy started event to perform actions when an agent strategy begins execution.
+     */
+    @Deprecated(
+        message = "Please use interceptStrategyStarting instead. This method is deprecated and will be removed in the next release.",
+        replaceWith = ReplaceWith(
+            expression = "interceptStrategyStarting(interceptContext, handle)",
+            imports = arrayOf(
+                "ai.koog.agents.core.feature.handler.strategy.StrategyStartingContext"
+            )
+        )
+    )
+    public fun <TFeature : Any> interceptStrategyStart(
+        interceptContext: InterceptContext<TFeature>,
+        handle: suspend (ai.koog.agents.core.feature.handler.StrategyStartContext<TFeature>) -> Unit
+    ) {
+        interceptStrategyStarting(interceptContext, handle)
+    }
+
+    /**
+     * Sets up an interceptor to handle the completion of a strategy for the given feature.
+     */
+    @Deprecated(
+        message = "Please use interceptStrategyCompleted instead. This method is deprecated and will be removed in the next release.",
+        replaceWith = ReplaceWith(
+            expression = "interceptStrategyCompleted(interceptContext, handle)",
+            imports = arrayOf(
+                "ai.koog.agents.core.feature.handler.strategy.StrategyCompletedContext"
+            )
+        )
+    )
+    public fun <TFeature : Any> interceptStrategyFinished(
+        interceptContext: InterceptContext<TFeature>,
+        handle: suspend (ai.koog.agents.core.feature.handler.StrategyFinishedContext<TFeature>) -> Unit
+    ) {
+        interceptStrategyCompleted(interceptContext, handle)
+    }
+
+    /**
+     * Intercepts LLM calls before they are made (deprecated name).
+     */
+    @Deprecated(
+        message = "Please use interceptLLMCallStarting instead. This method is deprecated and will be removed in the next release.",
+        replaceWith = ReplaceWith(
+            expression = "interceptLLMCallStarting(interceptContext, handle)",
+            imports = arrayOf(
+                "ai.koog.agents.core.feature.handler.llm.LLMCallStartingContext"
+            )
+        )
+    )
+    public fun <TFeature : Any> interceptBeforeLLMCall(
+        interceptContext: InterceptContext<TFeature>,
+        handle: suspend TFeature.(eventContext: ai.koog.agents.core.feature.handler.BeforeLLMCallContext) -> Unit
+    ) {
+        interceptLLMCallStarting(interceptContext, handle)
+    }
+
+    /**
+     * Intercepts LLM calls after they are made to process or log the response.
+     */
+    @Deprecated(
+        message = "Please use interceptLLMCallCompleted instead. This method is deprecated and will be removed in the next release.",
+        replaceWith = ReplaceWith(
+            expression = "interceptLLMCallCompleted(interceptContext, handle)",
+            imports = arrayOf(
+                "ai.koog.agents.core.feature.handler.llm.LLMCallCompletedContext"
+            )
+        )
+    )
+    public fun <TFeature : Any> interceptAfterLLMCall(
+        interceptContext: InterceptContext<TFeature>,
+        handle: suspend TFeature.(eventContext: ai.koog.agents.core.feature.handler.AfterLLMCallContext) -> Unit
+    ) {
+        interceptLLMCallCompleted(interceptContext, handle)
+    }
+
+    /**
+     * Intercepts and handles tool calls for the specified feature and its implementation.
+     * Updates the tool call handler for the given feature key with a custom handler.
+     */
+    @Deprecated(
+        message = "Please use interceptToolExecutionStarting instead. This method is deprecated and will be removed in the next release.",
+        replaceWith = ReplaceWith(
+            expression = "interceptToolExecutionStarting(interceptContext, handle)",
+            imports = arrayOf(
+                "ai.koog.agents.core.feature.handler.tool.ToolExecutionStartingContext"
+            )
+        )
+    )
+    public fun <TFeature : Any> interceptToolCall(
+        interceptContext: InterceptContext<TFeature>,
+        handle: suspend TFeature.(eventContext: ai.koog.agents.core.feature.handler.ToolCallContext) -> Unit
+    ) {
+        interceptToolExecutionStarting(interceptContext, handle)
+    }
+
+    /**
+     * Intercepts the result of a tool call with a custom handler for a specific feature.
+     */
+    @Deprecated(
+        message = "Please use interceptToolExecutionCompleted instead. This method is deprecated and will be removed in the next release.",
+        replaceWith = ReplaceWith(
+            expression = "interceptToolExecutionCompleted(interceptContext, handle)",
+            imports = arrayOf(
+                "ai.koog.agents.core.feature.handler.tool.ToolExecutionCompletedContext"
+            )
+        )
+    )
+    public fun <TFeature : Any> interceptToolCallResult(
+        interceptContext: InterceptContext<TFeature>,
+        handle: suspend TFeature.(eventContext: ToolExecutionCompletedContext) -> Unit
+    ) {
+        interceptToolExecutionCompleted(interceptContext, handle)
+    }
+
+    /**
+     * Sets up an interception mechanism to handle tool call failures for a specific feature.
+     */
+    @Deprecated(
+        message = "Please use interceptToolExecutionFailed instead. This method is deprecated and will be removed in the next release.",
+        replaceWith = ReplaceWith(
+            expression = "interceptToolExecutionFailed(interceptContext, handle)",
+            imports = arrayOf(
+                "ai.koog.agents.core.feature.handler.tool.ToolExecutionFailedContext"
+            )
+        )
+    )
+    public fun <TFeature : Any> interceptToolCallFailure(
+        interceptContext: InterceptContext<TFeature>,
+        handle: suspend TFeature.(eventContext: ToolExecutionFailedContext) -> Unit
+    ) {
+        interceptToolExecutionFailed(interceptContext, handle)
+    }
+
+    /**
+     * Intercepts validation errors encountered during the execution of tools associated with the specified feature.
+     */
+    @Deprecated(
+        message = "Please use interceptToolValidationFailed instead. This method is deprecated and will be removed in the next release.",
+        replaceWith = ReplaceWith(
+            expression = "interceptToolValidationFailed(interceptContext, handle)",
+            imports = arrayOf(
+                "ai.koog.agents.core.feature.handler.tool.ToolValidationFailedContext"
+            )
+        )
+    )
+    public fun <TFeature : Any> interceptToolValidationError(
+        interceptContext: InterceptContext<TFeature>,
+        handle: suspend TFeature.(eventContext: ToolValidationFailedContext) -> Unit
+    ) {
+        interceptToolValidationFailed(interceptContext, handle)
+    }
+
+    //endregion Deprecated Interceptors
 
     //region Private Methods
 

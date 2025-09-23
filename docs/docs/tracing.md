@@ -36,8 +36,8 @@ To use the Tracing feature, you need to:
 
 <!--- INCLUDE
 import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.feature.model.events.AfterLLMCallEvent
-import ai.koog.agents.core.feature.model.events.ToolCallEvent
+import ai.koog.agents.core.feature.model.events.LLMCallCompletedEvent
+import ai.koog.agents.core.feature.model.events.ToolExecutionStartingEvent
 import ai.koog.agents.features.tracing.feature.Tracing
 import ai.koog.agents.features.tracing.writer.TraceFeatureMessageFileWriter
 import ai.koog.agents.features.tracing.writer.TraceFeatureMessageLogWriter
@@ -110,20 +110,20 @@ addMessageProcessor(fileWriter)
 
 // Filter for LLM-related events only
 fileWriter.setMessageFilter { message ->
-    message is BeforeLLMCallEvent || message is AfterLLMCallEvent
+    message is LLMCallStartingEvent || message is LLMCallCompletedEvent
 }
 
 // Filter for tool-related events only
 fileWriter.setMessageFilter { message -> 
-    message is ToolCallEvent ||
-           message is ToolCallResultEvent ||
-           message is ToolValidationErrorEvent ||
-           message is ToolCallFailureEvent
+    message is ToolExecutionStartingEvent ||
+           message is ToolExecutionCompletedEvent ||
+           message is ToolValidationFailedEvent ||
+           message is ToolExecutionFailedEvent
 }
 
 // Filter for node execution events only
 fileWriter.setMessageFilter { message -> 
-    message is AIAgentNodeExecutionStartEvent || message is AIAgentNodeExecutionEndEvent
+    message is NodeExecutionStartingEvent || message is NodeExecutionCompletedEvent
 }
 ```
 <!--- KNIT example-tracing-02.kt -->
@@ -153,19 +153,19 @@ Tracing
 │   └── TraceFeatureMessageRemoteWriter
 │       └── FeatureMessageRemoteWriter
 └── Event Types (from ai.koog.agents.core.feature.model)
-    ├── AIAgentStartedEvent
-    ├── AIAgentFinishedEvent
-    ├── AIAgentRunErrorEvent
-    ├── AIAgentStrategyStartEvent
-    ├── AIAgentStrategyFinishedEvent
-    ├── AIAgentNodeExecutionStartEvent
-    ├── AIAgentNodeExecutionEndEvent
-    ├── BeforeLLMCallEvent
-    ├── AfterLLMCallEvent
-    ├── ToolCallEvent
-    ├── ToolValidationErrorEvent
-    ├── ToolCallFailureEvent
-    └── ToolCallResultEvent
+    ├── AgentStartingEvent
+    ├── AgentCompletedEvent
+    ├── AgentExecutionFailedEvent
+    ├── StrategyStartingEvent
+    ├── StrategyCompletedEvent
+    ├── NodeExecutionStartingEvent
+    ├── NodeExecutionCompletedEvent
+    ├── LLMCallStartingEvent
+    ├── LLMCallCompletedEvent
+    ├── ToolExecutionStartingEvent
+    ├── ToolValidationFailedEvent
+    ├── ToolExecutionFailedEvent
+    └── ToolExecutionCompletedEvent
 ```
 
 ## Examples and quickstarts
@@ -269,8 +269,8 @@ agent.run(input)
 
 <!--- INCLUDE
 import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.feature.model.events.AfterLLMCallEvent
-import ai.koog.agents.core.feature.model.events.BeforeLLMCallEvent
+import ai.koog.agents.core.feature.model.events.LLMCallCompletedEvent
+import ai.koog.agents.core.feature.model.events.LLMCallStartingEvent
 import ai.koog.agents.example.exampleTracing01.outputPath
 import ai.koog.agents.features.tracing.feature.Tracing
 import ai.koog.agents.features.tracing.writer.TraceFeatureMessageFileWriter
@@ -311,7 +311,7 @@ install(Tracing) {
     
     // Only trace LLM calls
     fileWriter.setMessageFilter { message ->
-        message is BeforeLLMCallEvent || message is AfterLLMCallEvent
+        message is LLMCallStartingEvent || message is LLMCallCompletedEvent
     }
 }
 ```
@@ -367,7 +367,7 @@ agent.run(input)
 On the client side, you can use `FeatureMessageRemoteClient` to receive events and deserialize them.
 
 <!--- INCLUDE
-import ai.koog.agents.core.feature.model.events.AIAgentFinishedEvent
+import ai.koog.agents.core.feature.model.events.AgentCompletedEvent
 import ai.koog.agents.core.feature.model.events.DefinedFeatureEvent
 import ai.koog.agents.core.feature.remote.client.config.DefaultClientConnectionConfig
 import ai.koog.agents.core.feature.remote.client.FeatureMessageRemoteClient
@@ -398,8 +398,8 @@ val clientJob = launch {
                 // Collect events from server
                 agentEvents.add(event as DefinedFeatureEvent)
 
-                // Stop collecting events on angent finished
-                if (event is AIAgentFinishedEvent) {
+                // Stop collecting events on agent finished
+                if (event is AgentCompletedEvent) {
                     cancel()
                 }
             }
@@ -435,8 +435,8 @@ Use the `messageFilter` property to filter events. For example, to trace only no
 
 <!--- INCLUDE
 import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.feature.model.events.AfterLLMCallEvent
-import ai.koog.agents.core.feature.model.events.BeforeLLMCallEvent
+import ai.koog.agents.core.feature.model.events.LLMCallCompletedEvent
+import ai.koog.agents.core.feature.model.events.LLMCallStartingEvent
 import ai.koog.agents.example.exampleTracing01.outputPath
 import ai.koog.agents.features.tracing.feature.Tracing
 import ai.koog.agents.features.tracing.writer.TraceFeatureMessageFileWriter
@@ -476,7 +476,7 @@ install(Tracing) {
     
     // Only trace LLM calls
     fileWriter.setMessageFilter { message ->
-        message is BeforeLLMCallEvent || message is AfterLLMCallEvent
+        message is LLMCallStartingEvent || message is LLMCallCompletedEvent
     }
 }
 ```
@@ -535,8 +535,8 @@ Implement the `FeatureMessageProcessor` interface:
 
 <!--- INCLUDE
 import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.feature.model.events.AIAgentNodeExecutionStartEvent
-import ai.koog.agents.core.feature.model.events.AfterLLMCallEvent
+import ai.koog.agents.core.feature.model.events.NodeExecutionStartingEvent
+import ai.koog.agents.core.feature.model.events.LLMCallCompletedEvent
 import ai.koog.agents.core.feature.message.FeatureMessage
 import ai.koog.agents.core.feature.message.FeatureMessageProcessor
 import ai.koog.agents.features.tracing.feature.Tracing
@@ -572,11 +572,11 @@ class CustomTraceProcessor : FeatureMessageProcessor() {
     override suspend fun processMessage(message: FeatureMessage) {
         // Custom processing logic
         when (message) {
-            is AIAgentNodeExecutionStartEvent -> {
+            is NodeExecutionStartingEvent -> {
                 // Process node start event
             }
 
-            is AfterLLMCallEvent -> {
+            is LLMCallCompletedEvent -> {
                 // Process LLM call end event 
             }
             // Handle other event types 
@@ -610,16 +610,16 @@ classified into several categories, depending on the entity they relate to:
 
 ### Agent events
 
-#### AIAgentStartedEvent
+#### AgentStartingEvent
 
 Represents the start of an agent run. Includes the following fields:
 
 | Name           | Data type | Required | Default               | Description                                                               |
 |----------------|-----------|----------|-----------------------|---------------------------------------------------------------------------|
 | `strategyName` | String    | Yes      |                       | The name of the strategy that the agent should follow.                    |
-| `eventId`      | String    | No       | `AIAgentStartedEvent` | The identifier of the event. Usually the `simpleName` of the event class. |
+| `eventId`      | String    | No       | `AgentStartingEvent` | The identifier of the event. Usually the `simpleName` of the event class. |
 
-#### AIAgentFinishedEvent
+#### AgentCompletedEvent
 
 Represents the end of an agent run. Includes the following fields:
 
@@ -627,9 +627,9 @@ Represents the end of an agent run. Includes the following fields:
 |----------------|-----------|----------|------------------------|---------------------------------------------------------------------------|
 | `strategyName` | String    | Yes      |                        | The name of the strategy that the agent followed.                         |
 | `result`       | String    | Yes      |                        | The result of the agent run. Can be `null` if there is no result.         |
-| `eventId`      | String    | No       | `AIAgentFinishedEvent` | The identifier of the event. Usually the `simpleName` of the event class. |
+| `eventId`      | String    | No       | `AgentCompletedEvent` | The identifier of the event. Usually the `simpleName` of the event class. |
 
-#### AIAgentRunErrorEvent
+#### AgentExecutionFailedEvent
 
 Represents the occurrence of an error during an agent run. Includes the following fields:
 
@@ -637,7 +637,7 @@ Represents the occurrence of an error during an agent run. Includes the followin
 |----------------|--------------|----------|------------------------|-----------------------------------------------------------------------------------------------------------------|
 | `strategyName` | String       | Yes      |                        | The name of the strategy that the agent followed.                                                               |
 | `error`        | AIAgentError | Yes      |                        | The specific error that occurred during the agent run. For more information, see [AIAgentError](#aiagenterror). |
-| `eventId`      | String       | No       | `AIAgentRunErrorEvent` | The identifier of the event. Usually the `simpleName` of the event class.                                       |
+| `eventId`      | String       | No       | `AgentExecutionFailedEvent` | The identifier of the event. Usually the `simpleName` of the event class.                                       |
 
 <a id="aiagenterror"></a>
 The `AIAgentError` class provides more details about an error that occurred during an agent run. Includes the following fields:
@@ -650,16 +650,16 @@ The `AIAgentError` class provides more details about an error that occurred duri
 
 ### Strategy events
 
-#### AIAgentStrategyStartEvent
+#### StrategyStartingEvent
 
 Represents the start of a strategy run. Includes the following fields:
 
 | Name           | Data type | Required | Default                     | Description                                                               |
 |----------------|-----------|----------|-----------------------------|---------------------------------------------------------------------------|
 | `strategyName` | String    | Yes      |                             | The name of the strategy.                                                 |
-| `eventId`      | String    | No       | `AIAgentStrategyStartEvent` | The identifier of the event. Usually the `simpleName` of the event class. |
+| `eventId`      | String    | No       | `StrategyStartingEvent` | The identifier of the event. Usually the `simpleName` of the event class. |
 
-#### AIAgentStrategyFinishedEvent
+#### StrategyCompletedEvent
 
 Represents the end of a strategy run. Includes the following fields:
 
@@ -667,11 +667,11 @@ Represents the end of a strategy run. Includes the following fields:
 |----------------|-----------|----------|--------------------------------|---------------------------------------------------------------------------|
 | `strategyName` | String    | Yes      |                                | The name of the strategy.                                                 |
 | `result`       | String    | Yes      |                                | The result of the run.                                                    |
-| `eventId`      | String    | No       | `AIAgentStrategyFinishedEvent` | The identifier of the event. Usually the `simpleName` of the event class. |
+| `eventId`      | String    | No       | `StrategyCompletedEvent` | The identifier of the event. Usually the `simpleName` of the event class. |
 
 ### Node events
 
-#### AIAgentNodeExecutionStartEvent
+#### NodeExecutionStartingEvent
 
 Represents the start of a node run. Includes the following fields:
 
@@ -679,9 +679,9 @@ Represents the start of a node run. Includes the following fields:
 |------------|-----------|----------|----------------------------------|---------------------------------------------------------------------------|
 | `nodeName` | String    | Yes      |                                  | The name of the node whose run started.                                   |
 | `input`    | String    | Yes      |                                  | The input value for the node.                                             |
-| `eventId`  | String    | No       | `AIAgentNodeExecutionStartEvent` | The identifier of the event. Usually the `simpleName` of the event class. |
+| `eventId`  | String    | No       | `NodeExecutionStartingEvent` | The identifier of the event. Usually the `simpleName` of the event class. |
 
-#### AIAgentNodeExecutionEndEvent
+#### NodeExecutionCompletedEvent
 
 Represents the end of a node run. Includes the following fields:
 
@@ -690,11 +690,11 @@ Represents the end of a node run. Includes the following fields:
 | `nodeName` | String    | Yes      |                                | The name of the node whose run ended.                                     |
 | `input`    | String    | Yes      |                                | The input value for the node.                                             |
 | `output`   | String    | Yes      |                                | The output value produced by the node.                                    |
-| `eventId`  | String    | No       | `AIAgentNodeExecutionEndEvent` | The identifier of the event. Usually the `simpleName` of the event class. |
+| `eventId`  | String    | No       | `NodeExecutionCompletedEvent` | The identifier of the event. Usually the `simpleName` of the event class. |
 
 ### LLM call events
 
-#### BeforeLLMCallEvent
+#### LLMCallStartingEvent
 
 Represents the start of an LLM call. Includes the following fields:
 
@@ -702,7 +702,7 @@ Represents the start of an LLM call. Includes the following fields:
 |-----------|--------------------|----------|----------------------|------------------------------------------------------------------------------------|
 | `prompt`  | Prompt             | Yes      |                      | The prompt that is sent to the model. For more information, see [Prompt](#prompt). |
 | `tools`   | List&lt;String&gt; | Yes      |                      | The list of tools that the model can call.                                         |
-| `eventId` | String             | No       | `BeforeLLMCallEvent` | The identifier of the event. Usually the `simpleName` of the event class.          |
+| `eventId` | String             | No       | `LLMCallStartingEvent` | The identifier of the event. Usually the `simpleName` of the event class.          |
 
 <a id="prompt"></a>
 The `Prompt` class represents a data structure for a prompt, consisting of a list of messages, a unique identifier, and
@@ -714,14 +714,14 @@ optional parameters for language model settings. Includes the following fields:
 | `id`       | String              | Yes      |             | The unique identifier for the prompt.                        |
 | `params`   | LLMParams           | No       | LLMParams() | The settings that control the way the LLM generates content. |
 
-#### AfterLLMCallEvent
+#### LLMCallCompletedEvent
 
 Represents the end of an LLM call. Includes the following fields:
 
 | Name        | Data type                    | Required | Default             | Description                                                               |
 |-------------|------------------------------|----------|---------------------|---------------------------------------------------------------------------|
 | `responses` | List&lt;Message.Response&gt; | Yes      |                     | One or more responses returned by the model.                              |
-| `eventId`   | String                       | No       | `AfterLLMCallEvent` | The identifier of the event. Usually the `simpleName` of the event class. |
+| `eventId`   | String                       | No       | `LLMCallCompletedEvent` | The identifier of the event. Usually the `simpleName` of the event class. |
 
 ### Tool call events
 

@@ -17,60 +17,60 @@ class TestEventsCollector {
 
     val eventHandlerFeatureConfig: EventHandlerConfig.() -> Unit = {
 
-        onBeforeAgentStarted { eventContext ->
+        onAgentStarting { eventContext ->
             runId = eventContext.runId
             _collectedEvents.add(
                 "OnBeforeAgentStarted (agent id: ${eventContext.agent.id}, run id: ${eventContext.runId})"
             )
         }
 
-        onAgentFinished { eventContext ->
+        onAgentCompleted { eventContext ->
             _collectedEvents.add(
                 "OnAgentFinished (agent id: ${eventContext.agentId}, run id: ${eventContext.runId}, result: ${eventContext.result})"
             )
         }
 
-        onAgentRunError { eventContext ->
+        onAgentExecutionFailed { eventContext ->
             _collectedEvents.add(
                 "OnAgentRunError (agent id: ${eventContext.agentId}, run id: ${eventContext.runId}, error: ${eventContext.throwable.message})"
             )
         }
 
-        onAgentBeforeClose { eventContext ->
+        onAgentClosing { eventContext ->
             _collectedEvents.add("OnAgentBeforeClose (agent id: ${eventContext.agentId})")
         }
 
-        onStrategyStarted { eventContext ->
+        onStrategyStarting { eventContext ->
             _collectedEvents.add(
                 "OnStrategyStarted (run id: ${eventContext.runId}, strategy: ${eventContext.strategy.name})"
             )
         }
 
-        onStrategyFinished { eventContext ->
+        onStrategyCompleted { eventContext ->
             _collectedEvents.add(
                 "OnStrategyFinished (run id: ${eventContext.runId}, strategy: ${eventContext.strategy.name}, result: ${eventContext.result})"
             )
         }
 
-        onBeforeNode { eventContext ->
+        onNodeExecutionStarting { eventContext ->
             _collectedEvents.add(
                 "OnBeforeNode (run id: ${eventContext.context.runId}, node: ${eventContext.node.name}, input: ${eventContext.input})"
             )
         }
 
-        onAfterNode { eventContext ->
+        onNodeExecutionCompleted { eventContext ->
             _collectedEvents.add(
                 "OnAfterNode (run id: ${eventContext.context.runId}, node: ${eventContext.node.name}, input: ${eventContext.input}, output: ${eventContext.output})"
             )
         }
 
-        onNodeExecutionError { eventContext ->
+        onNodeExecutionFailed { eventContext ->
             _collectedEvents.add(
                 "OnNodeExecutionError (run id: ${eventContext.context.runId}, node: ${eventContext.node.name}, error: ${eventContext.throwable.message})"
             )
         }
 
-        onBeforeLLMCall { eventContext ->
+        onLLMCallStarting { eventContext ->
             _collectedEvents.add(
                 "OnBeforeLLMCall (run id: ${eventContext.runId}, prompt: ${eventContext.prompt.traceString}, tools: [${
                     eventContext.tools.joinToString {
@@ -80,7 +80,7 @@ class TestEventsCollector {
             )
         }
 
-        onAfterLLMCall { eventContext ->
+        onLLMCallCompleted { eventContext ->
             _collectedEvents.add(
                 "OnAfterLLMCall (run id: ${eventContext.runId}, prompt: ${eventContext.prompt.traceString}, model: ${eventContext.model.eventString}, tools: [${
                     eventContext.tools.joinToString {
@@ -90,31 +90,31 @@ class TestEventsCollector {
             )
         }
 
-        onToolCall { eventContext ->
+        onToolExecutionStarting { eventContext ->
             _collectedEvents.add(
                 "OnToolCall (run id: ${eventContext.runId}, tool: ${eventContext.tool.name}, args: ${eventContext.toolArgs})"
             )
         }
 
-        onToolValidationError { eventContext ->
+        onToolValidationFailed { eventContext ->
             _collectedEvents.add(
                 "OnToolValidationError (run id: ${eventContext.runId}, tool: ${eventContext.tool.name}, args: ${eventContext.toolArgs}, value: ${eventContext.error})"
             )
         }
 
-        onToolCallFailure { eventContext ->
+        onToolExecutionFailed { eventContext ->
             _collectedEvents.add(
                 "OnToolCallFailure (run id: ${eventContext.runId}, tool: ${eventContext.tool.name}, args: ${eventContext.toolArgs}, throwable: ${eventContext.throwable.message})"
             )
         }
 
-        onToolCallResult { eventContext ->
+        onToolExecutionCompleted { eventContext ->
             _collectedEvents.add(
                 "OnToolCallResult (run id: ${eventContext.runId}, tool: ${eventContext.tool.name}, args: ${eventContext.toolArgs}, result: ${eventContext.result})"
             )
         }
 
-        onBeforeStream { eventContext ->
+        onLLMStreamingStarting { eventContext ->
             _collectedEvents.add(
                 "OnBeforeStream (run id: ${eventContext.runId}, prompt: ${eventContext.prompt.traceString}, model: ${eventContext.model.eventString}, tools: [${
                     eventContext.tools.joinToString { it.name }
@@ -122,19 +122,19 @@ class TestEventsCollector {
             )
         }
 
-        onStreamFrame { eventContext ->
+        onLLMStreamingFrameReceived { eventContext ->
             _collectedEvents.add(
                 "OnStreamFrame (run id: ${eventContext.runId}, frame: ${eventContext.streamFrame})"
             )
         }
 
-        onStreamError { eventContext ->
+        onLLMStreamingFailed { eventContext ->
             _collectedEvents.add(
                 "OnStreamError (run id: ${eventContext.runId}, error: ${eventContext.error.message})"
             )
         }
 
-        onAfterStream { eventContext ->
+        onLLMStreamingCompleted { eventContext ->
             _collectedEvents.add(
                 "OnAfterStream (run id: ${eventContext.runId}, prompt: ${eventContext.prompt.traceString}, model: ${eventContext.model.eventString}, tools: [${
                     eventContext.tools.joinToString { it.name }

@@ -82,3 +82,31 @@ public data class AgentClosingEvent(
     override val eventId: String = AgentClosingEvent::class.simpleName!!,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent()
+
+//region Deprecated
+
+@Deprecated(
+    message = "Use AgentStartingEvent instead",
+    replaceWith = ReplaceWith("AgentStartingEvent")
+)
+public typealias AIAgentStartedEvent = AgentStartingEvent
+
+@Deprecated(
+    message = "Use AgentCompletedEvent instead",
+    replaceWith = ReplaceWith("AgentCompletedEvent")
+)
+public typealias AIAgentFinishedEvent = AgentCompletedEvent
+
+@Deprecated(
+    message = "Use AgentExecutionFailedEvent instead",
+    replaceWith = ReplaceWith("AgentExecutionFailedEvent")
+)
+public typealias AIAgentRunErrorEvent = AgentExecutionFailedEvent
+
+@Deprecated(
+    message = "Use AgentClosingEvent instead",
+    replaceWith = ReplaceWith("AgentClosingEvent")
+)
+public typealias AIAgentBeforeCloseEvent = AgentClosingEvent
+
+//endregion Deprecated

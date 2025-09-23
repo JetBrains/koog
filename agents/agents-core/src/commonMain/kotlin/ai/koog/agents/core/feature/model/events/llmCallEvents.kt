@@ -53,3 +53,19 @@ public data class LLMCallCompletedEvent(
     override val eventId: String = LLMCallCompletedEvent::class.simpleName!!,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent()
+
+//region Deprecated
+
+@Deprecated(
+    message = "Use LLMCallStartingEvent instead",
+    replaceWith = ReplaceWith("LLMCallStartingEvent")
+)
+public typealias BeforeLLMCallEvent = LLMCallStartingEvent
+
+@Deprecated(
+    message = "Use LLMCallCompletedEvent instead",
+    replaceWith = ReplaceWith("LLMCallCompletedEvent")
+)
+public typealias AfterLLMCallEvent = LLMCallCompletedEvent
+
+//endregion Deprecated

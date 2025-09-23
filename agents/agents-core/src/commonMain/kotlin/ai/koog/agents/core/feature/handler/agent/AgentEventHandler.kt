@@ -75,7 +75,6 @@ public class AgentEventHandler<TFeature : Any>(public val feature: TFeature) {
     ): AIAgentEnvironment =
         agentEnvironmentTransformingHandler.transform(context, environment)
 
-
     /**
      * Transforms the provided AgentEnvironment using the configured environment transformer.
      *

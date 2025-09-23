@@ -34,15 +34,15 @@ fun main(): Unit = runBlocking {
             onToolCall { context ->
                 println("\n🔧 Using ${context.tool.name} with ${context.toolArgs}... ")
             }
-            onStreamFrame { context ->
+            onLLMStreamingFrameReceived { context ->
                 (context.streamFrame as? StreamFrame.Append)?.let { frame ->
                     print(frame.text)
                 }
             }
-            onStreamError {
+            onLLMStreamingFailed {
                 println("❌ Error: ${it.error}")
             }
-            onAfterStream {
+            onLLMStreamingCompleted {
                 println("")
             }
         }

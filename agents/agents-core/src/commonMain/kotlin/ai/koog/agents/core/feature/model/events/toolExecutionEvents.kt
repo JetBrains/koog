@@ -98,3 +98,31 @@ public data class ToolExecutionCompletedEvent(
     override val eventId: String = ToolExecutionCompletedEvent::class.simpleName!!,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent()
+
+//region Deprecated
+
+@Deprecated(
+    message = "Use ToolExecutionStartingEvent instead",
+    replaceWith = ReplaceWith("ToolExecutionStartingEvent")
+)
+public typealias ToolCallEvent = ToolExecutionStartingEvent
+
+@Deprecated(
+    message = "Use ToolValidationFailedEvent instead",
+    replaceWith = ReplaceWith("ToolValidationFailedEvent")
+)
+public typealias ToolValidationErrorEvent = ToolValidationFailedEvent
+
+@Deprecated(
+    message = "Use ToolExecutionFailedEvent instead",
+    replaceWith = ReplaceWith("ToolExecutionFailedEvent")
+)
+public typealias ToolCallFailureEvent = ToolExecutionFailedEvent
+
+@Deprecated(
+    message = "Use ToolExecutionCompletedEvent instead",
+    replaceWith = ReplaceWith("ToolExecutionCompletedEvent")
+)
+public typealias ToolCallResultEvent = ToolExecutionCompletedEvent
+
+//endregion Deprecated

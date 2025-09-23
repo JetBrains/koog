@@ -228,3 +228,19 @@ public fun <TInput, TOutput> AIAgentGraphStrategy<TInput, TOutput>.startNodeToGr
 
     return graph
 }
+
+//region Deprecated
+
+@Deprecated(
+    message = "Use StrategyStartingEvent instead or one of particular methods like GraphStrategyStartingEvent or FunctionalStrategyStartingEvent",
+    replaceWith = ReplaceWith("StrategyStartingEvent")
+)
+public typealias AIAgentStrategyStartEvent = StrategyStartingEvent
+
+@Deprecated(
+    message = "Use StrategyCompletedEvent instead",
+    replaceWith = ReplaceWith("StrategyCompletedEvent")
+)
+public typealias AIAgentStrategyFinishedEvent = StrategyCompletedEvent
+
+//endregion Deprecated

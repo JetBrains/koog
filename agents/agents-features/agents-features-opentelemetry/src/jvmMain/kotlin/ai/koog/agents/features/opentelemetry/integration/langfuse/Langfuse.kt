@@ -13,7 +13,7 @@ import kotlin.time.Duration.Companion.seconds
  * Configure an OpenTelemetry span exporter that sends data to [Langfuse](https://langfuse.com/).
  *
  * @param langfuseUrl the base URL of the Langfuse instance.
- *        If not set is retrieved from `LANGFUSE_HOST` environment variable.
+ *        If not a set is retrieved from `LANGFUSE_HOST` environment variable.
  *        Defaults to [https://cloud.langfuse.com](https://cloud.langfuse.com).
  * @param langfusePublicKey if not set is retrieved from `LANGFUSE_PUBLIC_KEY` environment variable.
  * @param langfuseSecretKey if not set is retrieved from `LANGFUSE_SECRET_KEY` environment variable.

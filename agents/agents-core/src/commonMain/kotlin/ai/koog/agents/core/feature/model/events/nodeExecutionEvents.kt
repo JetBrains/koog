@@ -78,3 +78,25 @@ public data class NodeExecutionFailedEvent(
     override val eventId: String = NodeExecutionFailedEvent::class.simpleName!!,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent()
+
+//region Deprecated
+
+@Deprecated(
+    message = "Use NodeExecutionStartingEvent instead",
+    replaceWith = ReplaceWith("NodeExecutionStartingEvent")
+)
+public typealias AIAgentNodeExecutionStartEvent = NodeExecutionStartingEvent
+
+@Deprecated(
+    message = "Use NodeExecutionCompletedEvent instead",
+    replaceWith = ReplaceWith("NodeExecutionCompletedEvent")
+)
+public typealias AIAgentNodeExecutionEndEvent = NodeExecutionCompletedEvent
+
+@Deprecated(
+    message = "Use NodeExecutionFailedEvent instead",
+    replaceWith = ReplaceWith("NodeExecutionFailedEvent")
+)
+public typealias AIAgentNodeExecutionErrorEvent = NodeExecutionFailedEvent
+
+//endregion Deprecated
