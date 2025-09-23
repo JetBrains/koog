@@ -1025,8 +1025,7 @@ class AIAgentIntegrationTest {
 
         agent.run(testInput)
 
-        // Verify that a checkpoint was created and saved to the file system
-        val checkpoints = fileStorageProvider.getCheckpoints()
+        val checkpoints = fileStorageProvider.getCheckpoints().filter { it.nodeId != "tombstone" }
         assertTrue(checkpoints.isNotEmpty(), noCheckpointsError)
         assertEquals(bye, checkpoints.first().nodeId, incorrectNodeIdError)
     }
