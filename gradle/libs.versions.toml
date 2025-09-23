@@ -23,7 +23,6 @@ mockk = "1.13.8"
 netty = "4.2.6.Final"
 opentelemetry = "1.51.0"
 oshai-logging = "7.0.7"
-shadow = "8.1.1"
 slf4j = "2.0.17"
 testcontainers = "1.19.7"
 exposed = "0.58.0"
@@ -55,9 +54,6 @@ kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serializa
 ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor3" }
 ktor-client-js = { module = "io.ktor:ktor-client-js", version.ref = "ktor3" }
 ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor3" }
-ktor-client-winhttp = { module = "io.ktor:ktor-client-winhttp", version.ref = "ktor3" }
-ktor-client-curl = { module = "io.ktor:ktor-client-curl", version.ref = "ktor3" }
-ktor-bom = { module = "io.ktor:ktor-bom", version.ref = "ktor3" }
 ktor-client-apache5 = { module = "io.ktor:ktor-client-apache5", version.ref = "ktor3" }
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor3" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor3" }
@@ -115,12 +111,9 @@ spring-boot-core = [
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
-android-library = { id = "com.android.library", version.ref = "agp" }
 knit = { id = "org.jetbrains.kotlinx.knit", version.ref = "knit" }
-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 kotlin-spring = { id = "org.jetbrains.kotlin.plugin.spring", version.ref = "kotlin" }
 kotlinx-kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
 ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }
-shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadow" }
 spring-management = { id = "io.spring.dependency-management", version.ref = "spring-management" }
