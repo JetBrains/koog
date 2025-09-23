@@ -43,6 +43,7 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.get
 import io.ktor.client.request.post
+import io.ktor.client.request.preparePost
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsChannel
 import io.ktor.http.ContentType
@@ -245,31 +246,31 @@ public class OllamaClient(
             )
         )
 
-        val response = client.post(DEFAULT_MESSAGE_PATH) {
+        client.preparePost(DEFAULT_MESSAGE_PATH) {
             setBody(request)
-        }
+        }.execute { response ->
+            val channel = response.bodyAsChannel()
 
-        val channel = response.bodyAsChannel()
+            while (!channel.isClosedForRead) {
+                val line = channel.readUTF8Line() ?: break
+                if (line.isBlank()) continue
 
-        while (!channel.isClosedForRead) {
-            val line = channel.readUTF8Line() ?: break
-            if (line.isBlank()) continue
-
-            try {
-                val chunk = ollamaJson.decodeFromString<OllamaChatResponseDTO>(line)
-                chunk.message?.let { message ->
-                    emitAppend(message.content)
-                    message.toolCalls?.forEach { toolCall ->
-                        emitToolCall(
-                            id = null,
-                            name = toolCall.function.name,
-                            content = toolCall.function.arguments.toString()
-                        )
+                try {
+                    val chunk = ollamaJson.decodeFromString<OllamaChatResponseDTO>(line)
+                    chunk.message?.let { message ->
+                        emitAppend(message.content)
+                        message.toolCalls?.forEach { toolCall ->
+                            emitToolCall(
+                                id = null,
+                                name = toolCall.function.name,
+                                content = toolCall.function.arguments.toString()
+                            )
+                        }
                     }
+                } catch (_: Exception) {
+                    // Skip malformed JSON lines
+                    continue
                 }
-            } catch (_: Exception) {
-                // Skip malformed JSON lines
-                continue
             }
         }
     }
