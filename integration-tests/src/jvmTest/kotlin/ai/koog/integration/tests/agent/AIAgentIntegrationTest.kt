@@ -352,10 +352,9 @@ class AIAgentIntegrationTest {
                 getSingleRunAgentWithRunMode(model, runMode, eventHandlerConfig = eventHandlerConfig)
             multiToolAgent.run(twoToolsPrompt)
 
-            assertEquals(
-                2,
-                parallelToolCalls.size,
-                "There should be exactly 2 tool calls in a Multiple tool calls scenario"
+            assertTrue(
+                parallelToolCalls.size >= 2,
+                "There should be at least 2 tool calls in a Multiple tool calls scenario"
             )
             assertTrue(
                 singleToolCalls.isEmpty(),

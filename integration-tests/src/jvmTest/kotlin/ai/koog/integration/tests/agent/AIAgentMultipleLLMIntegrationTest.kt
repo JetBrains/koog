@@ -87,6 +87,8 @@ internal class ReportingLLMLLMClient(
             val tools: List<String>,
             val model: LLModel
         ) : Event
+
+        data object Termination : Event
     }
 
     override suspend fun execute(
@@ -576,12 +578,17 @@ class AIAgentMultipleLLMIntegrationTest {
         Models.assumeAvailable(LLMProvider.OpenAI)
         Models.assumeAvailable(LLMProvider.Anthropic)
 
-        val eventsChannel = Channel<Event>(Channel.UNLIMITED)
         val fs = MockFileSystem()
+        val eventsChannel = Channel<Event>(Channel.UNLIMITED)
+        val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
+            onAgentFinished { _ ->
+                eventsChannel.send(Event.Termination)
+            }
+        }
 
         val agent = createTestMultiLLMAgent(
             fs,
-            { },
+            eventHandlerConfig,
             maxAgentIterations = 42,
             eventsChannel = eventsChannel,
         )
