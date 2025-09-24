@@ -527,7 +527,8 @@ class AIAgentMultipleLLMIntegrationTest {
         val anthropicClient = AnthropicLLMClient(anthropicApiKey)
 
         val executor = MultiLLMPromptExecutor(
-            LLMProvider.OpenAI to openAIClient, LLMProvider.Anthropic to anthropicClient
+            LLMProvider.OpenAI to openAIClient,
+            LLMProvider.Anthropic to anthropicClient
         )
 
         val subgraphTools = listOf(
@@ -563,11 +564,16 @@ class AIAgentMultipleLLMIntegrationTest {
         }
 
         return AIAgent(
-            promptExecutor = executor, strategy = strategy, agentConfig = AIAgentConfig(
+            promptExecutor = executor,
+            strategy = strategy,
+            agentConfig = AIAgentConfig(
                 prompt = prompt("test") {
                     system("You are a helpful assistant.")
-                }, model, maxAgentIterations = 20
-            ), toolRegistry = toolRegistry
+                },
+                model,
+                maxAgentIterations = 20,
+            ),
+            toolRegistry = toolRegistry,
         ) {
             install(EventHandler, eventHandlerConfig)
         }
@@ -683,7 +689,8 @@ class AIAgentMultipleLLMIntegrationTest {
             assertTrue(result.isNotEmpty(), "Agent result should not be empty")
 
             assertTrue(
-                fs.fileCount() > 0, "Agent must have created at least one file using subgraph tools"
+                fs.fileCount() > 0,
+                "Agent must have created at least one file using subgraph tools"
             )
 
             when (val readResult = fs.read("test.txt")) {
@@ -700,7 +707,8 @@ class AIAgentMultipleLLMIntegrationTest {
             }
 
             assertTrue(
-                calledTools.any { it == "create_file" }, "At least one LLM call must have tools available"
+                calledTools.any { it == "create_file" },
+                "At least one LLM call must have tools available"
             )
         }
 
