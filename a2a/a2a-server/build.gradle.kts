@@ -33,6 +33,15 @@ kotlin {
         jvmTest {
             dependencies {
                 implementation(kotlin("test-junit5"))
+                implementation(project(":a2a:a2a-test"))
+                implementation(project(":a2a:a2a-client"))
+                implementation(project(":a2a:a2a-transport:a2a-transport-client-jsonrpc-http"))
+                implementation(project(":a2a:a2a-transport:a2a-transport-server-jsonrpc-http"))
+
+                implementation(libs.ktor.client.cio)
+                implementation(libs.ktor.client.logging)
+                implementation(libs.ktor.server.netty)
+                runtimeOnly(libs.slf4j.simple)
             }
         }
 

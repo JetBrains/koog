@@ -11,32 +11,34 @@ import ai.koog.a2a.transport.jsonrpc.JSONRPCServerTransport
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCJson
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCRequest
 import ai.koog.a2a.utils.runCatchingCancellable
+import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.install
-import io.ktor.server.application.pluginOrNull
 import io.ktor.server.engine.ApplicationEngine
 import io.ktor.server.engine.ApplicationEngineFactory
 import io.ktor.server.engine.EmbeddedServer
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.server.request.receiveText
+import io.ktor.server.response.header
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
-import io.ktor.server.routing.application
+import io.ktor.server.routing.RoutingContext
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import io.ktor.server.sse.SSE
-import io.ktor.server.sse.send
-import io.ktor.server.sse.sse
+import io.ktor.server.sse.SSEServerContent
+import io.ktor.server.sse.ServerSSESession
+import io.ktor.sse.ServerSentEvent
 import io.ktor.util.toMap
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.decodeFromJsonElement
-import kotlinx.serialization.serializer
 
 /**
  * Implements A2A JSON-RPC server transport over HTTP using Ktor server
@@ -81,6 +83,7 @@ import kotlinx.serialization.serializer
  *
  * @property requestHandler The handler responsible for processing A2A requests received by the transport.
  */
+@OptIn(InternalA2AApi::class)
 public class HttpJSONRPCServerTransport(
     override val requestHandler: RequestHandler,
 ) : JSONRPCServerTransport() {
@@ -127,6 +130,10 @@ public class HttpJSONRPCServerTransport(
             install(SSE)
 
             routing {
+                install(ContentNegotiation) {
+                    json(JSONRPCJson)
+                }
+
                 transportRoutes(this, path)
 
                 if (agentCard != null) {
@@ -180,47 +187,82 @@ public class HttpJSONRPCServerTransport(
      * @param route The base route to which the transport routes should be mounted.
      * @param path JSON-RPC endpoint path that will be mounted under the base [route].
      */
-    @OptIn(InternalA2AApi::class)
     public fun transportRoutes(route: Route, path: String): Route = route.route(path) {
-        if (application.pluginOrNull(SSE) == null) {
-            throw IllegalStateException("SSE plugin must be installed in the application to add these routes.")
-        }
+        plugin(SSE)
 
         install(ContentNegotiation) {
             json(JSONRPCJson)
         }
 
-        // Regular JSON-RPC requests
+        // Handle incoming JSON-RPC requests, both regular and streaming
         post {
-            val response = runCatchingCancellable {
-                onRequest(
-                    request = call.receiveJSONRPCRequest(),
-                    ctx = call.toServerCallContext()
-                )
-            }.getOrElse { it.toJSONRPCErrorResponse() }
-
-            call.respond(response)
-        }
-
-        // Streaming JSON-RPC requests
-        sse(
-            serialize = { typeInfo, it ->
-                val kType = typeInfo.kotlinType ?: throw IllegalArgumentException("Null KType for value: $it")
-                val serializer = JSONRPCJson.serializersModule.serializer(kType)
-                JSONRPCJson.encodeToString(serializer, it)
-            }
-        ) {
             runCatchingCancellable {
-                onRequestStreaming(
-                    request = call.receiveJSONRPCRequest(),
-                    ctx = call.toServerCallContext()
-                ).collect { response ->
-                    send(response)
+                val request: JSONRPCRequest = call.receiveJSONRPCRequest()
+                val ctx: ServerCallContext = call.toServerCallContext()
+
+                runCatchingCancellable {
+                    val a2aMethod = parseA2AMethod(request)
+
+                    if (a2aMethod.streaming) {
+                        handleRequestStreaming(request, ctx)
+                    } else {
+                        handleRequest(request, ctx)
+                    }
+                }.getOrElse {
+                    call.respond(it.toJSONRPCErrorResponse(request.id))
                 }
             }.getOrElse {
-                send(it.toJSONRPCErrorResponse())
+                call.respond(it.toJSONRPCErrorResponse())
             }
         }
+    }
+
+    /**
+     * Handling A2A requests to regular methods.
+     */
+    private suspend fun RoutingContext.handleRequest(request: JSONRPCRequest, ctx: ServerCallContext) {
+        val response = runCatchingCancellable {
+            onRequest(
+                request = request,
+                ctx = ctx
+            )
+        }.getOrElse { it.toJSONRPCErrorResponse() }
+
+        call.respond(response)
+    }
+
+    /**
+     * Handling A2A requests to streaming methods.
+     */
+    private suspend fun RoutingContext.handleRequestStreaming(request: JSONRPCRequest, ctx: ServerCallContext) {
+        val handle: suspend ServerSSESession.() -> Unit = {
+            runCatchingCancellable {
+                onRequestStreaming(
+                    request = request,
+                    ctx = ctx
+                ).collect { response ->
+                    send(
+                        ServerSentEvent(JSONRPCJson.encodeToString(response))
+                    )
+                }
+            }.getOrElse {
+                send(
+                    ServerSentEvent(
+                        JSONRPCJson.encodeToString(it.toJSONRPCErrorResponse())
+                    )
+                )
+            }
+        }
+
+        // Reply with SSE (implementation copied from SSE plugin code)
+        call.response.apply {
+            header(HttpHeaders.ContentType, ContentType.Text.EventStream.toString())
+            header(HttpHeaders.CacheControl, "no-store")
+            header(HttpHeaders.Connection, "keep-alive")
+            header("X-Accel-Buffering", "no")
+        }
+
+        call.respond(SSEServerContent(call, handle))
     }
 
     /**

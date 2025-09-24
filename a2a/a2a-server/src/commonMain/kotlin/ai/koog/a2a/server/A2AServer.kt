@@ -4,6 +4,7 @@ import ai.koog.a2a.exceptions.A2AAuthenticatedExtendedCardNotConfiguredException
 import ai.koog.a2a.exceptions.A2AInternalErrorException
 import ai.koog.a2a.exceptions.A2AInvalidParamsException
 import ai.koog.a2a.exceptions.A2APushNotificationNotSupportedException
+import ai.koog.a2a.exceptions.A2ATaskNotCancelableException
 import ai.koog.a2a.exceptions.A2ATaskNotFoundException
 import ai.koog.a2a.exceptions.A2AUnsupportedOperationException
 import ai.koog.a2a.model.AgentCard
@@ -18,20 +19,19 @@ import ai.koog.a2a.model.TaskPushNotificationConfig
 import ai.koog.a2a.model.TaskPushNotificationConfigParams
 import ai.koog.a2a.model.TaskQueryParams
 import ai.koog.a2a.model.TaskState
-import ai.koog.a2a.model.TaskStatus
-import ai.koog.a2a.model.TaskStatusUpdateEvent
 import ai.koog.a2a.server.agent.AgentExecutor
 import ai.koog.a2a.server.messages.ContextMessageStorage
 import ai.koog.a2a.server.messages.InMemoryMessageStorage
 import ai.koog.a2a.server.messages.MessageStorage
 import ai.koog.a2a.server.notifications.PushNotificationConfigStorage
 import ai.koog.a2a.server.notifications.PushNotificationSender
+import ai.koog.a2a.server.session.AgentSession
 import ai.koog.a2a.server.session.IdGenerator
 import ai.koog.a2a.server.session.RequestContext
-import ai.koog.a2a.server.session.Session
 import ai.koog.a2a.server.session.SessionEventProcessor
 import ai.koog.a2a.server.session.SessionManager
 import ai.koog.a2a.server.session.UuidIdGenerator
+import ai.koog.a2a.server.session.withTaskLock
 import ai.koog.a2a.server.tasks.ContextTaskStorage
 import ai.koog.a2a.server.tasks.InMemoryTaskStorage
 import ai.koog.a2a.server.tasks.TaskStorage
@@ -261,7 +261,7 @@ import kotlinx.datetime.Clock
  *     path = "/a2a",
  *     wait = true,
  *     agentCard = agentCard,
- *     agentCardPath = "/.well-known/a2a/agent-card.json"
+ *     agentCardPath = A2AConsts.AGENT_CARD_WELL_KNOWN_PATH
  * )
  * ```
  *
@@ -299,13 +299,14 @@ import kotlinx.datetime.Clock
  * @param agentExecutor The executor containing the core agent logic
  * @param agentCard The agent card describing this agent's capabilities and metadata
  * @param agentCardExtended Optional extended agent card for authenticated requests
- * @param taskStorage Storage implementation for persisting tasks (defaults to in-memory)
- * @param messageStorage Storage implementation for persisting messages (defaults to in-memory)
- * @param pushConfigStorage Optional storage for push notification configurations
- * @param pushSender Optional push notification sender implementation
- * @param idGenerator Generator for new task and context IDs (defaults to UUID)
+ * @param taskStorage Storage implementation for persisting tasks (defaults to [InMemoryTaskStorage])
+ * @param messageStorage Storage implementation for persisting messages (defaults to [InMemoryMessageStorage])
+ * @param pushConfigStorage Optional storage for push notification configurations (defaults to `null`)
+ * @param pushSender Optional push notification sender implementation (defaults to `null`)
+ * @param idGenerator Generator for new task and context IDs (defaults to [UuidIdGenerator])
  * @param coroutineScope Scope for managing all sessions, agent jobs, event processing, etc.
  * @param clock Clock instance for timestamp generation (defaults to [Clock.System])
+ * @param sessionManager Manager for managing agent sessions (defaults to [SessionManager])
  *
  * @see AgentExecutor for implementing agent business logic
  * @see TaskStorage for persisting tasks
@@ -326,7 +327,7 @@ public open class A2AServer(
     protected val coroutineScope: CoroutineScope = CoroutineScope(SupervisorJob()),
     protected val clock: Clock = Clock.System,
 ) : RequestHandler {
-    protected val sessionManager: SessionManager = SessionManager(
+    protected open val sessionManager: SessionManager = SessionManager(
         coroutineScope = coroutineScope,
         taskStorage = taskStorage,
         pushConfigStorage = pushConfigStorage,
@@ -355,54 +356,60 @@ public open class A2AServer(
      *
      * @return A stream of events from the agent
      */
-    protected fun onSendMessageCommon(
+    protected open fun onSendMessageCommon(
         request: Request<MessageSendParams>,
         ctx: ServerCallContext
     ): Flow<Response<Event>> = channelFlow {
         val message = request.data.message
+        val contextId = message.contextId ?: idGenerator.generateContextId(message)
+        val taskId = message.taskId ?: idGenerator.generateTaskId(message)
 
-        // Check if message links to a task.
-        val task: Task? = message.taskId?.let { taskId ->
-            // Check if the task is still in progress, no message can be sent.
-            if (sessionManager.sessionForTask(taskId) != null) {
-                throw A2AUnsupportedOperationException("Task '$taskId' is still running, can't send messages to the task that has not yielded control")
+        val session = sessionManager.withTaskLock(taskId) {
+            // Check if message links to a task.
+            val task: Task? = message.taskId?.let { taskId ->
+                // Check if the specified task exists and message context id matches the task context id.
+                val task = taskStorage.get(taskId, historyLength = 0, includeArtifacts = false)
+                    ?: throw A2ATaskNotFoundException("Task '$taskId' not found")
+
+                if (message.contextId != task.contextId) {
+                    throw A2AInvalidParamsException("Message context id '${message.contextId}' doesn't match task context id '${task.contextId}'")
+                }
+
+                task
             }
 
-            // Check if the specified task exists and message context id matches the task context id.
-            val task = taskStorage.get(taskId, historyLength = 0, includeArtifacts = false)
-                ?: throw A2ATaskNotFoundException("Task '$taskId' not found")
+            // Create event processor for the session based on the input data.
+            val eventProcessor = SessionEventProcessor(
+                contextId = contextId,
+                taskId = taskId,
+                taskStorage = taskStorage,
+                task = task,
+            )
 
-            if (message.contextId != task.contextId) {
-                throw A2AInvalidParamsException("Message context id '${message.contextId}' doesn't match task context id '${task.contextId}'")
+            // Create request context based on the request information.
+            val requestContext = RequestContext(
+                callContext = ctx,
+                params = request.data,
+                taskStorage = ContextTaskStorage(eventProcessor.contextId, taskStorage),
+                messageStorage = ContextMessageStorage(eventProcessor.contextId, messageStorage),
+                contextId = eventProcessor.contextId,
+                taskId = eventProcessor.taskId,
+                task = task,
+            )
+
+            // Create agent execution session
+            AgentSession(coroutineScope, eventProcessor) {
+                agentExecutor.execute(requestContext, eventProcessor)
+            }.also {
+                try {
+                    // Add to session manager, it will handle monitoring and closing once the session is completed (successfully or not).
+                    sessionManager.addSession(it)
+                } catch (_: IllegalArgumentException) {
+                    throw A2AUnsupportedOperationException(
+                        "Task '${request.data.message.taskId}' is already running, can't send messages to the task that hasn't yielded control."
+                    )
+                }
             }
-
-            task
-        }
-
-        // Create event processor for the session based on the input data.
-        val eventProcessor = SessionEventProcessor(
-            contextId = task?.contextId
-                ?: message.contextId
-                ?: idGenerator.generateContextId(message),
-            taskId = task?.id ?: idGenerator.generateTaskId(message),
-            taskStorage = taskStorage,
-            task = null,
-        )
-
-        // Create request context based on the request information.
-        val requestContext = RequestContext(
-            callContext = ctx,
-            params = request.data,
-            taskStorage = ContextTaskStorage(eventProcessor.contextId, taskStorage),
-            messageStorage = ContextMessageStorage(eventProcessor.contextId, messageStorage),
-            contextId = eventProcessor.contextId,
-            taskId = eventProcessor.taskId,
-            task = task,
-        )
-
-        // Create agent execution session
-        val session = Session(coroutineScope, eventProcessor) {
-            agentExecutor.execute(requestContext, eventProcessor)
         }
 
         // Subscribe to events stream and start emitting them.
@@ -412,9 +419,6 @@ public open class A2AServer(
                     send(Response(data = event, id = request.id))
                 }
         }
-
-        // Add to session manager, it will handle monitoring and closing once the session is completed (successfully or not).
-        sessionManager.addSession(session)
 
         // Start the session to execute the agent and wait for it to finish.
         session.join()
@@ -482,57 +486,57 @@ public open class A2AServer(
         ctx: ServerCallContext
     ): Response<Task> {
         val taskParams = request.data
+        val taskId = taskParams.id
 
-        val session = sessionManager.sessionForTask(taskParams.id)
-        val task = taskStorage.get(taskParams.id, historyLength = 0, includeArtifacts = true)
-            ?: throw A2ATaskNotFoundException("Task '${taskParams.id}' not found")
+        sessionManager.withTaskLock(taskId) {
+            val session = sessionManager.getSession(taskParams.id)
 
-        // Task is not running, check if it exists in the storage.
-        if (session == null) {
-            // Task exists but not running - check if it is already canceled.
-            if (task.status.state == TaskState.Canceled) {
-                return Response(data = task, id = request.id)
+            val task = taskStorage.get(taskParams.id, historyLength = 0, includeArtifacts = true)
+                ?: throw A2ATaskNotFoundException("Task '${taskParams.id}' not found")
+
+            // Task is not running, check if it exists in the storage.
+            if (session == null) {
+                // Task exists but not running - check if it is already canceled.
+                if (task.status.state == TaskState.Canceled) {
+                    return Response(data = task, id = request.id)
+                }
+
+                // If the task is not canceled and in the terminal state, throw.
+                if (task.status.state.terminal) {
+                    throw A2ATaskNotCancelableException("Task '${taskParams.id}' is already in terminal state ${task.status.state}")
+                }
             }
 
-            // If the task is not canceled and in the terminal state, throw.
-            if (task.status.state.terminal) {
-                throw A2AUnsupportedOperationException("Task '${taskParams.id}' is already in terminal state ${task.status.state}")
-            }
-
-            // Proceed to mark the task as canceled.
-            taskStorage.update(
-                TaskStatusUpdateEvent(
-                    taskId = task.id,
-                    contextId = task.contextId,
-                    status = TaskStatus(
-                        state = TaskState.Canceled,
-                        timestamp = clock.now()
-                    ),
-                    final = true
-                )
+            val eventProcessor = session?.eventProcessor ?: SessionEventProcessor(
+                contextId = task.contextId,
+                taskId = task.id,
+                taskStorage = taskStorage,
+                task = task,
             )
-        } else {
+
             // Create request context based on the request information.
             val requestContext = RequestContext(
                 callContext = ctx,
                 params = request.data,
-                taskStorage = ContextTaskStorage(session.contextId, taskStorage),
-                messageStorage = ContextMessageStorage(session.contextId, messageStorage),
-                contextId = session.contextId,
-                taskId = session.taskId,
+                taskStorage = ContextTaskStorage(eventProcessor.contextId, taskStorage),
+                messageStorage = ContextMessageStorage(eventProcessor.contextId, messageStorage),
+                contextId = eventProcessor.contextId,
+                taskId = eventProcessor.taskId,
                 task = task,
             )
 
             // Attempt to cancel the agent execution and wait until it's finished.
-            agentExecutor.cancel(requestContext, session)
-
-            // If cancel finished without exception, assume the cancellation was successful and close the session explicitly.
-            session.close()
+            agentExecutor.cancel(requestContext, eventProcessor, session?.agentJob)
         }
 
         // Return the final task state.
         return Response(
             data = taskStorage.get(taskParams.id, historyLength = 0, includeArtifacts = true)
+                ?.also {
+                    if (it.status.state != TaskState.Canceled) {
+                        throw A2ATaskNotCancelableException("Task '${taskParams.id}' was not canceled successfully, current state is ${it.status.state}")
+                    }
+                }
                 ?: throw A2ATaskNotFoundException("Task '${taskParams.id}' not found"),
             id = request.id,
         )
@@ -545,7 +549,7 @@ public open class A2AServer(
         checkStreamingSupport()
 
         val taskParams = request.data
-        val session = sessionManager.sessionForTask(taskParams.id)
+        val session = sessionManager.getSession(taskParams.id)
             ?: throw A2AUnsupportedOperationException("Session for task '${taskParams.id}' is not currently running or task does not exist")
 
         emitAll(
@@ -612,13 +616,13 @@ public open class A2AServer(
         return Response(data = null, id = request.id)
     }
 
-    protected fun checkStreamingSupport() {
+    protected open fun checkStreamingSupport() {
         if (agentCard.capabilities.streaming != true) {
             throw A2AUnsupportedOperationException("Streaming is not supported by the server")
         }
     }
 
-    protected fun storageIfPushNotificationSupported(): PushNotificationConfigStorage {
+    protected open fun storageIfPushNotificationSupported(): PushNotificationConfigStorage {
         if (agentCard.capabilities.pushNotifications != true) {
             throw A2APushNotificationNotSupportedException("Push notifications are not supported by the server")
         }
@@ -635,7 +639,7 @@ public open class A2AServer(
      *
      * @param cause Optional cause of the cancellation
      */
-    public fun cancel(cause: CancellationException? = null) {
+    public open fun cancel(cause: CancellationException? = null) {
         coroutineScope.cancel(cause)
     }
 }

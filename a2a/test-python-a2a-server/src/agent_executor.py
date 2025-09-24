@@ -13,12 +13,20 @@ from a2a.utils import (
     new_agent_text_message,
     new_task
 )
+from datetime import datetime, timezone
+
+
+def get_current_timestamp():
+    """Get current timestamp in ISO 8601 format (UTC)"""
+    return datetime.now(timezone.utc).isoformat()
 
 
 async def say_hello(
     event_queue: EventQueue,
-    message: Message
+    context: RequestContext,
 ) -> None:
+    message = context.message
+
     await event_queue.enqueue_event(
         new_agent_text_message(
             text="Hello World",
@@ -30,9 +38,20 @@ async def say_hello(
 
 async def do_task(
     event_queue: EventQueue,
-    message: Message
+    context: RequestContext,
 ) -> None:
-    task = new_task(message)
+    message = context.message
+
+    # noinspection PyTypeChecker
+    task = Task(
+        id=message.task_id,
+        context_id=message.context_id,
+        status=TaskStatus(
+            state=TaskState.submitted,
+            timestamp=get_current_timestamp()
+        ),
+        history=[message]
+    )
 
     # noinspection PyTypeChecker
     events = [
@@ -73,24 +92,38 @@ async def do_task(
 
 async def do_cancelable_task(
     event_queue: EventQueue,
-    message: Message,
+    context: RequestContext,
 ):
-    await event_queue.enqueue_event(
-        new_task(message),
-    )
+    message = context.message
 
-
-async def do_long_running_task(
-    event_queue: EventQueue,
-    message: Message
-):
+    # noinspection PyTypeChecker
     task = Task(
         id=message.task_id,
         context_id=message.context_id,
         status=TaskStatus(
-            state=TaskState.working,
-            message=message
-        )
+            state=TaskState.submitted,
+            timestamp=get_current_timestamp()
+        ),
+        history=[message]
+    )
+    await event_queue.enqueue_event(task)
+
+
+async def do_long_running_task(
+    event_queue: EventQueue,
+    context: RequestContext,
+):
+    message = context.message
+
+    # noinspection PyTypeChecker
+    task = Task(
+        id=message.task_id,
+        context_id=message.context_id,
+        status=TaskStatus(
+            state=TaskState.submitted,
+            timestamp=get_current_timestamp()
+        ),
+        history=[message]
     )
 
     await event_queue.enqueue_event(task)
@@ -128,17 +161,17 @@ class HelloWorldAgentExecutor(AgentExecutor):
         user_input = context.get_user_input()
 
         # Test scenarios to test various aspects of A2A
-        if "hello world" in user_input:
-            await say_hello(event_queue, context.message)
+        if user_input == "hello world":
+            await say_hello(event_queue, context)
 
-        elif "do task" in user_input:
-            await do_task(event_queue, context.message)
+        elif user_input == "do task":
+            await do_task(event_queue, context)
 
-        elif "do cancelable task" in user_input:
-            await do_cancelable_task(event_queue, context.message)
+        elif user_input == "do cancelable task":
+            await do_cancelable_task(event_queue, context)
 
-        elif "do long-running task" in user_input:
-            await do_long_running_task(event_queue, context.message)
+        elif user_input == "do long-running task":
+            await do_long_running_task(event_queue, context)
 
         else:
             await event_queue.enqueue_event(

@@ -6,14 +6,22 @@ import io.ktor.client.HttpClient
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logging
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.TestInstance
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.wait.strategy.Wait
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
-import kotlin.test.BeforeTest
 
+/**
+ * Integration test class for testing the JSON-RPC HTTP communication in the A2A client context.
+ * This class ensures the proper functioning and correctness of the A2A protocol over HTTP
+ * using the JSON-RPC standard.
+ */
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Testcontainers
-class A2AClientIntegrationTest : BaseA2AProtocolTest() {
+class A2AClientJsonRpcIntegrationTest : BaseA2AProtocolTest() {
     companion object {
         @Container
         val testA2AServer: GenericContainer<*> =
@@ -31,25 +39,30 @@ class A2AClientIntegrationTest : BaseA2AProtocolTest() {
     @Suppress("HttpUrlsUsage")
     private val agentUrl by lazy { "http://${testA2AServer.host}:${testA2AServer.getMappedPort(9999)}" }
 
-    private val transport by lazy {
-        HttpJSONRPCClientTransport(
+    private lateinit var transport: HttpJSONRPCClientTransport
+
+    override lateinit var client: A2AClient
+
+    @BeforeAll
+    fun setUp() = runTest {
+        transport = HttpJSONRPCClientTransport(
             url = agentUrl,
             baseHttpClient = httpClient
         )
-    }
 
-    override val client by lazy {
-        A2AClient(
+        client = A2AClient(
             transport = transport,
             agentCardResolver = UrlAgentCardResolver(
                 baseUrl = agentUrl,
                 baseHttpClient = httpClient,
             ),
         )
+
+        client.connect()
     }
 
-    @BeforeTest
-    fun initClient() = runTest {
-        client.connect()
+    @AfterAll
+    fun tearDown() = runTest {
+        transport.close()
     }
 }

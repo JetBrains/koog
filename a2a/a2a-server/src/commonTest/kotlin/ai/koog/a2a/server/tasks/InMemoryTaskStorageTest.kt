@@ -244,6 +244,84 @@ class InMemoryTaskStorageTest {
         }
     }
 
+    @Test
+    fun testTaskStatusHistoryPreservation() = runTest {
+        // Initial task with no message in status
+        val initialTask = createTask(
+            id = "task-1",
+            contextId = "context-1"
+        )
+        storage.update(initialTask)
+
+        // Verify initial task - should have the initial status message but no history yet
+        val initialTaskFromStorage = storage.get("task-1", historyLength = null)
+        assertNotNull(initialTaskFromStorage)
+        assertNull(initialTaskFromStorage.history)
+
+        // Update status with a new message - history is still empty
+        val firstUpdateMessage = createUserMessage("update-msg-1", "context-1", "Making progress")
+        val firstUpdateStatus = TaskStatus(
+            state = TaskState.Working,
+            message = firstUpdateMessage,
+            timestamp = Instant.parse("2023-01-01T11:00:00Z")
+        )
+        val firstUpdate = TaskStatusUpdateEvent(
+            taskId = "task-1",
+            contextId = "context-1",
+            status = firstUpdateStatus,
+            final = false
+        )
+
+        storage.update(firstUpdate)
+
+        val afterFirstUpdate = storage.get("task-1", historyLength = null) // Get full history
+        assertNotNull(afterFirstUpdate)
+        assertEquals(firstUpdateStatus, afterFirstUpdate.status)
+        assertNull(afterFirstUpdate.history)
+
+        // Second status update - this should add the previous status message to history
+        val secondUpdateMessage = createUserMessage("update-msg-2", "context-1", "Almost done")
+        val secondUpdateStatus = TaskStatus(
+            state = TaskState.Working,
+            message = secondUpdateMessage,
+            timestamp = Instant.parse("2023-01-01T12:00:00Z")
+        )
+        val secondUpdate = TaskStatusUpdateEvent(
+            taskId = "task-1",
+            contextId = "context-1",
+            status = secondUpdateStatus,
+            final = false
+        )
+        storage.update(secondUpdate)
+
+        // Verify second update
+        val afterSecondUpdate = storage.get("task-1", historyLength = null)
+        assertNotNull(afterSecondUpdate)
+        assertEquals(secondUpdateStatus, afterSecondUpdate.status)
+        assertEquals(listOf(firstUpdateMessage), afterSecondUpdate.history)
+
+        // Final status update
+        val completionMessage = createUserMessage("completion-msg", "context-1", "Task completed successfully")
+        val completionStatus = TaskStatus(
+            state = TaskState.Completed,
+            message = completionMessage,
+            timestamp = Instant.parse("2023-01-01T13:00:00Z")
+        )
+        val completionUpdate = TaskStatusUpdateEvent(
+            taskId = "task-1",
+            contextId = "context-1",
+            status = completionStatus,
+            final = true
+        )
+        storage.update(completionUpdate)
+
+        // Verify final update
+        val finalTask = storage.get("task-1", historyLength = null)
+        assertNotNull(finalTask)
+        assertEquals(completionStatus, finalTask.status)
+        assertEquals(listOf(firstUpdateMessage, secondUpdateMessage), finalTask.history)
+    }
+
     private fun createUserMessage(
         messageId: String,
         contextId: String,
@@ -258,16 +336,14 @@ class InMemoryTaskStorageTest {
     private fun createTask(
         id: String,
         contextId: String,
+        status: TaskStatus = TaskStatus(state = TaskState.Submitted),
         history: List<Message>? = null,
         artifacts: List<Artifact>? = null,
         metadata: JsonObject? = null
     ) = Task(
         id = id,
         contextId = contextId,
-        status = TaskStatus(
-            state = TaskState.Submitted,
-            timestamp = Instant.parse("2023-01-01T10:00:00Z")
-        ),
+        status = status,
         history = history,
         artifacts = artifacts,
         metadata = metadata

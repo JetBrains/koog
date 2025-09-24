@@ -31,6 +31,16 @@ import kotlinx.serialization.json.encodeToJsonElement
  */
 public abstract class JSONRPCServerTransport : ServerTransport {
     /**
+     * Parses [A2AMethod] from the given [JSONRPCRequest].
+     *
+     * @throws A2AMethodNotFoundException if method is not found.
+     */
+    protected fun parseA2AMethod(request: JSONRPCRequest): A2AMethod {
+        return A2AMethod.entries.find { it.value == request.method }
+            ?: throw A2AMethodNotFoundException("Method not found: ${request.method}")
+    }
+
+    /**
      * Handles a JSON-RPC request and returns the corresponding response
      * Handles exceptions, mapping all non [A2AException]s to [A2AInternalErrorException], and then converting them to [JSONRPCErrorResponse].
      */
@@ -68,7 +78,7 @@ public abstract class JSONRPCServerTransport : ServerTransport {
                         .toJSONRPCSuccessResponse()
 
                 else ->
-                    throw A2AMethodNotFoundException("Method not found: ${request.method}")
+                    throw A2AMethodNotFoundException("Non-streaming method not found: ${request.method}")
             }
         }.getOrElse { it.toJSONRPCErrorResponse(request.id) }
     }
@@ -90,7 +100,7 @@ public abstract class JSONRPCServerTransport : ServerTransport {
                 requestHandler.onResubscribeTask(request.toRequest(), ctx)
 
             else ->
-                flow { throw A2AMethodNotFoundException("Method not found: ${request.method}") }
+                flow { throw A2AMethodNotFoundException("Streaming method not found: ${request.method}") }
         }.map { it.toJSONRPCSuccessResponse() as JSONRPCResponse }
             .catch { emit(it.toJSONRPCErrorResponse(request.id)) }
     }

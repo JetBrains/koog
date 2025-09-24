@@ -11,8 +11,8 @@ import ai.koog.a2a.model.TaskStatusUpdateEvent
 import ai.koog.a2a.model.TextPart
 import ai.koog.a2a.server.agent.AgentExecutor
 import ai.koog.a2a.server.session.RequestContext
-import ai.koog.a2a.server.session.Session
 import ai.koog.a2a.server.session.SessionEventProcessor
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.datetime.Clock
 
@@ -38,15 +38,10 @@ private suspend fun doTask(
         id = context.taskId,
         contextId = context.contextId,
         status = TaskStatus(
-            state = TaskState.Working,
-            message = Message(
-                role = Role.Agent,
-                parts = listOf(TextPart("Task created")),
-                contextId = context.contextId,
-                taskId = context.taskId
-            ),
+            state = TaskState.Submitted,
             timestamp = Clock.System.now()
-        )
+        ),
+        history = listOf(context.params.message)
     )
 
     // Send initial task event
@@ -99,15 +94,10 @@ private suspend fun doCancelableTask(
         id = context.taskId,
         contextId = context.contextId,
         status = TaskStatus(
-            state = TaskState.Working,
-            message = Message(
-                role = Role.Agent,
-                parts = listOf(TextPart("Cancelable task created")),
-                contextId = context.contextId,
-                taskId = context.taskId
-            ),
+            state = TaskState.Submitted,
             timestamp = Clock.System.now()
-        )
+        ),
+        history = listOf(context.params.message)
     )
 
     eventProcessor.sendTaskEvent(task)
@@ -121,15 +111,10 @@ private suspend fun doLongRunningTask(
         id = context.taskId,
         contextId = context.contextId,
         status = TaskStatus(
-            state = TaskState.Working,
-            message = Message(
-                role = Role.Agent,
-                parts = listOf(TextPart("Long running task started")),
-                contextId = context.contextId,
-                taskId = context.taskId
-            ),
+            state = TaskState.Submitted,
             timestamp = Clock.System.now()
-        )
+        ),
+        history = listOf(context.params.message)
     )
 
     eventProcessor.sendTaskEvent(task)
@@ -166,20 +151,20 @@ class TestAgentExecutor : AgentExecutor {
             .lowercase()
 
         // Test scenarios to test various aspects of A2A
-        when {
-            "hello world" in userInput -> {
+        when (userInput) {
+            "hello world" -> {
                 sayHello(context, eventProcessor)
             }
 
-            "do task" in userInput -> {
+            "do task" -> {
                 doTask(context, eventProcessor)
             }
 
-            "do cancelable task" in userInput -> {
+            "do cancelable task" -> {
                 doCancelableTask(context, eventProcessor)
             }
 
-            "do long-running task" in userInput -> {
+            "do long-running task" -> {
                 doLongRunningTask(context, eventProcessor)
             }
 
@@ -195,10 +180,14 @@ class TestAgentExecutor : AgentExecutor {
         }
     }
 
-    override suspend fun cancel(context: RequestContext<TaskIdParams>, session: Session) {
-        session.agentJob.cancel()
+    override suspend fun cancel(
+        context: RequestContext<TaskIdParams>,
+        eventProcessor: SessionEventProcessor,
+        agentJob: Job?
+    ) {
+        agentJob?.cancel()
 
-        session.eventProcessor.sendTaskEvent(
+        eventProcessor.sendTaskEvent(
             TaskStatusUpdateEvent(
                 contextId = context.contextId,
                 taskId = context.taskId,

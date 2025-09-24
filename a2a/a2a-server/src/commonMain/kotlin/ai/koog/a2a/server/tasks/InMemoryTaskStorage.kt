@@ -95,9 +95,12 @@ public class InMemoryTaskStorage : TaskStorage {
 
                 val updatedTask = existingTask.copy(
                     status = event.status,
+                    history = existingTask.status.message
+                        ?.let { existingTask.history.orEmpty() + it }
+                        ?: existingTask.history,
                     metadata = existingTask.metadata
                         ?.let { JsonObject(it + event.metadata.orEmpty()) }
-                        ?: event.metadata
+                        ?: event.metadata,
                 )
 
                 tasks[event.taskId] = updatedTask

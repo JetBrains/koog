@@ -15,6 +15,7 @@ import io.ktor.client.request.headers
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
+import io.ktor.http.HttpMethod
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.flow.Flow
@@ -31,7 +32,7 @@ import kotlinx.coroutines.flow.flow
  */
 public class HttpJSONRPCClientTransport(
     url: String,
-    baseHttpClient: HttpClient
+    baseHttpClient: HttpClient = HttpClient()
 ) : JSONRPCClientTransport() {
     private val httpClient: HttpClient = baseHttpClient.config {
         defaultRequest {
@@ -71,6 +72,8 @@ public class HttpJSONRPCClientTransport(
     ): Flow<JSONRPCResponse> = flow {
         httpClient.sse(
             request = {
+                method = HttpMethod.Post
+
                 headers {
                     ctx.additionalHeaders.forEach { (key, values) ->
                         appendAll(key, values)

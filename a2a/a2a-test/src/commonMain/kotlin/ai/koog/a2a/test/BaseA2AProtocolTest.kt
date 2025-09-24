@@ -48,7 +48,7 @@ abstract class BaseA2AProtocolTest {
     /**
      * The A2A client instance to test. Must be connected and ready to use.
      */
-    protected abstract val client: A2AClient
+    protected abstract var client: A2AClient
 
     @Test
     fun `test get agent card`() = runTest {
@@ -160,7 +160,6 @@ abstract class BaseA2AProtocolTest {
                     role = Role.User,
                     parts = listOf(
                         TextPart("hello world"),
-                        TextPart("How are you doing?"),
                     ),
                     contextId = "test-context"
                 ),

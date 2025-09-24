@@ -33,6 +33,7 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
+import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.server.sse.SSE
@@ -299,6 +300,8 @@ class HttpJSONRPCServerTransportTest {
                 client.sse(
                     urlString = "/a2a",
                     request = {
+                        this.method = HttpMethod.Post
+
                         contentType(ContentType.Application.Json)
                         setBody(json.encodeToString(jsonRpcRequest))
                     },
