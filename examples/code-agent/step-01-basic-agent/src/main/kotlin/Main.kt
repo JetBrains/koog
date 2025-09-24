@@ -8,6 +8,9 @@ import ai.koog.agents.ext.tool.file.ListDirectoryTool
 import ai.koog.agents.ext.tool.file.ReadFileTool
 import ai.koog.agents.ext.tool.file.WriteFileTool
 import ai.koog.agents.features.eventHandler.feature.handleEvents
+import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute
+import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
+import ai.koog.agents.features.opentelemetry.integration.langfuse.addLangfuseExporter
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.koog.rag.base.files.JVMFileSystemProvider
@@ -29,6 +32,17 @@ val agent = AIAgent(
     },
     maxIterations = 100
 ) {
+    install(OpenTelemetry) {
+        setVerbose(true) // Enable verbose mode to send full strings instead of HIDDEN placeholders
+        addLangfuseExporter(
+            langfuseUrl = "https://cloud.langfuse.com",
+            langfusePublicKey = System.getenv("LANGFUSE_PUBLIC_KEY"),
+            langfuseSecretKey = System.getenv("LANGFUSE_SECRET_KEY"),
+            traceAttributes = listOf(
+                CustomAttribute("langfuse.session.id", System.getenv("LANGFUSE_SESSION_ID") ?: ""),
+            )
+        )
+    }
     handleEvents {
         onToolCall { ctx ->
             println("Tool called: ${ctx.tool.name}, args=${ctx.toolArgs}")
