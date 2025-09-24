@@ -17,6 +17,7 @@ import ai.koog.agents.core.feature.AIAgentGraphPipeline
 import ai.koog.prompt.message.Message
 import org.jetbrains.annotations.TestOnly
 import kotlin.reflect.KType
+import kotlin.reflect.typeOf
 
 /**
  * A mock implementation of the [AIAgentContext] interface, used for testing purposes.
@@ -322,12 +323,12 @@ public class AIAgentContextMockBuilder() : AIAgentContextMockBuilderBase {
      * This property is optional and can be null, indicating that no specific input is provided for the agent.
      * It is used during the construction or copying of an agent's context to define the data the agent operates on.
      */
-    override var agentInput: Any? = null
+    override var agentInput: Any? = "test-input-default"
 
     /**
      * Represents the [KType] of the [agentInput].
      */
-    override var agentInputType: KType? = null
+    override var agentInputType: KType? = typeOf<String>()
 
     /**
      * Represents the AI agent configuration used in the mock builder.
