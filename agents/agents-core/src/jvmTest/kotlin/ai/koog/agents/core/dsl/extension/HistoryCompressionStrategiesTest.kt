@@ -16,6 +16,7 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import kotlinx.serialization.json.Json
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
@@ -24,7 +25,6 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 
 class HistoryCompressionStrategiesTest {
-
     private fun createMockExecutor() = getMockExecutor {
         mockLLMAnswer("TLDR").onRequestContains("Create a comprehensive summary")
     }
@@ -62,6 +62,7 @@ class HistoryCompressionStrategiesTest {
         }
 
     companion object {
+        private val dummyArgsContent = Json.encodeToString(DummyTool.Args("dummy"))
 
         private fun testClock(delay: Duration): Clock = object : Clock {
             override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z").plus(delay)
@@ -107,21 +108,46 @@ class HistoryCompressionStrategiesTest {
             Message.System("System message 0", metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
             Message.User("User message 0", metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
             Message.Assistant("Assistant message 0", metaInfo = ResponseMetaInfo.create(testClock(2.minutes))),
-            Message.Tool.Call("id1", "DummyTool", "Args", metaInfo = ResponseMetaInfo.create(testClock(3.minutes))),
+            Message.Tool.Call(
+                "id1",
+                "DummyTool",
+                dummyArgsContent,
+                metaInfo = ResponseMetaInfo.create(testClock(3.minutes))
+            ),
             Message.Tool.Result("id1", "DummyTool", "Result", metaInfo = RequestMetaInfo.create(testClock(4.minutes))),
-            Message.Tool.Call("id2", "DummyTool", "Args", metaInfo = ResponseMetaInfo.create(testClock(5.minutes))),
+            Message.Tool.Call(
+                "id2",
+                "DummyTool",
+                dummyArgsContent,
+                metaInfo = ResponseMetaInfo.create(testClock(5.minutes))
+            ),
             Message.Tool.Result("id2", "DummyTool", "Result", metaInfo = RequestMetaInfo.create(testClock(6.minutes))),
             Message.System("System message 1", metaInfo = RequestMetaInfo.create(testClock(7.minutes))),
             Message.User("User message 1", metaInfo = RequestMetaInfo.create(testClock(8.minutes))),
             Message.Assistant("Assistant message 1", metaInfo = ResponseMetaInfo.create(testClock(9.minutes))),
-            Message.Tool.Call("id3", "DummyTool", "Args", metaInfo = ResponseMetaInfo.create(testClock(10.minutes))),
+            Message.Tool.Call(
+                "id3",
+                "DummyTool",
+                dummyArgsContent,
+                metaInfo = ResponseMetaInfo.create(testClock(10.minutes))
+            ),
             Message.Tool.Result("id3", "DummyTool", "Result", metaInfo = RequestMetaInfo.create(testClock(11.minutes))),
-            Message.Tool.Call("id4", "DummyTool", "Args", metaInfo = ResponseMetaInfo.create(testClock(12.minutes))),
+            Message.Tool.Call(
+                "id4",
+                "DummyTool",
+                dummyArgsContent,
+                metaInfo = ResponseMetaInfo.create(testClock(12.minutes))
+            ),
             Message.Tool.Result("id4", "DummyTool", "Result", metaInfo = RequestMetaInfo.create(testClock(13.minutes))),
             Message.Assistant("Assistant message 2", metaInfo = ResponseMetaInfo.create(testClock(14.minutes))),
             Message.System("System message 2", metaInfo = RequestMetaInfo.create(testClock(15.minutes))),
             Message.Assistant("Assistant message 3", metaInfo = ResponseMetaInfo.create(testClock(16.minutes))),
-            Message.Tool.Call("id5", "DummyTool", "Args", metaInfo = ResponseMetaInfo.create(testClock(17.minutes))),
+            Message.Tool.Call(
+                "id5",
+                "DummyTool",
+                dummyArgsContent,
+                metaInfo = ResponseMetaInfo.create(testClock(17.minutes))
+            ),
             Message.Tool.Result("id5", "DummyTool", "Result", metaInfo = RequestMetaInfo.create(testClock(18.minutes))),
         )
 
@@ -167,6 +193,16 @@ class HistoryCompressionStrategiesTest {
                     Message.System("System message 1", metaInfo = RequestMetaInfo.create(testClock(3.minutes))),
                     Message.System("System message 2", metaInfo = RequestMetaInfo.create(testClock(6.minutes))),
                     Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(7.minutes)))
+                )
+            ),
+            Arguments.of(
+                longMessagesHistory,
+                listOf(
+                    Message.System("System message 0", metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
+                    Message.User("User message 0", metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
+                    Message.System("System message 1", metaInfo = RequestMetaInfo.create(testClock(7.minutes))),
+                    Message.System("System message 2", metaInfo = RequestMetaInfo.create(testClock(15.minutes))),
+                    Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(19.minutes)))
                 )
             ),
         )
@@ -217,6 +253,19 @@ class HistoryCompressionStrategiesTest {
                     Message.System("System message 2", metaInfo = RequestMetaInfo.create(testClock(6.minutes))),
                     Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(7.minutes)))
                 )
+            ),
+            Arguments.of(
+                longMessagesHistory,
+                listOf(
+                    Message.System("System message 0", metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
+                    Message.User("User message 0", metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
+                    Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(2.minutes))),
+                    Message.System("System message 1", metaInfo = RequestMetaInfo.create(testClock(7.minutes))),
+                    Message.User("User message 1", metaInfo = RequestMetaInfo.create(testClock(8.minutes))),
+                    Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(9.minutes))),
+                    Message.System("System message 2", metaInfo = RequestMetaInfo.create(testClock(15.minutes))),
+                    Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(16.minutes)))
+                )
             )
         )
 
@@ -241,6 +290,17 @@ class HistoryCompressionStrategiesTest {
                     Message.System("System message 2", metaInfo = RequestMetaInfo.create(testClock(3.minutes))),
                     Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(4.minutes)))
                 )
+            ),
+            Arguments.of(
+                longMessagesHistory,
+                5,
+                listOf(
+                    Message.System("System message 0", metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
+                    Message.User("User message 0", metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
+                    Message.System("System message 1", metaInfo = RequestMetaInfo.create(testClock(7.minutes))),
+                    Message.System("System message 2", metaInfo = RequestMetaInfo.create(testClock(15.minutes))),
+                    Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(19.minutes)))
+                )
             )
         )
 
@@ -253,6 +313,17 @@ class HistoryCompressionStrategiesTest {
                     Message.System("System message", metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
                     Message.User("User message", metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
                     Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(2.minutes)))
+                )
+            ),
+            Arguments.of(
+                longMessagesHistory,
+                Instant.parse("2023-01-01T00:07:00Z"),
+                listOf(
+                    Message.System("System message 0", metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
+                    Message.User("User message 0", metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
+                    Message.System("System message 1", metaInfo = RequestMetaInfo.create(testClock(7.minutes))),
+                    Message.System("System message 2", metaInfo = RequestMetaInfo.create(testClock(15.minutes))),
+                    Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(19.minutes)))
                 )
             )
         )
@@ -272,11 +343,44 @@ class HistoryCompressionStrategiesTest {
                     Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(9.minutes))),
                     Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(10.minutes)))
                 )
+            ),
+            Arguments.of(
+                longMessagesHistory,
+                3,
+                listOf(
+                    Message.System("System message 0", metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
+                    Message.User("User message 0", metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
+                    Message.System("System message 1", metaInfo = RequestMetaInfo.create(testClock(7.minutes))),
+                    Message.System("System message 2", metaInfo = RequestMetaInfo.create(testClock(15.minutes))),
+                    Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(19.minutes))),
+                    Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(20.minutes))),
+                    Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(21.minutes))),
+                    Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(22.minutes))),
+                    Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(23.minutes))),
+                    Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(24.minutes))),
+                    Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(25.minutes))),
+                )
             )
         )
     }
 
-    private fun compareHistory(resultMessages: List<Message>, compressedMessages: List<Message>) {
+    private suspend fun checkHistoryCompression(
+        strategy: HistoryCompressionStrategy,
+        originalMessages: List<Message>,
+        compressedMessages: List<Message>
+    ) {
+        val agent = AIAgent.Companion(
+            promptExecutor = createMockExecutor(),
+            strategy = createHistoryCompressionStrategy(
+                strategy,
+                originalMessages,
+            ),
+            agentConfig = createBaseAgentConfig(),
+            toolRegistry = createToolRegistry()
+        )
+
+        val resultMessages = agent.run("User input")
+
         assert(resultMessages.size == compressedMessages.size)
         resultMessages.forEachIndexed { index, message ->
             assert(message.content == compressedMessages[index].content)
@@ -287,18 +391,7 @@ class HistoryCompressionStrategiesTest {
     @ParameterizedTest
     @MethodSource("wholeHistoryCompressionMessages")
     fun testWholeHistoryCompression(originalMessages: List<Message>, compressedMessages: List<Message>) = runTest {
-        val agent = AIAgent.Companion(
-            promptExecutor = createMockExecutor(),
-            strategy = createHistoryCompressionStrategy(
-                HistoryCompressionStrategy.WholeHistory,
-                originalMessages,
-            ),
-            agentConfig = createBaseAgentConfig(),
-            toolRegistry = createToolRegistry()
-        )
-
-        val resultMessages = agent.run("User input")
-        compareHistory(resultMessages, compressedMessages)
+        checkHistoryCompression(HistoryCompressionStrategy.WholeHistory, originalMessages, compressedMessages)
     }
 
     @ParameterizedTest
@@ -307,36 +400,22 @@ class HistoryCompressionStrategiesTest {
         originalMessages: List<Message>,
         compressedMessages: List<Message>
     ) = runTest {
-        val agent = AIAgent.Companion(
-            promptExecutor = createMockExecutor(),
-            strategy = createHistoryCompressionStrategy(
-                HistoryCompressionStrategy.WholeHistoryMultipleSystemMessages,
-                originalMessages,
-            ),
-            agentConfig = createBaseAgentConfig(),
-            toolRegistry = createToolRegistry()
+        checkHistoryCompression(
+            HistoryCompressionStrategy.WholeHistoryMultipleSystemMessages,
+            originalMessages,
+            compressedMessages
         )
-
-        val resultMessages = agent.run("User input")
-        compareHistory(resultMessages, compressedMessages)
     }
 
     @ParameterizedTest
     @MethodSource("fromLastNMessagesCompressionMessages")
     fun testFromLastNMessagesCompression(originalMessages: List<Message>, n: Int, compressedMessages: List<Message>) =
         runTest {
-            val agent = AIAgent.Companion(
-                promptExecutor = createMockExecutor(),
-                strategy = createHistoryCompressionStrategy(
-                    HistoryCompressionStrategy.FromLastNMessages(n),
-                    originalMessages,
-                ),
-                agentConfig = createBaseAgentConfig(),
-                toolRegistry = createToolRegistry()
+            checkHistoryCompression(
+                HistoryCompressionStrategy.FromLastNMessages(n),
+                originalMessages,
+                compressedMessages
             )
-
-            val resultMessages = agent.run("User input")
-            compareHistory(resultMessages, compressedMessages)
         }
 
     @ParameterizedTest
@@ -346,35 +425,21 @@ class HistoryCompressionStrategiesTest {
         timestamp: Instant,
         compressedMessages: List<Message>
     ) = runTest {
-        val agent = AIAgent.Companion(
-            promptExecutor = createMockExecutor(),
-            strategy = createHistoryCompressionStrategy(
-                HistoryCompressionStrategy.FromTimestamp(timestamp),
-                originalMessages,
-            ),
-            agentConfig = createBaseAgentConfig(),
-            toolRegistry = createToolRegistry()
+        checkHistoryCompression(
+            HistoryCompressionStrategy.FromTimestamp(timestamp),
+            originalMessages,
+            compressedMessages
         )
-
-        val resultMessages = agent.run("User input")
-        compareHistory(resultMessages, compressedMessages)
     }
 
     @ParameterizedTest
     @MethodSource("chunkedCompressionMessages")
     fun testChunkedCompression(originalMessages: List<Message>, chunkSize: Int, compressedMessages: List<Message>) =
         runTest {
-            val agent = AIAgent.Companion(
-                promptExecutor = createMockExecutor(),
-                strategy = createHistoryCompressionStrategy(
-                    HistoryCompressionStrategy.Chunked(chunkSize),
-                    originalMessages,
-                ),
-                agentConfig = createBaseAgentConfig(),
-                toolRegistry = createToolRegistry()
+            checkHistoryCompression(
+                HistoryCompressionStrategy.Chunked(chunkSize),
+                originalMessages,
+                compressedMessages
             )
-
-            val resultMessages = agent.run("User input")
-            compareHistory(resultMessages, compressedMessages)
         }
 }
