@@ -25,5 +25,5 @@ public enum class RollbackStrategy {
      * Rollback only the message history to the last saved state.
      * Agent starts from the first node with saved message history.
      */
-    MessageHistoryOnly
+    MessageHistoryOnly,
 }
