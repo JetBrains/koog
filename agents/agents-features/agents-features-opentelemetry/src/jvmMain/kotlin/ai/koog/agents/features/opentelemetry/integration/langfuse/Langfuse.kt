@@ -1,5 +1,6 @@
 package ai.koog.agents.features.opentelemetry.integration.langfuse
 
+import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetryConfig
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporter
@@ -18,6 +19,8 @@ import kotlin.time.Duration.Companion.seconds
  * @param langfuseSecretKey if not set is retrieved from `LANGFUSE_SECRET_KEY` environment variable.
  * @param timeout OpenTelemetry SpanExporter timeout.
  *        See [io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporterBuilder.setTimeout].
+ * @param traceAttributes list of trace-level Langfuse attributes.
+ *        See the full list: [Trace-Level Attributes](https://langfuse.com/integrations/native/opentelemetry#trace-level-attributes)
  *
  * @see <a href="https://langfuse.com/docs/get-started#create-new-project-in-langfuse">How to create a new project in Langfuse</a>
  * @see <a href="https://langfuse.com/faq/all/where-are-langfuse-api-keys">How to set up API keys in Langfuse</a>
@@ -28,6 +31,7 @@ public fun OpenTelemetryConfig.addLangfuseExporter(
     langfusePublicKey: String? = null,
     langfuseSecretKey: String? = null,
     timeout: Duration = 10.seconds,
+    traceAttributes: List<CustomAttribute> = emptyList()
 ) {
     val url = langfuseUrl ?: System.getenv()["LANGFUSE_HOST"] ?: "https://cloud.langfuse.com"
 
@@ -49,7 +53,7 @@ public fun OpenTelemetryConfig.addLangfuseExporter(
             .build()
     )
 
-    addSpanAdapter(LangfuseSpanAdapter(this))
+    addSpanAdapter(LangfuseSpanAdapter(traceAttributes, this))
 }
 
 private val logger = KotlinLogging.logger { }
