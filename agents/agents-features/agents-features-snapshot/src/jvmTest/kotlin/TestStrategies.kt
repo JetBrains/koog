@@ -231,10 +231,12 @@ fun createCheckpointGraphWithRollback(checkpointId: String) = strategy("") {
 
 fun straightForwardGraphNoCheckpoint() = strategy("straight-forward") {
     val node1 by simpleNode(
+        name = "Node1",
         output = "Node 1 output"
     )
 
     val node2 by simpleNode(
+        name = "Node2",
         output = "Node 2 output"
     )
 
