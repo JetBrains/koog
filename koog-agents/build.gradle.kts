@@ -12,7 +12,6 @@ val excluded = setOf(
     ":agents:agents-ext",
     ":agents:agents-features:agents-features-sql", // Optional SQL persistence provider
     ":agents:agents-mcp-server",
-    ":examples",
     ":integration-tests",
     ":test-utils",
     ":koog-spring-boot-starter",
