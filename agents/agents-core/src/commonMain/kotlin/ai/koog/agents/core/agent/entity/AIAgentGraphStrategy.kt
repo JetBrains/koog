@@ -1,6 +1,8 @@
 package ai.koog.agents.core.agent.entity
 
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
+import ai.koog.agents.core.agent.context.AgentContextData
+import ai.koog.agents.core.agent.context.RollbackStrategy
 import ai.koog.agents.core.agent.context.getAgentContextData
 import ai.koog.agents.core.agent.context.removeAgentContextData
 import ai.koog.agents.core.annotation.InternalAgentsApi
@@ -46,12 +48,12 @@ public class AIAgentGraphStrategy<TInput, TOutput>(
     override suspend fun execute(context: AIAgentGraphContextBase, input: TInput): TOutput? {
         return runCatchingCancellable {
             context.pipeline.onStrategyStarted(this, context)
-            setExecutionPointIfNeeded(context)
+            restoreStateIfNeeded(context)
 
             var result: TOutput? = super.execute(context = context, input = input)
 
             while (result == null && context.getAgentContextData() != null) {
-                setExecutionPointIfNeeded(context)
+                restoreStateIfNeeded(context)
                 result = super.execute(context = context, input = input)
             }
 
@@ -63,20 +65,33 @@ public class AIAgentGraphStrategy<TInput, TOutput>(
     }
 
     @OptIn(InternalAgentsApi::class)
-    private suspend fun setExecutionPointIfNeeded(
+    private suspend fun restoreStateIfNeeded(
         agentContext: AIAgentGraphContextBase
     ) {
-        val additionalContextData = agentContext.getAgentContextData() ?: return
+        val additionalContextData: AgentContextData = agentContext.getAgentContextData() ?: return
 
-        val nodeId = additionalContextData.nodeId
-        setExecutionPoint(nodeId, additionalContextData.lastInput)
-
-        val messages = additionalContextData.messageHistory
-        agentContext.llm.withPrompt {
-            this.withMessages { (messages).sortedBy { m -> m.metaInfo.timestamp } }
+        when (additionalContextData.rollbackStrategy) {
+            RollbackStrategy.Default -> restoreDefault(agentContext, additionalContextData)
+            RollbackStrategy.MessageHistoryOnly -> restoreMessageOnly(agentContext, additionalContextData)
         }
-
         agentContext.removeAgentContextData()
+    }
+
+    @OptIn(InternalAgentsApi::class)
+    private suspend fun restoreMessageOnly(agentContext: AIAgentGraphContextBase, data: AgentContextData) {
+        agentContext.llm.withPrompt {
+            this.withMessages { (data.messageHistory) }
+        }
+    }
+
+    @OptIn(InternalAgentsApi::class)
+    private suspend fun restoreDefault(agentContext: AIAgentGraphContextBase, data: AgentContextData) {
+        val nodeId = data.nodeId
+        setExecutionPoint(nodeId, data.lastInput)
+
+        agentContext.llm.withPrompt {
+            this.withMessages { (data.messageHistory) }
+        }
     }
 
     /**

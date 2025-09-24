@@ -10,5 +10,20 @@ import kotlinx.serialization.json.JsonElement
 public class AgentContextData(
     internal val messageHistory: List<Message>,
     internal val nodeId: String,
-    internal val lastInput: JsonElement
+    internal val lastInput: JsonElement,
+    internal val rollbackStrategy: RollbackStrategy
 )
+
+public enum class RollbackStrategy {
+    /**
+     * Rollback state of the agent to the last saved state in full.
+     * Meaning restore the entire context, including message history and any other stateful data.
+     */
+    Default,
+
+    /**
+     * Rollback only the message history to the last saved state.
+     * Agent starts from the first node with saved message history.
+     */
+    MessageHistoryOnly,
+}
