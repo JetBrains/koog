@@ -1,5 +1,8 @@
 package ai.koog.prompt.executor.clients.google
 
+import ai.koog.prompt.executor.clients.google.GoogleFunctionCallingMode.ANY
+import ai.koog.prompt.executor.clients.google.GoogleFunctionCallingMode.AUTO
+import ai.koog.prompt.executor.clients.google.GoogleFunctionCallingMode.NONE
 import ai.koog.utils.serializers.ByteArrayAsBase64Serializer
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.SerialName
@@ -391,11 +394,11 @@ internal class GooglePromptFeedback(
  */
 @Serializable
 internal class GoogleUsageMetadata(
-    val promptTokenCount: Int,
+    val promptTokenCount: Int? = null,
     val candidatesTokenCount: Int? = null,
     val toolUsePromptTokenCount: Int? = null,
     val thoughtsTokenCount: Int? = null,
-    val totalTokenCount: Int,
+    val totalTokenCount: Int? = null,
 )
 
 internal object GooglePartSerializer : JsonContentPolymorphicSerializer<GooglePart>(GooglePart::class) {

@@ -19,13 +19,14 @@ import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.ToolResult
+import ai.koog.agents.ext.agent.ProvideStringSubgraphResult
+import ai.koog.agents.ext.agent.StringSubgraphResult
+import ai.koog.agents.ext.agent.subgraphWithTask
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
-import ai.koog.agents.features.tracing.feature.Tracing
 import ai.koog.integration.tests.agent.ReportingLLMLLMClient.Event
 import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.RetryUtils.withRetry
-import ai.koog.integration.tests.utils.TestLogPrinter
 import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
 import ai.koog.prompt.dsl.ModerationResult
@@ -71,6 +72,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.test.fail
 import kotlin.time.Duration.Companion.seconds
 
 internal class ReportingLLMLLMClient(
@@ -145,6 +147,12 @@ class AIAgentMultipleLLMIntegrationTest {
 
     companion object {
         private lateinit var testResourcesDir: File
+
+        @JvmStatic
+        fun getModels(): Stream<LLModel> = Stream.of(
+            AnthropicModels.Sonnet_3_7,
+            OpenAIModels.Chat.GPT4o,
+        )
 
         @JvmStatic
         @BeforeAll
@@ -505,10 +513,68 @@ class AIAgentMultipleLLMIntegrationTest {
             agentConfig = AIAgentConfig(prompt, OpenAIModels.Chat.GPT4o, maxAgentIterations),
             toolRegistry = tools,
         ) {
-            install(Tracing) {
-                addMessageProcessor(TestLogPrinter())
+            install(EventHandler, eventHandlerConfig)
+        }
+    }
+
+    private fun createTestAgentWithToolsInSubgraph(
+        fs: MockFileSystem,
+        eventHandlerConfig: EventHandlerConfig.() -> Unit = {},
+        model: LLModel,
+        emptyAgentRegistry: Boolean = true,
+    ): AIAgent<String, String> {
+        val openAIClient = OpenAILLMClient(openAIApiKey)
+        val anthropicClient = AnthropicLLMClient(anthropicApiKey)
+
+        val executor = MultiLLMPromptExecutor(
+            LLMProvider.OpenAI to openAIClient,
+            LLMProvider.Anthropic to anthropicClient
+        )
+
+        val subgraphTools = listOf(
+            CreateFile(fs),
+            ReadFile(fs),
+            ListFiles(fs),
+            DeleteFile(fs),
+        )
+
+        val strategy = strategy<String, String>("test-subgraph-only-tools") {
+            val fileOperationsSubgraph by subgraphWithTask<String>(
+                tools = subgraphTools,
+                llmModel = model,
+                llmParams = LLMParams(toolChoice = LLMParams.ToolChoice.Required)
+            ) { input ->
+                "You are a helpful assistant that can perform file operations. Use the available tools to complete the following task: $input. Make sure to use tools when needed and provide clear feedback about what you've done."
             }
 
+            val extractResult by node<StringSubgraphResult, String> { subgraphResult ->
+                subgraphResult.result
+            }
+
+            nodeStart then fileOperationsSubgraph then extractResult then nodeFinish
+        }
+
+        val toolRegistry = if (emptyAgentRegistry) {
+            ToolRegistry {}
+        } else {
+            ToolRegistry {
+                subgraphTools.forEach { tool(it) }
+                tool(ProvideStringSubgraphResult)
+            }
+        }
+
+        return AIAgent(
+            promptExecutor = executor,
+            strategy = strategy,
+            agentConfig = AIAgentConfig(
+                prompt = prompt("test") {
+                    system("You are a helpful assistant.")
+                },
+                model,
+                maxAgentIterations = 20,
+            ),
+            toolRegistry = toolRegistry,
+        ) {
             install(EventHandler, eventHandlerConfig)
         }
     }
@@ -517,22 +583,15 @@ class AIAgentMultipleLLMIntegrationTest {
     fun integration_testOpenAIAnthropicAgent() = runTest(timeout = 600.seconds) {
         Models.assumeAvailable(LLMProvider.OpenAI)
         Models.assumeAvailable(LLMProvider.Anthropic)
-        // Create the clients
-        val eventsChannel = Channel<Event>(Channel.UNLIMITED)
-        val fs = MockFileSystem()
-        val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
-            onToolCall { eventContext ->
-                println(
-                    "Calling tool ${eventContext.tool.name} with arguments ${
-                        eventContext.toolArgs.toString().lines().first().take(100)
-                    }"
-                )
-            }
 
-            onAgentFinished { eventContext ->
+        val fs = MockFileSystem()
+        val eventsChannel = Channel<Event>(Channel.UNLIMITED)
+        val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
+            onAgentFinished { _ ->
                 eventsChannel.send(Event.Termination)
             }
         }
+
         val agent = createTestMultiLLMAgent(
             fs,
             eventHandlerConfig,
@@ -585,31 +644,85 @@ class AIAgentMultipleLLMIntegrationTest {
         )
     }
 
+    @ParameterizedTest
+    @MethodSource("getModels")
+    fun `integration_test agent with not registered subgraph tool result fails`(model: LLModel) =
+        runTest(timeout = 600.seconds) {
+            Models.assumeAvailable(LLMProvider.OpenAI)
+            Models.assumeAvailable(LLMProvider.Anthropic)
+
+            val fs = MockFileSystem()
+            val agent = createTestAgentWithToolsInSubgraph(fs = fs, model = model)
+
+            try {
+                val result = agent.run(
+                    "Create a simple file called 'test.txt' with content 'Hello from subgraph tools!' and then read it back to verify it was created correctly."
+                )
+                fail("Expected AIAgentException but got result: $result")
+            } catch (e: IllegalArgumentException) {
+                assertContains(e.message ?: "", "Tool \"create_file\" is not defined")
+            }
+        }
+
+    @ParameterizedTest
+    @MethodSource("getModels")
+    fun `integration_test agent with registered subgraph tool result runs`(model: LLModel) =
+        runTest(timeout = 600.seconds) {
+            Models.assumeAvailable(LLMProvider.OpenAI)
+            Models.assumeAvailable(LLMProvider.Anthropic)
+
+            val fs = MockFileSystem()
+            val calledTools = mutableListOf<String>()
+            val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
+                onToolCall { eventContext ->
+                    calledTools.add(eventContext.tool.name)
+                }
+            }
+
+            val agent = createTestAgentWithToolsInSubgraph(fs, eventHandlerConfig, model, false)
+
+            val result = agent.run(
+                "Create a simple file called 'test.txt' with content 'Hello from subgraph tools!' and then read it back to verify it was created correctly."
+            )
+
+            assertNotNull(result)
+            assertTrue(result.isNotEmpty(), "Agent result should not be empty")
+
+            assertTrue(
+                fs.fileCount() > 0,
+                "Agent must have created at least one file using subgraph tools"
+            )
+
+            when (val readResult = fs.read("test.txt")) {
+                is OperationResult.Success -> {
+                    assertTrue(
+                        readResult.result.contains("Hello from subgraph tools!"),
+                        "File should contain the expected content"
+                    )
+                }
+
+                is OperationResult.Failure -> {
+                    fail("Failed to read file: ${readResult.error}")
+                }
+            }
+
+            assertTrue(
+                calledTools.any { it == "create_file" },
+                "At least one LLM call must have tools available"
+            )
+        }
+
     @Test
     fun integration_testTerminationOnIterationsLimitExhaustion() = runTest(timeout = 600.seconds) {
         Models.assumeAvailable(LLMProvider.OpenAI)
         Models.assumeAvailable(LLMProvider.Anthropic)
 
-        val eventsChannel = Channel<Event>(Channel.UNLIMITED)
         val fs = MockFileSystem()
         var errorMessage: String? = null
-        val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
-            onToolCall { eventContext ->
-                println(
-                    "Calling tool ${eventContext.tool.name} with arguments ${
-                        eventContext.toolArgs.toString().lines().first().take(100)
-                    }"
-                )
-            }
-
-            onAgentFinished { eventContext ->
-                eventsChannel.send(Event.Termination)
-            }
-        }
         val steps = 10
         val agent = createTestMultiLLMAgent(
             fs,
-            eventHandlerConfig,
+            { },
             maxAgentIterations = steps,
         )
 

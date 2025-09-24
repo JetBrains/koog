@@ -32,9 +32,17 @@ jobs:
             test-group: "ai.koog.integration.tests.agent.*"
             artifact-name: "agent-tests"
             os: ubuntu-latest
-          - job-name: "executor-tests"
-            test-group: "ai.koog.integration.tests.executor.*"
-            artifact-name: "executor-tests"
+          - job-name: "single-llm-executor-tests"
+            test-group: "ai.koog.integration.tests.executor.SingleLLMPromptExecutorIntegrationTest"
+            artifact-name: "single-llm-executor-tests"
+            os: ubuntu-latest
+          - job-name: "multiple-llm-executor-tests"
+            test-group: "ai.koog.integration.tests.executor.MultipleLLMPromptExecutorIntegrationTest"
+            artifact-name: "multiple-llm-executor-tests"
+            os: ubuntu-latest
+          - job-name: "other-executor-tests"
+            test-group: "ai.koog.integration.tests.executor.* --exclude-tests ai.koog.integration.tests.executor.SingleLLMPromptExecutorIntegrationTest --exclude-tests ai.koog.integration.tests.executor.MultipleLLMPromptExecutorIntegrationTest --exclude-tests ai.koog.integration.tests.executor.OllamaExecutorIntegrationTest"
+            artifact-name: "other-executor-tests"
             os: ubuntu-latest
           - job-name: "capabilities-tests"
             test-group: "ai.koog.integration.tests.capabilities.*"
