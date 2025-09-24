@@ -1,8 +1,8 @@
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.RollbackStrategy
-import ai.koog.agents.snapshot.feature.Persistency
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
+import ai.koog.agents.snapshot.feature.Persistency
 import ai.koog.agents.snapshot.providers.InMemoryPersistencyStorageProvider
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
@@ -49,8 +49,11 @@ class PersistencyRestoreStrategyTests {
 
         val result = agent.run("start")
 
-        assertEquals("History: History Before\n" +
-                "Node 2 output", result)
+        assertEquals(
+            "History: History Before\n" +
+                "Node 2 output",
+            result
+        )
     }
 
     @Test
@@ -85,9 +88,12 @@ class PersistencyRestoreStrategyTests {
 
         val result = agent.run("Agent Input")
 
-        assertEquals("History: History Before\n" +
+        assertEquals(
+            "History: History Before\n" +
                 "Agent Input\n" +
                 "Node 1 output\n" +
-                "Node 2 output", result)
+                "Node 2 output",
+            result
+        )
     }
 }

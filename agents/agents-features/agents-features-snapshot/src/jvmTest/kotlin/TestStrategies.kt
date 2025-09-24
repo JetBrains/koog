@@ -230,7 +230,6 @@ fun createCheckpointGraphWithRollback(checkpointId: String) = strategy("") {
 }
 
 fun straightForwardGraphNoCheckpoint() = strategy("straight-forward") {
-
     val node1 by simpleNode(
         output = "Node 1 output"
     )
@@ -285,7 +284,6 @@ internal fun loggingGraphStrategy(collector: TestAgentLogsCollector) = strategy(
     edge(node1 forwardTo node2)
     edge(node2 forwardTo nodeFinish)
 }
-
 
 internal fun loggingGraphWithHistoryCollectionStrategy(collector: TestAgentLogsCollector) = strategy("logging-test") {
     val node1 by loggingNode(
