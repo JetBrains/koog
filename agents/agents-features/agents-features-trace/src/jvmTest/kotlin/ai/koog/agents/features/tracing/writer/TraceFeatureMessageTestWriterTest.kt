@@ -4,24 +4,41 @@ import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeExecuteTool
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
+import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreamingAndSendResults
 import ai.koog.agents.core.dsl.extension.nodeUpdatePrompt
 import ai.koog.agents.core.feature.model.AIAgentError
 import ai.koog.agents.core.feature.model.events.LLMCallStartingEvent
+import ai.koog.agents.core.feature.model.events.LLMStreamingCompletedEvent
+import ai.koog.agents.core.feature.model.events.LLMStreamingFailedEvent
+import ai.koog.agents.core.feature.model.events.LLMStreamingFrameReceivedEvent
+import ai.koog.agents.core.feature.model.events.LLMStreamingStartingEvent
 import ai.koog.agents.core.feature.model.events.NodeExecutionFailedEvent
 import ai.koog.agents.core.feature.model.events.ToolCallCompletedEvent
 import ai.koog.agents.core.feature.model.events.ToolCallStartingEvent
 import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.features.tracing.eventString
 import ai.koog.agents.features.tracing.feature.Tracing
 import ai.koog.agents.features.tracing.mock.RecursiveTool
 import ai.koog.agents.features.tracing.mock.TestFeatureMessageWriter
 import ai.koog.agents.features.tracing.mock.TestLogger
+import ai.koog.agents.features.tracing.mock.assistantMessage
 import ai.koog.agents.features.tracing.mock.createAgent
+import ai.koog.agents.features.tracing.mock.systemMessage
 import ai.koog.agents.features.tracing.mock.testClock
+import ai.koog.agents.features.tracing.mock.userMessage
 import ai.koog.agents.testing.tools.DummyTool
+import ai.koog.agents.testing.tools.getMockExecutor
+import ai.koog.agents.testing.tools.mockLLMAnswer
 import ai.koog.agents.utils.use
+import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
-import kotlinx.coroutines.test.runTest
+import ai.koog.prompt.streaming.StreamFrame
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Instant
 import org.junit.jupiter.api.Assertions.assertEquals
 import kotlin.test.AfterTest
@@ -39,7 +56,7 @@ class TraceFeatureMessageTestWriterTest {
     }
 
     @Test
-    fun `test subsequent LLM calls`() = runTest {
+    fun `test subsequent LLM calls`() = runBlocking {
         val strategy = strategy("tracing-test-strategy") {
             val setPrompt by nodeUpdatePrompt<String>("Set prompt") {
                 system("System 1")
@@ -90,7 +107,7 @@ class TraceFeatureMessageTestWriterTest {
     }
 
     @Test
-    fun `test nonexistent tool call`() = runTest {
+    fun `test nonexistent tool call`() = runBlocking {
         val strategy = strategy<String, String>("tracing-tool-call-test") {
             val callTool by nodeExecuteTool("Tool call")
             edge(
@@ -127,7 +144,7 @@ class TraceFeatureMessageTestWriterTest {
     }
 
     @Test
-    fun `test existing tool call`() = runTest {
+    fun `test existing tool call`() = runBlocking {
         val strategy = strategy<String, String>("tracing-tool-call-test") {
             val callTool by nodeExecuteTool("Tool call")
             edge(
@@ -163,7 +180,7 @@ class TraceFeatureMessageTestWriterTest {
     }
 
     @Test
-    fun `test recursive tool call`() = runTest {
+    fun `test recursive tool call`() = runBlocking {
         val strategy = strategy<String, String>("recursive-tool-call-test") {
             val callTool by nodeExecuteTool("Tool call")
             edge(
@@ -200,7 +217,7 @@ class TraceFeatureMessageTestWriterTest {
     }
 
     @Test
-    fun `test llm tool call`() = runTest {
+    fun `test llm tool call`() = runBlocking {
         val dummyTool = DummyTool()
 
         val strategy = strategy<String, String>("llm-tool-call-test") {
@@ -242,7 +259,7 @@ class TraceFeatureMessageTestWriterTest {
     }
 
     @Test
-    fun `test agent with node execution error`() = runTest {
+    fun `test agent with node execution error`() = runBlocking {
         val agentId = "test-agent-id"
         val nodeWithErrorName = "node-with-error"
         val testErrorMessage = "Test error"
@@ -284,6 +301,203 @@ class TraceFeatureMessageTestWriterTest {
                         runId = writer.runId,
                         nodeName = nodeWithErrorName,
                         error = AIAgentError(testErrorMessage, expectedStackTrace, null),
+                        timestamp = testClock.now().toEpochMilliseconds()
+                    )
+                )
+
+                assertEquals(expectedEvents.size, actualEvents.size)
+                assertContentEquals(expectedEvents, actualEvents)
+            }
+        }
+    }
+
+    @Test
+    fun `test llm streaming events success`() = runBlocking {
+        val userPrompt = "Test user request"
+        val systemPrompt = "Test system prompt"
+        val assistantPrompt = "Test assistant prompt"
+        val promptId = "Test prompt id"
+
+        val model = OpenAIModels.Chat.GPT4o
+
+        val strategy = strategy<String, String>("tracing-streaming-success") {
+            val streamAndCollect by nodeLLMRequestStreamingAndSendResults<String>("stream-and-collect")
+
+            edge(nodeStart forwardTo streamAndCollect)
+            edge(streamAndCollect forwardTo nodeFinish transformed { messages -> messages.firstOrNull()?.content ?: "" })
+        }
+
+        val testLLMResponse = "Default test response"
+
+        val testExecutor = getMockExecutor {
+            mockLLMAnswer(testLLMResponse).asDefaultResponse onUserRequestEquals userPrompt
+        }
+
+        val toolRegistry = ToolRegistry { tool(DummyTool()) }
+
+        TestFeatureMessageWriter().use { writer ->
+            createAgent(
+                agentId = "test-agent-id",
+                strategy = strategy,
+                promptExecutor = testExecutor,
+                systemPrompt = systemPrompt,
+                userPrompt = userPrompt,
+                assistantPrompt = assistantPrompt,
+                promptId = promptId,
+                model = model,
+                toolRegistry = toolRegistry,
+            ) {
+                install(Tracing) {
+                    addMessageProcessor(writer)
+                }
+            }.use { agent ->
+                agent.run("")
+
+                val actualEvents = writer.messages.filter { event ->
+                    event is LLMStreamingStartingEvent ||
+                        event is LLMStreamingFrameReceivedEvent ||
+                        event is LLMStreamingFailedEvent ||
+                        event is LLMStreamingCompletedEvent
+                }
+
+                val expectedPrompt = Prompt(
+                    messages = listOf(
+                        systemMessage(systemPrompt),
+                        userMessage(userPrompt),
+                        assistantMessage(assistantPrompt)
+                    ),
+                    id = promptId
+                )
+
+                val expectedEvents = listOf(
+                    LLMStreamingStartingEvent(
+                        runId = writer.runId,
+                        prompt = expectedPrompt,
+                        model = model.eventString,
+                        tools = toolRegistry.tools.map { it.name },
+                        timestamp = testClock.now().toEpochMilliseconds()
+                    ),
+                    LLMStreamingFrameReceivedEvent(
+                        runId = writer.runId,
+                        frame = StreamFrame.Append(testLLMResponse),
+                        timestamp = testClock.now().toEpochMilliseconds()
+                    ),
+                    LLMStreamingCompletedEvent(
+                        runId = writer.runId,
+                        prompt = expectedPrompt,
+                        model = model.eventString,
+                        tools = toolRegistry.tools.map { it.name },
+                        timestamp = testClock.now().toEpochMilliseconds()
+                    )
+                )
+
+                assertEquals(expectedEvents.size, actualEvents.size)
+                assertContentEquals(expectedEvents, actualEvents)
+            }
+        }
+    }
+
+    @Test
+    fun `test llm streaming events failure`() = runBlocking {
+        val userPrompt = "Call the dummy tool with argument: test"
+        val systemPrompt = "Test system prompt"
+        val assistantPrompt = "Test assistant prompt"
+        val promptId = "Test prompt id"
+        val model = OpenAIModels.Chat.GPT4o
+
+        val strategy = strategy<String, String>("tracing-streaming-failure") {
+            val streamAndCollect by nodeLLMRequestStreamingAndSendResults<String>("stream-and-collect")
+
+            edge(nodeStart forwardTo streamAndCollect)
+            edge(streamAndCollect forwardTo nodeFinish transformed { messages -> messages.firstOrNull()?.content ?: "" })
+        }
+
+        val toolRegistry = ToolRegistry { tool(DummyTool()) }
+
+        val testStreamingErrorMessage = "Test streaming error"
+        var testStreamingStackTrace = ""
+
+        val testStreamingExecutor = object : PromptExecutor {
+            override suspend fun execute(
+                prompt: Prompt,
+                model: ai.koog.prompt.llm.LLModel,
+                tools: List<ai.koog.agents.core.tools.ToolDescriptor>
+            ): List<Message.Response> = emptyList()
+
+            override fun executeStreaming(
+                prompt: Prompt,
+                model: ai.koog.prompt.llm.LLModel,
+                tools: List<ai.koog.agents.core.tools.ToolDescriptor>
+            ): Flow<StreamFrame> = flow {
+                val testException = IllegalStateException(testStreamingErrorMessage)
+                testStreamingStackTrace = testException.stackTraceToString()
+                throw testException
+            }
+
+            override suspend fun moderate(
+                prompt: Prompt,
+                model: ai.koog.prompt.llm.LLModel
+            ): ai.koog.prompt.dsl.ModerationResult {
+                throw UnsupportedOperationException("Not used in test")
+            }
+        }
+
+        TestFeatureMessageWriter().use { writer ->
+
+            createAgent(
+                systemPrompt = systemPrompt,
+                userPrompt = userPrompt,
+                assistantPrompt = assistantPrompt,
+                promptId = promptId,
+                model = model,
+                strategy = strategy,
+                promptExecutor = testStreamingExecutor,
+                toolRegistry = toolRegistry,
+            ) {
+                install(Tracing) {
+                    addMessageProcessor(writer)
+                }
+            }.use { agent ->
+                val throwable = assertFails {
+                    agent.run("")
+                }
+
+                assertEquals(testStreamingErrorMessage, throwable.message)
+
+                val expectedPrompt = Prompt(
+                    messages = listOf(
+                        systemMessage(systemPrompt),
+                        userMessage(userPrompt),
+                        assistantMessage(assistantPrompt),
+                    ),
+                    id = promptId
+                )
+
+                val actualEvents = writer.messages.filter { event ->
+                    event is LLMStreamingStartingEvent ||
+                        event is LLMStreamingFrameReceivedEvent ||
+                        event is LLMStreamingFailedEvent ||
+                        event is LLMStreamingCompletedEvent
+                }
+
+                val expectedEvents = listOf(
+                    LLMStreamingStartingEvent(
+                        runId = writer.runId,
+                        prompt = expectedPrompt,
+                        model = model.eventString,
+                        tools = toolRegistry.tools.map { it.name },
+                        timestamp = testClock.now().toEpochMilliseconds()
+                    ),
+                    LLMStreamingFailedEvent(
+                        runId = writer.runId,
+                        error = AIAgentError(testStreamingErrorMessage, testStreamingStackTrace),
+                        timestamp = testClock.now().toEpochMilliseconds()
+                    ),
+                    LLMStreamingCompletedEvent(
+                        runId = writer.runId,
+                        prompt = expectedPrompt,
+                        model = model.eventString,
+                        tools = toolRegistry.tools.map { it.name },
                         timestamp = testClock.now().toEpochMilliseconds()
                     )
                 )

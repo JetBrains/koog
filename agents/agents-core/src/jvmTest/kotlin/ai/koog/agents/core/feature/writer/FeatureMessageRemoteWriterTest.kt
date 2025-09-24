@@ -254,7 +254,7 @@ class FeatureMessageRemoteWriterTest {
                 assertNotNull(actualEventMessage) {
                     "Client received a server SSE message, but it is not a string message"
                 }
-                assertEquals(testServerMessage.eventId, actualEventMessage.eventId)
+                assertEquals(testServerMessage.testMessage, actualEventMessage.testMessage)
 
                 logger.info { "Client is finished successfully" }
             }

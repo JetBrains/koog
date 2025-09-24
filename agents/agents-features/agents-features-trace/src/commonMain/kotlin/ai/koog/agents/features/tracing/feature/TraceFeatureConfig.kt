@@ -19,4 +19,4 @@ import ai.koog.agents.core.feature.config.FeatureConfig
  * }
  * ```
  */
-public class TraceFeatureConfig() : FeatureConfig()
+public class TraceFeatureConfig : FeatureConfig()

@@ -32,53 +32,49 @@ internal val FeatureStringMessage.featureStringMessage
     get() = "Feature string message (message: $message)"
 
 internal val AgentStartingEvent.agentStartedEventFormat
-    get() = "$eventId (agent id: $agentId, run id: $runId)"
+    get() = "${this::class.simpleName} (agent id: $agentId, run id: $runId)"
 
 internal val AgentCompletedEvent.agentFinishedEventFormat
-    get() = "$eventId (agent id: $agentId, run id: $runId, result: $result)"
+    get() = "${this::class.simpleName} (agent id: $agentId, run id: $runId, result: $result)"
 
 internal val AgentExecutionFailedEvent.agentRunErrorEventFormat
-    get() = "$eventId (agent id: $agentId, run id: $runId, error: ${error.message})"
+    get() = "${this::class.simpleName} (agent id: $agentId, run id: $runId, error: ${error.message})"
 
 internal val AgentClosingEvent.agentBeforeCloseFormat
-    get() = "$eventId (agent id: $agentId)"
+    get() = "${this::class.simpleName} (agent id: $agentId)"
 
 internal val StrategyStartingEvent.strategyStartEventFormat
-    get() = "$eventId (run id: $runId, strategy: $strategyName)"
+    get() = "${this::class.simpleName} (run id: $runId, strategy: $strategyName)"
 
 internal val StrategyCompletedEvent.strategyFinishedEventFormat
-    get() = "$eventId (run id: $runId, strategy: $strategyName, result: $result)"
+    get() = "${this::class.simpleName} (run id: $runId, strategy: $strategyName, result: $result)"
 
 internal val NodeExecutionStartingEvent.nodeExecutionStartEventFormat
-    get() = "$eventId (run id: $runId, node: $nodeName, input: $input)"
+    get() = "${this::class.simpleName} (run id: $runId, node: $nodeName, input: $input)"
 
 internal val NodeExecutionCompletedEvent.nodeExecutionEndEventFormat
-    get() = "$eventId (run id: $runId, node: $nodeName, input: $input, output: $output)"
+    get() = "${this::class.simpleName} (run id: $runId, node: $nodeName, input: $input, output: $output)"
 
 internal val NodeExecutionFailedEvent.nodeExecutionErrorEventFormat
-    get() = "$eventId (run id: $runId, node: $nodeName, error: ${error.message})"
+    get() = "${this::class.simpleName} (run id: $runId, node: $nodeName, error: ${error.message})"
 
 internal val LLMCallStartingEvent.beforeLLMCallEventFormat
-    get() = "$eventId (run id: $runId, prompt: ${prompt.traceString}, model: $model, tools: [${tools.joinToString()}])"
+    get() = "${this::class.simpleName} (run id: $runId, prompt: ${prompt.traceString}, model: $model, tools: [${tools.joinToString()}])"
 
 internal val LLMCallCompletedEvent.afterLLMCallEventFormat
-    get() = "$eventId (run id: $runId, prompt: ${prompt.traceString}, model: $model, responses: [${
-        responses.joinToString {
-            "{${it.traceString}}"
-        }
-    }])"
+    get() = "${this::class.simpleName} (run id: $runId, prompt: ${prompt.traceString}, model: $model, responses: [${responses.joinToString { "{${it.traceString}}" }}])"
 
 internal val ToolCallStartingEvent.toolCallEventFormat
-    get() = "$eventId (run id: $runId, tool: $toolName, tool args: $toolArgs)"
+    get() = "${this::class.simpleName} (run id: $runId, tool: $toolName, tool args: $toolArgs)"
 
 internal val ToolValidationFailedEvent.toolValidationErrorEventFormat
-    get() = "$eventId (run id: $runId, tool: $toolName, tool args: $toolArgs, validation error: $error)"
+    get() = "${this::class.simpleName} (run id: $runId, tool: $toolName, tool args: $toolArgs, validation error: $error)"
 
 internal val ToolCallFailedEvent.toolCallFailureEventFormat
-    get() = "$eventId (run id: $runId, tool: $toolName, tool args: $toolArgs, error: ${error.message})"
+    get() = "${this::class.simpleName} (run id: $runId, tool: $toolName, tool args: $toolArgs, error: ${error.message})"
 
 internal val ToolCallCompletedEvent.toolCallResultEventFormat
-    get() = "$eventId (run id: $runId, tool: $toolName, tool args: $toolArgs, result: $result)"
+    get() = "${this::class.simpleName} (run id: $runId, tool: $toolName, tool args: $toolArgs, result: $result)"
 
 internal val FeatureMessage.traceMessage: String
     get() {

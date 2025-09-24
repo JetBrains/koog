@@ -13,6 +13,10 @@ import ai.koog.agents.core.feature.model.events.AgentStartingEvent
 import ai.koog.agents.core.feature.model.events.GraphStrategyStartingEvent
 import ai.koog.agents.core.feature.model.events.LLMCallCompletedEvent
 import ai.koog.agents.core.feature.model.events.LLMCallStartingEvent
+import ai.koog.agents.core.feature.model.events.LLMStreamingCompletedEvent
+import ai.koog.agents.core.feature.model.events.LLMStreamingFailedEvent
+import ai.koog.agents.core.feature.model.events.LLMStreamingFrameReceivedEvent
+import ai.koog.agents.core.feature.model.events.LLMStreamingStartingEvent
 import ai.koog.agents.core.feature.model.events.NodeExecutionCompletedEvent
 import ai.koog.agents.core.feature.model.events.NodeExecutionStartingEvent
 import ai.koog.agents.core.feature.model.events.StrategyCompletedEvent
@@ -206,6 +210,50 @@ public class Debugger {
             }
 
             //endregion Intercept LLM Call Events
+
+            //region Intercept LLM Streaming Events
+
+            pipeline.interceptLLMStreamingStarting(interceptContext) intercept@{ eventContext ->
+                val event = LLMStreamingStartingEvent(
+                    runId = eventContext.runId,
+                    prompt = eventContext.prompt,
+                    model = eventContext.model.eventString,
+                    tools = eventContext.tools.map { it.name },
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
+                )
+                writer.onMessage(event)
+            }
+
+            pipeline.interceptLLMStreamingFrameReceived(interceptContext) intercept@{ eventContext ->
+                val event = LLMStreamingFrameReceivedEvent(
+                    runId = eventContext.runId,
+                    frame = eventContext.streamFrame,
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
+                )
+                writer.onMessage(event)
+            }
+
+            pipeline.interceptLLMStreamingFailed(interceptContext) intercept@{ eventContext ->
+                val event = LLMStreamingFailedEvent(
+                    runId = eventContext.runId,
+                    error = eventContext.error.toAgentError(),
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
+                )
+                writer.onMessage(event)
+            }
+
+            pipeline.interceptLLMStreamingCompleted(interceptContext) intercept@{ eventContext ->
+                val event = LLMStreamingCompletedEvent(
+                    runId = eventContext.runId,
+                    prompt = eventContext.prompt,
+                    model = eventContext.model.eventString,
+                    tools = eventContext.tools.map { it.name },
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
+                )
+                writer.onMessage(event)
+            }
+
+            //endregion Intercept LLM Streaming Events
 
             //region Intercept Tool Call Events
 

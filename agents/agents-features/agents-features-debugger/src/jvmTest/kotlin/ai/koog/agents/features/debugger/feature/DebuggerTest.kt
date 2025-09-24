@@ -4,14 +4,20 @@ import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeExecuteTool
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
+import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreamingAndSendResults
 import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
 import ai.koog.agents.core.dsl.extension.onAssistantMessage
 import ai.koog.agents.core.dsl.extension.onToolCall
+import ai.koog.agents.core.feature.model.AIAgentError
 import ai.koog.agents.core.feature.model.events.AgentCompletedEvent
 import ai.koog.agents.core.feature.model.events.AgentStartingEvent
 import ai.koog.agents.core.feature.model.events.GraphStrategyStartingEvent
 import ai.koog.agents.core.feature.model.events.LLMCallCompletedEvent
 import ai.koog.agents.core.feature.model.events.LLMCallStartingEvent
+import ai.koog.agents.core.feature.model.events.LLMStreamingCompletedEvent
+import ai.koog.agents.core.feature.model.events.LLMStreamingFailedEvent
+import ai.koog.agents.core.feature.model.events.LLMStreamingFrameReceivedEvent
+import ai.koog.agents.core.feature.model.events.LLMStreamingStartingEvent
 import ai.koog.agents.core.feature.model.events.NodeExecutionCompletedEvent
 import ai.koog.agents.core.feature.model.events.NodeExecutionStartingEvent
 import ai.koog.agents.core.feature.model.events.StrategyCompletedEvent
@@ -43,10 +49,15 @@ import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.agents.testing.tools.mockLLMAnswer
 import ai.koog.agents.utils.use
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.message.Message
+import ai.koog.prompt.streaming.StreamFrame
 import io.ktor.http.URLProtocol
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -55,6 +66,7 @@ import org.junit.jupiter.api.Disabled
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
+import kotlin.test.assertFails
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -370,6 +382,334 @@ class DebuggerTest {
                     "expectedEventsCount variable in the test need to be updated"
                 )
                 assertContentEquals(expectedEvents, clientEventsCollector.collectedEvents)
+
+                isClientFinished.complete(true)
+            }
+        }
+
+        val isFinishedOrNull = withTimeoutOrNull(defaultClientServerTimeout) {
+            listOf(clientJob, serverJob).joinAll()
+        }
+
+        assertNotNull(isFinishedOrNull, "Client or server did not finish in time")
+    }
+
+    @Test
+    fun `test feature message remote writer collect streaming success events on agent run`() = runBlocking {
+        // Agent Config
+        val agentId = "test-agent-id"
+
+        val userPrompt = "Call the dummy tool with argument: test"
+        val systemPrompt = "Test system prompt"
+        val assistantPrompt = "Test assistant prompt"
+        val promptId = "Test prompt id"
+
+        // Tools
+        val dummyTool = DummyTool()
+
+        val toolRegistry = ToolRegistry {
+            tool(dummyTool)
+        }
+
+        // Model
+        val testModel = LLModel(
+            provider = MockLLMProvider(),
+            id = "test-llm-id",
+            capabilities = emptyList(),
+            contextLength = 1_000,
+        )
+
+        // Prompt
+        val expectedPrompt = Prompt(
+            messages = listOf(
+                systemMessage(systemPrompt),
+                userMessage(userPrompt),
+                assistantMessage(assistantPrompt)
+            ),
+            id = promptId
+        )
+
+        val expectedLLMCallPrompt = expectedPrompt.copy(
+            messages = expectedPrompt.messages
+        )
+
+        // Executor
+        val testLLMResponse = "Default test response"
+
+        val mockExecutor = getMockExecutor {
+            mockLLMAnswer(testLLMResponse).asDefaultResponse onUserRequestEquals userPrompt
+        }
+
+        // Test Data
+        val port = findAvailablePort()
+        val clientConfig = DefaultClientConnectionConfig(host = HOST, port = port, protocol = URLProtocol.HTTP)
+
+        val isClientFinished = CompletableDeferred<Boolean>()
+        val isServerStarted = CompletableDeferred<Boolean>()
+
+        // Server
+        val serverJob = launch {
+            val strategy = strategy<String, String>("tracing-streaming-success") {
+                val streamAndCollect by nodeLLMRequestStreamingAndSendResults<String>("stream-and-collect")
+
+                edge(nodeStart forwardTo streamAndCollect)
+                edge(streamAndCollect forwardTo nodeFinish transformed { messages -> messages.firstOrNull()?.content ?: "" })
+            }
+
+            createAgent(
+                agentId = agentId,
+                strategy = strategy,
+                promptId = promptId,
+                userPrompt = userPrompt,
+                systemPrompt = systemPrompt,
+                assistantPrompt = assistantPrompt,
+                toolRegistry = toolRegistry,
+                promptExecutor = mockExecutor,
+                model = testModel,
+            ) {
+                install(Debugger) {
+                    setPort(port)
+
+                    launch {
+                        val messageProcessor = messageProcessors.single() as FeatureMessageRemoteWriter
+                        val isServerStartedCheck = withTimeoutOrNull(defaultClientServerTimeout) {
+                            messageProcessor.isOpen.first { it }
+                        } != null
+
+                        assertTrue(isServerStartedCheck, "Server did not start in time")
+                        isServerStarted.complete(true)
+                    }
+                }
+            }.use { agent ->
+                agent.run(userPrompt)
+                isClientFinished.await()
+            }
+        }
+
+        // Client
+        val clientJob = launch {
+            FeatureMessageRemoteClient(connectionConfig = clientConfig, scope = this).use { client ->
+
+                val clientEventsCollector =
+                    ClientEventsCollector(client = client, expectedEventsCount = 13)
+
+                val collectEventsJob =
+                    clientEventsCollector.startCollectEvents(coroutineScope = this@launch)
+
+                isServerStarted.await()
+                client.connect()
+                collectEventsJob.join()
+
+                // Correct run id will be set after the 'collect events job' is finished.
+                val expectedEvents = listOf(
+                    LLMStreamingStartingEvent(
+                        runId = clientEventsCollector.runId,
+                        prompt = expectedLLMCallPrompt,
+                        model = testModel.eventString,
+                        tools = listOf(dummyTool.name),
+                        timestamp = testClock.now().toEpochMilliseconds(),
+                    ),
+                    LLMStreamingFrameReceivedEvent(
+                        runId = clientEventsCollector.runId,
+                        frame = StreamFrame.Append(testLLMResponse),
+                        timestamp = testClock.now().toEpochMilliseconds(),
+                    ),
+                    LLMStreamingCompletedEvent(
+                        runId = clientEventsCollector.runId,
+                        prompt = expectedLLMCallPrompt,
+                        model = testModel.eventString,
+                        tools = listOf(dummyTool.name),
+                        timestamp = testClock.now().toEpochMilliseconds(),
+                    )
+                )
+
+                val actualEvents = clientEventsCollector.collectedEvents.filter { event ->
+                    event is LLMStreamingStartingEvent ||
+                        event is LLMStreamingFrameReceivedEvent ||
+                        event is LLMStreamingFailedEvent ||
+                        event is LLMStreamingCompletedEvent
+                }
+
+                assertEquals(expectedEvents.size, actualEvents.size)
+                assertContentEquals(expectedEvents, actualEvents)
+
+                isClientFinished.complete(true)
+            }
+        }
+
+        val isFinishedOrNull = withTimeoutOrNull(defaultClientServerTimeout) {
+            listOf(clientJob, serverJob).joinAll()
+        }
+
+        assertNotNull(isFinishedOrNull, "Client or server did not finish in time")
+    }
+
+    @Test
+    fun `test feature message remote writer collect streaming failed events on agent run`() = runBlocking {
+        // Agent Config
+        val agentId = "test-agent-id"
+
+        val userPrompt = "Call the dummy tool with argument: test"
+        val systemPrompt = "Test system prompt"
+        val assistantPrompt = "Test assistant prompt"
+        val promptId = "Test prompt id"
+
+        // Tools
+        val dummyTool = DummyTool()
+
+        val toolRegistry = ToolRegistry {
+            tool(dummyTool)
+        }
+
+        // Model
+        val testModel = LLModel(
+            provider = MockLLMProvider(),
+            id = "test-llm-id",
+            capabilities = emptyList(),
+            contextLength = 1_000,
+        )
+
+        // Prompt
+        val expectedPrompt = Prompt(
+            messages = listOf(
+                systemMessage(systemPrompt),
+                userMessage(userPrompt),
+                assistantMessage(assistantPrompt)
+            ),
+            id = promptId
+        )
+
+        val expectedLLMCallPrompt = expectedPrompt.copy(
+            messages = expectedPrompt.messages
+        )
+
+        // Executor
+        val testStreamingErrorMessage = "Test streaming error"
+        var testStreamingStackTrace = ""
+
+        val testStreamingExecutor = object : PromptExecutor {
+            override suspend fun execute(
+                prompt: Prompt,
+                model: LLModel,
+                tools: List<ai.koog.agents.core.tools.ToolDescriptor>
+            ): List<Message.Response> = emptyList()
+
+            override fun executeStreaming(
+                prompt: Prompt,
+                model: LLModel,
+                tools: List<ai.koog.agents.core.tools.ToolDescriptor>
+            ): Flow<StreamFrame> = flow {
+                val testException = IllegalStateException(testStreamingErrorMessage)
+                testStreamingStackTrace = testException.stackTraceToString()
+                throw testException
+            }
+
+            override suspend fun moderate(
+                prompt: Prompt,
+                model: LLModel
+            ): ai.koog.prompt.dsl.ModerationResult {
+                throw UnsupportedOperationException("Not used in test")
+            }
+        }
+
+        // Test Data
+        val port = findAvailablePort()
+        val clientConfig = DefaultClientConnectionConfig(host = HOST, port = port, protocol = URLProtocol.HTTP)
+
+        val isClientFinished = CompletableDeferred<Boolean>()
+        val isServerStarted = CompletableDeferred<Boolean>()
+
+        // Server
+        val serverJob = launch {
+            val strategy = strategy<String, String>("tracing-streaming-success") {
+                val streamAndCollect by nodeLLMRequestStreamingAndSendResults<String>("stream-and-collect")
+
+                edge(nodeStart forwardTo streamAndCollect)
+                edge(streamAndCollect forwardTo nodeFinish transformed { messages -> messages.firstOrNull()?.content ?: "" })
+            }
+
+            createAgent(
+                agentId = agentId,
+                strategy = strategy,
+                promptId = promptId,
+                userPrompt = userPrompt,
+                systemPrompt = systemPrompt,
+                assistantPrompt = assistantPrompt,
+                toolRegistry = toolRegistry,
+                promptExecutor = testStreamingExecutor,
+                model = testModel,
+            ) {
+                install(Debugger) {
+                    setPort(port)
+
+                    launch {
+                        val messageProcessor = messageProcessors.single() as FeatureMessageRemoteWriter
+                        val isServerStartedCheck = withTimeoutOrNull(defaultClientServerTimeout) {
+                            messageProcessor.isOpen.first { it }
+                        } != null
+
+                        assertTrue(isServerStartedCheck, "Server did not start in time")
+                        isServerStarted.complete(true)
+                    }
+                }
+            }.use { agent ->
+                val throwable = assertFails {
+                    agent.run(userPrompt)
+                }
+
+                isClientFinished.await()
+
+                assertTrue(throwable is IllegalStateException)
+                assertEquals(testStreamingErrorMessage, throwable.message)
+            }
+        }
+
+        // Client
+        val clientJob = launch {
+            FeatureMessageRemoteClient(connectionConfig = clientConfig, scope = this).use { client ->
+
+                val clientEventsCollector =
+                    ClientEventsCollector(client = client, expectedEventsCount = 9)
+
+                val collectEventsJob =
+                    clientEventsCollector.startCollectEvents(coroutineScope = this@launch)
+
+                isServerStarted.await()
+                client.connect()
+                collectEventsJob.join()
+
+                // Correct run id will be set after the 'collect events job' is finished.
+                val expectedEvents = listOf(
+                    LLMStreamingStartingEvent(
+                        runId = clientEventsCollector.runId,
+                        prompt = expectedLLMCallPrompt,
+                        model = testModel.eventString,
+                        tools = listOf(dummyTool.name),
+                        timestamp = testClock.now().toEpochMilliseconds(),
+                    ),
+                    LLMStreamingFailedEvent(
+                        runId = clientEventsCollector.runId,
+                        error = AIAgentError(testStreamingErrorMessage, testStreamingStackTrace),
+                        timestamp = testClock.now().toEpochMilliseconds()
+                    ),
+                    LLMStreamingCompletedEvent(
+                        runId = clientEventsCollector.runId,
+                        prompt = expectedLLMCallPrompt,
+                        model = testModel.eventString,
+                        tools = listOf(dummyTool.name),
+                        timestamp = testClock.now().toEpochMilliseconds(),
+                    )
+                )
+
+                val actualEvents = clientEventsCollector.collectedEvents.filter { event ->
+                    event is LLMStreamingStartingEvent ||
+                        event is LLMStreamingFrameReceivedEvent ||
+                        event is LLMStreamingFailedEvent ||
+                        event is LLMStreamingCompletedEvent
+                }
+
+                assertEquals(expectedEvents.size, actualEvents.size)
+                assertContentEquals(expectedEvents, actualEvents)
 
                 isClientFinished.complete(true)
             }

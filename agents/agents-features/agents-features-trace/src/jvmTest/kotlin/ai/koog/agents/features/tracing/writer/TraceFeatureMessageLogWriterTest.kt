@@ -245,7 +245,7 @@ class TraceFeatureMessageLogWriterTest {
         val customFormat: (FeatureMessage) -> String = { message ->
             when (message) {
                 is FeatureStringMessage -> "CUSTOM STRING. ${message.message}"
-                is FeatureEvent -> "CUSTOM EVENT. ${message.eventId}"
+                is FeatureEvent -> "CUSTOM EVENT. No event message"
                 else -> "OTHER: ${message::class.simpleName}"
             }
         }
@@ -260,7 +260,7 @@ class TraceFeatureMessageLogWriterTest {
 
         val expectedMessages = listOf(
             "[INFO] Received feature message [message]: CUSTOM STRING. Test string message",
-            "[INFO] Received feature message [event]: CUSTOM EVENT. ${AgentStartingEvent::class.simpleName}",
+            "[INFO] Received feature message [event]: CUSTOM EVENT. No event message",
         )
 
         TraceFeatureMessageLogWriter(targetLogger = targetLogger, format = customFormat).use { writer ->

@@ -15,7 +15,6 @@ import kotlinx.serialization.json.JsonObject
  *
  * @property toolName The unique name of the tool being called;
  * @property toolArgs The arguments provided for the tool execution;
- * @property eventId A string representing the event type;
  * @property timestamp The timestamp of the event, in milliseconds since the Unix epoch.
  */
 @Serializable
@@ -24,7 +23,6 @@ public data class ToolCallStartingEvent(
     val toolCallId: String?,
     val toolName: String,
     val toolArgs: JsonObject,
-    override val eventId: String = ToolCallStartingEvent::class.simpleName!!,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent()
 
@@ -37,7 +35,6 @@ public data class ToolCallStartingEvent(
  * @property toolName The name of the tool that encountered the validation error;
  * @property toolArgs The arguments associated with the tool at the time of validation failure;
  * @property error A message describing the validation error encountered;
- * @property eventId A string representing the event type;
  * @property timestamp The timestamp of the event, in milliseconds since the Unix epoch.
  */
 @Serializable
@@ -47,7 +44,6 @@ public data class ToolValidationFailedEvent(
     val toolName: String,
     val toolArgs: JsonObject,
     val error: String,
-    override val eventId: String = ToolValidationFailedEvent::class.simpleName!!,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent()
 
@@ -61,7 +57,6 @@ public data class ToolValidationFailedEvent(
  * @property toolName The name of the tool that failed;
  * @property toolArgs The arguments passed to the tool during the failed execution;
  * @property error The error encountered during the tool's execution;
- * @property eventId A string representing the event type;
  * @property timestamp The timestamp of the event, in milliseconds since the Unix epoch.
  */
 @Serializable
@@ -71,7 +66,6 @@ public data class ToolCallFailedEvent(
     val toolName: String,
     val toolArgs: JsonObject,
     val error: AIAgentError,
-    override val eventId: String = ToolCallFailedEvent::class.simpleName!!,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent()
 
@@ -85,7 +79,6 @@ public data class ToolCallFailedEvent(
  * @property toolName The name of the tool that was executed;
  * @property toolArgs The arguments used for executing the tool;
  * @property result The result of the tool execution, which may be null if no result was produced or an error occurred;
- * @property eventId A string representing the event type;
  * @property timestamp The timestamp of the event, in milliseconds since the Unix epoch.
  */
 @Serializable
@@ -95,7 +88,6 @@ public data class ToolCallCompletedEvent(
     val toolName: String,
     val toolArgs: JsonObject,
     val result: String?,
-    override val eventId: String = ToolCallCompletedEvent::class.simpleName!!,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent()
 

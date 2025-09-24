@@ -18,7 +18,6 @@ import kotlinx.serialization.Serializable
  *                  messages and configuration parameters sent to the LLM.
  * @property model The description of the LLM model used during the call. Use the format: 'llm_provider:model_id';
  * @property tools A list of tools used or invoked during the LLM call.
- * @property eventId A string representing the event type;
  * @property timestamp The timestamp of the event, in milliseconds since the Unix epoch.
  */
 @Serializable
@@ -27,7 +26,6 @@ public data class LLMCallStartingEvent(
     val prompt: Prompt,
     val model: String,
     val tools: List<String>,
-    override val eventId: String = LLMCallStartingEvent::class.simpleName!!,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent()
 
@@ -47,7 +45,6 @@ public data class LLMCallStartingEvent(
  *                     Each response contains content, metadata, and additional context about the interaction.
  * @property moderationResponse The moderation response, if any, returned by the LLM.
  *                              This is typically used to capture and track content moderation results.
- * @property eventId A string representing the event type;
  * @property timestamp The timestamp of the event, in milliseconds since the Unix epoch.
  */
 @Serializable
@@ -57,7 +54,6 @@ public data class LLMCallCompletedEvent(
     val model: String,
     val responses: List<Message.Response>,
     val moderationResponse: ModerationResult? = null,
-    override val eventId: String = LLMCallCompletedEvent::class.simpleName!!,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent()
 

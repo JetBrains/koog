@@ -13,6 +13,10 @@ import ai.koog.agents.core.feature.model.events.FunctionalStrategyStartingEvent
 import ai.koog.agents.core.feature.model.events.GraphStrategyStartingEvent
 import ai.koog.agents.core.feature.model.events.LLMCallCompletedEvent
 import ai.koog.agents.core.feature.model.events.LLMCallStartingEvent
+import ai.koog.agents.core.feature.model.events.LLMStreamingCompletedEvent
+import ai.koog.agents.core.feature.model.events.LLMStreamingFailedEvent
+import ai.koog.agents.core.feature.model.events.LLMStreamingFrameReceivedEvent
+import ai.koog.agents.core.feature.model.events.LLMStreamingStartingEvent
 import ai.koog.agents.core.feature.model.events.NodeExecutionCompletedEvent
 import ai.koog.agents.core.feature.model.events.NodeExecutionFailedEvent
 import ai.koog.agents.core.feature.model.events.NodeExecutionStartingEvent
@@ -107,6 +111,10 @@ public val defaultFeatureMessageSerializersModule: SerializersModule
             subclass(ToolCallCompletedEvent::class, ToolCallCompletedEvent.serializer())
             subclass(LLMCallStartingEvent::class, LLMCallStartingEvent.serializer())
             subclass(LLMCallCompletedEvent::class, LLMCallCompletedEvent.serializer())
+            subclass(LLMStreamingStartingEvent::class, LLMStreamingStartingEvent.serializer())
+            subclass(LLMStreamingFrameReceivedEvent::class, LLMStreamingFrameReceivedEvent.serializer())
+            subclass(LLMStreamingFailedEvent::class, LLMStreamingFailedEvent.serializer())
+            subclass(LLMStreamingCompletedEvent::class, LLMStreamingCompletedEvent.serializer())
         }
 
         polymorphic(FeatureEvent::class) {
@@ -127,6 +135,10 @@ public val defaultFeatureMessageSerializersModule: SerializersModule
             subclass(ToolCallCompletedEvent::class, ToolCallCompletedEvent.serializer())
             subclass(LLMCallStartingEvent::class, LLMCallStartingEvent.serializer())
             subclass(LLMCallCompletedEvent::class, LLMCallCompletedEvent.serializer())
+            subclass(LLMStreamingStartingEvent::class, LLMStreamingStartingEvent.serializer())
+            subclass(LLMStreamingFrameReceivedEvent::class, LLMStreamingFrameReceivedEvent.serializer())
+            subclass(LLMStreamingFailedEvent::class, LLMStreamingFailedEvent.serializer())
+            subclass(LLMStreamingCompletedEvent::class, LLMStreamingCompletedEvent.serializer())
         }
 
         polymorphic(DefinedFeatureEvent::class) {
@@ -146,6 +158,10 @@ public val defaultFeatureMessageSerializersModule: SerializersModule
             subclass(ToolCallCompletedEvent::class, ToolCallCompletedEvent.serializer())
             subclass(LLMCallStartingEvent::class, LLMCallStartingEvent.serializer())
             subclass(LLMCallCompletedEvent::class, LLMCallCompletedEvent.serializer())
+            subclass(LLMStreamingStartingEvent::class, LLMStreamingStartingEvent.serializer())
+            subclass(LLMStreamingFrameReceivedEvent::class, LLMStreamingFrameReceivedEvent.serializer())
+            subclass(LLMStreamingFailedEvent::class, LLMStreamingFailedEvent.serializer())
+            subclass(LLMStreamingCompletedEvent::class, LLMStreamingCompletedEvent.serializer())
         }
 
         polymorphic(StrategyStartingEvent::class) {

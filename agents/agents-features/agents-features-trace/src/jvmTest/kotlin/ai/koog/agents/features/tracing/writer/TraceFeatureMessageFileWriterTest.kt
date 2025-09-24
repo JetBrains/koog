@@ -258,7 +258,7 @@ class TraceFeatureMessageFileWriterTest {
         val customFormat: (FeatureMessage) -> String = { message ->
             when (message) {
                 is FeatureStringMessage -> "CUSTOM STRING. ${message.message}"
-                is FeatureEvent -> "CUSTOM EVENT. ${message.eventId}"
+                is FeatureEvent -> "CUSTOM EVENT. No event message"
                 else -> "CUSTOM OTHER: ${message::class.simpleName}"
             }
         }
@@ -273,7 +273,7 @@ class TraceFeatureMessageFileWriterTest {
 
         val expectedMessages = listOf(
             "CUSTOM STRING. Test string message",
-            "CUSTOM EVENT. ${AgentStartingEvent::class.simpleName}",
+            "CUSTOM EVENT. No event message",
         )
 
         TraceFeatureMessageFileWriter(
