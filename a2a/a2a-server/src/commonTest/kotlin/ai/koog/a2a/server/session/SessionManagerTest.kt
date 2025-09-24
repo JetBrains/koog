@@ -25,7 +25,7 @@ class SessionManagerTest {
     private lateinit var pushConfigStorage: InMemoryPushNotificationConfigStorage
     private lateinit var pushSender: MockPushNotificationSender
 
-    private val contextId = "test-context-1"
+    private val contextId = "context-1"
     private val taskId = "task-1"
 
     private class MockPushNotificationSender : PushNotificationSender {

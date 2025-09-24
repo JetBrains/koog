@@ -28,6 +28,50 @@ public interface AgentExecutor {
      *
      * Can throw an exception if the input is invalid or the agent fails to execute the request.
      *
+     * Example implementation:
+     * ```kotlin
+     * val userMessage = context.params.message
+     *
+     * // Process the message and create a task
+     * // Send task creation event
+     * eventProcessor.sendTaskEvent(
+     *     Task(
+     *         id = context.taskId,
+     *         contextId = context.contextId,
+     *         status = TaskStatus(
+     *             state = TaskState.Working,
+     *             // Mark this message as belonging to the created task
+     *             message = message.copy(taskId = context.taskId)
+     *             timestamp = Clock.System.now()
+     *         ),
+     *     )
+     * )
+     *
+     * // Simulate some work
+     * delay(1000)
+     *
+     * // Mark task as completed
+     * eventProcessor.sendTaskEvent(
+     *     TaskStatusUpdateEvent(
+     *         taskId = context.taskId,
+     *         contextId = context.contextId,
+     *         status = TaskStatus(
+     *             state = TaskState.Completed,
+     *             message = Message(
+     *                role = Role.Agent,
+     *                contextId = context.contextId,
+     *                taskId = context.taskId,
+     *                parts = listOf(
+     *                    TextPart("Task completed successfully!")
+     *                )
+     *            ),
+     *            timestamp = Clock.System.now()
+     *         ),
+     *         final = true
+     *     )
+     * )
+     * ```
+     *
      * @param context The context containing the necessary information and accessors for executing the agent.
      * @param eventProcessor The event processor to publish events to.
      * @throws Exception if something goes wrong during execution. Should prefer more specific exceptions when possible,

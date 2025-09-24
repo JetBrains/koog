@@ -68,7 +68,7 @@ public abstract class JSONRPCServerTransport : ServerTransport {
                         .toJSONRPCSuccessResponse()
 
                 else ->
-                    throw A2AMethodNotFoundException(request.method)
+                    throw A2AMethodNotFoundException("Method not found: ${request.method}")
             }
         }.getOrElse { it.toJSONRPCErrorResponse(request.id) }
     }
@@ -90,7 +90,7 @@ public abstract class JSONRPCServerTransport : ServerTransport {
                 requestHandler.onResubscribeTask(request.toRequest(), ctx)
 
             else ->
-                flow { throw A2AMethodNotFoundException(request.method) }
+                flow { throw A2AMethodNotFoundException("Method not found: ${request.method}") }
         }.map { it.toJSONRPCSuccessResponse() as JSONRPCResponse }
             .catch { emit(it.toJSONRPCErrorResponse(request.id)) }
     }

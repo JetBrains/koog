@@ -11,12 +11,10 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.sse.SSE
 import io.ktor.client.plugins.sse.sse
-import io.ktor.client.request.accept
 import io.ktor.client.request.headers
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
-import io.ktor.http.HttpMethod
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.flow.Flow
@@ -73,9 +71,6 @@ public class HttpJSONRPCClientTransport(
     ): Flow<JSONRPCResponse> = flow {
         httpClient.sse(
             request = {
-                method = HttpMethod.Post
-                accept(ContentType.Text.EventStream)
-
                 headers {
                     ctx.additionalHeaders.forEach { (key, values) ->
                         appendAll(key, values)
