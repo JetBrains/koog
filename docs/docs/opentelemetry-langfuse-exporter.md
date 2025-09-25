@@ -64,7 +64,7 @@ fun main() = runBlocking {
 Langfuse uses trace-level attributes to enhance observability with features like sessions, environments, tags and other metadata.
 The `addLangfuseExporter` function supports a `traceAttributes` parameter that accepts a list of `CustomAttribute` objects.
 
-These attributes are added to the root span of each trace and enable Langfuse's advanced features. You can pass
+These attributes are added to the root `InvokeAgentSpan` span of each trace and enable Langfuse's advanced features. You can pass
 any attributes supported by Langfuse - see the [complete list in Langfuse's OpenTelemetry documentation](https://langfuse.com/integrations/native/opentelemetry#trace-level-attributes).
 
 Common attributes:
