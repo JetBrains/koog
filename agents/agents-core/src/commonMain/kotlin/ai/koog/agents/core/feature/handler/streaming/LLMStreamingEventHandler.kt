@@ -3,9 +3,6 @@ package ai.koog.agents.core.feature.handler.streaming
 /**
  * Handler for processing individual stream frames during streaming.
  * This handler is invoked for each frame received from the streaming response.
- * A handler responsible for managing the streaming flow of Large Language Model (LLM) responses.
- * It allows customization of logic to be executed before streaming starts, during streaming frames,
- * and after streaming completes.
  */
 public class LLMStreamingEventHandler {
 
