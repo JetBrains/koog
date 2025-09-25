@@ -1,14 +1,12 @@
 package ai.koog.prompt.executor.clients.anthropic
 
+import ai.koog.test.utils.verifyDeserialization
 import io.kotest.assertions.json.shouldEqualJson
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
-import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
-import kotlinx.serialization.json.decodeFromJsonElement
-import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -95,24 +93,25 @@ class AnthropicSerializationTest {
 
     @Test
     fun `test deserialization without additional properties`() {
-        val jsonInput = buildJsonObject {
-            put("model", JsonPrimitive("claude-3"))
-            put(
-                "messages",
-                json.encodeToJsonElement(
-                    listOf(
-                        AnthropicMessage(
-                            role = "user",
-                            content = listOf(AnthropicContent.Text("Hello"))
-                        )
-                    )
-                )
-            )
-            put("max_tokens", JsonPrimitive(1000))
-            put("temperature", JsonPrimitive(0.7))
-        }
+        val jsonString =
+            // language=json
+            """
+            {
+                "model": "claude-3",
+                "max_tokens": 1000,
+                "messages": [
+                    {"role": "user", "content": [{ "type": "text", "text": "Hello, Claude"}]}
+                ],
+                "temperature": 0.7,
+                "stream": false
+            }
+            """.trimIndent()
 
-        val request = json.decodeFromJsonElement<AnthropicMessageRequest>(jsonInput)
+        val request: AnthropicMessageRequest = verifyDeserialization(
+            payload = jsonString,
+            serializer = AnthropicMessageRequestSerializer,
+            json = json
+        )
 
         assertEquals("claude-3", request.model)
         assertEquals(1000, request.maxTokens)
@@ -122,26 +121,28 @@ class AnthropicSerializationTest {
 
     @Test
     fun `test deserialization with additional properties`() {
-        val jsonInput = buildJsonObject {
-            put("model", JsonPrimitive("claude-3"))
-            put(
-                "messages",
-                json.encodeToJsonElement(
-                    listOf(
-                        AnthropicMessage(
-                            role = "user",
-                            content = listOf(AnthropicContent.Text("Hello"))
-                        )
-                    )
-                )
-            )
-            put("max_tokens", JsonPrimitive(1000))
-            put("customProperty", JsonPrimitive("customValue"))
-            put("customNumber", JsonPrimitive(42))
-            put("customBoolean", JsonPrimitive(true))
-        }
+        val jsonString =
+            // language=json
+            """
+            {
+                "model": "claude-3",
+                "max_tokens": 1000,
+                "messages": [
+                    {"role": "user", "content": [{ "type": "text", "text": "Hello, Claude"}]}
+                ],
+                "temperature": 0.7,
+                "stream": false,
+                "customProperty": "customValue",
+                "customNumber": 42,
+                "customBoolean": true
+            }
+            """.trimIndent()
 
-        val request = json.decodeFromJsonElement(AnthropicMessageRequestSerializer, jsonInput)
+        val request: AnthropicMessageRequest = verifyDeserialization(
+            payload = jsonString,
+            serializer = AnthropicMessageRequestSerializer,
+            json = json
+        )
 
         assertEquals("claude-3", request.model)
         assertEquals(1000, request.maxTokens)

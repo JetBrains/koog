@@ -14,8 +14,10 @@ import kotlin.test.assertNotNull
  * and ensures that re-serializing the deserialized object produces the same JSON structure as the original payload.
  *
  * @param payload The JSON string to deserialize and verify.
- * @param serializationStrategy The serialization strategy to transform the object of type [T] into JSON. Defaults to the serializer for [T].
- * @param deserializationStrategy The deserialization strategy to transform the JSON into an object of type [T]. Defaults to the serializer for [T].
+ * @param serializationStrategy The serialization strategy to transform the object of type [T] into JSON.
+ *      Defaults to the serializer for [T].
+ * @param deserializationStrategy The deserialization strategy to transform the JSON into an object of type [T].
+ *      Defaults to the serializer for [T].
  * @param json The [Json] instance used for serialization and deserialization processes. Defaults to [Json].
  * @return The deserialized object of type [T].
  * @throws IllegalArgumentException If the [payload] is not valid JSON.
@@ -53,12 +55,14 @@ public inline fun <reified T : Any> verifyDeserialization(
 }
 
 /**
- * Verifies that a given [payload] can be deserialized into the specified type [T] using the supplied or default serializer,
- * and ensures that re-serializing the deserialized object results in the same JSON representation as the original payload.
+ * Verifies that a given [payload] can be deserialized into the specified type [T] using the supplied
+ * or default serializer, and ensures that re-serializing the deserialized object results
+ * in the same JSON representation as the original payload.
  *
  * @param payload The JSON string to be deserialized and verified.
  * @param json The [Json] instance used for serialization and deserialization. Defaults to [Json].
- * @param serializer The [KSerializer] used for deserialization and serialization. Defaults to the serializer for type [T].
+ * @param serializer The [KSerializer] used for deserialization and serialization.
+ *      Defaults to the serializer for type [T].
  * @return The deserialized object of type [T].
  * @throws IllegalArgumentException If the [payload] cannot be parsed as valid JSON.
  * @throws AssertionError If deserialization or re-serialization does not align with the original [payload].
