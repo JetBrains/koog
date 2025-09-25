@@ -161,7 +161,7 @@ Sets the sampling strategy to control which spans are collected. Takes the follo
 
 #### setVerbose
 
-Enables or disables verbose logging for debugging OpenTelemetry configuration. Takes the following argument:
+Enables or disables verbose logging. Takes the following argument:
 
 | Name      | Data type | Required | Default value | Description                                                     |
 |-----------|-----------|----------|---------------|-----------------------------------------------------------------|
@@ -169,8 +169,7 @@ Enables or disables verbose logging for debugging OpenTelemetry configuration. T
 
 !!! note
 
-    When using [Langfuse Exporter](opentelemetry-langfuse-exporter.md), set the value of the `verbose` argument to `true` to see the content of LLM messages in Langfuse. 
-    Otherwise, the message content appears in Langfuse as `HIDDEN:non-empty` for security reasons.
+    Some content of OpenTelemetry spans is masked by default for security reasons. For example, LLM messages are masked as `HIDDEN:non-empty` instead of the actual message content. To get the content, set the value of the `verbose` argument to `true`.
 
 #### setSdk
 
