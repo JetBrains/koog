@@ -82,12 +82,12 @@ class PersistencyRestoreStrategyTests {
         val result2 = agent.run("Agent Input2")
         assertEquals(
             "History: You are a test agent.\n" +
-                    "Agent Input\n" +
-                    "Node 1 output\n" +
-                    "Node 2 output\n" +
-                    "Agent Input2\n" +
-                    "Node 1 output\n" +
-                    "Node 2 output",
+                "Agent Input\n" +
+                "Node 1 output\n" +
+                "Node 2 output\n" +
+                "Agent Input2\n" +
+                "Node 1 output\n" +
+                "Node 2 output",
             result2
         )
     }
