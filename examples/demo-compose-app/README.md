@@ -37,3 +37,13 @@ Run the desktop **hot reload** application: `./gradlew :app:hotRunJvm`
 To run the application on iPhone device/simulator:
 - Open `iosApp/iosApp.xcproject` in Xcode and run standard configuration
 - Or use [Kotlin Multiplatform Mobile plugin](https://plugins.jetbrains.com/plugin/14936-kotlin-multiplatform-mobile) for Android Studio
+
+### Web Distribution
+Build web distribution: `./gradlew :app:composeCompatibilityBrowserDistribution`  
+Deploy a dir `app/build/dist/composeWebCompatibility/productionExecutable` to a web server
+
+### JS Browser
+Run the browser application: `./gradlew :app:jsBrowserDevelopmentRun --continue`
+
+### Wasm Browser
+Run the browser application: `./gradlew :app:wasmJsBrowserDevelopmentRun --continue`

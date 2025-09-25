@@ -1,16 +1,15 @@
 [versions]
-agp = "8.11.1"
+agp = "8.13.0"
 compose-multiplatform = "1.9.0"
 coroutines = "1.10.2"
 datastore = "1.1.7"
-hotReload = "1.0.0-beta07"
+hotReload = "1.0.0-beta08"
 jetbrains-lifecycle = "2.9.4"
 jetbrains-navigation = "2.9.0"
 koin-bom = "4.1.1"
 koog = "0.4.2"
-kotlin = "2.2.10"
+kotlin = "2.2.20"
 kotlinx-serialization = "1.9.0"
-ktor = "3.2.3"
 
 [libraries]
 jetbrains-lifecycle-viewmodel-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "jetbrains-lifecycle" }
@@ -34,13 +33,6 @@ androidx-datastore-preferences = { module = "androidx.datastore:datastore-prefer
 # Koog
 koog-agents-core = { module = "ai.koog:agents-core", version.ref = "koog" }
 koog-prompt-executor-llms-all = { module = "ai.koog:prompt-executor-llms-all", version.ref = "koog" }
-
-# Ktor
-ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
-ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
-ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
-ktor-client-logging = { module = "io.ktor:ktor-client-logging", version.ref = "ktor" }
-ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

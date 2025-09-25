@@ -32,6 +32,16 @@ kotlin {
         }
     }
 
+    js {
+        browser()
+        binaries.executable()
+    }
+
+    wasmJs {
+        browser()
+        binaries.executable()
+    }
+
     sourceSets {
         commonMain.dependencies {
             implementation(compose.animation)
@@ -52,10 +62,6 @@ kotlin {
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.serialization.core)
             implementation(libs.kotlinx.serialization.json)
-            implementation(libs.ktor.client.content.negotiation)
-            implementation(libs.ktor.client.core)
-            implementation(libs.ktor.client.logging)
-            implementation(libs.ktor.serialization.kotlinx.json)
             implementation(project.dependencies.platform(libs.koin.bom))
         }
 
@@ -73,7 +79,9 @@ kotlin {
 
         iosMain.dependencies {
             implementation(libs.androidx.datastore.preferences)
-            implementation(libs.ktor.client.darwin)
+        }
+
+        webMain.dependencies {
         }
     }
 }

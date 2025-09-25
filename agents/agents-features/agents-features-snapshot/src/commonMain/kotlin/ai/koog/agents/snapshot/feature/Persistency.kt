@@ -2,6 +2,7 @@ package ai.koog.agents.snapshot.feature
 
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AgentContextData
+import ai.koog.agents.core.agent.context.RollbackStrategy
 import ai.koog.agents.core.agent.context.store
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
@@ -45,6 +46,20 @@ public class Persistency(
     private val persistencyStorageProvider: PersistencyStorageProvider,
     internal val clock: Clock = Clock.System,
 ) {
+    /**
+     * Determines the strategy to use during rollback operations for the agent's state.
+     *
+     * The `rollbackStrategy` defines the extent of state restoration when rolling back
+     * to a previous checkpoint. It impacts which parts of the agent's session data
+     * (e.g., message history, context) are restored during a rollback. Available
+     * strategies include restoring the full state or limiting restoration to specific parts.
+     *
+     * By default, the strategy is set to `RollbackStrategy.Default`, which restores the
+     * entire context of the agent, including message history and other stateful data.
+     * Alternative strategies, such as `MessageHistoryOnly`, can be used for partial rollbacks.
+     */
+    public var rollbackStrategy: RollbackStrategy = RollbackStrategy.Default
+
     /**
      * Represents the identifier of the current node being executed within the agent pipeline.
      *
@@ -97,6 +112,7 @@ public class Persistency(
             pipeline: AIAgentGraphPipeline
         ) {
             val featureImpl = Persistency(config.storage)
+            featureImpl.rollbackStrategy = config.rollbackStrategy
             val interceptContext = InterceptContext(this, featureImpl)
 
             pipeline.interceptContextAgentFeature(this) { _ ->
@@ -255,7 +271,7 @@ public class Persistency(
         messageHistory: List<Message>,
         input: JsonElement
     ) {
-        agentContext.store(AgentContextData(messageHistory, nodeId, input))
+        agentContext.store(AgentContextData(messageHistory, nodeId, input, rollbackStrategy))
     }
 
     /**
@@ -274,7 +290,7 @@ public class Persistency(
     ): AgentCheckpointData? {
         val checkpoint: AgentCheckpointData? = getCheckpointById(checkpointId)
         if (checkpoint != null) {
-            agentContext.store(checkpoint.toAgentContextData())
+            agentContext.store(checkpoint.toAgentContextData(rollbackStrategy))
         }
         return checkpoint
     }
@@ -296,7 +312,7 @@ public class Persistency(
             return null
         }
 
-        agentContext.store(checkpoint.toAgentContextData())
+        agentContext.store(checkpoint.toAgentContextData(rollbackStrategy))
         return checkpoint
     }
 }

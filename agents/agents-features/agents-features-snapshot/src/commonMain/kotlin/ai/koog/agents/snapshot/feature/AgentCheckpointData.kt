@@ -3,6 +3,7 @@
 package ai.koog.agents.snapshot.feature
 
 import ai.koog.agents.core.agent.context.AgentContextData
+import ai.koog.agents.core.agent.context.RollbackStrategy
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.snapshot.providers.PersistencyUtils
 import ai.koog.prompt.message.Message
@@ -61,11 +62,12 @@ public fun tombstoneCheckpoint(time: Instant): AgentCheckpointData {
  * @return A new [AgentContextData] instance containing the message history, node ID,
  * and last input from the [AgentCheckpointData].
  */
-public fun AgentCheckpointData.toAgentContextData(): AgentContextData {
+public fun AgentCheckpointData.toAgentContextData(rollbackStrategy: RollbackStrategy): AgentContextData {
     return AgentContextData(
         messageHistory = messageHistory,
         nodeId = nodeId,
-        lastInput = lastInput
+        lastInput = lastInput,
+        rollbackStrategy
     )
 }
 

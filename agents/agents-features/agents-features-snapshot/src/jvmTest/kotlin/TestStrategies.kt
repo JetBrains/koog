@@ -19,6 +19,15 @@ fun AIAgentSubgraphBuilderBase<*, *>.simpleNode(
     return@node it + "\n" + output
 }
 
+fun AIAgentSubgraphBuilderBase<*, *>.inputLogNode(
+    name: String? = null,
+): AIAgentNodeDelegate<String, String> = node(name) {
+    llm.writeSession {
+        updatePrompt { user { text(it) } }
+    }
+    return@node it
+}
+
 internal fun AIAgentSubgraphBuilderBase<*, *>.loggingNode(
     name: String? = null,
     message: String,
@@ -222,9 +231,31 @@ fun createCheckpointGraphWithRollback(checkpointId: String) = strategy("") {
 
 fun straightForwardGraphNoCheckpoint() = strategy("straight-forward") {
     val node1 by simpleNode(
+        name = "Node1",
+        output = "Node 1 output"
+    )
+
+    val node2 by simpleNode(
+        name = "Node2",
+        output = "Node 2 output"
+    )
+
+    val historyNode by collectHistoryNode("History Node")
+
+    edge(nodeStart forwardTo node1)
+    edge(node1 forwardTo node2)
+    edge(node2 forwardTo historyNode)
+    edge(historyNode forwardTo nodeFinish)
+}
+
+fun restoreStrategyGraph() = strategy("restore-strategy") {
+    val inputNode by inputLogNode()
+
+    val node1 by simpleNode(
         "Node1",
         output = "Node 1 output"
     )
+
     val node2 by simpleNode(
         "Node2",
         output = "Node 2 output"
@@ -232,7 +263,8 @@ fun straightForwardGraphNoCheckpoint() = strategy("straight-forward") {
 
     val historyNode by collectHistoryNode("History Node")
 
-    edge(nodeStart forwardTo node1)
+    edge(nodeStart forwardTo inputNode)
+    edge(inputNode forwardTo node1)
     edge(node1 forwardTo node2)
     edge(node2 forwardTo historyNode)
     edge(historyNode forwardTo nodeFinish)
@@ -253,6 +285,26 @@ internal fun loggingGraphStrategy(collector: TestAgentLogsCollector) = strategy(
     edge(nodeStart forwardTo node1)
     edge(node1 forwardTo node2)
     edge(node2 forwardTo nodeFinish)
+}
+
+internal fun loggingGraphWithHistoryCollectionStrategy(collector: TestAgentLogsCollector) = strategy("logging-test") {
+    val node1 by loggingNode(
+        "Node1",
+        message = "First Step",
+        collector = collector
+    )
+
+    val node2 by loggingNode(
+        "Node2",
+        message = "Second Step",
+        collector = collector
+    )
+    val historyNode by collectHistoryNode("History Node")
+
+    edge(nodeStart forwardTo node1)
+    edge(node1 forwardTo node2)
+    edge(node2 forwardTo historyNode)
+    edge(historyNode forwardTo nodeFinish)
 }
 
 internal fun loggingGraphForRunFromSecondTry(collector: TestAgentLogsCollector) = strategy("logging-test") {

@@ -24,7 +24,8 @@ jobs:
       matrix:
         gradle-tasks: [
           "lint :app:assembleDebug :app:assembleRelease",
-          ":app:jvmJar"
+          ":app:jvmJar",
+          ":app:composeCompatibilityBrowserDistribution"
         ]
         os: [ ubuntu-latest ]
         include:
