@@ -89,7 +89,7 @@ class NodeLLMRequestStreamingAndSendResultsTest {
 
         // Verify streaming events were captured
         val streamingEvents = eventsCollector.collectedEvents.filter {
-            it.contains("OnBeforeStream") || it.contains("OnStreamFrame") || it.contains("OnAfterStream")
+            it.contains("OnBeforeLLMCall") || it.contains("OnStreamFrame") || it.contains("OnAfterLLMCall")
         }
         assertTrue(streamingEvents.isNotEmpty(), "Should have captured streaming events")
     }
@@ -132,7 +132,7 @@ class NodeLLMRequestStreamingAndSendResultsTest {
 
         // Verify streaming events occurred
         val streamingEvents = eventsCollector.collectedEvents.filter {
-            it.contains("OnBeforeStream") || it.contains("OnAfterStream")
+            it.contains("OnBeforeLLMCall") || it.contains("OnAfterLLMCall") || it.contains("OnStreamFrame")
         }
         assertTrue(streamingEvents.isNotEmpty(), "Should have streaming events")
     }
