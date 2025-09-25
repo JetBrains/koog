@@ -1,11 +1,11 @@
-package ai.koog.agents.core.feature.handler
+package ai.koog.agents.core.feature.handler.streaming
 
 /**
  * A handler responsible for managing the streaming flow of Large Language Model (LLM) responses.
  * It allows customization of logic to be executed before streaming starts, during streaming frames,
  * and after streaming completes.
  */
-public class StreamHandler {
+public class LLMStreamingEventHandler {
 
     /**
      * A handler invoked before streaming from the Language Learning Model (LLM) begins.
@@ -14,8 +14,8 @@ public class StreamHandler {
      * It accepts the prompt, a list of tools, the model, and a run ID as inputs, allowing
      * users to define specific logic or modifications to these inputs before streaming begins.
      */
-    public var beforeStreamHandler: BeforeStreamHandler =
-        BeforeStreamHandler { _ -> }
+    public var llmStreamingStartingHandler: LLMStreamingStartingHandler =
+        LLMStreamingStartingHandler { _ -> }
 
     /**
      * A handler invoked when stream frames are sent out during the streaming process.
@@ -29,8 +29,8 @@ public class StreamHandler {
      *
      * Customize this handler to implement specific behavior required during the streaming process.
      */
-    public var streamFrameHandler: StreamFrameHandler =
-        StreamFrameHandler { _ -> }
+    public var llmStreamingFrameReceivedHandler: LLMStreamingFrameReceivedHandler =
+        LLMStreamingFrameReceivedHandler { _ -> }
 
     /**
      * A handler invoked when an error occurs during streaming from the language model (LLM).
@@ -43,8 +43,8 @@ public class StreamHandler {
      *
      * Customize this handler to implement specific behavior required during streaming errors.
      */
-    public var streamErrorHandler: StreamErrorHandler =
-        StreamErrorHandler { _ -> }
+    public var llmStreamingFailedHandler: LLMStreamingFailedHandler =
+        LLMStreamingFailedHandler { _ -> }
 
     /**
      * A handler invoked after streaming from the language model (LLM) is complete.
@@ -57,8 +57,8 @@ public class StreamHandler {
      *
      * Customize this handler to implement specific behavior required after streaming completes.
      */
-    public var afterStreamHandler: AfterStreamHandler =
-        AfterStreamHandler { _ -> }
+    public var llmStreamingCompletedHandler: LLMStreamingCompletedHandler =
+        LLMStreamingCompletedHandler { _ -> }
 }
 
 /**
@@ -69,13 +69,13 @@ public class StreamHandler {
  * This can be particularly useful for custom input manipulation, logging, validation, or applying
  * configurations to the streaming request based on external context.
  */
-public fun interface BeforeStreamHandler {
+public fun interface LLMStreamingStartingHandler {
     /**
      * Handles the initialization of a streaming interaction by processing the given prompt, tools, model, and run ID.
      *
      * @param eventContext The context for the before-stream event
      */
-    public suspend fun handle(eventContext: BeforeStreamContext)
+    public suspend fun handle(eventContext: LLMStreamingStartingContext)
 }
 
 /**
@@ -83,13 +83,13 @@ public fun interface BeforeStreamHandler {
  * The implementation of this interface provides a mechanism to perform real-time processing of
  * streaming content, such as aggregation, transformation, or monitoring.
  */
-public fun interface StreamFrameHandler {
+public fun interface LLMStreamingFrameReceivedHandler {
     /**
      * Handles individual stream frames as they are sent out during the streaming process.
      *
      * @param eventContext The context for the stream frame event
      */
-    public suspend fun handle(eventContext: StreamFrameContext)
+    public suspend fun handle(eventContext: LLMStreamingFrameReceivedContext)
 }
 
 /**
@@ -97,13 +97,13 @@ public fun interface StreamFrameHandler {
  * The implementation of this interface provides a mechanism to perform error handling or logging
  * based on the provided error message and run ID.
  */
-public fun interface StreamErrorHandler {
+public fun interface LLMStreamingFailedHandler {
     /**
      * Handles streaming errors by processing the provided error message and run ID.
      *
      * @param eventContext The context for the stream error event
      */
-    public suspend fun handle(eventContext: StreamErrorContext)
+    public suspend fun handle(eventContext: LLMStreamingFailedContext)
 }
 
 /**
@@ -112,11 +112,11 @@ public fun interface StreamErrorHandler {
  * to perform custom logic or processing based on the provided inputs, such as the prompt, tools,
  * model, and the completion of the stream.
  */
-public fun interface AfterStreamHandler {
+public fun interface LLMStreamingCompletedHandler {
     /**
      * Handles the post-processing of a streaming session and its associated data after streaming completes.
      *
      * @param eventContext The context for the after-stream event
      */
-    public suspend fun handle(eventContext: AfterStreamContext)
+    public suspend fun handle(eventContext: LLMStreamingCompletedContext)
 }

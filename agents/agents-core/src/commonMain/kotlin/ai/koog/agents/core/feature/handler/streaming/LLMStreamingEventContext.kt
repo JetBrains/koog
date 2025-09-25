@@ -1,5 +1,7 @@
-package ai.koog.agents.core.feature.handler
+package ai.koog.agents.core.feature.handler.streaming
 
+import ai.koog.agents.core.feature.handler.AgentLifecycleEventContext
+import ai.koog.agents.core.feature.handler.AgentLifecycleEventType
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.LLModel
@@ -8,7 +10,7 @@ import ai.koog.prompt.streaming.StreamFrame
 /**
  * Represents the context for handling streaming-specific events within the framework.
  */
-public interface StreamHandlerContext : EventHandlerContext
+public interface LLMStreamingEventContext : AgentLifecycleEventContext
 
 /**
  * Represents the context for handling a before-stream event.
@@ -19,13 +21,13 @@ public interface StreamHandlerContext : EventHandlerContext
  * @property model The language model instance being used for streaming.
  * @property tools The list of tool descriptors available for the streaming call.
  */
-public data class BeforeStreamContext(
+public data class LLMStreamingStartingContext(
     val runId: String,
     val prompt: Prompt,
     val model: LLModel,
     val tools: List<ToolDescriptor>,
-) : StreamHandlerContext {
-    override val eventType: AgentEventType = AgentEventType.BeforeStream
+) : LLMStreamingEventContext {
+    override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.LLMStreamingStarting
 }
 
 /**
@@ -35,11 +37,11 @@ public data class BeforeStreamContext(
  * @property runId The unique identifier for this streaming session.
  * @property streamFrame The individual stream frame containing partial response data from the LLM.
  */
-public data class StreamFrameContext(
+public data class LLMStreamingFrameReceivedContext(
     val runId: String,
     val streamFrame: StreamFrame,
-) : StreamHandlerContext {
-    override val eventType: AgentEventType = AgentEventType.StreamFrame
+) : LLMStreamingEventContext {
+    override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.LLMStreamingFrameReceived
 }
 
 /**
@@ -49,11 +51,11 @@ public data class StreamFrameContext(
  * @property runId The unique identifier for this streaming session.
  * @property error The exception or error that occurred during streaming.
  */
-public data class StreamErrorContext(
+public data class LLMStreamingFailedContext(
     val runId: String,
     val error: Throwable
-) : StreamHandlerContext {
-    override val eventType: AgentEventType = AgentEventType.StreamError
+) : LLMStreamingEventContext {
+    override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.LLMStreamingFailed
 }
 
 /**
@@ -65,11 +67,11 @@ public data class StreamErrorContext(
  * @property model The language model instance that was used for streaming.
  * @property tools The list of tool descriptors that were available for the streaming call.
  */
-public data class AfterStreamContext(
+public data class LLMStreamingCompletedContext(
     val runId: String,
     val prompt: Prompt,
     val model: LLModel,
     val tools: List<ToolDescriptor>
-) : StreamHandlerContext {
-    override val eventType: AgentEventType = AgentEventType.AfterStream
+) : LLMStreamingEventContext {
+    override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.LLMStreamingCompleted
 }

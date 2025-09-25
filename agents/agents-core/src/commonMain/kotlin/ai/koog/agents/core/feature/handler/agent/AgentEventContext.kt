@@ -1,9 +1,11 @@
-package ai.koog.agents.core.feature.handler
+package ai.koog.agents.core.feature.handler.agent
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
+import ai.koog.agents.core.feature.handler.AgentLifecycleEventContext
+import ai.koog.agents.core.feature.handler.AgentLifecycleEventType
 import kotlin.reflect.KType
 
 /**
@@ -14,23 +16,7 @@ import kotlin.reflect.KType
  * The `AgentEventHandlerContext` enables implementation of event-driven systems within
  * the AI Agent framework by offering hooks for custom event handling logic tailored to agent operations.
  */
-public interface AgentEventHandlerContext : EventHandlerContext
-
-/**
- * Provides a context for executing transformations and operations within an AI agent's environment.
- *
- * @param TFeature The type of the feature associated with the context.
- * @property strategy The AI agent strategy that defines the workflow and execution logic for the AI agent.
- * @property agent The AI agent being managed or operated upon in the context.
- * @property feature An additional feature or configuration associated with the context.
- */
-public class AgentTransformEnvironmentContext<TFeature>(
-    public val strategy: AIAgentGraphStrategy<*, *>,
-    public val agent: GraphAIAgent<*, *>,
-    public val feature: TFeature
-) : AgentEventHandlerContext {
-    override val eventType: AgentEventType = AgentEventType.TransformEnvironment
-}
+public interface AgentEventContext : AgentLifecycleEventContext
 
 /**
  * Represents the context available during the start of an AI agent.
@@ -39,13 +25,13 @@ public class AgentTransformEnvironmentContext<TFeature>(
  * @property agent The AI agent associated with this context.
  * @property feature The feature-specific data associated with this context.
  */
-public data class AgentStartContext<TFeature>(
+public data class AgentStartingContext<TFeature>(
     public val agent: AIAgent<*, *>,
     public val runId: String,
     public val feature: TFeature,
     public val context: AIAgentContext,
-) : AgentEventHandlerContext {
-    override val eventType: AgentEventType = AgentEventType.BeforeAgentStart
+) : AgentEventContext {
+    override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.AgentStarting
 }
 
 /**
@@ -56,13 +42,13 @@ public data class AgentStartContext<TFeature>(
  * @property result The optional result of the agent's execution, if available.
  * @property resultType [KType] of the [result].
  */
-public data class AgentFinishedContext(
+public data class AgentCompletedContext(
     public val agentId: String,
     public val runId: String,
     public val result: Any?,
     public val resultType: KType,
-) : AgentEventHandlerContext {
-    override val eventType: AgentEventType = AgentEventType.BeforeAgentFinished
+) : AgentEventContext {
+    override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.AgentCompleted
 }
 
 /**
@@ -72,12 +58,12 @@ public data class AgentFinishedContext(
  * @property runId The identifier for the session during which the error occurred.
  * @property throwable The exception or error thrown during the execution.
  */
-public data class AgentRunErrorContext(
+public data class AgentExecutionFailedContext(
     val agentId: String,
     val runId: String,
     val throwable: Throwable
-) : AgentEventHandlerContext {
-    override val eventType: AgentEventType = AgentEventType.AgentRunError
+) : AgentEventContext {
+    override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.AgentExecutionFailed
 }
 
 /**
@@ -85,8 +71,24 @@ public data class AgentRunErrorContext(
  *
  * @property agentId Identifier of the agent that is about to be closed.
  */
-public data class AgentBeforeCloseContext(
+public data class AgentClosingContext(
     val agentId: String,
-) : AgentEventHandlerContext {
-    override val eventType: AgentEventType = AgentEventType.BeforeAgentClose
+) : AgentEventContext {
+    override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.AgentClosing
+}
+
+/**
+ * Provides a context for executing transformations and operations within an AI agent's environment.
+ *
+ * @param TFeature The type of the feature associated with the context.
+ * @property strategy The AI agent strategy that defines the workflow and execution logic for the AI agent.
+ * @property agent The AI agent being managed or operated upon in the context.
+ * @property feature An additional feature or configuration associated with the context.
+ */
+public class AgentEnvironmentTransformingContext<TFeature>(
+    public val strategy: AIAgentGraphStrategy<*, *>,
+    public val agent: GraphAIAgent<*, *>,
+    public val feature: TFeature
+) : AgentEventContext {
+    override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.AgentEnvironmentTransforming
 }

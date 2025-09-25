@@ -1,4 +1,4 @@
-package ai.koog.agents.core.feature.handler
+package ai.koog.agents.core.feature.handler.tool
 
 /**
  * Handler for executing tools with customizable behaviors for tool calls,
@@ -7,7 +7,7 @@ package ai.koog.agents.core.feature.handler
  * This class provides properties that allow defining specific behavior
  * during different stages of a tool's execution process.
  */
-public class ExecuteToolHandler {
+public class ToolExecutionEventHandler {
     /**
      * A variable of type [ToolCallHandler] used to handle tool call operations.
      * It provides a mechanism for executing specific logic when a tool is called
@@ -61,7 +61,7 @@ public fun interface ToolCallHandler {
     /**
      * Handles the execution of a given tool using the provided arguments.
      */
-    public suspend fun handle(eventContext: ToolCallContext)
+    public suspend fun handle(eventContext: ToolExecutionStartingContext)
 }
 
 /**
@@ -72,7 +72,7 @@ public fun interface ToolValidationErrorHandler {
     /**
      * Handles the tool validation error with the provided tool, arguments, and error message.
      */
-    public suspend fun handle(eventContext: ToolValidationErrorContext)
+    public suspend fun handle(eventContext: ToolValidationFailedContext)
 }
 
 /**
@@ -84,7 +84,7 @@ public fun interface ToolCallFailureHandler {
     /**
      * Handles a failure that occurs during the execution of a tool call.
      */
-    public suspend fun handle(eventContext: ToolCallFailureContext)
+    public suspend fun handle(eventContext: ToolExecutionFailedContext)
 }
 
 /**
@@ -96,5 +96,5 @@ public fun interface ToolCallResultHandler {
     /**
      * Handles the execution of a specific tool by processing its arguments and optionally handling its result.
      */
-    public suspend fun handle(eventContext: ToolCallResultContext)
+    public suspend fun handle(eventContext: ToolExecutionCompletedContext)
 }

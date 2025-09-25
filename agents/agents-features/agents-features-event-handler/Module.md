@@ -7,8 +7,8 @@ Provides `EventHandler` feature that allows to listen and react to events in the
 The agents-features-event-handler module provides a powerful event handling system for AI agents, allowing developers to hook into various events in the agent's lifecycle. This enables monitoring, logging, debugging, and extending agent behavior by reacting to specific events during execution.
 
 Key features include:
-- Monitoring agent lifecycle events (creation, start, finish, error)
-- Tracking strategy execution (start, finish)
+- Monitoring agent lifecycle events (creation, start, completion, error)
+- Tracking strategy execution (starting, completed)
 - Observing node processing in the execution graph
 - Intercepting LLM calls and responses
 - Monitoring tool calls, validation errors, failures, and results
@@ -26,17 +26,17 @@ dependencies {
 Then, install the EventHandler feature when creating your agent:
 
 ```kotlin
-val myAgent = AIAgents(
+val myAgent = AIAgent(
     // other configuration parameters
 ) {
     handleEvents {
         // Configure event handlers here
-        onAgentStarted = { strategyName ->
-            println("Agent started with strategy: $strategyName")
+        onAgentStarting { eventContext ->
+            println("Agent starting: ${eventContext.agent.id}")
         }
 
-        onAgentFinished = { strategyName, result ->
-            println("Agent finished with result: $result")
+        onAgentCompleted { eventContext ->
+            println("Agent finished with result: ${eventContext.result}")
         }
     }
 }
@@ -48,7 +48,7 @@ For testing agents with event handling capabilities, you can use the EventHandle
 
 ```kotlin
 // Create a test agent with event handling
-val testAgent = AIAgents(
+val testAgent = AIAgent(
     // other test configuration
 ) {
     // Track events for testing
@@ -56,14 +56,14 @@ val testAgent = AIAgents(
     var agentFinished = false
 
     handleEvents {
-        onToolCall { stage, tool, toolArgs ->
+        onToolExecutionStarting { eventContext ->
             toolCalled = true
-            println("[DEBUG_LOG] Tool called: ${tool.name}")
+            println("[DEBUG_LOG] Tool called: ${eventContext.tool.name}")
         }
 
-        onAgentFinished { strategyName, result ->
+        onAgentCompleted { eventContext ->
             agentFinished = true
-            println("[DEBUG_LOG] Agent finished with result: $result")
+            println("[DEBUG_LOG] Agent finished with result: ${eventContext.result}")
         }
     }
 
@@ -81,39 +81,39 @@ assert(agentFinished) { "Expected agent to finish" }
 Here's an example of using the EventHandler to monitor and log various events during agent execution:
 
 ```kotlin
-val agent = AIAgents(
+val agent = AIAgent(
     // other configuration parameters
 ) {
     handleEvents {
         // Log LLM interactions
-        onBeforeLLMCall { prompt ->
-            println("Sending prompt to LLM: ${prompt.toString().take(100)}...")
+        onLLMCallStarting { eventContext ->
+            println("Sending prompt to LLM: ${eventContext.prompt}")
         }
 
-        onAfterLLMCall { response ->
-            println("Received response from LLM: ${response.take(100)}...")
+        onLLMCallCompleted { eventContext ->
+            println("Received ${eventContext.responses.size} response(s) from LLM")
         }
 
         // Monitor tool usage
-        onToolCall { stage, tool, toolArgs ->
-            println("Tool called: ${tool.name} with args: $toolArgs")
+        onToolExecutionStarting { eventContext ->
+            println("Tool called: ${eventContext.tool.name} with args: ${eventContext.toolArgs}")
         }
 
-        onToolCallResult { stage, tool, toolArgs, result ->
-            println("Tool result: $result")
+        onToolExecutionCompleted { eventContext ->
+            println("Tool result: ${eventContext.result}")
         }
 
-        onToolCallFailure { stage, tool, toolArgs, throwable ->
-            println("Tool failed: ${throwable.message}")
+        onToolExecutionFailed { eventContext ->
+            println("Tool failed: ${eventContext.throwable.message}")
         }
 
         // Track agent progress
-        onStrategyStarted { strategy ->
-            println("Strategy started: ${strategy.name}")
+        onStrategyStarting { eventContext ->
+            println("Strategy started: ${eventContext.strategy.name}")
         }
 
-        onStrategyFinished { strategyName, result ->
-            println("Strategy finished: $strategyName with result: $result")
+        onStrategyCompleted { eventContext ->
+            println("Strategy finished with result: ${eventContext.result}")
         }
     }
 }
