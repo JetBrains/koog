@@ -1,5 +1,6 @@
 package ai.koog.prompt.executor.clients.anthropic
 
+import io.kotest.assertions.json.shouldEqualJson
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
@@ -7,12 +8,11 @@ import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.decodeFromJsonElement
-import kotlinx.serialization.json.doubleOrNull
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import org.junit.jupiter.api.Test
+import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -33,20 +33,28 @@ class AnthropicSerializationTest {
             messages = listOf(
                 AnthropicMessage(
                     role = "user",
-                    content = listOf(AnthropicContent.Text("Hello"))
+                    content = listOf(AnthropicContent.Text("Hello, Claude"))
                 )
             ),
             maxTokens = 1000,
             temperature = 0.7
         )
 
-        val jsonElement = json.encodeToJsonElement(AnthropicMessageRequestSerializer, request)
-        val jsonObject = jsonElement.jsonObject
+        val jsonString = json.encodeToString(AnthropicMessageRequestSerializer, request)
 
-        assertEquals("claude-3", jsonObject["model"]?.jsonPrimitive?.contentOrNull)
-        assertEquals(1000, jsonObject["maxTokens"]?.jsonPrimitive?.intOrNull)
-        assertEquals(0.7, jsonObject["temperature"]?.jsonPrimitive?.doubleOrNull)
-        assertNull(jsonObject["customProperty"])
+        jsonString shouldEqualJson
+            // language=json
+            """
+            {
+                "model": "claude-3",
+                "max_tokens": 1000,
+                "messages": [
+                    {"role": "user", "content": [{ "type": "text", "text": "Hello, Claude"}]}
+                ],
+                "temperature": 0.7,
+                "stream": false
+            }
+            """.trimIndent()
     }
 
     @Test
@@ -74,7 +82,7 @@ class AnthropicSerializationTest {
 
         // Standard properties should be present
         assertEquals("claude-3", jsonObject["model"]?.jsonPrimitive?.contentOrNull)
-        assertEquals(1000, jsonObject["maxTokens"]?.jsonPrimitive?.intOrNull)
+        assertEquals(1000, jsonObject["max_tokens"]?.jsonPrimitive?.intOrNull)
 
         // Additional properties should be flattened to root level
         assertEquals("customValue", jsonObject["customProperty"]?.jsonPrimitive?.contentOrNull)
@@ -100,7 +108,7 @@ class AnthropicSerializationTest {
                     )
                 )
             )
-            put("maxTokens", JsonPrimitive(1000))
+            put("max_tokens", JsonPrimitive(1000))
             put("temperature", JsonPrimitive(0.7))
         }
 
@@ -127,7 +135,7 @@ class AnthropicSerializationTest {
                     )
                 )
             )
-            put("maxTokens", JsonPrimitive(1000))
+            put("max_tokens", JsonPrimitive(1000))
             put("customProperty", JsonPrimitive("customValue"))
             put("customNumber", JsonPrimitive(42))
             put("customBoolean", JsonPrimitive(true))

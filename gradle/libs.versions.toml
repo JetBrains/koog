@@ -7,6 +7,7 @@ dokka = "2.0.0"
 jetsign = "45.47"
 junit = "5.8.2"
 knit = "0.5.0"
+kotest = "6.0.3"
 kotlin = "2.2.10"
 kotlinx-coroutines = "1.10.2"
 kotlinx-datetime = "0.6.2"
@@ -40,6 +41,7 @@ mockito-junit-jupiter = { module = "org.mockito:mockito-junit-jupiter", version.
 assertj-core = { module = "org.assertj:assertj-core", version.ref = "assertj" }
 junit-jupiter-params = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "junit" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
+kotest-assertions-json = { module = "io.kotest:kotest-assertions-json", version.ref = "kotest" }
 kotlin-bom = { module = "org.jetbrains.kotlin:kotlin-bom", version.ref = "kotlin" }
 kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
