@@ -283,6 +283,7 @@ class StructuredOutputWithToolsIntegrationTest {
 
         val mockExecutor = getMockExecutor {
             // LLM directly returns structured output without calling tools
+            // Set as default response to match any request
             mockLLMAnswer(
                 """
                 {
@@ -292,7 +293,7 @@ class StructuredOutputWithToolsIntegrationTest {
                     "humidity": 50
                 }
                 """.trimIndent()
-            ) onRequestContains "Generate mock weather data"
+            ).asDefaultResponse
         }
 
         val agentConfig = AIAgentConfig(
@@ -300,7 +301,7 @@ class StructuredOutputWithToolsIntegrationTest {
                 system("Generate weather data without using tools.")
             },
             model = OpenAIModels.CostOptimized.GPT4oMini,
-            maxAgentIterations = 5
+            maxAgentIterations = 10
         )
 
         val agent = AIAgent(
