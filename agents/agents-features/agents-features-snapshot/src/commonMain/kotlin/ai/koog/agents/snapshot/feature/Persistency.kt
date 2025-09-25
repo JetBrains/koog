@@ -121,9 +121,11 @@ public class Persistency(
 
             pipeline.interceptStrategyStarted(interceptContext) { ctx ->
                 val strategy = ctx.strategy as AIAgentGraphStrategy<*, *>
+
                 require(strategy.metadata.uniqueNames) {
                     "Checkpoint feature requires unique node names in the strategy metadata"
                 }
+
                 val checkpoint = ctx.feature.rollbackToLatestCheckpoint(ctx.context)
 
                 if (checkpoint != null) {
@@ -153,7 +155,9 @@ public class Persistency(
             }
 
             pipeline.interceptStrategyFinished(interceptContext) { ctx ->
-                ctx.feature.createTombstoneCheckpoint(ctx.feature.clock.now())
+                if (config.enableAutomaticPersistency && config.rollbackStrategy == RollbackStrategy.Default) {
+                    ctx.feature.createTombstoneCheckpoint(ctx.feature.clock.now())
+                }
             }
         }
     }
