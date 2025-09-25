@@ -167,6 +167,11 @@ Enables or disables verbose logging for debugging OpenTelemetry configuration. T
 |-----------|-----------|----------|---------------|-----------------------------------------------------------------|
 | `verbose` | `Boolean` | Yes      | `false`       | If true, the application collects more detailed telemetry data. |
 
+!!! note
+
+    When using [Langfuse Exporter](opentelemetry-langfuse-exporter.md), set the value of the `verbose` argument to `true` to see the content of LLM messages in Langfuse. 
+    Otherwise, the message content appears in Langfuse as `HIDDEN:non-empty` for security reasons.
+
 #### setSdk
 
 Injects a pre-configured OpenTelemetrySdk instance.
@@ -174,9 +179,9 @@ Injects a pre-configured OpenTelemetrySdk instance.
 - When you call setSdk(sdk), the provided SDK is used as-is, and any custom configuration applied via addSpanExporter, addSpanProcessor, addResourceAttributes, or setSampler is ignored.
 - The tracer’s instrumentation scope name/version are aligned with your service info.
 
-| Name | Data type         | Required | Description                           |
-|------|-------------------|----------|---------------------------------------|
-| `sdk`| `OpenTelemetrySdk`| Yes      | The SDK instance to use in the agent. |
+| Name  | Data type          | Required | Description                           |
+|-------|--------------------|----------|---------------------------------------|
+| `sdk` | `OpenTelemetrySdk` | Yes      | The SDK instance to use in the agent. |
 
 ### Advanced configuration
 
