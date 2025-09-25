@@ -102,7 +102,7 @@ public class DeepSeekParams(
         user: String? = this.user,
         includeThoughts: Boolean? = this.includeThoughts,
         thinkingBudget: Int? = this.thinkingBudget,
-        additionalProperties : Map<String, JsonElement>? = this.additionalProperties,
+        additionalProperties: Map<String, JsonElement>? = this.additionalProperties,
         frequencyPenalty: Double? = this.frequencyPenalty,
         presencePenalty: Double? = this.presencePenalty,
         logprobs: Boolean? = this.logprobs,

@@ -1,10 +1,7 @@
 package ai.koog.prompt.executor.clients.google
 
-import ai.koog.prompt.executor.clients.google.GoogleFunctionCallingMode.ANY
-import ai.koog.prompt.executor.clients.google.GoogleFunctionCallingMode.AUTO
-import ai.koog.prompt.executor.clients.google.GoogleFunctionCallingMode.NONE
-import ai.koog.utils.serializers.ByteArrayAsBase64Serializer
 import ai.koog.prompt.executor.clients.serialization.AdditionalPropertiesFlatteningSerializer
+import ai.koog.utils.serializers.ByteArrayAsBase64Serializer
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

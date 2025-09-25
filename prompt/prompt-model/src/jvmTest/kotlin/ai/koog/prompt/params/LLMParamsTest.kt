@@ -1,6 +1,5 @@
 package ai.koog.prompt.params
 
-import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -9,7 +8,6 @@ import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
-import kotlin.collections.mapOf
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
