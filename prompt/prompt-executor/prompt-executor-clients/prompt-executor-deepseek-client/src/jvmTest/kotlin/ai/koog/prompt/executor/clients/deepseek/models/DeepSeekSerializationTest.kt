@@ -124,8 +124,6 @@ class DeepSeekSerializationTest {
             put("customBoolean", JsonPrimitive(true))
         }
 
-        println(jsonInput.toString())
-
         val request = json.decodeFromJsonElement(DeepSeekChatCompletionRequestSerializer, jsonInput)
 
         assertEquals("deepseek-chat", request.model)
