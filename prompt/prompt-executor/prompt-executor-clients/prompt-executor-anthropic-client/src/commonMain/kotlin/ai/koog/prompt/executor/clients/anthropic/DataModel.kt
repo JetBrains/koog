@@ -29,11 +29,15 @@ import kotlinx.serialization.json.JsonObject
 public data class AnthropicMessageRequest(
     val model: String,
     val messages: List<AnthropicMessage>,
+    @SerialName("max_tokens")
+    @EncodeDefault
     val maxTokens: Int = MAX_TOKENS_DEFAULT,
     val temperature: Double? = null,
     val system: List<SystemAnthropicMessage>? = null,
     val tools: List<AnthropicTool>? = null,
+    @EncodeDefault
     val stream: Boolean = false,
+    @SerialName("tool_choice")
     val toolChoice: AnthropicToolChoice? = null,
     val additionalProperties: Map<String, JsonElement>? = null,
 ) {
