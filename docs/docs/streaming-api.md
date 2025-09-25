@@ -155,15 +155,23 @@ handleEvents {
     onToolExecutionStarting { context ->
         println("\n🔧 Using ${context.tool.name} with ${context.toolArgs}... ")
     }
+
+    onLLMCallStarting { context ->
+        // This is called before both regular and streaming LLM calls
+        println("📡 Starting LLM call...")
+    }
+
     onLLMStreamingFrameReceived { context ->
         (context.streamFrame as? StreamFrame.Append)?.let { frame ->
             print(frame.text)
         }
     }
+
     onLLMStreamingFailed { context -> 
         println("❌ Error: ${context.error}")
     }
-    onLLMStreamingCompleted {
+
+    onLLMCallCompleted {
         println("🏁 Done")
     }
 }

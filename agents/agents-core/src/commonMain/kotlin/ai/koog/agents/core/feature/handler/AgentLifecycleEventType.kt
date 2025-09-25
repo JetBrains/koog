@@ -111,11 +111,6 @@ public sealed interface AgentLifecycleEventType {
     //region LLM Streaming
 
     /**
-     * Represents an event triggered before streaming from a language model begins.
-     */
-    public object LLMStreamingStarting : AgentLifecycleEventType
-
-    /**
      * Represents an event triggered when a streaming frame is received from a language model.
      */
     public object LLMStreamingFrameReceived : AgentLifecycleEventType
@@ -124,11 +119,6 @@ public sealed interface AgentLifecycleEventType {
      * Represents an event triggered when an error occurs during streaming from a language model.
      */
     public object LLMStreamingFailed : AgentLifecycleEventType
-
-    /**
-     * Represents an event triggered after streaming from a language model completes.
-     */
-    public object LLMStreamingCompleted : AgentLifecycleEventType
 
     //endregion LLM Streaming
 }

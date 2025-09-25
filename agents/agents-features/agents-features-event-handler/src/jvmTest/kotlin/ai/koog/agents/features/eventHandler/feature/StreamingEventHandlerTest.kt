@@ -14,8 +14,8 @@ import kotlin.test.Test
 import kotlin.test.assertTrue
 
 /**
- * Tests for streaming event handlers.
- * These tests verify that the streaming handlers (onBeforeStream, onStreamFrame, onAfterStream)
+ * Tests for streaming functionality with event handlers.
+ * These tests verify that LLM handlers (onBeforeLLMCall, onAfterLLMCall)
  * are properly invoked during LLM streaming operations.
  */
 class StreamingEventHandlerTest {
@@ -35,14 +35,14 @@ class StreamingEventHandlerTest {
         // Verify events are captured
         assertEventsCollected(eventsCollector)
 
-        // Verify streaming events are captured when using nodeLLMRequestsStreaming
-        val beforeStreamEvents = eventsCollector.collectedEvents.filter { it.contains("OnBeforeStream") }
+        // Verify LLM events are captured when using nodeLLMRequestsStreaming
+        val beforeLLMEvents = eventsCollector.collectedEvents.filter { it.contains("OnBeforeLLMCall") }
+        val afterLLMEvents = eventsCollector.collectedEvents.filter { it.contains("OnAfterLLMCall") }
         val streamFrameEvents = eventsCollector.collectedEvents.filter { it.contains("OnStreamFrame") }
-        val afterStreamEvents = eventsCollector.collectedEvents.filter { it.contains("OnAfterStream") }
 
-        assertTrue(beforeStreamEvents.isNotEmpty(), "Should have OnBeforeStream events")
+        assertTrue(beforeLLMEvents.isNotEmpty(), "Should have OnBeforeLLMCall events for streaming")
+        assertTrue(afterLLMEvents.isNotEmpty(), "Should have OnAfterLLMCall events for streaming")
         assertTrue(streamFrameEvents.isNotEmpty(), "Should have OnStreamFrame events")
-        assertTrue(afterStreamEvents.isNotEmpty(), "Should have OnAfterStream events")
 
         // Verify the stream frame contains the expected response
         val frameWithContent = streamFrameEvents.firstOrNull { it.contains(assistantResponse) }
@@ -62,11 +62,11 @@ class StreamingEventHandlerTest {
         }
         // Verify the overall event collection is working
         assertEventsCollected(eventsCollector)
-        // Verify that streaming events were captured
-        val streamingEventTypes = listOf("OnBeforeStream", "OnStreamFrame", "OnAfterStream")
+        // Verify that both LLM and streaming events were captured
+        val eventTypes = listOf("OnBeforeLLMCall", "OnAfterLLMCall", "OnStreamFrame")
         assertTrue(
-            actual = eventsCollector.collectedEvents.any { streamingEventTypes.any(it::contains) },
-            message = "Should have captured at least one streaming event (${streamingEventTypes.joinToString()})"
+            actual = eventsCollector.collectedEvents.any { eventTypes.any(it::contains) },
+            message = "Should have captured at least one event for streaming (${eventTypes.joinToString()})"
         )
     }
 }

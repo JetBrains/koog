@@ -14,9 +14,7 @@ import ai.koog.agents.core.feature.handler.llm.LLMCallStartingContext
 import ai.koog.agents.core.feature.handler.node.NodeExecutionCompletedContext
 import ai.koog.agents.core.feature.handler.node.NodeExecutionFailedContext
 import ai.koog.agents.core.feature.handler.node.NodeExecutionStartingContext
-import ai.koog.agents.core.feature.handler.streaming.LLMStreamingCompletedContext
 import ai.koog.agents.core.feature.handler.streaming.LLMStreamingFrameReceivedContext
-import ai.koog.agents.core.feature.handler.streaming.LLMStreamingStartingContext
 import ai.koog.agents.core.feature.handler.tool.ToolExecutionCompletedContext
 import ai.koog.agents.core.feature.handler.tool.ToolExecutionFailedContext
 import ai.koog.agents.core.feature.handler.tool.ToolExecutionStartingContext
@@ -163,20 +161,12 @@ public class EventHandler {
                 config.invokeOnToolExecutionCompleted(eventContext)
             }
 
-            pipeline.interceptLLMStreamingStarting(interceptContext) intercept@{ eventContext: LLMStreamingStartingContext ->
-                config.invokeOnLLMStreammingStarting(eventContext)
-            }
-
             pipeline.interceptLLMStreamingFrameReceived(interceptContext) intercept@{ eventContext: LLMStreamingFrameReceivedContext ->
                 config.invokeOnLLMStreamingFrameReceived(eventContext)
             }
 
             pipeline.interceptLLMStreamingFailed(interceptContext) intercept@{ eventContext ->
                 config.invokeOnLLMStreamingFailed(eventContext)
-            }
-
-            pipeline.interceptLLMStreamingCompleted(interceptContext) intercept@{ eventContext: LLMStreamingCompletedContext ->
-                config.invokeOnLLMStreamingCompleted(eventContext)
             }
         }
 

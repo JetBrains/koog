@@ -6,6 +6,7 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolResult
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.modelcontextprotocol.kotlin.sdk.PromptMessageContent
+import io.modelcontextprotocol.kotlin.sdk.TextContent
 import io.modelcontextprotocol.kotlin.sdk.client.Client
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
@@ -117,7 +118,10 @@ public class McpTool(
 
             // Format each content item and join them with newlines
             return promptMessageContents.joinToString("\n") { content ->
-                content.toString()
+                when (content) {
+                    is TextContent -> content.text ?: ""
+                    else -> content.toString()
+                }
             }
         }
     }

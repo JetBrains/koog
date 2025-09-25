@@ -31,18 +31,21 @@ fun main(): Unit = runBlocking {
     }
     val agent = openAiAgent(toolRegistry) {
         handleEvents {
-            onToolCall { context ->
+            onToolExecutionStarting { context ->
                 println("\n🔧 Using ${context.tool.name} with ${context.toolArgs}... ")
             }
+
             onLLMStreamingFrameReceived { context ->
                 (context.streamFrame as? StreamFrame.Append)?.let { frame ->
                     print(frame.text)
                 }
             }
+
             onLLMStreamingFailed {
                 println("❌ Error: ${it.error}")
             }
-            onLLMStreamingCompleted {
+
+            onLLMCallCompleted {
                 println("")
             }
         }

@@ -32,15 +32,11 @@ import ai.koog.agents.core.feature.handler.strategy.StrategyCompletedHandler
 import ai.koog.agents.core.feature.handler.strategy.StrategyEventHandler
 import ai.koog.agents.core.feature.handler.strategy.StrategyStartingContext
 import ai.koog.agents.core.feature.handler.strategy.StrategyStartingHandler
-import ai.koog.agents.core.feature.handler.streaming.LLMStreamingCompletedContext
-import ai.koog.agents.core.feature.handler.streaming.LLMStreamingCompletedHandler
 import ai.koog.agents.core.feature.handler.streaming.LLMStreamingEventHandler
 import ai.koog.agents.core.feature.handler.streaming.LLMStreamingFailedContext
 import ai.koog.agents.core.feature.handler.streaming.LLMStreamingFailedHandler
 import ai.koog.agents.core.feature.handler.streaming.LLMStreamingFrameReceivedContext
 import ai.koog.agents.core.feature.handler.streaming.LLMStreamingFrameReceivedHandler
-import ai.koog.agents.core.feature.handler.streaming.LLMStreamingStartingContext
-import ai.koog.agents.core.feature.handler.streaming.LLMStreamingStartingHandler
 import ai.koog.agents.core.feature.handler.tool.ToolCallFailureHandler
 import ai.koog.agents.core.feature.handler.tool.ToolCallHandler
 import ai.koog.agents.core.feature.handler.tool.ToolCallResultHandler
@@ -438,22 +434,6 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
     //region Trigger LLM Streaming
 
     /**
-     * Invoked before streaming from a language model begins.
-     *
-     * This method notifies all registered stream handlers that streaming is about to start,
-     * allowing them to perform preprocessing or logging operations.
-     *
-     * @param runId The unique identifier for this streaming session
-     * @param prompt The prompt being sent to the language model
-     * @param model The language model being used for streaming
-     * @param tools The list of available tool descriptors for this streaming session
-     */
-    public suspend fun onLLMStreamingStarting(runId: String, prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>) {
-        val eventContext = LLMStreamingStartingContext(runId, prompt, model, tools)
-        llmStreamingEventHandlers.values.forEach { handler -> handler.llmStreamingStartingHandler.handle(eventContext) }
-    }
-
-    /**
      * Invoked when a stream frame is received during the streaming process.
      *
      * This method notifies all registered stream handlers about each incoming stream frame,
@@ -479,27 +459,6 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
     public suspend fun onLLMStreamingFailed(runId: String, throwable: Throwable) {
         val eventContext = LLMStreamingFailedContext(runId, throwable)
         llmStreamingEventHandlers.values.forEach { handler -> handler.llmStreamingFailedHandler.handle(eventContext) }
-    }
-
-    /**
-     * Invoked after streaming from a language model completes.
-     *
-     * This method notifies all registered stream handlers that streaming has finished,
-     * allowing them to perform post-processing, cleanup, or final logging operations.
-     *
-     * @param runId The unique identifier for this streaming session
-     * @param prompt The prompt that was sent to the language model
-     * @param model The language model that was used for streaming
-     * @param tools The list of tool descriptors that were available for this streaming session
-     */
-    public suspend fun onLLMStreamingCompleted(
-        runId: String,
-        prompt: Prompt,
-        model: LLModel,
-        tools: List<ToolDescriptor>
-    ) {
-        val eventContext = LLMStreamingCompletedContext(runId, prompt, model, tools)
-        llmStreamingEventHandlers.values.forEach { handler -> handler.llmStreamingCompletedHandler.handle(eventContext) }
     }
 
     //endregion Trigger LLM Streaming
@@ -769,32 +728,6 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
     }
 
     /**
-     * Intercepts streaming operations before they begin to modify or log the streaming request.
-     *
-     * This method allows features to hook into the streaming pipeline before streaming starts,
-     * enabling preprocessing, validation, or logging of streaming requests.
-     *
-     * @param interceptContext The context containing the feature and its implementation
-     * @param handle The handler that processes before-stream events
-     *
-     * Example:
-     * ```
-     * pipeline.interceptLLMStreamingStarting(interceptContext) { eventContext ->
-     *     logger.info("About to start streaming with prompt: ${eventContext.prompt.messages.last().content}")
-     * }
-     * ```
-     */
-    public fun <TFeature : Any> interceptLLMStreamingStarting(
-        interceptContext: InterceptContext<TFeature>,
-        handle: suspend TFeature.(eventContext: LLMStreamingStartingContext) -> Unit
-    ) {
-        val handler = llmStreamingEventHandlers.getOrPut(interceptContext.feature.key) { LLMStreamingEventHandler() }
-        handler.llmStreamingStartingHandler = LLMStreamingStartingHandler(
-            function = createConditionalHandler(interceptContext, handle)
-        )
-    }
-
-    /**
      * Intercepts stream frames as they are received during the streaming process.
      *
      * This method allows features to process individual stream frames in real-time,
@@ -832,32 +765,6 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
     ) {
         val handler = llmStreamingEventHandlers.getOrPut(interceptContext.feature.key) { LLMStreamingEventHandler() }
         handler.llmStreamingFailedHandler = LLMStreamingFailedHandler(
-            function = createConditionalHandler(interceptContext, handle)
-        )
-    }
-
-    /**
-     * Intercepts streaming operations after they complete to perform post-processing or cleanup.
-     *
-     * This method allows features to hook into the streaming pipeline after streaming finishes,
-     * enabling post-processing, cleanup, or final logging of the streaming session.
-     *
-     * @param interceptContext The context containing the feature and its implementation
-     * @param handle The handler that processes after-stream events
-     *
-     * Example:
-     * ```
-     * pipeline.interceptLLMStreamingCompleted(interceptContext) { eventContext ->
-     *     logger.info("Streaming completed for run: ${eventContext.runId}")
-     * }
-     * ```
-     */
-    public fun <TFeature : Any> interceptLLMStreamingCompleted(
-        interceptContext: InterceptContext<TFeature>,
-        handle: suspend TFeature.(eventContext: LLMStreamingCompletedContext) -> Unit
-    ) {
-        val handler = llmStreamingEventHandlers.getOrPut(interceptContext.feature.key) { LLMStreamingEventHandler() }
-        handler.llmStreamingCompletedHandler = LLMStreamingCompletedHandler(
             function = createConditionalHandler(interceptContext, handle)
         )
     }

@@ -5,6 +5,7 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
+import io.modelcontextprotocol.kotlin.sdk.ImageContent
 import io.modelcontextprotocol.kotlin.sdk.TextContent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.runTest
@@ -103,5 +104,55 @@ class McpToolTest {
 
         val contentWithTitle = resultWithTitle.promptMessageContents.first() as TextContent
         assertEquals("Hello, Mr. Test!", contentWithTitle.text)
+    }
+
+    @Test
+    fun `test McpTool Result toStringDefault with empty content`() {
+        val result = McpTool.Result(emptyList())
+        assertEquals("[No content]", result.toStringDefault())
+    }
+
+    @Test
+    fun `test McpTool Result toStringDefault with single TextContent`() {
+        val content = TextContent("Hello, World!")
+        val result = McpTool.Result(listOf(content))
+        assertEquals("Hello, World!", result.toStringDefault())
+    }
+
+    @Test
+    fun `test McpTool Result toStringDefault with null text in TextContent`() {
+        val content = TextContent(null)
+        val result = McpTool.Result(listOf(content))
+        assertEquals("", result.toStringDefault())
+    }
+
+    @Test
+    fun `test McpTool Result toStringDefault with multiple TextContent`() {
+        val content1 = TextContent("First line")
+        val content2 = TextContent("Second line")
+        val content3 = TextContent("Third line")
+        val result = McpTool.Result(listOf(content1, content2, content3))
+        assertEquals("First line\nSecond line\nThird line", result.toStringDefault())
+    }
+
+    @Test
+    fun `test McpTool Result toStringDefault with mixed content types`() {
+        val textContent = TextContent("Some text")
+        val imageContent = ImageContent("image/png", "base64data")
+        val result = McpTool.Result(listOf(textContent, imageContent))
+        val resultString = result.toStringDefault()
+
+        // The string should contain the text content and the toString representation of the image
+        assert(resultString.contains("Some text"))
+        assert(resultString.contains("ImageContent"))
+    }
+
+    @Test
+    fun `test McpTool Result toStringDefault with mixed null and non-null text`() {
+        val content1 = TextContent("Valid text")
+        val content2 = TextContent(null)
+        val content3 = TextContent("Another text")
+        val result = McpTool.Result(listOf(content1, content2, content3))
+        assertEquals("Valid text\n\nAnother text", result.toStringDefault())
     }
 }

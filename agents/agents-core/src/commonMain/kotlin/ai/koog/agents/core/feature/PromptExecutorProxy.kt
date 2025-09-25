@@ -8,6 +8,7 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.streaming.toMessageResponses
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -48,9 +49,8 @@ public class PromptExecutorProxy(
      * Executes a streaming call to the language model with tool support.
      *
      * This method wraps the underlying executor's streaming functionality with pipeline hooks
-     * to enable monitoring and processing of stream events. It triggers before-stream handlers
-     * before starting, stream-frame handlers for each frame received, and after-stream handlers
-     * upon completion.
+     * to enable monitoring and processing of stream events. It triggers before-LLM handlers
+     * before starting and after-LLM handlers upon completion.
      *
      * @param prompt The prompt to send to the language model
      * @param model The language model to use for streaming
@@ -63,10 +63,12 @@ public class PromptExecutorProxy(
         tools: List<ToolDescriptor>
     ): Flow<StreamFrame> {
         logger.debug { "Executing LLM streaming call (prompt: $prompt, tools: [${tools.joinToString { it.name }}])" }
+
+        val responses = mutableListOf<StreamFrame>()
         return executor.executeStreaming(prompt, model, tools)
             .onStart {
                 logger.debug { "Starting LLM streaming call" }
-                pipeline.onLLMStreamingStarting(runId, prompt, model, tools)
+                pipeline.onLLMCallStarting(runId, prompt, model, tools)
             }
             .onEach {
                 logger.debug { "Received frame from LLM streaming call: $it" }
@@ -79,7 +81,13 @@ public class PromptExecutorProxy(
             }
             .onCompletion { error ->
                 logger.debug(error) { "Finished LLM streaming call" }
-                pipeline.onLLMStreamingCompleted(runId, prompt, model, tools)
+                pipeline.onLLMCallCompleted(
+                    runId,
+                    prompt,
+                    model,
+                    tools,
+                    responses.toMessageResponses()
+                )
             }
     }
 

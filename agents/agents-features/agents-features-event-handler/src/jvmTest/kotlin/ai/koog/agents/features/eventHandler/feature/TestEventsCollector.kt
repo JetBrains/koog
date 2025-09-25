@@ -114,14 +114,6 @@ class TestEventsCollector {
             )
         }
 
-        onLLMStreamingStarting { eventContext ->
-            _collectedEvents.add(
-                "OnBeforeStream (run id: ${eventContext.runId}, prompt: ${eventContext.prompt.traceString}, model: ${eventContext.model.eventString}, tools: [${
-                    eventContext.tools.joinToString { it.name }
-                }])"
-            )
-        }
-
         onLLMStreamingFrameReceived { eventContext ->
             _collectedEvents.add(
                 "OnStreamFrame (run id: ${eventContext.runId}, frame: ${eventContext.streamFrame})"
@@ -131,14 +123,6 @@ class TestEventsCollector {
         onLLMStreamingFailed { eventContext ->
             _collectedEvents.add(
                 "OnStreamError (run id: ${eventContext.runId}, error: ${eventContext.error.message})"
-            )
-        }
-
-        onLLMStreamingCompleted { eventContext ->
-            _collectedEvents.add(
-                "OnAfterStream (run id: ${eventContext.runId}, prompt: ${eventContext.prompt.traceString}, model: ${eventContext.model.eventString}, tools: [${
-                    eventContext.tools.joinToString { it.name }
-                }])"
             )
         }
     }

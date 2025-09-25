@@ -27,10 +27,8 @@ import ai.koog.agents.core.feature.handler.node.NodeExecutionFailedContext
 import ai.koog.agents.core.feature.handler.node.NodeExecutionStartingContext
 import ai.koog.agents.core.feature.handler.strategy.StrategyCompletedContext
 import ai.koog.agents.core.feature.handler.strategy.StrategyStartingContext
-import ai.koog.agents.core.feature.handler.streaming.LLMStreamingCompletedContext
 import ai.koog.agents.core.feature.handler.streaming.LLMStreamingFailedContext
 import ai.koog.agents.core.feature.handler.streaming.LLMStreamingFrameReceivedContext
-import ai.koog.agents.core.feature.handler.streaming.LLMStreamingStartingContext
 import ai.koog.agents.core.feature.handler.tool.ToolExecutionCompletedContext
 import ai.koog.agents.core.feature.handler.tool.ToolExecutionFailedContext
 import ai.koog.agents.core.feature.handler.tool.ToolExecutionStartingContext
@@ -113,13 +111,9 @@ public class EventHandlerConfig : FeatureConfig() {
 
     //region Private Stream Handlers
 
-    private var _onLLMStreamingStarting: suspend (eventHandler: LLMStreamingStartingContext) -> Unit = { _ -> }
-
     private var _onLLMStreamingFrameReceived: suspend (eventHandler: LLMStreamingFrameReceivedContext) -> Unit = { _ -> }
 
     private var _onLLMStreamingFailed: suspend (eventHandler: LLMStreamingFailedContext) -> Unit = { _ -> }
-
-    private var _onLLMStreamingCompleted: suspend (eventHandler: LLMStreamingCompletedContext) -> Unit = { _ -> }
 
     //endregion Private Stream Handlers
 
@@ -312,31 +306,6 @@ public class EventHandlerConfig : FeatureConfig() {
     //region Stream Handlers
 
     /**
-     * Registers a handler to be invoked before streaming from a language model begins.
-     *
-     * This handler is called immediately before starting a streaming operation,
-     * allowing you to perform preprocessing, validation, or logging of the streaming request.
-     *
-     * @param handler The handler function that receives a [LLMStreamingStartingContext] containing
-     *                the run ID, prompt, model, and available tools for the streaming session.
-     *
-     * Example:
-     * ```
-     * onLLMStreamingStarting { eventContext ->
-     *     logger.info("Starting stream for run: ${eventContext.runId}")
-     *     logger.debug("Prompt: ${eventContext.prompt}")
-     * }
-     * ```
-     */
-    public fun onLLMStreamingStarting(handler: suspend (eventContext: LLMStreamingStartingContext) -> Unit) {
-        val originalHandler = this._onLLMStreamingStarting
-        this._onLLMStreamingStarting = { eventContext ->
-            originalHandler(eventContext)
-            handler.invoke(eventContext)
-        }
-    }
-
-    /**
      * Registers a handler to be invoked when stream frames are received during streaming.
      *
      * This handler is called for each stream frame as it arrives from the language model,
@@ -382,31 +351,6 @@ public class EventHandlerConfig : FeatureConfig() {
     public fun onLLMStreamingFailed(handler: suspend (eventContext: LLMStreamingFailedContext) -> Unit) {
         val originalHandler = this._onLLMStreamingFailed
         this._onLLMStreamingFailed = { eventContext ->
-            originalHandler(eventContext)
-            handler.invoke(eventContext)
-        }
-    }
-
-    /**
-     * Registers a handler to be invoked after streaming from a language model completes.
-     *
-     * This handler is called when the streaming operation finishes,
-     * allowing you to perform post-processing, cleanup, or final logging operations.
-     *
-     * @param handler The handler function that receives an [LLMStreamingCompletedContext] containing
-     *                the run ID, prompt, model, and tools that were used for the streaming session.
-     *
-     * Example:
-     * ```
-     * onLLMStreamingCompleted { eventContext ->
-     *     logger.info("Stream completed for run: ${eventContext.runId}")
-     *     // Perform any cleanup or aggregation of collected stream data
-     * }
-     * ```
-     */
-    public fun onLLMStreamingCompleted(handler: suspend (eventContext: LLMStreamingCompletedContext) -> Unit) {
-        val originalHandler = this._onLLMStreamingCompleted
-        this._onLLMStreamingCompleted = { eventContext ->
             originalHandler(eventContext)
             handler.invoke(eventContext)
         }
@@ -712,15 +656,6 @@ public class EventHandlerConfig : FeatureConfig() {
     //region Invoke Stream Handlers
 
     /**
-     * Invokes the handler associated with the event that occurs before streaming starts.
-     *
-     * @param eventContext The context containing information about the streaming session about to begin
-     */
-    internal suspend fun invokeOnLLMStreammingStarting(eventContext: LLMStreamingStartingContext) {
-        _onLLMStreamingStarting.invoke(eventContext)
-    }
-
-    /**
      * Invokes the handler associated with stream frame events during streaming.
      *
      * @param eventContext The context containing the stream frame data
@@ -736,15 +671,6 @@ public class EventHandlerConfig : FeatureConfig() {
      */
     internal suspend fun invokeOnLLMStreamingFailed(eventContext: LLMStreamingFailedContext) {
         _onLLMStreamingFailed.invoke(eventContext)
-    }
-
-    /**
-     * Invokes the handler associated with the event that occurs after streaming completes.
-     *
-     * @param eventContext The context containing information about the completed streaming session
-     */
-    internal suspend fun invokeOnLLMStreamingCompleted(eventContext: LLMStreamingCompletedContext) {
-        _onLLMStreamingCompleted.invoke(eventContext)
     }
 
     //endregion Invoke Stream Handlers
