@@ -3,21 +3,21 @@ package ai.koog.agents.features.tracing.writer
 import ai.koog.agents.core.feature.message.FeatureEvent
 import ai.koog.agents.core.feature.message.FeatureMessage
 import ai.koog.agents.core.feature.model.FeatureStringMessage
-import ai.koog.agents.core.feature.model.events.AIAgentBeforeCloseEvent
-import ai.koog.agents.core.feature.model.events.AIAgentFinishedEvent
-import ai.koog.agents.core.feature.model.events.AIAgentNodeExecutionEndEvent
-import ai.koog.agents.core.feature.model.events.AIAgentNodeExecutionErrorEvent
-import ai.koog.agents.core.feature.model.events.AIAgentNodeExecutionStartEvent
-import ai.koog.agents.core.feature.model.events.AIAgentRunErrorEvent
-import ai.koog.agents.core.feature.model.events.AIAgentStartedEvent
-import ai.koog.agents.core.feature.model.events.AIAgentStrategyFinishedEvent
-import ai.koog.agents.core.feature.model.events.AIAgentStrategyStartEvent
-import ai.koog.agents.core.feature.model.events.AfterLLMCallEvent
-import ai.koog.agents.core.feature.model.events.BeforeLLMCallEvent
-import ai.koog.agents.core.feature.model.events.ToolCallEvent
-import ai.koog.agents.core.feature.model.events.ToolCallFailureEvent
-import ai.koog.agents.core.feature.model.events.ToolCallResultEvent
-import ai.koog.agents.core.feature.model.events.ToolValidationErrorEvent
+import ai.koog.agents.core.feature.model.events.AgentClosingEvent
+import ai.koog.agents.core.feature.model.events.AgentCompletedEvent
+import ai.koog.agents.core.feature.model.events.AgentExecutionFailedEvent
+import ai.koog.agents.core.feature.model.events.AgentStartingEvent
+import ai.koog.agents.core.feature.model.events.LLMCallCompletedEvent
+import ai.koog.agents.core.feature.model.events.LLMCallStartingEvent
+import ai.koog.agents.core.feature.model.events.NodeExecutionCompletedEvent
+import ai.koog.agents.core.feature.model.events.NodeExecutionFailedEvent
+import ai.koog.agents.core.feature.model.events.NodeExecutionStartingEvent
+import ai.koog.agents.core.feature.model.events.StrategyCompletedEvent
+import ai.koog.agents.core.feature.model.events.StrategyStartingEvent
+import ai.koog.agents.core.feature.model.events.ToolExecutionCompletedEvent
+import ai.koog.agents.core.feature.model.events.ToolExecutionFailedEvent
+import ai.koog.agents.core.feature.model.events.ToolExecutionStartingEvent
+import ai.koog.agents.core.feature.model.events.ToolValidationFailedEvent
 import ai.koog.agents.features.tracing.traceString
 
 @Suppress("UnusedReceiverParameter")
@@ -31,73 +31,73 @@ internal val FeatureEvent.featureEvent
 internal val FeatureStringMessage.featureStringMessage
     get() = "Feature string message (message: $message)"
 
-internal val AIAgentStartedEvent.agentStartedEventFormat
+internal val AgentStartingEvent.agentStartedEventFormat
     get() = "$eventId (agent id: $agentId, run id: $runId)"
 
-internal val AIAgentFinishedEvent.agentFinishedEventFormat
+internal val AgentCompletedEvent.agentFinishedEventFormat
     get() = "$eventId (agent id: $agentId, run id: $runId, result: $result)"
 
-internal val AIAgentRunErrorEvent.agentRunErrorEventFormat
+internal val AgentExecutionFailedEvent.agentRunErrorEventFormat
     get() = "$eventId (agent id: $agentId, run id: $runId, error: ${error.message})"
 
-internal val AIAgentBeforeCloseEvent.agentBeforeCloseFormat
+internal val AgentClosingEvent.agentBeforeCloseFormat
     get() = "$eventId (agent id: $agentId)"
 
-internal val AIAgentStrategyStartEvent.strategyStartEventFormat
+internal val StrategyStartingEvent.strategyStartEventFormat
     get() = "$eventId (run id: $runId, strategy: $strategyName)"
 
-internal val AIAgentStrategyFinishedEvent.strategyFinishedEventFormat
+internal val StrategyCompletedEvent.strategyFinishedEventFormat
     get() = "$eventId (run id: $runId, strategy: $strategyName, result: $result)"
 
-internal val AIAgentNodeExecutionStartEvent.nodeExecutionStartEventFormat
+internal val NodeExecutionStartingEvent.nodeExecutionStartEventFormat
     get() = "$eventId (run id: $runId, node: $nodeName, input: $input)"
 
-internal val AIAgentNodeExecutionEndEvent.nodeExecutionEndEventFormat
+internal val NodeExecutionCompletedEvent.nodeExecutionEndEventFormat
     get() = "$eventId (run id: $runId, node: $nodeName, input: $input, output: $output)"
 
-internal val AIAgentNodeExecutionErrorEvent.nodeExecutionErrorEventFormat
+internal val NodeExecutionFailedEvent.nodeExecutionErrorEventFormat
     get() = "$eventId (run id: $runId, node: $nodeName, error: ${error.message})"
 
-internal val BeforeLLMCallEvent.beforeLLMCallEventFormat
+internal val LLMCallStartingEvent.beforeLLMCallEventFormat
     get() = "$eventId (run id: $runId, prompt: ${prompt.traceString}, model: $model, tools: [${tools.joinToString()}])"
 
-internal val AfterLLMCallEvent.afterLLMCallEventFormat
+internal val LLMCallCompletedEvent.afterLLMCallEventFormat
     get() = "$eventId (run id: $runId, prompt: ${prompt.traceString}, model: $model, responses: [${
         responses.joinToString {
             "{${it.traceString}}"
         }
     }])"
 
-internal val ToolCallEvent.toolCallEventFormat
+internal val ToolExecutionStartingEvent.toolCallEventFormat
     get() = "$eventId (run id: $runId, tool: $toolName, tool args: $toolArgs)"
 
-internal val ToolValidationErrorEvent.toolValidationErrorEventFormat
+internal val ToolValidationFailedEvent.toolValidationErrorEventFormat
     get() = "$eventId (run id: $runId, tool: $toolName, tool args: $toolArgs, validation error: $error)"
 
-internal val ToolCallFailureEvent.toolCallFailureEventFormat
+internal val ToolExecutionFailedEvent.toolCallFailureEventFormat
     get() = "$eventId (run id: $runId, tool: $toolName, tool args: $toolArgs, error: ${error.message})"
 
-internal val ToolCallResultEvent.toolCallResultEventFormat
+internal val ToolExecutionCompletedEvent.toolCallResultEventFormat
     get() = "$eventId (run id: $runId, tool: $toolName, tool args: $toolArgs, result: $result)"
 
 internal val FeatureMessage.traceMessage: String
     get() {
         return when (this) {
-            is AIAgentStartedEvent -> this.agentStartedEventFormat
-            is AIAgentFinishedEvent -> this.agentFinishedEventFormat
-            is AIAgentRunErrorEvent -> this.agentRunErrorEventFormat
-            is AIAgentBeforeCloseEvent -> this.agentBeforeCloseFormat
-            is AIAgentStrategyStartEvent -> this.strategyStartEventFormat
-            is AIAgentStrategyFinishedEvent -> this.strategyFinishedEventFormat
-            is AIAgentNodeExecutionStartEvent -> this.nodeExecutionStartEventFormat
-            is AIAgentNodeExecutionEndEvent -> this.nodeExecutionEndEventFormat
-            is AIAgentNodeExecutionErrorEvent -> this.nodeExecutionErrorEventFormat
-            is BeforeLLMCallEvent -> this.beforeLLMCallEventFormat
-            is AfterLLMCallEvent -> this.afterLLMCallEventFormat
-            is ToolCallEvent -> this.toolCallEventFormat
-            is ToolValidationErrorEvent -> this.toolValidationErrorEventFormat
-            is ToolCallFailureEvent -> this.toolCallFailureEventFormat
-            is ToolCallResultEvent -> this.toolCallResultEventFormat
+            is AgentStartingEvent -> this.agentStartedEventFormat
+            is AgentCompletedEvent -> this.agentFinishedEventFormat
+            is AgentExecutionFailedEvent -> this.agentRunErrorEventFormat
+            is AgentClosingEvent -> this.agentBeforeCloseFormat
+            is StrategyStartingEvent -> this.strategyStartEventFormat
+            is StrategyCompletedEvent -> this.strategyFinishedEventFormat
+            is NodeExecutionStartingEvent -> this.nodeExecutionStartEventFormat
+            is NodeExecutionCompletedEvent -> this.nodeExecutionEndEventFormat
+            is NodeExecutionFailedEvent -> this.nodeExecutionErrorEventFormat
+            is LLMCallStartingEvent -> this.beforeLLMCallEventFormat
+            is LLMCallCompletedEvent -> this.afterLLMCallEventFormat
+            is ToolExecutionStartingEvent -> this.toolCallEventFormat
+            is ToolValidationFailedEvent -> this.toolValidationErrorEventFormat
+            is ToolExecutionFailedEvent -> this.toolCallFailureEventFormat
+            is ToolExecutionCompletedEvent -> this.toolCallResultEventFormat
             is FeatureStringMessage -> this.featureStringMessage
             is FeatureEvent -> this.featureEvent
             else -> this.featureMessage

@@ -1,7 +1,7 @@
 package ai.koog.agents.features.debugger.mock
 
 import ai.koog.agents.core.feature.message.FeatureMessage
-import ai.koog.agents.core.feature.model.events.AIAgentStartedEvent
+import ai.koog.agents.core.feature.model.events.AgentStartingEvent
 import ai.koog.agents.core.feature.model.events.DefinedFeatureEvent
 import ai.koog.agents.core.feature.remote.client.FeatureMessageRemoteClient
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -33,7 +33,7 @@ internal class ClientEventsCollector(
     internal fun startCollectEvents(coroutineScope: CoroutineScope): Job {
         return coroutineScope.launch {
             client.receivedMessages.consumeAsFlow().collect { event ->
-                if (event is AIAgentStartedEvent) {
+                if (event is AgentStartingEvent) {
                     _runId = event.runId
                 }
 

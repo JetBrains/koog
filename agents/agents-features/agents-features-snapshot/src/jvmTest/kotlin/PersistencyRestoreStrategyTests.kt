@@ -42,7 +42,7 @@ class PersistencyRestoreStrategyTests {
             install(Persistency) {
                 storage = provider
                 // We only need restore on start; automatic persistency doesn't matter here
-                enableAutomaticPersistency = false
+                enableAutomaticPersistency = true
                 rollbackStrategy = RollbackStrategy.Default
             }
         }
@@ -60,16 +60,6 @@ class PersistencyRestoreStrategyTests {
     fun `rollback MessageHistoryOnly starts from beginning`() = runTest {
         val provider = InMemoryPersistencyStorageProvider("persistency-restore-history-only")
 
-        val checkpoint = AgentCheckpointData(
-            checkpointId = "chk-1",
-            createdAt = Clock.System.now(),
-            nodeId = "Node2",
-            lastInput = JsonPrimitive("input-for-node2"),
-            messageHistory = listOf(Message.Assistant("History Before", ResponseMetaInfo(Clock.System.now()))),
-        )
-
-        provider.saveCheckpoint(checkpoint)
-
         val agent = AIAgent(
             promptExecutor = getMockExecutor { },
             strategy = restoreStrategyGraph(),
@@ -81,19 +71,24 @@ class PersistencyRestoreStrategyTests {
         ) {
             install(Persistency) {
                 storage = provider
-                enableAutomaticPersistency = false
+                enableAutomaticPersistency = true
                 rollbackStrategy = RollbackStrategy.MessageHistoryOnly
             }
         }
 
-        val result = agent.run("Agent Input")
+        // run first time to create a history
+        agent.run("Agent Input")
 
+        val result2 = agent.run("Agent Input2")
         assertEquals(
-            "History: History Before\n" +
+            "History: You are a test agent.\n" +
                 "Agent Input\n" +
                 "Node 1 output\n" +
+                "Node 2 output\n" +
+                "Agent Input2\n" +
+                "Node 1 output\n" +
                 "Node 2 output",
-            result
+            result2
         )
     }
 }

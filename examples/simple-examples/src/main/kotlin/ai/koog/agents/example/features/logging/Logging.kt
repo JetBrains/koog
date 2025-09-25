@@ -7,7 +7,6 @@ import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.InterceptContext
 import ai.koog.agents.core.feature.config.FeatureConfig
-import ai.koog.agents.core.feature.handler.BeforeNodeHandler
 import ai.koog.agents.example.ApiKeyService
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
@@ -55,25 +54,25 @@ class Logging(val logger: Logger) {
         ) {
             val logging = Logging(LoggerFactory.getLogger(config.loggerName))
             val interceptContext = InterceptContext(this, logging)
-            pipeline.interceptBeforeAgentStarted(interceptContext) { eventContext ->
+            pipeline.interceptAgentStarting(interceptContext) { eventContext ->
                 logging.logger.info("Agent is going to be started (id: ${eventContext.agent.id})")
             }
 
-            pipeline.interceptStrategyStarted(interceptContext) { eventContext ->
+            pipeline.interceptStrategyStarting(interceptContext) { eventContext ->
                 logging.logger.info("Strategy ${eventContext.strategy.name} started")
             }
 
-            pipeline.interceptBeforeNode(interceptContext) { eventContext ->
+            pipeline.interceptNodeExecutionStarting(interceptContext) { eventContext ->
                 logger.info("Node ${eventContext.node.name} received input: ${eventContext.input}")
             }
 
-            pipeline.interceptAfterNode(interceptContext) { eventContext ->
+            pipeline.interceptNodeExecutionCompleted(interceptContext) { eventContext ->
                 logger.info(
                     "Node ${eventContext.node.name} with input: ${eventContext.input} produced output: ${eventContext.output}"
                 )
             }
 
-            pipeline.interceptBeforeLLMCall(interceptContext) { eventContext ->
+            pipeline.interceptLLMCallStarting(interceptContext) { eventContext ->
                 logger.info(
                     "Before LLM call with prompt: ${eventContext.prompt}, tools: [${eventContext.tools.joinToString {
                         it.name
@@ -81,7 +80,7 @@ class Logging(val logger: Logger) {
                 )
             }
 
-            pipeline.interceptAfterLLMCall(interceptContext) { eventContext ->
+            pipeline.interceptLLMCallCompleted(interceptContext) { eventContext ->
                 logger.info("After LLM call with response: ${eventContext.responses}")
             }
         }

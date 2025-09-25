@@ -152,18 +152,18 @@ fun GraphAIAgent.FeatureContext.installStreamingApi() {
 -->
 ```kotlin
 handleEvents {
-    onToolCall { context ->
+    onToolExecutionStarting { context ->
         println("\n🔧 Using ${context.tool.name} with ${context.toolArgs}... ")
     }
-    onStreamFrame { context ->
+    onLLMStreamingFrameReceived { context ->
         (context.streamFrame as? StreamFrame.Append)?.let { frame ->
             print(frame.text)
         }
     }
-    onStreamError { context -> 
+    onLLMStreamingFailed { context -> 
         println("❌ Error: ${context.error}")
     }
-    onAfterStream {
+    onLLMStreamingCompleted {
         println("🏁 Done")
     }
 }

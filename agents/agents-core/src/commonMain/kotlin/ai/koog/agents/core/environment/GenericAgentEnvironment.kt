@@ -116,13 +116,13 @@ internal class GenericAgentEnvironment(
                 )
             }
 
-            pipeline.onToolCall(content.runId, content.toolCallId, tool, toolArgs)
+            pipeline.onToolExecutionStarting(content.runId, content.toolCallId, tool, toolArgs)
 
             val toolResult = try {
                 @Suppress("UNCHECKED_CAST")
                 (tool as Tool<ToolArgs, ToolResult>).execute(toolArgs, toolEnabler)
             } catch (e: ToolException) {
-                pipeline.onToolValidationError(content.runId, content.toolCallId, tool, toolArgs, e.message)
+                pipeline.onToolValidationFailed(content.runId, content.toolCallId, tool, toolArgs, e.message)
 
                 return toolResult(
                     message = e.message,
@@ -134,7 +134,7 @@ internal class GenericAgentEnvironment(
             } catch (e: Exception) {
                 logger.error(e) { "Tool \"${tool.name}\" failed to execute with arguments: ${content.toolArgs}" }
 
-                pipeline.onToolCallFailure(content.runId, content.toolCallId, tool, toolArgs, e)
+                pipeline.onToolExecutionFailed(content.runId, content.toolCallId, tool, toolArgs, e)
 
                 return toolResult(
                     message = "Tool \"${tool.name}\" failed to execute because of ${e.message}!",
@@ -145,9 +145,9 @@ internal class GenericAgentEnvironment(
                 )
             }
 
-            pipeline.onToolCallResult(content.runId, content.toolCallId, tool, toolArgs, toolResult)
+            pipeline.onToolExecutionCompleted(content.runId, content.toolCallId, tool, toolArgs, toolResult)
 
-            logger.debug { "Completed execution of ${content.toolName} with result: $toolResult" }
+            logger.trace { "Completed execution of ${content.toolName} with result: $toolResult" }
 
             return toolResult(
                 toolCallId = content.toolCallId,
