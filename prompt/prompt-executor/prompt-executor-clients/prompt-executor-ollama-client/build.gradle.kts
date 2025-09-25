@@ -64,6 +64,7 @@ kotlin {
             dependencies {
                 implementation(project(":test-utils"))
                 implementation(project(":agents:agents-features:agents-features-event-handler"))
+                implementation(libs.ktor.client.mock)
             }
         }
 
