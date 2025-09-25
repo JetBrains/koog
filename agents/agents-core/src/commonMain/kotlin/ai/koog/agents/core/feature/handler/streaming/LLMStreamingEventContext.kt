@@ -24,8 +24,8 @@ public data class LLMStreamingFrameReceivedContext(
 }
 
 /**
- * Represents the context for handling errors during streaming.
- * This context is provided when an error occurs during the streaming process.
+ * Represents the context for handling an error event during streaming.
+ * This context is provided when an error occurs during streaming.
  *
  * @property runId The unique identifier for this streaming session.
  * @property error The exception or error that occurred during streaming.

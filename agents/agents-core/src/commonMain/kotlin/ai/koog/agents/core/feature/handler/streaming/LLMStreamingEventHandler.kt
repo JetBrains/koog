@@ -46,20 +46,23 @@ public class LLMStreamingEventHandler {
  */
 public fun interface LLMStreamingFrameReceivedHandler {
     /**
-     * Handles a stream frame event.
-     * @param eventContext The context containing the stream frame data
+     * Handles individual stream frames as they are sent out during the streaming process.
+     *
+     * @param eventContext The context for the stream frame event
      */
     public suspend fun handle(eventContext: LLMStreamingFrameReceivedContext)
 }
 
 /**
- * Handler for processing errors that occur during streaming.
- * This handler is invoked when an error occurs in the streaming flow.
+ * A functional interface for handling streaming errors.
+ * The implementation of this interface provides a mechanism to perform error handling or logging
+ * based on the provided error message and run ID.
  */
 public fun interface LLMStreamingFailedHandler {
     /**
-     * Handles a stream error event.
-     * @param eventContext The context containing the error information
+     * Handles streaming errors by processing the provided error message and run ID.
+     *
+     * @param eventContext The context for the stream error event
      */
     public suspend fun handle(eventContext: LLMStreamingFailedContext)
 }
