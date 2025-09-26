@@ -28,7 +28,6 @@ object CreateTool : SimpleTool<CreateTool.Args>() {
     override suspend fun doExecute(args: Args): String = "created"
 }
 
-
 object SolveTool : SimpleTool<SolveTool.Args>() {
     @Serializable
     data class Args(
