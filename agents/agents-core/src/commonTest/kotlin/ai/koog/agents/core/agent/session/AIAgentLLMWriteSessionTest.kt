@@ -72,7 +72,7 @@ class AIAgentLLMWriteSessionTest {
         override val argsSerializer: KSerializer<Args> = Args.serializer()
 
         override val name: String = "test-tool"
-        override val toolDescription: String = "A test tool"
+        override val description: String = "A test tool"
 
         override suspend fun doExecute(args: Args): String {
             return "Processed: ${args.input}"
@@ -93,7 +93,7 @@ class AIAgentLLMWriteSessionTest {
         override val resultSerializer: KSerializer<Result> = Result.serializer()
 
         override val name: String = "custom-tool"
-        override val toolDescription: String = "A custom tool"
+        override val description: String = "A custom tool"
 
         override val descriptor: ToolDescriptor = ToolDescriptor(
             name = "custom-tool",

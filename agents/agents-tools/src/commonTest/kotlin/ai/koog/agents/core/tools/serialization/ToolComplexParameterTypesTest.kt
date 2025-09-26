@@ -452,7 +452,7 @@ class ToolComplexParameterTypesTest {
         override val resultSerializer: KSerializer<Result> = Result.serializer()
 
         override val name = "nested_lists_tool"
-        override val toolDescription: String = "Tool with nested lists parameter"
+        override val description: String = "Tool with nested lists parameter"
 
         override suspend fun execute(args: Args): Result = Result(args.nestedList)
     }
@@ -481,7 +481,7 @@ class ToolComplexParameterTypesTest {
         override val resultSerializer: KSerializer<Result> = Result.serializer()
 
         override val name = "list_of_enums_tool"
-        override val toolDescription: String = "Tool with list of enums parameter"
+        override val description: String = "Tool with list of enums parameter"
 
         override suspend fun execute(args: Args): Result = Result(args.colors, args.names, args.optional)
     }
@@ -519,7 +519,7 @@ class ToolComplexParameterTypesTest {
 
 
         override val name = "object_tool"
-        override val toolDescription: String = "Tool with object parameter"
+        override val description: String = "Tool with object parameter"
 
         override suspend fun execute(args: Args): Result = Result(args.person)
     }
@@ -546,7 +546,7 @@ class ToolComplexParameterTypesTest {
         override val resultSerializer: KSerializer<Result> = Result.serializer()
 
         override val name = "list_of_objects_tool"
-        override val toolDescription: String = "Tool with list of objects parameter"
+        override val description: String = "Tool with list of objects parameter"
 
         override suspend fun execute(args: Args): Result = Result(args.people)
     }
@@ -585,7 +585,7 @@ class ToolComplexParameterTypesTest {
 
 
         override val name = "object_with_additional_properties_tool"
-        override val toolDescription: String = "Tool with object with additional properties parameter"
+        override val description: String = "Tool with object with additional properties parameter"
 
         override suspend fun execute(args: Args): Result = Result(args.config)
     }

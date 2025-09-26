@@ -30,7 +30,7 @@ class ToolTest {
         override val argsSerializer = Unit.serializer()
 
         override val name: String = "unstructured_tool"
-        override val toolDescription: String = "Unstructured tool"
+        override val description: String = "Unstructured tool"
 
         override suspend fun doExecute(args: Unit): String = "Simple result"
     }
@@ -56,7 +56,7 @@ class ToolTest {
         override val resultSerializer: KSerializer<Result> = Result.serializer()
 
         override val name: String = "structured_tool"
-        override val toolDescription: String = "Structured tool"
+        override val description: String = "Structured tool"
 
         override suspend fun execute(args: Args): Result = Result("result", 1)
     }
@@ -102,7 +102,7 @@ class ToolTest {
         override val resultSerializer: KSerializer<Result> = Result.serializer()
 
         override val name: String = "custom_format_tool"
-        override val toolDescription: String = "Custom format tool"
+        override val description: String = "Custom format tool"
 
         override suspend fun execute(args: Unit): Result {
             return Result("first result", "second result")

@@ -23,7 +23,7 @@ public object SayToUser : SimpleTool<SayToUser.Args>() {
 
     override val argsSerializer: KSerializer<Args> = Args.serializer()
     override val name: String = "say_to_user"
-    override val toolDescription: String = "Service tool, used by the agent to talk."
+    override val description: String = "Service tool, used by the agent to talk."
 
     override suspend fun doExecute(args: Args): String {
         println("Agent says: ${args.message}")

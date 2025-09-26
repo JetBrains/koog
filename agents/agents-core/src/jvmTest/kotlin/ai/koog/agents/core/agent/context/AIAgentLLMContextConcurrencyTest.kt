@@ -148,7 +148,7 @@ class AIAgentLLMContextConcurrencyTest {
         override val argsSerializer = TestToolArgs.serializer()
 
         override val name: String = "test-tool"
-        override val toolDescription: String = "A test tool for testing"
+        override val description: String = "A test tool for testing"
 
         override suspend fun doExecute(args: TestToolArgs): String {
             return "Processed: ${args.input}"

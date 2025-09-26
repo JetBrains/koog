@@ -19,7 +19,7 @@ internal class SampleTool(name: String) : SimpleTool<SampleTool.Args>() {
 
     override val name = name
 
-    override val toolDescription: String = "First tool description"
+    override val description: String = "First tool description"
 
     override suspend fun doExecute(args: Args): String = "Do nothing $args"
 }

@@ -10,7 +10,7 @@ object CalculatorTools {
 
     abstract class CalculatorTool(
         override val name: String,
-        override val toolDescription: String,
+        override val description: String,
     ) : Tool<CalculatorTool.Args, CalculatorTool.Result>() {
         @Serializable
         data class Args(
@@ -30,7 +30,7 @@ object CalculatorTools {
 
     object PlusTool : CalculatorTool(
         name = "plus",
-        toolDescription = "Adds a and b",
+        description = "Adds a and b",
     ) {
         override suspend fun execute(args: Args): Result {
             return Result(args.a + args.b)

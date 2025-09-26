@@ -117,7 +117,7 @@ class SimpleAgentMockedTest {
         override val argsSerializer: KSerializer<Args> = Args.serializer()
 
         override val name: String = "error_tool"
-        override val toolDescription: String = "A tool that always throws an exception"
+        override val description: String = "A tool that always throws an exception"
 
         override suspend fun doExecute(args: Args): String {
             throw ToolException.ValidationFailure("This tool always fails")
@@ -134,7 +134,7 @@ class SimpleAgentMockedTest {
         override val argsSerializer: KSerializer<Args> = Args.serializer()
 
         override val name: String = "conditional_tool"
-        override val toolDescription: String = "A tool that conditionally throws an exception"
+        override val description: String = "A tool that conditionally throws an exception"
 
         override suspend fun doExecute(args: Args): String {
             if (args.condition == "error") {

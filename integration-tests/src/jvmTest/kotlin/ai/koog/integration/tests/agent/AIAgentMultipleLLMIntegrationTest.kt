@@ -194,7 +194,7 @@ class AIAgentMultipleLLMIntegrationTest {
         override val resultSerializer: KSerializer<Int> = Int.serializer()
 
         override val name: String = "calculator"
-        override val toolDescription: String =
+        override val description: String =
             "A simple calculator that can add, subtract, multiply, and divide two numbers."
 
         override suspend fun execute(args: Args): Int = when (args.operation) {
@@ -263,7 +263,7 @@ class AIAgentMultipleLLMIntegrationTest {
         override val resultSerializer: KSerializer<Result> = Result.serializer()
 
         override val name: String = "create_file"
-        override val toolDescription: String =
+        override val description: String =
             "Create a file and writes the given text content to it"
 
         override suspend fun execute(args: Args): Result {
@@ -289,7 +289,7 @@ class AIAgentMultipleLLMIntegrationTest {
         override val resultSerializer: KSerializer<Result> = Result.serializer()
 
         override val name: String = "delete_file"
-        override val toolDescription: String = "Deletes a file"
+        override val description: String = "Deletes a file"
 
         override suspend fun execute(args: Args): Result {
             val res = fs.delete(args.path)
@@ -318,7 +318,7 @@ class AIAgentMultipleLLMIntegrationTest {
         override val resultSerializer: KSerializer<Result> = Result.serializer()
 
         override val name: String = "read_file"
-        override val toolDescription: String = "Reads a file"
+        override val description: String = "Reads a file"
 
         override suspend fun execute(args: Args): Result {
             val res = fs.read(args.path)
@@ -348,7 +348,7 @@ class AIAgentMultipleLLMIntegrationTest {
 
 
         override val name: String = "list_files"
-        override val toolDescription: String = "List all files inside the given path of the directory"
+        override val description: String = "List all files inside the given path of the directory"
 
         override suspend fun execute(args: Args): Result {
             val res = fs.ls(args.path)

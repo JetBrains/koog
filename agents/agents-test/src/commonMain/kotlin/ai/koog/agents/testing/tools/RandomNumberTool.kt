@@ -38,7 +38,7 @@ public class RandomNumberTool : Tool<RandomNumberTool.Args, Int>() {
 
     override val argsSerializer: KSerializer<Args> = Args.serializer()
     override val resultSerializer: KSerializer<Int> = Int.serializer()
-    override val toolDescription: String = "Generates a random number"
+    override val description: String = "Generates a random number"
 
     override suspend fun execute(args: Args): Int {
         val seed = args.seed

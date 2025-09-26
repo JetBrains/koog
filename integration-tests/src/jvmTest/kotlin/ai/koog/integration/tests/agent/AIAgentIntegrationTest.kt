@@ -81,7 +81,7 @@ class AIAgentIntegrationTest {
         override val argsSerializer = Unit.serializer()
 
         override val name: String = "calculator"
-        override val toolDescription: String =
+        override val description: String =
             "A simple calculator that performs basic calculations. No parameters needed."
 
         override suspend fun doExecute(args: Unit): String {
@@ -101,7 +101,7 @@ class AIAgentIntegrationTest {
         override val argsSerializer = GetTransactionsArgs.serializer()
 
         override val name: String = "get_transactions"
-        override val toolDescription: String = "Get all transactions between two dates"
+        override val description: String = "Get all transactions between two dates"
 
         override suspend fun doExecute(args: GetTransactionsArgs): String {
             // Simulate returning transactions
@@ -126,7 +126,7 @@ class AIAgentIntegrationTest {
         override val argsSerializer = CalculateSumArgs.serializer()
 
         override val name: String = "calculate_sum"
-        override val toolDescription: String = "Calculate the sum of a list of amounts"
+        override val description: String = "Calculate the sum of a list of amounts"
 
         override suspend fun doExecute(args: CalculateSumArgs): String {
             val sum = args.amounts.sum()

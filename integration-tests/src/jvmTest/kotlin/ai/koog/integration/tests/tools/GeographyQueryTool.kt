@@ -19,7 +19,7 @@ object GeographyQueryTool : SimpleTool<GeographyQueryTool.Args>() {
     override val argsSerializer = Args.serializer()
 
     override val name: String = "geography_query_tool"
-    override val toolDescription: String = "A tool for retrieving geographical information such as capitals of countries"
+    override val description: String = "A tool for retrieving geographical information such as capitals of countries"
 
     override suspend fun doExecute(args: Args): String {
         return "Geography query processed: ${args.query}, language: ${args.language ?: "not specified"}"

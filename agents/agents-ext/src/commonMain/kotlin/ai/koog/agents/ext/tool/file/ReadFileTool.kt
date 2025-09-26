@@ -76,7 +76,7 @@ public class ReadFileTool<Path>(private val fs: FileSystemProvider.ReadOnly<Path
     override val argsSerializer: KSerializer<Args> = Args.serializer()
     override val resultSerializer: KSerializer<Result> = ToolResultUtils.toTextSerializer()
     override val name: String = "__read_file__"
-    override val toolDescription: String = """
+    override val description: String = """
         Reads a text file (throws if non-text) with optional line range selection. TEXT-ONLY - never reads binary files.
         
         Use this to:

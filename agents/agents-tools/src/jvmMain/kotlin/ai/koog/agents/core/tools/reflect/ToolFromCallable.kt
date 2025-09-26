@@ -110,7 +110,7 @@ public class ToolFromCallable(
         get() = VarArgsSerializer(callable)
 
     override val name: String = callable.name
-    override val toolDescription: String = descriptor.description
+    override val description: String = descriptor.description
 
     /**
      * A serializer for the `VarArgs` class, enabling Kotlin serialization for arguments provided dynamically

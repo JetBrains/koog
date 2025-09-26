@@ -117,7 +117,7 @@ class AnthropicSchemaValidationIntegrationTest {
 
         override val name = "complex_nested_tool"
 
-        override val toolDescription = "A tool that processes user profiles with complex nested structures."
+        override val description = "A tool that processes user profiles with complex nested structures."
 
         override suspend fun doExecute(args: ComplexNestedToolArgs): String {
             // Process the user profile

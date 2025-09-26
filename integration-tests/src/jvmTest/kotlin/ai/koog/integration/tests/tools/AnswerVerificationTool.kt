@@ -15,7 +15,7 @@ object AnswerVerificationTool : SimpleTool<AnswerVerificationTool.Args>() {
 
     override val argsSerializer = Args.serializer()
     override val name: String = "answer_verification_tool"
-    override val toolDescription: String = "A tool for verifying the correctness of answers with optional confidence rating"
+    override val description: String = "A tool for verifying the correctness of answers with optional confidence rating"
 
     override suspend fun doExecute(args: Args): String {
         return "Answer verification completed for: '${args.answer}', confidence level: ${args.confidence ?: "not specified"}"

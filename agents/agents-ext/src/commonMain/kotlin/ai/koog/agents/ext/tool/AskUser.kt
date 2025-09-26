@@ -22,7 +22,7 @@ public object AskUser : SimpleTool<AskUser.Args>() {
     )
 
     override val name: String = "__ask_user__"
-    override val toolDescription: String = "Service tool, used by the agent to talk with user"
+    override val description: String = "Service tool, used by the agent to talk with user"
     override val argsSerializer: KSerializer<Args> = Args.serializer()
 
     override suspend fun doExecute(args: Args): String {

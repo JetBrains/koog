@@ -231,7 +231,7 @@ public class EditFileTool<Path>(
 
     override val name: String = EditFileTool.toolName
 
-    override val toolDescription: String = EditFileTool.toolDescription
+    override val description: String = EditFileTool.toolDescription
 
     override val descriptor: ToolDescriptor = EditFileTool.descriptor
 

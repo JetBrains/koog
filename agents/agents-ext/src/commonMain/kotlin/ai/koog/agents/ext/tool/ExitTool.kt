@@ -35,5 +35,5 @@ public object ExitTool : SimpleTool<ExitTool.Args>() {
         get() = Args.serializer()
 
     override val name: String = "__exit__"
-    override val toolDescription: String = "Service tool, used by the agent to end conversation on user request or agent decision"
+    override val description: String = "Service tool, used by the agent to end conversation on user request or agent decision"
 }

@@ -20,7 +20,7 @@ object GenericParameterTool : SimpleTool<GenericParameterTool.Args>() {
     override val argsSerializer = Args.serializer()
 
     override val name: String = "generic_parameter_tool"
-    override val toolDescription: String = "A tool that demonstrates handling of required and optional parameters"
+    override val description: String = "A tool that demonstrates handling of required and optional parameters"
 
     override suspend fun doExecute(args: Args): String {
         return "Generic parameter tool executed with requiredArg: ${args.requiredArg}, optionalArg: ${args.optionalArg ?: "not provided"}"

@@ -71,7 +71,7 @@ public class WriteFileTool<Path>(private val fs: FileSystemProvider.ReadWrite<Pa
 
     override val argsSerializer: KSerializer<Args> = Args.serializer()
     override val name: String = "__write_file__"
-    override val toolDescription: String = """
+    override val description: String = """
             Writes text content to a file at an absolute path. Creates parent directories if needed and overwrites existing content.
             
             Use this to:

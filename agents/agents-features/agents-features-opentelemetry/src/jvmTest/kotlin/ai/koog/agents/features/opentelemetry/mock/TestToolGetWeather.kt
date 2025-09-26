@@ -22,7 +22,7 @@ internal object TestGetWeatherTool : SimpleTool<TestGetWeatherTool.Args>() {
     override val argsSerializer: KSerializer<Args> = Args.serializer()
 
     override val name: String = "Get whether"
-    override val toolDescription: String = "The test tool to get a whether based on provided location."
+    override val description: String = "The test tool to get a whether based on provided location."
 
     override suspend fun doExecute(args: Args): String =
         if (args.location.contains("Paris")) {

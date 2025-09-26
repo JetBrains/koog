@@ -74,7 +74,7 @@ public abstract class Tool<TArgs, TResult> {
      *
      * This property provides a textual explanation of what the tool does and how it can be utilized (for the LLM).
      */
-    public abstract val toolDescription: String
+    public abstract val description: String
 
     /**
      * Provides a descriptor detailing the tool's metadata, including its name,
@@ -87,7 +87,7 @@ public abstract class Tool<TArgs, TResult> {
         // Needs to be calculated lazily because argsSerializer from the subclass might be unavailable on initialization of the base class:
         argsSerializer.descriptor.asToolDescriptor(
             name,
-            toolDescription
+            description
         )
     }
 

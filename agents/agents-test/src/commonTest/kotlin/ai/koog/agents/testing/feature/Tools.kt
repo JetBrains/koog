@@ -12,7 +12,7 @@ object DummyTool : SimpleTool<Unit>() {
     override val argsSerializer = Unit.serializer()
 
     override val name: String = "dummy"
-    override val toolDescription: String = "Dummy tool for testing"
+    override val description: String = "Dummy tool for testing"
 
     override suspend fun doExecute(args: Unit): String = "Dummy result"
 }
@@ -26,7 +26,7 @@ object CreateTool : SimpleTool<CreateTool.Args>() {
     override val argsSerializer = Args.serializer()
 
     override val name: String = "create"
-    override val toolDescription: String = "Create something"
+    override val description: String = "Create something"
 
     override suspend fun doExecute(args: Args): String = "created"
 }
@@ -42,7 +42,7 @@ object SolveTool : SimpleTool<SolveTool.Args>() {
     override val argsSerializer = Args.serializer()
 
     override val name: String = "solve"
-    override val toolDescription: String = "Solve something"
+    override val description: String = "Solve something"
 
     override suspend fun doExecute(args: Args): String = "solved"
 }

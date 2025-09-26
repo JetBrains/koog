@@ -6,6 +6,7 @@ import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.core.tools.asToolDescriptor
+import ai.koog.agents.core.tools.asToolDescriptorDeserializer
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.SerialDescriptor
@@ -112,16 +113,17 @@ public class AIAgentTool<Input, Output>(
     }
 
     override val name: String = agentName
-    override val toolDescription: String = agentDescription
+    override val description: String = agentDescription
 
     @OptIn(InternalAgentToolsApi::class)
     override val descriptor: ToolDescriptor =
-        inputSerializer.descriptor.asToolDescriptor(name, toolDescription, inputDescription)
+        inputSerializer.descriptor.asToolDescriptor(name, description, inputDescription)
 
+    @OptIn(InternalAgentToolsApi::class)
     override suspend fun execute(args: AgentToolArgs): AgentToolResult {
         return try {
             val input = json.decodeFromJsonElement(
-                inputSerializer,
+                inputSerializer.asToolDescriptorDeserializer(),
                 args.args.getValue(descriptor.requiredParameters.first().name)
             )
             val result = agent.run(input)

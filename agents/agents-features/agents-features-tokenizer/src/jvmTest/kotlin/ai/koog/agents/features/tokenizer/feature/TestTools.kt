@@ -17,7 +17,7 @@ abstract class TestTool(override val name: String) : SimpleTool<TestTool.Args>()
 
     override val argsSerializer: KSerializer<Args> = Args.serializer()
 
-    override val toolDescription: String = "$name description"
+    override val description: String = "$name description"
 
     override suspend fun doExecute(args: Args): String {
         return "Answer to ${args.question} from tool `$name`"

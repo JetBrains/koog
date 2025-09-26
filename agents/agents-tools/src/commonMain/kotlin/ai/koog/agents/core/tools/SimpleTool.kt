@@ -14,7 +14,7 @@ public abstract class SimpleTool<TArgs> : Tool<TArgs, String>() {
     /**
      * Deprecated in favor of `String`.
      */
-    @Deprecated("String directly")
+    @Deprecated("Please use the `encodeResultToString(result: String): String` API instead")
     public fun encodeResultToString(result: ToolResult.Text): String = result.text
     override val resultSerializer: KSerializer<String> = String.serializer()
 

@@ -119,7 +119,7 @@ object TestUtils {
         override val argsSerializer = CalculatorArgs.serializer()
 
         override val name: String = "calculator"
-        override val toolDescription: String =
+        override val description: String =
             "A simple calculator that can add, subtract, multiply, and divide two numbers."
 
         override suspend fun doExecute(args: CalculatorArgs): String {
@@ -150,7 +150,7 @@ object TestUtils {
         override val argsSerializer = DelayArgs.serializer()
 
         override val name = "delay"
-        override val toolDescription = "A tool that introduces a delay to simulate a time-consuming operation."
+        override val description = "A tool that introduces a delay to simulate a time-consuming operation."
 
         override suspend fun doExecute(args: DelayArgs): String {
             kotlinx.coroutines.delay(args.milliseconds.toLong())

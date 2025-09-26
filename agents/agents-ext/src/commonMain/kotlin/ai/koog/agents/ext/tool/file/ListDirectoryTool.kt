@@ -83,7 +83,7 @@ public class ListDirectoryTool<Path>(private val fs: FileSystemProvider.ReadOnly
     override val argsSerializer: KSerializer<Args> = Args.serializer()
     override val resultSerializer: KSerializer<Result> = ToolResultUtils.toTextSerializer()
     override val name: String = "__list_directory__"
-    override val toolDescription: String = """
+    override val description: String = """
         Lists files and subdirectories in a directory. READ-ONLY - never modifies anything.
         
         Use this to:

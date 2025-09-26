@@ -170,7 +170,7 @@ public fun SerialDescriptor.asToolDescriptor(
  *
  * @return A `KSerializer` that acts as*/
 @InternalAgentToolsApi
-public inline fun <reified T> KSerializer<T>.asToolDescriptorDeserializer(json: Json = Json): KSerializer<T> {
+public fun <T> KSerializer<T>.asToolDescriptorDeserializer(json: Json = Json): KSerializer<T> {
     val kind = descriptor.kind
 
     return if (kind is PrimitiveKind) {

@@ -37,7 +37,7 @@ public class McpTool(
     }
 
     override val name: String = descriptor.name
-    override val toolDescription: String = descriptor.description
+    override val description: String = descriptor.description
 
     /**
      * Arguments for an MCP tool call.
