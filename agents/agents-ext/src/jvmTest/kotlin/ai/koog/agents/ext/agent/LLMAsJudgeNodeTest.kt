@@ -41,7 +41,6 @@ class LLMAsJudgeNodeTest {
     @OptIn(InternalAgentsApi::class, DetachedPromptExecutorAPI::class)
     @Test
     fun testChatStrategyDefaultName() = runTest {
-
         val initialPrompt = prompt("id") {
             system("System message")
             user("User question")
@@ -144,10 +143,10 @@ class LLMAsJudgeNodeTest {
         coVerify {
             mockPromptExecutor.execute(
                 prompt = match {
-                    (it.messages.size == 2)
-                        && (it.messages.first().role == Message.Role.System && it.messages.first().content == CRITIC_TASK)
-                        && (it.messages.last().role == Message.Role.User && it.messages.last().content.trimIndent() == expectedXMLHistory)
-                        && (it.id == "critic")
+                    (it.messages.size == 2) &&
+                        (it.messages.first().role == Message.Role.System && it.messages.first().content == CRITIC_TASK) &&
+                        (it.messages.last().role == Message.Role.User && it.messages.last().content.trimIndent() == expectedXMLHistory) &&
+                        (it.id == "critic")
                 },
                 model = match {
                     it == anotherModel

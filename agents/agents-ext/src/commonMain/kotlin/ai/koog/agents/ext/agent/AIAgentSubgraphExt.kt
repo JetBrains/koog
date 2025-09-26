@@ -5,7 +5,6 @@ import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
 import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.builder.AIAgentBuilderDslMarker
-import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphDelegate
 import ai.koog.agents.core.dsl.builder.forwardTo
@@ -27,7 +26,6 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
 
@@ -286,7 +284,7 @@ public inline fun <reified Input : Any> AIAgentSubgraphBuilderBase<*, *>.subgrap
  */
 @Suppress("unused")
 @AIAgentBuilderDslMarker
-public inline fun <reified Input: Any> AIAgentSubgraphBuilderBase<*, *>.subgraphWithVerification(
+public inline fun <reified Input : Any> AIAgentSubgraphBuilderBase<*, *>.subgraphWithVerification(
     tools: List<Tool<*, *>>,
     llmModel: LLModel? = null,
     llmParams: LLMParams? = null,
