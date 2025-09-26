@@ -125,6 +125,7 @@ public class Persistency(
         ) {
             val featureImpl = Persistency(config.storage)
             featureImpl.rollbackStrategy = config.rollbackStrategy
+            featureImpl.rollbackToolRegistry = config.rollbackToolRegistry
             val interceptContext = InterceptContext(this, featureImpl)
 
             pipeline.interceptContextAgentFeature(this) { _ ->
