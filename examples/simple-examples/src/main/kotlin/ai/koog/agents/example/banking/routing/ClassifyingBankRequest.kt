@@ -1,7 +1,6 @@
 package ai.koog.agents.example.banking.routing
 
 import ai.koog.agents.core.tools.annotations.LLMDescription
-import ai.koog.agents.ext.agent.SerializableSubgraphResult
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -18,6 +17,4 @@ data class ClassifiedBankRequest(
     val requestType: RequestType,
     @property:LLMDescription("Actual request to be performed by the banking application")
     val userRequest: String
-) : SerializableSubgraphResult<ClassifiedBankRequest> {
-    override fun getSerializer() = serializer()
-}
+)

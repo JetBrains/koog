@@ -1,5 +1,6 @@
 package ai.koog.agents.ext.tool.file.patch
 
+import kotlinx.serialization.Serializable
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
 
@@ -29,21 +30,25 @@ internal fun applyTokenNormalizedPatch(content: String, patch: FilePatch): Patch
 /**
  * Represents the result of applying a patch to a file
  */
+@Serializable
 public sealed interface PatchApplyResult {
 
     /**
      * Represents a successful patch application
      */
+    @Serializable
     public data class Success(val updatedContent: String) : PatchApplyResult
 
     /**
      * Represents a failed patch application, including the reason for the failure
      */
+    @Serializable
     public sealed class Failure(public val reason: String) : PatchApplyResult {
 
         /**
          * Represents a failure to find the original text in the file content
          */
+        @Serializable
         public object OriginalNotFound : Failure(
             """
             The original text to replace was not found in the file content. 

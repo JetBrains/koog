@@ -1,5 +1,6 @@
 package ai.koog.prompt.executor.ollama.client.dto
 
+import ai.koog.prompt.executor.clients.serialization.AdditionalPropertiesFlatteningSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
@@ -62,7 +63,8 @@ internal data class OllamaChatRequestDTO(
     val format: JsonElement? = null,
     val options: Options? = null,
     val stream: Boolean,
-    @SerialName("keep_alive") val keepAlive: String? = null
+    @SerialName("keep_alive") val keepAlive: String? = null,
+    val additionalProperties: Map<String, JsonElement>? = null,
 ) {
     /**
      * Model options for generation.
@@ -120,3 +122,6 @@ internal data class EmbeddingResponseDTO(
     val embedding: List<Double>,
     @SerialName("model") val modelId: String? = null
 )
+
+internal object OllamaChatRequestDTOSerializer :
+    AdditionalPropertiesFlatteningSerializer<OllamaChatRequestDTO>(OllamaChatRequestDTO.serializer())

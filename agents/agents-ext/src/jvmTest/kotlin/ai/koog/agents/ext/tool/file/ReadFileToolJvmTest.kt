@@ -43,7 +43,7 @@ class ReadFileToolJvmTest {
 
     @Test
     fun `descriptor is configured correctly`() {
-        val descriptor = ReadFileTool.descriptor
+        val descriptor = tool.descriptor
         assertEquals("__read_file__", descriptor.name)
         assertTrue(descriptor.description.isNotEmpty())
         assertEquals(listOf("path"), descriptor.requiredParameters.map { it.name })
@@ -89,7 +89,7 @@ class ReadFileToolJvmTest {
             ```
         """.trimIndent()
 
-        assertEquals(expected, result.toStringDefault())
+        assertEquals(expected, result.textForLLM())
     }
 
     @Test
@@ -115,7 +115,7 @@ class ReadFileToolJvmTest {
             ```
         """.trimIndent()
 
-        assertEquals(expected, result.toStringDefault())
+        assertEquals(expected, result.textForLLM())
     }
 
     @Test
@@ -132,7 +132,7 @@ class ReadFileToolJvmTest {
             c
         """.trimIndent()
 
-        assertEquals(expected, result.toStringDefault())
+        assertEquals(expected, result.textForLLM())
     }
 
     @Test
@@ -147,7 +147,7 @@ class ReadFileToolJvmTest {
             b: 2
             ```
         """.trimIndent()
-        assertEquals(expected, result.toStringDefault())
+        assertEquals(expected, result.textForLLM())
     }
 
     @Test
@@ -161,7 +161,7 @@ class ReadFileToolJvmTest {
             print('hi')
             ```
         """.trimIndent()
-        assertEquals(expected, result.toStringDefault())
+        assertEquals(expected, result.textForLLM())
     }
 
     @Test
@@ -175,7 +175,7 @@ class ReadFileToolJvmTest {
             Write-Host 'hello'
             ```
         """.trimIndent()
-        assertEquals(expected, result.toStringDefault())
+        assertEquals(expected, result.textForLLM())
     }
 
     @Test
@@ -189,7 +189,7 @@ class ReadFileToolJvmTest {
             task hello { }
             ```
         """.trimIndent()
-        assertEquals(expected, result.toStringDefault())
+        assertEquals(expected, result.textForLLM())
     }
 
     @Test
@@ -203,7 +203,7 @@ class ReadFileToolJvmTest {
             echo hello
             ```
         """.trimIndent()
-        assertEquals(expected, result.toStringDefault())
+        assertEquals(expected, result.textForLLM())
     }
 
     @Test
@@ -234,7 +234,7 @@ class ReadFileToolJvmTest {
             fun c() = 3
             ```
         """.trimIndent()
-        assertEquals(expected, result.toStringDefault())
+        assertEquals(expected, result.textForLLM())
     }
 
     @Test
@@ -247,7 +247,7 @@ class ReadFileToolJvmTest {
             ```markdown
             ```
         """.trimIndent()
-        assertEquals(expected, result.toStringDefault())
+        assertEquals(expected, result.textForLLM())
     }
 
     @Test

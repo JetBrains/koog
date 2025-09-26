@@ -152,7 +152,7 @@ public class FunctionalAIAgent<Input, Output>(
     }
 
     override suspend fun close() {
-        pipeline.onAgentBeforeClosed(agentId = this@FunctionalAIAgent.id)
+        pipeline.onAgentClosing(agentId = this@FunctionalAIAgent.id)
         pipeline.closeFeaturesStreamProviders()
     }
 }

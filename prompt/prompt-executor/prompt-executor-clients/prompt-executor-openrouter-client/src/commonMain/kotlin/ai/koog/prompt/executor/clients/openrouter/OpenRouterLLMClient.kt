@@ -12,6 +12,7 @@ import ai.koog.prompt.executor.clients.openai.base.models.OpenAIStaticContent
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAITool
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolChoice
 import ai.koog.prompt.executor.clients.openrouter.models.OpenRouterChatCompletionRequest
+import ai.koog.prompt.executor.clients.openrouter.models.OpenRouterChatCompletionRequestSerializer
 import ai.koog.prompt.executor.clients.openrouter.models.OpenRouterChatCompletionResponse
 import ai.koog.prompt.executor.clients.openrouter.models.OpenRouterChatCompletionStreamResponse
 import ai.koog.prompt.executor.model.LLMChoice
@@ -95,9 +96,10 @@ public class OpenRouterLLMClient(
             route = openRouterParams.route,
             provider = openRouterParams.provider,
             user = openRouterParams.user,
+            additionalProperties = openRouterParams.additionalProperties,
         )
 
-        return json.encodeToString(request)
+        return json.encodeToString(OpenRouterChatCompletionRequestSerializer, request)
     }
 
     override fun processProviderChatResponse(response: OpenRouterChatCompletionResponse): List<LLMChoice> {

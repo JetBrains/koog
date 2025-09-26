@@ -1,8 +1,6 @@
 package ai.koog.agents.features.tracing.mock
 
 import ai.koog.agents.core.tools.SimpleTool
-import ai.koog.agents.core.tools.ToolArgs
-import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
@@ -12,15 +10,12 @@ import kotlinx.serialization.Serializable
 internal class TestTool(private val executor: PromptExecutor) : SimpleTool<TestTool.Args>() {
 
     @Serializable
-    data class Args(val dummy: String = "") : ToolArgs
+    data class Args(val dummy: String = "")
 
     override val argsSerializer = Args.serializer()
 
-    override val descriptor = ToolDescriptor(
-        name = "test-tool",
-        description = "Test tool",
-        requiredParameters = emptyList()
-    )
+    override val name: String = "test-tool"
+    override val description: String = "Test tool"
 
     override suspend fun doExecute(args: Args): String {
         val prompt = Prompt.build("test") {
@@ -38,15 +33,12 @@ internal class TestTool(private val executor: PromptExecutor) : SimpleTool<TestT
 internal class RecursiveTool : SimpleTool<RecursiveTool.Args>() {
 
     @Serializable
-    data class Args(val dummy: String = "") : ToolArgs
+    data class Args(val dummy: String = "")
 
     override val argsSerializer = Args.serializer()
 
-    override val descriptor = ToolDescriptor(
-        name = "recursive",
-        description = "Recursive tool for testing",
-        requiredParameters = emptyList()
-    )
+    override val name: String = "recursive"
+    override val description: String = "Recursive tool for testing"
 
     override suspend fun doExecute(args: Args): String {
         return "Dummy tool result: ${DummyTool().doExecute(DummyTool.Args())}"
@@ -56,17 +48,14 @@ internal class RecursiveTool : SimpleTool<RecursiveTool.Args>() {
 internal class LLMCallTool : SimpleTool<LLMCallTool.Args>() {
 
     @Serializable
-    data class Args(val dummy: String = "") : ToolArgs
+    data class Args(val dummy: String = "")
 
     val executor = MockLLMExecutor()
 
     override val argsSerializer = Args.serializer()
 
-    override val descriptor = ToolDescriptor(
-        name = "recursive",
-        description = "Recursive tool for testing",
-        requiredParameters = emptyList()
-    )
+    override val name: String = "recursive"
+    override val description: String = "Recursive tool for testing"
 
     override suspend fun doExecute(args: Args): String {
         val prompt = Prompt.build("test") {

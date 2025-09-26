@@ -74,7 +74,9 @@ public sealed class ToolParameterType(public val name: kotlin.String) {
      *
      * @property entries The entries for the enumeration, allowing the parameter to be one of these values.
      */
-    public data class Enum(val entries: Array<kotlin.String>) : ToolParameterType("ENUM")
+    public data class Enum(val entries: Array<kotlin.String>) : ToolParameterType("ENUM") {
+        override fun equals(other: Any?): kotlin.Boolean = other is Enum && this.entries.contentEquals(other.entries)
+    }
 
     /**
      * Represents an array type parameter.
@@ -84,9 +86,17 @@ public sealed class ToolParameterType(public val name: kotlin.String) {
     public data class List(val itemsType: ToolParameterType) : ToolParameterType("ARRAY")
 
     /**
-     * Represents an array type parameter.
+     * Represents an object-type parameter used in the tool's parameter schema.
+     * This class is a specialization of [ToolParameterType] with the parameter type set to "OBJECT".
      *
-     * @property properties The properties of the object type.
+     * @property properties A list of descriptors for the properties of the object.
+     * Each descriptor defines the name, description, and type for an individual property.
+     * @property requiredProperties A list of property names that are required.
+     * Defaults to an empty list if no properties are considered mandatory.
+     * @property additionalProperties Indicates whether additional properties are allowed in the object.
+     * If `null`, the allowance for additional properties is unspecified.
+     * @property additionalPropertiesType The type of any additional properties allowed, if additional
+     * properties are permitted. If not applicable, defaults to `null`.
      */
     public data class Object(
         val properties: kotlin.collections.List<ToolParameterDescriptor>,

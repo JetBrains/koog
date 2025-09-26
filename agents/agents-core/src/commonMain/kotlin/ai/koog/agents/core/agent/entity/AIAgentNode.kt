@@ -155,19 +155,21 @@ public open class AIAgentNode<TInput, TOutput> internal constructor(
     override suspend fun execute(context: AIAgentGraphContextBase, input: TInput): TOutput =
         withContext(NodeInfoContextElement(nodeName = name)) {
             logger.debug { "Start executing node (name: $name)" }
-            context.pipeline.onBeforeNode(this@AIAgentNode, context, input, inputType)
+            context.pipeline.onNodeExecutionStarting(this@AIAgentNode, context, input, inputType)
 
-            try {
-                val output = context.execute(input)
-                logger.debug { "Finished executing node (name: $name) with output: $output" }
+            val output =
+                try {
+                    val executeResult = context.execute(input)
+                    logger.trace { "Finished executing node (name: $name) with output: $executeResult" }
+                    executeResult
+                } catch (t: Throwable) {
+                    logger.error(t) { "Error executing node (name: $name): ${t.message}" }
+                    context.pipeline.onNodeExecutionFailed(this@AIAgentNode, context, t)
+                    throw t
+                }
 
-                context.pipeline.onAfterNode(this@AIAgentNode, context, input, output, inputType, outputType)
-                return@withContext output
-            } catch (t: Throwable) {
-                logger.error(t) { "Error executing node (name: $name): ${t.message}" }
-                context.pipeline.onNodeExecutionError(this@AIAgentNode, context, t)
-                throw t
-            }
+            context.pipeline.onNodeExecutionCompleted(this@AIAgentNode, context, input, output, inputType, outputType)
+            output
         }
 }
 

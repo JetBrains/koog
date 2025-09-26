@@ -1,10 +1,12 @@
 package ai.koog.prompt.executor.clients.anthropic
 
 import ai.koog.prompt.executor.clients.InternalLLMClientApi
+import ai.koog.prompt.executor.clients.serialization.AdditionalPropertiesFlatteningSerializer
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.EncodeDefault.Mode.ALWAYS
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 
 /**
@@ -27,12 +29,17 @@ import kotlinx.serialization.json.JsonObject
 public data class AnthropicMessageRequest(
     val model: String,
     val messages: List<AnthropicMessage>,
+    @SerialName("max_tokens")
+    @EncodeDefault
     val maxTokens: Int = MAX_TOKENS_DEFAULT,
     val temperature: Double? = null,
     val system: List<SystemAnthropicMessage>? = null,
     val tools: List<AnthropicTool>? = null,
+    @EncodeDefault
     val stream: Boolean = false,
+    @SerialName("tool_choice")
     val toolChoice: AnthropicToolChoice? = null,
+    val additionalProperties: Map<String, JsonElement>? = null,
 ) {
     init {
         require(maxTokens > 0) { "maxTokens must be greater than 0, but was $maxTokens" }
@@ -478,3 +485,6 @@ public sealed interface AnthropicToolChoice {
     @SerialName("tool")
     public data class Tool(val name: String) : AnthropicToolChoice
 }
+
+internal object AnthropicMessageRequestSerializer :
+    AdditionalPropertiesFlatteningSerializer<AnthropicMessageRequest>(AnthropicMessageRequest.serializer())

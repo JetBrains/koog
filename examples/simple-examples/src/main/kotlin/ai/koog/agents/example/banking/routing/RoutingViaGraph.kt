@@ -16,7 +16,6 @@ import ai.koog.agents.example.banking.tools.MoneyTransferTools
 import ai.koog.agents.example.banking.tools.TransactionAnalysisTools
 import ai.koog.agents.example.banking.tools.bankingAssistantSystemPrompt
 import ai.koog.agents.example.banking.tools.transactionAnalysisPrompt
-import ai.koog.agents.ext.agent.ProvideStringSubgraphResult
 import ai.koog.agents.ext.agent.subgraphWithTask
 import ai.koog.agents.ext.tool.AskUser
 import ai.koog.prompt.dsl.prompt
@@ -32,8 +31,6 @@ fun main() = runBlocking {
         tool(AskUser)
         tools(MoneyTransferTools().asTools())
         tools(TransactionAnalysisTools().asTools())
-
-        tool(ProvideStringSubgraphResult)
     }
 
     val strategy = strategy<String, String>("banking assistant") {
@@ -79,7 +76,7 @@ fun main() = runBlocking {
             edge(callAskUserTool forwardTo requestClassification transformed { it.result.toString() })
         }
 
-        val transferMoney by subgraphWithTask<ClassifiedBankRequest>(
+        val transferMoney by subgraphWithTask<ClassifiedBankRequest, String>(
             tools = MoneyTransferTools().asTools() + AskUser,
             llmModel = OpenAIModels.Chat.GPT4o
         ) { request ->
@@ -90,7 +87,7 @@ fun main() = runBlocking {
             """.trimIndent()
         }
 
-        val transactionAnalysis by subgraphWithTask<ClassifiedBankRequest>(
+        val transactionAnalysis by subgraphWithTask<ClassifiedBankRequest, String>(
             tools = TransactionAnalysisTools().asTools() + AskUser,
         ) { request ->
             """
@@ -106,8 +103,8 @@ fun main() = runBlocking {
         edge(classifyRequest forwardTo transactionAnalysis onCondition { it.requestType == RequestType.Analytics })
 
         // assume that subgraph always returns successfull results
-        edge(transferMoney forwardTo nodeFinish transformed { it.result })
-        edge(transactionAnalysis forwardTo nodeFinish transformed { it.result })
+        edge(transferMoney forwardTo nodeFinish)
+        edge(transactionAnalysis forwardTo nodeFinish)
     }
 
     val agentConfig = AIAgentConfig(

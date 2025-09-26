@@ -20,7 +20,7 @@ public data class ReceivedToolResult(
     val id: String?,
     val tool: String,
     val content: String,
-    val result: ToolResult?
+    val result: Any?
 ) {
     /**
      * Converts the current `ReceivedToolResult` instance into a `Message.Tool.Result` object.

@@ -1,6 +1,6 @@
 package ai.koog.agents.core.feature.config
 
-import ai.koog.agents.core.feature.handler.EventHandlerContext
+import ai.koog.agents.core.feature.handler.AgentLifecycleEventContext
 import ai.koog.agents.core.feature.message.FeatureMessageProcessor
 
 /**
@@ -14,7 +14,7 @@ public abstract class FeatureConfig {
 
     private val _messageProcessors = mutableListOf<FeatureMessageProcessor>()
 
-    private var _eventFilter: (EventHandlerContext) -> Boolean = { true }
+    private var _eventFilter: (AgentLifecycleEventContext) -> Boolean = { true }
 
     /**
      * Provides a read-only list of `FeatureMessageProcessor` instances registered with the feature configuration.
@@ -25,7 +25,7 @@ public abstract class FeatureConfig {
     /**
      * A filter for events to be processed by a feature.
      */
-    public val eventFilter: (EventHandlerContext) -> Boolean
+    public val eventFilter: (AgentLifecycleEventContext) -> Boolean
         get() = _eventFilter
 
     /**
@@ -52,7 +52,7 @@ public abstract class FeatureConfig {
      * }
      * ```
      */
-    public fun setEventFilter(filter: (EventHandlerContext) -> Boolean) {
+    public fun setEventFilter(filter: (AgentLifecycleEventContext) -> Boolean) {
         _eventFilter = filter
     }
 }

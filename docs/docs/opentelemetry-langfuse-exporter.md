@@ -10,10 +10,9 @@ For background on Koog's OpenTelemetry support, see the [OpenTelemetry support](
 ## Setup instructions
 
 1. Create a Langfuse project. Follow the setup guide at [Create new project in Langfuse](https://langfuse.com/docs/get-started#create-new-project-in-langfuse)
-2. Obtain API credentials. Retrieve your Langfuse `public key` and `secret key` as described in [Where are Langfuse API keys?](https://langfuse.com/faq/all/where-are-langfuse-api-keys)
-3. Pass the Langfuse host, private key, and secret key to the Langfuse exporter.
-This can be done by providing them as parameters to the `addLangfuseExporter()` function,
-or by setting environment variables as shown below:
+2. Get API credentials. Retrieve your Langfuse `public key` and `secret key` as described in [Where are Langfuse API keys?](https://langfuse.com/faq/all/where-are-langfuse-api-keys)
+3. Pass the Langfuse host, private key, and secret key to the Langfuse exporter. 
+This can be done by providing them as parameters to the `addLangfuseExporter()` function, or by setting environment variables as shown below:
 
 ```bash
    export LANGFUSE_HOST="https://cloud.langfuse.com"
@@ -120,7 +119,36 @@ When enabled, the Langfuse exporter captures the same spans as Koog’s general 
 - **Tool calls**: execution traces for tool invocations
 - **System context**: metadata such as model name, environment, Koog version
 
-Koog also captures span attributes required by Langfuse to show [Agent Graphs](https://langfuse.com/docs/observability/features/agent-graphs). 
+Koog also captures span attributes required by Langfuse to show [Agent Graphs](https://langfuse.com/docs/observability/features/agent-graphs).
+
+For security reasons, some content of OpenTelemetry spans is masked by default. 
+To make the content available in Langfuse, use the [setVerbose](opentelemetry-support.md#setverbose) method in the OpenTelemetry configuration and set its `verbose` argument to `true` as follows:
+
+<!--- INCLUDE
+import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
+import ai.koog.agents.features.opentelemetry.integration.langfuse.addLangfuseExporter
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+
+const val apiKey = ""
+
+val agent = AIAgent(
+    promptExecutor = simpleOpenAIExecutor(apiKey),
+    llmModel = OpenAIModels.Chat.GPT4o,
+    systemPrompt = "You are a helpful assistant."
+) {
+-->
+<!--- SUFFIX
+}
+-->
+```kotlin
+install(OpenTelemetry) {
+    addLangfuseExporter()
+    setVerbose(true)
+}
+```
+<!--- KNIT example-langfuse-exporter-03.kt -->
 
 When visualized in Langfuse, the trace appears as follows:
 ![Langfuse traces](img/opentelemetry-langfuse-exporter-light.png#only-light)

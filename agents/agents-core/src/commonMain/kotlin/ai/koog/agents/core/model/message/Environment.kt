@@ -1,7 +1,5 @@
 package ai.koog.agents.core.model.message
 
-import ai.koog.agents.core.tools.ToolResult
-
 /**
  * Represents the content of tool result messages sent to an agent after a tool call is executed within
  * the local environment. This provides the result of the tool execution alongside metadata such as
@@ -18,5 +16,5 @@ public data class AIAgentEnvironmentToolResultToAgentContent(
     override val toolName: String,
     override val agentId: String,
     override val message: String,
-    val toolResult: ToolResult? = null
+    val toolResult: Any? = null
 ) : EnvironmentToolResultToAgentContent()

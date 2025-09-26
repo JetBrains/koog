@@ -2,6 +2,7 @@
 
 package ai.koog.agents.core.environment
 
+import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.reflect.ToolFromCallable
 import ai.koog.agents.core.tools.reflect.asTool
 import ai.koog.prompt.message.Message
@@ -37,7 +38,7 @@ public data class SafeToolFromCallable<TResult>(
      * Primarily used in the context of tool execution, such as invoking the `execute` or
      * `executeRaw` methods on the enclosing class, to resolve and interact with the callable as a tool.
      */
-    private val tool: ToolFromCallable get() = toolFunction.asTool()
+    private val tool: Tool<ToolFromCallable.VarArgs, TResult> get() = toolFunction.asTool()
 
     /**
      * Encodes the provided arguments into a `VarArgs` object to be used by the tool function.
@@ -191,7 +192,7 @@ private fun <TResult> ReceivedToolResult.toSafeResultFromCallable(): SafeToolFro
     when (result) {
         null -> SafeToolFromCallable.Result.Failure(message = content)
         else -> SafeToolFromCallable.Result.Success(
-            result = (result as ToolFromCallable.Result).result as TResult,
+            result = result as TResult,
             content = content
         )
     }

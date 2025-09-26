@@ -1,8 +1,6 @@
 package ai.koog.agents.example.structuredoutput.markdown
 
 import ai.koog.agents.core.tools.SimpleTool
-import ai.koog.agents.core.tools.ToolArgs
-import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.structure.markdown.MarkdownStructuredDataDefinition
 import ai.koog.prompt.structure.markdown.markdownStreamingParser
@@ -19,12 +17,15 @@ data class Book(
     val bookName: String,
     val author: String,
     val description: String
-) : ToolArgs
+)
 
 class BookTool() : SimpleTool<Book>() {
     companion object {
         const val NAME = "book"
     }
+
+    override val name: String = "book"
+    override val description: String = "A tool to parse book information from markdown"
 
     override suspend fun doExecute(args: Book): String {
         println("${args.bookName} by ${args.author}:\n ${args.description}")
@@ -33,13 +34,6 @@ class BookTool() : SimpleTool<Book>() {
 
     override val argsSerializer: KSerializer<Book>
         get() = Book.serializer()
-    override val descriptor: ToolDescriptor
-        get() = ToolDescriptor(
-            name = NAME,
-            description = "A tool to parse book information from markdown",
-            requiredParameters = listOf(),
-            optionalParameters = listOf()
-        )
 }
 
 /**

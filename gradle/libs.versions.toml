@@ -2,11 +2,16 @@
 agp = "8.11.1"
 annotations = "26.0.2"
 assertj = "3.27.4"
+awaitility = "4.3.0"
 aws-sdk-kotlin = "1.5.16"
 dokka = "2.0.0"
+exposed = "0.58.0"
+h2 = "2.2.224"
+hikaricp = "6.2.1"
 jetsign = "45.47"
 junit = "5.8.2"
 knit = "0.5.0"
+kotest = "6.0.3"
 kotlin = "2.2.10"
 kotlinx-coroutines = "1.10.2"
 kotlinx-datetime = "0.6.2"
@@ -20,26 +25,26 @@ logback = "1.5.13"
 mcp = "0.7.2"
 mockito = "5.19.0"
 mockk = "1.13.8"
+mysql = "8.0.33"
 netty = "4.2.6.Final"
 opentelemetry = "1.51.0"
 oshai-logging = "7.0.7"
-slf4j = "2.0.17"
-testcontainers = "1.19.7"
-exposed = "0.58.0"
-hikaricp = "6.2.1"
 postgresql = "42.7.4"
-mysql = "8.0.33"
-h2 = "2.2.224"
-sqlite = "3.46.1.3"
+slf4j = "2.0.17"
 spring-boot = "3.5.3"
 spring-management = "1.1.7"
+sqlite = "3.46.1.3"
+testcontainers = "1.19.7"
 
 [libraries]
 jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "annotations" }
 mockito-junit-jupiter = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mockito" }
 assertj-core = { module = "org.assertj:assertj-core", version.ref = "assertj" }
+awaitility = { module = "org.awaitility:awaitility-kotlin", version.ref = "awaitility" }
 junit-jupiter-params = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "junit" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
+kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
+kotest-assertions-json = { module = "io.kotest:kotest-assertions-json", version.ref = "kotest" }
 kotlin-bom = { module = "org.jetbrains.kotlin:kotlin-bom", version.ref = "kotlin" }
 kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }

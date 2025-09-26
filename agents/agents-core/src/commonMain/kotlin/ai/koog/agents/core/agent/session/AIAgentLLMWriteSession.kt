@@ -4,10 +4,8 @@ import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.environment.SafeTool
 import ai.koog.agents.core.tools.Tool
-import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.core.utils.ActiveProperty
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.PromptBuilder
@@ -83,13 +81,13 @@ public class AIAgentLLMWriteSession internal constructor(
     /**
      * Executes the specified tool with the given arguments and returns the result within a [SafeTool.Result] wrapper.
      *
-     * @param TArgs the type of arguments required by the tool, extending `ToolArgs`.
+     * @param TArgs the type of arguments required by the tool.
      * @param TResult the type of result returned by the tool, implementing `ToolResult`.
      * @param tool the tool to be executed.
      * @param args the arguments required to execute the tool.
      * @return a `SafeTool.Result` containing the tool's execution result of type `TResult`.
      */
-    public suspend inline fun <reified TArgs : ToolArgs, reified TResult : ToolResult> callTool(
+    public suspend inline fun <reified TArgs, reified TResult> callTool(
         tool: Tool<TArgs, TResult>,
         args: TArgs
     ): SafeTool.Result<TResult> {
@@ -100,13 +98,13 @@ public class AIAgentLLMWriteSession internal constructor(
      * Executes a tool by its name with the provided arguments.
      *
      * @param toolName The name of the tool to be executed.
-     * @param args The arguments required to execute the tool, which must be a subtype of [ToolArgs].
+     * @param args The arguments required to execute the tool.
      * @return A [SafeTool.Result] containing the result of the tool execution, which is a subtype of [ToolResult].
      */
-    public suspend inline fun <reified TArgs : ToolArgs> callTool(
+    public suspend inline fun <reified TArgs> callTool(
         toolName: String,
         args: TArgs
-    ): SafeTool.Result<out ToolResult> {
+    ): SafeTool.Result<out Any?> {
         return findToolByName<TArgs>(toolName).execute(args)
     }
 
@@ -114,10 +112,10 @@ public class AIAgentLLMWriteSession internal constructor(
      * Executes a tool identified by its name with the provided arguments and returns the raw string result.
      *
      * @param toolName The name of the tool to be executed.
-     * @param args The arguments to be passed to the tool, conforming to the [ToolArgs] type.
+     * @param args The arguments to be passed to the tool.
      * @return The raw result of the tool's execution as a String.
      */
-    public suspend inline fun <reified TArgs : ToolArgs> callToolRaw(
+    public suspend inline fun <reified TArgs> callToolRaw(
         toolName: String,
         args: TArgs
     ): String {
@@ -133,7 +131,7 @@ public class AIAgentLLMWriteSession internal constructor(
      * @param args The arguments to be passed to the tool for its execution.
      * @return A result wrapper containing either the successful result of the tool's execution or an error.
      */
-    public suspend inline fun <reified TArgs : ToolArgs, reified TResult : ToolResult> callTool(
+    public suspend inline fun <reified TArgs, reified TResult> callTool(
         toolClass: KClass<out Tool<TArgs, TResult>>,
         args: TArgs
     ): SafeTool.Result<TResult> {
@@ -144,13 +142,13 @@ public class AIAgentLLMWriteSession internal constructor(
     /**
      * Finds and retrieves a tool of the specified type from the tool registry.
      *
-     * @param TArgs The type of arguments the tool accepts, extending from ToolArgs.
+     * @param TArgs The type of arguments the tool accepts.
      * @param TResult The type of result the tool produces, extending from ToolResult.
      * @param toolClass The KClass reference that specifies the type of tool to find.
      * @return A SafeTool instance wrapping the found tool and its environment.
      * @throws IllegalArgumentException if the specified tool is not found in the tool registry.
      */
-    public inline fun <reified TArgs : ToolArgs, reified TResult : ToolResult> findTool(
+    public inline fun <reified TArgs, reified TResult> findTool(
         toolClass: KClass<out Tool<TArgs, TResult>>
     ): SafeTool<TArgs, TResult> {
         @Suppress("UNCHECKED_CAST")
@@ -165,12 +163,12 @@ public class AIAgentLLMWriteSession internal constructor(
     /**
      * Invokes a tool of the specified type with the provided arguments.
      *
-     * @param args The input arguments required for the tool execution, represented as an instance of `ToolArgs`.
+     * @param args The input arguments required for the tool execution.
      * @return A `SafeTool.Result` containing the outcome of the tool's execution, which may be of any type that extends `ToolResult`.
      */
     public suspend inline fun <reified ToolT : Tool<*, *>> callTool(
-        args: ToolArgs
-    ): SafeTool.Result<out ToolResult> {
+        args: Any?
+    ): SafeTool.Result<out Any?> {
         val tool = findTool<ToolT>()
         return tool.executeUnsafe(args)
     }
@@ -192,13 +190,13 @@ public class AIAgentLLMWriteSession internal constructor(
     /**
      * Transforms a flow of arguments into a flow of results by asynchronously executing the given tool in parallel.
      *
-     * @param TArgs the type of the arguments required by the tool, extending ToolArgs.
+     * @param TArgs the type of the arguments required by the tool.
      * @param TResult the type of the result produced by the tool, extending ToolResult.
      * @param safeTool the tool to be executed for each input argument.
      * @param concurrency the maximum number of parallel executions allowed. Defaults to 16.
      * @return a flow of results wrapped in SafeTool.Result for each input argument.
      */
-    public inline fun <reified TArgs : ToolArgs, reified TResult : ToolResult> Flow<TArgs>.toParallelToolCalls(
+    public inline fun <reified TArgs, reified TResult> Flow<TArgs>.toParallelToolCalls(
         safeTool: SafeTool<TArgs, TResult>,
         concurrency: Int = 16
     ): Flow<SafeTool.Result<TResult>> = flatMapMerge(concurrency) { args ->
@@ -215,7 +213,7 @@ public class AIAgentLLMWriteSession internal constructor(
      * @param concurrency The maximum number of parallel calls to the tool. Default is 16.
      * @return A flow of string results derived from executing the tool's raw method.
      */
-    public inline fun <reified TArgs : ToolArgs, reified TResult : ToolResult> Flow<TArgs>.toParallelToolCallsRaw(
+    public inline fun <reified TArgs, reified TResult> Flow<TArgs>.toParallelToolCallsRaw(
         safeTool: SafeTool<TArgs, TResult>,
         concurrency: Int = 16
     ): Flow<String> = flatMapMerge(concurrency) { args ->
@@ -233,7 +231,7 @@ public class AIAgentLLMWriteSession internal constructor(
      * @param concurrency The maximum number of concurrent executions. Default value is 16.
      * @return A flow emitting the results of the tool executions wrapped in a SafeTool.Result object.
      */
-    public inline fun <reified TArgs : ToolArgs, reified TResult : ToolResult> Flow<TArgs>.toParallelToolCalls(
+    public inline fun <reified TArgs, reified TResult> Flow<TArgs>.toParallelToolCalls(
         tool: Tool<TArgs, TResult>,
         concurrency: Int = 16
     ): Flow<SafeTool.Result<TResult>> = flatMapMerge(concurrency) { args ->
@@ -252,7 +250,7 @@ public class AIAgentLLMWriteSession internal constructor(
      * @param concurrency The maximum number of parallel executions allowed. Default is 16.
      * @return A Flow containing the results of the tool executions, wrapped in `SafeTool.Result`.
      */
-    public inline fun <reified TArgs : ToolArgs, reified TResult : ToolResult> Flow<TArgs>.toParallelToolCalls(
+    public inline fun <reified TArgs, reified TResult> Flow<TArgs>.toParallelToolCalls(
         toolClass: KClass<out Tool<TArgs, TResult>>,
         concurrency: Int = 16
     ): Flow<SafeTool.Result<TResult>> {
@@ -269,7 +267,7 @@ public class AIAgentLLMWriteSession internal constructor(
      * @param concurrency the number of concurrent tool calls to be executed. Defaults to 16.
      * @return a flow of raw string results from the parallel tool calls.
      */
-    public inline fun <reified TArgs : ToolArgs, reified TResult : ToolResult> Flow<TArgs>.toParallelToolCallsRaw(
+    public inline fun <reified TArgs, reified TResult> Flow<TArgs>.toParallelToolCallsRaw(
         toolClass: KClass<out Tool<TArgs, TResult>>,
         concurrency: Int = 16
     ): Flow<String> {
@@ -288,7 +286,7 @@ public class AIAgentLLMWriteSession internal constructor(
      * @return the tool that matches the specified name and types
      * @throws IllegalArgumentException if the tool is not defined or the types are incompatible
      */
-    public inline fun <reified TArgs : ToolArgs, reified TResult : ToolResult> findToolByNameAndArgs(
+    public inline fun <reified TArgs, reified TResult> findToolByNameAndArgs(
         toolName: String
     ): Tool<TArgs, TResult> =
         @Suppress("UNCHECKED_CAST")
@@ -305,7 +303,7 @@ public class AIAgentLLMWriteSession internal constructor(
      * @throws IllegalArgumentException If the tool with the specified name is not defined or its arguments
      * are incompatible with the expected type.
      */
-    public inline fun <reified TArgs : ToolArgs> findToolByName(toolName: String): SafeTool<TArgs, *> {
+    public inline fun <reified TArgs> findToolByName(toolName: String): SafeTool<TArgs, *> {
         @Suppress("UNCHECKED_CAST")
         val tool = (
             toolRegistry.getTool(toolName) as? Tool<TArgs, *>

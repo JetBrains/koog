@@ -19,5 +19,11 @@ public data class LLModel(
     val contextLength: Long,
     val maxOutputTokens: Long? = null,
 ) {
+    /**
+     * Checks if the Large Language Model (LLM) supports a specific capability.
+     *
+     * @param capability The capability to check for, represented by an instance of [LLMCapability].
+     * @return `true` if the LLM supports the given capability, otherwise `false`.
+     */
     public fun supports(capability: LLMCapability): Boolean = capabilities.contains(capability)
 }

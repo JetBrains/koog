@@ -198,5 +198,5 @@ copyright: Copyright © 2000-2025 JetBrains s.r.o.
 extra:
   social:
     - icon: fontawesome/brands/slack
-      link: https://kotlinlang.slack.com/messages/koog-agentic-framework/
+      link: https://docs.koog.ai/koog-slack-channel/
       name: Koog on Slack

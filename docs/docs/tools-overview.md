@@ -131,7 +131,7 @@ data class Book(
     val title: String,
     val author: String,
     val description: String
-) : ToolArgs
+)
 
 class BookTool() : SimpleTool<Book>() {
     companion object {
@@ -146,13 +146,8 @@ class BookTool() : SimpleTool<Book>() {
     override val argsSerializer: KSerializer<Book>
         get() = Book.serializer()
 
-    override val descriptor: ToolDescriptor
-        get() = ToolDescriptor(
-            name = NAME,
-            description = "A tool to parse book information from Markdown",
-            requiredParameters = listOf(),
-            optionalParameters = listOf()
-        )
+    override val name = NAME
+    override val description = "A tool to parse book information from Markdown"
 }
 
 val strategy = strategy<Unit, Unit>("strategy-name") {
@@ -220,11 +215,7 @@ val analysisAgent = AIAgent(
 val analysisAgentTool = analysisAgent.asTool(
     agentName = "analyzeTransactions",
     agentDescription = "Performs financial transaction analysis",
-    inputDescriptor = ToolParameterDescriptor(
-        name = "request",
-        description = "Transaction analysis request",
-        type = ToolParameterType.String
-    )
+    inputDescription = "Transaction analysis request",
 )
 ```
 <!--- KNIT example-tools-overview-05.kt -->

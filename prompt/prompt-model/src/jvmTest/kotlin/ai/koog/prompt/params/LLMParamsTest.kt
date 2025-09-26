@@ -1,5 +1,7 @@
 package ai.koog.prompt.params
 
+import io.kotest.matchers.equality.shouldBeEqualToComparingFields
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import org.junit.jupiter.api.Test
@@ -9,7 +11,6 @@ import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
-
 class LLMParamsTest {
 
     companion object {
@@ -247,5 +248,31 @@ class LLMParamsTest {
         assertEquals(nrOfChoices, result.numberOfChoices)
         assertEquals(DEFAULT_SPECULATION, result.speculation)
         assertEquals(TEST_USER, result.user)
+    }
+
+    @Test
+    fun testCopyWithNoChanges() {
+        val originalSchema = LLMParams.Schema.JSON.Basic(
+            VALID_SCHEMA_NAME,
+            STRING_JSON_SCHEMA
+        )
+        val originalToolChoice = LLMParams.ToolChoice.Auto
+
+        val original = LLMParams(
+            temperature = 1.5,
+            maxTokens = 100,
+            numberOfChoices = 3,
+            speculation = TEST_SPECULATION,
+            schema = originalSchema,
+            toolChoice = originalToolChoice,
+            user = TEST_USER,
+            includeThoughts = true,
+            thinkingBudget = 50,
+            additionalProperties = mapOf("foo" to JsonPrimitive("bar"))
+        )
+
+        val copied = original.copy()
+
+        copied shouldBeEqualToComparingFields original
     }
 }

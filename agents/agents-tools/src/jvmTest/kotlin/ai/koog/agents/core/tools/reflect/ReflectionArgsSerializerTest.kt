@@ -97,8 +97,7 @@ class ReflectionArgsSerializerTest {
             "Specific tool called with 42",
             runBlocking {
                 val args = tool.decodeArgs(buildJsonObject { put("argLong", JsonPrimitive(42)) })
-                val rawResult = tool.execute(args, ToolsEnabler)
-                rawResult.result
+                tool.execute(args, ToolsEnabler)
             },
         )
     }
@@ -106,14 +105,13 @@ class ReflectionArgsSerializerTest {
     @Test
     fun testToolDoubleArg() {
         val toolClass = MySpecificTool()
-        val tool: ToolFromCallable = toolClass::executeDouble.asTool(ToolsFromCallableTest.Companion.json)
+        val tool = toolClass::executeDouble.asTool(ToolsFromCallableTest.Companion.json)
 
         assertEquals(
             "Specific tool called with 42.0",
             runBlocking {
                 val args = tool.decodeArgs(buildJsonObject { put("argDouble", JsonPrimitive(42.0)) })
-                val rawResult = tool.execute(args, ToolsEnabler)
-                rawResult.result
+                tool.execute(args, ToolsEnabler)
             },
         )
     }
@@ -145,8 +143,7 @@ class ReflectionArgsSerializerTest {
                             )
                         }
                     )
-                val rawResult = tool.execute(args, ToolsEnabler)
-                rawResult.result
+                tool.execute(args, ToolsEnabler)
             }
         )
     }
@@ -181,8 +178,7 @@ class ReflectionArgsSerializerTest {
                             )
                         }
                     )
-                val rawResult = tool.execute(args, ToolsEnabler)
-                rawResult.result
+                tool.execute(args, ToolsEnabler)
             }
         )
     }

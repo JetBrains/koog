@@ -1,10 +1,6 @@
 package ai.koog.integration.tests.utils
 
 import ai.koog.agents.core.tools.SimpleTool
-import ai.koog.agents.core.tools.ToolArgs
-import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.agents.core.tools.ToolParameterDescriptor
-import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.LLMProvider
@@ -111,37 +107,20 @@ object TestUtils {
 
     @Serializable
     data class CalculatorArgs(
+        @property:LLMDescription("The operation to perform.")
         val operation: CalculatorOperation,
+        @property:LLMDescription("The first argument (number)")
         val a: Int,
+        @property:LLMDescription("The second argument (number)")
         val b: Int
-    ) : ToolArgs
+    )
 
     object CalculatorTool : SimpleTool<CalculatorArgs>() {
         override val argsSerializer = CalculatorArgs.serializer()
 
-        val calculatorToolDescriptor = ToolDescriptor(
-            name = "calculator",
-            description = "A simple calculator that can add, subtract, multiply, and divide two numbers.",
-            requiredParameters = listOf(
-                ToolParameterDescriptor(
-                    name = "operation",
-                    description = "The operation to perform.",
-                    type = ToolParameterType.Enum(CalculatorOperation.entries.map { it.name }.toTypedArray())
-                ),
-                ToolParameterDescriptor(
-                    name = "a",
-                    description = "The first argument (number)",
-                    type = ToolParameterType.Integer
-                ),
-                ToolParameterDescriptor(
-                    name = "b",
-                    description = "The second argument (number)",
-                    type = ToolParameterType.Integer
-                )
-            )
-        )
-
-        override val descriptor = calculatorToolDescriptor
+        override val name: String = "calculator"
+        override val description: String =
+            "A simple calculator that can add, subtract, multiply, and divide two numbers."
 
         override suspend fun doExecute(args: CalculatorArgs): String {
             return when (args.operation) {
@@ -162,24 +141,16 @@ object TestUtils {
     const val DELAY_MILLIS = 500L
 
     @Serializable
-    data class DelayArgs(val milliseconds: Int = DELAY_MILLIS.toInt()) : ToolArgs
+    data class DelayArgs(
+        @property:LLMDescription("The number of milliseconds to delay")
+        val milliseconds: Int = DELAY_MILLIS.toInt()
+    )
 
     object DelayTool : SimpleTool<DelayArgs>() {
         override val argsSerializer = DelayArgs.serializer()
 
-        val delayToolDescriptor = ToolDescriptor(
-            name = "delay",
-            description = "A tool that introduces a delay to simulate a time-consuming operation.",
-            requiredParameters = listOf(
-                ToolParameterDescriptor(
-                    name = "milliseconds",
-                    description = "The number of milliseconds to delay",
-                    type = ToolParameterType.Integer
-                )
-            )
-        )
-
-        override val descriptor = delayToolDescriptor
+        override val name = "delay"
+        override val description = "A tool that introduces a delay to simulate a time-consuming operation."
 
         override suspend fun doExecute(args: DelayArgs): String {
             kotlinx.coroutines.delay(args.milliseconds.toLong())

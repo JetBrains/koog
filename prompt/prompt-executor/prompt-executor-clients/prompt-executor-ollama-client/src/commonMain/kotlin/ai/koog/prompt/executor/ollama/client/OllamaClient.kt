@@ -11,6 +11,7 @@ import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import ai.koog.prompt.executor.ollama.client.dto.EmbeddingRequestDTO
 import ai.koog.prompt.executor.ollama.client.dto.EmbeddingResponseDTO
 import ai.koog.prompt.executor.ollama.client.dto.OllamaChatRequestDTO
+import ai.koog.prompt.executor.ollama.client.dto.OllamaChatRequestDTOSerializer
 import ai.koog.prompt.executor.ollama.client.dto.OllamaChatResponseDTO
 import ai.koog.prompt.executor.ollama.client.dto.OllamaErrorResponseDTO
 import ai.koog.prompt.executor.ollama.client.dto.OllamaModelsListResponseDTO
@@ -151,17 +152,21 @@ public class OllamaClient(
     ): List<Message.Response> {
         require(model.provider == LLMProvider.Ollama) { "Model not supported by Ollama" }
 
-        val response = client.post(DEFAULT_MESSAGE_PATH) {
-            setBody(
-                OllamaChatRequestDTO(
-                    model = model.id,
-                    messages = prompt.toOllamaChatMessages(model),
-                    tools = if (tools.isNotEmpty()) tools.map { it.toOllamaTool() } else null,
-                    format = prompt.extractOllamaJsonFormat(),
-                    options = prompt.extractOllamaOptions(),
-                    stream = false,
-                )
+        val request = ollamaJson.encodeToString(
+            OllamaChatRequestDTOSerializer,
+            OllamaChatRequestDTO(
+                model = model.id,
+                messages = prompt.toOllamaChatMessages(model),
+                tools = if (tools.isNotEmpty()) tools.map { it.toOllamaTool() } else null,
+                format = prompt.extractOllamaJsonFormat(),
+                options = prompt.extractOllamaOptions(),
+                stream = false,
+                additionalProperties = prompt.params.additionalProperties
             )
+        )
+
+        val response = client.post(DEFAULT_MESSAGE_PATH) {
+            setBody(request)
         }
 
         if (response.status.isSuccess()) {
@@ -229,15 +234,19 @@ public class OllamaClient(
     ): Flow<StreamFrame> = streamFrameFlow {
         require(model.provider == LLMProvider.Ollama) { "Model not supported by Ollama" }
 
-        val response = client.post(DEFAULT_MESSAGE_PATH) {
-            setBody(
-                OllamaChatRequestDTO(
-                    model = model.id,
-                    messages = prompt.toOllamaChatMessages(model),
-                    options = prompt.extractOllamaOptions(),
-                    stream = true,
-                )
+        val request = ollamaJson.encodeToString(
+            OllamaChatRequestDTOSerializer,
+            OllamaChatRequestDTO(
+                model = model.id,
+                messages = prompt.toOllamaChatMessages(model),
+                options = prompt.extractOllamaOptions(),
+                stream = true,
+                additionalProperties = prompt.params.additionalProperties,
             )
+        )
+
+        val response = client.post(DEFAULT_MESSAGE_PATH) {
+            setBody(request)
         }
 
         val channel = response.bodyAsChannel()

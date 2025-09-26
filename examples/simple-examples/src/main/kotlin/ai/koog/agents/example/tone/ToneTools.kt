@@ -1,11 +1,8 @@
 package ai.koog.agents.example.tone
 
 import ai.koog.agents.core.tools.SimpleTool
-import ai.koog.agents.core.tools.ToolArgs
-import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.agents.core.tools.ToolParameterDescriptor
-import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.example.ApiKeyService
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
@@ -18,26 +15,17 @@ object ToneTools {
      * Base class for tone analysis tools.
      */
     abstract class ToneTool(
-        name: String,
-        description: String,
+        override val name: String,
+        override val description: String,
         private val toneType: String
     ) : SimpleTool<ToneTool.Args>() {
         @Serializable
-        data class Args(val text: String) : ToolArgs
+        data class Args(
+            @property:LLMDescription("The text to analyze for tone.")
+            val text: String
+        )
 
         override val argsSerializer = Args.serializer()
-
-        override val descriptor = ToolDescriptor(
-            name = name,
-            description = description,
-            requiredParameters = listOf(
-                ToolParameterDescriptor(
-                    name = "text",
-                    description = "The text to analyze for tone.",
-                    type = ToolParameterType.String,
-                )
-            )
-        )
 
         override suspend fun doExecute(args: Args): String {
             val executor: PromptExecutor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey)

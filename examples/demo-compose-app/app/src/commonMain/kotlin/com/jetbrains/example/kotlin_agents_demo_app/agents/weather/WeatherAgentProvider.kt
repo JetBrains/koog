@@ -74,7 +74,7 @@ internal class WeatherAgentProvider : AgentProvider {
             edge(
                 nodeExecuteToolMultiple forwardTo nodeFinish
                     onCondition { it.singleOrNull()?.tool == ExitTool.name }
-                    transformed { it.single().result!!.toStringDefault() }
+                    transformed { it.single().result!!.toString() }
             )
 
             edge(

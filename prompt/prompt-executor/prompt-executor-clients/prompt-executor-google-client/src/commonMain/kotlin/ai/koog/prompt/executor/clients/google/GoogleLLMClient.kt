@@ -392,7 +392,8 @@ public open class GoogleLLMClient(
             thinkingConfig = GoogleThinkingConfig(
                 includeThoughts = prompt.params.includeThoughts.takeIf { it == true },
                 thinkingBudget = prompt.params.thinkingBudget
-            ).takeIf { it.includeThoughts != null || it.thinkingBudget != null }
+            ).takeIf { it.includeThoughts != null || it.thinkingBudget != null },
+            additionalProperties = prompt.params.additionalProperties
         )
 
         val functionCallingConfig = when (val toolChoice = prompt.params.toolChoice) {

@@ -2,14 +2,27 @@ package ai.koog.agents.core.tools
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.serializer
 import kotlin.jvm.JvmInline
 
 /**
  * Represents a result produced by a tool operation. This is a marker interface implemented by various result types.
  */
+@Deprecated("Extending ToolResult is no longer required. Tool results are entirely handled by KotlinX Serialization.")
 public interface ToolResult {
-    private companion object {
+    /**
+     * Companion object for the enclosing class.
+     *
+     * Provides utility functionalities, including methods to handle and interact with
+     * objects of types implementing the `TextSerializable` interface. It includes support
+     * for creating a text-based serializer for the objects using the `AsTextSerializer`
+     * class and a pre-configured `Json` instance for serialization with customizable options.
+     */
+    public companion object {
         private val json = Json {
             ignoreUnknownKeys = true
             encodeDefaults = true
@@ -28,6 +41,7 @@ public interface ToolResult {
     /**
      * Result implementation representing a simple tool result, just a string.
      */
+    @Deprecated("Extending ToolResult.Text is no longer required (just use plain String class instead). Tool results are entirely handled by KotlinX Serialization.")
     @Serializable
     @JvmInline
     public value class Text(public val text: String) : JSONSerializable<Text> {
@@ -70,6 +84,7 @@ public interface ToolResult {
      *
      * @property result The internal `kotlin.Boolean` value representing the logical state.
      */
+    @Deprecated("Extending ToolResult.Boolean is no longer required (just use plain Boolean class instead). Tool results are entirely handled by KotlinX Serialization.")
     @JvmInline
     public value class Boolean(public val result: kotlin.Boolean) : ToolResult {
         /**
@@ -90,6 +105,7 @@ public interface ToolResult {
              */
             public val FALSE: Boolean = Boolean(false)
         }
+
         override fun toStringDefault(): String = result.toString()
     }
 
@@ -101,6 +117,7 @@ public interface ToolResult {
      *
      * @property result The underlying numeric value.
      */
+    @Deprecated("Extending ToolResult.Number is no longer required (just use plain Int/Double/... classes instead). Tool results are entirely handled by KotlinX Serialization.")
     @JvmInline
     public value class Number(public val result: kotlin.Number) : ToolResult {
         override fun toStringDefault(): String = result.toString()
@@ -112,6 +129,7 @@ public interface ToolResult {
      *
      * @param T The type of the implementing class, which must also be JSONSerializable.
      */
+    @Deprecated("Extending ToolResult.JSONSerializable<T> is no longer required (just use T type directly and mark it as `@Serializable`). Tool results are entirely handled by KotlinX Serialization.")
     public interface JSONSerializable<T : JSONSerializable<T>> : ToolResult {
         /**
          * Retrieves the serializer instance for the implementing class.
@@ -121,5 +139,63 @@ public interface ToolResult {
         public fun getSerializer(): KSerializer<T>
 
         override fun toStringDefault(): String = json.encodeToString(getSerializer(), this as T)
+    }
+
+    /**
+     * A serializer that converts an object implementing the TextSerializable interface into a textual format
+     * by utilizing the `textForLLM` function defined in the interface.
+     *
+     * This serializer provides functionality to encode the object into a string format suitable for textual
+     * representation and decodes it using a provided serializer for the type.
+     *
+     * @param T The type of object being serialized/deserialized, constrained to types implementing TextSerializable.
+     * @param valueSerializer The serializer responsible for handling the underlying type operations.
+     */
+    public open class AsTextSerializer<T : TextSerializable>(
+        private val valueSerializer: KSerializer<T>
+    ) : KSerializer<T> {
+        /**
+         * The descriptor that provides metadata about the serialized form of the value.
+         * This descriptor corresponds to the valueSerializer's descriptor, defining the
+         * structure of the serialized data and associated information like kind and elements.
+         */
+        override val descriptor: SerialDescriptor = valueSerializer.descriptor
+
+        /**
+         * Serializes an object of type `T` into its textual representation.
+         *
+         * This method uses the provided encoder to encode the `textForLLM` representation of the `value`.
+         *
+         * @param encoder The encoder used to serialize the object.
+         * @param value The object of type `T` to be serialized.
+         */
+        override fun serialize(encoder: Encoder, value: T) {
+            encoder.encodeString(value.textForLLM())
+        }
+
+        /**
+         * Deserializes the provided encoded data using the specified decoder and returns the resulting object of type T.
+         *
+         * @param decoder The decoder to read the serialized data from.
+         * @return The deserialized object of type T.
+         */
+        override fun deserialize(decoder: Decoder): T {
+            return valueSerializer.deserialize(decoder)
+        }
+    }
+
+    /**
+     * Abstract class representing a text-serializable object.
+     * This class provides a contract for converting an object to a text representation
+     * that can be utilized by language learning models (LLMs) or other text-processing systems.
+     */
+    @Serializable
+    public abstract class TextSerializable {
+        /**
+         * Abstract method to retrieve a text representation for integration with language learning models.
+         *
+         * @return a string that represents the textual content to be used by language learning models.
+         */
+        public abstract fun textForLLM(): String
     }
 }

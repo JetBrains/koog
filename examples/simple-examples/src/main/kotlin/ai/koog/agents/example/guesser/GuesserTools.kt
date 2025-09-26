@@ -1,32 +1,19 @@
 package ai.koog.agents.example.guesser
 
 import ai.koog.agents.core.tools.SimpleTool
-import ai.koog.agents.core.tools.ToolArgs
-import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.agents.core.tools.ToolParameterDescriptor
-import ai.koog.agents.core.tools.ToolParameterType
 import kotlinx.serialization.Serializable
 
 abstract class GuesserTool(
-    name: String,
-    description: String,
+    toolName: String,
+    toolDescription: String,
 ) : SimpleTool<GuesserTool.Args>() {
     @Serializable
-    data class Args(val value: Int) : ToolArgs
+    data class Args(val value: Int)
 
     final override val argsSerializer = Args.serializer()
 
-    final override val descriptor = ToolDescriptor(
-        name = name,
-        description = description,
-        requiredParameters = listOf(
-            ToolParameterDescriptor(
-                name = "value",
-                description = "A value to compare the guessed number with.",
-                type = ToolParameterType.Integer,
-            )
-        )
-    )
+    final override val name: String = toolName
+    final override val description: String = toolDescription
 
     protected fun ask(question: String, value: Int): String {
         print("$question [Y/n]: ")
@@ -47,8 +34,8 @@ abstract class GuesserTool(
  */
 
 object LessThanTool : GuesserTool(
-    name = "less_than",
-    description = "Asks the user if his number is STRICTLY less than a given value.",
+    toolName = "less_than",
+    toolDescription = "Asks the user if his number is STRICTLY less than a given value.",
 ) {
     override suspend fun doExecute(args: Args): String {
         return ask("Is your number less than ${args.value}?", args.value)
@@ -56,8 +43,8 @@ object LessThanTool : GuesserTool(
 }
 
 object GreaterThanTool : GuesserTool(
-    name = "greater_than",
-    description = "Asks the user if his number is STRICTLY greater than a given value.",
+    toolName = "greater_than",
+    toolDescription = "Asks the user if his number is STRICTLY greater than a given value.",
 ) {
     override suspend fun doExecute(args: Args): String {
         return ask("Is your number greater than ${args.value}?", args.value)
@@ -65,8 +52,8 @@ object GreaterThanTool : GuesserTool(
 }
 
 object ProposeNumberTool : GuesserTool(
-    name = "propose_number",
-    description = "Asks the user if his number is EXACTLY equal to the given number. Only use this tool once you've narrowed down your answer.",
+    toolName = "propose_number",
+    toolDescription = "Asks the user if his number is EXACTLY equal to the given number. Only use this tool once you've narrowed down your answer.",
 ) {
     override suspend fun doExecute(args: Args): String {
         return ask("Is your number equal to ${args.value}?", args.value)

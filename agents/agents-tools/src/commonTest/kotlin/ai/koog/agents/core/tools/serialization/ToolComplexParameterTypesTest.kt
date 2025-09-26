@@ -2,13 +2,10 @@ package ai.koog.agents.core.tools.serialization
 
 import ai.koog.agents.core.tools.DirectToolCallsEnabler
 import ai.koog.agents.core.tools.Tool
-import ai.koog.agents.core.tools.ToolArgs
-import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.agents.core.tools.ToolParameterDescriptor
-import ai.koog.agents.core.tools.ToolParameterType
-import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
+import ai.koog.agents.core.tools.annotations.LLMDescription
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.add
@@ -443,30 +440,19 @@ class ToolComplexParameterTypesTest {
 
     private object NestedListsTool : Tool<NestedListsTool.Args, NestedListsTool.Result>() {
         @Serializable
-        data class Args(val nestedList: List<List<Int>>) : ToolArgs
+        data class Args(
+            @property:LLMDescription("A nested list of integers")
+            val nestedList: List<List<Int>>
+        )
 
         @Serializable
-        data class Result(val nestedList: List<List<Int>>) : ToolResult {
-            override fun toStringDefault(): String = "Nested list: $nestedList"
-        }
+        data class Result(val nestedList: List<List<Int>>)
 
         override val argsSerializer = Args.serializer()
+        override val resultSerializer: KSerializer<Result> = Result.serializer()
 
-        override val descriptor = ToolDescriptor(
-            name = "nested_lists_tool",
-            description = "Tool with nested lists parameter",
-            requiredParameters = listOf(
-                ToolParameterDescriptor(
-                    name = "nestedList",
-                    description = "A nested list of integers",
-                    type = ToolParameterType.List(
-                        ToolParameterType.List(
-                            ToolParameterType.Integer
-                        )
-                    )
-                )
-            )
-        )
+        override val name = "nested_lists_tool"
+        override val description: String = "Tool with nested lists parameter"
 
         override suspend fun execute(args: Args): Result = Result(args.nestedList)
     }
@@ -479,154 +465,87 @@ class ToolComplexParameterTypesTest {
         enum class Name { JANE, JOHN }
 
         @Serializable
-        data class Args(val colors: List<Color>, val names: List<Name>, val optional: List<Color>?) : ToolArgs
+        data class Args(
+            @property:LLMDescription("A list of colors")
+            val colors: List<Color>,
+            @property:LLMDescription("A list of names")
+            val names: List<Name>,
+            @property:LLMDescription("An optional color parameter")
+            val optional: List<Color>?
+        )
 
         @Serializable
-        data class Result(val colors: List<Color>, val names: List<Name>, val optional: List<Color>?) : ToolResult {
-            override fun toStringDefault(): String = "Colors: $colors, names: $names"
-        }
+        data class Result(val colors: List<Color>, val names: List<Name>, val optional: List<Color>?)
 
         override val argsSerializer = Args.serializer()
+        override val resultSerializer: KSerializer<Result> = Result.serializer()
 
-        override val descriptor = ToolDescriptor(
-            name = "list_of_enums_tool",
-            description = "Tool with list of enums parameter",
-            requiredParameters = listOf(
-                ToolParameterDescriptor(
-                    name = "colors",
-                    description = "A list of colors",
-                    type = ToolParameterType.List(
-                        ToolParameterType.Enum(Color.entries)
-                    )
-                ),
-                ToolParameterDescriptor(
-                    name = "names",
-                    description = "A list of names",
-                    type = ToolParameterType.List(
-                        ToolParameterType.Enum(Name.entries)
-                    )
-                )
-            ),
-            optionalParameters = listOf(
-                ToolParameterDescriptor(
-                    name = "optional",
-                    description = "An optional color parameter",
-                    type = ToolParameterType.Enum(Color.entries)
-                )
-            )
-        )
+        override val name = "list_of_enums_tool"
+        override val description: String = "Tool with list of enums parameter"
 
         override suspend fun execute(args: Args): Result = Result(args.colors, args.names, args.optional)
     }
 
     private object ObjectTool : Tool<ObjectTool.Args, ObjectTool.Result>() {
         @Serializable
-        data class Address(val street: String, val city: String)
+        data class Address(
+            @property:LLMDescription("Street address")
+            val street: String,
+            @property:LLMDescription("City")
+            val city: String
+        )
 
         @Serializable
-        data class Person(val name: String, val age: Int, val address: Address)
+        data class Person(
+            @property:LLMDescription("Person's name")
+            val name: String,
+            @property:LLMDescription("Person's age")
+            val age: Int,
+            @property:LLMDescription("Person's address")
+            val address: Address
+        )
 
         @Serializable
-        data class Args(val person: Person) : ToolArgs
+        data class Args(
+            @property:LLMDescription("A person object")
+            val person: Person
+        )
 
         @Serializable
-        data class Result(val person: Person) : ToolResult {
-            override fun toStringDefault(): String =
-                "Person: ${person.name}, ${person.age}, Address: ${person.address.street}, ${person.address.city}"
-        }
+        data class Result(val person: Person)
 
         override val argsSerializer = Args.serializer()
+        override val resultSerializer: KSerializer<Result> = Result.serializer()
 
-        override val descriptor = ToolDescriptor(
-            name = "object_tool",
-            description = "Tool with object parameter",
-            requiredParameters = listOf(
-                ToolParameterDescriptor(
-                    name = "person",
-                    description = "A person object",
-                    type = ToolParameterType.Object(
-                        properties = listOf(
-                            ToolParameterDescriptor(
-                                name = "name",
-                                description = "Person's name",
-                                type = ToolParameterType.String
-                            ),
-                            ToolParameterDescriptor(
-                                name = "age",
-                                description = "Person's age",
-                                type = ToolParameterType.Integer
-                            ),
-                            ToolParameterDescriptor(
-                                name = "address",
-                                description = "Person's address",
-                                type = ToolParameterType.Object(
-                                    properties = listOf(
-                                        ToolParameterDescriptor(
-                                            name = "street",
-                                            description = "Street address",
-                                            type = ToolParameterType.String
-                                        ),
-                                        ToolParameterDescriptor(
-                                            name = "city",
-                                            description = "City",
-                                            type = ToolParameterType.String
-                                        )
-                                    ),
-                                    requiredProperties = listOf("street", "city")
-                                )
-                            )
-                        ),
-                        requiredProperties = listOf("name", "age", "address")
-                    )
-                )
-            )
-        )
+        override val name = "object_tool"
+        override val description: String = "Tool with object parameter"
 
         override suspend fun execute(args: Args): Result = Result(args.person)
     }
 
     private object ListOfObjectsTool : Tool<ListOfObjectsTool.Args, ListOfObjectsTool.Result>() {
         @Serializable
-        data class Person(val name: String, val age: Int)
+        data class Person(
+            @property:LLMDescription("Person's name")
+            val name: String,
+            @property:LLMDescription("Person's age")
+            val age: Int
+        )
 
         @Serializable
-        data class Args(val people: List<Person>) : ToolArgs
+        data class Args(
+            @property:LLMDescription("A list of people")
+            val people: List<Person>
+        )
 
         @Serializable
-        data class Result(val people: List<Person>) : ToolResult {
-            override fun toStringDefault(): String =
-                "People: [${people.joinToString(", ") { "${it.name} (${it.age})" }}]"
-        }
+        data class Result(val people: List<Person>)
 
         override val argsSerializer = Args.serializer()
+        override val resultSerializer: KSerializer<Result> = Result.serializer()
 
-        override val descriptor = ToolDescriptor(
-            name = "list_of_objects_tool",
-            description = "Tool with list of objects parameter",
-            requiredParameters = listOf(
-                ToolParameterDescriptor(
-                    name = "people",
-                    description = "A list of people",
-                    type = ToolParameterType.List(
-                        ToolParameterType.Object(
-                            properties = listOf(
-                                ToolParameterDescriptor(
-                                    name = "name",
-                                    description = "Person's name",
-                                    type = ToolParameterType.String
-                                ),
-                                ToolParameterDescriptor(
-                                    name = "age",
-                                    description = "Person's age",
-                                    type = ToolParameterType.Integer
-                                )
-                            ),
-                            requiredProperties = listOf("name", "age")
-                        )
-                    )
-                )
-            )
-        )
+        override val name = "list_of_objects_tool"
+        override val description: String = "Tool with list of objects parameter"
 
         override suspend fun execute(args: Args): Result = Result(args.people)
     }
@@ -636,8 +555,11 @@ class ToolComplexParameterTypesTest {
 
         @Serializable
         data class Config(
+            @property:LLMDescription("Config name")
             val name: String,
+            @property:LLMDescription("")
             val custom1: String? = null,
+            @property:LLMDescription("")
             val custom2: String? = null
         ) {
             fun getAdditionalProperties(): Map<String, String> {
@@ -649,38 +571,19 @@ class ToolComplexParameterTypesTest {
         }
 
         @Serializable
-        data class Args(val config: Config) : ToolArgs
+        data class Args(
+            @property:LLMDescription("A configuration object")
+            val config: Config
+        )
 
         @Serializable
-        data class Result(val config: Config) : ToolResult {
-            override fun toStringDefault(): String =
-                "Config: ${config.name}, Additional: ${config.getAdditionalProperties()}"
-        }
+        data class Result(val config: Config)
 
         override val argsSerializer = Args.serializer()
+        override val resultSerializer: KSerializer<Result> = Result.serializer()
 
-        override val descriptor = ToolDescriptor(
-            name = "object_with_additional_properties_tool",
-            description = "Tool with object with additional properties parameter",
-            requiredParameters = listOf(
-                ToolParameterDescriptor(
-                    name = "config",
-                    description = "A configuration object",
-                    type = ToolParameterType.Object(
-                        properties = listOf(
-                            ToolParameterDescriptor(
-                                name = "name",
-                                description = "Config name",
-                                type = ToolParameterType.String
-                            )
-                        ),
-                        requiredProperties = listOf("name"),
-                        additionalProperties = true,
-                        additionalPropertiesType = ToolParameterType.String
-                    )
-                )
-            )
-        )
+        override val name = "object_with_additional_properties_tool"
+        override val description: String = "Tool with object with additional properties parameter"
 
         override suspend fun execute(args: Args): Result = Result(args.config)
     }

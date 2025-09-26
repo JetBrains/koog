@@ -27,24 +27,20 @@ kotlin {
 
         jvmMain {
             dependencies {
-                api(libs.ktor.client.cio)
+                implementation(libs.ktor.client.cio)
             }
         }
 
         jsMain {
             dependencies {
-                api(libs.ktor.client.js)
+                implementation(libs.ktor.client.js)
             }
         }
 
         commonTest {
             dependencies {
                 implementation(project(":test-utils"))
-            }
-        }
-
-        jvmTest {
-            dependencies {
+                implementation(libs.kotest.assertions.json)
             }
         }
     }

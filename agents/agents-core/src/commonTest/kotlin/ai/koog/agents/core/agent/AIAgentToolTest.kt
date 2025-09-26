@@ -3,12 +3,12 @@ package ai.koog.agents.core.agent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.config.AIAgentConfigBase
 import ai.koog.agents.core.tools.DirectToolCallsEnabler
-import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.llm.OllamaModels
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
@@ -53,15 +53,11 @@ class AIAgentToolTest {
         val tool = agent.asTool(
             agentName = "testAgent",
             agentDescription = "Test agent description",
-            inputDescriptor = ToolParameterDescriptor(
-                name = "request",
-                description = "Test request description",
-                type = ToolParameterType.String
-            )
+            inputDescription = "Test request description"
         )
 
         val argsJson = buildJsonObject {
-            put("request", "Test input")
+            put("value", "Test input")
         }
     }
 
@@ -70,17 +66,13 @@ class AIAgentToolTest {
         val tool = agent.asTool(
             agentName = "testAgent",
             agentDescription = "Test agent description",
-            inputDescriptor = ToolParameterDescriptor(
-                name = "request",
-                description = "Test request description",
-                type = ToolParameterType.String
-            )
+            inputDescription = "Test request description"
         )
 
         assertEquals("testAgent", tool.descriptor.name)
         assertEquals("Test agent description", tool.descriptor.description)
         assertEquals(1, tool.descriptor.requiredParameters.size)
-        assertEquals("request", tool.descriptor.requiredParameters[0].name)
+        assertEquals("value", tool.descriptor.requiredParameters[0].name)
         assertEquals("Test request description", tool.descriptor.requiredParameters[0].description)
         assertEquals(ToolParameterType.String, tool.descriptor.requiredParameters[0].type)
     }
@@ -90,11 +82,7 @@ class AIAgentToolTest {
         val tool = agent.asTool(
             agentName = "testAgent",
             agentDescription = "Test agent description",
-            inputDescriptor = ToolParameterDescriptor(
-                name = "request",
-                description = "Test request description",
-                type = ToolParameterType.String
-            )
+            inputDescription = "Test request description"
         )
         assertEquals("testAgent", tool.descriptor.name)
     }
@@ -138,11 +126,7 @@ class AIAgentToolTest {
         val tool = agent.asTool(
             agentName = "testAgent",
             agentDescription = "Test agent description",
-            inputDescriptor = ToolParameterDescriptor(
-                name = "request",
-                description = "Test request description",
-                type = ToolParameterType.String
-            )
+            inputDescription = "Test request description"
         )
 
         val args = tool.decodeArgs(argsJson)
@@ -163,18 +147,18 @@ class AIAgentToolTest {
         val tool = agent.asTool(
             agentName = "testAgent",
             agentDescription = "Test agent description",
-            inputDescriptor = ToolParameterDescriptor(
-                name = "request",
-                description = "Test request description",
-                type = ToolParameterType.String
-            )
+            inputDescription = "Test request description"
         )
 
         val args = tool.decodeArgs(argsJson)
         val result = tool.execute(args, Enabler)
 
-        val serialized = result.toStringDefault()
-        assertTrue(serialized.contains("\"successful\": true"))
-        assertTrue(serialized.contains("\"result\": \"This is the agent's response\""))
+        assertEquals(
+            AIAgentTool.AgentToolResult(
+                successful = true,
+                result = JsonPrimitive("This is the agent's response")
+            ),
+            result
+        )
     }
 }

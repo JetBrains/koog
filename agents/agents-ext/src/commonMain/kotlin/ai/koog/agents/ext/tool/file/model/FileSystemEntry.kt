@@ -15,9 +15,37 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 public sealed interface FileSystemEntry {
+    /**
+     * Represents the name as a string value.
+     * This variable is typically used to hold textual data corresponding to a name.
+     */
     public val name: String
+
+    /**
+     * Represents the optional file extension of the file system entry.
+     *
+     * The extension is the portion of the filename following the last dot ('.'),
+     * excluding the dot itself. For example, in the file name "document.txt",
+     * the extension would be "txt". If the file does not have an extension or
+     * the entry is not a file, this value may be `null`.
+     */
     public val extension: String?
+
+    /**
+     * Represents a filesystem or resource path.
+     *
+     * This variable is typically used to store the string representation
+     * of an absolute or relative path to a file, directory, or resource.
+     */
     public val path: String
+
+    /**
+     * Indicates whether the file system entry is hidden.
+     *
+     * A hidden file or folder is typically not visible in directory listings
+     * unless explicitly configured to show hidden items. The visibility may
+     * depend on the underlying file system's settings or user preferences.
+     */
     public val hidden: Boolean
 
     /**
@@ -107,9 +135,15 @@ public sealed interface FileSystemEntry {
     }
 
     /**
-     * Represents a directory in the filesystem.
+     * Represents a folder in a filesystem.
      *
-     * @property entries child files and directories, or null if not loaded
+     * A folder is a directory that can contain other entries, including files and subfolders.
+     * This class implements [FileSystemEntry] and includes metadata and optional child entries.
+     *
+     * @property name the name of the folder
+     * @property path the absolute path to the folder
+     * @property hidden whether the folder is hidden
+     * @property entries the list of child entries (files and folders), or null if not specified
      */
     @Serializable
     public data class Folder(

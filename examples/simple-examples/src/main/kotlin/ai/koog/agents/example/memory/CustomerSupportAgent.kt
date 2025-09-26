@@ -11,8 +11,6 @@ import ai.koog.agents.example.ApiKeyService
 import ai.koog.agents.example.memory.tools.DiagnosticToolSet
 import ai.koog.agents.example.memory.tools.KnowledgeBaseToolSet
 import ai.koog.agents.example.memory.tools.UserInfoToolSet
-import ai.koog.agents.ext.agent.ProvideStringSubgraphResult
-import ai.koog.agents.ext.agent.StringSubgraphResult
 import ai.koog.agents.ext.agent.subgraphWithTask
 import ai.koog.agents.memory.config.MemoryScopeType
 import ai.koog.agents.memory.feature.AgentMemory
@@ -187,7 +185,7 @@ fun createCustomerSupportAgent(
                 nodeFinish
         }
 
-        val supportSession by subgraphWithTask<String>(
+        val supportSession by subgraphWithTask<String, String>(
             tools = userInfoToolSet.asTools() + diagnosticToolSet.asTools() + knowledgeBaseToolSet.asTools()
         ) { userInput ->
             markdown {
@@ -213,7 +211,6 @@ fun createCustomerSupportAgent(
                 text(userInput)
             }
         }
-        val retrieveResult by node<StringSubgraphResult, String> { it.result }
 
         val saveToMemory by subgraph<String, String>(tools = emptyList()) {
             val saveUserPreferences by nodeSaveToMemory<String>(
@@ -245,7 +242,7 @@ fun createCustomerSupportAgent(
                 nodeFinish
         }
 
-        nodeStart then loadMemory then supportSession then retrieveResult then saveToMemory then nodeFinish
+        nodeStart then loadMemory then supportSession then saveToMemory then nodeFinish
     }
 
     // Create and configure the agent runner
@@ -257,8 +254,6 @@ fun createCustomerSupportAgent(
             tools(userInfoToolSet.asTools())
             tools(diagnosticToolSet.asTools())
             tools(knowledgeBaseToolSet.asTools())
-
-            tool(ProvideStringSubgraphResult)
         }
     ) {
         install(AgentMemory) {

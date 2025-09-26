@@ -3,7 +3,7 @@ package ai.koog.ktor
 import ai.koog.agents.core.agent.GraphAIAgent.FeatureContext
 import ai.koog.agents.core.agent.config.MissingToolsConversionStrategy
 import ai.koog.agents.core.agent.config.ToolCallDescriber
-import ai.koog.agents.core.feature.AIAgentFeature
+import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.ktor.KoogAgentsConfig.TimeoutConfiguration.Companion.DEFAULT_TIMEOUT
@@ -403,11 +403,11 @@ public class KoogAgentsConfig(private val scope: CoroutineScope) {
          * @param configure A lambda function to configure the feature. The default is an empty configuration.
          */
         public fun <TConfig : FeatureConfig> install(
-            feature: AIAgentFeature<TConfig, *>,
+            feature: AIAgentGraphFeature<TConfig, *>,
             configure: TConfig.() -> Unit = {}
         ) {
             this@KoogAgentsConfig.agentFeatures += {
-                install(feature, configure)
+                this.install(feature, configure)
             }
         }
     }

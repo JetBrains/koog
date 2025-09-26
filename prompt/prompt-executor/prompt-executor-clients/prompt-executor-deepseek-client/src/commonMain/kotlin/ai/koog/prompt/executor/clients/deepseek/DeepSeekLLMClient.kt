@@ -5,6 +5,7 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.deepseek.models.DeepSeekChatCompletionRequest
+import ai.koog.prompt.executor.clients.deepseek.models.DeepSeekChatCompletionRequestSerializer
 import ai.koog.prompt.executor.clients.deepseek.models.DeepSeekChatCompletionResponse
 import ai.koog.prompt.executor.clients.deepseek.models.DeepSeekChatCompletionStreamResponse
 import ai.koog.prompt.executor.clients.openai.base.AbstractOpenAILLMClient
@@ -83,9 +84,10 @@ public class DeepSeekLLMClient(
             tools = tools,
             topLogprobs = deepSeekParams.topLogprobs,
             topP = deepSeekParams.topP,
+            additionalProperties = deepSeekParams.additionalProperties,
         )
 
-        return json.encodeToString(request)
+        return json.encodeToString(DeepSeekChatCompletionRequestSerializer, request)
     }
 
     override fun processProviderChatResponse(response: DeepSeekChatCompletionResponse): List<LLMChoice> {

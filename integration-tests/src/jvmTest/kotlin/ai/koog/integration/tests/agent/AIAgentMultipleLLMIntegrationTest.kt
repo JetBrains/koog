@@ -13,14 +13,9 @@ import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
 import ai.koog.agents.core.dsl.extension.onAssistantMessage
 import ai.koog.agents.core.dsl.extension.onToolCall
 import ai.koog.agents.core.tools.Tool
-import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.agents.core.tools.ToolParameterDescriptor
-import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.core.tools.ToolResult
-import ai.koog.agents.ext.agent.ProvideStringSubgraphResult
-import ai.koog.agents.ext.agent.StringSubgraphResult
+import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.ext.agent.subgraphWithTask
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
@@ -55,7 +50,9 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.serializer
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.parallel.Execution
@@ -180,40 +177,30 @@ class AIAgentMultipleLLMIntegrationTest {
         DIVIDE
     }
 
-    object CalculatorTool : Tool<CalculatorTool.Args, ToolResult.Number>() {
+    object CalculatorTool : Tool<CalculatorTool.Args, Int>() {
         @Serializable
-        data class Args(val operation: CalculatorOperation, val a: Int, val b: Int) : ToolArgs
-
-        override val argsSerializer = Args.serializer()
-
-        override val descriptor: ToolDescriptor = ToolDescriptor(
-            name = "calculator",
-            description = "A simple calculator that can add, subtract, multiply, and divide two numbers.",
-            requiredParameters = listOf(
-                ToolParameterDescriptor(
-                    name = "operation",
-                    description = "The operation to perform.",
-                    type = ToolParameterType.Enum(CalculatorOperation.entries.map { it.name }.toTypedArray())
-                ),
-                ToolParameterDescriptor(
-                    name = "a",
-                    description = "The first argument (number)",
-                    type = ToolParameterType.Integer
-                ),
-                ToolParameterDescriptor(
-                    name = "b",
-                    description = "The second argument (number)",
-                    type = ToolParameterType.Integer
-                )
-            )
+        data class Args(
+            @property:LLMDescription("The operation to perform.")
+            val operation: CalculatorOperation,
+            @property:LLMDescription("The first argument (number)")
+            val a: Int,
+            @property:LLMDescription("The second argument (number)")
+            val b: Int
         )
 
-        override suspend fun execute(args: Args): ToolResult.Number = when (args.operation) {
+        override val argsSerializer = Args.serializer()
+        override val resultSerializer: KSerializer<Int> = Int.serializer()
+
+        override val name: String = "calculator"
+        override val description: String =
+            "A simple calculator that can add, subtract, multiply, and divide two numbers."
+
+        override suspend fun execute(args: Args): Int = when (args.operation) {
             CalculatorOperation.ADD -> args.a + args.b
             CalculatorOperation.SUBTRACT -> args.a - args.b
             CalculatorOperation.MULTIPLY -> args.a * args.b
             CalculatorOperation.DIVIDE -> args.a / args.b
-        }.let(ToolResult::Number)
+        }
     }
 
     sealed interface OperationResult<T> {
@@ -260,34 +247,22 @@ class AIAgentMultipleLLMIntegrationTest {
 
     class CreateFile(private val fs: MockFileSystem) : Tool<CreateFile.Args, CreateFile.Result>() {
         @Serializable
-        data class Args(val path: String, val content: String) : ToolArgs
+        data class Args(
+            @property:LLMDescription("The path to create the file")
+            val path: String,
+            @property:LLMDescription("The content to create the file")
+            val content: String
+        )
 
         @Serializable
-        data class Result(
-            val successful: Boolean,
-            val message: String? = null
-        ) : ToolResult.JSONSerializable<Result> {
-            override fun getSerializer() = serializer()
-        }
+        data class Result(val successful: Boolean, val message: String? = null)
 
         override val argsSerializer = Args.serializer()
+        override val resultSerializer: KSerializer<Result> = Result.serializer()
 
-        override val descriptor: ToolDescriptor = ToolDescriptor(
-            name = "create_file",
-            description = "Create a file and writes the given text content to it",
-            requiredParameters = listOf(
-                ToolParameterDescriptor(
-                    name = "path",
-                    description = "The path to create the file",
-                    type = ToolParameterType.String
-                ),
-                ToolParameterDescriptor(
-                    name = "content",
-                    description = "The content to create the file",
-                    type = ToolParameterType.String
-                )
-            )
-        )
+        override val name: String = "create_file"
+        override val description: String =
+            "Create a file and writes the given text content to it"
 
         override suspend fun execute(args: Args): Result {
             val res = fs.create(args.path, args.content)
@@ -300,29 +275,19 @@ class AIAgentMultipleLLMIntegrationTest {
 
     class DeleteFile(private val fs: MockFileSystem) : Tool<DeleteFile.Args, DeleteFile.Result>() {
         @Serializable
-        data class Args(val path: String) : ToolArgs
+        data class Args(
+            @property:LLMDescription("The path of the file to be deleted")
+            val path: String
+        )
 
         @Serializable
-        data class Result(
-            val successful: Boolean,
-            val message: String? = null
-        ) : ToolResult {
-            override fun toStringDefault(): String = "successful: $successful, message: \"$message\""
-        }
+        data class Result(val successful: Boolean, val message: String? = null)
 
         override val argsSerializer = Args.serializer()
+        override val resultSerializer: KSerializer<Result> = Result.serializer()
 
-        override val descriptor: ToolDescriptor = ToolDescriptor(
-            name = "delete_file",
-            description = "Deletes a file",
-            requiredParameters = listOf(
-                ToolParameterDescriptor(
-                    name = "path",
-                    description = "The path of the file to be deleted",
-                    type = ToolParameterType.String
-                )
-            )
-        )
+        override val name: String = "delete_file"
+        override val description: String = "Deletes a file"
 
         override suspend fun execute(args: Args): Result {
             val res = fs.delete(args.path)
@@ -335,30 +300,23 @@ class AIAgentMultipleLLMIntegrationTest {
 
     class ReadFile(private val fs: MockFileSystem) : Tool<ReadFile.Args, ReadFile.Result>() {
         @Serializable
-        data class Args(val path: String) : ToolArgs
+        data class Args(
+            @property:LLMDescription("The path of the file to read")
+            val path: String
+        )
 
         @Serializable
         data class Result(
             val successful: Boolean,
             val message: String? = null,
             val content: String? = null
-        ) : ToolResult.JSONSerializable<Result> {
-            override fun getSerializer() = serializer()
-        }
+        )
 
         override val argsSerializer = Args.serializer()
+        override val resultSerializer: KSerializer<Result> = Result.serializer()
 
-        override val descriptor: ToolDescriptor = ToolDescriptor(
-            name = "read_file",
-            description = "Reads a file",
-            requiredParameters = listOf(
-                ToolParameterDescriptor(
-                    name = "path",
-                    description = "The path of the file to read",
-                    type = ToolParameterType.String
-                )
-            )
-        )
+        override val name: String = "read_file"
+        override val description: String = "Reads a file"
 
         override suspend fun execute(args: Args): Result {
             val res = fs.read(args.path)
@@ -371,31 +329,23 @@ class AIAgentMultipleLLMIntegrationTest {
 
     class ListFiles(private val fs: MockFileSystem) : Tool<ListFiles.Args, ListFiles.Result>() {
         @Serializable
-        data class Args(val path: String) : ToolArgs
+        data class Args(
+            @property:LLMDescription("The path of the directory")
+            val path: String
+        )
 
         @Serializable
         data class Result(
             val successful: Boolean,
             val message: String? = null,
             val children: List<String>? = null
-        ) : ToolResult {
-            override fun toStringDefault(): String =
-                "successful: $successful, message: \"$message\", children: ${children?.joinToString()}"
-        }
+        )
 
         override val argsSerializer = Args.serializer()
+        override val resultSerializer: KSerializer<Result> = Result.serializer()
 
-        override val descriptor: ToolDescriptor = ToolDescriptor(
-            name = "list_files",
-            description = "List all files inside the given path of the directory",
-            requiredParameters = listOf(
-                ToolParameterDescriptor(
-                    name = "path",
-                    description = "The path of the directory",
-                    type = ToolParameterType.String
-                )
-            )
-        )
+        override val name: String = "list_files"
+        override val description: String = "List all files inside the given path of the directory"
 
         override suspend fun execute(args: Args): Result {
             val res = fs.ls(args.path)
@@ -539,7 +489,7 @@ class AIAgentMultipleLLMIntegrationTest {
         )
 
         val strategy = strategy<String, String>("test-subgraph-only-tools") {
-            val fileOperationsSubgraph by subgraphWithTask<String>(
+            val fileOperationsSubgraph by subgraphWithTask<String, String>(
                 tools = subgraphTools,
                 llmModel = model,
                 llmParams = LLMParams(toolChoice = LLMParams.ToolChoice.Required)
@@ -547,11 +497,7 @@ class AIAgentMultipleLLMIntegrationTest {
                 "You are a helpful assistant that can perform file operations. Use the available tools to complete the following task: $input. Make sure to use tools when needed and provide clear feedback about what you've done."
             }
 
-            val extractResult by node<StringSubgraphResult, String> { subgraphResult ->
-                subgraphResult.result
-            }
-
-            nodeStart then fileOperationsSubgraph then extractResult then nodeFinish
+            nodeStart then fileOperationsSubgraph then nodeFinish
         }
 
         val toolRegistry = if (emptyAgentRegistry) {
@@ -559,7 +505,6 @@ class AIAgentMultipleLLMIntegrationTest {
         } else {
             ToolRegistry {
                 subgraphTools.forEach { tool(it) }
-                tool(ProvideStringSubgraphResult)
             }
         }
 

@@ -1,12 +1,10 @@
 package ai.koog.agents.ext.tool.file
 
 import ai.koog.agents.core.tools.Tool
-import ai.koog.agents.core.tools.ToolArgs
-import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolException
-import ai.koog.agents.core.tools.ToolParameterDescriptor
-import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.ToolResult
+import ai.koog.agents.core.tools.ToolResultUtils
+import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.core.tools.validate
 import ai.koog.agents.core.tools.validateNotNull
 import ai.koog.agents.ext.tool.file.model.FileSystemEntry
@@ -37,10 +35,13 @@ public class ReadFileTool<Path>(private val fs: FileSystemProvider.ReadOnly<Path
      */
     @Serializable
     public data class Args(
+        @property:LLMDescription("Absolute path to the text file you want to read (e.g., /home/user/file.txt)")
         val path: String,
+        @property:LLMDescription("First line to include (0-based, inclusive). Default is 0 to start from beginning")
         val startLine: Int = 0,
+        @property:LLMDescription("First line to exclude (0-based, exclusive). Use -1 to read until end. Default is -1")
         val endLine: Int = -1,
-    ) : ToolArgs
+    )
 
     /**
      * Contains the successfully read file with its metadata and extracted content.
@@ -52,9 +53,7 @@ public class ReadFileTool<Path>(private val fs: FileSystemProvider.ReadOnly<Path
      * @property file the file entry containing metadata and content
      */
     @Serializable
-    public data class Result(val file: FileSystemEntry.File) : ToolResult.JSONSerializable<Result> {
-        override fun getSerializer(): KSerializer<Result> = serializer()
-
+    public data class Result(val file: FileSystemEntry.File) : ToolResult.TextSerializable() {
         /**
          * Converts the result to a structured text representation.
          *
@@ -67,11 +66,22 @@ public class ReadFileTool<Path>(private val fs: FileSystemProvider.ReadOnly<Path
          *
          * @return formatted text representation of the file
          */
-        override fun toStringDefault(): String = text { file(file) }
+        override fun textForLLM(): String = text { file(file) }
     }
 
     override val argsSerializer: KSerializer<Args> = Args.serializer()
-    override val descriptor: ToolDescriptor = Companion.descriptor
+    override val resultSerializer: KSerializer<Result> = ToolResultUtils.toTextSerializer()
+    override val name: String = "__read_file__"
+    override val description: String = """
+        Reads a text file (throws if non-text) with optional line range selection. TEXT-ONLY - never reads binary files.
+        
+        Use this to:
+        - Read entire text files or specific line ranges
+        - Get file content along with metadata
+        - Extract portions of files using 0-based line indexing
+        
+        Returns file content and metadata (name, extension, path, hidden, size, contentType).
+    """.trimIndent()
 
     /**
      * Reads file content from the filesystem with optional line range filtering.
@@ -112,46 +122,5 @@ public class ReadFileTool<Path>(private val fs: FileSystemProvider.ReadOnly<Path
                 )
             }
         }.getOrThrow()
-    }
-
-    public companion object {
-        /**
-         * Provides a tool descriptor for the read file operation.
-         *
-         * Configures the tool to read text files with optional line range selection
-         * using 0-based indexing.
-         */
-        public val descriptor: ToolDescriptor = ToolDescriptor(
-            name = "__read_file__",
-            description = """
-                Reads a text file (throws if non-text) with optional line range selection. TEXT-ONLY - never reads binary files.
-                
-                Use this to:
-                - Read entire text files or specific line ranges
-                - Get file content along with metadata
-                - Extract portions of files using 0-based line indexing
-                
-                Returns file content and metadata (name, extension, path, hidden, size, contentType).
-            """.trimIndent(),
-            requiredParameters = listOf(
-                ToolParameterDescriptor(
-                    name = "path",
-                    description = "Absolute path to the text file you want to read (e.g., /home/user/file.txt)",
-                    type = ToolParameterType.String
-                )
-            ),
-            optionalParameters = listOf(
-                ToolParameterDescriptor(
-                    name = "startLine",
-                    description = "First line to include (0-based, inclusive). Default is 0 to start from beginning",
-                    type = ToolParameterType.Integer
-                ),
-                ToolParameterDescriptor(
-                    name = "endLine",
-                    description = "First line to exclude (0-based, exclusive). Use -1 to read until end. Default is -1",
-                    type = ToolParameterType.Integer
-                )
-            )
-        )
     }
 }

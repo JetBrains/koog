@@ -10,7 +10,7 @@ Key features include:
 - Agent definition and configuration
 - Graph-based execution model
 - Exception handling for common agent issues
-- Event subscription for monitoring agent execution
+- Interceptors for agent lifecycle, strategy, LLM, tool, and node events
 - Integration with LLM services
 - Tool registration and execution
 

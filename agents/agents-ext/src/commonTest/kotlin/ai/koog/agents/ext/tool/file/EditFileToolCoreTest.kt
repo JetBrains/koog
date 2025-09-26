@@ -54,7 +54,7 @@ class EditFileToolCoreTest {
         val result = tool.execute(args, object : DirectToolCallsEnabler {})
 
         // Then
-        val markdownReport = result.toMarkdown()
+        val markdownReport = result.textForLLM()
         assertContains(markdownReport, "Success")
         assertContains(markdownReport, "edit")
     }
@@ -278,7 +278,7 @@ class EditFileToolCoreTest {
         val result = tool.execute(args, object : DirectToolCallsEnabler {})
 
         // Then
-        val markdownReport = result.toMarkdown()
+        val markdownReport = result.textForLLM()
         assertFalse(markdownReport.contains("Successfully"), "Markdown should not indicate a successful edit")
 
         assertEquals(false, result.applied, "Patch should not be applied when original is not found")

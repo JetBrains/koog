@@ -73,5 +73,10 @@ public interface KoogHttpClient {
         processStreamingChunk: (R) -> O?
     ): Flow<O>
 
+    /**
+     * Easter egg companion object. Guess why it's here.
+     *
+     * Hint: it was created in order to not bring Ktor and other dependencies to the interface declaration
+     * */
     public companion object
 }

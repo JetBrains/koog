@@ -15,7 +15,9 @@ import ai.koog.agents.core.tools.reflect.asTools
 import ai.koog.agents.core.tools.reflect.tool
 import ai.koog.agents.core.tools.reflect.tools
 import ai.koog.agents.examples.tripplanning.api.OpenMeteoClient
-import ai.koog.agents.examples.tripplanning.tools.*
+import ai.koog.agents.examples.tripplanning.tools.UserTools
+import ai.koog.agents.examples.tripplanning.tools.WeatherTools
+import ai.koog.agents.examples.tripplanning.tools.addDate
 import ai.koog.agents.ext.agent.subgraphWithTask
 import ai.koog.agents.features.eventHandler.feature.handleEvents
 import ai.koog.prompt.dsl.prompt
@@ -44,15 +46,10 @@ fun createSimplePlannerAgent(
         tool(::addDate)
         tools(weatherTools)
         tools(userTools)
-
-        // Technical tools:
-        tool(ProvidePlanSuggestion)
-        tool(ProvideUserPlan)
-
     } + googleMapsMcpRegistry
 
     return AIAgent(
-        executor = promptExecutor,
+        promptExecutor = promptExecutor,
         llmModel = OpenAIModels.Chat.GPT4o,
         temperature = 0.3,
         toolRegistry = toolRegistry,
@@ -92,19 +89,12 @@ fun createPlannerAgent(
         tool(::addDate)
         tools(weatherTools)
         tools(userTools)
-
-        // Technical tools:
-        tool(ProvidePlanSuggestion)
-        tool(ProvideUserPlan)
-
     } + googleMapsMcpRegistry
 
     val plannerStrategy = plannerStrategy(
         googleMapsTools = googleMapTools,
         addDateTool = ::addDate.asTool(),
         weatherTools = weatherTools,
-        providePlanSuggestionTool = ProvidePlanSuggestion,
-        provideUserPlanTool = ProvideUserPlan,
         userTools = userTools,
     )
 
@@ -148,8 +138,6 @@ private fun plannerStrategy(
     googleMapsTools: List<Tool<*, *>>,
     addDateTool: Tool<*, *>,
     weatherTools: WeatherTools,
-    providePlanSuggestionTool: ProvidePlanSuggestion,
-    provideUserPlanTool: ProvideUserPlan,
     userTools: UserTools
 ) = strategy<UserInput, TripPlan>("planner-strategy") {
     val userPlanKey = createStorageKey<TripPlan>("user_plan")
@@ -172,8 +160,7 @@ private fun plannerStrategy(
     }
 
     val clarifyUserPlan by subgraphWithTask<String, TripPlan>(
-        tools = userTools.asTools() + addDateTool,
-        finishTool = provideUserPlanTool,
+        tools = userTools.asTools() + addDateTool
     ) { initialMessage ->
         xml {
             tag("instructions") {
@@ -189,8 +176,7 @@ private fun plannerStrategy(
     }
 
     val suggestPlan by subgraphWithTask<SuggestPlanRequest, TripPlan>(
-        tools = googleMapsTools + weatherTools.asTools(),
-        finishTool = providePlanSuggestionTool,
+        tools = googleMapsTools + weatherTools.asTools()
     ) { input ->
         xml {
             tag("instructions") {
@@ -229,7 +215,7 @@ private fun plannerStrategy(
             when (input) {
                 is SuggestPlanRequest.InitialRequest -> {
                     tag("user_plan") {
-                        +input.userPlan.toStringDefault()
+                        +input.userPlan.toMarkdownString()
                     }
                 }
 
@@ -239,11 +225,11 @@ private fun plannerStrategy(
                     }
 
                     tag("user_plan") {
-                        +input.userPlan.toStringDefault()
+                        +input.userPlan.toMarkdownString()
                     }
 
                     tag("previously_suggested_plan") {
-                        +input.prevSuggestedPlan.toStringDefault()
+                        +input.prevSuggestedPlan.toMarkdownString()
                     }
 
                     tag("user_feedback") {
@@ -299,22 +285,22 @@ private fun plannerStrategy(
 
     edge(
         savePrevSuggestedPlan forwardTo showPlanSuggestion
-                transformed { it.toStringDefault() }
+            transformed { it.toMarkdownString() }
     )
 
     edge(showPlanSuggestion forwardTo processUserFeedback)
 
     edge(
         processUserFeedback forwardTo createPlanCorrectionRequest
-                transformed { it.getOrThrow().structure }
-                onCondition { !it.isAccepted }
-                transformed { it.message }
+            transformed { it.getOrThrow().structure }
+            onCondition { !it.isAccepted }
+            transformed { it.message }
     )
     edge(
         processUserFeedback forwardTo nodeFinish
-                transformed { it.getOrThrow().structure }
-                onCondition { it.isAccepted }
-                transformed { storage.getValue(prevSuggestedPlanKey) }
+            transformed { it.getOrThrow().structure }
+            onCondition { it.isAccepted }
+            transformed { storage.getValue(prevSuggestedPlanKey) }
     )
 
     edge(createPlanCorrectionRequest forwardTo suggestPlan)

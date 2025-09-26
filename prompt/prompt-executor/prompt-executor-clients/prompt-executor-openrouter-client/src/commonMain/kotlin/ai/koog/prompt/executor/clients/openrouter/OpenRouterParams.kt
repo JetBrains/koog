@@ -2,6 +2,7 @@ package ai.koog.prompt.executor.clients.openrouter
 
 import ai.koog.prompt.executor.clients.openrouter.models.ProviderPreferences
 import ai.koog.prompt.params.LLMParams
+import kotlinx.serialization.json.JsonElement
 
 internal fun LLMParams.toOpenRouterParams(): OpenRouterParams {
     if (this is OpenRouterParams) return this
@@ -14,6 +15,7 @@ internal fun LLMParams.toOpenRouterParams(): OpenRouterParams {
         toolChoice = toolChoice,
         user = user,
         includeThoughts = includeThoughts,
+        additionalProperties = additionalProperties,
     )
 }
 
@@ -30,6 +32,7 @@ internal fun LLMParams.toOpenRouterParams(): OpenRouterParams {
  * @property user stable end-user identifier
  * @property includeThoughts Request inclusion of model “thoughts”/reasoning traces (model-dependent).
  * @property thinkingBudget Soft cap on tokens spent on internal reasoning (reasoning models).
+ * @property additionalProperties Additional properties that can be used to store custom parameters.
  * @property frequencyPenalty Number in [-2.0, 2.0]—penalizes frequent tokens to reduce repetition.
  * @property presencePenalty Number in [-2.0, 2.0]—encourages introduction of new tokens/topics.
  * @property logprobs Whether to include log-probabilities for output tokens.
@@ -58,6 +61,7 @@ public open class OpenRouterParams(
     user: String? = null,
     includeThoughts: Boolean? = null,
     thinkingBudget: Int? = null,
+    additionalProperties: Map<String, JsonElement>? = null,
     public val frequencyPenalty: Double? = null,
     public val presencePenalty: Double? = null,
     public val logprobs: Boolean? = null,
@@ -75,7 +79,7 @@ public open class OpenRouterParams(
 ) : LLMParams(
     temperature, maxTokens, numberOfChoices,
     speculation, schema, toolChoice,
-    user, includeThoughts, thinkingBudget
+    user, includeThoughts, thinkingBudget, additionalProperties
 ) {
     init {
         require(topP == null || topP in 0.0..1.0) {
@@ -129,6 +133,7 @@ public open class OpenRouterParams(
         user: String? = this.user,
         includeThoughts: Boolean? = this.includeThoughts,
         thinkingBudget: Int? = this.thinkingBudget,
+        additionalProperties: Map<String, JsonElement>? = this.additionalProperties,
         frequencyPenalty: Double? = this.frequencyPenalty,
         presencePenalty: Double? = this.presencePenalty,
         logprobs: Boolean? = this.logprobs,
@@ -153,6 +158,7 @@ public open class OpenRouterParams(
         user = user,
         includeThoughts = includeThoughts,
         thinkingBudget = thinkingBudget,
+        additionalProperties = additionalProperties,
         frequencyPenalty = frequencyPenalty,
         presencePenalty = presencePenalty,
         logprobs = logprobs,
@@ -182,6 +188,7 @@ public open class OpenRouterParams(
                 user == other.user &&
                 includeThoughts == other.includeThoughts &&
                 thinkingBudget == other.thinkingBudget &&
+                additionalProperties == other.additionalProperties &&
                 frequencyPenalty == other.frequencyPenalty &&
                 presencePenalty == other.presencePenalty &&
                 logprobs == other.logprobs &&
@@ -202,7 +209,7 @@ public open class OpenRouterParams(
         temperature, maxTokens, numberOfChoices,
         speculation, schema, toolChoice,
         user, includeThoughts, thinkingBudget,
-        frequencyPenalty, presencePenalty,
+        additionalProperties, frequencyPenalty, presencePenalty,
         logprobs, stop, topLogprobs, topP,
         topK, repetitionPenalty, minP,
         topA, transforms, models, route, provider,
@@ -221,6 +228,7 @@ public open class OpenRouterParams(
         append(", user=$user")
         append(", includeThoughts=$includeThoughts")
         append(", thinkingBudget=$thinkingBudget")
+        append(", additionalProperties=$additionalProperties")
         append(", frequencyPenalty=$frequencyPenalty")
         append(", presencePenalty=$presencePenalty")
         append(", logprobs=$logprobs")

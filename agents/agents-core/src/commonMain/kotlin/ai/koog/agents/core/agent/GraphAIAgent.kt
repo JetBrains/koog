@@ -137,7 +137,7 @@ public open class GraphAIAgent<Input, Output>(
             // Environment (initially equal to the current agent), transformed by some features
             //   (ex: testing feature transforms it into a MockEnvironment with mocked tools)
             val preparedEnvironment =
-                pipeline.transformEnvironment(strategy = strategy, agent = this@GraphAIAgent, baseEnvironment = environment)
+                pipeline.onAgentEnvironmentTransforming(strategy = strategy, agent = this@GraphAIAgent, baseEnvironment = environment)
 
             val agentContext = AIAgentGraphContext(
                 environment = preparedEnvironment,
@@ -168,7 +168,7 @@ public open class GraphAIAgent<Input, Output>(
 
             logger.debug { formatLog(agentId = this@GraphAIAgent.id, runId = runId, message = "Starting agent execution") }
 
-            pipeline.onBeforeAgentStarted<Input, Output>(
+            pipeline.onAgentStarting<Input, Output>(
                 runId = runId,
                 agent = this@GraphAIAgent,
                 context = agentContext
@@ -178,7 +178,7 @@ public open class GraphAIAgent<Input, Output>(
                 strategy.execute(context = agentContext, input = agentInput)
             } catch (e: Throwable) {
                 logger.error(e) { "Execution exception reported by server!" }
-                pipeline.onAgentRunError(agentId = this@GraphAIAgent.id, runId = runId, throwable = e)
+                pipeline.onAgentExecutionFailed(agentId = this@GraphAIAgent.id, runId = runId, throwable = e)
                 throw e
             } finally {
                 runningMutex.withLock {
@@ -187,14 +187,14 @@ public open class GraphAIAgent<Input, Output>(
             }
 
             logger.debug { formatLog(agentId = this@GraphAIAgent.id, runId = runId, message = "Finished agent execution") }
-            pipeline.onAgentFinished(agentId = this@GraphAIAgent.id, runId = runId, result = result, resultType = outputType)
+            pipeline.onAgentCompleted(agentId = this@GraphAIAgent.id, runId = runId, result = result, resultType = outputType)
 
             return@withContext result ?: error("result is null")
         }
     }
 
     override suspend fun close() {
-        pipeline.onAgentBeforeClosed(agentId = this@GraphAIAgent.id)
+        pipeline.onAgentClosing(agentId = this@GraphAIAgent.id)
         pipeline.closeFeaturesStreamProviders()
     }
 

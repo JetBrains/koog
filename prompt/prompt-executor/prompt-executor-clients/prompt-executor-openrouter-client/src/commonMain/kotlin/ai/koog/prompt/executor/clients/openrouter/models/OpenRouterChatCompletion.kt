@@ -11,8 +11,10 @@ import ai.koog.prompt.executor.clients.openai.base.models.OpenAIStreamChoice
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAITool
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolChoice
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIUsage
+import ai.koog.prompt.executor.clients.serialization.AdditionalPropertiesFlatteningSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
 
 /**
  * OpenRouter Chat Completions API Request
@@ -47,7 +49,8 @@ internal class OpenRouterChatCompletionRequest(
     val models: List<String>? = null,
     val route: String? = null,
     val provider: ProviderPreferences? = null,
-    val user: String? = null
+    val user: String? = null,
+    val additionalProperties: Map<String, JsonElement>? = null,
 ) : OpenAIBaseLLMRequest
 
 /**
@@ -105,3 +108,6 @@ public class OpenRouterChatCompletionStreamResponse(
     public val objectType: String = "chat.completion.chunk",
     public val usage: OpenAIUsage? = null,
 ) : OpenAIBaseLLMStreamResponse
+
+internal object OpenRouterChatCompletionRequestSerializer :
+    AdditionalPropertiesFlatteningSerializer<OpenRouterChatCompletionRequest>(OpenRouterChatCompletionRequest.serializer())

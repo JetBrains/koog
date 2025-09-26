@@ -6,8 +6,6 @@ import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.onAssistantMessage
-import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.ext.agent.ProvideStringSubgraphResult
 import ai.koog.agents.ext.agent.subgraphWithTask
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.tracing.feature.Tracing
@@ -60,9 +58,7 @@ fun main() {
             // Create the ToolRegistry with tools from the MCP server
             val toolRegistry = McpToolRegistryProvider.fromTransport(
                 transport = McpToolRegistryProvider.defaultStdioTransport(process)
-            ) + ToolRegistry {
-                tool(ProvideStringSubgraphResult)
-            }
+            )
 
             toolRegistry.tools.forEach {
                 println(it.name)
@@ -84,7 +80,7 @@ fun main() {
 
             val strategy = strategy<String, String>("unity_interaction") {
                 val nodePlanIngredients by nodeLLMRequest(allowToolCalls = false)
-                val interactionWithUnity by subgraphWithTask<String>(
+                val interactionWithUnity by subgraphWithTask<String, String>(
                     // work with plan
                     tools = toolRegistry.tools,
                 ) { input ->
@@ -100,7 +96,7 @@ fun main() {
                     }
                 )
                 edge(nodePlanIngredients forwardTo interactionWithUnity onAssistantMessage { true })
-                edge(interactionWithUnity forwardTo nodeFinish transformed { it.result })
+                edge(interactionWithUnity forwardTo nodeFinish)
             }
 
             val agent = AIAgent(

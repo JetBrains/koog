@@ -1,8 +1,6 @@
 package ai.koog.prompt.executor.clients.google
 
-import ai.koog.prompt.executor.clients.google.GoogleFunctionCallingMode.ANY
-import ai.koog.prompt.executor.clients.google.GoogleFunctionCallingMode.AUTO
-import ai.koog.prompt.executor.clients.google.GoogleFunctionCallingMode.NONE
+import ai.koog.prompt.executor.clients.serialization.AdditionalPropertiesFlatteningSerializer
 import ai.koog.utils.serializers.ByteArrayAsBase64Serializer
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.SerialName
@@ -32,6 +30,7 @@ internal class GoogleRequest(
     val contents: List<GoogleContent>,
     val tools: List<GoogleTool>? = null,
     val systemInstruction: GoogleContent? = null,
+    @Serializable(with = GoogleGenerationConfigSerializer::class)
     val generationConfig: GoogleGenerationConfig? = null,
     val toolConfig: GoogleToolConfig? = null,
 )
@@ -53,29 +52,24 @@ internal class GoogleContent(
 )
 
 /**
- * A datatype containing media that is part of a multipart `Content` message.
- *
- * A `Part` consists of data which has an associated datatype.
- * A `Part` can only contain one of the accepted types in `Part.data`.
- *
- * A Part must have a fixed IANA MIME type identifying the type and subtype of the media
- * if the `inlineData` field is filled with raw bytes.
- *
- * @property thought Indicates if the part is thought from the model.
- *
- * @property data data can be only one of the following:
- *   - [Text] - inline text.
- *   - [InlineData] - Inline media bytes.
- *   - [FunctionCall] - A predicted `FunctionCall` returned from the model that contains a string representing
- *   the `FunctionDeclaration.name` with the arguments and their values.
- *   - [FunctionResponse] - The result output of a `FunctionCall` that contains a string representing the
- *   `FunctionDeclaration.name` and a structured JSON object containing any output from the function is used as context to the model.
- *
+ * Represents a sealed interface for different parts of Google-related data or actions.
+ * Each subclass provides a specific type of data or functionality.
  */
 @Serializable(with = GooglePartSerializer::class)
 internal sealed interface GooglePart {
     val thought: Boolean?
 
+    /**
+     * Represents a text element in a Google-specific data context.
+     *
+     * This class is part of the `GooglePart` sealed interface and provides
+     * functionality for handling textual data. The `text` property contains
+     * the actual text, while the optional `thought` property indicates an
+     * additional contextual attribute, such as internal state or intent.
+     *
+     * @property text The textual content represented by this class.
+     * @property thought An optional boolean indicating a specific contextual attribute.
+     */
     @Serializable
     @SerialName("text")
     data class Text(
@@ -83,6 +77,17 @@ internal sealed interface GooglePart {
         override val thought: Boolean? = null,
     ) : GooglePart
 
+    /**
+     * Represents inline binary data as part of the Google-specific data context.
+     *
+     * This class is a concrete implementation of the `GooglePart` sealed interface
+     * and is used for encapsulating raw media data in the form of a `GoogleData.Blob` object.
+     * It also supports an optional contextual attribute indicating additional state or intent.
+     *
+     * @property inlineData An instance of `GoogleData.Blob` containing raw media bytes,
+     * including its MIME type and base64-encoded data.
+     * @property thought An optional boolean indicating a specific contextual attribute.
+     */
     @Serializable
     @SerialName("inlineData")
     data class InlineData(
@@ -90,6 +95,18 @@ internal sealed interface GooglePart {
         override val thought: Boolean? = null,
     ) : GooglePart
 
+    /**
+     * Represents a file data part in the Google ecosystem for serialization purposes.
+     *
+     * This class is used to encapsulate file data along with an optional boolean flag
+     * indicating supplemental information. It extends the [GooglePart] interface,
+     * making it a functional component for broader use cases.
+     *
+     * @property fileData Contains file-specific metadata such as MIME type and URI,
+     * provided by [GoogleData.FileData].
+     * @property thought An optional flag that may represent additional information
+     * associated with this file data part.
+     */
     @Serializable
     @SerialName("fileData")
     data class FileData(
@@ -97,6 +114,14 @@ internal sealed interface GooglePart {
         override val thought: Boolean? = null,
     ) : GooglePart
 
+    /**
+     * Represents a predicted function call returned from the model.
+     * This contains the function name, arguments, and their values.
+     *
+     * @property functionCall The details of the function call including its unique id, name,
+     *                        and arguments in JSON object format.
+     * @property thought      Indicates whether the function call is associated with a thought or reasoning.
+     */
     @Serializable
     @SerialName("functionCall")
     data class FunctionCall(
@@ -104,6 +129,17 @@ internal sealed interface GooglePart {
         override val thought: Boolean? = null,
     ) : GooglePart
 
+    /**
+     * Represents a response from a function call made during the interaction with the GoogleData model.
+     *
+     * This class encapsulates the details of the function response, including the function's name,
+     * unique identifier, and the corresponding output in a structured JSON format.
+     *
+     * @property functionResponse The result of a function call returned from the model.
+     * This includes the function's name, identifier, and its structured response.
+     * @property thought Indicates whether the response contains a thought, providing an additional context
+     * or reasoning about the model's output.
+     */
     @Serializable
     @SerialName("functionResponse")
     data class FunctionResponse(
@@ -130,7 +166,8 @@ internal sealed interface GoogleData {
      *   - image/jpeg
      *
      * If an unsupported MIME type is provided, an error will be returned.
-     * For a complete list of supported types, see [Supported file formats](https://ai.google.dev/gemini-api/docs/prompting_with_media#supported_file_formats).
+     * For a complete list of supported types,
+     * see [Supported file formats](https://ai.google.dev/gemini-api/docs/prompting_with_media#supported_file_formats).
      *
      * @property data Raw bytes for media formats. A base64-encoded string.
      */
@@ -141,6 +178,12 @@ internal sealed interface GoogleData {
         val data: ByteArray,
     ) : GoogleData
 
+    /**
+     * Represents file data with associated MIME type and URI.
+     *
+     * @property mimeType The MIME type of the file, representing its format (e.g., "image/png", "application/pdf").
+     * @property fileUri The URI location of the file, typically used to retrieve it.
+     */
     @Serializable
     class FileData(
         val mimeType: String,
@@ -247,6 +290,7 @@ internal class GoogleFunctionDeclaration(
  * and how many tokens it may spend on it (see [GoogleThinkingConfig]).
  */
 @Serializable
+@Suppress("LongParameterList")
 internal class GoogleGenerationConfig(
     val responseMimeType: String? = null,
     val responseSchema: JsonObject? = null,
@@ -256,7 +300,8 @@ internal class GoogleGenerationConfig(
     val candidateCount: Int? = null,
     val topP: Double? = null,
     val topK: Int? = null,
-    val thinkingConfig: GoogleThinkingConfig? = null
+    val thinkingConfig: GoogleThinkingConfig? = null,
+    val additionalProperties: Map<String, JsonElement>? = null,
 )
 
 /**
@@ -401,6 +446,22 @@ internal class GoogleUsageMetadata(
     val totalTokenCount: Int? = null,
 )
 
+/**
+ * A polymorphic JSON serializer for the `GooglePart` sealed interface.
+ *
+ * This serializer dynamically selects the appropriate deserialization strategy
+ * for the `GooglePart` based on the presence of specific fields in the JSON object.
+ * Each subclass of `GooglePart` is identified using unique keys in the JSON structure.
+ *
+ * The serializer checks for the following fields to determine the correct deserialization strategy:
+ * - `text`: Selects the `GooglePart.Text` deserializer.
+ * - `inlineData`: Selects the `GooglePart.InlineData` deserializer.
+ * - `fileData`: Selects the `GooglePart.FileData` deserializer.
+ * - `functionCall`: Selects the `GooglePart.FunctionCall` deserializer.
+ * - `functionResponse`: Selects the `GooglePart.FunctionResponse` deserializer.
+ *
+ * Throws [SerializationException] for unknown or unsupported JSON structures.
+ */
 internal object GooglePartSerializer : JsonContentPolymorphicSerializer<GooglePart>(GooglePart::class) {
     override fun selectDeserializer(element: JsonElement): DeserializationStrategy<GooglePart> {
         fun has(field: String) = element.jsonObject.containsKey(field)
@@ -415,3 +476,18 @@ internal object GooglePartSerializer : JsonContentPolymorphicSerializer<GooglePa
         }
     }
 }
+
+/**
+ * Serializer for `GoogleGenerationConfig` that handles additional properties in the object.
+ *
+ * This serializer customizes the default behavior for serializing and deserializing
+ * `GoogleGenerationConfig` objects by flattening the `additionalProperties` field
+ * into the root of the JSON object during serialization. During deserialization, it
+ * collects unknown or extra properties from the JSON object and stores them in the
+ * `additionalProperties` field.
+ *
+ * Inherits behavior from `AdditionalPropertiesFlatteningSerializer` by using
+ * `GoogleGenerationConfig`'s structure to manage known and unknown properties.
+ */
+internal object GoogleGenerationConfigSerializer :
+    AdditionalPropertiesFlatteningSerializer<GoogleGenerationConfig>(GoogleGenerationConfig.serializer())
