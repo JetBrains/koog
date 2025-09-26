@@ -1,6 +1,7 @@
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.AIAgentSession
 import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.agent.context.element.AgentRunInfoContextElement
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
@@ -22,17 +23,23 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.JsonPrimitive
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.assertDoesNotThrow
+import kotlin.coroutines.CoroutineContext
 import kotlin.reflect.typeOf
 import kotlin.test.Test
 import kotlin.test.assertContains
@@ -226,14 +233,9 @@ class CheckpointsTests {
             }
         }
 
-        var sessionDef: CompletableDeferred<AIAgentSession<String, String>> = CompletableDeferred()
+        val session = agent.launch("Start", scope = this)
 
-        val task1 = GlobalScope.launch(Dispatchers.Default.limitedParallelism(3)) {
-            sessionDef.complete(agent.launch("Start"))
-        }
-
-        val task2 = GlobalScope.launch(Dispatchers.Default.limitedParallelism(3)) {
-            val session = sessionDef.await()
+        val task2 = launch {
             assertEquals("after-checkpoint", rollbackConfig.notifications.receive())
             rollbackConfig.commands.send("continue")
 
@@ -245,8 +247,12 @@ class CheckpointsTests {
             assertContains(databaseMap, "user-3")
 
             session.withContext {
-                persistency().rollbackToCheckpoint("checkpoint-1", this)
+                withPersistency(this) { ctx ->
+                    rollbackToCheckpoint("ckpt-1", ctx)!!
+                }
             }
+
+            rollbackConfig.commands.send("go further!")
 
             assertEquals("after-checkpoint", rollbackConfig.notifications.receive())
 
@@ -262,7 +268,6 @@ class CheckpointsTests {
             }
         }
 
-        task1.join()
         task2.join()
     }
 

@@ -10,7 +10,13 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.coroutineContext
 import kotlin.reflect.typeOf
 
 /**
@@ -34,7 +40,10 @@ public interface AIAgent<Input, Output> : Closeable {
      * @param agentInput The input provided to initiate the AI agent's session.
      * @return An instance of [AIAgentSession] that represents the ongoing session for the agent.
      */
-    public suspend fun launch(agentInput: Input): AIAgentSession<Input, Output>
+    public suspend fun launch(
+        agentInput: Input,
+        scope: CoroutineScope
+    ): AIAgentSession<Input, Output>
 
     /**
      * Executes the AI agent with the given input and retrieves the resulting output.
@@ -42,7 +51,9 @@ public interface AIAgent<Input, Output> : Closeable {
      * @param agentInput The input for the agent.
      * @return The output produced by the agent.
      */
-    public suspend fun run(agentInput: Input): Output = launch(agentInput).result()
+    public suspend fun run(agentInput: Input): Output = withContext(currentCoroutineContext()) {
+        launch(agentInput, this).result()
+    }
 
     /**
      * The companion object for the AIAgent class, providing functionality to instantiate an AI agent

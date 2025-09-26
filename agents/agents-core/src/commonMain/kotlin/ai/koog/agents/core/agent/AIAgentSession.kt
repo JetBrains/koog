@@ -4,7 +4,9 @@ import ai.koog.agents.core.agent.context.AIAgentContext
 import io.ktor.utils.io.core.Input
 import io.ktor.utils.io.core.Output
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.sync.Mutex
+import kotlin.coroutines.CoroutineContext
 
 /**
  * AIAgentSession is a generic class that manages the execution context and result of an AI agent session.
@@ -13,11 +15,12 @@ import kotlinx.coroutines.sync.Mutex
  */
 public interface AIAgentSession<Input, Output> {
     /**
-     * Initiates the execution of an AI agent session with the provided input.
+     * Launches the AI agent session with the provided input and runs it within the specified coroutine scope.
      *
-     * @param agentInput The input data of type Input required to begin the AI agent session.
+     * @param agentInput The input data required to start the AI agent session.
+     * @param scope The coroutine scope used to launch and manage the session execution.
      */
-    public suspend fun launch(agentInput: Input)
+    public suspend fun launch(agentInput: Input, scope: CoroutineScope)
 
     /**
      * Awaits and retrieves the result produced by the AI agent session.

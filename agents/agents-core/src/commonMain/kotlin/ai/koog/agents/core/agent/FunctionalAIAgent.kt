@@ -18,12 +18,15 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.executor.model.PromptExecutor
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
+import kotlin.coroutines.CoroutineContext
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -98,7 +101,7 @@ public class FunctionalAIAgent<Input, Output>(
             sessionJob.cancel()
         }
 
-        override suspend fun launch(agentInput: Input) {
+        override suspend fun launch(agentInput: Input, scope: CoroutineScope) {
             runningMutex.withLock {
                 if (isRunning) {
                     throw IllegalStateException("Agent is already running")
@@ -124,7 +127,7 @@ public class FunctionalAIAgent<Input, Output>(
                 clock = clock
             )
 
-            context = AIAgentFunctionalContext(
+            this@FunctionalAIAgentSession.context = AIAgentFunctionalContext(
                 environment,
                 this@FunctionalAIAgent.id,
                 runId,
@@ -138,16 +141,16 @@ public class FunctionalAIAgent<Input, Output>(
             )
 
 
-            withContext(
-                AgentRunInfoContextElement(
-                    agentId = this@FunctionalAIAgent.id,
-                    runId = runId,
-                    agentConfig = agentConfig,
-                    strategyName = strategy.name
-                )
-            ) {
-                sessionJob = launch {
-                    val result = strategy.execute(context, agentInput)
+            sessionJob = scope.launch {
+                withContext(
+                    AgentRunInfoContextElement(
+                        agentId = this@FunctionalAIAgent.id,
+                        runId = runId,
+                        agentConfig = agentConfig,
+                        strategyName = strategy.name
+                    )
+                ) {
+                    val result = strategy.execute(this@FunctionalAIAgentSession.context, agentInput)
 
                     runningMutex.withLock {
                         isRunning = false
@@ -161,8 +164,8 @@ public class FunctionalAIAgent<Input, Output>(
         override suspend fun result(): Output = resultDeferred.await()
     }
 
-    override suspend fun launch(agentInput: Input): AIAgentSession<Input, Output> =
-        FunctionalAIAgentSession().also { it.launch(agentInput) }
+    override suspend fun launch(agentInput: Input, scope: CoroutineScope): AIAgentSession<Input, Output> =
+        FunctionalAIAgentSession().also { it.launch(agentInput, scope) }
 
     private val pipeline = AIAgentNonGraphPipeline(clock)
 
