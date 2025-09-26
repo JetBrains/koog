@@ -1,12 +1,10 @@
 package com.jetbrains.example.kotlin_agents_demo_app.agents.weather
 
 import ai.koog.agents.core.tools.Tool
-import ai.koog.agents.core.tools.ToolArgs
-import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.agents.core.tools.ToolParameterDescriptor
-import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.ToolResult
+import ai.koog.agents.core.tools.ToolResultUtils
 import ai.koog.agents.core.tools.annotations.LLMDescription
+import demo_compose_app.app.generated.resources.Res
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimePeriod
 import kotlinx.datetime.LocalDate
@@ -56,14 +54,14 @@ object WeatherTools {
             val date: String,
             val time: String,
             val timezone: String
-        ) : ToolResult {
-            override fun toStringDefault(): String {
+        ) : ToolResult.TextSerializable() {
+            override fun textForLLM(): String {
                 return "Current datetime: $datetime, Date: $date, Time: $time, Timezone: $timezone"
             }
         }
 
         override val argsSerializer = Args.serializer()
-        override val resultSerializer: KSerializer<Result> = Result.serializer()
+        override val resultSerializer: KSerializer<Result> = ToolResultUtils.toTextSerializer<Result>()
 
         override val name = "current_datetime"
         override val description = "Get the current date and time in the specified timezone"
@@ -117,8 +115,8 @@ object WeatherTools {
             val daysAdded: Int,
             val hoursAdded: Int,
             val minutesAdded: Int
-        ) : ToolResult {
-            override fun toStringDefault(): String {
+        ) : ToolResult.TextSerializable() {
+            override fun textForLLM(): String {
                 return buildString {
                     append("Date: $date")
                     if (originalDate.isBlank()) {
@@ -149,9 +147,11 @@ object WeatherTools {
         }
 
         override val argsSerializer = Args.serializer()
+        override val resultSerializer = ToolResultUtils.toTextSerializer<Result>()
 
         override val name = "add_datetime"
-        override val description = "Add a duration to a date. Use this tool when you need to calculate offsets, such as tomorrow, in two days, etc."
+        override val description =
+            "Add a duration to a date. Use this tool when you need to calculate offsets, such as tomorrow, in two days, etc."
 
         override suspend fun execute(args: Args): Result {
             val baseDate = if (args.date.isNotBlank()) {
@@ -194,7 +194,7 @@ object WeatherTools {
     object WeatherForecastTool : Tool<WeatherForecastTool.Args, WeatherForecastTool.Result>() {
         @Serializable
         data class Args(
-            @property:LLMDescription("The location to get the weather forecast for (e.g., 'New York', 'London', 'Paris')",)
+            @property:LLMDescription("The location to get the weather forecast for (e.g., 'New York', 'London', 'Paris')")
             val location: String,
             @property:LLMDescription("The date to get the weather forecast for in ISO format (e.g., '2023-05-20'). If empty, the forecast starts from today.")
             val date: String = "",
@@ -211,8 +211,8 @@ object WeatherTools {
             val forecast: String,
             val date: String,
             val granularity: Granularity
-        ) : ToolResult {
-            override fun toStringDefault(): String {
+        ) : ToolResult.TextSerializable() {
+            override fun textForLLM(): String {
                 val granularityText = when (granularity) {
                     Granularity.DAILY -> "daily"
                     Granularity.HOURLY -> "hourly"
@@ -229,6 +229,7 @@ object WeatherTools {
         }
 
         override val argsSerializer = Args.serializer()
+        override val resultSerializer = ToolResultUtils.toTextSerializer<Result>()
 
         override val name = "weather_forecast"
         override val description = "Get a weather forecast for a location with specified granularity (daily or hourly)"
