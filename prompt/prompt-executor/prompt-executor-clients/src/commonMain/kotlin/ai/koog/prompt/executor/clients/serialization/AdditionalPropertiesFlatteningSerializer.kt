@@ -6,9 +6,6 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonTransformingSerializer
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
-import kotlin.collections.component1
-import kotlin.collections.component2
-import kotlin.sequences.forEach
 
 /**
  * JSON serializer that handles additional properties in objects.
