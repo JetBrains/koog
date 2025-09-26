@@ -84,8 +84,7 @@ object Models {
         OpenRouterModels.GPT5Nano,
         OpenRouterModels.DeepSeekV30324,
         OpenRouterModels.Claude4Sonnet,
-        // ToDo add Gemini when KG-203 is fixed
-        // OpenRouterModels.Gemini2_5FlashLite,
+        OpenRouterModels.Gemini2_5FlashLite,
     )
 
     @JvmStatic
