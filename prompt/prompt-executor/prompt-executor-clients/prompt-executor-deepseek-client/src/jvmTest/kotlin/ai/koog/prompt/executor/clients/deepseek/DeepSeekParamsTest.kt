@@ -1,11 +1,14 @@
 package ai.koog.prompt.executor.clients.deepseek
 
 import ai.koog.prompt.params.LLMParams
+import io.kotest.matchers.equality.shouldBeEqualToComparingFields
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.assertEquals
 
-class DeepSeekParamsValidationTest {
+class DeepSeekParamsTest {
 
     @Test
     fun `topP bounds`() {
@@ -45,6 +48,31 @@ class DeepSeekParamsValidationTest {
     }
 
     @Test
+    fun `Should make a full copy`() {
+        val source = DeepSeekParams(
+            temperature = 0.43,
+            maxTokens = 100500,
+            numberOfChoices = 42,
+            speculation = "forex",
+            schema = LLMParams.Schema.JSON.Basic("test", JsonObject(mapOf())),
+            toolChoice = LLMParams.ToolChoice.Named("calculator"),
+            user = "alice",
+            includeThoughts = true,
+            thinkingBudget = 500,
+            additionalProperties = mapOf("foo" to JsonPrimitive("bar")),
+            frequencyPenalty = 0.5,
+            presencePenalty = 0.6,
+            logprobs = true,
+            stop = listOf("cancel"),
+            topLogprobs = 15,
+            topP = 0.87
+        )
+
+        val target = source.copy()
+        target shouldBeEqualToComparingFields source
+    }
+
+    @Test
     fun `LLMParams to DeepSeek conversion preserves base fields`() {
         val base = LLMParams(
             temperature = 0.5,
@@ -53,6 +81,7 @@ class DeepSeekParamsValidationTest {
             speculation = "sp",
             user = "uid",
             includeThoughts = false,
+            additionalProperties = mapOf("foo" to JsonPrimitive("bar"))
         )
         val ds = base.toDeepSeekParams()
         assertEquals(base.temperature, ds.temperature)

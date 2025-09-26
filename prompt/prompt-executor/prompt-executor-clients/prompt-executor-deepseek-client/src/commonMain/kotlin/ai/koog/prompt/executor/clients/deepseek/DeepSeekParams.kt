@@ -40,6 +40,7 @@ internal fun LLMParams.toDeepSeekParams(): DeepSeekParams {
  * @property topLogprobs Number of top alternatives per position (0–20). Requires [logprobs] = true.
  * @property topP Nucleus sampling in (0.0, 1.0]; use **instead of** [temperature].
  */
+@Suppress("LongParameterList")
 public class DeepSeekParams(
     temperature: Double? = null,
     maxTokens: Int? = null,

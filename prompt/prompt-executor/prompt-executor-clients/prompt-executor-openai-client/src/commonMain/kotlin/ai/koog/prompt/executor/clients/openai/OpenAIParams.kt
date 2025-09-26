@@ -23,6 +23,7 @@ internal fun LLMParams.toOpenAIChatParams(): OpenAIChatParams {
         toolChoice = toolChoice,
         user = user,
         includeThoughts = includeThoughts,
+        additionalProperties = additionalProperties,
     )
 }
 
@@ -37,6 +38,7 @@ internal fun LLMParams.toOpenAIResponsesParams(): OpenAIResponsesParams {
         toolChoice = toolChoice,
         user = user,
         includeThoughts = includeThoughts,
+        additionalProperties = additionalProperties,
     )
 }
 
@@ -75,6 +77,7 @@ internal fun LLMParams.toOpenAIResponsesParams(): OpenAIResponsesParams {
  * @property topP Nucleus sampling in (0.0, 1.0]; use **instead of** [temperature].
  * @property webSearchOptions Configure web search tool usage (if supported).
  */
+@Suppress("LongParameterList")
 public class OpenAIChatParams(
     temperature: Double? = null,
     maxTokens: Int? = null,

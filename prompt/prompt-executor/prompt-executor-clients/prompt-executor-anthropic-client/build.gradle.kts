@@ -27,13 +27,13 @@ kotlin {
 
         jvmMain {
             dependencies {
-                api(libs.ktor.client.cio)
+                implementation(libs.ktor.client.cio)
             }
         }
 
         jsMain {
             dependencies {
-                api(libs.ktor.client.js)
+                implementation(libs.ktor.client.js)
             }
         }
 
@@ -41,11 +41,6 @@ kotlin {
             dependencies {
                 implementation(project(":test-utils"))
                 implementation(libs.kotest.assertions.json)
-            }
-        }
-
-        jvmTest {
-            dependencies {
             }
         }
     }

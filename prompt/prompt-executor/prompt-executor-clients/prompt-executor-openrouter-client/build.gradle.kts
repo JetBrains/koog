@@ -19,16 +19,8 @@ kotlin {
 
         commonTest {
             dependencies {
-                implementation(kotlin("test"))
-                implementation(libs.kotlinx.coroutines.test)
+                implementation(project(":test-utils"))
                 implementation(libs.kotlinx.serialization.core)
-                implementation(libs.kotlinx.serialization.json)
-            }
-        }
-
-        jvmTest {
-            dependencies {
-                implementation(kotlin("test-junit5"))
             }
         }
     }

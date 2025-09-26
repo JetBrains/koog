@@ -23,21 +23,13 @@ kotlin {
 
         commonTest {
             dependencies {
-                implementation(kotlin("test"))
-                implementation(libs.kotlinx.coroutines.test)
+                implementation(project(":test-utils"))
             }
         }
 
         jsTest {
             dependencies {
                 implementation(kotlin("test-js"))
-            }
-        }
-
-        jvmTest {
-            dependencies {
-                implementation(kotlin("test-junit5"))
-                implementation(libs.junit.jupiter.params)
             }
         }
     }

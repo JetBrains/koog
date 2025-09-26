@@ -1,5 +1,6 @@
 package ai.koog.prompt.executor.clients.google
 
+import ai.koog.test.utils.verifyDeserialization
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
@@ -82,16 +83,23 @@ class GoogleSerializationTest {
 
     @Test
     fun `test deserialization without additional properties`() {
-        val jsonInput = buildJsonObject {
-            put("responseMimeType", JsonPrimitive("application/json"))
-            put("maxOutputTokens", JsonPrimitive(1000))
-            put("temperature", JsonPrimitive(0.7))
-            put("candidateCount", JsonPrimitive(1))
-            put("topP", JsonPrimitive(0.9))
-            put("topK", JsonPrimitive(40))
-        }
+        val jsonString =
+            // language=json
+            """
+            {
+                "responseMimeType": "application/json",
+                "maxOutputTokens": 1000,
+                "temperature": 0.7,
+                "candidateCount": 1,
+                "topP": 0.9,
+                "topK": 40
+            }
+            """.trimIndent()
 
-        val request = json.decodeFromJsonElement<GoogleGenerationConfig>(jsonInput)
+        val request: GoogleGenerationConfig = verifyDeserialization(
+            payload = jsonString,
+            json = json
+        )
 
         assertEquals("application/json", request.responseMimeType)
         assertEquals(1000, request.maxOutputTokens)
@@ -104,37 +112,41 @@ class GoogleSerializationTest {
 
     @Test
     fun `test deserialization with additional properties`() {
-        val jsonInput = buildJsonObject {
-            put("responseMimeType", JsonPrimitive("application/json"))
-            put("maxOutputTokens", JsonPrimitive(1000))
-            put("temperature", JsonPrimitive(0.7))
-            put("customProperty", JsonPrimitive("customValue"))
-            put("customNumber", JsonPrimitive(42))
-            put("customBoolean", JsonPrimitive(true))
-        }
-        val input = buildJsonObject {
-            put(
-                "contents",
-                json.encodeToJsonElement(
-                    listOf(
-                        GoogleContent(
-                            role = "user",
-                            parts = listOf(GooglePart.Text("Hello"))
-                        )
-                    )
-                )
-            )
-            put("generationConfig", jsonInput)
-        }
+        val jsonString =
+            // language=json
+            """ {
+                "contents": [
+                   {
+                     "role": "user",
+                     "parts": [{"text": "Hello"}]
+                   }
+               ], 
+                "generationConfig": {
+                    "responseMimeType": "application/json",
+                    "maxOutputTokens": 1000,
+                    "temperature": 0.7,
+                    "candidateCount": 1,
+                    "topP": 0.9,
+                    "topK": 40,
+                    "customProperty": "customValue",
+                    "customNumber": 42,
+                    "customBoolean": true
+                }
+            }
+            """.trimIndent()
 
-        val request = json.decodeFromJsonElement<GoogleRequest>(input).generationConfig
+        val request: GoogleRequest = verifyDeserialization(
+            payload = jsonString,
+            json = json
+        )
+        val generationConfig = request.generationConfig!!
 
-        assertEquals("application/json", request?.responseMimeType)
-        assertEquals(1000, request?.maxOutputTokens)
-        assertEquals(0.7, request?.temperature)
+        assertEquals("application/json", generationConfig.responseMimeType)
+        assertEquals(1000, generationConfig.maxOutputTokens)
+        assertEquals(0.7, generationConfig.temperature)
 
-        assertNotNull(request?.additionalProperties)
-        val additionalProps = request.additionalProperties
+        assertNotNull(generationConfig.additionalProperties)
+        val additionalProps = generationConfig.additionalProperties
         assertEquals(3, additionalProps.size)
         assertEquals("customValue", additionalProps["customProperty"]?.jsonPrimitive?.contentOrNull)
         assertEquals(42, additionalProps["customNumber"]?.jsonPrimitive?.intOrNull)

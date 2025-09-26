@@ -15,6 +15,7 @@ internal fun LLMParams.toOpenRouterParams(): OpenRouterParams {
         toolChoice = toolChoice,
         user = user,
         includeThoughts = includeThoughts,
+        additionalProperties = additionalProperties,
     )
 }
 

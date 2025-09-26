@@ -1,5 +1,7 @@
 package ai.koog.prompt.params
 
+import io.kotest.matchers.equality.shouldBeEqualToComparingFields
+import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -273,15 +275,6 @@ class LLMParamsTest {
 
         val copied = original.copy()
 
-        assertEquals(original.temperature, copied.temperature)
-        assertEquals(original.maxTokens, copied.maxTokens)
-        assertEquals(original.numberOfChoices, copied.numberOfChoices)
-        assertEquals(original.speculation, copied.speculation)
-        assertEquals(original.schema, copied.schema)
-        assertEquals(original.toolChoice, copied.toolChoice)
-        assertEquals(original.user, copied.user)
-        assertEquals(original.includeThoughts, copied.includeThoughts)
-        assertEquals(original.thinkingBudget, copied.thinkingBudget)
-        assertEquals(original.additionalProperties, copied.additionalProperties)
+        copied shouldBeEqualToComparingFields original
     }
 }

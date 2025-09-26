@@ -33,6 +33,7 @@ import kotlinx.serialization.json.JsonPrimitive
  * @property additionalProperties Additional properties that can be used to store custom parameters.
  */
 @Serializable
+@Suppress("LongParameterList")
 public open class LLMParams(
     public val temperature: Double? = null,
     public val maxTokens: Int? = null,
