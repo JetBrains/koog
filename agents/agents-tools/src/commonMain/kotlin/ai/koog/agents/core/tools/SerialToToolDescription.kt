@@ -13,16 +13,10 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonDecoder
-import kotlinx.serialization.json.floatOrNull
-import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
-import kotlinx.serialization.json.longOrNull
-
 
 private fun SerialDescriptor.description(): String =
     annotations.filterIsInstance<LLMDescription>().firstOrNull()?.description ?: ""
-
 
 /**
  * Converts a [SerialDescriptor] into a [ToolDescriptor] with metadata about a tool,
