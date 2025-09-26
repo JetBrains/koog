@@ -26,11 +26,11 @@ import kotlinx.serialization.Serializable
 @Serializable
 @LLMDescription("Result of the evaluation")
 public data class CriticResultFromLLM(
-    @property:LLMDescription("Was the plan correct?")
+    @property:LLMDescription("Was the task solved correctly?")
     val isCorrect: Boolean,
     @property:LLMDescription(
-        "Optional feedback about the plan. " +
-            "Only needed if `isCorrect == false` and if plan needs adjustments."
+        "Optional feedback about the provided solution. " +
+            "Only needed if `isCorrect == false` and if solution needs adjustments."
     )
     val feedback: String
 )
