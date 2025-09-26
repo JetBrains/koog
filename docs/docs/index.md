@@ -56,7 +56,7 @@ To use Koog, you need to include all necessary dependencies in your build config
 
 1. Add dependencies to the `build.gradle.kts` file:
 
-    ```kotlin
+    ```
     dependencies {
         implementation("ai.koog:koog-agents:LATEST_VERSION")
        // include Ktor client dependency explicitly

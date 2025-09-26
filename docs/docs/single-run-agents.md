@@ -30,7 +30,7 @@ To learn more about configuration options, see [API reference](https://api.koog.
 
 To use the `AIAgent` functionality, include all necessary dependencies in your build configuration:
 
-```kotlin
+```
 dependencies {
     implementation("ai.koog:koog-agents:$koog_version")
     // include Ktor client dependency explicitly
