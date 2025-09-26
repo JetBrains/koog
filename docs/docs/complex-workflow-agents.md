@@ -39,7 +39,7 @@ For all available installation methods, see [Installation](index.md#installation
 Prompt executors manage and run prompts.
 You can choose a prompt executor based on the LLM provider you plan to use.
 Also, you can create a custom prompt executor using one of the available LLM clients.
-To learn more, see [Prompt executors](prompt-api.md#prompt-executors).
+To learn more, see [Prompt executors](prompt-api.md#running-prompts-with-prompt-executors).
 
 For example, to provide the OpenAI prompt executor, you need to call the `simpleOpenAIExecutor` function and provide it with the API key required for authentication with the OpenAI service:
 
@@ -391,7 +391,7 @@ fun main() {
 
 ## Working with structured data
 
-The `AIAgent` can process structured data from LLM outputs. For more details, see [Structured data processing](structured-data.md).
+The `AIAgent` can process structured data from LLM outputs. For more details, see [Structured data processing](structured-output.md).
 
 ## Using parallel tool calls
 

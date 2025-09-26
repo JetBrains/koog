@@ -222,7 +222,7 @@ To choose between clients and executors, consider the following factors:
 
 - Use LLM clients directly if you work with a single LLM provider and do not require advanced lifecycle management. To learm more, see [Running prompts with LLM clients](#running-prompts-with-llm-clients).
 - Use prompt executors if you need a higher level of abstraction for managing LLMs and their lifecycle, or if you want to run prompts with a consistent API across multiple providers and dynamically switch between them.
-  To learn more, see [Runnning prompts with prompt executors](#running-prompts-with-executors).
+  To learn more, see [Runnning prompts with prompt executors](#running-prompts-with-prompt-executors).
 
 !!!note
     Both the LLM clients and prompt executors let you stream responses, generate multiple choices, and run content moderation.
@@ -375,7 +375,7 @@ To create a prompt executor that works with multiple LLM providers, do the follo
 1) Configure clients for the required LLM providers with the corresponding API keys:
 <!--- INCLUDE
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
-import ai.koog.prompt.executor.ollama.client.OllamaClient
+import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
 -->
 ```kotlin
 val openAIClient = OpenAILLMClient(System.getenv("OPENAI_KEY"))
@@ -408,7 +408,7 @@ For faster setup, Koog provides the following ready-to-use executor implementati
     - `simpleAnthropicExecutor` for executing prompts with Anthropic models.
     - `simpleGoogleAIExecutor` for executing prompts with Google models.
     - `simpleOpenRouterExecutor` for executing prompts with OpenRouter.
-    - `simpleOllamaExecutor` for executing prompts with Ollama.
+    - `simpleOllamaAIExecutor` for executing prompts with Ollama.
 
 - Multi-provider executor:
     - `DefaultMultiLLMPromptExecutor` which is an implementation of `MultiLLMPromptExecutor` that supports OpenAI, Anthropic, and Google providers.
