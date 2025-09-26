@@ -1,10 +1,7 @@
 package ai.koog.agents.ext.tool.file
 
 import ai.koog.agents.core.tools.Tool
-import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolException
-import ai.koog.agents.core.tools.ToolParameterDescriptor
-import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.core.tools.ToolResultUtils
 import ai.koog.agents.core.tools.annotations.LLMDescription
@@ -17,7 +14,6 @@ import ai.koog.rag.base.files.FileMetadata
 import ai.koog.rag.base.files.FileSystemProvider
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.builtins.serializer
 
 /**
  * Provides functionality to read file contents with configurable start and end line parameters,

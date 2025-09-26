@@ -41,7 +41,6 @@ public data class VerifiedSubgraphResult(
     val message: String,
 )
 
-
 /**
  * Utility object providing tools and methods for working with subgraphs and tasks in a controlled
  * and structured way. These utilities are designed to help finalize subgraph-related tasks and
@@ -180,7 +179,6 @@ public inline fun <reified Input, reified Output> AIAgentSubgraphBuilderBase<*, 
     defineTask = defineTask
 )
 
-
 /**
  * Defines a subgraph with a specific task to be performed by an AI agent.
  *
@@ -241,7 +239,6 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
     setupSubgraphWithTask<Input, Output, OutputTransformed>(finishToolDescriptor, defineTask)
 }
 
-
 /**
  * [subgraphWithTask] with [VerifiedSubgraphResult] result.
  * It verifies if the task was performed correctly or not, and describes the problems if any.
@@ -289,7 +286,6 @@ public inline fun <reified Input> AIAgentSubgraphBuilderBase<*, *>.subgraphWithV
     llmParams = llmParams,
     defineTask = defineTask
 )
-
 
 /**
  * Configures a subgraph within the AI agent framework, associating it with required tasks and operations.
@@ -343,7 +339,7 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
      * Works like a normal `nodeExecuteTool` but a bit hacked: if LLM decides to call the fake "finaize_result" tool,
      * it doesn't execute it.
      * */
-    val callToolHacked by node<Message.Tool.Call, ReceivedToolResult>() { toolCall ->
+    val callToolHacked by node<Message.Tool.Call, ReceivedToolResult> { toolCall ->
         if (toolCall.tool == FINALIZE_SUBGRAPH_TOOL_NAME) {
             val toolResult =
                 Json.decodeFromString(serializer<Output>().asToolDescriptorDeserializer(), toolCall.content)
@@ -374,8 +370,7 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
     edge(nodeDecide forwardTo callToolHacked onToolCall { true })
     // throw to terminate the agent early with exception
     edge(
-        nodeDecide forwardTo nodeFinish
-            transformed {
+        nodeDecide forwardTo nodeFinish transformed {
             throw IllegalStateException(
                 "Subgraph with task must always call tools, but no tool call was generated, got instead: $it"
             )

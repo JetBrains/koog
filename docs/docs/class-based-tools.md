@@ -203,7 +203,7 @@ object EditFile : Tool<EditFile.Args, EditFile.Result>() {
                 line {
                     text("File was ")
                         .bold("not")
-                        .text(" modified (patch application failed: ${patchApplyResult.reason})")
+                        .text(" modified (patch application failed: ${(patchApplyResult as PatchApplyResult.Failure).reason})")
                 }
             }
         }
@@ -213,7 +213,7 @@ object EditFile : Tool<EditFile.Args, EditFile.Result>() {
 
     // Serializers for the args and Result class
     override val argsSerializer = Args.serializer()
-    val resultSerializer = Result.serializer()
+    override val resultSerializer = Result.serializer()
 
     // Description of the tool, visible to LLM
     override val description = "Edits the given file"

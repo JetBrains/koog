@@ -20,6 +20,7 @@ public sealed interface FileSystemEntry {
      * This variable is typically used to hold textual data corresponding to a name.
      */
     public val name: String
+
     /**
      * Represents the optional file extension of the file system entry.
      *
@@ -29,6 +30,7 @@ public sealed interface FileSystemEntry {
      * the entry is not a file, this value may be `null`.
      */
     public val extension: String?
+
     /**
      * Represents a filesystem or resource path.
      *
@@ -36,6 +38,7 @@ public sealed interface FileSystemEntry {
      * of an absolute or relative path to a file, directory, or resource.
      */
     public val path: String
+
     /**
      * Indicates whether the file system entry is hidden.
      *

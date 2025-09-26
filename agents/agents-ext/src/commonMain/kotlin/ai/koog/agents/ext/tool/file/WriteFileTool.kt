@@ -72,14 +72,14 @@ public class WriteFileTool<Path>(private val fs: FileSystemProvider.ReadWrite<Pa
     override val argsSerializer: KSerializer<Args> = Args.serializer()
     override val name: String = "__write_file__"
     override val description: String = """
-            Writes text content to a file at an absolute path. Creates parent directories if needed and overwrites existing content.
-            
-            Use this to:
-            - Create new text files with content
-            - Replace entire content of existing files
-            
-            Returns file metadata (name, extension, path, hidden, size, contentType).
-            """.trimIndent()
+        Writes text content to a file at an absolute path. Creates parent directories if needed and overwrites existing content.
+        
+        Use this to:
+        - Create new text files with content
+        - Replace entire content of existing files
+        
+        Returns file metadata (name, extension, path, hidden, size, contentType).
+        """.trimIndent()
 
     /**
      * Writes text content to the filesystem at the specified absolute path.
