@@ -1,5 +1,6 @@
 package ai.koog.agents.ext.agent
 
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.tools.annotations.LLMDescription
@@ -10,9 +11,21 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.structure.StructureFixingParser
 import kotlinx.serialization.Serializable
 
+/**
+ * Represents the result of a plan evaluation performed by an LLM (Large Language Model).
+ *
+ * This class is primarily used within internal agent-related implementations where an LLM
+ * evaluates the correctness of a plan and optionally provides feedback for improvements.
+ *
+ * @property isCorrect Indicates whether the evaluated plan is correct.
+ * @property feedback Optional feedback provided by the LLM about the evaluated plan. This property
+ *        is populated only when the plan is deemed incorrect (`isCorrect == false`) and adjustments
+ *        are suggested.
+ */
+@InternalAgentsApi
 @Serializable
 @LLMDescription("Result of the evaluation")
-internal data class CriticResultFromLLM(
+public data class CriticResultFromLLM(
     @property:LLMDescription("Was the plan correct?")
     val isCorrect: Boolean,
     @property:LLMDescription(
@@ -27,10 +40,10 @@ internal data class CriticResultFromLLM(
  *
  * @property successful Indicates whether the critique operation was successful.
  * @property feedback A textual message providing details about the*/
-public data class CriticResult(
+public data class CriticResult<T>(
     val successful: Boolean,
     val feedback: String,
-    val input: String
+    val input: T
 )
 
 /**
@@ -40,10 +53,11 @@ public data class CriticResult(
  * @param llmModel The optional language model to override the default model during the session. If `null`, the default model will be used.
  * @param task The task or instruction to be presented to the language model for critical evaluation.
  */
-public fun AIAgentSubgraphBuilderBase<*, *>.llmAsAJudge(
+@OptIn(InternalAgentsApi::class)
+public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.llmAsAJudge(
     llmModel: LLModel? = null,
     task: String
-): AIAgentNodeDelegate<String, CriticResult> = node<String, CriticResult> { nodeInput ->
+): AIAgentNodeDelegate<T, CriticResult<T>> = node<T, CriticResult<T>> { nodeInput ->
     llm.writeSession {
         val initialPrompt = prompt.copy()
         val initialModel = model
