@@ -1,6 +1,5 @@
 package ai.koog.agents.snapshot.feature
 
-import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.reflect.asTool
 import kotlin.reflect.KFunction
 
@@ -16,8 +15,6 @@ public fun RollbackToolRegistry.Builder.registerRollback(
 ) {
     this.registerRollback(toolFunction.asTool(), rollbackToolFunction.asTool())
 }
-
-
 
 /**
  * Adds a tool and its corresponding rollback tool to the registry.

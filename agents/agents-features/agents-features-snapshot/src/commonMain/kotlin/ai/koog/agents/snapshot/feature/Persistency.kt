@@ -311,21 +311,23 @@ public class Persistency(
     ): AgentCheckpointData? {
         val checkpoint: AgentCheckpointData? = getCheckpointById(checkpointId)
         if (checkpoint != null) {
-            agentContext.store(checkpoint.toAgentContextData(rollbackStrategy) { context ->
-                messageHistoryDiff(
-                    currentMessages = context.llm.prompt.messages,
-                    checkpointMessages = checkpoint.messageHistory
-                )
-                    .filterIsInstance<Message.Tool.Call>()
-                    .reversed()
-                    .forEach { toolCall ->
-                        rollbackToolRegistry.getRollbackTool(toolCall.tool)?.let { rollbackTool ->
-                            val toolArgs = rollbackTool.decodeArgs(toolCall.contentJson)
+            agentContext.store(
+                checkpoint.toAgentContextData(rollbackStrategy) { context ->
+                    messageHistoryDiff(
+                        currentMessages = context.llm.prompt.messages,
+                        checkpointMessages = checkpoint.messageHistory
+                    )
+                        .filterIsInstance<Message.Tool.Call>()
+                        .reversed()
+                        .forEach { toolCall ->
+                            rollbackToolRegistry.getRollbackTool(toolCall.tool)?.let { rollbackTool ->
+                                val toolArgs = rollbackTool.decodeArgs(toolCall.contentJson)
 
-                            rollbackTool.executeUnsafe(toolArgs, DirectToolCallsEnablerImpl)
+                                rollbackTool.executeUnsafe(toolArgs, DirectToolCallsEnablerImpl)
+                            }
                         }
-                    }
-            })
+                }
+            )
         }
 
         return checkpoint

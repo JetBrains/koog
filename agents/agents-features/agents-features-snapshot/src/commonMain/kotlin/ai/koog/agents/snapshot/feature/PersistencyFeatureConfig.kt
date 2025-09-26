@@ -2,9 +2,9 @@ package ai.koog.agents.snapshot.feature
 
 import ai.koog.agents.core.agent.context.RollbackStrategy
 import ai.koog.agents.core.feature.config.FeatureConfig
+import ai.koog.agents.snapshot.feature.RollbackToolRegistry
 import ai.koog.agents.snapshot.providers.NoPersistencyStorageProvider
 import ai.koog.agents.snapshot.providers.PersistencyStorageProvider
-import ai.koog.agents.snapshot.feature.RollbackToolRegistry
 
 /**
  * Configuration class for the Snapshot feature.
