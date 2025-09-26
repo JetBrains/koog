@@ -1,7 +1,6 @@
 package ai.koog.prompt.params
 
 import io.kotest.matchers.equality.shouldBeEqualToComparingFields
-import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -12,7 +11,6 @@ import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
-
 class LLMParamsTest {
 
     companion object {
