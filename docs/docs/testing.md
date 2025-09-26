@@ -88,7 +88,7 @@ public object CreateTool : Tool<CreateTool.Args, String>() {
     override val resultSerializer: KSerializer<String> = String.serializer()
 
     override val name = "message"
-    override val toolDescription = "Service tool, used by the agent to talk with user"
+    override val description = "Service tool, used by the agent to talk with user"
 
     override suspend fun execute(args: Args): String = args.message
 }
@@ -109,7 +109,7 @@ public object SearchTool : Tool<SearchTool.Args, String>() {
     override val resultSerializer: KSerializer<String> = String.serializer()
 
     override val name = "message"
-    override val toolDescription = "Service tool, used by the agent to talk with user"
+    override val description = "Service tool, used by the agent to talk with user"
 
     override suspend fun execute(args: Args): String = args.query
 }
@@ -131,7 +131,7 @@ public object AnalyzeTool : Tool<AnalyzeTool.Args, String>() {
     override val resultSerializer: KSerializer<String> = String.serializer()
 
     override val name = "message"
-    override val toolDescription = "Service tool, used by the agent to talk with user"
+    override val description = "Service tool, used by the agent to talk with user"
 
     override suspend fun execute(args: Args): String = args.query
 }
@@ -365,7 +365,7 @@ object SolveTool : SimpleTool<SolveTool.Args>() {
     override val argsSerializer: KSerializer<Args> = Args.serializer()
  
     override val name = "message"
-    override val toolDescription = "Service tool, used by the agent to talk with user"
+    override val description = "Service tool, used by the agent to talk with user"
 
     override suspend fun doExecute(args: Args): String {
         return args.message
@@ -438,7 +438,7 @@ object AnalyzeTool : Tool<AnalyzeTool.Args, String>() {
     override val resultSerializer: KSerializer<String> = String.serializer()
  
     override val name = "message"
-    override val toolDescription = "Service tool, used by the agent to talk with user"
+    override val description = "Service tool, used by the agent to talk with user"
 
     override suspend fun execute(args: Args): String = args.query
 }
@@ -512,7 +512,7 @@ object AnalyzeTool : Tool<AnalyzeTool.Args, AnalyzeTool.Result>() {
     override val resultSerializer: KSerializer<Result> = Result.serializer()
  
     override val name = "message"
-    override val toolDescription = "Service tool, used by the agent to talk with user"
+    override val description = "Service tool, used by the agent to talk with user"
 
     override suspend fun execute(args: Args): Result {
         return Result(

@@ -26,7 +26,7 @@ object ProjectGeneratorTools {
         override val resultSerializer: KSerializer<Result> = Result.serializer()
 
         override val name: String = "create_file"
-        override val toolDescription: String =
+        override val description: String =
             "Creates a file under the provided relative path, with the specified content"
 
         override suspend fun execute(args: Args): Result {
@@ -63,7 +63,7 @@ object ProjectGeneratorTools {
         override val resultSerializer: KSerializer<Result> = Result.serializer()
 
         override val name: String = "read_file"
-        override val toolDescription: String =
+        override val description: String =
             "Reads a file under the provided RELATIVE path, with the specified content"
 
         override suspend fun execute(args: Args): Result {
@@ -113,7 +113,7 @@ object ProjectGeneratorTools {
         override val resultSerializer: KSerializer<Result> = Result.serializer()
 
         override val name: String = "ls_directory"
-        override val toolDescription: String = "Lists all the files and directories under the provided RELATIVE path"
+        override val description: String = "Lists all the files and directories under the provided RELATIVE path"
 
         override suspend fun execute(args: Args): Result {
             val path = rootProjectPath.resolve(args.path).normalize()
@@ -159,7 +159,7 @@ object ProjectGeneratorTools {
         override val resultSerializer: KSerializer<Result> = Result.serializer()
 
         override val name: String = "create_directory"
-        override val toolDescription: String = "Creates a directory under the provided relative path"
+        override val description: String = "Creates a directory under the provided relative path"
 
         override suspend fun execute(args: Args): Result {
             val path = rootProjectPath.resolve(args.path).normalize()
@@ -190,7 +190,7 @@ object ProjectGeneratorTools {
         override val resultSerializer: KSerializer<Result> = Result.serializer()
 
         override val name: String = "delete_directory"
-        override val toolDescription: String = "Removes a directory under the provided relative path"
+        override val description: String = "Removes a directory under the provided relative path"
 
         override suspend fun execute(args: Args): Result {
             val path = rootProjectPath.resolve(args.path).normalize()
@@ -226,7 +226,7 @@ object ProjectGeneratorTools {
         override val resultSerializer: KSerializer<Result> = Result.serializer()
 
         override val name: String = "delete_file"
-        override val toolDescription: String = "Deletes a file under the provided relative path"
+        override val description: String = "Deletes a file under the provided relative path"
 
         override suspend fun execute(args: Args): Result {
             val path = rootProjectPath.resolve(args.path).normalize()
@@ -260,7 +260,7 @@ object ProjectGeneratorTools {
         override val resultSerializer: KSerializer<Result> = Result.serializer()
 
         override val name: String = "run_bash_command"
-        override val toolDescription: String = "Runs the provided bash command in the project root directory"
+        override val description: String = "Runs the provided bash command in the project root directory"
 
         override suspend fun execute(args: Args): Result {
             if (args.bashCommand.isBlank()) {

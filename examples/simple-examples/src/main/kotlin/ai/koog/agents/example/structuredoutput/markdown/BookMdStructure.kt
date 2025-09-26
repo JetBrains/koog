@@ -25,7 +25,7 @@ class BookTool() : SimpleTool<Book>() {
     }
 
     override val name: String = "book"
-    override val toolDescription: String = "A tool to parse book information from markdown"
+    override val description: String = "A tool to parse book information from markdown"
 
     override suspend fun doExecute(args: Book): String {
         println("${args.bookName} by ${args.author}:\n ${args.description}")

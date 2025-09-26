@@ -14,7 +14,7 @@ class Move(val game: ChessGame) : SimpleTool<Move.Args>() {
     override val argsSerializer = Args.serializer()
 
     override val name: String = "move"
-    override val toolDescription: String = "Moves a piece according to the notation:\n${game.moveNotation}"
+    override val description: String = "Moves a piece according to the notation:\n${game.moveNotation}"
 
     override suspend fun doExecute(args: Args): String {
         game.move(args.notation)

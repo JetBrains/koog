@@ -147,7 +147,7 @@ class BookTool() : SimpleTool<Book>() {
         get() = Book.serializer()
 
     override val name = NAME
-    override val toolDescription = "A tool to parse book information from Markdown"
+    override val description = "A tool to parse book information from Markdown"
 }
 
 val strategy = strategy<Unit, Unit>("strategy-name") {

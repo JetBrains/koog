@@ -77,7 +77,7 @@ object CalculatorTool : Tool<CalculatorTool.Args, Int>() {
     // Name of the tool, visible to LLM (by default will be derrived from the class name)
     override val name = "calculator"
     // Description of the tool, visible to LLM. Required
-    override val toolDescription = "A simple calculator that can add two digits (0-9)."
+    override val description = "A simple calculator that can add two digits (0-9)."
 
     // Function to add two digits
     override suspend fun execute(args: Args): Int = args.digit1 + args.digit2
@@ -135,7 +135,7 @@ object CastToDoubleTool : SimpleTool<CastToDoubleTool.Args>() {
     override val argsSerializer = Args.serializer()
 
     // Description of the tool, visible to LLM
-    override val toolDescription = "casts the passed expression to double or returns 0.0 if the expression is not castable"
+    override val description = "casts the passed expression to double or returns 0.0 if the expression is not castable"
     
     // Function that executes the tool with the provided arguments
     override suspend fun doExecute(args: Args): String {
@@ -215,7 +215,7 @@ object EditFile : Tool<EditFile.Args, EditFile.Result>() {
     override val argsSerializer = Args.serializer()
 
     // Description of the tool, visible to LLM
-    override val toolDescription = "Edits the given file"
+    override val description = "Edits the given file"
     
     // Function that executes the tool with the provided arguments
     override suspend fun execute(args: Args): Result {

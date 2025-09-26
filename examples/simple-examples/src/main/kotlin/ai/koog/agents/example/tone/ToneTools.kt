@@ -16,7 +16,7 @@ object ToneTools {
      */
     abstract class ToneTool(
         override val name: String,
-        override val toolDescription: String,
+        override val description: String,
         private val toneType: String
     ) : SimpleTool<ToneTool.Args>() {
         @Serializable
@@ -60,7 +60,7 @@ object ToneTools {
      */
     object PositiveToneTool : ToneTool(
         name = "positive_tone_analyzer",
-        toolDescription = "Analyzes if the given text has a positive tone.",
+        description = "Analyzes if the given text has a positive tone.",
         toneType = "positive"
     )
 
@@ -69,7 +69,7 @@ object ToneTools {
      */
     object NegativeToneTool : ToneTool(
         name = "negative_tone_analyzer",
-        toolDescription = "Analyzes if the given text has a negative tone.",
+        description = "Analyzes if the given text has a negative tone.",
         toneType = "negative"
     )
 
@@ -78,7 +78,7 @@ object ToneTools {
      */
     object NeutralToneTool : ToneTool(
         name = "neutral_tone_analyzer",
-        toolDescription = "Analyzes if the given text has a neutral tone.",
+        description = "Analyzes if the given text has a neutral tone.",
         toneType = "neutral"
     )
 
