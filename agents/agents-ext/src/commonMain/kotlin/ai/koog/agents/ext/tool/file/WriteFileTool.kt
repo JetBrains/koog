@@ -79,7 +79,7 @@ public class WriteFileTool<Path>(private val fs: FileSystemProvider.ReadWrite<Pa
         - Replace entire content of existing files
         
         Returns file metadata (name, extension, path, hidden, size, contentType).
-        """.trimIndent()
+    """.trimIndent()
 
     /**
      * Writes text content to the filesystem at the specified absolute path.

@@ -21,11 +21,7 @@ object CalculatorTools {
         )
 
         @Serializable
-        class Result(val result: Float) {
-            override fun toStringDefault(): String {
-                return result.toString()
-            }
-        }
+        class Result(val result: Float)
 
         final override val argsSerializer = Args.serializer()
         final override val resultSerializer = Result.serializer()
