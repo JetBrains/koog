@@ -311,7 +311,10 @@ public class Persistency(
         val checkpoint: AgentCheckpointData? = getCheckpointById(checkpointId)
         if (checkpoint != null) {
             agentContext.store(checkpoint.toAgentContextData(rollbackStrategy) { context ->
-                (context.llm.prompt.messages - checkpoint.messageHistory.toSet())
+                messageHistoryDiff(
+                    currentMessages = context.llm.prompt.messages,
+                    checkpointMessages = checkpoint.messageHistory
+                )
                     .filterIsInstance<Message.Tool.Call>()
                     .reversed()
                     .forEach { toolCall ->
@@ -325,6 +328,27 @@ public class Persistency(
         }
 
         return checkpoint
+    }
+
+    /**
+     * Returns the difference only.
+     * ex: current messages: [1, 2, 3, 4, 5, 6, 7], checkpoint messages: [1, 2, 3, 4, 5] -> diff messages: 6, 7
+     *
+     * Only works for the scenario when current chat histor is AHEAD of the checkpoint (i.e. we are restoring BACKWARDS in time),
+     * otherwise will return an empty list!
+     * */
+    private fun messageHistoryDiff(currentMessages: List<Message>, checkpointMessages: List<Message>): List<Message> {
+        if (checkpointMessages.size > currentMessages.size) {
+            return emptyList()
+        }
+
+        checkpointMessages.forEachIndexed { index, message ->
+            if (currentMessages[index] != message) {
+                return emptyList()
+            }
+        }
+
+        return currentMessages.takeLast(currentMessages.size - checkpointMessages.size)
     }
 
     /**
