@@ -1,7 +1,6 @@
 package ai.koog.agents.features.tracing.mock
 
 import ai.koog.agents.core.tools.SimpleTool
-import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor

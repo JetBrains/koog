@@ -517,7 +517,6 @@ class ToolComplexParameterTypesTest {
         override val argsSerializer = Args.serializer()
         override val resultSerializer: KSerializer<Result> = Result.serializer()
 
-
         override val name = "object_tool"
         override val description: String = "Tool with object parameter"
 
@@ -582,7 +581,6 @@ class ToolComplexParameterTypesTest {
 
         override val argsSerializer = Args.serializer()
         override val resultSerializer: KSerializer<Result> = Result.serializer()
-
 
         override val name = "object_with_additional_properties_tool"
         override val description: String = "Tool with object with additional properties parameter"

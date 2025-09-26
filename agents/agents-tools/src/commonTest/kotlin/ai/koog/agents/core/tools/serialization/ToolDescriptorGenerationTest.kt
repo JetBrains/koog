@@ -13,7 +13,7 @@ import kotlin.test.assertEquals
  * Address type enum.
  */
 @Serializable
-enum class  AddressType {
+enum class AddressType {
     HOME,
     WORK,
     OTHER

@@ -41,7 +41,8 @@ class SerialToToolDescriptionTest {
 
     @Serializable
     data class FreeFormHolder(
-        @Contextual val meta: Any? = null // contextual => free-form property mapping
+        // contextual => free-form property mapping
+        @Contextual val meta: Any? = null
     )
 
     // ---------- Tests ----------
@@ -211,9 +212,9 @@ class SerialToToolDescriptionTest {
     val expectedTripPlanToolDescriptor = ToolDescriptor(
         name = "provideTripPlan",
         description = """
-                Finish tool to compile final plan suggestion for the user's request. 
-                Call to provide the final plan suggestion result.
-            """.trimIndent(),
+            Finish tool to compile final plan suggestion for the user's request. 
+            Call to provide the final plan suggestion result.
+        """.trimIndent(),
         requiredParameters = listOf(
             ToolParameterDescriptor(
                 name = "steps",

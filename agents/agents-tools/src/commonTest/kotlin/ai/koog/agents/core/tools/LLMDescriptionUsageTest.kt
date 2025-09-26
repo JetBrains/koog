@@ -5,8 +5,8 @@ import ai.koog.agents.core.tools.annotations.LLMDescription
 import kotlinx.serialization.Serializable
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 import kotlin.test.assertIs
+import kotlin.test.assertTrue
 
 @OptIn(InternalAgentToolsApi::class)
 class LLMDescriptionUsageTest {
@@ -47,7 +47,7 @@ class LLMDescriptionUsageTest {
         // Per implementation, param descriptions are taken from class-level descriptor annotations
         assertEquals(
             "INT property desc",
-        desc.requiredParameters.single { it.name == "x" }.description
+            desc.requiredParameters.single { it.name == "x" }.description
         )
         assertEquals(
             "STRING property desc",
