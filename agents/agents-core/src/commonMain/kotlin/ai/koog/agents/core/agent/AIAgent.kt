@@ -29,12 +29,20 @@ public interface AIAgent<Input, Output> : Closeable {
     public val agentConfig: AIAgentConfigBase
 
     /**
+     * Launches an AI agent with the specified input and begins a new running session.
+     *
+     * @param agentInput The input provided to initiate the AI agent's session.
+     * @return An instance of [AIAgentSession] that represents the ongoing session for the agent.
+     */
+    public suspend fun launch(agentInput: Input): AIAgentSession<Input, Output>
+
+    /**
      * Executes the AI agent with the given input and retrieves the resulting output.
      *
      * @param agentInput The input for the agent.
      * @return The output produced by the agent.
      */
-    public suspend fun run(agentInput: Input): Output
+    public suspend fun run(agentInput: Input): Output = launch(agentInput).result()
 
     /**
      * The companion object for the AIAgent class, providing functionality to instantiate an AI agent
