@@ -15,10 +15,8 @@ import ai.koog.agents.core.dsl.extension.onToolCall
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.ext.agent.ProvideStringSubgraphResult
-import ai.koog.agents.ext.agent.StringSubgraphResult
-import ai.koog.agents.ext.agent.subgraphWithTask
 import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.agents.ext.agent.subgraphWithTask
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
 import ai.koog.integration.tests.agent.ReportingLLMLLMClient.Event
@@ -346,7 +344,6 @@ class AIAgentMultipleLLMIntegrationTest {
         override val argsSerializer = Args.serializer()
         override val resultSerializer: KSerializer<Result> = Result.serializer()
 
-
         override val name: String = "list_files"
         override val description: String = "List all files inside the given path of the directory"
 
@@ -492,7 +489,7 @@ class AIAgentMultipleLLMIntegrationTest {
         )
 
         val strategy = strategy<String, String>("test-subgraph-only-tools") {
-            val fileOperationsSubgraph by subgraphWithTask<String>(
+            val fileOperationsSubgraph by subgraphWithTask<String, String>(
                 tools = subgraphTools,
                 llmModel = model,
                 llmParams = LLMParams(toolChoice = LLMParams.ToolChoice.Required)
@@ -500,11 +497,7 @@ class AIAgentMultipleLLMIntegrationTest {
                 "You are a helpful assistant that can perform file operations. Use the available tools to complete the following task: $input. Make sure to use tools when needed and provide clear feedback about what you've done."
             }
 
-            val extractResult by node<StringSubgraphResult, String> { subgraphResult ->
-                subgraphResult.result
-            }
-
-            nodeStart then fileOperationsSubgraph then extractResult then nodeFinish
+            nodeStart then fileOperationsSubgraph then nodeFinish
         }
 
         val toolRegistry = if (emptyAgentRegistry) {
@@ -512,7 +505,6 @@ class AIAgentMultipleLLMIntegrationTest {
         } else {
             ToolRegistry {
                 subgraphTools.forEach { tool(it) }
-                tool(ProvideStringSubgraphResult)
             }
         }
 

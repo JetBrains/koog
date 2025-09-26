@@ -211,8 +211,9 @@ object EditFile : Tool<EditFile.Args, EditFile.Result>() {
         override fun toString(): String = textForLLM()
     }
 
-    // Serializer for the Args class
+    // Serializers for the args and Result class
     override val argsSerializer = Args.serializer()
+    val resultSerializer = Result.serializer()
 
     // Description of the tool, visible to LLM
     override val description = "Edits the given file"

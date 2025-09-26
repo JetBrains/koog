@@ -123,7 +123,7 @@ public class AIAgentTool<Input, Output>(
     override suspend fun execute(args: AgentToolArgs): AgentToolResult {
         return try {
             val input = json.decodeFromJsonElement(
-                inputSerializer.asToolDescriptorDeserializer(),
+                inputSerializer,
                 args.args.getValue(descriptor.requiredParameters.first().name)
             )
             val result = agent.run(input)
