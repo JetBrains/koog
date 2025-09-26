@@ -12,6 +12,8 @@ import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.InterceptContext
+import ai.koog.agents.core.tools.DirectToolCallsEnabler
+import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.snapshot.providers.PersistencyStorageProvider
 import ai.koog.prompt.message.Message
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -59,6 +61,16 @@ public class Persistency(
      * Alternative strategies, such as `MessageHistoryOnly`, can be used for partial rollbacks.
      */
     public var rollbackStrategy: RollbackStrategy = RollbackStrategy.Default
+
+    /**
+     * A registry for managing rollback tools within the persistence system.
+     *
+     * The `rollbackToolRegistry` plays a key role in supporting the rollback mechanism in the
+     * persistency operations, allowing seamless state restoration for tools **with side-effects** to specified or latest
+     * checkpoints as needed.
+     *
+     */
+    public var rollbackToolRegistry: RollbackToolRegistry = RollbackToolRegistry {}
 
     /**
      * Represents the identifier of the current node being executed within the agent pipeline.
@@ -284,10 +296,14 @@ public class Persistency(
      * This method retrieves the checkpoint with the specified ID and, if found,
      * sets the agent's context to the state captured in that checkpoint.
      *
+     * **Note: If some of your tools had side-effects and you need to roll back to some older state, please consider
+     * providing [RollbackToolRegistry]. This would only work if you are always trying to rollback BACKWARDS in time!**
+     *
      * @param checkpointId The ID of the checkpoint to roll back to
      * @param agentContext The context of the agent to roll back
      * @return The checkpoint data that was restored or null if the checkpoint was not found
      */
+    @OptIn(InternalAgentToolsApi::class)
     public suspend fun rollbackToCheckpoint(
         checkpointId: String,
         agentContext: AIAgentContext
@@ -295,7 +311,20 @@ public class Persistency(
         val checkpoint: AgentCheckpointData? = getCheckpointById(checkpointId)
         if (checkpoint != null) {
             agentContext.store(checkpoint.toAgentContextData(rollbackStrategy))
+
+            (agentContext.llm.prompt.messages - checkpoint.messageHistory)
+                .filterIsInstance<Message.Tool.Call>()
+                .reversed()
+                .forEach { toolCall ->
+                    rollbackToolRegistry.getRollbackTool(toolCall.tool)?.let { rollbackTool ->
+                        val toolArgs = rollbackTool.decodeArgs(toolCall.contentJson)
+
+                        rollbackTool.executeUnsafe(toolArgs, DirectToolCallsEnablerImpl)
+                    }
+
+                }
         }
+
         return checkpoint
     }
 
@@ -344,3 +373,6 @@ public suspend fun <T> AIAgentContext.withPersistency(
     context: AIAgentContext,
     action: suspend Persistency.(AIAgentContext) -> T
 ): T = persistency().action(context)
+
+@OptIn(InternalAgentToolsApi::class)
+private object DirectToolCallsEnablerImpl : DirectToolCallsEnabler
