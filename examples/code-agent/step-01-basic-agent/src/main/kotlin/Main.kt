@@ -32,19 +32,8 @@ val agent = AIAgent(
     },
     maxIterations = 100
 ) {
-    install(OpenTelemetry) {
-        setVerbose(true) // Enable verbose mode to send full strings instead of HIDDEN placeholders
-        addLangfuseExporter(
-            langfuseUrl = "https://cloud.langfuse.com",
-            langfusePublicKey = System.getenv("LANGFUSE_PUBLIC_KEY"),
-            langfuseSecretKey = System.getenv("LANGFUSE_SECRET_KEY"),
-            traceAttributes = listOf(
-                CustomAttribute("langfuse.session.id", System.getenv("LANGFUSE_SESSION_ID") ?: ""),
-            )
-        )
-    }
     handleEvents {
-        onToolCall { ctx ->
+        onToolExecutionStarting { ctx ->
             println("Tool called: ${ctx.tool.name}, args=${ctx.toolArgs}")
         }
     }
