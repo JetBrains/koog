@@ -3,7 +3,6 @@
 package ai.koog.agents.core.agent
 
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.agents.core.agent.context.element.AgentRunInfoContextElement
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
@@ -17,10 +16,6 @@ import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.executor.model.PromptExecutor
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -55,116 +50,15 @@ public class FunctionalAIAgent<Input, Output>(
 
     override val id: String by lazy { id ?: Uuid.random().toString() }
 
-    /**
-     * FunctionalAIAgentSession manages the execution context of a functional AI agent session.
-     * It extends the generic AIAgentSession interface, allowing for the initialization, execution,
-     * and completion of AI-driven tasks with specific input and output types.
-     *
-     * Key responsibilities of this class include:
-     * - Managing the session state and ensuring that concurrent sessions are not executed.
-     * - Preparing the pipeline and associated features required for session execution.
-     * - Establishing and maintaining contextual data specific to the current session.
-     * - Delegating the execution process to the strategy configured for the AI agent.
-     *
-     * This class is designed for use within the FunctionalAIAgent context and relies
-     * on several dependencies, such as a tool registry, configuration data, and a strategy.
-     *
-     * @constructor Constructs a session bound to a specific FunctionalAIAgent instance,
-     *              utilizing its configuration settings and operational components.
-     */
-    public inner class FunctionalAIAgentSession : AIAgentSession<Input, Output> {
-        private var isRunning = false
-
-        private val runningMutex = Mutex()
-
-        private val environment = GenericAgentEnvironment(
-            this@FunctionalAIAgent.id,
-            strategy.name,
-            logger,
-            toolRegistry,
-            pipeline = pipeline
-        )
-
-        private val resultDeferred: CompletableDeferred<Output> = CompletableDeferred()
-
-        private lateinit var sessionJob: Job
-
-        private lateinit var context: AIAgentFunctionalContext
-
-        override suspend fun withContext(action: suspend AIAgentContext.() -> Unit) {
-            context.action()
-        }
-
-        override suspend fun stop() {
-            sessionJob.cancel()
-        }
-
-        override suspend fun launch(agentInput: Input, scope: CoroutineScope) {
-            runningMutex.withLock {
-                if (isRunning) {
-                    throw IllegalStateException("Agent is already running")
-                }
-                isRunning = true
-            }
-
-            pipeline.prepareFeatures()
-            val runId = Uuid.random().toString()
-
-            val llm = AIAgentLLMContext(
-                tools = toolRegistry.tools.map { it.descriptor },
-                toolRegistry = toolRegistry,
-                prompt = agentConfig.prompt,
-                model = agentConfig.model,
-                promptExecutor = PromptExecutorProxy(
-                    executor = promptExecutor,
-                    pipeline = pipeline,
-                    runId = runId
-                ),
-                environment = environment,
-                config = agentConfig,
-                clock = clock
-            )
-
-            this@FunctionalAIAgentSession.context = AIAgentFunctionalContext(
-                environment,
-                this@FunctionalAIAgent.id,
-                runId,
-                agentInput,
-                agentConfig,
-                llm,
-                AIAgentStateManager(),
-                storage = AIAgentStorage(),
-                strategyName = strategy.name,
-                pipeline = pipeline
-            )
-
-            sessionJob = scope.launch {
-                withContext(
-                    AgentRunInfoContextElement(
-                        agentId = this@FunctionalAIAgent.id,
-                        runId = runId,
-                        agentConfig = agentConfig,
-                        strategyName = strategy.name
-                    )
-                ) {
-                    val result = strategy.execute(this@FunctionalAIAgentSession.context, agentInput)
-
-                    runningMutex.withLock {
-                        isRunning = false
-                    }
-
-                    resultDeferred.complete(result)
-                }
-            }
-        }
-
-        override suspend fun result(): Output = resultDeferred.await()
-    }
-
-    override suspend fun launch(agentInput: Input, scope: CoroutineScope): AIAgentSession<Input, Output> =
-        FunctionalAIAgentSession().also { it.launch(agentInput, scope) }
-
     private val pipeline = AIAgentNonGraphPipeline(clock)
+
+    private val environment = GenericAgentEnvironment(
+        this@FunctionalAIAgent.id,
+        strategy.name,
+        logger,
+        toolRegistry,
+        pipeline = pipeline
+    )
 
     /**
      * Represents a context for managing and configuring features in an AI agent.
@@ -198,6 +92,63 @@ public class FunctionalAIAgent<Input, Output>(
 
     init {
         FeatureContext(this).featureContext()
+    }
+
+    override suspend fun run(agentInput: Input): Output {
+        runningMutex.withLock {
+            if (isRunning) {
+                throw IllegalStateException("Agent is already running")
+            }
+            isRunning = true
+        }
+
+        pipeline.prepareFeatures()
+        val runId = Uuid.random().toString()
+
+        val llm = AIAgentLLMContext(
+            tools = toolRegistry.tools.map { it.descriptor },
+            toolRegistry = toolRegistry,
+            prompt = agentConfig.prompt,
+            model = agentConfig.model,
+            promptExecutor = PromptExecutorProxy(
+                executor = promptExecutor,
+                pipeline = pipeline,
+                runId = runId
+            ),
+            environment = environment,
+            config = agentConfig,
+            clock = clock
+        )
+
+        val context = AIAgentFunctionalContext(
+            environment,
+            this@FunctionalAIAgent.id,
+            runId,
+            agentInput,
+            agentConfig,
+            llm,
+            AIAgentStateManager(),
+            storage = AIAgentStorage(),
+            strategyName = strategy.name,
+            pipeline = pipeline
+        )
+
+        val result = withContext(
+            AgentRunInfoContextElement(
+                agentId = this@FunctionalAIAgent.id,
+                runId = runId,
+                agentConfig = agentConfig,
+                strategyName = strategy.name
+            )
+        ) {
+            strategy.execute(context, agentInput)
+        }
+
+        runningMutex.withLock {
+            isRunning = false
+        }
+
+        return result
     }
 
     override suspend fun close() {
