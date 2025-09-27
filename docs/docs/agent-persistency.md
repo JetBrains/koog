@@ -231,6 +231,7 @@ import ai.koog.agents.snapshot.providers.InMemoryPersistencyStorageProvider
 import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
 import ai.koog.prompt.llm.OllamaModels
 import ai.koog.agents.snapshot.feature.RollbackToolRegistry
+import ai.koog.agents.snapshot.feature.registerRollback
 
 fun createUser(name: String) {}
 
@@ -258,7 +259,7 @@ install(Persistency) {
 }
 ```
 
-<!--- KNIT example-agent-persistency-11.kt -->
+<!--- KNIT example-agent-persistency-07.kt -->
 
 ### Using extension functions
 
@@ -290,7 +291,7 @@ suspend fun example(context: AIAgentContext) {
     }
 }
 ```
-<!--- KNIT example-agent-persistency-07.kt -->
+<!--- KNIT example-agent-persistency-08.kt -->
 
 ## Advanced usage
 
@@ -324,7 +325,7 @@ class MyCustomStorageProvider : PersistencyStorageProvider {
 }
 ```
 
-<!--- KNIT example-agent-persistency-08.kt -->
+<!--- KNIT example-agent-persistency-09.kt -->
 
 To use your custom provider in the feature configuration, set it as the storage when configuring the Agent Persistency
 feature in your agent.
@@ -366,7 +367,7 @@ install(Persistency) {
 }
 ```
 
-<!--- KNIT example-agent-persistency-09.kt -->
+<!--- KNIT example-agent-persistency-10.kt -->
 
 ### Setting execution points
 
@@ -394,6 +395,6 @@ fun example(context: AIAgentContext) {
 
 ```
 
-<!--- KNIT example-agent-persistency-10.kt -->
+<!--- KNIT example-agent-persistency-11.kt -->
 
 This allows for more fine-grained control over the agent's state beyond just restoring from checkpoints.
