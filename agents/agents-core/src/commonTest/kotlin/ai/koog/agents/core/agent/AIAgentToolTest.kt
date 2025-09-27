@@ -53,7 +53,6 @@ class AIAgentToolTest {
             override suspend fun stop() {}
 
             override suspend fun withContext(action: suspend AIAgentContext.() -> Unit) {}
-
         }
 
         override suspend fun close() {
