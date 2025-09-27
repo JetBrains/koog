@@ -1,6 +1,7 @@
 package ai.koog.agents.snapshot.feature
 
 import ai.koog.agents.core.agent.context.AIAgentContext
+import ai.koog.agents.core.agent.context.AIAgentGraphContext
 import ai.koog.agents.core.agent.context.AgentContextData
 import ai.koog.agents.core.agent.context.RollbackStrategy
 import ai.koog.agents.core.agent.context.store
@@ -382,7 +383,7 @@ public class Persistency(
  * @return The [Persistency] feature instance for this agent
  * @throws IllegalStateException if the checkpoint feature is not installed
  */
-public fun AIAgentContext.persistency(): Persistency = featureOrThrow(Persistency.Feature)
+public fun AIAgentContext.persistency(): Persistency = rootContext().featureOrThrow(Persistency.Feature)
 
 /**
  * Extension function to perform an action with the checkpoint feature.
@@ -395,10 +396,11 @@ public fun AIAgentContext.persistency(): Persistency = featureOrThrow(Persistenc
  * @param action The action to perform with the checkpoint feature
  * @return The result of the action
  */
+@OptIn(InternalAgentsApi::class)
 public suspend fun <T> AIAgentContext.withPersistency(
     context: AIAgentContext,
     action: suspend Persistency.(AIAgentContext) -> T
-): T = persistency().action(context)
+): T = context.persistency().action(context)
 
 @OptIn(InternalAgentToolsApi::class)
 private object DirectToolCallsEnablerImpl : DirectToolCallsEnabler

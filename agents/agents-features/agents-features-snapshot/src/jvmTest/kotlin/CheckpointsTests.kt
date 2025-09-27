@@ -3,10 +3,14 @@ import ai.koog.agents.core.agent.AIAgentSession
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.element.AgentRunInfoContextElement
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
+import ai.koog.agents.core.dsl.builder.AIAgentGraphStrategyBuilder
+import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.extension.nodeDoNothing
 import ai.koog.agents.core.dsl.extension.nodeExecuteSingleTool
 import ai.koog.agents.core.dsl.extension.nodeExecuteTool
+import ai.koog.agents.core.environment.SafeTool
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.tool.SayToUser
@@ -36,10 +40,13 @@ import kotlinx.datetime.Clock
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.assertDoesNotThrow
 import kotlin.coroutines.CoroutineContext
+import kotlin.math.absoluteValue
+import kotlin.random.Random
 import kotlin.reflect.typeOf
 import kotlin.test.Test
 import kotlin.test.assertContains
@@ -59,6 +66,69 @@ class CheckpointsTests {
     )
     val toolRegistry = ToolRegistry {
         tool(SayToUser)
+    }
+
+    @Test
+    fun testCheckpointsOneMoreTime() = runTest {
+        val agent = AIAgent(
+            promptExecutor = getMockExecutor { },
+            strategy = strategy("name") {
+                var loaded = false
+                val node1 by node<String, String> {
+                    println("node1")
+                    it
+                }
+                val node2 by node<String, String> {
+                    println("node2")
+                    it
+                }
+                val checkpoint by node<String, String> { input ->
+                    println("checkpoint save")
+                    withPersistency(this) { ctx ->
+                        createCheckpoint(
+                            ctx,
+                            currentNodeId ?: error("currentNodeId not set"),
+                            input,
+                            typeOf<String>(),
+                            "cpt-100500"
+                        )
+                    }
+                    input
+                }
+                val node3 by node<String, String> {
+                    println("node3")
+                    it
+                }
+                val loadCheckpoint by node<String, String> {
+                    println("checkpoint load")
+                    if (!loaded) {
+                        loaded = true
+                        withPersistency(this) { ctx ->
+                            rollbackToCheckpoint("cpt-100500", ctx)
+                        }
+                    }
+                    it
+                }
+                val node4 by node<String, String> {
+                    println("node4")
+                    it
+                }
+
+                nodeStart then node1 then node2 then checkpoint then node3 then loadCheckpoint then node4 then nodeFinish
+            },
+            agentConfig = agentConfig,
+            toolRegistry = toolRegistry
+        ) {
+            install(Persistency) {
+                storage = InMemoryPersistencyStorageProvider("testAgentId")
+            }
+        }
+
+        val output = agent.run("Start the test")
+        assertEquals(
+            "Start the test",
+            output
+        )
     }
 
     @Test
@@ -124,19 +194,33 @@ class CheckpointsTests {
         val commands = Channel<String>(capacity = 100500)
         val notifications = Channel<String>(capacity = 100500)
 
+        fun AIAgentGraphStrategyBuilder<String, String>.callUserToolNode(
+            userName: String,
+            userData: String
+        ): AIAgentNodeDelegate<String, String> = node<String, String> {
+            llm.writeSession {
+                val args = WriteArgs(userName, userData)
+                val result = callTool(WriteKVTool, args).asSuccessful().result
+                val callID = Random.nextInt().absoluteValue
+                updatePrompt {
+                    tool {
+                        call(id = "$callID", tool = WriteKVTool.name, content = WriteKVTool.encodeArgsToString(args))
+                        result(id = "$callID", tool = WriteKVTool.name, content = WriteKVTool.encodeResultToString(result))
+                    }
+                }
+            }
+            it
+        }
+
         val strategy = strategy("ckpt-with-tool") {
             // Node that emits simple output
             val textNode1 by simpleNode(output = "Node 1 output")
 
-            val createUser1 by node<String, String> {
-                llm.writeSession {
-                    callTool(WriteKVTool, WriteArgs("user-1", "good man"))
-                }
-                it
-            }
+            nodeExecuteTool()
+            val createUser1 by callUserToolNode("user-1", "good man")
 
             // Node that creates a checkpoint
-            val saveCheckpoint by node<String, Unit>("checkpointNode") { input ->
+            val saveCheckpoint by node<String, Unit> { input ->
                 withPersistency(this) { ctx ->
                     createCheckpoint(
                         ctx,
@@ -149,32 +233,29 @@ class CheckpointsTests {
                 }
             }
 
-            val awaitCommands1 by node<Unit, Unit> {
+            val awaitCommands1 by node<Unit, String> {
                 notifications.send("after-checkpoint")
                 commands.receive()
+                ""
             }
 
-            val createUser2 by node<Unit, Unit> {
-                llm.writeSession {
-                    callTool(WriteKVTool, WriteArgs("user-2", "very good man"))
-                }
-            }
+            val createUser2 by callUserToolNode("user-2", "very good man")
 
             val textNode2 by simpleNode(output = "Node 2 output")
 
-            val createUser3 by node<Unit, Unit> {
-                llm.writeSession {
-                    callTool(WriteKVTool, WriteArgs("user-3", "the best man"))
-                }
-            }
+            val createUser3 by callUserToolNode("user-3", "the best man")
 
-            val awaitCommands2 by node<Unit, String> {
+            val awaitCommands2 by node<String, String> {
+                println("ctx inside: $this")
+                println("ctx inside [hash]: ${this.hashCode()}")
                 notifications.send("await-command")
                 commands.receive()
             }
 
+            val someOtherNode by nodeDoNothing<String>()
+
             nodeStart then textNode1 then createUser1 then saveCheckpoint then awaitCommands1
-            awaitCommands1 then createUser2 then createUser3 then awaitCommands2 then nodeFinish
+            awaitCommands1 then createUser2 then textNode2 then createUser3 then awaitCommands2 then someOtherNode then nodeFinish
         }
 
         return TestRollbackableStrategy(
@@ -247,8 +328,10 @@ class CheckpointsTests {
             assertContains(databaseMap, "user-3")
 
             session.withContext {
+                println("ctx outside: $this")
+                println("ctx outside [hash]: ${this.hashCode()}")
                 withPersistency(this) { ctx ->
-                    rollbackToCheckpoint("ckpt-1", ctx)!!
+                    rollbackToCheckpoint("ckpt-1", ctx)
                 }
             }
 

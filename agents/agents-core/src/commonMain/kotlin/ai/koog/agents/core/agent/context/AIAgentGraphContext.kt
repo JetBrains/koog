@@ -69,19 +69,24 @@ public interface AIAgentGraphContextBase : AIAgentContext {
         runId: String = this.runId,
         strategyName: String = this.strategyName,
         pipeline: AIAgentGraphPipeline = this.pipeline,
-    ): AIAgentGraphContextBase = AIAgentGraphContext(
-        environment = environment,
-        agentInput = agentInput,
-        agentInputType = agentInputType,
-        config = config,
-        llm = llm,
-        stateManager = stateManager,
-        storage = storage,
-        runId = runId,
-        strategyName = strategyName,
-        pipeline = pipeline,
-        agentId = this.agentId,
-    )
+    ): AIAgentGraphContextBase {
+        val clone = AIAgentGraphContext(
+            environment = environment,
+            agentInput = agentInput,
+            agentInputType = agentInputType,
+            config = config,
+            llm = llm,
+            stateManager = stateManager,
+            storage = storage,
+            runId = runId,
+            strategyName = strategyName,
+            pipeline = pipeline,
+            agentId = this.agentId,
+            rootContext = this
+        )
+
+        return clone
+    }
 
     /**
      * Creates a copy of the current [AIAgentGraphContext] with deep copies of all mutable properties.
@@ -130,6 +135,7 @@ public class AIAgentGraphContext(
     @OptIn(InternalAgentsApi::class)
     override val pipeline: AIAgentGraphPipeline,
     override val agentId: String,
+    override val rootContext: AIAgentGraphContextBase? = null
 ) : AIAgentGraphContextBase {
 
     /**
@@ -280,7 +286,7 @@ public val agentContextDataAdditionalKey: AIAgentStorageKey<AgentContextData> =
  */
 @InternalAgentsApi
 public fun AIAgentContext.store(data: AgentContextData) {
-    this.store(agentContextDataAdditionalKey, data)
+    this.rootContext().store(agentContextDataAdditionalKey, data)
 }
 
 /**
@@ -296,7 +302,7 @@ public fun AIAgentContext.store(data: AgentContextData) {
  */
 @InternalAgentsApi
 public fun AIAgentContext.getAgentContextData(): AgentContextData? {
-    return this.get(agentContextDataAdditionalKey)
+    return this.rootContext().get(agentContextDataAdditionalKey)
 }
 
 /**
@@ -308,5 +314,5 @@ public fun AIAgentContext.getAgentContextData(): AgentContextData? {
  */
 @OptIn(InternalAgentsApi::class)
 public fun AIAgentContext.removeAgentContextData(): Boolean {
-    return this.remove(agentContextDataAdditionalKey)
+    return this.rootContext().remove(agentContextDataAdditionalKey)
 }
