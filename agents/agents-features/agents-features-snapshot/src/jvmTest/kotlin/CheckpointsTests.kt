@@ -1,23 +1,17 @@
 import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.agent.AIAgentSession
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.agent.context.element.AgentRunInfoContextElement
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.dsl.builder.AIAgentGraphStrategyBuilder
 import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
-import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeDoNothing
-import ai.koog.agents.core.dsl.extension.nodeExecuteSingleTool
 import ai.koog.agents.core.dsl.extension.nodeExecuteTool
-import ai.koog.agents.core.environment.SafeTool
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
 import ai.koog.agents.snapshot.feature.Persistency
 import ai.koog.agents.snapshot.feature.RollbackToolRegistry
-import ai.koog.agents.snapshot.feature.persistency
 import ai.koog.agents.snapshot.feature.withPersistency
 import ai.koog.agents.snapshot.providers.InMemoryPersistencyStorageProvider
 import ai.koog.agents.testing.tools.getMockExecutor
@@ -26,25 +20,16 @@ import ai.koog.prompt.llm.OllamaModels
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.assertDoesNotThrow
-import kotlin.coroutines.CoroutineContext
 import kotlin.math.absoluteValue
 import kotlin.random.Random
 import kotlin.reflect.typeOf
@@ -158,7 +143,6 @@ class CheckpointsTests {
     // ---------------------------- New test-only tooling ----------------------------
     @Serializable
     data class WriteArgs(val key: String, val value: String)
-
 
     object WriteKVTool : Tool<WriteArgs, String>() {
         override val argsSerializer: KSerializer<WriteArgs> = WriteArgs.serializer()

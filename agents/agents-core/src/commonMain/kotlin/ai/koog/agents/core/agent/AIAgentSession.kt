@@ -3,10 +3,7 @@ package ai.koog.agents.core.agent
 import ai.koog.agents.core.agent.context.AIAgentContext
 import io.ktor.utils.io.core.Input
 import io.ktor.utils.io.core.Output
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.sync.Mutex
-import kotlin.coroutines.CoroutineContext
 
 /**
  * AIAgentSession is a generic class that manages the execution context and result of an AI agent session.
