@@ -101,7 +101,7 @@ public interface AIAgentContext {
      * Specifically, useful for operations initiated from the outside of the agent session to be performed
      * on the actual current context, while the session itself only holds the root.
      */
-    public val rootContext: AIAgentContext?
+    public val parentRootContext: AIAgentContext?
 
     /**
      * Provides the root context of the current agent.
@@ -109,7 +109,7 @@ public interface AIAgentContext {
      *
      * @return The root context of type [AIAgentContext], or the current instance if the root context is null.
      */
-    public fun rootContext(): AIAgentContext = rootContext ?: this
+    public fun rootContext(): AIAgentContext = parentRootContext ?: this
 
     /**
      * Stores a feature in the agent's storage using the specified key.

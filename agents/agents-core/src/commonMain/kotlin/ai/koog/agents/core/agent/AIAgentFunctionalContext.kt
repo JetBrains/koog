@@ -44,7 +44,7 @@ public class AIAgentFunctionalContext(
     override val storage: AIAgentStorage,
     override val strategyName: String,
     public val pipeline: AIAgentNonGraphPipeline,
-    override val rootContext: AIAgentContext? = null
+    override val parentRootContext: AIAgentContext? = null
 ) : AIAgentContext {
 
     private val storeMap: MutableMap<AIAgentStorageKey<*>, Any> = mutableMapOf()
