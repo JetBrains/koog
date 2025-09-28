@@ -153,6 +153,14 @@ public interface AIAgentService<Input, Output> {
     public fun removeAgentById(id: String): Boolean
 
     /**
+     * Retrieves an AI agent from the service by its unique identifier.
+     *
+     * @param id The unique identifier of the AI agent to retrieve.
+     * @return The AI agent with the specified identifier, or null if no agent with the given identifier is found.
+     */
+    public fun agentById(id: String): AIAgent<Input, Output>?
+
+    /**
      * Retrieves a comprehensive list of all AI agents currently managed by the service,
      * regardless of their state (active, inactive, or finished).
      *
@@ -237,7 +245,21 @@ public abstract class AIAgentServiceBase<Input, Output> : AIAgentService<Input, 
      */
     final override fun removeAgent(agent: AIAgent<Input, Output>): Boolean = removeAgentById(agent.id)
 
+    /**
+     * Removes the AI agent identified by the given ID from the managed agents list.
+     *
+     * @param id The unique identifier of the AI agent to be removed.
+     * @return `true` if an agent with the specified ID was successfully removed, otherwise `false`.
+     */
     final override fun removeAgentById(id: String): Boolean = managedAgents.remove(id) != null
+
+    /**
+     * Retrieves an AI agent managed by this service based on the provided unique identifier.
+     *
+     * @param id The unique identifier of the AI agent to be retrieved.
+     * @return The AI agent corresponding to the given identifier, or `null` if no agent with the specified ID exists.
+     */
+    final override fun agentById(id: String): AIAgent<Input, Output>? = managedAgents[id]
 
     /**
      * Retrieves a list of all currently active AI agents managed by the service.

@@ -300,6 +300,7 @@ class CheckpointsTests {
 
         val agent = agentService.createAgent()
 
+
         val agentResult = async {
             println("agent.run()")
             agent.run("Input")

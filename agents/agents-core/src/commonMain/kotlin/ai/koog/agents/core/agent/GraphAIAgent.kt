@@ -77,6 +77,8 @@ public open class GraphAIAgent<Input, Output>(
 
     override suspend fun finished(): Boolean = agentStateMutex.withLock { wasStarted && !isRunning }
 
+    override suspend fun resultIfReady(): Output? = agentStateMutex.withLock { if (finished()) agentResult else null }
+
     private val pipeline = AIAgentGraphPipeline(clock)
 
     private val environment = GenericAgentEnvironment(
@@ -111,9 +113,7 @@ public open class GraphAIAgent<Input, Output>(
 
     private var wasStarted = false
     private var isRunning = false
-
-    @OptIn(ExperimentalAtomicApi::class)
-    private var agentJob: Job? = null
+    private var agentResult: Output? = null
 
     private var rootAgentContext: AIAgentGraphContextBase? = null
 
@@ -226,6 +226,10 @@ public open class GraphAIAgent<Input, Output>(
                 result = result,
                 resultType = outputType
             )
+
+            agentStateMutex.withLock {
+                agentResult = result
+            }
 
             return@withContext result ?: error("result is null")
         }

@@ -42,6 +42,7 @@ class AIAgentToolTest {
         override suspend fun isRunning(): Boolean = true
 
         override suspend fun finished(): Boolean = false
+        override suspend fun resultIfReady(): String = run()
 
         override suspend fun run(agentInput: String): String {
             return run()

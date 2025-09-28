@@ -44,6 +44,17 @@ public interface AIAgent<Input, Output> : Closeable {
     public suspend fun finished(): Boolean
 
     /**
+     * Retrieves the result of the AI agent if it is ready.
+     *
+     * This method should be called to fetch the output of the agent once it has completed its operations.
+     * It will return the result if the agent's task is completed and the result is available. Otherwise,
+     * it will return `null` if the agent is still processing.
+     *
+     * @return The output produced by the AI agent, or `null` if the result is not yet available.
+     */
+    public suspend fun resultIfReady(): Output?
+
+    /**
      * Executes the AI agent with the given input and retrieves the resulting output.
      *
      * @param agentInput The input for the agent.

@@ -59,6 +59,8 @@ public class FunctionalAIAgent<Input, Output>(
         wasStarted && !isRunning
     }
 
+    override suspend fun resultIfReady(): Output? = agentStateMutex.withLock { if (finished()) agentResult else null }
+
     private val pipeline = AIAgentNonGraphPipeline(clock)
 
     private val environment = GenericAgentEnvironment(
@@ -90,6 +92,7 @@ public class FunctionalAIAgent<Input, Output>(
 
     private var isRunning = false
     private var wasStarted = false
+    private var agentResult: Output? = null
 
     private var rootAgentContext: AIAgentFunctionalContext? = null
 
@@ -160,6 +163,7 @@ public class FunctionalAIAgent<Input, Output>(
         }
 
         agentStateMutex.withLock {
+            agentResult = result
             isRunning = false
         }
 
