@@ -8,7 +8,6 @@ import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.llm.OllamaModels
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
@@ -40,20 +39,15 @@ class AIAgentToolTest {
             maxAgentIterations = 5
         )
 
-        override suspend fun launch(
-            agentInput: String,
-            scope: CoroutineScope
-        ): AIAgentSession<String, String> = object : AIAgentSession<String, String> {
-            override suspend fun launch(agentInput: String, scope: CoroutineScope) {}
+        override suspend fun isRunning(): Boolean = true
 
-            override suspend fun result(): String {
-                return run()
-            }
+        override suspend fun finished(): Boolean = false
 
-            override suspend fun stop() {}
-
-            override suspend fun withContext(action: suspend AIAgentContext.() -> Unit) {}
+        override suspend fun run(agentInput: String): String {
+            return run()
         }
+
+        override suspend fun withRunningContext(action: suspend AIAgentContext.() -> Unit): Boolean = false
 
         override suspend fun close() {
         }

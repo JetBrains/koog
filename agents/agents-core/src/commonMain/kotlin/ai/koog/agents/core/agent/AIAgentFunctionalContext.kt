@@ -44,7 +44,7 @@ public class AIAgentFunctionalContext(
     override val storage: AIAgentStorage,
     override val strategyName: String,
     public val pipeline: AIAgentNonGraphPipeline,
-    override val parentRootContext: AIAgentContext? = null
+    override val parentContext: AIAgentContext? = null
 ) : AIAgentContext {
 
     private val storeMap: MutableMap<AIAgentStorageKey<*>, Any> = mutableMapOf()
@@ -70,5 +70,57 @@ public class AIAgentFunctionalContext(
 
     override suspend fun getHistory(): List<Message> {
         return llm.readSession { prompt.messages }
+    }
+
+    /**
+     * Creates a copy of the current [AIAgentFunctionalContext], allowing for selective overriding of its properties.
+     * This method is particularly useful for creating modified contexts during agent execution without mutating
+     * the original context - perfect for when you need to experiment with different configurations or
+     * pass tweaked contexts down the execution pipeline while keeping the original pristine!
+     *
+     * @param environment The [AIAgentEnvironment] to be used in the new context, or retain the current playground if not specified.
+     * @param agentId The unique agent identifier, or keep the same identity if you're feeling attached.
+     * @param runId The run identifier for this execution adventure, or stick with the current journey.
+     * @param agentInput The input data for the agent - fresh data or the same trusty input, your choice!
+     * @param config The [AIAgentConfig] for the new context, or keep the current rulebook.
+     * @param llm The [AIAgentLLMContext] to be used, or maintain the current AI conversation partner.
+     * @param stateManager The [AIAgentStateManager] to be used, or preserve the current state keeper.
+     * @param storage The [AIAgentStorage] to be used, or stick with the current memory bank.
+     * @param strategyName The strategy name, or maintain the current game plan.
+     * @param pipeline The [AIAgentNonGraphPipeline] to be used, or keep the current execution superhighway.
+     * @param parentRootContext The parent root context, or maintain the current family tree.
+     * @return A shiny new [AIAgentFunctionalContext] with your desired modifications applied!
+     */
+    public fun copy(
+        environment: AIAgentEnvironment = this.environment,
+        agentId: String = this.agentId,
+        runId: String = this.runId,
+        agentInput: Any? = this.agentInput,
+        config: AIAgentConfig = this.config,
+        llm: AIAgentLLMContext = this.llm,
+        stateManager: AIAgentStateManager = this.stateManager,
+        storage: AIAgentStorage = this.storage,
+        strategyName: String = this.strategyName,
+        pipeline: AIAgentNonGraphPipeline = this.pipeline,
+        parentRootContext: AIAgentContext? = this.parentContext,
+    ): AIAgentFunctionalContext {
+        val freshContext = AIAgentFunctionalContext(
+            environment = environment,
+            agentId = agentId,
+            runId = runId,
+            agentInput = agentInput,
+            config = config,
+            llm = llm,
+            stateManager = stateManager,
+            storage = storage,
+            strategyName = strategyName,
+            pipeline = pipeline,
+            parentContext = parentRootContext
+        )
+
+        // Copy over the internal store map to preserve any stored values
+        freshContext.storeMap.putAll(this.storeMap)
+
+        return freshContext
     }
 }

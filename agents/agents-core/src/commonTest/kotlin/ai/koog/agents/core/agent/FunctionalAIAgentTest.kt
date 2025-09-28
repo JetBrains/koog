@@ -1,5 +1,6 @@
 package ai.koog.agents.core.agent
 
+import ai.koog.agents.core.agent.functionalStrategy
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.testing.tools.getMockExecutor
@@ -36,23 +37,23 @@ class FunctionalAIAgentTest {
         val agent = AIAgent<String, String>(
             systemPrompt = "You are helpful",
             promptExecutor = mockLLMApi,
-            llmModel = OllamaModels.Meta.LLAMA_3_2,
-            toolRegistry = testToolRegistry,
-            installFeatures = {
-                install(EventHandler) {
-                    onToolCall { eventContext -> actualToolCalls += eventContext.toolArgs.toString() }
+            strategy = functionalStrategy { inputParam ->
+                var responses = requestLLMMultiple(inputParam)
+
+                while (responses.containsToolCalls()) {
+                    val tools = extractToolCalls(responses)
+                    val results = executeMultipleTools(tools)
+                    responses = sendMultipleToolResults(results)
                 }
-            }
-        ) { inputParam ->
-            var responses = requestLLMMultiple(inputParam)
 
-            while (responses.containsToolCalls()) {
-                val tools = extractToolCalls(responses)
-                val results = executeMultipleTools(tools)
-                responses = sendMultipleToolResults(results)
+                responses.single().asAssistantMessage().content
+            },
+            llmModel = OllamaModels.Meta.LLAMA_3_2,
+            toolRegistry = testToolRegistry
+        ) {
+            install(EventHandler) {
+                onToolCall { eventContext -> actualToolCalls += eventContext.toolArgs.toString() }
             }
-
-            responses.single().asAssistantMessage().content
         }
 
         val result = agent.run("Solve task")
@@ -80,19 +81,19 @@ class FunctionalAIAgentTest {
         val agent = AIAgent<String, String>(
             systemPrompt = "You are helpful",
             promptExecutor = mockLLMApi,
+            strategy = functionalStrategy { inputParam ->
+                val resp = llm.writeSession {
+                    updatePrompt { user(inputParam) }
+                    requestLLM()
+                }
+                resp.content
+            },
             llmModel = OllamaModels.Meta.LLAMA_3_2,
             toolRegistry = testToolRegistry,
-            installFeatures = {
-                install(EventHandler) {
-                    onToolCall { eventContext -> actualToolCalls += eventContext.toolArgs.toString() }
-                }
+        ) {
+            install(EventHandler) {
+                onToolCall { eventContext -> actualToolCalls += eventContext.toolArgs.toString() }
             }
-        ) { inputParam ->
-            val resp = llm.writeSession {
-                updatePrompt { user(inputParam) }
-                requestLLM()
-            }
-            resp.content
         }
 
         val result = agent.run("Solve task")
@@ -120,21 +121,21 @@ class FunctionalAIAgentTest {
             mockLLMApi,
             OllamaModels.Meta.LLAMA_3_2,
             toolRegistry = testToolRegistry,
-            installFeatures = {
-                install(EventHandler) {
-                    onToolCall { eventContext -> actualToolCalls += eventContext.toolArgs.toString() }
+            strategy = functionalStrategy { inputParam: String ->
+                var responses = requestLLMMultiple(inputParam)
+
+                while (responses.containsToolCalls()) {
+                    val tools = extractToolCalls(responses)
+                    val results = executeMultipleTools(tools)
+                    responses = sendMultipleToolResults(results)
                 }
-            }
-        ) { inputParam: String ->
-            var responses = requestLLMMultiple(inputParam)
 
-            while (responses.containsToolCalls()) {
-                val tools = extractToolCalls(responses)
-                val results = executeMultipleTools(tools)
-                responses = sendMultipleToolResults(results)
+                responses.single().asAssistantMessage().content
             }
-
-            responses.single().asAssistantMessage().content
+        ) {
+            install(EventHandler) {
+                onToolCall { eventContext -> actualToolCalls += eventContext.toolArgs.toString() }
+            }
         }
 
         val result = agent.run("Solve task")

@@ -3,6 +3,7 @@
 package ai.koog.agents.core.agent
 
 import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.agents.core.agent.context.element.AgentRunInfoContextElement
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
@@ -50,6 +51,14 @@ public class FunctionalAIAgent<Input, Output>(
 
     override val id: String by lazy { id ?: Uuid.random().toString() }
 
+    override suspend fun isRunning(): Boolean = agentStateMutex.withLock {
+        isRunning
+    }
+
+    override suspend fun finished(): Boolean = agentStateMutex.withLock {
+        wasStarted && !isRunning
+    }
+
     private val pipeline = AIAgentNonGraphPipeline(clock)
 
     private val environment = GenericAgentEnvironment(
@@ -80,8 +89,11 @@ public class FunctionalAIAgent<Input, Output>(
     }
 
     private var isRunning = false
+    private var wasStarted = false
 
-    private val runningMutex = Mutex()
+    private var rootAgentContext: AIAgentFunctionalContext? = null
+
+    private val agentStateMutex = Mutex()
 
     private fun <Config : FeatureConfig, Feature : Any> install(
         feature: AIAgentNonGraphFeature<Config, Feature>,
@@ -95,11 +107,12 @@ public class FunctionalAIAgent<Input, Output>(
     }
 
     override suspend fun run(agentInput: Input): Output {
-        runningMutex.withLock {
+        agentStateMutex.withLock {
             if (isRunning) {
                 throw IllegalStateException("Agent is already running")
             }
             isRunning = true
+            wasStarted = true
         }
 
         pipeline.prepareFeatures()
@@ -120,18 +133,20 @@ public class FunctionalAIAgent<Input, Output>(
             clock = clock
         )
 
-        val context = AIAgentFunctionalContext(
-            environment,
-            this@FunctionalAIAgent.id,
-            runId,
-            agentInput,
-            agentConfig,
-            llm,
-            AIAgentStateManager(),
-            storage = AIAgentStorage(),
-            strategyName = strategy.name,
-            pipeline = pipeline
-        )
+        agentStateMutex.withLock {
+            rootAgentContext = AIAgentFunctionalContext(
+                environment,
+                this@FunctionalAIAgent.id,
+                runId,
+                agentInput,
+                agentConfig,
+                llm,
+                AIAgentStateManager(),
+                storage = AIAgentStorage(),
+                strategyName = strategy.name,
+                pipeline = pipeline
+            )
+        }
 
         val result = withContext(
             AgentRunInfoContextElement(
@@ -141,15 +156,20 @@ public class FunctionalAIAgent<Input, Output>(
                 strategyName = strategy.name
             )
         ) {
-            strategy.execute(context, agentInput)
+            strategy.execute(rootAgentContext!!, agentInput)
         }
 
-        runningMutex.withLock {
+        agentStateMutex.withLock {
             isRunning = false
         }
 
         return result
     }
+
+    override suspend fun withRunningContext(action: suspend AIAgentContext.() -> Unit): Boolean =
+        agentStateMutex.withLock {
+            rootAgentContext?.action()?.let { true } ?: false
+        }
 
     override suspend fun close() {
         pipeline.onAgentClosing(agentId = this@FunctionalAIAgent.id)

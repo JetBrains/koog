@@ -94,14 +94,9 @@ public interface AIAgentContext {
     public val strategyName: String
 
     /**
-     * Represents the root context of the AI Agent. This may be used as the
-     * starting point or parent context in a hierarchy of contexts. It can be `null`
-     * if the current context does not have a root or parent.
-     *
-     * Specifically, useful for operations initiated from the outside of the agent session to be performed
-     * on the actual current context, while the session itself only holds the root.
+     * Represents the parent context of the AI Agent.
      */
-    public val parentRootContext: AIAgentContext?
+    public val parentContext: AIAgentContext?
 
     /**
      * Provides the root context of the current agent.
@@ -109,7 +104,7 @@ public interface AIAgentContext {
      *
      * @return The root context of type [AIAgentContext], or the current instance if the root context is null.
      */
-    public fun rootContext(): AIAgentContext = parentRootContext ?: this
+    public fun rootContext(): AIAgentContext = parentContext?.rootContext() ?: this
 
     /**
      * Stores a feature in the agent's storage using the specified key.

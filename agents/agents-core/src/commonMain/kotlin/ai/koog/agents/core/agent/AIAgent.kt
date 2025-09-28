@@ -3,6 +3,7 @@ package ai.koog.agents.core.agent
 import ai.koog.agents.core.agent.GraphAIAgent.FeatureContext
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.config.AIAgentConfigBase
+import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.utils.Closeable
@@ -29,12 +30,36 @@ public interface AIAgent<Input, Output> : Closeable {
     public val agentConfig: AIAgentConfigBase
 
     /**
+     * Checks if the AI agent is currently running.
+     *
+     * @return true if the agent is running, false otherwise.
+     */
+    public suspend fun isRunning(): Boolean
+
+    /**
+     * Checks if the AI agent has completed its operation.
+     *
+     * @return true if the agent has finished its task, false otherwise.
+     */
+    public suspend fun finished(): Boolean
+
+    /**
      * Executes the AI agent with the given input and retrieves the resulting output.
      *
      * @param agentInput The input for the agent.
      * @return The output produced by the agent.
      */
     public suspend fun run(agentInput: Input): Output
+
+    /**
+     * Executes the provided action within the context of an active AI Agent session.
+     * The method ensures the action is performed while the agent is running.
+     *
+     * @param action A suspend function representing the operation to be executed within the [AIAgentContext].
+     *               This provides access to the agent's runtime context, configurations, state, and tools.
+     * @return `true` if the agent was running during the execution of the action, or `false` otherwise.
+     */
+    public suspend fun withRunningContext(action: suspend AIAgentContext.() -> Unit): Boolean
 
     /**
      * The companion object for the AIAgent class, providing functionality to instantiate an AI agent
@@ -122,7 +147,7 @@ public interface AIAgent<Input, Output> : Closeable {
         public operator fun <Input, Output> invoke(
             promptExecutor: PromptExecutor,
             agentConfig: AIAgentConfig,
-            func: suspend AIAgentFunctionalContext.(input: Input) -> Output,
+            strategy: AIAgentFunctionalStrategy<Input, Output>,
             toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
             id: String? = null,
             installFeatures: FeatureContext.() -> Unit = {},
@@ -131,9 +156,7 @@ public interface AIAgent<Input, Output> : Closeable {
                 promptExecutor = promptExecutor,
                 agentConfig = agentConfig,
                 toolRegistry = toolRegistry,
-                strategy = functionalStrategy(
-                    func = func
-                )
+                strategy = strategy
             )
         }
 
@@ -257,13 +280,13 @@ public interface AIAgent<Input, Output> : Closeable {
             promptExecutor: PromptExecutor,
             llmModel: LLModel,
             toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
+            strategy: AIAgentFunctionalStrategy<Input, Output>,
             id: String? = null,
             systemPrompt: String = "",
             temperature: Double = 1.0,
             numberOfChoices: Int = 1,
             maxIterations: Int = 50,
             installFeatures: FunctionalAIAgent.FeatureContext.() -> Unit = {},
-            func: suspend AIAgentFunctionalContext.(input: Input) -> Output,
         ): AIAgent<Input, Output> = FunctionalAIAgent(
             promptExecutor = promptExecutor,
             agentConfig = AIAgentConfig(
@@ -281,9 +304,7 @@ public interface AIAgent<Input, Output> : Closeable {
             ),
             featureContext = installFeatures,
             toolRegistry = toolRegistry,
-            strategy = functionalStrategy(
-                func = func
-            )
+            strategy = strategy
         )
     }
 }

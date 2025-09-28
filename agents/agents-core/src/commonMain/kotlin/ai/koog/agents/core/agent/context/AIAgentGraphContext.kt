@@ -82,7 +82,7 @@ public interface AIAgentGraphContextBase : AIAgentContext {
             strategyName = strategyName,
             pipeline = pipeline,
             agentId = this.agentId,
-            parentRootContext = this
+            parentContext = this
         )
 
         return clone
@@ -135,7 +135,7 @@ public class AIAgentGraphContext(
     @OptIn(InternalAgentsApi::class)
     override val pipeline: AIAgentGraphPipeline,
     override val agentId: String,
-    override val parentRootContext: AIAgentGraphContextBase? = null
+    override val parentContext: AIAgentGraphContextBase? = null
 ) : AIAgentGraphContextBase {
 
     /**

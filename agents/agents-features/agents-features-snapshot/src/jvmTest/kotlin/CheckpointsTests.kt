@@ -1,4 +1,5 @@
 import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.core.agent.AIAgentService
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.dsl.builder.AIAgentGraphStrategyBuilder
@@ -20,6 +21,7 @@ import ai.koog.prompt.llm.OllamaModels
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
+import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
@@ -28,7 +30,6 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.JsonPrimitive
-import org.junit.jupiter.api.assertDoesNotThrow
 import kotlin.math.absoluteValue
 import kotlin.random.Random
 import kotlin.reflect.typeOf
@@ -283,7 +284,7 @@ class CheckpointsTests {
 
         val rollbackConfig = createGraphWithOptionalToolCallAndRollback("ckpt-1", appendToolCall = true)
 
-        val agent = AIAgent(
+        val agentService = AIAgentService(
             promptExecutor = getMockExecutor { },
             strategy = rollbackConfig.strategy,
             agentConfig = agentConfig,
@@ -297,7 +298,14 @@ class CheckpointsTests {
             }
         }
 
-        val session = agent.launch("Start", scope = this)
+        val agent = agentService.createAgent()
+
+        val agentResult = async {
+            println("agent.run()")
+            agent.run("Input")
+        }
+
+        println("before second launch")
 
         val task2 = launch {
             assertEquals("after-checkpoint", rollbackConfig.notifications.receive())
@@ -310,7 +318,7 @@ class CheckpointsTests {
             assertContains(databaseMap, "user-2")
             assertContains(databaseMap, "user-3")
 
-            session.withContext {
+            agent.withRunningContext {
                 println("ctx outside: $this")
                 println("ctx outside [hash]: ${this.hashCode()}")
                 withPersistency(this) { ctx ->
@@ -328,44 +336,12 @@ class CheckpointsTests {
             rollbackConfig.commands.send("continue")
 
             assertEquals("await-command", rollbackConfig.notifications.receive())
-
-            assertDoesNotThrow {
-                session.stop()
-            }
+            rollbackConfig.commands.send("try to go to finish")
         }
 
-        task2.join()
+        val result = agentResult.await()
+        println("Result: $result")
     }
-
-//    @Test
-//    fun testRollbackToolsNotExecutedWhenNoDiff() = runTest {
-//        // Reset recorder
-//        DeleteKVTool.calls = mutableListOf()
-//
-//        val localToolRegistry = ToolRegistry {
-//            tool(SayToUser)
-//            tool(WriteKVTool)
-//            tool(DeleteKVTool)
-//        }
-//
-//        val agent = AIAgent(
-//            promptExecutor = getMockExecutor { },
-//            strategy = createGraphWithOptionalToolCallAndRollback("ckpt-2", appendToolCall = false),
-//            agentConfig = agentConfig,
-//            toolRegistry = localToolRegistry
-//        ) {
-//            install(Persistency) {
-//                storage = InMemoryPersistencyStorageProvider("agent-tools-rollback-2")
-//                rollbackToolRegistry = RollbackToolRegistry {
-//                    registerRollback(WriteKVTool, DeleteKVTool)
-//                }
-//            }
-//        }
-//
-//        agent.run("Start")
-//
-//        assertEquals(0, DeleteKVTool.calls.size)
-//    }
 
     @Test
     fun testRestoreFromSingleCheckpoint() = runTest {

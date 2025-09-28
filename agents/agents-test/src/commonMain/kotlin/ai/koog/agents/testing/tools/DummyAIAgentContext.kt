@@ -33,7 +33,7 @@ public class DummyAIAgentContext(
     private val builder: AIAgentContextMockBuilder,
     override val agentId: String = "DummyAgentId",
 ) : AIAgentGraphContextBase {
-    override val parentRootContext: AIAgentGraphContextBase? = null
+    override val parentContext: AIAgentGraphContextBase? = null
 
     /**
      * Indicates whether a Language Learning Model (LLM) is defined in the current context.
