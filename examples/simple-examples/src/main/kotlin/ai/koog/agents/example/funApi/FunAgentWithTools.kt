@@ -6,6 +6,7 @@ import ai.koog.agents.core.agent.compressHistory
 import ai.koog.agents.core.agent.containsToolCalls
 import ai.koog.agents.core.agent.executeMultipleTools
 import ai.koog.agents.core.agent.extractToolCalls
+import ai.koog.agents.core.agent.functionalStrategy
 import ai.koog.agents.core.agent.latestTokenUsage
 import ai.koog.agents.core.agent.requestLLMMultiple
 import ai.koog.agents.core.agent.sendMultipleToolResults
@@ -28,30 +29,31 @@ fun main(): Unit = runBlocking {
     val functionalAgent = AIAgent<String, String>(
         systemPrompt = "You're responsible for running a Switch device and perform operations on it by request.",
         promptExecutor = promptExec,
-        llmModel = OllamaModels.Meta.LLAMA_3_2,
-        toolRegistry = toolRegistry,
-        installFeatures = {
-            install(EventHandler) {
-                onToolCall { eventContext ->
-                    println("Tool called: tool ${eventContext.tool.name}, args ${eventContext.toolArgs}")
+        strategy = functionalStrategy {
+            var responses = requestLLMMultiple(it)
+
+            while (responses.containsToolCalls()) {
+                val tools = extractToolCalls(responses)
+
+                if (latestTokenUsage() > 100500) {
+                    compressHistory()
                 }
+
+                val results = executeMultipleTools(tools)
+                responses = sendMultipleToolResults(results)
             }
-        }
+
+            // Result:
+            responses.single().asAssistantMessage().content
+        },
+        llmModel = OllamaModels.Meta.LLAMA_3_2,
+        toolRegistry = toolRegistry
     ) {
-        var responses = requestLLMMultiple(it)
-
-        while (responses.containsToolCalls()) {
-            val tools = extractToolCalls(responses)
-
-            if (latestTokenUsage() > 100500) {
-                compressHistory()
+        install(EventHandler) {
+            onToolCall { eventContext ->
+                println("Tool called: tool ${eventContext.tool.name}, args ${eventContext.toolArgs}")
             }
-
-            val results = executeMultipleTools(tools)
-            responses = sendMultipleToolResults(results)
         }
-
-        return@AIAgent responses.single().asAssistantMessage().content
     }
 
     functionalAgent.run("Turn switch on")

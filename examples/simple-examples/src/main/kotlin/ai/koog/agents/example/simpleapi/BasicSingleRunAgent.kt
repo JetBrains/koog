@@ -22,8 +22,9 @@ fun main() = runBlocking {
         promptExecutor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey),
         llmModel = OpenAIModels.CostOptimized.GPT4oMini,
         systemPrompt = "You are a code assistant. Provide concise code examples.",
-        installFeatures = { install(EventHandler, eventHandlerConfig) }
-    )
+    ) {
+        install(EventHandler, eventHandlerConfig)
+    }
 
     println("Single-run agent started. Enter your request:")
 

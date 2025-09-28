@@ -103,27 +103,26 @@ fun main() {
                 promptExecutor = executor,
                 strategy = strategy,
                 agentConfig = agentConfig,
-                toolRegistry = toolRegistry,
-                installFeatures = {
-                    install(Tracing)
+                toolRegistry = toolRegistry
+            ) {
+                install(Tracing)
 
-                    install(EventHandler) {
-                        onBeforeAgentStarted { eventContext ->
-                            println("OnBeforeAgentStarted first (strategy: ${strategy.name})")
-                        }
+                install(EventHandler) {
+                    onBeforeAgentStarted { eventContext ->
+                        println("OnBeforeAgentStarted first (strategy: ${strategy.name})")
+                    }
 
-                        onBeforeAgentStarted { eventContext ->
-                            println("OnBeforeAgentStarted second (strategy: ${strategy.name})")
-                        }
+                    onBeforeAgentStarted { eventContext ->
+                        println("OnBeforeAgentStarted second (strategy: ${strategy.name})")
+                    }
 
-                        onAgentFinished { eventContext ->
-                            println(
-                                "OnAgentFinished (agent id: ${eventContext.agentId}, result: ${eventContext.result})"
-                            )
-                        }
+                    onAgentFinished { eventContext ->
+                        println(
+                            "OnAgentFinished (agent id: ${eventContext.agentId}, result: ${eventContext.result})"
+                        )
                     }
                 }
-            )
+            }
 
             val run = agent.run(
                 " extend current opened scene for the towerdefence game. " +
