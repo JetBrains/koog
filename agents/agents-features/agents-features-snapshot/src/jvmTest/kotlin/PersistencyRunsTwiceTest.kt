@@ -1,4 +1,4 @@
-import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.core.agent.AIAgentService
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.snapshot.feature.Persistency
 import ai.koog.agents.snapshot.feature.isTombstone
@@ -21,7 +21,7 @@ class PersistencyRunsTwiceTest {
 
         val testCollector = TestAgentLogsCollector()
 
-        val agent = AIAgent(
+        val agentService = AIAgentService(
             promptExecutor = getMockExecutor {
                 // No LLM calls needed for this test; nodes write directly to the prompt/history
             },
@@ -38,8 +38,10 @@ class PersistencyRunsTwiceTest {
             }
         }
 
+        val firstAgent = agentService.createAgent(id = "SAME_ID")
+
         // Act: first run
-        agent.run("Start the test")
+        firstAgent.run("Start the test")
 
         // Assert
         testCollector.logs() shouldContainExactly listOf(
@@ -57,8 +59,10 @@ class PersistencyRunsTwiceTest {
 
         val firstCheckpoint = provider.getLatestCheckpoint()
 
+        val secondAgent = agentService.createAgent(id = "SAME_ID")
+
         // Act: second run with the same storage (should not resume mid-graph)
-        agent.run("Start the test2")
+        secondAgent.run("Start the test2")
 
         // And still ends with a tombstone as the latest checkpoint
         await.until {
@@ -76,7 +80,7 @@ class PersistencyRunsTwiceTest {
 
         val testCollector = TestAgentLogsCollector()
 
-        val agent = AIAgent(
+        val agentService = AIAgentService(
             promptExecutor = getMockExecutor {
                 // No LLM calls needed for this test; nodes write directly to the prompt/history
             },
@@ -92,6 +96,8 @@ class PersistencyRunsTwiceTest {
                 enableAutomaticPersistency = true
             }
         }
+
+        val agent = agentService.createAgent()
 
         // Act: first run
         val result = runCatching { agent.run("Start the test") }
@@ -112,7 +118,9 @@ class PersistencyRunsTwiceTest {
 
         testCollector.clear()
 
-        val secondRunResult = runCatching { agent.run("Start the test") }
+        val secondAgent = agentService.createAgent(id = agent.id)
+
+        val secondRunResult = runCatching { secondAgent.run("Start the test") }
 
         // Assert: second run is successful
         assert(secondRunResult.isSuccess)

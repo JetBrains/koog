@@ -111,8 +111,8 @@ public class FunctionalAIAgent<Input, Output>(
 
     override suspend fun run(agentInput: Input): Output {
         agentStateMutex.withLock {
-            if (isRunning) {
-                throw IllegalStateException("Agent is already running")
+            if (wasStarted) {
+                throw IllegalStateException("Agent was already started")
             }
             isRunning = true
             wasStarted = true
