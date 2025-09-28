@@ -22,12 +22,10 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.utils.Closeable
 import ai.koog.prompt.executor.model.PromptExecutor
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
-import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.reflect.KType
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
