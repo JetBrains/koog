@@ -10,6 +10,7 @@ import ai.koog.agents.core.dsl.extension.onToolCall
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.assertMapsEqual
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.createAgent
+import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.createAgentService
 import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute
 import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes
 import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes.Response.FinishReasonType
@@ -303,8 +304,7 @@ class OpenTelemetryTest {
                 mockLLMAnswer(mockResponse1) onRequestEquals userPrompt1
             }
 
-            val agent = createAgent(
-                agentId = agentId,
+            val agentService = createAgentService(
                 strategy = strategy,
                 promptId = promptId,
                 systemPrompt = systemPrompt,
@@ -319,13 +319,13 @@ class OpenTelemetryTest {
                 }
             }
 
-            agent.run(userPrompt0)
-            agent.run(userPrompt1)
+            agentService.createAgentAndRun(userPrompt0, id = agentId)
+            agentService.createAgentAndRun(userPrompt1, id = agentId)
 
             val collectedSpans = mockExporter.collectedSpans
             assertTrue(collectedSpans.isNotEmpty(), "Spans should be created during agent execution")
 
-            agent.close()
+            agentService.closeAll()
 
             // Check each span
 

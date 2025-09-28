@@ -137,6 +137,21 @@ public interface AIAgentService<Input, Output> {
     ): AIAgent<Input, Output>
 
     /**
+     * Creates a new AI agent with the specified optional parameters ([id], [clock]), executes it with the given input,
+     * and retrieves the resulting output.
+     *
+     * @param agentInput The input to be processed by the AI agent.
+     * @param id An optional unique identifier for the agent. If null, a default identifier will be generated.
+     * @param clock The clock instance used to manage time-related operations. Defaults to the system clock.
+     * @return The output produced by the agent after processing the input.
+     */
+    public suspend fun createAgentAndRun(
+        agentInput: Input,
+        id: String? = null,
+        clock: Clock = Clock.System
+    ): Output = createAgent(id, clock).run(agentInput)
+
+    /**
      * Removes the specified AI agent from the service.
      *
      * @param agent The AI agent to be removed.
@@ -188,6 +203,16 @@ public interface AIAgentService<Input, Output> {
      * @return A list of finished AI agents.
      */
     public suspend fun listFinishedAgents(): List<AIAgent<Input, Output>>
+
+    /**
+     * Closes all AI agents currently managed by the service.
+     *
+     * This method retrieves the list of all agents, regardless of their state (active, inactive, or finished),
+     * and invokes the [AIAgent.close] function on each of them, releasing any underlying resources.
+     */
+    public suspend fun closeAll() {
+        listAllAgents().forEach { it.close() }
+    }
 }
 
 /**
