@@ -42,7 +42,7 @@ class PersistencyRunsTwiceTest {
         agent.run("Start the test")
 
         // Assert
-        testCollector.logs shouldContainExactly listOf(
+        testCollector.logs() shouldContainExactly listOf(
             "First Step",
             "Second Step"
         )
@@ -99,7 +99,7 @@ class PersistencyRunsTwiceTest {
         // Assert: first run fails
         assert(result.isFailure)
 
-        testCollector.logs shouldContainExactly listOf(
+        testCollector.logs() shouldContainExactly listOf(
             "First Step",
             "Second Step"
         )
@@ -110,12 +110,13 @@ class PersistencyRunsTwiceTest {
             }
         }
 
-        testCollector.logs.clear()
+        testCollector.clear()
+
         val secondRunResult = runCatching { agent.run("Start the test") }
 
         // Assert: second run is successful
         assert(secondRunResult.isSuccess)
-        testCollector.logs shouldContainExactly listOf(
+        testCollector.logs() shouldContainExactly listOf(
             "Second Step",
             "Second try successful",
         )
