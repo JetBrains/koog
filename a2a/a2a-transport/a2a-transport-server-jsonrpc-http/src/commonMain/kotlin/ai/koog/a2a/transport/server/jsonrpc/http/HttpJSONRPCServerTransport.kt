@@ -19,6 +19,7 @@ import io.ktor.server.engine.ApplicationEngineFactory
 import io.ktor.server.engine.EmbeddedServer
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.server.plugins.cors.routing.CORS
 import io.ktor.server.request.receiveText
 import io.ktor.server.response.header
 import io.ktor.server.response.respond
@@ -128,6 +129,11 @@ public class HttpJSONRPCServerTransport(
             routing {
                 install(ContentNegotiation) {
                     json(JSONRPCJson)
+                }
+
+                install(CORS) {
+                    anyHost()
+                    allowNonSimpleContentTypes = true
                 }
 
                 transportRoutes(this, path)
