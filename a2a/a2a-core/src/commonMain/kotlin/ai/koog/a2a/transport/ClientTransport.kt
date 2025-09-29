@@ -11,6 +11,7 @@ import ai.koog.a2a.model.TaskPushNotificationConfig
 import ai.koog.a2a.model.TaskPushNotificationConfigParams
 import ai.koog.a2a.model.TaskQueryParams
 import kotlinx.coroutines.flow.Flow
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 
 /**
@@ -131,7 +132,8 @@ public interface ClientTransport : AutoCloseable {
  *
  * @property additionalHeaders Additional call-specific headers associated with the call.
  */
-public class ClientCallContext(
+@Serializable
+public data class ClientCallContext(
     public val additionalHeaders: Map<String, List<String>> = emptyMap(),
 ) {
     @Suppress("MissingKDocForPublicAPI")

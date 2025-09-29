@@ -30,6 +30,10 @@ val excluded = setOf(
     ":a2a:a2a-test",
     ":a2a:test-tck:a2a-test-server-tck",
 
+    ":agents:agents-features:agents-features-a2a-core",
+    ":agents:agents-features:agents-features-a2a-server",
+    ":agents:agents-features:agents-features-a2a-client",
+
     project.path, // the current project should not depend on itself
 )
 
