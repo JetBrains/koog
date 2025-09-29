@@ -20,7 +20,7 @@ kotlin {
             }
         }
 
-        jsMain {
+        jsTest {
             dependencies {
                 api(libs.ktor.client.js)
             }
