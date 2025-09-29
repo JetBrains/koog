@@ -59,6 +59,10 @@ class HttpJSONRPCServerTransportTest {
             capabilities = AgentCapabilities(),
             defaultInputModes = listOf("text/plain"),
             defaultOutputModes = listOf("text/plain"),
+            security = listOf(
+                mapOf("oauth" to listOf("read")),
+                mapOf("api-key" to listOf("mtls")),
+            ),
             skills = listOf(
                 AgentSkill(
                     id = "test-skill",

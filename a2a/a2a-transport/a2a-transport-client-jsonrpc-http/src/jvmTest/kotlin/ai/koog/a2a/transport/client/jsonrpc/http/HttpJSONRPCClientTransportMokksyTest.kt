@@ -17,61 +17,14 @@ import io.ktor.client.HttpClient
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.MissingFieldException
 import me.kpavlov.aimocks.a2a.MockAgentServer
-import me.kpavlov.aimocks.a2a.model.AgentCard
 import me.kpavlov.aimocks.a2a.model.Task
 import me.kpavlov.aimocks.a2a.model.TaskStatus
-import me.kpavlov.aimocks.a2a.model.create
-import kotlin.test.Ignore
 import kotlin.test.Test
-import kotlin.time.Duration.Companion.milliseconds
 
 class HttpJSONRPCClientTransportMokksyTest {
-
     val a2aServer = MockAgentServer(verbose = true)
 
     val client = HttpJSONRPCClientTransport(a2aServer.baseUrl(), HttpClient())
-
-    @Test
-    @Ignore()
-    // todo: implement client.getCard(...)
-    fun `Should get Card`() = runTest {
-        val agentCard = AgentCard.create {
-            name = "test-agent"
-            description = "test-agent-description"
-            url = a2aServer.baseUrl()
-            documentationUrl = "https://example.com/documentation"
-            version = "0.0.1"
-            provider {
-                organization = "Acme, Inc."
-                url = "https://example.com/organization"
-            }
-            authentication {
-                schemes = listOf("none", "bearer")
-                credentials = "test-token"
-            }
-            capabilities {
-                streaming = true
-                pushNotifications = true
-                stateTransitionHistory = true
-            }
-            skills += skill {
-                id = "walk"
-                name = "Walk the walk"
-            }
-            skills += skill {
-                id = "talk"
-                name = "Talk the talk"
-            }
-        }
-
-        // Configure the mock server to respond with the AgentCard
-        a2aServer.agentCard() responds {
-            delay = 1.milliseconds
-            card = agentCard
-        }
-
-        TODO("client.getCard(...)")
-    }
 
     @Test
     fun `Should sendMessage`() = runTest {

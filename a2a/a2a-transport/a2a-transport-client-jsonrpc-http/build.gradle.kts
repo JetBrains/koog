@@ -24,6 +24,7 @@ kotlin {
                 api(libs.ktor.client.core)
                 api(libs.ktor.client.content.negotiation)
                 api(libs.ktor.serialization.kotlinx.json)
+                implementation(libs.oshai.kotlin.logging)
             }
         }
 
@@ -38,7 +39,7 @@ kotlin {
         jvmTest {
             dependencies {
                 implementation(kotlin("test-junit5"))
-                implementation("me.kpavlov.aimocks:ai-mocks-a2a-jvm:0.5.0-Alpha1")
+                implementation(libs.mokksy.a2a)
                 implementation(libs.ktor.client.cio)
                 runtimeOnly(libs.slf4j.simple)
             }

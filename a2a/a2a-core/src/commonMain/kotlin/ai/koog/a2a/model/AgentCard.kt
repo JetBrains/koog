@@ -93,7 +93,7 @@ public data class AgentCard(
     public val defaultOutputModes: List<String>,
     public val skills: List<AgentSkill>,
     @EncodeDefault
-    public val supportsAuthenticatedExtendedCard: Boolean = false,
+    public val supportsAuthenticatedExtendedCard: Boolean? = false,
     public val signatures: List<AgentCardSignature>? = null
 ) {
     init {

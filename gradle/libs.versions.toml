@@ -35,6 +35,7 @@ spring-boot = "3.5.3"
 spring-management = "1.1.7"
 sqlite = "3.46.1.3"
 testcontainers = "1.19.7"
+mokksy = "0.5.0-Alpha3"
 
 [libraries]
 jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "annotations" }
@@ -70,12 +71,12 @@ ktor-server-cio = { module = "io.ktor:ktor-server-cio", version.ref = "ktor3" }
 ktor-server-netty = { module = "io.ktor:ktor-server-netty-jvm", version.ref = "ktor3" }
 ktor-server-sse = { module = "io.ktor:ktor-server-sse", version.ref = "ktor3" }
 ktor-server-content-negotiation = { module = "io.ktor:ktor-server-content-negotiation", version.ref = "ktor3" }
-ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor3" }
 ktor-server-test-host = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor3" }
 lettuce-core = { module = "io.lettuce:lettuce-core", version.ref = "lettuce" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 oshai-kotlin-logging = { module = "io.github.oshai:kotlin-logging", version.ref = "oshai-logging" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+mokksy-a2a = { module = "me.kpavlov.aimocks:ai-mocks-a2a", version.ref = "mokksy" }
 dokka-gradle-plugin = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version.ref = "dokka" }
 mcp-client = { module = "io.modelcontextprotocol:kotlin-sdk-client", version.ref = "mcp" }
 mcp-server = { module = "io.modelcontextprotocol:kotlin-sdk-server", version.ref = "mcp" }
