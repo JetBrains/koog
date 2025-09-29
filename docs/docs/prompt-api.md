@@ -375,7 +375,7 @@ To create a prompt executor that works with multiple LLM providers, do the follo
 1) Configure clients for the required LLM providers with the corresponding API keys:
 <!--- INCLUDE
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
-import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
+import ai.koog.prompt.executor.ollama.client.OllamaClient
 -->
 ```kotlin
 val openAIClient = OpenAILLMClient(System.getenv("OPENAI_KEY"))

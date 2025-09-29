@@ -3,6 +3,9 @@
 In addition to single-run agents, the `AIAgent` class lets you build agents that handle complex workflows by defining 
 custom strategies, tools, configurations, and custom input/output types.
 
+!!! tip
+    If you are new to Koog and want to create the simplest agent, start with [Single-run agents](single-run-agents.md).
+
 The process of creating and configuring such an agent typically includes the following steps:
 
 1. Provide a prompt executor to communicate with the LLM.
@@ -20,7 +23,7 @@ The process of creating and configuring such an agent typically includes the fol
     Use environment variables or a secure configuration management system to store your API keys.
     Avoid hardcoding API keys directly in your source code.
 
-## Creating a single-run agent
+## Creating a complex workflow agent
 
 ### 1. Add dependencies
 
@@ -115,6 +118,7 @@ val processNode by node<InputType, OutputType> { input ->
 }
 ```
 <!--- KNIT example-complex-workflow-agents-04.kt -->
+
 !!! tip
     There are also pre-defined nodes that you can use in your agent strategy. To learn more, see [Predefined nodes and components](nodes-and-components.md).
 
@@ -165,6 +169,7 @@ edge(sourceNode forwardTo targetNode transformed { output ->
 edge(sourceNode forwardTo targetNode onCondition { it.isNotEmpty() } transformed { it.uppercase() })
 ```
 <!--- KNIT example-complex-workflow-agents-05.kt -->
+
 #### 3.2. Implement the strategy
 
 To implement the agent strategy, call the `strategy` function and define nodes and edges. For example:

@@ -1,45 +1,58 @@
 # Functional agents
 
-Functional agents are lightweight, non-graph agents that you can control with a simple loop
-that calls an LLM one or a few times, optionally invokes tools, and returns a final value without building a full strategy graph.
+Functional agents are lightweight AI agents that operate without building complex strategy graphs.
+Instead, they use a simple loop controlled by a lambda function.
+This loop handles user input, interacts with an LLM, and produces a final output.
+The agent loop defines the main logic of the agent, which is repeated as needed based on user input and LLM output.
+
+This page guides you through the steps necessary to create a minimal functional agent and extend it with tools.
 
 !!! tip
     If you are new to Koog and want to create the simplest agent, start with [Single-run agents](single-run-agents.md).
 
 ## Prerequisites
 
-- You have a valid API key from the LLM provider used to implement an AI agent. For a list of all available providers, see [Overview](index.md).
+Before you start, make sure that you have the following:
+
+- A working Kotlin/JVM project with Gradle.
+- Java 17+ installed.
+- A valid API key from the LLM provider used to implement an AI agent. For a list of all available providers, refer to [Overview](index.md).
+- (Optional) Ollama installed and running locally if you use this provider.
 
 !!! tip
     Use environment variables or a secure configuration management system to store your API keys.
     Avoid hardcoding API keys directly in your source code.
 
-## Creating a functional agent
+## Add dependencies
+
+The `AIAgent` class is the main class for creating agents in Koog.
+Include the following dependency in your build configuration to use the class functionality:
+
+```
+dependencies {
+    implementation("ai.koog:koog-agents:VERSION")
+}
+```
+For all available installation methods, see [Installation](index.md#installation).
+
+## Create a minimal functional agent
 
 To create a minimal functional agent, do the following:
 
-1) Include all necessary dependencies in your build configuration to use the `FunctionalAIAgent` class functionality:
+1) Choose the input and output types that the agent handles and create a corresponding `AIAgent<Input, Output>` instance.
+   In this guide, we use `AIAgent<String, String>`, which means the agent receives and returns `String`.
+2) Provide the required parameters, including a system prompt, prompt executor, and LLM.
+3) Define the agent loop with a lambda function.
 
-    ```
-    dependencies {
-        implementation("ai.koog:koog-agents:VERSION")
-    }
-    ```
-
-    For all available installation methods, see [Installation](index.md#installation).
-
-2) Create an instance of the `FunctionalAIAgent` class and provide a prompt executor, LLM, prompt, and an input loop.
-   returns a single assistant message as a string.
-
-Here is an example of an agent that sends a user text to the LLM and returns a single assistant message as a string.
+Here is an example of a minimal functional agent that sends user text to a specified LLM and returns a single assistant message.
 
 <!--- INCLUDE
-import ai.koog.agents.core.agent.FunctionalAIAgent
-import ai.koog.prompt.llm.OllamaModels
-import ai.koog.prompt.executor.llms.all.simpleOllamaExecutor
+import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.asAssistantMessage
 import ai.koog.agents.core.agent.requestLLMMultiple
-kotlinx.coroutines.runBlocking
+import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
+import ai.koog.prompt.llm.OllamaModels
+import kotlinx.coroutines.runBlocking
 
 fun main() {
     runBlocking {
@@ -47,125 +60,67 @@ fun main() {
 <!--- SUFFIX
     }
 }
---> 
+-->
 ```kotlin
-val agent = FunctionalAIAgent<String, String>(
+// Create an AIAgent instance and provide a system prompt, prompt executor, and LLM
+val mathAgent = AIAgent<String, String>(
+    systemPrompt = "You are a precise math assistant.",
     promptExecutor = simpleOllamaAIExecutor(),
-    model = OllamaModels.Meta.LLAMA_3_2,
-    prompt = "You are a helpful assistant."
-) { input ->
-    val responses = requestLLMMultiple(input)
-    responses.single().asAssistantMessage().content
-}
-
-val result = agent.run("Say hi in one sentence")
+    llmModel = OllamaModels.Meta.LLAMA_3_2
+    ) { input -> // Define the agent loop
+        // Send the user input to the LLM
+        val responses = requestLLMMultiple(input)
+        // Extract and return the assistant message content from the response
+        responses.single().asAssistantMessage().content
+    }
+// Run the agent with a user input and print the result
+val result = mathAgent.run("What is 12 × 9?")
 println(result)
 ```
 <!--- KNIT example-functional-agent-01.kt -->
 
-In the example, `requestLLMMultiple(input)` sends the user input and receives content of an assistant message.
-If you want to return structured data, parse the content or use the [Structured output API](structured-output.md).
+The agent can produce the following output:
 
-## Adding tools 
+```
+The answer to 12 × 9 is 108.
+```
 
-Agents use tools to complete specific tasks.
-To configure tools, use the `toolRegistry` parameter that defines the tools available to the agent.
+## Add tools
 
-Here is an example of a Switch device with tools the model can call:
+In many cases, the functional agent needs to complete specific tasks, such as reading and writing data or calling APIs.
+In Koog, you expose such capabilities as tools and let the LLM invoke them during the agent loop.
+
+This chapter takes the minimal functional agent created above and demonstrates how to extend the agent logic using tools.
+
+1) Create an annotation-based tool. For more details, see [Annotation-based tools](annotation-based-tools.md). 
 
 <!--- INCLUDE
-import ai.koog.agents.core.agent.FunctionalAIAgent
-import ai.koog.prompt.llm.OllamaModels
-import ai.koog.prompt.executor.llms.all.simpleOllamaExecutor
-import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.core.tools.reflect.asTools
-import ai.koog.agents.core.agent.containsToolCalls
-import ai.koog.agents.core.agent.executeMultipleTools
-import ai.koog.agents.core.agent.extractToolCalls
-import ai.koog.agents.core.agent.sendMultipleToolResults
-import ai.koog.agents.core.agent.asAssistantMessage
-import ai.koog.agents.core.agent.requestLLMMultiple
-kotlinx.coroutines.runBlocking
-
-fun main() {
-    runBlocking {
--->
-<!--- SUFFIX
-    }
-}
+import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.agents.core.tools.annotations.Tool
+import ai.koog.agents.core.tools.reflect.ToolSet
 --> 
 ```kotlin
-class Switch {
-    private var on = false
-    fun on() { on = true }
-    fun off() { on = false }
-    fun isOn() = on
-}
-
-class SwitchTools(private val sw: Switch) {
-    fun turn_on() = run { sw.on(); "ok" }
-    fun turn_off() = run { sw.off(); "ok" }
-    fun state() = if (sw.isOn()) "on" else "off"
-}
-
-val sw = Switch()
-val tools = ToolRegistry { tools(SwitchTools(sw).asTools()) }
-
-val agent = FunctionalAIAgent<String, String>(
-    promptExecutor = simpleOllamaAIExecutor(),
-    model = OllamaModels.Meta.LLAMA_3_2,
-    prompt = "You're responsible for running a Switch device and perform operations on it upon request.",
-    toolRegistry = tools
-) { input ->
-    var responses = requestLLMMultiple(input)
-
-    while (responses.containsToolCalls()) {
-        val pending = extractToolCalls(responses)
-        val results = executeMultipleTools(pending)
-        responses = sendMultipleToolResults(results)
+@LLMDescription("Simple multiplier")
+class MathTools : ToolSet {
+    @Tool
+    @LLMDescription("Multiplies two numbers and returns the result")
+    fun multiply(a: Int, b: Int): Int {
+        val result = a * b
+        return result
     }
-
-    responses.single().asAssistantMessage().content
 }
-
-val result = agent.run("Turn switch on")
-println(result)
-println("Switch is ${if (sw.isOn()) "on" else "off"}")
 ```
 <!--- KNIT example-functional-agent-02.kt -->
 
-In the example, `requestLLMMultiple(input)` sends the user input. The `containsToolCalls()` method detects tool call messages from the LLM.
-If the LLM returns tool calls, for each tool call, the agent does the following:
+To learn more about available tools, refer to the [Tool overview](tool-overview.md).
 
-1. The `extractToolCalls()` method reads, which tools to run and with what arguments. 
-2. The `executeMultipleTools()` method runs the tools and returns the results. 
-3. The `sendMultipleToolResults()` method sends the results back to the LLM and gets the next response. 
-
-Then the `single()` method returns the content of the assistant message.
-
-You can perform input validation inside your tool methods and return clear error messages when arguments are invalid,
-so the LLM can self-correct on the next turn.
-
-To learn more about tools, see [Tools overview](tools-overview.md).
-
-## Observing and extending behavior with features
-
-You can install features to observe or extend your agent. 
-
-Here is an example that prints every tool call to the console:
+2) Register the tool to make it available to the agent.
 
 <!--- INCLUDE
-import ai.koog.agents.core.agent.FunctionalAIAgent
-import ai.koog.prompt.llm.OllamaModels
-import ai.koog.prompt.executor.llms.all.simpleOllamaExecutor
-import ai.koog.agents.core.agent.containsToolCalls
-import ai.koog.agents.core.agent.executeMultipleTools
-import ai.koog.agents.core.agent.extractToolCalls
-import ai.koog.agents.core.agent.requestLLMMultiple
-import ai.koog.agents.core.agent.sendMultipleToolResults
-import ai.koog.agents.core.agent.asAssistantMessage
-import ai.koog.agents.features.eventHandler.feature.EventHandler
-kotlinx.coroutines.runBlocking
+import ai.koog.agents.example.exampleFunctionalAgent02.MathTools
+import ai.koog.agents.core.tools.reflect.tools
+import ai.koog.agents.core.tools.ToolRegistry
+import kotlinx.coroutines.runBlocking
 
 fun main() {
     runBlocking {
@@ -174,134 +129,86 @@ fun main() {
     }
 }
 -->
-
 ```kotlin
-val observed = FunctionalAIAgent<String, String>(
-    promptExecutor = simpleOllamaAIExecutor(),
-    model = OllamaModels.Meta.LLAMA_3_2,
-    prompt = "...",
-    toolRegistry = tools,
-    featureContext = {
-        install(EventHandler) {
-            onToolCall { e -> println("Tool called: ${'$'}{e.tool.name}, args: ${'$'}{e.toolArgs}") }
-        }
-    }
-) { input ->
-    var responses = requestLLMMultiple(input)
-    while (responses.containsToolCalls()) {
-        val pending = extractToolCalls(responses)
-        val results = executeMultipleTools(pending)
-        responses = sendMultipleToolResults(results)
-    }
-    responses.single().asAssistantMessage().content
+val toolRegistry = ToolRegistry {
+    tools(MathTools())
 }
 ```
 <!--- KNIT example-functional-agent-03.kt -->
 
-For more information about features, see [Features overview](features-overview.md).
-
-## Handling long-running conversations
-
-Long-running conversations can exceed the model context window.
-To reduce its size, you can track token usage and compress history as needed.
+3) Pass the tool registry to the agent to enable the LLM to request and use the available tools.
+4) Extend the agent loop to identify tool calls, execute the requested tools, and return their results to the LLM for further processing.
 
 <!--- INCLUDE
-import ai.koog.agents.core.agent.FunctionalAIAgent
-import ai.koog.prompt.executor.clients.openai.OllamaModels
-import ai.koog.prompt.executor.llms.all.simpleOllamaExecutor
+import ai.koog.agents.example.exampleFunctionalAgent02.MathTools
+import ai.koog.agents.core.tools.reflect.tools
+import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.core.agent.asAssistantMessage
 import ai.koog.agents.core.agent.containsToolCalls
 import ai.koog.agents.core.agent.executeMultipleTools
 import ai.koog.agents.core.agent.extractToolCalls
-import ai.koog.agents.core.agent.sendMultipleToolResults
-import ai.koog.agents.core.agent.latestTokenUsage
-import ai.koog.agents.core.agent.asAssistantMessage
-import ai.koog.agents.core.agent.compressHistory
 import ai.koog.agents.core.agent.requestLLMMultiple
-import ai.koog.agents.features.eventHandler.feature.EventHandler
-kotlinx.coroutines.runBlocking
+import ai.koog.agents.core.agent.sendMultipleToolResults
+import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
+import ai.koog.prompt.llm.OllamaModels
+import kotlinx.coroutines.runBlocking
 
 fun main() {
     runBlocking {
-        val observed = FunctionalAIAgent<String, String>(
-            promptExecutor = simpleOllamaAIExecutor(),
-            model = OllamaModels.Meta.LLAMA_3_2,
-            prompt = "...",
-            toolRegistry = tools,
-            featureContext = {
-                install(EventHandler) {
-                    onToolCall { e -> println("Tool called: ${'$'}{e.tool.name}, args: ${'$'}{e.toolArgs}") }
-                }
-            }
-        ) { input ->
+        val toolRegistry = ToolRegistry {
+            tools(MathTools())
+        }
 -->
 <!--- SUFFIX
-        }
     }
 }
 -->
-
 ```kotlin
-var responses = requestLLMMultiple(input)
+val mathWithTools = AIAgent<String, String>(
+    systemPrompt = "You are a precise math assistant. When multiplication is needed, use the multiplication tool.",
+    promptExecutor = simpleOllamaAIExecutor(),
+    llmModel = OllamaModels.Meta.LLAMA_3_2,
+    toolRegistry = toolRegistry
+) { input -> // Define the agent loop extended with tool calls
+    // Send the user input to the LLM
+    var responses = requestLLMMultiple(input)
 
-while (responses.containsToolCalls()) {
-    if (latestTokenUsage() > 100_000) {
-        compressHistory()
+    // If the LLM requests tools
+    while (responses.containsToolCalls()) {
+        // Extract tool calls from the response
+        val pendingCalls = extractToolCalls(responses)
+        // Execute the tools and return the results
+        val results = executeMultipleTools(pendingCalls)
+        // Send the tool results back to the LLM. The LLM may call more tools or return a final output
+        responses = sendMultipleToolResults(results)
     }
-    val pending = extractToolCalls(responses)
-    val results = executeMultipleTools(pending)
-    responses = sendMultipleToolResults(results)
+
+    // When no tool calls remain, extract and return the assistant message content from the response
+    responses.single().asAssistantMessage().content
 }
+
+// Run the agent with a user input and print the result
+val reply = mathWithTools.run("Please multiply 12.5 and 4, then add 10 to the result.")
+println(reply)
 ```
 <!--- KNIT example-functional-agent-04.kt -->
 
-For more information about history compression, see [History compression](history-compression.md).
+The agent can produce the following output:
 
-## Concurrency and lifecycle
+```
+Here is the step-by-step solution:
 
-`FunctionalAIAgent` prevents concurrent runs on the same instance.
-If you need to process multiple requests in parallel, create a fresh agent instance per request or await completion of the current run.
+1. Multiply 12.5 and 4:
+   12.5 × 4 = 50
 
-!!! tip
-    One agent instance per request. Do not share the same `FunctionalAIAgent` across parallel coroutines.
-
-If you see an error like `“Agent is already running”`, it means two runs overlapped on the same instance.
-
-## Returning custom output types
-
-You can return a data class from your loop by changing the output type parameter.
-
-```kotlin
-data class MyResult(val title: String, val state: String)
-
-val agent = FunctionalAIAgent<String, MyResult>(
-    promptExecutor = simpleOllamaAIExecutor(),
-    model = OllamaModels.Meta.LLAMA_3_2,
-    prompt = "Summarize the status as JSON with fields: title, state."
-) { input ->
-    val responses = requestLLMMultiple(input)
-    val text = responses.single().asAssistantMessage().content
-
-    // Parse or map to your schema; alternatively use Structured output API
-    val json = JSONObject(text)
-    MyResult(
-        title = json.getString("title"),
-        state = json.getString("state")
-    )
-}
+2. Add 10 to the result:
+   50 + 10 = 60
 ```
 
-Alternatively, you can use the [Structured output API](structured-output.md) for safer schema‑based parsing.
+## What's next
 
-## Troubleshooting notes
-
-- Empty or unexpected model output
-    - Check your system prompt; be explicit about the format you expect.
-    - Print intermediate responses (for example, via EventHandler) to see what the LLM returns.
-    - Consider adding a couple of few‑shot examples.
-- Loop never ends
-    - Break when there are no tool calls.
-    - Add guards: a max loop count and a timeout.
-- Context overflows
-    - Watch `latestTokenUsage()` and call `compressHistory()` as needed.
-- “Agent is already running”
-    - Do not share one agent instance across parallel coroutines. Create a new agent per run or await completion.
+- Learn how to return structured data using the [Structured output API](structured-output.md).
+- Experiment with adding more [tools](tools-overview.md) to the agent.
+- Improve observability with the [EventHandler](agent-events.md) feature.
+- Learn how to handle long-running conversations with [History compression](history-compression.md).
