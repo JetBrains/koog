@@ -3,10 +3,6 @@ package ai.koog.agents.ext.agent
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.tools.SimpleTool
-import ai.koog.agents.core.tools.ToolArgs
-import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.agents.core.tools.ToolParameterDescriptor
-import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.features.eventHandler.feature.EventHandler
@@ -46,18 +42,16 @@ class StructuredOutputWithToolsIntegrationTest {
 
     object GetTemperatureTool : SimpleTool<GetTemperatureTool.Args>() {
         @Serializable
-        data class Args(val city: String, val country: String) : ToolArgs
+        data class Args(
+            @property:LLMDescription("City name")
+            val city: String,
+            @property:LLMDescription("Country name")
+            val country: String
+        )
 
         override val argsSerializer: KSerializer<Args> = Args.serializer()
-
-        override val descriptor: ToolDescriptor = ToolDescriptor(
-            name = "get_temperature",
-            description = "Get current temperature for a city",
-            requiredParameters = listOf(
-                ToolParameterDescriptor("city", "City name", ToolParameterType.String),
-                ToolParameterDescriptor("country", "Country name", ToolParameterType.String)
-            )
-        )
+        override val name: String = "get_temperature"
+        override val description: String = "Get current temperature for a city"
 
         override suspend fun doExecute(args: Args): String =
             "Temperature in ${args.city}, ${args.country}: 22°C"
@@ -65,18 +59,16 @@ class StructuredOutputWithToolsIntegrationTest {
 
     object GetWeatherConditionsTool : SimpleTool<GetWeatherConditionsTool.Args>() {
         @Serializable
-        data class Args(val city: String, val country: String) : ToolArgs
+        data class Args(
+            @property:LLMDescription("City name")
+            val city: String,
+            @property:LLMDescription("Country name")
+            val country: String
+        )
 
         override val argsSerializer: KSerializer<Args> = Args.serializer()
-
-        override val descriptor: ToolDescriptor = ToolDescriptor(
-            name = "get_weather_conditions",
-            description = "Get current weather conditions for a city",
-            requiredParameters = listOf(
-                ToolParameterDescriptor("city", "City name", ToolParameterType.String),
-                ToolParameterDescriptor("country", "Country name", ToolParameterType.String)
-            )
-        )
+        override val name: String = "get_weather_conditions"
+        override val description: String = "Get current weather conditions for a city"
 
         override suspend fun doExecute(args: Args): String =
             "Weather conditions in ${args.city}, ${args.country}: Partly Cloudy"
@@ -84,18 +76,16 @@ class StructuredOutputWithToolsIntegrationTest {
 
     object GetWindSpeedTool : SimpleTool<GetWindSpeedTool.Args>() {
         @Serializable
-        data class Args(val city: String, val country: String) : ToolArgs
+        data class Args(
+            @property:LLMDescription("City name")
+            val city: String,
+            @property:LLMDescription("Country name")
+            val country: String
+        )
 
         override val argsSerializer: KSerializer<Args> = Args.serializer()
-
-        override val descriptor: ToolDescriptor = ToolDescriptor(
-            name = "get_wind_speed",
-            description = "Get current wind speed for a city",
-            requiredParameters = listOf(
-                ToolParameterDescriptor("city", "City name", ToolParameterType.String),
-                ToolParameterDescriptor("country", "Country name", ToolParameterType.String)
-            )
-        )
+        override val name: String = "get_wind_speed"
+        override val description: String = "Get current wind speed for a city"
 
         override suspend fun doExecute(args: Args): String =
             "Wind speed in ${args.city}, ${args.country}: 15.5 km/h"
@@ -103,18 +93,16 @@ class StructuredOutputWithToolsIntegrationTest {
 
     object GetHumidityTool : SimpleTool<GetHumidityTool.Args>() {
         @Serializable
-        data class Args(val city: String, val country: String) : ToolArgs
+        data class Args(
+            @property:LLMDescription("City name")
+            val city: String,
+            @property:LLMDescription("Country name")
+            val country: String
+        )
 
         override val argsSerializer: KSerializer<Args> = Args.serializer()
-
-        override val descriptor: ToolDescriptor = ToolDescriptor(
-            name = "get_humidity",
-            description = "Get current humidity for a city",
-            requiredParameters = listOf(
-                ToolParameterDescriptor("city", "City name", ToolParameterType.String),
-                ToolParameterDescriptor("country", "Country name", ToolParameterType.String)
-            )
-        )
+        override val name: String = "get_humidity"
+        override val description: String = "Get current humidity for a city"
 
         override suspend fun doExecute(args: Args): String =
             "Humidity in ${args.city}, ${args.country}: 65%"
@@ -177,10 +165,10 @@ class StructuredOutputWithToolsIntegrationTest {
             }
         ) {
             install(EventHandler) {
-                onToolCall { eventContext ->
+                onToolCallStarting { eventContext ->
                     toolCallEvents.add(eventContext.tool.name)
                 }
-                onAgentFinished { eventContext ->
+                onAgentCompleted { eventContext ->
                     eventContext.result?.let { results.add(it as WeatherResponse) }
                 }
             }
@@ -252,7 +240,7 @@ class StructuredOutputWithToolsIntegrationTest {
             }
         ) {
             install(EventHandler) {
-                onToolCall { eventContext ->
+                onToolCallStarting { eventContext ->
                     toolCallTimestamps[eventContext.tool.name] = currentTime
                 }
             }

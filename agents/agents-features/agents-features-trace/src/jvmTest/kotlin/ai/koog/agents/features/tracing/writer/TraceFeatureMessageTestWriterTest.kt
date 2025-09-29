@@ -8,8 +8,8 @@ import ai.koog.agents.core.dsl.extension.nodeUpdatePrompt
 import ai.koog.agents.core.feature.model.AIAgentError
 import ai.koog.agents.core.feature.model.events.LLMCallStartingEvent
 import ai.koog.agents.core.feature.model.events.NodeExecutionFailedEvent
-import ai.koog.agents.core.feature.model.events.ToolExecutionCompletedEvent
-import ai.koog.agents.core.feature.model.events.ToolExecutionStartingEvent
+import ai.koog.agents.core.feature.model.events.ToolCallCompletedEvent
+import ai.koog.agents.core.feature.model.events.ToolCallStartingEvent
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.tracing.feature.Tracing
 import ai.koog.agents.features.tracing.mock.RecursiveTool
@@ -155,10 +155,10 @@ class TraceFeatureMessageTestWriterTest {
 
         agent.run("")
 
-        val toolCallsStartEvent = messageProcessor.messages.filterIsInstance<ToolExecutionStartingEvent>().toList()
+        val toolCallsStartEvent = messageProcessor.messages.filterIsInstance<ToolCallStartingEvent>().toList()
         assertEquals(1, toolCallsStartEvent.size, "Tool call start event for existing tool")
 
-        val toolCallsEndEvent = messageProcessor.messages.filterIsInstance<ToolExecutionStartingEvent>().toList()
+        val toolCallsEndEvent = messageProcessor.messages.filterIsInstance<ToolCallStartingEvent>().toList()
         assertEquals(1, toolCallsEndEvent.size, "Tool call end event for existing tool")
     }
 
@@ -195,7 +195,7 @@ class TraceFeatureMessageTestWriterTest {
 
         agent.run("")
 
-        val toolCallsStartEvent = messageProcessor.messages.filterIsInstance<ToolExecutionStartingEvent>().toList()
+        val toolCallsStartEvent = messageProcessor.messages.filterIsInstance<ToolCallStartingEvent>().toList()
         assertEquals(1, toolCallsStartEvent.size, "Tool call start event for existing tool")
     }
 
@@ -234,10 +234,10 @@ class TraceFeatureMessageTestWriterTest {
 
         agent.run("")
 
-        val toolCallsStartEvent = messageProcessor.messages.filterIsInstance<ToolExecutionStartingEvent>().toList()
+        val toolCallsStartEvent = messageProcessor.messages.filterIsInstance<ToolCallStartingEvent>().toList()
         assertEquals(1, toolCallsStartEvent.size, "Tool call start event for existing tool")
 
-        val toolCallsEndEvent = messageProcessor.messages.filterIsInstance<ToolExecutionCompletedEvent>().toList()
+        val toolCallsEndEvent = messageProcessor.messages.filterIsInstance<ToolCallCompletedEvent>().toList()
         assertEquals(1, toolCallsEndEvent.size, "Tool call end event for existing tool")
     }
 

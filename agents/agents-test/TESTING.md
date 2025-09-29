@@ -307,7 +307,7 @@ fun testToneAgent() = runTest {
 
     // Create an event handler
     val eventHandler = EventHandler {
-        onToolCall { tool, args ->
+        onToolCallStarting { tool, args ->
             println("[DEBUG_LOG] Tool called: tool ${tool.name}, args $args")
             toolCalls.add(tool.name)
         }

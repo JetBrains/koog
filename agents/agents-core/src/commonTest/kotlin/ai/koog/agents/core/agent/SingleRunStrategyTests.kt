@@ -32,7 +32,7 @@ class SingleRunStrategyTests {
             toolRegistry = testToolRegistry
         ) {
             install(EventHandler) {
-                onToolCall { eventContext -> actualToolCalls += eventContext.toolArgs.toString() }
+                onToolCallStarting { eventContext -> actualToolCalls += eventContext.toolArgs.toString() }
             }
         }
 
@@ -63,7 +63,7 @@ class SingleRunStrategyTests {
             toolRegistry = testToolRegistry
         ) {
             install(EventHandler) {
-                onToolCall { eventContext -> actualToolCalls += eventContext.toolArgs.toString() }
+                onToolCallStarting { eventContext -> actualToolCalls += eventContext.toolArgs.toString() }
             }
         }
 
@@ -93,7 +93,7 @@ class SingleRunStrategyTests {
             toolRegistry = testToolRegistry
         ) {
             install(EventHandler) {
-                onToolCall { eventContext -> actualToolCalls += eventContext.toolArgs.toString() }
+                onToolCallStarting { eventContext -> actualToolCalls += eventContext.toolArgs.toString() }
             }
         }
 
@@ -123,7 +123,7 @@ class SingleRunStrategyTests {
             toolRegistry = testToolRegistry
         ) {
             install(EventHandler) {
-                onToolCall { eventContext -> actualToolCalls += eventContext.toolArgs.toString() }
+                onToolCallStarting { eventContext -> actualToolCalls += eventContext.toolArgs.toString() }
             }
         }
 
@@ -162,7 +162,7 @@ class SingleRunStrategyTests {
             toolRegistry = testToolRegistry
         ) {
             install(EventHandler) {
-                onToolCall { eventContext -> actualToolCalls += eventContext.toolArgs.toString() }
+                onToolCallStarting { eventContext -> actualToolCalls += eventContext.toolArgs.toString() }
             }
         }
 
@@ -201,7 +201,7 @@ class SingleRunStrategyTests {
             toolRegistry = testToolRegistry
         ) {
             install(EventHandler) {
-                onToolCall { eventContext -> actualToolCalls += eventContext.toolArgs.toString() }
+                onToolCallStarting { eventContext -> actualToolCalls += eventContext.toolArgs.toString() }
             }
         }
 
@@ -241,7 +241,7 @@ class SingleRunStrategyTests {
             toolRegistry = testToolRegistry
         ) {
             install(EventHandler) {
-                onToolCall { eventContext -> actualToolCalls += eventContext.toolArgs.toString() }
+                onToolCallStarting { eventContext -> actualToolCalls += eventContext.toolArgs.toString() }
             }
         }
 
@@ -281,7 +281,7 @@ class SingleRunStrategyTests {
             toolRegistry = testToolRegistry
         ) {
             install(EventHandler) {
-                onToolCall { eventContext -> actualToolCalls += eventContext.toolArgs.toString() }
+                onToolCallStarting { eventContext -> actualToolCalls += eventContext.toolArgs.toString() }
             }
         }
 

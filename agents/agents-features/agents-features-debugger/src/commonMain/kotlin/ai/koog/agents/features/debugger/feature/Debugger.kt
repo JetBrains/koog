@@ -16,9 +16,9 @@ import ai.koog.agents.core.feature.model.events.LLMCallStartingEvent
 import ai.koog.agents.core.feature.model.events.NodeExecutionCompletedEvent
 import ai.koog.agents.core.feature.model.events.NodeExecutionStartingEvent
 import ai.koog.agents.core.feature.model.events.StrategyCompletedEvent
-import ai.koog.agents.core.feature.model.events.ToolExecutionCompletedEvent
-import ai.koog.agents.core.feature.model.events.ToolExecutionFailedEvent
-import ai.koog.agents.core.feature.model.events.ToolExecutionStartingEvent
+import ai.koog.agents.core.feature.model.events.ToolCallCompletedEvent
+import ai.koog.agents.core.feature.model.events.ToolCallFailedEvent
+import ai.koog.agents.core.feature.model.events.ToolCallStartingEvent
 import ai.koog.agents.core.feature.model.events.ToolValidationFailedEvent
 import ai.koog.agents.core.feature.model.events.startNodeToGraph
 import ai.koog.agents.core.feature.model.toAgentError
@@ -209,11 +209,11 @@ public class Debugger {
 
             //region Intercept Tool Call Events
 
-            pipeline.interceptToolExecutionStarting(interceptContext) intercept@{ eventContext ->
+            pipeline.interceptToolCallStarting(interceptContext) intercept@{ eventContext ->
                 @Suppress("UNCHECKED_CAST")
                 val tool = eventContext.tool as Tool<Any?, Any?>
 
-                val event = ToolExecutionStartingEvent(
+                val event = ToolCallStartingEvent(
                     runId = eventContext.runId,
                     toolCallId = eventContext.toolCallId,
                     toolName = eventContext.tool.name,
@@ -238,11 +238,11 @@ public class Debugger {
                 writer.onMessage(event)
             }
 
-            pipeline.interceptToolExecutionFailed(interceptContext) intercept@{ eventContext ->
+            pipeline.interceptToolCallFailed(interceptContext) intercept@{ eventContext ->
                 @Suppress("UNCHECKED_CAST")
                 val tool = eventContext.tool as Tool<Any?, Any?>
 
-                val event = ToolExecutionFailedEvent(
+                val event = ToolCallFailedEvent(
                     runId = eventContext.runId,
                     toolCallId = eventContext.toolCallId,
                     toolName = tool.name,
@@ -253,11 +253,11 @@ public class Debugger {
                 writer.onMessage(event)
             }
 
-            pipeline.interceptToolExecutionCompleted(interceptContext) intercept@{ eventContext ->
+            pipeline.interceptToolCallCompleted(interceptContext) intercept@{ eventContext ->
                 @Suppress("UNCHECKED_CAST")
                 val tool = eventContext.tool as Tool<Any?, Any?>
 
-                val event = ToolExecutionCompletedEvent(
+                val event = ToolCallCompletedEvent(
                     runId = eventContext.runId,
                     toolCallId = eventContext.toolCallId,
                     toolName = eventContext.tool.name,

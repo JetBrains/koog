@@ -15,7 +15,7 @@ import kotlinx.coroutines.runBlocking
 fun main() = runBlocking {
     var result: Any? = null
     val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
-        onAgentFinished { eventContext -> result = eventContext.result }
+        onAgentCompleted { eventContext -> result = eventContext.result }
     }
     // Create a single-run agent with a system prompt
     val agent = AIAgent(

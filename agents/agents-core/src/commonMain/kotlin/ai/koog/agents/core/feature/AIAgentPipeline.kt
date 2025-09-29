@@ -41,13 +41,13 @@ import ai.koog.agents.core.feature.handler.streaming.LLMStreamingFrameReceivedCo
 import ai.koog.agents.core.feature.handler.streaming.LLMStreamingFrameReceivedHandler
 import ai.koog.agents.core.feature.handler.streaming.LLMStreamingStartingContext
 import ai.koog.agents.core.feature.handler.streaming.LLMStreamingStartingHandler
+import ai.koog.agents.core.feature.handler.tool.ToolCallCompletedContext
+import ai.koog.agents.core.feature.handler.tool.ToolCallEventHandler
+import ai.koog.agents.core.feature.handler.tool.ToolCallFailedContext
 import ai.koog.agents.core.feature.handler.tool.ToolCallFailureHandler
 import ai.koog.agents.core.feature.handler.tool.ToolCallHandler
 import ai.koog.agents.core.feature.handler.tool.ToolCallResultHandler
-import ai.koog.agents.core.feature.handler.tool.ToolExecutionCompletedContext
-import ai.koog.agents.core.feature.handler.tool.ToolExecutionEventHandler
-import ai.koog.agents.core.feature.handler.tool.ToolExecutionFailedContext
-import ai.koog.agents.core.feature.handler.tool.ToolExecutionStartingContext
+import ai.koog.agents.core.feature.handler.tool.ToolCallStartingContext
 import ai.koog.agents.core.feature.handler.tool.ToolValidationErrorHandler
 import ai.koog.agents.core.feature.handler.tool.ToolValidationFailedContext
 import ai.koog.agents.core.tools.Tool
@@ -123,7 +123,7 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
      * Map of tool execution handlers registered for different features.
      * Keys are feature storage keys, values are tool execution handlers.
      */
-    protected val toolExecutionEventHandlers: MutableMap<AIAgentStorageKey<*>, ToolExecutionEventHandler> = mutableMapOf()
+    protected val toolCallEventHandlers: MutableMap<AIAgentStorageKey<*>, ToolCallEventHandler> = mutableMapOf()
 
     /**
      * Map of LLM execution handlers registered for different features.
@@ -367,9 +367,9 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
      * @param tool The tool that is being called
      * @param toolArgs The arguments provided to the tool
      */
-    public suspend fun onToolExecutionStarting(runId: String, toolCallId: String?, tool: Tool<*, *>, toolArgs: Any?) {
-        val eventContext = ToolExecutionStartingContext(runId, toolCallId, tool, toolArgs)
-        toolExecutionEventHandlers.values.forEach { handler -> handler.toolCallHandler.handle(eventContext) }
+    public suspend fun onToolCallStarting(runId: String, toolCallId: String?, tool: Tool<*, *>, toolArgs: Any?) {
+        val eventContext = ToolCallStartingContext(runId, toolCallId, tool, toolArgs)
+        toolCallEventHandlers.values.forEach { handler -> handler.toolCallHandler.handle(eventContext) }
     }
 
     /**
@@ -389,7 +389,7 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
     ) {
         val eventContext =
             ToolValidationFailedContext(runId, toolCallId, tool, toolArgs, error)
-        toolExecutionEventHandlers.values.forEach { handler -> handler.toolValidationErrorHandler.handle(eventContext) }
+        toolCallEventHandlers.values.forEach { handler -> handler.toolValidationErrorHandler.handle(eventContext) }
     }
 
     /**
@@ -400,15 +400,15 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
      * @param toolArgs The arguments provided to the tool
      * @param throwable The exception that caused the failure
      */
-    public suspend fun onToolExecutionFailed(
+    public suspend fun onToolCallFailed(
         runId: String,
         toolCallId: String?,
         tool: Tool<*, *>,
         toolArgs: Any?,
         throwable: Throwable
     ) {
-        val eventContext = ToolExecutionFailedContext(runId, toolCallId, tool, toolArgs, throwable)
-        toolExecutionEventHandlers.values.forEach { handler -> handler.toolCallFailureHandler.handle(eventContext) }
+        val eventContext = ToolCallFailedContext(runId, toolCallId, tool, toolArgs, throwable)
+        toolCallEventHandlers.values.forEach { handler -> handler.toolCallFailureHandler.handle(eventContext) }
     }
 
     /**
@@ -419,15 +419,15 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
      * @param toolArgs The arguments that were provided to the tool
      * @param result The result produced by the tool, or null if no result was produced
      */
-    public suspend fun onToolExecutionCompleted(
+    public suspend fun onToolCallCompleted(
         runId: String,
         toolCallId: String?,
         tool: Tool<*, *>,
         toolArgs: Any?,
         result: Any?
     ) {
-        val eventContext = ToolExecutionCompletedContext(runId, toolCallId, tool, toolArgs, result)
-        toolExecutionEventHandlers.values.forEach { handler -> handler.toolCallResultHandler.handle(eventContext) }
+        val eventContext = ToolCallCompletedContext(runId, toolCallId, tool, toolArgs, result)
+        toolCallEventHandlers.values.forEach { handler -> handler.toolCallResultHandler.handle(eventContext) }
     }
 
     //endregion Trigger Tool Call Handlers
@@ -867,16 +867,16 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
      *
      * Example:
      * ```
-     * pipeline.interceptToolExecutionStarting(interceptContext) { eventContext ->
+     * pipeline.interceptToolCallStarting(interceptContext) { eventContext ->
      *    // Process or log the tool call
      * }
      * ```
      */
-    public fun <TFeature : Any> interceptToolExecutionStarting(
+    public fun <TFeature : Any> interceptToolCallStarting(
         interceptContext: InterceptContext<TFeature>,
-        handle: suspend TFeature.(eventContext: ToolExecutionStartingContext) -> Unit
+        handle: suspend TFeature.(eventContext: ToolCallStartingContext) -> Unit
     ) {
-        val handler = toolExecutionEventHandlers.getOrPut(interceptContext.feature.key) { ToolExecutionEventHandler() }
+        val handler = toolCallEventHandlers.getOrPut(interceptContext.feature.key) { ToolCallEventHandler() }
         handler.toolCallHandler = ToolCallHandler(
             function = createConditionalHandler(interceptContext, handle)
         )
@@ -899,7 +899,7 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
         interceptContext: InterceptContext<TFeature>,
         handle: suspend TFeature.(eventContext: ToolValidationFailedContext) -> Unit
     ) {
-        val handler = toolExecutionEventHandlers.getOrPut(interceptContext.feature.key) { ToolExecutionEventHandler() }
+        val handler = toolCallEventHandlers.getOrPut(interceptContext.feature.key) { ToolCallEventHandler() }
         handler.toolValidationErrorHandler = ToolValidationErrorHandler(
             function = createConditionalHandler(interceptContext, handle)
         )
@@ -913,16 +913,16 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
      *
      * Example:
      * ```
-     * pipeline.interceptToolExecutionFailed(interceptContext) { eventContext ->
+     * pipeline.interceptToolCallFailed(interceptContext) { eventContext ->
      *     // Handle the tool call failure here
      * }
      * ```
      */
-    public fun <TFeature : Any> interceptToolExecutionFailed(
+    public fun <TFeature : Any> interceptToolCallFailed(
         interceptContext: InterceptContext<TFeature>,
-        handle: suspend TFeature.(eventContext: ToolExecutionFailedContext) -> Unit
+        handle: suspend TFeature.(eventContext: ToolCallFailedContext) -> Unit
     ) {
-        val handler = toolExecutionEventHandlers.getOrPut(interceptContext.feature.key) { ToolExecutionEventHandler() }
+        val handler = toolCallEventHandlers.getOrPut(interceptContext.feature.key) { ToolCallEventHandler() }
         handler.toolCallFailureHandler = ToolCallFailureHandler(
             function = createConditionalHandler(interceptContext, handle)
         )
@@ -942,11 +942,11 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
      * }
      * ```
      */
-    public fun <TFeature : Any> interceptToolExecutionCompleted(
+    public fun <TFeature : Any> interceptToolCallCompleted(
         interceptContext: InterceptContext<TFeature>,
-        handle: suspend TFeature.(eventContext: ToolExecutionCompletedContext) -> Unit
+        handle: suspend TFeature.(eventContext: ToolCallCompletedContext) -> Unit
     ) {
-        val handler = toolExecutionEventHandlers.getOrPut(interceptContext.feature.key) { ToolExecutionEventHandler() }
+        val handler = toolCallEventHandlers.getOrPut(interceptContext.feature.key) { ToolCallEventHandler() }
         handler.toolCallResultHandler = ToolCallResultHandler(
             function = createConditionalHandler(interceptContext, handle)
         )
@@ -1111,11 +1111,11 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
      * Updates the tool call handler for the given feature key with a custom handler.
      */
     @Deprecated(
-        message = "Please use interceptToolExecutionStarting instead. This method is deprecated and will be removed in the next release.",
+        message = "Please use interceptToolCallStarting instead. This method is deprecated and will be removed in the next release.",
         replaceWith = ReplaceWith(
-            expression = "interceptToolExecutionStarting(interceptContext, handle)",
+            expression = "interceptToolCallStarting(interceptContext, handle)",
             imports = arrayOf(
-                "ai.koog.agents.core.feature.handler.tool.ToolExecutionStartingContext"
+                "ai.koog.agents.core.feature.handler.tool.ToolCallStartingContext"
             )
         )
     )
@@ -1123,45 +1123,45 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
         interceptContext: InterceptContext<TFeature>,
         handle: suspend TFeature.(eventContext: ai.koog.agents.core.feature.handler.ToolCallContext) -> Unit
     ) {
-        interceptToolExecutionStarting(interceptContext, handle)
+        interceptToolCallStarting(interceptContext, handle)
     }
 
     /**
      * Intercepts the result of a tool call with a custom handler for a specific feature.
      */
     @Deprecated(
-        message = "Please use interceptToolExecutionCompleted instead. This method is deprecated and will be removed in the next release.",
+        message = "Please use interceptToolCallCompleted instead. This method is deprecated and will be removed in the next release.",
         replaceWith = ReplaceWith(
-            expression = "interceptToolExecutionCompleted(interceptContext, handle)",
+            expression = "interceptToolCallCompleted(interceptContext, handle)",
             imports = arrayOf(
-                "ai.koog.agents.core.feature.handler.tool.ToolExecutionCompletedContext"
+                "ai.koog.agents.core.feature.handler.tool.ToolCallCompletedContext"
             )
         )
     )
     public fun <TFeature : Any> interceptToolCallResult(
         interceptContext: InterceptContext<TFeature>,
-        handle: suspend TFeature.(eventContext: ToolExecutionCompletedContext) -> Unit
+        handle: suspend TFeature.(eventContext: ToolCallCompletedContext) -> Unit
     ) {
-        interceptToolExecutionCompleted(interceptContext, handle)
+        interceptToolCallCompleted(interceptContext, handle)
     }
 
     /**
      * Sets up an interception mechanism to handle tool call failures for a specific feature.
      */
     @Deprecated(
-        message = "Please use interceptToolExecutionFailed instead. This method is deprecated and will be removed in the next release.",
+        message = "Please use interceptToolCallFailed instead. This method is deprecated and will be removed in the next release.",
         replaceWith = ReplaceWith(
-            expression = "interceptToolExecutionFailed(interceptContext, handle)",
+            expression = "interceptToolCallFailed(interceptContext, handle)",
             imports = arrayOf(
-                "ai.koog.agents.core.feature.handler.tool.ToolExecutionFailedContext"
+                "ai.koog.agents.core.feature.handler.tool.ToolCallFailedContext"
             )
         )
     )
     public fun <TFeature : Any> interceptToolCallFailure(
         interceptContext: InterceptContext<TFeature>,
-        handle: suspend TFeature.(eventContext: ToolExecutionFailedContext) -> Unit
+        handle: suspend TFeature.(eventContext: ToolCallFailedContext) -> Unit
     ) {
-        interceptToolExecutionFailed(interceptContext, handle)
+        interceptToolCallFailed(interceptContext, handle)
     }
 
     /**

@@ -9,6 +9,7 @@ import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.agents.testing.tools.mockLLMAnswer
+import ai.koog.agents.utils.use
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
@@ -49,7 +50,7 @@ class AIAgentNodesTest {
             mockLLMAnswer("Default test response").asDefaultResponse
         }
 
-        val runner = AIAgent(
+        AIAgent(
             promptExecutor = testExecutor,
             strategy = agentStrategy,
             agentConfig = agentConfig,
@@ -58,11 +59,11 @@ class AIAgentNodesTest {
             }
         ) {
             install(EventHandler) {
-                onAgentFinished { eventContext -> results += eventContext.result }
+                onAgentCompleted { eventContext -> results += eventContext.result }
             }
+        }.use { agent ->
+            agent.run("")
         }
-
-        runner.run("")
 
         // After compression, we should have one result
         assertEquals(1, results.size)
@@ -110,7 +111,7 @@ class AIAgentNodesTest {
             maxAgentIterations = 10
         )
 
-        val runner = AIAgent(
+        AIAgent(
             promptExecutor = modelCapturingExecutor,
             strategy = agentStrategy,
             agentConfig = agentConfig,
@@ -119,29 +120,30 @@ class AIAgentNodesTest {
             }
         ) {
             install(EventHandler) {
-                onAgentFinished { eventContext ->
+                onAgentCompleted { eventContext ->
                     executionEvents += "Agent finished"
                     results += eventContext.result
                 }
             }
+        }.use { agent ->
+
+            val executionResult = agent.run("Heeeey")
+
+            assertEquals("Done", executionResult, "Agent execution should return 'Done'")
+            assertEquals(1, results.size, "Should have exactly one result")
+
+            assertTrue(executionEvents.contains("nodeStart -> compress"), "Should transition from start to compress")
+            assertTrue(executionEvents.contains("compress -> nodeFinish"), "Should transition from compress to finish")
+
+            assertTrue(
+                agentConfig.prompt.messages.any { it.content.contains("testing history compression") },
+                "Prompt should contain test content for compression"
+            )
+            assertTrue(
+                executionEvents.size >= 3,
+                "Should have at least 3 execution events (agent finished, node transitions)"
+            )
         }
-
-        val executionResult = runner.run("Heeeey")
-
-        assertEquals("Done", executionResult, "Agent execution should return 'Done'")
-        assertEquals(1, results.size, "Should have exactly one result")
-
-        assertTrue(executionEvents.contains("nodeStart -> compress"), "Should transition from start to compress")
-        assertTrue(executionEvents.contains("compress -> nodeFinish"), "Should transition from compress to finish")
-
-        assertTrue(
-            agentConfig.prompt.messages.any { it.content.contains("testing history compression") },
-            "Prompt should contain test content for compression"
-        )
-        assertTrue(
-            executionEvents.size >= 3,
-            "Should have at least 3 execution events (agent finished, node transitions)"
-        )
     }
 
     @Test

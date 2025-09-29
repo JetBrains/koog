@@ -89,7 +89,7 @@ public sealed interface AgentLifecycleEventType {
     /**
      * Represents an event triggered when a tool is called.
      */
-    public object ToolExecutionStarting : AgentLifecycleEventType
+    public object ToolCallStarting : AgentLifecycleEventType
 
     /**
      * Represents an event triggered when a tool call fails validation.
@@ -99,12 +99,12 @@ public sealed interface AgentLifecycleEventType {
     /**
      * Represents an event triggered when a tool call fails.
      */
-    public object ToolExecutionFailed : AgentLifecycleEventType
+    public object ToolCallFailed : AgentLifecycleEventType
 
     /**
      * Represents an event triggered when a tool call succeeds.
      */
-    public object ToolExecutionCompleted : AgentLifecycleEventType
+    public object ToolCallCompleted : AgentLifecycleEventType
 
     //endregion Tool
 

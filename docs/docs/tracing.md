@@ -37,7 +37,7 @@ To use the Tracing feature, you need to:
 <!--- INCLUDE
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.feature.model.events.LLMCallCompletedEvent
-import ai.koog.agents.core.feature.model.events.ToolExecutionStartingEvent
+import ai.koog.agents.core.feature.model.events.ToolCallStartingEvent
 import ai.koog.agents.features.tracing.feature.Tracing
 import ai.koog.agents.features.tracing.writer.TraceFeatureMessageFileWriter
 import ai.koog.agents.features.tracing.writer.TraceFeatureMessageLogWriter
@@ -115,10 +115,10 @@ fileWriter.setMessageFilter { message ->
 
 // Filter for tool-related events only
 fileWriter.setMessageFilter { message -> 
-    message is ToolExecutionStartingEvent ||
-           message is ToolExecutionCompletedEvent ||
+    message is ToolCallStartingEvent ||
+           message is ToolCallCompletedEvent ||
            message is ToolValidationFailedEvent ||
-           message is ToolExecutionFailedEvent
+           message is ToolCallFailedEvent
 }
 
 // Filter for node execution events only
@@ -162,10 +162,10 @@ Tracing
     ├── NodeExecutionCompletedEvent
     ├── LLMCallStartingEvent
     ├── LLMCallCompletedEvent
-    ├── ToolExecutionStartingEvent
+    ├── ToolCallStartingEvent
     ├── ToolValidationFailedEvent
-    ├── ToolExecutionFailedEvent
-    └── ToolExecutionCompletedEvent
+    ├── ToolCallFailedEvent
+    └── ToolCallCompletedEvent
 ```
 
 ## Examples and quickstarts

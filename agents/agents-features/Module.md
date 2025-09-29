@@ -28,11 +28,11 @@ Features integrate with the agent pipeline via interceptor hooks and consume sta
   - LLMCallStartingEvent
   - LLMCallCompletedEvent
 
-- Tool execution events:
-  - ToolExecutionStartingEvent
+- Tool call events:
+  - ToolCallStartingEvent
   - ToolValidationFailedEvent
-  - ToolExecutionFailedEvent
-  - ToolExecutionCompletedEvent
+  - ToolCallFailedEvent
+  - ToolCallCompletedEvent
 
 These events are produced by features such as Tracing and Debugger to enable logging, tracing, monitoring, and remote inspection.
 

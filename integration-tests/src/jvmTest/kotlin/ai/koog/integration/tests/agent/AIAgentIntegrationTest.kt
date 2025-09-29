@@ -317,7 +317,7 @@ class AIAgentIntegrationTest {
             }
         }
 
-        onToolExecutionStarting { eventContext ->
+        onToolCallStarting { eventContext ->
             actualToolCalls.add(eventContext.tool.name)
             toolExecutionCounter.add(eventContext.tool.name)
         }
@@ -702,7 +702,7 @@ class AIAgentIntegrationTest {
 
             // Count how many times the reasoning step would trigger based on the interval
             var expectedReasoningCalls = 1 // Start with 1 for the initial reasoning
-            for (i in 0 until toolExecutionCounter.size) {
+            for (i in toolExecutionCounter.indices) {
                 if (i % interval == 0) {
                     expectedReasoningCalls++
                 }

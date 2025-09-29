@@ -52,7 +52,7 @@ class FunctionalAIAgentTest {
             toolRegistry = testToolRegistry
         ) {
             install(EventHandler) {
-                onToolCall { eventContext -> actualToolCalls += eventContext.toolArgs.toString() }
+                onToolCallStarting { eventContext -> actualToolCalls += eventContext.toolArgs.toString() }
             }
         }
 
@@ -92,7 +92,7 @@ class FunctionalAIAgentTest {
             toolRegistry = testToolRegistry,
         ) {
             install(EventHandler) {
-                onToolCall { eventContext -> actualToolCalls += eventContext.toolArgs.toString() }
+                onToolCallStarting { eventContext -> actualToolCalls += eventContext.toolArgs.toString() }
             }
         }
 
@@ -134,7 +134,7 @@ class FunctionalAIAgentTest {
             }
         ) {
             install(EventHandler) {
-                onToolCall { eventContext -> actualToolCalls += eventContext.toolArgs.toString() }
+                onToolCallStarting { eventContext -> actualToolCalls += eventContext.toolArgs.toString() }
             }
         }
 

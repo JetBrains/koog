@@ -49,15 +49,15 @@ class EventHandlerTest {
         val runId = eventsCollector.runId
 
         val expectedEvents = listOf(
-            "OnBeforeAgentStarted (agent id: test-agent-id, run id: $runId)",
-            "OnStrategyStarted (run id: $runId, strategy: $strategyName)",
-            "OnBeforeNode (run id: $runId, node: __start__, input: $agentInput)",
-            "OnAfterNode (run id: $runId, node: __start__, input: $agentInput, output: $agentInput)",
-            "OnBeforeNode (run id: $runId, node: __finish__, input: $agentResult)",
-            "OnAfterNode (run id: $runId, node: __finish__, input: $agentResult, output: $agentResult)",
-            "OnStrategyFinished (run id: $runId, strategy: $strategyName, result: $agentResult)",
-            "OnAgentFinished (agent id: test-agent-id, run id: $runId, result: $agentResult)",
-            "OnAgentBeforeClose (agent id: test-agent-id)",
+            "OnAgentStarting (agent id: test-agent-id, run id: $runId)",
+            "OnStrategyStarting (run id: $runId, strategy: $strategyName)",
+            "OnNodeExecutionStarting (run id: $runId, node: __start__, input: $agentInput)",
+            "OnNodeExecutionCompleted (run id: $runId, node: __start__, input: $agentInput, output: $agentInput)",
+            "OnNodeExecutionStarting (run id: $runId, node: __finish__, input: $agentResult)",
+            "OnNodeExecutionCompleted (run id: $runId, node: __finish__, input: $agentResult, output: $agentResult)",
+            "OnStrategyCompleted (run id: $runId, strategy: $strategyName, result: $agentResult)",
+            "OnAgentCompleted (agent id: test-agent-id, run id: $runId, result: $agentResult)",
+            "OnAgentClosing (agent id: test-agent-id)",
         )
 
         assertEquals(expectedEvents.size, eventsCollector.size)
@@ -93,19 +93,19 @@ class EventHandlerTest {
         val runId = eventsCollector.runId
 
         val expectedEvents = listOf(
-            "OnBeforeAgentStarted (agent id: test-agent-id, run id: $runId)",
-            "OnStrategyStarted (run id: $runId, strategy: $strategyName)",
-            "OnBeforeNode (run id: $runId, node: __start__, input: $agentInput)",
-            "OnAfterNode (run id: $runId, node: __start__, input: $agentInput, output: $agentInput)",
-            "OnBeforeNode (run id: $runId, node: test LLM call, input: Test LLM call prompt)",
-            "OnBeforeLLMCall (run id: $runId, prompt: id: test, messages: [{role: System, message: Test system message, role: User, message: Test user message, role: Assistant, message: Test assistant response, role: User, message: Test LLM call prompt}], temperature: null, tools: [])",
-            "OnAfterLLMCall (run id: $runId, prompt: id: test, messages: [{role: System, message: Test system message, role: User, message: Test user message, role: Assistant, message: Test assistant response, role: User, message: Test LLM call prompt}], temperature: null, model: openai:gpt-4o, tools: [], responses: [role: Assistant, message: Default test response])",
-            "OnAfterNode (run id: $runId, node: test LLM call, input: Test LLM call prompt, output: Assistant(content=Default test response, metaInfo=ResponseMetaInfo(timestamp=$ts, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}), attachments=[], finishReason=null))",
-            "OnBeforeNode (run id: $runId, node: __finish__, input: $agentResult)",
-            "OnAfterNode (run id: $runId, node: __finish__, input: $agentResult, output: $agentResult)",
-            "OnStrategyFinished (run id: $runId, strategy: $strategyName, result: $agentResult)",
-            "OnAgentFinished (agent id: test-agent-id, run id: $runId, result: $agentResult)",
-            "OnAgentBeforeClose (agent id: $agentId)",
+            "OnAgentStarting (agent id: test-agent-id, run id: $runId)",
+            "OnStrategyStarting (run id: $runId, strategy: $strategyName)",
+            "OnNodeExecutionStarting (run id: $runId, node: __start__, input: $agentInput)",
+            "OnNodeExecutionCompleted (run id: $runId, node: __start__, input: $agentInput, output: $agentInput)",
+            "OnNodeExecutionStarting (run id: $runId, node: test LLM call, input: Test LLM call prompt)",
+            "OnLLMCallStarting (run id: $runId, prompt: id: test, messages: [{role: System, message: Test system message, role: User, message: Test user message, role: Assistant, message: Test assistant response, role: User, message: Test LLM call prompt}], temperature: null, tools: [])",
+            "OnLLMCallCompleted (run id: $runId, prompt: id: test, messages: [{role: System, message: Test system message, role: User, message: Test user message, role: Assistant, message: Test assistant response, role: User, message: Test LLM call prompt}], temperature: null, model: openai:gpt-4o, tools: [], responses: [role: Assistant, message: Default test response])",
+            "OnNodeExecutionCompleted (run id: $runId, node: test LLM call, input: Test LLM call prompt, output: Assistant(content=Default test response, metaInfo=ResponseMetaInfo(timestamp=$ts, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}), attachments=[], finishReason=null))",
+            "OnNodeExecutionStarting (run id: $runId, node: __finish__, input: $agentResult)",
+            "OnNodeExecutionCompleted (run id: $runId, node: __finish__, input: $agentResult, output: $agentResult)",
+            "OnStrategyCompleted (run id: $runId, strategy: $strategyName, result: $agentResult)",
+            "OnAgentCompleted (agent id: test-agent-id, run id: $runId, result: $agentResult)",
+            "OnAgentClosing (agent id: $agentId)",
         )
 
         assertEquals(expectedEvents.size, eventsCollector.size)
@@ -162,27 +162,27 @@ class EventHandlerTest {
         val runId = eventsCollector.runId
 
         val expectedEvents = listOf(
-            "OnBeforeAgentStarted (agent id: $agentId, run id: $runId)",
-            "OnStrategyStarted (run id: $runId, strategy: $strategyName)",
-            "OnBeforeNode (run id: $runId, node: __start__, input: $userPrompt)",
-            "OnAfterNode (run id: $runId, node: __start__, input: $userPrompt, output: $userPrompt)",
-            "OnBeforeNode (run id: $runId, node: test-llm-call, input: $userPrompt)",
-            "OnBeforeLLMCall (run id: $runId, prompt: id: test, messages: [{role: System, message: Test system message, role: User, message: Test user message, role: Assistant, message: Test assistant response, role: User, message: $userPrompt}], temperature: null, tools: [dummy])",
-            "OnAfterLLMCall (run id: $runId, prompt: id: test, messages: [{role: System, message: Test system message, role: User, message: Test user message, role: Assistant, message: Test assistant response, role: User, message: $userPrompt}], temperature: null, model: openai:gpt-4o, tools: [${dummyTool.name}], responses: [role: Tool, message: {\"dummy\":\"test\"}])",
-            "OnAfterNode (run id: $runId, node: test-llm-call, input: $userPrompt, output: Call(id=null, tool=${dummyTool.name}, content={\"dummy\":\"test\"}, metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={})))",
-            "OnBeforeNode (run id: $runId, node: test-tool-call, input: Call(id=null, tool=${dummyTool.name}, content={\"dummy\":\"test\"}, metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={})))",
-            "OnToolCall (run id: $runId, tool: ${dummyTool.name}, args: Args(dummy=test))",
-            "OnToolCallResult (run id: $runId, tool: ${dummyTool.name}, args: Args(dummy=test), result: ${dummyTool.result})",
-            "OnAfterNode (run id: $runId, node: test-tool-call, input: Call(id=null, tool=${dummyTool.name}, content={\"dummy\":\"test\"}, metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={})), output: ReceivedToolResult(id=null, tool=${dummyTool.name}, content=${dummyTool.result}, result=${dummyTool.result}))",
-            "OnBeforeNode (run id: $runId, node: test-node-llm-send-tool-result, input: ReceivedToolResult(id=null, tool=${dummyTool.name}, content=${dummyTool.result}, result=${dummyTool.result}))",
-            "OnBeforeLLMCall (run id: $runId, prompt: id: test, messages: [{role: System, message: Test system message, role: User, message: Test user message, role: Assistant, message: Test assistant response, role: User, message: $userPrompt, role: Tool, message: {\"dummy\":\"test\"}, role: Tool, message: ${dummyTool.result}}], temperature: null, tools: [${dummyTool.name}])",
-            "OnAfterLLMCall (run id: $runId, prompt: id: test, messages: [{role: System, message: Test system message, role: User, message: Test user message, role: Assistant, message: Test assistant response, role: User, message: $userPrompt, role: Tool, message: {\"dummy\":\"test\"}, role: Tool, message: ${dummyTool.result}}], temperature: null, model: openai:gpt-4o, tools: [${dummyTool.name}], responses: [role: Assistant, message: Return test result])",
-            "OnAfterNode (run id: $runId, node: test-node-llm-send-tool-result, input: ReceivedToolResult(id=null, tool=${dummyTool.name}, content=${dummyTool.result}, result=${dummyTool.result}), output: Assistant(content=Return test result, metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}), attachments=[], finishReason=null))",
-            "OnBeforeNode (run id: $runId, node: __finish__, input: $mockResponse)",
-            "OnAfterNode (run id: $runId, node: __finish__, input: $mockResponse, output: $mockResponse)",
-            "OnStrategyFinished (run id: $runId, strategy: $strategyName, result: $mockResponse)",
-            "OnAgentFinished (agent id: $agentId, run id: $runId, result: $mockResponse)",
-            "OnAgentBeforeClose (agent id: $agentId)",
+            "OnAgentStarting (agent id: $agentId, run id: $runId)",
+            "OnStrategyStarting (run id: $runId, strategy: $strategyName)",
+            "OnNodeExecutionStarting (run id: $runId, node: __start__, input: $userPrompt)",
+            "OnNodeExecutionCompleted (run id: $runId, node: __start__, input: $userPrompt, output: $userPrompt)",
+            "OnNodeExecutionStarting (run id: $runId, node: test-llm-call, input: $userPrompt)",
+            "OnLLMCallStarting (run id: $runId, prompt: id: test, messages: [{role: System, message: Test system message, role: User, message: Test user message, role: Assistant, message: Test assistant response, role: User, message: $userPrompt}], temperature: null, tools: [dummy])",
+            "OnLLMCallCompleted (run id: $runId, prompt: id: test, messages: [{role: System, message: Test system message, role: User, message: Test user message, role: Assistant, message: Test assistant response, role: User, message: $userPrompt}], temperature: null, model: openai:gpt-4o, tools: [${dummyTool.name}], responses: [role: Tool, message: {\"dummy\":\"test\"}])",
+            "OnNodeExecutionCompleted (run id: $runId, node: test-llm-call, input: $userPrompt, output: Call(id=null, tool=${dummyTool.name}, content={\"dummy\":\"test\"}, metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={})))",
+            "OnNodeExecutionStarting (run id: $runId, node: test-tool-call, input: Call(id=null, tool=${dummyTool.name}, content={\"dummy\":\"test\"}, metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={})))",
+            "OnToolCallStarting (run id: $runId, tool: ${dummyTool.name}, args: Args(dummy=test))",
+            "OnToolCallCompleted (run id: $runId, tool: ${dummyTool.name}, args: Args(dummy=test), result: ${dummyTool.result})",
+            "OnNodeExecutionCompleted (run id: $runId, node: test-tool-call, input: Call(id=null, tool=${dummyTool.name}, content={\"dummy\":\"test\"}, metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={})), output: ReceivedToolResult(id=null, tool=${dummyTool.name}, content=${dummyTool.result}, result=${dummyTool.result}))",
+            "OnNodeExecutionStarting (run id: $runId, node: test-node-llm-send-tool-result, input: ReceivedToolResult(id=null, tool=${dummyTool.name}, content=${dummyTool.result}, result=${dummyTool.result}))",
+            "OnLLMCallStarting (run id: $runId, prompt: id: test, messages: [{role: System, message: Test system message, role: User, message: Test user message, role: Assistant, message: Test assistant response, role: User, message: $userPrompt, role: Tool, message: {\"dummy\":\"test\"}, role: Tool, message: ${dummyTool.result}}], temperature: null, tools: [${dummyTool.name}])",
+            "OnLLMCallCompleted (run id: $runId, prompt: id: test, messages: [{role: System, message: Test system message, role: User, message: Test user message, role: Assistant, message: Test assistant response, role: User, message: $userPrompt, role: Tool, message: {\"dummy\":\"test\"}, role: Tool, message: ${dummyTool.result}}], temperature: null, model: openai:gpt-4o, tools: [${dummyTool.name}], responses: [role: Assistant, message: Return test result])",
+            "OnNodeExecutionCompleted (run id: $runId, node: test-node-llm-send-tool-result, input: ReceivedToolResult(id=null, tool=${dummyTool.name}, content=${dummyTool.result}, result=${dummyTool.result}), output: Assistant(content=Return test result, metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}), attachments=[], finishReason=null))",
+            "OnNodeExecutionStarting (run id: $runId, node: __finish__, input: $mockResponse)",
+            "OnNodeExecutionCompleted (run id: $runId, node: __finish__, input: $mockResponse, output: $mockResponse)",
+            "OnStrategyCompleted (run id: $runId, strategy: $strategyName, result: $mockResponse)",
+            "OnAgentCompleted (agent id: $agentId, run id: $runId, result: $mockResponse)",
+            "OnAgentClosing (agent id: $agentId)",
         )
 
         assertEquals(expectedEvents.size, eventsCollector.size)
@@ -219,23 +219,23 @@ class EventHandlerTest {
         val runId = eventsCollector.runId
 
         val expectedEvents = listOf(
-            "OnBeforeAgentStarted (agent id: test-agent-id, run id: $runId)",
-            "OnStrategyStarted (run id: $runId, strategy: $strategyName)",
-            "OnBeforeNode (run id: $runId, node: __start__, input: $agentInput)",
-            "OnAfterNode (run id: $runId, node: __start__, input: $agentInput, output: $agentInput)",
-            "OnBeforeNode (run id: $runId, node: test LLM call, input: Test LLM call prompt)",
-            "OnBeforeLLMCall (run id: $runId, prompt: id: test, messages: [{role: System, message: Test system message, role: User, message: Test user message, role: Assistant, message: Test assistant response, role: User, message: Test LLM call prompt}], temperature: null, tools: [dummy])",
-            "OnAfterLLMCall (run id: $runId, prompt: id: test, messages: [{role: System, message: Test system message, role: User, message: Test user message, role: Assistant, message: Test assistant response, role: User, message: Test LLM call prompt}], temperature: null, model: openai:gpt-4o, tools: [dummy], responses: [role: Assistant, message: Default test response])",
-            "OnAfterNode (run id: $runId, node: test LLM call, input: Test LLM call prompt, output: Assistant(content=Default test response, metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}), attachments=[], finishReason=null))",
-            "OnBeforeNode (run id: $runId, node: test LLM call with tools, input: Test LLM call with tools prompt)",
-            "OnBeforeLLMCall (run id: $runId, prompt: id: test, messages: [{role: System, message: Test system message, role: User, message: Test user message, role: Assistant, message: Test assistant response, role: User, message: Test LLM call prompt, role: Assistant, message: Default test response, role: User, message: Test LLM call with tools prompt}], temperature: null, tools: [dummy])",
-            "OnAfterLLMCall (run id: $runId, prompt: id: test, messages: [{role: System, message: Test system message, role: User, message: Test user message, role: Assistant, message: Test assistant response, role: User, message: Test LLM call prompt, role: Assistant, message: Default test response, role: User, message: Test LLM call with tools prompt}], temperature: null, model: openai:gpt-4o, tools: [dummy], responses: [role: Assistant, message: Default test response])",
-            "OnAfterNode (run id: $runId, node: test LLM call with tools, input: Test LLM call with tools prompt, output: Assistant(content=Default test response, metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}), attachments=[], finishReason=null))",
-            "OnBeforeNode (run id: $runId, node: __finish__, input: $agentResult)",
-            "OnAfterNode (run id: $runId, node: __finish__, input: $agentResult, output: $agentResult)",
-            "OnStrategyFinished (run id: $runId, strategy: $strategyName, result: $agentResult)",
-            "OnAgentFinished (agent id: test-agent-id, run id: $runId, result: $agentResult)",
-            "OnAgentBeforeClose (agent id: test-agent-id)",
+            "OnAgentStarting (agent id: test-agent-id, run id: $runId)",
+            "OnStrategyStarting (run id: $runId, strategy: $strategyName)",
+            "OnNodeExecutionStarting (run id: $runId, node: __start__, input: $agentInput)",
+            "OnNodeExecutionCompleted (run id: $runId, node: __start__, input: $agentInput, output: $agentInput)",
+            "OnNodeExecutionStarting (run id: $runId, node: test LLM call, input: Test LLM call prompt)",
+            "OnLLMCallStarting (run id: $runId, prompt: id: test, messages: [{role: System, message: Test system message, role: User, message: Test user message, role: Assistant, message: Test assistant response, role: User, message: Test LLM call prompt}], temperature: null, tools: [dummy])",
+            "OnLLMCallCompleted (run id: $runId, prompt: id: test, messages: [{role: System, message: Test system message, role: User, message: Test user message, role: Assistant, message: Test assistant response, role: User, message: Test LLM call prompt}], temperature: null, model: openai:gpt-4o, tools: [dummy], responses: [role: Assistant, message: Default test response])",
+            "OnNodeExecutionCompleted (run id: $runId, node: test LLM call, input: Test LLM call prompt, output: Assistant(content=Default test response, metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}), attachments=[], finishReason=null))",
+            "OnNodeExecutionStarting (run id: $runId, node: test LLM call with tools, input: Test LLM call with tools prompt)",
+            "OnLLMCallStarting (run id: $runId, prompt: id: test, messages: [{role: System, message: Test system message, role: User, message: Test user message, role: Assistant, message: Test assistant response, role: User, message: Test LLM call prompt, role: Assistant, message: Default test response, role: User, message: Test LLM call with tools prompt}], temperature: null, tools: [dummy])",
+            "OnLLMCallCompleted (run id: $runId, prompt: id: test, messages: [{role: System, message: Test system message, role: User, message: Test user message, role: Assistant, message: Test assistant response, role: User, message: Test LLM call prompt, role: Assistant, message: Default test response, role: User, message: Test LLM call with tools prompt}], temperature: null, model: openai:gpt-4o, tools: [dummy], responses: [role: Assistant, message: Default test response])",
+            "OnNodeExecutionCompleted (run id: $runId, node: test LLM call with tools, input: Test LLM call with tools prompt, output: Assistant(content=Default test response, metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}), attachments=[], finishReason=null))",
+            "OnNodeExecutionStarting (run id: $runId, node: __finish__, input: $agentResult)",
+            "OnNodeExecutionCompleted (run id: $runId, node: __finish__, input: $agentResult, output: $agentResult)",
+            "OnStrategyCompleted (run id: $runId, strategy: $strategyName, result: $agentResult)",
+            "OnAgentCompleted (agent id: test-agent-id, run id: $runId, result: $agentResult)",
+            "OnAgentClosing (agent id: test-agent-id)",
         )
 
         assertEquals(expectedEvents.size, eventsCollector.size)
@@ -277,14 +277,14 @@ class EventHandlerTest {
         val runId = eventsCollector.runId
 
         val expectedEvents = listOf(
-            "OnBeforeAgentStarted (agent id: $agentId, run id: $runId)",
-            "OnStrategyStarted (run id: $runId, strategy: $strategyName)",
-            "OnBeforeNode (run id: $runId, node: __start__, input: $agentInput)",
-            "OnAfterNode (run id: $runId, node: __start__, input: $agentInput, output: $agentInput)",
-            "OnBeforeNode (run id: $runId, node: $errorNodeName, input: $agentInput)",
-            "OnNodeExecutionError (run id: $runId, node: $errorNodeName, error: $testErrorMessage)",
-            "OnAgentRunError (agent id: $agentId, run id: $runId, error: $testErrorMessage)",
-            "OnAgentBeforeClose (agent id: $agentId)",
+            "OnAgentStarting (agent id: $agentId, run id: $runId)",
+            "OnStrategyStarting (run id: $runId, strategy: $strategyName)",
+            "OnNodeExecutionStarting (run id: $runId, node: __start__, input: $agentInput)",
+            "OnNodeExecutionCompleted (run id: $runId, node: __start__, input: $agentInput, output: $agentInput)",
+            "OnNodeExecutionStarting (run id: $runId, node: $errorNodeName, input: $agentInput)",
+            "OnNodeExecutionFailed (run id: $runId, node: $errorNodeName, error: $testErrorMessage)",
+            "OnAgentExecutionFailed (agent id: $agentId, run id: $runId, error: $testErrorMessage)",
+            "OnAgentClosing (agent id: $agentId)",
         )
 
         assertEquals(expectedEvents.size, eventsCollector.size)
@@ -308,22 +308,22 @@ class EventHandlerTest {
             strategy = strategy,
             installFeatures = {
                 install(EventHandler) {
-                    onBeforeAgentStarted { eventContext ->
+                    onAgentStarting { eventContext ->
                         runId = eventContext.runId
                         collectedEvents.add(
-                            "OnBeforeAgentStarted first (agent id: ${eventContext.agent.id})"
+                            "OnAgentStarting first (agent id: ${eventContext.agent.id})"
                         )
                     }
 
-                    onBeforeAgentStarted { eventContext ->
+                    onAgentStarting { eventContext ->
                         collectedEvents.add(
-                            "OnBeforeAgentStarted second (agent id: ${eventContext.agent.id})"
+                            "OnAgentStarting second (agent id: ${eventContext.agent.id})"
                         )
                     }
 
-                    onAgentFinished { eventContext ->
+                    onAgentCompleted { eventContext ->
                         collectedEvents.add(
-                            "OnAgentFinished (agent id: ${eventContext.agentId}, run id: ${eventContext.runId}, result: $agentResult)"
+                            "OnAgentCompleted (agent id: ${eventContext.agentId}, run id: ${eventContext.runId}, result: $agentResult)"
                         )
                     }
                 }
@@ -334,9 +334,9 @@ class EventHandlerTest {
         agent.run(agentInput)
 
         val expectedEvents = listOf(
-            "OnBeforeAgentStarted first (agent id: ${agent.id})",
-            "OnBeforeAgentStarted second (agent id: ${agent.id})",
-            "OnAgentFinished (agent id: ${agent.id}, run id: $runId, result: $agentResult)",
+            "OnAgentStarting first (agent id: ${agent.id})",
+            "OnAgentStarting second (agent id: ${agent.id})",
+            "OnAgentCompleted (agent id: ${agent.id}, run id: $runId, result: $agentResult)",
         )
 
         assertEquals(expectedEvents.size, collectedEvents.size)

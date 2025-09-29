@@ -56,7 +56,7 @@ val agent = AIAgent(
 ```kotlin
 handleEvents {
     // Handle tool calls
-    onToolExecutionStarting { eventContext ->
+    onToolCallStarting { eventContext ->
         println("Tool called: ${eventContext.tool.name} with args ${eventContext.toolArgs}")
     }
     // Handle event triggered when the agent completes its execution
@@ -87,7 +87,7 @@ val agent = AIAgent(
 ){
     handleEvents {
         // Handle tool calls
-        onToolExecutionStarting { eventContext ->
+        onToolCallStarting { eventContext ->
             println("Tool called: ${eventContext.tool.name} with args ${eventContext.toolArgs}")
         }
         // Handle event triggered when the agent completes its execution

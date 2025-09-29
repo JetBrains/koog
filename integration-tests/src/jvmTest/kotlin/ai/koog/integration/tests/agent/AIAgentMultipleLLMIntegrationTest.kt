@@ -387,7 +387,7 @@ class AIAgentMultipleLLMIntegrationTest {
                                 system(
                                     "You are a helpful assistant. You need to solve my task. " +
                                         "CALL TOOLS!!! DO NOT SEND MESSAGES!!!!! ONLY SEND THE FINAL MESSAGE " +
-                                        "WHEN YOU ARE FINISHED AND EVERYTING IS DONE AFTER CALLING THE TOOLS!"
+                                        "WHEN YOU ARE FINISHED AND EVERYTHING IS DONE AFTER CALLING THE TOOLS!"
                                 )
                             }
                         }
@@ -419,7 +419,7 @@ class AIAgentMultipleLLMIntegrationTest {
                                     Please analyze the whole produced solution, and check that it is valid.
                                     Write concise verification result.
                                     CALL TOOLS!!! DO NOT SEND MESSAGES!!!!!
-                                    ONLY SEND THE FINAL MESSAGE WHEN YOU ARE FINISHED AND EVERYTING IS DONE
+                                    ONLY SEND THE FINAL MESSAGE WHEN YOU ARE FINISHED AND EVERYTHING IS DONE
                                     AFTER CALLING THE TOOLS! 
                                     """.trimIndent()
                                 )
@@ -615,7 +615,7 @@ class AIAgentMultipleLLMIntegrationTest {
             val fs = MockFileSystem()
             val calledTools = mutableListOf<String>()
             val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
-                onToolExecutionStarting { eventContext ->
+                onToolCallStarting { eventContext ->
                     calledTools.add(eventContext.tool.name)
                 }
             }
@@ -702,7 +702,7 @@ class AIAgentMultipleLLMIntegrationTest {
                                 "error: ${eventContext.throwable.javaClass.simpleName}(${eventContext.throwable.message})\n${eventContext.throwable.stackTraceToString()}"
                             )
                         }
-                        onToolExecutionStarting { eventContext ->
+                        onToolCallStarting { eventContext ->
                             println(
                                 "Calling tool ${eventContext.tool.name} with arguments ${
                                     eventContext.toolArgs.toString().lines().first().take(100)
@@ -726,7 +726,7 @@ class AIAgentMultipleLLMIntegrationTest {
         Models.assumeAvailable(model.provider)
         val fs = MockFileSystem()
         val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
-            onToolExecutionStarting { eventContext ->
+            onToolCallStarting { eventContext ->
                 println(
                     "Calling tool ${eventContext.tool.name} with arguments ${
                         eventContext.toolArgs.toString().lines().first().take(100)
@@ -785,7 +785,7 @@ class AIAgentMultipleLLMIntegrationTest {
 
         val fs = MockFileSystem()
         val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
-            onToolExecutionStarting { eventContext ->
+            onToolCallStarting { eventContext ->
                 println(
                     "Calling tool ${eventContext.tool.name} with arguments ${
                         eventContext.toolArgs.toString().lines().first().take(100)

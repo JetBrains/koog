@@ -155,7 +155,7 @@ class OllamaAgentIntegrationTest {
             toolRegistry = toolRegistry
         ) {
             install(EventHandler) {
-                onToolExecutionStarting { eventContext ->
+                onToolCallStarting { eventContext ->
                     println(
                         "Calling tool ${eventContext.tool.name} with arguments ${
                             eventContext.toolArgs.toString().lines().first().take(100)

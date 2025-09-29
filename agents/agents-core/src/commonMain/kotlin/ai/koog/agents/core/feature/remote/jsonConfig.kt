@@ -18,9 +18,9 @@ import ai.koog.agents.core.feature.model.events.NodeExecutionFailedEvent
 import ai.koog.agents.core.feature.model.events.NodeExecutionStartingEvent
 import ai.koog.agents.core.feature.model.events.StrategyCompletedEvent
 import ai.koog.agents.core.feature.model.events.StrategyStartingEvent
-import ai.koog.agents.core.feature.model.events.ToolExecutionCompletedEvent
-import ai.koog.agents.core.feature.model.events.ToolExecutionFailedEvent
-import ai.koog.agents.core.feature.model.events.ToolExecutionStartingEvent
+import ai.koog.agents.core.feature.model.events.ToolCallCompletedEvent
+import ai.koog.agents.core.feature.model.events.ToolCallFailedEvent
+import ai.koog.agents.core.feature.model.events.ToolCallStartingEvent
 import ai.koog.agents.core.feature.model.events.ToolValidationFailedEvent
 import io.ktor.utils.io.InternalAPI
 import kotlinx.serialization.DeserializationStrategy
@@ -75,10 +75,10 @@ public val defaultFeatureMessageJsonConfig: Json
  * - [StrategyCompletedEvent] - Fired when an AI agent strategy completes
  * - [NodeExecutionStartingEvent] - Fired when a node execution starts
  * - [NodeExecutionCompletedEvent] - Fired when a node execution ends
- * - [ToolExecutionStartingEvent] - Fired when a tool is called
+ * - [ToolCallStartingEvent] - Fired when a tool is called
  * - [ToolValidationFailedEvent] - Fired when tool validation fails
- * - [ToolExecutionFailedEvent] - Fired when a tool call fails
- * - [ToolExecutionCompletedEvent] - Fired when a tool call returns a result
+ * - [ToolCallFailedEvent] - Fired when a tool call fails
+ * - [ToolCallCompletedEvent] - Fired when a tool call returns a result
  * - [LLMCallStartingEvent] - Fired before making an LLM call
  * - [LLMCallCompletedEvent] - Fired after completing an LLM call
  *
@@ -101,10 +101,10 @@ public val defaultFeatureMessageSerializersModule: SerializersModule
             subclass(NodeExecutionStartingEvent::class, NodeExecutionStartingEvent.serializer())
             subclass(NodeExecutionCompletedEvent::class, NodeExecutionCompletedEvent.serializer())
             subclass(NodeExecutionFailedEvent::class, NodeExecutionFailedEvent.serializer())
-            subclass(ToolExecutionStartingEvent::class, ToolExecutionStartingEvent.serializer())
+            subclass(ToolCallStartingEvent::class, ToolCallStartingEvent.serializer())
             subclass(ToolValidationFailedEvent::class, ToolValidationFailedEvent.serializer())
-            subclass(ToolExecutionFailedEvent::class, ToolExecutionFailedEvent.serializer())
-            subclass(ToolExecutionCompletedEvent::class, ToolExecutionCompletedEvent.serializer())
+            subclass(ToolCallFailedEvent::class, ToolCallFailedEvent.serializer())
+            subclass(ToolCallCompletedEvent::class, ToolCallCompletedEvent.serializer())
             subclass(LLMCallStartingEvent::class, LLMCallStartingEvent.serializer())
             subclass(LLMCallCompletedEvent::class, LLMCallCompletedEvent.serializer())
         }
@@ -121,10 +121,10 @@ public val defaultFeatureMessageSerializersModule: SerializersModule
             subclass(NodeExecutionStartingEvent::class, NodeExecutionStartingEvent.serializer())
             subclass(NodeExecutionCompletedEvent::class, NodeExecutionCompletedEvent.serializer())
             subclass(NodeExecutionFailedEvent::class, NodeExecutionFailedEvent.serializer())
-            subclass(ToolExecutionStartingEvent::class, ToolExecutionStartingEvent.serializer())
+            subclass(ToolCallStartingEvent::class, ToolCallStartingEvent.serializer())
             subclass(ToolValidationFailedEvent::class, ToolValidationFailedEvent.serializer())
-            subclass(ToolExecutionFailedEvent::class, ToolExecutionFailedEvent.serializer())
-            subclass(ToolExecutionCompletedEvent::class, ToolExecutionCompletedEvent.serializer())
+            subclass(ToolCallFailedEvent::class, ToolCallFailedEvent.serializer())
+            subclass(ToolCallCompletedEvent::class, ToolCallCompletedEvent.serializer())
             subclass(LLMCallStartingEvent::class, LLMCallStartingEvent.serializer())
             subclass(LLMCallCompletedEvent::class, LLMCallCompletedEvent.serializer())
         }
@@ -140,10 +140,10 @@ public val defaultFeatureMessageSerializersModule: SerializersModule
             subclass(NodeExecutionStartingEvent::class, NodeExecutionStartingEvent.serializer())
             subclass(NodeExecutionCompletedEvent::class, NodeExecutionCompletedEvent.serializer())
             subclass(NodeExecutionFailedEvent::class, NodeExecutionFailedEvent.serializer())
-            subclass(ToolExecutionStartingEvent::class, ToolExecutionStartingEvent.serializer())
+            subclass(ToolCallStartingEvent::class, ToolCallStartingEvent.serializer())
             subclass(ToolValidationFailedEvent::class, ToolValidationFailedEvent.serializer())
-            subclass(ToolExecutionFailedEvent::class, ToolExecutionFailedEvent.serializer())
-            subclass(ToolExecutionCompletedEvent::class, ToolExecutionCompletedEvent.serializer())
+            subclass(ToolCallFailedEvent::class, ToolCallFailedEvent.serializer())
+            subclass(ToolCallCompletedEvent::class, ToolCallCompletedEvent.serializer())
             subclass(LLMCallStartingEvent::class, LLMCallStartingEvent.serializer())
             subclass(LLMCallCompletedEvent::class, LLMCallCompletedEvent.serializer())
         }

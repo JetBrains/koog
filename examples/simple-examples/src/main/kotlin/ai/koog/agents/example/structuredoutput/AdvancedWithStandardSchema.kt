@@ -118,7 +118,7 @@ fun main(): Unit = runBlocking {
         agentConfig = agentConfig
     ) {
         handleEvents {
-            onAgentRunError { eventContext ->
+            onAgentExecutionFailed { eventContext ->
                 println("An error occurred: ${eventContext.throwable.message}\n${eventContext.throwable.stackTraceToString()}")
             }
         }

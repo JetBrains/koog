@@ -69,7 +69,7 @@ class OllamaSimpleAgentIntegrationTest {
             println("After LLM call: response=${lastResponse.take(100)}${if (lastResponse.length > 100) "..." else ""}")
         }
 
-        onToolExecutionStarting { eventContext ->
+        onToolCallStarting { eventContext ->
             println("Tool called: tool=${eventContext.tool.name}, args=${eventContext.toolArgs}")
             actualToolCalls.add(eventContext.tool.name)
         }
@@ -80,13 +80,13 @@ class OllamaSimpleAgentIntegrationTest {
             )
         }
 
-        onToolExecutionFailed { eventContext ->
+        onToolCallFailed { eventContext ->
             println(
                 "Tool call failure: tool=${eventContext.tool.name}, args=${eventContext.toolArgs}, error=${eventContext.throwable.message}"
             )
         }
 
-        onToolExecutionCompleted { eventContext ->
+        onToolCallCompleted { eventContext ->
             println(
                 "Tool call result: tool=${eventContext.tool.name}, args=${eventContext.toolArgs}, result=${eventContext.result}"
             )
