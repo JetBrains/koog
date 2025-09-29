@@ -107,7 +107,7 @@ public class FunctionalAIAgent<Input, Output>(
 
         return AIAgentFunctionalContext(
             environment,
-            this@FunctionalAIAgent.id,
+            this@FunctionalAIAgent,
             runId,
             agentInput,
             agentConfig,

@@ -91,7 +91,7 @@ private fun openrouter(parts: List<String>, identifier: String): LLModel? {
     val normalizedModelName = modelName.replace("-", "").replace("_", "").lowercase()
     val model = openRouterModels[normalizedModelName]
     if (model == null) {
-        println("Model '$modelName' not found in OpenRouterModels")
+        logger.info("Model '$modelName' not found in OpenRouterModels")
         return null
     }
 
@@ -112,7 +112,7 @@ private fun deepSeek(parts: List<String>, identifier: String): LLModel? {
     val normalizedModelName = modelName.lowercase()
     val model = deepSeekModels[normalizedModelName]
     if (model == null) {
-        println("Model '$modelName' not found in DeepSeekModels")
+        logger.info("Model '$modelName' not found in DeepSeekModels")
         return null
     }
 

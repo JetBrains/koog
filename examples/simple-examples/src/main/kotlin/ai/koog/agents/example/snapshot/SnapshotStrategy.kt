@@ -22,7 +22,7 @@ private fun AIAgentSubgraphBuilderBase<*, *>.teleportNode(
 ): AIAgentNodeDelegate<String, String> = node(name) {
     if (!teleportState.teleported) {
         teleportState.teleported = true
-        withPersistency(this) {
+        withPersistency {
             setExecutionPoint(it, "Node1", listOf(), JsonPrimitive("Teleported!!!"))
             return@withPersistency "Teleported"
         }

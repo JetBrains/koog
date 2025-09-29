@@ -341,17 +341,6 @@ class OpenTelemetryTest {
                         "events" to emptyMap()
                     )
                 ),
-                mapOf(
-                    "agent.$agentId" to mapOf(
-                        "attributes" to mapOf(
-                            "gen_ai.operation.name" to "create_agent",
-                            "gen_ai.system" to model.provider.id,
-                            "gen_ai.agent.id" to agentId,
-                            "gen_ai.request.model" to model.id
-                        ),
-                        "events" to emptyMap()
-                    )
-                ),
 
                 // First run
                 mapOf(
@@ -1527,11 +1516,11 @@ class OpenTelemetryTest {
     }
 
     private fun assertSpanNames(expectedSpanNames: List<String>, actualSpanNames: List<String>) {
-//        assertEquals(
-//            expectedSpanNames.size,
-//            actualSpanNames.size,
-//            "Expected collection of spans should be the same size"
-//        )
+        assertEquals(
+            expectedSpanNames.size,
+            actualSpanNames.size,
+            "Expected collection of spans should be the same size"
+        )
         assertContentEquals(
             expectedSpanNames,
             actualSpanNames,

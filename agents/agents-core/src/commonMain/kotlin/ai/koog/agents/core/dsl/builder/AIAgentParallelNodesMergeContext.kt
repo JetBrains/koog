@@ -1,5 +1,6 @@
 package ai.koog.agents.core.dsl.builder
 
+import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
@@ -34,7 +35,7 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
 
     // Delegate all properties to the underlying context
     override val environment: AIAgentEnvironment get() = underlyingContextBase.environment
-    override val agentId: String get() = underlyingContextBase.agentId
+    override val agent: GraphAIAgent<*, *> get() = underlyingContextBase.agent
     override val agentInput: Any? get() = underlyingContextBase.agentInput
     override val agentInputType: KType get() = underlyingContextBase.agentInputType
 

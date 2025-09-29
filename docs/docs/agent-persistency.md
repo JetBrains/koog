@@ -279,7 +279,7 @@ suspend fun example(context: AIAgentContext) {
     val checkpointFeature = context.persistency()
 
     // Or perform an action with the checkpoint feature
-    context.withPersistency(context) { ctx ->
+    context.withPersistency { ctx ->
         // 'this' is the checkpoint feature
         createCheckpoint(
             agentContext = ctx,

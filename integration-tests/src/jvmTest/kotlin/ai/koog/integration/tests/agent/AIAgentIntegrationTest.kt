@@ -735,7 +735,7 @@ class AIAgentIntegrationTest {
 
             val nodeSave by node<String, String>(save) { input ->
                 // Create a checkpoint
-                withPersistency(this) { agentContext ->
+                withPersistency { agentContext ->
                     createCheckpoint(
                         agentContext = agentContext,
                         nodeId = save,
@@ -840,7 +840,7 @@ class AIAgentIntegrationTest {
             }
 
             val nodeSave by node<String, String>(save) { input ->
-                withPersistency(this) { agentContext ->
+                withPersistency { agentContext ->
                     createCheckpoint(
                         agentContext = agentContext,
                         nodeId = save,
@@ -863,7 +863,7 @@ class AIAgentIntegrationTest {
                 if (!hasRolledBack) {
                     hasRolledBack = true
                     executionLog.append(rollbackPerformingLog)
-                    withPersistency(this) { agentContext ->
+                    withPersistency { agentContext ->
                         rollbackToLatestCheckpoint(agentContext)
                     }
                     rolledBackMessage
@@ -1021,7 +1021,7 @@ class AIAgentIntegrationTest {
             }
 
             val nodeBye by node<String, String>(bye) { input ->
-                withPersistency(this) { agentContext ->
+                withPersistency { agentContext ->
                     createCheckpoint(
                         agentContext = agentContext,
                         nodeId = bye,

@@ -15,6 +15,9 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.serializer
+import kotlin.concurrent.atomics.AtomicInt
+import kotlin.concurrent.atomics.ExperimentalAtomicApi
+import kotlin.concurrent.atomics.fetchAndIncrement
 
 /**
  * Converts the current AI agent into a tool to allow using it in other agents as a tool.
@@ -27,7 +30,6 @@ import kotlinx.serialization.serializer
  * @param inputSerializer Serializer to deserialize tool arguments to agent input.
  * @param outputSerializer Serializer to serialize agent output to tool result.
  * @param json Optional [Json] instance to customize de/serialization behavior.
- * @param agentId Optional fixed agent ID that will be used for all instantiated agents whenever tool runs.
  * @return A special tool that wraps the agent functionality.
  */
 @InternalAgentToolsApi
@@ -45,7 +47,6 @@ public inline fun <reified Input, reified Output> AIAgent<Input, Output>.asTool(
     inputSerializer: KSerializer<Input> = serializer(),
     outputSerializer: KSerializer<Output> = serializer(),
     json: Json = Json.Default,
-    agentId: String? = null
 ): Tool<AgentToolArgs, AgentToolResult> {
     val service = when (this) {
         is GraphAIAgent -> AIAgentService.fromAgent(this)
@@ -60,7 +61,7 @@ public inline fun <reified Input, reified Output> AIAgent<Input, Output>.asTool(
         inputSerializer = inputSerializer,
         outputSerializer = outputSerializer,
         json = json,
-        agentId = this.id
+        parentAgentId = this.id
     )
 }
 
@@ -80,6 +81,7 @@ public inline fun <reified Input, reified Output> AIAgent<Input, Output>.asTool(
  * @property inputSerializer A serializer for converting the input type to/from JSON.
  * @property outputSerializer A serializer for converting the output type to/from JSON.
  * @property json The JSON configuration used for serialization and deserialization.
+ * @param parentAgentId Optional ID of the parent AI agent. Tool agent IDs will be generated as "parentAgentId.<number of tool call>"
  */
 public class AIAgentTool<Input, Output>(
     private val agentService: AIAgentService<Input, Output>,
@@ -89,8 +91,14 @@ public class AIAgentTool<Input, Output>(
     private val inputSerializer: KSerializer<Input>,
     private val outputSerializer: KSerializer<Output>,
     private val json: Json = Json.Default,
-    private val agentId: String? = null
+    private val parentAgentId: String? = null
 ) : Tool<AgentToolArgs, AgentToolResult>() {
+    @OptIn(ExperimentalAtomicApi::class)
+    private val toolCallNumber: AtomicInt = AtomicInt(0)
+
+    @OptIn(ExperimentalAtomicApi::class)
+    private suspend fun nextToolAgentID(): String = "$parentAgentId.${toolCallNumber.fetchAndIncrement()}"
+
     /**
      * Represents the arguments required for the execution of an agent tool.
      * Wraps raw arguments.
@@ -144,7 +152,7 @@ public class AIAgentTool<Input, Output>(
                 inputSerializer,
                 args.args.getValue(descriptor.requiredParameters.first().name)
             )
-            val result = agentService.createAgentAndRun(input, id = agentId)
+            val result = agentService.createAgentAndRun(input, id = nextToolAgentID())
 
             AgentToolResult(
                 successful = true,

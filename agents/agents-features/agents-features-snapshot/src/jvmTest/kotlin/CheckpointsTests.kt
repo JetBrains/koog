@@ -69,7 +69,7 @@ class CheckpointsTests {
                 }
                 val checkpoint by node<String, String> { input ->
                     println("checkpoint save")
-                    withPersistency(this) { ctx ->
+                    withPersistency { ctx ->
                         createCheckpoint(
                             ctx,
                             currentNodeId ?: error("currentNodeId not set"),
@@ -88,7 +88,7 @@ class CheckpointsTests {
                     println("checkpoint load")
                     if (!loaded) {
                         loaded = true
-                        withPersistency(this) { ctx ->
+                        withPersistency { ctx ->
                             rollbackToCheckpoint("cpt-100500", ctx)
                         }
                     }
@@ -189,7 +189,11 @@ class CheckpointsTests {
                 updatePrompt {
                     tool {
                         call(id = "$callID", tool = WriteKVTool.name, content = WriteKVTool.encodeArgsToString(args))
-                        result(id = "$callID", tool = WriteKVTool.name, content = WriteKVTool.encodeResultToString(result))
+                        result(
+                            id = "$callID",
+                            tool = WriteKVTool.name,
+                            content = WriteKVTool.encodeResultToString(result)
+                        )
                     }
                 }
             }
@@ -205,7 +209,7 @@ class CheckpointsTests {
 
             // Node that creates a checkpoint
             val saveCheckpoint by node<String, Unit> { input ->
-                withPersistency(this) { ctx ->
+                withPersistency { ctx ->
                     createCheckpoint(
                         ctx,
                         currentNodeId ?: error("currentNodeId not set"),
@@ -318,12 +322,10 @@ class CheckpointsTests {
             assertContains(databaseMap, "user-2")
             assertContains(databaseMap, "user-3")
 
-            agent.withRunningContext {
+            agent.withPersistency { ctx ->
                 println("ctx outside: $this")
                 println("ctx outside [hash]: ${this.hashCode()}")
-                withPersistency(this) { ctx ->
-                    rollbackToCheckpoint("ckpt-1", ctx)
-                }
+                rollbackToCheckpoint("ckpt-1", ctx)
             }
 
             rollbackConfig.commands.send("go further!")

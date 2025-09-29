@@ -103,7 +103,7 @@ private fun AIAgentSubgraphBuilderBase<*, *>.teleportOnceNode(
 ): AIAgentNodeDelegate<String, String> = node(name) {
     if (!teleportState.teleported) {
         teleportState.teleported = true
-        withPersistency(this) { ctx ->
+        withPersistency { ctx ->
             val history = llm.readSession { this.prompt.messages }
             setExecutionPoint(ctx, teleportToId, history, JsonPrimitive("$it\nTeleported"))
             return@withPersistency "Teleported"
@@ -131,7 +131,7 @@ private fun AIAgentSubgraphBuilderBase<*, *>.nodeForSecondTry(
 private fun AIAgentSubgraphBuilderBase<*, *>.createCheckpointNode(name: String? = null, checkpointId: String) =
     node<String, String>(name) {
         val input = it
-        withPersistency(this) { ctx ->
+        withPersistency { ctx ->
             createCheckpoint(ctx, name!!, input, typeOf<String>(), checkpointId)
             llm.writeSession {
                 updatePrompt {
@@ -157,7 +157,7 @@ private fun AIAgentSubgraphBuilderBase<*, *>.nodeRollbackToCheckpoint(
             return@node "Skipping rollback"
         }
 
-        withPersistency(this) {
+        withPersistency {
             val checkpoint = rollbackToCheckpoint(checkpointId, it)!!
             teleportState.teleported = true
             llm.writeSession {
@@ -174,7 +174,7 @@ private fun AIAgentSubgraphBuilderBase<*, *>.nodeCreateCheckpoint(
     name: String? = null,
 ): AIAgentNodeDelegate<String, String> = node(name) {
     val input = it
-    withPersistency(this) { ctx ->
+    withPersistency { ctx ->
         val checkpoint = createCheckpoint(
             ctx,
             currentNodeId ?: error("currentNodeId not set"),

@@ -57,7 +57,7 @@ class AIAgentServiceTest {
 
         // managed agents tracking
         assertEquals(1, service.listAllAgents().size)
-        assertEquals(listOf(agent), service.agentsWithId("id-1"))
+        assertEquals(agent, service.agentById("id-1"))
         assertTrue(
             service.listInactiveAgents().isNotEmpty()
         ) // before run, agent has finished immediately, not running now
@@ -104,7 +104,7 @@ class AIAgentServiceTest {
 
         // remove operations
         assertTrue(service.removeAgent(agent))
-        assertFalse(service.removeAgentsWithId("no-such"))
+        assertFalse(service.removeAgentWithId("no-such"))
         assertEquals(0, service.listAllAgents().size)
     }
 

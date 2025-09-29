@@ -140,7 +140,7 @@ public open class GraphAIAgent<Input, Output>(
             runId = runId,
             strategyName = strategy.name,
             pipeline = pipeline,
-            agentId = this@GraphAIAgent.id,
+            agent = this@GraphAIAgent,
         )
     }
 

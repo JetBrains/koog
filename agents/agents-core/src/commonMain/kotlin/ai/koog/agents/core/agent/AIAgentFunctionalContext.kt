@@ -32,10 +32,11 @@ import ai.koog.prompt.message.Message
  * @property strategyName The name of the agent's strategic approach or operational method, determining its behavior
  * during execution.
  */
+@OptIn(InternalAgentsApi::class)
 @Suppress("UNCHECKED_CAST")
 public class AIAgentFunctionalContext(
     override val environment: AIAgentEnvironment,
-    override val agentId: String,
+    override val agent: FunctionalAIAgent<*, *>,
     override val runId: String,
     override val agentInput: Any?,
     override val config: AIAgentConfig,
@@ -93,7 +94,7 @@ public class AIAgentFunctionalContext(
      */
     public fun copy(
         environment: AIAgentEnvironment = this.environment,
-        agentId: String = this.agentId,
+        agent: FunctionalAIAgent<*, *> = this.agent,
         runId: String = this.runId,
         agentInput: Any? = this.agentInput,
         config: AIAgentConfig = this.config,
@@ -106,7 +107,7 @@ public class AIAgentFunctionalContext(
     ): AIAgentFunctionalContext {
         val freshContext = AIAgentFunctionalContext(
             environment = environment,
-            agentId = agentId,
+            agent = agent,
             runId = runId,
             agentInput = agentInput,
             config = config,

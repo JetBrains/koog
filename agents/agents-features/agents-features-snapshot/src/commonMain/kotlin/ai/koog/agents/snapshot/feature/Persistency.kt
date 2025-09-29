@@ -1,5 +1,7 @@
 package ai.koog.agents.snapshot.feature
 
+import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.core.agent.AIAgent.Companion.State.Running
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AgentContextData
 import ai.koog.agents.core.agent.context.RollbackStrategy
@@ -382,24 +384,49 @@ public class Persistency(
  * @return The [Persistency] feature instance for this agent
  * @throws IllegalStateException if the checkpoint feature is not installed
  */
-public fun AIAgentContext.persistency(): Persistency = rootContext().featureOrThrow(Persistency.Feature)
+public fun AIAgentContext.persistency(): Persistency = agent.persistency()
 
 /**
- * Extension function to perform an action with the checkpoint feature.
+ * Retrieves the persistency feature for the AI agent.
  *
- * This is a convenience function that retrieves the checkpoint feature and
- * executes the provided action with it.
+ * @return The persistency feature associated with the AI agent.
+ * @throws IllegalStateException if the persistency feature is not available.
+ */
+public fun AIAgent<*, *>.persistency(): Persistency = featureOrThrow(Persistency.Feature)
+
+/**
+ * Executes the provided action within the context of the AI agent's persistency layer.
  *
- * @param T The return type of the action
- * @param context The agent context to pass to the action
- * @param action The action to perform with the checkpoint feature
- * @return The result of the action
+ * This function enhances agents with persistent state management capabilities by leveraging the `Persistency` component
+ * within the current `AIAgentContext`. The supplied action is executed with the persistency layer, enabling operations
+ * that require consistent and reliable state management across the lifecycle of the agent.
+ *
+ * @param action A suspendable lambda function that receives the `Persistency` instance and the current `AIAgentContext`
+ *               as its parameters. This allows custom logic that interacts with the persistency layer to be executed.
+ * @return A result of type [T] produced by the execution of the provided action.
+ */
+public suspend fun <T> AIAgentContext.withPersistency(
+    action: suspend Persistency.(AIAgentContext) -> T
+): T = this.persistency().action(this)
+
+/**
+ * Executes the provided action within the context of the agent's persistency layer if the agent is in a running state.
+ *
+ * This function allows interaction with the persistency mechanism associated with the agent, ensuring that
+ * the operation is carried out in the correct execution context.
+ *
+ * @param action A suspending function defining operations to perform using the agent's persistency mechanism
+ *               and the current agent context.
+ * @return The result of the execution of the provided action.
+ * @throws IllegalStateException If the agent is not in a running state when this function is called.
  */
 @OptIn(InternalAgentsApi::class)
-public suspend fun <T> AIAgentContext.withPersistency(
-    context: AIAgentContext,
+public suspend fun <T> AIAgent<*, *>.withPersistency(
     action: suspend Persistency.(AIAgentContext) -> T
-): T = context.persistency().action(context)
+): T = when (val state = getState()) {
+    is Running<*> -> this.persistency().action(state.rootContext)
+    else -> throw IllegalStateException("Agent is not running. Current agents's state: $state")
+}
 
 @OptIn(InternalAgentToolsApi::class)
 private object DirectToolCallsEnablerImpl : DirectToolCallsEnabler

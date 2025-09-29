@@ -1,7 +1,10 @@
 package ai.koog.agents.core.agent
 
+import ai.koog.agents.core.agent.AIAgent.Companion.State
+import ai.koog.agents.core.agent.AIAgent.Companion.State.NotStarted
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.element.AgentRunInfoContextElement
+import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
 import ai.koog.agents.core.feature.AIAgentPipeline
 import io.github.oshai.kotlinlogging.KLogger
@@ -34,48 +37,13 @@ public abstract class StatefulSingleUseAIAgent<Input, Output, TContext : AIAgent
     agentId: String? = null
 ) : AIAgent<Input, Output> {
     /**
-     * Indicates whether the agent is currently running.
-     *
-     * This variable is used to track the running state of the agent. It is mutable and
-     * can be updated to reflect the current operational status of the agent. It is set
-     * to `false` by default, meaning the agent is not running.
-     */
-    private var isRunning: Boolean = false
-
-    /**
-     * Indicates whether the agent has been started.
-     *
-     * This variable is used to track if the agent's execution process has begun.
-     * It is primarily utilized internally to ensure that methods or operations
-     * depending on the agent's startup state react appropriately.
-     *
-     * By default, this variable is initialized to `false`, representing that the agent
-     * has not yet started.
-     */
-    private var wasStarted: Boolean = false
-
-    /**
-     * Represents the result or output of an agent's operation.
-     * This variable is of a nullable type and may hold the result of a computation or remain null if no result is produced.
-     * It is protected, meaning it is accessible within the class and by subclasses.
-     */
-    private var agentResult: Output? = null
-
-    /**
-     * The root context associated with the agent during its lifecycle. This context is expected to be defined
-     * during the preparation phase and is used for managing the agent's execution state and interactions.
-     *
-     * It is nullable to indicate that the context may not be available before initialization or after
-     * the agent's lifecycle ends.
-     */
-    private var rootAgentContext: TContext? = null
-
-    /**
      * A mutex used to synchronize access to the state of the agent. Ensures that only one coroutine
      * can modify or read the shared state of the agent at a time, preventing data races and ensuring
      * thread-safe operations.
      */
     private val agentStateMutex: Mutex = Mutex()
+
+    private var state: State<Output> = NotStarted()
 
     /**
      * A unique identifier represented as a string. This identifier is lazily initialized.
@@ -84,36 +52,7 @@ public abstract class StatefulSingleUseAIAgent<Input, Output, TContext : AIAgent
      */
     final override val id: String by lazy { agentId ?: Uuid.random().toString() }
 
-    /**
-     * Determines whether the agent is currently in a running state.
-     *
-     * @return `true` if the agent is running, `false` otherwise.
-     */
-    final override suspend fun isRunning(): Boolean = agentStateMutex.withLock {
-        isRunning
-    }
-
-    /**
-     * Determines if the process or operation has completed its execution.
-     *
-     * This method evaluates the state of the associated process, ensuring it was started
-     * and is no longer running.
-     *
-     * @return `true` if the operation was started and is no longer running, otherwise `false`.
-     */
-    final override suspend fun finished(): Boolean = agentStateMutex.withLock {
-        wasStarted && !isRunning
-    }
-
-    /**
-     * Retrieves the result of the agent if it is in a finished state, or returns null if it is not ready yet.
-     *
-     * The method ensures thread-safety by using a locking mechanism to access the agent's state.
-     *
-     * @return The calculated result of type [Output] if the agent has finished execution, or null if it is not ready.
-     */
-    final override suspend fun resultIfReady(): Output? =
-        agentStateMutex.withLock { if (finished()) agentResult else null }
+    final override suspend fun getState(): State<Output> = agentStateMutex.withLock { state.copy() }
 
     /**
      * Represents the pipeline used by the AI agent for processing tasks or data.
@@ -124,6 +63,27 @@ public abstract class StatefulSingleUseAIAgent<Input, Output, TContext : AIAgent
      * AI agent's functionality.
      */
     public abstract val pipeline: AIAgentPipeline
+
+    private var agentFeatures: Map<AIAgentStorageKey<*>, Any>? = null
+
+    /**
+     * Retrieves a feature associated with the given key from the current context.
+     *
+     * @param key The key of the feature to retrieve.
+     * @return The feature associated with the specified key, or null if no such feature exists.
+     */
+    @Suppress("UNCHECKED_CAST")
+    override fun <Feature : Any> feature(key: AIAgentStorageKey<Feature>): Feature? {
+        if (agentFeatures == null) {
+            throw IllegalStateException(
+                "Features are not ready yet. " +
+                    "Probably your AI Agent hasn't stil initialized it's context. " +
+                    "Have you run your agent?"
+            )
+        }
+
+        return agentFeatures!![key] as? Feature
+    }
 
     /**
      * Executes the agent's main functionality, coordinating with various components
@@ -139,11 +99,10 @@ public abstract class StatefulSingleUseAIAgent<Input, Output, TContext : AIAgent
      */
     final override suspend fun run(agentInput: Input): Output {
         agentStateMutex.withLock {
-            if (wasStarted) {
+            if (state !is NotStarted) {
                 throw IllegalStateException("Agent was already started")
             }
-            isRunning = true
-            wasStarted = true
+            state = State.Starting()
         }
 
         val runId = Uuid.random().toString()
@@ -159,8 +118,11 @@ public abstract class StatefulSingleUseAIAgent<Input, Output, TContext : AIAgent
             )
         ) {
             val context = prepareContext(agentInput, runId)
+
+            agentFeatures = pipeline.getAgentFeatures(context)
+
             agentStateMutex.withLock {
-                rootAgentContext = context
+                state = State.Running(context)
             }
 
             logger.debug {
@@ -174,11 +136,11 @@ public abstract class StatefulSingleUseAIAgent<Input, Output, TContext : AIAgent
             pipeline.onAgentStarting<Input, Output>(
                 runId = runId,
                 agent = this@StatefulSingleUseAIAgent,
-                context = rootAgentContext!!
+                context = context
             )
 
             val result = try {
-                strategy.execute(context = rootAgentContext!!, input = agentInput)
+                strategy.execute(context = context, input = agentInput)
             } catch (e: Throwable) {
                 logger.error(e) { "Execution exception reported by server!" }
                 pipeline.onAgentExecutionFailed(
@@ -186,11 +148,8 @@ public abstract class StatefulSingleUseAIAgent<Input, Output, TContext : AIAgent
                     runId = runId,
                     throwable = e
                 )
+                agentStateMutex.withLock { state = State.Failed(e) }
                 throw e
-            } finally {
-                agentStateMutex.withLock {
-                    isRunning = false
-                }
             }
 
             logger.debug {
@@ -207,24 +166,16 @@ public abstract class StatefulSingleUseAIAgent<Input, Output, TContext : AIAgent
             )
 
             agentStateMutex.withLock {
-                agentResult = result
+                state = if (result != null) {
+                    State.Finished(result)
+                } else {
+                    State.Failed(Exception("result is null"))
+                }
             }
 
             return@withContext result ?: error("result is null")
         }
     }
-
-    /**
-     * Executes a given action within the context of a running AI agent if the root context exists.
-     *
-     * @param action A suspend function to be executed within the AI agent's context. This lambda
-     *               extension function operates on the current [AIAgentContext].
-     * @return `true` if the action was successfully executed with a valid root context; `false` otherwise.
-     */
-    final override suspend fun withRunningContext(action: suspend AIAgentContext.() -> Unit): Boolean =
-        agentStateMutex.withLock {
-            rootAgentContext?.action()?.let { true } ?: false
-        }
 
     /**
      * Closes the AI Agent and performs necessary cleanup operations.

@@ -12,13 +12,11 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.llm.OllamaModels
 import ai.koog.prompt.params.LLMParams
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
+import io.ktor.util.collections.ConcurrentMap
 import kotlinx.datetime.Clock
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
-import kotlin.collections.mutableListOf
 import kotlin.collections.set
 import kotlin.reflect.KType
 import kotlin.reflect.typeOf
@@ -229,20 +227,20 @@ public interface AIAgentService<Input, Output> {
     public suspend fun removeAgent(agent: AIAgent<Input, Output>): Boolean
 
     /**
-     * Removes all AI agents that match the specified unique identifier from the service.
+     * Removes an AI agent based on its unique identifier.
      *
-     * @param id The unique identifier of the agents to be removed.
-     * @return True if one or more agents with the specified identifier were successfully removed, false otherwise.
+     * @param id The unique identifier of the AI agent to be removed.
+     * @return True if the agent with the specified ID was successfully removed, or false if no such agent was found.
      */
-    public suspend fun removeAgentsWithId(id: String): Boolean
+    public suspend fun removeAgentWithId(id: String): Boolean
 
     /**
-     * Retrieves a list of AI agents associated with the specified unique identifier.
+     * Retrieves an AI agent based on its unique identifier.
      *
-     * @param id The unique identifier used to filter the AI agents.
-     * @return A list of AI agents that match the provided identifier.
+     * @param id The unique identifier of the AI agent to retrieve.
+     * @return The AI agent associated with the specified ID, or null if no agent is found.
      */
-    public suspend fun agentsWithId(id: String): List<AIAgent<Input, Output>>
+    public suspend fun agentById(id: String): AIAgent<Input, Output>?
 
     /**
      * Retrieves a comprehensive list of all AI agents currently managed by the service,
@@ -302,8 +300,7 @@ public abstract class AIAgentServiceBase<Input, Output> : AIAgentService<Input, 
      * This list is used to track all agents created and managed by the service, allowing for operations
      * such as addition, removal, and querying of agents based on their state or lifecycle.
      */
-    private val managedAgents: MutableMap<String, MutableList<AIAgent<Input, Output>>> = mutableMapOf()
-    private val managedAgentsMutex: Mutex = Mutex()
+    private val managedAgents: ConcurrentMap<String, AIAgent<Input, Output>> = ConcurrentMap()
 
     /**
      * Creates and registers a managed AI agent with an optional identifier and clock instance.
@@ -328,31 +325,25 @@ public abstract class AIAgentServiceBase<Input, Output> : AIAgentService<Input, 
     @OptIn(InternalAgentsApi::class)
     final override suspend fun createAgent(id: String?, clock: Clock): AIAgent<Input, Output> {
         val agent = createManagedAgent(id, clock)
-        managedAgentsMutex.withLock {
-            managedAgents.getOrPut(agent.id) { mutableListOf() }.add(agent)
-        }
+        managedAgents[agent.id] = agent
         return agent
     }
 
     /**
-     * Removes the specified AI agent from the list of managed agents.
+     * Removes the specified AI agent from the managed collection.
      *
-     * @param agent The AI agent to be removed from management.
-     * @return `true` if the agent was successfully removed, otherwise `false`.
+     * @param agent The AI agent to be removed. This agent must be part of the managed agents collection.
+     * @return `true` if the agent was successfully removed, or `false` if the agent was not found or could not be removed.
      */
-    final override suspend fun removeAgent(agent: AIAgent<Input, Output>): Boolean = managedAgentsMutex.withLock {
-        managedAgents[agent.id]?.remove(agent) == true
-    }
+    final override suspend fun removeAgent(agent: AIAgent<Input, Output>): Boolean = removeAgentWithId(agent.id)
 
     /**
-     * Removes the AI agent identified by the given ID from the managed agents list.
+     * Removes a managed AI agent identified by the specified unique identifier.
      *
      * @param id The unique identifier of the AI agent to be removed.
-     * @return `true` if an agent with the specified ID was successfully removed, otherwise `false`.
+     * @return `true` if the agent was successfully removed, `false` if no agent with the given ID exists.
      */
-    final override suspend fun removeAgentsWithId(id: String): Boolean = managedAgentsMutex.withLock {
-        managedAgents.remove(id) != null
-    }
+    final override suspend fun removeAgentWithId(id: String): Boolean = managedAgents.remove(id) != null
 
     /**
      * Retrieves an AI agent managed by this service based on the provided unique identifier.
@@ -360,9 +351,7 @@ public abstract class AIAgentServiceBase<Input, Output> : AIAgentService<Input, 
      * @param id The unique identifier of the AI agent to be retrieved.
      * @return The AI agent corresponding to the given identifier, or `null` if no agent with the specified ID exists.
      */
-    final override suspend fun agentsWithId(id: String): List<AIAgent<Input, Output>> = managedAgentsMutex.withLock {
-        managedAgents[id]?.toList().orEmpty()
-    }
+    final override suspend fun agentById(id: String): AIAgent<Input, Output>? = managedAgents[id]
 
     /**
      * Retrieves a list of all currently active AI agents managed by the service.
@@ -370,9 +359,8 @@ public abstract class AIAgentServiceBase<Input, Output> : AIAgentService<Input, 
      *
      * @return A list of active AI agents of type `AIAgent<Input, Output>`.
      */
-    final override suspend fun listActiveAgents(): List<AIAgent<Input, Output>> = managedAgentsMutex.withLock {
-        managedAgents.flatMap { it.value }.filter { it.isRunning() }.toList()
-    }
+    final override suspend fun listActiveAgents(): List<AIAgent<Input, Output>> =
+        managedAgents.filterValues { it.isRunning() }.values.toList()
 
     /**
      * Retrieves a list of inactive AI agents managed by this service.
@@ -381,18 +369,16 @@ public abstract class AIAgentServiceBase<Input, Output> : AIAgentService<Input, 
      *
      * @return A list of AI agents that are inactive.
      */
-    final override suspend fun listInactiveAgents(): List<AIAgent<Input, Output>> = managedAgentsMutex.withLock {
-        managedAgents.flatMap { it.value }.filter { !it.isRunning() }.toList()
-    }
+    final override suspend fun listInactiveAgents(): List<AIAgent<Input, Output>> =
+        managedAgents.filterValues { !it.isRunning() }.values.toList()
 
     /**
      * Retrieves a list of all agents that have already finished their task.
      *
      * @return A list of finished agents managed by this service.
      */
-    final override suspend fun listFinishedAgents(): List<AIAgent<Input, Output>> = managedAgentsMutex.withLock {
-        managedAgents.flatMap { it.value }.filter { it.finished() }.toList()
-    }
+    final override suspend fun listFinishedAgents(): List<AIAgent<Input, Output>> =
+        managedAgents.filterValues { it.isFinished() }.values.toList()
 
     /**
      * Retrieves a list of all AI agents currently managed by the service, regardless of their state
@@ -400,9 +386,7 @@ public abstract class AIAgentServiceBase<Input, Output> : AIAgentService<Input, 
      *
      * @return A list of all AI agents of type `AIAgent<Input, Output>` managed by this service.
      */
-    override suspend fun listAllAgents(): List<AIAgent<Input, Output>> = managedAgentsMutex.withLock {
-        managedAgents.flatMap { it.value }.toList()
-    }
+    override suspend fun listAllAgents(): List<AIAgent<Input, Output>> = managedAgents.values.toList()
 }
 
 /**
@@ -551,7 +535,7 @@ public operator fun AIAgentService.Companion.invoke(
  * @param outputSerializer Serializer to serialize agent output to tool result.
  * @param json Optional [Json] instance to customize de/serialization behavior.
  * @return A special tool that wraps the agent functionality.
- * @param agentId An optional unique identifier for the agent. If null, a default identifier is used. Defaults to null.
+ * @param parentAgentId Optional ID of the parent AI agent. Tool agent IDs will be generated as "parentAgentId.<number of tool call>"
  * @param clock The clock instance used to manage time-related operations. Defaults to `Clock.System`.
  * @return A tool instance configured with the provided parameters, representing the AI agent.
  */
@@ -564,7 +548,7 @@ public inline fun <reified Input, reified Output> AIAgentService<Input, Output>.
     inputSerializer: KSerializer<Input> = serializer(),
     outputSerializer: KSerializer<Output> = serializer(),
     json: Json = Json.Default,
-    agentId: String? = null,
+    parentAgentId: String? = null,
     clock: Clock = Clock.System
 ): Tool<AIAgentTool.AgentToolArgs, AIAgentTool.AgentToolResult> = AIAgentTool(
     agentService = this,
@@ -574,5 +558,5 @@ public inline fun <reified Input, reified Output> AIAgentService<Input, Output>.
     inputSerializer = inputSerializer,
     outputSerializer = outputSerializer,
     json = json,
-    agentId = agentId
+    parentAgentId = parentAgentId
 )
