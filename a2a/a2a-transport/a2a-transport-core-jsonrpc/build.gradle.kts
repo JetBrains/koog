@@ -16,6 +16,8 @@ kotlin {
 
                 api(libs.kotlinx.serialization.json)
                 api(libs.kotlinx.coroutines.core)
+
+                implementation(libs.oshai.kotlin.logging)
             }
         }
 
@@ -28,6 +30,7 @@ kotlin {
         jvmTest {
             dependencies {
                 implementation(kotlin("test-junit5"))
+                runtimeOnly(libs.logback.classic)
             }
         }
 

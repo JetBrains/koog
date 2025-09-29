@@ -10,7 +10,7 @@ import ai.koog.a2a.model.TaskIdParams
 import ai.koog.a2a.model.TaskState
 import ai.koog.a2a.server.session.RequestContext
 import ai.koog.a2a.server.session.SessionEventProcessor
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.Deferred
 
 /**
  * Implementations of this interface contain the core logic of the agent,
@@ -98,7 +98,7 @@ public interface AgentExecutor {
      * Example implementation:
      * ```kotlin
      * // Cancel agent execution job, if the agent is currently running, to terminate it.
-     * agentJob?.cancel()
+     * agentJob?.cancelAndJoin()
      * // Send task cancellation event with custom message to event processor
      * eventProcessor.sendTaskEvent(
      *     TaskStatusUpdateEvent(
@@ -122,7 +122,7 @@ public interface AgentExecutor {
      *
      * @param context The context containing the necessary information and accessors for executing the agent.
      * @param eventProcessor The event processor to publish events to.
-     * @param agentJob Optional [Job] executing the agent logic, if the agent is currently running.
+     * @param agentJob Optional job executing the agent logic, if the agent is currently running.
      * @throws Exception if something goes wrong during execution or the cancellation is impossible. Should prefer more
      * specific exceptions if possible, e.g., [A2ATaskNotCancelableException], [A2AUnsupportedOperationException], etc.
      * See full list of available A2A exceptions in [ai.koog.a2a.exceptions].
@@ -130,7 +130,7 @@ public interface AgentExecutor {
     public suspend fun cancel(
         context: RequestContext<TaskIdParams>,
         eventProcessor: SessionEventProcessor,
-        agentJob: Job?,
+        agentJob: Deferred<Unit>?,
     ) {
         throw A2ATaskNotCancelableException("Cancellation is not supported")
     }

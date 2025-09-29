@@ -1,6 +1,7 @@
 package ai.koog.a2a.transport
 
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
@@ -21,15 +22,15 @@ internal object RequestIdSerializer : KSerializer<RequestId> {
             is JsonPrimitive -> when {
                 element.isString -> RequestId.StringId(element.content)
                 element.longOrNull != null -> RequestId.NumberId(element.long)
-                else -> error("Invalid RequestId type")
+                else -> throw SerializationException("Invalid RequestId type")
             }
 
-            else -> error("Invalid RequestId format")
+            else -> throw SerializationException("Invalid RequestId format")
         }
     }
 
     override fun serialize(encoder: Encoder, value: RequestId) {
-        val jsonEncoder = encoder as? JsonEncoder ?: error("Can only serialize JSON")
+        val jsonEncoder = encoder as? JsonEncoder ?: throw SerializationException("Can only serialize JSON")
         when (value) {
             is RequestId.StringId -> jsonEncoder.encodeString(value.value)
             is RequestId.NumberId -> jsonEncoder.encodeLong(value.value)

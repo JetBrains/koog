@@ -4,8 +4,6 @@ import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 /**
  * Message role.
@@ -32,11 +30,9 @@ public enum class Role {
  * @property contextId The context ID for this message, used to group related interactions.
  * @property metadata Optional metadata for extensions. The key is an extension-specific identifier.
  */
-@OptIn(ExperimentalUuidApi::class)
 @Serializable
 public data class Message(
-    @EncodeDefault
-    public val messageId: String = Uuid.random().toString(),
+    public val messageId: String,
     public val role: Role,
     public val parts: List<Part>,
     public val extensions: List<String>? = null,

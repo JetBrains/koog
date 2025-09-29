@@ -1,0 +1,112 @@
+name: A2A TCK Test
+
+on:
+  push:
+    paths:
+      - 'a2a/**'
+  pull_request:
+    paths:
+      - 'a2a/**'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/develop' }}
+
+env:
+  JAVA_VERSION: 17
+  JAVA_DISTRIBUTION: 'corretto'
+
+jobs:
+  a2a-tck-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Configure Git
+        run: |
+          git config --global core.autocrlf input
+
+      - uses: actions/checkout@v5
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v5
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.8.15"
+          enable-cache: true
+
+      - name: Setup A2A TCK
+        working-directory: ./a2a/test-tck
+        run: ./setup_tck.sh
+
+      - name: Build test server
+        run: ./gradlew :a2a:test-tck:a2a-test-server-tck:assemble
+
+      - name: Start test server in background
+        working-directory: ./a2a/test-tck
+        run: |
+          ./run_sut.sh > server.log 2>&1 &
+          SERVER_PID=$!
+          echo "SERVER_PID=$SERVER_PID" >> $GITHUB_ENV
+
+          # Wait for server to start (max 60 seconds)
+          timeout 60 bash -c '
+            while ! grep -q "Responding at http://0.0.0.0:9999" server.log 2>/dev/null; do
+              sleep 1
+            done
+          '
+
+          echo "Server started successfully"
+
+      - name: Run TCK tests - Mandatory
+        working-directory: ./a2a/test-tck
+        run: ./run_tck.sh --sut-url http://localhost:9999/a2a --category mandatory --report
+
+      - name: Run TCK tests - Capabilities
+        working-directory: ./a2a/test-tck
+        run: ./run_tck.sh --sut-url http://localhost:9999/a2a --category capabilities --report
+
+      - name: Run TCK tests - Transport Equivalence
+        working-directory: ./a2a/test-tck
+        run: ./run_tck.sh --sut-url http://localhost:9999/a2a --category transport-equivalence --report
+
+      - name: Run TCK tests - Quality
+        working-directory: ./a2a/test-tck
+        run: ./run_tck.sh --sut-url http://localhost:9999/a2a --category quality --report
+
+      - name: Run TCK tests - Features
+        working-directory: ./a2a/test-tck
+        run: ./run_tck.sh --sut-url http://localhost:9999/a2a --category features --report
+
+      - name: Stop test server
+        if: always()
+        run: |
+          if [ ! -z "$SERVER_PID" ]; then
+            kill $SERVER_PID || true
+            wait $SERVER_PID 2>/dev/null || true
+          fi
+
+      - name: Upload TCK reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: a2a-tck-reports
+          path: a2a/test-tck/a2a-tck/reports/*.html
+          if-no-files-found: warn

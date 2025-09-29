@@ -3,24 +3,22 @@ package ai.koog.a2a.server.session
 import ai.koog.a2a.model.Event
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.launch
 
 /**
- * Represents an active agent execution session with lifecycle management.
+ * Represents a session with lifecycle management.
  *
  * @property eventProcessor The session event processor
- * @property agentJob The job executing the agent logic
- * @property contextId Unique context ID associated with this session
- * @property taskId Unique task ID associated with this session
+ * @property agentJob The execution process associated with this session's execution
  * @property events A stream of events generated during this session
  */
 public class Session(
     public val eventProcessor: SessionEventProcessor,
-    public val agentJob: Job
+    public val agentJob: Deferred<Unit>
 ) {
     public val contextId: String get() = eventProcessor.contextId
     public val taskId: String get() = eventProcessor.taskId
@@ -34,42 +32,47 @@ public class Session(
     }
 
     /*
-     * Suspends until the session, i.e., agent job and event stream, complete.
+     * Suspends until the session, i.e., event stream and agent job, complete.
+     * Waits for the event stream to finish first, to avoid triggering the agent job prematurely.
+     * Assumes that by the time event stream is finished, agent job will already be completed or canceled.
      */
     public suspend fun join() {
-        agentJob.join()
         events.collect()
+        agentJob.join()
     }
 
     /**
-     * Cancels the agent job, waiting for it to complete, and then closes event processor.
+     * [start] and then [join] the session.
      */
-    public suspend fun cancel() {
+    public suspend fun startAndJoin() {
+        start()
+        join()
+    }
+
+    /**
+     * Cancels the execution process, waiting for it to complete, and then closes event processor.
+     */
+    public suspend fun cancelAndJoin() {
         agentJob.cancelAndJoin()
         eventProcessor.close()
     }
 }
 
 /**
- * Factory function that creates a new [Session] with lazy-started [agentAction].
+ * Creates an instance of [Session] with lazily started [Session.agentJob]
  *
- * @param coroutineScope The scope for launching the agent coroutine
+ * @param coroutineScope The coroutine scope to use for running the [block]
  * @param eventProcessor The session event processor
- * @param agentAction The agent logic to execute
- * @return A new session instance
+ * @param block The block to be executed
  */
 @Suppress("ktlint:standard:function-naming", "FunctionName")
-public fun AgentSession(
+public fun LazySession(
     coroutineScope: CoroutineScope,
     eventProcessor: SessionEventProcessor,
-    agentAction: suspend CoroutineScope.() -> Unit
+    block: suspend CoroutineScope.() -> Unit
 ): Session {
-    val agentJob = coroutineScope.launch(start = CoroutineStart.LAZY) {
-        agentAction()
-    }
-
     return Session(
         eventProcessor = eventProcessor,
-        agentJob = agentJob
+        agentJob = coroutineScope.async(start = CoroutineStart.LAZY, block = block)
     )
 }

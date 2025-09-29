@@ -27,6 +27,7 @@ kotlin {
                 implementation(project(":a2a:a2a-test"))
                 implementation(kotlin("test"))
                 implementation(libs.kotlinx.coroutines.test)
+                implementation(libs.kotest.assertions)
             }
         }
 
@@ -41,7 +42,7 @@ kotlin {
                 implementation(libs.ktor.client.cio)
                 implementation(libs.ktor.client.logging)
                 implementation(libs.ktor.server.netty)
-                runtimeOnly(libs.slf4j.simple)
+                runtimeOnly(libs.logback.classic)
             }
         }
 

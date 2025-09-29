@@ -14,6 +14,7 @@ import ai.koog.a2a.model.TaskQueryParams
 import ai.koog.a2a.transport.ClientCallContext
 import ai.koog.a2a.transport.ClientTransport
 import ai.koog.a2a.transport.Request
+import ai.koog.a2a.transport.RequestId
 import ai.koog.a2a.transport.Response
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCError
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCErrorResponse
@@ -21,8 +22,10 @@ import ai.koog.a2a.transport.jsonrpc.model.JSONRPCJson
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCRequest
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCResponse
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCSuccessResponse
+import ai.koog.a2a.transport.jsonrpc.model.JSONRPC_VERSION
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onCompletion
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
 
@@ -54,7 +57,8 @@ public abstract class JSONRPCClientTransport : ClientTransport {
         return JSONRPCRequest(
             id = id,
             method = method.value,
-            params = JSONRPCJson.encodeToJsonElement<T>(data)
+            params = JSONRPCJson.encodeToJsonElement<T>(data),
+            jsonrpc = JSONRPC_VERSION,
         )
     }
 
@@ -71,13 +75,13 @@ public abstract class JSONRPCClientTransport : ClientTransport {
             )
 
             is JSONRPCErrorResponse -> {
-                throw error.toA2AException()
+                throw error.toA2AException(id)
             }
         }
     }
 
-    protected fun JSONRPCError.toA2AException(): A2AException {
-        return createA2AException(message, code)
+    protected fun JSONRPCError.toA2AException(id: RequestId?): A2AException {
+        return createA2AException(message, code, id)
     }
 
     /**
@@ -105,7 +109,14 @@ public abstract class JSONRPCClientTransport : ClientTransport {
         val jsonrpcRequest = request.toJSONRPCRequest(method)
         val jsonrpcResponse = requestStreaming(jsonrpcRequest, ctx)
 
-        return jsonrpcResponse.map { it.toResponse<TResponse>() }
+        return jsonrpcResponse
+            .map { it.toResponse<TResponse>() }
+            .onCompletion { thr ->
+                // Do not let wrap A2A exceptions, propagate them directly
+                if (thr?.cause is A2AException) {
+                    throw thr.cause!!
+                }
+            }
     }
 
     override suspend fun getAuthenticatedExtendedAgentCard(

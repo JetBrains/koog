@@ -11,7 +11,7 @@ import ai.koog.a2a.model.TaskStatus
 import ai.koog.a2a.model.TaskStatusUpdateEvent
 import ai.koog.a2a.model.TextPart
 import ai.koog.a2a.server.exceptions.InvalidEventException
-import ai.koog.a2a.server.exceptions.SessionClosedException
+import ai.koog.a2a.server.exceptions.SessionNotActiveException
 import ai.koog.a2a.server.tasks.InMemoryTaskStorage
 import kotlinx.coroutines.flow.lastOrNull
 import kotlinx.coroutines.launch
@@ -22,6 +22,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.time.Duration.Companion.seconds
 
@@ -66,12 +67,10 @@ class SessionEventProcessorTest {
     private fun createProcessor(
         contextId: String,
         taskId: String,
-        task: Task? = null
-    ) = SessionEventProcessor(
+    ): SessionEventProcessor = SessionEventProcessor(
         contextId = contextId,
         taskId = taskId,
         taskStorage = taskStorage,
-        task = task
     )
 
     @Test
@@ -94,11 +93,10 @@ class SessionEventProcessorTest {
 
         processor.sendMessage(message1)
 
-        assertFailsWith<InvalidEventException> {
+        assertFailsWith<SessionNotActiveException> {
             processor.sendMessage(message2)
         }
-
-        processor.close()
+        assertFalse(processor.isOpen)
     }
 
     @Test
@@ -109,11 +107,10 @@ class SessionEventProcessorTest {
 
         processor.sendMessage(message)
 
-        assertFailsWith<InvalidEventException> {
+        assertFailsWith<SessionNotActiveException> {
             processor.sendTaskEvent(task)
         }
-
-        processor.close()
+        assertFalse(processor.isOpen)
     }
 
     // Task session tests
@@ -154,7 +151,7 @@ class SessionEventProcessorTest {
         taskStorage.update(existingTask)
 
         // Create processor with existing task
-        val processor = createProcessor(contextId, taskId, existingTask)
+        val processor = createProcessor(contextId, taskId)
 
         val statusUpdate = TaskStatusUpdateEvent(
             taskId = taskId,
@@ -184,23 +181,6 @@ class SessionEventProcessorTest {
     }
 
     @Test
-    fun task_testSendNonTaskEventForNewTaskFails() = runTest(timeout = TEST_TIMEOUT) {
-        val processor = createProcessor(contextId, taskId)
-        val statusUpdate = TaskStatusUpdateEvent(
-            taskId = taskId,
-            contextId = contextId,
-            status = TaskStatus(state = TaskState.Working),
-            final = false
-        )
-
-        assertFailsWith<InvalidEventException> {
-            processor.sendTaskEvent(statusUpdate)
-        }
-
-        processor.close()
-    }
-
-    @Test
     fun task_testSendEventAfterFinalEventFails() = runTest(timeout = TEST_TIMEOUT) {
         val processor = createProcessor(contextId, taskId)
         val task = createTask(taskId, contextId)
@@ -223,56 +203,10 @@ class SessionEventProcessorTest {
         processor.sendTaskEvent(task)
         processor.sendTaskEvent(finalStatusUpdate)
 
-        assertFailsWith<InvalidEventException> {
+        assertFailsWith<SessionNotActiveException> {
             processor.sendTaskEvent(anotherEvent)
         }
-
-        processor.close()
-    }
-
-    @Test
-    fun task_testSendEventWhenTaskInTerminalStateFails() = runTest(timeout = TEST_TIMEOUT) {
-        // Create task in terminal state
-        val completedTask = createTask(taskId, contextId, TaskState.Completed)
-        taskStorage.update(completedTask)
-
-        val processor = createProcessor(contextId, taskId)
-
-        val artifactEvent = TaskArtifactUpdateEvent(
-            taskId = taskId,
-            contextId = contextId,
-            artifact = Artifact(
-                artifactId = "artifact-1",
-                parts = listOf(TextPart("content"))
-            ),
-            append = false
-        )
-
-        assertFailsWith<InvalidEventException> {
-            processor.sendTaskEvent(artifactEvent)
-        }
-
-        processor.close()
-    }
-
-    @Test
-    fun task_testTerminalStatusUpdateWithoutFinalFlagFails() = runTest(timeout = TEST_TIMEOUT) {
-        val processor = createProcessor(contextId, taskId)
-        val task = createTask(taskId, contextId)
-        val statusUpdate = TaskStatusUpdateEvent(
-            taskId = taskId,
-            contextId = contextId,
-            status = TaskStatus(state = TaskState.Failed),
-            final = false // This should be true for terminal state
-        )
-
-        processor.sendTaskEvent(task)
-
-        assertFailsWith<InvalidEventException> {
-            processor.sendTaskEvent(statusUpdate)
-        }
-
-        processor.close()
+        assertFalse(processor.isOpen)
     }
 
     @Test
@@ -407,11 +341,12 @@ class SessionEventProcessorTest {
             // Close processor and then attempt to send more events
             processor.close()
 
-            assertFailsWith<SessionClosedException>("Should not be possible to send events to closed session") {
+            assertFailsWith<SessionNotActiveException>("Should not be possible to send events to closed session") {
                 processor.sendMessage(message2)
             }
 
             assertNull(processor.events.lastOrNull(), "Events stream should be empty after closing")
+            assertFalse(processor.isOpen)
         }
 
     @Test
@@ -432,10 +367,11 @@ class SessionEventProcessorTest {
             final = false
         )
 
-        assertFailsWith<SessionClosedException>("Should not be possible to send events to closed session") {
+        assertFailsWith<SessionNotActiveException>("Should not be possible to send events to closed session") {
             processor.sendTaskEvent(workingUpdate)
         }
 
         assertNull(processor.events.lastOrNull(), "Events stream should be empty after closing")
+        assertFalse(processor.isOpen)
     }
 }

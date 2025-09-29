@@ -3,7 +3,6 @@
 package ai.koog.a2a.transport.jsonrpc.model
 
 import ai.koog.a2a.transport.RequestId
-import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
@@ -26,24 +25,21 @@ public data class JSONRPCRequest(
     public val id: RequestId,
     val method: String,
     val params: JsonElement = JsonNull,
-    @EncodeDefault
-    override val jsonrpc: String = JSONRPC_VERSION,
+    override val jsonrpc: String,
 ) : JSONRPCMessage
 
 @Serializable
 public data class JSONRPCNotification(
     val method: String,
     val params: JsonElement = JsonNull,
-    @EncodeDefault
-    override val jsonrpc: String = JSONRPC_VERSION,
+    override val jsonrpc: String,
 ) : JSONRPCMessage
 
 @Serializable
 public data class JSONRPCSuccessResponse(
     public val id: RequestId,
     public val result: JsonElement = JsonNull,
-    @EncodeDefault
-    override val jsonrpc: String = JSONRPC_VERSION,
+    override val jsonrpc: String,
 ) : JSONRPCResponse
 
 @Serializable
@@ -57,6 +53,5 @@ public data class JSONRPCError(
 public data class JSONRPCErrorResponse(
     public val id: RequestId?,
     public val error: JSONRPCError,
-    @EncodeDefault
-    override val jsonrpc: String = JSONRPC_VERSION,
+    override val jsonrpc: String,
 ) : JSONRPCResponse

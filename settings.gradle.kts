@@ -71,6 +71,7 @@ include(":a2a:a2a-transport:a2a-transport-client-jsonrpc-http")
 include(":a2a:a2a-transport:a2a-transport-core-rest")
 include(":a2a:a2a-transport:a2a-transport-server-rest")
 include(":a2a:a2a-transport:a2a-transport-client-rest")
+include(":a2a:test-tck:a2a-test-server-tck")
 
 include(":koog-spring-boot-starter")
 

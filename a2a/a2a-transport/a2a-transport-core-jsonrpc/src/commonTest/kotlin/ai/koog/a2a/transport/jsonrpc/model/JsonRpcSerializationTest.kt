@@ -24,6 +24,7 @@ class JsonRpcSerializationTest {
         val request: JSONRPCMessage = JSONRPCRequest(
             id = RequestId.NumberId(42),
             method = "add",
+            jsonrpc = JSONRPC_VERSION,
         )
 
         //language=JSON
@@ -40,7 +41,8 @@ class JsonRpcSerializationTest {
     fun testJSONRPCNotification() {
         val request: JSONRPCMessage = JSONRPCNotification(
             method = "update",
-            params = JsonPrimitive("notification-params")
+            params = JsonPrimitive("notification-params"),
+            jsonrpc = JSONRPC_VERSION,
         )
 
         //language=JSON
@@ -57,6 +59,7 @@ class JsonRpcSerializationTest {
     fun testJSONRPCNotificationWithoutParams() {
         val request: JSONRPCMessage = JSONRPCNotification(
             method = "notify",
+            jsonrpc = JSONRPC_VERSION,
         )
 
         //language=JSON
@@ -73,7 +76,8 @@ class JsonRpcSerializationTest {
     fun testJSONRPCSuccessResponse() {
         val response: JSONRPCMessage = JSONRPCSuccessResponse(
             id = RequestId.NumberId(99),
-            result = JsonPrimitive(100)
+            result = JsonPrimitive(100),
+            jsonrpc = JSONRPC_VERSION,
         )
 
         //language=JSON
@@ -90,7 +94,8 @@ class JsonRpcSerializationTest {
     fun testJSONRPCErrorResponse() {
         val response: JSONRPCMessage = JSONRPCErrorResponse(
             id = RequestId.NumberId(123),
-            error = JSONRPCError(code = -32602, message = "Invalid params")
+            error = JSONRPCError(code = -32602, message = "Invalid params"),
+            jsonrpc = JSONRPC_VERSION,
         )
 
         //language=JSON
@@ -107,7 +112,8 @@ class JsonRpcSerializationTest {
     fun testJSONRPCErrorResponseWithoutId() {
         val response: JSONRPCMessage = JSONRPCErrorResponse(
             id = null,
-            error = JSONRPCError(code = -32700, message = "Parse error")
+            error = JSONRPCError(code = -32700, message = "Parse error"),
+            jsonrpc = JSONRPC_VERSION,
         )
 
         //language=JSON

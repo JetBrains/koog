@@ -11,7 +11,6 @@ val excluded = setOf(
     ":agents:agents-test",
     ":agents:agents-ext",
     ":agents:agents-features:agents-features-sql", // Optional SQL persistence provider
-    ":a2a:a2a-test", // Testing utilities for A2A protocol compliance
     ":agents:agents-mcp-server",
     ":integration-tests",
     ":test-utils",
@@ -28,6 +27,8 @@ val excluded = setOf(
     ":a2a:a2a-transport:a2a-transport-core-rest",
     ":a2a:a2a-transport:a2a-transport-server-rest",
     ":a2a:a2a-transport:a2a-transport-client-rest",
+    ":a2a:a2a-test",
+    ":a2a:test-tck:a2a-test-server-tck",
 
     project.path, // the current project should not depend on itself
 )

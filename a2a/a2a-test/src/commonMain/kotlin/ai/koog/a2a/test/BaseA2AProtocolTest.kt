@@ -33,6 +33,9 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
+import kotlin.time.Duration
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 /**
  * Abstract base class containing transport-agnostic A2A protocol compliance tests.
@@ -42,8 +45,10 @@ import kotlin.test.Test
  *
  * @property client The A2A client instance to test against. Should be connected and ready to use.
  */
+@OptIn(ExperimentalUuidApi::class)
 @Suppress("FunctionName")
 abstract class BaseA2AProtocolTest {
+    protected abstract val testTimeout: Duration
 
     /**
      * The A2A client instance to test. Must be connected and ready to use.
@@ -51,7 +56,7 @@ abstract class BaseA2AProtocolTest {
     protected abstract var client: A2AClient
 
     @Test
-    fun `test get agent card`() = runTest {
+    fun `test get agent card`() = runTest(timeout = testTimeout) {
         val agentCard = client.getAgentCard()
 
         // Assert on the full AgentCard structure
@@ -96,7 +101,7 @@ abstract class BaseA2AProtocolTest {
     }
 
     @Test
-    fun `test get authenticated extended agent card`() = runTest {
+    fun `test get authenticated extended agent card`() = runTest(timeout = testTimeout) {
         val request = Request<Nothing?>(data = null)
 
         val response = client.getAuthenticatedExtendedAgentCard(request)
@@ -153,10 +158,11 @@ abstract class BaseA2AProtocolTest {
     }
 
     @Test
-    fun `test send message`() = runTest {
+    fun `test send message`() = runTest(timeout = testTimeout) {
         val request = Request(
             data = MessageSendParams(
                 message = Message(
+                    messageId = Uuid.random().toString(),
                     role = Role.User,
                     parts = listOf(
                         TextPart("hello world"),
@@ -180,10 +186,11 @@ abstract class BaseA2AProtocolTest {
     }
 
     @Test
-    fun `test send message streaming`() = runTest {
+    fun `test send message streaming`() = runTest(timeout = testTimeout) {
         val createTaskRequest = Request(
             data = MessageSendParams(
                 message = Message(
+                    messageId = Uuid.random().toString(),
                     role = Role.User,
                     parts = listOf(
                         TextPart("do task"),
@@ -241,10 +248,11 @@ abstract class BaseA2AProtocolTest {
     }
 
     @Test
-    fun `test get task`() = runTest {
+    fun `test get task`() = runTest(timeout = testTimeout) {
         val createTaskRequest = Request(
             data = MessageSendParams(
                 message = Message(
+                    messageId = Uuid.random().toString(),
                     role = Role.User,
                     parts = listOf(
                         TextPart("do task"),
@@ -275,10 +283,11 @@ abstract class BaseA2AProtocolTest {
     }
 
     @Test
-    fun `test cancel task`() = runTest {
+    fun `test cancel task`() = runTest(timeout = testTimeout) {
         val createTaskRequest = Request(
             data = MessageSendParams(
                 message = Message(
+                    messageId = Uuid.random().toString(),
                     role = Role.User,
                     parts = listOf(
                         TextPart("do cancelable task"),
@@ -312,10 +321,11 @@ abstract class BaseA2AProtocolTest {
     }
 
     @Test
-    fun `test resubscribe task`() = runTest {
+    fun `test resubscribe task`() = runTest(timeout = testTimeout) {
         val createTaskRequest = Request(
             data = MessageSendParams(
                 message = Message(
+                    messageId = Uuid.random().toString(),
                     role = Role.User,
                     parts = listOf(
                         TextPart("do long-running task"),
@@ -365,10 +375,11 @@ abstract class BaseA2AProtocolTest {
     }
 
     @Test
-    fun `test push notification configs`() = runTest {
+    fun `test push notification configs`() = runTest(timeout = testTimeout) {
         val createTaskRequest = Request(
             data = MessageSendParams(
                 message = Message(
+                    messageId = Uuid.random().toString(),
                     role = Role.User,
                     parts = listOf(
                         TextPart("do long-running task"),

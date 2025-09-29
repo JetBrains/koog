@@ -28,6 +28,7 @@ import ai.koog.a2a.transport.jsonrpc.model.JSONRPCErrorResponse
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCJson
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCRequest
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCSuccessResponse
+import ai.koog.a2a.transport.jsonrpc.model.JSONRPC_VERSION
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
@@ -43,7 +44,10 @@ import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.fail
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
+@OptIn(ExperimentalUuidApi::class)
 class HttpJSONRPCClientTransportTest {
 
     private val json = JSONRPCJson
@@ -67,7 +71,8 @@ class HttpJSONRPCClientTransportTest {
 
             val jsonRpcResponse = JSONRPCSuccessResponse(
                 id = expectedResponse.id,
-                result = json.encodeToJsonElement(expectedResponse.data)
+                result = json.encodeToJsonElement(expectedResponse.data),
+                jsonrpc = JSONRPC_VERSION,
             )
 
             respond(
@@ -130,6 +135,7 @@ class HttpJSONRPCClientTransportTest {
         val id = RequestId.StringId("test-2")
 
         val testMessage = Message(
+            messageId = Uuid.random().toString(),
             role = Role.User,
             parts = listOf(TextPart("Hello, agent!")),
             taskId = "task-123"
@@ -190,12 +196,14 @@ class HttpJSONRPCClientTransportTest {
                 status = TaskStatus(
                     state = TaskState.Working,
                     message = Message(
+                        messageId = Uuid.random().toString(),
                         role = Role.Agent,
                         parts = listOf(TextPart("Working on your request..."))
                     )
                 ),
                 history = listOf(
                     Message(
+                        messageId = Uuid.random().toString(),
                         role = Role.User,
                         parts = listOf(TextPart("Hello, agent!")),
                         taskId = "task-123"
@@ -231,6 +239,7 @@ class HttpJSONRPCClientTransportTest {
                 status = TaskStatus(
                     state = TaskState.Canceled,
                     message = Message(
+                        messageId = Uuid.random().toString(),
                         role = Role.Agent,
                         parts = listOf(TextPart("Task has been canceled."))
                     )
@@ -390,6 +399,7 @@ class HttpJSONRPCClientTransportTest {
         val id = RequestId.StringId("test-error-1")
 
         val testMessage = Message(
+            messageId = Uuid.random().toString(),
             role = Role.User,
             parts = listOf(TextPart("Hello, agent!")),
             taskId = "invalid-task-id"
@@ -421,7 +431,8 @@ class HttpJSONRPCClientTransportTest {
                     code = A2AErrorCodes.INVALID_PARAMS,
                     message = "Invalid method parameters",
                     data = json.encodeToJsonElement("The message parameters are invalid")
-                )
+                ),
+                jsonrpc = JSONRPC_VERSION,
             )
 
             respond(

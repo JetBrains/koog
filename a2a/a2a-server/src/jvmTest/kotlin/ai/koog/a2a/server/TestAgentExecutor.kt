@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalUuidApi::class)
+
 package ai.koog.a2a.server
 
 import ai.koog.a2a.model.Message
@@ -12,9 +14,12 @@ import ai.koog.a2a.model.TextPart
 import ai.koog.a2a.server.agent.AgentExecutor
 import ai.koog.a2a.server.session.RequestContext
 import ai.koog.a2a.server.session.SessionEventProcessor
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.datetime.Clock
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 private suspend fun sayHello(
     context: RequestContext<MessageSendParams>,
@@ -22,6 +27,7 @@ private suspend fun sayHello(
 ) {
     eventProcessor.sendMessage(
         Message(
+            messageId = Uuid.random().toString(),
             role = Role.Agent,
             parts = listOf(TextPart("Hello World")),
             contextId = context.contextId,
@@ -55,6 +61,7 @@ private suspend fun doTask(
             status = TaskStatus(
                 state = TaskState.Working,
                 message = Message(
+                    messageId = Uuid.random().toString(),
                     role = Role.Agent,
                     parts = listOf(TextPart("Working on task")),
                     contextId = context.contextId,
@@ -74,6 +81,7 @@ private suspend fun doTask(
             status = TaskStatus(
                 state = TaskState.Completed,
                 message = Message(
+                    messageId = Uuid.random().toString(),
                     role = Role.Agent,
                     parts = listOf(TextPart("Task completed")),
                     contextId = context.contextId,
@@ -130,6 +138,7 @@ private suspend fun doLongRunningTask(
                 status = TaskStatus(
                     state = TaskState.Working,
                     message = Message(
+                        messageId = Uuid.random().toString(),
                         role = Role.Agent,
                         parts = listOf(TextPart("Still working $it")),
                         contextId = context.contextId,
@@ -171,6 +180,7 @@ class TestAgentExecutor : AgentExecutor {
             else -> {
                 eventProcessor.sendMessage(
                     Message(
+                        messageId = Uuid.random().toString(),
                         role = Role.Agent,
                         parts = listOf(TextPart("Sorry, I don't understand you")),
                         contextId = context.contextId
@@ -183,9 +193,9 @@ class TestAgentExecutor : AgentExecutor {
     override suspend fun cancel(
         context: RequestContext<TaskIdParams>,
         eventProcessor: SessionEventProcessor,
-        agentJob: Job?
+        agentJob: Deferred<Unit>?
     ) {
-        agentJob?.cancel()
+        agentJob?.cancelAndJoin()
 
         eventProcessor.sendTaskEvent(
             TaskStatusUpdateEvent(
@@ -194,6 +204,7 @@ class TestAgentExecutor : AgentExecutor {
                 status = TaskStatus(
                     state = TaskState.Canceled,
                     message = Message(
+                        messageId = Uuid.random().toString(),
                         role = Role.Agent,
                         parts = listOf(TextPart("Task canceled")),
                         contextId = context.contextId,

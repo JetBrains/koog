@@ -1,7 +1,6 @@
 package ai.koog.a2a.server
 
 import ai.koog.a2a.exceptions.A2AAuthenticatedExtendedCardNotConfiguredException
-import ai.koog.a2a.exceptions.A2AInternalErrorException
 import ai.koog.a2a.exceptions.A2AInvalidParamsException
 import ai.koog.a2a.exceptions.A2APushNotificationNotSupportedException
 import ai.koog.a2a.exceptions.A2ATaskNotCancelableException
@@ -25,13 +24,12 @@ import ai.koog.a2a.server.messages.InMemoryMessageStorage
 import ai.koog.a2a.server.messages.MessageStorage
 import ai.koog.a2a.server.notifications.PushNotificationConfigStorage
 import ai.koog.a2a.server.notifications.PushNotificationSender
-import ai.koog.a2a.server.session.AgentSession
 import ai.koog.a2a.server.session.IdGenerator
+import ai.koog.a2a.server.session.LazySession
 import ai.koog.a2a.server.session.RequestContext
 import ai.koog.a2a.server.session.SessionEventProcessor
 import ai.koog.a2a.server.session.SessionManager
 import ai.koog.a2a.server.session.UuidIdGenerator
-import ai.koog.a2a.server.session.withTaskLock
 import ai.koog.a2a.server.tasks.ContextTaskStorage
 import ai.koog.a2a.server.tasks.InMemoryTaskStorage
 import ai.koog.a2a.server.tasks.TaskStorage
@@ -39,19 +37,19 @@ import ai.koog.a2a.transport.Request
 import ai.koog.a2a.transport.RequestHandler
 import ai.koog.a2a.transport.Response
 import ai.koog.a2a.transport.ServerCallContext
+import ai.koog.a2a.utils.KeyedMutex
+import ai.koog.a2a.utils.withLock
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import kotlinx.datetime.Clock
 
 /**
  * Default implementation of A2A server responsible for handling requests from A2A clients according to the
@@ -177,14 +175,13 @@ import kotlinx.datetime.Clock
  *
  *     override suspend fun cancel(
  *         context: RequestContext<TaskIdParams>,
- *         session: Session
+ *         eventProcessor: SessionEventProcessor,
+ *         agentJob: Deferred<Unit>?,
  *     ) {
+ *         agentJob?.cancelAndJoin()
  *         // Access user data for audit logging
  *         val user = context.callContext.getFromStateOrNull(AuthStateKeys.USER)
  *         log.info("Task ${context.taskId} canceled by user ${user?.id}")
- *
- *         // Default cancellation behavior
- *         super.cancel(context, session)
  *     }
  * }
  * ```
@@ -305,8 +302,6 @@ import kotlinx.datetime.Clock
  * @param pushSender Optional push notification sender implementation (defaults to `null`)
  * @param idGenerator Generator for new task and context IDs (defaults to [UuidIdGenerator])
  * @param coroutineScope Scope for managing all sessions, agent jobs, event processing, etc.
- * @param clock Clock instance for timestamp generation (defaults to [Clock.System])
- * @param sessionManager Manager for managing agent sessions (defaults to [SessionManager])
  *
  * @see AgentExecutor for implementing agent business logic
  * @see TaskStorage for persisting tasks
@@ -325,10 +320,21 @@ public open class A2AServer(
     protected val pushSender: PushNotificationSender? = null,
     protected val idGenerator: IdGenerator = UuidIdGenerator,
     protected val coroutineScope: CoroutineScope = CoroutineScope(SupervisorJob()),
-    protected val clock: Clock = Clock.System,
 ) : RequestHandler {
+    /**
+     * Mutex for locking specific tasks by their IDs.
+     */
+    protected val tasksMutex: KeyedMutex<String> = KeyedMutex()
+
+    /**
+     * Special cancellation key for additional set of task cancellation locks.
+     */
+    protected fun cancelKey(taskId: String): String = "cancel:$taskId"
+
     protected open val sessionManager: SessionManager = SessionManager(
         coroutineScope = coroutineScope,
+        cancelKey = ::cancelKey,
+        tasksMutex = tasksMutex,
         taskStorage = taskStorage,
         pushConfigStorage = pushConfigStorage,
         pushSender = pushSender,
@@ -361,29 +367,33 @@ public open class A2AServer(
         ctx: ServerCallContext
     ): Flow<Response<Event>> = channelFlow {
         val message = request.data.message
-        val contextId = message.contextId ?: idGenerator.generateContextId(message)
+
+        if (message.parts.isEmpty()) {
+            throw A2AInvalidParamsException("Empty message parts are not supported")
+        }
+
         val taskId = message.taskId ?: idGenerator.generateTaskId(message)
 
-        val session = sessionManager.withTaskLock(taskId) {
+        val session = tasksMutex.withLock(taskId) {
+            // If there's a currently running session for the same task, wait for it to finish.
+            sessionManager.getSession(taskId)?.join()
+
             // Check if message links to a task.
             val task: Task? = message.taskId?.let { taskId ->
-                // Check if the specified task exists and message context id matches the task context id.
+                // Check if the specified task exists
                 val task = taskStorage.get(taskId, historyLength = 0, includeArtifacts = false)
                     ?: throw A2ATaskNotFoundException("Task '$taskId' not found")
-
-                if (message.contextId != task.contextId) {
-                    throw A2AInvalidParamsException("Message context id '${message.contextId}' doesn't match task context id '${task.contextId}'")
-                }
 
                 task
             }
 
             // Create event processor for the session based on the input data.
             val eventProcessor = SessionEventProcessor(
-                contextId = contextId,
+                contextId = task?.contextId
+                    ?: message.contextId
+                    ?: idGenerator.generateContextId(message),
                 taskId = taskId,
                 taskStorage = taskStorage,
-                task = task,
             )
 
             // Create request context based on the request information.
@@ -397,18 +407,13 @@ public open class A2AServer(
                 task = task,
             )
 
-            // Create agent execution session
-            AgentSession(coroutineScope, eventProcessor) {
+            LazySession(
+                coroutineScope = coroutineScope,
+                eventProcessor = eventProcessor,
+            ) {
                 agentExecutor.execute(requestContext, eventProcessor)
             }.also {
-                try {
-                    // Add to session manager, it will handle monitoring and closing once the session is completed (successfully or not).
-                    sessionManager.addSession(it)
-                } catch (_: IllegalArgumentException) {
-                    throw A2AUnsupportedOperationException(
-                        "Task '${request.data.message.taskId}' is already running, can't send messages to the task that hasn't yielded control."
-                    )
-                }
+                sessionManager.addSession(it)
             }
         }
 
@@ -421,7 +426,8 @@ public open class A2AServer(
         }
 
         // Start the session to execute the agent and wait for it to finish.
-        session.join()
+        // Using await here to propagate any exceptions thrown by the agent execution.
+        session.agentJob.await()
     }
 
     override suspend fun onSendMessage(
@@ -432,31 +438,24 @@ public open class A2AServer(
         // Reusing streaming logic here, because it's essentially the same, only we need some particular event from the stream
         val eventStream = onSendMessageCommon(request, ctx)
 
-        return if (messageConfiguration?.blocking == true) {
+        val event = if (messageConfiguration?.blocking == true) {
             // If blocking is requested, attempt to wait for the last event, until the current turn of the agent execution is finished.
-            val lastEventResponse = eventStream.last()
-
-            when (val eventData = lastEventResponse.data) {
-                is Message -> Response(data = eventData, id = lastEventResponse.id)
-                is TaskEvent ->
-                    taskStorage
-                        .get(
-                            eventData.taskId,
-                            historyLength = messageConfiguration.historyLength,
-                            includeArtifacts = true
-                        )
-                        ?.let { Response(data = it, id = lastEventResponse.id) }
-                        ?: throw A2ATaskNotFoundException("Task '${eventData.taskId}' not found after the agent execution")
-            }
+            eventStream.last()
         } else {
-            // Else read the first event from the stream, check that it's a proper communication event and return it.
-            val firstEventResponse = eventStream.first()
+            eventStream.first()
+        }
 
-            when (val eventData = firstEventResponse.data) {
-                is Message -> Response(data = eventData, id = firstEventResponse.id)
-                is Task -> Response(data = eventData, id = firstEventResponse.id)
-                else -> throw A2AInternalErrorException("Got unexpected event type from the agent '${eventData::class.simpleName}'")
-            }
+        return when (val eventData = event.data) {
+            is Message -> Response(data = eventData, id = event.id)
+            is TaskEvent ->
+                taskStorage
+                    .get(
+                        eventData.taskId,
+                        historyLength = messageConfiguration?.historyLength,
+                        includeArtifacts = true
+                    )
+                    ?.let { Response(data = it, id = event.id) }
+                    ?: throw A2ATaskNotFoundException("Task '${eventData.taskId}' not found after the agent execution")
         }
     }
 
@@ -465,7 +464,7 @@ public open class A2AServer(
         ctx: ServerCallContext
     ): Flow<Response<Event>> = flow {
         checkStreamingSupport()
-        emitAll(onSendMessageCommon(request, ctx))
+        onSendMessageCommon(request, ctx).collect(this)
     }
 
     override suspend fun onGetTask(
@@ -488,58 +487,69 @@ public open class A2AServer(
         val taskParams = request.data
         val taskId = taskParams.id
 
-        sessionManager.withTaskLock(taskId) {
-            val session = sessionManager.getSession(taskParams.id)
+        /*
+         Cancellation uses two lock levels. The first is the standard task lock.
+         If it’s already held by another request, ignore it because cancellation takes priority.
+         If it’s not held, acquire it to block new requests while the cancellation is in progress.
+         */
+        val lockAcquired = tasksMutex.tryLock(taskId)
 
-            val task = taskStorage.get(taskParams.id, historyLength = 0, includeArtifacts = true)
-                ?: throw A2ATaskNotFoundException("Task '${taskParams.id}' not found")
+        return try {
+            /*
+             The second lock is a per-task cancellation lock.
+             It’s always taken during cancellation to serialize cancel operations and allow them to proceed even if the
+             regular task lock is held. It prevents overlapping cancels and delays session teardown so the event processor
+             isn’t closed immediately after the agent job is canceled. This allows the cancel handler to emit additional
+             cancellation events through the same processor and session, ensuring that existing subscribers receive all events.
+             */
+            tasksMutex.withLock(cancelKey(taskId)) {
+                val session = sessionManager.getSession(taskParams.id)
 
-            // Task is not running, check if it exists in the storage.
-            if (session == null) {
-                // Task exists but not running - check if it is already canceled.
-                if (task.status.state == TaskState.Canceled) {
-                    return Response(data = task, id = request.id)
-                }
+                val task = taskStorage.get(taskParams.id, historyLength = 0, includeArtifacts = true)
+                    ?: throw A2ATaskNotFoundException("Task '${taskParams.id}' not found")
 
-                // If the task is not canceled and in the terminal state, throw.
-                if (task.status.state.terminal) {
+                // Task is not running, check if it's already in a terminal state.
+                if (session == null && task.status.state.terminal) {
                     throw A2ATaskNotCancelableException("Task '${taskParams.id}' is already in terminal state ${task.status.state}")
                 }
+
+                val eventProcessor = session?.eventProcessor ?: SessionEventProcessor(
+                    contextId = task.contextId,
+                    taskId = task.id,
+                    taskStorage = taskStorage,
+                )
+
+                // Create request context based on the request information.
+                val requestContext = RequestContext(
+                    callContext = ctx,
+                    params = request.data,
+                    taskStorage = ContextTaskStorage(eventProcessor.contextId, taskStorage),
+                    messageStorage = ContextMessageStorage(eventProcessor.contextId, messageStorage),
+                    contextId = eventProcessor.contextId,
+                    taskId = eventProcessor.taskId,
+                    task = task,
+                )
+
+                // Attempt to cancel the agent execution and wait until it's finished.
+                agentExecutor.cancel(requestContext, eventProcessor, session?.agentJob)
+
+                // Return the final task state.
+                Response(
+                    data = taskStorage.get(taskParams.id, historyLength = 0, includeArtifacts = true)
+                        ?.also {
+                            if (it.status.state != TaskState.Canceled) {
+                                throw A2ATaskNotCancelableException("Task '${taskParams.id}' was not canceled successfully, current state is ${it.status.state}")
+                            }
+                        }
+                        ?: throw A2ATaskNotFoundException("Task '${taskParams.id}' not found"),
+                    id = request.id,
+                )
             }
-
-            val eventProcessor = session?.eventProcessor ?: SessionEventProcessor(
-                contextId = task.contextId,
-                taskId = task.id,
-                taskStorage = taskStorage,
-                task = task,
-            )
-
-            // Create request context based on the request information.
-            val requestContext = RequestContext(
-                callContext = ctx,
-                params = request.data,
-                taskStorage = ContextTaskStorage(eventProcessor.contextId, taskStorage),
-                messageStorage = ContextMessageStorage(eventProcessor.contextId, messageStorage),
-                contextId = eventProcessor.contextId,
-                taskId = eventProcessor.taskId,
-                task = task,
-            )
-
-            // Attempt to cancel the agent execution and wait until it's finished.
-            agentExecutor.cancel(requestContext, eventProcessor, session?.agentJob)
+        } finally {
+            if (lockAcquired) {
+                tasksMutex.unlock(taskId)
+            }
         }
-
-        // Return the final task state.
-        return Response(
-            data = taskStorage.get(taskParams.id, historyLength = 0, includeArtifacts = true)
-                ?.also {
-                    if (it.status.state != TaskState.Canceled) {
-                        throw A2ATaskNotCancelableException("Task '${taskParams.id}' was not canceled successfully, current state is ${it.status.state}")
-                    }
-                }
-                ?: throw A2ATaskNotFoundException("Task '${taskParams.id}' not found"),
-            id = request.id,
-        )
     }
 
     override fun onResubscribeTask(
@@ -549,13 +559,11 @@ public open class A2AServer(
         checkStreamingSupport()
 
         val taskParams = request.data
-        val session = sessionManager.getSession(taskParams.id)
-            ?: throw A2AUnsupportedOperationException("Session for task '${taskParams.id}' is not currently running or task does not exist")
+        val session = sessionManager.getSession(taskParams.id) ?: return@flow
 
-        emitAll(
-            session.events
-                .map { event -> Response(data = event, id = request.id) }
-        )
+        session.events
+            .map { event -> Response(data = event, id = request.id) }
+            .collect(this)
     }
 
     override suspend fun onSetTaskPushNotificationConfig(

@@ -2,8 +2,6 @@ package ai.koog.a2a.transport.server.jsonrpc.http
 
 import ai.koog.a2a.annotations.InternalA2AApi
 import ai.koog.a2a.consts.A2AConsts
-import ai.koog.a2a.exceptions.A2AInvalidRequestException
-import ai.koog.a2a.exceptions.A2AParseException
 import ai.koog.a2a.model.AgentCard
 import ai.koog.a2a.transport.RequestHandler
 import ai.koog.a2a.transport.ServerCallContext
@@ -37,8 +35,6 @@ import io.ktor.sse.ServerSentEvent
 import io.ktor.util.toMap
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.serialization.SerializationException
-import kotlinx.serialization.json.decodeFromJsonElement
 
 /**
  * Implements A2A JSON-RPC server transport over HTTP using Ktor server
@@ -197,12 +193,10 @@ public class HttpJSONRPCServerTransport(
         // Handle incoming JSON-RPC requests, both regular and streaming
         post {
             runCatchingCancellable {
-                val request: JSONRPCRequest = call.receiveJSONRPCRequest()
-                val ctx: ServerCallContext = call.toServerCallContext()
+                val (request, a2aMethod) = parseJSONRPCRequest(call.receiveText())
+                val ctx = call.toServerCallContext()
 
                 runCatchingCancellable {
-                    val a2aMethod = parseA2AMethod(request)
-
                     if (a2aMethod.streaming) {
                         handleRequestStreaming(request, ctx)
                     } else {
@@ -263,24 +257,6 @@ public class HttpJSONRPCServerTransport(
         }
 
         call.respond(SSEServerContent(call, handle))
-    }
-
-    /**
-     * Converts raw request body to [JSONRPCRequest], following A2A specification for error handling.
-     */
-    private suspend fun ApplicationCall.receiveJSONRPCRequest(): JSONRPCRequest {
-        val jsonBody = try {
-            val rawBody = receiveText()
-            JSONRPCJson.parseToJsonElement(rawBody)
-        } catch (e: SerializationException) {
-            throw A2AParseException("Cannot parse request body to JSON:\n${e.message}")
-        }
-
-        return try {
-            JSONRPCJson.decodeFromJsonElement<JSONRPCRequest>(jsonBody)
-        } catch (e: SerializationException) {
-            throw A2AInvalidRequestException("Cannot parse request params to JSON-RPC request:\n${e.message}")
-        }
     }
 
     private fun ApplicationCall.toServerCallContext(): ServerCallContext {

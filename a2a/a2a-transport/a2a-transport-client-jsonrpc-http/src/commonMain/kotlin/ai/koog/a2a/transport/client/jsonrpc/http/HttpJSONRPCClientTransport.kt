@@ -20,6 +20,7 @@ import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 
 /**
  * Implementation of a JSON-RPC client transport using HTTP as the underlying communication protocol.
@@ -83,13 +84,12 @@ public class HttpJSONRPCClientTransport(
                 setBody(request)
             }
         ) {
-            incoming.collect { event ->
-                requireNotNull(event.data) { "SSE data must not be null" }
-                    .let { data ->
-                        val response = JSONRPCJson.decodeFromString<JSONRPCResponse>(data)
-                        emit(response)
-                    }
-            }
+            incoming
+                .map { event ->
+                    requireNotNull(event.data) { "SSE data must not be null" }
+                        .let { data -> JSONRPCJson.decodeFromString<JSONRPCResponse>(data) }
+                }
+                .collect(this@flow)
         }
     }
 

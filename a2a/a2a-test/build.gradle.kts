@@ -11,10 +11,10 @@ kotlin {
                 api(project(":a2a:a2a-client"))
                 api(kotlin("test"))
                 api(kotlin("test-annotations-common"))
-                api(libs.kotest.assertions)
                 api(libs.kotlinx.coroutines.core)
                 api(libs.kotlinx.coroutines.test)
                 api(libs.kotlinx.serialization.json)
+                implementation(libs.kotest.assertions)
                 implementation(libs.kotlinx.coroutines.test)
             }
         }

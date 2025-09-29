@@ -38,7 +38,7 @@ kotlin {
                 implementation(libs.ktor.client.cio)
                 implementation(libs.ktor.client.logging)
                 implementation(libs.testcontainers.junit)
-                runtimeOnly(libs.slf4j.simple)
+                runtimeOnly(libs.logback.classic)
             }
         }
 

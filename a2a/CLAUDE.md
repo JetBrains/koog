@@ -52,7 +52,7 @@ The A2A (Agent-to-Agent) module is a **meta-module** within the larger Koog proj
 - **kotest-assertions**: Rich assertion library for complex objects
 - **kotlinx-coroutines-test**: Testing coroutines with runTest
 - **testcontainers**: Docker-based integration testing
-- **slf4j-simple**: Runtime logging for tests
+- **logback-classic**: Runtime logging for tests
 
 ### Platform Support
 - **JVM**: Full server and client support

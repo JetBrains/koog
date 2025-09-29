@@ -28,6 +28,7 @@ import ai.koog.a2a.transport.jsonrpc.model.JSONRPCErrorResponse
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCJson
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCRequest
 import ai.koog.a2a.transport.jsonrpc.model.JSONRPCSuccessResponse
+import ai.koog.a2a.transport.jsonrpc.model.JSONRPC_VERSION
 import io.ktor.client.plugins.sse.sse
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -251,7 +252,8 @@ class HttpJSONRPCServerTransportTest {
             val jsonRpcRequest = JSONRPCRequest(
                 id = request.id,
                 method = method.value,
-                params = json.encodeToJsonElement(request.data)
+                params = json.encodeToJsonElement(request.data),
+                jsonrpc = JSONRPC_VERSION,
             )
 
             val response = client.post("/a2a") {
@@ -293,7 +295,8 @@ class HttpJSONRPCServerTransportTest {
             val jsonRpcRequest = JSONRPCRequest(
                 id = request.id,
                 method = method.value,
-                params = json.encodeToJsonElement(request.data)
+                params = json.encodeToJsonElement(request.data),
+                jsonrpc = JSONRPC_VERSION,
             )
 
             val jsonrpcResponses = buildList {
@@ -596,7 +599,8 @@ class HttpJSONRPCServerTransportTest {
             val jsonRpcRequest = JSONRPCRequest(
                 id = requestId,
                 method = "unknown.method",
-                params = JsonNull
+                params = JsonNull,
+                jsonrpc = JSONRPC_VERSION,
             )
 
             val response = client.post("/a2a") {
