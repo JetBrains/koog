@@ -354,7 +354,6 @@ public abstract class AIAgentServiceBase<Input, Output> : AIAgentService<Input, 
         managedAgents.remove(id) != null
     }
 
-
     /**
      * Retrieves an AI agent managed by this service based on the provided unique identifier.
      *

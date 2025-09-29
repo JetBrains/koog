@@ -25,9 +25,11 @@ class AIAgentServiceTest {
     )
 
     private fun mockGraphStrategy() = strategy<String, String>("mock") {
-        edge(nodeStart forwardTo nodeFinish transformed { input ->
-            "ok:$input"
-        })
+        edge(
+            nodeStart forwardTo nodeFinish transformed { input ->
+                "ok:$input"
+            }
+        )
     }
 
     private fun mockFunctionalStrategy(): AIAgentFunctionalStrategy<Int, Int> =
