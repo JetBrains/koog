@@ -11,6 +11,7 @@ val excluded = setOf(
     ":agents:agents-test",
     ":agents:agents-ext",
     ":agents:agents-features:agents-features-sql", // Optional SQL persistence provider
+    ":a2a:a2a-test", // Testing utilities for A2A protocol compliance
     ":agents:agents-mcp-server",
     ":integration-tests",
     ":test-utils",
