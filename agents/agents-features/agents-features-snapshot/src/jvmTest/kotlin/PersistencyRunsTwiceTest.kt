@@ -97,10 +97,10 @@ class PersistencyRunsTwiceTest {
             }
         }
 
-        val agent = agentService.createAgent()
+        val agentId = "100500"
 
         // Act: first run
-        val result = runCatching { agent.run("Start the test") }
+        val result = runCatching { agentService.createAgentAndRun("Start the test", id = agentId) }
 
         // Assert: first run fails
         assert(result.isFailure)

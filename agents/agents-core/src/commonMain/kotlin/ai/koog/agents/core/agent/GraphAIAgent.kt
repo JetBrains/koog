@@ -16,13 +16,13 @@ import ai.koog.agents.core.environment.GenericAgentEnvironment
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.AIAgentGraphPipeline
+import ai.koog.agents.core.feature.AIAgentPipeline
 import ai.koog.agents.core.feature.PromptExecutorProxy
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.utils.Closeable
 import ai.koog.prompt.executor.model.PromptExecutor
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
@@ -58,26 +58,21 @@ public open class GraphAIAgent<Input, Output>(
     public val promptExecutor: PromptExecutor,
     override val agentConfig: AIAgentConfig,
     public val toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
-    private val strategy: AIAgentGraphStrategy<Input, Output>,
+    strategy: AIAgentGraphStrategy<Input, Output>,
     id: String? = null, // If null, ID will be initialized as a random UUID lazily
     public val clock: Clock = Clock.System,
     private val installFeatures: FeatureContext.() -> Unit = {},
-) : AIAgent<Input, Output>, Closeable {
+) : StatefulSingleUseAIAgent<Input, Output, AIAgentGraphContextBase>(
+    strategy = strategy,
+    logger = logger,
+    agentId = id
+), Closeable {
 
     private companion object {
         private val logger = KotlinLogging.logger {}
     }
 
-    // Random UUID should be invoked lazily, so when compiling a native image, it will happen on runtime
-    override val id: String by lazy { id ?: Uuid.random().toString() }
-
-    override suspend fun isRunning(): Boolean = agentStateMutex.withLock { isRunning }
-
-    override suspend fun finished(): Boolean = agentStateMutex.withLock { wasStarted && !isRunning }
-
-    override suspend fun resultIfReady(): Output? = agentStateMutex.withLock { if (finished()) agentResult else null }
-
-    private val pipeline = AIAgentGraphPipeline(clock)
+    override val pipeline: AIAgentGraphPipeline = AIAgentGraphPipeline(clock)
 
     private val environment = GenericAgentEnvironment(
         this@GraphAIAgent.id,
@@ -109,138 +104,49 @@ public open class GraphAIAgent<Input, Output>(
         }
     }
 
-    private var wasStarted = false
-    private var isRunning = false
-    private var agentResult: Output? = null
-
-    private var rootAgentContext: AIAgentGraphContextBase? = null
-
-    private val agentStateMutex = Mutex()
-
     init {
         FeatureContext(this).installFeatures()
     }
 
-    override suspend fun run(agentInput: Input): Output {
-        agentStateMutex.withLock {
-            if (wasStarted) {
-                throw IllegalStateException("Agent was already started")
-            }
+    override suspend fun prepareContext(agentInput: Input, runId: String): AIAgentGraphContextBase {
+        val stateManager = AIAgentStateManager()
+        val storage = AIAgentStorage()
 
-            isRunning = true
-            wasStarted = true
-        }
-
-        pipeline.prepareFeatures()
-
-        val sessionUuid = Uuid.random()
-        val runId = sessionUuid.toString()
-
-        return withContext(
-            AgentRunInfoContextElement(
-                agentId = this@GraphAIAgent.id,
-                runId = runId,
-                agentConfig = agentConfig,
-                strategyName = strategy.name
-            )
-        ) {
-            val stateManager = AIAgentStateManager()
-            val storage = AIAgentStorage()
-
-            // Environment (initially equal to the current agent), transformed by some features
-            //   (ex: testing feature transforms it into a MockEnvironment with mocked tools)
-            val preparedEnvironment =
-                pipeline.onAgentEnvironmentTransforming(
-                    strategy = strategy,
-                    agent = this@GraphAIAgent,
-                    baseEnvironment = environment
-                )
-
-            agentStateMutex.withLock {
-                rootAgentContext = AIAgentGraphContext(
-                    environment = preparedEnvironment,
-                    agentInput = agentInput,
-                    agentInputType = inputType,
-                    config = agentConfig,
-                    llm = AIAgentLLMContext(
-                        tools = toolRegistry.tools.map { it.descriptor },
-                        toolRegistry = toolRegistry,
-                        prompt = agentConfig.prompt,
-                        model = agentConfig.model,
-                        promptExecutor = PromptExecutorProxy(
-                            executor = promptExecutor,
-                            pipeline = pipeline,
-                            runId = runId
-                        ),
-                        environment = preparedEnvironment,
-                        config = agentConfig,
-                        clock = clock
-                    ),
-                    stateManager = stateManager,
-                    storage = storage,
-                    runId = runId,
-                    strategyName = strategy.name,
-                    pipeline = pipeline,
-                    agentId = this@GraphAIAgent.id,
-                )
-            }
-
-            logger.debug {
-                formatLog(
-                    agentId = this@GraphAIAgent.id,
-                    runId = runId,
-                    message = "Starting agent execution"
-                )
-            }
-
-            pipeline.onAgentStarting<Input, Output>(
-                runId = runId,
+        // Environment (initially equal to the current agent), transformed by some features
+        //   (ex: testing feature transforms it into a MockEnvironment with mocked tools)
+        val preparedEnvironment =
+            pipeline.onAgentEnvironmentTransforming(
+                strategy = strategy,
                 agent = this@GraphAIAgent,
-                context = rootAgentContext!!
+                baseEnvironment = environment
             )
 
-            val result = try {
-                strategy.execute(context = rootAgentContext!!, input = agentInput)
-            } catch (e: Throwable) {
-                logger.error(e) { "Execution exception reported by server!" }
-                pipeline.onAgentExecutionFailed(agentId = this@GraphAIAgent.id, runId = runId, throwable = e)
-                throw e
-            } finally {
-                agentStateMutex.withLock {
-                    isRunning = false
-                }
-            }
-
-            logger.debug {
-                formatLog(
-                    agentId = this@GraphAIAgent.id,
-                    runId = runId,
-                    message = "Finished agent execution"
-                )
-            }
-            pipeline.onAgentCompleted(
-                agentId = this@GraphAIAgent.id,
-                runId = runId,
-                result = result,
-                resultType = outputType
-            )
-
-            agentStateMutex.withLock {
-                agentResult = result
-            }
-
-            return@withContext result ?: error("result is null")
-        }
-    }
-
-    override suspend fun withRunningContext(action: suspend AIAgentContext.() -> Unit): Boolean =
-        agentStateMutex.withLock {
-            rootAgentContext?.action()?.let { true } ?: false
-        }
-
-    override suspend fun close() {
-        pipeline.onAgentClosing(agentId = this@GraphAIAgent.id)
-        pipeline.closeFeaturesStreamProviders()
+        return AIAgentGraphContext(
+            environment = preparedEnvironment,
+            agentInput = agentInput,
+            agentInputType = inputType,
+            config = agentConfig,
+            llm = AIAgentLLMContext(
+                tools = toolRegistry.tools.map { it.descriptor },
+                toolRegistry = toolRegistry,
+                prompt = agentConfig.prompt,
+                model = agentConfig.model,
+                promptExecutor = PromptExecutorProxy(
+                    executor = promptExecutor,
+                    pipeline = pipeline,
+                    runId = runId
+                ),
+                environment = preparedEnvironment,
+                config = agentConfig,
+                clock = clock
+            ),
+            stateManager = stateManager,
+            storage = storage,
+            runId = runId,
+            strategyName = strategy.name,
+            pipeline = pipeline,
+            agentId = this@GraphAIAgent.id,
+        )
     }
 
     private fun <Config : FeatureConfig, Feature : Any> install(
@@ -248,7 +154,4 @@ public open class GraphAIAgent<Input, Output>(
         configure: Config.() -> Unit
     ) =
         pipeline.install(feature, configure)
-
-    private fun formatLog(agentId: String, runId: String, message: String): String =
-        "[agent id: $agentId, run id: $runId] $message"
 }

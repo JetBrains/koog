@@ -3,6 +3,7 @@ package ai.koog.agents.core.feature
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.context.AIAgentContext
+import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
@@ -198,11 +199,10 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
     public suspend fun onAgentCompleted(
         agentId: String,
         runId: String,
-        result: Any?,
-        resultType: KType,
+        result: Any?
     ) {
         val eventContext =
-            AgentCompletedContext(agentId = agentId, runId = runId, result = result, resultType = resultType)
+            AgentCompletedContext(agentId = agentId, runId = runId, result = result)
         agentEventHandlers.values.forEach { handler -> handler.agentCompletedHandler.handle(eventContext) }
     }
 
@@ -261,7 +261,7 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
      * @return The transformed environment after all handlers have been applied
      */
     public suspend fun onAgentEnvironmentTransforming(
-        strategy: AIAgentGraphStrategy<*, *>,
+        strategy: AIAgentStrategy<*, *, AIAgentGraphContextBase>,
         agent: GraphAIAgent<*, *>,
         baseEnvironment: AIAgentEnvironment
     ): AIAgentEnvironment {
