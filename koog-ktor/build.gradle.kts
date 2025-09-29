@@ -54,6 +54,12 @@ kotlin {
                 implementation(libs.ktor.client.cio)
             }
         }
+
+        appleTest {
+            dependencies {
+                implementation(libs.ktor.client.darwin)
+            }
+        }
     }
 
     explicitApi()
