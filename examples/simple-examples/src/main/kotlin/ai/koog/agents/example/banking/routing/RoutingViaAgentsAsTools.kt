@@ -1,7 +1,8 @@
 package ai.koog.agents.example.banking.routing
 
 import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.agent.asTool
+import ai.koog.agents.core.agent.AIAgentService
+import ai.koog.agents.core.agent.createAgentTool
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.reflect.asTools
 import ai.koog.agents.example.ApiKeyService
@@ -18,7 +19,7 @@ fun main() = runBlocking {
     val apiKey = ApiKeyService.openAIApiKey // Your OpenAI API key
     val openAIExecutor = simpleOpenAIExecutor(apiKey)
 
-    val transferAgent = AIAgent(
+    val transferAgentService = AIAgentService(
         promptExecutor = openAIExecutor,
         llmModel = OpenAIModels.CostOptimized.GPT4oMini,
         systemPrompt = bankingAssistantSystemPrompt,
@@ -26,7 +27,7 @@ fun main() = runBlocking {
         toolRegistry = ToolRegistry { tools(MoneyTransferTools().asTools()) }
     )
 
-    val analysisAgent = AIAgent(
+    val analysisAgentService = AIAgentService(
         promptExecutor = openAIExecutor,
         llmModel = OpenAIModels.CostOptimized.GPT4oMini,
         systemPrompt = bankingAssistantSystemPrompt + transactionAnalysisPrompt,
@@ -40,14 +41,14 @@ fun main() = runBlocking {
         toolRegistry = ToolRegistry {
             tool(AskUser)
             tool(
-                transferAgent.asTool(
+                transferAgentService.createAgentTool(
                     agentName = "transferMoney",
                     agentDescription = "Transfers money and solves all arising problems",
                     inputDescription = "Transfer request"
                 )
             )
             tool(
-                analysisAgent.asTool(
+                analysisAgentService.createAgentTool(
                     agentName = "analyzeTransactions",
                     agentDescription = "Performs analytics for user transactions",
                     inputDescription = "Transaction analytics request"

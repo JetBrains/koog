@@ -3,7 +3,6 @@
 package ai.koog.agents.core.agent
 
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
@@ -11,7 +10,6 @@ import ai.koog.agents.core.environment.GenericAgentEnvironment
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentNonGraphFeature
 import ai.koog.agents.core.feature.AIAgentNonGraphPipeline
-import ai.koog.agents.core.feature.AIAgentPipeline
 import ai.koog.agents.core.feature.PromptExecutorProxy
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.tools.ToolRegistry
@@ -84,7 +82,6 @@ public class FunctionalAIAgent<Input, Output>(
     ) {
         pipeline.install(feature, configure)
     }
-
 
     init {
         FeatureContext(this).featureContext()

@@ -2,14 +2,12 @@ package ai.koog.agents.core.agent
 
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.element.AgentRunInfoContextElement
-import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
 import ai.koog.agents.core.feature.AIAgentPipeline
 import io.github.oshai.kotlinlogging.KLogger
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import kotlin.reflect.KType
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -116,7 +114,6 @@ public abstract class StatefulSingleUseAIAgent<Input, Output, TContext : AIAgent
      */
     final override suspend fun resultIfReady(): Output? =
         agentStateMutex.withLock { if (finished()) agentResult else null }
-
 
     /**
      * Represents the pipeline used by the AI agent for processing tasks or data.

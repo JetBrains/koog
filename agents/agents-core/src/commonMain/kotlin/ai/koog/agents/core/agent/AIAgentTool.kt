@@ -29,6 +29,14 @@ import kotlinx.serialization.serializer
  * @param json Optional [Json] instance to customize de/serialization behavior.
  * @return A special tool that wraps the agent functionality.
  */
+@InternalAgentToolsApi
+@Deprecated(
+    level = DeprecationLevel.WARNING,
+    message = "Please consider using `AIAgentService.createAgentTool(...)`, instead." +
+        "Converting an instance of `AIAgent` into a tool is error-prone because `AIAgent` is a single-use instance," +
+        "while tools can be run multiple times, and moreover - in parallel - by another `AIAgent`. " +
+        "That would cause an error."
+)
 public inline fun <reified Input, reified Output> AIAgent<Input, Output>.asTool(
     agentName: String,
     agentDescription: String,

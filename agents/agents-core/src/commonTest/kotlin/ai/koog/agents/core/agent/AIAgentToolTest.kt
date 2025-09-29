@@ -62,6 +62,7 @@ class AIAgentToolTest {
 
         private val agent = createMockAgent()
 
+        @OptIn(InternalAgentToolsApi::class)
         val tool = agent.asTool(
             agentName = "testAgent",
             agentDescription = "Test agent description",
@@ -73,6 +74,7 @@ class AIAgentToolTest {
         }
     }
 
+    @OptIn(InternalAgentToolsApi::class)
     @Test
     fun testAsToolCreation() = runTest {
         val tool = agent.asTool(
@@ -89,6 +91,7 @@ class AIAgentToolTest {
         assertEquals(ToolParameterType.String, tool.descriptor.requiredParameters[0].type)
     }
 
+    @OptIn(InternalAgentToolsApi::class)
     @Test
     fun testAsToolWithDefaultName() = runTest {
         val tool = agent.asTool(

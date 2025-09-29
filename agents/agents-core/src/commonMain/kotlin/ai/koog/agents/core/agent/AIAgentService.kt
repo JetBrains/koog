@@ -4,7 +4,9 @@ import ai.koog.agents.core.agent.GraphAIAgent.FeatureContext
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.annotation.InternalAgentsApi
+import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
@@ -12,6 +14,9 @@ import ai.koog.prompt.llm.OllamaModels
 import ai.koog.prompt.params.LLMParams
 import io.ktor.util.collections.ConcurrentMap
 import kotlinx.datetime.Clock
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.serializer
 import kotlin.reflect.KType
 import kotlin.reflect.typeOf
 
@@ -456,4 +461,40 @@ public operator fun AIAgentService.Companion.invoke(
     outputType = typeOf<String>(),
     toolRegistry = toolRegistry,
     installFeatures = installFeatures
+)
+
+/**
+ * Creates an [AIAgent] and converts it to a [Tool] that can be used by other AI Agents.
+ *
+ * @param agentName Agent name that would be a tool name for this agent tool.
+ * @param agentDescription Agent description that would be a tool description for this agent tool.
+ * @param inputDescription An optional description of the agent's input. Required for primitive types only!
+ *  * If not specified for a primitive input type (ex: String, Int, ...), an empty input description will be sent to LLM.
+ *  * Does not have any effect for non-primitive [Input] type with @LLMDescription annotations.
+ * @param inputSerializer Serializer to deserialize tool arguments to agent input.
+ * @param outputSerializer Serializer to serialize agent output to tool result.
+ * @param json Optional [Json] instance to customize de/serialization behavior.
+ * @return A special tool that wraps the agent functionality.
+ * @param agentId An optional unique identifier for the agent. If null, a default identifier is used. Defaults to null.
+ * @param clock The clock instance used to manage time-related operations. Defaults to `Clock.System`.
+ * @return A tool instance configured with the provided parameters, representing the AI agent.
+ */
+@Suppress("DEPRECATION")
+@OptIn(InternalAgentToolsApi::class)
+public inline fun <reified Input, reified Output> AIAgentService<Input, Output>.createAgentTool(
+    agentName: String,
+    agentDescription: String,
+    inputDescription: String? = null,
+    inputSerializer: KSerializer<Input> = serializer(),
+    outputSerializer: KSerializer<Output> = serializer(),
+    json: Json = Json.Default,
+    agentId: String? = null,
+    clock: Clock = Clock.System
+): Tool<AIAgentTool.AgentToolArgs, AIAgentTool.AgentToolResult> = createAgent(agentId, clock).asTool(
+    agentName = agentName,
+    agentDescription = agentDescription,
+    inputDescription = inputDescription,
+    inputSerializer = inputSerializer,
+    outputSerializer = outputSerializer,
+    json = json,
 )
