@@ -18,7 +18,7 @@ import kotlin.test.assertTrue
 
 internal object OpenTelemetryTestAPI {
 
-    internal fun createAgent(
+    internal suspend fun createAgent(
         agentId: String = "test-agent-id",
         strategy: AIAgentGraphStrategy<String, String>,
         promptId: String? = null,
