@@ -213,7 +213,7 @@ val analysisAgentService = AIAgentService(
 )
 
 // Create a tool that would run financial analysis agent once called.
-val analysisAgentTool = analysisAgent.createAgentTool(
+val analysisAgentTool = analysisAgentService.createAgentTool(
     agentName = "analyzeTransactions",
     agentDescription = "Performs financial transaction analysis",
     inputDescription = "Transaction analysis request",
