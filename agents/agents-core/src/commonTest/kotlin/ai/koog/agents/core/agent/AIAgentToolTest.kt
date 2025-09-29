@@ -1,11 +1,12 @@
 package ai.koog.agents.core.agent
 
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.agent.config.AIAgentConfigBase
-import ai.koog.agents.core.agent.context.AIAgentContext
+import ai.koog.agents.core.dsl.builder.forwardTo
+import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.tools.DirectToolCallsEnabler
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
+import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.llm.OllamaModels
 import kotlinx.coroutines.test.runTest
@@ -13,6 +14,7 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
+import kotlin.reflect.typeOf
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -25,38 +27,26 @@ class AIAgentToolTest {
 
     private class MockAgent(
         private val run: () -> String
-    ) : AIAgent<String, String> {
-
-        constructor(expectedResponse: String) : this({ expectedResponse }) {}
-
-        override val id: String = "mock_agent_id"
-
-        override val agentConfig: AIAgentConfigBase = AIAgentConfig(
+    ) : GraphAIAgent<String, String>(
+        id = "mock_agent_id",
+        strategy = strategy("mock") { edge(nodeStart forwardTo nodeFinish transformed { run() }) },
+        promptExecutor = getMockExecutor { },
+        agentConfig = AIAgentConfig(
             prompt = prompt("test-prompt-id") {
                 system("You are a helpful assistant.")
             },
             model = OllamaModels.Meta.LLAMA_3_2,
             maxAgentIterations = 5
-        )
-
-        override suspend fun isRunning(): Boolean = true
-
-        override suspend fun finished(): Boolean = false
-        override suspend fun resultIfReady(): String = run()
-
-        override suspend fun run(agentInput: String): String {
-            return run()
-        }
-
-        override suspend fun withRunningContext(action: suspend AIAgentContext.() -> Unit): Boolean = false
-
-        override suspend fun close() {
-        }
+        ),
+        inputType = typeOf<String>(),
+        outputType = typeOf<String>()
+    ) {
+        constructor(result: String) : this({ result })
     }
 
     companion object {
         const val RESPONSE = "This is the agent's response"
-        private fun createMockAgent(): AIAgent<String, String> {
+        private fun createMockAgent(): MockAgent {
             return MockAgent(RESPONSE)
         }
 
