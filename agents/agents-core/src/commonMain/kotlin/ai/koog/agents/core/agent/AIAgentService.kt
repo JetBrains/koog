@@ -13,6 +13,8 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.llm.OllamaModels
 import ai.koog.prompt.params.LLMParams
 import io.ktor.util.collections.ConcurrentMap
+import io.ktor.utils.io.core.Input
+import io.ktor.utils.io.core.Output
 import kotlinx.datetime.Clock
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
@@ -65,6 +67,42 @@ public interface AIAgentService<Input, Output> {
      * GraphAIAgentService with various configurations.
      */
     public companion object {
+        /**
+         * Converts a given `GraphAIAgent` instance into an `AIAgentService` instance.
+         *
+         * @param Input The input type that the agent processes.
+         * @param Output The output type that the agent produces.
+         * @param agent The `GraphAIAgent` to be converted into a service instance.
+         * @return An `AIAgentService` instance constructed from the provided `GraphAIAgent`.
+         */
+        @OptIn(InternalAgentsApi::class)
+        public inline fun <reified Input, reified Output> fromAgent(agent: GraphAIAgent<Input, Output>): AIAgentService<Input, Output> =
+            AIAgentService(
+                promptExecutor = agent.promptExecutor,
+                agentConfig = agent.agentConfig,
+                strategy = agent.strategy as AIAgentGraphStrategy<Input, Output>,
+                toolRegistry = agent.toolRegistry,
+                installFeatures = agent.installFeatures
+            )
+
+        /**
+         * Creates a new instance of `AIAgentService` by transforming a given `FunctionalAIAgent`.
+         *
+         * @param Input The type of input data expected by the agent.
+         * @param Output The type of output data produced by the agent.
+         * @param agent The `FunctionalAIAgent` to be transformed into an `AIAgentService`.
+         * @return A new `AIAgentService` instance configured with the parameters of the provided agent.
+         */
+        @OptIn(InternalAgentsApi::class)
+        public fun <Input, Output> fromAgent(agent: FunctionalAIAgent<Input, Output>): AIAgentService<Input, Output> =
+            AIAgentService(
+                promptExecutor = agent.promptExecutor,
+                agentConfig = agent.agentConfig,
+                strategy = agent.strategy as AIAgentFunctionalStrategy<Input, Output>,
+                toolRegistry = agent.toolRegistry,
+                installFeatures = agent.featureContext
+            )
+
         /**
          * Invokes the creation of a `GraphAIAgentService` instance with the provided configuration, strategy,
          * tool registry, and optional feature installation logic.
@@ -125,6 +163,31 @@ public interface AIAgentService<Input, Output> {
                 maxAgentIterations = maxIterations,
             ),
             toolRegistry = toolRegistry,
+            installFeatures = installFeatures
+        )
+
+        /**
+         * Invokes the creation of a FunctionalAIAgentService instance with the provided parameters.
+         *
+         * @param promptExecutor The executor responsible for handling prompts and managing their execution.
+         * @param agentConfig The configuration parameters for the AI agent.
+         * @param strategy The functional strategy that defines the behavior and capabilities of the AI agent.
+         * @param toolRegistry The registry containing tools that can be used by the agent. Defaults to an empty registry if not specified.
+         * @param installFeatures A lambda expression to configure and install additional features to the AI agent context.
+         * @return An instance of FunctionalAIAgentService initialized with the given parameters.
+         */
+        @OptIn(InternalAgentsApi::class)
+        public operator fun <Input, Output> invoke(
+            promptExecutor: PromptExecutor,
+            agentConfig: AIAgentConfig,
+            strategy: AIAgentFunctionalStrategy<Input, Output>,
+            toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
+            installFeatures: FunctionalAIAgent.FeatureContext.() -> Unit = {},
+        ): FunctionalAIAgentService<Input, Output> = FunctionalAIAgentService(
+            promptExecutor = promptExecutor,
+            agentConfig = agentConfig,
+            toolRegistry = toolRegistry,
+            strategy = strategy,
             installFeatures = installFeatures
         )
     }
@@ -399,8 +462,6 @@ public constructor(
     override val promptExecutor: PromptExecutor,
     override val agentConfig: AIAgentConfig,
     public val strategy: AIAgentFunctionalStrategy<Input, Output>,
-    private val inputType: KType,
-    private val outputType: KType,
     override val toolRegistry: ToolRegistry,
     public val installFeatures: FunctionalAIAgent.FeatureContext.() -> Unit
 ) : AIAgentServiceBase<Input, Output>() {
@@ -490,11 +551,13 @@ public inline fun <reified Input, reified Output> AIAgentService<Input, Output>.
     json: Json = Json.Default,
     agentId: String? = null,
     clock: Clock = Clock.System
-): Tool<AIAgentTool.AgentToolArgs, AIAgentTool.AgentToolResult> = createAgent(agentId, clock).asTool(
+): Tool<AIAgentTool.AgentToolArgs, AIAgentTool.AgentToolResult> = AIAgentTool(
+    agentService = this,
     agentName = agentName,
     agentDescription = agentDescription,
     inputDescription = inputDescription,
     inputSerializer = inputSerializer,
     outputSerializer = outputSerializer,
     json = json,
+    agentId = agentId
 )

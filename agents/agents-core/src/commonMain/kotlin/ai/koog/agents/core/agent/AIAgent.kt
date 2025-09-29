@@ -161,13 +161,17 @@ public interface AIAgent<Input, Output> : Closeable {
             strategy: AIAgentFunctionalStrategy<Input, Output>,
             toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
             id: String? = null,
-            installFeatures: FeatureContext.() -> Unit = {},
+            clock: Clock = Clock.System,
+            installFeatures: FunctionalAIAgent.FeatureContext.() -> Unit = {},
         ): FunctionalAIAgent<Input, Output> {
             return FunctionalAIAgent(
+                id = id,
                 promptExecutor = promptExecutor,
                 agentConfig = agentConfig,
                 toolRegistry = toolRegistry,
-                strategy = strategy
+                strategy = strategy,
+                clock = clock,
+                featureContext = installFeatures
             )
         }
 

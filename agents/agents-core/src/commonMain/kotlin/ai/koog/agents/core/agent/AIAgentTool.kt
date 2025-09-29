@@ -27,13 +27,14 @@ import kotlinx.serialization.serializer
  * @param inputSerializer Serializer to deserialize tool arguments to agent input.
  * @param outputSerializer Serializer to serialize agent output to tool result.
  * @param json Optional [Json] instance to customize de/serialization behavior.
+ * @param agentId Optional fixed agent ID that will be used for all instantiated agents whenever tool runs.
  * @return A special tool that wraps the agent functionality.
  */
 @InternalAgentToolsApi
 @Deprecated(
     level = DeprecationLevel.WARNING,
-    message = "Please consider using `AIAgentService.createAgentTool(...)`, instead." +
-        "Converting an instance of `AIAgent` into a tool is error-prone because `AIAgent` is a single-use instance," +
+    message = "Please use `AIAgentService.createAgentTool(...)`, instead." +
+        "Converting an instance of `AIAgent` into a tool is error-prone because `AIAgent` is essentially a single-use instance," +
         "while tools can be run multiple times, and moreover - in parallel - by another `AIAgent`. " +
         "That would cause an error."
 )
@@ -44,15 +45,24 @@ public inline fun <reified Input, reified Output> AIAgent<Input, Output>.asTool(
     inputSerializer: KSerializer<Input> = serializer(),
     outputSerializer: KSerializer<Output> = serializer(),
     json: Json = Json.Default,
-): Tool<AgentToolArgs, AgentToolResult> = AIAgentTool(
-    agent = this,
-    agentName = agentName,
-    agentDescription = agentDescription,
-    inputDescription = inputDescription,
-    inputSerializer = inputSerializer,
-    outputSerializer = outputSerializer,
-    json = json,
-)
+    agentId: String? = null
+): Tool<AgentToolArgs, AgentToolResult> {
+    val service = when (this) {
+        is GraphAIAgent -> AIAgentService.fromAgent(this)
+        is FunctionalAIAgent -> AIAgentService.fromAgent(this)
+        else -> throw UnsupportedOperationException("`asTool` can only be used for `GraphAIAgent` or `FunctionalAIAgent`")
+    }
+
+    return service.createAgentTool(
+        agentName = agentName,
+        agentDescription = agentDescription,
+        inputDescription = inputDescription,
+        inputSerializer = inputSerializer,
+        outputSerializer = outputSerializer,
+        json = json,
+        agentId = this.id
+    )
+}
 
 /**
  * AIAgentTool is a generic tool that wraps an AI agent to facilitate integration
@@ -72,13 +82,14 @@ public inline fun <reified Input, reified Output> AIAgent<Input, Output>.asTool(
  * @property json The JSON configuration used for serialization and deserialization.
  */
 public class AIAgentTool<Input, Output>(
-    private val agent: AIAgent<Input, Output>,
+    private val agentService: AIAgentService<Input, Output>,
     private val agentName: String,
     private val agentDescription: String,
     private val inputDescription: String? = null,
     private val inputSerializer: KSerializer<Input>,
     private val outputSerializer: KSerializer<Output>,
     private val json: Json = Json.Default,
+    private val agentId: String? = null
 ) : Tool<AgentToolArgs, AgentToolResult>() {
     /**
      * Represents the arguments required for the execution of an agent tool.
@@ -133,7 +144,7 @@ public class AIAgentTool<Input, Output>(
                 inputSerializer,
                 args.args.getValue(descriptor.requiredParameters.first().name)
             )
-            val result = agent.run(input)
+            val result = agentService.createAgentAndRun(input, id = agentId)
 
             AgentToolResult(
                 successful = true,

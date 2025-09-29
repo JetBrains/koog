@@ -6,6 +6,7 @@ import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.GenericAgentEnvironment
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentNonGraphFeature
@@ -29,6 +30,7 @@ import kotlin.uuid.ExperimentalUuidApi
  * @param agentConfig The configuration for the agent, including the prompt structure and execution parameters.
  * @param toolRegistry The registry of tools available for the agent. Defaults to an empty registry if not specified.
  */
+@OptIn(InternalAgentsApi::class)
 public class FunctionalAIAgent<Input, Output>(
     public val promptExecutor: PromptExecutor,
     override val agentConfig: AIAgentConfig,
@@ -36,7 +38,7 @@ public class FunctionalAIAgent<Input, Output>(
     strategy: AIAgentFunctionalStrategy<Input, Output>,
     id: String? = null,
     public val clock: Clock = Clock.System,
-    featureContext: FeatureContext.() -> Unit = {}
+    @property:InternalAgentsApi public val featureContext: FeatureContext.() -> Unit = {}
 ) : StatefulSingleUseAIAgent<Input, Output, AIAgentFunctionalContext>(
     strategy = strategy,
     logger = logger,

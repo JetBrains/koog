@@ -55,7 +55,7 @@ public open class GraphAIAgent<Input, Output>(
     strategy: AIAgentGraphStrategy<Input, Output>,
     id: String? = null, // If null, ID will be initialized as a random UUID lazily
     public val clock: Clock = Clock.System,
-    private val installFeatures: FeatureContext.() -> Unit = {},
+    @property:InternalAgentsApi public val installFeatures: FeatureContext.() -> Unit = {}
 ) : StatefulSingleUseAIAgent<Input, Output, AIAgentGraphContextBase>(
     strategy = strategy,
     logger = logger,
