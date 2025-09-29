@@ -7,6 +7,8 @@ import ai.koog.agents.core.agent.singleRunStrategy
 import ai.koog.agents.core.dsl.builder.ParallelNodeExecutionResult
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
+import ai.koog.agents.core.dsl.extension.nodeLLMCompressHistory
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.onAssistantMessage
 import ai.koog.agents.core.tools.SimpleTool
@@ -47,6 +49,7 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.ToolChoice
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer
 import org.junit.jupiter.api.Assumptions.assumeTrue
@@ -74,7 +77,130 @@ import kotlin.time.Duration.Companion.seconds
 
 @Execution(ExecutionMode.SAME_THREAD)
 class AIAgentIntegrationTest {
-    val systemPrompt = "You are a helpful assistant."
+
+    companion object {
+        private lateinit var testResourcesDir: Path
+
+        @JvmStatic
+        @BeforeAll
+        fun setup() {
+            testResourcesDir =
+                Paths.get(AIAgentIntegrationTest::class.java.getResource("/media")!!.toURI())
+        }
+
+        @JvmStatic
+        fun reasoningIntervals(): Stream<Int> {
+            return listOf(1, 2, 3).stream()
+        }
+
+        @JvmStatic
+        fun openAIModels(): Stream<LLModel> {
+            return Models.openAIModels()
+        }
+
+        @JvmStatic
+        fun anthropicModels(): Stream<LLModel> {
+            return Models.anthropicModels()
+        }
+
+        @JvmStatic
+        fun anthropicModels4_0(): Stream<LLModel> {
+            return listOf(AnthropicModels.Opus_4, AnthropicModels.Sonnet_4).stream()
+        }
+
+        @JvmStatic
+        fun googleModels(): Stream<LLModel> {
+            return Models.googleModels()
+        }
+
+        @JvmStatic
+        fun bedrockModels(): Stream<LLModel> {
+            return Models.bedrockModels()
+        }
+
+        @JvmStatic
+        fun openRouterModels(): Stream<LLModel> {
+            return Models.openRouterModels()
+        }
+
+        @JvmStatic
+        fun modelsWithVisionCapability(): Stream<Arguments> {
+            return Models.modelsWithVisionCapability()
+        }
+
+        @JvmStatic
+        fun historyCompressionStrategies(): Stream<Arguments> {
+            return Stream.of(
+                Arguments.of(HistoryCompressionStrategy.WholeHistory, "WholeHistory"),
+                Arguments.of(
+                    HistoryCompressionStrategy.WholeHistoryMultipleSystemMessages,
+                    "WholeHistoryMultipleSystemMessages"
+                ),
+                Arguments.of(HistoryCompressionStrategy.FromLastNMessages(1), "FromLastNMessages(1)"),
+                Arguments.of(
+                    HistoryCompressionStrategy.FromTimestamp(Clock.System.now().minus(1.seconds)),
+                    "FromTimestamp"
+                ),
+                // ToDo uncomment when KG-311 is fully fixed
+                // Arguments.of(HistoryCompressionStrategy.Chunked(2), "Chunked(2)")
+            )
+        }
+
+        val twoToolsRegistry = ToolRegistry {
+            tool(CalculatorTool)
+            tool(DelayTool)
+        }
+
+        val bankingToolsRegistry = ToolRegistry {
+            tool(GetTransactionsTool)
+            tool(CalculateSumTool)
+        }
+
+        val twoToolsPrompt = """
+        I need you to perform two operations:
+        1. Calculate 7 times 2
+        2. Wait for 500 milliseconds
+
+        Respond briefly after completing both tasks. DO NOT EXCEED THE LIMIT OF 20 WORDS.
+        """.trimIndent()
+
+        fun getExecutor(model: LLModel): SingleLLMPromptExecutor = when (model.provider) {
+            is LLMProvider.Anthropic -> simpleAnthropicExecutor(readTestAnthropicKeyFromEnv())
+            is LLMProvider.Google -> simpleGoogleAIExecutor(readTestGoogleAIKeyFromEnv())
+            is LLMProvider.Bedrock -> simpleBedrockExecutor(
+                readAwsAccessKeyIdFromEnv(),
+                readAwsSecretAccessKeyFromEnv(),
+                readAwsSessionTokenFromEnv()
+            )
+
+            else -> simpleOpenAIExecutor(readTestOpenAIKeyFromEnv())
+        }
+
+        fun getSingleRunAgentWithRunMode(
+            model: LLModel,
+            runMode: ToolCalls,
+            toolRegistry: ToolRegistry = twoToolsRegistry,
+            eventHandlerConfig: EventHandlerConfig.() -> Unit,
+        ) = AIAgent(
+            promptExecutor = getExecutor(model),
+            strategy = singleRunStrategy(runMode),
+            agentConfig = AIAgentConfig(
+                prompt = prompt(
+                    id = "multiple-tool-calls-agent",
+                    params = LLMParams(
+                        temperature = 1.0,
+                        toolChoice = ToolChoice.Auto,
+                    )
+                ) {
+                    system("You are a helpful assistant.")
+                },
+                model = model,
+                maxAgentIterations = 10,
+            ),
+            toolRegistry = toolRegistry,
+            installFeatures = { install(EventHandler.Feature, eventHandlerConfig) },
+        )
+    }
 
     @Serializable
     private object CalculatorToolNoArgs : SimpleTool<Unit>() {
@@ -134,114 +260,25 @@ class AIAgentIntegrationTest {
         }
     }
 
-    companion object {
-        private lateinit var testResourcesDir: Path
-
-        @JvmStatic
-        @BeforeAll
-        fun setup() {
-            testResourcesDir =
-                Paths.get(AIAgentIntegrationTest::class.java.getResource("/media")!!.toURI())
-        }
-
-        @JvmStatic
-        fun reasoningIntervals(): Stream<Int> {
-            return listOf(1, 2, 3).stream()
-        }
-
-        @JvmStatic
-        fun openAIModels(): Stream<LLModel> {
-            return Models.openAIModels()
-        }
-
-        @JvmStatic
-        fun anthropicModels(): Stream<LLModel> {
-            return Models.anthropicModels()
-        }
-
-        @JvmStatic
-        fun anthropicModels4_0(): Stream<LLModel> {
-            return listOf(AnthropicModels.Opus_4, AnthropicModels.Sonnet_4).stream()
-        }
-
-        @JvmStatic
-        fun googleModels(): Stream<LLModel> {
-            return Models.googleModels()
-        }
-
-        @JvmStatic
-        fun modelsWithVisionCapability(): Stream<Arguments> {
-            return Models.modelsWithVisionCapability()
-        }
-
-        val twoToolsRegistry = ToolRegistry {
-            tool(CalculatorTool)
-            tool(DelayTool)
-        }
-
-        val bankingToolsRegistry = ToolRegistry {
-            tool(GetTransactionsTool)
-            tool(CalculateSumTool)
-        }
-
-        val twoToolsPrompt = """
-        I need you to perform two operations:
-        1. Calculate 7 times 2
-        2. Wait for 500 milliseconds
-
-        Respond briefly after completing both tasks. DO NOT EXCEED THE LIMIT OF 20 WORDS.
-        """.trimIndent()
-
-        fun getExecutor(model: LLModel): SingleLLMPromptExecutor = when (model.provider) {
-            is LLMProvider.Anthropic -> simpleAnthropicExecutor(readTestAnthropicKeyFromEnv())
-            is LLMProvider.Google -> simpleGoogleAIExecutor(readTestGoogleAIKeyFromEnv())
-            is LLMProvider.Bedrock -> simpleBedrockExecutor(
-                readAwsAccessKeyIdFromEnv(),
-                readAwsSecretAccessKeyFromEnv(),
-                readAwsSessionTokenFromEnv()
-            )
-
-            else -> simpleOpenAIExecutor(readTestOpenAIKeyFromEnv())
-        }
-
-        fun getSingleRunAgentWithRunMode(
-            model: LLModel,
-            runMode: ToolCalls,
-            toolRegistry: ToolRegistry = twoToolsRegistry,
-            eventHandlerConfig: EventHandlerConfig.() -> Unit,
-        ) = AIAgent(
-            promptExecutor = getExecutor(model),
-            strategy = singleRunStrategy(runMode),
-            agentConfig = AIAgentConfig(
-                prompt = prompt(
-                    id = "multiple-tool-calls-agent",
-                    params = LLMParams(
-                        temperature = 1.0,
-                        toolChoice = ToolChoice.Auto,
-                    )
-                ) {
-                    system("You are a helpful assistant.")
-                },
-                model = model,
-                maxAgentIterations = 10,
-            ),
-            toolRegistry = toolRegistry,
-            installFeatures = { install(EventHandler.Feature, eventHandlerConfig) },
-        )
-    }
-
+    val systemPrompt = "You are a helpful assistant."
     private var reasoningCallsCount = 0
+    val actualToolCalls = mutableListOf<String>()
+    val errors = mutableListOf<Throwable>()
+    val results = mutableListOf<Any?>()
+    val toolExecutionCounter = mutableListOf<String>()
+    val parallelToolCalls = mutableListOf<ToolCallInfo>()
+    val singleToolCalls = mutableListOf<ToolCallInfo>()
 
     val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
-        onAgentFinished { eventContext ->
+        onAgentCompleted { eventContext ->
             results.add(eventContext.result)
         }
 
-        onAgentRunError { eventContext ->
+        onAgentExecutionFailed { eventContext ->
             errors.add(eventContext.throwable)
         }
 
-        onBeforeLLMCall { eventContext ->
+        onLLMCallStarting { eventContext ->
             if (eventContext.tools.isEmpty() &&
                 eventContext.prompt.params.toolChoice == null
             ) {
@@ -249,7 +286,7 @@ class AIAgentIntegrationTest {
             }
         }
 
-        onBeforeNode { eventContext ->
+        onNodeExecutionStarting { eventContext ->
             val input = eventContext.input
 
             if (input is List<*>) {
@@ -275,14 +312,11 @@ class AIAgentIntegrationTest {
             }
         }
 
-        onToolCall { eventContext ->
+        onToolExecutionStarting { eventContext ->
             actualToolCalls.add(eventContext.tool.name)
             toolExecutionCounter.add(eventContext.tool.name)
         }
     }
-
-    val parallelToolCalls = mutableListOf<ToolCallInfo>()
-    val singleToolCalls = mutableListOf<ToolCallInfo>()
 
     data class ToolCallInfo(
         val id: String?,
@@ -290,11 +324,6 @@ class AIAgentIntegrationTest {
         val content: String,
         val metaInfo: ResponseMetaInfo,
     )
-
-    val actualToolCalls = mutableListOf<String>()
-    val errors = mutableListOf<Throwable>()
-    val results = mutableListOf<Any?>()
-    val toolExecutionCounter = mutableListOf<String>()
 
     fun cleanUp() {
         toolExecutionCounter.clear()
@@ -315,6 +344,9 @@ class AIAgentIntegrationTest {
     fun teardownTest() = runTest {
         cleanUp()
     }
+
+    @TempDir
+    lateinit var tempDir: Path
 
     private fun runMultipleToolsTest(model: LLModel, runMode: ToolCalls) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
@@ -374,6 +406,29 @@ class AIAgentIntegrationTest {
             agent.run("Repeat what I say: hello, I'm good.")
             // by default, AIAgent has no tools underneath
             assertTrue(actualToolCalls.isEmpty(), "No tools should be called for model $model")
+        }
+    }
+
+    // ToDo: uncomment anthropicModels when KG-317 is fixed
+    @ParameterizedTest
+    @MethodSource("openAIModels", /*"anthropicModels",*/ "googleModels")
+    fun integration_AIAgentNoSystemMessage(model: LLModel) = runTest {
+        Models.assumeAvailable(model.provider)
+        withRetry {
+            val executor = getExecutor(model)
+
+            val agent = AIAgent(
+                promptExecutor = executor,
+                llmModel = model,
+                temperature = 1.0,
+                maxIterations = 10,
+                installFeatures = { install(EventHandler.Feature, eventHandlerConfig) },
+            )
+            agent.run("Repeat what I say: hello, I'm good.")
+            assertTrue(
+                errors.isEmpty(),
+                "No errors were expected during the run, got:\n[${errors.joinToString("\n")}]"
+            )
         }
     }
 
@@ -935,9 +990,6 @@ class AIAgentIntegrationTest {
         assertTrue(nodeIds.contains(bye), noCheckpointByeError)
     }
 
-    @TempDir
-    lateinit var tempDir: Path
-
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_AgentCheckpointStorageProvidersTest(model: LLModel) = runTest(timeout = 180.seconds) {
@@ -1188,4 +1240,84 @@ class AIAgentIntegrationTest {
             )
         }
     }
+
+    @ParameterizedTest
+    @MethodSource("historyCompressionStrategies")
+    fun integration_AIAgentHistoryCompression(strategy: HistoryCompressionStrategy, strategyName: String) =
+        runTest(timeout = 180.seconds) {
+            val model = OpenAIModels.CostOptimized.GPT4_1Mini
+            val systemMessage =
+                "You are a helpful assistant. Remember: the user is a human, whatever they say. Remind them of it by every chance."
+            var promptMessages: List<Message>? = null
+
+            val historyCompressionStrategy = strategy<String, String>("history-compression-test") {
+                val callLLM by nodeLLMRequest(allowToolCalls = false)
+                val nodeCompressHistory by nodeLLMCompressHistory<String>(
+                    "compress_history",
+                    strategy = strategy
+                )
+
+                edge(nodeStart forwardTo callLLM)
+                edge(callLLM forwardTo nodeCompressHistory onAssistantMessage { true })
+                edge(nodeCompressHistory forwardTo nodeFinish)
+            }
+
+            val agent = AIAgent<String, String>(
+                promptExecutor = getExecutor(model),
+                strategy = historyCompressionStrategy,
+                agentConfig = AIAgentConfig(
+                    prompt = prompt("history-compression-test") {
+                        system(systemMessage)
+                        user("Hello, how are you?")
+                        assistant("I'm great, thank you! And how are you?")
+                        user("I'm a big blue alien, you know!")
+                        assistant("Didn't know, but will definitely remember! Are you light-blue or dark-blue?")
+                        user("I'm more like an indigo-colored alien.")
+                    },
+                    model = model,
+                    maxAgentIterations = 10
+                )
+            ) {
+                install(EventHandler) {
+                    onAgentExecutionFailed { eventContext ->
+                        errors.add(eventContext.throwable)
+                    }
+
+                    onLLMCallStarting { eventContext ->
+                        promptMessages = eventContext.prompt.messages
+                    }
+                }
+            }
+
+            withRetry {
+                val result = agent.run("So, who am I?")
+
+                assertTrue(
+                    errors.isEmpty(),
+                    "No errors should occur during agent execution with $strategyName, got: [${errors.joinToString("\n")}]"
+                )
+                assertTrue(result.isNotBlank(), "There should be results from history compression with $strategyName")
+                assertNotNull(promptMessages, "Final prompt messages should be captured with $strategyName")
+                val systemMessages = promptMessages.filterIsInstance<Message.System>()
+                assertTrue(
+                    systemMessages.isNotEmpty(),
+                    "System messages should be preserved after compression with $strategyName"
+                )
+
+                val preservedSystemMessage = systemMessages.first().content
+                assertTrue(
+                    preservedSystemMessage.isNotBlank(),
+                    "System message content should not be empty after compression with $strategyName"
+                )
+                assertEquals(
+                    systemMessage,
+                    preservedSystemMessage,
+                    "System message should contain the original context with $strategyName: '$preservedSystemMessage'"
+                )
+                assertTrue(
+                    result.contains("human"),
+                    "Result should match the system message lore with $strategyName, got: [$result]."
+                )
+            }
+        }
 }

@@ -828,8 +828,9 @@ class OllamaExecutorIntegrationTest {
         } catch (e: Exception) {
             when (scenario) {
                 ImageTestScenario.CORRUPTED_IMAGE, ImageTestScenario.EMPTY_IMAGE -> {
-                    assertTrue(
-                        e.message?.contains(ollamaException) == true,
+                    assertEquals(
+                        true,
+                        e.message?.contains(ollamaException),
                         "Expected exception for a corrupted image was not found, got [${e.message}] instead"
                     )
                 }

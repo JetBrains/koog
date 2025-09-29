@@ -265,8 +265,7 @@ class AIAgentMultipleLLMIntegrationTest {
             "Create a file and writes the given text content to it"
 
         override suspend fun execute(args: Args): Result {
-            val res = fs.create(args.path, args.content)
-            return when (res) {
+            return when (val res = fs.create(args.path, args.content)) {
                 is OperationResult.Success -> Result(successful = true)
                 is OperationResult.Failure -> Result(successful = false, message = res.error)
             }
@@ -290,8 +289,7 @@ class AIAgentMultipleLLMIntegrationTest {
         override val description: String = "Deletes a file"
 
         override suspend fun execute(args: Args): Result {
-            val res = fs.delete(args.path)
-            return when (res) {
+            return when (val res = fs.delete(args.path)) {
                 is OperationResult.Success -> Result(successful = true)
                 is OperationResult.Failure -> Result(successful = false, message = res.error)
             }
@@ -319,8 +317,7 @@ class AIAgentMultipleLLMIntegrationTest {
         override val description: String = "Reads a file"
 
         override suspend fun execute(args: Args): Result {
-            val res = fs.read(args.path)
-            return when (res) {
+            return when (val res = fs.read(args.path)) {
                 is OperationResult.Success<String> -> Result(successful = true, content = res.result)
                 is OperationResult.Failure -> Result(successful = false, message = res.error)
             }
@@ -348,8 +345,7 @@ class AIAgentMultipleLLMIntegrationTest {
         override val description: String = "List all files inside the given path of the directory"
 
         override suspend fun execute(args: Args): Result {
-            val res = fs.ls(args.path)
-            return when (res) {
+            return when (val res = fs.ls(args.path)) {
                 is OperationResult.Success<List<String>> -> Result(successful = true, children = res.result)
                 is OperationResult.Failure -> Result(successful = false, message = res.error)
             }
@@ -532,7 +528,7 @@ class AIAgentMultipleLLMIntegrationTest {
         val fs = MockFileSystem()
         val eventsChannel = Channel<Event>(Channel.UNLIMITED)
         val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
-            onAgentFinished { _ ->
+            onAgentCompleted { _ ->
                 eventsChannel.send(Event.Termination)
             }
         }
@@ -619,7 +615,7 @@ class AIAgentMultipleLLMIntegrationTest {
             val fs = MockFileSystem()
             val calledTools = mutableListOf<String>()
             val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
-                onToolCall { eventContext ->
+                onToolExecutionStarting { eventContext ->
                     calledTools.add(eventContext.tool.name)
                 }
             }
@@ -701,12 +697,12 @@ class AIAgentMultipleLLMIntegrationTest {
                 },
                 installFeatures = {
                     install(EventHandler) {
-                        onAgentRunError { eventContext ->
+                        onAgentExecutionFailed { eventContext ->
                             println(
                                 "error: ${eventContext.throwable.javaClass.simpleName}(${eventContext.throwable.message})\n${eventContext.throwable.stackTraceToString()}"
                             )
                         }
-                        onToolCall { eventContext ->
+                        onToolExecutionStarting { eventContext ->
                             println(
                                 "Calling tool ${eventContext.tool.name} with arguments ${
                                     eventContext.toolArgs.toString().lines().first().take(100)
@@ -730,7 +726,7 @@ class AIAgentMultipleLLMIntegrationTest {
         Models.assumeAvailable(model.provider)
         val fs = MockFileSystem()
         val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
-            onToolCall { eventContext ->
+            onToolExecutionStarting { eventContext ->
                 println(
                     "Calling tool ${eventContext.tool.name} with arguments ${
                         eventContext.toolArgs.toString().lines().first().take(100)
@@ -789,7 +785,7 @@ class AIAgentMultipleLLMIntegrationTest {
 
         val fs = MockFileSystem()
         val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
-            onToolCall { eventContext ->
+            onToolExecutionStarting { eventContext ->
                 println(
                     "Calling tool ${eventContext.tool.name} with arguments ${
                         eventContext.toolArgs.toString().lines().first().take(100)
