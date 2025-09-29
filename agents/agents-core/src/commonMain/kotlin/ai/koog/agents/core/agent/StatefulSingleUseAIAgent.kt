@@ -42,7 +42,7 @@ public abstract class StatefulSingleUseAIAgent<Input, Output, TContext : AIAgent
      * can be updated to reflect the current operational status of the agent. It is set
      * to `false` by default, meaning the agent is not running.
      */
-    protected var isRunning: Boolean = false
+    private var isRunning: Boolean = false
 
     /**
      * Indicates whether the agent has been started.
@@ -54,14 +54,14 @@ public abstract class StatefulSingleUseAIAgent<Input, Output, TContext : AIAgent
      * By default, this variable is initialized to `false`, representing that the agent
      * has not yet started.
      */
-    protected var wasStarted: Boolean = false
+    private var wasStarted: Boolean = false
 
     /**
      * Represents the result or output of an agent's operation.
      * This variable is of a nullable type and may hold the result of a computation or remain null if no result is produced.
      * It is protected, meaning it is accessible within the class and by subclasses.
      */
-    protected var agentResult: Output? = null
+    private var agentResult: Output? = null
 
     /**
      * The root context associated with the agent during its lifecycle. This context is expected to be defined
@@ -70,14 +70,14 @@ public abstract class StatefulSingleUseAIAgent<Input, Output, TContext : AIAgent
      * It is nullable to indicate that the context may not be available before initialization or after
      * the agent's lifecycle ends.
      */
-    protected var rootAgentContext: TContext? = null
+    private var rootAgentContext: TContext? = null
 
     /**
      * A mutex used to synchronize access to the state of the agent. Ensures that only one coroutine
      * can modify or read the shared state of the agent at a time, preventing data races and ensuring
      * thread-safe operations.
      */
-    protected val agentStateMutex: Mutex = Mutex()
+    private val agentStateMutex: Mutex = Mutex()
 
     /**
      * A unique identifier represented as a string. This identifier is lazily initialized.
