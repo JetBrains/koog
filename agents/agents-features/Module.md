@@ -4,37 +4,16 @@ Provides implementations of useful features of AI agents, such as Tracing, Debug
 
 ### Overview
 
-Features integrate with the agent pipeline via interceptor hooks and consume standardized Feature Events emitted during agent execution. After the 0afb32b refactor, event and interceptor names are unified across the system.
+Features integrate with the agent pipeline via interceptor hooks and consume standardized Feature Events emitted during agent execution. These events are defined in the agents-core module under `ai.koog.agents.core.feature.model.events`. After the 0afb32b refactor, event and interceptor names are unified across the system.
 
 ### Standard Feature Events
 
-- Agent events:
-  - AgentStartingEvent
-  - AgentCompletedEvent
-  - AgentExecutionFailedEvent
-  - AgentClosingEvent
+The canonical description and definitions of Feature Events now live in the agents-core module. See:
 
-- Strategy events:
-  - GraphStrategyStartingEvent
-  - FunctionalStrategyStartingEvent
-  - StrategyCompletedEvent
+- agents-core module docs: ../agents-core/Module.md (section "Standard Feature Events")
+- Kotlin definitions: package `ai.koog.agents.core.feature.model.events`
 
-- Node execution events:
-  - NodeExecutionStartingEvent
-  - NodeExecutionCompletedEvent
-  - NodeExecutionFailedEvent
-
-- LLM call events:
-  - LLMCallStartingEvent
-  - LLMCallCompletedEvent
-
-- Tool call events:
-  - ToolCallStartingEvent
-  - ToolValidationFailedEvent
-  - ToolCallFailedEvent
-  - ToolCallCompletedEvent
-
-These events are produced by features such as Tracing and Debugger to enable logging, tracing, monitoring, and remote inspection.
+Features in this module (Tracing, Debugger, EventHandler, etc.) consume these events to provide logging, tracing, monitoring, and remote inspection.
 
 ### Using in your project
 

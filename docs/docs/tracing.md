@@ -9,7 +9,8 @@ including:
 
 - Strategy execution
 - LLM calls
-- Tool invocations
+- LLM streaming (start, frames, completion, errors)
+- Tool calls
 - Node execution within the agent graph
 
 This feature operates by intercepting key events in the agent pipeline and forwarding them to configurable message
@@ -162,6 +163,10 @@ Tracing
     ├── NodeExecutionCompletedEvent
     ├── LLMCallStartingEvent
     ├── LLMCallCompletedEvent
+    ├── LLMStreamingStartingEvent
+    ├── LLMStreamingFrameReceivedEvent
+    ├── LLMStreamingFailedEvent
+    ├── LLMStreamingCompletedEvent
     ├── ToolCallStartingEvent
     ├── ToolValidationFailedEvent
     ├── ToolCallFailedEvent

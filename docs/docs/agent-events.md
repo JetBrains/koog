@@ -4,9 +4,12 @@ Agent events are actions or interactions that occur as part of an agent workflow
 
 - Agent lifecycle events
 - Strategy events
-- Node events
+- Node execution events
 - LLM call events
-- Tool call events
+- LLM streaming events
+- Tool execution events
+
+Note: Feature events are defined in the agents-core module and live under the package `ai.koog.agents.core.feature.model.events`. Features such as `agents-features-trace`, `agents-features-debugger`, and `agents-features-event-handler` consume these events to process and forward messages created during agent execution.
 
 ## Event handlers
 
