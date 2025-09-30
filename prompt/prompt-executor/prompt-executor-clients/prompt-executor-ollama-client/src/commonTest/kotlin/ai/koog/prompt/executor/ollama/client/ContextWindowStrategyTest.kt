@@ -81,8 +81,8 @@ class ContextWindowStrategyTest {
                     override fun tokenCountFor(message: Message): Int = error("Not needed")
                     override fun tokenCountFor(prompt: Prompt): Int = 3000
                 },
-                granularity = 1024,
-                minimumContextLength = 2048,
+                contextChunkSize = 1024,
+                minimumChunkCount = 2
             ),
         )
 
@@ -107,8 +107,8 @@ class ContextWindowStrategyTest {
             baseClient = HttpClient(mockServer.mockEngine),
             contextWindowStrategy = ContextWindowStrategy.Companion.FitPrompt(
                 promptTokenizer = null,
-                granularity = 1024,
-                minimumContextLength = 2048,
+                contextChunkSize = 1024,
+                minimumChunkCount = 2
             ),
         )
 
@@ -133,8 +133,8 @@ class ContextWindowStrategyTest {
             baseClient = HttpClient(mockServer.mockEngine),
             contextWindowStrategy = ContextWindowStrategy.Companion.FitPrompt(
                 promptTokenizer = null,
-                granularity = 1024,
-                minimumContextLength = 2048,
+                contextChunkSize = 1024,
+                minimumChunkCount = 2
             ),
         )
 
@@ -172,8 +172,8 @@ class ContextWindowStrategyTest {
                     override fun tokenCountFor(message: Message): Int = error("Not needed")
                     override fun tokenCountFor(prompt: Prompt): Int = 9000
                 },
-                granularity = 1024,
-                minimumContextLength = 2048,
+                contextChunkSize = 1024,
+                minimumChunkCount = 2
             ),
         )
 

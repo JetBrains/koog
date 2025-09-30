@@ -31,8 +31,24 @@ private val logger = KotlinLogging.logger { }
  */
 public interface ContextWindowStrategy {
 
+    /**
+     * Computes the context length for a given prompt and language model.
+     * This may involve calculating the number of tokens used in the prompt
+     * and determining if it fits within the model's context length constraints.
+     *
+     * @param prompt The [Prompt] containing the list of messages, unique identifier,
+     *        and language model parameters that describe the input for the LLM.
+     * @param model The [LLModel] representing the language model used to process the prompt,
+     *        which includes its provider, identifier, capabilities, and context length.
+     * @return The context length as a [Long], indicating the number of tokens used
+     *         in the prompt, or `null` if it cannot be calculated.
+     */
     public fun computeContextLength(prompt: Prompt, model: LLModel): Long?
 
+    /**
+     * Provides companion object-related strategies for determining the context window length.
+     * It contains multiple strategies that are implemented as subtypes of [ContextWindowStrategy].
+     */
     public companion object {
         /**
          * A strategy for letting the Ollama server decide the context window length.
@@ -70,21 +86,22 @@ public interface ContextWindowStrategy {
          *
          * @param promptTokenizer The [PromptTokenizer] to use for computing the prompt length,
          *   or null to use the last reported token usage.
-         * @param granularity The granularity to use for computing the context window length. Defaults to 2048.
-         * @param minimumContextLength The minimum context window length,
-         *   if the prompt length is less than it or cannot be computed yet.
-         *   If not null, [minimumContextLength] must be a multiple of the [granularity].
-         *   If null, we let Ollama decide the context window length.
+         * @param contextChunkSize The granularity to use for computing the context window length. Defaults to 2048.
+         * @param minimumChunkCount The minimum number of context chunks in the context.
+         *
+         * Example: contextChunkSize = 512, minimumChunkCount = 2, then [minimumContextLength] = 1024
          */
         public data class FitPrompt(
             val promptTokenizer: PromptTokenizer? = null,
-            val granularity: Long = 2048,
-            val minimumContextLength: Long? = null,
+            val contextChunkSize: Long = 2048,
+            val minimumChunkCount: Long? = null
         ) : ContextWindowStrategy {
 
+            private val minimumContextLength: Long? = minimumChunkCount?.let { cnt -> cnt * contextChunkSize }
+
             init {
-                require(granularity > 0) { "Granularity must be greater than 0" }
-                require(minimumContextLength == null || minimumContextLength % granularity == 0L) {
+                require(contextChunkSize > 0) { "Granularity must be greater than 0" }
+                require(minimumContextLength == null || minimumContextLength % contextChunkSize == 0L) {
                     "Minimum context length must be a multiple of granularity"
                 }
             }
@@ -105,7 +122,7 @@ public interface ContextWindowStrategy {
                     return model.contextLength
                 }
 
-                return (promptLength / granularity + 1) * granularity
+                return (promptLength / contextChunkSize + 1) * contextChunkSize
             }
         }
     }
