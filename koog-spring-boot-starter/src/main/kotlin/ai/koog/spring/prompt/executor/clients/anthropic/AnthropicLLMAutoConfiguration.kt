@@ -6,19 +6,32 @@ import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 import ai.koog.spring.prompt.executor.clients.toRetryingClient
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.AutoConfiguration
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.PropertySource
 
 /**
- * [KoogAutoConfiguration] is a Spring Boot auto-configuration class that configures and provides beans
- * for various LLM (Large Language Model) provider clients. It ensures that the beans are only
- * created if the corresponding properties are defined in the application's configuration.
+ * Auto-configuration class for Anthropic LLM integration in a Spring Boot application.
  *
- * This configuration includes support for Anthropic, Google, Ollama, OpenAI, DeepSeek, and OpenRouter providers.
- * Each provider is configured with specific settings and logic encapsulated within a
- * [SingleLLMPromptExecutor] instance backed by a respective client implementation.
+ * This class automatically configures the required beans for interacting with the Anthropic LLM
+ * when the appropriate configuration properties are set in the application. It specifically checks
+ * for the presence of the `enabled` and `api-key` properties under the prefix defined by
+ * [AnthropicKoogProperties].
+ *
+ * Beans provided by this configuration:
+ * - [AnthropicLLMClient]: Configured client for interacting with the Anthropic API.
+ * - [SingleLLMPromptExecutor]: Prompt executor that utilizes the configured Anthropic client.
+ *
+ * To enable this configuration, the `enabled` property must be set to `true` and a valid `api-key`
+ * must be provided in the application's property files.
+ *
+ * This configuration reads additional properties from the `anthropic-llm.properties` file located
+ * in the `META-INF/config/koog` classpath directory and binds them to the [AnthropicKoogProperties].
+ *
+ * @property properties Anthropic-specific configuration properties, automatically injected by Spring's
+ *                      configuration properties mechanism.
  */
 @AutoConfiguration
 @PropertySource("classpath:/META-INF/config/koog/anthropic-llm.properties")
@@ -33,6 +46,13 @@ public class AnthropicLLMAutoConfiguration(
 
     private val logger = LoggerFactory.getLogger(AnthropicLLMAutoConfiguration::class.java)
 
+    /**
+     * Creates and initializes an instance of [AnthropicLLMClient] with the specified API key and settings from the
+     * application properties. The client is configured to interact with the Anthropic LLM API using the provided
+     * base URL and credentials.
+     *
+     * @return An instance of [AnthropicLLMClient] configured for communication with the Anthropic API.
+     */
     @Bean
     public fun anthropicLLMClient(): AnthropicLLMClient {
         logger.info("Initializing AnthropicLLMClient with: $properties")
@@ -50,6 +70,7 @@ public class AnthropicLLMAutoConfiguration(
      * @return An instance of [SingleLLMPromptExecutor] configured with [AnthropicLLMClient].
      */
     @Bean
+    @ConditionalOnBean(AnthropicLLMClient::class)
     public fun anthropicExecutor(client: AnthropicLLMClient): SingleLLMPromptExecutor {
         return SingleLLMPromptExecutor(client.toRetryingClient(properties.retry))
     }

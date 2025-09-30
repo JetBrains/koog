@@ -6,16 +6,53 @@ import ai.koog.utils.lang.masked
 import org.springframework.boot.context.properties.ConfigurationProperties
 
 /**
- * Configuration properties for the Koog library used for integrating with Google LLM provider.
- * These properties are used in conjunction with the [GoogleLLMAutoConfiguration] auto-configuration class to initialize and
- * configure respective client implementations.
+ * Configuration properties for integrating with Google's LLM services in the Koog framework.
  *
- * Configuration prefix: `ai.koog.google`
+ * This class provides the necessary settings for enabling and configuring access
+ * to Google's LLM API, including authentication and retry behavior.
+ * The configuration is mapped using the prefix `ai.koog.google`.
  *
- * @param apiKey The API key used to authenticate requests to the provider's service
- * @param baseUrl The base URL of the provider's API endpoint. By default, it is set to `https://generativelanguage.googleapis.com`
+ * Parameters:
+ * @param enabled Indicates whether the Google LLM integration is enabled.
+ * @param apiKey The API key used for authenticating requests to Google's services.
+ * @param baseUrl The base URL of the Google LLM API.
+ * @param retry Optional configuration for retrying failed API calls.
+ *
+ * Properties:
+ * - `enabled`: Enables or disables the Google LLM integration.
+ * - `apiKey`: The key required for authenticating with the API.
+ * - `baseUrl`: URL endpoint for the Google LLM API.
+ * - `retry`: Defines retry behavior, such as maximum attempts and delays between retries.
+ *
+ * Usage:
+ * These properties are automatically bound to the Spring environment when specified
+ * in application configuration (e.g., `application.yml` or `application.properties`).
+ *
+ * Example configuration snippet in `application.yml` or `application.properties`:
+ * ```
+ * ai.koog.google.enabled=true
+ * ai.koog.google.api-key=your-google-api-key
+ * ai.koog.google.base-url=https://api.google.com/llm
+ * ai.koog.google.retry.enabled=true
+ * ai.koog.google.retry.max-attempts=3
+ * ai.koog.google.retry.initial-delay=2s
+ * ai.koog.google.retry.max-delay=10s
+ * ai.koog.google.retry.backoff-multiplier=2.0
+ * ai.koog.google.retry.jitter-factor=0.5
+ * ```
+ *
+ * Advanced Features:
+ * - The retry configuration supports customizable retries for handling transient failures.
+ * - Dedicated masking utility ensures that sensitive information, such as the API key, is
+ *   not exposed when serialized or logged.
+ *
+ * This class is primarily used in conjunction with the `GoogleLLMAutoConfiguration` auto-configuration
+ * class to initialize and configure the necessary beans for interacting with Google's LLM API.
+ *
+ * For more details on retry behavior, refer to the `RetryConfigKoogProperties` class.
+ * For shared configuration attributes, see the `KoogLlmClientProperties` interface.
  */
-@ConfigurationProperties(prefix = GoogleKoogProperties.PREFIX)
+@ConfigurationProperties(prefix = GoogleKoogProperties.PREFIX, ignoreUnknownFields = true)
 public class GoogleKoogProperties(
     public override val enabled: Boolean,
     public val apiKey: String,

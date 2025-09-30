@@ -6,16 +6,21 @@ import ai.koog.utils.lang.masked
 import org.springframework.boot.context.properties.ConfigurationProperties
 
 /**
- * Configuration properties for the Koog library used for integrating with OpenAI LLM provider.
- * These properties are used in conjunction with the [ai.koog.spring.KoogAutoConfiguration] auto-configuration class to initialize and
- * configure respective client implementations.
+ * Configuration class for OpenAI settings in the Koog framework.
+ * This class defines properties required to configure and use OpenAI-related services, such as API keys,
+ * base URLs for the services, and optional retry configurations.
  *
- * Configuration prefix: `ai.koog.openai`
+ * The class is annotated with `@ConfigurationProperties` to bind its fields to configuration file properties
+ * prefixed with `ai.koog.openai`.
  *
- * @param apiKey The API key used to authenticate requests to the provider's service
- * @param baseUrl The base URL of the provider's API endpoint. By default, it is set to `https://api.openai.com`
+ * @param enabled Determines if the OpenAI client is enabled.
+ * @param apiKey The API key required to authenticate requests to the OpenAI API.
+ * @param baseUrl The base URL for accessing the OpenAI API.
+ * @param retry Optional retry configuration settings, such as maximum attempts, delays, and backoff strategies.
+ *
+ * This configuration is used in `OpenAILLMAutoConfiguration` to set up the OpenAI client and related beans.
  */
-@ConfigurationProperties(prefix = OpenAIKoogProperties.PREFIX)
+@ConfigurationProperties(prefix = OpenAIKoogProperties.PREFIX, ignoreUnknownFields = true)
 public class OpenAIKoogProperties(
     public override val enabled: Boolean,
     public val apiKey: String,

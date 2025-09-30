@@ -3,14 +3,14 @@ package ai.koog.spring.prompt.executor.clients
 import ai.koog.spring.RetryConfigKoogProperties
 
 /**
- * Configuration properties for the Koog library used for integrating with DeepSeek LLM provider.
- * These properties are used in conjunction with the [KoogAutoConfiguration] auto-configuration class to initialize and
- * configure respective client implementations.
+ * Interface representing configuration properties for a Koog LLM Client.
  *
- * Configuration prefix: `ai.koog.deepseek`
+ * This interface is intended to provide the necessary configuration required to set up a LLM Client.
+ * It includes options for enabling the client, specifying the base URL, and defining retry configurations.
  *
- * @param apiKey The API key used to authenticate requests to the provider's service
- * @param baseUrl The base URL of the provider's API endpoint. By default, it is set to `https://api.deepseek.com`
+ * @param enabled Indicates whether the LLM client is enabled.
+ * @param baseUrl Specifies the base URL for the LLM client.
+ * @param retry Defines the retry configuration for the LLM client using [RetryConfigKoogProperties].
  */
 public interface KoogLlmClientProperties {
     public val enabled: Boolean

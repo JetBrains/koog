@@ -5,6 +5,7 @@ import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 import ai.koog.spring.prompt.executor.clients.toRetryingClient
 import org.springframework.boot.autoconfigure.AutoConfiguration
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
@@ -40,6 +41,12 @@ public class GoogleLLMAutoConfiguration(
     private val properties: GoogleKoogProperties
 ) {
 
+    /**
+     * Provides a `GoogleLLMClient` bean configured with the API key and base URL
+     * specified in the application's properties.
+     *
+     * @return A configured instance of `GoogleLLMClient`.
+     */
     @Bean
     public fun googleLLMClient(): GoogleLLMClient {
         return GoogleLLMClient(
@@ -56,6 +63,7 @@ public class GoogleLLMAutoConfiguration(
      * @return A [SingleLLMPromptExecutor] instance configured with a [GoogleLLMClient].
      */
     @Bean
+    @ConditionalOnBean(GoogleLLMClient::class)
     public fun googleExecutor(client: GoogleLLMClient): SingleLLMPromptExecutor {
         return SingleLLMPromptExecutor(client.toRetryingClient(properties.retry))
     }

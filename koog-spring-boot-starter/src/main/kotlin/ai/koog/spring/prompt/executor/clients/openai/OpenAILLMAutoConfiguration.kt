@@ -6,6 +6,7 @@ import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 import ai.koog.spring.prompt.executor.clients.toRetryingClient
 import org.springframework.boot.autoconfigure.AutoConfiguration
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
@@ -57,6 +58,7 @@ public class OpenAILLMAutoConfiguration(
      * @return A [SingleLLMPromptExecutor] instance configured with a [GoogleLLMClient].
      */
     @Bean
+    @ConditionalOnBean(OpenAILLMClient::class)
     public fun openAIExecutor(client: OpenAILLMClient): SingleLLMPromptExecutor {
         return SingleLLMPromptExecutor(client.toRetryingClient(properties.retry))
     }

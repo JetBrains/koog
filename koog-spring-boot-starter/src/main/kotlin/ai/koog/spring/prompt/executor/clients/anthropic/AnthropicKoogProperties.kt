@@ -6,16 +6,21 @@ import ai.koog.utils.lang.masked
 import org.springframework.boot.context.properties.ConfigurationProperties
 
 /**
- * Configuration properties for the Koog library used for integrating with Anthropic LLM provider.
- * These properties are used in conjunction with the [ai.koog.spring.KoogAutoConfiguration] auto-configuration class to initialize and
- * configure respective client implementations.
+ * Configuration properties for configuring Anthropic-related clients in the Koog framework.
  *
- * Configuration prefix: `ai.koog.anthropic`
+ * This class allows defining settings necessary for integrating with the Anthropic LLM (Large Language Model)
+ * client. It extends [KoogLlmClientProperties] to include common LLM client configurations such as `enabled`,
+ * `baseUrl`, and retry options. Additionally, it includes the `apiKey` property specific to the Anthropic client.
  *
- * @param apiKey The API key used to authenticate requests to the provider's service
- * @param baseUrl The base URL of the provider's API endpoint. By default, it is set to `https://api.anthropic.com`
+ * The properties are bound to the configuration prefix defined by [AnthropicKoogProperties.PREFIX], which is
+ * "ai.koog.anthropic". This allows configuring the client via property files in a Spring Boot application.
+ *
+ * @param enabled Indicates whether the Anthropic client is enabled. If `false`, the client will not be configured.
+ * @param apiKey The API key used to authenticate requests to the Anthropic API.
+ * @param baseUrl The base URL of the Anthropic API for sending requests.
+ * @param retry Retry configuration for the client in case of failed or timeout requests. This is optional.
  */
-@ConfigurationProperties(prefix = AnthropicKoogProperties.PREFIX)
+@ConfigurationProperties(prefix = AnthropicKoogProperties.PREFIX, ignoreUnknownFields = true)
 public class AnthropicKoogProperties(
     public override val enabled: Boolean,
     public val apiKey: String,
@@ -33,6 +38,12 @@ public class AnthropicKoogProperties(
         public const val PREFIX: String = "ai.koog.anthropic"
     }
 
+    /**
+     * Provides a string representation of the `AnthropicKoogProperties` instance, including
+     * the masked API key, base URL, and retry configuration.
+     *
+     * @return A string that represents the current state of the `AnthropicKoogProperties` object.
+     */
     override fun toString(): String {
         return "AnthropicKoogProperties(apiKey='${apiKey.masked()}', baseUrl='$baseUrl', retry=$retry)"
     }

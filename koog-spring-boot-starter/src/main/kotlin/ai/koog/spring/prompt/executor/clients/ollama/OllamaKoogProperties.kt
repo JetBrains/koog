@@ -5,15 +5,24 @@ import ai.koog.spring.prompt.executor.clients.KoogLlmClientProperties
 import org.springframework.boot.context.properties.ConfigurationProperties
 
 /**
- * Configuration properties for the Koog library used for integrating with Ollama LLM provider.
- * These properties are used in conjunction with the [ai.koog.spring.KoogAutoConfiguration] auto-configuration class to initialize and
- * configure respective client implementations.
+ * Configuration properties for the Ollama integration in the Koog framework.
  *
- * Configuration prefix: `ai.koog.ollama`
+ * This class defines properties that control the connection and behavior when interacting
+ * with the Ollama Large Language Model (LLM) service.
  *
- * @param baseUrl The base URL of the provider's API endpoint. By default, it is set to `http://localhost:11434`
+ * These properties are typically configured in the application properties or YAML file.
+ *
+ * The configuration prefix for these properties is defined as `ai.koog.ollama`.
+ * It is used to map these properties in the application configuration file.
+ *
+ * This class is designed to work along with the `OllamaLLMAutoConfiguration` class to
+ * automatically initialize and configure the required beans for the Ollama client and executor.
+ *
+ * @param enabled Indicates whether the Ollama integration is enabled.
+ * @param baseUrl The URL of the API endpoint for Ollama service.
+ * @param retry The retry settings for handling request failures.
  */
-@ConfigurationProperties(prefix = OllamaKoogProperties.PREFIX)
+@ConfigurationProperties(prefix = OllamaKoogProperties.PREFIX, ignoreUnknownFields = true)
 public class OllamaKoogProperties(
     public override val enabled: Boolean,
     public override val baseUrl: String,
@@ -30,6 +39,14 @@ public class OllamaKoogProperties(
         public const val PREFIX: String = "ai.koog.ollama"
     }
 
+    /**
+     * Returns a string representation of the `OllamaKoogProperties` object.
+     *
+     * The string includes values for the `enabled`, `baseUrl`, and `retry` properties
+     * to provide a comprehensive overview of the configuration state of the object.
+     *
+     * @return a string describing the current state of the `OllamaKoogProperties` instance.
+     */
     override fun toString(): String {
         return "OllamaKoogProperties(enabled=$enabled, baseUrl='$baseUrl', retry=$retry)"
     }

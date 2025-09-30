@@ -2,20 +2,30 @@ package ai.koog.spring.prompt.executor.clients.deepseek
 
 import ai.koog.spring.RetryConfigKoogProperties
 import ai.koog.spring.prompt.executor.clients.KoogLlmClientProperties
+import ai.koog.spring.prompt.executor.clients.deepseek.DeepSeekKoogProperties.Companion.PREFIX
 import ai.koog.utils.lang.masked
 import org.springframework.boot.context.properties.ConfigurationProperties
 
 /**
- * Configuration properties for the Koog library used for integrating with DeepSeek LLM provider.
- * These properties are used in conjunction with the [DeepSeekLLMAutoConfiguration] auto-configuration class to initialize and
- * configure respective client implementations.
+ * Configuration properties class for DeepSeek LLM provider integration within the Koog framework.
  *
- * Configuration prefix: `ai.koog.deepseek`
+ * This class is used to define and manage application-level configuration parameters for connecting
+ * to the DeepSeek provider. It includes properties such as API key, base URL, and optional retry settings.
  *
- * @param apiKey The API key used to authenticate requests to the provider's service
- * @param baseUrl The base URL of the provider's API endpoint. By default, it is set to `https://api.deepseek.com`
+ * The properties are auto-configured via Spring Boot's `@ConfigurationProperties` using the prefix
+ * defined in [PREFIX].
+ *
+ * Implements the [KoogLlmClientProperties] interface, which provides base attributes for all LLM client property configurations.
+ *
+ * Properties from this class are typically consumed by auto-configuration classes, such as [DeepSeekLLMAutoConfiguration],
+ * to initialize and configure necessary beans for working with the DeepSeek API.
+ *
+ * @param enabled Indicates whether DeepSeek API integration is enabled (true or false).
+ * @param apiKey An API key string required to authenticate requests to the DeepSeek external service.
+ * @param baseUrl The base URL endpoint for DeepSeek API calls.
+ * @param retry Optional retry configuration for API requests, represented by [RetryConfigKoogProperties].
  */
-@ConfigurationProperties(prefix = DeepSeekKoogProperties.PREFIX)
+@ConfigurationProperties(prefix = DeepSeekKoogProperties.PREFIX, ignoreUnknownFields = true)
 public class DeepSeekKoogProperties(
     public override val enabled: Boolean,
     public val apiKey: String,

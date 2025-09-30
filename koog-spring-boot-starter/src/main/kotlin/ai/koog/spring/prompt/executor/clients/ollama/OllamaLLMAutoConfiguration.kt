@@ -11,16 +11,20 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.PropertySource
 
 /**
- * Auto-configuration class for integrating the Ollama LLM provider with the application.
+ * Auto-configuration class for integrating the Ollama Large Language Model (LLM) service into applications.
  *
- * This configuration class initializes necessary beans and ensures proper setup for using the
- * Ollama LLM provider. It activates when the `ai.koog.ollama.api-key` property is defined in the
- * application configuration. It relies on properties defined in [OllamaKoogProperties] and provides
- * the necessary clients for interfacing with the provider.
+ * This configuration initializes and provides the necessary beans to enable interaction with the Ollama LLM API.
+ * It relies on properties defined in the `OllamaKoogProperties` class to set up the service.
  *
- * The configuration:
- * - Reads properties from `ollama-llm.properties` located in the META-INF directory.
- * - Registers beans for an Ollama client and a prompt executor.
+ * The configuration is conditional and will only be initialized if:
+ * - The `enabled` property within `OllamaKoogProperties` is set to `true`.
+ * - The required `OllamaKoogProperties` are provided in the application configuration.
+ *
+ * Initializes the following beans:
+ * - `OllamaClient`: A client for interacting with the Ollama LLM service.
+ * - `SingleLLMPromptExecutor`: Executes single-prompt interactions with Ollama, utilizing the client.
+ *
+ * This configuration allows seamless integration with the Ollama API while enabling properties-based customization.
  */
 @AutoConfiguration
 @PropertySource("classpath:/META-INF/config/koog/ollama-llm.properties")

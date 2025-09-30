@@ -5,21 +5,20 @@ import ai.koog.prompt.executor.clients.openrouter.OpenRouterLLMClient
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 import ai.koog.spring.prompt.executor.clients.toRetryingClient
 import org.springframework.boot.autoconfigure.AutoConfiguration
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.PropertySource
 
 /**
- * Autoconfiguration class for integrating the OpenRouter LLM (Large Language Model) client within a Spring application.
- * This class is responsible for creating and configuring the necessary beans to interact with the OpenRouter API.
+ * Auto-configuration class for integrating OpenRouter with Koog framework.
  *
- * The configuration is activated when the corresponding properties in the application's configuration file are set:
- * - The API key must be defined using the prefix specified in [OpenRouterKoogProperties.PREFIX].
- * - The integration must be explicitly enabled by setting the `enabled` property to `true`.
+ * This class enables the automatic configuration of beans and properties to work with OpenRouter's LLM services,
+ * provided the application properties have been set with the required prefix and fields.
  *
- * The `OpenRouterLLMAutoConfiguration` class relies on the provided [OpenRouterKoogProperties] for configuration,
- * which includes essential parameters such as the API key, base URL, and retry settings.
+ * The configuration is activated only when both `ai.koog.openrouter.enabled` is set to `true`
+ * and `ai.koog.openrouter.api-key` is provided in the application properties.
  */
 @AutoConfiguration
 @PropertySource("classpath:/META-INF/config/koog/openrouter-llm.properties")
@@ -54,6 +53,7 @@ public class OpenRouterLLMAutoConfiguration(
      *
      * @param client The `OpenRouterLLMClient` instance used to configure the `Single*/
     @Bean
+    @ConditionalOnBean(OpenRouterLLMClient::class)
     public fun openRouterExecutor(client: OpenRouterLLMClient): SingleLLMPromptExecutor {
         return SingleLLMPromptExecutor(client.toRetryingClient(properties.retry))
     }
