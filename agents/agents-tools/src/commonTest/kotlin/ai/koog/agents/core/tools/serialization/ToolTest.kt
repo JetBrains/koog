@@ -3,15 +3,12 @@ package ai.koog.agents.core.tools.serialization
 import ai.koog.agents.core.tools.DirectToolCallsEnabler
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.Tool
-import ai.koog.agents.core.tools.ToolArgs
-import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.agents.core.tools.ToolParameterDescriptor
-import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
@@ -29,15 +26,13 @@ object Enabler : DirectToolCallsEnabler
 class ToolTest {
     // Unstructured tool
 
-    private object UnstructuredTool : SimpleTool<ToolArgs.Empty>() {
-        override val argsSerializer = ToolArgs.Empty.serializer()
+    private object UnstructuredTool : SimpleTool<Unit>() {
+        override val argsSerializer = Unit.serializer()
 
-        override val descriptor = ToolDescriptor(
-            name = "unstructured_tool",
-            description = "Unstructured tool"
-        )
+        override val name: String = "unstructured_tool"
+        override val description: String = "Unstructured tool"
 
-        override suspend fun doExecute(args: ToolArgs.Empty): String = "Simple result"
+        override suspend fun doExecute(args: Unit): String = "Simple result"
     }
 
     @Test
@@ -45,38 +40,23 @@ class ToolTest {
         val args = JsonObject(emptyMap())
         val result = UnstructuredTool.execute(UnstructuredTool.decodeArgs(args), Enabler)
 
-        assertEquals("Simple result", result.toStringDefault())
+        assertEquals("Simple result", result)
     }
 
     // Structured tool
 
     private object SampleStructuredTool : Tool<SampleStructuredTool.Args, SampleStructuredTool.Result>() {
         @Serializable
-        data class Args(val arg1: String, val arg2: Int) : ToolArgs
+        data class Args(val arg1: String, val arg2: Int)
 
         @Serializable
-        data class Result(val first: String, val second: Int) : ToolResult {
-            override fun toStringDefault(): String = ToolJson.encodeToString(serializer(), this)
-        }
+        data class Result(val first: String, val second: Int)
 
         override val argsSerializer = Args.serializer()
+        override val resultSerializer: KSerializer<Result> = Result.serializer()
 
-        override val descriptor = ToolDescriptor(
-            name = "structured_tool",
-            description = "Structured tool",
-            requiredParameters = listOf(
-                ToolParameterDescriptor(
-                    name = "arg1",
-                    description = "arg1",
-                    type = ToolParameterType.String
-                ),
-                ToolParameterDescriptor(
-                    name = "arg2",
-                    description = "arg2",
-                    type = ToolParameterType.Integer
-                )
-            )
-        )
+        override val name: String = "structured_tool"
+        override val description: String = "Structured tool"
 
         override suspend fun execute(args: Args): Result = Result("result", 1)
     }
@@ -92,13 +72,13 @@ class ToolTest {
         assertEquals(
             //language=JSON
             expected = """{"first":"result","second":1}""",
-            actual = result.toStringDefault()
+            actual = SampleStructuredTool.encodeResultToStringUnsafe(result)
         )
     }
 
     // Custom format tool
 
-    private abstract class CustomFormatSerializer<T : ToolResult> : KSerializer<T> {
+    private abstract class CustomFormatSerializer<T> : KSerializer<T> {
         final override val descriptor = PrimitiveSerialDescriptor("CustomFormat", PrimitiveKind.STRING)
 
         abstract fun toCustomFormat(value: T): String
@@ -112,20 +92,19 @@ class ToolTest {
         }
     }
 
-    private object CustomFormatTool : Tool<ToolArgs.Empty, CustomFormatTool.Result>() {
+    private object CustomFormatTool : Tool<Unit, CustomFormatTool.Result>() {
         @Serializable
         data class Result(val foo: String, val bar: String) : ToolResult {
             override fun toStringDefault(): String = "Foo: $foo | Bar: $bar"
         }
 
-        override val argsSerializer = ToolArgs.Empty.serializer()
+        override val argsSerializer = Unit.serializer()
+        override val resultSerializer: KSerializer<Result> = Result.serializer()
 
-        override val descriptor = ToolDescriptor(
-            name = "custom_format_tool",
-            description = "Custom format tool",
-        )
+        override val name: String = "custom_format_tool"
+        override val description: String = "Custom format tool"
 
-        override suspend fun execute(args: ToolArgs.Empty): Result {
+        override suspend fun execute(args: Unit): Result {
             return Result("first result", "second result")
         }
     }

@@ -10,10 +10,8 @@ import ai.koog.agents.core.model.message.EnvironmentToolResultMultipleToAgentMes
 import ai.koog.agents.core.model.message.EnvironmentToolResultToAgentContent
 import ai.koog.agents.core.tools.DirectToolCallsEnabler
 import ai.koog.agents.core.tools.Tool
-import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolException
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.prompt.message.Message
 import io.github.oshai.kotlinlogging.KLogger
@@ -67,11 +65,14 @@ internal class GenericAgentEnvironment(
         logger.debug {
             "Received results from tools call (" +
                 "tools: [${toolCalls.joinToString(", ") { it.tool }}], " +
-                "results: [${results.joinToString(", ") { it.result?.toStringDefault() ?: "null" }}])"
+                "results: [${results.joinToString(", ") { it.resultString() }}])"
         }
 
         return results
     }
+
+    private fun ReceivedToolResult.resultString(): String =
+        toolRegistry.tools.firstOrNull { it.name == tool }?.encodeResultToStringUnsafe(result) ?: "null"
 
     override suspend fun reportProblem(exception: Throwable) {
         val agentRunInfo = currentCoroutineContext().getAgentRunInfoElementOrThrow()
@@ -87,7 +88,7 @@ internal class GenericAgentEnvironment(
         toolName: String,
         agentId: String,
         message: String,
-        result: ToolResult?
+        result: Any?
     ): EnvironmentToolResultToAgentContent = AIAgentEnvironmentToolResultToAgentContent(
         toolCallId = toolCallId,
         toolName = toolName,
@@ -116,13 +117,13 @@ internal class GenericAgentEnvironment(
                 )
             }
 
-            pipeline.onToolCall(content.runId, content.toolCallId, tool, toolArgs)
+            pipeline.onToolExecutionStarting(content.runId, content.toolCallId, tool, toolArgs)
 
             val toolResult = try {
                 @Suppress("UNCHECKED_CAST")
-                (tool as Tool<ToolArgs, ToolResult>).execute(toolArgs, toolEnabler)
+                (tool as Tool<Any?, Any?>).execute(toolArgs, toolEnabler)
             } catch (e: ToolException) {
-                pipeline.onToolValidationError(content.runId, content.toolCallId, tool, toolArgs, e.message)
+                pipeline.onToolValidationFailed(content.runId, content.toolCallId, tool, toolArgs, e.message)
 
                 return toolResult(
                     message = e.message,
@@ -134,7 +135,7 @@ internal class GenericAgentEnvironment(
             } catch (e: Exception) {
                 logger.error(e) { "Tool \"${tool.name}\" failed to execute with arguments: ${content.toolArgs}" }
 
-                pipeline.onToolCallFailure(content.runId, content.toolCallId, tool, toolArgs, e)
+                pipeline.onToolExecutionFailed(content.runId, content.toolCallId, tool, toolArgs, e)
 
                 return toolResult(
                     message = "Tool \"${tool.name}\" failed to execute because of ${e.message}!",
@@ -145,15 +146,15 @@ internal class GenericAgentEnvironment(
                 )
             }
 
-            pipeline.onToolCallResult(content.runId, content.toolCallId, tool, toolArgs, toolResult)
+            pipeline.onToolExecutionCompleted(content.runId, content.toolCallId, tool, toolArgs, toolResult)
 
-            logger.debug { "Completed execution of ${content.toolName} with result: $toolResult" }
+            logger.trace { "Completed execution of ${content.toolName} with result: $toolResult" }
 
             return toolResult(
                 toolCallId = content.toolCallId,
                 toolName = content.toolName,
                 agentId = strategyId,
-                message = toolResult.toStringDefault(),
+                message = tool.encodeResultToStringUnsafe(toolResult),
                 result = toolResult
             )
         }

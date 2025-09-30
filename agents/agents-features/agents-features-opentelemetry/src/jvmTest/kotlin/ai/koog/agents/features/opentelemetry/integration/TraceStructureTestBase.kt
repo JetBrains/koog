@@ -2,7 +2,6 @@ package ai.koog.agents.features.opentelemetry.integration
 
 import ai.koog.agents.core.agent.context.DetachedPromptExecutorAPI
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
-import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeExecuteTool
@@ -11,11 +10,11 @@ import ai.koog.agents.core.dsl.extension.nodeLLMRequestStructured
 import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
 import ai.koog.agents.core.dsl.extension.onAssistantMessage
 import ai.koog.agents.core.dsl.extension.onToolCall
-import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.LLMDescription
-import ai.koog.agents.ext.agent.ProvideStringSubgraphResult
-import ai.koog.agents.ext.agent.StringSubgraphResult
+import ai.koog.agents.core.tools.annotations.Tool
+import ai.koog.agents.core.tools.reflect.asTool
+import ai.koog.agents.core.tools.reflect.tool
 import ai.koog.agents.ext.agent.subgraphWithTask
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.assertMapsEqual
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.createAgent
@@ -28,6 +27,7 @@ import ai.koog.agents.features.opentelemetry.mock.TestGetWeatherTool
 import ai.koog.agents.features.opentelemetry.span.GenAIAgentSpan
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.agents.testing.tools.mockLLMAnswer
+import ai.koog.agents.testing.tools.mockLLMToolCall
 import ai.koog.agents.utils.use
 import ai.koog.prompt.dsl.ModerationCategory
 import ai.koog.prompt.dsl.ModerationCategoryResult
@@ -400,20 +400,24 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
         }
     }
 
+    @Tool
+    @LLMDescription("Provides final result of the task")
+    fun subgraphFinish(result: String): String = result
+
     @Test
     fun testSubgraphWithFinishTool() = runBlocking {
         MockSpanExporter().use { mockSpanExporter ->
+            val finishTool = ::subgraphFinish.asTool()
+
             val strategy = strategy("subgraph-finish-tool-strategy") {
-                val sg by subgraphWithTask<String>(
-                    toolSelectionStrategy = ToolSelectionStrategy.Tools(
-                        listOf(ProvideStringSubgraphResult.descriptor)
-                    )
+                val sg by subgraphWithTask<String, String>(
+                    tools = listOf(finishTool),
+                    finishToolFunction = ::subgraphFinish
                 ) { input ->
                     "Please finish the task by calling the finish tool with the final result for: $input"
                 }
 
-                edge(nodeStart forwardTo sg)
-                edge(sg forwardTo nodeFinish transformed { it.result })
+                nodeStart then sg then nodeFinish
             }
 
             val model = OpenAIModels.Chat.GPT4o
@@ -423,14 +427,11 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
             val finalString = "Task done for: test subgraph"
 
             val mockExecutor = getMockExecutor {
-                mockLLMToolCall(
-                    ProvideStringSubgraphResult,
-                    StringSubgraphResult(finalString)
-                ) onRequestContains "Please finish the task"
+                mockLLMToolCall(::subgraphFinish, finalString) onRequestContains "Please finish the task"
             }
 
             val toolRegistry = ToolRegistry {
-                tool(ProvideStringSubgraphResult)
+                tool(::subgraphFinish)
             }
 
             runAgentWithStrategy(
@@ -453,8 +454,8 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
 
             val toolAttrs = toolSpan.attributes.asMap().map { (k, v) -> k.key to v }.toMap()
             val expectedToolAttrs = mapOf(
-                "gen_ai.tool.name" to ProvideStringSubgraphResult.name,
-                "gen_ai.tool.description" to ProvideStringSubgraphResult.descriptor.description,
+                "gen_ai.tool.name" to finishTool.name,
+                "gen_ai.tool.description" to finishTool.descriptor.description,
                 "input.value" to "{\"result\":\"$finalString\"}",
                 "output.value" to "{\"result\":\"$finalString\"}",
             )
@@ -802,7 +803,7 @@ abstract class TraceStructureTestBase(private val openTelemetryConfigurator: Ope
             )
 
             val promptExecutor = getMockExecutor {
-                addModerationResponseExactPattern<ToolArgs>(userPrompt, moderationResult)
+                addModerationResponseExactPattern(userPrompt, moderationResult)
             }
 
             runAgentWithStrategy(

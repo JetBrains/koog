@@ -31,12 +31,17 @@ val agent = AIAgent(
     install(Tracing) {
         // Configure message processors to handle trace events
         addMessageProcessor(TraceFeatureMessageLogWriter(logger))
-        addMessageProcessor(TraceFeatureMessageFileWriter(outputPath, fileSystem::sink))
+        
+        val fileWriter = TraceFeatureMessageFileWriter(
+            outputPath,
+            { path: Path -> SystemFileSystem.sink(path).buffered() }
+        )
+        addMessageProcessor(fileWriter)
 
         // Optionally filter messages
-        messageFilter = { message -> 
+        fileWriter.setMessageFilter { message -> 
             // Only trace LLM calls and tool calls
-            message is LLMCallStartEvent || message is ToolCallEvent 
+            message is BeforeLLMCallEvent || message is ToolCallEvent 
         }
     }
 }
@@ -70,8 +75,8 @@ AgentStartedEvent (strategy name: my-agent-strategy)
 StrategyStartEvent (strategy name: my-agent-strategy)
 NodeExecutionStartEvent (node: definePrompt, input: user query)
 NodeExecutionEndEvent (node: definePrompt, input: user query, output: processed query)
-LLMCallStartEvent (prompt: Please analyze the following code...)
-LLMCallEndEvent (response: I've analyzed the code and found...)
+BeforeLLMCallEvent (prompt: Please analyze the following code...)
+AfterLLMCallEvent (response: I've analyzed the code and found...)
 ToolCallEvent (tool: readFile, tool args: {"path": "src/main.py"})
 ToolCallResultEvent (tool: readFile, tool args: {"path": "src/main.py"}, result: "def main():...")
 StrategyFinishedEvent (strategy name: my-agent-strategy, result: Success)

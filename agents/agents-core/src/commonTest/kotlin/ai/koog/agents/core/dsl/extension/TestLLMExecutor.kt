@@ -7,8 +7,10 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.streaming.toStreamFrame
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.datetime.Clock
 
 class TestLLMExecutor : PromptExecutor {
@@ -35,9 +37,12 @@ class TestLLMExecutor : PromptExecutor {
         return listOf(handlePrompt(prompt))
     }
 
-    override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> = flow {
-        emit(handlePrompt(prompt).content)
-    }
+    override fun executeStreaming(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>
+    ): Flow<StreamFrame> =
+        flowOf(handlePrompt(prompt).toStreamFrame())
 
     override suspend fun moderate(
         prompt: Prompt,

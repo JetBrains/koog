@@ -1,4 +1,4 @@
-rootProject.name = "koog-agents"
+rootProject.name = "koog"
 
 pluginManagement {
     repositories {
@@ -23,8 +23,6 @@ include(":agents:agents-mcp-server")
 include(":agents:agents-test")
 include(":agents:agents-tools")
 include(":agents:agents-utils")
-
-include(":examples")
 
 include(":integration-tests")
 
@@ -69,3 +67,4 @@ include(":koog-ktor")
 include(":docs")
 
 include(":test-utils")
+include(":utils")

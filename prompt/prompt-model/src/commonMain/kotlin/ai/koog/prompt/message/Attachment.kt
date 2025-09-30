@@ -1,5 +1,7 @@
 package ai.koog.prompt.message
 
+import ai.koog.utils.serializers.ByteArrayAsBase64Serializer
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.io.encoding.ExperimentalEncodingApi
 
@@ -116,20 +118,26 @@ public sealed interface AttachmentContent {
     @Serializable
     public sealed interface Binary : AttachmentContent {
         /**
-         * Base64 representation ofr the binary content
+         * Base64 representation of the binary content
          */
-        public val base64: String
+        public fun asBase64(): String
+
+        /**
+         * Returns the binary content as a byte array.
+         *
+         * @return a ByteArray representing the binary content.
+         */
+        public fun asBytes(): ByteArray
 
         /**
          * Binary content represented as byte array.
          */
         @Serializable
-        public data class Bytes(val data: ByteArray) : Binary {
-            /**
-             * Lazily evaluated Base64 representation of the underlying byte array
-             */
-            @OptIn(ExperimentalEncodingApi::class)
-            override val base64: String by lazy { kotlin.io.encoding.Base64.encode(data) }
+        public data class Bytes(
+            @SerialName("base64")
+            @Serializable(with = ByteArrayAsBase64Serializer::class)
+            val data: ByteArray
+        ) : Binary {
 
             override fun equals(other: Any?): Boolean {
                 if (this === other) return true
@@ -147,13 +155,18 @@ public sealed interface AttachmentContent {
             override fun toString(): String {
                 return "Bytes(length=${data.size})"
             }
+
+            @OptIn(ExperimentalEncodingApi::class)
+            override fun asBase64(): String = kotlin.io.encoding.Base64.encode(data)
+
+            override fun asBytes(): ByteArray = data
         }
 
         /**
          * Binary content represented as Base64 encoded string.
          */
         @Serializable
-        public data class Base64(override val base64: String) : Binary {
+        public data class Base64(val base64: String) : Binary {
             override fun toString(): String {
                 return "Base64(length=${base64.length})"
             }
@@ -164,7 +177,9 @@ public sealed interface AttachmentContent {
              * @return a ByteArray representation of the decoded Base64 string.
              */
             @OptIn(ExperimentalEncodingApi::class)
-            public fun toBytes(): ByteArray = kotlin.io.encoding.Base64.decode(base64)
+            public override fun asBytes(): ByteArray = kotlin.io.encoding.Base64.decode(base64)
+
+            override fun asBase64(): String = base64
         }
     }
 }

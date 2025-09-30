@@ -25,7 +25,6 @@ kotlin {
                 api(libs.kotlinx.io.core)
                 api(libs.kotlinx.coroutines.core)
                 api(libs.ktor.client.cio)
-                api(libs.ktor.client.sse)
                 implementation(libs.oshai.kotlin.logging)
             }
         }

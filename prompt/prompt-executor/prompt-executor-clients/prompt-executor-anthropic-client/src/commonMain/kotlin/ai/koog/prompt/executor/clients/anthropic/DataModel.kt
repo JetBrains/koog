@@ -1,10 +1,12 @@
 package ai.koog.prompt.executor.clients.anthropic
 
 import ai.koog.prompt.executor.clients.InternalLLMClientApi
+import ai.koog.prompt.executor.clients.serialization.AdditionalPropertiesFlatteningSerializer
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.EncodeDefault.Mode.ALWAYS
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 
 /**
@@ -27,12 +29,17 @@ import kotlinx.serialization.json.JsonObject
 public data class AnthropicMessageRequest(
     val model: String,
     val messages: List<AnthropicMessage>,
+    @SerialName("max_tokens")
+    @EncodeDefault
     val maxTokens: Int = MAX_TOKENS_DEFAULT,
     val temperature: Double? = null,
     val system: List<SystemAnthropicMessage>? = null,
     val tools: List<AnthropicTool>? = null,
+    @EncodeDefault
     val stream: Boolean = false,
+    @SerialName("tool_choice")
     val toolChoice: AnthropicToolChoice? = null,
+    val additionalProperties: Map<String, JsonElement>? = null,
 ) {
     init {
         require(maxTokens > 0) { "maxTokens must be greater than 0, but was $maxTokens" }
@@ -351,16 +358,16 @@ public sealed class AnthropicResponseContent {
 /**
  * Represents the usage statistics of the Anthropic LLM API.
  *
- * @property inputTokens The number of tokens sent as input to the LLM.
- * @property outputTokens The number of tokens received as output from the LLM.
+ * @property inputTokens The number of tokens sent as input to the LLM. Optional in streaming responses.
+ * @property outputTokens The number of tokens received as output from the LLM. Optional in streaming responses.
  *
  * Note: This API is marked with [InternalLLMClientApi] and is intended for internal use only.
  */
 @InternalLLMClientApi
 @Serializable
 public data class AnthropicUsage(
-    val inputTokens: Int,
-    val outputTokens: Int
+    val inputTokens: Int? = null,
+    val outputTokens: Int? = null,
 )
 
 /**
@@ -369,16 +376,24 @@ public data class AnthropicUsage(
  * This data class encapsulates the structure of a streamed response,
  * including its type, any delta updates to the content, and the complete message data when applicable.
  *
- * @property type The type of the response.
+ * @property type The type of the response (e.g., "content_block_start", "content_block_delta", "message_delta").
+ * @property index The index of the content block in streaming responses. Present in content block events.
+ * @property contentBlock The content block data for "content_block_start" events, containing tool use information.
  * @property delta An optional incremental update to the message content, represented as [AnthropicStreamDelta].
  * @property message An optional complete response message, represented as [AnthropicResponse].
+ * @property usage Optional usage statistics for the response, including token counts.
+ * @property error Optional error information if an error occurred during streaming.
  */
 @InternalLLMClientApi
 @Serializable
 public data class AnthropicStreamResponse(
     val type: String,
+    val index: Int? = null,
+    val contentBlock: AnthropicContent? = null,
     val delta: AnthropicStreamDelta? = null,
-    val message: AnthropicResponse? = null
+    val message: AnthropicResponse? = null,
+    val usage: AnthropicUsage? = null,
+    val error: AnthropicStreamError? = null
 )
 
 /**
@@ -389,14 +404,35 @@ public data class AnthropicStreamResponse(
  *
  * @property type The type of the update provided by Anthropic.
  * @property text Optional text content associated with the delta update.
- * @property toolUse Optional data about tool usage associated with the delta update, if applicable.
+ * @property partialJson Optional partial JSON content for tool use streaming.
+ * @property stopReason Optional reason why the generation process was stopped, if applicable.
+ * @property toolUse Optional tool usage data associated with the delta update (deprecated).
  */
 @InternalLLMClientApi
 @Serializable
 public data class AnthropicStreamDelta(
-    val type: String,
+    val type: String? = null,
     val text: String? = null,
+    val partialJson: String? = null,
+    val stopReason: String? = null,
     val toolUse: AnthropicResponseContent.ToolUse? = null
+)
+
+/**
+ * Represents an error that occurred during Anthropic streaming response processing.
+ *
+ * This data class encapsulates error information received from the Anthropic API
+ * during streaming operations, providing details about the type and nature of the error.
+ *
+ * @property type The type or category of the error that occurred.
+ * @property message An optional descriptive message providing additional details about the error.
+ * Defaults to null if no message is provided.
+ */
+@InternalLLMClientApi
+@Serializable
+public data class AnthropicStreamError(
+    val type: String,
+    val message: String? = null,
 )
 
 /**
@@ -449,3 +485,6 @@ public sealed interface AnthropicToolChoice {
     @SerialName("tool")
     public data class Tool(val name: String) : AnthropicToolChoice
 }
+
+internal object AnthropicMessageRequestSerializer :
+    AdditionalPropertiesFlatteningSerializer<AnthropicMessageRequest>(AnthropicMessageRequest.serializer())

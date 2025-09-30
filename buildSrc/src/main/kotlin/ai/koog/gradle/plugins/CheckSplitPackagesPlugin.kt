@@ -7,9 +7,7 @@ import org.gradle.api.logging.LogLevel
 import org.gradle.api.logging.Logger
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.SetProperty
-import org.gradle.kotlin.dsl.apply
 import org.gradle.kotlin.dsl.create
-import org.gradle.kotlin.dsl.getByType
 import java.io.File
 import java.util.jar.JarFile
 

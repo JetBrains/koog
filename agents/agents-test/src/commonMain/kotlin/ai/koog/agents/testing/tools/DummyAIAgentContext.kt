@@ -2,6 +2,9 @@
 
 package ai.koog.agents.testing.tools
 
+import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.core.agent.AIAgent.Companion.invoke
+import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
@@ -14,9 +17,13 @@ import ai.koog.agents.core.dsl.builder.BaseBuilder
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentGraphPipeline
+import ai.koog.prompt.llm.OllamaModels
 import ai.koog.prompt.message.Message
 import org.jetbrains.annotations.TestOnly
 import kotlin.reflect.KType
+import kotlin.reflect.typeOf
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 /**
  * A mock implementation of the [AIAgentContext] interface, used for testing purposes.
@@ -30,6 +37,14 @@ public class DummyAIAgentContext(
     private val builder: AIAgentContextMockBuilder,
     override val agentId: String = "DummyAgentId",
 ) : AIAgentGraphContextBase {
+    override val parentContext: AIAgentGraphContextBase? = null
+
+    override val agent: GraphAIAgent<*, *> = AIAgent(
+        promptExecutor = getMockExecutor { },
+        llmModel = OllamaModels.Meta.LLAMA_3_2,
+        id = agentId
+    ) as GraphAIAgent<String, String>
+
     /**
      * Indicates whether a Language Learning Model (LLM) is defined in the current context.
      *
@@ -322,12 +337,12 @@ public class AIAgentContextMockBuilder() : AIAgentContextMockBuilderBase {
      * This property is optional and can be null, indicating that no specific input is provided for the agent.
      * It is used during the construction or copying of an agent's context to define the data the agent operates on.
      */
-    override var agentInput: Any? = null
+    override var agentInput: Any? = "test-input-default"
 
     /**
      * Represents the [KType] of the [agentInput].
      */
-    override var agentInputType: KType? = null
+    override var agentInputType: KType? = typeOf<String>()
 
     /**
      * Represents the AI agent configuration used in the mock builder.
@@ -388,7 +403,8 @@ public class AIAgentContextMockBuilder() : AIAgentContextMockBuilderBase {
      *
      * The `runId` can be null, indicating that the session has not been associated with an identifier.
      */
-    override var runId: String? = null
+    @OptIn(ExperimentalUuidApi::class)
+    override var runId: String? = "test-run-id-${Uuid.random()}"
 
     /**
      * Represents the identifier for the strategy to be used in the agent context.
@@ -399,7 +415,7 @@ public class AIAgentContextMockBuilder() : AIAgentContextMockBuilderBase {
      *
      * Can be null if a strategy is not explicitly defined or required.
      */
-    override var strategyName: String? = null
+    override var strategyName: String? = "test-strategy-default"
 
     /**
      * Creates and returns a new copy of the current `AIAgentContextMockBuilder` instance.

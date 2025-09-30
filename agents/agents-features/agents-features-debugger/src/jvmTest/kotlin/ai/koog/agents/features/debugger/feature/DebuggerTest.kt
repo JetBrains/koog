@@ -7,16 +7,19 @@ import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
 import ai.koog.agents.core.dsl.extension.onAssistantMessage
 import ai.koog.agents.core.dsl.extension.onToolCall
-import ai.koog.agents.core.feature.model.AIAgentFinishedEvent
-import ai.koog.agents.core.feature.model.AIAgentNodeExecutionEndEvent
-import ai.koog.agents.core.feature.model.AIAgentNodeExecutionStartEvent
-import ai.koog.agents.core.feature.model.AIAgentStartedEvent
-import ai.koog.agents.core.feature.model.AIAgentStrategyFinishedEvent
-import ai.koog.agents.core.feature.model.AIAgentStrategyStartEvent
-import ai.koog.agents.core.feature.model.AfterLLMCallEvent
-import ai.koog.agents.core.feature.model.BeforeLLMCallEvent
-import ai.koog.agents.core.feature.model.ToolCallEvent
-import ai.koog.agents.core.feature.model.ToolCallResultEvent
+import ai.koog.agents.core.feature.model.events.AgentCompletedEvent
+import ai.koog.agents.core.feature.model.events.AgentStartingEvent
+import ai.koog.agents.core.feature.model.events.GraphStrategyStartingEvent
+import ai.koog.agents.core.feature.model.events.LLMCallCompletedEvent
+import ai.koog.agents.core.feature.model.events.LLMCallStartingEvent
+import ai.koog.agents.core.feature.model.events.NodeExecutionCompletedEvent
+import ai.koog.agents.core.feature.model.events.NodeExecutionStartingEvent
+import ai.koog.agents.core.feature.model.events.StrategyCompletedEvent
+import ai.koog.agents.core.feature.model.events.StrategyEventGraph
+import ai.koog.agents.core.feature.model.events.StrategyEventGraphEdge
+import ai.koog.agents.core.feature.model.events.StrategyEventGraphNode
+import ai.koog.agents.core.feature.model.events.ToolExecutionCompletedEvent
+import ai.koog.agents.core.feature.model.events.ToolExecutionStartingEvent
 import ai.koog.agents.core.feature.remote.client.FeatureMessageRemoteClient
 import ai.koog.agents.core.feature.remote.client.config.DefaultClientConnectionConfig
 import ai.koog.agents.core.feature.remote.server.config.DefaultServerConnectionConfig
@@ -69,6 +72,9 @@ class DebuggerTest {
         // Agent Config
         val agentId = "test-agent-id"
         val strategyName = "test-strategy"
+        val nodeSendLLMCallName = "test-llm-call"
+        val nodeExecuteToolName = "test-tool-call"
+        val nodeSendToolResultName = "test-node-llm-send-tool-result"
 
         val userPrompt = "Call the dummy tool with argument: test"
         val systemPrompt = "Test system prompt"
@@ -126,9 +132,9 @@ class DebuggerTest {
         // Server
         val serverJob = launch {
             val strategy = strategy(strategyName) {
-                val nodeSendInput by nodeLLMRequest("test-llm-call")
-                val nodeExecuteTool by nodeExecuteTool("test-tool-call")
-                val nodeSendToolResult by nodeLLMSendToolResult("test-node-llm-send-tool-result")
+                val nodeSendInput by nodeLLMRequest(nodeSendLLMCallName)
+                val nodeExecuteTool by nodeExecuteTool(nodeExecuteToolName)
+                val nodeSendToolResult by nodeLLMSendToolResult(nodeSendToolResultName)
 
                 edge(nodeStart forwardTo nodeSendInput)
                 edge(nodeSendInput forwardTo nodeExecuteTool onToolCall { true })
@@ -192,116 +198,169 @@ class DebuggerTest {
                 collectEventsJob.join()
 
                 // Correct run id will be set after the 'collect events job' is finished.
+                val llmCallGraphNode = StrategyEventGraphNode(id = nodeSendLLMCallName, name = nodeSendLLMCallName)
+                val executeToolGraphNode = StrategyEventGraphNode(id = nodeExecuteToolName, name = nodeExecuteToolName)
+                val sendToolResultGraphNode = StrategyEventGraphNode(id = nodeSendToolResultName, name = nodeSendToolResultName)
+
+                val startGraphNode = StrategyEventGraphNode(id = "__start__", name = "__start__")
+                val finishGraphNode = StrategyEventGraphNode(id = "__finish__", name = "__finish__")
+
                 val expectedEvents = listOf(
-                    AIAgentStartedEvent(
+                    AgentStartingEvent(
                         agentId = agentId,
                         runId = clientEventsCollector.runId,
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
-                    AIAgentStrategyStartEvent(
+                    GraphStrategyStartingEvent(
                         runId = clientEventsCollector.runId,
-                        strategyName = strategyName
+                        strategyName = strategyName,
+                        graph = StrategyEventGraph(
+                            nodes = listOf(
+                                startGraphNode,
+                                llmCallGraphNode,
+                                executeToolGraphNode,
+                                sendToolResultGraphNode,
+                                finishGraphNode,
+                            ),
+                            edges = listOf(
+                                StrategyEventGraphEdge(sourceNode = startGraphNode, targetNode = llmCallGraphNode),
+                                StrategyEventGraphEdge(sourceNode = llmCallGraphNode, targetNode = executeToolGraphNode),
+                                StrategyEventGraphEdge(sourceNode = llmCallGraphNode, targetNode = finishGraphNode),
+                                StrategyEventGraphEdge(
+                                    sourceNode = executeToolGraphNode,
+                                    targetNode = sendToolResultGraphNode
+                                ),
+                                StrategyEventGraphEdge(
+                                    sourceNode = sendToolResultGraphNode,
+                                    targetNode = finishGraphNode
+                                ),
+                                StrategyEventGraphEdge(
+                                    sourceNode = sendToolResultGraphNode,
+                                    targetNode = executeToolGraphNode
+                                )
+                            )
+                        ),
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
-                    AIAgentNodeExecutionStartEvent(
-                        runId = clientEventsCollector.runId,
-                        nodeName = "__start__",
-                        input = userPrompt
-                    ),
-                    AIAgentNodeExecutionEndEvent(
+                    NodeExecutionStartingEvent(
                         runId = clientEventsCollector.runId,
                         nodeName = "__start__",
                         input = userPrompt,
-                        output = userPrompt
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
-                    AIAgentNodeExecutionStartEvent(
+                    NodeExecutionCompletedEvent(
                         runId = clientEventsCollector.runId,
-                        nodeName = "test-llm-call",
-                        input = userPrompt
+                        nodeName = "__start__",
+                        input = userPrompt,
+                        output = userPrompt,
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
-                    BeforeLLMCallEvent(
-                        runId = clientEventsCollector.runId,
-                        prompt = expectedLLMCallPrompt,
-                        model = testModel.eventString,
-                        tools = listOf(dummyTool.name)
-                    ),
-                    AfterLLMCallEvent(
-                        runId = clientEventsCollector.runId,
-                        prompt = expectedLLMCallPrompt,
-                        model = testModel.eventString,
-                        responses = listOf(toolCallMessage(dummyTool.name, content = """{"dummy":"test"}"""))
-                    ),
-                    AIAgentNodeExecutionEndEvent(
+                    NodeExecutionStartingEvent(
                         runId = clientEventsCollector.runId,
                         nodeName = "test-llm-call",
                         input = userPrompt,
-                        output = toolCallMessage(dummyTool.name, content = """{"dummy":"test"}""").toString()
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
-                    AIAgentNodeExecutionStartEvent(
+                    LLMCallStartingEvent(
+                        runId = clientEventsCollector.runId,
+                        prompt = expectedLLMCallPrompt,
+                        model = testModel.eventString,
+                        tools = listOf(dummyTool.name),
+                        timestamp = testClock.now().toEpochMilliseconds()
+                    ),
+                    LLMCallCompletedEvent(
+                        runId = clientEventsCollector.runId,
+                        prompt = expectedLLMCallPrompt,
+                        model = testModel.eventString,
+                        responses = listOf(toolCallMessage(dummyTool.name, content = """{"dummy":"test"}""")),
+                        timestamp = testClock.now().toEpochMilliseconds()
+                    ),
+                    NodeExecutionCompletedEvent(
+                        runId = clientEventsCollector.runId,
+                        nodeName = "test-llm-call",
+                        input = userPrompt,
+                        output = toolCallMessage(dummyTool.name, content = """{"dummy":"test"}""").toString(),
+                        timestamp = testClock.now().toEpochMilliseconds()
+                    ),
+                    NodeExecutionStartingEvent(
                         runId = clientEventsCollector.runId,
                         nodeName = "test-tool-call",
-                        input = toolCallMessage(dummyTool.name, content = """{"dummy":"test"}""").toString()
+                        input = toolCallMessage(dummyTool.name, content = """{"dummy":"test"}""").toString(),
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
-                    ToolCallEvent(
-                        runId = clientEventsCollector.runId,
-                        toolCallId = "0",
-                        toolName = dummyTool.name,
-                        toolArgs = dummyTool.encodeArgs(DummyTool.Args("test"))
-                    ),
-                    ToolCallResultEvent(
+                    ToolExecutionStartingEvent(
                         runId = clientEventsCollector.runId,
                         toolCallId = "0",
                         toolName = dummyTool.name,
                         toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
-                        result = dummyTool.result
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
-                    AIAgentNodeExecutionEndEvent(
+                    ToolExecutionCompletedEvent(
+                        runId = clientEventsCollector.runId,
+                        toolCallId = "0",
+                        toolName = dummyTool.name,
+                        toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
+                        result = dummyTool.result,
+                        timestamp = testClock.now().toEpochMilliseconds()
+                    ),
+                    NodeExecutionCompletedEvent(
                         runId = clientEventsCollector.runId,
                         nodeName = "test-tool-call",
                         input = toolCallMessage(dummyTool.name, content = """{"dummy":"test"}""").toString(),
-                        output = toolResult("0", dummyTool.name, dummyTool.result, dummyTool.result).toString()
+                        output = toolResult("0", dummyTool.name, dummyTool.result, dummyTool.result).toString(),
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
-                    AIAgentNodeExecutionStartEvent(
+                    NodeExecutionStartingEvent(
                         runId = clientEventsCollector.runId,
                         nodeName = "test-node-llm-send-tool-result",
-                        input = toolResult("0", dummyTool.name, dummyTool.result, dummyTool.result).toString()
+                        input = toolResult("0", dummyTool.name, dummyTool.result, dummyTool.result).toString(),
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
-                    BeforeLLMCallEvent(
+                    LLMCallStartingEvent(
                         runId = clientEventsCollector.runId,
                         prompt = expectedLLMCallWithToolsPrompt,
                         model = testModel.eventString,
-                        tools = listOf(dummyTool.name)
+                        tools = listOf(dummyTool.name),
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
-                    AfterLLMCallEvent(
+                    LLMCallCompletedEvent(
                         runId = clientEventsCollector.runId,
                         prompt = expectedLLMCallWithToolsPrompt,
                         model = testModel.eventString,
                         responses = listOf(assistantMessage(mockResponse)),
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
-                    AIAgentNodeExecutionEndEvent(
+                    NodeExecutionCompletedEvent(
                         runId = clientEventsCollector.runId,
                         nodeName = "test-node-llm-send-tool-result",
                         input = toolResult("0", dummyTool.name, dummyTool.result, dummyTool.result).toString(),
-                        output = assistantMessage(mockResponse).toString()
+                        output = assistantMessage(mockResponse).toString(),
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
-                    AIAgentNodeExecutionStartEvent(
-                        runId = clientEventsCollector.runId,
-                        nodeName = "__finish__",
-                        input = mockResponse
-                    ),
-                    AIAgentNodeExecutionEndEvent(
+                    NodeExecutionStartingEvent(
                         runId = clientEventsCollector.runId,
                         nodeName = "__finish__",
                         input = mockResponse,
-                        output = mockResponse
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
-                    AIAgentStrategyFinishedEvent(
+                    NodeExecutionCompletedEvent(
+                        runId = clientEventsCollector.runId,
+                        nodeName = "__finish__",
+                        input = mockResponse,
+                        output = mockResponse,
+                        timestamp = testClock.now().toEpochMilliseconds()
+                    ),
+                    StrategyCompletedEvent(
                         runId = clientEventsCollector.runId,
                         strategyName = strategyName,
-                        result = mockResponse
+                        result = mockResponse,
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
-                    AIAgentFinishedEvent(
+                    AgentCompletedEvent(
                         agentId = agentId,
                         runId = clientEventsCollector.runId,
-                        result = mockResponse
+                        result = mockResponse,
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
                 )
 
@@ -321,10 +380,6 @@ class DebuggerTest {
         }
 
         assertNotNull(isFinishedOrNull, "Client or server did not finish in time")
-    }
-
-    @Test
-    fun `test read port from parameter`() = runBlocking {
     }
 
     @Test
@@ -382,36 +437,53 @@ class DebuggerTest {
                 client.connect()
                 collectEventsJob.join()
 
+                val startGraphNode = StrategyEventGraphNode(id = "__start__", name = "__start__")
+                val finishGraphNode = StrategyEventGraphNode(id = "__finish__", name = "__finish__")
+
                 // Correct run id will be set after the 'collect events job' is finished.
                 val expectedEvents = listOf(
-                    AIAgentStartedEvent(
+                    AgentStartingEvent(
                         agentId = agentId,
                         runId = clientEventsCollector.runId,
                     ),
-                    AIAgentStrategyStartEvent(
+                    GraphStrategyStartingEvent(
                         runId = clientEventsCollector.runId,
-                        strategyName = strategyName
+                        strategyName = strategyName,
+                        graph = StrategyEventGraph(
+                            nodes = listOf(
+                                startGraphNode,
+                                finishGraphNode
+                            ),
+                            edges = listOf(
+                                StrategyEventGraphEdge(sourceNode = startGraphNode, targetNode = finishGraphNode)
+                            )
+                        ),
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
-                    AIAgentNodeExecutionStartEvent(
-                        runId = clientEventsCollector.runId,
-                        nodeName = "__start__",
-                        input = userPrompt
-                    ),
-                    AIAgentNodeExecutionEndEvent(
+                    NodeExecutionStartingEvent(
                         runId = clientEventsCollector.runId,
                         nodeName = "__start__",
                         input = userPrompt,
-                        output = userPrompt
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
-                    AIAgentStrategyFinishedEvent(
+                    NodeExecutionCompletedEvent(
+                        runId = clientEventsCollector.runId,
+                        nodeName = "__start__",
+                        input = userPrompt,
+                        output = userPrompt,
+                        timestamp = testClock.now().toEpochMilliseconds()
+                    ),
+                    StrategyCompletedEvent(
                         runId = clientEventsCollector.runId,
                         strategyName = strategyName,
-                        result = userPrompt
+                        result = userPrompt,
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
-                    AIAgentFinishedEvent(
+                    AgentCompletedEvent(
                         agentId = agentId,
                         runId = clientEventsCollector.runId,
-                        result = userPrompt
+                        result = userPrompt,
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
                 )
 
@@ -487,47 +559,67 @@ class DebuggerTest {
                 client.connect()
                 collectEventsJob.join()
 
+                val startGraphNode = StrategyEventGraphNode(id = "__start__", name = "__start__")
+                val finishGraphNode = StrategyEventGraphNode(id = "__finish__", name = "__finish__")
+
                 // Correct run id will be set after the 'collect events job' is finished.
                 val expectedEvents = listOf(
-                    AIAgentStartedEvent(
+                    AgentStartingEvent(
                         agentId = agentId,
                         runId = clientEventsCollector.runId,
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
-                    AIAgentStrategyStartEvent(
-                        runId = clientEventsCollector.runId,
-                        strategyName = strategyName
-                    ),
-                    AIAgentNodeExecutionStartEvent(
-                        runId = clientEventsCollector.runId,
-                        nodeName = "__start__",
-                        input = userPrompt
-                    ),
-                    AIAgentNodeExecutionEndEvent(
-                        runId = clientEventsCollector.runId,
-                        nodeName = "__start__",
-                        input = userPrompt,
-                        output = userPrompt
-                    ),
-                    AIAgentNodeExecutionStartEvent(
-                        runId = clientEventsCollector.runId,
-                        nodeName = "__finish__",
-                        input = userPrompt
-                    ),
-                    AIAgentNodeExecutionEndEvent(
-                        runId = clientEventsCollector.runId,
-                        nodeName = "__finish__",
-                        input = userPrompt,
-                        output = userPrompt
-                    ),
-                    AIAgentStrategyFinishedEvent(
+                    GraphStrategyStartingEvent(
                         runId = clientEventsCollector.runId,
                         strategyName = strategyName,
-                        result = userPrompt
+                        graph = StrategyEventGraph(
+                            nodes = listOf(
+                                startGraphNode,
+                                finishGraphNode
+                            ),
+                            edges = listOf(
+                                StrategyEventGraphEdge(startGraphNode, finishGraphNode)
+                            )
+                        ),
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
-                    AIAgentFinishedEvent(
+                    NodeExecutionStartingEvent(
+                        runId = clientEventsCollector.runId,
+                        nodeName = "__start__",
+                        input = userPrompt,
+                        timestamp = testClock.now().toEpochMilliseconds()
+                    ),
+                    NodeExecutionCompletedEvent(
+                        runId = clientEventsCollector.runId,
+                        nodeName = "__start__",
+                        input = userPrompt,
+                        output = userPrompt,
+                        timestamp = testClock.now().toEpochMilliseconds()
+                    ),
+                    NodeExecutionStartingEvent(
+                        runId = clientEventsCollector.runId,
+                        nodeName = "__finish__",
+                        input = userPrompt,
+                        timestamp = testClock.now().toEpochMilliseconds()
+                    ),
+                    NodeExecutionCompletedEvent(
+                        runId = clientEventsCollector.runId,
+                        nodeName = "__finish__",
+                        input = userPrompt,
+                        output = userPrompt,
+                        timestamp = testClock.now().toEpochMilliseconds()
+                    ),
+                    StrategyCompletedEvent(
+                        runId = clientEventsCollector.runId,
+                        strategyName = strategyName,
+                        result = userPrompt,
+                        timestamp = testClock.now().toEpochMilliseconds()
+                    ),
+                    AgentCompletedEvent(
                         agentId = agentId,
                         runId = clientEventsCollector.runId,
-                        result = userPrompt
+                        result = userPrompt,
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
                 )
 

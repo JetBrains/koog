@@ -1,0 +1,88 @@
+name: Simple Examples
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  # Cancel only when the run is not on main or develop
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/develop' }}
+
+env:
+  JAVA_VERSION: 17
+  JAVA_DISTRIBUTION: 'corretto'
+
+jobs:
+  compilation:
+
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Configure Git
+        run: |
+          git config --global core.autocrlf input
+      - uses: actions/checkout@v5
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v5
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          cache: gradle
+
+      # Configure Gradle for optimal use in GitHub Actions, including caching of downloaded dependencies.
+      # See: https://github.com/gradle/actions/blob/main/setup-gradle/README.md
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          # Cache downloaded JDKs/konan in addition to the default directories.
+          gradle-home-cache-includes: |
+            caches
+            notifications
+            jdks
+            ~/.konan/**
+
+      - name: Compile
+        working-directory: ./examples/simple-examples
+        run: ./gradlew assemble testClasses --stacktrace
+        env:
+          JAVA_OPTS: "-Xmx8g -Dfile.encoding=UTF-8 -Djava.awt.headless=true -Dkotlin.daemon.jvm.options=-Xmx6g"
+
+  tests:
+    needs: compilation
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Configure Git
+        run: |
+          git config --global core.autocrlf input
+      - uses: actions/checkout@v5
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v5
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: ${{ env.JAVA_DISTRIBUTION }}
+          cache: gradle
+
+      # Configure Gradle for optimal use in GitHub Actions, including caching of downloaded dependencies.
+      # See: https://github.com/gradle/actions/blob/main/setup-gradle/README.md
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          # Cache downloaded JDKs/konan in addition to the default directories.
+          gradle-home-cache-includes: |
+            caches
+            notifications
+            jdks
+            ~/.konan/**
+
+      - name: Run tests
+        working-directory: ./examples/simple-examples
+        run: ./gradlew test --stacktrace
+        env:
+          JAVA_OPTS: "-Xmx8g -Dfile.encoding=UTF-8 -Djava.awt.headless=true -Dkotlin.daemon.jvm.options=-Xmx6g"

@@ -1,7 +1,6 @@
 package ai.koog.agents.examples.tripplanning
 
 import ai.koog.agents.core.tools.annotations.LLMDescription
-import ai.koog.agents.ext.agent.SubgraphResult
 import ai.koog.prompt.markdown.markdown
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -37,19 +36,30 @@ data class PlanSuggestionFeedback(
 
 
 @Serializable
+@LLMDescription(
+    "Finish tool to compile final plan suggestion for the user's request. \n" +
+        "Call to provide the final plan suggestion result."
+)
 data class TripPlan(
+    @property:LLMDescription("The steps in the user travel plan.")
     val steps: List<Step>,
-) : SubgraphResult {
+) {
     @Serializable
+    @LLMDescription("The steps in the user travel plan.")
     data class Step(
+        @property:LLMDescription("The location of the destination (e.g. city name)")
         val location: String,
+        @property:LLMDescription("ISO 3166-1 alpha-2 country code of the location (e.g. US, GB, FR).")
         val countryCodeISO2: String? = null,
+        @property:LLMDescription("Start date when the user arrives in this location in the ISO format, e.g. 2022-01-01.")
         val fromDate: LocalDate,
+        @property:LLMDescription("End date when the user leaves this location in the ISO format, e.g. 2022-01-01.")
         val toDate: LocalDate,
+        @property:LLMDescription("More information about this step from the plan")
         val description: String
     )
 
-    override fun toStringDefault(): String = markdown {
+    fun toMarkdownString(): String = markdown {
         h1("Plan:")
         br()
 

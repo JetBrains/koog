@@ -78,7 +78,7 @@ You can create custom tools by extending the `SimpleTool` class:
 ```kotlin
 object CalculatorTool : SimpleTool<CalculatorToolArgs>() {
     @Serializable
-    data class Args(val expression: String) : ToolArgs
+    data class Args(val expression: String)
 
     override val argsSerializer = Args.serializer()
 
@@ -140,7 +140,7 @@ val agent = AIAgent(
 ```kotlin
 object GenerateCodeTool : SimpleTool<GenerateCodeToolArgs>() {
     @Serializable
-    data class Args(val language: String, val task: String) : ToolArgs
+    data class Args(val language: String, val task: String)
 
     override val argsSerializer = Args.serializer()
 

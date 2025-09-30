@@ -1,20 +1,17 @@
 package ai.koog.agents.testing.tools
 
 import ai.koog.agents.core.tools.Tool
-import ai.koog.agents.core.tools.ToolArgs
-import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.agents.core.tools.ToolParameterDescriptor
-import ai.koog.agents.core.tools.ToolParameterType
-import ai.koog.agents.core.tools.ToolResult
+import ai.koog.agents.core.tools.annotations.LLMDescription
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.serializer
 import kotlin.random.Random
 
 /**
  * A tool that provides a random number using the passed seed.
  */
-public class RandomNumberTool : Tool<RandomNumberTool.Args, ToolResult.Number>() {
+public class RandomNumberTool : Tool<RandomNumberTool.Args, Int>() {
 
     /**
      * The last generated random number.
@@ -29,23 +26,16 @@ public class RandomNumberTool : Tool<RandomNumberTool.Args, ToolResult.Number>()
      * @property seed The seed for the random number generator.
      */
     @Serializable
-    public data class Args(val seed: Int? = null) : ToolArgs
-
-    override val argsSerializer: KSerializer<Args> = Args.serializer()
-
-    override val descriptor: ToolDescriptor = ToolDescriptor(
-        name = "RandomNumberTool",
-        description = "Generates a random number",
-        optionalParameters = listOf(
-            ToolParameterDescriptor(
-                name = "seed",
-                description = "The seed for the random number generator",
-                type = ToolParameterType.Integer,
-            )
-        )
+    public data class Args(
+        @property:LLMDescription("The seed for the random number generator")
+        val seed: Int? = null
     )
 
-    override suspend fun execute(args: Args): ToolResult.Number {
+    override val argsSerializer: KSerializer<Args> = Args.serializer()
+    override val resultSerializer: KSerializer<Int> = Int.serializer()
+    override val description: String = "Generates a random number"
+
+    override suspend fun execute(args: Args): Int {
         val seed = args.seed
         val random = if (seed == null) Random else Random(seed)
 
@@ -54,6 +44,6 @@ public class RandomNumberTool : Tool<RandomNumberTool.Args, ToolResult.Number>()
             last = number
         }
 
-        return ToolResult.Number(result)
+        return result
     }
 }

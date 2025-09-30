@@ -4,7 +4,6 @@ import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaClient
 import ai.koog.prompt.llm.OllamaModels
 import io.ktor.client.HttpClient
-import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.request.get
 import io.ktor.http.isSuccess
@@ -53,7 +52,7 @@ class OllamaTestFixture {
     }
 
     private fun waitForOllamaServer(baseUrl: String) {
-        val httpClient = HttpClient(CIO) {
+        val httpClient = HttpClient {
             install(HttpTimeout) {
                 connectTimeoutMillis = 1000
             }

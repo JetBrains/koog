@@ -62,6 +62,72 @@ val agent = AIAgent(
 }
 ```
 
+## Filtering agent events with setEventFilter
+
+In addition to per-processor message filtering, you can filter which agent events a feature will handle using FeatureConfig.setEventFilter. This filter works for any feature and is evaluated before events are passed to any FeatureMessageProcessor.
+
+Key points:
+- The predicate receives an EventHandlerContext and must return true to let the event be handled; false will skip it.
+- EventHandlerContext exposes eventType and has useful subtypes you can match on (e.g., LLMEventHandlerContext, NodeEventHandlerContext, ToolEventHandlerContext, StrategyEventHandlerContext).
+- If you do not set a filter, all events are allowed (default behavior).
+- You can change the filter at runtime by calling setEventFilter again; the new predicate is applied to subsequent events.
+- This event-level filter composes with per-processor setMessageFilter. Both must allow the item for it to be processed and emitted.
+
+Example: allow only LLM call start/end events for a feature
+```kotlin
+install(TraceFeature) {
+    setEventFilter { context ->
+        context.eventType is AgentEventType.BeforeLLMCall ||
+            context.eventType is AgentEventType.AfterLLMCall
+    }
+}
+```
+
+Equivalent using context type checks
+```kotlin
+
+install(TraceFeature) {
+    setEventFilter { context -> context is LLMEventHandlerContext }
+}
+```
+
+Example: filter node-related events by node name
+```kotlin
+
+install(MyFeature) {
+    setEventFilter { context ->
+        when (context) {
+            is NodeBeforeExecuteContext -> context.node.name == "Summarize"
+            is NodeAfterExecuteContext -> context.node.name == "Summarize"
+            is NodeExecutionErrorContext -> context.node.name == "Summarize"
+            else -> true // allow all other event types
+        }
+    }
+}
+```
+
+Example: combine setEventFilter with per-processor setMessageFilter
+```kotlin
+val logWriter = MyFeatureMessageLogWriter(targetLogger = KotlinLogger.logger("my.feature.logger")).apply {
+    initialize()
+    setMessageFilter { message ->
+        // Only log AfterLLMCall messages
+        message is AfterLLMCallEvent
+    }
+}
+
+install(TraceFeature) {
+    // Only allow LLM events for this feature instance
+    setEventFilter { context -> 
+        context.eventType is AgentEventType.BeforeLLMCall || 
+            context.eventType is AgentEventType.AfterLLMCall 
+    }
+
+    // Then add a processor with its own, more granular, message filter
+    addMessageProcessor(logWriter)
+}
+```
+
 ### Using FeatureMessageProcessor
 
 You can provide a list of `FeatureMessageProcessor` implementations when configuring a feature. These processors can be accessed by the feature configuration. A configuration class should inherit from `FeatureConfig` class to get access to the `messageProcessor` property:
@@ -87,6 +153,35 @@ install(TraceFeature) {
 ```
 
 The `FeatureMessageProcessor` class contains methods for initialization of a concrete processor instance and properly closing it when finished.
+
+#### Filtering messages with setMessageFilter
+
+Every `FeatureMessageProcessor` now supports message filtering via `setMessageFilter`. By default, all messages are processed. You can supply a predicate to process only specific messages. The filter is evaluated for each incoming `FeatureMessage` before it is passed to the processor.
+
+Example: only process LLM call start/end events
+```kotlin
+myFeatureMessageProcessor.setMessageFilter { message ->
+    message is BeforeLLMCallEvent ||
+    message is AfterLLMCallEvent
+}
+```
+
+You can use the same approach with any concrete processor implementation (e.g., `FeatureMessageLogWriter`, `FeatureMessageFileWriter`, or `FeatureMessageRemoteWriter`):
+```kotlin
+val logWriter = MyFeatureMessageLogWriter(targetLogger = KotlinLogger.logger("my.feature.logger"))
+logWriter.initialize()
+logWriter.setMessageFilter { message -> 
+    message is AfterLLMCallEvent && message.content.contains("keyword")
+}
+
+install(MyFeature) {
+    addMessageProcessor(logWriter)
+}
+```
+
+Notes:
+- If you do not set a filter, all messages are processed (default behavior).
+- You can change the filter at runtime by calling `setMessageFilter` again; the new predicate will be applied to subsequent messages.
 
 ### Using FeatureMessageFileWriter
 
@@ -301,71 +396,69 @@ Features can intercept various points in the agent execution pipeline:
    }
    ```
 
-2. **Context Stage Feature Interception**: Customize how features are provided to stage contexts
+2. **Context Agent Feature Interception**: Customize how features are provided to agent contexts
    ```kotlin
-   pipeline.interceptContextStageFeature(MyFeature) { stageContext ->
-       // Inspect stage context and return a feature instance
-       MyFeature(customizedForStage = stageContext.stageName)
+   pipeline.interceptContextAgentFeature(MyFeature) { agentContext ->
+       // Inspect agent context and return a feature instance
+       MyFeature(customizedForStage = agentContext.stageName)
    }
    ```
 
-3. **Before Agent Started Interception**: Modify or enhance the agent during creation
+3. **Agent Starting Interception**: Execute code when an agent starts
    ```kotlin
-   pipeline.interceptBeforeAgentStarted(this, feature) {
-       readStages { stages ->
-           // Inspect agent stages
-       }
+   val interceptContext = InterceptContext(this, feature)
+   pipeline.interceptAgentStarting(interceptContext) { event ->
+       // Access agent, runId, context, or feature
+       // event.agent, event.runId, event.context, event.feature
    }
    ```
 
-4. **Strategy Started Interception**: Execute code when a strategy starts
+4. **Strategy Starting Interception**: Execute code when a strategy starts
    ```kotlin
-   pipeline.interceptStrategyStarted(this, feature) {
-       readStages { stages ->
-           // Inspect agent stages when strategy starts
-       }
+   pipeline.interceptStrategyStarting(interceptContext) { event ->
+       // Inspect agent or context when strategy starts
    }
    ```
 
 5. **Before Node Execution**: Execute code before a node runs
    ```kotlin
-   pipeline.interceptBeforeNode(this, feature) { node, context, input ->
-       logger.info("Node ${node.name} is about to execute with input: $input")
+   pipeline.interceptNodeExecutionStarting(interceptContext) { event ->
+       logger.info("Node ${event.node.name} is about to execute with input: ${event.input}")
    }
    ```
 
 6. **After Node Execution**: Execute code after a node completes
    ```kotlin
-   pipeline.interceptAfterNode(this, feature) { node, context, input, output ->
-       logger.info("Node ${node.name} executed with input: $input and produced output: $output")
+   pipeline.interceptNodeExecutionCompleted(interceptContext) { event ->
+       logger.info("Node ${event.node.name} executed with input: ${event.input} and produced output: ${event.output}")
    }
    ```
 
-7. **Before LLM Call**: Execute code before a call to the language model
+7. **LLM Call Starting**: Execute code before a call to the language model
    ```kotlin
-   pipeline.interceptBeforeLLMCall(this, feature) { prompt ->
-       logger.info("About to make LLM call with prompt: ${prompt.messages.last().content}")
+   pipeline.interceptLLMCallStarting(interceptContext) { eventContext ->
+       logger.info("About to make LLM call with prompt: ${eventContext.prompt.messages.last().content}")
    }
    ```
 
-8. **Before LLM Call With Tools**: Execute code before a call to the language model with tools
+8. **LLM Call Starting (with tools)**: Tools are available via the event context
    ```kotlin
-   pipeline.interceptBeforeLLMCallWithTools(this, feature) { prompt, tools ->
-       logger.info("About to make LLM call with ${tools.size} tools")
+   pipeline.interceptLLMCallStarting(interceptContext) { eventContext ->
+       logger.info("About to make LLM call with ${eventContext.tools.size} tools")
    }
    ```
 
-9. **After LLM Call**: Execute code after a call to the language model
+9. **LLM Call Completed**: Execute code after a call to the language model
    ```kotlin
-   pipeline.interceptAfterLLMCall(this, feature) { response ->
-       logger.info("Received LLM response: $response")
+   pipeline.interceptLLMCallCompleted(interceptContext) { eventContext ->
+       logger.info("Received LLM responses: ${eventContext.responses}")
    }
    ```
 
-10. **After LLM Call With Tools**: Execute code after a call to the language model with tools
+10. **LLM Call Completed (with tools)**: Access responses and tools via the event context
     ```kotlin
-    pipeline.interceptAfterLLMCallWithTools(this, feature) { response ->
-        logger.info("Received structured LLM response with role: ${response.role}")
+    pipeline.interceptLLMCallCompleted(interceptContext) { eventContext ->
+        logger.info("Received ${eventContext.responses.size} responses (tools used: ${eventContext.tools.size})")
     }
     ```
 
@@ -390,53 +483,47 @@ class LoggingFeature(val logger: Logger) {
         ) {
             val logging = LoggingFeature(LoggerFactory.getLogger(config.loggerName))
 
-            // Intercept agent started
-            pipeline.interceptBeforeAgentStarted(this, logging) {
-                readStages { stages ->
-                    stages.forEach { stage ->
-                        feature.logger.info("Stage ${stage.name} has ${stage.start.edges.size} edges")
-                    }
-                }
+            val interceptContext = InterceptContext(this, logging)
+
+            // Intercept agent starting
+            pipeline.interceptAgentStarting(interceptContext) { event ->
+                event.feature.logger.info("Agent starting: runId=${event.runId}")
             }
 
-            // Intercept strategy started
-            pipeline.interceptStrategyStarted(this, logging) {
-                readStages { stages ->
-                    stages.forEach { stage ->
-                        feature.logger.info("Strategy started with stage ${stage.name}")
-                    }
-                }
+            // Intercept strategy starting
+            pipeline.interceptStrategyStarting(interceptContext) { event ->
+                event.feature.logger.info("Strategy starting")
             }
 
             // Intercept before node execution
-            pipeline.interceptBeforeNode(this, logging) { node, context, input ->
-                logger.info("Node ${node.name} received input: $input")
+            pipeline.interceptNodeExecutionStarting(interceptContext) { eventContext ->
+                logger.info("Node ${eventContext.node.name} received input: ${eventContext.input}")
             }
 
             // Intercept after node execution
-            pipeline.interceptAfterNode(this, logging) { node, context, input, output ->
-                logger.info("Node ${node.name} with input: $input produced output: $output")
+            pipeline.interceptNodeExecutionCompleted(interceptContext) { eventContext ->
+                logger.info("Node ${eventContext.node.name} with input: ${eventContext.input} produced output: ${eventContext.output}")
             }
 
             // Intercept LLM calls
-            pipeline.interceptBeforeLLMCall(this, logging) { prompt ->
-                logger.info("Making LLM call with prompt: ${prompt.messages.lastOrNull()?.content?.take(100)}...")
+            pipeline.interceptLLMCallStarting(interceptContext) { eventContext ->
+                logger.info("Making LLM call with prompt: ${eventContext.prompt.messages.lastOrNull()?.content?.take(100)}...")
             }
 
-            pipeline.interceptAfterLLMCall(this, logging) { response ->
-                logger.info("Received LLM response: ${response.take(100)}...")
+            pipeline.interceptLLMCallCompleted(interceptContext) { eventContext ->
+                logger.info("Received LLM responses: ${eventContext.responses}")
             }
 
-            // Intercept LLM calls with tools
-            pipeline.interceptBeforeLLMCallWithTools(this, logging) { prompt, tools ->
-                logger.info("Making LLM call with ${tools.size} tools")
-                tools.forEach { tool ->
+            // Intercept LLM calls with tools (available via eventContext.tools)
+            pipeline.interceptLLMCallStarting(interceptContext) { eventContext ->
+                logger.info("Making LLM call with ${eventContext.tools.size} tools")
+                eventContext.tools.forEach { tool ->
                     logger.info("Tool available: ${tool.name}")
                 }
             }
 
-            pipeline.interceptAfterLLMCallWithTools(this, logging) { response ->
-                logger.info("Received structured LLM response with role: ${response.role}")
+            pipeline.interceptLLMCallCompleted(interceptContext) { eventContext ->
+                logger.info("Received ${eventContext.responses.size} response(s)")
             }
         }
     }

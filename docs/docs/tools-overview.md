@@ -131,7 +131,7 @@ data class Book(
     val title: String,
     val author: String,
     val description: String
-) : ToolArgs
+)
 
 class BookTool() : SimpleTool<Book>() {
     companion object {
@@ -146,13 +146,8 @@ class BookTool() : SimpleTool<Book>() {
     override val argsSerializer: KSerializer<Book>
         get() = Book.serializer()
 
-    override val descriptor: ToolDescriptor
-        get() = ToolDescriptor(
-            name = NAME,
-            description = "A tool to parse book information from Markdown",
-            requiredParameters = listOf(),
-            optionalParameters = listOf()
-        )
+    override val name = NAME
+    override val description = "A tool to parse book information from Markdown"
 }
 
 val strategy = strategy<Unit, Unit>("strategy-name") {
@@ -196,7 +191,8 @@ To convert an agent into a tool, use the `asTool()` extension function:
 
 <!--- INCLUDE
 import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.agent.asTool
+import ai.koog.agents.core.agent.AIAgentService
+import ai.koog.agents.core.agent.createAgentTool
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.ToolRegistry
@@ -208,23 +204,19 @@ val analysisToolRegistry = ToolRegistry {}
 
 -->
 ```kotlin
-// Create a specialized agent
-val analysisAgent = AIAgent(
+// Create a specialized agent service, responsible for creating financial analysis agents.
+val analysisAgentService = AIAgentService(
     promptExecutor = simpleOpenAIExecutor(apiKey),
     llmModel = OpenAIModels.Chat.GPT4o,
     systemPrompt = "You are a financial analysis specialist.",
     toolRegistry = analysisToolRegistry
 )
 
-// Convert the agent to a tool
-val analysisAgentTool = analysisAgent.asTool(
+// Create a tool that would run financial analysis agent once called.
+val analysisAgentTool = analysisAgentService.createAgentTool(
     agentName = "analyzeTransactions",
     agentDescription = "Performs financial transaction analysis",
-    inputDescriptor = ToolParameterDescriptor(
-        name = "request",
-        description = "Transaction analysis request",
-        type = ToolParameterType.String
-    )
+    inputDescription = "Transaction analysis request",
 )
 ```
 <!--- KNIT example-tools-overview-05.kt -->

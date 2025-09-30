@@ -17,8 +17,11 @@ import ai.koog.prompt.executor.clients.openai.base.models.OpenAIUsage
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIWebSearchOptions
 import ai.koog.prompt.executor.clients.openai.base.models.ReasoningEffort
 import ai.koog.prompt.executor.clients.openai.base.models.ServiceTier
+import ai.koog.prompt.executor.clients.serialization.AdditionalPropertiesFlatteningSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
+import kotlin.collections.List
 
 /**
  * Chat completion request.
@@ -187,7 +190,8 @@ internal class OpenAIChatCompletionRequest(
     override val topLogprobs: Int? = null,
     override val topP: Double? = null,
     val user: String? = null,
-    val webSearchOptions: OpenAIWebSearchOptions? = null
+    val webSearchOptions: OpenAIWebSearchOptions? = null,
+    val additionalProperties: Map<String, JsonElement>? = null,
 ) : OpenAIBaseLLMRequest
 
 /**
@@ -273,3 +277,6 @@ public class OpenAIChatCompletionStreamResponse(
     public val objectType: String,
     public val usage: OpenAIUsage? = null,
 ) : OpenAIBaseLLMStreamResponse
+
+internal object OpenAIChatCompletionRequestSerializer :
+    AdditionalPropertiesFlatteningSerializer<OpenAIChatCompletionRequest>(OpenAIChatCompletionRequest.serializer())

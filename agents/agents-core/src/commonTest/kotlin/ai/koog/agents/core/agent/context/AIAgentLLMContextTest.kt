@@ -2,11 +2,9 @@ package ai.koog.agents.core.agent.context
 
 import ai.koog.agents.core.CalculatorChatExecutor.testClock
 import ai.koog.agents.core.tools.SimpleTool
-import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.agents.core.tools.ToolParameterDescriptor
-import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.agents.testing.tools.mockLLMAnswer
 import ai.koog.prompt.dsl.prompt
@@ -172,22 +170,16 @@ class AIAgentLLMContextTest : AgentTestBase() {
     }
 
     @Serializable
-    private data class TestToolArgs(val input: String) : ToolArgs
+    private data class TestToolArgs(
+        @property:LLMDescription("The input to process")
+        val input: String
+    )
 
     private class TestTool : SimpleTool<TestToolArgs>() {
         override val argsSerializer = TestToolArgs.serializer()
 
-        override val descriptor = ToolDescriptor(
-            name = "test-tool",
-            description = "A test tool for testing",
-            requiredParameters = listOf(
-                ToolParameterDescriptor(
-                    name = "input",
-                    description = "The input to process",
-                    type = ToolParameterType.String
-                )
-            )
-        )
+        override val name: String = "test-tool"
+        override val description: String = "A test tool for testing"
 
         override suspend fun doExecute(args: TestToolArgs): String {
             return "Processed: ${args.input}"

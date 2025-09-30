@@ -1,6 +1,7 @@
 # Module prompt-executor-openai-client
 
-A client implementation for executing prompts using OpenAI's GPT models with support for images, audio, and custom parameters. Includes support for both Chat Completions and Responses APIs.
+A client implementation for executing prompts using OpenAI's GPT models with support for images, audio, and custom
+parameters. Includes support for both Chat Completions and Responses APIs.
 
 ### Overview
 
@@ -12,35 +13,36 @@ requirements.
 
 #### Reasoning Models
 
-| Model    | Speed   | Context | Input Support        | Output Support | Pricing (per 1M tokens) | APIs Support    |
-|----------|---------|---------|----------------------|----------------|--------------------------|-----------------|
-| o4-mini  | Medium  | 200K    | Text, Images, Tools  | Text, Tools    | $1.1-$4.4               | Chat, Responses |
-| o3-mini  | Medium  | 200K    | Text, Tools          | Text, Tools    | $1.1-$4.4               | Chat, Responses |
-| o1-mini  | Slow    | 128K    | Text                 | Text           | $1.1-$4.4               | Chat            |
-| o3       | Slowest | 200K    | Text, Images, Tools  | Text, Tools    | $10-$40                 | Chat, Responses |
-| o1       | Slowest | 200K    | Text, Images, Tools  | Text, Tools    | $15-$60                 | Chat, Responses |
+| Model   | Speed   | Context | Input Support       | Output Support | Pricing (per 1M tokens) | APIs Support    |
+|---------|---------|---------|---------------------|----------------|-------------------------|-----------------|
+| o4-mini | Medium  | 200K    | Text, Images, Tools | Text, Tools    | $1.1-$4.4               | Chat, Responses |
+| o3-mini | Medium  | 200K    | Text, Tools         | Text, Tools    | $1.1-$4.4               | Chat, Responses |
+| o1-mini | Slow    | 128K    | Text                | Text           | $1.1-$4.4               | Chat            |
+| o3      | Slowest | 200K    | Text, Images, Tools | Text, Tools    | $10-$40                 | Chat, Responses |
+| o1      | Slowest | 200K    | Text, Images, Tools | Text, Tools    | $15-$60                 | Chat, Responses |
 
 #### Chat Models
 
-| Model       | Speed     | Context | Input Support            | Output Support | Pricing (per 1M tokens) | APIs Support    |
-|-------------|-----------|---------|--------------------------|----------------|--------------------------|-----------------|
-| GPT-4o      | Medium    | 128K    | Text, Images, Tools      | Text, Tools    | $2.5-$10                | Chat, Responses |
-| GPT-4.1     | Medium    | 1M      | Text, Images, Tools      | Text, Tools    | $2-$8                   | Chat, Responses |
-| GPT-5       | Medium    | 400K    | Text, Images, Documents  | Text, Tools    | $1.25-$10               | Chat, Responses |
-| GPT-5 Mini  | Fast      | 400K    | Text, Images, Documents  | Text, Tools    | $0.25-$2                | Chat, Responses |
-| GPT-5 Nano  | Very fast | 400K    | Text, Images, Documents  | Text, Tools    | $0.05-$0.4              | Chat, Responses |
+| Model      | Speed     | Context | Input Support           | Output Support | Pricing (per 1M tokens) | APIs Support    |
+|------------|-----------|---------|-------------------------|----------------|-------------------------|-----------------|
+| GPT-4o     | Medium    | 128K    | Text, Images, Tools     | Text, Tools    | $2.5-$10                | Chat, Responses |
+| GPT-4.1    | Medium    | 1M      | Text, Images, Tools     | Text, Tools    | $2-$8                   | Chat, Responses |
+| GPT-5      | Medium    | 400K    | Text, Images, Documents | Text, Tools    | $1.25-$10               | Chat, Responses |
+| GPT-5 Mini | Fast      | 400K    | Text, Images, Documents | Text, Tools    | $0.25-$2                | Chat, Responses |
+| GPT-5 Nano | Very fast | 400K    | Text, Images, Documents | Text, Tools    | $0.05-$0.4              | Chat, Responses |
 
 #### Audio Models
 
 | Model             | Speed  | Context | Input Support      | Output Support     | Pricing (per 1M tokens) |
 |-------------------|--------|---------|--------------------|--------------------|-------------------------|
+| GPT Audio         | Medium | 128K    | Text, Audio, Tools | Text, Audio, Tools | $2.5-$10                |
 | GPT-4o Mini Audio | Fast   | 128K    | Text, Audio, Tools | Text, Audio, Tools | $0.15-$0.6/$10-$20      |
 | GPT-4o Audio      | Medium | 128K    | Text, Audio, Tools | Text, Audio, Tools | $2.5-$10/$40-$80        |
 
 #### Cost-Optimized Models
 
 | Model        | Speed     | Context | Input Support       | Output Support | Pricing (per 1M tokens) | APIs Support    |
-|--------------|-----------|---------|---------------------|----------------|--------------------------|-----------------|
+|--------------|-----------|---------|---------------------|----------------|-------------------------|-----------------|
 | o4-mini      | Medium    | 200K    | Text, Images, Tools | Text, Tools    | $1.1-$4.4               | Chat, Responses |
 | GPT-4o Mini  | Medium    | 128K    | Text, Images, Tools | Text, Tools    | $0.15-$0.6              | Chat, Responses |
 | GPT-4.1-nano | Very fast | 1M      | Text, Images, Tools | Text, Tools    | $0.1-$0.4               | Chat, Responses |

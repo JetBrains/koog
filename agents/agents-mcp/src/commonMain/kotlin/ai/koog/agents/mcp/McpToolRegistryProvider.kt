@@ -37,10 +37,10 @@ public object McpToolRegistryProvider {
      * @param url The URL to be used for establishing an SSE connection.
      * @return An instance of SseClientTransport configured with the given URL.
      */
-    public fun defaultSseTransport(url: String): SseClientTransport {
+    public fun defaultSseTransport(url: String, baseClient: HttpClient = HttpClient()): SseClientTransport {
         // Setup SSE transport using the HTTP client
         return SseClientTransport(
-            client = HttpClient {
+            client = baseClient.config {
                 install(SSE)
             },
             urlString = url,

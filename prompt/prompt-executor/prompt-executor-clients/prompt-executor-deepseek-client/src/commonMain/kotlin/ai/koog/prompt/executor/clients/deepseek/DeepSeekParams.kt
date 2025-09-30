@@ -1,6 +1,7 @@
 package ai.koog.prompt.executor.clients.deepseek
 
 import ai.koog.prompt.params.LLMParams
+import kotlinx.serialization.json.JsonElement
 
 internal fun LLMParams.toDeepSeekParams(): DeepSeekParams {
     if (this is DeepSeekParams) return this
@@ -13,6 +14,8 @@ internal fun LLMParams.toDeepSeekParams(): DeepSeekParams {
         toolChoice = toolChoice,
         user = user,
         includeThoughts = includeThoughts,
+        thinkingBudget = thinkingBudget,
+        additionalProperties = additionalProperties,
     )
 }
 
@@ -29,6 +32,7 @@ internal fun LLMParams.toDeepSeekParams(): DeepSeekParams {
  * @property user not used for DeepSeek
  * @property includeThoughts Request inclusion of model “thoughts”/reasoning traces (model-dependent).
  * @property thinkingBudget Soft cap on tokens spent on internal reasoning (reasoning models).
+ * @property additionalProperties Additional properties that can be used to store custom parameters.
  * @property frequencyPenalty Number in [-2.0, 2.0]—penalizes frequent tokens to reduce repetition.
  * @property presencePenalty Number in [-2.0, 2.0]—encourages introduction of new tokens/topics.
  * @property logprobs Whether to include log-probabilities for output tokens.
@@ -36,6 +40,7 @@ internal fun LLMParams.toDeepSeekParams(): DeepSeekParams {
  * @property topLogprobs Number of top alternatives per position (0–20). Requires [logprobs] = true.
  * @property topP Nucleus sampling in (0.0, 1.0]; use **instead of** [temperature].
  */
+@Suppress("LongParameterList")
 public class DeepSeekParams(
     temperature: Double? = null,
     maxTokens: Int? = null,
@@ -46,6 +51,7 @@ public class DeepSeekParams(
     user: String? = null,
     includeThoughts: Boolean? = null,
     thinkingBudget: Int? = null,
+    additionalProperties: Map<String, JsonElement>? = null,
     public val frequencyPenalty: Double? = null,
     public val presencePenalty: Double? = null,
     public val logprobs: Boolean? = null,
@@ -55,7 +61,7 @@ public class DeepSeekParams(
 ) : LLMParams(
     temperature, maxTokens, numberOfChoices,
     speculation, schema, toolChoice,
-    user, includeThoughts, thinkingBudget
+    user, includeThoughts, thinkingBudget, additionalProperties,
 ) {
     init {
         require(topP == null || topP in 0.0..1.0) {
@@ -97,6 +103,7 @@ public class DeepSeekParams(
         user: String? = this.user,
         includeThoughts: Boolean? = this.includeThoughts,
         thinkingBudget: Int? = this.thinkingBudget,
+        additionalProperties: Map<String, JsonElement>? = this.additionalProperties,
         frequencyPenalty: Double? = this.frequencyPenalty,
         presencePenalty: Double? = this.presencePenalty,
         logprobs: Boolean? = this.logprobs,
@@ -113,6 +120,7 @@ public class DeepSeekParams(
         user = user,
         includeThoughts = includeThoughts,
         thinkingBudget = thinkingBudget,
+        additionalProperties = additionalProperties,
         frequencyPenalty = frequencyPenalty,
         presencePenalty = presencePenalty,
         logprobs = logprobs,
@@ -134,6 +142,7 @@ public class DeepSeekParams(
                 user == other.user &&
                 includeThoughts == other.includeThoughts &&
                 thinkingBudget == other.thinkingBudget &&
+                additionalProperties == other.additionalProperties &&
                 frequencyPenalty == other.frequencyPenalty &&
                 presencePenalty == other.presencePenalty &&
                 logprobs == other.logprobs &&
@@ -146,7 +155,7 @@ public class DeepSeekParams(
         temperature, maxTokens, numberOfChoices,
         speculation, schema, toolChoice,
         user, includeThoughts, thinkingBudget,
-        frequencyPenalty, presencePenalty,
+        additionalProperties, frequencyPenalty, presencePenalty,
         logprobs, stop, topLogprobs, topP,
     ).fold(0) { acc, element ->
         31 * acc + (element?.hashCode() ?: 0)
@@ -163,6 +172,7 @@ public class DeepSeekParams(
         append(", user=$user")
         append(", includeThoughts=$includeThoughts")
         append(", thinkingBudget=$thinkingBudget")
+        append(", additionalProperties=$additionalProperties")
         append(", frequencyPenalty=$frequencyPenalty")
         append(", presencePenalty=$presencePenalty")
         append(", logprobs=$logprobs")

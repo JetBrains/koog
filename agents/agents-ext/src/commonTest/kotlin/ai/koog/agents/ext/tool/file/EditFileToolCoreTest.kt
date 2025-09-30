@@ -2,9 +2,9 @@ package ai.koog.agents.ext.tool.file
 
 import ai.koog.agents.core.tools.DirectToolCallsEnabler
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
+import ai.koog.agents.ext.utils.InMemoryFS
 import ai.koog.rag.base.files.readText
 import ai.koog.rag.base.files.writeText
-import ai.koog.test.utils.InMemoryFS
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertContains
@@ -54,7 +54,7 @@ class EditFileToolCoreTest {
         val result = tool.execute(args, object : DirectToolCallsEnabler {})
 
         // Then
-        val markdownReport = result.toMarkdown()
+        val markdownReport = result.textForLLM()
         assertContains(markdownReport, "Success")
         assertContains(markdownReport, "edit")
     }
@@ -278,7 +278,7 @@ class EditFileToolCoreTest {
         val result = tool.execute(args, object : DirectToolCallsEnabler {})
 
         // Then
-        val markdownReport = result.toMarkdown()
+        val markdownReport = result.textForLLM()
         assertFalse(markdownReport.contains("Successfully"), "Markdown should not indicate a successful edit")
 
         assertEquals(false, result.applied, "Patch should not be applied when original is not found")

@@ -1,12 +1,10 @@
 package ai.koog.agents.ext.tool.file
 
 import ai.koog.agents.core.tools.Tool
-import ai.koog.agents.core.tools.ToolArgs
-import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolException
-import ai.koog.agents.core.tools.ToolParameterDescriptor
-import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.ToolResult
+import ai.koog.agents.core.tools.ToolResultUtils
+import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.core.tools.validate
 import ai.koog.agents.core.tools.validateNotNull
 import ai.koog.agents.ext.tool.file.filter.GlobPattern
@@ -37,10 +35,13 @@ public class ListDirectoryTool<Path>(private val fs: FileSystemProvider.ReadOnly
      */
     @Serializable
     public data class Args(
+        @property:LLMDescription("Absolute path to the directory you want to list (e.g., /home/user/project)")
         val path: String,
+        @property:LLMDescription("How many levels deep to go. 1 = only direct contents, 2 = include subdirectories, etc. Default is 1")
         val depth: Int = 1,
+        @property:LLMDescription("Glob pattern to match files/folders. Examples: '*.txt' for text files, '**/*.kt' for all Kotlin files at any depth")
         val filter: String? = null
-    ) : ToolArgs
+    )
 
     /**
      * Contains the successfully listed directory with its hierarchical structure and metadata.
@@ -52,9 +53,7 @@ public class ListDirectoryTool<Path>(private val fs: FileSystemProvider.ReadOnly
      * @property root the directory tree starting from the requested path
      */
     @Serializable
-    public data class Result(val root: FileSystemEntry.Folder) : ToolResult.JSONSerializable<Result> {
-        override fun getSerializer(): KSerializer<Result> = serializer()
-
+    public data class Result(val root: FileSystemEntry.Folder) : ToolResult.TextSerializable() {
         /**
          * Converts the result to a structured text representation.
          *
@@ -75,11 +74,22 @@ public class ListDirectoryTool<Path>(private val fs: FileSystemProvider.ReadOnly
          *
          * @return formatted text representation of the directory tree
          */
-        override fun toStringDefault(): String = text { folder(root) }
+        override fun textForLLM(): String = text { folder(root) }
     }
 
     override val argsSerializer: KSerializer<Args> = Args.serializer()
-    override val descriptor: ToolDescriptor = Companion.descriptor
+    override val resultSerializer: KSerializer<Result> = ToolResultUtils.toTextSerializer()
+    override val name: String = "__list_directory__"
+    override val description: String = """
+        Lists files and subdirectories in a directory. READ-ONLY - never modifies anything.
+        
+        Use this to:
+        - See what files exist before reading or creating
+        - Understand project structure
+        - Find specific files with patterns
+        
+        Returns a tree showing all contents with sizes and metadata.
+    """.trimIndent()
 
     /**
      * Lists directory contents from the filesystem with optional depth and pattern filtering.
@@ -117,45 +127,5 @@ public class ListDirectoryTool<Path>(private val fs: FileSystemProvider.ReadOnly
         }
 
         return Result(entry as FileSystemEntry.Folder)
-    }
-
-    public companion object {
-        /**
-         * Tool descriptor for the list directory operation.
-         *
-         * Defines the tool interface for listing directories with depth control and pattern filtering.
-         */
-        public val descriptor: ToolDescriptor = ToolDescriptor(
-            name = "__list_directory__",
-            description = """
-                Lists files and subdirectories in a directory. READ-ONLY - never modifies anything.
-                
-                Use this to:
-                - See what files exist before reading or creating
-                - Understand project structure
-                - Find specific files with patterns
-                
-                Returns a tree showing all contents with sizes and metadata.
-            """.trimIndent(),
-            requiredParameters = listOf(
-                ToolParameterDescriptor(
-                    name = "path",
-                    description = "Absolute path to the directory you want to list (e.g., /home/user/project)",
-                    type = ToolParameterType.String
-                )
-            ),
-            optionalParameters = listOf(
-                ToolParameterDescriptor(
-                    name = "depth",
-                    description = "How many levels deep to go. 1 = only direct contents, 2 = include subdirectories, etc. Default is 1",
-                    type = ToolParameterType.Integer
-                ),
-                ToolParameterDescriptor(
-                    name = "filter",
-                    description = "Glob pattern to match files/folders. Examples: '*.txt' for text files, '**/*.kt' for all Kotlin files at any depth",
-                    type = ToolParameterType.String
-                )
-            )
-        )
     }
 }

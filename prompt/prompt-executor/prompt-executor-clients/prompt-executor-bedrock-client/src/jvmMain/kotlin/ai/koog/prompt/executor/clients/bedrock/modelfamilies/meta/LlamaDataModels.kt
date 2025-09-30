@@ -37,5 +37,11 @@ public data class LlamaResponse(
 @Serializable
 public data class LlamaStreamChunk(
     @SerialName("generation")
-    val generation: String? = null
+    val generation: String? = null,
+    @SerialName("prompt_token_count")
+    val promptTokenCount: Int? = null,
+    @SerialName("generation_token_count")
+    val generationTokenCount: Int? = null,
+    @SerialName("stop_reason")
+    val stopReason: String? = null
 )

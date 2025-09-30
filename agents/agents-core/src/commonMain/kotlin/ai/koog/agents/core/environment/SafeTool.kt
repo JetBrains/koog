@@ -3,8 +3,6 @@
 package ai.koog.agents.core.environment
 
 import ai.koog.agents.core.tools.Tool
-import ai.koog.agents.core.tools.ToolArgs
-import ai.koog.agents.core.tools.ToolResult
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import kotlinx.datetime.Clock
@@ -14,13 +12,13 @@ import kotlinx.datetime.Clock
  * It provides mechanisms for handling tool execution results and differentiating between
  * success and failure cases.
  *
- * @param TArgs The type of arguments accepted by the underlying tool. Must extend [ToolArgs].
- * @param TResult The type of result produced by the underlying tool. Must extend [ToolResult].
+ * @param TArgs The type of arguments accepted by the underlying tool.
+ * @param TResult The type of result produced by the underlying tool.
  * @property tool The tool instance to be executed. Defines the operation and its required input/output behavior.
  * @property clock The clock used to determine tool call message timestamps
  * @property environment The environment in which the tool operates. Handles the execution of tool logic.
  */
-public data class SafeTool<TArgs : ToolArgs, TResult : ToolResult>(
+public data class SafeTool<TArgs, TResult>(
     private val tool: Tool<TArgs, TResult>,
     private val environment: AIAgentEnvironment,
     private val clock: Clock
@@ -34,7 +32,7 @@ public data class SafeTool<TArgs : ToolArgs, TResult : ToolResult>(
      *
      * @param TResult The type of the result, constrained to types that implement `ToolResult`.
      */
-    public sealed interface Result<TResult : ToolResult> {
+    public sealed interface Result<TResult> {
         /**
          * Represents the content of the result within the sealed interface `Result`.
          *
@@ -96,7 +94,7 @@ public data class SafeTool<TArgs : ToolArgs, TResult : ToolResult>(
          * @property result The tool result encapsulated within this success instance.
          * @property content The associated content describing or representing the result in string format.
          */
-        public data class Success<TResult : ToolResult>(
+        public data class Success<TResult>(
             val result: TResult,
             override val content: String
         ) : Result<TResult>
@@ -110,7 +108,7 @@ public data class SafeTool<TArgs : ToolArgs, TResult : ToolResult>(
          * @param TResult The type of the tool result associated with the operation.
          * @property message A descriptive error message explaining the reason for the failure.
          */
-        public data class Failure<TResult : ToolResult>(val message: String) : Result<TResult> {
+        public data class Failure<TResult>(val message: String) : Result<TResult> {
             /**
              * Returns the failure message associated with this result.
              *
@@ -166,11 +164,11 @@ public data class SafeTool<TArgs : ToolArgs, TResult : ToolResult>(
      * Executes a tool with the provided arguments in an unsafe manner.
      * This method does not enforce type safety for the arguments provided to the tool.
      *
-     * @param args The arguments to be passed to the tool, represented as a ToolArgs object.
+     * @param args The arguments to be passed to the tool.
      * @return A Result containing the outcome of the tool execution with TResult as the result type.
      */
     @Suppress("UNCHECKED_CAST")
-    public suspend fun executeUnsafe(args: ToolArgs): Result<TResult> {
+    public suspend fun executeUnsafe(args: Any?): Result<TResult> {
         return environment.executeTool(
             Message.Tool.Call(
                 id = null,
@@ -192,7 +190,7 @@ public data class SafeTool<TArgs : ToolArgs, TResult : ToolResult>(
  * @return A [SafeTool.Result] which will either be a [SafeTool.Result.Failure] or [SafeTool.Result.Success]
  * based on the presence and validity of the `result` in the [ReceivedToolResult].
  */
-public fun <TResult : ToolResult> ReceivedToolResult.toSafeResult(): SafeTool.Result<TResult> = when (result) {
+public fun <TResult> ReceivedToolResult.toSafeResult(): SafeTool.Result<TResult> = when (result) {
     null -> SafeTool.Result.Failure(message = content)
     else -> SafeTool.Result.Success(result = result as TResult, content = content)
 }

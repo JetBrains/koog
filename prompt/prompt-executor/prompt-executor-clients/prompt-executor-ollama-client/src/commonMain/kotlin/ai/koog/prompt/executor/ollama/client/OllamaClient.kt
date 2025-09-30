@@ -11,6 +11,7 @@ import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import ai.koog.prompt.executor.ollama.client.dto.EmbeddingRequestDTO
 import ai.koog.prompt.executor.ollama.client.dto.EmbeddingResponseDTO
 import ai.koog.prompt.executor.ollama.client.dto.OllamaChatRequestDTO
+import ai.koog.prompt.executor.ollama.client.dto.OllamaChatRequestDTOSerializer
 import ai.koog.prompt.executor.ollama.client.dto.OllamaChatResponseDTO
 import ai.koog.prompt.executor.ollama.client.dto.OllamaErrorResponseDTO
 import ai.koog.prompt.executor.ollama.client.dto.OllamaModelsListResponseDTO
@@ -29,6 +30,10 @@ import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.streaming.emitAppend
+import ai.koog.prompt.streaming.emitToolCall
+import ai.koog.prompt.streaming.streamFrameFlow
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -46,7 +51,6 @@ import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.utils.io.readUTF8Line
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
 
@@ -148,17 +152,21 @@ public class OllamaClient(
     ): List<Message.Response> {
         require(model.provider == LLMProvider.Ollama) { "Model not supported by Ollama" }
 
-        val response = client.post(DEFAULT_MESSAGE_PATH) {
-            setBody(
-                OllamaChatRequestDTO(
-                    model = model.id,
-                    messages = prompt.toOllamaChatMessages(model),
-                    tools = if (tools.isNotEmpty()) tools.map { it.toOllamaTool() } else null,
-                    format = prompt.extractOllamaJsonFormat(),
-                    options = prompt.extractOllamaOptions(),
-                    stream = false,
-                )
+        val request = ollamaJson.encodeToString(
+            OllamaChatRequestDTOSerializer,
+            OllamaChatRequestDTO(
+                model = model.id,
+                messages = prompt.toOllamaChatMessages(model),
+                tools = if (tools.isNotEmpty()) tools.map { it.toOllamaTool() } else null,
+                format = prompt.extractOllamaJsonFormat(),
+                options = prompt.extractOllamaOptions(),
+                stream = false,
+                additionalProperties = prompt.params.additionalProperties
             )
+        )
+
+        val response = client.post(DEFAULT_MESSAGE_PATH) {
+            setBody(request)
         }
 
         if (response.status.isSuccess()) {
@@ -221,19 +229,24 @@ public class OllamaClient(
 
     override fun executeStreaming(
         prompt: Prompt,
-        model: LLModel
-    ): Flow<String> = flow {
+        model: LLModel,
+        tools: List<ToolDescriptor>
+    ): Flow<StreamFrame> = streamFrameFlow {
         require(model.provider == LLMProvider.Ollama) { "Model not supported by Ollama" }
 
-        val response = client.post(DEFAULT_MESSAGE_PATH) {
-            setBody(
-                OllamaChatRequestDTO(
-                    model = model.id,
-                    messages = prompt.toOllamaChatMessages(model),
-                    options = prompt.extractOllamaOptions(),
-                    stream = true,
-                )
+        val request = ollamaJson.encodeToString(
+            OllamaChatRequestDTOSerializer,
+            OllamaChatRequestDTO(
+                model = model.id,
+                messages = prompt.toOllamaChatMessages(model),
+                options = prompt.extractOllamaOptions(),
+                stream = true,
+                additionalProperties = prompt.params.additionalProperties,
             )
+        )
+
+        val response = client.post(DEFAULT_MESSAGE_PATH) {
+            setBody(request)
         }
 
         val channel = response.bodyAsChannel()
@@ -244,9 +257,14 @@ public class OllamaClient(
 
             try {
                 val chunk = ollamaJson.decodeFromString<OllamaChatResponseDTO>(line)
-                chunk.message?.content?.let { content ->
-                    if (content.isNotEmpty()) {
-                        emit(content)
+                chunk.message?.let { message ->
+                    emitAppend(message.content)
+                    message.toolCalls?.forEach { toolCall ->
+                        emitToolCall(
+                            id = null,
+                            name = toolCall.function.name,
+                            content = toolCall.function.arguments.toString()
+                        )
                     }
                 }
             } catch (_: Exception) {

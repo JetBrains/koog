@@ -89,14 +89,14 @@ internal class KoogKtorHttpClient internal constructor(
         }
     }
 
-    override fun <T : Any, R : Any> sse(
+    override fun <T : Any, R : Any, O : Any> sse(
         path: String,
         request: T,
         requestBodyType: KClass<T>,
         dataFilter: (String?) -> Boolean,
         decodeStreamingResponse: (String) -> R,
-        processStreamingChunk: (R) -> String?
-    ): Flow<String> = flow {
+        processStreamingChunk: (R) -> O?
+    ): Flow<O> = flow {
         @Suppress("TooGenericExceptionCaught")
         try {
             ktorClient.sse(

@@ -47,6 +47,7 @@ kotlin {
             dependencies {
                 implementation(kotlin("test-junit5"))
                 implementation("org.jetbrains.lincheck:lincheck:3.1")
+                implementation(libs.junit.jupiter.params)
             }
         }
     }

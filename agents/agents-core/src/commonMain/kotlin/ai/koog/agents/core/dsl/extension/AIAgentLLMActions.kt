@@ -20,8 +20,13 @@ public fun AIAgentLLMWriteSession.clearHistory() {
  *
  * @param n The number of most recent messages to retain in the session's prompt.
  */
-public fun AIAgentLLMWriteSession.leaveLastNMessages(n: Int) {
-    prompt = prompt.withMessages { it.takeLast(n) }
+public fun AIAgentLLMWriteSession.leaveLastNMessages(n: Int, preserveSystemMessages: Boolean = true) {
+    prompt = prompt.withMessages {
+        val thresholdIndex = it.size - n
+        it.filterIndexed { index, message ->
+            index >= thresholdIndex || (preserveSystemMessages && message is Message.System)
+        }
+    }
 }
 
 /**
@@ -29,8 +34,13 @@ public fun AIAgentLLMWriteSession.leaveLastNMessages(n: Int) {
  *
  * @param n The number of messages to remove from the end of the current message list.
  */
-public fun AIAgentLLMWriteSession.dropLastNMessages(n: Int) {
-    prompt = prompt.withMessages { it.dropLast(n) }
+public fun AIAgentLLMWriteSession.dropLastNMessages(n: Int, preserveSystemMessages: Boolean = true) {
+    prompt = prompt.withMessages {
+        val thresholdIndex = it.size - n
+        it.filterIndexed { index, message ->
+            index < thresholdIndex || (preserveSystemMessages && message is Message.System)
+        }
+    }
 }
 
 /**
@@ -39,8 +49,15 @@ public fun AIAgentLLMWriteSession.dropLastNMessages(n: Int) {
  *
  * @param timestamp The threshold timestamp. Messages with a timestamp earlier than this will be removed.
  */
-public fun AIAgentLLMWriteSession.leaveMessagesFromTimestamp(timestamp: Instant) {
-    prompt = prompt.withMessages { it.filter { it.metaInfo.timestamp >= timestamp } }
+public fun AIAgentLLMWriteSession.leaveMessagesFromTimestamp(
+    timestamp: Instant,
+    preserveSystemMessages: Boolean = true
+) {
+    prompt = prompt.withMessages {
+        it.filter { message ->
+            message.metaInfo.timestamp >= timestamp || (preserveSystemMessages && message is Message.System)
+        }
+    }
 }
 
 /**
@@ -106,7 +123,7 @@ public suspend fun AIAgentLLMWriteSession.replaceHistoryWithTLDR(
         emptyList()
     }
 
-    strategy.compress(this, preserveMemory, memoryMessages)
+    strategy.compress(this, memoryMessages)
 }
 
 /**

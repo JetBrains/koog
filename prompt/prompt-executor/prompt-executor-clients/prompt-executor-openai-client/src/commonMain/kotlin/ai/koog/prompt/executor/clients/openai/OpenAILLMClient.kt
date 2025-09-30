@@ -11,6 +11,9 @@ import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import ai.koog.prompt.executor.clients.openai.base.AbstractOpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.base.OpenAIBasedSettings
 import ai.koog.prompt.executor.clients.openai.base.models.Content
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIAudioConfig
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIAudioFormat
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIAudioVoice
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIContentPart
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIMessage
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIModalities
@@ -20,12 +23,14 @@ import ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolChoice
 import ai.koog.prompt.executor.clients.openai.models.InputContent
 import ai.koog.prompt.executor.clients.openai.models.Item
 import ai.koog.prompt.executor.clients.openai.models.OpenAIChatCompletionRequest
+import ai.koog.prompt.executor.clients.openai.models.OpenAIChatCompletionRequestSerializer
 import ai.koog.prompt.executor.clients.openai.models.OpenAIChatCompletionResponse
 import ai.koog.prompt.executor.clients.openai.models.OpenAIChatCompletionStreamResponse
 import ai.koog.prompt.executor.clients.openai.models.OpenAIEmbeddingRequest
 import ai.koog.prompt.executor.clients.openai.models.OpenAIEmbeddingResponse
 import ai.koog.prompt.executor.clients.openai.models.OpenAIOutputFormat
 import ai.koog.prompt.executor.clients.openai.models.OpenAIResponsesAPIRequest
+import ai.koog.prompt.executor.clients.openai.models.OpenAIResponsesAPIRequestSerializer
 import ai.koog.prompt.executor.clients.openai.models.OpenAIResponsesAPIResponse
 import ai.koog.prompt.executor.clients.openai.models.OpenAIResponsesTool
 import ai.koog.prompt.executor.clients.openai.models.OpenAIResponsesToolChoice
@@ -43,12 +48,15 @@ import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.streaming.StreamFrameFlowBuilder
 import ai.koog.prompt.structure.RegisteredBasicJsonSchemaGenerators
 import ai.koog.prompt.structure.RegisteredStandardJsonSchemaGenerators
 import ai.koog.prompt.structure.annotations.InternalStructuredOutputApi
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.datetime.Clock
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.uuid.ExperimentalUuidApi
@@ -115,10 +123,15 @@ public open class OpenAILLMClient(
         stream: Boolean
     ): String {
         val chatParams = params.toOpenAIChatParams()
-        val modalities = if (chatParams.audio != null && model.supports(LLMCapability.Audio)) {
+        val modalities = if (model.supports(LLMCapability.Audio)) {
             listOf(OpenAIModalities.Text, OpenAIModalities.Audio)
         } else {
             null
+        }
+        val audioConfig = if (chatParams.audio == null && model.supports(LLMCapability.Audio)) {
+            OpenAIAudioConfig(OpenAIAudioFormat.MP3, OpenAIAudioVoice.Alloy)
+        } else {
+            chatParams.audio
         }
 
         val responseFormat = createResponseFormat(chatParams.schema, model)
@@ -126,7 +139,7 @@ public open class OpenAILLMClient(
         val request = OpenAIChatCompletionRequest(
             messages = messages,
             model = model.id,
-            audio = chatParams.audio,
+            audio = audioConfig,
             frequencyPenalty = chatParams.frequencyPenalty,
             logprobs = chatParams.logprobs,
             maxCompletionTokens = chatParams.maxTokens,
@@ -151,9 +164,10 @@ public open class OpenAILLMClient(
             topP = chatParams.topP,
             user = chatParams.user,
             webSearchOptions = chatParams.webSearchOptions,
+            additionalProperties = chatParams.additionalProperties,
         )
 
-        return json.encodeToString(request)
+        return json.encodeToString(OpenAIChatCompletionRequestSerializer, request)
     }
 
     private fun serializeResponsesAPIRequest(
@@ -201,9 +215,10 @@ public open class OpenAILLMClient(
             topP = params.topP,
             truncation = params.truncation,
             user = params.user,
+            additionalProperties = params.additionalProperties,
         )
 
-        return json.encodeToString(request)
+        return json.encodeToString(OpenAIResponsesAPIRequestSerializer, request)
     }
 
     override fun processProviderChatResponse(response: OpenAIChatCompletionResponse): List<LLMChoice> {
@@ -217,8 +232,19 @@ public open class OpenAILLMClient(
     override fun decodeResponse(data: String): OpenAIChatCompletionResponse =
         json.decodeFromString(data)
 
-    override fun processStreamingChunk(chunk: OpenAIChatCompletionStreamResponse): String? =
-        chunk.choices.firstOrNull()?.delta?.content
+    override suspend fun StreamFrameFlowBuilder.processStreamingChunk(chunk: OpenAIChatCompletionStreamResponse) {
+        chunk.choices.firstOrNull()?.let { choice ->
+            choice.delta.content?.let { emitAppend(it) }
+            choice.delta.toolCalls?.forEach { openAIToolCall ->
+                val index = openAIToolCall.index
+                val id = openAIToolCall.id
+                val functionName = openAIToolCall.function?.name
+                val functionArgs = openAIToolCall.function?.arguments
+                upsertToolCall(index, id, functionName, functionArgs)
+            }
+            choice.finishReason?.let { emitEnd(it, createMetaInfo(chunk.usage)) }
+        }
+    }
 
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         return selectExecutionStrategy(prompt, model) { params ->
@@ -233,16 +259,22 @@ public open class OpenAILLMClient(
         }
     }
 
-    override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
-        return selectExecutionStrategy(prompt, model) { params ->
-            when (params) {
-                is OpenAIResponsesParams -> executeResponsesStreaming(prompt, model, params)
-                is OpenAIChatParams -> super.executeStreaming(prompt, model)
-            }
+    override fun executeStreaming(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>
+    ): Flow<StreamFrame> = selectExecutionStrategy(prompt, model) { params ->
+        when (params) {
+            is OpenAIResponsesParams -> executeResponsesStreaming(prompt, model, params)
+            is OpenAIChatParams -> super.executeStreaming(prompt, model, tools)
         }
     }
 
-    private fun executeResponsesStreaming(prompt: Prompt, model: LLModel, params: OpenAIResponsesParams): Flow<String> {
+    private fun executeResponsesStreaming(
+        prompt: Prompt,
+        model: LLModel,
+        params: OpenAIResponsesParams
+    ): Flow<StreamFrame> {
         logger.debug { "Executing streaming prompt: $prompt with model: $model" }
 
         val messages = convertPromptToInput(prompt, model)
@@ -261,9 +293,37 @@ public open class OpenAILLMClient(
             requestBodyType = String::class,
             decodeStreamingResponse = { json.decodeFromString<OpenAIStreamEvent>(it) },
             processStreamingChunk = {
-                (it as? OpenAIStreamEvent.ResponseOutputTextDelta)?.delta
+                // TODO: handle tool calls, not sure if this is supported by the OpenAI Streaming API yet
+                when (it) {
+                    is OpenAIStreamEvent.ResponseOutputItemDone -> {
+                        when (val item = it.item) {
+                            is Item.FunctionToolCall -> StreamFrame.ToolCall(item.id, item.name, item.arguments)
+                            else -> null
+                        }
+                    }
+
+                    is OpenAIStreamEvent.ResponseCompleted -> {
+                        StreamFrame.End(
+                            finishReason = null,
+                            metaInfo = it.response.usage.let { usage ->
+                                ResponseMetaInfo.create(
+                                    clock = clock,
+                                    totalTokensCount = usage?.totalTokens,
+                                    inputTokensCount = usage?.inputTokens,
+                                    outputTokensCount = usage?.outputTokens
+                                )
+                            }
+                        )
+                    }
+
+                    is OpenAIStreamEvent.ResponseOutputTextDelta -> {
+                        StreamFrame.Append(it.delta)
+                    }
+
+                    else -> null
+                }
             }
-        )
+        ).filterNotNull()
     }
 
     override suspend fun executeMultipleChoices(
@@ -574,7 +634,7 @@ public open class OpenAILLMClient(
 
                         val imageUrl: String = when (val content = attachment.content) {
                             is AttachmentContent.URL -> content.url
-                            is AttachmentContent.Binary -> "data:${attachment.mimeType};base64,${content.base64}"
+                            is AttachmentContent.Binary -> "data:${attachment.mimeType};base64,${content.asBase64()}"
                             else -> throw IllegalArgumentException("Unsupported image attachment content: ${content::class}")
                         }
 
@@ -585,7 +645,7 @@ public open class OpenAILLMClient(
                         model.requireCapability(LLMCapability.Document)
 
                         val fileData = when (val content = attachment.content) {
-                            is AttachmentContent.Binary -> "data:${attachment.mimeType};base64,${content.base64}"
+                            is AttachmentContent.Binary -> "data:${attachment.mimeType};base64,${content.asBase64()}"
                             else -> null
                         }
 

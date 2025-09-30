@@ -1,11 +1,11 @@
 package ai.koog.agents.ext.tool.file
 
 import ai.koog.agents.core.tools.Tool
-import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.ToolResult
+import ai.koog.agents.core.tools.ToolResultUtils
 import ai.koog.agents.core.tools.validate
 import ai.koog.agents.ext.tool.file.patch.FilePatch
 import ai.koog.agents.ext.tool.file.patch.PatchApplyResult
@@ -44,7 +44,7 @@ public class EditFileTool<Path>(
         val path: String,
         val original: String,
         val replacement: String
-    ) : ToolArgs
+    )
 
     /**
      * Result of applying the edit patch to the target file.
@@ -54,16 +54,11 @@ public class EditFileTool<Path>(
     @Serializable
     public data class Result(
         private val patchApplyResult: PatchApplyResult
-    ) : ToolResult.JSONSerializable<Result> {
+    ) : ToolResult.TextSerializable() {
         @Serializable
         val applied: Boolean = patchApplyResult.isSuccess()
 
-        override fun getSerializer(): KSerializer<Result> = serializer()
-
-        /**
-         * Converts the result to a markdown string for reporting to the LLM.
-         */
-        public fun toMarkdown(): String = markdown {
+        override fun textForLLM(): String = markdown {
             if (patchApplyResult.isSuccess()) {
                 line {
                     bold("Successfully").text(" edited file (patch applied)")
@@ -77,8 +72,7 @@ public class EditFileTool<Path>(
             }
         }
 
-        override fun toStringDefault(): String = toMarkdown()
-        override fun toString(): String = toStringDefault()
+        override fun toString(): String = textForLLM()
     }
 
     /**
@@ -88,50 +82,65 @@ public class EditFileTool<Path>(
         private val logger = KotlinLogging.logger { }
 
         /**
+         * Represents the name of the tool used for file editing functionality.
+         *
+         * This constant holds the unique identifier for the tool, which is used
+         * in configurations, registration, or referencing the tool within the system.
+         */
+        public val toolName: String = "edit_file"
+
+        /**
+         * Provides a description for the functionality of a tool that modifies files by applying text replacements.
+         *
+         * This description outlines key features, requirements, limitations, and use cases of the tool.
+         */
+        public val toolDescription: String = markdown {
+            +"Makes an edit to a target file by applying a single text replacement patch."
+            newline()
+
+            +"This tool performs targeted file modifications by replacing specific text segments with new content. "
+            +"It can handle partial edits, complete file rewrites, or new file creation. "
+            +"The tool uses string matching to locate the original text and replaces it with the provided replacement text."
+            newline()
+
+            +"The tool should be used when you need to modify existing files, create new files, or make precise text replacements. "
+            +"It handles file operations safely by creating parent directories automatically if they don't exist."
+            newline()
+
+            h3("Key Requirements")
+            bulleted {
+                item("The 'original' text must match text in the file, whitespaces and line endings will be fuzzy matched")
+                item("Only ONE replacement per tool call - for multiple changes, call the tool multiple times")
+                item("Use empty string (\"\") for 'original' when creating new files or performing complete rewrites")
+                item("The 'original' text must be kept to absolute minimum to ensure effective editing")
+            }
+            newline()
+
+            h3("This tool does NOT")
+            bulleted {
+                item("Perform fuzzy or approximate text matching other than whitespaces")
+                item("Handle multiple replacements in a single call")
+                item("Automatically fix formatting or indentation mismatches")
+                item("Provide file content reading capabilities (use read_file for that)")
+            }
+            newline()
+
+            h3("Common use cases")
+            bulleted {
+                item("Modifying specific functions or code blocks in existing files")
+                item("Adding new imports, methods, or classes to source files")
+                item("Creating new configuration files with complete content")
+                item("Updating documentation or README files")
+                item("Fixing bugs by replacing problematic code segments")
+            }
+        }
+
+        /**
          * Descriptor for the edit file tool.
          */
         public val descriptor: ToolDescriptor = ToolDescriptor(
-            name = "edit_file",
-            description = markdown {
-                +"Makes an edit to a target file by applying a single text replacement patch."
-                newline()
-
-                +"This tool performs targeted file modifications by replacing specific text segments with new content. "
-                +"It can handle partial edits, complete file rewrites, or new file creation. "
-                +"The tool uses string matching to locate the original text and replaces it with the provided replacement text."
-                newline()
-
-                +"The tool should be used when you need to modify existing files, create new files, or make precise text replacements. "
-                +"It handles file operations safely by creating parent directories automatically if they don't exist."
-                newline()
-
-                h3("Key Requirements")
-                bulleted {
-                    item("The 'original' text must match text in the file, whitespaces and line endings will be fuzzy matched")
-                    item("Only ONE replacement per tool call - for multiple changes, call the tool multiple times")
-                    item("Use empty string (\"\") for 'original' when creating new files or performing complete rewrites")
-                    item("The 'original' text must be kept to absolute minimum to ensure effective editing")
-                }
-                newline()
-
-                h3("This tool does NOT")
-                bulleted {
-                    item("Perform fuzzy or approximate text matching other than whitespaces")
-                    item("Handle multiple replacements in a single call")
-                    item("Automatically fix formatting or indentation mismatches")
-                    item("Provide file content reading capabilities (use read_file for that)")
-                }
-                newline()
-
-                h3("Common use cases")
-                bulleted {
-                    item("Modifying specific functions or code blocks in existing files")
-                    item("Adding new imports, methods, or classes to source files")
-                    item("Creating new configuration files with complete content")
-                    item("Updating documentation or README files")
-                    item("Fixing bugs by replacing problematic code segments")
-                }
-            },
+            name = toolName,
+            description = toolDescription,
             requiredParameters = listOf(
                 ToolParameterDescriptor(
                     name = "path",
@@ -217,6 +226,12 @@ public class EditFileTool<Path>(
     }
 
     override val argsSerializer: KSerializer<Args> = Args.serializer()
+
+    override val resultSerializer: KSerializer<Result> = ToolResultUtils.toTextSerializer<Result>()
+
+    override val name: String = EditFileTool.toolName
+
+    override val description: String = EditFileTool.toolDescription
 
     override val descriptor: ToolDescriptor = EditFileTool.descriptor
 

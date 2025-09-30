@@ -13,6 +13,7 @@ object RetryUtils {
     private const val GOOGLE_500_ERROR = "Error from GoogleAI API: 500 Internal Server Error"
     private const val GOOGLE_503_ERROR = "Error from GoogleAI API: 503 Service Unavailable"
     private const val ANTHROPIC_429_ERROR = "Error from Anthropic API: 429 Too Many Requests"
+    private const val ANTHROPIC_500_ERROR = "Error from Anthropic API: 500 Internal Server Error"
     private const val ANTHROPIC_502_ERROR = "Error from Anthropic API: 502 Bad Gateway"
     private const val ANTHROPIC_529_ERROR = "Error from Anthropic API: 529"
     private const val OPENAI_500_ERROR = "Error from OpenAI API: 500 Internal Server Error"
@@ -25,6 +26,7 @@ object RetryUtils {
             GOOGLE_500_ERROR,
             GOOGLE_503_ERROR,
             ANTHROPIC_429_ERROR,
+            ANTHROPIC_500_ERROR,
             ANTHROPIC_502_ERROR,
             ANTHROPIC_529_ERROR,
             OPENAI_500_ERROR,

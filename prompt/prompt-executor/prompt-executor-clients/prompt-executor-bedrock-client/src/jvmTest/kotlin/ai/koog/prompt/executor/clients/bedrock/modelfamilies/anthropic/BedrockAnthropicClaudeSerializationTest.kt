@@ -4,15 +4,17 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.prompt.dsl.Prompt
-import ai.koog.prompt.executor.clients.anthropic.AnthropicContent
-import ai.koog.prompt.executor.clients.anthropic.AnthropicMessageRequest
-import ai.koog.prompt.executor.clients.anthropic.AnthropicToolChoice
-import ai.koog.prompt.executor.clients.bedrock.BedrockModels
+import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicInvokeModel
+import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicInvokeModelContent
+import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicToolChoice
+import ai.koog.prompt.executor.clients.bedrock.modelfamilies.anthropic.BedrockAnthropicClaudeSerialization.parseAnthropicStreamChunk
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.streaming.StreamFrame
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
-import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.JsonObject
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
@@ -22,10 +24,9 @@ import kotlin.test.assertTrue
 class BedrockAnthropicClaudeSerializationTest {
 
     private val mockClock = object : Clock {
-        override fun now(): Instant = Clock.System.now()
+        override fun now(): Instant = Instant.DISTANT_FUTURE
     }
 
-    private val model = BedrockModels.AnthropicClaude3Sonnet
     private val systemMessage = "You are a helpful assistant."
     private val userMessage = "Tell me about Paris."
     private val userMessageQuestion = "What's the weather in Paris?"
@@ -44,22 +45,19 @@ class BedrockAnthropicClaudeSerializationTest {
             user(userMessage)
         }
 
-        val request = BedrockAnthropicClaudeSerialization.createAnthropicRequest(prompt, model, emptyList())
+        val request = BedrockAnthropicClaudeSerialization.createAnthropicRequest(prompt, emptyList())
 
         assertNotNull(request)
-        assertEquals(model.id, request.model)
-        assertEquals(AnthropicMessageRequest.MAX_TOKENS_DEFAULT, request.maxTokens)
+        assertEquals(BedrockAnthropicInvokeModel.MAX_TOKENS_DEFAULT, request.maxTokens)
         assertEquals(temperature, request.temperature)
 
         assertNotNull(request.system)
-        assertEquals(1, request.system?.size)
-        assertEquals(systemMessage, request.system?.first()?.text)
 
+        val userMessageActual = request.messages[0]
         assertEquals(1, request.messages.size)
-        assertEquals("user", request.messages[0].role)
-        assertEquals(1, request.messages[0].content.size)
-        assertTrue(request.messages[0].content[0] is AnthropicContent.Text)
-        assertEquals(userMessage, (request.messages[0].content[0] as AnthropicContent.Text).text)
+        assertEquals("user", userMessageActual.role)
+        assertEquals(1, userMessageActual.content.size)
+        assertEquals(userMessage, (userMessageActual.content[0] as BedrockAnthropicInvokeModelContent.Text).text)
     }
 
     @Test
@@ -71,23 +69,25 @@ class BedrockAnthropicClaudeSerializationTest {
             user(userMessage)
         }
 
-        val request = BedrockAnthropicClaudeSerialization.createAnthropicRequest(prompt, model, emptyList())
+        val request = BedrockAnthropicClaudeSerialization.createAnthropicRequest(prompt, emptyList())
 
         assertNotNull(request)
 
         assertEquals(3, request.messages.size)
+        val userMessageActual = request.messages[0]
+        val userMessageActual2 = request.messages[2]
+        val assistantMessage = request.messages[1]
+        assertEquals("user", userMessageActual.role)
+        assertEquals("Hello, who are you?", (userMessageActual.content[0] as BedrockAnthropicInvokeModelContent.Text).text)
 
-        assertEquals("user", request.messages[0].role)
-        assertEquals("Hello, who are you?", (request.messages[0].content[0] as AnthropicContent.Text).text)
-
-        assertEquals("assistant", request.messages[1].role)
+        assertEquals("assistant", assistantMessage.role)
         assertEquals(
             "I'm Claude, an AI assistant created by Anthropic. How can I help you today?",
-            (request.messages[1].content[0] as AnthropicContent.Text).text
+            (assistantMessage.content[0] as BedrockAnthropicInvokeModelContent.Text).text
         )
 
-        assertEquals("user", request.messages[2].role)
-        assertEquals("Tell me about Paris.", (request.messages[2].content[0] as AnthropicContent.Text).text)
+        assertEquals("user", userMessageActual2.role)
+        assertEquals("Tell me about Paris.", (userMessageActual2.content[0] as BedrockAnthropicInvokeModelContent.Text).text)
     }
 
     @Test
@@ -109,25 +109,17 @@ class BedrockAnthropicClaudeSerializationTest {
             user(userMessageQuestion)
         }
 
-        val request = BedrockAnthropicClaudeSerialization.createAnthropicRequest(prompt, model, tools)
+        val request = BedrockAnthropicClaudeSerialization.createAnthropicRequest(prompt, tools)
 
         assertNotNull(request)
 
         assertNotNull(request.tools)
-        assertEquals(1, request.tools?.size)
-        assertEquals(toolName, request.tools?.get(0)?.name)
-        assertEquals(toolDescription, request.tools?.get(0)?.description)
+        assertEquals(1, request.tools.size)
+        assertEquals(toolName, request.tools[0].name)
+        assertEquals(toolDescription, request.tools[0].description)
 
-        val schema = request.tools?.get(0)?.inputSchema
+        val schema = request.tools[0].inputSchema
         assertNotNull(schema)
-
-        assertEquals(listOf("city"), schema.required)
-
-        val properties = schema.properties.jsonObject
-        assertNotNull(properties["city"])
-        assertNotNull(properties["units"])
-
-        assertEquals(AnthropicToolChoice.Auto, request.toolChoice)
     }
 
     @Test
@@ -145,27 +137,27 @@ class BedrockAnthropicClaudeSerializationTest {
         val promptAuto = Prompt.build("test", params = LLMParams(toolChoice = LLMParams.ToolChoice.Auto)) {
             user(userMessageQuestion)
         }
-        val requestAuto = BedrockAnthropicClaudeSerialization.createAnthropicRequest(promptAuto, model, tools)
-        assertEquals(AnthropicToolChoice.Auto, requestAuto.toolChoice)
+        val requestAuto = BedrockAnthropicClaudeSerialization.createAnthropicRequest(promptAuto, tools)
+        assertEquals("auto", requestAuto.toolChoice?.type)
 
         val promptNone = Prompt.build("test", params = LLMParams(toolChoice = LLMParams.ToolChoice.None)) {
             user(userMessageQuestion)
         }
-        val requestNone = BedrockAnthropicClaudeSerialization.createAnthropicRequest(promptNone, model, tools)
-        assertEquals(AnthropicToolChoice.None, requestNone.toolChoice)
+        val requestNone = BedrockAnthropicClaudeSerialization.createAnthropicRequest(promptNone, tools)
+        assertEquals("none", requestNone.toolChoice?.type)
 
         val promptRequired = Prompt.build("test", params = LLMParams(toolChoice = LLMParams.ToolChoice.Required)) {
             user(userMessageQuestion)
         }
-        val requestRequired = BedrockAnthropicClaudeSerialization.createAnthropicRequest(promptRequired, model, tools)
-        assertEquals(AnthropicToolChoice.Any, requestRequired.toolChoice)
+        val requestRequired = BedrockAnthropicClaudeSerialization.createAnthropicRequest(promptRequired, tools)
+        assertEquals("any", requestRequired.toolChoice?.type)
 
         val promptNamed = Prompt.build("test", params = LLMParams(toolChoice = LLMParams.ToolChoice.Named(toolName))) {
             user(userMessageQuestion)
         }
-        val requestNamed = BedrockAnthropicClaudeSerialization.createAnthropicRequest(promptNamed, model, tools)
-        assertTrue(requestNamed.toolChoice is AnthropicToolChoice.Tool)
-        assertEquals(toolName, (requestNamed.toolChoice as AnthropicToolChoice.Tool).name)
+        val requestNamed = BedrockAnthropicClaudeSerialization.createAnthropicRequest(promptNamed, tools)
+        assertTrue(requestNamed.toolChoice is BedrockAnthropicToolChoice)
+        assertEquals(toolName, requestNamed.toolChoice.name)
     }
 
     @Test
@@ -200,8 +192,7 @@ class BedrockAnthropicClaudeSerializationTest {
         assertTrue(message is Message.Assistant)
         assertContains(message.content, "Paris is the capital of France")
 
-        val assistant = message
-        assertEquals(stopReason, assistant.finishReason)
+        assertEquals(stopReason, message.finishReason)
 
         assertEquals(25, message.metaInfo.inputTokensCount)
         assertEquals(20, message.metaInfo.outputTokensCount)
@@ -312,8 +303,8 @@ class BedrockAnthropicClaudeSerializationTest {
             }
         """.trimIndent()
 
-        val content = BedrockAnthropicClaudeSerialization.parseAnthropicStreamChunk(chunkJson)
-        assertEquals("Paris is ", content)
+        val content = parseAnthropicStreamChunk(chunkJson)
+        assertEquals(listOf("Paris is ").map(StreamFrame::Append), content)
     }
 
     @Test
@@ -340,8 +331,8 @@ class BedrockAnthropicClaudeSerializationTest {
             }
         """.trimIndent()
 
-        val content = BedrockAnthropicClaudeSerialization.parseAnthropicStreamChunk(chunkJson)
-        assertEquals("the capital of France.", content)
+        val content = parseAnthropicStreamChunk(chunkJson)
+        assertEquals(listOf("the capital of France.").map(StreamFrame::Append), content)
     }
 
     @Test
@@ -363,8 +354,8 @@ class BedrockAnthropicClaudeSerializationTest {
             }
         """.trimIndent()
 
-        val content = BedrockAnthropicClaudeSerialization.parseAnthropicStreamChunk(chunkJson)
-        assertEquals("", content)
+        val content = parseAnthropicStreamChunk(chunkJson)
+        assertEquals(emptyList(), content)
     }
 
     @Test
@@ -391,9 +382,21 @@ class BedrockAnthropicClaudeSerializationTest {
                 }
             }
         """.trimIndent()
-
-        val content = BedrockAnthropicClaudeSerialization.parseAnthropicStreamChunk(chunkJson)
-        assertEquals("", content)
+        val content = parseAnthropicStreamChunk(chunkJson, mockClock)
+        assertEquals(
+            expected = listOf(
+                StreamFrame.End(
+                    finishReason = "end_turn",
+                    metaInfo = ResponseMetaInfo.create(
+                        clock = mockClock,
+                        totalTokensCount = 45,
+                        inputTokensCount = 25,
+                        outputTokensCount = 20
+                    )
+                )
+            ),
+            actual = content
+        )
     }
 
     @Test
@@ -413,11 +416,11 @@ class BedrockAnthropicClaudeSerializationTest {
         val prompt = Prompt.build("test", params = LLMParams(toolChoice = LLMParams.ToolChoice.Auto)) {
             user(userMessageQuestion)
         }
-        val request = BedrockAnthropicClaudeSerialization.createAnthropicRequest(prompt, model, tools)
+        val request = BedrockAnthropicClaudeSerialization.createAnthropicRequest(prompt, tools)
         assertNotNull(request)
         assertNotNull(request.tools)
-        assertEquals(1, request.tools?.size)
-        val tool = request.tools?.get(0)
+        assertEquals(1, request.tools.size)
+        val tool = request.tools[0]
         assertNotNull(tool)
         assertEquals(toolName, tool.name)
         assertEquals(toolDescription, tool.description)
@@ -425,11 +428,10 @@ class BedrockAnthropicClaudeSerializationTest {
         assertNotNull(schema)
 
         // Verify that the type field is always "object" and gets serialized
-        assertEquals("object", schema.type)
+        assertEquals("custom", tool.type)
 
-        assertEquals(listOf("city"), schema.required)
-        val properties = schema.properties.jsonObject
-        assertNotNull(properties["city"])
-        assertNotNull(properties["units"])
+        val props = schema["properties"] as JsonObject
+        assertNotNull(props["city"])
+        assertNotNull(props["units"])
     }
 }

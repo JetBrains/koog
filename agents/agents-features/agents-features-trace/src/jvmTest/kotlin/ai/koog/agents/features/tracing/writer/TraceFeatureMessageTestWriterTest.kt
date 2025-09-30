@@ -6,16 +6,17 @@ import ai.koog.agents.core.dsl.extension.nodeExecuteTool
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeUpdatePrompt
 import ai.koog.agents.core.feature.model.AIAgentError
-import ai.koog.agents.core.feature.model.AIAgentNodeExecutionErrorEvent
-import ai.koog.agents.core.feature.model.BeforeLLMCallEvent
-import ai.koog.agents.core.feature.model.ToolCallEvent
-import ai.koog.agents.core.feature.model.ToolCallResultEvent
+import ai.koog.agents.core.feature.model.events.LLMCallStartingEvent
+import ai.koog.agents.core.feature.model.events.NodeExecutionFailedEvent
+import ai.koog.agents.core.feature.model.events.ToolExecutionCompletedEvent
+import ai.koog.agents.core.feature.model.events.ToolExecutionStartingEvent
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.tracing.feature.Tracing
 import ai.koog.agents.features.tracing.mock.RecursiveTool
 import ai.koog.agents.features.tracing.mock.TestFeatureMessageWriter
 import ai.koog.agents.features.tracing.mock.TestLogger
 import ai.koog.agents.features.tracing.mock.createAgent
+import ai.koog.agents.features.tracing.mock.testClock
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.utils.use
 import ai.koog.prompt.message.Message
@@ -76,7 +77,7 @@ class TraceFeatureMessageTestWriterTest {
         agent.run("")
         agent.close()
 
-        val llmStartEvents = messageProcessor.messages.filterIsInstance<BeforeLLMCallEvent>().toList()
+        val llmStartEvents = messageProcessor.messages.filterIsInstance<LLMCallStartingEvent>().toList()
         assertEquals(2, llmStartEvents.size)
         assertEquals(
             listOf("User 0", "User 1", ""),
@@ -154,10 +155,10 @@ class TraceFeatureMessageTestWriterTest {
 
         agent.run("")
 
-        val toolCallsStartEvent = messageProcessor.messages.filterIsInstance<ToolCallEvent>().toList()
+        val toolCallsStartEvent = messageProcessor.messages.filterIsInstance<ToolExecutionStartingEvent>().toList()
         assertEquals(1, toolCallsStartEvent.size, "Tool call start event for existing tool")
 
-        val toolCallsEndEvent = messageProcessor.messages.filterIsInstance<ToolCallEvent>().toList()
+        val toolCallsEndEvent = messageProcessor.messages.filterIsInstance<ToolExecutionStartingEvent>().toList()
         assertEquals(1, toolCallsEndEvent.size, "Tool call end event for existing tool")
     }
 
@@ -194,7 +195,7 @@ class TraceFeatureMessageTestWriterTest {
 
         agent.run("")
 
-        val toolCallsStartEvent = messageProcessor.messages.filterIsInstance<ToolCallEvent>().toList()
+        val toolCallsStartEvent = messageProcessor.messages.filterIsInstance<ToolExecutionStartingEvent>().toList()
         assertEquals(1, toolCallsStartEvent.size, "Tool call start event for existing tool")
     }
 
@@ -233,10 +234,10 @@ class TraceFeatureMessageTestWriterTest {
 
         agent.run("")
 
-        val toolCallsStartEvent = messageProcessor.messages.filterIsInstance<ToolCallEvent>().toList()
+        val toolCallsStartEvent = messageProcessor.messages.filterIsInstance<ToolExecutionStartingEvent>().toList()
         assertEquals(1, toolCallsStartEvent.size, "Tool call start event for existing tool")
 
-        val toolCallsEndEvent = messageProcessor.messages.filterIsInstance<ToolCallResultEvent>().toList()
+        val toolCallsEndEvent = messageProcessor.messages.filterIsInstance<ToolExecutionCompletedEvent>().toList()
         assertEquals(1, toolCallsEndEvent.size, "Tool call end event for existing tool")
     }
 
@@ -276,13 +277,14 @@ class TraceFeatureMessageTestWriterTest {
                 val throwable = assertFails { agent.run("") }
                 assertEquals(testErrorMessage, throwable.message)
 
-                val actualEvents = writer.messages.filterIsInstance<AIAgentNodeExecutionErrorEvent>().toList()
+                val actualEvents = writer.messages.filterIsInstance<NodeExecutionFailedEvent>().toList()
 
                 val expectedEvents = listOf(
-                    AIAgentNodeExecutionErrorEvent(
+                    NodeExecutionFailedEvent(
                         runId = writer.runId,
                         nodeName = nodeWithErrorName,
-                        error = AIAgentError(testErrorMessage, expectedStackTrace, null)
+                        error = AIAgentError(testErrorMessage, expectedStackTrace, null),
+                        timestamp = testClock.now().toEpochMilliseconds()
                     )
                 )
 

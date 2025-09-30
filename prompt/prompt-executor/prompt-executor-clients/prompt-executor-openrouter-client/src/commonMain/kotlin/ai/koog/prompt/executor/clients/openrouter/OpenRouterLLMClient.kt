@@ -12,11 +12,13 @@ import ai.koog.prompt.executor.clients.openai.base.models.OpenAIStaticContent
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAITool
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolChoice
 import ai.koog.prompt.executor.clients.openrouter.models.OpenRouterChatCompletionRequest
+import ai.koog.prompt.executor.clients.openrouter.models.OpenRouterChatCompletionRequestSerializer
 import ai.koog.prompt.executor.clients.openrouter.models.OpenRouterChatCompletionResponse
 import ai.koog.prompt.executor.clients.openrouter.models.OpenRouterChatCompletionStreamResponse
 import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.streaming.StreamFrameFlowBuilder
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import kotlinx.datetime.Clock
@@ -94,9 +96,10 @@ public class OpenRouterLLMClient(
             route = openRouterParams.route,
             provider = openRouterParams.provider,
             user = openRouterParams.user,
+            additionalProperties = openRouterParams.additionalProperties,
         )
 
-        return json.encodeToString(request)
+        return json.encodeToString(OpenRouterChatCompletionRequestSerializer, request)
     }
 
     override fun processProviderChatResponse(response: OpenRouterChatCompletionResponse): List<LLMChoice> {
@@ -110,8 +113,19 @@ public class OpenRouterLLMClient(
     override fun decodeResponse(data: String): OpenRouterChatCompletionResponse =
         json.decodeFromString(data)
 
-    override fun processStreamingChunk(chunk: OpenRouterChatCompletionStreamResponse): String? =
-        chunk.choices.firstOrNull()?.delta?.content
+    override suspend fun StreamFrameFlowBuilder.processStreamingChunk(chunk: OpenRouterChatCompletionStreamResponse) {
+        chunk.choices.firstOrNull()?.let { choice ->
+            choice.delta.content?.let { emitAppend(it) }
+            choice.delta.toolCalls?.forEach { openAIToolCall ->
+                val index = openAIToolCall.index
+                val id = openAIToolCall.id
+                val name = openAIToolCall.function?.name
+                val arguments = openAIToolCall.function?.arguments
+                upsertToolCall(index, id, name, arguments)
+            }
+            choice.finishReason?.let { emitEnd(it, createMetaInfo(chunk.usage)) }
+        }
+    }
 
     public override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
         logger.warn { "Moderation is not supported by OpenRouter API" }

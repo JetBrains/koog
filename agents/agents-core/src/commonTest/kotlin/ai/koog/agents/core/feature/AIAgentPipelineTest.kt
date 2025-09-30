@@ -12,6 +12,7 @@ import ai.koog.agents.core.dsl.extension.nodeDoNothing
 import ai.koog.agents.core.dsl.extension.nodeExecuteTool
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.onToolCall
+import ai.koog.agents.core.feature.handler.AgentLifecycleEventType
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
@@ -272,8 +273,7 @@ class AIAgentPipelineTest {
 
         val actualEvents = interceptedEvents.filter { it.startsWith("Agent Context: ") }
         val expectedEvents = listOf(
-            "Agent Context: request features from agent context",
-            "Agent Context: request features from agent context",
+            "Agent Context: request features from agent context"
         )
 
         assertEquals(
@@ -335,6 +335,46 @@ class AIAgentPipelineTest {
             actualEvents.size,
             "Miss intercepted events. Expected ${expectedEvents.size}, but received: ${actualEvents.size}"
         )
+        assertContentEquals(expectedEvents, actualEvents)
+    }
+
+    @Test
+    @JsName("testFilterLLMCallStartEvents")
+    fun `test filter llm call finish events`() = runTest {
+        val interceptedEvents = mutableListOf<String>()
+
+        val strategy = strategy<String, String>("test-interceptors-strategy") {
+            val llmCallWithoutTools by nodeLLMRequest("test LLM call", allowToolCalls = false)
+            val llmCall by nodeLLMRequest("test LLM call with tools")
+
+            edge(nodeStart forwardTo llmCallWithoutTools transformed { "Test LLM call prompt" })
+            edge(llmCallWithoutTools forwardTo llmCall transformed { "Test LLM call with tools prompt" })
+            edge(llmCall forwardTo nodeFinish transformed { "Done" })
+        }
+
+        createAgent(strategy = strategy) {
+            install(TestFeature) {
+                setEventFilter { eventContext ->
+                    eventContext.eventType !is AgentLifecycleEventType.LLMCallCompleted
+                }
+                events = interceptedEvents
+            }
+        }.use { agent ->
+            agent.run("")
+        }
+
+        val actualEvents = interceptedEvents.filter { it.startsWith("LLM: ") }
+        val expectedEvents = listOf(
+            "LLM: start LLM call (prompt: Test user message, tools: [])",
+            "LLM: start LLM call (prompt: Test user message, tools: [dummy])",
+        )
+
+        assertEquals(
+            expectedEvents.size,
+            actualEvents.size,
+            "Miss intercepted events. Expected ${expectedEvents.size}, but received: ${actualEvents.size}"
+        )
+
         assertContentEquals(expectedEvents, actualEvents)
     }
 

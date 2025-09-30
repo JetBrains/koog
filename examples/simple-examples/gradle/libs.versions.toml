@@ -1,0 +1,27 @@
+[versions]
+kotlin = "2.2.20"
+kotlinx-coroutines = "1.10.2"
+kotlinx-datetime = "0.6.2"
+kotlinx-serialization = "1.8.1"
+ktor3 = "3.2.2"
+logback = "1.5.13"
+mockk = "1.13.8"
+opentelemetry = "1.51.0"
+oshai-logging = "7.0.7"
+
+[libraries]
+kotlin-bom = { module = "org.jetbrains.kotlin:kotlin-bom", version.ref = "kotlin" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
+kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
+ktor-server-cio = { module = "io.ktor:ktor-server-cio", version.ref = "ktor3" }
+logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+opentelemetry-bom = { module = "io.opentelemetry:opentelemetry-bom", version.ref = "opentelemetry" }
+opentelemetry-exporter-logging = { module = "io.opentelemetry:opentelemetry-exporter-logging" }
+opentelemetry-exporter-otlp = { module = "io.opentelemetry:opentelemetry-exporter-otlp" }
+opentelemetry-sdk = { module = "io.opentelemetry:opentelemetry-sdk" }
+oshai-kotlin-logging = { module = "io.github.oshai:kotlin-logging", version.ref = "oshai-logging" }
+
+[plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }

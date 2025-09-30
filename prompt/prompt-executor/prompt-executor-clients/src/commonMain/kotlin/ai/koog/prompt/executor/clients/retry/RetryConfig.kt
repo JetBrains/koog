@@ -31,6 +31,11 @@ public data class RetryConfig(
         require(initialDelay <= maxDelay) { "initialDelay ($initialDelay) must not be greater than maxDelay ($maxDelay)" }
     }
 
+    /**
+     * Companion object for providing predefined retry configurations and patterns.
+     * Contains default retry logic settings that can be used across different use cases,
+     * along with scoped configurations for conservative, aggressive, and production environments.
+     */
     public companion object {
         /**
          * Default retry patterns that work across all providers.
@@ -99,6 +104,12 @@ public data class RetryConfig(
  * Pattern for identifying retryable errors.
  */
 public sealed class RetryablePattern {
+    /**
+     * Evaluates whether the given message matches the criteria defined by the implementing class.
+     *
+     * @param message The message to evaluate against the matching criteria.
+     * @return `true` if the message matches the criteria, otherwise `false`.
+     */
     public abstract fun matches(message: String): Boolean
 
     /**
@@ -143,6 +154,12 @@ public sealed class RetryablePattern {
  * Extracts retry-after hints from error messages.
  */
 public fun interface RetryAfterExtractor {
+    /**
+     * Extracts a retry-after duration from the provided error message.
+     *
+     * @param message The error message from which to extract the retry-after duration.
+     * @return The extracted retry-after duration, or null if no valid duration could be determined.
+     */
     public fun extract(message: String): Duration?
 }
 

@@ -44,7 +44,7 @@ class ListDirectoryToolJvmTest {
 
     @Test
     fun `descriptor is configured correctly`() {
-        val descriptor = ListDirectoryTool.descriptor
+        val descriptor = tool.descriptor
         assertEquals("__list_directory__", descriptor.name)
         assertTrue(descriptor.description.isNotEmpty())
         assertEquals(listOf("path"), descriptor.requiredParameters.map { it.name })
@@ -75,7 +75,7 @@ class ListDirectoryToolJvmTest {
         // empty/ (empty directory)
         val empty = createDir("empty")
 
-        val resultText = list(empty, depth = 1).toStringDefault()
+        val resultText = list(empty, depth = 1).textForLLM()
 
         // Expected: /path/to/empty/
         val expectedText = "${empty.toAbsolutePath().toString().norm()}/"
@@ -91,7 +91,7 @@ class ListDirectoryToolJvmTest {
         val dir = createDir("project")
         val readmeFile = dir.resolve("README.md").createFile().apply { writeText("hello world") }
 
-        val resultText = list(dir, depth = 1).toStringDefault()
+        val resultText = list(dir, depth = 1).textForLLM()
 
         // Expected: /path/to/project/README.md (<0.1 KiB, 1 line)
         val expectedText = "${readmeFile.toAbsolutePath().toString().norm()} (<0.1 KiB, 1 line)"
@@ -109,7 +109,7 @@ class ListDirectoryToolJvmTest {
         dir.resolve("README.md").createFile().writeText("hello") // 5 bytes
         dir.resolve("LICENSE.txt").createFile().writeText("MIT") // 3 bytes
 
-        val resultText = list(dir, depth = 2).toStringDefault()
+        val resultText = list(dir, depth = 2).textForLLM()
 
         // Expected:
         // /path/to/project/
@@ -132,7 +132,7 @@ class ListDirectoryToolJvmTest {
         val root = createDir("root")
         val srcDir = root.resolve("src").createDirectories()
 
-        val resultText = list(root, depth = 1).toStringDefault()
+        val resultText = list(root, depth = 1).textForLLM()
 
         // Expected: /path/to/root/src/
         val expectedText = "${srcDir.toAbsolutePath().toString().norm()}/"
@@ -150,7 +150,7 @@ class ListDirectoryToolJvmTest {
         root.resolve("src").createDirectories()
         root.resolve("test").createDirectories()
 
-        val resultText = list(root, depth = 1).toStringDefault()
+        val resultText = list(root, depth = 1).textForLLM()
 
         // Expected: /path/to/root/
         val expectedText = "${root.toAbsolutePath().toString().norm()}/"
@@ -172,7 +172,7 @@ class ListDirectoryToolJvmTest {
         val kotlin = main.resolve("kotlin").createDirectories()
         val mainFile = kotlin.resolve("Main.kt").createFile().apply { writeText("fun main() {}") }
 
-        val resultText = list(project, depth = 1).toStringDefault()
+        val resultText = list(project, depth = 1).textForLLM()
 
         // Expected: /path/to/project/src/main/kotlin/Main.kt (<0.1 KiB, 1 line)
         val expectedText = "${mainFile.toAbsolutePath().toString().norm()} (<0.1 KiB, 1 line)"
@@ -196,7 +196,7 @@ class ListDirectoryToolJvmTest {
         kotlin.resolve("Main.kt").createFile().writeText("fun main() {}")
         kotlin.resolve("Utils.kt").createFile().writeText("class Utils")
 
-        val resultText = list(project, depth = 1).toStringDefault()
+        val resultText = list(project, depth = 1).textForLLM()
 
         // Expected: /path/to/project/src/main/kotlin/
         val expectedText = "${kotlin.toAbsolutePath().toString().norm()}/"
@@ -219,7 +219,7 @@ class ListDirectoryToolJvmTest {
         kotlin.resolve("Main.kt").createFile().writeText("fun main() {}")
         kotlin.resolve("utils").createDirectories()
 
-        val resultText = list(project, depth = 1).toStringDefault()
+        val resultText = list(project, depth = 1).textForLLM()
 
         // Expected: /path/to/project/src/main/kotlin/
         val expectedText = "${kotlin.toAbsolutePath().toString().norm()}/"
@@ -244,7 +244,7 @@ class ListDirectoryToolJvmTest {
         val kotlin = main.resolve("kotlin").createDirectories()
         kotlin.resolve("Main.kt").createFile().writeText("fun main() {}")
 
-        val resultText = list(project, depth = 1).toStringDefault()
+        val resultText = list(project, depth = 1).textForLLM()
 
         // Expected: /path/to/project/
         val expectedText = "${project.toAbsolutePath().toString().norm()}/"
@@ -266,7 +266,7 @@ class ListDirectoryToolJvmTest {
         val c = b.resolve("c").createDirectories()
         val d = c.resolve("d").createDirectories()
 
-        val resultText = list(project, depth = 1).toStringDefault()
+        val resultText = list(project, depth = 1).textForLLM()
 
         // Expected: /path/to/project/a/b/c/d/
         val expectedText = "${d.toAbsolutePath().toString().norm()}/"
@@ -290,7 +290,7 @@ class ListDirectoryToolJvmTest {
         kotlin.resolve("Main.kt").createFile().writeText("fun main() {}")
         kotlin.resolve("Utils.kt").createFile().writeText("class Utils")
 
-        val resultText = list(project, depth = 2).toStringDefault()
+        val resultText = list(project, depth = 2).textForLLM()
 
         // Expected:
         // /path/to/project/src/main/kotlin/
@@ -321,7 +321,7 @@ class ListDirectoryToolJvmTest {
         val kotlin = main.resolve("kotlin").createDirectories()
         kotlin.resolve("Main.kt").createFile().writeText("fun main(){}\n")
 
-        val resultText = list(project, depth = 4).toStringDefault()
+        val resultText = list(project, depth = 4).textForLLM()
 
         // Expected:
         // /path/to/project/
@@ -348,7 +348,7 @@ class ListDirectoryToolJvmTest {
         dir.resolve("Main.java").createFile().writeText("java")
         dir.resolve("README.md").createFile().writeText("readme")
 
-        val resultText = list(dir, depth = 1, filter = "*.kt").toStringDefault()
+        val resultText = list(dir, depth = 1, filter = "*.kt").textForLLM()
 
         // Expected: /path/to/project/Main.kt (<0.1 KiB, 1 line)
         val expectedText = "${mainKtFile.toAbsolutePath().toString().norm()} (<0.1 KiB, 1 line)"
@@ -391,7 +391,7 @@ class ListDirectoryToolJvmTest {
         src.resolve("Utils.kt").createFile().writeText("utils")
         src.resolve("Test.java").createFile().writeText("test")
 
-        val resultText = list(project, depth = 2, filter = "*/*.kt").toStringDefault()
+        val resultText = list(project, depth = 2, filter = "*/*.kt").textForLLM()
 
         // Expected:
         // /path/to/project/src/
@@ -422,7 +422,7 @@ class ListDirectoryToolJvmTest {
         val srcDir = project.resolve("src").createDirectories()
         srcDir.resolve("Main.kt").createFile().writeText("main")
 
-        val resultText = list(project, depth = 2, filter = "*/Test*").toStringDefault()
+        val resultText = list(project, depth = 2, filter = "*/Test*").textForLLM()
 
         // Expected: /path/to/project/test/TestMain.kt (<0.1 KiB, 1 line)
         val expectedText = "${testMainFile.toAbsolutePath().toString().norm()} (<0.1 KiB, 1 line)"
@@ -458,7 +458,7 @@ class ListDirectoryToolJvmTest {
         val test = src.resolve("test").createDirectories()
         test.resolve("TestUtils.kt").createFile().writeText("test") // 4 bytes
 
-        val resultText = list(project, depth = 3).toStringDefault()
+        val resultText = list(project, depth = 3).textForLLM()
 
         // Expected:
         // /path/to/project/
@@ -491,7 +491,7 @@ class ListDirectoryToolJvmTest {
         b.resolve("c1").createDirectories()
         b.resolve("c2").createDirectories()
 
-        val resultText = list(project, depth = 1).toStringDefault()
+        val resultText = list(project, depth = 1).textForLLM()
 
         // Expected: /path/to/project/a/b/
         val expectedText = "${b.toAbsolutePath().toString().norm()}/"

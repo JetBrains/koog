@@ -11,6 +11,7 @@ import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.streaming.StreamFrame
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.json.jsonObject
@@ -342,7 +343,7 @@ class BedrockAI21JambaSerializationTest {
         """.trimIndent()
 
         val content = BedrockAI21JambaSerialization.parseJambaStreamChunk(chunkJson)
-        assertEquals("Paris is ", content)
+        assertEquals(listOf("Paris is ").map(StreamFrame::Append), content)
     }
 
     @Test
@@ -362,7 +363,7 @@ class BedrockAI21JambaSerializationTest {
         """.trimIndent()
 
         val content = BedrockAI21JambaSerialization.parseJambaStreamChunk(chunkJson)
-        assertEquals("", content)
+        assertEquals(listOf("").map(StreamFrame::Append), content)
     }
 
     @Test
@@ -382,6 +383,6 @@ class BedrockAI21JambaSerializationTest {
         """.trimIndent()
 
         val content = BedrockAI21JambaSerialization.parseJambaStreamChunk(chunkJson)
-        assertEquals("", content)
+        assertEquals(emptyList(), content)
     }
 }

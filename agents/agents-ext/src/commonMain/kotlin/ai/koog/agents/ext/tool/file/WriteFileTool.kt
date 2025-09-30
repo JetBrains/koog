@@ -1,12 +1,10 @@
 package ai.koog.agents.ext.tool.file
 
 import ai.koog.agents.core.tools.Tool
-import ai.koog.agents.core.tools.ToolArgs
-import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolException
-import ai.koog.agents.core.tools.ToolParameterDescriptor
-import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.ToolResult
+import ai.koog.agents.core.tools.ToolResultUtils
+import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.core.tools.validate
 import ai.koog.agents.core.tools.validateNotNull
 import ai.koog.agents.ext.tool.file.model.FileSystemEntry
@@ -37,9 +35,11 @@ public class WriteFileTool<Path>(private val fs: FileSystemProvider.ReadWrite<Pa
      */
     @Serializable
     public data class Args(
+        @property:LLMDescription("Absolute path to the target file (e.g., /home/user/file.txt)")
         val path: String,
+        @property:LLMDescription("Text content to write (must not be empty). Overwrites existing content completely")
         val content: String
-    ) : ToolArgs
+    )
 
     /**
      * Contains the successfully written file with its metadata.
@@ -51,9 +51,7 @@ public class WriteFileTool<Path>(private val fs: FileSystemProvider.ReadWrite<Pa
      * @property file the written file entry containing metadata
      */
     @Serializable
-    public data class Result(val file: FileSystemEntry.File) : ToolResult.JSONSerializable<Result> {
-        override fun getSerializer(): KSerializer<Result> = serializer()
-
+    public data class Result(val file: FileSystemEntry.File) : ToolResult.TextSerializable() {
         /**
          * Converts the result to a confirmation message with file metadata.
          *
@@ -63,14 +61,25 @@ public class WriteFileTool<Path>(private val fs: FileSystemProvider.ReadWrite<Pa
          *
          * @return formatted text representation after writing the file
          */
-        override fun toStringDefault(): String = text {
+        override fun textForLLM(): String = text {
             +"Written"
             entry(file)
         }
     }
 
+    override val resultSerializer: KSerializer<Result> = ToolResultUtils.toTextSerializer()
+
     override val argsSerializer: KSerializer<Args> = Args.serializer()
-    override val descriptor: ToolDescriptor = Companion.descriptor
+    override val name: String = "__write_file__"
+    override val description: String = """
+        Writes text content to a file at an absolute path. Creates parent directories if needed and overwrites existing content.
+        
+        Use this to:
+        - Create new text files with content
+        - Replace entire content of existing files
+        
+        Returns file metadata (name, extension, path, hidden, size, contentType).
+    """.trimIndent()
 
     /**
      * Writes text content to the filesystem at the specified absolute path.
@@ -99,38 +108,5 @@ public class WriteFileTool<Path>(private val fs: FileSystemProvider.ReadWrite<Pa
 
         val fileEntry = buildFileSystemEntry(fs, path, metadata) as FileSystemEntry.File
         return Result(fileEntry)
-    }
-
-    public companion object {
-        /**
-         * Provides a tool descriptor for the write file operation.
-         *
-         * Configures the tool to write text files with content validation
-         * and automatic parent directory creation.
-         */
-        public val descriptor: ToolDescriptor = ToolDescriptor(
-            name = "__write_file__",
-            description = """
-            Writes text content to a file at an absolute path. Creates parent directories if needed and overwrites existing content.
-            
-            Use this to:
-            - Create new text files with content
-            - Replace entire content of existing files
-            
-            Returns file metadata (name, extension, path, hidden, size, contentType).
-            """.trimIndent(),
-            requiredParameters = listOf(
-                ToolParameterDescriptor(
-                    name = "path",
-                    description = "Absolute path to the target file (e.g., /home/user/file.txt)",
-                    type = ToolParameterType.String
-                ),
-                ToolParameterDescriptor(
-                    name = "content",
-                    description = "Text content to write (must not be empty). Overwrites existing content completely",
-                    type = ToolParameterType.String
-                )
-            )
-        )
     }
 }

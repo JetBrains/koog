@@ -13,19 +13,15 @@ import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
 import ai.koog.agents.core.dsl.extension.onAssistantMessage
 import ai.koog.agents.core.dsl.extension.onToolCall
 import ai.koog.agents.core.tools.Tool
-import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.agents.core.tools.ToolParameterDescriptor
-import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.core.tools.ToolResult
+import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.agents.ext.agent.subgraphWithTask
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
-import ai.koog.agents.features.tracing.feature.Tracing
 import ai.koog.integration.tests.agent.ReportingLLMLLMClient.Event
 import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.RetryUtils.withRetry
-import ai.koog.integration.tests.utils.TestLogPrinter
 import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
 import ai.koog.prompt.dsl.ModerationResult
@@ -43,6 +39,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.streaming.StreamFrame
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.channels.Channel
@@ -53,9 +50,13 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.serializer
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
@@ -68,6 +69,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.test.fail
 import kotlin.time.Duration.Companion.seconds
 
 internal class ReportingLLMLLMClient(
@@ -105,7 +107,11 @@ internal class ReportingLLMLLMClient(
         return underlyingClient.execute(prompt, model, tools)
     }
 
-    override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> = flow {
+    override fun executeStreaming(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>
+    ): Flow<StreamFrame> = flow {
         coroutineScope {
             eventsChannel.send(
                 Event.Message(
@@ -117,7 +123,7 @@ internal class ReportingLLMLLMClient(
                 )
             )
         }
-        underlyingClient.executeStreaming(prompt, model)
+        underlyingClient.executeStreaming(prompt, model, tools)
             .collect(this)
     }
 
@@ -133,10 +139,17 @@ internal fun LLMClient.reportingTo(
     eventsChannel: Channel<Event>
 ) = ReportingLLMLLMClient(eventsChannel, this)
 
+@Execution(ExecutionMode.SAME_THREAD)
 class AIAgentMultipleLLMIntegrationTest {
 
     companion object {
         private lateinit var testResourcesDir: File
+
+        @JvmStatic
+        fun getModels(): Stream<LLModel> = Stream.of(
+            AnthropicModels.Sonnet_3_7,
+            OpenAIModels.Chat.GPT4o,
+        )
 
         @JvmStatic
         @BeforeAll
@@ -164,40 +177,30 @@ class AIAgentMultipleLLMIntegrationTest {
         DIVIDE
     }
 
-    object CalculatorTool : Tool<CalculatorTool.Args, ToolResult.Number>() {
+    object CalculatorTool : Tool<CalculatorTool.Args, Int>() {
         @Serializable
-        data class Args(val operation: CalculatorOperation, val a: Int, val b: Int) : ToolArgs
-
-        override val argsSerializer = Args.serializer()
-
-        override val descriptor: ToolDescriptor = ToolDescriptor(
-            name = "calculator",
-            description = "A simple calculator that can add, subtract, multiply, and divide two numbers.",
-            requiredParameters = listOf(
-                ToolParameterDescriptor(
-                    name = "operation",
-                    description = "The operation to perform.",
-                    type = ToolParameterType.Enum(CalculatorOperation.entries.map { it.name }.toTypedArray())
-                ),
-                ToolParameterDescriptor(
-                    name = "a",
-                    description = "The first argument (number)",
-                    type = ToolParameterType.Integer
-                ),
-                ToolParameterDescriptor(
-                    name = "b",
-                    description = "The second argument (number)",
-                    type = ToolParameterType.Integer
-                )
-            )
+        data class Args(
+            @property:LLMDescription("The operation to perform.")
+            val operation: CalculatorOperation,
+            @property:LLMDescription("The first argument (number)")
+            val a: Int,
+            @property:LLMDescription("The second argument (number)")
+            val b: Int
         )
 
-        override suspend fun execute(args: Args): ToolResult.Number = when (args.operation) {
+        override val argsSerializer = Args.serializer()
+        override val resultSerializer: KSerializer<Int> = Int.serializer()
+
+        override val name: String = "calculator"
+        override val description: String =
+            "A simple calculator that can add, subtract, multiply, and divide two numbers."
+
+        override suspend fun execute(args: Args): Int = when (args.operation) {
             CalculatorOperation.ADD -> args.a + args.b
             CalculatorOperation.SUBTRACT -> args.a - args.b
             CalculatorOperation.MULTIPLY -> args.a * args.b
             CalculatorOperation.DIVIDE -> args.a / args.b
-        }.let(ToolResult::Number)
+        }
     }
 
     sealed interface OperationResult<T> {
@@ -244,38 +247,25 @@ class AIAgentMultipleLLMIntegrationTest {
 
     class CreateFile(private val fs: MockFileSystem) : Tool<CreateFile.Args, CreateFile.Result>() {
         @Serializable
-        data class Args(val path: String, val content: String) : ToolArgs
-
-        @Serializable
-        data class Result(
-            val successful: Boolean,
-            val message: String? = null
-        ) : ToolResult.JSONSerializable<Result> {
-            override fun getSerializer() = serializer()
-        }
-
-        override val argsSerializer = Args.serializer()
-
-        override val descriptor: ToolDescriptor = ToolDescriptor(
-            name = "create_file",
-            description = "Create a file and writes the given text content to it",
-            requiredParameters = listOf(
-                ToolParameterDescriptor(
-                    name = "path",
-                    description = "The path to create the file",
-                    type = ToolParameterType.String
-                ),
-                ToolParameterDescriptor(
-                    name = "content",
-                    description = "The content to create the file",
-                    type = ToolParameterType.String
-                )
-            )
+        data class Args(
+            @property:LLMDescription("The path to create the file")
+            val path: String,
+            @property:LLMDescription("The content to create the file")
+            val content: String
         )
 
+        @Serializable
+        data class Result(val successful: Boolean, val message: String? = null)
+
+        override val argsSerializer = Args.serializer()
+        override val resultSerializer: KSerializer<Result> = Result.serializer()
+
+        override val name: String = "create_file"
+        override val description: String =
+            "Create a file and writes the given text content to it"
+
         override suspend fun execute(args: Args): Result {
-            val res = fs.create(args.path, args.content)
-            return when (res) {
+            return when (val res = fs.create(args.path, args.content)) {
                 is OperationResult.Success -> Result(successful = true)
                 is OperationResult.Failure -> Result(successful = false, message = res.error)
             }
@@ -284,33 +274,22 @@ class AIAgentMultipleLLMIntegrationTest {
 
     class DeleteFile(private val fs: MockFileSystem) : Tool<DeleteFile.Args, DeleteFile.Result>() {
         @Serializable
-        data class Args(val path: String) : ToolArgs
-
-        @Serializable
-        data class Result(
-            val successful: Boolean,
-            val message: String? = null
-        ) : ToolResult {
-            override fun toStringDefault(): String = "successful: $successful, message: \"$message\""
-        }
-
-        override val argsSerializer = Args.serializer()
-
-        override val descriptor: ToolDescriptor = ToolDescriptor(
-            name = "delete_file",
-            description = "Deletes a file",
-            requiredParameters = listOf(
-                ToolParameterDescriptor(
-                    name = "path",
-                    description = "The path of the file to be deleted",
-                    type = ToolParameterType.String
-                )
-            )
+        data class Args(
+            @property:LLMDescription("The path of the file to be deleted")
+            val path: String
         )
 
+        @Serializable
+        data class Result(val successful: Boolean, val message: String? = null)
+
+        override val argsSerializer = Args.serializer()
+        override val resultSerializer: KSerializer<Result> = Result.serializer()
+
+        override val name: String = "delete_file"
+        override val description: String = "Deletes a file"
+
         override suspend fun execute(args: Args): Result {
-            val res = fs.delete(args.path)
-            return when (res) {
+            return when (val res = fs.delete(args.path)) {
                 is OperationResult.Success -> Result(successful = true)
                 is OperationResult.Failure -> Result(successful = false, message = res.error)
             }
@@ -319,34 +298,26 @@ class AIAgentMultipleLLMIntegrationTest {
 
     class ReadFile(private val fs: MockFileSystem) : Tool<ReadFile.Args, ReadFile.Result>() {
         @Serializable
-        data class Args(val path: String) : ToolArgs
+        data class Args(
+            @property:LLMDescription("The path of the file to read")
+            val path: String
+        )
 
         @Serializable
         data class Result(
             val successful: Boolean,
             val message: String? = null,
             val content: String? = null
-        ) : ToolResult.JSONSerializable<Result> {
-            override fun getSerializer() = serializer()
-        }
-
-        override val argsSerializer = Args.serializer()
-
-        override val descriptor: ToolDescriptor = ToolDescriptor(
-            name = "read_file",
-            description = "Reads a file",
-            requiredParameters = listOf(
-                ToolParameterDescriptor(
-                    name = "path",
-                    description = "The path of the file to read",
-                    type = ToolParameterType.String
-                )
-            )
         )
 
+        override val argsSerializer = Args.serializer()
+        override val resultSerializer: KSerializer<Result> = Result.serializer()
+
+        override val name: String = "read_file"
+        override val description: String = "Reads a file"
+
         override suspend fun execute(args: Args): Result {
-            val res = fs.read(args.path)
-            return when (res) {
+            return when (val res = fs.read(args.path)) {
                 is OperationResult.Success<String> -> Result(successful = true, content = res.result)
                 is OperationResult.Failure -> Result(successful = false, message = res.error)
             }
@@ -355,35 +326,26 @@ class AIAgentMultipleLLMIntegrationTest {
 
     class ListFiles(private val fs: MockFileSystem) : Tool<ListFiles.Args, ListFiles.Result>() {
         @Serializable
-        data class Args(val path: String) : ToolArgs
+        data class Args(
+            @property:LLMDescription("The path of the directory")
+            val path: String
+        )
 
         @Serializable
         data class Result(
             val successful: Boolean,
             val message: String? = null,
             val children: List<String>? = null
-        ) : ToolResult {
-            override fun toStringDefault(): String =
-                "successful: $successful, message: \"$message\", children: ${children?.joinToString()}"
-        }
-
-        override val argsSerializer = Args.serializer()
-
-        override val descriptor: ToolDescriptor = ToolDescriptor(
-            name = "list_files",
-            description = "List all files inside the given path of the directory",
-            requiredParameters = listOf(
-                ToolParameterDescriptor(
-                    name = "path",
-                    description = "The path of the directory",
-                    type = ToolParameterType.String
-                )
-            )
         )
 
+        override val argsSerializer = Args.serializer()
+        override val resultSerializer: KSerializer<Result> = Result.serializer()
+
+        override val name: String = "list_files"
+        override val description: String = "List all files inside the given path of the directory"
+
         override suspend fun execute(args: Args): Result {
-            val res = fs.ls(args.path)
-            return when (res) {
+            return when (val res = fs.ls(args.path)) {
                 is OperationResult.Success<List<String>> -> Result(successful = true, children = res.result)
                 is OperationResult.Failure -> Result(successful = false, message = res.error)
             }
@@ -497,10 +459,63 @@ class AIAgentMultipleLLMIntegrationTest {
             agentConfig = AIAgentConfig(prompt, OpenAIModels.Chat.GPT4o, maxAgentIterations),
             toolRegistry = tools,
         ) {
-            install(Tracing) {
-                addMessageProcessor(TestLogPrinter())
+            install(EventHandler, eventHandlerConfig)
+        }
+    }
+
+    private fun createTestAgentWithToolsInSubgraph(
+        fs: MockFileSystem,
+        eventHandlerConfig: EventHandlerConfig.() -> Unit = {},
+        model: LLModel,
+        emptyAgentRegistry: Boolean = true,
+    ): AIAgent<String, String> {
+        val openAIClient = OpenAILLMClient(openAIApiKey)
+        val anthropicClient = AnthropicLLMClient(anthropicApiKey)
+
+        val executor = MultiLLMPromptExecutor(
+            LLMProvider.OpenAI to openAIClient,
+            LLMProvider.Anthropic to anthropicClient
+        )
+
+        val subgraphTools = listOf(
+            CreateFile(fs),
+            ReadFile(fs),
+            ListFiles(fs),
+            DeleteFile(fs),
+        )
+
+        val strategy = strategy<String, String>("test-subgraph-only-tools") {
+            val fileOperationsSubgraph by subgraphWithTask<String, String>(
+                tools = subgraphTools,
+                llmModel = model,
+                llmParams = LLMParams(toolChoice = LLMParams.ToolChoice.Required)
+            ) { input ->
+                "You are a helpful assistant that can perform file operations. Use the available tools to complete the following task: $input. Make sure to use tools when needed and provide clear feedback about what you've done."
             }
 
+            nodeStart then fileOperationsSubgraph then nodeFinish
+        }
+
+        val toolRegistry = if (emptyAgentRegistry) {
+            ToolRegistry {}
+        } else {
+            ToolRegistry {
+                subgraphTools.forEach { tool(it) }
+            }
+        }
+
+        return AIAgent(
+            promptExecutor = executor,
+            strategy = strategy,
+            agentConfig = AIAgentConfig(
+                prompt = prompt("test") {
+                    system("You are a helpful assistant.")
+                },
+                model,
+                maxAgentIterations = 20,
+            ),
+            toolRegistry = toolRegistry,
+        ) {
             install(EventHandler, eventHandlerConfig)
         }
     }
@@ -509,22 +524,15 @@ class AIAgentMultipleLLMIntegrationTest {
     fun integration_testOpenAIAnthropicAgent() = runTest(timeout = 600.seconds) {
         Models.assumeAvailable(LLMProvider.OpenAI)
         Models.assumeAvailable(LLMProvider.Anthropic)
-        // Create the clients
-        val eventsChannel = Channel<Event>(Channel.UNLIMITED)
-        val fs = MockFileSystem()
-        val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
-            onToolCall { eventContext ->
-                println(
-                    "Calling tool ${eventContext.tool.name} with arguments ${
-                        eventContext.toolArgs.toString().lines().first().take(100)
-                    }"
-                )
-            }
 
-            onAgentFinished { eventContext ->
+        val fs = MockFileSystem()
+        val eventsChannel = Channel<Event>(Channel.UNLIMITED)
+        val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
+            onAgentCompleted { _ ->
                 eventsChannel.send(Event.Termination)
             }
         }
+
         val agent = createTestMultiLLMAgent(
             fs,
             eventHandlerConfig,
@@ -577,31 +585,85 @@ class AIAgentMultipleLLMIntegrationTest {
         )
     }
 
+    @ParameterizedTest
+    @MethodSource("getModels")
+    fun `integration_test agent with not registered subgraph tool result fails`(model: LLModel) =
+        runTest(timeout = 600.seconds) {
+            Models.assumeAvailable(LLMProvider.OpenAI)
+            Models.assumeAvailable(LLMProvider.Anthropic)
+
+            val fs = MockFileSystem()
+            val agent = createTestAgentWithToolsInSubgraph(fs = fs, model = model)
+
+            try {
+                val result = agent.run(
+                    "Create a simple file called 'test.txt' with content 'Hello from subgraph tools!' and then read it back to verify it was created correctly."
+                )
+                fail("Expected AIAgentException but got result: $result")
+            } catch (e: IllegalArgumentException) {
+                assertContains(e.message ?: "", "Tool \"create_file\" is not defined")
+            }
+        }
+
+    @ParameterizedTest
+    @MethodSource("getModels")
+    fun `integration_test agent with registered subgraph tool result runs`(model: LLModel) =
+        runTest(timeout = 600.seconds) {
+            Models.assumeAvailable(LLMProvider.OpenAI)
+            Models.assumeAvailable(LLMProvider.Anthropic)
+
+            val fs = MockFileSystem()
+            val calledTools = mutableListOf<String>()
+            val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
+                onToolExecutionStarting { eventContext ->
+                    calledTools.add(eventContext.tool.name)
+                }
+            }
+
+            val agent = createTestAgentWithToolsInSubgraph(fs, eventHandlerConfig, model, false)
+
+            val result = agent.run(
+                "Create a simple file called 'test.txt' with content 'Hello from subgraph tools!' and then read it back to verify it was created correctly."
+            )
+
+            assertNotNull(result)
+            assertTrue(result.isNotEmpty(), "Agent result should not be empty")
+
+            assertTrue(
+                fs.fileCount() > 0,
+                "Agent must have created at least one file using subgraph tools"
+            )
+
+            when (val readResult = fs.read("test.txt")) {
+                is OperationResult.Success -> {
+                    assertTrue(
+                        readResult.result.contains("Hello from subgraph tools!"),
+                        "File should contain the expected content"
+                    )
+                }
+
+                is OperationResult.Failure -> {
+                    fail("Failed to read file: ${readResult.error}")
+                }
+            }
+
+            assertTrue(
+                calledTools.any { it == "create_file" },
+                "At least one LLM call must have tools available"
+            )
+        }
+
     @Test
     fun integration_testTerminationOnIterationsLimitExhaustion() = runTest(timeout = 600.seconds) {
         Models.assumeAvailable(LLMProvider.OpenAI)
         Models.assumeAvailable(LLMProvider.Anthropic)
 
-        val eventsChannel = Channel<Event>(Channel.UNLIMITED)
         val fs = MockFileSystem()
         var errorMessage: String? = null
-        val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
-            onToolCall { eventContext ->
-                println(
-                    "Calling tool ${eventContext.tool.name} with arguments ${
-                        eventContext.toolArgs.toString().lines().first().take(100)
-                    }"
-                )
-            }
-
-            onAgentFinished { eventContext ->
-                eventsChannel.send(Event.Termination)
-            }
-        }
         val steps = 10
         val agent = createTestMultiLLMAgent(
             fs,
-            eventHandlerConfig,
+            { },
             maxAgentIterations = steps,
         )
 
@@ -635,12 +697,12 @@ class AIAgentMultipleLLMIntegrationTest {
                 },
                 installFeatures = {
                     install(EventHandler) {
-                        onAgentRunError { eventContext ->
+                        onAgentExecutionFailed { eventContext ->
                             println(
                                 "error: ${eventContext.throwable.javaClass.simpleName}(${eventContext.throwable.message})\n${eventContext.throwable.stackTraceToString()}"
                             )
                         }
-                        onToolCall { eventContext ->
+                        onToolExecutionStarting { eventContext ->
                             println(
                                 "Calling tool ${eventContext.tool.name} with arguments ${
                                     eventContext.toolArgs.toString().lines().first().take(100)
@@ -664,7 +726,7 @@ class AIAgentMultipleLLMIntegrationTest {
         Models.assumeAvailable(model.provider)
         val fs = MockFileSystem()
         val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
-            onToolCall { eventContext ->
+            onToolExecutionStarting { eventContext ->
                 println(
                     "Calling tool ${eventContext.tool.name} with arguments ${
                         eventContext.toolArgs.toString().lines().first().take(100)
@@ -723,7 +785,7 @@ class AIAgentMultipleLLMIntegrationTest {
 
         val fs = MockFileSystem()
         val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
-            onToolCall { eventContext ->
+            onToolExecutionStarting { eventContext ->
                 println(
                     "Calling tool ${eventContext.tool.name} with arguments ${
                         eventContext.toolArgs.toString().lines().first().take(100)

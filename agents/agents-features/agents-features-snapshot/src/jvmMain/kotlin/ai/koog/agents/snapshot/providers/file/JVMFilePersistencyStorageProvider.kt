@@ -1,6 +1,8 @@
 package ai.koog.agents.snapshot.providers.file
 
+import ai.koog.agents.snapshot.providers.PersistencyUtils
 import ai.koog.rag.base.files.JVMFileSystemProvider
+import kotlinx.serialization.json.Json
 import java.nio.file.Path
 
 /**
@@ -19,9 +21,11 @@ import java.nio.file.Path
  */
 public class JVMFilePersistencyStorageProvider(
     root: Path,
-    persistenceId: String
+    persistenceId: String,
+    json: Json = PersistencyUtils.defaultCheckpointJson
 ) : FilePersistencyStorageProvider<Path>(
     fs = JVMFileSystemProvider.ReadWrite,
     root = root,
-    persistenceId = persistenceId
+    persistenceId = persistenceId,
+    json = json
 )

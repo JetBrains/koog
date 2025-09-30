@@ -11,8 +11,10 @@ import ai.koog.prompt.executor.clients.openai.base.models.OpenAIStreamOptions
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAITool
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolChoice
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIUsage
+import ai.koog.prompt.executor.clients.serialization.AdditionalPropertiesFlatteningSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
 
 /**
  * DeepSeek Chat Completions API Request
@@ -76,7 +78,8 @@ internal class DeepSeekChatCompletionRequest(
     val responseFormat: OpenAIResponseFormat? = null,
     val stop: List<String>? = null,
     val logprobs: Boolean? = null,
-    val streamOptions: OpenAIStreamOptions? = null
+    val streamOptions: OpenAIStreamOptions? = null,
+    val additionalProperties: Map<String, JsonElement>? = null,
 ) : OpenAIBaseLLMRequest
 
 /**
@@ -109,3 +112,6 @@ public class DeepSeekChatCompletionStreamResponse(
     public val objectType: String = "chat.completion.chunk",
     public val usage: OpenAIUsage? = null,
 ) : OpenAIBaseLLMStreamResponse
+
+internal object DeepSeekChatCompletionRequestSerializer :
+    AdditionalPropertiesFlatteningSerializer<DeepSeekChatCompletionRequest>(DeepSeekChatCompletionRequest.serializer())

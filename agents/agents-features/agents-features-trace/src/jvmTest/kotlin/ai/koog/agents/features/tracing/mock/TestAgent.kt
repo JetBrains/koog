@@ -6,7 +6,6 @@ import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.prompt.dsl.AttachmentBuilder
 import ai.koog.prompt.dsl.prompt
@@ -82,7 +81,7 @@ fun toolResult(toolCallId: String?, toolName: String, content: String, result: S
         id = toolCallId,
         tool = toolName,
         content = content,
-        result = ToolResult.Text(result)
+        result = result
     )
 
 /**

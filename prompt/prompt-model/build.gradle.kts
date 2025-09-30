@@ -13,6 +13,8 @@ kotlin {
         commonMain {
             dependencies {
                 api(project(":prompt:prompt-llm"))
+                api(project(":utils"))
+                api(libs.kotlinx.coroutines.core)
                 api(libs.kotlinx.serialization.json)
                 api(libs.kotlinx.datetime)
                 api(libs.kotlinx.io.core)
@@ -21,20 +23,13 @@ kotlin {
 
         commonTest {
             dependencies {
-                implementation(kotlin("test"))
+                implementation(project(":test-utils"))
             }
         }
 
         jsTest {
             dependencies {
                 implementation(kotlin("test-js"))
-            }
-        }
-
-        jvmTest {
-            dependencies {
-                implementation(kotlin("test-junit5"))
-                implementation(libs.junit.jupiter.params)
             }
         }
     }

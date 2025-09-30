@@ -13,6 +13,7 @@ import ai.koog.agents.features.opentelemetry.integration.SpanAdapter
 import ai.koog.agents.features.opentelemetry.integration.bodyFieldsToCustomAttribute
 import ai.koog.agents.features.opentelemetry.span.GenAIAgentSpan
 import ai.koog.agents.features.opentelemetry.span.InferenceSpan
+import ai.koog.agents.features.opentelemetry.span.InvokeAgentSpan
 import ai.koog.agents.features.opentelemetry.span.NodeExecuteSpan
 import ai.koog.prompt.message.Message
 import java.util.concurrent.atomic.AtomicInteger
@@ -27,12 +28,18 @@ import java.util.concurrent.atomic.AtomicInteger
  * their data into custom attributes. Additionally, it ensures that the converted events
  * are removed from the span's event list after conversion.
  */
-internal class LangfuseSpanAdapter(private val openTelemetryConfig: OpenTelemetryConfig) : SpanAdapter() {
+internal class LangfuseSpanAdapter(private val traceAttributes: List<CustomAttribute>, private val openTelemetryConfig: OpenTelemetryConfig) : SpanAdapter() {
 
     private val stepKey = AtomicInteger(0)
 
     override fun onBeforeSpanStarted(span: GenAIAgentSpan) {
         when (span) {
+            is InvokeAgentSpan -> {
+                traceAttributes.forEach { attribute ->
+                    span.addAttribute(attribute)
+                }
+            }
+
             is InferenceSpan -> {
                 val eventsToProcess = span.events.toList()
 

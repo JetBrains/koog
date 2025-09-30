@@ -28,65 +28,65 @@ class OllamaSimpleAgentIntegrationTest {
     }
 
     val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
-        onBeforeAgentStarted { eventContext ->
+        onAgentStarting { eventContext ->
             println(
                 "Agent started: agentId=${eventContext.agent.javaClass.simpleName}"
             )
         }
 
-        onAgentFinished { eventContext ->
+        onAgentCompleted { eventContext ->
             println("Agent finished: agentId=${eventContext.agentId}, result=${eventContext.result}")
         }
 
-        onAgentRunError { eventContext ->
+        onAgentExecutionFailed { eventContext ->
             println("Agent error: agentId=${eventContext.agentId}, error=${eventContext.throwable.message}")
         }
 
-        onStrategyStarted { eventContext ->
+        onStrategyStarting { eventContext ->
             println("Strategy started: ${eventContext.strategy.name}")
         }
 
-        onStrategyFinished { eventContext ->
+        onStrategyCompleted { eventContext ->
             println("Strategy finished: strategy=${eventContext.strategy.name}, result=${eventContext.result}")
         }
 
-        onBeforeNode { eventContext ->
+        onNodeExecutionStarting { eventContext ->
             println("Before node: node=${eventContext.node.javaClass.simpleName}, input=${eventContext.input}")
         }
 
-        onAfterNode { eventContext ->
+        onNodeExecutionCompleted { eventContext ->
             println(
                 "After node: node=${eventContext.node.javaClass.simpleName}, input=${eventContext.input}, output=${eventContext.output}"
             )
         }
 
-        onBeforeLLMCall { eventContext ->
+        onLLMCallStarting { eventContext ->
             println("Before LLM call: prompt=${eventContext.prompt}")
         }
 
-        onAfterLLMCall { eventContext ->
+        onLLMCallCompleted { eventContext ->
             val lastResponse = eventContext.responses.last().content
             println("After LLM call: response=${lastResponse.take(100)}${if (lastResponse.length > 100) "..." else ""}")
         }
 
-        onToolCall { eventContext ->
+        onToolExecutionStarting { eventContext ->
             println("Tool called: tool=${eventContext.tool.name}, args=${eventContext.toolArgs}")
             actualToolCalls.add(eventContext.tool.name)
         }
 
-        onToolValidationError { eventContext ->
+        onToolValidationFailed { eventContext ->
             println(
                 "Tool validation error: tool=${eventContext.tool.name}, args=${eventContext.toolArgs}, value=${eventContext.error}"
             )
         }
 
-        onToolCallFailure { eventContext ->
+        onToolExecutionFailed { eventContext ->
             println(
                 "Tool call failure: tool=${eventContext.tool.name}, args=${eventContext.toolArgs}, error=${eventContext.throwable.message}"
             )
         }
 
-        onToolCallResult { eventContext ->
+        onToolExecutionCompleted { eventContext ->
             println(
                 "Tool call result: tool=${eventContext.tool.name}, args=${eventContext.toolArgs}, result=${eventContext.result}"
             )

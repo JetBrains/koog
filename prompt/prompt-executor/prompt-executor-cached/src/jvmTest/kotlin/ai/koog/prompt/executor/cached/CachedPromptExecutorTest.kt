@@ -11,8 +11,9 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.streaming.streamFrameFlowOf
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
 import kotlin.test.Test
@@ -66,9 +67,13 @@ class CachedPromptExecutorTest {
             return testResponse
         }
 
-        override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
+        override fun executeStreaming(
+            prompt: Prompt,
+            model: LLModel,
+            tools: List<ToolDescriptor>
+        ): Flow<StreamFrame> {
             executeStreamingCalled = true
-            return flowOf("Streaming response from executor")
+            return streamFrameFlowOf("Streaming response from executor")
         }
 
         override suspend fun moderate(

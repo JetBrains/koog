@@ -134,7 +134,7 @@ class ToolSetAsToolsTest {
         }
 
         val addResult = addTool.execute(addTool.decodeArgs(addArgs), TestToolsEnabler)
-        assertEquals("8", addResult.toStringDefault(), "Add tool should return 8")
+        assertEquals("8", addTool.encodeResultToStringUnsafe(addResult), "Add tool should return 8")
 
         val multiplyTool = tools.find { it.descriptor.name == "multiply" }
         assertNotNull(multiplyTool, "Multiply tool should be found")
@@ -145,7 +145,7 @@ class ToolSetAsToolsTest {
         }
 
         val multiplyResult = multiplyTool.execute(multiplyTool.decodeArgs(multiplyArgs), TestToolsEnabler)
-        assertEquals("28", multiplyResult.toStringDefault(), "Multiply tool should return 28")
+        assertEquals("28", multiplyTool.encodeResultToStringUnsafe(multiplyResult), "Multiply tool should return 28")
     }
 
     @Test
@@ -165,7 +165,7 @@ class ToolSetAsToolsTest {
         }
 
         val powerResult = powerTool.execute(powerTool.decodeArgs(powerArgs), TestToolsEnabler)
-        assertEquals("8", powerResult.toStringDefault(), "Power tool should return 8")
+        assertEquals("8", powerTool.encodeResultToStringUnsafe(powerResult), "Power tool should return 8")
     }
 
     @Test
@@ -185,7 +185,7 @@ class ToolSetAsToolsTest {
         }
 
         val subtractResult = subtractTool.execute(subtractTool.decodeArgs(subtractArgs), TestToolsEnabler)
-        assertEquals("6", subtractResult.toStringDefault(), "Subtract tool should return 6")
+        assertEquals("6", subtractTool.encodeResultToStringUnsafe(subtractResult), "Subtract tool should return 6")
     }
 
     @Test
@@ -205,7 +205,7 @@ class ToolSetAsToolsTest {
         }
 
         val concatResult = concatTool.execute(concatTool.decodeArgs(concatArgs), TestToolsEnabler)
-        assertEquals("\"Hello, World!\"", concatResult.toStringDefault(), "Concat tool should return \"Hello, World!\"")
+        assertEquals("\"Hello, World!\"", concatTool.encodeResultToStringUnsafe(concatResult), "Concat tool should return \"Hello, World!\"")
     }
 
     @Test
@@ -224,7 +224,7 @@ class ToolSetAsToolsTest {
 
         val createPersonResult =
             createPersonTool.execute(createPersonTool.decodeArgs(createPersonArgs), TestToolsEnabler)
-        val personJson = createPersonResult.toStringDefault()
+        val personJson = createPersonTool.encodeResultToStringUnsafe(createPersonResult)
         assertTrue(personJson.contains("\"name\":\"John\""), "Person JSON should contain name")
         assertTrue(personJson.contains("\"age\":30"), "Person JSON should contain age")
 
@@ -239,7 +239,7 @@ class ToolSetAsToolsTest {
             formatPersonTool.execute(formatPersonTool.decodeArgs(formatPersonArgs), TestToolsEnabler)
         assertEquals(
             "\"John is 30 years old\"",
-            formatPersonResult.toStringDefault(),
+            formatPersonTool.encodeResultToStringUnsafe(formatPersonResult),
             "Format tool should return formatted string"
         )
     }

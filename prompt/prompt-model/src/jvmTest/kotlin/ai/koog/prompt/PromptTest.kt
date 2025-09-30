@@ -7,14 +7,12 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
-import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
@@ -421,11 +419,11 @@ class PromptTest {
 
     @Test
     fun testInvalidToolCallJsonContent() {
+        // contentJson property is now on StreamFrame.ToolCall, not Message.Tool.Call
+        // This test is no longer applicable for Message.Tool.Call
         val toolCallWithInvalidJson = Message.Tool.Call(toolCallId, toolName, "invalid json", testRespMetaInfo)
-
-        assertThrows<SerializationException> {
-            toolCallWithInvalidJson.contentJson
-        }
+        // Just verify the content is stored as-is
+        assertEquals("invalid json", toolCallWithInvalidJson.content)
     }
 
     @Test

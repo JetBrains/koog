@@ -7,13 +7,12 @@ import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.tools.DirectToolCallsEnabler
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.Tool
-import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
+import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.agents.testing.tools.mockLLMAnswer
 import ai.koog.prompt.dsl.Prompt
@@ -65,21 +64,15 @@ class AIAgentLLMWriteSessionTest {
 
     class TestTool : SimpleTool<TestTool.Args>() {
         @Serializable
-        data class Args(val input: String) : ToolArgs
+        data class Args(
+            @property:LLMDescription("Input parameter")
+            val input: String
+        )
 
         override val argsSerializer: KSerializer<Args> = Args.serializer()
 
-        override val descriptor: ToolDescriptor = ToolDescriptor(
-            name = "test-tool",
-            description = "A test tool",
-            requiredParameters = listOf(
-                ToolParameterDescriptor(
-                    name = "input",
-                    description = "Input parameter",
-                    type = ToolParameterType.String
-                )
-            )
-        )
+        override val name: String = "test-tool"
+        override val description: String = "A test tool"
 
         override suspend fun doExecute(args: Args): String {
             return "Processed: ${args.input}"
@@ -88,13 +81,19 @@ class AIAgentLLMWriteSessionTest {
 
     class CustomTool : Tool<CustomTool.Args, CustomTool.Result>() {
         @Serializable
-        data class Args(val input: String) : ToolArgs
+        data class Args(val input: String)
 
-        data class Result(val output: String) : ToolResult {
-            override fun toStringDefault(): String = output
-        }
+        @Serializable
+        data class Result(
+            @property:LLMDescription("Input parameter")
+            val output: String
+        )
 
         override val argsSerializer: KSerializer<Args> = Args.serializer()
+        override val resultSerializer: KSerializer<Result> = Result.serializer()
+
+        override val name: String = "custom-tool"
+        override val description: String = "A custom tool"
 
         override val descriptor: ToolDescriptor = ToolDescriptor(
             name = "custom-tool",
@@ -217,7 +216,7 @@ class AIAgentLLMWriteSessionTest {
         val result = session.callTool(testTool, TestTool.Args("test input"))
 
         assertTrue(result.isSuccessful())
-        assertEquals("Processed: test input", result.asSuccessful().result.text)
+        assertEquals("Processed: test input", result.asSuccessful().result)
     }
 
     @Test
@@ -232,7 +231,7 @@ class AIAgentLLMWriteSessionTest {
         val result = session.callTool("test-tool", TestTool.Args("test input"))
 
         assertTrue(result.isSuccessful())
-        assertEquals("Processed: test input", (result.asSuccessful().result as ToolResult.Text).text)
+        assertEquals("Processed: test input", result.asSuccessful().result)
     }
 
     @Test
@@ -258,12 +257,12 @@ class AIAgentLLMWriteSessionTest {
         val testTool = TestTool()
         val session = createSession(mockExecutor, listOf(testTool))
 
-        val safeTool = session.findTool<TestTool.Args, ToolResult.Text>(TestTool::class)
+        val safeTool = session.findTool<TestTool.Args, String>(TestTool::class)
         assertNotNull(safeTool)
 
         val result = safeTool.execute(TestTool.Args("test input"))
         assertTrue(result.isSuccessful())
-        assertEquals("Processed: test input", result.asSuccessful().result.text)
+        assertEquals("Processed: test input", result.asSuccessful().result)
     }
 
     @Test

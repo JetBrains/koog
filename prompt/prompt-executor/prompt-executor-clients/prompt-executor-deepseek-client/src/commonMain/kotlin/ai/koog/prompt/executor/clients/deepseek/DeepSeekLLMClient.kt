@@ -1,9 +1,11 @@
 package ai.koog.prompt.executor.clients.deepseek
+
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.deepseek.models.DeepSeekChatCompletionRequest
+import ai.koog.prompt.executor.clients.deepseek.models.DeepSeekChatCompletionRequestSerializer
 import ai.koog.prompt.executor.clients.deepseek.models.DeepSeekChatCompletionResponse
 import ai.koog.prompt.executor.clients.deepseek.models.DeepSeekChatCompletionStreamResponse
 import ai.koog.prompt.executor.clients.openai.base.AbstractOpenAILLMClient
@@ -14,6 +16,7 @@ import ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolChoice
 import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.streaming.StreamFrameFlowBuilder
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import kotlinx.datetime.Clock
@@ -81,9 +84,10 @@ public class DeepSeekLLMClient(
             tools = tools,
             topLogprobs = deepSeekParams.topLogprobs,
             topP = deepSeekParams.topP,
+            additionalProperties = deepSeekParams.additionalProperties,
         )
 
-        return json.encodeToString(request)
+        return json.encodeToString(DeepSeekChatCompletionRequestSerializer, request)
     }
 
     override fun processProviderChatResponse(response: DeepSeekChatCompletionResponse): List<LLMChoice> {
@@ -97,8 +101,19 @@ public class DeepSeekLLMClient(
     override fun decodeResponse(data: String): DeepSeekChatCompletionResponse =
         json.decodeFromString(data)
 
-    override fun processStreamingChunk(chunk: DeepSeekChatCompletionStreamResponse): String? =
-        chunk.choices.firstOrNull()?.delta?.content
+    override suspend fun StreamFrameFlowBuilder.processStreamingChunk(chunk: DeepSeekChatCompletionStreamResponse) {
+        chunk.choices.firstOrNull()?.let { choice ->
+            choice.delta.content?.let { emitAppend(it) }
+            choice.delta.toolCalls?.forEach { toolCall ->
+                val index = toolCall.index
+                val id = toolCall.id
+                val name = toolCall.function?.name
+                val arguments = toolCall.function?.arguments
+                upsertToolCall(index, id, name, arguments)
+            }
+            choice.finishReason?.let { emitEnd(it, createMetaInfo(chunk.usage)) }
+        }
+    }
 
     public override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
         logger.warn { "Moderation is not supported by DeepSeek API" }

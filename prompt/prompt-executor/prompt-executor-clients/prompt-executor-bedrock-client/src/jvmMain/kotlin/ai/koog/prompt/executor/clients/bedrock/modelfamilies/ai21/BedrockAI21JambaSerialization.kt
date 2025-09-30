@@ -7,6 +7,7 @@ import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.prompt.streaming.StreamFrame
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
@@ -137,9 +138,7 @@ internal object BedrockAI21JambaSerialization {
     internal fun parseJambaResponse(responseBody: String, clock: Clock = Clock.System): List<Message.Response> {
         val response = json.decodeFromString<JambaResponse>(responseBody)
 
-        val inputTokens = response.usage?.promptTokens
-        val outputTokens = response.usage?.completionTokens
-        val totalTokens = response.usage?.totalTokens
+        val metaInfo = parseMetaInfo(clock, response.usage)
 
         return response.choices.flatMap { choice ->
             val messages = mutableListOf<Message.Response>()
@@ -150,12 +149,7 @@ internal object BedrockAI21JambaSerialization {
                     Message.Assistant(
                         content = content,
                         finishReason = choice.finishReason,
-                        metaInfo = ResponseMetaInfo.create(
-                            clock,
-                            totalTokensCount = totalTokens,
-                            inputTokensCount = inputTokens,
-                            outputTokensCount = outputTokens
-                        )
+                        metaInfo = metaInfo
                     )
                 )
             }
@@ -167,12 +161,7 @@ internal object BedrockAI21JambaSerialization {
                         id = toolCall.id,
                         tool = toolCall.function.name,
                         content = toolCall.function.arguments,
-                        metaInfo = ResponseMetaInfo.create(
-                            clock,
-                            totalTokensCount = totalTokens,
-                            inputTokensCount = inputTokens,
-                            outputTokensCount = outputTokens
-                        )
+                        metaInfo = metaInfo
                     )
                 )
             }
@@ -181,9 +170,38 @@ internal object BedrockAI21JambaSerialization {
         }
     }
 
-    internal fun parseJambaStreamChunk(chunkJsonString: String): String {
+    internal fun parseJambaStreamChunk(chunkJsonString: String, clock: Clock = Clock.System): List<StreamFrame> {
         val streamResponse = json.decodeFromString<JambaStreamResponse>(chunkJsonString)
-
-        return streamResponse.choices.firstOrNull()?.delta?.content ?: ""
+        return buildList {
+            val choice = streamResponse.choices.firstOrNull()
+            choice?.delta?.let { delta ->
+                delta.content?.let(StreamFrame::Append)?.let(::add)
+                delta.toolCalls?.map { jambaToolCall ->
+                    StreamFrame.ToolCall(
+                        id = jambaToolCall.id,
+                        name = jambaToolCall.function.name,
+                        content = jambaToolCall.function.arguments
+                    )
+                }?.let(::addAll)
+            }
+            choice?.finishReason?.let { finishReason ->
+                add(
+                    StreamFrame.End(
+                        finishReason = finishReason,
+                        metaInfo = parseMetaInfo(clock, streamResponse.usage)
+                    )
+                )
+            }
+        }
     }
+
+    private fun parseMetaInfo(
+        clock: Clock,
+        usage: JambaUsage?
+    ): ResponseMetaInfo = ResponseMetaInfo.create(
+        clock = clock,
+        totalTokensCount = usage?.totalTokens,
+        inputTokensCount = usage?.promptTokens,
+        outputTokensCount = usage?.completionTokens
+    )
 }

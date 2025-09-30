@@ -1,6 +1,9 @@
 package ai.koog.prompt.executor.clients.openrouter
 
 import ai.koog.prompt.params.LLMParams
+import io.kotest.matchers.equality.shouldBeEqualToComparingFields
+import io.kotest.matchers.shouldBe
+import kotlinx.serialization.json.JsonPrimitive
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
@@ -50,5 +53,53 @@ class OpenRouterParamsValidationTest {
         assert(base.speculation == or.speculation)
         assert(base.user == or.user)
         assert(base.includeThoughts == or.includeThoughts)
+    }
+
+    @Test
+    fun `Should make a full copy`() {
+        val source = OpenRouterParams(
+            temperature = 1.0,
+            maxTokens = 321,
+            numberOfChoices = 1,
+            speculation = "copy",
+            user = "user",
+            includeThoughts = true,
+            additionalProperties = mapOf("foo" to JsonPrimitive("bar")),
+            topP = 1.0,
+            topK = 3,
+            toolChoice = LLMParams.ToolChoice.Named("calculator")
+        )
+
+        val target = source.copy()
+        target shouldBeEqualToComparingFields source
+    }
+
+    @Test
+    fun `Should create from LLMParams`() {
+        val source = LLMParams(
+            additionalProperties = mapOf("foo" to JsonPrimitive("bar")),
+            includeThoughts = true,
+            maxTokens = 321,
+            numberOfChoices = 54,
+            speculation = "copy",
+            temperature = 0.43,
+            toolChoice = LLMParams.ToolChoice.Named("calculator"),
+            user = "user",
+        )
+
+        // when
+        val target = source.toOpenRouterParams()
+
+        // then
+        target.additionalProperties shouldBe source.additionalProperties
+        target.includeThoughts shouldBe source.includeThoughts
+        target.maxTokens shouldBe source.maxTokens
+        target.numberOfChoices shouldBe source.numberOfChoices
+        target.speculation shouldBe source.speculation
+        target.temperature shouldBe source.temperature
+        target.toolChoice shouldBe source.toolChoice
+        target.topK shouldBe null
+        target.topP shouldBe null
+        target.user shouldBe source.user
     }
 }
