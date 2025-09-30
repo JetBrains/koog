@@ -1,14 +1,16 @@
+
 # Functional agents
 
 Functional agents are lightweight AI agents that operate without building complex strategy graphs.
-Instead, they use a simple loop controlled by a lambda function.
-This loop handles user input, interacts with an LLM, and produces a final output.
-The agent loop defines the main logic of the agent, which is repeated as needed based on user input and LLM output.
+Instead, the agent logic is implemented as a lambda function that handles user input, interacts with an LLM,
+optionally calls tools, and produces a final output. It can perform a single LLM call,
+manage multiple LLM calls in a sequence, or repeat in a loop when needed based on user input and LLM and tool outputs.
 
 This page guides you through the steps necessary to create a minimal functional agent and extend it with tools.
 
 !!! tip
-    If you are new to Koog and want to create the simplest agent, start with [Single-run agents](single-run-agents.md).
+    - If you are new to Koog and want to create the simplest agent, start with [Single-run agents](single-run-agents.md).
+    - If you want to create an agent with complex strategy graphs, check [Complex workflow agents](complex-workflow-agents.md).
 
 ## Prerequisites
 
@@ -39,17 +41,18 @@ For all available installation methods, see [Installation](index.md#installation
 
 To create a minimal functional agent, do the following:
 
-1) Choose the input and output types that the agent handles and create a corresponding `AIAgent<Input, Output>` instance.
+1. Choose the input and output types that the agent handles and create a corresponding `AIAgent<Input, Output>` instance.
    In this guide, we use `AIAgent<String, String>`, which means the agent receives and returns `String`.
-2) Provide the required parameters, including a system prompt, prompt executor, and LLM.
-3) Define the agent loop with a lambda function.
+2. Provide the required parameters, including a system prompt, prompt executor, and LLM.
+3. Define the agent logic with a lambda function wrapped into the `functionalStrategy {...}` DSL method.
 
 Here is an example of a minimal functional agent that sends user text to a specified LLM and returns a single assistant message.
 
 <!--- INCLUDE
 import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.core.agent.functionalStrategy
 import ai.koog.agents.core.agent.asAssistantMessage
-import ai.koog.agents.core.agent.requestLLMMultiple
+import ai.koog.agents.core.agent.requestLLM
 import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
 import ai.koog.prompt.llm.OllamaModels
 import kotlinx.coroutines.runBlocking
@@ -66,13 +69,15 @@ fun main() {
 val mathAgent = AIAgent<String, String>(
     systemPrompt = "You are a precise math assistant.",
     promptExecutor = simpleOllamaAIExecutor(),
-    llmModel = OllamaModels.Meta.LLAMA_3_2
-    ) { input -> // Define the agent loop
-        // Send the user input to the LLM
-        val responses = requestLLMMultiple(input)
+    llmModel = OllamaModels.Meta.LLAMA_3_2,
+    strategy = functionalStrategy { input -> // Define the agent logic
+        // Make one LLM call
+        val response = requestLLM(input)
         // Extract and return the assistant message content from the response
-        responses.single().asAssistantMessage().content
+        response.asAssistantMessage().content
     }
+)
+
 // Run the agent with a user input and print the result
 val result = mathAgent.run("What is 12 × 9?")
 println(result)
@@ -85,14 +90,71 @@ The agent can produce the following output:
 The answer to 12 × 9 is 108.
 ```
 
+This agent makes a single LLM call and returns the assistant message content.
+You can extend the agent logic to handle multiple sequential LLM calls. For example:
+
+<!--- INCLUDE
+import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.core.agent.functionalStrategy
+import ai.koog.agents.core.agent.asAssistantMessage
+import ai.koog.agents.core.agent.requestLLM
+import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
+import ai.koog.prompt.llm.OllamaModels
+import kotlinx.coroutines.runBlocking
+
+fun main() {
+    runBlocking {
+-->
+<!--- SUFFIX
+    }
+}
+-->
+```kotlin
+// Create an AIAgent instance and provide a system prompt, prompt executor, and LLM
+val mathAgent = AIAgent<String, String>(
+    systemPrompt = "You are a precise math assistant.",
+    promptExecutor = simpleOllamaAIExecutor(),
+    llmModel = OllamaModels.Meta.LLAMA_3_2,
+    strategy = functionalStrategy { input -> // Define the agent logic
+        // The first LLM call to produce an initial draft based on the user input
+        val draft = requestLLM("Draft: $input").asAssistantMessage().content
+        // The second LLM call to improve the draft by prompting the LLM again with the draft content
+        val improved = requestLLM("Improve and clarify: $draft").asAssistantMessage().content
+        // The final LLM call to format the improved text and return the final formatted result
+        requestLLM("Format the result as bold: $improved").asAssistantMessage().content
+    }
+)
+
+// Run the agent with a user input and print the result
+val result = mathAgent.run("What is 12 × 9?")
+println(result)
+```
+<!--- KNIT example-functional-agent-02.kt -->
+
+The agent can produce the following output:
+
+```
+When multiplying 12 by 9, we can break it down as follows:
+
+**12 (tens) × 9 = 108**
+
+Alternatively, we can also use the distributive property to calculate this:
+
+**(10 + 2) × 9**
+= **10 × 9 + 2 × 9**
+= **90 + 18**
+= **108**
+```
+
 ## Add tools
 
-In many cases, the functional agent needs to complete specific tasks, such as reading and writing data or calling APIs.
-In Koog, you expose such capabilities as tools and let the LLM invoke them during the agent loop.
+In many cases, a functional agent needs to complete specific tasks, such as reading and writing data or calling APIs.
+In Koog, you expose such capabilities as tools and let the LLM call them in the agent logic.
 
 This chapter takes the minimal functional agent created above and demonstrates how to extend the agent logic using tools.
 
-1) Create an annotation-based tool. For more details, see [Annotation-based tools](annotation-based-tools.md). 
+
+1) Create an annotation-based tool. For more details, see [Annotation-based tools](annotation-based-tools.md).
 
 <!--- INCLUDE
 import ai.koog.agents.core.tools.annotations.LLMDescription
@@ -110,14 +172,14 @@ class MathTools : ToolSet {
     }
 }
 ```
-<!--- KNIT example-functional-agent-02.kt -->
+<!--- KNIT example-functional-agent-03.kt -->
 
-To learn more about available tools, refer to the [Tool overview](tool-overview.md).
+To learn more about available tools, refer to the [Tool overview](tools-overview.md).
 
 2) Register the tool to make it available to the agent.
 
 <!--- INCLUDE
-import ai.koog.agents.example.exampleFunctionalAgent02.MathTools
+import ai.koog.agents.example.exampleFunctionalAgent03.MathTools
 import ai.koog.agents.core.tools.reflect.tools
 import ai.koog.agents.core.tools.ToolRegistry
 import kotlinx.coroutines.runBlocking
@@ -134,16 +196,21 @@ val toolRegistry = ToolRegistry {
     tools(MathTools())
 }
 ```
-<!--- KNIT example-functional-agent-03.kt -->
+<!--- KNIT example-functional-agent-04.kt -->
 
 3) Pass the tool registry to the agent to enable the LLM to request and use the available tools.
-4) Extend the agent loop to identify tool calls, execute the requested tools, and return their results to the LLM for further processing.
+
+4) Extend the agent logic to identify tool calls, execute the requested tools, send their results back to the LLM, and repeat the process until no tool calls remain.
+
+!!! note
+    Use a loop only if the LLM continues to issue tool calls.
 
 <!--- INCLUDE
-import ai.koog.agents.example.exampleFunctionalAgent02.MathTools
+import ai.koog.agents.example.exampleFunctionalAgent03.MathTools
 import ai.koog.agents.core.tools.reflect.tools
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.core.agent.functionalStrategy
 import ai.koog.agents.core.agent.asAssistantMessage
 import ai.koog.agents.core.agent.containsToolCalls
 import ai.koog.agents.core.agent.executeMultipleTools
@@ -169,30 +236,31 @@ val mathWithTools = AIAgent<String, String>(
     systemPrompt = "You are a precise math assistant. When multiplication is needed, use the multiplication tool.",
     promptExecutor = simpleOllamaAIExecutor(),
     llmModel = OllamaModels.Meta.LLAMA_3_2,
-    toolRegistry = toolRegistry
-) { input -> // Define the agent loop extended with tool calls
-    // Send the user input to the LLM
-    var responses = requestLLMMultiple(input)
+    toolRegistry = toolRegistry,
+    strategy = functionalStrategy { input -> // Define the agent logic extended with tool calls
+        // Send the user input to the LLM
+        var responses = requestLLMMultiple(input)
+        
+        // Only loop while the LLM requests tools
+        while (responses.containsToolCalls()) {
+            // Extract tool calls from the response
+            val pendingCalls = extractToolCalls(responses)
+            // Execute the tools and return the results
+            val results = executeMultipleTools(pendingCalls)
+            // Send the tool results back to the LLM. The LLM may call more tools or return a final output
+            responses = sendMultipleToolResults(results)
+        }
 
-    // If the LLM requests tools
-    while (responses.containsToolCalls()) {
-        // Extract tool calls from the response
-        val pendingCalls = extractToolCalls(responses)
-        // Execute the tools and return the results
-        val results = executeMultipleTools(pendingCalls)
-        // Send the tool results back to the LLM. The LLM may call more tools or return a final output
-        responses = sendMultipleToolResults(results)
+        // When no tool calls remain, extract and return the assistant message content from the response
+        responses.single().asAssistantMessage().content
     }
-
-    // When no tool calls remain, extract and return the assistant message content from the response
-    responses.single().asAssistantMessage().content
-}
+)
 
 // Run the agent with a user input and print the result
 val reply = mathWithTools.run("Please multiply 12.5 and 4, then add 10 to the result.")
 println(reply)
 ```
-<!--- KNIT example-functional-agent-04.kt -->
+<!--- KNIT example-functional-agent-05.kt -->
 
 The agent can produce the following output:
 
