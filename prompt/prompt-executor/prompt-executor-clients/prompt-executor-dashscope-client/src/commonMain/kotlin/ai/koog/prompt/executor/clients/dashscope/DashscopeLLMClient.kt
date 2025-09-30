@@ -6,17 +6,16 @@ import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.dashscope.models.DashscopeChatCompletionRequest
 import ai.koog.prompt.executor.clients.dashscope.models.DashscopeChatCompletionResponse
 import ai.koog.prompt.executor.clients.dashscope.models.DashscopeChatCompletionStreamResponse
-import ai.koog.prompt.executor.clients.dashscope.models.DashscopeUsage
-import ai.koog.prompt.executor.clients.openai.AbstractOpenAILLMClient
-import ai.koog.prompt.executor.clients.openai.OpenAIBasedSettings
-import ai.koog.prompt.executor.clients.openai.models.OpenAIMessage
-import ai.koog.prompt.executor.clients.openai.models.OpenAITool
-import ai.koog.prompt.executor.clients.openai.models.OpenAIToolChoice
+import ai.koog.prompt.executor.clients.openai.base.AbstractOpenAILLMClient
+import ai.koog.prompt.executor.clients.openai.base.OpenAIBasedSettings
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIMessage
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAITool
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolChoice
 import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
-import io.github.oshai.kotlinlogging.KLogger
+import ai.koog.prompt.streaming.StreamFrameFlowBuilder
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import kotlinx.datetime.Clock
@@ -24,14 +23,14 @@ import kotlinx.datetime.Clock
 /**
  * Configuration settings for connecting to the DashScope API using OpenAI-compatible endpoints.
  *
- * @property baseUrl The base URL of the DashScope API. 
+ * @property baseUrl The base URL of the DashScope API.
  * For international: "https://dashscope-intl.aliyuncs.com/compatible-mode/v1"
  * For China mainland: "https://dashscope.aliyuncs.com/compatible-mode/v1"
  * @property chatCompletionsPath The path for chat completions (default: "/chat/completions")
  * @property timeoutConfig Configuration for connection timeouts including request, connection, and socket timeouts.
  */
 public class DashscopeClientSettings(
-    baseUrl: String = "https://dashscope-intl.aliyuncs.com/",
+    baseUrl: String = "https://dashscope.aliyuncs.com/",
     chatCompletionsPath: String = "compatible-mode/v1/chat/completions",
     timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig()
 ) : OpenAIBasedSettings(baseUrl, chatCompletionsPath, timeoutConfig)
@@ -54,14 +53,13 @@ public class DashscopeLLMClient(
     apiKey,
     settings,
     baseClient,
-    clock
+    clock,
+    staticLogger
 ) {
 
     private companion object {
         private val staticLogger = KotlinLogging.logger { }
     }
-
-    override val logger: KLogger = staticLogger
 
     override fun serializeProviderChatRequest(
         messages: List<OpenAIMessage>,
@@ -97,7 +95,7 @@ public class DashscopeLLMClient(
 
     override fun processProviderChatResponse(response: DashscopeChatCompletionResponse): List<LLMChoice> {
         require(response.choices.isNotEmpty()) { "Empty choices in response" }
-        return response.choices.map { it.toMessageResponses(response.usage.createMetaInfo()) }
+        return response.choices.map { it.toMessageResponses(createMetaInfo(response.usage)) }
     }
 
     override fun decodeStreamingResponse(data: String): DashscopeChatCompletionStreamResponse =
@@ -106,22 +104,22 @@ public class DashscopeLLMClient(
     override fun decodeResponse(data: String): DashscopeChatCompletionResponse =
         json.decodeFromString(data)
 
-    override fun processStreamingChunk(chunk: DashscopeChatCompletionStreamResponse): String? =
-        chunk.choices.firstOrNull()?.delta?.content
+    override suspend fun StreamFrameFlowBuilder.processStreamingChunk(chunk: DashscopeChatCompletionStreamResponse) {
+        chunk.choices.firstOrNull()?.let { choice ->
+            choice.delta.content?.let { emitAppend(it) }
+            choice.delta.toolCalls?.forEach { toolCall ->
+                val index = toolCall.index
+                val id = toolCall.id
+                val name = toolCall.function?.name
+                val arguments = toolCall.function?.arguments
+                upsertToolCall(index, id, name, arguments)
+            }
+            choice.finishReason?.let { emitEnd(it, createMetaInfo(chunk.usage)) }
+        }
+    }
 
     public override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
         logger.warn { "Moderation is not supported by DashScope API" }
         throw UnsupportedOperationException("Moderation is not supported by DashScope API.")
     }
-
-    /**
-     * Creates ResponseMetaInfo from usage data.
-     * Should be used by concrete implementations when processing responses.
-     */
-    private fun DashscopeUsage?.createMetaInfo(): ResponseMetaInfo = ResponseMetaInfo.create(
-        clock,
-        totalTokensCount = this?.totalTokens,
-        inputTokensCount = this?.promptTokens,
-        outputTokensCount = this?.completionTokens
-    )
 }

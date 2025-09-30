@@ -84,7 +84,6 @@ class DashscopeLLMClientTest {
 
             val chunks = client.executeStreaming(prompt, DashscopeModels.QWEN_FLASH).toList()
 
-            assertNotNull(chunks)
             assertTrue(chunks.isNotEmpty())
             val fullResponse = chunks.joinToString("")
             assertTrue(fullResponse.isNotEmpty())
