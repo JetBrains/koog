@@ -118,7 +118,7 @@ class PersistencyRunsTwiceTest {
 
         testCollector.clear()
 
-        val secondAgent = agentService.createAgent(id = agent.id)
+        val secondAgent = agentService.createAgent(id = agentId)
 
         val secondRunResult = runCatching { secondAgent.run("Start the test") }
 
