@@ -11,6 +11,8 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.condition.EnabledOnOs
 import org.junit.jupiter.api.condition.OS
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.wait.strategy.Wait
 import org.testcontainers.junit.jupiter.Container
@@ -25,6 +27,7 @@ import kotlin.time.Duration.Companion.minutes
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Testcontainers
 @EnabledOnOs(OS.LINUX)
+@Execution(ExecutionMode.SAME_THREAD, reason = "Working with the same instance of test server.")
 class A2AClientJsonRpcIntegrationTest : BaseA2AProtocolTest() {
     companion object {
         @Container
@@ -34,7 +37,7 @@ class A2AClientJsonRpcIntegrationTest : BaseA2AProtocolTest() {
                 .waitingFor(Wait.forListeningPort())
     }
 
-    override val testTimeout = 2.minutes
+    override val testTimeout = 1.minutes
 
     private val httpClient = HttpClient {
         install(Logging) {

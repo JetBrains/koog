@@ -1,6 +1,5 @@
 package ai.koog.agents.a2a.core
 
-import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.MessageMetaInfo
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
@@ -19,11 +18,11 @@ public const val MESSAGE_A2A_METADATA_KEY: String = "a2a_metadata"
 @Serializable
 public data class MessageA2AMetadata(
     val messageId: String,
-    val contextId: String?,
-    val taskId: String?,
-    val referenceTaskIds: List<String>?,
-    val metadata: JsonObject?,
-    val extensions: List<String>?,
+    val contextId: String? = null,
+    val taskId: String? = null,
+    val referenceTaskIds: List<String>? = null,
+    val metadata: JsonObject? = null,
+    val extensions: List<String>? = null,
 )
 
 /**

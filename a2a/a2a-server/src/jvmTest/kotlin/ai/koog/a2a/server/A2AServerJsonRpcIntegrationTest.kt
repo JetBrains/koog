@@ -45,6 +45,8 @@ import kotlinx.coroutines.withContext
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
 import java.net.ServerSocket
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -59,6 +61,7 @@ import kotlin.uuid.Uuid
  */
 @OptIn(ExperimentalUuidApi::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@Execution(ExecutionMode.SAME_THREAD, reason = "Working with the same instance of test server.")
 class A2AServerJsonRpcIntegrationTest : BaseA2AProtocolTest() {
     override val testTimeout = 2.minutes
 

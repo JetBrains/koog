@@ -18,6 +18,15 @@ dependencies {
     //noinspection UseTomlInstead
     implementation("ai.koog:agents-features-sql")
     //noinspection UseTomlInstead
+    implementation("ai.koog:agents-features-a2a-server")
+    //noinspection UseTomlInstead
+    implementation("ai.koog:agents-features-a2a-client")
+    //noinspection UseTomlInstead
+    implementation("ai.koog:a2a-transport-server-jsonrpc-http")
+    //noinspection UseTomlInstead
+    implementation("ai.koog:a2a-transport-client-jsonrpc-http")
+
+    //noinspection UseTomlInstead
     testImplementation("ai.koog:agents-test")
 
     implementation(libs.kotlinx.datetime)
@@ -106,3 +115,11 @@ registerRunExampleTask("runExampleFilePersistentAgent", "ai.koog.agents.example.
 registerRunExampleTask("runExampleSQLPersistentAgent", "ai.koog.agents.example.snapshot.sql.SQLPersistentAgentExample")
 registerRunExampleTask("runExampleWebSearchAgent", "ai.koog.agents.example.websearch.WebSearchAgentKt")
 registerRunExampleTask("runExampleStreamingWithTools", "ai.koog.agents.example.streaming.StreamingAgentWithToolsKt")
+
+/*
+ A2A examples
+*/
+
+// joke generation
+registerRunExampleTask("runExampleJokeAgentServer", "ai.koog.agents.example.a2a.joke.ServerKt")
+registerRunExampleTask("runExampleJokeAgentClient", "ai.koog.agents.example.a2a.joke.ClientKt")
