@@ -1174,6 +1174,11 @@ class SingleLLMPromptExecutorIntegrationTest {
             model.provider !== LLMProvider.Google,
             "Google models fail to return manually requested structured output without fixing"
         )
+        assumeTrue(
+            model.provider == LLMProvider.OpenRouter && model.id.contains("gemini"),
+            "Google models fail to return manually requested structured output without fixing"
+        )
+
         val executor = SingleLLMPromptExecutor(client)
 
         withRetry {

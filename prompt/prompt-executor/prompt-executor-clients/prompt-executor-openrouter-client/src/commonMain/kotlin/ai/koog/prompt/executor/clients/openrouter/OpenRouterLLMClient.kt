@@ -11,14 +11,20 @@ import ai.koog.prompt.executor.clients.openai.base.models.OpenAIMessage
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIStaticContent
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAITool
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolChoice
+import ai.koog.prompt.executor.clients.openai.structure.OpenAIBasicJsonSchemaGenerator
+import ai.koog.prompt.executor.clients.openai.structure.OpenAIStandardJsonSchemaGenerator
 import ai.koog.prompt.executor.clients.openrouter.models.OpenRouterChatCompletionRequest
 import ai.koog.prompt.executor.clients.openrouter.models.OpenRouterChatCompletionRequestSerializer
 import ai.koog.prompt.executor.clients.openrouter.models.OpenRouterChatCompletionResponse
 import ai.koog.prompt.executor.clients.openrouter.models.OpenRouterChatCompletionStreamResponse
 import ai.koog.prompt.executor.model.LLMChoice
+import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrameFlowBuilder
+import ai.koog.prompt.structure.RegisteredBasicJsonSchemaGenerators
+import ai.koog.prompt.structure.RegisteredStandardJsonSchemaGenerators
+import ai.koog.prompt.structure.annotations.InternalStructuredOutputApi
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import kotlinx.datetime.Clock
@@ -56,8 +62,14 @@ public class OpenRouterLLMClient(
     staticLogger
 ) {
 
+    @OptIn(InternalStructuredOutputApi::class)
     private companion object {
         private val staticLogger = KotlinLogging.logger { }
+
+        init {
+            RegisteredBasicJsonSchemaGenerators[LLMProvider.OpenRouter] = OpenAIBasicJsonSchemaGenerator
+            RegisteredStandardJsonSchemaGenerators[LLMProvider.OpenRouter] = OpenAIStandardJsonSchemaGenerator
+        }
     }
 
     override fun serializeProviderChatRequest(
@@ -122,7 +134,6 @@ public class OpenRouterLLMClient(
         chunk.choices.firstOrNull()?.let { choice ->
             choice.delta.content?.let { emitAppend(it) }
             choice.delta.toolCalls?.forEachIndexed { index, openAIToolCall ->
-                val index = index
                 val id = openAIToolCall.id
                 val name = openAIToolCall.function.name
                 val arguments = openAIToolCall.function.arguments
