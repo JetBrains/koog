@@ -1,44 +1,76 @@
 # Module agents:agents-features
 
-Provides implementations of useful features of AI agents, such as Tracing, Debugger, EventHandler, Memory, OpenTelemetry, Snapshot, and more.
+A collection of plug-and-play features for Koog AI agents. These features hook into the agent execution pipeline to observe, enrich, and extend behavior.
 
-### Overview
+## What is inside
 
-Features integrate with the agent pipeline via interceptor hooks and consume standardized Feature Events emitted during agent execution. These events are defined in the agents-core module under `ai.koog.agents.core.feature.model.events`. After the 0afb32b refactor, event and interceptor names are unified across the system.
+Each feature lives in its own submodule, you only depend on what you need. Commonly used features include:
+- Tracing: End-to-end spans for agent runs and LLM, or Tool calls. Great for local dev and production observability;
+- Debugger: Step-through style inspection of the agent pipeline;
+- EventHandler: Subscribe to standardized agent events and react (log, metrics, custom side effects);
+- Memory: Pluggable memory interfaces for storing and retrieving agent context;
+- OpenTelemetry: OTel exporters and wiring for spans emitted by the agent pipeline;
+- Snapshot: Persist and restore agent snapshots for reproducibility and time-travel debugging.
 
-### Standard Feature Events
+Check each feature’s own README/Module docs for details and advanced configuration.
 
-The canonical description and definitions of Feature Events now live in the agents-core module. See:
+## How features integrate
 
-- agents-core module docs: ../agents-core/Module.md (section "Standard Feature Events")
-- Kotlin definitions: package `ai.koog.agents.core.feature.model.events`
+Features integrate via interceptor hooks and consume standardized events emitted during an agent execution. These events are defined in the agents-core module under:
+- ai.koog.agents.core.feature.model.events
 
-Features in this module (Tracing, Debugger, EventHandler, etc.) consume these events to provide logging, tracing, monitoring, and remote inspection.
+Typical events include:
+- AgentStarting/Completed
+- LLMCallStarting/Completed
+- ToolCallStarting/Completed
 
-### Using in your project
+Features can listen to these events, mutate context when appropriate, and publish additional events for downstream consumers.
 
-Add the desired feature dependency, for example:
+## Installing features
 
-```kotlin
-dependencies {
-    implementation("ai.koog.agents:agents-features-trace:$version")
-    implementation("ai.koog.agents:agents-features-debugger:$version")
-}
-```
-
-Install a feature in the agent builder:
+Install features when constructing your agent. Multiple features can be installed together; they remain decoupled and communicate via events.
 
 ```kotlin
 val agent = createAgent(/* ... */) {
-    install(Tracing)
-    install(Debugger)
+    install(Tracing) {
+        // Tracing configuration
+    }
+    install(OpenTelemetry) {
+        // OTel configuration
+    }
 }
 ```
 
-### Using in unit tests
+Consult each feature’s README for exact configuration options and defaults.
 
-Most features can be installed in tests; they honor testing configuration and can be pointed to test writers/ports.
+## Using in unit tests
 
-### Example of usage
+Features are test-friendly. They honor testing configurations and can be directed to in-memory writers/ports.
+- Install the same feature in tests to capture events deterministically.
+- Point outputs to test stubs to assert behavior (e.g., assert a specific sequence of Feature Events).
+- Prefer higher sampling in tests so important transitions are recorded.
 
-See each feature's Module/README in its submodule for concrete examples (Tracing, Debugger, EventHandler, Memory, OpenTelemetry, Snapshot).
+Example (pseudo):
+```kotlin
+@Test
+fun testAgentEmitsExpectedEvents() {
+    val events = MutableListWriter<FeatureEvent>()
+    createAgent { 
+        install(EventHandler) { 
+            writer = events 
+        } 
+    }.use { agent ->
+        agent.run("Hello")
+        assertTrue(events.any { it is LlmCallRequested })
+    }
+}
+```
+
+## Where to learn more
+See each feature’s Module/README in its submodule for concrete examples and advanced setup:
+- Tracing
+- Debugger
+- EventHandler
+- Memory
+- OpenTelemetry
+- Snapshot
