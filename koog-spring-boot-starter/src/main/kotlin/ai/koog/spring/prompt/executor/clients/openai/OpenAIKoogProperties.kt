@@ -13,10 +13,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties
  * The class is annotated with `@ConfigurationProperties` to bind its fields to configuration file properties
  * prefixed with `ai.koog.openai`.
  *
- * @param enabled Determines if the OpenAI client is enabled.
- * @param apiKey The API key required to authenticate requests to the OpenAI API.
- * @param baseUrl The base URL for accessing the OpenAI API.
- * @param retry Optional retry configuration settings, such as maximum attempts, delays, and backoff strategies.
+ * @property enabled Determines if the OpenAI client is enabled.
+ * @property apiKey The API key required to authenticate requests to the OpenAI API.
+ * @property baseUrl The base URL for accessing the OpenAI API.
+ * @property retry Optional retry configuration settings, such as maximum attempts, delays, and backoff strategies.
  *
  * This configuration is used in `OpenAILLMAutoConfiguration` to set up the OpenAI client and related beans.
  */

@@ -34,7 +34,7 @@ public class OpenRouterKoogProperties(
     public override val retry: RetryConfigKoogProperties? = null
 ) : KoogLlmClientProperties {
     /**
-     * Companion object for the OpenRouterKoogProperties class, providing constant values and
+     * Companion object for the [OpenRouterKoogProperties] class, providing constant values and
      * utilities associated with the configuration of OpenRouter-related properties.
      */
     public companion object Companion {
@@ -45,11 +45,10 @@ public class OpenRouterKoogProperties(
     }
 
     /**
-     * Converts the `OpenRouterKoogProperties` instance to its string representation.
+     * Converts the [OpenRouterKoogProperties] instance to its string representation.
      * Sensitive information, such as the API key, is masked to ensure security.
      *
-     * @return A string representation of the `OpenRouterKoogProperties` object, including the `enabled` status,
-     * the masked `apiKey`, the `baseUrl`, and the `retry` configuration.
+     * @return A string representation of the [OpenRouterKoogProperties] object.
      */
     override fun toString(): String {
         return "OpenRouterKoogProperties(enabled=$enabled, apiKey='${apiKey.masked()}', baseUrl='$baseUrl', retry=$retry)"

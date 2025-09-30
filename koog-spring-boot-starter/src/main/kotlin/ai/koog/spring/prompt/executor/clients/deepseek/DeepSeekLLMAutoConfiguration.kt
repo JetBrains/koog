@@ -14,7 +14,7 @@ import org.springframework.context.annotation.PropertySource
  * Auto-configuration class for integrating with the DeepSeek LLM provider within a Spring Boot application.
  *
  * This configuration enables the auto-wiring of required beans when the appropriate application
- * properties are set. The configuration ensures that the DeepSeek LLM client is properly initialized
+ * properties are set. The configuration ensures that the [DeepSeekLLMClient] is properly initialized
  * and available for usage in the application.
  *
  * The following conditions must be met for this configuration to be activated:
@@ -30,10 +30,11 @@ import org.springframework.context.annotation.PropertySource
  * - [DeepSeekLLMClient]: A client for interacting with the DeepSeek API.
  * - [SingleLLMPromptExecutor]: A bean for executing single-step LLM prompts using the DeepSeek client.
  *
- * @constructor Accepts [DeepSeekKoogProperties] containing the configuration properties for the DeepSeek client.
+ * @property properties [DeepSeekKoogProperties] containing the configuration properties for the DeepSeek client.
  *
  * @see DeepSeekKoogProperties
  * @see DeepSeekLLMClient
+ * @see SingleLLMPromptExecutor
  */
 @AutoConfiguration
 @PropertySource("classpath:/META-INF/config/koog/deepseek-llm.properties")

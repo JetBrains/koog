@@ -17,18 +17,17 @@ import org.springframework.context.annotation.PropertySource
  *
  * This class automatically configures the required beans for interacting with the Anthropic LLM
  * when the appropriate configuration properties are set in the application. It specifically checks
- * for the presence of the `enabled` and `api-key` properties under the prefix defined by
- * [AnthropicKoogProperties].
+ * for the presence of the `ai.koog.anthropic.enabled` and `ai.koog.anthropic.api-key` properties.
  *
  * Beans provided by this configuration:
  * - [AnthropicLLMClient]: Configured client for interacting with the Anthropic API.
  * - [SingleLLMPromptExecutor]: Prompt executor that utilizes the configured Anthropic client.
  *
- * To enable this configuration, the `enabled` property must be set to `true` and a valid `api-key`
+ * To enable this configuration, the `ai.koog.anthropic.enabled` property must be set to `true` and a valid `api-key`
  * must be provided in the application's property files.
  *
- * This configuration reads additional properties from the `anthropic-llm.properties` file located
- * in the `META-INF/config/koog` classpath directory and binds them to the [AnthropicKoogProperties].
+ * This configuration reads additional properties from the `classpath:META-INF/config/koog/anthropic-llm.properties`
+ * and binds them to the [AnthropicKoogProperties].
  *
  * @property properties Anthropic-specific configuration properties, automatically injected by Spring's
  *                      configuration properties mechanism.
@@ -63,11 +62,11 @@ public class AnthropicLLMAutoConfiguration(
     }
 
     /**
-     * Creates and configures a [SingleLLMPromptExecutor] using an [AnthropicLLMClient].
-     * This is conditioned on the presence of an API key in the application properties.
+     * Creates and initializes a [SingleLLMPromptExecutor] instance using an [AnthropicLLMClient].
+     * The executor is configured with a retrying client derived from the provided AnthropicLLMClient.
      *
-     * @param properties The configuration properties containing settings for the Anthropic client.
-     * @return An instance of [SingleLLMPromptExecutor] configured with [AnthropicLLMClient].
+     * @param client An instance of [AnthropicLLMClient] used to communicate with the Anthropic LLM API.
+     * @return An instance of [SingleLLMPromptExecutor] for sending prompts to the Anthropic LLM API.
      */
     @Bean
     @ConditionalOnBean(AnthropicLLMClient::class)

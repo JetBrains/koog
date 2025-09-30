@@ -18,18 +18,12 @@ import org.springframework.boot.context.properties.ConfigurationProperties
  * @param baseUrl The base URL of the Google LLM API.
  * @param retry Optional configuration for retrying failed API calls.
  *
- * Properties:
- * - `enabled`: Enables or disables the Google LLM integration.
- * - `apiKey`: The key required for authenticating with the API.
- * - `baseUrl`: URL endpoint for the Google LLM API.
- * - `retry`: Defines retry behavior, such as maximum attempts and delays between retries.
- *
  * Usage:
  * These properties are automatically bound to the Spring environment when specified
  * in application configuration (e.g., `application.yml` or `application.properties`).
  *
  * Example configuration snippet in `application.yml` or `application.properties`:
- * ```
+ * ```properties
  * ai.koog.google.enabled=true
  * ai.koog.google.api-key=your-google-api-key
  * ai.koog.google.base-url=https://api.google.com/llm
@@ -51,6 +45,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties
  *
  * For more details on retry behavior, refer to the `RetryConfigKoogProperties` class.
  * For shared configuration attributes, see the `KoogLlmClientProperties` interface.
+ *
+ *  @property enabled Enables or disables the Google LLM integration.
+ *  @property apiKey The key required for authenticating with the API.
+ *  @property baseUrl URL endpoint for the Google LLM API.
+ *  @property retry Defines retry behavior, such as maximum attempts and delays between retries.
  */
 @ConfigurationProperties(prefix = GoogleKoogProperties.PREFIX, ignoreUnknownFields = true)
 public class GoogleKoogProperties(

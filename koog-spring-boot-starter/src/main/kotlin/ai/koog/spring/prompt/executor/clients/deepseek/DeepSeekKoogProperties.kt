@@ -12,20 +12,19 @@ import org.springframework.boot.context.properties.ConfigurationProperties
  * This class is used to define and manage application-level configuration parameters for connecting
  * to the DeepSeek provider. It includes properties such as API key, base URL, and optional retry settings.
  *
- * The properties are auto-configured via Spring Boot's `@ConfigurationProperties` using the prefix
- * defined in [PREFIX].
+ * The properties are auto-configured via Spring Boot's `@ConfigurationProperties` using the `ai.koog.deepseek` prefix.
  *
  * Implements the [KoogLlmClientProperties] interface, which provides base attributes for all LLM client property configurations.
  *
  * Properties from this class are typically consumed by auto-configuration classes, such as [DeepSeekLLMAutoConfiguration],
- * to initialize and configure necessary beans for working with the DeepSeek API.
+ * to initialize and configure the necessary beans for working with the DeepSeek API.
  *
- * @param enabled Indicates whether DeepSeek API integration is enabled (true or false).
- * @param apiKey An API key string required to authenticate requests to the DeepSeek external service.
- * @param baseUrl The base URL endpoint for DeepSeek API calls.
- * @param retry Optional retry configuration for API requests, represented by [RetryConfigKoogProperties].
+ * @property enabled Indicates whether DeepSeek API integration is enabled (true or false).
+ * @property apiKey An API key string required to authenticate requests to the DeepSeek external service.
+ * @property baseUrl The base URL endpoint for DeepSeek API calls.
+ * @property retry Optional retry configuration for API requests, represented by [RetryConfigKoogProperties].
  */
-@ConfigurationProperties(prefix = DeepSeekKoogProperties.PREFIX, ignoreUnknownFields = true)
+@ConfigurationProperties(prefix = PREFIX, ignoreUnknownFields = true)
 public class DeepSeekKoogProperties(
     public override val enabled: Boolean,
     public val apiKey: String,

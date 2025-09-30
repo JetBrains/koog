@@ -18,9 +18,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties
  * This class is designed to work along with the `OllamaLLMAutoConfiguration` class to
  * automatically initialize and configure the required beans for the Ollama client and executor.
  *
- * @param enabled Indicates whether the Ollama integration is enabled.
- * @param baseUrl The URL of the API endpoint for Ollama service.
- * @param retry The retry settings for handling request failures.
+ * @property enabled Indicates whether the Ollama integration is enabled.
+ * @property baseUrl The URL of the API endpoint for Ollama service.
+ * @property retry The retry settings for handling request failures.
  */
 @ConfigurationProperties(prefix = OllamaKoogProperties.PREFIX, ignoreUnknownFields = true)
 public class OllamaKoogProperties(

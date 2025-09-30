@@ -14,17 +14,22 @@ import org.springframework.context.annotation.PropertySource
  * Auto-configuration class for integrating the Ollama Large Language Model (LLM) service into applications.
  *
  * This configuration initializes and provides the necessary beans to enable interaction with the Ollama LLM API.
- * It relies on properties defined in the `OllamaKoogProperties` class to set up the service.
+ * It relies on properties defined in the [OllamaKoogProperties] class to set up the service.
  *
  * The configuration is conditional and will only be initialized if:
- * - The `enabled` property within `OllamaKoogProperties` is set to `true`.
- * - The required `OllamaKoogProperties` are provided in the application configuration.
+ * - [OllamaKoogProperties.enabled] is set to `true`.
+ * - The required [OllamaKoogProperties] are provided in the application configuration.
  *
  * Initializes the following beans:
- * - `OllamaClient`: A client for interacting with the Ollama LLM service.
- * - `SingleLLMPromptExecutor`: Executes single-prompt interactions with Ollama, utilizing the client.
+ * - [OllamaClient]: A client for interacting with the Ollama LLM service.
+ * - [SingleLLMPromptExecutor]: Executes single-prompt interactions with Ollama, utilizing the client.
  *
  * This configuration allows seamless integration with the Ollama API while enabling properties-based customization.
+ *
+ * @property properties [OllamaKoogProperties] to define key settings such as API key, base URL, and retry configurations.
+ * @see OllamaKoogProperties
+ * @see OllamaClient
+ * @see SingleLLMPromptExecutor
  */
 @AutoConfiguration
 @PropertySource("classpath:/META-INF/config/koog/ollama-llm.properties")
@@ -52,13 +57,11 @@ public class OllamaLLMAutoConfiguration(
     }
 
     /**
-     * Creates and configures a [SingleLLMPromptExecutor] instance using Ollama properties.
+     * Creates and configures an instance of [SingleLLMPromptExecutor] that wraps the provided [OllamaClient].
+     * The configured executor includes retry capabilities based on the application's properties.
      *
-     * The method initializes an [OllamaClient] with the base URL derived from the provided [OllamaKoogProperties]
-     * and uses it to construct the [SingleLLMPromptExecutor].
-     *
-     * @param properties the configuration properties containing Ollama client settings such as the base URL.
-     * @return a [SingleLLMPromptExecutor] configured to use the Ollama client.
+     * @param client the [OllamaClient] instance used for communicating with the Ollama LLM service.
+     * @return a [SingleLLMPromptExecutor] configured to execute LLM prompts with the provided client.
      */
     @Bean
     @ConditionalOnBean(OllamaClient::class)

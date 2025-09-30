@@ -19,6 +19,11 @@ import org.springframework.context.annotation.PropertySource
  *
  * The configuration is activated only when both `ai.koog.openrouter.enabled` is set to `true`
  * and `ai.koog.openrouter.api-key` is provided in the application properties.
+ *
+ * @property properties [OpenRouterKoogProperties] to define key settings such as API key, base URL, and retry configurations.
+ * @see OpenRouterKoogProperties
+ * @see OpenRouterLLMClient
+ * @see SingleLLMPromptExecutor
  */
 @AutoConfiguration
 @PropertySource("classpath:/META-INF/config/koog/openrouter-llm.properties")
@@ -32,11 +37,11 @@ public class OpenRouterLLMAutoConfiguration(
 ) {
 
     /**
-     * Creates and configures an instance of `OpenRouterLLMClient` as a Spring Bean.
+     * Creates and configures an instance of [OpenRouterLLMClient] as a Spring Bean.
      * The client is initialized with the API key and settings (such as base URL)
      * obtained from the provided `properties` configuration.
      *
-     * @return An instance of `OpenRouterLLMClient` configured with the given properties.
+     * @return An instance of [OpenRouterLLMClient] configured with the given properties.
      */
     @Bean
     public fun openRouterLLMClient(): OpenRouterLLMClient {
@@ -47,11 +52,13 @@ public class OpenRouterLLMAutoConfiguration(
     }
 
     /**
-     * Provides a `SingleLLMPromptExecutor` bean configured with an `OpenRouterLLMClient`.
-     * The method utilizes the provided `OpenRouterLLMClient` to create a retrying client instance
+     * Provides a [SingleLLMPromptExecutor] bean configured with an [OpenRouterLLMClient].
+     *
+     * The method uses the provided [OpenRouterLLMClient] to create a retrying client instance
      * based on the configuration in the `properties.retry` parameter.
      *
-     * @param client The `OpenRouterLLMClient` instance used to configure the `Single*/
+     * @param client The [OpenRouterLLMClient] instance used to configure the [SingleLLMPromptExecutor]
+     * */
     @Bean
     @ConditionalOnBean(OpenRouterLLMClient::class)
     public fun openRouterExecutor(client: OpenRouterLLMClient): SingleLLMPromptExecutor {

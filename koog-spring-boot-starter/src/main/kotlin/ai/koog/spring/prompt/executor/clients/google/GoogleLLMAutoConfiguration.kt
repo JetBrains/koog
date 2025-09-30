@@ -3,6 +3,7 @@ package ai.koog.spring.prompt.executor.clients.google
 import ai.koog.prompt.executor.clients.google.GoogleClientSettings
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
+import ai.koog.spring.prompt.executor.clients.ollama.OllamaKoogProperties
 import ai.koog.spring.prompt.executor.clients.toRetryingClient
 import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
@@ -20,15 +21,17 @@ import org.springframework.context.annotation.PropertySource
  * and an `api-key` is provided.
  *
  * Beans configured by this class:
- * - `GoogleLLMClient`: A client for interacting with Google's LLM API, using the specified API key and settings.
- * - `SingleLLMPromptExecutor`: An executor capable of handling and retrying LLM prompts, using the initialized client.
- *
- * Dependencies:
- * - Requires the presence of properties defined in `GoogleKoogProperties` to function correctly.
- * - Relies on `KoogLlmClientProperties` for common client settings.
+ * - [GoogleLLMClient]: A client for interacting with Google's LLM API, using the specified API key and settings.
+ * - [SingleLLMPromptExecutor]: An executor capable of handling and retrying LLM prompts, using the initialized client.
  *
  * An external configuration file at `classpath:/META-INF/config/koog/google-llm.properties` is leveraged
  * for managing default settings.
+ *
+ * @property properties [GoogleKoogProperties] to define key settings such as API key, base URL, and retry configurations.
+ *
+ * @see GoogleKoogProperties
+ * @see GoogleLLMClient
+ * @see SingleLLMPromptExecutor
  */
 @AutoConfiguration
 @PropertySource("classpath:/META-INF/config/koog/google-llm.properties")
@@ -42,10 +45,10 @@ public class GoogleLLMAutoConfiguration(
 ) {
 
     /**
-     * Provides a `GoogleLLMClient` bean configured with the API key and base URL
+     * Provides a [GoogleLLMClient] bean configured with the API key and base URL
      * specified in the application's properties.
      *
-     * @return A configured instance of `GoogleLLMClient`.
+     * @return A configured instance of [GoogleLLMClient].
      */
     @Bean
     public fun googleLLMClient(): GoogleLLMClient {
@@ -56,11 +59,13 @@ public class GoogleLLMAutoConfiguration(
     }
 
     /**
-     * Provides a [SingleLLMPromptExecutor] bean configured with a [GoogleLLMClient] using the settings
-     * from the given `KoogProperties`. The bean is only created if the `google.api-key` property is set.
+     * Creates and configures a [SingleLLMPromptExecutor] instance using [GoogleLLMClient] properties.
      *
-     * @param properties The configuration properties containing the `googleClientProperties` needed to create the client.
-     * @return A [SingleLLMPromptExecutor] instance configured with a [GoogleLLMClient].
+     * The method initializes an [GoogleLLMClient] with the base URL derived from the provided [OllamaKoogProperties]
+     * and uses it to construct the [SingleLLMPromptExecutor].
+     *
+     * @param properties the configuration properties containing Ollama client settings such as the base URL.
+     * @return a [SingleLLMPromptExecutor] configured to use the Ollama client.
      */
     @Bean
     @ConditionalOnBean(GoogleLLMClient::class)

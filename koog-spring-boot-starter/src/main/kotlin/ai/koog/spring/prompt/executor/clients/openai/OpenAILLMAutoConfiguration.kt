@@ -1,6 +1,5 @@
 package ai.koog.spring.prompt.executor.clients.openai
 
-import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIClientSettings
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
@@ -17,19 +16,22 @@ import org.springframework.context.annotation.PropertySource
  * This class utilizes the properties defined in [OpenAIKoogProperties] to configure and initialize OpenAI-related components,
  * including the client and executor.
  *
- * The configuration is conditionally applied if the property `ai.koog.openai.api-key` is set.
+ * The configuration is conditionally applied if the property `ai.koog.openai.api-key` is set to `true`.
  * It reads additional configuration from the properties file located at `classpath:/META-INF/config/koog/openai-llm.properties`.
  *
  * Key Features:
- * - Sets up the `OpenAILLMClient` bean with API key and base URL from the provided properties.
- * - Configures a `SingleLLMPromptExecutor` bean using the configured OpenAI client with retry capabilities.
- *
- * Dependencies:
- * - Requires the `OpenAIKoogProperties` to define key settings such as API key, base URL, and retry configurations.
+ * - Sets up the [OpenAILLMClient] bean with API key and base URL from the provided properties.
+ * - Configures a [SingleLLMPromptExecutor] bean using the configured OpenAI client with retry capabilities.
  *
  * Usage Notes:
  * - To activate, ensure the `ai.koog.openai.api-key` property is defined in your application configuration.
  * - Customize behavior and settings using the `ai.koog.openai.*` configuration properties.
+ *
+ * @property properties [OpenAIKoogProperties] to define key settings such as API key, base URL, and retry configurations.
+ *
+ * @see OpenAIKoogProperties
+ * @see OpenAILLMClient
+ * @see SingleLLMPromptExecutor
  */
 @AutoConfiguration
 @PropertySource("classpath:/META-INF/config/koog/openai-llm.properties")
@@ -42,6 +44,12 @@ public class OpenAILLMAutoConfiguration(
     private val properties: OpenAIKoogProperties
 ) {
 
+    /**
+     * Creates and provides an instance of [OpenAILLMClient] as a Spring bean for use in the application context.
+     * The [OpenAILLMClient] is configured using API key and base URL from the associated properties.
+     *
+     * @return a configured instance of [OpenAILLMClient].
+     */
     @Bean
     public fun openAILLMClient(): OpenAILLMClient {
         return OpenAILLMClient(
@@ -51,11 +59,11 @@ public class OpenAILLMAutoConfiguration(
     }
 
     /**
-     * Provides a [SingleLLMPromptExecutor] bean configured with a [GoogleLLMClient] using the settings
-     * from the given `KoogProperties`. The bean is only created if the `google.api-key` property is set.
+     * Creates and returns a [SingleLLMPromptExecutor] bean configured with the given [OpenAILLMClient].
+     * This bean is conditionally initialized only when an [OpenAILLMClient] bean is present in the application context.
      *
-     * @param properties The configuration properties containing the `googleClientProperties` needed to create the client.
-     * @return A [SingleLLMPromptExecutor] instance configured with a [GoogleLLMClient].
+     * @param client the [OpenAILLMClient] used to create a retry-capable client for executing LLM prompts.
+     * @return a configured instance of [SingleLLMPromptExecutor].
      */
     @Bean
     @ConditionalOnBean(OpenAILLMClient::class)
