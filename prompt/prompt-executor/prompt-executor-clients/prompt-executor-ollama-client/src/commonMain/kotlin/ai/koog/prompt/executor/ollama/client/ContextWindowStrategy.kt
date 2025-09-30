@@ -113,7 +113,6 @@ public interface ContextWindowStrategy {
                     "`minimumChunkCount` must be a positive number or `null`"
                 }
 
-
                 if (minimumChunkCount != null && maximumChunkCount != null) {
                     require(minimumChunkCount <= maximumChunkCount) {
                         "`maximumChunkCount` ($maximumChunkCount) must be greater or equal" +
