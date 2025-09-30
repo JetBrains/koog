@@ -239,6 +239,7 @@ private val GOOGLE_MODELS_MAP = mapOf(
 private val OPENROUTER_MODELS_MAP = mapOf(
     "claude3haiku" to OpenRouterModels.Claude3Haiku,
     "claude3opus" to OpenRouterModels.Claude3Opus,
+    "claude3sonnet" to OpenRouterModels.Claude3Sonnet,
     "claude35sonnet" to OpenRouterModels.Claude3_5Sonnet,
     "claude4sonnet" to OpenRouterModels.Claude4Sonnet,
     "claude41opus" to OpenRouterModels.Claude4_1Opus,
