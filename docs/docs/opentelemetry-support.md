@@ -54,7 +54,7 @@ const val apiKey = ""
 -->
 ```kotlin
 val agent = AIAgent(
-    executor = simpleOpenAIExecutor(apiKey),
+    promptExecutor = simpleOpenAIExecutor(apiKey),
     llmModel = OpenAIModels.Chat.GPT4o,
     systemPrompt = "You are a helpful assistant.",
     installFeatures = {
@@ -97,7 +97,7 @@ import io.opentelemetry.exporter.logging.LoggingSpanExporter
 const val apiKey = ""
 
 val agent = AIAgent(
-    executor = simpleOpenAIExecutor(apiKey),
+    promptExecutor = simpleOpenAIExecutor(apiKey),
     llmModel = OpenAIModels.Chat.GPT4o,
     systemPrompt = "You are a helpful assistant."
 ) {
@@ -161,11 +161,15 @@ Sets the sampling strategy to control which spans are collected. Takes the follo
 
 #### setVerbose
 
-Enables or disables verbose logging for debugging OpenTelemetry configuration. Takes the following argument:
+Enables or disables verbose logging. Takes the following argument:
 
 | Name      | Data type | Required | Default value | Description                                                     |
 |-----------|-----------|----------|---------------|-----------------------------------------------------------------|
 | `verbose` | `Boolean` | Yes      | `false`       | If true, the application collects more detailed telemetry data. |
+
+!!! note
+
+    Some content of OpenTelemetry spans is masked by default for security reasons. For example, LLM messages are masked as `HIDDEN:non-empty` instead of the actual message content. To get the content, set the value of the `verbose` argument to `true`.
 
 #### setSdk
 
@@ -174,9 +178,9 @@ Injects a pre-configured OpenTelemetrySdk instance.
 - When you call setSdk(sdk), the provided SDK is used as-is, and any custom configuration applied via addSpanExporter, addSpanProcessor, addResourceAttributes, or setSampler is ignored.
 - The tracer’s instrumentation scope name/version are aligned with your service info.
 
-| Name | Data type         | Required | Description                           |
-|------|-------------------|----------|---------------------------------------|
-| `sdk`| `OpenTelemetrySdk`| Yes      | The SDK instance to use in the agent. |
+| Name  | Data type          | Required | Description                           |
+|-------|--------------------|----------|---------------------------------------|
+| `sdk` | `OpenTelemetrySdk` | Yes      | The SDK instance to use in the agent. |
 
 ### Advanced configuration
 
@@ -197,7 +201,7 @@ import io.opentelemetry.sdk.trace.samplers.Sampler
 const val apiKey = ""
 
 val agent = AIAgent(
-    executor = simpleOpenAIExecutor(apiKey),
+    promptExecutor = simpleOpenAIExecutor(apiKey),
     llmModel = OpenAIModels.Chat.GPT4o,
     systemPrompt = "You are a helpful assistant."
 ) {
@@ -264,7 +268,7 @@ import io.opentelemetry.api.common.AttributeKey
 
 const val apiKey = "api-key"
 val agent = AIAgent(
-    executor = simpleOpenAIExecutor(apiKey),
+    promptExecutor = simpleOpenAIExecutor(apiKey),
     llmModel = OpenAIModels.Chat.GPT4o,
     systemPrompt = "You are a helpful assistant.",
     installFeatures = {
@@ -375,7 +379,7 @@ import io.opentelemetry.exporter.logging.LoggingSpanExporter
 const val apiKey = ""
 
 val agent = AIAgent(
-    executor = simpleOpenAIExecutor(apiKey),
+    promptExecutor = simpleOpenAIExecutor(apiKey),
     llmModel = OpenAIModels.Chat.GPT4o,
     systemPrompt = "You are a helpful assistant."
 ) {
@@ -410,7 +414,7 @@ const val AUTH_STRING = ""
 
 
 val agent = AIAgent(
-    executor = simpleOpenAIExecutor(apiKey),
+    promptExecutor = simpleOpenAIExecutor(apiKey),
     llmModel = OpenAIModels.Chat.GPT4o,
     systemPrompt = "You are a helpful assistant."
 ) {
@@ -452,7 +456,7 @@ import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter
 const val apiKey = ""
 
 val agent = AIAgent(
-    executor = simpleOpenAIExecutor(apiKey),
+    promptExecutor = simpleOpenAIExecutor(apiKey),
     llmModel = OpenAIModels.Chat.GPT4o,
     systemPrompt = "You are a helpful assistant."
 ) {
@@ -489,7 +493,7 @@ import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 const val apiKey = ""
 
 val agent = AIAgent(
-    executor = simpleOpenAIExecutor(apiKey),
+    promptExecutor = simpleOpenAIExecutor(apiKey),
     llmModel = OpenAIModels.Chat.GPT4o,
     systemPrompt = "You are a helpful assistant."
 ) {
@@ -524,7 +528,7 @@ import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 const val apiKey = ""
 
 val agent = AIAgent(
-    executor = simpleOpenAIExecutor(apiKey),
+    promptExecutor = simpleOpenAIExecutor(apiKey),
     llmModel = OpenAIModels.Chat.GPT4o,
     systemPrompt = "You are a helpful assistant."
 ) {
@@ -602,7 +606,7 @@ const val openAIApiKey = "open-ai-api-key"
 fun main() {
     runBlocking {
         val agent = AIAgent(
-            executor = simpleOpenAIExecutor(openAIApiKey),
+            promptExecutor = simpleOpenAIExecutor(openAIApiKey),
             llmModel = OpenAIModels.Reasoning.O4Mini,
             systemPrompt = "You are a code assistant. Provide concise code examples."
         ) {

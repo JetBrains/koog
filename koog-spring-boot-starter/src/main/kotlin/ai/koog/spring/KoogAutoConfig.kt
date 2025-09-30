@@ -1,5 +1,6 @@
 package ai.koog.spring
 
+import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicClientSettings
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.deepseek.DeepSeekClientSettings
@@ -10,12 +11,15 @@ import ai.koog.prompt.executor.clients.openai.OpenAIClientSettings
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterClientSettings
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterLLMClient
+import ai.koog.prompt.executor.clients.retry.RetryConfig
+import ai.koog.prompt.executor.clients.retry.RetryingLLMClient
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaClient
 import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
+import kotlin.time.toKotlinDuration
 
 /**
  * [KoogAutoConfiguration] is a Spring Boot auto-configuration class that configures and provides beans
@@ -27,7 +31,14 @@ import org.springframework.context.annotation.Bean
  * [SingleLLMPromptExecutor] instance backed by a respective client implementation.
  */
 @AutoConfiguration
-@EnableConfigurationProperties(KoogProperties::class)
+@EnableConfigurationProperties(
+    OpenAIKoogProperties::class,
+    AnthropicKoogProperties::class,
+    GoogleKoogProperties::class,
+    OllamaKoogProperties::class,
+    DeepSeekKoogProperties::class,
+    OpenRouterKoogProperties::class
+)
 public class KoogAutoConfiguration {
 
     /**
@@ -38,15 +49,13 @@ public class KoogAutoConfiguration {
      * @return An instance of [SingleLLMPromptExecutor] configured with [AnthropicLLMClient].
      */
     @Bean
-    @ConditionalOnProperty(prefix = KoogProperties.PREFIX, name = ["anthropic.api-key"])
-    public fun anthropicExecutor(properties: KoogProperties): SingleLLMPromptExecutor {
-        val props = properties.anthropicClientProperties
-        return SingleLLMPromptExecutor(
-            AnthropicLLMClient(
-                apiKey = props.apiKey,
-                settings = AnthropicClientSettings(baseUrl = props.baseUrl)
-            )
+    @ConditionalOnProperty(prefix = AnthropicKoogProperties.PREFIX, name = ["api-key"])
+    public fun anthropicExecutor(properties: AnthropicKoogProperties): SingleLLMPromptExecutor {
+        val client = AnthropicLLMClient(
+            apiKey = properties.apiKey,
+            settings = AnthropicClientSettings(baseUrl = properties.baseUrl)
         )
+        return SingleLLMPromptExecutor(getRetryingClientOrDefault(client, properties.retry))
     }
 
     /**
@@ -57,33 +66,29 @@ public class KoogAutoConfiguration {
      * @return A [SingleLLMPromptExecutor] instance configured with a [GoogleLLMClient].
      */
     @Bean
-    @ConditionalOnProperty(prefix = KoogProperties.PREFIX, name = ["google.api-key"])
-    public fun googleExecutor(properties: KoogProperties): SingleLLMPromptExecutor {
-        val props = properties.googleClientProperties
-        return SingleLLMPromptExecutor(
-            GoogleLLMClient(
-                apiKey = props.apiKey,
-                settings = GoogleClientSettings(baseUrl = props.baseUrl)
-            )
+    @ConditionalOnProperty(prefix = GoogleKoogProperties.PREFIX, name = ["api-key"])
+    public fun googleExecutor(properties: GoogleKoogProperties): SingleLLMPromptExecutor {
+        val client = GoogleLLMClient(
+            apiKey = properties.apiKey,
+            settings = GoogleClientSettings(baseUrl = properties.baseUrl)
         )
+        return SingleLLMPromptExecutor(getRetryingClientOrDefault(client, properties.retry))
     }
 
     /**
      * Creates and configures a [SingleLLMPromptExecutor] instance using Ollama properties.
      *
-     * The method initializes an [OllamaClient] with the base URL derived from the provided [KoogProperties]
+     * The method initializes an [OllamaClient] with the base URL derived from the provided [OllamaKoogProperties]
      * and uses it to construct the [SingleLLMPromptExecutor].
      *
      * @param properties the configuration properties containing Ollama client settings such as the base URL.
      * @return a [SingleLLMPromptExecutor] configured to use the Ollama client.
      */
     @Bean
-    @ConditionalOnProperty(prefix = KoogProperties.PREFIX, name = ["ollama"])
-    public fun ollamaExecutor(properties: KoogProperties): SingleLLMPromptExecutor {
-        val props = properties.ollamaClientProperties
-        return SingleLLMPromptExecutor(
-            OllamaClient(baseUrl = props.baseUrl)
-        )
+    @ConditionalOnProperty(prefix = OllamaKoogProperties.PREFIX, name = ["base-url"])
+    public fun ollamaExecutor(properties: OllamaKoogProperties): SingleLLMPromptExecutor {
+        val client = OllamaClient(baseUrl = properties.baseUrl)
+        return SingleLLMPromptExecutor(getRetryingClientOrDefault(client, properties.retry))
     }
 
     /**
@@ -94,15 +99,13 @@ public class KoogAutoConfiguration {
      * @return An instance of [SingleLLMPromptExecutor] initialized with the OpenAI client.
      */
     @Bean
-    @ConditionalOnProperty(prefix = KoogProperties.PREFIX, name = ["openai.api-key"])
-    public fun openAIExecutor(properties: KoogProperties): SingleLLMPromptExecutor {
-        val props = properties.openAIClientProperties
-        return SingleLLMPromptExecutor(
-            OpenAILLMClient(
-                apiKey = props.apiKey,
-                settings = OpenAIClientSettings(baseUrl = props.baseUrl)
-            )
+    @ConditionalOnProperty(prefix = OpenAIKoogProperties.PREFIX, name = ["api-key"])
+    public fun openAIExecutor(properties: OpenAIKoogProperties): SingleLLMPromptExecutor {
+        val client = OpenAILLMClient(
+            apiKey = properties.apiKey,
+            settings = OpenAIClientSettings(baseUrl = properties.baseUrl)
         )
+        return SingleLLMPromptExecutor(getRetryingClientOrDefault(client, properties.retry))
     }
 
     /**
@@ -115,15 +118,13 @@ public class KoogAutoConfiguration {
      * @return A [SingleLLMPromptExecutor] initialized with an OpenRouter LLM client.
      */
     @Bean
-    @ConditionalOnProperty(prefix = KoogProperties.PREFIX, name = ["openrouter.api-key"])
-    public fun openRouterExecutor(properties: KoogProperties): SingleLLMPromptExecutor {
-        val props = properties.openRouterClientProperties
-        return SingleLLMPromptExecutor(
-            OpenRouterLLMClient(
-                props.apiKey,
-                settings = OpenRouterClientSettings(baseUrl = props.baseUrl)
-            )
+    @ConditionalOnProperty(prefix = OpenRouterKoogProperties.PREFIX, name = ["api-key"])
+    public fun openRouterExecutor(properties: OpenRouterKoogProperties): SingleLLMPromptExecutor {
+        val client = OpenRouterLLMClient(
+            apiKey = properties.apiKey,
+            settings = OpenRouterClientSettings(baseUrl = properties.baseUrl)
         )
+        return SingleLLMPromptExecutor(getRetryingClientOrDefault(client, properties.retry))
     }
 
     /**
@@ -136,14 +137,31 @@ public class KoogAutoConfiguration {
      * @return A [SingleLLMPromptExecutor] initialized with an DeepSeek LLM client.
      */
     @Bean
-    @ConditionalOnProperty(prefix = KoogProperties.PREFIX, name = ["deepseek.api-key"])
-    public fun deepSeekExecutor(properties: KoogProperties): SingleLLMPromptExecutor {
-        val props = properties.deepSeekClientProperties
-        return SingleLLMPromptExecutor(
-            DeepSeekLLMClient(
-                props.apiKey,
-                settings = DeepSeekClientSettings(baseUrl = props.baseUrl)
-            )
+    @ConditionalOnProperty(prefix = DeepSeekKoogProperties.PREFIX, name = ["api-key"])
+    public fun deepSeekExecutor(properties: DeepSeekKoogProperties): SingleLLMPromptExecutor {
+        val client = DeepSeekLLMClient(
+            apiKey = properties.apiKey,
+            settings = DeepSeekClientSettings(baseUrl = properties.baseUrl)
         )
+        return SingleLLMPromptExecutor(getRetryingClientOrDefault(client, properties.retry))
+    }
+
+    private fun getRetryingClientOrDefault(client: LLMClient, properties: RetryConfigKoogProperties?): LLMClient {
+        return if (properties?.enabled == true) {
+            val defaultConfig = RetryConfig()
+            val retryConfig = RetryConfig(
+                maxAttempts = properties.maxAttempts ?: defaultConfig.maxAttempts,
+                initialDelay = properties.initialDelay?.toKotlinDuration() ?: defaultConfig.initialDelay,
+                maxDelay = properties.maxDelay?.toKotlinDuration() ?: defaultConfig.maxDelay,
+                backoffMultiplier = properties.backoffMultiplier ?: defaultConfig.backoffMultiplier,
+                jitterFactor = properties.jitterFactor ?: defaultConfig.jitterFactor
+            )
+            RetryingLLMClient(
+                delegate = client,
+                config = retryConfig
+            )
+        } else {
+            client
+        }
     }
 }

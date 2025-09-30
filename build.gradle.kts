@@ -1,4 +1,6 @@
 import ai.koog.gradle.fixups.DisableDistTasks.disableDistTasks
+import ai.koog.gradle.plugins.CheckSplitPackagesExtension
+import ai.koog.gradle.plugins.CheckSplitPackagesPlugin
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -7,27 +9,44 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
 import org.jetbrains.kotlin.gradle.targets.js.ir.KotlinJsIrLink
 import org.jetbrains.kotlin.gradle.tasks.BaseKotlinCompile
 import org.jlleitschuh.gradle.ktlint.KtlintExtension
+import java.time.Clock
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.Base64
 
 group = "ai.koog"
 version = run {
     // our version follows the semver specification
 
-    val main = "0.4.1"
+    val main = "0.4.3"
 
     val feat = run {
         val releaseBuild = !System.getenv("BRANCH_KOOG_IS_RELEASING_FROM").isNullOrBlank()
+        val nightlyBuild = System.getenv("IS_NIGHTLY_BUILD")?.toBoolean() ?: false
         val branch = System.getenv("BRANCH_KOOG_IS_RELEASING_FROM")
         val customVersion = System.getenv("CE_CUSTOM_VERSION")
         val tcCounter = System.getenv("TC_BUILD_COUNTER")
 
-        if (releaseBuild) {
+        if (nightlyBuild) {
+            if (branch != "develop") {
+                throw GradleException("Nightly builds are allowed only from the develop branch")
+            }
+            val date = Clock.systemUTC().instant()
+                .atZone(ZoneId.of("UTC"))
+                .format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmm"))
+            if (!customVersion.isNullOrBlank()) {
+                "-$branch-$date-$customVersion"
+            } else {
+                "-$branch-$date"
+            }
+        } else if (releaseBuild) {
             when (branch) {
                 "main" -> {
                     if (customVersion.isNullOrBlank()) {
                         ""
                     } else {
-                        throw GradleException("Custom version is not allowed during release from the main branch")
+                        println("Custom version is not allowed during release from the main branch")
+                        ""
                     }
                 }
 
@@ -51,7 +70,7 @@ version = run {
             }
         } else {
             // do not care
-            ""
+            "-SNAPSHOT"
         }
     }
 
@@ -60,7 +79,7 @@ version = run {
 
 buildscript {
     dependencies {
-        classpath("com.squareup.okhttp3:okhttp:4.12.0")
+        classpath("com.squareup.okhttp3:okhttp:5.1.0")
     }
 }
 
@@ -72,6 +91,7 @@ plugins {
 
 allprojects {
     repositories {
+        google()
         mavenCentral()
     }
 }
@@ -171,7 +191,7 @@ tasks {
             client.newCall(request).execute().use { response ->
                 val statusCode = response.code
                 println("Upload status code: $statusCode")
-                println("Upload result: ${response.body!!.string()}")
+                println("Upload result: ${response.body.string()}")
                 if (statusCode != 201) {
                     error("Upload error to Central repository. Status code $statusCode.")
                 }
@@ -182,20 +202,22 @@ tasks {
 
 dependencies {
     dokka(project(":agents:agents-core"))
+    dokka(project(":agents:agents-ext"))
     dokka(project(":agents:agents-features:agents-features-debugger"))
     dokka(project(":agents:agents-features:agents-features-event-handler"))
     dokka(project(":agents:agents-features:agents-features-memory"))
     dokka(project(":agents:agents-features:agents-features-opentelemetry"))
     dokka(project(":agents:agents-features:agents-features-snapshot"))
-    dokka(project(":agents:agents-features:agents-features-trace"))
     dokka(project(":agents:agents-features:agents-features-tokenizer"))
+    dokka(project(":agents:agents-features:agents-features-trace"))
     dokka(project(":agents:agents-mcp"))
     dokka(project(":agents:agents-test"))
     dokka(project(":agents:agents-tools"))
     dokka(project(":agents:agents-utils"))
-    dokka(project(":agents:agents-ext"))
     dokka(project(":embeddings:embeddings-base"))
     dokka(project(":embeddings:embeddings-llm"))
+    dokka(project(":koog-ktor"))
+    dokka(project(":koog-spring-boot-starter"))
     dokka(project(":prompt:prompt-cache:prompt-cache-files"))
     dokka(project(":prompt:prompt-cache:prompt-cache-model"))
     dokka(project(":prompt:prompt-cache:prompt-cache-redis"))
@@ -207,7 +229,7 @@ dependencies {
     dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-google-client"))
     dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-ollama-client"))
     dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
-    dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-model"))
+    dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client-base"))
     dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openrouter-client"))
     dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-dashscope-client"))
     dokka(project(":prompt:prompt-executor:prompt-executor-llms"))
@@ -219,10 +241,9 @@ dependencies {
     dokka(project(":prompt:prompt-structure"))
     dokka(project(":prompt:prompt-tokenizer"))
     dokka(project(":prompt:prompt-xml"))
-    dokka(project(":koog-spring-boot-starter"))
-    dokka(project(":koog-ktor"))
     dokka(project(":rag:rag-base"))
     dokka(project(":rag:vector-storage"))
+    dokka(project(":utils"))
 }
 
 kover {
@@ -268,4 +289,12 @@ tasks.register("compileTestKotlinAll") {
     """.trimIndent()
 
     dependsOn(subprojects.map { it.getKotlinCompileTasks("test") })
+}
+
+apply<CheckSplitPackagesPlugin>()
+
+extensions.getByType<CheckSplitPackagesExtension>().apply {
+    includeProjects = setOf(":agents:", ":embeddings:", ":prompt:", ":koog-spring-boot-starter", ":rag:")
+    failOnError = true
+    includePackages = setOf("ai.koog")
 }

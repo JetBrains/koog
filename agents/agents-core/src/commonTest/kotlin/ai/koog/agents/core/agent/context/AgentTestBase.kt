@@ -1,21 +1,24 @@
 package ai.koog.agents.core.agent.context
 
 import ai.koog.agents.core.CalculatorChatExecutor.testClock
+import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.agent.config.AIAgentConfigBase
 import ai.koog.agents.core.agent.config.MissingToolsConversionStrategy
 import ai.koog.agents.core.agent.config.ToolCallDescriber
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
+import ai.koog.agents.core.agent.invoke
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.environment.ReceivedToolResult
-import ai.koog.agents.core.feature.AIAgentPipeline
+import ai.koog.agents.core.feature.AIAgentGraphPipeline
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.agents.testing.tools.mockLLMAnswer
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.llm.OllamaModels
 import ai.koog.prompt.message.Message
+import io.ktor.client.request.invoke
 import kotlin.reflect.typeOf
 
 open class AgentTestBase {
@@ -37,7 +40,7 @@ open class AgentTestBase {
         }
     }
 
-    protected fun createTestConfig(id: String = "test-config"): AIAgentConfigBase {
+    protected fun createTestConfig(id: String = "test-config"): AIAgentConfig {
         return AIAgentConfig(
             prompt = createTestPrompt(),
             model = OllamaModels.Meta.LLAMA_3_2,
@@ -76,16 +79,16 @@ open class AgentTestBase {
 
     protected open fun createTestContext(
         environment: AIAgentEnvironment = createTestEnvironment(),
-        config: AIAgentConfigBase = createTestConfig(),
+        config: AIAgentConfig = createTestConfig(),
         llmContext: AIAgentLLMContext = createTestLLMContext(),
         stateManager: AIAgentStateManager = createTestStateManager(),
         storage: AIAgentStorage = createTestStorage(),
         runId: String = "test-run-id",
         strategyName: String = "test-strategy",
-        pipeline: AIAgentPipeline = AIAgentPipeline(),
+        pipeline: AIAgentGraphPipeline = AIAgentGraphPipeline(testClock),
         agentInput: String = "test-input"
-    ): AIAgentContext {
-        return AIAgentContext(
+    ): AIAgentGraphContext {
+        return AIAgentGraphContext(
             environment = environment,
             agentInputType = typeOf<String>(),
             agentInput = agentInput,
@@ -96,7 +99,11 @@ open class AgentTestBase {
             runId = runId,
             strategyName = strategyName,
             pipeline = pipeline,
-            agentId = "test-context-id",
+            agent = AIAgent(
+                promptExecutor = getMockExecutor { },
+                llmModel = OllamaModels.Meta.LLAMA_3_2,
+                id = "test-agent"
+            ) as GraphAIAgent<String, String>
         )
     }
 }

@@ -69,7 +69,7 @@ private fun Message.User.toOllamaChatMessage(model: LLModel): OllamaChatMessageD
                 }
 
                 val image: String = when (val content = attachment.content) {
-                    is AttachmentContent.Binary -> content.base64
+                    is AttachmentContent.Binary -> content.asBase64()
                     else -> throw IllegalArgumentException("Unsupported image attachment content: ${content::class}")
                 }
 

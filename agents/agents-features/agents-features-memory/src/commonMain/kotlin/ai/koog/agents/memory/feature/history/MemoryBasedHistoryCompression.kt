@@ -34,12 +34,10 @@ public class RetrieveFactsFromHistory(public val concepts: List<Concept>) : Hist
      * each concept and appends them to the composed prompt.
      *
      * @param llmSession The local LLM write session used to retrieve facts and manage prompts.
-     * @param preserveMemory A flag indicating whether to preserve existing memory-related messages in the session.
      * @param memoryMessages A list of existing memory-related messages to be included in the prompt.
      */
     override suspend fun compress(
         llmSession: AIAgentLLMWriteSession,
-        preserveMemory: Boolean,
         memoryMessages: List<Message>
     ) {
         val iterationsCount = llmSession.prompt.messages.count { it is Message.Tool.Result }
@@ -94,6 +92,7 @@ public class RetrieveFactsFromHistory(public val concepts: List<Concept>) : Hist
             user(userMessage)
         }.messages
 
-        composePromptWithRequiredMessages(llmSession, newMessages, preserveMemory, memoryMessages)
+        val compressedMessages = composeMessageHistory(oldMessages, newMessages, memoryMessages)
+        llmSession.prompt = llmSession.prompt.withMessages { compressedMessages }
     }
 }

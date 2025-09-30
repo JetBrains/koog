@@ -1,4 +1,4 @@
-rootProject.name = "koog-trip-planning"
+rootProject.name = "trip-planning-example"
 
 pluginManagement {
     repositories {

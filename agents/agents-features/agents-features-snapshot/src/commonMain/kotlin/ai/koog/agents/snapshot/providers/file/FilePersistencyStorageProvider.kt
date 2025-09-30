@@ -2,6 +2,7 @@ package ai.koog.agents.snapshot.providers.file
 
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
 import ai.koog.agents.snapshot.providers.PersistencyStorageProvider
+import ai.koog.agents.snapshot.providers.PersistencyUtils
 import ai.koog.rag.base.files.FileSystemProvider
 import ai.koog.rag.base.files.createDirectory
 import ai.koog.rag.base.files.readText
@@ -22,8 +23,8 @@ public open class FilePersistencyStorageProvider<Path>(
     private val persistenceId: String,
     private val fs: FileSystemProvider.ReadWrite<Path>,
     private val root: Path,
+    private val json: Json = PersistencyUtils.defaultCheckpointJson
 ) : PersistencyStorageProvider {
-    private val json = Json { prettyPrint = true }
 
     /**
      * Directory where agent checkpoints are stored

@@ -3,15 +3,16 @@ package ai.koog.agents.core.feature
 import ai.koog.agents.core.CalculatorChatExecutor
 import ai.koog.agents.core.CalculatorTools
 import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.agent.AIAgent.FeatureContext
+import ai.koog.agents.core.agent.GraphAIAgent.FeatureContext
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.agent.entity.AIAgentStrategy
+import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeDoNothing
 import ai.koog.agents.core.dsl.extension.nodeExecuteTool
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.onToolCall
+import ai.koog.agents.core.feature.handler.AgentLifecycleEventType
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
@@ -198,20 +199,25 @@ class AIAgentPipelineTest {
     @JsName("testPipelineInterceptorsForAgentCreateEvents")
     fun `test pipeline interceptors before agent started events`() = runTest {
         val interceptedEvents = mutableListOf<String>()
+        val interceptedRunIds = mutableListOf<String>()
 
         val strategy = strategy<String, String>("test-interceptors-strategy") {
             edge(nodeStart forwardTo nodeFinish transformed { "Done" })
         }
 
-        createAgent(strategy = strategy) {
-            install(TestFeature) { events = interceptedEvents }
+        val agentId = "test-agent-id"
+        createAgent(strategy = strategy, id = agentId) {
+            install(TestFeature) {
+                events = interceptedEvents
+                runIds = interceptedRunIds
+            }
         }.use { agent ->
             agent.run("")
         }
 
         val actualEvents = interceptedEvents.filter { it.startsWith("Agent: before agent started") }
         val expectedEvents = listOf(
-            "Agent: before agent started (strategy name: test-interceptors-strategy)",
+            "Agent: before agent started (id: $agentId, run id: ${interceptedRunIds.last()})",
         )
 
         assertEquals(
@@ -267,8 +273,7 @@ class AIAgentPipelineTest {
 
         val actualEvents = interceptedEvents.filter { it.startsWith("Agent Context: ") }
         val expectedEvents = listOf(
-            "Agent Context: request features from agent context",
-            "Agent Context: request features from agent context",
+            "Agent Context: request features from agent context"
         )
 
         assertEquals(
@@ -283,21 +288,33 @@ class AIAgentPipelineTest {
     @JsName("testSeveralAgentsShareOnePipeline")
     fun `test several agents share one pipeline`() = runTest {
         val interceptedEvents = mutableListOf<String>()
+        val interceptedRunIds = mutableListOf<String>()
+
+        val agent1Id = "agent1-id"
+        val agent2Id = "agent2-id"
 
         createAgent(
+            id = agent1Id,
             strategy = strategy("test-interceptors-strategy-1") {
                 edge(nodeStart forwardTo nodeFinish transformed { "Done" })
             }
         ) {
-            install(TestFeature) { events = interceptedEvents }
+            install(TestFeature) {
+                events = interceptedEvents
+                runIds = interceptedRunIds
+            }
         }.use { agent1 ->
 
             createAgent(
+                id = agent2Id,
                 strategy = strategy("test-interceptors-strategy-2") {
                     edge(nodeStart forwardTo nodeFinish transformed { "Done" })
                 }
             ) {
-                install(TestFeature) { events = interceptedEvents }
+                install(TestFeature) {
+                    events = interceptedEvents
+                    runIds = interceptedRunIds
+                }
             }.use { agent2 ->
 
                 agent1.run("")
@@ -305,10 +322,12 @@ class AIAgentPipelineTest {
             }
         }
 
+        assertEquals(2, interceptedRunIds.size)
+
         val actualEvents = interceptedEvents.filter { it.startsWith("Agent: before agent started") }
         val expectedEvents = listOf(
-            "Agent: before agent started (strategy name: test-interceptors-strategy-1)",
-            "Agent: before agent started (strategy name: test-interceptors-strategy-2)",
+            "Agent: before agent started (id: $agent1Id, run id: ${interceptedRunIds[0]})",
+            "Agent: before agent started (id: $agent2Id, run id: ${interceptedRunIds[1]})",
         )
 
         assertEquals(
@@ -319,6 +338,46 @@ class AIAgentPipelineTest {
         assertContentEquals(expectedEvents, actualEvents)
     }
 
+    @Test
+    @JsName("testFilterLLMCallStartEvents")
+    fun `test filter llm call finish events`() = runTest {
+        val interceptedEvents = mutableListOf<String>()
+
+        val strategy = strategy<String, String>("test-interceptors-strategy") {
+            val llmCallWithoutTools by nodeLLMRequest("test LLM call", allowToolCalls = false)
+            val llmCall by nodeLLMRequest("test LLM call with tools")
+
+            edge(nodeStart forwardTo llmCallWithoutTools transformed { "Test LLM call prompt" })
+            edge(llmCallWithoutTools forwardTo llmCall transformed { "Test LLM call with tools prompt" })
+            edge(llmCall forwardTo nodeFinish transformed { "Done" })
+        }
+
+        createAgent(strategy = strategy) {
+            install(TestFeature) {
+                setEventFilter { eventContext ->
+                    eventContext.eventType !is AgentLifecycleEventType.LLMCallCompleted
+                }
+                events = interceptedEvents
+            }
+        }.use { agent ->
+            agent.run("")
+        }
+
+        val actualEvents = interceptedEvents.filter { it.startsWith("LLM: ") }
+        val expectedEvents = listOf(
+            "LLM: start LLM call (prompt: Test user message, tools: [])",
+            "LLM: start LLM call (prompt: Test user message, tools: [dummy])",
+        )
+
+        assertEquals(
+            expectedEvents.size,
+            actualEvents.size,
+            "Miss intercepted events. Expected ${expectedEvents.size}, but received: ${actualEvents.size}"
+        )
+
+        assertContentEquals(expectedEvents, actualEvents)
+    }
+
     //region Private Methods
 
     private val testClock: Clock = object : Clock {
@@ -326,7 +385,8 @@ class AIAgentPipelineTest {
     }
 
     private fun createAgent(
-        strategy: AIAgentStrategy<String, String>,
+        strategy: AIAgentGraphStrategy<String, String>,
+        id: String? = null,
         userPrompt: String? = null,
         systemPrompt: String? = null,
         assistantPrompt: String? = null,
@@ -353,6 +413,7 @@ class AIAgentPipelineTest {
         }
 
         return AIAgent(
+            id = id ?: "test-agent-id",
             promptExecutor = promptExecutor ?: testExecutor,
             strategy = strategy,
             agentConfig = agentConfig,

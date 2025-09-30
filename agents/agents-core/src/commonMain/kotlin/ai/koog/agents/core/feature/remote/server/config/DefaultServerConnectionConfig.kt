@@ -13,10 +13,14 @@ package ai.koog.agents.core.feature.remote.server.config
  *        Set to 'false' by default.
  */
 public class DefaultServerConnectionConfig(
-    host: String = DEFAULT_HOST,
-    port: Int = DEFAULT_PORT,
-    waitConnection: Boolean = DEFAULT_WAIT_CONNECTION,
-) : ServerConnectionConfig(host = host, port = port, waitConnection = waitConnection) {
+    host: String? = null,
+    port: Int? = null,
+    waitConnection: Boolean? = null,
+) : ServerConnectionConfig(
+    host = host ?: DEFAULT_HOST,
+    port = port ?: DEFAULT_PORT,
+    waitConnection = waitConnection ?: DEFAULT_WAIT_CONNECTION,
+) {
 
     /**
      * Contains default configurations for server connection parameters.
@@ -44,6 +48,13 @@ public class DefaultServerConnectionConfig(
          */
         public const val DEFAULT_HOST: String = "127.0.0.1"
 
-        internal const val DEFAULT_WAIT_CONNECTION: Boolean = false
+        /**
+         * Indicates whether the server should wait for the first incoming connection before proceeding.
+         *
+         * This constant is set to `false` by default, meaning the server does not wait for
+         * an initial connection and continues with its execution. It is used as a default value
+         * for the `waitConnection` parameter in the `DefaultServerConnectionConfig` class.
+         */
+        public const val DEFAULT_WAIT_CONNECTION: Boolean = false
     }
 }

@@ -26,8 +26,13 @@ kotlin {
                 api(libs.kotlinx.coroutines.core)
                 api(libs.ktor.client.content.negotiation)
                 api(libs.ktor.serialization.kotlinx.json)
-                api(libs.ktor.client.cio)
                 implementation(libs.oshai.kotlin.logging)
+            }
+        }
+
+        androidMain {
+            dependencies {
+                implementation(libs.ktor.client.cio)
             }
         }
 
@@ -43,23 +48,30 @@ kotlin {
             }
         }
 
+        wasmJsMain {
+            dependencies {
+                api(libs.ktor.client.cio)
+            }
+        }
+
+        jvmMain {
+            dependencies {
+                api(libs.ktor.client.cio)
+            }
+        }
+
         commonTest {
             dependencies {
-                implementation(kotlin("test"))
+                implementation(project(":test-utils"))
                 implementation(project(":agents:agents-features:agents-features-event-handler"))
-                implementation(libs.kotlinx.coroutines.core)
-                implementation(libs.kotlinx.coroutines.test)
             }
         }
 
         jvmTest {
             dependencies {
-                implementation(kotlin("test-junit5"))
-                implementation(libs.kotlinx.coroutines.test)
                 implementation(project(":agents:agents-core"))
                 implementation(project(":agents:agents-features:agents-features-event-handler"))
                 implementation(project(":agents:agents-features:agents-features-trace"))
-                implementation(project(":integration-tests"))
             }
         }
     }

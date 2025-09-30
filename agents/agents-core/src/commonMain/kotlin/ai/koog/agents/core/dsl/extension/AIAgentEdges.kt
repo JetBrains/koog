@@ -6,8 +6,6 @@ import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.environment.SafeTool
 import ai.koog.agents.core.environment.toSafeResult
 import ai.koog.agents.core.tools.Tool
-import ai.koog.agents.core.tools.ToolArgs
-import ai.koog.agents.core.tools.ToolResult
 import ai.koog.prompt.message.Attachment
 import ai.koog.prompt.message.Message
 import kotlin.reflect.KClass
@@ -45,7 +43,7 @@ public inline infix fun <IncomingOutput, IntermediateOutput, OutgoingInput, reif
  */
 @Suppress("UNCHECKED_CAST")
 @EdgeTransformationDslMarker
-public inline infix fun <IncomingOutput, OutgoingInput, reified TResult : ToolResult> AIAgentEdgeBuilderIntermediate<IncomingOutput, SafeTool.Result<TResult>, OutgoingInput>.onSuccessful(
+public inline infix fun <IncomingOutput, OutgoingInput, reified TResult> AIAgentEdgeBuilderIntermediate<IncomingOutput, SafeTool.Result<TResult>, OutgoingInput>.onSuccessful(
     crossinline condition: suspend (TResult) -> Boolean
 ): AIAgentEdgeBuilderIntermediate<IncomingOutput, SafeTool.Result.Success<TResult>, OutgoingInput> =
     onIsInstance(SafeTool.Result.Success::class).transformed { it as SafeTool.Result.Success<TResult> }
@@ -65,7 +63,7 @@ public inline infix fun <IncomingOutput, OutgoingInput, reified TResult : ToolRe
  */
 @Suppress("UNCHECKED_CAST")
 @EdgeTransformationDslMarker
-public inline infix fun <IncomingOutput, OutgoingInput, reified TResult : ToolResult> AIAgentEdgeBuilderIntermediate<IncomingOutput, SafeTool.Result<TResult>, OutgoingInput>.onFailure(
+public inline infix fun <IncomingOutput, OutgoingInput, reified TResult> AIAgentEdgeBuilderIntermediate<IncomingOutput, SafeTool.Result<TResult>, OutgoingInput>.onFailure(
     crossinline condition: suspend (error: String) -> Boolean
 ): AIAgentEdgeBuilderIntermediate<IncomingOutput, SafeTool.Result.Failure<TResult>, OutgoingInput> =
     onIsInstance(SafeTool.Result.Failure::class).transformed { it as SafeTool.Result.Failure<TResult> }
@@ -93,7 +91,7 @@ public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput> AIAgentEdge
  * @param block A function that evaluates the tool arguments to determine if the edge should accept the message
  */
 @EdgeTransformationDslMarker
-public inline fun <IncomingOutput, IntermediateOutput, OutgoingInput, reified Args : ToolArgs> AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.onToolCall(
+public inline fun <IncomingOutput, IntermediateOutput, OutgoingInput, reified Args> AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.onToolCall(
     tool: Tool<Args, *>,
     crossinline block: suspend (Args) -> Boolean
 ): AIAgentEdgeBuilderIntermediate<IncomingOutput, Message.Tool.Call, OutgoingInput> {
@@ -142,7 +140,7 @@ public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput> AIAgentEdge
  * @param block A function that evaluates the tool result to determine if the edge should accept the message
  */
 @EdgeTransformationDslMarker
-public inline fun <IncomingOutput, IntermediateOutput, OutgoingInput, reified Result : ToolResult> AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.onToolResult(
+public inline fun <IncomingOutput, IntermediateOutput, OutgoingInput, reified Result> AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.onToolResult(
     tool: Tool<*, Result>,
     crossinline block: suspend (SafeTool.Result<Result>) -> Boolean
 ): AIAgentEdgeBuilderIntermediate<IncomingOutput, ReceivedToolResult, OutgoingInput> {

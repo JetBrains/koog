@@ -1,10 +1,7 @@
 package ai.koog.agents.ext.tool
 
 import ai.koog.agents.core.tools.SimpleTool
-import ai.koog.agents.core.tools.ToolArgs
-import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.agents.core.tools.ToolParameterDescriptor
-import ai.koog.agents.core.tools.ToolParameterType
+import ai.koog.agents.core.tools.annotations.LLMDescription
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 
@@ -19,21 +16,14 @@ public object AskUser : SimpleTool<AskUser.Args>() {
      * @property message The message to be used as an argument for the tool's execution.
      */
     @Serializable
-    public data class Args(val message: String) : ToolArgs
-
-    override val argsSerializer: KSerializer<Args> = Args.serializer()
-
-    override val descriptor: ToolDescriptor = ToolDescriptor(
-        name = "__ask_user__",
-        description = "Service tool, used by the agent to talk with user",
-        requiredParameters = listOf(
-            ToolParameterDescriptor(
-                name = "message",
-                description = "Message from the agent",
-                type = ToolParameterType.String
-            )
-        )
+    public data class Args(
+        @property:LLMDescription("Message from the agent")
+        val message: String
     )
+
+    override val name: String = "__ask_user__"
+    override val description: String = "Service tool, used by the agent to talk with user"
+    override val argsSerializer: KSerializer<Args> = Args.serializer()
 
     override suspend fun doExecute(args: Args): String {
         println(args.message)

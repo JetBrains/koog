@@ -14,9 +14,9 @@ public object FeatureMessageProcessorUtil {
 
     private val logger = KotlinLogging.logger { }
 
-    internal suspend fun FeatureMessageProcessor.onMessageSafe(message: FeatureMessage) {
+    internal suspend fun FeatureMessageProcessor.onMessageCatching(message: FeatureMessage) {
         try {
-            this.processMessage(message)
+            this.onMessage(message)
         } catch (t: Throwable) {
             logger.error(t) { "Error while processing the provider onMessage handler: ${message.messageType.value}" }
         }
@@ -32,7 +32,7 @@ public object FeatureMessageProcessorUtil {
      *
      * @param message The feature message to be processed by each `FeatureMessageProcessor`.
      */
-    public suspend fun List<FeatureMessageProcessor>.onMessageForEachSafe(message: FeatureMessage) {
-        this.forEach { provider -> provider.onMessageSafe(message) }
+    public suspend fun List<FeatureMessageProcessor>.onMessageForEachCatching(message: FeatureMessage) {
+        this.forEach { provider -> provider.onMessageCatching(message) }
     }
 }

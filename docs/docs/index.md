@@ -13,37 +13,43 @@ The framework supports the following types of agents:
 
 Key features of Koog include:
 
-- **Pure Kotlin implementation**: Build AI agents entirely in natural and idiomatic Kotlin.
-- **MCP integration**: Connect to Model Control Protocol for enhanced model management.
-- **Embedding capabilities**: Use vector embeddings for semantic search and knowledge retrieval.
-- **Custom tool creation**: Extend your agents with tools that access external systems and APIs.
-- **Ready-to-use components**: Speed up development with pre-built solutions for common AI engineering challenges.
-- **Intelligent history compression**: Optimize token usage while maintaining conversation context using various pre-built strategies.
+- **Multiplatform development**: Deploy agents across JVM, JS, WasmJS, Android, and iOS targets using Kotlin Multiplatform.
+- **Reliability and fault-tolerance**: Handle failures with built-in retries and restore the agent state at specific points during execution with the agent persistence feature.
+- **Intelligent history compression**: Optimize token usage while maintaining context in long-running conversations using advanced built-in history compression techniques.
+- **Enterprise-ready integrations**: Utilize integration with popular JVM frameworks such as Spring Boot and Ktor to embed Koog into your applications.
+- **Observability with OpenTelemetry exporters**: Monitor and debug applications with built-in support for popular observability providers (W&B Weave, Langfuse).
+- **LLM switching and seamless history adaptation**: Switch to a different LLM at any point without losing the existing conversation history, or reroute between multiple LLM providers.
+- **Integration with JVM and Kotlin applications**: Build AI agents with an idiomatic, type-safe Kotlin DSL designed specifically for JVM and Kotlin developers.
+- **Model Context Protocol integration**: Use Model Context Protocol (MCP) tools in AI agents.
+- **Knowledge retrieval and memory**: Retain and retrieve knowledge across conversations using vector embeddings, ranked document storage, and shared agent memory.
 - **Powerful Streaming API**: Process responses in real-time with streaming support and parallel tool calls.
-- **Persistent agent memory**: Enable knowledge retention across sessions and even different agents.
-- **Comprehensive tracing**: Debug and monitor agent execution with detailed and configurable tracing.
-- **Flexible graph workflows**: Design complex agent behaviors using intuitive graph-based workflows.
 - **Modular feature system**: Customize agent capabilities through a composable architecture.
-- **Scalable architecture**: Handle workloads from simple chatbots to enterprise applications.
-- **Multiplatform**: Run agents on JVM, JS, WasmJS targets with Kotlin Multiplatform.
+- **Flexible graph workflows**: Design complex agent behaviors using intuitive graph-based workflows.
+- **Custom tool creation**: Enhance your agents with tools that access external systems and APIs.
+- **Comprehensive tracing**: Debug and monitor agent execution with detailed, configurable tracing.
 
-# Available LLM providers and platforms
+## Available LLM providers and platforms
 
 The LLM providers and platforms whose LLMs you can use to power your agent capabilities:
 
 - Google
 - OpenAI
 - Anthropic
+- DeepSeek
 - OpenRouter
 - Ollama
+- Bedrock
 
-# Installation
+For detailed guidance on using these providers with dedicated LLM clients, refer to [Runnning prompts with LLM clients](prompt-api.md#running-prompts-with-llm-clients).
+
+
+## Installation
 
 To use Koog, you need to include all necessary dependencies in your build configuration.
 
-## Gradle
+### Gradle
 
-### Gradle (Kotlin DSL)
+#### Gradle (Kotlin DSL)
 
 1. Add dependencies to the `build.gradle.kts` file:
 
@@ -55,7 +61,7 @@ To use Koog, you need to include all necessary dependencies in your build config
 
 2. Make sure that you have `mavenCentral()` in the list of repositories.
 
-### Gradle (Groovy)
+#### Gradle (Groovy)
 
 1. Add dependencies to the `build.gradle` file:
 
@@ -67,7 +73,7 @@ To use Koog, you need to include all necessary dependencies in your build config
 
 2. Make sure that you have `mavenCentral()` in the list of repositories.
 
-## Maven
+### Maven
 
 1. Add dependencies to the `pom.xml` file:
 
@@ -82,7 +88,7 @@ To use Koog, you need to include all necessary dependencies in your build config
 2. Make sure that you have `mavenCentral` in the list of repositories.
 
 
-# Quickstart example
+## Quickstart example
 
 To help you get started with AI agents, here is a quick example of a single-run agent:
 
@@ -101,7 +107,7 @@ fun main() {
         val apiKey = System.getenv("OPENAI_API_KEY") // or Anthropic, Google, OpenRouter, etc.
 
         val agent = AIAgent(
-            executor = simpleOpenAIExecutor(apiKey), // or Anthropic, Google, OpenRouter, etc.
+            promptExecutor = simpleOpenAIExecutor(apiKey), // or Anthropic, Google, OpenRouter, etc.
             systemPrompt = "You are a helpful assistant. Answer user questions concisely.",
             llmModel = OpenAIModels.Chat.GPT4o
         )

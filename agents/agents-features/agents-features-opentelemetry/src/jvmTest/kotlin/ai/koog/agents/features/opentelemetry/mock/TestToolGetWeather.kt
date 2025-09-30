@@ -1,10 +1,7 @@
 package ai.koog.agents.features.opentelemetry.mock
 
 import ai.koog.agents.core.tools.SimpleTool
-import ai.koog.agents.core.tools.ToolArgs
-import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.agents.core.tools.ToolParameterDescriptor
-import ai.koog.agents.core.tools.ToolParameterType
+import ai.koog.agents.core.tools.annotations.LLMDescription
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 
@@ -14,21 +11,15 @@ internal object TestGetWeatherTool : SimpleTool<TestGetWeatherTool.Args>() {
     const val DEFAULT_LONDON_RESULT: String = "cloudy, 62°F"
 
     @Serializable
-    data class Args(val location: String) : ToolArgs
+    data class Args(
+        @property:LLMDescription("Whether location")
+        val location: String
+    )
 
     override val argsSerializer: KSerializer<Args> = Args.serializer()
 
-    override val descriptor: ToolDescriptor = ToolDescriptor(
-        name = "Get whether",
-        description = "The test tool to get a whether based on provided location.",
-        requiredParameters = listOf(
-            ToolParameterDescriptor(
-                name = "location",
-                description = "Whether location",
-                type = ToolParameterType.String
-            )
-        )
-    )
+    override val name: String = "Get whether"
+    override val description: String = "The test tool to get a whether based on provided location."
 
     override suspend fun doExecute(args: Args): String =
         if (args.location.contains("Paris")) {

@@ -5,9 +5,11 @@ import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Haiku_3
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Haiku_3_5
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Opus_3
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Opus_4
+import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Opus_4_1
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Sonnet_3_5
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Sonnet_3_7
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Sonnet_4
+import ai.koog.prompt.executor.clients.anthropic.AnthropicModels.Sonnet_4_5
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -24,6 +26,8 @@ import ai.koog.prompt.llm.LLModel
  * | [Sonnet_3_7] | Fast            | $3-$15       | Text, Image, Tools, Document | Text, Tools |
  * | [Sonnet_4]   | Fast            | $3-$15       | Text, Image, Tools, Document | Text, Tools |
  * | [Opus_4]     | Moderately fast | $15-$75      | Text, Image, Tools, Document | Text, Tools |
+ * | [Opus_4_1]   | Moderately fast | $15-$75      | Text, Image, Tools, Document | Text, Tools |
+ * | [Sonnet_4_5] | Fast            | $3-$15       | Text, Image, Tools, Document | Text, Tools |
  */
 public object AnthropicModels : LLModelDefinitions {
 
@@ -169,8 +173,8 @@ public object AnthropicModels : LLModelDefinitions {
     )
 
     /**
-     * Claude Sonnet 4 is Anthropic's most capable and intelligent model.
-     * It sets new standards in complex reasoning and advanced coding.
+     * Claude Opus 4 is Anthropic's previous flagship model.
+     * It has very high intelligence and capability.
      *
      * 200K context window
      * Knowledge cutoff: March 2025
@@ -191,6 +195,54 @@ public object AnthropicModels : LLModelDefinitions {
         contextLength = 200_000,
         maxOutputTokens = 32_000,
     )
+
+    /**
+     * Claude Opus 4.1 is Anthropic's exceptional model for specialized complex tasks.
+     * It has a very high level of intelligence and capability.
+     *
+     * 200K context window
+     * Knowledge cutoff: March 2025
+     *
+     * @see <a href="https://docs.anthropic.com/claude/docs/models-overview">
+     */
+    public val Opus_4_1: LLModel = LLModel(
+        provider = LLMProvider.Anthropic,
+        id = "claude-opus-4-1",
+        capabilities = listOf(
+            LLMCapability.Temperature,
+            LLMCapability.Tools,
+            LLMCapability.ToolChoice,
+            LLMCapability.Vision.Image,
+            LLMCapability.Document,
+            LLMCapability.Completion
+        ),
+        contextLength = 200_000,
+        maxOutputTokens = 32_000,
+    )
+
+    /**
+     * Claude Sonnet 4.5 is Anthropic's best model for complex agents and coding.
+     * It has the highest level of intelligence across most tasks with exceptional agent and coding capabilities.
+     *
+     * 200K context window
+     * Knowledge cutoff: July 2025
+     *
+     * @see <a href="https://docs.anthropic.com/claude/docs/models-overview">
+     */
+    public val Sonnet_4_5: LLModel = LLModel(
+        provider = LLMProvider.Anthropic,
+        id = "claude-sonnet-4-5",
+        capabilities = listOf(
+            LLMCapability.Temperature,
+            LLMCapability.Tools,
+            LLMCapability.ToolChoice,
+            LLMCapability.Vision.Image,
+            LLMCapability.Document,
+            LLMCapability.Completion,
+        ),
+        contextLength = 200_000,
+        maxOutputTokens = 64_000,
+    )
 }
 
 internal val DEFAULT_ANTHROPIC_MODEL_VERSIONS_MAP: Map<LLModel, String> = mapOf(
@@ -200,5 +252,7 @@ internal val DEFAULT_ANTHROPIC_MODEL_VERSIONS_MAP: Map<LLModel, String> = mapOf(
     Haiku_3_5 to "claude-3-5-haiku-20241022",
     Sonnet_3_7 to "claude-3-7-sonnet-20250219",
     Sonnet_4 to "claude-sonnet-4-20250514",
-    Opus_4 to "claude-opus-4-20250514"
+    Opus_4 to "claude-opus-4-20250514",
+    Opus_4_1 to "claude-opus-4-1-20250805",
+    Sonnet_4_5 to "claude-sonnet-4-5-20250929",
 )

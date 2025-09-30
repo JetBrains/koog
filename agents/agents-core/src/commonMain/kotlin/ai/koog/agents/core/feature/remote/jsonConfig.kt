@@ -1,9 +1,27 @@
 package ai.koog.agents.core.feature.remote
 
 import ai.koog.agents.core.feature.message.FeatureEvent
-import ai.koog.agents.core.feature.message.FeatureEventMessage
 import ai.koog.agents.core.feature.message.FeatureMessage
-import ai.koog.agents.core.feature.message.FeatureStringMessage
+import ai.koog.agents.core.feature.model.FeatureEventMessage
+import ai.koog.agents.core.feature.model.FeatureStringMessage
+import ai.koog.agents.core.feature.model.events.AgentClosingEvent
+import ai.koog.agents.core.feature.model.events.AgentCompletedEvent
+import ai.koog.agents.core.feature.model.events.AgentExecutionFailedEvent
+import ai.koog.agents.core.feature.model.events.AgentStartingEvent
+import ai.koog.agents.core.feature.model.events.DefinedFeatureEvent
+import ai.koog.agents.core.feature.model.events.FunctionalStrategyStartingEvent
+import ai.koog.agents.core.feature.model.events.GraphStrategyStartingEvent
+import ai.koog.agents.core.feature.model.events.LLMCallCompletedEvent
+import ai.koog.agents.core.feature.model.events.LLMCallStartingEvent
+import ai.koog.agents.core.feature.model.events.NodeExecutionCompletedEvent
+import ai.koog.agents.core.feature.model.events.NodeExecutionFailedEvent
+import ai.koog.agents.core.feature.model.events.NodeExecutionStartingEvent
+import ai.koog.agents.core.feature.model.events.StrategyCompletedEvent
+import ai.koog.agents.core.feature.model.events.StrategyStartingEvent
+import ai.koog.agents.core.feature.model.events.ToolExecutionCompletedEvent
+import ai.koog.agents.core.feature.model.events.ToolExecutionFailedEvent
+import ai.koog.agents.core.feature.model.events.ToolExecutionStartingEvent
+import ai.koog.agents.core.feature.model.events.ToolValidationFailedEvent
 import io.ktor.utils.io.InternalAPI
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.KSerializer
@@ -15,7 +33,21 @@ import kotlinx.serialization.modules.plus
 import kotlinx.serialization.modules.polymorphic
 import kotlin.reflect.KClass
 
-private val defaultFeatureMessageJsonConfig: Json
+/**
+ * Provides a preconfigured instance of [Json] with specific settings tailored
+ * for serializing and deserializing feature messages in a remote communication context.
+ *
+ * This configuration includes features such as
+ * - Enabling pretty printing of JSON for readability.
+ * - Ignoring unknown keys during deserialization to support backward and forward compatibility.
+ * - Encoding default values to ensure complete serialization of data.
+ * - Allowing lenient parsing for more flexible input handling.
+ * - Disabling explicit null representation to omit `null` fields when serializing.
+ *
+ * Additionally, this [Json] instance is configured with a default serializers module,
+ * facilitating custom serialization logic for feature messages.
+ */
+public val defaultFeatureMessageJsonConfig: Json
     get() = Json {
         prettyPrint = true
         ignoreUnknownKeys = true
@@ -25,15 +57,100 @@ private val defaultFeatureMessageJsonConfig: Json
         serializersModule = defaultFeatureMessageSerializersModule
     }
 
-private val defaultFeatureMessageSerializersModule: SerializersModule
+/**
+ * Provides a [SerializersModule] that handles polymorphic serialization and deserialization for various events
+ * and messages associated with features, agents, and strategies.
+ *
+ * This module supports polymorphic serialization for the following base classes:
+ * - [FeatureMessage]
+ * - [FeatureEvent]
+ * - [DefinedFeatureEvent]
+ *
+ * It registers the concrete subclasses of these base classes for serialization and deserialization:
+ * - [AgentStartingEvent] - Fired when an AI agent starts execution
+ * - [AgentCompletedEvent] - Fired when an AI agent completes execution
+ * - [AgentClosingEvent] - Fired before an AI agent is closed
+ * - [AgentExecutionFailedEvent] - Fired when an AI agent encounters a runtime error
+ * - [StrategyStartingEvent] - Fired when an AI agent strategy begins
+ * - [StrategyCompletedEvent] - Fired when an AI agent strategy completes
+ * - [NodeExecutionStartingEvent] - Fired when a node execution starts
+ * - [NodeExecutionCompletedEvent] - Fired when a node execution ends
+ * - [ToolExecutionStartingEvent] - Fired when a tool is called
+ * - [ToolValidationFailedEvent] - Fired when tool validation fails
+ * - [ToolExecutionFailedEvent] - Fired when a tool call fails
+ * - [ToolExecutionCompletedEvent] - Fired when a tool call returns a result
+ * - [LLMCallStartingEvent] - Fired before making an LLM call
+ * - [LLMCallCompletedEvent] - Fired after completing an LLM call
+ *
+ * This configuration enables proper handling of the diverse event types encountered in the system by ensuring
+ * that the polymorphic serialization framework can correctly serialize and deserialize each subclass.
+ */
+public val defaultFeatureMessageSerializersModule: SerializersModule
     get() = SerializersModule {
+
         polymorphic(FeatureMessage::class) {
             subclass(FeatureStringMessage::class, FeatureStringMessage.serializer())
             subclass(FeatureEventMessage::class, FeatureEventMessage.serializer())
+            subclass(AgentStartingEvent::class, AgentStartingEvent.serializer())
+            subclass(AgentCompletedEvent::class, AgentCompletedEvent.serializer())
+            subclass(AgentClosingEvent::class, AgentClosingEvent.serializer())
+            subclass(AgentExecutionFailedEvent::class, AgentExecutionFailedEvent.serializer())
+            subclass(GraphStrategyStartingEvent::class, GraphStrategyStartingEvent.serializer())
+            subclass(FunctionalStrategyStartingEvent::class, FunctionalStrategyStartingEvent.serializer())
+            subclass(StrategyCompletedEvent::class, StrategyCompletedEvent.serializer())
+            subclass(NodeExecutionStartingEvent::class, NodeExecutionStartingEvent.serializer())
+            subclass(NodeExecutionCompletedEvent::class, NodeExecutionCompletedEvent.serializer())
+            subclass(NodeExecutionFailedEvent::class, NodeExecutionFailedEvent.serializer())
+            subclass(ToolExecutionStartingEvent::class, ToolExecutionStartingEvent.serializer())
+            subclass(ToolValidationFailedEvent::class, ToolValidationFailedEvent.serializer())
+            subclass(ToolExecutionFailedEvent::class, ToolExecutionFailedEvent.serializer())
+            subclass(ToolExecutionCompletedEvent::class, ToolExecutionCompletedEvent.serializer())
+            subclass(LLMCallStartingEvent::class, LLMCallStartingEvent.serializer())
+            subclass(LLMCallCompletedEvent::class, LLMCallCompletedEvent.serializer())
         }
 
         polymorphic(FeatureEvent::class) {
             subclass(FeatureEventMessage::class, FeatureEventMessage.serializer())
+            subclass(AgentStartingEvent::class, AgentStartingEvent.serializer())
+            subclass(AgentCompletedEvent::class, AgentCompletedEvent.serializer())
+            subclass(AgentClosingEvent::class, AgentClosingEvent.serializer())
+            subclass(AgentExecutionFailedEvent::class, AgentExecutionFailedEvent.serializer())
+            subclass(GraphStrategyStartingEvent::class, GraphStrategyStartingEvent.serializer())
+            subclass(FunctionalStrategyStartingEvent::class, FunctionalStrategyStartingEvent.serializer())
+            subclass(StrategyCompletedEvent::class, StrategyCompletedEvent.serializer())
+            subclass(NodeExecutionStartingEvent::class, NodeExecutionStartingEvent.serializer())
+            subclass(NodeExecutionCompletedEvent::class, NodeExecutionCompletedEvent.serializer())
+            subclass(NodeExecutionFailedEvent::class, NodeExecutionFailedEvent.serializer())
+            subclass(ToolExecutionStartingEvent::class, ToolExecutionStartingEvent.serializer())
+            subclass(ToolValidationFailedEvent::class, ToolValidationFailedEvent.serializer())
+            subclass(ToolExecutionFailedEvent::class, ToolExecutionFailedEvent.serializer())
+            subclass(ToolExecutionCompletedEvent::class, ToolExecutionCompletedEvent.serializer())
+            subclass(LLMCallStartingEvent::class, LLMCallStartingEvent.serializer())
+            subclass(LLMCallCompletedEvent::class, LLMCallCompletedEvent.serializer())
+        }
+
+        polymorphic(DefinedFeatureEvent::class) {
+            subclass(AgentStartingEvent::class, AgentStartingEvent.serializer())
+            subclass(AgentCompletedEvent::class, AgentCompletedEvent.serializer())
+            subclass(AgentClosingEvent::class, AgentClosingEvent.serializer())
+            subclass(AgentExecutionFailedEvent::class, AgentExecutionFailedEvent.serializer())
+            subclass(GraphStrategyStartingEvent::class, GraphStrategyStartingEvent.serializer())
+            subclass(FunctionalStrategyStartingEvent::class, FunctionalStrategyStartingEvent.serializer())
+            subclass(StrategyCompletedEvent::class, StrategyCompletedEvent.serializer())
+            subclass(NodeExecutionStartingEvent::class, NodeExecutionStartingEvent.serializer())
+            subclass(NodeExecutionCompletedEvent::class, NodeExecutionCompletedEvent.serializer())
+            subclass(NodeExecutionFailedEvent::class, NodeExecutionFailedEvent.serializer())
+            subclass(ToolExecutionStartingEvent::class, ToolExecutionStartingEvent.serializer())
+            subclass(ToolValidationFailedEvent::class, ToolValidationFailedEvent.serializer())
+            subclass(ToolExecutionFailedEvent::class, ToolExecutionFailedEvent.serializer())
+            subclass(ToolExecutionCompletedEvent::class, ToolExecutionCompletedEvent.serializer())
+            subclass(LLMCallStartingEvent::class, LLMCallStartingEvent.serializer())
+            subclass(LLMCallCompletedEvent::class, LLMCallCompletedEvent.serializer())
+        }
+
+        polymorphic(StrategyStartingEvent::class) {
+            subclass(GraphStrategyStartingEvent::class, GraphStrategyStartingEvent.serializer())
+            subclass(FunctionalStrategyStartingEvent::class, FunctionalStrategyStartingEvent.serializer())
         }
     }
 

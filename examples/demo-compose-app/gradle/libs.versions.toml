@@ -1,0 +1,43 @@
+[versions]
+agp = "8.13.0"
+compose-multiplatform = "1.9.0"
+coroutines = "1.10.2"
+datastore = "1.1.7"
+hotReload = "1.0.0-beta08"
+jetbrains-lifecycle = "2.9.4"
+jetbrains-navigation = "2.9.0"
+koin-bom = "4.1.1"
+koog = "0.4.3-feat-100-06"
+kotlin = "2.2.20"
+kotlinx-serialization = "1.9.0"
+
+[libraries]
+jetbrains-lifecycle-viewmodel-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "jetbrains-lifecycle" }
+jetbrains-navigation-compose = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "jetbrains-navigation" }
+
+koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koin-bom" }
+koin-compose = { module = "io.insert-koin:koin-compose" }
+
+# Kotlinx Serialization
+kotlinx-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinx-serialization" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
+
+# Coroutines
+kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
+kotlinx-coroutines-swing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-swing", version.ref = "coroutines" }
+
+# DataStore
+androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
+
+# Koog
+koog-agents-core = { module = "ai.koog:agents-core", version.ref = "koog" }
+koog-prompt-executor-llms-all = { module = "ai.koog:prompt-executor-llms-all", version.ref = "koog" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+compose = { id = "org.jetbrains.compose", version.ref = "compose-multiplatform" }
+compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+hotReload = { id = "org.jetbrains.compose.hot-reload", version.ref = "hotReload" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }

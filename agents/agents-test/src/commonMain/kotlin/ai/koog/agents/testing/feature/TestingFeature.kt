@@ -3,30 +3,30 @@
 package ai.koog.agents.testing.feature
 
 import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.agent.AIAgent.FeatureContext
-import ai.koog.agents.core.agent.config.AIAgentConfigBase
-import ai.koog.agents.core.agent.context.AIAgentContextBase
+import ai.koog.agents.core.agent.GraphAIAgent
+import ai.koog.agents.core.agent.GraphAIAgent.FeatureContext
+import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.context.AIAgentLLMContext
+import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
-import ai.koog.agents.core.agent.entity.AIAgentStrategy
 import ai.koog.agents.core.agent.entity.AIAgentSubgraph
 import ai.koog.agents.core.agent.entity.FinishNode
 import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.environment.ReceivedToolResult
-import ai.koog.agents.core.feature.AIAgentFeature
+import ai.koog.agents.core.feature.AIAgentGraphFeature
+import ai.koog.agents.core.feature.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.AIAgentPipeline
 import ai.koog.agents.core.feature.InterceptContext
 import ai.koog.agents.core.feature.PromptExecutorProxy
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.Tool
-import ai.koog.agents.core.tools.ToolArgs
-import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.testing.tools.AIAgentContextMockBuilder
 import ai.koog.agents.testing.tools.AIAgentContextMockBuilderBase
 import ai.koog.agents.testing.tools.DummyAIAgentContext
@@ -111,7 +111,7 @@ public sealed class NodeReference<Input, Output> {
          * The method performs a depth-first traversal starting from the subgraph's start node.
          *
          * @param subgraph The AI Agent subgraph to traverse in search of the matching node.
-         * @return The resolved node that matches the current node's name of type [AIAgentNodeBase<Input, Output>].
+         * @return The resolved node that matches the current node's name of a type [AIAgentNodeBase<Input, Output>].
          * @throws IllegalArgumentException If no node with the specified name is found within the subgraph.
          */
         @Suppress("UNCHECKED_CAST")
@@ -185,16 +185,16 @@ public sealed class NodeReference<Input, Output> {
          * @throws IllegalStateException If the subgraph is not of type `AIAgentStrategy`.
          */
         @Suppress("UNCHECKED_CAST")
-        override fun resolve(subgraph: AIAgentSubgraph<*, *>): AIAgentStrategy<Input, Output> {
+        override fun resolve(subgraph: AIAgentSubgraph<*, *>): AIAgentGraphStrategy<Input, Output> {
             if (subgraph.name != name) {
                 throw IllegalArgumentException("Strategy with name '$name' was expected")
             }
 
-            if (subgraph !is AIAgentStrategy) {
+            if (subgraph !is AIAgentGraphStrategy) {
                 throw IllegalStateException("Resolving a strategy is not possible from a subgraph")
             }
 
-            return subgraph as AIAgentStrategy<Input, Output>
+            return subgraph as AIAgentGraphStrategy<Input, Output>
         }
     }
 }
@@ -260,7 +260,7 @@ public data class NodeOutputAssertion<Input, Output>(
 @TestOnly
 public data class EdgeAssertion<Input, Output>(
     val node: NodeReference<Input, Output>,
-    val context: AIAgentContextBase,
+    val context: AIAgentGraphContextBase,
     val output: Output,
     val expectedNode: NodeReference<*, *>
 )
@@ -290,7 +290,7 @@ public data class UnconditionalEdgeAssertion(
  * @property from The starting node reference for the reachability assertion.
  * @property to The target node reference for the reachability assertion.
  *
- * This assertion helps validate correctness and connectivity properties of constructed graphs.
+ * This assertion helps validate the correctness and connectivity properties of constructed graphs.
  */
 @TestOnly
 public data class ReachabilityAssertion(val from: NodeReference<*, *>, val to: NodeReference<*, *>)
@@ -567,7 +567,7 @@ public class Testing {
              * `StageAssertionsBuilder` context, allowing users to define node-specific assertions
              * and add them to this collection.
              *
-             * The collected assertions are later utilized during the construction of the
+             * The collected assertions are later used during the construction of the
              * `StageAssertions` object to verify node output behavior.
              */
             private val nodeOutputs = mutableListOf<NodeOutputAssertion<*, *>>()
@@ -579,7 +579,7 @@ public class Testing {
              * stage, including the originating node, its output, the target node, and the
              * execution context in which the assertion was made.
              *
-             * This property is utilized during the edge validation process to ensure the
+             * This property is used during the edge validation process to ensure the
              * stage conforms to its designed behavior regarding node-to-node transitions.
              * The assertions are collected through the `EdgeAssertionsBuilder` and
              * integrated into the final `StageAssertions` object for the stage.
@@ -753,7 +753,7 @@ public class Testing {
                     environment: AIAgentEnvironment?,
                     agentInput: Any?,
                     agentInputType: KType?,
-                    config: AIAgentConfigBase?,
+                    config: AIAgentConfig?,
                     llm: AIAgentLLMContext?,
                     stateManager: AIAgentStateManager?,
                     storage: AIAgentStorage?,
@@ -850,7 +850,7 @@ public class Testing {
                  * such as when defining relationships or validating graph behavior.
                  */
                 public val unconditionalEdgeAssertions: MutableList<UnconditionalEdgeAssertion> =
-                    mutableListOf<UnconditionalEdgeAssertion>()
+                    mutableListOf()
 
                 /**
                  * Creates a deep copy of the current EdgeAssertionsBuilder instance, duplicating its state and context.
@@ -861,7 +861,7 @@ public class Testing {
                     environment: AIAgentEnvironment?,
                     agentInput: Any?,
                     agentInputType: KType?,
-                    config: AIAgentConfigBase?,
+                    config: AIAgentConfig?,
                     llm: AIAgentLLMContext?,
                     stateManager: AIAgentStateManager?,
                     storage: AIAgentStorage?,
@@ -927,7 +927,7 @@ public class Testing {
      * reachability, outputs, and edges within an AI agent pipeline.
      */
     @TestOnly
-    public companion object Feature : AIAgentFeature<Config, Testing> {
+    public companion object Feature : AIAgentGraphFeature<Config, Testing> {
         /**
          * A storage key uniquely identifying the `Testing` feature within the local agent's storage.
          * The key is generated using the `createStorageKey` function and associates the
@@ -951,7 +951,7 @@ public class Testing {
          */
         override fun install(
             config: Config,
-            pipeline: AIAgentPipeline
+            pipeline: AIAgentGraphPipeline
         ) {
             val feature = Testing()
             val interceptContext = InterceptContext(this, feature)
@@ -962,21 +962,36 @@ public class Testing {
             if (config.enableGraphTesting) {
                 feature.graphAssertions.add(config.getAssertions())
 
-                pipeline.interceptBeforeAgentStarted(interceptContext) { eventContext ->
-                    val strategyGraph = eventContext.strategy
+                var agent: AIAgent<*, *>? = null
+
+                pipeline.interceptAgentStarting(interceptContext) { eventContext ->
+                    agent = eventContext.agent
+                }
+
+                pipeline.interceptStrategyStarting(interceptContext) { eventContext ->
+                    val agentToUse = agent as GraphAIAgent<*, *>
+                    val strategyGraph = eventContext.strategy as AIAgentGraphStrategy<*, *>
+
                     val strategyAssertions = feature.graphAssertions.find { it.name == strategyGraph.name }
                     config.assert(
                         strategyAssertions != null,
                         "Assertions for strategyGraph with name `${strategyGraph.name}` not found in configuration."
                     )
                     strategyAssertions!!
-                    verifyGraph(eventContext.agent, strategyAssertions, strategyGraph, pipeline, config)
+
+                    verifyGraph(
+                        agent = agentToUse,
+                        graphAssertions = strategyAssertions,
+                        graph = strategyGraph,
+                        pipeline = pipeline,
+                        config = config
+                    )
                 }
             }
         }
 
         private suspend fun <Input, Output> verifyGraph(
-            agent: AIAgent<Input, Output>,
+            agent: GraphAIAgent<Input, Output>,
             graphAssertions: GraphAssertions,
             graph: AIAgentSubgraph<*, *>,
             pipeline: AIAgentPipeline,
@@ -1181,7 +1196,7 @@ public class Testing {
  * }
  * ```
  */
-public fun <Args : ToolArgs> Testing.Config.SubgraphAssertionsBuilder<*, *>.toolCallMessage(
+public fun <Args> Testing.Config.SubgraphAssertionsBuilder<*, *>.toolCallMessage(
     tool: Tool<Args, *>,
     args: Args
 ): Message.Tool.Call {
@@ -1237,7 +1252,7 @@ public fun Testing.Config.SubgraphAssertionsBuilder<*, *>.assistantMessage(
  * }
  * ```
  */
-public fun <Result : ToolResult> toolResult(tool: Tool<*, Result>, result: Result): ReceivedToolResult =
+public fun <Result> toolResult(tool: Tool<*, Result>, result: Result): ReceivedToolResult =
     ReceivedToolResult(null, tool.name, tool.encodeResultToString(result), result)
 
 /**
@@ -1262,7 +1277,7 @@ public fun <Result : ToolResult> toolResult(tool: Tool<*, Result>, result: Resul
  * ```
  */
 public fun toolResult(tool: SimpleTool<*>, result: String): ReceivedToolResult =
-    toolResult(tool, ToolResult.Text(result))
+    ReceivedToolResult(null, tool.name, result, result)
 
 /**
  * Enables and configures the Testing feature for a Kotlin AI Agent instance.

@@ -42,6 +42,7 @@ object Models {
         return Stream.of(
             AnthropicModels.Opus_3,
             AnthropicModels.Opus_4,
+            AnthropicModels.Opus_4_1,
 
             AnthropicModels.Haiku_3,
             AnthropicModels.Haiku_3_5,
@@ -49,6 +50,7 @@ object Models {
             AnthropicModels.Sonnet_3_5,
             AnthropicModels.Sonnet_3_7,
             AnthropicModels.Sonnet_4,
+            AnthropicModels.Sonnet_4_5,
         )
     }
 
@@ -61,6 +63,7 @@ object Models {
             GoogleModels.Gemini2_0FlashLite,
             GoogleModels.Gemini2_0FlashLite001,
             GoogleModels.Gemini2_5Flash,
+            GoogleModels.Gemini2_5FlashLite,
         )
     }
 
@@ -69,7 +72,10 @@ object Models {
     fun bedrockModels(): Stream<LLModel> {
         return Stream.of(
             BedrockModels.AnthropicClaude35Haiku,
+            BedrockModels.AnthropicClaude4Sonnet,
             BedrockModels.MetaLlama3_1_70BInstruct,
+            BedrockModels.AmazonNovaPro,
+            BedrockModels.AmazonNovaLite,
         )
     }
 

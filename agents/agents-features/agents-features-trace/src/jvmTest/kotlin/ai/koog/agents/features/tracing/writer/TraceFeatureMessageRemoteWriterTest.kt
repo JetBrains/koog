@@ -8,20 +8,23 @@ import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
 import ai.koog.agents.core.dsl.extension.onAssistantMessage
 import ai.koog.agents.core.dsl.extension.onToolCall
 import ai.koog.agents.core.feature.message.FeatureMessage
-import ai.koog.agents.core.feature.model.AIAgentFinishedEvent
-import ai.koog.agents.core.feature.model.AIAgentNodeExecutionEndEvent
-import ai.koog.agents.core.feature.model.AIAgentNodeExecutionStartEvent
-import ai.koog.agents.core.feature.model.AIAgentStartedEvent
-import ai.koog.agents.core.feature.model.AIAgentStrategyFinishedEvent
-import ai.koog.agents.core.feature.model.AIAgentStrategyStartEvent
-import ai.koog.agents.core.feature.model.AfterLLMCallEvent
-import ai.koog.agents.core.feature.model.BeforeLLMCallEvent
-import ai.koog.agents.core.feature.model.DefinedFeatureEvent
-import ai.koog.agents.core.feature.model.ToolCallEvent
-import ai.koog.agents.core.feature.model.ToolCallResultEvent
+import ai.koog.agents.core.feature.model.events.AgentCompletedEvent
+import ai.koog.agents.core.feature.model.events.AgentStartingEvent
+import ai.koog.agents.core.feature.model.events.DefinedFeatureEvent
+import ai.koog.agents.core.feature.model.events.GraphStrategyStartingEvent
+import ai.koog.agents.core.feature.model.events.LLMCallCompletedEvent
+import ai.koog.agents.core.feature.model.events.LLMCallStartingEvent
+import ai.koog.agents.core.feature.model.events.NodeExecutionCompletedEvent
+import ai.koog.agents.core.feature.model.events.NodeExecutionStartingEvent
+import ai.koog.agents.core.feature.model.events.StrategyCompletedEvent
+import ai.koog.agents.core.feature.model.events.StrategyEventGraph
+import ai.koog.agents.core.feature.model.events.StrategyEventGraphEdge
+import ai.koog.agents.core.feature.model.events.StrategyEventGraphNode
+import ai.koog.agents.core.feature.model.events.ToolExecutionCompletedEvent
+import ai.koog.agents.core.feature.model.events.ToolExecutionStartingEvent
 import ai.koog.agents.core.feature.remote.client.FeatureMessageRemoteClient
-import ai.koog.agents.core.feature.remote.client.config.AIAgentFeatureClientConnectionConfig
-import ai.koog.agents.core.feature.remote.server.config.AIAgentFeatureServerConnectionConfig
+import ai.koog.agents.core.feature.remote.client.config.DefaultClientConnectionConfig
+import ai.koog.agents.core.feature.remote.server.config.DefaultServerConnectionConfig
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.tracing.eventString
 import ai.koog.agents.features.tracing.feature.Tracing
@@ -71,9 +74,8 @@ class TraceFeatureMessageRemoteWriterTest {
     @Test
     fun `test health check on agent run`() = runBlocking {
         val port = findAvailablePort()
-        val serverConfig = AIAgentFeatureServerConnectionConfig(host = HOST, port = port)
-        val clientConfig =
-            AIAgentFeatureClientConnectionConfig(host = HOST, port = port, protocol = URLProtocol.HTTP)
+        val serverConfig = DefaultServerConnectionConfig(host = HOST, port = port)
+        val clientConfig = DefaultClientConnectionConfig(host = HOST, port = port, protocol = URLProtocol.HTTP)
 
         val isServerStarted = CompletableDeferred<Boolean>()
         val isClientFinished = CompletableDeferred<Boolean>()
@@ -102,7 +104,6 @@ class TraceFeatureMessageRemoteWriterTest {
 
                 createAgent(strategy = strategy) {
                     install(Tracing) {
-                        messageFilter = { true }
                         addMessageProcessor(writer)
                     }
                 }.use { agent ->
@@ -125,6 +126,9 @@ class TraceFeatureMessageRemoteWriterTest {
         // Agent Config
         val agentId = "test-agent-id"
         val strategyName = "test-strategy"
+        val nodeSendLLMCallName = "test-llm-call"
+        val nodeExecuteToolName = "test-tool-call"
+        val nodeSendToolResultName = "test-node-llm-send-tool-result"
 
         val userPrompt = "Call the dummy tool with argument: test"
         val systemPrompt = "Test system prompt"
@@ -172,8 +176,8 @@ class TraceFeatureMessageRemoteWriterTest {
 
         // Test Data
         val port = findAvailablePort()
-        val serverConfig = AIAgentFeatureServerConnectionConfig(host = HOST, port = port)
-        val clientConfig = AIAgentFeatureClientConnectionConfig(host = HOST, port = port, protocol = URLProtocol.HTTP)
+        val serverConfig = DefaultServerConnectionConfig(host = HOST, port = port)
+        val clientConfig = DefaultClientConnectionConfig(host = HOST, port = port, protocol = URLProtocol.HTTP)
 
         val actualEvents = mutableListOf<DefinedFeatureEvent>()
 
@@ -234,7 +238,7 @@ class TraceFeatureMessageRemoteWriterTest {
 
                 val collectEventsJob = launch {
                     client.receivedMessages.consumeAsFlow().collect { event ->
-                        if (event is AIAgentStartedEvent) {
+                        if (event is AgentStartingEvent) {
                             runId = event.runId
                         }
 
@@ -252,118 +256,170 @@ class TraceFeatureMessageRemoteWriterTest {
                 client.connect()
                 collectEventsJob.join()
 
+                val llmCallGraphNode = StrategyEventGraphNode(id = nodeSendLLMCallName, name = nodeSendLLMCallName)
+                val executeToolGraphNode = StrategyEventGraphNode(id = nodeExecuteToolName, name = nodeExecuteToolName)
+                val sendToolResultGraphNode = StrategyEventGraphNode(id = nodeSendToolResultName, name = nodeSendToolResultName)
+
+                val startGraphNode = StrategyEventGraphNode(id = "__start__", name = "__start__")
+                val finishGraphNode = StrategyEventGraphNode(id = "__finish__", name = "__finish__")
+
                 // Correct run id will be set after the 'collect events job' is finished.
                 val expectedEvents = listOf(
-                    AIAgentStartedEvent(
+                    AgentStartingEvent(
                         agentId = agentId,
                         runId = runId,
-                        strategyName = strategyName
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
-                    AIAgentStrategyStartEvent(
+                    GraphStrategyStartingEvent(
                         runId = runId,
-                        strategyName = strategyName
+                        strategyName = strategyName,
+                        graph = StrategyEventGraph(
+                            nodes = listOf(
+                                startGraphNode,
+                                llmCallGraphNode,
+                                executeToolGraphNode,
+                                sendToolResultGraphNode,
+                                finishGraphNode,
+                            ),
+                            edges = listOf(
+                                StrategyEventGraphEdge(sourceNode = startGraphNode, targetNode = llmCallGraphNode),
+                                StrategyEventGraphEdge(sourceNode = llmCallGraphNode, targetNode = executeToolGraphNode),
+                                StrategyEventGraphEdge(sourceNode = llmCallGraphNode, targetNode = finishGraphNode),
+                                StrategyEventGraphEdge(
+                                    sourceNode = executeToolGraphNode,
+                                    targetNode = sendToolResultGraphNode
+                                ),
+                                StrategyEventGraphEdge(
+                                    sourceNode = sendToolResultGraphNode,
+                                    targetNode = finishGraphNode
+                                ),
+                                StrategyEventGraphEdge(
+                                    sourceNode = sendToolResultGraphNode,
+                                    targetNode = executeToolGraphNode
+                                )
+                            )
+                        ),
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
-                    AIAgentNodeExecutionStartEvent(
-                        runId = runId,
-                        nodeName = "__start__",
-                        input = userPrompt
-                    ),
-                    AIAgentNodeExecutionEndEvent(
+                    NodeExecutionStartingEvent(
                         runId = runId,
                         nodeName = "__start__",
                         input = userPrompt,
-                        output = userPrompt
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
-                    AIAgentNodeExecutionStartEvent(
+                    NodeExecutionCompletedEvent(
                         runId = runId,
-                        nodeName = "test-llm-call",
-                        input = userPrompt
+                        nodeName = "__start__",
+                        input = userPrompt,
+                        output = userPrompt,
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
-                    BeforeLLMCallEvent(
-                        runId = runId,
-                        prompt = expectedLLMCallPrompt,
-                        model = testModel.eventString,
-                        tools = listOf(dummyTool.name)
-                    ),
-                    AfterLLMCallEvent(
-                        runId = runId,
-                        prompt = expectedLLMCallPrompt,
-                        model = testModel.eventString,
-                        responses = listOf(toolCallMessage(dummyTool.name, content = """{"dummy":"test"}"""))
-                    ),
-                    AIAgentNodeExecutionEndEvent(
+                    NodeExecutionStartingEvent(
                         runId = runId,
                         nodeName = "test-llm-call",
                         input = userPrompt,
-                        output = toolCallMessage(dummyTool.name, content = """{"dummy":"test"}""").toString()
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
-                    AIAgentNodeExecutionStartEvent(
+                    LLMCallStartingEvent(
+                        runId = runId,
+                        prompt = expectedLLMCallPrompt,
+                        model = testModel.eventString,
+                        tools = listOf(dummyTool.name),
+                        timestamp = testClock.now().toEpochMilliseconds()
+                    ),
+                    LLMCallCompletedEvent(
+                        runId = runId,
+                        prompt = expectedLLMCallPrompt,
+                        model = testModel.eventString,
+                        responses = listOf(toolCallMessage(dummyTool.name, content = """{"dummy":"test"}""")),
+                        timestamp = testClock.now().toEpochMilliseconds()
+                    ),
+                    NodeExecutionCompletedEvent(
+                        runId = runId,
+                        nodeName = "test-llm-call",
+                        input = userPrompt,
+                        output = toolCallMessage(dummyTool.name, content = """{"dummy":"test"}""").toString(),
+                        timestamp = testClock.now().toEpochMilliseconds()
+                    ),
+                    NodeExecutionStartingEvent(
                         runId = runId,
                         nodeName = "test-tool-call",
-                        input = toolCallMessage(dummyTool.name, content = """{"dummy":"test"}""").toString()
+                        input = toolCallMessage(dummyTool.name, content = """{"dummy":"test"}""").toString(),
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
-                    ToolCallEvent(
-                        runId = runId,
-                        toolCallId = "0",
-                        toolName = dummyTool.name,
-                        toolArgs = dummyTool.encodeArgs(DummyTool.Args("test"))
-                    ),
-                    ToolCallResultEvent(
+                    ToolExecutionStartingEvent(
                         runId = runId,
                         toolCallId = "0",
                         toolName = dummyTool.name,
                         toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
-                        result = dummyTool.result
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
-                    AIAgentNodeExecutionEndEvent(
+                    ToolExecutionCompletedEvent(
+                        runId = runId,
+                        toolCallId = "0",
+                        toolName = dummyTool.name,
+                        toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
+                        result = dummyTool.result,
+                        timestamp = testClock.now().toEpochMilliseconds()
+                    ),
+                    NodeExecutionCompletedEvent(
                         runId = runId,
                         nodeName = "test-tool-call",
                         input = toolCallMessage(dummyTool.name, content = """{"dummy":"test"}""").toString(),
-                        output = toolResult("0", dummyTool.name, dummyTool.result, dummyTool.result).toString()
+                        output = toolResult("0", dummyTool.name, dummyTool.result, dummyTool.result).toString(),
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
-                    AIAgentNodeExecutionStartEvent(
+                    NodeExecutionStartingEvent(
                         runId = runId,
                         nodeName = "test-node-llm-send-tool-result",
-                        input = toolResult("0", dummyTool.name, dummyTool.result, dummyTool.result).toString()
+                        input = toolResult("0", dummyTool.name, dummyTool.result, dummyTool.result).toString(),
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
-                    BeforeLLMCallEvent(
+                    LLMCallStartingEvent(
                         runId = runId,
                         prompt = expectedLLMCallWithToolsPrompt,
                         model = testModel.eventString,
-                        tools = listOf(dummyTool.name)
+                        tools = listOf(dummyTool.name),
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
-                    AfterLLMCallEvent(
+                    LLMCallCompletedEvent(
                         runId = runId,
                         prompt = expectedLLMCallWithToolsPrompt,
                         model = testModel.eventString,
                         responses = listOf(assistantMessage(mockResponse)),
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
-                    AIAgentNodeExecutionEndEvent(
+                    NodeExecutionCompletedEvent(
                         runId = runId,
                         nodeName = "test-node-llm-send-tool-result",
                         input = toolResult("0", dummyTool.name, dummyTool.result, dummyTool.result).toString(),
-                        output = assistantMessage(mockResponse).toString()
+                        output = assistantMessage(mockResponse).toString(),
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
-                    AIAgentNodeExecutionStartEvent(
-                        runId = runId,
-                        nodeName = "__finish__",
-                        input = mockResponse
-                    ),
-                    AIAgentNodeExecutionEndEvent(
+                    NodeExecutionStartingEvent(
                         runId = runId,
                         nodeName = "__finish__",
                         input = mockResponse,
-                        output = mockResponse
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
-                    AIAgentStrategyFinishedEvent(
+                    NodeExecutionCompletedEvent(
+                        runId = runId,
+                        nodeName = "__finish__",
+                        input = mockResponse,
+                        output = mockResponse,
+                        timestamp = testClock.now().toEpochMilliseconds()
+                    ),
+                    StrategyCompletedEvent(
                         runId = runId,
                         strategyName = strategyName,
-                        result = mockResponse
+                        result = mockResponse,
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
-                    AIAgentFinishedEvent(
+                    AgentCompletedEvent(
                         agentId = agentId,
                         runId = runId,
-                        result = mockResponse
+                        result = mockResponse,
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
                 )
 
@@ -393,9 +449,8 @@ class TraceFeatureMessageRemoteWriterTest {
         val strategyName = "tracing-test-strategy"
 
         val port = findAvailablePort()
-        val serverConfig = AIAgentFeatureServerConnectionConfig(host = HOST, port = port)
-        val clientConfig =
-            AIAgentFeatureClientConnectionConfig(host = HOST, port = port, protocol = URLProtocol.HTTP)
+        val serverConfig = DefaultServerConnectionConfig(host = HOST, port = port)
+        val clientConfig = DefaultClientConnectionConfig(host = HOST, port = port, protocol = URLProtocol.HTTP)
 
         val actualEvents = mutableListOf<FeatureMessage>()
 
@@ -421,11 +476,9 @@ class TraceFeatureMessageRemoteWriterTest {
 
                     createAgent(strategy = strategy) {
                         install(Tracing) {
-                            messageFilter = { true }
                             addMessageProcessor(testWriter)
                         }
                     }.use { agent ->
-
                         agent.run("")
                         isServerStarted.complete(true)
                         isClientFinished.await()
@@ -523,8 +576,8 @@ class TraceFeatureMessageRemoteWriterTest {
 
         // Test Data
         val port = findAvailablePort()
-        val serverConfig = AIAgentFeatureServerConnectionConfig(host = HOST, port = port)
-        val clientConfig = AIAgentFeatureClientConnectionConfig(host = HOST, port = port, protocol = URLProtocol.HTTP)
+        val serverConfig = DefaultServerConnectionConfig(host = HOST, port = port)
+        val clientConfig = DefaultClientConnectionConfig(host = HOST, port = port, protocol = URLProtocol.HTTP)
 
         val actualEvents = mutableListOf<DefinedFeatureEvent>()
 
@@ -566,8 +619,8 @@ class TraceFeatureMessageRemoteWriterTest {
                     promptExecutor = mockExecutor
                 ) {
                     install(Tracing) {
-                        messageFilter = { message ->
-                            message is BeforeLLMCallEvent || message is AfterLLMCallEvent
+                        writer.setMessageFilter { message ->
+                            message is LLMCallStartingEvent || message is LLMCallCompletedEvent
                         }
                         addMessageProcessor(writer)
                     }
@@ -588,7 +641,7 @@ class TraceFeatureMessageRemoteWriterTest {
 
                 val collectEventsJob = launch {
                     client.receivedMessages.consumeAsFlow().collect { event ->
-                        if (event is BeforeLLMCallEvent) {
+                        if (event is LLMCallStartingEvent) {
                             runId = event.runId
                         }
 
@@ -608,29 +661,33 @@ class TraceFeatureMessageRemoteWriterTest {
 
                 // Correct run id will be set after the 'collect events job' is finished.
                 val expectedEvents = listOf(
-                    BeforeLLMCallEvent(
+                    LLMCallStartingEvent(
                         runId = runId,
                         prompt = expectedLLMCallPrompt,
                         model = testModel.eventString,
-                        tools = listOf(dummyTool.name)
+                        tools = listOf(dummyTool.name),
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
-                    AfterLLMCallEvent(
+                    LLMCallCompletedEvent(
                         runId = runId,
                         prompt = expectedLLMCallPrompt,
                         model = testModel.eventString,
-                        responses = listOf(toolCallMessage(dummyTool.name, content = """{"dummy":"test"}"""))
+                        responses = listOf(toolCallMessage(dummyTool.name, content = """{"dummy":"test"}""")),
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
-                    BeforeLLMCallEvent(
+                    LLMCallStartingEvent(
                         runId = runId,
                         prompt = expectedLLMCallWithToolsPrompt,
                         model = testModel.eventString,
-                        tools = listOf(dummyTool.name)
+                        tools = listOf(dummyTool.name),
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
-                    AfterLLMCallEvent(
+                    LLMCallCompletedEvent(
                         runId = runId,
                         prompt = expectedLLMCallWithToolsPrompt,
                         model = testModel.eventString,
                         responses = listOf(assistantMessage(mockResponse)),
+                        timestamp = testClock.now().toEpochMilliseconds()
                     ),
                 )
 

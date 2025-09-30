@@ -1,11 +1,11 @@
 package ai.koog.agents.features.debugger.mock
 
 import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.agent.entity.AIAgentStrategy
+import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.AttachmentBuilder
@@ -82,7 +82,7 @@ fun toolResult(toolCallId: String?, toolName: String, content: String, result: S
         id = toolCallId,
         tool = toolName,
         content = content,
-        result = ToolResult.Text(result)
+        result = result
     )
 
 /**
@@ -98,7 +98,7 @@ fun toolResult(toolCallId: String?, toolName: String, content: String, result: S
  */
 internal fun createAgent(
     agentId: String = "test-agent-id",
-    strategy: AIAgentStrategy<String, String>,
+    strategy: AIAgentGraphStrategy<String, String>,
     promptId: String? = null,
     model: LLModel? = null,
     systemPrompt: String? = null,
@@ -106,7 +106,7 @@ internal fun createAgent(
     assistantPrompt: String? = null,
     toolRegistry: ToolRegistry? = null,
     promptExecutor: PromptExecutor? = null,
-    installFeatures: AIAgent.FeatureContext.() -> Unit = { }
+    installFeatures: GraphAIAgent.FeatureContext.() -> Unit = { }
 ): AIAgent<String, String> {
     val agentConfig = AIAgentConfig(
         prompt = prompt(promptId ?: "Test prompt", clock = testClock) {

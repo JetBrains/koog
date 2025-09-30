@@ -25,12 +25,14 @@ kotlin {
                 implementation(kotlin("test"))
                 implementation(libs.kotlinx.coroutines.test)
                 implementation(project(":agents:agents-test"))
+                implementation(project(":test-utils"))
             }
         }
 
         jvmTest {
             dependencies {
                 implementation(kotlin("test-junit5"))
+                implementation(libs.mockk)
             }
         }
     }

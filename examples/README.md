@@ -9,147 +9,119 @@
   </a>
 </p>
 
-Welcome to the **Koog Framework Examples** repository! This collection showcases various AI agent implementations and
-patterns using the Koog framework for Kotlin.
+Welcome to the **Koog Framework Examples** collection! This directory contains multiple example projects showcasing various AI agent implementations and patterns using the Koog framework for Kotlin.
 
 ---
 
-## Contents
+## 📁 Project Structure
 
-- 🎯 [Examples](#examples)
-- 📱 [Android Demo App](#android-demo-app)
-- 📖 [How to Run](#how-to-run)
-- ⚙️ [Getting Started](#getting-started)
+This examples directory hosts several independent projects, each demonstrating different aspects of the Koog framework:
 
----
+### 🔧 Core Example Projects
 
-## Examples
+#### [**simple-examples**](simple-examples/)
 
-Each example includes both **interactive Jupyter notebooks** and **complete Kotlin project implementations**.
+A comprehensive collection of runnable Koog framework examples ranging from basic concepts to advanced features. 
 
-### Core Examples
+**Key Examples:**
+- Calculator agents with tool calling
+- Banking assistant with routing capabilities
+- Error fixing and code analysis agents
+- Structured output and streaming examples
+- OpenTelemetry integration and tracing
+- Memory and persistence patterns
+- … and more
 
-| Example          | Description                                                                | Notebook                                    | Project                                                          |
-|------------------|----------------------------------------------------------------------------|---------------------------------------------|------------------------------------------------------------------|
-| **Attachments**  | Learn how to use structured Markdown and attachments in prompts            | [📓 Notebook](notebooks/Attachments.ipynb)  | [🚀 Project](src/main/kotlin/ai/koog/agents/example/attachments) |
-| **Banking**      | Build a comprehensive AI banking assistant with routing capabilities       | [📓 Notebook](notebooks/Banking.ipynb)      | [🚀 Project](src/main/kotlin/ai/koog/agents/example/banking)     |
-| **BedrockAgent** | Create intelligent AI agents using AWS Bedrock integration                 | [📓 Notebook](notebooks/BedrockAgent.ipynb) | [🚀 Project](src/main/kotlin/ai/koog/agents/example/client)      |
-| **Calculator**   | Build a calculator agent with parallel tool calls and event logging        | [📓 Notebook](notebooks/Calculator.ipynb)   | [🚀 Project](src/main/kotlin/ai/koog/agents/example/calculator)  |
-| **Chess**        | Build an intelligent chess-playing agent with interactive choice selection | [📓 Notebook](notebooks/Chess.ipynb)        | [🚀 Project](src/main/kotlin/ai/koog/agents/example/chess)       |
-| **GoogleMapsMcp** | Connect to Google Maps MCP server and perform geocoding and elevation queries | [📓 Notebook](notebooks/GoogleMapsMcp.ipynb) | [🚀 Project](src/main/kotlin/ai/koog/agents/example/mcp)    |
-| **Guesser**      | Build a number-guessing agent implementing binary search strategy          | [📓 Notebook](notebooks/Guesser.ipynb)      | [🚀 Project](src/main/kotlin/ai/koog/agents/example/guesser)     |
-| **PlaywrightMcp** | Drive browsers with Playwright MCP for web automation tasks              | [📓 Notebook](notebooks/PlaywrightMcp.ipynb) | [🚀 Project](src/main/kotlin/ai/koog/agents/example/mcp)    |
-| **UnityMcp**     | Control Unity game development through MCP server integration             | [📓 Notebook](notebooks/UnityMcp.ipynb)     | [🚀 Project](src/main/kotlin/ai/koog/agents/example/mcp)         |
-| **VaccumAgent**  | Implementation of a basic reflex agent for cleaning tasks                  | [📓 Notebook](notebooks/VaccumAgent.ipynb)  | [🚀 Project](src/main/kotlin/ai/koog/agents/example/simpleapi)   |
+➡️ **[View all examples and run instructions →](simple-examples/README.md)**
 
-### Advanced Features
+#### [**demo-compose-app**](demo-compose-app/)
 
-| Feature             | Description                                                     | Notebook                                     | Project                                                                     |
-|---------------------|-----------------------------------------------------------------|----------------------------------------------|-----------------------------------------------------------------------------|
-| **Langfuse**        | Export Koog agent traces to Langfuse using OpenTelemetry        | [📓 Notebook](notebooks/Langfuse.ipynb)      | [🚀 Project](src/main/kotlin/ai/koog/agents/example/features/langfuse)      |
-| **OpenTelemetry**   | Add OpenTelemetry-based tracing to Koog AI agents               | [📓 Notebook](notebooks/OpenTelemetry.ipynb) | [🚀 Project](src/main/kotlin/ai/koog/agents/example/features/opentelemetry) |
-| **Weave**           | Learn how to trace Koog agents to W&B Weave using OpenTelemetry | [📓 Notebook](notebooks/Weave.ipynb)         | [🚀 Project](src/main/kotlin/ai/koog/agents/example/features/weave)         |
-| **Memory**          | Customer support agent with persistent memory                   | -                                            | [🚀 Project](src/main/kotlin/ai/koog/agents/example/memory)                 |
-| **MCP Integration** | Model Context Protocol examples                                 | -                                            | [🚀 Project](src/main/kotlin/ai/koog/agents/example/mcp)                    |
-| **Planner**         | Task planning with execution trees                              | -                                            | [🚀 Project](src/main/kotlin/ai/koog/agents/example/planner)                |
-| **Structured Data** | JSON-based structured output                                    | -                                            | [🚀 Project](src/main/kotlin/ai/koog/agents/example/structuredoutput)       |
-| **Tone Analysis**   | Text tone analysis agent                                        | -                                            | [🚀 Project](src/main/kotlin/ai/koog/agents/example/tone)                   |
+A complete Kotlin Multiplatform application built with Compose Multiplatform that demonstrates Koog integration in mobile and desktop environments.
 
----
-
-## Android Demo App
-
-A complete Android application showcasing Koog framework integration with:
-
+**Features:**
 - **Calculator Agent**: Arithmetic operations with tool calling
 - **Weather Agent**: Weather information retrieval
 - **Settings Management**: API key configuration
 - **Modern UI**: Jetpack Compose interface
+- **Cross-platform**: Android, iOS, and Desktop support
 
-### 🚀 How to Run Android App
+➡️ **[Setup and run instructions →](demo-compose-app/README.md)**
 
-1. **Open in IntelliJ IDEA or Android Studio:**
-    - Navigate to [`demo-android-app`](demo-android-app) directory
-    - Open the project in your preferred IDE
+### 🌟 Specialized Example Projects
 
-2. **Configure API keys** in the app settings
-3. **Build and run** on device or emulator
+#### [**trip-planning-example**](trip-planning-example/)
+An advanced trip planning agent demonstrating complex multi-API integration:
+- Natural language conversation interface
+- Google Maps and weather API integration
+- Iterative planning with user feedback
+- MCP (Model Context Protocol) integration
+- Multi-LLM executor support
+
+#### [**spring-boot-java**](spring-boot-java/)
+A Spring Boot application showcasing Koog integration in Java environments:
+- REST API for chat interactions
+- Reactive programming patterns
+- OpenAI GPT-4 integration via Koog
+- Configurable AI persona
+
+### 📚 Learning Resources
+
+#### [**notebooks**](notebooks/)
+Interactive Jupyter notebooks for hands-on learning with the Koog framework. Each notebook provides step-by-step tutorials with executable examples:
+
+| Notebook                                             | Description                                 |
+|------------------------------------------------------|---------------------------------------------|
+| [Calculator.ipynb](notebooks/Calculator.ipynb)       | Basic calculator agent with tool calling    |
+| [Banking.ipynb](notebooks/Banking.ipynb)             | Banking assistant with routing capabilities |
+| [Chess.ipynb](notebooks/Chess.ipynb)                 | Chess-playing agent with choice selection   |
+| [Attachments.ipynb](notebooks/Attachments.ipynb)     | Using structured Markdown and attachments   |
+| [BedrockAgent.ipynb](notebooks/BedrockAgent.ipynb)   | AWS Bedrock integration                     |
+| [OpenTelemetry.ipynb](notebooks/OpenTelemetry.ipynb) | Tracing and observability                   |
+| [Langfuse.ipynb](notebooks/Langfuse.ipynb)           | Export traces to Langfuse                   |
+| [Weave.ipynb](notebooks/Weave.ipynb)                 | W&B Weave integration                       |
+| *...and more*                                        | Additional notebooks for various features   |
 
 ---
 
-## How to Run
+## 🚀 Quick Start Guide
+
+### Choose Your Path
+
+1. **🔍 Explore Examples**: Start with [`simple-examples`](simple-examples/) for comprehensive runnable examples
+2. **📱 Mobile Development**: Try [`demo-compose-app`](demo-compose-app/) for multiplatform applications
+3. **📓 Interactive Learning**: Open notebooks in IntelliJ IDEA for hands-on tutorials
+4. **🌐 Advanced Integration**: Explore specialized projects like trip-planning or Spring Boot
+
+## 🛠️ How to Run Examples
 
 ### 📓 Running Notebooks
 
 1. **Open in IntelliJ IDEA:**
-    - IntelliJ IDEA has built-in Kotlin Notebook support
-    - Navigate to [`notebooks`](notebooks) directory
-    - Open any `.ipynb` file
+   - IntelliJ IDEA has built-in Kotlin Notebook support
+   - Navigate to [`notebooks`](notebooks) directory
+   - Open any `.ipynb` file
 
 2. **Set up environment variables:**
    ```bash
    # macOS/Linux
    export OPENAI_API_KEY=your_openai_key
    export ANTHROPIC_API_KEY=your_anthropic_key
-   
+
    # Windows
    set OPENAI_API_KEY=your_openai_key
    set ANTHROPIC_API_KEY=your_anthropic_key
    ```
 
-### 🚀 Running Projects
-
-1. **Build the project:**
-   ```bash
-   ./gradlew build
-   ```
-
-2. **Run a specific example:**
-   ```bash
-   ./gradlew run -PmainClass="ai.koog.agents.example.calculator.CalculatorKt"
-   ```
-
-3. **Set environment variables:**
-    - **Option 1:** Use system environment variables (as shown above)
-    - **Option 2:** Create [`env.properties`](env.template.properties) file:
-      ```properties
-      OPENAI_API_KEY=your_openai_key
-      ANTHROPIC_API_KEY=your_anthropic_key
-      # ... other API keys as needed
-      ```
+### 🚀 Running Other Examples
+Each project has a dedicated README with instructions
 
 ---
 
-## Getting Started
-
-### Prerequisites
+## Prerequisites
 
 - **Java 17+**
 - **Kotlin 1.9+**
-- **API Keys** for your chosen AI providers:
-    - OpenAI API key
-    - Anthropic API key (optional)
-    - AWS Bedrock credentials (for Bedrock examples)
-    - Other provider keys as needed
-
-### Quick Setup
-
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/JetBrains/koog.git
-   cd koog/examples
-   ```
-
-2. **Set up environment:**
-   ```bash
-   cp env.template.properties env.properties
-   # Edit env.properties with your API keys
-   ```
-
-3. **Choose your path:**
-    - **Notebooks**: Open in IntelliJ IDEA and explore interactive examples
-    - **Projects**: Build with Gradle and run specific examples
-    - **Android**: Open in IntelliJ IDEA or Android Studio for mobile development
+- **API Keys** for your chosen AI providers
 
 ---
 

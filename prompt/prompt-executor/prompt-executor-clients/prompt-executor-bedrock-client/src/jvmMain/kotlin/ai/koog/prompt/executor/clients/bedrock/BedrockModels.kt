@@ -115,6 +115,11 @@ public object BedrockModels : LLModelDefinitions {
         LLMCapability.Schema.JSON.Standard
     )
 
+    // Capabilities of the nova models
+    private val novaCapabilities: List<LLMCapability> = standardCapabilities + listOf(
+        LLMCapability.Tools,
+    )
+
     // Full capabilities (multimodal + tools)
     private val fullCapabilities: List<LLMCapability> = standardCapabilities + listOf(
         LLMCapability.Tools,
@@ -140,7 +145,7 @@ public object BedrockModels : LLModelDefinitions {
     ).effectiveModel
 
     /**
-     * Claude 4 Opus - Anthropic's most powerful and intelligent model yet
+     * Claude 4 Opus - Anthropic's previous flagship model
      *
      * This model sets new standards in:
      * - Complex reasoning and advanced coding
@@ -154,6 +159,23 @@ public object BedrockModels : LLModelDefinitions {
     public val AnthropicClaude4Opus: LLModel = BedrockModel(
         AnthropicModels.Opus_4,
         "anthropic.claude-opus-4-20250514-v1:0",
+    ).effectiveModel
+
+    /**
+     * Claude 4.1 Opus - Anthropic's most capable model
+     *
+     * This model sets new standards in:
+     * - Complex reasoning and advanced coding
+     * - Autonomous management of complex, multi-step tasks
+     * - Extended thinking for deeper reasoning
+     * - AI agent capabilities for orchestrating workflows
+     * - Multimodal understanding (text and images)
+     * - Tool/function calling with parallel execution
+     * - Memory capabilities for maintaining continuity
+     */
+    public val AnthropicClaude41Opus: LLModel = BedrockModel(
+        AnthropicModels.Opus_4_1,
+        "anthropic.claude-opus-4-1-20250805-v1:0",
     ).effectiveModel
 
     /**
@@ -171,6 +193,22 @@ public object BedrockModels : LLModelDefinitions {
     public val AnthropicClaude4Sonnet: LLModel = BedrockModel(
         AnthropicModels.Sonnet_4,
         "anthropic.claude-sonnet-4-20250514-v1:0",
+    ).effectiveModel
+
+    /**
+     * Claude 4.5 Sonnet - Latest high-performance model with enhanced capabilities
+     *
+     * This model offers:
+     * - Superior coding and agentic capabilities
+     * - Enhanced performance on complex tasks
+     * - Improved instruction following
+     * - Advanced multimodal understanding (text and images)
+     * - Tool/function calling with parallel execution
+     * - Optimized for both quality and efficiency
+     */
+    public val AnthropicClaude4_5Sonnet: LLModel = BedrockModel(
+        AnthropicModels.Sonnet_4_5,
+        "anthropic.claude-sonnet-4-5-20250929-v1:0",
     ).effectiveModel
 
     /**
@@ -293,7 +331,7 @@ public object BedrockModels : LLModelDefinitions {
         LLModel(
             provider = LLMProvider.Bedrock,
             id = "amazon.nova-micro-v1:0",
-            capabilities = standardCapabilities,
+            capabilities = novaCapabilities,
             contextLength = 128_000,
         ),
     ).effectiveModel
@@ -313,7 +351,7 @@ public object BedrockModels : LLModelDefinitions {
         LLModel(
             provider = LLMProvider.Bedrock,
             id = "amazon.nova-lite-v1:0",
-            capabilities = standardCapabilities,
+            capabilities = novaCapabilities,
             contextLength = 300_000,
         ),
     ).effectiveModel
@@ -333,7 +371,7 @@ public object BedrockModels : LLModelDefinitions {
         LLModel(
             provider = LLMProvider.Bedrock,
             id = "amazon.nova-pro-v1:0",
-            capabilities = standardCapabilities,
+            capabilities = novaCapabilities,
             contextLength = 300_000,
         ),
     ).effectiveModel
@@ -353,7 +391,7 @@ public object BedrockModels : LLModelDefinitions {
         LLModel(
             provider = LLMProvider.Bedrock,
             id = "amazon.nova-premier-v1:0",
-            capabilities = standardCapabilities,
+            capabilities = novaCapabilities,
             contextLength = 1_000_000,
         ),
     ).effectiveModel

@@ -1,9 +1,7 @@
 package ai.koog.agents.core.tools.reflect
 
 import ai.koog.agents.core.tools.Tool
-import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -19,10 +17,8 @@ import kotlinx.serialization.serializer
 import kotlinx.serialization.serializerOrNull
 import kotlin.reflect.KCallable
 import kotlin.reflect.KParameter
-import kotlin.reflect.KType
 import kotlin.reflect.full.callSuspendBy
 import kotlin.reflect.full.instanceParameter
-import kotlin.reflect.jvm.jvmName
 
 private const val nonSerializableParameterPrefix = "__##nonSerializableParameter##__"
 
@@ -43,7 +39,8 @@ public class ToolFromCallable(
     private val thisRef: Any? = null,
     override val descriptor: ToolDescriptor,
     private val json: Json = Json,
-) : Tool<ToolFromCallable.VarArgs, ToolFromCallable.Result>() {
+    override val resultSerializer: KSerializer<Any?>,
+) : Tool<ToolFromCallable.VarArgs, Any?>() {
 
     /**
      * Represents a data structure to hold arguments conforming to the Args interface.
@@ -51,7 +48,7 @@ public class ToolFromCallable(
      * @property args A map of parameters to their respective values.
      * Each key is a KParameter, matched with a value which can potentially be null.
      */
-    public data class VarArgs(val args: Map<KParameter, Any?>) : ToolArgs {
+    public data class VarArgs(val args: Map<KParameter, Any?>) {
         /**
          * Converts a map of parameters and their corresponding values into a list of pairs,
          * where each pair consists of a parameter name and its associated value.
@@ -64,25 +61,6 @@ public class ToolFromCallable(
                 it to
                     value
             }
-        }
-    }
-
-    /**
-     * Represents the result of a tool operation, encapsulating the value of the result, its type,
-     * and the JSON serialization logic.
-     *
-     * @property result The actual result value produced.
-     * @property type The Kotlin type of the result value.
-     * @property json The JSON configuration used for serialization and deserialization.
-     */
-    public class Result(public val result: Any?, public val type: KType, public val json: Json) : ToolResult {
-        /**
-         * Converts the encapsulated result into a JSON string representation using the specified serializer and type.
-         *
-         * @return A JSON string representation of the result based on the type and serializer.
-         */
-        override fun toStringDefault(): String {
-            return json.encodeToString(serializer(type), result)
         }
     }
 
@@ -117,7 +95,7 @@ public class ToolFromCallable(
             ?: throw SerializationException("Return type '${callable.returnType}' is not serializable")
     }
 
-    override suspend fun execute(args: VarArgs): Result {
+    override suspend fun execute(args: VarArgs): Any? {
         val instanceParameter = callable.instanceParameter
         val argsMap = if (instanceParameter != null) {
             val thisRefToCall = thisRef ?: error("Instance parameter is null")
@@ -125,12 +103,14 @@ public class ToolFromCallable(
         } else {
             args.args
         }
-        val result = callable.callSuspendBy(argsMap)
-        return Result(result, callable.returnType, json)
+        return callable.callSuspendBy(argsMap)
     }
 
     override val argsSerializer: KSerializer<VarArgs>
         get() = VarArgsSerializer(callable)
+
+    override val name: String = callable.name
+    override val description: String = descriptor.description
 
     /**
      * A serializer for the `VarArgs` class, enabling Kotlin serialization for arguments provided dynamically
@@ -143,7 +123,7 @@ public class ToolFromCallable(
     public class VarArgsSerializer(public val kCallable: KCallable<*>) : KSerializer<VarArgs> {
         @OptIn(InternalSerializationApi::class)
         override val descriptor: SerialDescriptor
-            get() = buildClassSerialDescriptor(VarArgs::class.jvmName) {
+            get() = buildClassSerialDescriptor(" ai.koog.agents.core.tools.reflect.ToolFromCallable.VarArgs") {
                 for ((i, parameter) in kCallable.parameters.withIndex()) {
                     val missingParameterName =
                         "$nonSerializableParameterPrefix#$i" // `this` parameter or other non-serializable, keep name as missing

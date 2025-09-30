@@ -36,9 +36,10 @@ public open class OpenAIStandardJsonSchemaGenerator : StandardJsonSchemaGenerato
         json: Json,
         name: String,
         serializer: KSerializer<*>,
-        descriptionOverrides: Map<String, String>
+        descriptionOverrides: Map<String, String>,
+        excludedProperties: Set<String>,
     ): LLMParams.Schema.JSON.Standard {
-        val param = super.generate(json, name, serializer, descriptionOverrides)
+        val param = super.generate(json, name, serializer, descriptionOverrides, excludedProperties)
         val schema = param.schema.toMutableMap()
 
         // OpenAI doesn't accept "$ref" at the root of the schema, so copying this definition explicitly.

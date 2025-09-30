@@ -59,9 +59,9 @@ updates:
       prefix-development: "deps(dev)"
       include: "scope"
 
-  # Android demo app
+  # Compose demo app
   - package-ecosystem: "gradle"
-    directory: "/examples/demo-android-app"
+    directory: "/examples/demo-compose-app"
     schedule:
       interval: "monthly"
     target-branch: "develop"

@@ -1,5 +1,11 @@
 package ai.koog.prompt.executor.clients.openai.models
 
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIBaseLLMRequest
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIBaseLLMResponse
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIChoiceLogProbs
+import ai.koog.prompt.executor.clients.openai.base.models.ReasoningEffort
+import ai.koog.prompt.executor.clients.openai.base.models.ServiceTier
+import ai.koog.prompt.executor.clients.serialization.AdditionalPropertiesFlatteningSerializer
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -138,7 +144,8 @@ internal class OpenAIResponsesAPIRequest(
     override val topP: Double? = null,
     val truncation: Truncation? = null,
     @Deprecated("Use safetyIdentifier and promptCacheKey instead")
-    val user: String? = null
+    val user: String? = null,
+    val additionalProperties: Map<String, JsonElement>? = null,
 ) : OpenAIBaseLLMRequest
 
 @Serializable(with = ItemPolymorphicSerializer::class)
@@ -907,6 +914,15 @@ internal class OpenAIPromptReference(
 @Serializable
 public class ReasoningConfig(public val effort: ReasoningEffort? = null, public val summary: ReasoningSummary? = null)
 
+/**
+ * Represents different levels of reasoning summary that can be used to specify the desired detail
+ * in responses.
+ *
+ * The levels include:
+ * - AUTO: Automatically determines the level of reasoning detail.
+ * - CONCISE: Provides a brief and to-the-point reasoning.
+ * - DETAILED: Provides extensive and thorough reasoning.
+ */
 @Serializable
 public enum class ReasoningSummary {
     @SerialName("auto")
@@ -982,6 +998,11 @@ internal sealed interface OpenAIOutputFormat {
     class JsonObject() : OpenAIOutputFormat
 }
 
+/**
+ * Represents the verbosity level for text output.
+ *
+ * The verbosity levels determine the amount of detail included in the text.
+ */
 @Serializable
 public enum class TextVerbosity {
     @SerialName("low")
@@ -1260,6 +1281,13 @@ internal sealed interface OpenAIResponsesTool {
     }
 }
 
+/**
+ * Represents the truncation behavior for processing inputs.
+ *
+ * This enum defines the following modes:
+ * - AUTO: Automatically handles truncation of inputs based on predefined logic.
+ * - DISABLED: Disables truncation, requiring inputs to fit within allowed limits.
+ */
 @Serializable
 public enum class Truncation {
     @SerialName("auto")
@@ -2333,3 +2361,6 @@ internal object OpenAIResponsesToolChoiceSerializer : KSerializer<OpenAIResponse
         }
     }
 }
+
+internal object OpenAIResponsesAPIRequestSerializer :
+    AdditionalPropertiesFlatteningSerializer<OpenAIResponsesAPIRequest>(OpenAIResponsesAPIRequest.serializer())

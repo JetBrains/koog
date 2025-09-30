@@ -22,22 +22,23 @@ kotlin {
 
         commonTest {
             dependencies {
-                implementation(kotlin("test"))
-                implementation(libs.kotlinx.coroutines.test)
+                implementation(project(":test-utils"))
             }
         }
 
         jvmMain {
             dependencies {
-                api(libs.ktor.client.cio)
+                // SQL dependencies moved to agents-features-sql module
             }
         }
 
         jvmTest {
             dependencies {
-                implementation(kotlin("test-junit5"))
                 implementation(project(":agents:agents-test"))
                 implementation(libs.mockk)
+                implementation(libs.awaitility)
+                implementation(libs.testcontainers)
+                implementation(libs.testcontainers.postgresql)
             }
         }
     }

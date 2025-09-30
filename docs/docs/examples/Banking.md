@@ -198,13 +198,14 @@ An agent combines an LLM with tools to accomplish tasks.
 
 ```kotlin
 import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.core.agent.AIAgentService
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.reflect.asTools
 import ai.koog.agents.ext.tool.AskUser
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import kotlinx.coroutines.runBlocking
 
-val transferAgent = AIAgent(
+val transferAgentService = AIAgentService(
     executor = openAIExecutor,
     llmModel = OpenAIModels.Reasoning.GPT4oMini,
     systemPrompt = bankingAssistantSystemPrompt,
@@ -225,7 +226,7 @@ val message = "Send 25 euros to Daniel for dinner at the restaurant."
 // - "Transfer 100 euros to Bob for the shared vacation expenses"
 
 runBlocking {
-    val result = transferAgent.run(message)
+    val result = transferAgentService.createAgentAndRun(message)
     result
 }
 ```
@@ -433,7 +434,7 @@ class TransactionAnalysisTools : ToolSet {
 
 
 ```kotlin
-val analysisAgent = AIAgent(
+val analysisAgentService = AIAgentService(
     executor = openAIExecutor,
     llmModel = OpenAIModels.Reasoning.GPT4oMini,
     systemPrompt = "$bankingAssistantSystemPrompt\n$transactionAnalysisPrompt",
@@ -453,7 +454,7 @@ val analysisMessage = "How much have I spent on restaurants this month?"
 // - "Show me all transactions from last week"
 
 runBlocking {
-    val result = analysisAgent.run(analysisMessage)
+    val result = analysisAgentService.createAgentAndRun(analysisMessage)
     result
 }
 ```
@@ -478,41 +479,36 @@ First, we need a way to classify incoming requests:
 
 
 ```kotlin
-import ai.koog.agents.ext.agent.SerializableSubgraphResult
+import ai.koog.agents.core.tools.annotations.LLMDescription
 import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
+@Suppress("unused")
 @SerialName("UserRequestType")
 @Serializable
 @LLMDescription("Type of user request: Transfer or Analytics")
-enum class RequestType {
-    Transfer,
-    Analytics
-}
+enum class RequestType { Transfer, Analytics }
 
 @Serializable
 @LLMDescription("The bank request that was classified by the agent.")
 data class ClassifiedBankRequest(
-    @LLMDescription("Type of request: Transfer or Analytics")
+    @property:LLMDescription("Type of request: Transfer or Analytics")
     val requestType: RequestType,
-    @LLMDescription("Actual request to be performed by the banking application")
+    @property:LLMDescription("Actual request to be performed by the banking application")
     val userRequest: String
-) : SerializableSubgraphResult<ClassifiedBankRequest> {
-    override fun getSerializer() = serializer()
-}
+)
+
 ```
 
 ### Shared tool registry
 
 
 ```kotlin
-import ai.koog.agents.ext.agent.ProvideStringSubgraphResult
-
 // Create a comprehensive tool registry for the multi-agent system
 val toolRegistry = ToolRegistry {
     tool(AskUser)  // Allow agents to ask for clarification
     tools(MoneyTransferTools().asTools())
     tools(TransactionAnalysisTools().asTools())
-    tool(ProvideStringSubgraphResult)
 }
 ```
 
@@ -582,7 +578,7 @@ val strategy = strategy<String, String>("banking assistant") {
     }
 
     // Subgraph for handling money transfers
-    val transferMoney by subgraphWithTask<ClassifiedBankRequest>(
+    val transferMoney by subgraphWithTask<ClassifiedBankRequest, String>(
         tools = MoneyTransferTools().asTools() + AskUser,
         llmModel = OpenAIModels.Chat.GPT4o  // Use more capable model for transfers
     ) { request ->
@@ -594,7 +590,7 @@ val strategy = strategy<String, String>("banking assistant") {
     }
 
     // Subgraph for transaction analysis
-    val transactionAnalysis by subgraphWithTask<ClassifiedBankRequest>(
+    val transactionAnalysis by subgraphWithTask<ClassifiedBankRequest, String>(
         tools = TransactionAnalysisTools().asTools() + AskUser,
     ) { request ->
         """
@@ -615,8 +611,8 @@ val strategy = strategy<String, String>("banking assistant") {
         onCondition { it.requestType == RequestType.Analytics })
 
     // Route results to finish node
-    edge(transferMoney forwardTo nodeFinish transformed { it.result })
-    edge(transactionAnalysis forwardTo nodeFinish transformed { it.result })
+    edge(transferMoney forwardTo nodeFinish)
+    edge(transactionAnalysis forwardTo nodeFinish)
 }
 ```
 
@@ -687,7 +683,7 @@ Koog allows you to use agents as tools within other agents, enabling powerful co
 
 
 ```kotlin
-import ai.koog.agents.core.agent.asTool
+import ai.koog.agents.core.agent.createAgentTool
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 
@@ -699,7 +695,7 @@ val classifierAgent = AIAgent(
 
         // Convert agents into tools
         tool(
-            transferAgent.asTool(
+            transferAgentService.createAgentTool(
                 agentName = "transferMoney",
                 agentDescription = "Transfers money and handles all related operations",
                 inputDescriptor = ToolParameterDescriptor(
@@ -711,7 +707,7 @@ val classifierAgent = AIAgent(
         )
 
         tool(
-            analysisAgent.asTool(
+            analysisAgentService.createAgentTool(
                 agentName = "analyzeTransactions",
                 agentDescription = "Performs analytics on user transactions",
                 inputDescriptor = ToolParameterDescriptor(

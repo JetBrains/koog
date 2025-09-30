@@ -1,29 +1,29 @@
 package ai.koog.agents.features.debugger.feature
 
+import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
-import ai.koog.agents.core.feature.AIAgentFeature
-import ai.koog.agents.core.feature.AIAgentPipeline
+import ai.koog.agents.core.annotation.InternalAgentsApi
+import ai.koog.agents.core.feature.AIAgentGraphFeature
+import ai.koog.agents.core.feature.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.InterceptContext
-import ai.koog.agents.core.feature.model.AIAgentBeforeCloseEvent
-import ai.koog.agents.core.feature.model.AIAgentFinishedEvent
-import ai.koog.agents.core.feature.model.AIAgentNodeExecutionEndEvent
-import ai.koog.agents.core.feature.model.AIAgentNodeExecutionStartEvent
-import ai.koog.agents.core.feature.model.AIAgentRunErrorEvent
-import ai.koog.agents.core.feature.model.AIAgentStartedEvent
-import ai.koog.agents.core.feature.model.AIAgentStrategyFinishedEvent
-import ai.koog.agents.core.feature.model.AIAgentStrategyStartEvent
-import ai.koog.agents.core.feature.model.AfterLLMCallEvent
-import ai.koog.agents.core.feature.model.BeforeLLMCallEvent
-import ai.koog.agents.core.feature.model.ToolCallEvent
-import ai.koog.agents.core.feature.model.ToolCallFailureEvent
-import ai.koog.agents.core.feature.model.ToolCallResultEvent
-import ai.koog.agents.core.feature.model.ToolValidationErrorEvent
+import ai.koog.agents.core.feature.model.events.AgentClosingEvent
+import ai.koog.agents.core.feature.model.events.AgentCompletedEvent
+import ai.koog.agents.core.feature.model.events.AgentExecutionFailedEvent
+import ai.koog.agents.core.feature.model.events.AgentStartingEvent
+import ai.koog.agents.core.feature.model.events.GraphStrategyStartingEvent
+import ai.koog.agents.core.feature.model.events.LLMCallCompletedEvent
+import ai.koog.agents.core.feature.model.events.LLMCallStartingEvent
+import ai.koog.agents.core.feature.model.events.NodeExecutionCompletedEvent
+import ai.koog.agents.core.feature.model.events.NodeExecutionStartingEvent
+import ai.koog.agents.core.feature.model.events.StrategyCompletedEvent
+import ai.koog.agents.core.feature.model.events.ToolExecutionCompletedEvent
+import ai.koog.agents.core.feature.model.events.ToolExecutionFailedEvent
+import ai.koog.agents.core.feature.model.events.ToolExecutionStartingEvent
+import ai.koog.agents.core.feature.model.events.ToolValidationFailedEvent
+import ai.koog.agents.core.feature.model.events.startNodeToGraph
 import ai.koog.agents.core.feature.model.toAgentError
-import ai.koog.agents.core.feature.remote.server.config.AIAgentFeatureServerConnectionConfig
 import ai.koog.agents.core.feature.remote.server.config.DefaultServerConnectionConfig
 import ai.koog.agents.core.tools.Tool
-import ai.koog.agents.core.tools.ToolArgs
-import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.features.debugger.EnvironmentVariablesReader
 import ai.koog.agents.features.debugger.eventString
 import ai.koog.agents.features.debugger.feature.writer.DebuggerFeatureMessageRemoteWriter
@@ -53,7 +53,7 @@ public class Debugger {
      * to intercept various events and log them to a remote writer connected to a debugging server. The port for the debugger
      * server can either be explicitly set in the configuration or derived from environment variables.
      */
-    public companion object Feature : AIAgentFeature<DebuggerConfig, Debugger> {
+    public companion object Feature : AIAgentGraphFeature<DebuggerConfig, Debugger> {
 
         private val logger = KotlinLogging.logger { }
 
@@ -66,18 +66,17 @@ public class Debugger {
 
         override fun install(
             config: DebuggerConfig,
-            pipeline: AIAgentPipeline,
+            pipeline: AIAgentGraphPipeline,
         ) {
             logger.debug { "Debugger Feature. Start installing feature: ${Debugger::class.simpleName}" }
 
             // Config that will be used to connect to the debugger server where
             // port is taken from environment variables if not set explicitly
 
-            val port = config.port ?: readPortFromEnvironmentVariables() ?: DefaultServerConnectionConfig.DEFAULT_PORT
+            val port = config.port ?: readPortFromEnvironmentVariables()
             logger.debug { "Debugger Feature. Use debugger port: $port" }
 
-            val debuggerServerConfig = AIAgentFeatureServerConnectionConfig(
-                host = DefaultServerConnectionConfig.DEFAULT_HOST,
+            val debuggerServerConfig = DefaultServerConnectionConfig(
                 port = port,
                 waitConnection = true
             )
@@ -89,170 +88,190 @@ public class Debugger {
 
             //region Intercept Agent Events
 
-            pipeline.interceptBeforeAgentStarted(interceptContext) intercept@{ eventContext ->
-                val event = AIAgentStartedEvent(
+            pipeline.interceptAgentStarting(interceptContext) intercept@{ eventContext ->
+                val event = AgentStartingEvent(
                     agentId = eventContext.agent.id,
                     runId = eventContext.runId,
-                    strategyName = eventContext.strategy.name,
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
-                writer.processMessage(event)
+                writer.onMessage(event)
             }
 
-            pipeline.interceptAgentFinished(interceptContext) intercept@{ eventContext ->
-                val event = AIAgentFinishedEvent(
+            pipeline.interceptAgentCompleted(interceptContext) intercept@{ eventContext ->
+                val event = AgentCompletedEvent(
                     agentId = eventContext.agentId,
                     runId = eventContext.runId,
                     result = eventContext.result?.toString(),
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
-                writer.processMessage(event)
+                writer.onMessage(event)
             }
 
-            pipeline.interceptAgentRunError(interceptContext) intercept@{ eventContext ->
-                val event = AIAgentRunErrorEvent(
+            pipeline.interceptAgentExecutionFailed(interceptContext) intercept@{ eventContext ->
+                val event = AgentExecutionFailedEvent(
                     agentId = eventContext.agentId,
                     runId = eventContext.runId,
                     error = eventContext.throwable.toAgentError(),
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
-                writer.processMessage(event)
+                writer.onMessage(event)
             }
 
-            pipeline.interceptAgentBeforeClosed(interceptContext) intercept@{ eventContext ->
-                val event = AIAgentBeforeCloseEvent(
+            pipeline.interceptAgentClosing(interceptContext) intercept@{ eventContext ->
+                val event = AgentClosingEvent(
                     agentId = eventContext.agentId,
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
-                writer.processMessage(event)
+                writer.onMessage(event)
             }
 
             //endregion Intercept Agent Events
 
             //region Intercept Strategy Events
 
-            pipeline.interceptStrategyStarted(interceptContext) intercept@{ eventContext ->
-                val event = AIAgentStrategyStartEvent(
+            pipeline.interceptStrategyStarting(interceptContext) intercept@{ eventContext ->
+
+                val strategy = eventContext.strategy as AIAgentGraphStrategy
+
+                @OptIn(InternalAgentsApi::class)
+                val event = GraphStrategyStartingEvent(
                     runId = eventContext.runId,
                     strategyName = eventContext.strategy.name,
+                    graph = strategy.startNodeToGraph(),
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
-                writer.processMessage(event)
+                writer.onMessage(event)
             }
 
-            pipeline.interceptStrategyFinished(interceptContext) intercept@{ eventContext ->
-                val event = AIAgentStrategyFinishedEvent(
+            pipeline.interceptStrategyCompleted(interceptContext) intercept@{ eventContext ->
+                val event = StrategyCompletedEvent(
                     runId = eventContext.runId,
                     strategyName = eventContext.strategy.name,
                     result = eventContext.result?.toString(),
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
-                writer.processMessage(event)
+                writer.onMessage(event)
             }
 
             //endregion Intercept Strategy Events
 
             //region Intercept Node Events
 
-            pipeline.interceptBeforeNode(interceptContext) intercept@{ eventContext ->
-                val event = AIAgentNodeExecutionStartEvent(
-                    runId = eventContext.context.runId,
-                    nodeName = eventContext.node.name,
-                    input = eventContext.input?.toString() ?: ""
-                )
-                writer.processMessage(event)
-            }
-
-            pipeline.interceptAfterNode(interceptContext) intercept@{ eventContext ->
-                val event = AIAgentNodeExecutionEndEvent(
+            pipeline.interceptNodeExecutionStarting(interceptContext) intercept@{ eventContext ->
+                val event = NodeExecutionStartingEvent(
                     runId = eventContext.context.runId,
                     nodeName = eventContext.node.name,
                     input = eventContext.input?.toString() ?: "",
-                    output = eventContext.output?.toString() ?: ""
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
-                writer.processMessage(event)
+                writer.onMessage(event)
+            }
+
+            pipeline.interceptNodeExecutionCompleted(interceptContext) intercept@{ eventContext ->
+                val event = NodeExecutionCompletedEvent(
+                    runId = eventContext.context.runId,
+                    nodeName = eventContext.node.name,
+                    input = eventContext.input?.toString() ?: "",
+                    output = eventContext.output?.toString() ?: "",
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
+                )
+                writer.onMessage(event)
             }
 
             //endregion Intercept Node Events
 
             //region Intercept LLM Call Events
 
-            pipeline.interceptBeforeLLMCall(interceptContext) intercept@{ eventContext ->
-                val event = BeforeLLMCallEvent(
+            pipeline.interceptLLMCallStarting(interceptContext) intercept@{ eventContext ->
+                val event = LLMCallStartingEvent(
                     runId = eventContext.runId,
                     prompt = eventContext.prompt,
                     model = eventContext.model.eventString,
-                    tools = eventContext.tools.map { it.name }
+                    tools = eventContext.tools.map { it.name },
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
-                writer.processMessage(event)
+                writer.onMessage(event)
             }
 
-            pipeline.interceptAfterLLMCall(interceptContext) intercept@{ eventContext ->
-                val event = AfterLLMCallEvent(
+            pipeline.interceptLLMCallCompleted(interceptContext) intercept@{ eventContext ->
+                val event = LLMCallCompletedEvent(
                     runId = eventContext.runId,
                     prompt = eventContext.prompt,
                     model = eventContext.model.eventString,
                     responses = eventContext.responses,
-                    moderationResponse = eventContext.moderationResponse
+                    moderationResponse = eventContext.moderationResponse,
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
-                writer.processMessage(event)
+                writer.onMessage(event)
             }
 
             //endregion Intercept LLM Call Events
 
             //region Intercept Tool Call Events
 
-            pipeline.interceptToolCall(interceptContext) intercept@{ eventContext ->
+            pipeline.interceptToolExecutionStarting(interceptContext) intercept@{ eventContext ->
                 @Suppress("UNCHECKED_CAST")
-                val tool = eventContext.tool as Tool<ToolArgs, ToolResult>
+                val tool = eventContext.tool as Tool<Any?, Any?>
 
-                val event = ToolCallEvent(
+                val event = ToolExecutionStartingEvent(
                     runId = eventContext.runId,
                     toolCallId = eventContext.toolCallId,
                     toolName = eventContext.tool.name,
                     toolArgs = tool.encodeArgs(eventContext.toolArgs),
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
-                writer.processMessage(event)
+                writer.onMessage(event)
             }
 
-            pipeline.interceptToolValidationError(interceptContext) intercept@{ eventContext ->
+            pipeline.interceptToolValidationFailed(interceptContext) intercept@{ eventContext ->
                 @Suppress("UNCHECKED_CAST")
-                val tool = eventContext.tool as Tool<ToolArgs, ToolResult>
+                val tool = eventContext.tool as Tool<Any?, Any?>
 
-                val event = ToolValidationErrorEvent(
+                val event = ToolValidationFailedEvent(
                     runId = eventContext.runId,
                     toolCallId = eventContext.toolCallId,
                     toolName = eventContext.tool.name,
                     toolArgs = tool.encodeArgs(eventContext.toolArgs),
-                    error = eventContext.error
+                    error = eventContext.error,
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
-                writer.processMessage(event)
+                writer.onMessage(event)
             }
 
-            pipeline.interceptToolCallFailure(interceptContext) intercept@{ eventContext ->
+            pipeline.interceptToolExecutionFailed(interceptContext) intercept@{ eventContext ->
                 @Suppress("UNCHECKED_CAST")
-                val tool = eventContext.tool as Tool<ToolArgs, ToolResult>
+                val tool = eventContext.tool as Tool<Any?, Any?>
 
-                val event = ToolCallFailureEvent(
+                val event = ToolExecutionFailedEvent(
                     runId = eventContext.runId,
                     toolCallId = eventContext.toolCallId,
                     toolName = tool.name,
                     toolArgs = tool.encodeArgs(eventContext.toolArgs),
-                    error = eventContext.throwable.toAgentError()
+                    error = eventContext.throwable.toAgentError(),
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
-                writer.processMessage(event)
+                writer.onMessage(event)
             }
 
-            pipeline.interceptToolCallResult(interceptContext) intercept@{ eventContext ->
+            pipeline.interceptToolExecutionCompleted(interceptContext) intercept@{ eventContext ->
                 @Suppress("UNCHECKED_CAST")
-                val tool = eventContext.tool as Tool<ToolArgs, ToolResult>
+                val tool = eventContext.tool as Tool<Any?, Any?>
 
-                val event = ToolCallResultEvent(
+                val event = ToolExecutionCompletedEvent(
                     runId = eventContext.runId,
                     toolCallId = eventContext.toolCallId,
                     toolName = eventContext.tool.name,
                     toolArgs = tool.encodeArgs(eventContext.toolArgs),
-                    result = eventContext.result?.let { result -> tool.encodeResultToString(result) }
+                    result = eventContext.result?.let { result -> tool.encodeResultToString(result) },
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
-                writer.processMessage(event)
+                writer.onMessage(event)
             }
 
             //endregion Intercept Tool Call Events
         }
+
+        //region Private Methods
 
         private fun readPortFromEnvironmentVariables(): Int? {
             val debuggerPortVariable =
@@ -261,5 +280,7 @@ public class Debugger {
             logger.debug { "Debugger Feature. Reading port from environment variable: KOOG_DEBUGGER_PORT_ENV_VAR=$debuggerPortVariable" }
             return debuggerPortVariable?.toIntOrNull()
         }
+
+        //endregion Private Methods
     }
 }

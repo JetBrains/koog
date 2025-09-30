@@ -11,6 +11,7 @@ import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.streaming.StreamFrame
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.json.jsonObject
@@ -179,7 +180,9 @@ class BedrockAI21JambaSerializationTest {
 
     @Test
     fun `parseJambaResponse with text content`() {
+        // language=text
         val responseContent = "Paris is the capital of France"
+        // language=json
         val responseJson = """
             {
                 "id": "resp_01234567",
@@ -219,6 +222,7 @@ class BedrockAI21JambaSerializationTest {
 
     @Test
     fun `parseJambaResponse with tool call content`() {
+        // language=text
         val callId = "call_01234567"
         // language=json
         val responseJson = """
@@ -269,7 +273,9 @@ class BedrockAI21JambaSerializationTest {
 
     @Test
     fun `parseJambaResponse with both text and tool calls`() {
+        // language=text
         val message = "I'll check the weather for you."
+        // language=text
         val callId = "call_01234567"
 
         // language=json
@@ -337,7 +343,7 @@ class BedrockAI21JambaSerializationTest {
         """.trimIndent()
 
         val content = BedrockAI21JambaSerialization.parseJambaStreamChunk(chunkJson)
-        assertEquals("Paris is ", content)
+        assertEquals(listOf("Paris is ").map(StreamFrame::Append), content)
     }
 
     @Test
@@ -357,7 +363,7 @@ class BedrockAI21JambaSerializationTest {
         """.trimIndent()
 
         val content = BedrockAI21JambaSerialization.parseJambaStreamChunk(chunkJson)
-        assertEquals("", content)
+        assertEquals(listOf("").map(StreamFrame::Append), content)
     }
 
     @Test
@@ -377,6 +383,6 @@ class BedrockAI21JambaSerializationTest {
         """.trimIndent()
 
         val content = BedrockAI21JambaSerialization.parseJambaStreamChunk(chunkJson)
-        assertEquals("", content)
+        assertEquals(emptyList(), content)
     }
 }

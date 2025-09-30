@@ -33,7 +33,7 @@ class FileDocumentEmbeddingStorageTest {
         }
     }
 
-    private suspend fun createTestStorage(): FileDocumentEmbeddingStorage<MockDocument, String> {
+    private fun createTestStorage(): FileDocumentEmbeddingStorage<MockDocument, String> {
         val mockFileSystem = MockFileSystem()
         val mockDocumentProvider = MockDocumentProvider(mockFileSystem)
         val mockFileSystemProvider = MockFileSystemProvider(mockFileSystem)

@@ -11,8 +11,12 @@ import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.streaming.filterTextOnly
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
@@ -27,25 +31,6 @@ class MultiLLMPromptExecutorTest {
         override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z")
     }
 
-    // Mock client for OpenAI
-    private inner class MockOpenAILLMClient : LLMClient {
-        override suspend fun execute(
-            prompt: Prompt,
-            model: LLModel,
-            tools: List<ToolDescriptor>
-        ): List<Message.Response> {
-            return listOf(Message.Assistant("OpenAI response", ResponseMetaInfo.create(mockClock)))
-        }
-
-        override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
-            return flowOf("OpenAI", " streaming", " response")
-        }
-
-        override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
-            throw UnsupportedOperationException("Moderation is not supported by mock client.")
-        }
-    }
-
     // Mock client for Anthropic
     private inner class MockAnthropicLLMClient : LLMClient {
         override suspend fun execute(
@@ -53,12 +38,15 @@ class MultiLLMPromptExecutorTest {
             model: LLModel,
             tools: List<ToolDescriptor>
         ): List<Message.Response> {
-            return listOf(Message.Assistant("Anthropic response", ResponseMetaInfo.create(mockClock)))
+            return listOf(Message.Assistant("Anthropic response", ResponseMetaInfo.create(clock = mockClock)))
         }
 
-        override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
-            return flowOf("Anthropic", " streaming", " response")
-        }
+        override fun executeStreaming(
+            prompt: Prompt,
+            model: LLModel,
+            tools: List<ToolDescriptor>
+        ): Flow<StreamFrame> =
+            flowOf("Anthropic", " streaming", " response").map(StreamFrame::Append)
 
         override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
             throw UnsupportedOperationException("Moderation is not supported by mock client.")
@@ -72,12 +60,15 @@ class MultiLLMPromptExecutorTest {
             model: LLModel,
             tools: List<ToolDescriptor>
         ): List<Message.Response> {
-            return listOf(Message.Assistant("Gemini response", ResponseMetaInfo.create(mockClock)))
+            return listOf(Message.Assistant("Gemini response", ResponseMetaInfo.create(clock = mockClock)))
         }
 
-        override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> {
-            return flowOf("Gemini", " streaming", " response")
-        }
+        override fun executeStreaming(
+            prompt: Prompt,
+            model: LLModel,
+            tools: List<ToolDescriptor>
+        ): Flow<StreamFrame> =
+            flowOf("Gemini", " streaming", " response").map(StreamFrame::Append)
 
         override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
             throw UnsupportedOperationException("Moderation is not supported by mock client.")
@@ -87,7 +78,7 @@ class MultiLLMPromptExecutorTest {
     @Test
     fun testExecuteWithOpenAI() = runTest {
         val executor = MultiLLMPromptExecutor(
-            LLMProvider.OpenAI to MockOpenAILLMClient(),
+            LLMProvider.OpenAI to MockOpenAILLMClient(clock = mockClock),
             LLMProvider.Anthropic to MockAnthropicLLMClient(),
             LLMProvider.Google to MockGoogleLLMClient()
         )
@@ -106,7 +97,7 @@ class MultiLLMPromptExecutorTest {
     @Test
     fun testExecuteWithAnthropic() = runTest {
         val executor = MultiLLMPromptExecutor(
-            LLMProvider.OpenAI to MockOpenAILLMClient(),
+            LLMProvider.OpenAI to MockOpenAILLMClient(clock = mockClock),
             LLMProvider.Anthropic to MockAnthropicLLMClient(),
             LLMProvider.Google to MockGoogleLLMClient()
         )
@@ -125,7 +116,7 @@ class MultiLLMPromptExecutorTest {
     @Test
     fun testExecuteWithGoogle() = runTest {
         val executor = MultiLLMPromptExecutor(
-            LLMProvider.OpenAI to MockOpenAILLMClient(),
+            LLMProvider.OpenAI to MockOpenAILLMClient(clock = mockClock),
             LLMProvider.Anthropic to MockAnthropicLLMClient(),
             LLMProvider.Google to MockGoogleLLMClient()
         )
@@ -144,7 +135,7 @@ class MultiLLMPromptExecutorTest {
     @Test
     fun testExecuteStreamingWithOpenAI() = runTest {
         val executor = MultiLLMPromptExecutor(
-            LLMProvider.OpenAI to MockOpenAILLMClient(),
+            LLMProvider.OpenAI to MockOpenAILLMClient(clock = mockClock),
             LLMProvider.Anthropic to MockAnthropicLLMClient(),
             LLMProvider.Google to MockGoogleLLMClient()
         )
@@ -155,7 +146,9 @@ class MultiLLMPromptExecutorTest {
             user("What is the capital of France?")
         }
 
-        val responseChunks = executor.executeStreaming(prompt, model).toList()
+        val responseChunks = executor.executeStreaming(prompt, model)
+            .filterTextOnly()
+            .toList()
         assertEquals(3, responseChunks.size, "Response should have three chunks")
         assertEquals(
             "OpenAI streaming response",
@@ -167,7 +160,7 @@ class MultiLLMPromptExecutorTest {
     @Test
     fun testExecuteStreamingWithAnthropic() = runTest {
         val executor = MultiLLMPromptExecutor(
-            LLMProvider.OpenAI to MockOpenAILLMClient(),
+            LLMProvider.OpenAI to MockOpenAILLMClient(clock = mockClock),
             LLMProvider.Anthropic to MockAnthropicLLMClient(),
             LLMProvider.Google to MockGoogleLLMClient()
         )
@@ -178,7 +171,9 @@ class MultiLLMPromptExecutorTest {
             user("What is the capital of France?")
         }
 
-        val responseChunks = executor.executeStreaming(prompt, model).toList()
+        val responseChunks = executor.executeStreaming(prompt, model)
+            .filterTextOnly()
+            .toList()
         assertEquals(3, responseChunks.size, "Response should have three chunks")
         assertEquals(
             "Anthropic streaming response",
@@ -190,7 +185,7 @@ class MultiLLMPromptExecutorTest {
     @Test
     fun testExecuteStreamingWithGoogle() = runTest {
         val executor = MultiLLMPromptExecutor(
-            LLMProvider.OpenAI to MockOpenAILLMClient(),
+            LLMProvider.OpenAI to MockOpenAILLMClient(clock = mockClock),
             LLMProvider.Anthropic to MockAnthropicLLMClient(),
             LLMProvider.Google to MockGoogleLLMClient()
         )
@@ -201,7 +196,9 @@ class MultiLLMPromptExecutorTest {
             user("What is the capital of France?")
         }
 
-        val responseChunks = executor.executeStreaming(prompt, model).toList()
+        val responseChunks = executor.executeStreaming(prompt, model)
+            .filterTextOnly()
+            .toList()
         assertEquals(3, responseChunks.size, "Response should have three chunks")
         assertEquals(
             "Gemini streaming response",
@@ -227,7 +224,7 @@ class MultiLLMPromptExecutorTest {
 
     @Test
     fun testExecuteStreamingWithUnsupportedProvider() = runTest {
-        val executor = MultiLLMPromptExecutor(LLMProvider.OpenAI to MockOpenAILLMClient())
+        val executor = MultiLLMPromptExecutor(LLMProvider.OpenAI to MockOpenAILLMClient(clock = mockClock))
         val model = AnthropicModels.Sonnet_3_7
         val prompt = Prompt.build("test-prompt") {
             system("You are a helpful assistant.")
@@ -235,7 +232,7 @@ class MultiLLMPromptExecutorTest {
         }
 
         assertFailsWith<IllegalArgumentException>("Should throw IllegalArgumentException for unsupported provider") {
-            executor.executeStreaming(prompt, model).toList()
+            executor.executeStreaming(prompt, model).collect()
         }
     }
 }

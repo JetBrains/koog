@@ -1,6 +1,6 @@
 package ai.koog.prompt.executor.clients.openai
 
-import ai.koog.prompt.executor.clients.openai.models.Content
+import ai.koog.prompt.executor.clients.openai.base.models.Content
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

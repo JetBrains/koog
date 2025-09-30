@@ -9,8 +9,11 @@ plugins {
 
 val excluded = setOf(
     ":agents:agents-test",
-    ":examples",
+    ":agents:agents-ext",
+    ":agents:agents-features:agents-features-sql", // Optional SQL persistence provider
+    ":agents:agents-mcp-server",
     ":integration-tests",
+    ":test-utils",
     ":koog-spring-boot-starter",
     ":koog-ktor",
     ":docs",
@@ -19,7 +22,6 @@ val excluded = setOf(
 
 val included = setOf(
     ":agents:agents-core",
-    ":agents:agents-ext",
     ":agents:agents-features:agents-features-debugger",
     ":agents:agents-features:agents-features-event-handler",
     ":agents:agents-features:agents-features-memory",
@@ -43,7 +45,7 @@ val included = setOf(
     ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-google-client",
     ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-ollama-client",
     ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client",
-    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-model",
+    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client-base",
     ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openrouter-client",
     ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-dashscope-client",
     ":prompt:prompt-executor:prompt-executor-llms",
@@ -56,7 +58,8 @@ val included = setOf(
     ":prompt:prompt-tokenizer",
     ":prompt:prompt-xml",
     ":rag:rag-base",
-    ":rag:vector-storage"
+    ":rag:vector-storage",
+    ":utils",
 )
 
 kotlin {
@@ -79,7 +82,7 @@ kotlin {
 
                 val notIncluded = projectsPaths - included
                 require(notIncluded.isEmpty()) {
-                    "There are modules that are not listed for '${project.name}' main jar dependencies," +
+                    "There are modules that are not listed for '${project.name}' main jar dependencies, " +
                         "please add them to 'included' or 'excluded' in ${project.name}/build.gradle.kts:\n" +
                         notIncluded.joinToString(",\n") { "\"$it\"" }
                 }

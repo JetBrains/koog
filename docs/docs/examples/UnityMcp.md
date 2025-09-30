@@ -86,9 +86,7 @@ runBlocking {
     // Create the ToolRegistry with tools from the MCP server
     val toolRegistry = McpToolRegistryProvider.fromTransport(
         transport = McpToolRegistryProvider.defaultStdioTransport(process)
-    ) + ToolRegistry {
-        tool(ProvideStringSubgraphResult)
-    }
+    )
 
     toolRegistry.tools.forEach {
         println(it.name)
@@ -97,7 +95,7 @@ runBlocking {
 
     val strategy = strategy<String, String>("unity_interaction") {
         val nodePlanIngredients by nodeLLMRequest(allowToolCalls = false)
-        val interactionWithUnity by subgraphWithTask<String>(
+        val interactionWithUnity by subgraphWithTask<String, String>(
             // work with plan
             tools = toolRegistry.tools,
         ) { input ->
@@ -113,7 +111,7 @@ runBlocking {
             }
         )
         edge(nodePlanIngredients forwardTo interactionWithUnity onAssistantMessage { true })
-        edge(interactionWithUnity forwardTo nodeFinish transformed { it.result })
+        edge(interactionWithUnity forwardTo nodeFinish)
     }
 
     val agent = AIAgent(

@@ -2,7 +2,11 @@ package ai.koog.prompt.params
 
 import ai.koog.prompt.llm.LLMCapability
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 
 /**
  * Represents configuration parameters for controlling the behavior of a language model.
@@ -26,8 +30,10 @@ import kotlinx.serialization.json.JsonObject
  * @property thinkingBudget Hard cap for reasoning tokens.
  * Ignored by models that don't support budgets.
  * This can be used to limit the amount of tokens used for reasoning when `includeThoughts` is enabled.
+ * @property additionalProperties Additional properties that can be used to store custom parameters.
  */
 @Serializable
+@Suppress("LongParameterList")
 public open class LLMParams(
     public val temperature: Double? = null,
     public val maxTokens: Int? = null,
@@ -38,6 +44,7 @@ public open class LLMParams(
     public val user: String? = null,
     public val includeThoughts: Boolean? = null,
     public val thinkingBudget: Int? = null,
+    public val additionalProperties: Map<String, JsonElement>? = null,
 ) {
     init {
         temperature?.let { temp ->
@@ -77,6 +84,7 @@ public open class LLMParams(
         user = user ?: default.user,
         includeThoughts = includeThoughts ?: default.includeThoughts,
         thinkingBudget = thinkingBudget ?: default.thinkingBudget,
+        additionalProperties = additionalProperties ?: default.additionalProperties,
     )
 
     /**
@@ -92,6 +100,7 @@ public open class LLMParams(
         user: String? = this.user,
         includeThoughts: Boolean? = this.includeThoughts,
         thinkingBudget: Int? = this.thinkingBudget,
+        additionalProperties: Map<String, JsonElement>? = this.additionalProperties,
     ): LLMParams = LLMParams(
         temperature = temperature,
         maxTokens = maxTokens,
@@ -102,20 +111,75 @@ public open class LLMParams(
         user = user,
         includeThoughts = includeThoughts,
         thinkingBudget = thinkingBudget,
+        additionalProperties = additionalProperties,
     )
 
     /**
-     * Component functions for destructuring declarations
+     * Retrieves the value of the temperature as a nullable Double.
+     * This function is typically used in destructuring declarations.
+     *
+     * @return the temperature value, which may be null
      */
     public operator fun component1(): Double? = temperature
+
+    /**
+     * Provides the second component of the object, corresponding to maxTokens.
+     *
+     * @return The value of maxTokens, or null if not set.
+     */
     public operator fun component2(): Int? = maxTokens
+
+    /**
+     * Retrieves the third component of the data structure, representing the number of choices.
+     *
+     * @return The number of choices as an [Int] if available, or null otherwise.
+     */
     public operator fun component3(): Int? = numberOfChoices
+
+    /**
+     * Retrieves the fourth component of the data structure.
+     *
+     * @return the fourth component of the data as a nullable String, or null if not available.
+     */
     public operator fun component4(): String? = speculation
+
+    /**
+     * Provides the fifth component of the data structure, represented by the `schema` property.
+     *
+     * @return The `schema` of type `Schema?`, or null if it is not set.
+     */
     public operator fun component5(): Schema? = schema
+
+    /**
+     * Retrieves the sixth component of a destructured object, which represents a tool choice.
+     *
+     * @return The tool choice associated with this component, or null if not set.
+     */
     public operator fun component6(): ToolChoice? = toolChoice
+
+    /**
+     * Retrieves the seventh component of the data class, typically used for destructuring declarations.
+     *
+     * @return The seventh component as a nullable String, or null if not available.
+     */
     public operator fun component7(): String? = user
+
+    /**
+     * Retrieves the eighth component of the data class, typically used for destructuring declarations.
+     *
+     * @return A Boolean value or null representing the state of the eighth component.
+     */
     public operator fun component8(): Boolean? = includeThoughts
+
+    /**
+     * Provides the ninth component of a destructured object, specifically the thinking budget.
+     *
+     * @return The value of the `thinkingBudget` as an optional integer, or null if not set.
+     */
     public operator fun component9(): Int? = thinkingBudget
+
+    @Suppress("MissingKDocForPublicAPI")
+    public operator fun component10(): Map<String, JsonElement>? = additionalProperties
 
     override fun equals(other: Any?): Boolean = when {
         this === other -> true
@@ -129,7 +193,8 @@ public open class LLMParams(
                 toolChoice == other.toolChoice &&
                 user == other.user &&
                 includeThoughts == other.includeThoughts &&
-                thinkingBudget == other.thinkingBudget
+                thinkingBudget == other.thinkingBudget &&
+                additionalProperties == other.additionalProperties
     }
 
     override fun hashCode(): Int = listOf(
@@ -151,6 +216,7 @@ public open class LLMParams(
         append(", user=$user")
         append(", includeThoughts=$includeThoughts")
         append(", thinkingBudget=$thinkingBudget")
+        append(", additionalProperties=$additionalProperties")
         append(")")
     }
 
@@ -259,4 +325,23 @@ public open class LLMParams(
         @Serializable
         public object Required : ToolChoice()
     }
+}
+
+/**
+ * Converts a variable number of pairs into a map where the values are transformed into JsonElement instances.
+ *
+ * @param pairs A variable number of key-value pairs, where the keys are strings and the values are any type.
+ * @return A map with the provided keys associated with their corresponding JsonElement representations as values.
+ */
+public fun additionalPropertiesOf(vararg pairs: Pair<String, Any>): Map<String, JsonElement> =
+    pairs.associate { (k, v) -> k to toJsonElement(v) }
+
+private fun toJsonElement(v: Any?): JsonElement = when (v) {
+    null -> JsonNull
+    is String -> JsonPrimitive(v)
+    is Number -> JsonPrimitive(v)
+    is Boolean -> JsonPrimitive(v)
+    is Iterable<*> -> JsonArray(v.map { toJsonElement(it) })
+    is Map<*, *> -> JsonObject(v.entries.associate { (k, value) -> k.toString() to toJsonElement(value) })
+    else -> JsonPrimitive(v.toString())
 }

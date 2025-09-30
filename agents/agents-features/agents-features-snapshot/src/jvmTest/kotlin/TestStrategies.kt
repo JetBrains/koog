@@ -19,6 +19,25 @@ fun AIAgentSubgraphBuilderBase<*, *>.simpleNode(
     return@node it + "\n" + output
 }
 
+fun AIAgentSubgraphBuilderBase<*, *>.inputLogNode(
+    name: String? = null,
+): AIAgentNodeDelegate<String, String> = node(name) {
+    llm.writeSession {
+        updatePrompt { user { text(it) } }
+    }
+    return@node it
+}
+
+internal fun AIAgentSubgraphBuilderBase<*, *>.loggingNode(
+    name: String? = null,
+    message: String,
+    collector: TestAgentLogsCollector
+): AIAgentNodeDelegate<String, String> =
+    node(name) {
+        collector.log(message)
+        return@node it
+    }
+
 fun AIAgentSubgraphBuilderBase<*, *>.collectHistoryNode(
     name: String? = null,
 ): AIAgentNodeDelegate<String, String> = node(name) {
@@ -84,7 +103,7 @@ private fun AIAgentSubgraphBuilderBase<*, *>.teleportOnceNode(
 ): AIAgentNodeDelegate<String, String> = node(name) {
     if (!teleportState.teleported) {
         teleportState.teleported = true
-        withPersistency(this) { ctx ->
+        withPersistency { ctx ->
             val history = llm.readSession { this.prompt.messages }
             setExecutionPoint(ctx, teleportToId, history, JsonPrimitive("$it\nTeleported"))
             return@withPersistency "Teleported"
@@ -95,10 +114,24 @@ private fun AIAgentSubgraphBuilderBase<*, *>.teleportOnceNode(
     }
 }
 
+private fun AIAgentSubgraphBuilderBase<*, *>.nodeForSecondTry(
+    name: String? = null,
+    teleportState: TeleportState,
+    collector: TestAgentLogsCollector,
+): AIAgentNodeDelegate<String, String> = node(name) {
+    if (teleportState.teleported) {
+        collector.log("Second try successful")
+        return@node "Second try successful"
+    } else {
+        teleportState.teleported = true
+        error("This node will be successful only on the second try")
+    }
+}
+
 private fun AIAgentSubgraphBuilderBase<*, *>.createCheckpointNode(name: String? = null, checkpointId: String) =
     node<String, String>(name) {
         val input = it
-        withPersistency(this) { ctx ->
+        withPersistency { ctx ->
             createCheckpoint(ctx, name!!, input, typeOf<String>(), checkpointId)
             llm.writeSession {
                 updatePrompt {
@@ -124,7 +157,7 @@ private fun AIAgentSubgraphBuilderBase<*, *>.nodeRollbackToCheckpoint(
             return@node "Skipping rollback"
         }
 
-        withPersistency(this) {
+        withPersistency {
             val checkpoint = rollbackToCheckpoint(checkpointId, it)!!
             teleportState.teleported = true
             llm.writeSession {
@@ -141,7 +174,7 @@ private fun AIAgentSubgraphBuilderBase<*, *>.nodeCreateCheckpoint(
     name: String? = null,
 ): AIAgentNodeDelegate<String, String> = node(name) {
     val input = it
-    withPersistency(this) { ctx ->
+    withPersistency { ctx ->
         val checkpoint = createCheckpoint(
             ctx,
             currentNodeId ?: error("currentNodeId not set"),
@@ -198,11 +231,12 @@ fun createCheckpointGraphWithRollback(checkpointId: String) = strategy("") {
 
 fun straightForwardGraphNoCheckpoint() = strategy("straight-forward") {
     val node1 by simpleNode(
-        "Node1",
+        name = "Node1",
         output = "Node 1 output"
     )
+
     val node2 by simpleNode(
-        "Node2",
+        name = "Node2",
         output = "Node 2 output"
     )
 
@@ -212,6 +246,90 @@ fun straightForwardGraphNoCheckpoint() = strategy("straight-forward") {
     edge(node1 forwardTo node2)
     edge(node2 forwardTo historyNode)
     edge(historyNode forwardTo nodeFinish)
+}
+
+fun restoreStrategyGraph() = strategy("restore-strategy") {
+    val inputNode by inputLogNode()
+
+    val node1 by simpleNode(
+        "Node1",
+        output = "Node 1 output"
+    )
+
+    val node2 by simpleNode(
+        "Node2",
+        output = "Node 2 output"
+    )
+
+    val historyNode by collectHistoryNode("History Node")
+
+    edge(nodeStart forwardTo inputNode)
+    edge(inputNode forwardTo node1)
+    edge(node1 forwardTo node2)
+    edge(node2 forwardTo historyNode)
+    edge(historyNode forwardTo nodeFinish)
+}
+
+internal fun loggingGraphStrategy(collector: TestAgentLogsCollector) = strategy("logging-test") {
+    val node1 by loggingNode(
+        "Node1",
+        message = "First Step",
+        collector = collector
+    )
+
+    val node2 by loggingNode(
+        "Node2",
+        message = "Second Step",
+        collector = collector
+    )
+    edge(nodeStart forwardTo node1)
+    edge(node1 forwardTo node2)
+    edge(node2 forwardTo nodeFinish)
+}
+
+internal fun loggingGraphWithHistoryCollectionStrategy(collector: TestAgentLogsCollector) = strategy("logging-test") {
+    val node1 by loggingNode(
+        "Node1",
+        message = "First Step",
+        collector = collector
+    )
+
+    val node2 by loggingNode(
+        "Node2",
+        message = "Second Step",
+        collector = collector
+    )
+    val historyNode by collectHistoryNode("History Node")
+
+    edge(nodeStart forwardTo node1)
+    edge(node1 forwardTo node2)
+    edge(node2 forwardTo historyNode)
+    edge(historyNode forwardTo nodeFinish)
+}
+
+internal fun loggingGraphForRunFromSecondTry(collector: TestAgentLogsCollector) = strategy("logging-test") {
+    val node1 by loggingNode(
+        "Node1",
+        message = "First Step",
+        collector = collector
+    )
+
+    val node2 by loggingNode(
+        "Node2",
+        message = "Second Step",
+        collector = collector
+    )
+
+    val nodeForSecondTry by nodeForSecondTry(
+        "NodeForSecondTry",
+        collector = collector,
+        teleportState = TeleportState(),
+    )
+
+    edge(nodeStart forwardTo node1)
+    edge(node1 forwardTo node2)
+    edge(node2 forwardTo nodeForSecondTry)
+    edge(nodeForSecondTry forwardTo nodeFinish)
 }
 
 fun createSimpleTeleportSubgraphWithInnerSubgraph(teleportToId: String) = strategy("teleport-test") {

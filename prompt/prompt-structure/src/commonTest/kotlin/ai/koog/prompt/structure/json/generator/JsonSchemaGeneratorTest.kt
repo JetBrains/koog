@@ -19,7 +19,7 @@ class JsonSchemaGeneratorTest {
         isLenient = true
         ignoreUnknownKeys = true
         prettyPrintIndent = "  "
-        classDiscriminator = "#type"
+        classDiscriminator = "kind"
         classDiscriminatorMode = ClassDiscriminatorMode.POLYMORPHIC
 
         serializersModule = SerializersModule {
@@ -265,6 +265,64 @@ class JsonSchemaGeneratorTest {
         """.trimIndent()
 
         assertEquals(expectedSchema, schema)
+    }
+
+    @Test
+    fun testGenerateBasicSchemaExcludingProperties() {
+        val result = basicGenerator.generate(json, "TestClass", serializer<TestClass>(), emptyMap(), setOf("TestClass.nullableProperty"))
+        val schema = json.encodeToString(result.schema)
+
+        val expectedSchema = """
+            {
+              "type": "object",
+              "properties": {
+                "stringProperty": {
+                  "type": "string",
+                  "description": "A string property"
+                },
+                "intProperty": {
+                  "type": "integer"
+                },
+                "booleanProperty": {
+                  "type": "boolean"
+                },
+                "listProperty": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "mapProperty": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "required": [
+                "stringProperty",
+                "intProperty",
+                "booleanProperty"
+              ],
+              "additionalProperties": false
+            }
+        """.trimIndent()
+
+        assertEquals(expectedSchema, schema)
+    }
+
+    @Test
+    fun testGenerateBasicSchemaExcludingRequiredProperties() {
+        val exception = assertFailsWith<IllegalArgumentException> {
+            basicGenerator.generate(
+                json,
+                "TestClass",
+                serializer<TestClass>(),
+                emptyMap(),
+                setOf("TestClass.stringProperty")
+            )
+        }
+        assertEquals("Property 'TestClass.stringProperty' is marked as excluded, but it is required in the schema.", exception.message)
     }
 
     @Test
@@ -590,14 +648,14 @@ class JsonSchemaGeneratorTest {
                       "type": "string",
                       "description": "Property 1 for subclass 1"
                     },
-                    "#type": {
+                    "kind": {
                       "const": "ClosedSubclass1"
                     }
                   },
                   "required": [
                     "id",
                     "property1",
-                    "#type"
+                    "kind"
                   ],
                   "additionalProperties": false
                 },
@@ -622,7 +680,7 @@ class JsonSchemaGeneratorTest {
                         }
                       ]
                     },
-                    "#type": {
+                    "kind": {
                       "const": "ClosedSubclass2"
                     }
                   },
@@ -630,7 +688,7 @@ class JsonSchemaGeneratorTest {
                     "id",
                     "property2",
                     "recursiveTypeProperty",
-                    "#type"
+                    "kind"
                   ],
                   "additionalProperties": false
                 }
@@ -682,14 +740,14 @@ class JsonSchemaGeneratorTest {
                       "type": "string",
                       "description": "Property 1 for subclass 1"
                     },
-                    "#type": {
+                    "kind": {
                       "const": "OpenSubclass1"
                     }
                   },
                   "required": [
                     "id",
                     "property1",
-                    "#type"
+                    "kind"
                   ],
                   "additionalProperties": false
                 },
@@ -714,7 +772,7 @@ class JsonSchemaGeneratorTest {
                         }
                       ]
                     },
-                    "#type": {
+                    "kind": {
                       "const": "OpenSubclass2"
                     }
                   },
@@ -722,7 +780,7 @@ class JsonSchemaGeneratorTest {
                     "id",
                     "property2",
                     "recursiveTypeProperty",
-                    "#type"
+                    "kind"
                   ],
                   "additionalProperties": false
                 }

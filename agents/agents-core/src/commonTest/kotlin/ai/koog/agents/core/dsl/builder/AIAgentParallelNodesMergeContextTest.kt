@@ -1,6 +1,6 @@
 package ai.koog.agents.core.dsl.builder
 
-import ai.koog.agents.core.agent.context.AIAgentContextBase
+import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.testing.tools.AIAgentContextMockBuilder
 import kotlinx.coroutines.test.runTest
@@ -11,7 +11,7 @@ import kotlin.test.assertFailsWith
 @OptIn(InternalAgentsApi::class)
 class AIAgentParallelNodesMergeContextTest {
 
-    private fun createMockContext(): AIAgentContextBase {
+    private fun createMockContext(): AIAgentGraphContextBase {
         return AIAgentContextMockBuilder().apply {
             runId = "test-run-id"
             strategyName = "test-strategy"

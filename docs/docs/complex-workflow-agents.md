@@ -55,7 +55,7 @@ val promptExecutor = simpleOpenAIExecutor(token)
 
 To create a prompt executor that works with multiple LLM providers, do the following:
 
-1. Configure clients for the required LLM providers with the corresponding API keys. For example:
+1) Configure clients for the required LLM providers with the corresponding API keys. For example:
 <!--- INCLUDE
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
@@ -67,7 +67,7 @@ val anthropicClient = AnthropicLLMClient(System.getenv("ANTHROPIC_KEY"))
 val googleClient = GoogleLLMClient(System.getenv("GOOGLE_KEY"))
 ```
 <!--- KNIT example-complex-workflow-agents-02.kt -->
-2. Pass the configured clients to the `DefaultMultiLLMPromptExecutor` class constructor to create a prompt executor with multiple LLM providers:
+2) Pass the configured clients to the `DefaultMultiLLMPromptExecutor` class constructor to create a prompt executor with multiple LLM providers:
 <!--- INCLUDE
 import ai.koog.agents.example.exampleComplexWorkflowAgents02.anthropicClient
 import ai.koog.agents.example.exampleComplexWorkflowAgents02.googleClient
@@ -314,14 +314,14 @@ To install the feature, call the `install` function and provide the feature as a
 For example, to install the event handler feature, you need to do the following:
 <!--- INCLUDE
 import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.feature.handler.AgentFinishedContext
-import ai.koog.agents.core.feature.handler.AgentStartContext
+import ai.koog.agents.core.feature.handler.agent.AgentCompletedContext
+import ai.koog.agents.core.feature.handler.agent.AgentStartingContext
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
 import ai.koog.prompt.llm.OllamaModels
 
 val agent = AIAgent(
-    executor = simpleOllamaAIExecutor(),
+    promptExecutor = simpleOllamaAIExecutor(),
     llmModel = OllamaModels.Meta.LLAMA_3_2,
 -->
 <!--- SUFFIX
@@ -331,10 +331,10 @@ val agent = AIAgent(
 // install the EventHandler feature
 installFeatures = {
     install(EventHandler) {
-        onBeforeAgentStarted { eventContext: AgentStartContext<*> ->
-            println("Starting strategy: ${eventContext.strategy.name}")
+        onAgentStarting { eventContext: AgentStartingContext<*> ->
+            println("Starting agent: ${eventContext.agent.id}")
         }
-        onAgentFinished { eventContext: AgentFinishedContext ->
+        onAgentCompleted { eventContext: AgentCompletedContext ->
             println("Result: ${eventContext.result}")
         }
     }
@@ -349,8 +349,8 @@ To learn more about feature configuration, see the dedicated page.
 Create the agent with the configuration option created in the previous stages and run it with the provided input:
 <!--- INCLUDE
 import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.feature.handler.AgentFinishedContext
-import ai.koog.agents.core.feature.handler.AgentStartContext
+import ai.koog.agents.core.feature.handler.agent.AgentCompletedContext
+import ai.koog.agents.core.feature.handler.agent.AgentStartingContext
 import ai.koog.agents.example.exampleComplexWorkflowAgents01.promptExecutor
 import ai.koog.agents.example.exampleComplexWorkflowAgents06.agentStrategy
 import ai.koog.agents.example.exampleComplexWorkflowAgents07.agentConfig
@@ -366,10 +366,10 @@ val agent = AIAgent(
     agentConfig = agentConfig,
     installFeatures = {
         install(EventHandler) {
-            onBeforeAgentStarted { eventContext: AgentStartContext<*> ->
-                println("Starting strategy: ${eventContext.strategy.name}")
+            onAgentStarting { eventContext: AgentStartingContext<*> ->
+                println("Starting agent: ${eventContext.agent.id}")
             }
-            onAgentFinished { eventContext: AgentFinishedContext ->
+            onAgentCompleted { eventContext: AgentCompletedContext ->
                 println("Result: ${eventContext.result}")
             }
         }
@@ -408,8 +408,8 @@ import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.*
-import ai.koog.agents.core.feature.handler.AgentFinishedContext
-import ai.koog.agents.core.feature.handler.AgentStartContext
+import ai.koog.agents.core.feature.handler.agent.AgentCompletedContext
+import ai.koog.agents.core.feature.handler.agent.AgentStartingContext
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.core.tools.annotations.Tool
@@ -509,10 +509,10 @@ val agent = AIAgent(
     agentConfig = agentConfig,
     installFeatures = {
         install(EventHandler) {
-            onBeforeAgentStarted { eventContext: AgentStartContext<*> ->
-                println("Starting strategy: ${eventContext.strategy.name}")
+            onAgentStarting { eventContext: AgentStartingContext<*> ->
+                println("Starting agent: ${eventContext.agent.id}")
             }
-            onAgentFinished { eventContext: AgentFinishedContext ->
+            onAgentCompleted { eventContext: AgentCompletedContext ->
                 println("Result: ${eventContext.result}")
             }
         }

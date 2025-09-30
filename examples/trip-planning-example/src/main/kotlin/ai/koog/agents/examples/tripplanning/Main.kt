@@ -55,7 +55,7 @@ suspend fun main() {
 
         // Print final result
         val result: TripPlan = agent.run(userInput)
-        println(result.toStringDefault())
+        println(result.toMarkdownString())
     } finally {
         // Don't forget to close MCP transport after use
         googleMapsMcp.close()

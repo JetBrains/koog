@@ -48,7 +48,7 @@ fun main() = runBlocking {
     val projectName = System.getenv()["WEAVE_PROJECT_NAME"] ?: "koog-tracing"
     
     val agent = AIAgent(
-        executor = simpleOpenAIExecutor(apiKey),
+        promptExecutor = simpleOpenAIExecutor(apiKey),
         llmModel = OpenAIModels.CostOptimized.GPT4oMini,
         systemPrompt = "You are a code assistant. Provide concise code examples."
     ) {
@@ -74,6 +74,35 @@ When enabled, the Weave exporter captures the same spans as Koog’s general Ope
 - **LLM interactions**: prompts, completions, latency
 - **Tool calls**: execution traces for tool invocations
 - **System context**: metadata such as model name, environment, Koog version
+
+For security reasons, some content of OpenTelemetry spans is masked by default.
+To make the content available in Weave, use the [setVerbose](opentelemetry-support.md#setverbose) method in the OpenTelemetry configuration and set its `verbose` argument to `true` as follows:
+
+<!--- INCLUDE
+import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
+import ai.koog.agents.features.opentelemetry.integration.weave.addWeaveExporter
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+
+const val apiKey = ""
+
+val agent = AIAgent(
+    promptExecutor = simpleOpenAIExecutor(apiKey),
+    llmModel = OpenAIModels.Chat.GPT4o,
+    systemPrompt = "You are a helpful assistant."
+) {
+-->
+<!--- SUFFIX
+}
+-->
+```kotlin
+install(OpenTelemetry) {
+    addWeaveExporter()
+    setVerbose(true)
+}
+```
+<!--- KNIT example-weave-exporter-02.kt -->
 
 When visualized in W&B Weave, the trace appears as follows:
 ![W&B Weave traces](img/opentelemetry-weave-exporter-light.png#only-light)

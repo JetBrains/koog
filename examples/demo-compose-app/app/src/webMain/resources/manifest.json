@@ -1,0 +1,8 @@
+{
+  "name": "Koog Demo App",
+  "short_name": "Koog Demo App",
+  "icons": [],
+  "theme_color": "#ffffff",
+  "background_color": "#ffffff",
+  "display": "standalone"
+}

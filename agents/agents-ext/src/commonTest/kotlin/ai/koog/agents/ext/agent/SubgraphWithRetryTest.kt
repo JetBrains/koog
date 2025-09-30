@@ -2,7 +2,7 @@ package ai.koog.agents.ext.agent
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.agent.context.AIAgentContextBase
+import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.eventHandler.feature.EventHandler
@@ -22,7 +22,7 @@ import kotlin.test.assertTrue
 
 private const val MAX_AGENT_ITERATIONS = 20
 private const val SUCCESS = "success"
-private val TEST_CONDITION: AIAgentContextBase.(String) -> ConditionResult = { (it == SUCCESS).asConditionResult }
+private val TEST_CONDITION: AIAgentGraphContextBase.(String) -> ConditionResult = { (it == SUCCESS).asConditionResult }
 private fun getBasicResult(
     output: String? = "test output",
     success: Boolean = true,

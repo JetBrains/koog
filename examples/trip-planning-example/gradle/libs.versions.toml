@@ -2,7 +2,7 @@
 kotlin = "2.1.20"
 ktor = "3.1.2"
 coroutines = "1.10.2"
-koog = "0.3.0.5"
+koog = "0.4.2-feat-1-3"
 logback = "1.5.13"
 oshai-logging = "7.0.7"
 

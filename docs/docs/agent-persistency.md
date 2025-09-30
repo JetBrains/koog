@@ -58,7 +58,7 @@ val executor = simpleOllamaAIExecutor()
 
 ```kotlin
 val agent = AIAgent(
-    executor = executor,
+    promptExecutor = executor,
     llmModel = OllamaModels.Meta.LLAMA_3_2,
 ) {
     install(Persistency) {
@@ -91,7 +91,7 @@ import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
 import ai.koog.prompt.llm.OllamaModels
 
 val agent = AIAgent(
-    executor = simpleOllamaAIExecutor(),
+    promptExecutor = simpleOllamaAIExecutor(),
     llmModel = OllamaModels.Meta.LLAMA_3_2,
 ) {
 -->
@@ -130,7 +130,7 @@ import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
 import ai.koog.prompt.llm.OllamaModels
 
 val agent = AIAgent(
-    executor = simpleOllamaAIExecutor(),
+    promptExecutor = simpleOllamaAIExecutor(),
     llmModel = OllamaModels.Meta.LLAMA_3_2,
 ) {
 -->
@@ -156,7 +156,7 @@ allowing for fine-grained recovery.
 To learn how to create a checkpoint at a specific point in your agent's execution, see the code sample below:
 
 <!--- INCLUDE
-import ai.koog.agents.core.agent.context.AIAgentContextBase
+import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.snapshot.feature.persistency
 import kotlin.reflect.typeOf
 
@@ -165,7 +165,7 @@ val inputType = typeOf<String>()
 -->
 
 ```kotlin
-suspend fun example(context: AIAgentContextBase) {
+suspend fun example(context: AIAgentContext) {
     // Create a checkpoint with the current state
     val checkpoint = context.persistency().createCheckpoint(
         agentContext = context,
@@ -187,12 +187,12 @@ suspend fun example(context: AIAgentContextBase) {
 To restore the state of an agent from a specific checkpoint, follow the code sample below:
 
 <!--- INCLUDE
-import ai.koog.agents.core.agent.context.AIAgentContextBase
+import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.snapshot.feature.persistency
 -->
 
 ```kotlin
-suspend fun example(context: AIAgentContextBase, checkpointId: String) {
+suspend fun example(context: AIAgentContext, checkpointId: String) {
     // Roll back to a specific checkpoint
     context.persistency().rollbackToCheckpoint(checkpointId, context)
 
@@ -203,12 +203,70 @@ suspend fun example(context: AIAgentContextBase, checkpointId: String) {
 
 <!--- KNIT example-agent-persistency-06.kt -->
 
+#### Rolling back all side-effects produced by tools
+
+It's quite common for some tools to produce side-effects. Specifically, when you are running your agents on the backend, 
+some of the tools would likely perform some database transactions. This makes it much harder for your agent to travel back in time.
+
+Imagine, that you have a tool `createUser` that creates a new user in your database. And your agent has populated multiple tool calls overtime:
+```
+tool call: createUser "Alex"
+
+->>>> checkpoint-1 <<<<-
+
+tool call: createUser "Daniel"
+tool call: createUser "Maria"
+```
+
+And now you would like to roll back to a checkpoint. Restoring the agent's state (including message history, and strategy graph node) alone would not
+be sufficient to achieve the exact state of the world before the checkpoint. You should also restore the side-effects produced by your tool calls. In our example,
+this would mean removing `Maria` and `Daniel` from the database.
+
+With Koog Persistency you can achieve that by providing a `RollbackToolRegistry` to `Persistency` feature config:
+
+<!--- INCLUDE
+import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.snapshot.feature.Persistency
+import ai.koog.agents.snapshot.providers.InMemoryPersistencyStorageProvider
+import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
+import ai.koog.prompt.llm.OllamaModels
+import ai.koog.agents.snapshot.feature.RollbackToolRegistry
+import ai.koog.agents.snapshot.feature.registerRollback
+
+fun createUser(name: String) {}
+
+fun removeUser(name: String) {}
+
+val agent = AIAgent(
+    promptExecutor = simpleOllamaAIExecutor(),
+    llmModel = OllamaModels.Meta.LLAMA_3_2,
+) {
+-->
+<!--- SUFFIX 
+} 
+-->
+
+```kotlin
+install(Persistency) {
+    enableAutomaticPersistency = true
+    rollbackToolRegistry = RollbackToolRegistry {
+        // For every `createUser` tool call there will be a `removeUser` invocation in the reverse order 
+        // when rolling back to the desired execution point.
+        // Note: `removeUser` tool should take the same exact arguments as `createUser`. 
+        // It's the developer's responsibility to make sure that `removeUser` invocation rolls back all side-effects of `createUser`:
+        registerRollback(::createUser, ::removeUser)
+    }
+}
+```
+
+<!--- KNIT example-agent-persistency-07.kt -->
+
 ### Using extension functions
 
 The Agent Persistency feature provides convenient extension functions for working with checkpoints:
 
 <!--- INCLUDE
-import ai.koog.agents.core.agent.context.AIAgentContextBase
+import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.example.exampleAgentPersistency05.inputData
 import ai.koog.agents.example.exampleAgentPersistency05.inputType
 import ai.koog.agents.snapshot.feature.persistency
@@ -216,12 +274,12 @@ import ai.koog.agents.snapshot.feature.withPersistency
 -->
 
 ```kotlin
-suspend fun example(context: AIAgentContextBase) {
+suspend fun example(context: AIAgentContext) {
     // Access the checkpoint feature
     val checkpointFeature = context.persistency()
 
     // Or perform an action with the checkpoint feature
-    context.withPersistency(context) { ctx ->
+    context.withPersistency { ctx ->
         // 'this' is the checkpoint feature
         createCheckpoint(
             agentContext = ctx,
@@ -233,7 +291,7 @@ suspend fun example(context: AIAgentContextBase) {
     }
 }
 ```
-<!--- KNIT example-agent-persistency-07.kt -->
+<!--- KNIT example-agent-persistency-08.kt -->
 
 ## Advanced usage
 
@@ -267,7 +325,7 @@ class MyCustomStorageProvider : PersistencyStorageProvider {
 }
 ```
 
-<!--- KNIT example-agent-persistency-08.kt -->
+<!--- KNIT example-agent-persistency-09.kt -->
 
 To use your custom provider in the feature configuration, set it as the storage when configuring the Agent Persistency
 feature in your agent.
@@ -295,7 +353,7 @@ class MyCustomStorageProvider : PersistencyStorageProvider {
 }
 
 val agent = AIAgent(
-    executor = simpleOllamaAIExecutor(),
+    promptExecutor = simpleOllamaAIExecutor(),
     llmModel = OllamaModels.Meta.LLAMA_3_2,
 ) {
 -->
@@ -309,14 +367,14 @@ install(Persistency) {
 }
 ```
 
-<!--- KNIT example-agent-persistency-09.kt -->
+<!--- KNIT example-agent-persistency-10.kt -->
 
 ### Setting execution points
 
 For advanced control, you can directly set the execution point of an agent:
 
 <!--- INCLUDE
-import ai.koog.agents.core.agent.context.AIAgentContextBase
+import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.snapshot.feature.persistency
 import ai.koog.prompt.message.Message.User
 import kotlinx.serialization.json.JsonPrimitive
@@ -326,7 +384,7 @@ val customMessageHistory = emptyList<User>()
 -->
 
 ```kotlin
-fun example(context: AIAgentContextBase) {
+fun example(context: AIAgentContext) {
     context.persistency().setExecutionPoint(
         agentContext = context,
         nodeId = "target-node-id",
@@ -337,6 +395,6 @@ fun example(context: AIAgentContextBase) {
 
 ```
 
-<!--- KNIT example-agent-persistency-10.kt -->
+<!--- KNIT example-agent-persistency-11.kt -->
 
 This allows for more fine-grained control over the agent's state beyond just restoring from checkpoints.

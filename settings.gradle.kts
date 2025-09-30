@@ -1,4 +1,4 @@
-rootProject.name = "koog-agents"
+rootProject.name = "koog"
 
 pluginManagement {
     repositories {
@@ -13,16 +13,16 @@ include(":agents:agents-features:agents-features-debugger")
 include(":agents:agents-features:agents-features-event-handler")
 include(":agents:agents-features:agents-features-memory")
 include(":agents:agents-features:agents-features-opentelemetry")
+include(":agents:agents-features:agents-features-sql")
 include(":agents:agents-features:agents-features-trace")
 include(":agents:agents-features:agents-features-tokenizer")
 include(":agents:agents-features:agents-features-snapshot")
 
 include(":agents:agents-mcp")
+include(":agents:agents-mcp-server")
 include(":agents:agents-test")
 include(":agents:agents-tools")
 include(":agents:agents-utils")
-
-include(":examples")
 
 include(":integration-tests")
 
@@ -41,7 +41,7 @@ include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-deepsee
 include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-google-client")
 include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-ollama-client")
 include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client")
-include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-model")
+include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client-base")
 include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openrouter-client")
 include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-dashscope-client")
 
@@ -66,3 +66,6 @@ include(":koog-spring-boot-starter")
 
 include(":koog-ktor")
 include(":docs")
+
+include(":test-utils")
+include(":utils")

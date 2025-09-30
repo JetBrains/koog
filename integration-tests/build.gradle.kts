@@ -2,9 +2,10 @@ group = "${rootProject.group}.integration-tests"
 version = rootProject.version
 
 plugins {
-    id("ai.kotlin.multiplatform")
+    id("ai.kotlin.multiplatform.server")
     alias(libs.plugins.kotlin.serialization)
     id("ai.koog.gradle.plugins.credentialsresolver")
+    `netty-convention`
 }
 
 kotlin {
@@ -13,8 +14,11 @@ kotlin {
             dependencies {
                 implementation(project(":prompt:prompt-executor:prompt-executor-llms-all"))
                 implementation(libs.testcontainers)
+                implementation(libs.ktor.server.netty)
                 implementation(kotlin("test"))
                 implementation(kotlin("test-junit5"))
+                runtimeOnly(libs.ktor.client.apache5)
+                runtimeOnly(libs.slf4j.simple)
             }
         }
 
@@ -24,6 +28,9 @@ kotlin {
                 implementation(project(":agents:agents-features:agents-features-event-handler"))
                 implementation(project(":agents:agents-features:agents-features-trace"))
                 implementation(project(":agents:agents-features:agents-features-snapshot"))
+                implementation(project(":agents:agents-mcp"))
+                implementation(project(":agents:agents-mcp-server"))
+                implementation(project(":agents:agents-test"))
                 implementation(
                     project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-anthropic-client")
                 )
@@ -39,10 +46,14 @@ kotlin {
                 implementation(libs.aws.sdk.kotlin.bedrock)
                 implementation(libs.aws.sdk.kotlin.bedrockruntime)
                 implementation(libs.ktor.client.content.negotiation)
-                runtimeOnly(libs.slf4j.simple)
             }
         }
     }
+}
+
+configurations.all {
+    // make sure we have Netty as a server, not CIO
+    exclude(group = "io.ktor", module = "ktor-server-cio")
 }
 
 val envs = credentialsResolver.resolve(

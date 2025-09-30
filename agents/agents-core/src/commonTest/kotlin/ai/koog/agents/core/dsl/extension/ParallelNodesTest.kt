@@ -2,8 +2,8 @@ package ai.koog.agents.core.dsl.extension
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
-import ai.koog.agents.core.agent.entity.AIAgentStrategy
 import ai.koog.agents.core.dsl.builder.ParallelNodeExecutionResult
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
@@ -44,7 +44,7 @@ class ParallelNodesTest {
         tool(DummyTool())
     }
 
-    private suspend fun runTestAgent(strategy: AIAgentStrategy<String, String>, config: AIAgentConfig): String {
+    private suspend fun runTestAgent(strategy: AIAgentGraphStrategy<String, String>, config: AIAgentConfig): String {
         val runner = AIAgent<String, String>(
             promptExecutor = createMockExecutor(),
             strategy = strategy,

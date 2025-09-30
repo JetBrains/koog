@@ -82,7 +82,7 @@ import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 ```kotlin
 // Agent initialization
 val agent = AIAgent(
-    executor = simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")),
+    promptExecutor = simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")),
     systemPrompt = "You are a helpful assistant with strong mathematical skills.",
     llmModel = OpenAIModels.Chat.GPT4o,
     // Pass your tool registry to the agent
@@ -131,7 +131,7 @@ data class Book(
     val title: String,
     val author: String,
     val description: String
-) : ToolArgs
+)
 
 class BookTool() : SimpleTool<Book>() {
     companion object {
@@ -146,13 +146,8 @@ class BookTool() : SimpleTool<Book>() {
     override val argsSerializer: KSerializer<Book>
         get() = Book.serializer()
 
-    override val descriptor: ToolDescriptor
-        get() = ToolDescriptor(
-            name = NAME,
-            description = "A tool to parse book information from Markdown",
-            requiredParameters = listOf(),
-            optionalParameters = listOf()
-        )
+    override val name = NAME
+    override val description = "A tool to parse book information from Markdown"
 }
 
 val strategy = strategy<Unit, Unit>("strategy-name") {
@@ -196,7 +191,8 @@ To convert an agent into a tool, use the `asTool()` extension function:
 
 <!--- INCLUDE
 import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.agent.asTool
+import ai.koog.agents.core.agent.AIAgentService
+import ai.koog.agents.core.agent.createAgentTool
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.ToolRegistry
@@ -208,23 +204,19 @@ val analysisToolRegistry = ToolRegistry {}
 
 -->
 ```kotlin
-// Create a specialized agent
-val analysisAgent = AIAgent(
-    executor = simpleOpenAIExecutor(apiKey),
+// Create a specialized agent service, responsible for creating financial analysis agents.
+val analysisAgentService = AIAgentService(
+    promptExecutor = simpleOpenAIExecutor(apiKey),
     llmModel = OpenAIModels.Chat.GPT4o,
     systemPrompt = "You are a financial analysis specialist.",
     toolRegistry = analysisToolRegistry
 )
 
-// Convert the agent to a tool
-val analysisAgentTool = analysisAgent.asTool(
+// Create a tool that would run financial analysis agent once called.
+val analysisAgentTool = analysisAgentService.createAgentTool(
     agentName = "analyzeTransactions",
     agentDescription = "Performs financial transaction analysis",
-    inputDescriptor = ToolParameterDescriptor(
-        name = "request",
-        description = "Transaction analysis request",
-        type = ToolParameterType.String
-    )
+    inputDescription = "Transaction analysis request",
 )
 ```
 <!--- KNIT example-tools-overview-05.kt -->
@@ -246,7 +238,7 @@ const val apiKey = ""
 ```kotlin
 // Create a coordinator agent that can use specialized agents as tools
 val coordinatorAgent = AIAgent(
-    executor = simpleOpenAIExecutor(apiKey),
+    promptExecutor = simpleOpenAIExecutor(apiKey),
     llmModel = OpenAIModels.Chat.GPT4o,
     systemPrompt = "You coordinate different specialized services.",
     toolRegistry = ToolRegistry {
@@ -261,12 +253,12 @@ val coordinatorAgent = AIAgent(
 
 When an agent tool is called:
 
-1. The arguments are deserialized according to the input descriptor
-2. The wrapped agent is executed with the deserialized input
-3. The agent's output is serialized and returned as the tool result
+1. The arguments are deserialized according to the input descriptor.
+2. The wrapped agent is executed with the deserialized input.
+3. The agent's output is serialized and returned as the tool result.
 
 ### Benefits of agents as tools
 
-- **Modularity**: Break complex workflows into specialized agents
-- **Reusability**: Use the same specialized agent across multiple coordinator agents
-- **Separation of concerns**: Each agent can focus on its specific domain
+- **Modularity**: Break complex workflows into specialized agents.
+- **Reusability**: Use the same specialized agent across multiple coordinator agents.
+- **Separation of concerns**: Each agent can focus on its specific domain.

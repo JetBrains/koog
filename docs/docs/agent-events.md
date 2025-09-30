@@ -45,7 +45,7 @@ import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
 import ai.koog.prompt.llm.OllamaModels
 
 val agent = AIAgent(
-    executor = simpleOllamaAIExecutor(),
+    promptExecutor = simpleOllamaAIExecutor(),
     llmModel = OllamaModels.Meta.LLAMA_3_2,
 ) {
 -->
@@ -56,11 +56,11 @@ val agent = AIAgent(
 ```kotlin
 handleEvents {
     // Handle tool calls
-    onToolCall { eventContext ->
-        println("Tool called: ${eventContext.tool} with args ${eventContext.toolArgs}")
+    onToolExecutionStarting { eventContext ->
+        println("Tool called: ${eventContext.tool.name} with args ${eventContext.toolArgs}")
     }
     // Handle event triggered when the agent completes its execution
-    onAgentFinished { eventContext ->
+    onAgentCompleted { eventContext ->
         println("Agent finished with result: ${eventContext.result}")
     }
 
@@ -82,16 +82,16 @@ import ai.koog.prompt.llm.OllamaModels
 -->
 ```kotlin
 val agent = AIAgent(
-    executor = simpleOllamaAIExecutor(),
+    promptExecutor = simpleOllamaAIExecutor(),
     llmModel = OllamaModels.Meta.LLAMA_3_2,
 ){
     handleEvents {
         // Handle tool calls
-        onToolCall { eventContext ->
-            println("Tool called: ${eventContext.tool} with args ${eventContext.toolArgs}")
+        onToolExecutionStarting { eventContext ->
+            println("Tool called: ${eventContext.tool.name} with args ${eventContext.toolArgs}")
         }
         // Handle event triggered when the agent completes its execution
-        onAgentFinished { eventContext ->
+        onAgentCompleted { eventContext ->
             println("Agent finished with result: ${eventContext.result}")
         }
 

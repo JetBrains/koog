@@ -34,23 +34,18 @@ kotlin {
                 implementation(
                     project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-anthropic-client")
                 )
-                implementation(libs.aws.sdk.kotlin.bedrockruntime)
+                api(libs.aws.sdk.kotlin.bedrockruntime)
             }
         }
 
         commonTest {
             dependencies {
-                implementation(kotlin("test"))
-                implementation(libs.kotlinx.coroutines.test)
-                implementation(libs.kotlinx.serialization.core)
-                implementation(libs.kotlinx.serialization.json)
+                implementation(project(":test-utils"))
             }
         }
 
         jvmTest {
             dependencies {
-                implementation(kotlin("test-junit5"))
-                implementation(libs.junit.jupiter.params)
             }
         }
     }

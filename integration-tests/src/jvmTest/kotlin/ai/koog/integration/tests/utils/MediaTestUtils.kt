@@ -584,6 +584,10 @@ object MediaTestUtils {
         }
     }
 
+    fun createVideoFileForScenario(testResourcesDir: Path): Path {
+        return testResourcesDir.resolve("video.mp4")
+    }
+
     fun checkExecutorMediaResponse(response: Message.Response) {
         checkResponseBasic(response)
         val responseLowerCase = response.content.lowercase()

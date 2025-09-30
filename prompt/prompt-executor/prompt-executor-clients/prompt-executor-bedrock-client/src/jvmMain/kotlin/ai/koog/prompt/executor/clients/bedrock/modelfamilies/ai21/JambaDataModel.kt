@@ -1,5 +1,6 @@
 package ai.koog.prompt.executor.clients.bedrock.modelfamilies.ai21
 
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
@@ -66,6 +67,7 @@ internal data class JambaFunction(
 @Serializable
 internal data class JambaToolCall(
     val id: String,
+    @EncodeDefault
     val type: String = "function",
     val function: JambaFunctionCall
 )

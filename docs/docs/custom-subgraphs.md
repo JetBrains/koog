@@ -261,12 +261,12 @@ import kotlinx.serialization.Serializable
 
 class WebSearchTool: SimpleTool<WebSearchTool.Args>() {
     @Serializable
-    class Args(val query: String) : ToolArgs
+    class Args(val query: String)
 
     override val argsSerializer: KSerializer<Args> = Args.serializer()
 
-    override val descriptor: ToolDescriptor = ToolDescriptor("web_search", "Search on the web")
-    
+    override val description = "Search on the web"
+
     override suspend fun doExecute(args: Args): String {
         return "Searching for ${args.query} on the web..."
     }
@@ -274,11 +274,11 @@ class WebSearchTool: SimpleTool<WebSearchTool.Args>() {
 
 class DoAction: SimpleTool<DoAction.Args>() {
     @Serializable
-    class Args(val action: String) : ToolArgs
+    class Args(val action: String)
 
     override val argsSerializer: KSerializer<Args> = Args.serializer()
 
-    override val descriptor: ToolDescriptor = ToolDescriptor("do_action", "Do something")
+    override val description = "Do something"
 
     override suspend fun doExecute(args: Args): String {
         return "Doing action..."
@@ -287,11 +287,11 @@ class DoAction: SimpleTool<DoAction.Args>() {
 
 class DoAnotherAction: SimpleTool<DoAnotherAction.Args>() {
     @Serializable
-    class Args(val action: String) : ToolArgs
+    class Args(val action: String)
 
     override val argsSerializer: KSerializer<Args> = Args.serializer()
 
-    override val descriptor: ToolDescriptor = ToolDescriptor("do_another_action", "Do something other")
+    override val description = "Do something other"
 
     override suspend fun doExecute(args: Args): String {
         return "Doing another action..."

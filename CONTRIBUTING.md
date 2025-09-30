@@ -45,6 +45,17 @@ The documentation is published on https://docs.koog.ai/. To propose changes or i
 
 ## Building
 
+### Prerequisites
+
+Koog is a Kotlin Multiplatform framework, and you need a bunch of tools to build it:
+
+- JDK 17+ (21 is recommended)
+- [Node.js](https://nodejs.org/en/download) installed, as it is required to build Kotlin/JS targets.
+- [Android SDK](https://developer.android.com/tools) installed, as it is required for Android target.
+- On macOS, you would need [Xcode / Command Line Tools](https://developer.apple.com/xcode/resources/), these are needed to build Native targets. 
+
+### How to build
+
 This library is built with Gradle.
 
 * Run `./gradlew build` to build. It also runs all the tests.

@@ -1,18 +1,20 @@
 package ai.koog.prompt.executor.clients.openrouter.models
 
-import ai.koog.prompt.executor.clients.openai.models.OpenAIBaseLLMRequest
-import ai.koog.prompt.executor.clients.openai.models.OpenAIBaseLLMResponse
-import ai.koog.prompt.executor.clients.openai.models.OpenAIBaseLLMStreamResponse
-import ai.koog.prompt.executor.clients.openai.models.OpenAIChoice
-import ai.koog.prompt.executor.clients.openai.models.OpenAIMessage
-import ai.koog.prompt.executor.clients.openai.models.OpenAIResponseFormat
-import ai.koog.prompt.executor.clients.openai.models.OpenAIStaticContent
-import ai.koog.prompt.executor.clients.openai.models.OpenAIStreamChoice
-import ai.koog.prompt.executor.clients.openai.models.OpenAITool
-import ai.koog.prompt.executor.clients.openai.models.OpenAIToolChoice
-import ai.koog.prompt.executor.clients.openai.models.OpenAIUsage
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIBaseLLMRequest
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIBaseLLMResponse
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIBaseLLMStreamResponse
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIChoice
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIMessage
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIResponseFormat
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIStaticContent
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIStreamChoice
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAITool
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolChoice
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIUsage
+import ai.koog.prompt.executor.clients.serialization.AdditionalPropertiesFlatteningSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
 
 /**
  * OpenRouter Chat Completions API Request
@@ -47,7 +49,8 @@ internal class OpenRouterChatCompletionRequest(
     val models: List<String>? = null,
     val route: String? = null,
     val provider: ProviderPreferences? = null,
-    val user: String? = null
+    val user: String? = null,
+    val additionalProperties: Map<String, JsonElement>? = null,
 ) : OpenAIBaseLLMRequest
 
 /**
@@ -100,8 +103,11 @@ public class OpenRouterChatCompletionStreamResponse(
     override val created: Long,
     override val id: String,
     override val model: String,
-    public val systemFingerprint: String,
+    public val systemFingerprint: String? = null,
     @SerialName("object")
     public val objectType: String = "chat.completion.chunk",
     public val usage: OpenAIUsage? = null,
 ) : OpenAIBaseLLMStreamResponse
+
+internal object OpenRouterChatCompletionRequestSerializer :
+    AdditionalPropertiesFlatteningSerializer<OpenRouterChatCompletionRequest>(OpenRouterChatCompletionRequest.serializer())

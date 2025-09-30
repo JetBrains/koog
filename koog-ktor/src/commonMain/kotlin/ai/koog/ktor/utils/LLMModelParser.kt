@@ -91,7 +91,7 @@ private fun openrouter(parts: List<String>, identifier: String): LLModel? {
     val normalizedModelName = modelName.replace("-", "").replace("_", "").lowercase()
     val model = openRouterModels[normalizedModelName]
     if (model == null) {
-        println("Model '$modelName' not found in OpenRouterModels")
+        logger.info("Model '$modelName' not found in OpenRouterModels")
         return null
     }
 
@@ -112,7 +112,7 @@ private fun deepSeek(parts: List<String>, identifier: String): LLModel? {
     val normalizedModelName = modelName.lowercase()
     val model = deepSeekModels[normalizedModelName]
     if (model == null) {
-        println("Model '$modelName' not found in DeepSeekModels")
+        logger.info("Model '$modelName' not found in DeepSeekModels")
         return null
     }
 
@@ -217,11 +217,13 @@ private val OPENAI_MODELS_MAP = mapOf(
 private val ANTHROPIC_MODELS_MAP = mapOf(
     "opus_3" to AnthropicModels.Opus_3,
     "opus_4" to AnthropicModels.Opus_4,
+    "opus_4_1" to AnthropicModels.Opus_4_1,
     "haiku_3" to AnthropicModels.Haiku_3,
     "haiku_3_5" to AnthropicModels.Haiku_3_5,
     "sonnet_3_5" to AnthropicModels.Sonnet_3_5,
     "sonnet_3_7" to AnthropicModels.Sonnet_3_7,
-    "sonnet_4" to AnthropicModels.Sonnet_4
+    "sonnet_4" to AnthropicModels.Sonnet_4,
+    "sonnet_4_5" to AnthropicModels.Sonnet_4_5,
 )
 
 private val GOOGLE_MODELS_MAP = mapOf(
@@ -231,6 +233,7 @@ private val GOOGLE_MODELS_MAP = mapOf(
     "gemini2_0flashlite001" to GoogleModels.Gemini2_0FlashLite001,
     "gemini2_5pro" to GoogleModels.Gemini2_5Pro,
     "gemini2_5flash" to GoogleModels.Gemini2_5Flash,
+    "gemini2_5flashlite" to GoogleModels.Gemini2_5FlashLite,
 )
 
 private val OPENROUTER_MODELS_MAP = mapOf(

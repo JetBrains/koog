@@ -1,7 +1,6 @@
 package ai.koog.agents.testing.tools
 
 import ai.koog.agents.core.tools.Tool
-import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.ToolResult
 import ai.koog.prompt.dsl.ModerationResult
@@ -10,6 +9,7 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.tokenizer.Tokenizer
 import kotlinx.datetime.Clock
+import kotlin.jvm.JvmName
 
 /**
  * Represents a condition for a tool call and its corresponding result.
@@ -24,7 +24,7 @@ import kotlinx.datetime.Clock
  * @property argsCondition A function that determines if the tool call matches this condition
  * @property produceResult A function that produces the result when the condition is satisfied
  */
-public class ToolCondition<Args : ToolArgs, Result : ToolResult>(
+public class ToolCondition<Args, Result>(
     public val tool: Tool<Args, Result>,
     public val argsCondition: suspend (Args) -> Boolean,
     public val produceResult: suspend (Args) -> Result
@@ -159,7 +159,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      * @param tool The tool to be called when the input matches
      * @param args The arguments to pass to the tool
      */
-    public fun <Args : ToolArgs> addLLMAnswerExactPattern(
+    public fun <Args> addLLMAnswerExactPattern(
         pattern: String,
         tool: Tool<Args, *>,
         args: Args,
@@ -184,7 +184,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      * @param tool The tool to be called when the input matches
      * @param args The arguments to pass to the tool
      */
-    public fun <Args : ToolArgs> addLLMAnswerPartialPattern(pattern: String, tool: Tool<Args, *>, args: Args) {
+    public fun <Args> addLLMAnswerPartialPattern(pattern: String, tool: Tool<Args, *>, args: Args) {
         toolCallPartialMatches[pattern] = tool.encodeArgsToString(args).let { toolContent ->
             listOf(
                 Message.Tool.Call(
@@ -204,7 +204,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      * @param toolCalls A list of pairs, where each pair consists of a tool and the arguments
      *                  to pass to the tool. These tool calls will be triggered when the input matches the pattern.
      */
-    public fun <Args : ToolArgs> addLLMAnswerPartialPattern(
+    public fun <Args> addLLMAnswerPartialPattern(
         pattern: String,
         toolCalls: List<Pair<Tool<Args, *>, Args>>
     ) {
@@ -226,7 +226,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      * @param pattern The exact input string to match
      * @param toolCalls Tool calls with args
      */
-    public fun <Args : ToolArgs> addLLMAnswerExactPattern(pattern: String, toolCalls: List<Pair<Tool<Args, *>, Args>>) {
+    public fun <Args> addLLMAnswerExactPattern(pattern: String, toolCalls: List<Pair<Tool<Args, *>, Args>>) {
         toolCallExactMatches[pattern] = toolCalls.map { (tool, args) ->
             tool.encodeArgsToString(args).let { toolContent ->
                 Message.Tool.Call(
@@ -247,7 +247,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      * @param toolCalls A list of tool call and argument pairs to be triggered when the input matches.
      * @param responses A list of response strings corresponding to each tool call.
      */
-    public fun <Args : ToolArgs> addLLMAnswerExactPattern(
+    public fun <Args> addLLMAnswerExactPattern(
         pattern: String,
         toolCalls: List<Pair<Tool<Args, *>, Args>>,
         responses: List<String>
@@ -271,7 +271,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      *
      * @param pattern The exact string pattern that should be matched.
      * @param response*/
-    public fun <Args : ToolArgs> addModerationResponseExactPattern(pattern: String, response: ModerationResult) {
+    public fun addModerationResponseExactPattern(pattern: String, response: ModerationResult) {
         moderationExactMatches[pattern] = response
     }
 
@@ -283,7 +283,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      * @param toolCalls A list of tool call and argument pairs to be triggered when the input matches.
      * @param responses A list of response strings corresponding to each tool call.
      */
-    public fun <Args : ToolArgs> addLLMAnswerPartialPattern(
+    public fun <Args> addLLMAnswerPartialPattern(
         pattern: String,
         toolCalls: List<Pair<Tool<Args, *>, Args>>,
         responses: List<String>
@@ -308,7 +308,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      * @param pattern The string pattern to be used as a key for the moderation response.
      * @param response The ModerationResult object that corresponds to the given pattern.
      */
-    public fun <Args : ToolArgs> addModerationResponsePartialPattern(pattern: String, response: ModerationResult) {
+    public fun addModerationResponsePartialPattern(pattern: String, response: ModerationResult) {
         moderationPartialMatches[pattern] = response
     }
 
@@ -319,7 +319,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      * @param argsCondition A function that determines if the tool call arguments match this action
      * @param action A function that produces the result when the condition is satisfied
      */
-    public fun <Args : ToolArgs, Result : ToolResult> addToolAction(
+    public fun <Args, Result> addToolAction(
         tool: Tool<Args, Result>,
         argsCondition: suspend (Args) -> Boolean = { true },
         action: suspend (Args) -> Result
@@ -337,7 +337,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      * @param args The arguments to pass to the tool
      * @return A [ToolCallReceiver] for further configuration
      */
-    public fun <Args : ToolArgs> mockLLMToolCall(
+    public fun <Args> mockLLMToolCall(
         tool: Tool<Args, *>,
         args: Args,
         toolCallId: String? = null
@@ -354,7 +354,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      *                  These define the mock calls to be returned by the LLM.
      * @return A [MultiToolCallReceiver] to configure further mock behavior for the provided tool calls.
      */
-    public fun <Args : ToolArgs> mockLLMToolCall(
+    public fun <Args> mockLLMToolCall(
         toolCalls: List<Pair<Tool<Args, *>, Args>>
     ): MultiToolCallReceiver<Args> =
         MultiToolCallReceiver(toolCalls, this)
@@ -370,7 +370,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      *                  what the LLM should output for each tool call.
      * @return A [MixedResultsReceiver] to configure further mock behavior for the provided tool calls and responses.
      */
-    public fun <Args : ToolArgs> mockLLMMixedResponse(
+    public fun <Args> mockLLMMixedResponse(
         toolCalls: List<Pair<Tool<Args, *>, Args>>,
         responses: List<String>
     ): MixedResultsReceiver<Args> =
@@ -385,7 +385,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      * @param tool The tool to be mocked
      * @return A [MockToolReceiver] for further configuration
      */
-    public fun <Args : ToolArgs, Result : ToolResult> mockTool(
+    public fun <Args, Result> mockTool(
         tool: Tool<Args, Result>
     ): MockToolReceiver<Args, Result> {
         return MockToolReceiver(tool, this)
@@ -435,7 +435,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      * @property args The arguments to pass to the tool
      * @property builder The parent MockLLMBuilder instance
      */
-    public class ToolCallReceiver<Args : ToolArgs>(
+    public class ToolCallReceiver<Args>(
         private val tool: Tool<Args, *>,
         private val args: Args,
         private val toolCallId: String?,
@@ -473,12 +473,12 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      * Represents a class responsible for handling and managing mixed tool call results
      * based on mock responses and predefined configurations.
      *
-     * @param Args The type of tool arguments extending [ToolArgs].
+     * @param Args The type of tool arguments.
      * @property toolCalls A list of tool-arguments pairs representing mocked tool calls and their configurations.
      * @property responses A list of response strings to be used when handling tool call results.
      * @property builder An instance of [MockLLMBuilder] used to configure and mock behaviors.
      */
-    public class MixedResultsReceiver<Args : ToolArgs>(
+    public class MixedResultsReceiver<Args>(
         private val toolCalls: List<Pair<Tool<Args, *>, Args>>,
         private val responses: List<String>,
         private val builder: MockLLMBuilder
@@ -516,7 +516,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      * This class is part of the fluent API for configuring how the LLM should respond
      * with tool calls when it receives specific inputs.
      */
-    public class MultiToolCallReceiver<Args : ToolArgs>(
+    public class MultiToolCallReceiver<Args>(
         private val toolCalls: List<Pair<Tool<Args, *>, Args>>,
         private val builder: MockLLMBuilder
     ) {
@@ -559,7 +559,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      * @property tool The tool to be mocked
      * @property builder The parent MockLLMBuilder instance
      */
-    public class MockToolReceiver<Args : ToolArgs, Result : ToolResult>(
+    public class MockToolReceiver<Args, Result>(
         internal val tool: Tool<Args, Result>,
         internal val builder: MockLLMBuilder
     ) {
@@ -575,7 +575,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
          * @property action A function that produces the result
          * @property builder The parent MockLLMBuilder instance
          */
-        public class MockToolResponseBuilder<Args : ToolArgs, Result : ToolResult>(
+        public class MockToolResponseBuilder<Args, Result>(
             private val tool: Tool<Args, Result>,
             private val action: suspend () -> Result,
             private val builder: MockLLMBuilder
@@ -642,7 +642,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      * @param response The string to return
      * @return The result of the alwaysReturns call
      */
-    public infix fun <Args : ToolArgs> MockToolReceiver<Args, ToolResult.Text>.alwaysReturns(response: String): Unit =
+    public infix fun <Args> MockToolReceiver<Args, ToolResult.Text>.alwaysReturns(response: String): Unit =
         alwaysReturns(ToolResult.Text(response))
 
     /**
@@ -652,7 +652,20 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      * @param action A function that produces the string result
      * @return The result of the alwaysDoes call
      */
-    public infix fun <Args : ToolArgs> MockToolReceiver<Args, ToolResult.Text>.alwaysTells(
+    public infix fun <Args> MockToolReceiver<Args, String>.alwaysTells(
+        action: suspend () -> String
+    ): Unit =
+        alwaysDoes { action() }
+
+    /**
+     * Convenience extension function for configuring a text tool to always execute the specified action
+     * and return its string result.
+     *
+     * @param action A function that produces the string result
+     * @return The result of the alwaysDoes call
+     */
+    @JvmName("alwaysTellsText")
+    public infix fun <Args> MockToolReceiver<Args, ToolResult.Text>.alwaysTells(
         action: suspend () -> String
     ): Unit =
         alwaysDoes { ToolResult.Text(action()) }
@@ -664,7 +677,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      * @param action A function that produces the string result
      * @return The result of the does call
      */
-    public infix fun <Args : ToolArgs> MockToolReceiver<Args, ToolResult.Text>.doesStr(
+    public infix fun <Args> MockToolReceiver<Args, ToolResult.Text>.doesStr(
         action: suspend () -> String
     ): MockToolReceiver.MockToolResponseBuilder<Args, ToolResult.Text> =
         does { ToolResult.Text(action()) }

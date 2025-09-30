@@ -7,6 +7,7 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.core.tools.annotations.Tool
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.serializer
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.KParameter
@@ -17,6 +18,7 @@ import kotlin.reflect.full.instanceParameter
 import kotlin.reflect.full.memberProperties
 import kotlin.reflect.jvm.javaMethod
 import kotlin.reflect.jvm.kotlinFunction
+import ai.koog.agents.core.tools.Tool as ToolType
 
 /**
  * Converts all instance methods of [this] class marked as [Tool] to a list of tools.
@@ -50,7 +52,7 @@ import kotlin.reflect.jvm.kotlinFunction
  * val tools = myToolset.asTools()
  * ```
  */
-public fun ToolSet.asTools(json: Json = Json): List<ToolFromCallable> {
+public fun ToolSet.asTools(json: Json = Json): List<ToolType<ToolFromCallable.VarArgs, *>> {
     return this::class.asTools(json = json, thisRef = this)
 }
 
@@ -87,7 +89,7 @@ public fun ToolSet.asTools(json: Json = Json): List<ToolFromCallable> {
  * val tools = myToolset.asToolsByInterface<MyToolsetInterface>() // only interface methods will be added
  * ```
  */
-public inline fun <reified T : ToolSet> T.asToolsByInterface(json: Json = Json): List<ToolFromCallable> {
+public inline fun <reified T : ToolSet> T.asToolsByInterface(json: Json = Json): List<ToolType<ToolFromCallable.VarArgs, *>> {
     return T::class.asTools(json = json, thisRef = this)
 }
 
@@ -115,7 +117,10 @@ public fun ToolRegistry.Builder.tools(
 
  * @see [asTool]
  */
-public fun <T : ToolSet> KClass<out T>.asTools(json: Json = Json, thisRef: T? = null): List<ToolFromCallable> {
+public fun <T : ToolSet> KClass<out T>.asTools(
+    json: Json = Json,
+    thisRef: T? = null
+): List<ToolType<ToolFromCallable.VarArgs, *>> {
     return this.functions.filter { m ->
         m.getPreferredToolAnnotation() != null
     }.map {
@@ -175,19 +180,26 @@ public fun <T : ToolSet> KClass<out T>.asTools(json: Json = Json, thisRef: T? = 
  * val tool = MyTools::my_best_tool.asTool(json = Json, thisRef = myTools)
  * ```
  */
-public fun KFunction<*>.asTool(
+public fun <A> KFunction<A>.asTool(
     json: Json = Json,
     thisRef: Any? = null,
     name: String? = null,
     description: String? = null
-): ToolFromCallable {
+): ToolType<ToolFromCallable.VarArgs, A> {
     val toolDescriptor = this.asToolDescriptor(name = name, description = description)
     if (instanceParameter != null &&
         thisRef == null
     ) {
         error("Instance parameter is not null, but no 'this' object is provided")
     }
-    return ToolFromCallable(callable = this, thisRef = thisRef, descriptor = toolDescriptor, json = json)
+    @Suppress("UNCHECKED_CAST")
+    return ToolFromCallable(
+        callable = this,
+        thisRef = thisRef,
+        descriptor = toolDescriptor,
+        json = json,
+        resultSerializer = serializer(returnType)
+    ) as ToolType<ToolFromCallable.VarArgs, A>
 }
 
 /**

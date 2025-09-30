@@ -3,7 +3,6 @@ package ai.koog.prompt.structure.json
 import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.structure.StructuredData
-import ai.koog.prompt.structure.json.generator.BasicJsonSchemaGenerator
 import ai.koog.prompt.structure.json.generator.JsonSchemaGenerator
 import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
 import ai.koog.prompt.structure.structure
@@ -56,7 +55,7 @@ public class JsonStructuredData<TStruct>(
             explicitNulls = false
             isLenient = true
             ignoreUnknownKeys = true
-            classDiscriminator = "#type"
+            classDiscriminator = "kind"
             classDiscriminatorMode = ClassDiscriminatorMode.POLYMORPHIC
         }
 
@@ -147,6 +146,7 @@ public class JsonStructuredData<TStruct>(
          *
          * val weatherStructure = JsonStructuredData.createJsonStructure<WeatherForecast>(
          *     id = "WeatherForecast",
+         *     serializer = WeatherForecast.serializer(),
          *     // some models don't work well with full json schema, so you may try simple, but it has more limitations (e.g. limited polymorphism)
          *     schemaGenerator = FullJsonSchemaGenerator,
          *     descriptionOverrides = mapOf(
@@ -157,7 +157,9 @@ public class JsonStructuredData<TStruct>(
          *         // property descriptions
          *         "Weather.forecast" to "List of forecasted weather conditions for a given location", // the property doesn't have description annotation, this will add description
          *         "Weather.countryCode" to "Country code of the location in the ISO2 format", // the property has description annotation, this will override description
-         *     )
+         *     ),
+         *     // You can also exclude properties from schema generation completely
+         *     excludedProperties = setOf("Weather.cityName"),
          * )
          * ```
          *
@@ -167,6 +169,7 @@ public class JsonStructuredData<TStruct>(
          * @param schemaGenerator JSON schema generator
          * @param descriptionOverrides Optional map of serial class names and property names to descriptions.
          * If a property/type is already described with [ai.koog.agents.core.tools.annotations.LLMDescription] annotation, value from the map will override this description.
+         * @param excludedProperties Optional set of property names to exclude from the schema generation.
          * @param examples List of example data items that conform to the structure, used for demonstrating valid formats.
          * @param definitionPrompt Prompt with definition, explaining the structure to the LLM when the manual mode for
          * structured output is used. Default is [JsonStructuredData.defaultDefinitionPrompt]
@@ -177,6 +180,7 @@ public class JsonStructuredData<TStruct>(
             json: Json = defaultJson,
             schemaGenerator: JsonSchemaGenerator = StandardJsonSchemaGenerator.Default,
             descriptionOverrides: Map<String, String> = emptyMap(),
+            excludedProperties: Set<String> = emptySet(),
             examples: List<TStruct> = emptyList(),
             definitionPrompt: (
                 builder: TextContentBuilderBase<*>,
@@ -185,7 +189,7 @@ public class JsonStructuredData<TStruct>(
         ): JsonStructuredData<TStruct> {
             return JsonStructuredData(
                 id = id,
-                schema = schemaGenerator.generate(json, id, serializer, descriptionOverrides),
+                schema = schemaGenerator.generate(json, id, serializer, descriptionOverrides, excludedProperties),
                 examples = examples,
                 serializer = serializer,
                 json = json,
@@ -201,17 +205,21 @@ public class JsonStructuredData<TStruct>(
          * Check non-inline version of `createJsonStructure` for detailed information.
          *
          * @param json JSON configuration instance used for serialization.
-         * @param schemaGenerator JSON schema generator
+         * @param schemaGenerator JSON schema generator.
+         * Make sure to select the correct one for the LLM you are using this structure with, since different models have
+         * slightly different formats.
          * @param descriptionOverrides Optional map of serial class names and property names to descriptions.
          * If a property/type is already described with [ai.koog.agents.core.tools.annotations.LLMDescription] annotation, value from the map will override this description.
+         * @param excludedProperties Optional set of property names to exclude from the schema generation.
          * @param examples List of example data items that conform to the structure, used for demonstrating valid formats.
          * @param definitionPrompt Prompt with definition, explaining the structure to the LLM when the manual mode for
          * structured output is used. Default is [JsonStructuredData.defaultDefinitionPrompt]
          */
         public inline fun <reified TStruct> createJsonStructure(
             json: Json = defaultJson,
-            schemaGenerator: JsonSchemaGenerator = BasicJsonSchemaGenerator.Default,
+            schemaGenerator: JsonSchemaGenerator = StandardJsonSchemaGenerator.Default,
             descriptionOverrides: Map<String, String> = emptyMap(),
+            excludedProperties: Set<String> = emptySet(),
             examples: List<TStruct> = emptyList(),
             noinline definitionPrompt: (
                 builder: TextContentBuilderBase<*>,
@@ -226,6 +234,7 @@ public class JsonStructuredData<TStruct>(
                 json = json,
                 schemaGenerator = schemaGenerator,
                 descriptionOverrides = descriptionOverrides,
+                excludedProperties = excludedProperties,
                 examples = examples,
                 definitionPrompt = definitionPrompt,
             )

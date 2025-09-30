@@ -2,7 +2,8 @@ package ai.koog.agents.core.agent.entity
 
 import ai.koog.agents.core.agent.AIAgentMaxNumberOfIterationsReachedException
 import ai.koog.agents.core.agent.AIAgentStuckInTheNodeException
-import ai.koog.agents.core.agent.context.AIAgentContextBase
+import ai.koog.agents.core.agent.context.AIAgentContext
+import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.context.DetachedPromptExecutorAPI
 import ai.koog.agents.core.agent.context.getAgentContextData
 import ai.koog.agents.core.agent.context.store
@@ -27,8 +28,8 @@ import kotlin.reflect.KType
  * segment containing a defined starting and ending point. The subgraph is responsible for executing tasks
  * in a step-by-step manner, managing iterations, and handling tool selection strategies.
  *
- * @param Input The type of input data accepted by the subgraph.
- * @param Output The type of output data returned by the subgraph.
+ * @param TInput The type of input data accepted by the subgraph.
+ * @param TOutput The type of output data returned by the subgraph.
  * @param name The name of the subgraph.
  * @param start The starting node of the subgraph, which initiates the processing.
  * @param finish The finishing node of the subgraph, which concludes the processing.
@@ -36,19 +37,40 @@ import kotlin.reflect.KType
  * @param llmModel Optional [LLModel] override for the subgraph execution.
  * @param llmParams Optional [LLMParams] override for the prompt for the subgraph execution.
  */
-public open class AIAgentSubgraph<Input, Output>(
+public open class AIAgentSubgraph<TInput, TOutput>(
     override val name: String,
-    public val start: StartNode<Input>,
-    public val finish: FinishNode<Output>,
+    public val start: StartNode<TInput>,
+    public val finish: FinishNode<TOutput>,
     private val toolSelectionStrategy: ToolSelectionStrategy,
     private val llmModel: LLModel? = null,
     private val llmParams: LLMParams? = null,
-) : AIAgentNodeBase<Input, Output>(), ExecutionPointNode {
+) : AIAgentNodeBase<TInput, TOutput>(), ExecutionPointNode {
     override val inputType: KType = start.inputType
     override val outputType: KType = finish.outputType
 
-    private companion object {
+    /**
+     * Companion object for the AIAgentSubgraph class.
+     *
+     * This companion object provides predefined constants used to denote
+     * special nodes (start and finish) within the subgraph of an AI agent strategy.
+     * It also includes utilities for internal logging.
+     */
+    public companion object {
         private val logger = KotlinLogging.logger { }
+
+        /**
+         * A constant string used as a prefix to identify the starting node in an AI agent's execution graph.
+         * This prefix is utilized to ensure unique identification and separation of the start node
+         * within the graph structure or during execution-related operations.
+         */
+        public const val START_NODE_PREFIX: String = "__start__"
+
+        /**
+         * A constant string used as a prefix to identify "finish" nodes within the AI agent subgraph.
+         * Finish nodes typically signify the conclusion of a sequence or process in the graph,
+         * and this prefix is used to mark such nodes for easier recognition and handling.
+         */
+        public const val FINISH_NODE_PREFIX: String = "__finish__"
     }
 
     private var forcedNode: AIAgentNodeBase<*, *>? = null
@@ -86,7 +108,7 @@ public open class AIAgentSubgraph<Input, Output>(
     )
 
     @OptIn(DetachedPromptExecutorAPI::class)
-    private suspend fun selectTools(context: AIAgentContextBase) = when (toolSelectionStrategy) {
+    private suspend fun selectTools(context: AIAgentContext) = when (toolSelectionStrategy) {
         is ToolSelectionStrategy.ALL -> context.llm.tools
         is ToolSelectionStrategy.NONE -> emptyList()
         is ToolSelectionStrategy.Tools -> toolSelectionStrategy.tools
@@ -128,7 +150,7 @@ public open class AIAgentSubgraph<Input, Output>(
      * @return The output of the AI agent execution, generated after processing the input.
      */
     @OptIn(InternalAgentsApi::class, DetachedPromptExecutorAPI::class)
-    override suspend fun execute(context: AIAgentContextBase, input: Input): Output? {
+    override suspend fun execute(context: AIAgentGraphContextBase, input: TInput): TOutput? {
         val newTools = selectTools(context)
 
         // Copy inner context with new tools, model and LLM params.
@@ -161,7 +183,7 @@ public open class AIAgentSubgraph<Input, Output>(
     }
 
     @OptIn(InternalAgentsApi::class)
-    private suspend fun executeWithInnerContext(context: AIAgentContextBase, initialInput: Input): Output? {
+    private suspend fun executeWithInnerContext(context: AIAgentGraphContextBase, initialInput: TInput): TOutput? {
         logger.info { formatLog(context, "Executing subgraph $name") }
 
         var currentNode: AIAgentNodeBase<*, *> = start
@@ -222,7 +244,7 @@ public open class AIAgentSubgraph<Input, Output>(
 
         logger.info { formatLog(context, "Completed subgraph $name") }
         @Suppress("UNCHECKED_CAST")
-        val result = (currentInput as? Output) ?: run {
+        val result = (currentInput as? TOutput) ?: run {
             logger.error {
                 formatLog(
                     context,
@@ -234,7 +256,7 @@ public open class AIAgentSubgraph<Input, Output>(
         return result
     }
 
-    private fun formatLog(context: AIAgentContextBase, message: String): String =
+    private fun formatLog(context: AIAgentContext, message: String): String =
         "$message [$name, ${context.strategyName}, ${context.runId}]"
 }
 

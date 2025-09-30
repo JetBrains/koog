@@ -124,7 +124,7 @@ public class RedisPromptCache(
             return defaultJson.decodeFromString<CachedElement>(value).response
         } catch (e: Exception) {
             // Log the error but don't fail the operation
-            println("Error retrieving from Redis cache: ${e.message}")
+            logger.error { "Error retrieving from Redis cache: ${e.message}" }
             return null
         }
     }

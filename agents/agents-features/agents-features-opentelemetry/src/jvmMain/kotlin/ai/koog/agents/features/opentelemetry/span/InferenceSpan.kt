@@ -14,8 +14,9 @@ internal class InferenceSpan(
     provider: LLMProvider,
     runId: String,
     model: LLModel,
+    promptId: String,
     temperature: Double,
-    private val promptId: String,
+    maxTokens: Int? = null
 ) : GenAIAgentSpan(parent) {
 
     companion object {
@@ -73,5 +74,10 @@ internal class InferenceSpan(
 
         // gen_ai.request.temperature
         addAttribute(SpanAttributes.Request.Temperature(temperature))
+
+        // gen_ai.request.max_tokens
+        maxTokens?.let {
+            addAttribute(SpanAttributes.Request.MaxTokens(it))
+        }
     }
 }

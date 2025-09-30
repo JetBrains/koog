@@ -12,9 +12,9 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
@@ -26,12 +26,12 @@ class McpToolTest {
     private val testPort = 3001
     private val testServer = TestMcpServer(testPort)
 
-    @BeforeEach
+    @BeforeTest
     fun setup() {
         testServer.start()
     }
 
-    @AfterEach
+    @AfterTest
     fun tearDown() {
         testServer.stop()
     }

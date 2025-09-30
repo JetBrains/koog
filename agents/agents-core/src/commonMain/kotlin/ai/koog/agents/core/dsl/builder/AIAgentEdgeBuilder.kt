@@ -1,6 +1,6 @@
 package ai.koog.agents.core.dsl.builder
 
-import ai.koog.agents.core.agent.context.AIAgentContextBase
+import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.entity.AIAgentEdge
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase
 import ai.koog.agents.core.utils.Option
@@ -57,7 +57,7 @@ public class AIAgentEdgeBuilder<IncomingOutput, OutgoingInput, CompatibleOutput 
 public class AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput> internal constructor(
     internal val fromNode: AIAgentNodeBase<*, IncomingOutput>,
     internal val toNode: AIAgentNodeBase<OutgoingInput, *>,
-    internal val forwardOutputComposition: suspend (AIAgentContextBase, IncomingOutput) -> Option<IntermediateOutput>
+    internal val forwardOutputComposition: suspend (AIAgentGraphContextBase, IncomingOutput) -> Option<IntermediateOutput>
 ) {
     /**
      * Filters the intermediate outputs of the [ai.koog.agents.core.agent.entity.AIAgentNode] based on a specified condition.
@@ -69,7 +69,7 @@ public class AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, 
      */
     @EdgeTransformationDslMarker
     public infix fun onCondition(
-        block: suspend AIAgentContextBase.(output: IntermediateOutput) -> Boolean
+        block: suspend AIAgentGraphContextBase.(output: IntermediateOutput) -> Boolean
     ): AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput> {
         return AIAgentEdgeBuilderIntermediate(
             fromNode = fromNode,
@@ -90,7 +90,7 @@ public class AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, 
      */
     @EdgeTransformationDslMarker
     public infix fun <NewIntermediateOutput> transformed(
-        block: suspend AIAgentContextBase.(IntermediateOutput) -> NewIntermediateOutput
+        block: suspend AIAgentGraphContextBase.(IntermediateOutput) -> NewIntermediateOutput
     ): AIAgentEdgeBuilderIntermediate<IncomingOutput, NewIntermediateOutput, OutgoingInput> {
         return AIAgentEdgeBuilderIntermediate(
             fromNode = fromNode,

@@ -1,10 +1,7 @@
 package ai.koog.agents.ext.tool
 
 import ai.koog.agents.core.tools.SimpleTool
-import ai.koog.agents.core.tools.ToolArgs
-import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.agents.core.tools.ToolParameterDescriptor
-import ai.koog.agents.core.tools.ToolParameterType
+import ai.koog.agents.core.tools.annotations.LLMDescription
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 
@@ -25,7 +22,10 @@ public object ExitTool : SimpleTool<ExitTool.Args>() {
      * @property message The input message provided as an argument for the tool.
      */
     @Serializable
-    public data class Args(val message: String) : ToolArgs
+    public data class Args(
+        @property:LLMDescription("Final message of the agent")
+        val message: String
+    )
 
     override suspend fun doExecute(args: Args): String {
         return "DONE"
@@ -34,16 +34,6 @@ public object ExitTool : SimpleTool<ExitTool.Args>() {
     override val argsSerializer: KSerializer<Args>
         get() = Args.serializer()
 
-    override val descriptor: ToolDescriptor
-        get() = ToolDescriptor(
-            name = "__exit__",
-            description = "Service tool, used by the agent to end conversation on user request or agent decision",
-            requiredParameters = listOf(
-                ToolParameterDescriptor(
-                    name = "message",
-                    description = "Final message of the agent",
-                    type = ToolParameterType.String
-                )
-            )
-        )
+    override val name: String = "__exit__"
+    override val description: String = "Service tool, used by the agent to end conversation on user request or agent decision"
 }

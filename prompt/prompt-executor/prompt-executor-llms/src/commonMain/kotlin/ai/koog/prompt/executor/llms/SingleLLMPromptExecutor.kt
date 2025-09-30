@@ -8,9 +8,9 @@ import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.streaming.StreamFrame
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 
 /**
  * Executes prompts using a direct client for communication with large language model (LLM) providers.
@@ -37,14 +37,13 @@ public open class SingleLLMPromptExecutor(
         return response
     }
 
-    override suspend fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> = flow {
-        logger.debug { "Executing streaming prompt: $prompt with model: $model" }
-
-        val responseFlow = llmClient.executeStreaming(prompt, model)
-
-        responseFlow.collect { chunk ->
-            emit(chunk)
-        }
+    override fun executeStreaming(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>
+    ): Flow<StreamFrame> {
+        logger.debug { "Executing streaming prompt: $prompt with tools: $tools and model: $model" }
+        return llmClient.executeStreaming(prompt, model, tools)
     }
 
     override suspend fun executeMultipleChoices(

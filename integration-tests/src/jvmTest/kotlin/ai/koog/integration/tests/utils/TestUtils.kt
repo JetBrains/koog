@@ -1,13 +1,12 @@
 package ai.koog.integration.tests.utils
 
 import ai.koog.agents.core.tools.SimpleTool
-import ai.koog.agents.core.tools.ToolArgs
-import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.agents.core.tools.ToolParameterDescriptor
-import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.streaming.filterTextOnly
 import ai.koog.prompt.structure.RegisteredStandardJsonSchemaGenerators
 import ai.koog.prompt.structure.StructureFixingParser
 import ai.koog.prompt.structure.StructuredOutput
@@ -21,6 +20,9 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -63,11 +65,6 @@ object TestUtils {
             }
     }
 
-    fun readTestDeepSeekKeyFromEnv(): String {
-        return System.getenv("DEEPSEEK_API_TEST_KEY")
-            ?: error("ERROR: environment variable `DEEPSEEK_API_TEST_KEY` is not set")
-    }
-
     @Serializable
     @SerialName("WeatherReport")
     @LLMDescription("Weather report for a specific location")
@@ -105,37 +102,20 @@ object TestUtils {
 
     @Serializable
     data class CalculatorArgs(
+        @property:LLMDescription("The operation to perform.")
         val operation: CalculatorOperation,
+        @property:LLMDescription("The first argument (number)")
         val a: Int,
+        @property:LLMDescription("The second argument (number)")
         val b: Int
-    ) : ToolArgs
+    )
 
     object CalculatorTool : SimpleTool<CalculatorArgs>() {
         override val argsSerializer = CalculatorArgs.serializer()
 
-        val calculatorToolDescriptor = ToolDescriptor(
-            name = "calculator",
-            description = "A simple calculator that can add, subtract, multiply, and divide two numbers.",
-            requiredParameters = listOf(
-                ToolParameterDescriptor(
-                    name = "operation",
-                    description = "The operation to perform.",
-                    type = ToolParameterType.Enum(CalculatorOperation.entries.map { it.name }.toTypedArray())
-                ),
-                ToolParameterDescriptor(
-                    name = "a",
-                    description = "The first argument (number)",
-                    type = ToolParameterType.Integer
-                ),
-                ToolParameterDescriptor(
-                    name = "b",
-                    description = "The second argument (number)",
-                    type = ToolParameterType.Integer
-                )
-            )
-        )
-
-        override val descriptor = calculatorToolDescriptor
+        override val name: String = "calculator"
+        override val description: String =
+            "A simple calculator that can add, subtract, multiply, and divide two numbers."
 
         override suspend fun doExecute(args: CalculatorArgs): String {
             return when (args.operation) {
@@ -156,24 +136,16 @@ object TestUtils {
     const val DELAY_MILLIS = 500L
 
     @Serializable
-    data class DelayArgs(val milliseconds: Int = DELAY_MILLIS.toInt()) : ToolArgs
+    data class DelayArgs(
+        @property:LLMDescription("The number of milliseconds to delay")
+        val milliseconds: Int = DELAY_MILLIS.toInt()
+    )
 
     object DelayTool : SimpleTool<DelayArgs>() {
         override val argsSerializer = DelayArgs.serializer()
 
-        val delayToolDescriptor = ToolDescriptor(
-            name = "delay",
-            description = "A tool that introduces a delay to simulate a time-consuming operation.",
-            requiredParameters = listOf(
-                ToolParameterDescriptor(
-                    name = "milliseconds",
-                    description = "The number of milliseconds to delay",
-                    type = ToolParameterType.Integer
-                )
-            )
-        )
-
-        override val descriptor = delayToolDescriptor
+        override val name = "delay"
+        override val description = "A tool that introduces a delay to simulate a time-consuming operation."
 
         override suspend fun doExecute(args: DelayArgs): String {
             kotlinx.coroutines.delay(args.milliseconds.toLong())
@@ -282,7 +254,7 @@ object TestUtils {
         }
     }
 
-    fun parseMarkdownStreamToCountries(markdownStream: Flow<String>): Flow<Country> {
+    fun parseMarkdownStreamToCountries(markdownStream: Flow<StreamFrame>): Flow<Country> {
         return flow {
             val countries = mutableListOf<Country>()
             var currentCountryName = ""
@@ -317,7 +289,7 @@ object TestUtils {
                 }
             }
 
-            parser.parseStream(markdownStream)
+            parser.parseStream(markdownStream.filterTextOnly())
 
             countries.forEach { emit(it) }
         }
@@ -386,5 +358,33 @@ object TestUtils {
                 "Humidity should be a valid percentage, got: ${response.humidity}"
             )
         }
+    }
+
+    fun singlePropertyObjectSchema(provider: LLMProvider, propName: String, type: String) = buildJsonObject {
+        put("type", JsonPrimitive("object"))
+        put(
+            "properties",
+            buildJsonObject {
+                put(propName, buildJsonObject { put("type", JsonPrimitive(type)) })
+            }
+        )
+        put("required", buildJsonArray { add(JsonPrimitive(propName)) })
+        if (provider !is LLMProvider.Google) {
+            // Google response_schema does not support additionalProperties at the root
+            put("additionalProperties", JsonPrimitive(false))
+        }
+    }
+
+    fun assertExceptionMessageContains(ex: Throwable, vararg substrings: String) {
+        val msg = ex.message ?: ""
+        val matches = substrings.any { needle -> msg.contains(needle, ignoreCase = true) }
+        assertTrue(matches, "Exception message doesn't contain expected error: ${ex.message}")
+    }
+
+    fun isValidJson(str: String): Boolean = try {
+        Json.parseToJsonElement(str)
+        true
+    } catch (_: Exception) {
+        false
     }
 }

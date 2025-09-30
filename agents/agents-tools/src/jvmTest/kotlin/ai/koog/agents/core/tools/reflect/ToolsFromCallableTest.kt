@@ -315,7 +315,7 @@ class ToolsFromCallableTest {
         }
         assertEquals(
             expectedResult,
-            result.toStringDefault(),
+            tool.encodeResultToStringUnsafe(result),
             "Incorrect result for $callable with argument $argumentJson"
         )
     }

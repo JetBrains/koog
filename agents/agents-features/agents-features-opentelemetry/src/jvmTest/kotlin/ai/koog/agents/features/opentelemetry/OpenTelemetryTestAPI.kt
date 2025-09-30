@@ -1,8 +1,10 @@
 package ai.koog.agents.features.opentelemetry
 
 import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.core.agent.AIAgentService
+import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.agent.entity.AIAgentStrategy
+import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
@@ -16,22 +18,58 @@ import kotlin.test.assertTrue
 
 internal object OpenTelemetryTestAPI {
 
-    internal fun createAgent(
+    internal suspend fun createAgent(
         agentId: String = "test-agent-id",
-        strategy: AIAgentStrategy<String, String>,
+        strategy: AIAgentGraphStrategy<String, String>,
         promptId: String? = null,
         promptExecutor: PromptExecutor? = null,
         toolRegistry: ToolRegistry? = null,
         model: LLModel? = null,
         clock: Clock = Clock.System,
         temperature: Double? = 0.0,
+        maxTokens: Int? = null,
         systemPrompt: String? = null,
         userPrompt: String? = null,
         assistantPrompt: String? = null,
-        installFeatures: AIAgent.FeatureContext.() -> Unit = { }
-    ): AIAgent<String, String> {
+        installFeatures: GraphAIAgent.FeatureContext.() -> Unit = { }
+    ): AIAgent<String, String> = createAgentService(
+        strategy,
+        promptId,
+        promptExecutor,
+        toolRegistry,
+        model,
+        clock,
+        temperature,
+        maxTokens,
+        systemPrompt,
+        userPrompt,
+        assistantPrompt,
+        installFeatures
+    ).createAgent(id = agentId, clock = clock)
+
+    internal fun createAgentService(
+        strategy: AIAgentGraphStrategy<String, String>,
+        promptId: String? = null,
+        promptExecutor: PromptExecutor? = null,
+        toolRegistry: ToolRegistry? = null,
+        model: LLModel? = null,
+        clock: Clock = Clock.System,
+        temperature: Double? = 0.0,
+        maxTokens: Int? = null,
+        systemPrompt: String? = null,
+        userPrompt: String? = null,
+        assistantPrompt: String? = null,
+        installFeatures: GraphAIAgent.FeatureContext.() -> Unit = { }
+    ): AIAgentService<String, String> {
         val agentConfig = AIAgentConfig(
-            prompt = prompt(promptId ?: "Test prompt", clock = clock, params = LLMParams(temperature = temperature)) {
+            prompt = prompt(
+                id = promptId ?: "Test prompt",
+                clock = clock,
+                params = LLMParams(
+                    temperature = temperature,
+                    maxTokens = maxTokens
+                )
+            ) {
                 systemPrompt?.let { system(systemPrompt) }
                 userPrompt?.let { user(userPrompt) }
                 assistantPrompt?.let { assistant(assistantPrompt) }
@@ -40,13 +78,11 @@ internal object OpenTelemetryTestAPI {
             maxAgentIterations = 10,
         )
 
-        return AIAgent(
-            id = agentId,
+        return AIAgentService(
             promptExecutor = promptExecutor ?: getMockExecutor {},
             strategy = strategy,
             agentConfig = agentConfig,
             toolRegistry = toolRegistry ?: ToolRegistry { },
-            clock = clock,
             installFeatures = installFeatures,
         )
     }
@@ -61,9 +97,7 @@ internal object OpenTelemetryTestAPI {
             assertEquals(
                 value,
                 actualValue,
-                "$message - Value for key '$key' should match. " +
-                    "Expected: <$value: ${value?.javaClass?.simpleName}>, " +
-                    "Actual: <$actualValue: ${actualValue?.javaClass?.simpleName}>."
+                "$message - Value for key '$key' should match. " + "Expected: <$value: ${value?.javaClass?.simpleName}>, " + "Actual: <$actualValue: ${actualValue?.javaClass?.simpleName}>."
             )
         }
     }

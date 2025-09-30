@@ -3,7 +3,6 @@ package ai.koog.agents.testing.tools
 import ai.koog.agents.core.tools.reflect.ToolFromCallable
 import ai.koog.agents.core.tools.reflect.asTool
 import ai.koog.agents.testing.tools.MockLLMBuilder.ToolCallReceiver
-import kotlinx.serialization.json.Json
 import kotlin.reflect.KFunction
 
 /**
@@ -68,7 +67,7 @@ public class MockToolFromCallableReceiver<Result>(
             builder.addToolAction(
                 callable.asTool(),
                 { it == ToolFromCallable.VarArgs(argsMap) }
-            ) { buildResult(action(), callable) }
+            ) { action() }
         }
 
         /**
@@ -79,7 +78,7 @@ public class MockToolFromCallableReceiver<Result>(
          * and evaluates to `true` if the action should be executed for the given arguments.
          */
         public fun onArgumentsMatching(condition: suspend (ToolFromCallable.VarArgs) -> Boolean) {
-            builder.addToolAction(callable.asTool(), condition) { buildResult(action(), callable) }
+            builder.addToolAction(callable.asTool(), condition) { action() }
         }
     }
 
@@ -90,7 +89,7 @@ public class MockToolFromCallableReceiver<Result>(
      */
     public infix fun alwaysReturns(response: Result) {
         builder.addToolAction(callable.asTool()) {
-            buildResult(response, callable)
+            response
         }
     }
 
@@ -101,7 +100,7 @@ public class MockToolFromCallableReceiver<Result>(
      */
     public infix fun alwaysDoes(action: suspend () -> Result) {
         builder.addToolAction(callable.asTool()) {
-            buildResult(action(), callable)
+            action()
         }
     }
 
@@ -133,17 +132,3 @@ public class MockToolFromCallableReceiver<Result>(
 public infix fun <Result> MockLLMBuilder.mockTool(tool: KFunction<Result>): MockToolFromCallableReceiver<Result> {
     return MockToolFromCallableReceiver<Result>(tool, this)
 }
-
-/**
- * Builds a result object containing the response from the callable, its return type, and a JSON serializer.
- *
- * @param response The result produced by invoking the callable.
- * @param callable The callable whose metadata (such as return type) is used in constructing the result object.
- * @return A [ToolFromCallable.Result] instance encapsulating the callable's result, its return type, and a JSON serializer.
- */
-private fun <Result> buildResult(response: Result, callable: KFunction<Result>): ToolFromCallable.Result =
-    ToolFromCallable.Result(
-        result = response,
-        type = callable.returnType,
-        json = Json
-    )
