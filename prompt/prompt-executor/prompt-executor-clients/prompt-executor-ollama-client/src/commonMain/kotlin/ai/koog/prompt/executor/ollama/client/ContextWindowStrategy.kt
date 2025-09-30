@@ -69,6 +69,10 @@ public interface ContextWindowStrategy {
          * @param contextLength The context window length to use.
          */
         public data class Fixed(val contextLength: Long) : ContextWindowStrategy {
+            init {
+                require(contextLength > 0) { "Context length must be positive but was: $contextLength" }
+            }
+
             override fun computeContextLength(prompt: Prompt, model: LLModel): Long {
                 if (contextLength > model.contextLength) {
                     logger.warn {
@@ -88,21 +92,33 @@ public interface ContextWindowStrategy {
          *   or null to use the last reported token usage.
          * @param contextChunkSize The granularity to use for computing the context window length. Defaults to 2048.
          * @param minimumChunkCount The minimum number of context chunks in the context.
+         * @param maximumChunkCount The maximum number of context chunks in the context.
          *
-         * Example: contextChunkSize = 512, minimumChunkCount = 2, then [minimumContextLength] = 1024
+         * Example: contextChunkSize = 512, minimumChunkCount = 2, maximumChunkCount = 4,
+         *  then [minimumContextLength] = 1024 and [maximumContextLength] = 2048
          */
         public data class FitPrompt(
             val promptTokenizer: PromptTokenizer? = null,
             val contextChunkSize: Long = 2048,
-            val minimumChunkCount: Long? = null
+            val minimumChunkCount: Long? = null,
+            val maximumChunkCount: Long? = null
         ) : ContextWindowStrategy {
 
             private val minimumContextLength: Long? = minimumChunkCount?.let { cnt -> cnt * contextChunkSize }
+            private val maximumContextLength: Long? = maximumChunkCount?.let { cnt -> cnt * contextChunkSize }
 
             init {
-                require(contextChunkSize > 0) { "Granularity must be greater than 0" }
-                require(minimumContextLength == null || minimumContextLength % contextChunkSize == 0L) {
-                    "Minimum context length must be a multiple of granularity"
+                require(contextChunkSize > 0) { "`contextChunkSize`` must be greater than 0" }
+                require(minimumChunkCount == null || minimumChunkCount > 0) {
+                    "`minimumChunkCount` must be a positive number or `null`"
+                }
+
+
+                if (minimumChunkCount != null && maximumChunkCount != null) {
+                    require(minimumChunkCount <= maximumChunkCount) {
+                        "`maximumChunkCount` ($maximumChunkCount) must be greater or equal" +
+                            " to `minimumChunkCount` ($minimumChunkCount)"
+                    }
                 }
             }
 
@@ -114,6 +130,15 @@ public interface ContextWindowStrategy {
                 }
 
                 if (promptLength == null) return minimumContextLength
+
+                if (maximumContextLength != null && promptLength > maximumContextLength) {
+                    logger.warn {
+                        "Prompt length $promptLength was more than " +
+                            "the maximum context length $maximumContextLength provideded"
+                    }
+                    return maximumContextLength
+                }
+
                 if (promptLength > model.contextLength) {
                     logger.warn {
                         "Prompt length $promptLength was more than the maximum context length of model '${model.id}'," +
