@@ -1,4 +1,4 @@
-package ai.koog.agents.ext.shell.shell
+package ai.koog.agents.ext.tool.shell
 
 /**
  * Confirmation handler that always approves commands.

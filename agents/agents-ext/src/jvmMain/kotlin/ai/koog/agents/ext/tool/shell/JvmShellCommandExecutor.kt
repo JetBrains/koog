@@ -1,6 +1,5 @@
 package ai.koog.agents.ext.tool.shell
 
-import ai.koog.agents.ext.shell.shell.ShellCommandExecutor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext

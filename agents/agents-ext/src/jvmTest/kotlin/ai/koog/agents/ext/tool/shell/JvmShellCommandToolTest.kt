@@ -1,8 +1,7 @@
-package ai.koog.agents.ext.shell.shell
+package ai.koog.agents.ext.tool.shell
 
 import ai.koog.agents.core.tools.DirectToolCallsEnabler
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
-import ai.koog.agents.ext.tool.shell.JvmShellCommandExecutor
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.condition.EnabledOnOs

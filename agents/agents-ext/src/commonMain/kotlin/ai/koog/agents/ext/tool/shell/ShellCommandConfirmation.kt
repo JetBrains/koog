@@ -1,4 +1,4 @@
-package ai.koog.agents.ext.shell.shell
+package ai.koog.agents.ext.tool.shell
 
 /**
  * User's decision on whether to execute a shell command.

@@ -1,4 +1,4 @@
-package ai.koog.agents.ext.shell.shell
+package ai.koog.agents.ext.tool.shell
 
 /**
  * Shell command executor using platform-specific shells (cmd.exe on Windows, sh on Unix).

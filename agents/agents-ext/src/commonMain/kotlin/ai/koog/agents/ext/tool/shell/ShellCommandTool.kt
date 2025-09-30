@@ -1,4 +1,4 @@
-package ai.koog.agents.ext.shell.shell
+package ai.koog.agents.ext.tool.shell
 
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.annotations.LLMDescription
