@@ -34,7 +34,7 @@ val agent = AIAgent(
 ) {
     handleEvents {
         onToolExecutionStarting { ctx ->
-            println("Tool called: ${ctx.tool.name}, args=${ctx.toolArgs}")
+            println("Tool called: ${ctx.tool.name}")
         }
     }
 }
