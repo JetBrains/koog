@@ -63,6 +63,20 @@ public object OpenRouterModels : LLModelDefinitions {
     )
 
     /**
+     * Represents a predefined language model configuration for the "Claude 3 Sonnet" model.
+     *
+     * This variable defines an instance of the `LLModel` class using the `OpenRouter` provider.
+     * The model is identified with the ID "anthropic/claude-3-sonnet" and supports multimodal capabilities.
+     */
+    public val Claude3Sonnet: LLModel = LLModel(
+        provider = LLMProvider.OpenRouter,
+        id = "anthropic/claude-3-sonnet",
+        capabilities = multimodalCapabilities,
+        contextLength = 200_000,
+        maxOutputTokens = 4_096,
+    )
+
+    /**
      * Represents the Claude v3 Haiku model provided through the OpenRouter platform.
      *
      * This model is designed to handle multimodal capabilities and is identified by the
