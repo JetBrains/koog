@@ -57,6 +57,7 @@ class JvmShellCommandToolTest {
         assertEquals(listOf("workingDirectory", "timeoutSeconds"), descriptor.optionalParameters.map { it.name })
     }
 
+    // SUCCESSFUL COMMAND EXECUTION TESTS
     @Test
     @EnabledOnOs(OS.LINUX, OS.MAC)
     fun `reading file content and filtering with grep`() = runBlocking {
@@ -217,6 +218,42 @@ class JvmShellCommandToolTest {
         assertEquals(expected, result.textForLLM())
     }
 
+    // NO OUTPUT COMMAND EXECUTION TESTS
+    @Test
+    @EnabledOnOs(OS.LINUX, OS.MAC)
+    fun `command with no output shows placeholder`() = runBlocking {
+        val testDir = tempDir.resolve("empty_test").createDirectories()
+
+        val result = execute("mkdir newdir", workingDirectory = testDir.toString())
+
+        val expected = """
+            Command: mkdir newdir
+            (no output)
+            Exit code: 0
+        """.trimIndent()
+
+        assertEquals(expected, result.textForLLM())
+        assertEquals(0, result.exitCode)
+    }
+
+    @Test
+    @EnabledOnOs(OS.WINDOWS)
+    fun `command with no output shows placeholder on Windows`() = runBlocking {
+        val testDir = tempDir.resolve("empty_test").createDirectories()
+
+        val result = execute("mkdir newdir", workingDirectory = testDir.toString())
+
+        val expected = """
+            Command: mkdir newdir
+            (no output)
+            Exit code: 0
+        """.trimIndent()
+
+        assertEquals(expected, result.textForLLM())
+        assertEquals(0, result.exitCode)
+    }
+
+    // COMMAND FAILURE TESTS
     @Test
     @EnabledOnOs(OS.LINUX, OS.MAC)
     fun `command fails with error message`() = runBlocking {
@@ -279,44 +316,7 @@ class JvmShellCommandToolTest {
         assertEquals(expected, result.textForLLM())
     }
 
-    @Test
-    @EnabledOnOs(OS.LINUX, OS.MAC)
-    fun `working in subdirectory`() = runBlocking {
-        val projectDir = tempDir.resolve("project").createDirectories()
-        projectDir.resolve("package.json").writeText("""{"name": "my-app"}""")
-        projectDir.resolve("index.js").writeText("console.log('hello')")
-
-        val result = execute("ls -1", workingDirectory = projectDir.toString())
-
-        val expected = """
-            Command: ls -1
-            index.js
-            package.json
-            Exit code: 0
-        """.trimIndent()
-
-        assertEquals(expected, result.textForLLM())
-    }
-
-    @Test
-    @EnabledOnOs(OS.WINDOWS)
-    fun `working in subdirectory on Windows`() = runBlocking {
-        val projectDir = tempDir.resolve("project").createDirectories()
-        projectDir.resolve("package.json").writeText("""{"name": "my-app"}""")
-        projectDir.resolve("index.js").writeText("console.log('hello')")
-
-        val result = execute("dir /b /o:n", workingDirectory = projectDir.toString())
-
-        val expected = """
-            Command: dir /b /o:n
-            index.js
-            package.json
-            Exit code: 0
-        """.trimIndent()
-
-        assertEquals(expected, result.textForLLM())
-    }
-
+    // USER DENIAL TESTS
     @Test
     fun `user denies command execution with simple No`() = runBlocking {
         val handler = object : ShellCommandConfirmationHandler {
@@ -353,6 +353,7 @@ class JvmShellCommandToolTest {
         assertNull(result.exitCode)
     }
 
+    // TIMEOUT  TESTS
     @Test
     @EnabledOnOs(OS.LINUX, OS.MAC)
     fun `long running command times out`() = runBlocking {

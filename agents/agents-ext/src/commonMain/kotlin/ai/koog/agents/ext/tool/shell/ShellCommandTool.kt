@@ -57,7 +57,7 @@ public class ExecuteShellCommandTool(
          *
          * Returns a multi-line string showing:
          * - The command that was run
-         * - Everything it printed
+         * - Everything it printed, or "(no output)" if the command succeeded but printed nothing
          * - The exit code (omitted if the command was denied or timed out)
          *
          * @return Formatted string ready for display or logging
@@ -67,6 +67,8 @@ public class ExecuteShellCommandTool(
             if (output.isNotEmpty()) {
                 append(output)
                 if (!output.endsWith('\n')) appendLine()
+            } else if (exitCode != null) {
+                appendLine("(no output)")
             }
             exitCode?.let {
                 appendLine("Exit code: $it")
