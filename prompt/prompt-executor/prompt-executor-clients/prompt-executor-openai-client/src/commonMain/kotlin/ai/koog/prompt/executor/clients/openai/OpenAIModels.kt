@@ -24,6 +24,7 @@ import ai.koog.prompt.llm.LLModel
  * | [Chat.GPT5]                      | Medium    | $1.25-$10          | Text, Image, Tools, Document | Text, Tools        |
  * | [Chat.GPT5Mini]                  | Fast      | $0.25-$2           | Text, Image, Tools, Document | Text, Tools        |
  * | [Chat.GPT5Nano]                  | Very fast | $0.05-$0.4         | Text, Image, Tools, Document | Text, Tools        |
+ * | [Chat.GPT5Codex]                 | Medium    | $1.25-$10          | Text, Image, Tools, Document | Text, Tools        |
  * | [Audio.GptAudio]                 | Fast      | $2.5-$10           | Text, Audio, Tools           | Text, Audio, Tools |
  * | [Audio.GPT4oMiniAudio]           | Fast      | $0.15-$0.6/$10-$20 | Text, Audio, Tools           | Text, Audio, Tools |
  * | [Audio.GPT4oAudio]               | Medium    | $2.5-$10/$40-$80   | Text, Audio, Tools           | Text, Audio, Tools |
@@ -360,6 +361,32 @@ public object OpenAIModels : LLModelDefinitions {
                 LLMCapability.Completion,
                 LLMCapability.MultipleChoices,
                 LLMCapability.OpenAIEndpoint.Completions,
+                LLMCapability.OpenAIEndpoint.Responses,
+            ),
+            contextLength = 400_000,
+            maxOutputTokens = 128_000,
+        )
+
+        /**
+         * GPT-5-Codex is a version of GPT-5 optimized for agentic coding tasks in agents.
+         * It's available in the **Responses API** only, and the underlying model snapshot will be regularly updated.
+         *
+         * 400,000 context window
+         * 128,000 max output tokens
+         * Reasoning token support
+         *
+         * @see <a href="https://platform.openai.com/docs/models/gpt-5-codex"\>
+         */
+        public val GPT5Codex: LLModel = LLModel(
+            provider = LLMProvider.OpenAI,
+            id = "gpt-5-codex",
+            capabilities = listOf(
+                LLMCapability.Temperature,
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Schema.JSON.Standard,
+                LLMCapability.Speculation,
+                LLMCapability.Tools,
+                LLMCapability.ToolChoice,
                 LLMCapability.OpenAIEndpoint.Responses,
             ),
             contextLength = 400_000,

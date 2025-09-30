@@ -30,6 +30,7 @@ requirements.
 | GPT-5      | Medium    | 400K    | Text, Images, Documents | Text, Tools    | $1.25-$10               | Chat, Responses |
 | GPT-5 Mini | Fast      | 400K    | Text, Images, Documents | Text, Tools    | $0.25-$2                | Chat, Responses |
 | GPT-5 Nano | Very fast | 400K    | Text, Images, Documents | Text, Tools    | $0.05-$0.4              | Chat, Responses |
+| GPT-5 Nano | Medium    | 400K    | Text, Images, Documents | Text, Tools    | $1.25-$10               | Responses       |
 
 #### Audio Models
 

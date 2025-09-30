@@ -37,7 +37,7 @@ internal fun getModelFromIdentifier(identifier: String): LLModel? {
 
         else -> {
             logger.debug("Unsupported LLM provider: $providerName")
-            return null
+            null
         }
     }
 }
@@ -71,7 +71,7 @@ private fun ollama(parts: List<String>, identifier: String): LLModel? {
         // Format is "ollama.model"
         val modelName = identifier.substring(ollamaPrefix.length).lowercase()
 
-        return OLLAMA_GROQ_MODELS_MAP[modelName]
+        OLLAMA_GROQ_MODELS_MAP[modelName]
             ?: OLLAMA_META_MODELS_MAP[modelName]
             ?: OLLAMA_ALIBABA_MODELS_MAP[modelName]
     }
@@ -186,6 +186,7 @@ private val OPENAI_MODELS_MAP = mapOf(
         "gpt5" to OpenAIModels.Chat.GPT5,
         "gpt5mini" to OpenAIModels.Chat.GPT5Mini,
         "gpt5nano" to OpenAIModels.Chat.GPT5Nano,
+        "gpt5codex" to OpenAIModels.Chat.GPT5Codex,
     ),
     "reasoning" to mapOf(
         "o4mini" to OpenAIModels.Reasoning.O4Mini,
