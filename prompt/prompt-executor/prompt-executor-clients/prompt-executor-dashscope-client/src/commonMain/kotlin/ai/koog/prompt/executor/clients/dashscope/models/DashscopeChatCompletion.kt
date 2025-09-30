@@ -1,6 +1,5 @@
 package ai.koog.prompt.executor.clients.dashscope.models
 
-import ai.koog.prompt.executor.clients.openai.base.models.CompletionTokensDetails
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIBaseLLMRequest
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIBaseLLMResponse
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIBaseLLMStreamResponse
