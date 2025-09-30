@@ -109,13 +109,13 @@ class KoogAutoConfigurationTest {
     }
 
     @ParameterizedTest
-    @CsvSource(PROVIDERS)
+    @CsvSource(textBlock = PROVIDERS)
     fun `should supply OpenAI executor bean with retry client and default config`(
         provider: String,
         clazz: Class<LLMClient>
     ) {
         ApplicationContextRunner()
-            .withConfiguration(AutoConfigurations.of(OpenAILLMAutoConfiguration::class.java))
+            .withConfiguration(allProvidersAutoConfigurations)
             .withPropertyValues("ai.koog.$provider.enabled=true")
             .withPropertyValues("ai.koog.$provider.api-key=some_api_key")
             .withPropertyValues("ai.koog.$provider.retry.enabled=true")
@@ -138,7 +138,7 @@ class KoogAutoConfigurationTest {
     }
 
     @ParameterizedTest
-    @CsvSource(PROVIDERS)
+    @CsvSource(textBlock = PROVIDERS)
     fun `should supply executor bean with retry client and full custom config`(
         provider: String,
         clazz: Class<LLMClient>
@@ -177,7 +177,36 @@ class KoogAutoConfigurationTest {
     }
 
     @ParameterizedTest
-    @CsvSource(PROVIDERS)
+    @CsvSource(textBlock = PROVIDERS)
+    fun `Should not create beans when provider is DISABLED`(
+        provider: String,
+        clazz: Class<LLMClient>
+    ) {
+        val maxAttempts = 5
+        val initialDelay = 10
+        val maxDelay = 60
+        val backoffMultiplier = 5.0
+        val jitterFactor = 0.5
+        ApplicationContextRunner()
+            .withConfiguration(allProvidersAutoConfigurations)
+            .withPropertyValues("ai.koog.$provider.enabled=false")
+            .withPropertyValues("ai.koog.$provider.api-key=some_api_key")
+            .withPropertyValues("ai.koog.$provider.base-url=http://localhost:9876")
+            .withPropertyValues("ai.koog.$provider.retry.enabled=true")
+            .withPropertyValues("ai.koog.$provider.retry.max-attempts=$maxAttempts")
+            .withPropertyValues("ai.koog.$provider.retry.initial-delay=$initialDelay")
+            .withPropertyValues("ai.koog.$provider.retry.max-delay=$maxDelay")
+            .withPropertyValues("ai.koog.$provider.retry.backoff-multiplier=$backoffMultiplier")
+            .withPropertyValues("ai.koog.$provider.retry.jitter-factor=$jitterFactor")
+            .run { context ->
+                assertTrue { context.getBeansOfType(SingleLLMPromptExecutor::class.java).isEmpty() }
+                assertTrue { context.getBeansOfType(RetryingLLMClient::class.java).isEmpty() }
+                assertTrue { context.getBeansOfType(LLMClient::class.java).isEmpty() }
+            }
+    }
+
+    @ParameterizedTest
+    @CsvSource(textBlock = PROVIDERS)
     fun `should supply executor bean with retry client and partial custom config`(
         provider: String,
         clazz: Class<LLMClient>
