@@ -11,16 +11,6 @@ public class AlwaysApproveConfirmationHandler : ShellCommandConfirmationHandler 
 }
 
 /**
- * Confirmation handler that always denies commands.
- */
-public class AlwaysDenyConfirmationHandler : ShellCommandConfirmationHandler {
-    override suspend fun requestConfirmation(
-        command: String,
-        workingDirectory: String?
-    ): ShellCommandConfirmation = ShellCommandConfirmation.Denied("User not available, all commands will be denied")
-}
-
-/**
  * Confirmation handler that prompts user via console input.
  *
  * Prints command details and waits for y/yes to approve, any other input denies.
