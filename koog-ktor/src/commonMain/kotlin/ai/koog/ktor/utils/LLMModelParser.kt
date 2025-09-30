@@ -222,7 +222,8 @@ private val ANTHROPIC_MODELS_MAP = mapOf(
     "haiku_3_5" to AnthropicModels.Haiku_3_5,
     "sonnet_3_5" to AnthropicModels.Sonnet_3_5,
     "sonnet_3_7" to AnthropicModels.Sonnet_3_7,
-    "sonnet_4" to AnthropicModels.Sonnet_4
+    "sonnet_4" to AnthropicModels.Sonnet_4,
+    "sonnet_4_5" to AnthropicModels.Sonnet_4_5,
 )
 
 private val GOOGLE_MODELS_MAP = mapOf(

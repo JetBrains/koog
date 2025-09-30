@@ -105,7 +105,12 @@ class AIAgentIntegrationTest {
 
         @JvmStatic
         fun anthropicModels4_0(): Stream<LLModel> {
-            return listOf(AnthropicModels.Opus_4, AnthropicModels.Sonnet_4).stream()
+            return listOf(
+                AnthropicModels.Opus_4,
+                AnthropicModels.Opus_4_1,
+                AnthropicModels.Sonnet_4,
+                AnthropicModels.Sonnet_4_5,
+            ).stream()
         }
 
         @JvmStatic

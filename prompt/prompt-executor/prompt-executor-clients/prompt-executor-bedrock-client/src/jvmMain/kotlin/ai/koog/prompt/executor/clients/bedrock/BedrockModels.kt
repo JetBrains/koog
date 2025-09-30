@@ -196,6 +196,22 @@ public object BedrockModels : LLModelDefinitions {
     ).effectiveModel
 
     /**
+     * Claude 4.5 Sonnet - Latest high-performance model with enhanced capabilities
+     *
+     * This model offers:
+     * - Superior coding and agentic capabilities
+     * - Enhanced performance on complex tasks
+     * - Improved instruction following
+     * - Advanced multimodal understanding (text and images)
+     * - Tool/function calling with parallel execution
+     * - Optimized for both quality and efficiency
+     */
+    public val AnthropicClaude4_5Sonnet: LLModel = BedrockModel(
+        AnthropicModels.Sonnet_4_5,
+        "anthropic.claude-sonnet-4-5-20250929-v1:0",
+    ).effectiveModel
+
+    /**
      * Claude 3 Sonnet - Balanced performance model ideal for most use cases
      *
      * This model offers:

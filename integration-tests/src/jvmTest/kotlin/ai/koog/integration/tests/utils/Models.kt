@@ -50,6 +50,7 @@ object Models {
             AnthropicModels.Sonnet_3_5,
             AnthropicModels.Sonnet_3_7,
             AnthropicModels.Sonnet_4,
+            AnthropicModels.Sonnet_4_5,
         )
     }
 
