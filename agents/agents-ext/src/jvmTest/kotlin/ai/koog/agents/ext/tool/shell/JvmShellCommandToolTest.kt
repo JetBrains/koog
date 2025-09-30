@@ -29,7 +29,7 @@ class JvmShellCommandToolTest {
         command: String,
         workingDirectory: String? = null,
         timeoutSeconds: Int = 60,
-        confirmationHandler: ShellCommandConfirmationHandler = AlwaysApproveConfirmationHandler()
+        confirmationHandler: ShellCommandConfirmationHandler = BraveModeConfirmationHandler()
     ): ExecuteShellCommandTool.Result {
         val tool = ExecuteShellCommandTool(executor, confirmationHandler)
         return tool.execute(
@@ -49,7 +49,7 @@ class JvmShellCommandToolTest {
 
     @Test
     fun `descriptor configuration`() {
-        val tool = ExecuteShellCommandTool(executor, AlwaysApproveConfirmationHandler())
+        val tool = ExecuteShellCommandTool(executor, BraveModeConfirmationHandler())
         val descriptor = tool.descriptor
 
         assertEquals("__execute_shell_command__", descriptor.name)

@@ -1,9 +1,11 @@
 package ai.koog.agents.ext.tool.shell
 
 /**
- * Confirmation handler that always approves commands.
+ * Brave mode confirmation handler that bypasses user confirmation.
+ *
+ * Use when you trust the agent to execute commands without prompting.
  */
-public class AlwaysApproveConfirmationHandler : ShellCommandConfirmationHandler {
+public class BraveModeConfirmationHandler : ShellCommandConfirmationHandler {
     override suspend fun requestConfirmation(
         command: String,
         workingDirectory: String?
