@@ -6,8 +6,13 @@ agents into your Spring Boot applications with minimal setup.
 ## Overview
 
 The `koog-spring-boot-starter` automatically configures LLM clients based on your application properties and provides
-ready-to-use beans for dependency injection. It supports all major LLM providers including OpenAI, Anthropic, Google,
-OpenRouter, DeepSeek, and Ollama.
+ready-to-use beans for dependency injection. It supports all major LLM providers including:
+- OpenAI
+- Anthropic
+- Google
+- OpenRouter
+- DeepSeek
+- Ollama
 
 ## Getting Started
 
@@ -27,21 +32,27 @@ Configure your preferred LLM providers in `application.properties`:
 
 ```properties
 # OpenAI Configuration
+ai.koog.openai.enabled=true
 ai.koog.openai.api-key=${OPENAI_API_KEY}
 ai.koog.openai.base-url=https://api.openai.com
 # Anthropic Configuration  
+ai.koog.anthropic.enabled=true
 ai.koog.anthropic.api-key=${ANTHROPIC_API_KEY}
 ai.koog.anthropic.base-url=https://api.anthropic.com
 # Google Configuration
+ai.koog.google.enabled=true
 ai.koog.google.api-key=${GOOGLE_API_KEY}
 ai.koog.google.base-url=https://generativelanguage.googleapis.com
 # OpenRouter Configuration
+ai.koog.openrouter.enabled=true
 ai.koog.openrouter.api-key=${OPENROUTER_API_KEY}
 ai.koog.openrouter.base-url=https://openrouter.ai
 # DeepSeek Configuration
+ai.koog.deepseek.enabled=true
 ai.koog.deepseek.api-key=${DEEPSEEK_API_KEY}
 ai.koog.deepseek.base-url=https://api.deepseek.com
 # Ollama Configuration (local - no API key required)
+ai.koog.ollama.enabled=true
 ai.koog.ollama.base-url=http://localhost:11434
 ```
 
@@ -51,23 +62,38 @@ Or using YAML format (`application.yml`):
 ai:
     koog:
         openai:
+            enabled: true
             api-key: ${OPENAI_API_KEY}
             base-url: https://api.openai.com
         anthropic:
+            enabled: true
             api-key: ${ANTHROPIC_API_KEY}
             base-url: https://api.anthropic.com
         google:
+            enabled: true
             api-key: ${GOOGLE_API_KEY}
             base-url: https://generativelanguage.googleapis.com
         openrouter:
+            enabled: true
             api-key: ${OPENROUTER_API_KEY}
             base-url: https://openrouter.ai
         deepseek:
+            enabled: true
             api-key: ${DEEPSEEK_API_KEY}
             base-url: https://api.deepseek.com
         ollama:
+            enabled: true # Set it to `true` explicitly to activate !!!
             base-url: http://localhost:11434
 ```
+
+Both `ai.koog.PROVIDER.api-key` and `ai.koog.PROVIDER.enabled` properties are used to activate the provider.
+
+If the provider supports the API Key (like OpenAI, Anthropic, Google), then `ai.koog.PROVIDER.enabled` is set to `true` by default.
+
+If the provider does not support the API Key, like Ollama, `ai.koog.PROVIDER.enabled` is set to `false` by default,
+and provider should be enabled explicitly in the application configuration.
+
+Provider's base urls are set to their default values in the Spring Boot starter, but you may override it in your application.
 
 !!! tip "Environment Variables"
 It's recommended to use environment variables for API keys to keep them secure and out of version control.
