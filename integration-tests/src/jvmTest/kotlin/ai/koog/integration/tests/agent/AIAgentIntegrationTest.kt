@@ -409,9 +409,8 @@ class AIAgentIntegrationTest {
         }
     }
 
-    // ToDo: uncomment anthropicModels when KG-317 is fixed
     @ParameterizedTest
-    @MethodSource("openAIModels", /*"anthropicModels",*/ "googleModels")
+    @MethodSource("openAIModels", "anthropicModels", "googleModels")
     fun integration_AIAgentNoSystemMessage(model: LLModel) = runTest {
         Models.assumeAvailable(model.provider)
         withRetry {
