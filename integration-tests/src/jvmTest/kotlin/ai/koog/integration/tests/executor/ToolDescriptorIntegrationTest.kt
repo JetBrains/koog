@@ -6,8 +6,13 @@ import ai.koog.integration.tests.utils.RetryUtils.withRetry
 import ai.koog.integration.tests.utils.TestUtils
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
+import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
+import ai.koog.prompt.executor.clients.bedrock.BedrockModels
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
+import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.clients.openrouter.OpenRouterModels
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -105,12 +110,12 @@ class ToolDescriptorIntegrationTest {
     companion object {
         @JvmStatic
         fun allModels(): Stream<LLModel> {
-            return Stream.concat(
-                Stream.concat(
-                    Models.openAIModels(),
-                    Models.anthropicModels()
-                ),
-                Models.googleModels()
+            return Stream.of(
+                OpenAIModels.CostOptimized.GPT4_1Mini,
+                AnthropicModels.Sonnet_3_7,
+                GoogleModels.Gemini2_5Flash,
+                BedrockModels.AnthropicClaude35Haiku,
+                OpenRouterModels.Mistral7B,
             )
         }
 
