@@ -1,4 +1,7 @@
 import ai.koog.gradle.publish.maven.Publishing.publishToMaven
+import org.gradle.internal.os.OperatingSystem
+import org.gradle.kotlin.dsl.support.serviceOf
+import java.io.ByteArrayOutputStream
 
 group = rootProject.group
 version = rootProject.version
@@ -59,8 +62,30 @@ tasks.register<Exec>("dockerBuildTestPythonA2AServer") {
     description = "Build Python A2A test server image"
     workingDir = file("../test-python-a2a-server")
     commandLine = listOf("docker", "build", "-t", "test-python-a2a-server", ".")
-}
 
+    onlyIf {
+        // do not attempt to check for docker on windows
+        if (OperatingSystem.current().isWindows) {
+            return@onlyIf false
+        }
+
+        try {
+            val buffer = ByteArrayOutputStream()
+
+            serviceOf<ExecOperations>().exec {
+                commandLine = listOf("docker", "--version")
+                standardOutput = buffer
+                errorOutput = buffer
+            }
+
+            true
+        } catch (_: Exception) {
+            logger.warn("Docker not available. Skipping task 'dockerBuildTestPythonA2AServer'")
+
+            false
+        }
+    }
+}
 tasks.named("jvmTest") {
     dependsOn("dockerBuildTestPythonA2AServer")
 }

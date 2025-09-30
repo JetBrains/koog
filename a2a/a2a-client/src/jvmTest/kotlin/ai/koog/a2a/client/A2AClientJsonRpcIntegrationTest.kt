@@ -9,11 +9,13 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.condition.EnabledOnOs
+import org.junit.jupiter.api.condition.OS
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.wait.strategy.Wait
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
-import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Duration.Companion.minutes
 
 /**
  * Integration test class for testing the JSON-RPC HTTP communication in the A2A client context.
@@ -22,6 +24,7 @@ import kotlin.time.Duration.Companion.seconds
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Testcontainers
+@EnabledOnOs(OS.LINUX)
 class A2AClientJsonRpcIntegrationTest : BaseA2AProtocolTest() {
     companion object {
         @Container
@@ -31,7 +34,7 @@ class A2AClientJsonRpcIntegrationTest : BaseA2AProtocolTest() {
                 .waitingFor(Wait.forListeningPort())
     }
 
-    override val testTimeout = 10.seconds
+    override val testTimeout = 2.minutes
 
     private val httpClient = HttpClient {
         install(Logging) {

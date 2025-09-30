@@ -13,6 +13,7 @@ kotlin {
         commonMain {
             dependencies {
                 api(project(":prompt:prompt-model"))
+                api(project(":prompt:prompt-xml"))
                 api(project(":a2a:a2a-core"))
 
                 api(libs.kotlinx.serialization.json)

@@ -11,6 +11,7 @@ import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.prompt.xml.xml
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.json.Json
@@ -20,8 +21,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
-class ConvertersTest {
-
+class MessageConvertersTest {
     private val fixedInstant: Instant = Instant.parse("2024-01-01T00:00:00Z")
     private val fixedClock: Clock = object : Clock {
         override fun now(): Instant = fixedInstant
@@ -30,7 +30,7 @@ class ConvertersTest {
     private val prettyJson = Json { prettyPrint = true }
 
     @Test
-    fun testA2AtoKoog_User_withTextDataAndFiles_fullObjectEquality() {
+    fun testA2AtoKoog_User_withTextDataAndFiles() {
         val json = buildJsonObject { put("k", "v") }
         val bytesBase64 = "YmFzZTY0" // arbitrary base64 string
 
@@ -51,13 +51,18 @@ class ConvertersTest {
 
         val actual: Message = a2a.toKoogMessage(clock = fixedClock)
 
-        val expectedContent = buildString {
-            appendLine("Context ID: ctx-123")
-            appendLine("Task ID: task-1")
-            appendLine("Reference Task ID: ref-1")
-            appendLine("Reference Task ID: ref-2")
-            appendLine("Hello")
-            appendLine(prettyJson.encodeToString(json))
+        val expectedContent = xml {
+            tag("message_content") {
+                +("Hello\n" + prettyJson.encodeToString(json))
+            }
+            tag("a2a_message_metadata") {
+                tag("context_id") { +"ctx-123" }
+                tag("task_id") { +"task-1" }
+                tag("reference_task_ids") {
+                    tag("id") { +"ref-1" }
+                    tag("id") { +"ref-2" }
+                }
+            }
         }
         val expectedAttachments = listOf(
             Attachment.File(
@@ -83,7 +88,7 @@ class ConvertersTest {
     }
 
     @Test
-    fun testA2AtoKoog_Agent_fullObjectEquality() {
+    fun testA2AtoKoog_Agent() {
         val a2a = A2AMessage(
             messageId = "m2",
             role = Role.Agent,
@@ -93,7 +98,10 @@ class ConvertersTest {
         val actual = a2a.toKoogMessage(clock = fixedClock)
 
         val expected = Message.Assistant(
-            content = buildString { appendLine("Agent says hi") },
+            content = xml {
+                tag("message_content") { +"Agent says hi" }
+                tag("a2a_message_metadata") {}
+            },
             metaInfo = ResponseMetaInfo(timestamp = fixedInstant),
             attachments = emptyList()
         )
@@ -102,7 +110,7 @@ class ConvertersTest {
     }
 
     @Test
-    fun testKoogToA2A_User_withPlainTextBinaryAndUrlAttachments_fullObjectEquality() {
+    fun testKoogToA2A_User_withPlainTextBinaryAndUrlAttachments() {
         val plain = Attachment.File(
             content = AttachmentContent.PlainText("abc"),
             format = "txt",
@@ -164,7 +172,7 @@ class ConvertersTest {
     }
 
     @Test
-    fun testKoogToA2A_Assistant_fullObjectEquality() {
+    fun testKoogToA2A_Assistant() {
         val koog: Message = Message.Assistant(
             content = "Answer",
             metaInfo = ResponseMetaInfo(timestamp = fixedInstant),

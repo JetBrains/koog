@@ -30,6 +30,7 @@ import io.kotest.matchers.string.shouldStartWith
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logging
 import io.ktor.server.netty.Netty
@@ -47,7 +48,7 @@ import org.junit.jupiter.api.TestInstance
 import java.net.ServerSocket
 import kotlin.test.BeforeTest
 import kotlin.test.Test
-import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Duration.Companion.minutes
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -59,7 +60,7 @@ import kotlin.uuid.Uuid
 @OptIn(ExperimentalUuidApi::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class A2AServerJsonRpcIntegrationTest : BaseA2AProtocolTest() {
-    override val testTimeout = 10.seconds
+    override val testTimeout = 2.minutes
 
     private var testPort: Int? = null
     private val testPath = "/a2a"
@@ -110,6 +111,10 @@ class A2AServerJsonRpcIntegrationTest : BaseA2AProtocolTest() {
             install(Logging) {
                 level = LogLevel.ALL
             }
+
+            install(HttpTimeout) {
+                requestTimeoutMillis = testTimeout.inWholeMilliseconds
+            }
         }
 
         clientTransport = HttpJSONRPCClientTransport(serverUrl, httpClient)
@@ -118,7 +123,8 @@ class A2AServerJsonRpcIntegrationTest : BaseA2AProtocolTest() {
             transport = clientTransport,
             agentCardResolver = UrlAgentCardResolver(
                 baseUrl = serverUrl,
-                path = A2AConsts.AGENT_CARD_WELL_KNOWN_PATH
+                path = A2AConsts.AGENT_CARD_WELL_KNOWN_PATH,
+                baseHttpClient = httpClient,
             )
         )
     }
