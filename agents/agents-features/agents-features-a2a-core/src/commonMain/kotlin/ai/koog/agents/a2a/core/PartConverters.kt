@@ -9,7 +9,6 @@ import ai.koog.a2a.model.TextPart
 import ai.koog.prompt.message.Attachment
 import ai.koog.prompt.message.AttachmentContent
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
 
 /**
  * Koog doesn't have proper support for message parts yet, but A2A operates with parts.
@@ -31,10 +30,6 @@ public data class KoogContentPart(val content: String) : KoogPart
 @Serializable
 public data class KoogAttachmentPart(val attachment: Attachment) : KoogPart
 
-private val json = Json {
-    prettyPrint = true
-}
-
 /**
  * Converts A2A [Part] to Koog [KoogPart].
  */
@@ -42,7 +37,7 @@ public fun Part.toKoogPart(): KoogPart = when (this) {
     is TextPart -> KoogContentPart(this.text)
     // Koog doesn't support structured data as a separate type, treat it as a content part.
 
-    is DataPart -> KoogContentPart(json.encodeToString(this.data))
+    is DataPart -> KoogContentPart(A2AFeatureJson.encodeToString(this.data))
 
     is FilePart -> {
         val file = this.file // to enable smart cast

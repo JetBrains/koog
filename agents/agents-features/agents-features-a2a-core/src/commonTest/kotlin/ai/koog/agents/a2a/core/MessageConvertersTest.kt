@@ -11,11 +11,12 @@ import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
-import ai.koog.prompt.xml.xml
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.put
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -51,19 +52,7 @@ class MessageConvertersTest {
 
         val actual: Message = a2a.toKoogMessage(clock = fixedClock)
 
-        val expectedContent = xml {
-            tag("message_content") {
-                +("Hello\n" + prettyJson.encodeToString(json))
-            }
-            tag("a2a_message_metadata") {
-                tag("context_id") { +"ctx-123" }
-                tag("task_id") { +"task-1" }
-                tag("reference_task_ids") {
-                    tag("id") { +"ref-1" }
-                    tag("id") { +"ref-2" }
-                }
-            }
-        }
+        val expectedContent = "Hello\n" + prettyJson.encodeToString(json)
         val expectedAttachments = listOf(
             Attachment.File(
                 format = "",
@@ -78,9 +67,23 @@ class MessageConvertersTest {
                 content = AttachmentContent.URL("https://example.com/doc.txt")
             )
         )
+        val expectedMetadata = JsonObject(
+            mapOf(
+                MESSAGE_A2A_METADATA_KEY to Json.encodeToJsonElement(
+                    MessageA2AMetadata(
+                        messageId = "m1",
+                        contextId = "ctx-123",
+                        taskId = "task-1",
+                        referenceTaskIds = listOf("ref-1", "ref-2"),
+                        metadata = null,
+                        extensions = listOf("ext:a"),
+                    )
+                )
+            )
+        )
         val expected: Message = Message.User(
             content = expectedContent,
-            metaInfo = RequestMetaInfo(timestamp = fixedInstant),
+            metaInfo = RequestMetaInfo(timestamp = fixedInstant, metadata = expectedMetadata),
             attachments = expectedAttachments
         )
 
@@ -97,12 +100,23 @@ class MessageConvertersTest {
 
         val actual = a2a.toKoogMessage(clock = fixedClock)
 
+        val expectedMetadata = JsonObject(
+            mapOf(
+                MESSAGE_A2A_METADATA_KEY to Json.encodeToJsonElement(
+                    MessageA2AMetadata(
+                        messageId = "m2",
+                        contextId = null,
+                        taskId = null,
+                        referenceTaskIds = null,
+                        metadata = null,
+                        extensions = null,
+                    )
+                )
+            )
+        )
         val expected = Message.Assistant(
-            content = xml {
-                tag("message_content") { +"Agent says hi" }
-                tag("a2a_message_metadata") {}
-            },
-            metaInfo = ResponseMetaInfo(timestamp = fixedInstant),
+            content = "Agent says hi",
+            metaInfo = ResponseMetaInfo(timestamp = fixedInstant, metadata = expectedMetadata),
             attachments = emptyList()
         )
 
@@ -138,10 +152,14 @@ class MessageConvertersTest {
         )
 
         val actual = koog.toA2AMessage(
-            messageId = "mid",
-            contextId = "ctx",
-            taskId = "task",
-            referenceTaskIds = listOf("r1"),
+            a2aMetadata = MessageA2AMetadata(
+                messageId = "mid",
+                contextId = "ctx",
+                taskId = "task",
+                referenceTaskIds = listOf("r1"),
+                metadata = null,
+                extensions = null,
+            )
         )
 
         val expectedPlainBase64 = AttachmentContent.Binary.Bytes("abc".encodeToByteArray()).asBase64()
@@ -177,7 +195,16 @@ class MessageConvertersTest {
             content = "Answer",
             metaInfo = ResponseMetaInfo(timestamp = fixedInstant),
         )
-        val actual = koog.toA2AMessage(messageId = "m3")
+        val actual = koog.toA2AMessage(
+            a2aMetadata = MessageA2AMetadata(
+                messageId = "m3",
+                contextId = null,
+                taskId = null,
+                referenceTaskIds = null,
+                metadata = null,
+                extensions = null,
+            )
+        )
         val expected = A2AMessage(
             messageId = "m3",
             role = Role.Agent,
@@ -198,7 +225,7 @@ class MessageConvertersTest {
             metaInfo = RequestMetaInfo(timestamp = fixedInstant)
         )
         assertFailsWith<IllegalArgumentException> {
-            sys.toA2AMessage(messageId = "m4")
+            sys.toA2AMessage()
         }
     }
 }
