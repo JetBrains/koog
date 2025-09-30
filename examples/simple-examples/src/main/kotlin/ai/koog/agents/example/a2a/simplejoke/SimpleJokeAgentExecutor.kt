@@ -1,4 +1,4 @@
-package ai.koog.agents.example.a2a.joke
+package ai.koog.agents.example.a2a.simplejoke
 
 import ai.koog.a2a.exceptions.A2AUnsupportedOperationException
 import ai.koog.a2a.model.MessageSendParams
@@ -20,7 +20,10 @@ import ai.koog.prompt.message.Message
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
-class JokeAgentExecutor : AgentExecutor {
+/**
+ * This is a simple example of an agent executor that wraps LLM calls using prompt executor to generate jokes.
+ */
+class SimpleJokeAgentExecutor : AgentExecutor {
     private val promptExecutor = MultiLLMPromptExecutor(
         LLMProvider.OpenAI to OpenAILLMClient(ApiKeyService.openAIApiKey),
         LLMProvider.Anthropic to AnthropicLLMClient(ApiKeyService.anthropicApiKey),
@@ -54,7 +57,7 @@ class JokeAgentExecutor : AgentExecutor {
         }
 
         // Get a response from the LLM
-        val responseMessage = promptExecutor.execute(prompt, AnthropicModels.Opus_4_1)
+        val responseMessage = promptExecutor.execute(prompt, AnthropicModels.Sonnet_4)
             .single()
             .let { message ->
                 message as? Message.Assistant ?: throw IllegalStateException("Unexpected message type: $message")

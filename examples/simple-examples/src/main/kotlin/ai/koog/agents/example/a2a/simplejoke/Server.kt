@@ -1,4 +1,4 @@
-package ai.koog.agents.example.a2a.joke
+package ai.koog.agents.example.a2a.simplejoke
 
 import ai.koog.a2a.model.AgentCapabilities
 import ai.koog.a2a.model.AgentCard
@@ -56,7 +56,7 @@ suspend fun main() {
     )
 
     // Create agent executor
-    val agentExecutor = JokeAgentExecutor()
+    val agentExecutor = SimpleJokeAgentExecutor()
 
     // Create A2A server
     val a2aServer = A2AServer(

@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalUuidApi::class)
 
-package ai.koog.agents.example.a2a.joke
+package ai.koog.agents.example.a2a.simplejoke
 
 import ai.koog.a2a.client.A2AClient
 import ai.koog.a2a.client.UrlAgentCardResolver
