@@ -319,17 +319,17 @@ class JvmShellCommandToolTest {
     }
 
     @Test
-    fun `user denies command execution`() = runBlocking {
+    fun `user denies command execution with simple No`() = runBlocking {
         val handler = object : ShellCommandConfirmationHandler {
             override suspend fun requestConfirmation(command: String, workingDirectory: String?) =
-                ShellCommandConfirmation.Denied
+                ShellCommandConfirmation.Denied("No")
         }
 
         val result = execute("rm important-file.txt", confirmationHandler = handler)
 
         val expected = """
             Command: rm important-file.txt
-            Command execution denied by user
+            Command execution denied with user response: No
         """.trimIndent()
 
         assertEquals(expected, result.textForLLM())
@@ -340,14 +340,14 @@ class JvmShellCommandToolTest {
     fun `user denies with reason`() = runBlocking {
         val handler = object : ShellCommandConfirmationHandler {
             override suspend fun requestConfirmation(command: String, workingDirectory: String?) =
-                ShellCommandConfirmation.DeniedWithReason("Cannot delete important files")
+                ShellCommandConfirmation.Denied("Cannot delete important files")
         }
 
         val result = execute("rm important-file.txt", confirmationHandler = handler)
 
         val expected = """
             Command: rm important-file.txt
-            Command execution denied: Cannot delete important files
+            Command execution denied with user response: Cannot delete important files
         """.trimIndent()
 
         assertEquals(expected, result.textForLLM())

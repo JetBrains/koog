@@ -115,9 +115,6 @@ public class ExecuteShellCommandTool(
         }
 
         is ShellCommandConfirmation.Denied ->
-            Result(args.command, null, "Command execution denied by user")
-
-        is ShellCommandConfirmation.DeniedWithReason ->
-            Result(args.command, null, "Command execution denied: ${confirmation.reason}")
+            Result(args.command, null, "Command execution denied with user response: ${confirmation.userResponse}")
     }
 }

@@ -7,15 +7,12 @@ public sealed class ShellCommandConfirmation {
     /** Command execution approved. */
     public data object Approved : ShellCommandConfirmation()
 
-    /** Command execution denied. */
-    public data object Denied : ShellCommandConfirmation()
-
     /**
      * Command execution denied with explanation.
      *
-     * @property reason Explanation for denial
+     * @property userResponse A free-form user reply when not approving; may be a reason or simply a “no”.
      */
-    public data class DeniedWithReason(val reason: String) : ShellCommandConfirmation()
+    public data class Denied(val userResponse: String) : ShellCommandConfirmation()
 }
 
 /**

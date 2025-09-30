@@ -17,7 +17,7 @@ public class AlwaysDenyConfirmationHandler : ShellCommandConfirmationHandler {
     override suspend fun requestConfirmation(
         command: String,
         workingDirectory: String?
-    ): ShellCommandConfirmation = ShellCommandConfirmation.Denied
+    ): ShellCommandConfirmation = ShellCommandConfirmation.Denied("User not available, all commands will be denied")
 }
 
 /**
@@ -30,13 +30,14 @@ public class PrintShellCommandConfirmationHandler : ShellCommandConfirmationHand
         command: String,
         workingDirectory: String?
     ): ShellCommandConfirmation {
-        println("Execute: $command")
+        println("Agent wants to execute: $command")
         workingDirectory?.let { println("In: $it") }
-        print("Confirm (y/n): ")
+        print("Confirm (y / n / reason-for-denying): ")
 
-        return when (readln().lowercase()) {
+        val userResponse = readln().lowercase()
+        return when (userResponse) {
             "y", "yes" -> ShellCommandConfirmation.Approved
-            else -> ShellCommandConfirmation.Denied
+            else -> ShellCommandConfirmation.Denied(userResponse)
         }
     }
 }
