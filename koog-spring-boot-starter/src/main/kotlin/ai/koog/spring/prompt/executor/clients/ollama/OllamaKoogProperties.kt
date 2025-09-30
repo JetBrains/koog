@@ -1,10 +1,12 @@
-package ai.koog.spring
+package ai.koog.spring.prompt.executor.clients.ollama
 
+import ai.koog.spring.RetryConfigKoogProperties
+import ai.koog.spring.prompt.executor.clients.KoogLlmClientProperties
 import org.springframework.boot.context.properties.ConfigurationProperties
 
 /**
  * Configuration properties for the Koog library used for integrating with Ollama LLM provider.
- * These properties are used in conjunction with the [KoogAutoConfiguration] auto-configuration class to initialize and
+ * These properties are used in conjunction with the [ai.koog.spring.KoogAutoConfiguration] auto-configuration class to initialize and
  * configure respective client implementations.
  *
  * Configuration prefix: `ai.koog.ollama`
@@ -13,9 +15,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties
  */
 @ConfigurationProperties(prefix = OllamaKoogProperties.PREFIX)
 public class OllamaKoogProperties(
-    public val baseUrl: String = "http://localhost:11434",
-    public val retry: RetryConfigKoogProperties? = null
-) {
+    public override val enabled: Boolean,
+    public override val baseUrl: String,
+    public override val retry: RetryConfigKoogProperties? = null
+) : KoogLlmClientProperties {
     /**
      * Companion object for the OllamaKoogProperties class, providing constant values and
      * utilities associated with the configuration of Ollama-related properties.
@@ -25,5 +28,9 @@ public class OllamaKoogProperties(
          * Prefix constant used for configuration Ollama-related properties in the Koog framework.
          */
         public const val PREFIX: String = "ai.koog.ollama"
+    }
+
+    override fun toString(): String {
+        return "OllamaKoogProperties(enabled=$enabled, baseUrl='$baseUrl', retry=$retry)"
     }
 }

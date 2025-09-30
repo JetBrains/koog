@@ -1,10 +1,13 @@
-package ai.koog.spring
+package ai.koog.spring.prompt.executor.clients.anthropic
 
+import ai.koog.spring.RetryConfigKoogProperties
+import ai.koog.spring.prompt.executor.clients.KoogLlmClientProperties
+import ai.koog.utils.lang.masked
 import org.springframework.boot.context.properties.ConfigurationProperties
 
 /**
  * Configuration properties for the Koog library used for integrating with Anthropic LLM provider.
- * These properties are used in conjunction with the [KoogAutoConfiguration] auto-configuration class to initialize and
+ * These properties are used in conjunction with the [ai.koog.spring.KoogAutoConfiguration] auto-configuration class to initialize and
  * configure respective client implementations.
  *
  * Configuration prefix: `ai.koog.anthropic`
@@ -14,10 +17,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties
  */
 @ConfigurationProperties(prefix = AnthropicKoogProperties.PREFIX)
 public class AnthropicKoogProperties(
-    public val apiKey: String = "",
-    public val baseUrl: String = "https://api.anthropic.com",
-    public val retry: RetryConfigKoogProperties? = null
-) {
+    public override val enabled: Boolean,
+    public val apiKey: String,
+    public override val baseUrl: String,
+    public override val retry: RetryConfigKoogProperties? = null
+) : KoogLlmClientProperties {
     /**
      * Companion object for the AnthropicKoogProperties class, providing constant values and
      * utilities associated with the configuration of Anthropic-related properties.
@@ -27,5 +31,9 @@ public class AnthropicKoogProperties(
          * Prefix constant used for configuration Anthropic-related properties in the Koog framework.
          */
         public const val PREFIX: String = "ai.koog.anthropic"
+    }
+
+    override fun toString(): String {
+        return "AnthropicKoogProperties(apiKey='${apiKey.masked()}', baseUrl='$baseUrl', retry=$retry)"
     }
 }

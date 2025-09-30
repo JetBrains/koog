@@ -1,10 +1,13 @@
-package ai.koog.spring
+package ai.koog.spring.prompt.executor.clients.openrouter
 
+import ai.koog.spring.RetryConfigKoogProperties
+import ai.koog.spring.prompt.executor.clients.KoogLlmClientProperties
+import ai.koog.utils.lang.masked
 import org.springframework.boot.context.properties.ConfigurationProperties
 
 /**
  * Configuration properties for the Koog library used for integrating with OpenRouter LLM provider.
- * These properties are used in conjunction with the [KoogAutoConfiguration] auto-configuration class to initialize and
+ * These properties are used in conjunction with the [ai.koog.spring.KoogAutoConfiguration] auto-configuration class to initialize and
  * configure respective client implementations.
  *
  * Configuration prefix: `ai.koog.openrouter`
@@ -14,10 +17,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties
  */
 @ConfigurationProperties(prefix = OpenRouterKoogProperties.PREFIX)
 public class OpenRouterKoogProperties(
-    public val apiKey: String = "",
-    public val baseUrl: String = "https://openrouter.ai",
-    public val retry: RetryConfigKoogProperties? = null
-) {
+    public override val enabled: Boolean,
+    public val apiKey: String,
+    public override val baseUrl: String,
+    public override val retry: RetryConfigKoogProperties? = null
+) : KoogLlmClientProperties {
     /**
      * Companion object for the OpenRouterKoogProperties class, providing constant values and
      * utilities associated with the configuration of OpenRouter-related properties.
@@ -27,5 +31,9 @@ public class OpenRouterKoogProperties(
          * Prefix constant used for configuration OpenRouter-related properties in the Koog framework.
          */
         public const val PREFIX: String = "ai.koog.openrouter"
+    }
+
+    override fun toString(): String {
+        return "OpenRouterKoogProperties(enabled=$enabled, apiKey='${apiKey.masked()}', baseUrl='$baseUrl', retry=$retry)"
     }
 }

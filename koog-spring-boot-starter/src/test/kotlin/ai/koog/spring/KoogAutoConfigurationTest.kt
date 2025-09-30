@@ -14,6 +14,12 @@ import ai.koog.prompt.executor.clients.retry.RetryConfig
 import ai.koog.prompt.executor.clients.retry.RetryingLLMClient
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaClient
+import ai.koog.spring.prompt.executor.clients.anthropic.AnthropicLLMAutoConfiguration
+import ai.koog.spring.prompt.executor.clients.deepseek.DeepSeekLLMAutoConfiguration
+import ai.koog.spring.prompt.executor.clients.google.GoogleLLMAutoConfiguration
+import ai.koog.spring.prompt.executor.clients.ollama.OllamaLLMAutoConfiguration
+import ai.koog.spring.prompt.executor.clients.openai.OpenAILLMAutoConfiguration
+import ai.koog.spring.prompt.executor.clients.openrouter.OpenRouterLLMAutoConfiguration
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -41,10 +47,19 @@ private const val PROVIDERS = """
 class KoogAutoConfigurationTest {
     private val defaultRetryConfig = RetryConfig()
 
+    private val allProvidersAutoConfigurations = AutoConfigurations.of(
+        AnthropicLLMAutoConfiguration::class.java,
+        GoogleLLMAutoConfiguration::class.java,
+        DeepSeekLLMAutoConfiguration::class.java,
+        OllamaLLMAutoConfiguration::class.java,
+        OpenAILLMAutoConfiguration::class.java,
+        OpenRouterLLMAutoConfiguration::class.java,
+    )
+
     @Test
     fun `should not supply executor beans if no apiKey is provided`() {
         ApplicationContextRunner()
-            .withConfiguration(AutoConfigurations.of(KoogAutoConfiguration::class.java))
+            .withConfiguration(allProvidersAutoConfigurations)
             .run { context ->
                 assertThrows<NoSuchBeanDefinitionException> { context.getBean<SingleLLMPromptExecutor>() }
             }
@@ -54,7 +69,8 @@ class KoogAutoConfigurationTest {
     fun `should supply OpenAI executor bean with provided apiKey and default baseUrl`() {
         val configApiKey = "some_api_key"
         ApplicationContextRunner()
-            .withConfiguration(AutoConfigurations.of(KoogAutoConfiguration::class.java))
+            .withConfiguration(allProvidersAutoConfigurations)
+            .withPropertyValues("ai.koog.openai.enabled=true")
             .withPropertyValues("ai.koog.openai.api-key=$configApiKey")
             .run { context ->
                 val executor = context.getBean<SingleLLMPromptExecutor>()
@@ -75,8 +91,9 @@ class KoogAutoConfigurationTest {
     fun `should supply OpenAI executor bean with provided baseUrl`() {
         val configBaseUrl = "https://some-url.com"
         ApplicationContextRunner()
-            .withConfiguration(AutoConfigurations.of(KoogAutoConfiguration::class.java))
+            .withConfiguration(AutoConfigurations.of(OpenAILLMAutoConfiguration::class.java))
             .withPropertyValues(
+                "ai.koog.openai.enabled=true",
                 "ai.koog.openai.api-key=some_api_key",
                 "ai.koog.openai.base-url=$configBaseUrl",
             )
@@ -98,7 +115,8 @@ class KoogAutoConfigurationTest {
         clazz: Class<LLMClient>
     ) {
         ApplicationContextRunner()
-            .withConfiguration(AutoConfigurations.of(KoogAutoConfiguration::class.java))
+            .withConfiguration(AutoConfigurations.of(OpenAILLMAutoConfiguration::class.java))
+            .withPropertyValues("ai.koog.$provider.enabled=true")
             .withPropertyValues("ai.koog.$provider.api-key=some_api_key")
             .withPropertyValues("ai.koog.$provider.retry.enabled=true")
             .withPropertyValues("ai.koog.$provider.base-url=http://localhost:9876")
@@ -131,7 +149,8 @@ class KoogAutoConfigurationTest {
         val backoffMultiplier = 5.0
         val jitterFactor = 0.5
         ApplicationContextRunner()
-            .withConfiguration(AutoConfigurations.of(KoogAutoConfiguration::class.java))
+            .withConfiguration(allProvidersAutoConfigurations)
+            .withPropertyValues("ai.koog.$provider.enabled=true")
             .withPropertyValues("ai.koog.$provider.api-key=some_api_key")
             .withPropertyValues("ai.koog.$provider.base-url=http://localhost:9876")
             .withPropertyValues("ai.koog.$provider.retry.enabled=true")
@@ -166,7 +185,8 @@ class KoogAutoConfigurationTest {
         val maxAttempts = 5
         val initialDelay = 10
         ApplicationContextRunner()
-            .withConfiguration(AutoConfigurations.of(KoogAutoConfiguration::class.java))
+            .withConfiguration(allProvidersAutoConfigurations)
+            .withPropertyValues("ai.koog.$provider.enabled=true")
             .withPropertyValues("ai.koog.$provider.api-key=some_api_key")
             .withPropertyValues("ai.koog.$provider.retry.enabled=true")
             .withPropertyValues("ai.koog.$provider.retry.max-attempts=$maxAttempts")
@@ -192,7 +212,8 @@ class KoogAutoConfigurationTest {
     fun `should supply Anthropic executor bean with provided apiKey and default baseUrl`() {
         val configApiKey = "some_api_key"
         ApplicationContextRunner()
-            .withConfiguration(AutoConfigurations.of(KoogAutoConfiguration::class.java))
+            .withConfiguration(allProvidersAutoConfigurations)
+            .withPropertyValues("ai.koog.anthropic.enabled=true")
             .withPropertyValues("ai.koog.anthropic.api-key=$configApiKey")
             .run { context ->
                 val executor = context.getBean<SingleLLMPromptExecutor>()
@@ -212,7 +233,8 @@ class KoogAutoConfigurationTest {
     @Test
     fun `should supply Anthropic executor bean with retry client and default config`() {
         ApplicationContextRunner()
-            .withConfiguration(AutoConfigurations.of(KoogAutoConfiguration::class.java))
+            .withConfiguration(AutoConfigurations.of(AnthropicLLMAutoConfiguration::class.java))
+            .withPropertyValues("ai.koog.anthropic.enabled=true")
             .withPropertyValues("ai.koog.anthropic.api-key=some_api_key")
             .withPropertyValues("ai.koog.anthropic.retry.enabled=true")
             .run { context ->
@@ -232,8 +254,9 @@ class KoogAutoConfigurationTest {
     fun `should supply Anthropic executor bean with provided baseUrl`() {
         val configBaseUrl = "https://some-url.com"
         ApplicationContextRunner()
-            .withConfiguration(AutoConfigurations.of(KoogAutoConfiguration::class.java))
+            .withConfiguration(AutoConfigurations.of(AnthropicLLMAutoConfiguration::class.java))
             .withPropertyValues(
+                "ai.koog.anthropic.enabled=true",
                 "ai.koog.anthropic.api-key=some_api_key",
                 "ai.koog.anthropic.base-url=$configBaseUrl",
             )
@@ -252,7 +275,8 @@ class KoogAutoConfigurationTest {
     fun `should supply Google executor bean with provided apiKey and default baseUrl`() {
         val configApiKey = "some_api_key"
         ApplicationContextRunner()
-            .withConfiguration(AutoConfigurations.of(KoogAutoConfiguration::class.java))
+            .withConfiguration(AutoConfigurations.of(GoogleLLMAutoConfiguration::class.java))
+            .withPropertyValues("ai.koog.google.enabled=true")
             .withPropertyValues("ai.koog.google.api-key=$configApiKey")
             .run { context ->
                 val executor = context.getBean<SingleLLMPromptExecutor>()
@@ -273,8 +297,9 @@ class KoogAutoConfigurationTest {
     fun `should supply Google executor bean with provided baseUrl`() {
         val configBaseUrl = "https://some-url.com"
         ApplicationContextRunner()
-            .withConfiguration(AutoConfigurations.of(KoogAutoConfiguration::class.java))
+            .withConfiguration(AutoConfigurations.of(GoogleLLMAutoConfiguration::class.java))
             .withPropertyValues(
+                "ai.koog.google.enabled=true",
                 "ai.koog.google.api-key=some_api_key",
                 "ai.koog.google.base-url=$configBaseUrl",
             )
@@ -292,7 +317,8 @@ class KoogAutoConfigurationTest {
     @Test
     fun `should supply Google executor bean with retry client and default config`() {
         ApplicationContextRunner()
-            .withConfiguration(AutoConfigurations.of(KoogAutoConfiguration::class.java))
+            .withConfiguration(AutoConfigurations.of(GoogleLLMAutoConfiguration::class.java))
+            .withPropertyValues("ai.koog.google.enabled=true")
             .withPropertyValues("ai.koog.google.api-key=some_api_key")
             .withPropertyValues("ai.koog.google.retry.enabled=true")
             .run { context ->
@@ -312,7 +338,8 @@ class KoogAutoConfigurationTest {
     fun `should supply OpenRouter executor bean with provided apiKey and default baseUrl`() {
         val configApiKey = "some_api_key"
         ApplicationContextRunner()
-            .withConfiguration(AutoConfigurations.of(KoogAutoConfiguration::class.java))
+            .withConfiguration(AutoConfigurations.of(OpenRouterLLMAutoConfiguration::class.java))
+            .withPropertyValues("ai.koog.openrouter.enabled=true")
             .withPropertyValues("ai.koog.openrouter.api-key=$configApiKey")
             .run { context ->
                 val executor = context.getBean<SingleLLMPromptExecutor>()
@@ -333,8 +360,9 @@ class KoogAutoConfigurationTest {
     fun `should supply OpenRouter executor bean with provided baseUrl`() {
         val configBaseUrl = "https://some-url.com"
         ApplicationContextRunner()
-            .withConfiguration(AutoConfigurations.of(KoogAutoConfiguration::class.java))
+            .withConfiguration(AutoConfigurations.of(OpenRouterLLMAutoConfiguration::class.java))
             .withPropertyValues(
+                "ai.koog.openrouter.enabled=true",
                 "ai.koog.openrouter.api-key=some_api_key",
                 "ai.koog.openrouter.base-url=$configBaseUrl",
             )
@@ -352,7 +380,8 @@ class KoogAutoConfigurationTest {
     @Test
     fun `should supply OpenRouter executor bean with retry client and default config`() {
         ApplicationContextRunner()
-            .withConfiguration(AutoConfigurations.of(KoogAutoConfiguration::class.java))
+            .withConfiguration(AutoConfigurations.of(OpenRouterLLMAutoConfiguration::class.java))
+            .withPropertyValues("ai.koog.openrouter.enabled=true")
             .withPropertyValues("ai.koog.openrouter.api-key=some_api_key")
             .withPropertyValues("ai.koog.openrouter.retry.enabled=true")
             .run { context ->
@@ -372,7 +401,8 @@ class KoogAutoConfigurationTest {
     fun `should supply DeepSeek executor bean with provided apiKey and default baseUrl`() {
         val configApiKey = "some_api_key"
         ApplicationContextRunner()
-            .withConfiguration(AutoConfigurations.of(KoogAutoConfiguration::class.java))
+            .withConfiguration(AutoConfigurations.of(DeepSeekLLMAutoConfiguration::class.java))
+            .withPropertyValues("ai.koog.deepseek.enabled=true")
             .withPropertyValues("ai.koog.deepseek.api-key=$configApiKey")
             .run { context ->
                 val executor = context.getBean<SingleLLMPromptExecutor>()
@@ -393,8 +423,9 @@ class KoogAutoConfigurationTest {
     fun `should supply DeepSeek executor bean with provided baseUrl`() {
         val configBaseUrl = "https://some-url.com"
         ApplicationContextRunner()
-            .withConfiguration(AutoConfigurations.of(KoogAutoConfiguration::class.java))
+            .withConfiguration(AutoConfigurations.of(DeepSeekLLMAutoConfiguration::class.java))
             .withPropertyValues(
+                "ai.koog.deepseek.enabled=true",
                 "ai.koog.deepseek.api-key=some_api_key",
                 "ai.koog.deepseek.base-url=$configBaseUrl",
             )
@@ -412,7 +443,8 @@ class KoogAutoConfigurationTest {
     @Test
     fun `should supply DeepSeek executor bean with retry client and default config`() {
         ApplicationContextRunner()
-            .withConfiguration(AutoConfigurations.of(KoogAutoConfiguration::class.java))
+            .withConfiguration(AutoConfigurations.of(DeepSeekLLMAutoConfiguration::class.java))
+            .withPropertyValues("ai.koog.deepseek.enabled=true")
             .withPropertyValues("ai.koog.deepseek.api-key=some_api_key")
             .withPropertyValues("ai.koog.deepseek.retry.enabled=true")
             .run { context ->
@@ -432,7 +464,8 @@ class KoogAutoConfigurationTest {
     fun `should supply Ollama executor bean with provided baseUrl`() {
         val configBaseUrl = "https://some-url.com"
         ApplicationContextRunner()
-            .withConfiguration(AutoConfigurations.of(KoogAutoConfiguration::class.java))
+            .withConfiguration(AutoConfigurations.of(OllamaLLMAutoConfiguration::class.java))
+            .withPropertyValues("ai.koog.ollama.enabled=true")
             .withPropertyValues("ai.koog.ollama.base-url=$configBaseUrl")
             .run { context ->
                 val executor = context.getBean<SingleLLMPromptExecutor>()
@@ -448,7 +481,8 @@ class KoogAutoConfigurationTest {
     @Test
     fun `should supply Ollama executor bean with retry client and default config`() {
         ApplicationContextRunner()
-            .withConfiguration(AutoConfigurations.of(KoogAutoConfiguration::class.java))
+            .withConfiguration(AutoConfigurations.of(OllamaLLMAutoConfiguration::class.java))
+            .withPropertyValues("ai.koog.ollama.enabled=true")
             .withPropertyValues("ai.koog.ollama.base-url=https://some-url.com")
             .withPropertyValues("ai.koog.ollama.retry.enabled=true")
             .run { context ->
@@ -467,13 +501,19 @@ class KoogAutoConfigurationTest {
     @Test
     fun `should supply multiple executor beans`() {
         ApplicationContextRunner()
-            .withConfiguration(AutoConfigurations.of(KoogAutoConfiguration::class.java))
+            .withConfiguration(
+                allProvidersAutoConfigurations
+            )
             .withPropertyValues(
+                "ai.koog.openai.enabled=true",
                 "ai.koog.openai.api-key=some_api_key",
+                "ai.koog.anthropic.enabled=true",
                 "ai.koog.anthropic.api-key=some_api_key",
+                "ai.koog.google.enabled=true",
                 "ai.koog.google.api-key=some_api_key",
+                "ai.koog.deepseek.enabled=true",
                 "ai.koog.deepseek.api-key=some_api_key",
-                "ai.koog.ollama.base-url=http://localhist:8765",
+                "ai.koog.ollama.enabled=true",
             )
             .run { context ->
                 val beanNames = context.getBeanNamesForType<SingleLLMPromptExecutor>()
