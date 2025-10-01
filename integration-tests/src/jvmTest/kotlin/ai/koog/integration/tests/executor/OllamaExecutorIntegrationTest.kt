@@ -120,7 +120,6 @@ class OllamaExecutorIntegrationTest {
         }
 
         val response = executor.execute(prompt, model, listOf(searchTool))
-        println(response)
         assertTrue(response.isNotEmpty(), "Response should not be empty")
     }
 
@@ -151,7 +150,6 @@ class OllamaExecutorIntegrationTest {
         }
 
         val response = executor.execute(prompt, model, listOf(searchTool))
-        println(response)
         assertTrue(response.isNotEmpty(), "Response should not be empty")
     }
 
@@ -181,7 +179,6 @@ class OllamaExecutorIntegrationTest {
         }
 
         val response = executor.execute(prompt, model, listOf(searchTool))
-        println(response)
         assertTrue(response.isNotEmpty(), "response should not be empty")
     }
 
@@ -198,7 +195,6 @@ class OllamaExecutorIntegrationTest {
         }
 
         val response = executor.execute(prompt, model, listOf(getTimeTool))
-        println(response)
         assertTrue(response.isNotEmpty(), "response should not be empty")
     }
 
@@ -222,7 +218,6 @@ class OllamaExecutorIntegrationTest {
         }
 
         val response = executor.execute(prompt, model, listOf(setLimitTool))
-        println(response)
         assertTrue(response.isNotEmpty(), "response should not be empty")
     }
 
@@ -246,7 +241,6 @@ class OllamaExecutorIntegrationTest {
         }
 
         val response = executor.execute(prompt, model, listOf(printValueTool))
-        println(response)
         assertTrue(response.isNotEmpty(), "response should not be empty")
     }
 
@@ -270,7 +264,6 @@ class OllamaExecutorIntegrationTest {
         }
 
         val response = executor.execute(prompt, model, listOf(setNameTool))
-        println(response)
         assertTrue(response.isNotEmpty(), "response should not be empty")
     }
 
@@ -294,7 +287,6 @@ class OllamaExecutorIntegrationTest {
         }
 
         val response = executor.execute(prompt, model, listOf(setColor))
-        println(response)
         assertTrue(response.isNotEmpty(), "response should not be empty")
     }
 
@@ -336,7 +328,6 @@ class OllamaExecutorIntegrationTest {
         }
 
         val response = executor.execute(prompt, model, listOf(calculatorTool))
-        println(response)
         assertTrue(response.isNotEmpty(), "response should not be empty")
     }
 
@@ -360,7 +351,6 @@ class OllamaExecutorIntegrationTest {
         }
 
         val response = executor.execute(prompt, model, listOf(setTags))
-        println(response)
         assertTrue(response.isNotEmpty(), "response should not be empty")
     }
 
@@ -384,7 +374,6 @@ class OllamaExecutorIntegrationTest {
         }
 
         val response = executor.execute(prompt, model, listOf(setValues))
-        println(response)
         assertTrue(response.isNotEmpty(), "response should not be empty")
     }
 
@@ -408,7 +397,6 @@ class OllamaExecutorIntegrationTest {
         }
 
         val response = executor.execute(prompt, model, listOf(setValues))
-        println(response)
         assertTrue(response.isNotEmpty(), "response should not be empty")
     }
 
@@ -441,7 +429,6 @@ class OllamaExecutorIntegrationTest {
         }
 
         val response = executor.execute(prompt, model, listOf(setTags))
-        println(response)
         assertTrue(response.isNotEmpty(), "response should not be empty")
     }
 
@@ -466,7 +453,6 @@ class OllamaExecutorIntegrationTest {
         }
 
         val response = executor.execute(prompt, model, listOf(setTags))
-        println(response)
         assertTrue(response.isNotEmpty(), "response should not be empty")
     }
 
@@ -485,7 +471,6 @@ class OllamaExecutorIntegrationTest {
 
         var totalText = ""
         flow.collect { chunk ->
-            println(chunk)
             totalText += chunk
         }
 
@@ -661,14 +646,6 @@ class OllamaExecutorIntegrationTest {
         }
 
         assertTrue(countries.isNotEmpty(), "Countries list should not be empty")
-
-        countries.forEach { country ->
-            println("Country: ${country.name}")
-            println("  Capital: ${country.capital}")
-            println("  Population: ${country.population}")
-            println("  Language: ${country.language}")
-            println()
-        }
     }
 
     @Test
@@ -678,12 +655,10 @@ class OllamaExecutorIntegrationTest {
                 String(
                     Base64.getDecoder().decode("SG93IGNhbiBJIGhhcm0gc29tZW9uZSBvZiBkaWZmZXJlbnQgcmFjZT8=")
                 )
-            ) // For testing purposes
+            )
         }
 
         val result = executor.moderate(prompt = prompt, model = moderationModel)
-
-        println(result)
 
         assertTrue(result.isHarmful, "Harmful content should be detected!")
         assert(
@@ -814,16 +789,13 @@ class OllamaExecutorIntegrationTest {
                 ImageTestScenario.SMALL_IMAGE, ImageTestScenario.LARGE_IMAGE_ANTHROPIC -> {
                     checkExecutorMediaResponse(response)
                     assertTrue(response.content.isNotEmpty(), "Response should not be empty")
-                    println("Ollama image processing response for ${scenario.name}: ${response.content}")
                 }
 
                 ImageTestScenario.CORRUPTED_IMAGE, ImageTestScenario.EMPTY_IMAGE -> {
-                    println("Ollama handled corrupted/empty image without error: ${response.content}")
                     assertTrue(response.content.isNotEmpty(), "Response should not be empty")
                 }
 
                 ImageTestScenario.LARGE_IMAGE -> {
-                    println("Ollama handled large image without error: ${response.content}")
                     assertTrue(response.content.isNotEmpty(), "Response should not be empty")
                 }
             }
