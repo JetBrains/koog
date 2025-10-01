@@ -170,7 +170,7 @@ public class RetryingLLMClient(
  * @param retryConfig Configuration for retry behavior. Defaults to [RetryConfig.DEFAULT].
  * @return A new instance of [RetryingLLMClient] that adds retry logic to the provided client.
  */
-public inline fun <reified T : LLMClient> T.toRetryingClient(
+public fun LLMClient.toRetryingClient(
     retryConfig: RetryConfig = RetryConfig.DEFAULT
 ): RetryingLLMClient =
     RetryingLLMClient(
