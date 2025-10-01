@@ -34,7 +34,7 @@ import kotlin.time.Duration.Companion.milliseconds
  */
 public class RetryingLLMClient(
     private val delegate: LLMClient,
-    public val config: RetryConfig = RetryConfig()
+    internal val config: RetryConfig = RetryConfig()
 ) : LLMClient {
 
     private companion object {
