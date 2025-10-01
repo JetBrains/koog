@@ -1,11 +1,11 @@
 package ai.koog.spring
 
+import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.deepseek.DeepSeekLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterLLMClient
-import ai.koog.prompt.executor.clients.retry.RetryingLLMClient
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaClient
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -56,7 +56,7 @@ class KoogAutoConfigurationIntegrationTest {
         ]
     )
     fun `Should register beans(classes)`(clazz: Class<*>) {
-        verifyBeanIsRegistered<RetryingLLMClient>(clazz)
+        verifyBeanIsRegistered<LLMClient>(clazz)
     }
 
     @ParameterizedTest
@@ -71,7 +71,9 @@ class KoogAutoConfigurationIntegrationTest {
         ]
     )
     fun `Should register SingleLLMExecutors`(beanName: String) {
-        val llmExecutorBeanNames = applicationContext.getBeanNamesForType(SingleLLMPromptExecutor::class.java)
+        val llmExecutorBeanNames = applicationContext.getBeanNamesForType(
+            SingleLLMPromptExecutor::class.java
+        )
         assertTrue(llmExecutorBeanNames.contains(beanName)) {
             logger.info(
                 "Registered ${SingleLLMPromptExecutor::class.simpleName} beans:${
