@@ -505,7 +505,7 @@ class DebuggerTest {
                     LLMStreamingStartingEvent(
                         runId = clientEventsCollector.runId,
                         prompt = expectedLLMCallPrompt,
-                        model = testModel.eventString,
+                        model = testModel.toModelInfo().modelIdentifierName,
                         tools = listOf(dummyTool.name),
                         timestamp = testClock.now().toEpochMilliseconds(),
                     ),
@@ -517,7 +517,7 @@ class DebuggerTest {
                     LLMStreamingCompletedEvent(
                         runId = clientEventsCollector.runId,
                         prompt = expectedLLMCallPrompt,
-                        model = testModel.eventString,
+                        model = testModel.toModelInfo().modelIdentifierName,
                         tools = listOf(dummyTool.name),
                         timestamp = testClock.now().toEpochMilliseconds(),
                     )
@@ -683,7 +683,7 @@ class DebuggerTest {
                     LLMStreamingStartingEvent(
                         runId = clientEventsCollector.runId,
                         prompt = expectedLLMCallPrompt,
-                        model = testModel.eventString,
+                        model = testModel.toModelInfo().modelIdentifierName,
                         tools = listOf(dummyTool.name),
                         timestamp = testClock.now().toEpochMilliseconds(),
                     ),
@@ -695,7 +695,7 @@ class DebuggerTest {
                     LLMStreamingCompletedEvent(
                         runId = clientEventsCollector.runId,
                         prompt = expectedLLMCallPrompt,
-                        model = testModel.eventString,
+                        model = testModel.toModelInfo().modelIdentifierName,
                         tools = listOf(dummyTool.name),
                         timestamp = testClock.now().toEpochMilliseconds(),
                     )

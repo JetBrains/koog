@@ -217,7 +217,7 @@ public class Debugger {
                 val event = LLMStreamingStartingEvent(
                     runId = eventContext.runId,
                     prompt = eventContext.prompt,
-                    model = eventContext.model.eventString,
+                    model = eventContext.model.toModelInfo().modelIdentifierName,
                     tools = eventContext.tools.map { it.name },
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
@@ -246,7 +246,7 @@ public class Debugger {
                 val event = LLMStreamingCompletedEvent(
                     runId = eventContext.runId,
                     prompt = eventContext.prompt,
-                    model = eventContext.model.eventString,
+                    model = eventContext.model.toModelInfo().modelIdentifierName,
                     tools = eventContext.tools.map { it.name },
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
