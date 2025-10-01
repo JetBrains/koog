@@ -158,7 +158,7 @@ public data class LocalFileMemoryProvider<Path>(
      */
     private suspend fun loadFacts(path: Path): Map<String, List<Fact>> = mutex.withLock {
         val content = storage.read(path) ?: return emptyMap()
-        
+
         return try {
             json.decodeFromString<Map<String, List<Fact>>>(content)
         } catch (e: SerializationException) {
