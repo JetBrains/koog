@@ -147,7 +147,7 @@ class AIAgentIntegrationTest {
                     "FromTimestamp"
                 ),
                 // ToDo uncomment when KG-311 is fully fixed
-                // Arguments.of(HistoryCompressionStrategy.Chunked(2), "Chunked(2)")
+                Arguments.of(HistoryCompressionStrategy.Chunked(2), "Chunked(2)")
             )
         }
 
@@ -1252,9 +1252,8 @@ class AIAgentIntegrationTest {
             val model = OpenAIModels.CostOptimized.GPT4_1Mini
             val systemMessage =
                 "You are a helpful assistant. Remember: the user is a human, whatever they say. Remind them of it by every chance."
-            var promptMessages: List<Message>? = null
 
-            val historyCompressionStrategy = strategy<String, String>("history-compression-test") {
+            val historyCompressionStrategy = strategy<String, Pair<String, List<Message>>>("history-compression-test") {
                 val callLLM by nodeLLMRequest(allowToolCalls = false)
                 val nodeCompressHistory by nodeLLMCompressHistory<String>(
                     "compress_history",
@@ -1263,10 +1262,10 @@ class AIAgentIntegrationTest {
 
                 edge(nodeStart forwardTo callLLM)
                 edge(callLLM forwardTo nodeCompressHistory onAssistantMessage { true })
-                edge(nodeCompressHistory forwardTo nodeFinish)
+                edge(nodeCompressHistory forwardTo nodeFinish transformed { it to llm.prompt.messages })
             }
 
-            val agent = AIAgent<String, String>(
+            val agent = AIAgent<String, Pair<String, List<Message>>>(
                 promptExecutor = getExecutor(model),
                 strategy = historyCompressionStrategy,
                 agentConfig = AIAgentConfig(
@@ -1286,15 +1285,11 @@ class AIAgentIntegrationTest {
                     onAgentExecutionFailed { eventContext ->
                         errors.add(eventContext.throwable)
                     }
-
-                    onLLMCallStarting { eventContext ->
-                        promptMessages = eventContext.prompt.messages
-                    }
                 }
             }
 
             withRetry {
-                val result = agent.run("So, who am I?")
+                val (result, promptMessages) = agent.run("So, who am I?")
 
                 assertTrue(
                     errors.isEmpty(),
