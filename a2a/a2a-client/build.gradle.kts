@@ -37,6 +37,7 @@ kotlin {
                 implementation(kotlin("test-junit5"))
                 implementation(project(":a2a:a2a-test"))
                 implementation(project(":a2a:a2a-transport:a2a-transport-client-jsonrpc-http"))
+                implementation(project(":test-utils"))
 
                 implementation(libs.ktor.client.cio)
                 implementation(libs.ktor.client.logging)

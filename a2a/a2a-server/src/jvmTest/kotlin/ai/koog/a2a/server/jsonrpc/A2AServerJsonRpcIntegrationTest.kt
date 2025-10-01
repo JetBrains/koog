@@ -1,11 +1,5 @@
-package ai.koog.a2a.server
+package ai.koog.a2a.server.jsonrpc
 
-import ai.koog.a2a.client.A2AClient
-import ai.koog.a2a.client.UrlAgentCardResolver
-import ai.koog.a2a.consts.A2AConsts
-import ai.koog.a2a.model.AgentCapabilities
-import ai.koog.a2a.model.AgentCard
-import ai.koog.a2a.model.AgentSkill
 import ai.koog.a2a.model.Message
 import ai.koog.a2a.model.MessageSendConfiguration
 import ai.koog.a2a.model.MessageSendParams
@@ -15,12 +9,7 @@ import ai.koog.a2a.model.TaskIdParams
 import ai.koog.a2a.model.TaskState
 import ai.koog.a2a.model.TaskStatusUpdateEvent
 import ai.koog.a2a.model.TextPart
-import ai.koog.a2a.model.TransportProtocol
-import ai.koog.a2a.server.notifications.InMemoryPushNotificationConfigStorage
-import ai.koog.a2a.test.BaseA2AProtocolTest
 import ai.koog.a2a.transport.Request
-import ai.koog.a2a.transport.client.jsonrpc.http.HttpJSONRPCClientTransport
-import ai.koog.a2a.transport.server.jsonrpc.http.HttpJSONRPCServerTransport
 import io.kotest.inspectors.shouldForAll
 import io.kotest.inspectors.shouldForAtLeastOne
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -28,18 +17,11 @@ import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.string.shouldStartWith
 import io.kotest.matchers.types.shouldBeInstanceOf
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.cio.CIO
-import io.ktor.client.plugins.HttpTimeout
-import io.ktor.client.plugins.logging.LogLevel
-import io.ktor.client.plugins.logging.Logging
-import io.ktor.server.netty.Netty
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import org.junit.jupiter.api.AfterAll
@@ -47,10 +29,9 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
-import java.net.ServerSocket
 import kotlin.test.BeforeTest
 import kotlin.test.Test
-import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -62,170 +43,55 @@ import kotlin.uuid.Uuid
 @OptIn(ExperimentalUuidApi::class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @Execution(ExecutionMode.SAME_THREAD, reason = "Working with the same instance of test server.")
-class A2AServerJsonRpcIntegrationTest : BaseA2AProtocolTest() {
-    override val testTimeout = 2.minutes
-
-    private var testPort: Int? = null
-    private val testPath = "/a2a"
-    private lateinit var serverUrl: String
-
-    private lateinit var serverTransport: HttpJSONRPCServerTransport
-    private lateinit var clientTransport: HttpJSONRPCClientTransport
-    private lateinit var httpClient: HttpClient
-
-    override lateinit var client: A2AClient
+class A2AServerJsonRpcIntegrationTest : BaseA2AServerJsonRpcTest() {
+    override val testTimeout = 10.seconds
 
     @BeforeAll
-    fun setup(): Unit = runBlocking {
-        // Discover and take any free port
-        testPort = ServerSocket(0).use { it.localPort }
-        serverUrl = "http://localhost:$testPort$testPath"
-
-        // Create agent cards
-        val agentCard = createAgentCard()
-        val agentCardExtended = createExtendedAgentCard()
-
-        // Create test agent executor
-        val testAgentExecutor = TestAgentExecutor()
-
-        // Create A2A server
-        val a2aServer = A2AServer(
-            agentExecutor = testAgentExecutor,
-            agentCard = agentCard,
-            agentCardExtended = agentCardExtended,
-            pushConfigStorage = InMemoryPushNotificationConfigStorage()
-        )
-
-        // Create server transport
-        serverTransport = HttpJSONRPCServerTransport(a2aServer)
-
-        // Start server
-        serverTransport.start(
-            engineFactory = Netty,
-            port = testPort!!,
-            path = testPath,
-            wait = false,
-            agentCard = agentCard,
-            agentCardPath = A2AConsts.AGENT_CARD_WELL_KNOWN_PATH,
-        )
-
-        // Create client transport
-        httpClient = HttpClient(CIO) {
-            install(Logging) {
-                level = LogLevel.ALL
-            }
-
-            install(HttpTimeout) {
-                requestTimeoutMillis = testTimeout.inWholeMilliseconds
-            }
-        }
-
-        clientTransport = HttpJSONRPCClientTransport(serverUrl, httpClient)
-
-        client = A2AClient(
-            transport = clientTransport,
-            agentCardResolver = UrlAgentCardResolver(
-                baseUrl = serverUrl,
-                path = A2AConsts.AGENT_CARD_WELL_KNOWN_PATH,
-                baseHttpClient = httpClient,
-            )
-        )
+    override fun setup() {
+        super.setup()
     }
 
     @BeforeTest
-    fun initClient(): Unit = runBlocking {
-        client.connect()
+    override fun initClient() {
+        super.initClient()
     }
 
     @AfterAll
-    fun tearDown(): Unit = runBlocking {
-        clientTransport.close()
-        serverTransport.stop()
+    override fun tearDown() {
+        super.tearDown()
     }
 
-    private fun createAgentCard(): AgentCard = AgentCard(
-        protocolVersion = "0.3.0",
-        name = "Hello World Agent",
-        description = "Just a hello world agent",
-        url = "http://localhost:9999/",
-        preferredTransport = TransportProtocol.JSONRPC,
-        additionalInterfaces = null,
-        iconUrl = null,
-        provider = null,
-        version = "1.0.0",
-        documentationUrl = null,
-        capabilities = AgentCapabilities(
-            streaming = true,
-            pushNotifications = true,
-            stateTransitionHistory = null,
-            extensions = null
-        ),
-        securitySchemes = null,
-        security = null,
-        defaultInputModes = listOf("text"),
-        defaultOutputModes = listOf("text"),
-        skills = listOf(
-            AgentSkill(
-                id = "hello_world",
-                name = "Returns hello world",
-                description = "just returns hello world",
-                tags = listOf("hello world"),
-                examples = listOf("hi", "hello world"),
-                inputModes = null,
-                outputModes = null,
-                security = null
-            )
-        ),
-        supportsAuthenticatedExtendedCard = true,
-        signatures = null
-    )
+    @Test
+    override fun `test get agent card`() =
+        super.`test get agent card`()
 
-    private fun createExtendedAgentCard(): AgentCard = AgentCard(
-        protocolVersion = "0.3.0",
-        name = "Hello World Agent - Extended Edition",
-        description = "The full-featured hello world agent for authenticated users.",
-        url = "http://localhost:9999/",
-        preferredTransport = TransportProtocol.JSONRPC,
-        additionalInterfaces = null,
-        iconUrl = null,
-        provider = null,
-        version = "1.0.1",
-        documentationUrl = null,
-        capabilities = AgentCapabilities(
-            streaming = true,
-            pushNotifications = true,
-            stateTransitionHistory = null,
-            extensions = null
-        ),
-        securitySchemes = null,
-        security = null,
-        defaultInputModes = listOf("text"),
-        defaultOutputModes = listOf("text"),
-        skills = listOf(
-            AgentSkill(
-                id = "hello_world",
-                name = "Returns hello world",
-                description = "just returns hello world",
-                tags = listOf("hello world"),
-                examples = listOf("hi", "hello world"),
-                inputModes = null,
-                outputModes = null,
-                security = null
-            ),
-            AgentSkill(
-                id = "super_hello_world",
-                name = "Returns a SUPER Hello World",
-                description = "A more enthusiastic greeting, only for authenticated users.",
-                tags = listOf("hello world", "super", "extended"),
-                examples = listOf("super hi", "give me a super hello"),
-                inputModes = null,
-                outputModes = null,
-                security = null
-            )
-        ),
-        supportsAuthenticatedExtendedCard = true,
-        signatures = null
-    )
+    @Test
+    override fun `test get authenticated extended agent card`() =
+        super.`test get authenticated extended agent card`()
+
+    @Test
+    override fun `test send message`() =
+        super.`test send message`()
+
+    @Test
+    override fun `test send message streaming`() =
+        super.`test send message streaming`()
+
+    @Test
+    override fun `test get task`() =
+        super.`test get task`()
+
+    @Test
+    override fun `test cancel task`() =
+        super.`test cancel task`()
+
+    @Test
+    override fun `test resubscribe task`() =
+        super.`test resubscribe task`()
+
+    @Test
+    override fun `test push notification configs`() =
+        super.`test push notification configs`()
 
     /**
      * Extended test that wouldn't work with Python A2A SDK server, because their implementation has some problems.
@@ -239,7 +105,7 @@ class A2AServerJsonRpcIntegrationTest : BaseA2AProtocolTest() {
             val createTaskRequest = Request(
                 data = MessageSendParams(
                     message = Message(
-                        messageId = Uuid.random().toString(),
+                        messageId = Uuid.Companion.random().toString(),
                         role = Role.User,
                         parts = listOf(
                             TextPart("do long-running task"),
@@ -339,7 +205,7 @@ class A2AServerJsonRpcIntegrationTest : BaseA2AProtocolTest() {
         ) = Request(
             data = MessageSendParams(
                 message = Message(
-                    messageId = Uuid.random().toString(),
+                    messageId = Uuid.Companion.random().toString(),
                     role = Role.User,
                     parts = listOf(
                         TextPart("do long-running task"),

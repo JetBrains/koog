@@ -14,15 +14,25 @@ import kotlinx.coroutines.flow.collect
  *
  * @property eventProcessor The session event processor
  * @property agentJob The execution process associated with this session's execution
- * @property events A stream of events generated during this session
  */
 public class Session(
     public val eventProcessor: SessionEventProcessor,
     public val agentJob: Deferred<Unit>
 ) {
-    public val contextId: String get() = eventProcessor.contextId
-    public val taskId: String get() = eventProcessor.taskId
-    public val events: Flow<Event> get() = eventProcessor.events
+    /**
+     * Context ID associated with this session.
+     */
+    public val contextId: String = eventProcessor.contextId
+
+    /**
+     * Task ID associated with this session.
+     */
+    public val taskId: String = eventProcessor.taskId
+
+    /**
+     * A stream of events associated with this session.
+     */
+    public val events: Flow<Event> = eventProcessor.events
 
     /**
      * Starts the [agentJob], if it hasn't already been started.
@@ -31,7 +41,7 @@ public class Session(
         agentJob.start()
     }
 
-    /*
+    /**
      * Suspends until the session, i.e., event stream and agent job, complete.
      * Waits for the event stream to finish first, to avoid triggering the agent job prematurely.
      * Assumes that by the time event stream is finished, agent job will already be completed or canceled.

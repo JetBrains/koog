@@ -8,8 +8,12 @@ import ai.koog.a2a.server.tasks.TaskStorage
 import ai.koog.a2a.utils.KeyedMutex
 import ai.koog.a2a.utils.RWLock
 import ai.koog.a2a.utils.withLock
+import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.CompletableJob
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 
 /**
@@ -36,6 +40,9 @@ public class SessionManager(
     private val pushConfigStorage: PushNotificationConfigStorage? = null,
     private val pushSender: PushNotificationSender? = null,
 ) {
+    private companion object {
+        private val logger = KotlinLogging.logger {}
+    }
 
     /**
      * Map of task id to session. All sessions have task id associated with them, even if the task won't be created.
@@ -49,9 +56,11 @@ public class SessionManager(
      * Sends push notifications if configured after each session completes.
      *
      * @param session The session to add.
+     * @return A [CompletableJob] indicating when the monitoring coroutine is started and ready to monitor the session.
+     * It is crucial to start agent execution only after this job completes, to ensure the monitoring won't skip any events.
      * @throws IllegalArgumentException if a session for the same task id already exists.
      */
-    public suspend fun addSession(session: Session) {
+    public suspend fun addSession(session: Session): CompletableJob {
         sessionsRwLock.withWriteLock {
             check(session.taskId !in sessions) {
                 "Session for taskId '${session.taskId}' already runs."
@@ -60,9 +69,14 @@ public class SessionManager(
             sessions[session.taskId] = session
         }
 
+        // Signal to indicate the monitoring is started.
+        val monitoringStarted = Job()
+
         // Monitor for agent job completion to send push notifications and remove session from the map.
         coroutineScope.launch {
-            val firstEvent = session.events.firstOrNull()
+            val firstEvent = session.events
+                .onStart { monitoringStarted.complete() }
+                .firstOrNull()
 
             // Wait for the agent job to finish
             session.agentJob.join()
@@ -95,6 +109,8 @@ public class SessionManager(
                 }
             }
         }
+
+        return monitoringStarted
     }
 
     /**

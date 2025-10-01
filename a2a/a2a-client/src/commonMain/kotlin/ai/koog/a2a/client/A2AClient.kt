@@ -15,17 +15,18 @@ import ai.koog.a2a.transport.ClientTransport
 import ai.koog.a2a.transport.Request
 import ai.koog.a2a.transport.Response
 import kotlinx.coroutines.flow.Flow
-import kotlin.concurrent.Volatile
+import kotlin.concurrent.atomics.AtomicReference
+import kotlin.concurrent.atomics.ExperimentalAtomicApi
 
 /**
  * A2A client responsible for sending requests to A2A server.
  */
+@OptIn(ExperimentalAtomicApi::class)
 public open class A2AClient(
     private val transport: ClientTransport,
     private val agentCardResolver: AgentCardResolver,
 ) {
-    @Volatile
-    protected var agentCard: AgentCard? = null
+    protected var agentCard: AtomicReference<AgentCard?> = AtomicReference(null)
 
     /**
      * Performs initialization logic.
@@ -41,7 +42,7 @@ public open class A2AClient(
      */
     public open suspend fun getAgentCard(): AgentCard {
         return agentCardResolver.resolve().also {
-            agentCard = it
+            agentCard.exchange(it)
         }
     }
 
@@ -51,7 +52,7 @@ public open class A2AClient(
      * @throws [IllegalStateException] if it's not initialized
      */
     public open fun cachedAgentCard(): AgentCard {
-        return checkNotNull(agentCard) { "Agent card is not initialized." }
+        return checkNotNull(agentCard.load()) { "Agent card is not initialized." }
     }
 
     /**
@@ -64,12 +65,12 @@ public open class A2AClient(
         request: Request<Nothing?>,
         ctx: ClientCallContext = ClientCallContext.Default
     ): Response<AgentCard> {
-        check(getAgentCard().supportsAuthenticatedExtendedCard == true) {
+        check(cachedAgentCard().supportsAuthenticatedExtendedCard == true) {
             "Agent card reports that authenticated extended agent card is not supported."
         }
 
         return transport.getAuthenticatedExtendedAgentCard(request, ctx).also {
-            agentCard = it.data
+            agentCard.exchange(it.data)
         }
     }
 

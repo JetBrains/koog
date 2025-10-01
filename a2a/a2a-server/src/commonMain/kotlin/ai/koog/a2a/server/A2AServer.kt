@@ -39,16 +39,20 @@ import ai.koog.a2a.transport.Response
 import ai.koog.a2a.transport.ServerCallContext
 import ai.koog.a2a.utils.KeyedMutex
 import ai.koog.a2a.utils.withLock
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableJob
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.last
+import kotlinx.coroutines.flow.lastOrNull
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 
 /**
@@ -321,6 +325,10 @@ public open class A2AServer(
     protected val idGenerator: IdGenerator = UuidIdGenerator,
     protected val coroutineScope: CoroutineScope = CoroutineScope(SupervisorJob()),
 ) : RequestHandler {
+    private companion object {
+        private val logger = KotlinLogging.logger {}
+    }
+
     /**
      * Mutex for locking specific tasks by their IDs.
      */
@@ -374,7 +382,7 @@ public open class A2AServer(
 
         val taskId = message.taskId ?: idGenerator.generateTaskId(message)
 
-        val session = tasksMutex.withLock(taskId) {
+        val (session, monitoringStarted) = tasksMutex.withLock(taskId) {
             // If there's a currently running session for the same task, wait for it to finish.
             sessionManager.getSession(taskId)?.join()
 
@@ -412,22 +420,36 @@ public open class A2AServer(
                 eventProcessor = eventProcessor,
             ) {
                 agentExecutor.execute(requestContext, eventProcessor)
-            }.also {
-                sessionManager.addSession(it)
+            }.let {
+                it to sessionManager.addSession(it)
             }
         }
+
+        // Signal that event collection is setup
+        val collectionStarted: CompletableJob = Job()
 
         // Subscribe to events stream and start emitting them.
         launch {
             session.events
+                .onStart {
+                    collectionStarted.complete()
+                }
                 .collect { event ->
                     send(Response(data = event, id = request.id))
                 }
         }
 
-        // Start the session to execute the agent and wait for it to finish.
-        // Using await here to propagate any exceptions thrown by the agent execution.
+        // Ensure event collection is setup to stream events in response.
+        collectionStarted.join()
+        // Ensure monitoring is ready to monitor the session.
+        monitoringStarted.join()
+
+        /*
+         Start the session to execute the agent and wait for it to finish.
+         Using await here to propagate any exceptions thrown by the agent execution.
+         */
         session.agentJob.await()
+        session.join()
     }
 
     override suspend fun onSendMessage(
@@ -440,10 +462,10 @@ public open class A2AServer(
 
         val event = if (messageConfiguration?.blocking == true) {
             // If blocking is requested, attempt to wait for the last event, until the current turn of the agent execution is finished.
-            eventStream.last()
+            eventStream.lastOrNull()
         } else {
-            eventStream.first()
-        }
+            eventStream.firstOrNull()
+        } ?: throw IllegalStateException("Can't get response from the agent: event stream is empty")
 
         return when (val eventData = event.data) {
             is Message -> Response(data = eventData, id = event.id)

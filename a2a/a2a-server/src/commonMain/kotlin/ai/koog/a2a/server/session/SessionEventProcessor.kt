@@ -10,10 +10,9 @@ import ai.koog.a2a.server.exceptions.SessionNotActiveException
 import ai.koog.a2a.server.tasks.TaskStorage
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filterIsInstance
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onSubscription
 import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -42,8 +41,6 @@ import kotlin.jvm.JvmInline
  * from the incoming request or a newly generated ID that must be used if creating a new task.
  * Note: This taskId might not correspond to an actually existing task initially - it serves as the
  * identifier that will be validated against all [TaskEvent] in this session.
- * @property isOpen Whether the session is open.
- * @property events A hot flow of events in this session that can be subscribed to.
  */
 @OptIn(ExperimentalAtomicApi::class)
 public class SessionEventProcessor(
@@ -63,6 +60,10 @@ public class SessionEventProcessor(
     }
 
     private val _isOpen: AtomicBoolean = AtomicBoolean(true)
+
+    /**
+     * Whether the session is open.
+     */
     public val isOpen: Boolean get() = _isOpen.load()
 
     /**
@@ -82,17 +83,15 @@ public class SessionEventProcessor(
     }
 
     private val _events = MutableSharedFlow<FlowEvent>()
-    public val events: Flow<Event>
-        get() = flow {
-            if (isOpen) {
-                _events
-                    .takeWhile { it !is FlowEvent.Close }
-                    .filterIsInstance<FlowEvent.Data>()
-                    .map { it.data }
-            } else {
-                emptyFlow()
-            }.collect(this)
-        }
+
+    /**
+     * A hot flow of events in this session that can be subscribed to.
+     */
+    public val events: Flow<Event> = _events
+        .onSubscription { if (!_isOpen.load()) emit(FlowEvent.Close) }
+        .takeWhile { it !is FlowEvent.Close }
+        .filterIsInstance<FlowEvent.Data>()
+        .map { it.data }
 
     /**
      * Sends a [Message] to the session event processor. Validates the message against the session context and updates

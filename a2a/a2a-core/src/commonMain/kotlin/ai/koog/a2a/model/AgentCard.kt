@@ -110,7 +110,9 @@ public data class AgentCard(
 @JvmInline
 @Serializable
 public value class TransportProtocol(public val value: String) {
-    @Suppress("MissingKDocForPublicAPI")
+    /**
+     * List of known transport protocols.
+     */
     public companion object {
         /**
          * JSON-RPC protocol.

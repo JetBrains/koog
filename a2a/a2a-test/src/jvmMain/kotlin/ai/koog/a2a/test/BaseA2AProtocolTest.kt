@@ -32,7 +32,6 @@ import io.kotest.matchers.string.shouldStartWith
 import io.kotest.matchers.types.shouldBeInstanceOf
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
-import kotlin.test.Test
 import kotlin.time.Duration
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -55,8 +54,7 @@ abstract class BaseA2AProtocolTest {
      */
     protected abstract var client: A2AClient
 
-    @Test
-    fun `test get agent card`() = runTest(timeout = testTimeout) {
+    open fun `test get agent card`() = runTest(timeout = testTimeout) {
         val agentCard = client.getAgentCard()
 
         // Assert on the full AgentCard structure
@@ -100,8 +98,7 @@ abstract class BaseA2AProtocolTest {
         agentCard shouldBe expectedAgentCard
     }
 
-    @Test
-    fun `test get authenticated extended agent card`() = runTest(timeout = testTimeout) {
+    open fun `test get authenticated extended agent card`() = runTest(timeout = testTimeout) {
         val request = Request<Nothing?>(data = null)
 
         val response = client.getAuthenticatedExtendedAgentCard(request)
@@ -157,8 +154,7 @@ abstract class BaseA2AProtocolTest {
         response.data shouldBe expectedExtendedAgentCard
     }
 
-    @Test
-    fun `test send message`() = runTest(timeout = testTimeout) {
+    open fun `test send message`() = runTest(timeout = testTimeout) {
         val request = Request(
             data = MessageSendParams(
                 message = Message(
@@ -185,8 +181,7 @@ abstract class BaseA2AProtocolTest {
         }
     }
 
-    @Test
-    fun `test send message streaming`() = runTest(timeout = testTimeout) {
+    open fun `test send message streaming`() = runTest(timeout = testTimeout) {
         val createTaskRequest = Request(
             data = MessageSendParams(
                 message = Message(
@@ -247,8 +242,7 @@ abstract class BaseA2AProtocolTest {
         }
     }
 
-    @Test
-    fun `test get task`() = runTest(timeout = testTimeout) {
+    open fun `test get task`() = runTest(timeout = testTimeout) {
         val createTaskRequest = Request(
             data = MessageSendParams(
                 message = Message(
@@ -282,8 +276,7 @@ abstract class BaseA2AProtocolTest {
         }
     }
 
-    @Test
-    fun `test cancel task`() = runTest(timeout = testTimeout) {
+    open fun `test cancel task`() = runTest(timeout = testTimeout) {
         val createTaskRequest = Request(
             data = MessageSendParams(
                 message = Message(
@@ -320,8 +313,7 @@ abstract class BaseA2AProtocolTest {
         }
     }
 
-    @Test
-    fun `test resubscribe task`() = runTest(timeout = testTimeout) {
+    open fun `test resubscribe task`() = runTest(timeout = testTimeout) {
         val createTaskRequest = Request(
             data = MessageSendParams(
                 message = Message(
@@ -374,8 +366,7 @@ abstract class BaseA2AProtocolTest {
         }
     }
 
-    @Test
-    fun `test push notification configs`() = runTest(timeout = testTimeout) {
+    open fun `test push notification configs`() = runTest(timeout = testTimeout) {
         val createTaskRequest = Request(
             data = MessageSendParams(
                 message = Message(
