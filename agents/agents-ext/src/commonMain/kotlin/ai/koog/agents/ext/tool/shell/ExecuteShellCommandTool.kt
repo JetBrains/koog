@@ -28,11 +28,21 @@ public class ExecuteShellCommandTool(
      */
     @Serializable
     public data class Args(
-        @property:LLMDescription("Shell command to execute (e.g., 'ls -la', 'git status')")
+        @property:LLMDescription(
+            "The exact shell command line to execute." +
+                "- Examples: 'git status', './gradlew assemble', 'ls -la'" +
+                "- Do not include 'cd' commands; use workingDirectory instead."
+        )
         val command: String,
-        @property:LLMDescription("Working directory for execution, or null for current directory")
+        @property:LLMDescription(
+            "An absolute filesystem path where the command runs. Must exist and be accessible; otherwise execution will fail immediately." +
+                "Optional. Default: uses the current working directory when null."
+        )
         val workingDirectory: String? = null,
-        @property:LLMDescription("Maximum execution time in seconds (default: 60)")
+        @property:LLMDescription(
+            "Maximum execution time in seconds. If the command runs longer, it will be terminated." +
+                "Optional. Default: 60 seconds."
+        )
         val timeoutSeconds: Int = 60
     )
 
@@ -62,8 +72,7 @@ public class ExecuteShellCommandTool(
         public fun textForLLM(): String = buildString {
             appendLine("Command: $command")
             if (output.isNotEmpty()) {
-                append(output)
-                if (!output.endsWith('\n')) appendLine()
+                appendWithNewline(output)
             } else if (exitCode != null) {
                 appendLine("(no output)")
             }
