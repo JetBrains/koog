@@ -27,12 +27,11 @@ fun main() = runBlocking {
         tools(CalculatorTools().asTools())
     }
 
-    val persistenceId = "snapshot-agent-example"
+    val agentId = "agent.1"
 
-    val snapshotProvider = InMemoryPersistenceStorageProvider(
-        persistenceId = persistenceId
-    )
+    val snapshotProvider = InMemoryPersistenceStorageProvider()
     val agent = AIAgent(
+        id = agentId,
         promptExecutor = executor,
         llmModel = OllamaModels.Meta.LLAMA_3_2,
         strategy = singleRunStrategy(ToolCalls.SEQUENTIAL),
@@ -61,17 +60,17 @@ fun main() = runBlocking {
         }
     }
 
-    val checkpoints = snapshotProvider.getCheckpoints()
+    val checkpoints = snapshotProvider.getCheckpoints(agentId)
     println("Snapshot provider state after first run: $checkpoints")
 
     val agent2 = AIAgent(
+        id = agent.id,
         promptExecutor = executor,
         llmModel = OllamaModels.Meta.LLAMA_3_2,
         toolRegistry = correctToolRegistry,
         strategy = singleRunStrategy(ToolCalls.SEQUENTIAL),
         systemPrompt = "You are a calculator. Use tools to calculate asked to result.",
         temperature = 0.0,
-        id = agent.id
     ) {
         install(Persistence) {
             storage = snapshotProvider

@@ -42,9 +42,9 @@ object SQLPersistentAgentExample {
     private suspend fun postgresqlExample() {
         println("PostgreSQL Persistence Example")
         println("------------------------------")
+        val agentId = "postgres-agent"
 
         val provider = PostgresPersistenceStorageProvider(
-            persistenceId = "postgres-agent",
             database = Database.connect(
                 url = "jdbc:postgresql://localhost:5432/agents",
                 driver = "org.postgresql.Driver",
@@ -59,11 +59,11 @@ object SQLPersistentAgentExample {
 
         // Create and save checkpoint
         val checkpoint = createSampleCheckpoint("postgres-checkpoint-1")
-        provider.saveCheckpoint(checkpoint)
+        provider.saveCheckpoint(agentId = agentId, agentCheckpointData = checkpoint)
         println("Saved checkpoint: ${checkpoint.checkpointId}")
 
         // Retrieve checkpoint
-        val retrieved = provider.getLatestCheckpoint()
+        val retrieved = provider.getLatestCheckpoint(agentId)
         println("Retrieved latest checkpoint: ${retrieved?.checkpointId}")
     }
 
@@ -73,9 +73,9 @@ object SQLPersistentAgentExample {
     private suspend fun mysqlExample() {
         println("MySQL Persistence Example")
         println("-------------------------")
+        val agentId = "postgres-agent"
 
         val provider = MySQLPersistenceStorageProvider(
-            persistenceId = "mysql-agent",
             database = Database.connect(
                 url = "jdbc:mysql://localhost:3306/agents?useSSL=false&serverTimezone=UTC",
                 driver = "com.mysql.cj.jdbc.Driver",
@@ -96,16 +96,16 @@ object SQLPersistentAgentExample {
         )
 
         checkpoints.forEach { checkpoint ->
-            provider.saveCheckpoint(checkpoint)
+            provider.saveCheckpoint(agentId, checkpoint)
             println("Saved: ${checkpoint.checkpointId}")
         }
 
         // Get all checkpoints
-        val allCheckpoints = provider.getCheckpoints()
+        val allCheckpoints = provider.getCheckpoints(agentId)
         println("\nTotal checkpoints: ${allCheckpoints.size}")
 
         // Get checkpoint count
-        val count = provider.getCheckpointCount()
+        val count = provider.getCheckpointCount(agentId)
         println("Checkpoint count: $count")
     }
 
@@ -115,37 +115,38 @@ object SQLPersistentAgentExample {
     private suspend fun h2Example() {
         println("H2 Database Persistence Examples")
         println("--------------------------------")
-
+        val agentId = "h2-test-agent"
         // Example 1: In-memory database (for testing)
         println("\n1. In-Memory H2:")
         val inMemoryProvider = H2PersistenceStorageProvider.inMemory(
-            persistenceId = "h2-test-agent",
             databaseName = "test_agents"
         )
 
         inMemoryProvider.migrate()
         val testCheckpoint = createSampleCheckpoint("h2-memory-checkpoint")
-        inMemoryProvider.saveCheckpoint(testCheckpoint)
+        inMemoryProvider.saveCheckpoint(agentId, testCheckpoint)
         println("   Saved to in-memory: ${testCheckpoint.checkpointId}")
+
+        val h2AgentId = "h2-file-agent"
 
         // Example 2: File-based database (for persistence)
         println("\n2. File-Based H2:")
         val fileProvider = H2PersistenceStorageProvider.fileBased(
-            persistenceId = "h2-file-agent",
             filePath = "./data/h2/agent_checkpoints",
             ttlSeconds = 86400 // 24 hours
         )
 
         fileProvider.migrate()
         val fileCheckpoint = createSampleCheckpoint("h2-file-checkpoint")
-        fileProvider.saveCheckpoint(fileCheckpoint)
+        fileProvider.saveCheckpoint(h2AgentId, fileCheckpoint)
         println("   Saved to file: ${fileCheckpoint.checkpointId}")
 
         // Example 3: PostgreSQL compatibility mode
         println("\n3. PostgreSQL Compatible Mode:")
 
+        val postgresAgentId = "postgres-agent"
+
         val pgCompatProvider = H2PersistenceStorageProvider(
-            persistenceId = "postgres-agent",
             database = Database.connect(
                 url = "jdbc:postgresql://localhost:5432/agents",
                 driver = "org.postgresql.Driver",
@@ -158,7 +159,7 @@ object SQLPersistentAgentExample {
 
         pgCompatProvider.migrate()
         val pgCheckpoint = createSampleCheckpoint("h2-pgcompat-checkpoint")
-        pgCompatProvider.saveCheckpoint(pgCheckpoint)
+        pgCompatProvider.saveCheckpoint(postgresAgentId, pgCheckpoint)
         println("   Saved with PG compatibility: ${pgCheckpoint.checkpointId}")
     }
 

@@ -37,7 +37,7 @@ fun main() = runBlocking {
         maxAgentIterations = 50
     )
 
-    val snapshotProvider = InMemoryPersistenceStorageProvider("persistent-agent-example")
+    val snapshotProvider = InMemoryPersistenceStorageProvider()
     val agent = AIAgent(
         promptExecutor = executor,
         strategy = SnapshotStrategy.strategy,
