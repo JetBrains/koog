@@ -6,7 +6,7 @@ import ai.koog.prompt.executor.clients.retry.toRetryingClient
 import ai.koog.spring.RetryConfigKoogProperties
 import kotlin.time.toKotlinDuration
 
-internal inline fun <reified T : LLMClient> T.toRetryingClient(properties: RetryConfigKoogProperties?): LLMClient {
+internal fun LLMClient.toRetryingClient(properties: RetryConfigKoogProperties?): LLMClient {
     val self = this
     return if (properties?.enabled == true) {
         val defaultConfig = RetryConfig.DEFAULT
