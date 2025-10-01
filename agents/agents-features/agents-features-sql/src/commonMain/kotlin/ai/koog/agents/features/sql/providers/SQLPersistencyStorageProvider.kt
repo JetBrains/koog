@@ -31,11 +31,11 @@ import kotlinx.datetime.Instant
  * @param tableName Name of the table to store checkpoints (default: "agent_checkpoints")
  * @param ttlSeconds Optional TTL for checkpoint entries in seconds (null = no expiration)
  */
-public abstract class SQLPersistenceStorageProvider(
+public abstract class SQLPersistenceStorageProvider<Filter>(
     protected val tableName: String = "agent_checkpoints",
     protected val ttlSeconds: Long? = null,
     protected val migrator: SQLPersistenceSchemaMigrator
-) : PersistenceStorageProvider {
+) : PersistenceStorageProvider<Filter> {
 
     /**
      * Initializes the database schema if it doesn't exist.
