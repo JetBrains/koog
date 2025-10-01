@@ -402,6 +402,7 @@ class JvmShellCommandToolTest {
             1
             2
             3
+            
             Command timed out after 3 seconds
         """.trimIndent()
 
