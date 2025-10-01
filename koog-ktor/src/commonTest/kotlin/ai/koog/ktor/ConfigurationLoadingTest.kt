@@ -3,8 +3,8 @@ package ai.koog.ktor
 import ai.koog.ktor.utils.loadAgentsConfig
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.llm.LLMProvider
-import io.ktor.server.config.ApplicationConfig
 import io.ktor.server.config.MapApplicationConfig
+import io.ktor.server.config.mergeWith
 import io.ktor.server.engine.applicationEnvironment
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
@@ -20,7 +20,7 @@ class ConfigurationLoadingTest {
     @Test
     fun testLoadCompleteConfiguration() = runTest {
         val koogConfig = applicationEnvironment {
-            config = createConfigFromResource("complete_config.yaml")
+            config = buildCompleteConfig()
         }.loadAgentsConfig(GlobalScope)
 
         // Verify OpenAI configuration
@@ -48,10 +48,18 @@ class ConfigurationLoadingTest {
     }
 
     @Test
-    fun testLoadDefaultModelConfiguration() = runTest {
+    fun testLoadEmptyConfiguration() = runTest {
         val koogConfig = applicationEnvironment {
-            config = createConfigFromResource("default_model_config.yaml")
+            config = MapApplicationConfig()
         }.loadAgentsConfig(GlobalScope)
+
+        // Verify no providers are configured
+        assertNull(koogConfig.llmConnections[LLMProvider.OpenAI])
+        assertNull(koogConfig.llmConnections[LLMProvider.Anthropic])
+        assertNull(koogConfig.llmConnections[LLMProvider.Google])
+        assertNull(koogConfig.llmConnections[LLMProvider.OpenRouter])
+        assertNull(koogConfig.llmConnections[LLMProvider.DeepSeek])
+        assertNull(koogConfig.llmConnections[LLMProvider.Ollama])
 
         // Verify no fallback settings
         assertNull(koogConfig.fallbackLLMSettings)
@@ -60,7 +68,7 @@ class ConfigurationLoadingTest {
     @Test
     fun testLoadFallbackConfiguration() = runTest {
         val koogConfig = applicationEnvironment {
-            config = createConfigFromResource("fallback_config.yaml")
+            this.config = buildFallbackConfig()
         }.loadAgentsConfig(GlobalScope)
 
         // Verify fallback settings
@@ -72,7 +80,7 @@ class ConfigurationLoadingTest {
     @Test
     fun testLoadOpenAIConfiguration() = runTest {
         val koogConfig = applicationEnvironment {
-            config = createConfigFromResource("openai_config.yaml")
+            config = buildOpenAIConfig()
         }.loadAgentsConfig(GlobalScope)
 
         // Verify OpenAI configuration
@@ -89,7 +97,7 @@ class ConfigurationLoadingTest {
     @Test
     fun testLoadAnthropicConfiguration() = runTest {
         val koogConfig = applicationEnvironment {
-            config = createConfigFromResource("anthropic_config.yaml")
+            config = buildAnthropicConfig()
         }.loadAgentsConfig(GlobalScope)
 
         // Verify Anthropic configuration
@@ -106,7 +114,7 @@ class ConfigurationLoadingTest {
     @Test
     fun testLoadGoogleConfiguration() = runTest {
         val koogConfig = applicationEnvironment {
-            config = createConfigFromResource("google_config.yaml")
+            this.config = buildGoogleConfig()
         }.loadAgentsConfig(GlobalScope)
 
         // Verify Google configuration
@@ -123,7 +131,7 @@ class ConfigurationLoadingTest {
     @Test
     fun testLoadOpenRouterConfiguration() = runTest {
         val koogConfig = applicationEnvironment {
-            config = createConfigFromResource("openrouter_config.yaml")
+            config = buildOpenRouterConfig()
         }.loadAgentsConfig(GlobalScope)
 
         // Verify OpenRouter configuration
@@ -140,7 +148,7 @@ class ConfigurationLoadingTest {
     @Test
     fun testLoadDeepSeekConfiguration() = runTest {
         val koogConfig = applicationEnvironment {
-            config = createConfigFromResource("deepseek_config.yaml")
+            config = buildDeepSeekConfig()
         }.loadAgentsConfig(GlobalScope)
 
         // Verify DeepSeek configuration
@@ -157,7 +165,7 @@ class ConfigurationLoadingTest {
     @Test
     fun testLoadOllamaConfiguration() = runTest {
         val koogConfig = applicationEnvironment {
-            config = createConfigFromResource("ollama_config.yaml")
+            config = buildOllamaConfig()
         }.loadAgentsConfig(GlobalScope)
 
         // Verify Ollama configuration
@@ -168,12 +176,13 @@ class ConfigurationLoadingTest {
         assertNull(koogConfig.llmConnections[LLMProvider.Anthropic])
         assertNull(koogConfig.llmConnections[LLMProvider.Google])
         assertNull(koogConfig.llmConnections[LLMProvider.OpenRouter])
+        assertNull(koogConfig.llmConnections[LLMProvider.DeepSeek])
     }
 
     @Test
     fun testLoadInvalidConfiguration() = runTest {
         val koogConfig = applicationEnvironment {
-            config = createConfigFromResource("invalid_config.yaml")
+            config = buildInvalidConfig()
         }.loadAgentsConfig(GlobalScope)
 
         // Verify OpenAI configuration is not loaded due to missing API key
@@ -186,147 +195,117 @@ class ConfigurationLoadingTest {
         assertNull(koogConfig.fallbackLLMSettings)
     }
 
-    // For testing purposes, we'll create a simplified configuration directly
-    // In a real implementation, we would use a proper YAML parser
-    private fun createConfigFromResource(resourceName: String): ApplicationConfig {
-        val config = MapApplicationConfig()
+    private fun buildCompleteConfig() =
+        buildOpenAIConfig()
+            .mergeWith(buildAnthropicConfig())
+            .mergeWith(buildGoogleConfig())
+            .mergeWith(buildOpenRouterConfig())
+            .mergeWith(buildDeepSeekConfig())
+            .mergeWith(buildOllamaConfig())
+            .mergeWith(buildFallbackConfig())
+            .mergeWith(MapApplicationConfig("koog.llm.default" to "openai.chat.gpt4o"))
 
-        // Create configurations based on the resource name
-        when (resourceName) {
-            "complete_config.yaml" -> {
-                // OpenAI configuration
-                config.put("koog.openai.apikey", "test-openai-api-key")
-                config.put("koog.openai.baseUrl", "https://api.openai.com/v1")
-                config.put("koog.openai.timeout.requestTimeoutMillis", "60000")
-                config.put("koog.openai.timeout.connectTimeoutMillis", "30000")
-                config.put("koog.openai.timeout.socketTimeoutMillis", "60000")
+    private fun buildFallbackConfig() = MapApplicationConfig(
+        "koog.llm.fallback.provider" to "anthropic",
+        "koog.llm.fallback.model" to "sonnet_3_5"
+    )
 
-                // Anthropic configuration
-                config.put("koog.anthropic.apikey", "test-anthropic-api-key")
-                config.put("koog.anthropic.baseUrl", "https://api.anthropic.com")
-                config.put("koog.anthropic.timeout.requestTimeoutMillis", "60000")
-                config.put("koog.anthropic.timeout.connectTimeoutMillis", "30000")
-                config.put("koog.anthropic.timeout.socketTimeoutMillis", "60000")
+    private fun buildOpenAIConfig() = MapApplicationConfig(
+        "koog.openai.apikey" to "test-openai-api-key",
+        "koog.openai.baseUrl" to "https://api.openai.com/v1",
+        "koog.openai.timeout.requestTimeoutMillis" to "60000",
+        "koog.openai.timeout.connectTimeoutMillis" to "30000",
+        "koog.openai.timeout.socketTimeoutMillis" to "60000"
+    )
 
-                // Google configuration
-                config.put("koog.google.apikey", "test-google-api-key")
-                config.put("koog.google.baseUrl", "https://generativelanguage.googleapis.com")
-                config.put("koog.google.timeout.requestTimeoutMillis", "60000")
-                config.put("koog.google.timeout.connectTimeoutMillis", "30000")
-                config.put("koog.google.timeout.socketTimeoutMillis", "60000")
+    private fun buildAnthropicConfig() = MapApplicationConfig(
+        "koog.anthropic.apikey" to "test-anthropic-api-key",
+        "koog.anthropic.baseUrl" to "https://api.anthropic.com",
+        "koog.anthropic.timeout.requestTimeoutMillis" to "60000",
+        "koog.anthropic.timeout.connectTimeoutMillis" to "30000",
+        "koog.anthropic.timeout.socketTimeoutMillis" to "60000"
+    )
 
-                // OpenRouter configuration
-                config.put("koog.openrouter.apikey", "test-openrouter-api-key")
-                config.put("koog.openrouter.baseUrl", "https://openrouter.ai/api/v1")
-                config.put("koog.openrouter.timeout.requestTimeoutMillis", "60000")
-                config.put("koog.openrouter.timeout.connectTimeoutMillis", "30000")
-                config.put("koog.openrouter.timeout.socketTimeoutMillis", "60000")
+    private fun buildGoogleConfig() = MapApplicationConfig(
+        "koog.google.apikey" to "test-google-api-key",
+        "koog.google.baseUrl" to "https://generativelanguage.googleapis.com",
+        "koog.google.timeout.requestTimeoutMillis" to "60000",
+        "koog.google.timeout.connectTimeoutMillis" to "30000",
+        "koog.google.timeout.socketTimeoutMillis" to "60000"
+    )
 
-                // DeepSeek configuration
-                config.put("koog.deepseek.apikey", "test-deepseek-api-key")
-                config.put("koog.deepseek.baseUrl", "https://api.deepseek.com")
-                config.put("koog.deepseek.timeout.requestTimeoutMillis", "60000")
-                config.put("koog.deepseek.timeout.connectTimeoutMillis", "30000")
-                config.put("koog.deepseek.timeout.socketTimeoutMillis", "60000")
+    private fun buildOpenRouterConfig() = MapApplicationConfig(
+        "koog.openrouter.apikey" to "test-openrouter-api-key",
+        "koog.openrouter.baseUrl" to "https://openrouter.ai/api/v1",
+        "koog.openrouter.timeout.requestTimeoutMillis" to "60000",
+        "koog.openrouter.timeout.connectTimeoutMillis" to "30000",
+        "koog.openrouter.timeout.socketTimeoutMillis" to "60000"
+    )
 
-                // Ollama configuration
-                config.put("koog.ollama.enable", "true")
-                config.put("koog.ollama.baseUrl", "http://localhost:11434")
-                config.put("koog.ollama.timeout.requestTimeoutMillis", "60000")
-                config.put("koog.ollama.timeout.connectTimeoutMillis", "30000")
-                config.put("koog.ollama.timeout.socketTimeoutMillis", "60000")
+    private fun buildDeepSeekConfig() = MapApplicationConfig(
+        "koog.deepseek.apikey" to "test-deepseek-api-key",
+        "koog.deepseek.baseUrl" to "https://api.deepseek.com",
+        "koog.deepseek.timeout.requestTimeoutMillis" to "60000",
+        "koog.deepseek.timeout.connectTimeoutMillis" to "30000",
+        "koog.deepseek.timeout.socketTimeoutMillis" to "60000"
+    )
 
-                // Default LLM configuration
-                config.put("koog.llm.default", "openai.chat.gpt4o")
+    private fun buildOllamaConfig() = MapApplicationConfig(
+        "koog.ollama.enable" to "true",
+        "koog.ollama.baseUrl" to "http://localhost:11434",
+        "koog.ollama.timeout.requestTimeoutMillis" to "60000",
+        "koog.ollama.timeout.connectTimeoutMillis" to "30000",
+        "koog.ollama.timeout.socketTimeoutMillis" to "60000"
+    )
 
-                // Fallback configuration
-                config.put("koog.llm.fallback.provider", "anthropic")
-                config.put("koog.llm.fallback.model", "sonnet_3_5")
-            }
+    private fun buildInvalidConfig() = MapApplicationConfig(
+        // Missing API key for OpenAI - should not load
+        "koog.openai.baseUrl" to "https://api.openai.com/v1",
+        // Invalid timeout for Anthropic - should load with defaults
+        "koog.anthropic.apikey" to "test-anthropic-api-key",
+        "koog.anthropic.timeout.requestTimeoutMillis" to "invalid-timeout",
+        // Invalid fallback configuration - missing model
+        "koog.llm.fallback.provider" to "google"
+    )
 
-            "default_model_config.yaml" -> {
-                // Only default LLM configuration
-                config.put("koog.llm.default", "openai.chat.gpt4o")
-            }
+    private fun buildTimeoutConfig() = MapApplicationConfig(
+        // All providers with custom timeouts (900000ms for request/socket, 60000ms for connect)
+        "koog.openai.apikey" to "test-openai-api-key",
+        "koog.openai.timeout.requestTimeoutMillis" to "900000",
+        "koog.openai.timeout.connectTimeoutMillis" to "60000",
+        "koog.openai.timeout.socketTimeoutMillis" to "900000",
+        "koog.anthropic.apikey" to "test-anthropic-api-key",
+        "koog.anthropic.timeout.requestTimeoutMillis" to "900000",
+        "koog.anthropic.timeout.connectTimeoutMillis" to "60000",
+        "koog.anthropic.timeout.socketTimeoutMillis" to "900000",
+        "koog.google.apikey" to "test-google-api-key",
+        "koog.google.timeout.requestTimeoutMillis" to "900000",
+        "koog.google.timeout.connectTimeoutMillis" to "60000",
+        "koog.google.timeout.socketTimeoutMillis" to "900000",
+        "koog.openrouter.apikey" to "test-openrouter-api-key",
+        "koog.openrouter.timeout.requestTimeoutMillis" to "900000",
+        "koog.openrouter.timeout.connectTimeoutMillis" to "60000",
+        "koog.openrouter.timeout.socketTimeoutMillis" to "900000",
+        "koog.deepseek.apikey" to "test-deepseek-api-key",
+        "koog.deepseek.timeout.requestTimeoutMillis" to "900000",
+        "koog.deepseek.timeout.connectTimeoutMillis" to "60000",
+        "koog.deepseek.timeout.socketTimeoutMillis" to "900000",
+        "koog.ollama.enable" to "true",
+        "koog.ollama.timeout.requestTimeoutMillis" to "900000",
+        "koog.ollama.timeout.connectTimeoutMillis" to "60000",
+        "koog.ollama.timeout.socketTimeoutMillis" to "900000"
+    )
 
-            "fallback_config.yaml" -> {
-                // Only fallback configuration
-                config.put("koog.llm.fallback.provider", "anthropic")
-                config.put("koog.llm.fallback.model", "sonnet_3_5")
-            }
+    private fun buildMixedTimeoutConfig() = MapApplicationConfig(
+        // OpenAI with custom timeout configuration
+        "koog.openai.apikey" to "test-openai-api-key",
+        "koog.openai.timeout.requestTimeoutMillis" to "900000",
+        "koog.openai.timeout.connectTimeoutMillis" to "60000",
+        "koog.openai.timeout.socketTimeoutMillis" to "900000",
+        // Anthropic without timeout config (should use defaults)
+        "koog.anthropic.apikey" to "test-anthropic-api-key",
+        // Google without API key but with timeout config (should not load)
+        "koog.google.timeout.requestTimeoutMillis" to "900000"
+    )
 
-            "openai_config.yaml" -> {
-                // OpenAI configuration
-                config.put("koog.openai.apikey", "test-openai-api-key")
-                config.put("koog.openai.baseUrl", "https://api.openai.com/v1")
-                config.put("koog.openai.timeout.requestTimeoutMillis", "60000")
-                config.put("koog.openai.timeout.connectTimeoutMillis", "30000")
-                config.put("koog.openai.timeout.socketTimeoutMillis", "60000")
-            }
-
-            "anthropic_config.yaml" -> {
-                // Anthropic configuration
-                config.put("koog.anthropic.apikey", "test-anthropic-api-key")
-                config.put("koog.anthropic.baseUrl", "https://api.anthropic.com")
-                config.put("koog.anthropic.timeout.requestTimeoutMillis", "60000")
-                config.put("koog.anthropic.timeout.connectTimeoutMillis", "30000")
-                config.put("koog.anthropic.timeout.socketTimeoutMillis", "60000")
-            }
-
-            "google_config.yaml" -> {
-                // Google configuration
-                config.put("koog.google.apikey", "test-google-api-key")
-                config.put("koog.google.baseUrl", "https://generativelanguage.googleapis.com")
-                config.put("koog.google.timeout.requestTimeoutMillis", "60000")
-                config.put("koog.google.timeout.connectTimeoutMillis", "30000")
-                config.put("koog.google.timeout.socketTimeoutMillis", "60000")
-            }
-
-            "openrouter_config.yaml" -> {
-                // OpenRouter configuration
-                config.put("koog.openrouter.apikey", "test-openrouter-api-key")
-                config.put("koog.openrouter.baseUrl", "https://openrouter.ai/api/v1")
-                config.put("koog.openrouter.timeout.requestTimeoutMillis", "60000")
-                config.put("koog.openrouter.timeout.connectTimeoutMillis", "30000")
-                config.put("koog.openrouter.timeout.socketTimeoutMillis", "60000")
-            }
-
-            "deepseek_config.yaml" -> {
-                // OpenRouter configuration
-                config.put("koog.deepseek.apikey", "test-deepseek-api-key")
-                config.put("koog.deepseek.baseUrl", "https://api.deepseek.com")
-                config.put("koog.deepseek.timeout.requestTimeoutMillis", "60000")
-                config.put("koog.deepseek.timeout.connectTimeoutMillis", "30000")
-                config.put("koog.deepseek.timeout.socketTimeoutMillis", "60000")
-            }
-
-            "ollama_config.yaml" -> {
-                // Ollama configuration
-                config.put("koog.ollama.enable", "true")
-                config.put("koog.ollama.baseUrl", "http://localhost:11434")
-                config.put("koog.ollama.timeout.requestTimeoutMillis", "60000")
-                config.put("koog.ollama.timeout.connectTimeoutMillis", "30000")
-                config.put("koog.ollama.timeout.socketTimeoutMillis", "60000")
-            }
-
-            "invalid_config.yaml" -> {
-                // Invalid OpenAI configuration (missing API key)
-                config.put("koog.openai.baseUrl", "https://api.openai.com/v1")
-
-                // Invalid Anthropic configuration (invalid timeout)
-                config.put("koog.anthropic.apikey", "test-anthropic-api-key")
-                config.put("koog.anthropic.timeout.requestTimeoutMillis", "invalid-timeout")
-
-                // Invalid default LLM configuration (invalid model identifier)
-                config.put("koog.llm.default", "invalid-model-identifier")
-
-                // Invalid fallback configuration (missing model)
-                config.put("koog.llm.fallback.provider", "google")
-            }
-
-            else -> throw IllegalArgumentException("Resource not found: $resourceName")
-        }
-
-        return config
-    }
 }
