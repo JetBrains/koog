@@ -14,7 +14,6 @@ import kotlinx.serialization.Serializable
  * shared properties from the [DefinedFeatureEvent] superclass.
  *
  * @property strategyName The name of the strategy being started.
- * @property eventId A string representing the event type.
  */
 public abstract class StrategyStartingEvent : DefinedFeatureEvent() {
 
@@ -53,7 +52,6 @@ public abstract class StrategyStartingEvent : DefinedFeatureEvent() {
  * @property strategyName The name of the graph-based strategy being executed.
  * @property graph The graph structure representing the strategy's execution workflow, encompassing nodes
  *                 and their directed relationships;
- * @property eventId A string representing the event type;
  * @property timestamp The timestamp of the event, in milliseconds since the Unix epoch.
  */
 @Serializable
@@ -61,7 +59,6 @@ public data class GraphStrategyStartingEvent(
     override val runId: String,
     override val strategyName: String,
     val graph: StrategyEventGraph,
-    override val eventId: String = GraphStrategyStartingEvent::class.simpleName!!,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
 ) : StrategyStartingEvent()
 
@@ -76,14 +73,12 @@ public data class GraphStrategyStartingEvent(
  *
  * @property runId A unique identifier representing the specific run or instance of the strategy execution;
  * @property strategyName The name of the functional-based strategy being executed;
- * @property eventId A string representing the event type;
  * @property timestamp The timestamp of the event, in milliseconds since the Unix epoch.
  */
 @Serializable
 public data class FunctionalStrategyStartingEvent(
     override val runId: String,
     override val strategyName: String,
-    override val eventId: String = FunctionalStrategyStartingEvent::class.simpleName!!,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
 ) : StrategyStartingEvent()
 
@@ -96,7 +91,6 @@ public data class FunctionalStrategyStartingEvent(
  * @property strategyName The name of the strategy that was executed;
  * @property result The result of the strategy execution, providing details such as success, failure,
  *           or other status descriptions;
- * @property eventId A string representing the event type;
  * @property timestamp The timestamp of the event, in milliseconds since the Unix epoch.
  */
 @Serializable
@@ -104,7 +98,6 @@ public data class StrategyCompletedEvent(
     val runId: String,
     val strategyName: String,
     val result: String?,
-    override val eventId: String = StrategyCompletedEvent::class.simpleName!!,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent()
 

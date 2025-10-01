@@ -8,6 +8,7 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.eventHandler.feature.handleEvents
 import ai.koog.agents.testing.tools.DummyTool
+import ai.koog.agents.utils.use
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.llm.OllamaModels
 import ai.koog.prompt.message.Message
@@ -55,7 +56,7 @@ class AIAgentNodesHistoryCompressionTest {
             maxAgentIterations = 10
         )
 
-        val runner = AIAgent(
+        AIAgent(
             promptExecutor = testExecutor,
             strategy = agentStrategy,
             agentConfig = agentConfig,
@@ -64,11 +65,11 @@ class AIAgentNodesHistoryCompressionTest {
             }
         ) {
             install(EventHandler) {
-                onAgentFinished { eventContext -> results += eventContext.result }
+                onAgentCompleted { eventContext -> results += eventContext.result }
             }
+        }.use { agent ->
+            agent.run("")
         }
-
-        runner.run("")
 
         // After compression, we should have one result
         assertEquals(1, results.size)
@@ -107,7 +108,7 @@ class AIAgentNodesHistoryCompressionTest {
             maxAgentIterations = 10
         )
 
-        val runner = AIAgent(
+        AIAgent(
             promptExecutor = testExecutor,
             strategy = agentStrategy,
             agentConfig = agentConfig,
@@ -116,11 +117,11 @@ class AIAgentNodesHistoryCompressionTest {
             }
         ) {
             install(EventHandler) {
-                onAgentFinished { eventContext -> results += eventContext.result }
+                onAgentCompleted { eventContext -> results += eventContext.result }
             }
+        }.use { agent ->
+            agent.run("")
         }
-
-        runner.run("")
 
         // After compression, we should have one result
         assertEquals(1, results.size)
@@ -162,7 +163,7 @@ class AIAgentNodesHistoryCompressionTest {
             maxAgentIterations = 10
         )
 
-        val runner = AIAgent(
+        AIAgent(
             promptExecutor = testExecutor,
             strategy = agentStrategy,
             agentConfig = agentConfig,
@@ -171,11 +172,11 @@ class AIAgentNodesHistoryCompressionTest {
             }
         ) {
             handleEvents {
-                onAgentFinished { eventContext -> results += eventContext.result }
+                onAgentCompleted { eventContext -> results += eventContext.result }
             }
+        }.use { agent ->
+            agent.run("")
         }
-
-        runner.run("")
 
         // After compression, we should have one result
         assertEquals(1, results.size)

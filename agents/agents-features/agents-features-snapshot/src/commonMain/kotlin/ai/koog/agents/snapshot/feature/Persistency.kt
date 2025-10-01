@@ -1,5 +1,7 @@
 package ai.koog.agents.snapshot.feature
 
+import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.core.agent.AIAgent.Companion.State.Running
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AgentContextData
 import ai.koog.agents.core.agent.context.RollbackStrategy
@@ -12,6 +14,8 @@ import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.InterceptContext
+import ai.koog.agents.core.tools.DirectToolCallsEnabler
+import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.snapshot.providers.PersistencyStorageProvider
 import ai.koog.prompt.message.Message
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -59,6 +63,16 @@ public class Persistency(
      * Alternative strategies, such as `MessageHistoryOnly`, can be used for partial rollbacks.
      */
     public var rollbackStrategy: RollbackStrategy = RollbackStrategy.Default
+
+    /**
+     * A registry for managing rollback tools within the persistence system.
+     *
+     * The `rollbackToolRegistry` plays a key role in supporting the rollback mechanism in the
+     * persistency operations, allowing seamless state restoration for tools **with side-effects** to specified or latest
+     * checkpoints as needed.
+     *
+     */
+    public var rollbackToolRegistry: RollbackToolRegistry = RollbackToolRegistry {}
 
     /**
      * Represents the identifier of the current node being executed within the agent pipeline.
@@ -113,6 +127,7 @@ public class Persistency(
         ) {
             val featureImpl = Persistency(config.storage)
             featureImpl.rollbackStrategy = config.rollbackStrategy
+            featureImpl.rollbackToolRegistry = config.rollbackToolRegistry
             val interceptContext = InterceptContext(this, featureImpl)
 
             pipeline.interceptContextAgentFeature(this) { _ ->
@@ -284,19 +299,61 @@ public class Persistency(
      * This method retrieves the checkpoint with the specified ID and, if found,
      * sets the agent's context to the state captured in that checkpoint.
      *
+     * **Note: If some of your tools had side-effects and you need to roll back to some older state, please consider
+     * providing [RollbackToolRegistry]. This would only work if you are always trying to rollback BACKWARDS in time!**
+     *
      * @param checkpointId The ID of the checkpoint to roll back to
      * @param agentContext The context of the agent to roll back
      * @return The checkpoint data that was restored or null if the checkpoint was not found
      */
+    @OptIn(InternalAgentToolsApi::class)
     public suspend fun rollbackToCheckpoint(
         checkpointId: String,
         agentContext: AIAgentContext
     ): AgentCheckpointData? {
         val checkpoint: AgentCheckpointData? = getCheckpointById(checkpointId)
         if (checkpoint != null) {
-            agentContext.store(checkpoint.toAgentContextData(rollbackStrategy))
+            agentContext.store(
+                checkpoint.toAgentContextData(rollbackStrategy) { context ->
+                    messageHistoryDiff(
+                        currentMessages = context.llm.prompt.messages,
+                        checkpointMessages = checkpoint.messageHistory
+                    )
+                        .filterIsInstance<Message.Tool.Call>()
+                        .reversed()
+                        .forEach { toolCall ->
+                            rollbackToolRegistry.getRollbackTool(toolCall.tool)?.let { rollbackTool ->
+                                val toolArgs = rollbackTool.decodeArgs(toolCall.contentJson)
+
+                                rollbackTool.executeUnsafe(toolArgs, DirectToolCallsEnablerImpl)
+                            }
+                        }
+                }
+            )
         }
+
         return checkpoint
+    }
+
+    /**
+     * Returns the difference only.
+     * ex: current messages: [1, 2, 3, 4, 5, 6, 7], checkpoint messages: [1, 2, 3, 4, 5] -> diff messages: 6, 7
+     *
+     * Only works for the scenario when current chat histor is AHEAD of the checkpoint (i.e. we are restoring BACKWARDS in time),
+     * otherwise will return an empty list!
+     * */
+    private fun messageHistoryDiff(currentMessages: List<Message>, checkpointMessages: List<Message>): List<Message> {
+        if (checkpointMessages.size > currentMessages.size) {
+            return emptyList()
+        }
+
+        checkpointMessages.forEachIndexed { index, message ->
+            if (currentMessages[index] != message) {
+                return emptyList()
+            }
+        }
+
+        return currentMessages.takeLast(currentMessages.size - checkpointMessages.size)
     }
 
     /**
@@ -327,20 +384,49 @@ public class Persistency(
  * @return The [Persistency] feature instance for this agent
  * @throws IllegalStateException if the checkpoint feature is not installed
  */
-public fun AIAgentContext.persistency(): Persistency = featureOrThrow(Persistency.Feature)
+public fun AIAgentContext.persistency(): Persistency = agent.persistency()
 
 /**
- * Extension function to perform an action with the checkpoint feature.
+ * Retrieves the persistency feature for the AI agent.
  *
- * This is a convenience function that retrieves the checkpoint feature and
- * executes the provided action with it.
+ * @return The persistency feature associated with the AI agent.
+ * @throws IllegalStateException if the persistency feature is not available.
+ */
+public fun AIAgent<*, *>.persistency(): Persistency = featureOrThrow(Persistency.Feature)
+
+/**
+ * Executes the provided action within the context of the AI agent's persistency layer.
  *
- * @param T The return type of the action
- * @param context The agent context to pass to the action
- * @param action The action to perform with the checkpoint feature
- * @return The result of the action
+ * This function enhances agents with persistent state management capabilities by leveraging the `Persistency` component
+ * within the current `AIAgentContext`. The supplied action is executed with the persistency layer, enabling operations
+ * that require consistent and reliable state management across the lifecycle of the agent.
+ *
+ * @param action A suspendable lambda function that receives the `Persistency` instance and the current `AIAgentContext`
+ *               as its parameters. This allows custom logic that interacts with the persistency layer to be executed.
+ * @return A result of type [T] produced by the execution of the provided action.
  */
 public suspend fun <T> AIAgentContext.withPersistency(
-    context: AIAgentContext,
     action: suspend Persistency.(AIAgentContext) -> T
-): T = persistency().action(context)
+): T = this.persistency().action(this)
+
+/**
+ * Executes the provided action within the context of the agent's persistency layer if the agent is in a running state.
+ *
+ * This function allows interaction with the persistency mechanism associated with the agent, ensuring that
+ * the operation is carried out in the correct execution context.
+ *
+ * @param action A suspending function defining operations to perform using the agent's persistency mechanism
+ *               and the current agent context.
+ * @return The result of the execution of the provided action.
+ * @throws IllegalStateException If the agent is not in a running state when this function is called.
+ */
+@OptIn(InternalAgentsApi::class)
+public suspend fun <T> AIAgent<*, *>.withPersistency(
+    action: suspend Persistency.(AIAgentContext) -> T
+): T = when (val state = getState()) {
+    is Running<*> -> this.persistency().action(state.rootContext)
+    else -> throw IllegalStateException("Agent is not running. Current agents's state: $state")
+}
+
+@OptIn(InternalAgentToolsApi::class)
+private object DirectToolCallsEnablerImpl : DirectToolCallsEnabler

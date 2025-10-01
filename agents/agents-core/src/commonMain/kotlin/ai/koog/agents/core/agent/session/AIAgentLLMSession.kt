@@ -15,6 +15,7 @@ import ai.koog.prompt.structure.StructureFixingParser
 import ai.koog.prompt.structure.StructuredOutputConfig
 import ai.koog.prompt.structure.StructuredResponse
 import ai.koog.prompt.structure.executeStructured
+import ai.koog.prompt.structure.parseResponseToStructuredResponse
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.serializer
 
@@ -311,6 +312,24 @@ public sealed class AIAgentLLMSession(
         examples = examples,
         fixingParser = fixingParser,
     )
+
+    /**
+     * Parses a structured response from the language model using the specified configuration.
+     *
+     * This function takes a response message and a structured output configuration,
+     * parses the response content based on the defined structure, and returns
+     * a structured response containing the parsed data and the original message.
+     *
+     * @param response The response message from the language model that contains the content to be parsed.
+     * The message is expected to match the defined structured output.
+     * @param config The configuration defining the expected structure and additional parsing behavior.
+     * It includes options such as structure definitions and optional parsers for error handling.
+     * @return A structured response containing the parsed data of type `T` along with the original message.
+     */
+    public suspend fun <T> parseResponseToStructuredResponse(
+        response: Message.Assistant,
+        config: StructuredOutputConfig<T>
+    ): StructuredResponse<T> = executor.parseResponseToStructuredResponse(response, config, model)
 
     /**
      * Sends a request to the language model, potentially receiving multiple choices,

@@ -58,7 +58,6 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import org.junit.jupiter.params.ParameterizedTest
@@ -95,24 +94,26 @@ class SingleLLMPromptExecutorIntegrationTest {
             val anthropicClientInstance = AnthropicLLMClient(readTestAnthropicKeyFromEnv())
             val googleClientInstance = GoogleLLMClient(readTestGoogleAIKeyFromEnv())
             val openRouterClientInstance = OpenRouterLLMClient(readTestOpenRouterKeyFromEnv())
-            /*val bedrockClientInstance = BedrockLLMClient(
+            val bedrockClientInstance = BedrockLLMClient(
                 readAwsAccessKeyIdFromEnv(),
                 readAwsSecretAccessKeyFromEnv(),
                 readAwsSessionTokenFromEnv(),
                 BedrockClientSettings()
-            )*/
+            )
 
             return Stream.concat(
                 Stream.concat(
-                    Models.openAIModels().map { model -> Arguments.of(model, openAIClientInstance) },
-                    Models.anthropicModels().map { model -> Arguments.of(model, anthropicClientInstance) }
+                    Stream.concat(
+                        Models.openAIModels().map { model -> Arguments.of(model, openAIClientInstance) },
+                        Models.anthropicModels().map { model -> Arguments.of(model, anthropicClientInstance) }
+                    ),
+                    Stream.concat(
+                        Models.googleModels().map { model -> Arguments.of(model, googleClientInstance) },
+                        Models.openRouterModels().map { model -> Arguments.of(model, openRouterClientInstance) }
+                    )
                 ),
-                Stream.concat(
-                    Models.googleModels().map { model -> Arguments.of(model, googleClientInstance) },
-                    Models.openRouterModels().map { model -> Arguments.of(model, openRouterClientInstance) }
-                )
+                Models.bedrockModels().map { model -> Arguments.of(model, bedrockClientInstance) }
             )
-            // Models.bedrockModels().map { model -> Arguments.of(model, bedrockClientInstance) }
         }
 
         @JvmStatic
@@ -156,6 +157,13 @@ class SingleLLMPromptExecutorIntegrationTest {
 
             LLMProvider.OpenAI -> OpenAILLMClient(
                 readTestOpenAIKeyFromEnv()
+            )
+
+            LLMProvider.Bedrock -> BedrockLLMClient(
+                readAwsAccessKeyIdFromEnv(),
+                readAwsSecretAccessKeyFromEnv(),
+                readAwsSessionTokenFromEnv(),
+                BedrockClientSettings()
             )
 
             else -> GoogleLLMClient(
@@ -229,10 +237,6 @@ class SingleLLMPromptExecutorIntegrationTest {
         Models.assumeAvailable(model.provider)
         if (model.id == OpenAIModels.Audio.GPT4oAudio.id || model.id == OpenAIModels.Audio.GPT4oMiniAudio.id) {
             assumeTrue(false, "https://github.com/JetBrains/koog/issues/231")
-        }
-        // TODO fix (KG-394): OpenRouter anthropic/claude-sonnet-4 streaming is incompatible with our current client setup (SSE/protocol)
-        if (model.provider == LLMProvider.OpenRouter && model.id.contains("anthropic/claude-sonnet-4")) {
-            assumeTrue(false, "Skipping OpenRouter anthropic/claude-sonnet-4 streaming: protocol incompatibility")
         }
 
         val executor = SingleLLMPromptExecutor(client)
@@ -506,10 +510,6 @@ class SingleLLMPromptExecutorIntegrationTest {
         if (model.id == OpenAIModels.Audio.GPT4oAudio.id || model.id == OpenAIModels.Audio.GPT4oMiniAudio.id) {
             assumeTrue(false, "https://github.com/JetBrains/koog/issues/231")
         }
-        // TODO fix (KG-394): OpenRouter anthropic/claude-sonnet-4 streaming is incompatible with our current client setup (SSE/protocol)
-        if (model.provider == LLMProvider.OpenRouter && model.id.contains("anthropic/claude-sonnet-4")) {
-            assumeTrue(false, "Skipping OpenRouter anthropic/claude-sonnet-4 streaming: protocol incompatibility")
-        }
 
         val prompt = Prompt.build("test-streaming") {
             system("You are a helpful assistant. You have NO output length limitations.")
@@ -542,10 +542,6 @@ class SingleLLMPromptExecutorIntegrationTest {
     fun integration_testStructuredDataStreaming(model: LLModel, client: LLMClient) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model != OpenAIModels.CostOptimized.GPT4_1Nano, "Model $model is too small for structured streaming")
-        // TODO fix (KG-394): OpenRouter anthropic/claude-sonnet-4 streaming is incompatible with our current client setup (SSE/protocol)
-        if (model.provider == LLMProvider.OpenRouter && model.id.contains("anthropic/claude-sonnet-4")) {
-            assumeTrue(false, "Skipping OpenRouter anthropic/claude-sonnet-4 streaming: protocol incompatibility")
-        }
 
         val countries = mutableListOf<Country>()
         val countryDefinition = markdownCountryDefinition()
@@ -633,7 +629,7 @@ class SingleLLMPromptExecutorIntegrationTest {
     @MethodSource("modelClientCombinations")
     fun integration_testToolChoiceNamed(model: LLModel, client: LLMClient) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
-        assumeTrue(!(model.provider == LLMProvider.OpenRouter && model.id.contains("anthropic")), "KG-282")
+
         assumeTrue(model.capabilities.contains(LLMCapability.ToolChoice), "Model $model does not support tools")
 
         val calculatorTool = createCalculatorTool()
@@ -1089,7 +1085,6 @@ class SingleLLMPromptExecutorIntegrationTest {
      * Some models may require an inference profile instead of on-demand throughput.
      * The test may fail if the AWS account doesn't have access to the specified models.
      */
-    @Disabled
     @ParameterizedTest
     @MethodSource("bedrockCombinations")
     fun integration_testSimpleBedrockExecutor(model: LLModel) = runTest(timeout = 300.seconds) {
@@ -1135,10 +1130,7 @@ class SingleLLMPromptExecutorIntegrationTest {
             model.capabilities.contains(LLMCapability.Schema.JSON.Standard),
             "Model does not support Standard JSON Schema"
         )
-        // TODO fix (KG-394): OpenRouter anthropic/claude-sonnet-4 streaming is incompatible with our current client setup (SSE/protocol)
-        if (model.provider == LLMProvider.OpenRouter) {
-            assumeTrue(false, "Skipping StructuredOutputNative for OpenRouter due to schema incompatibilities upstream")
-        }
+
         val executor = SingleLLMPromptExecutor(client)
 
         withRetry {
@@ -1160,13 +1152,7 @@ class SingleLLMPromptExecutorIntegrationTest {
             model.capabilities.contains(LLMCapability.Schema.JSON.Standard),
             "Model does not support Standard JSON Schema"
         )
-        // TODO fix (KG-394) OpenRouter
-        if (model.provider == LLMProvider.OpenRouter) {
-            assumeTrue(
-                false,
-                "Skipping StructuredOutputNativeWithFixingParser for OpenRouter due to upstream schema incompatibilities"
-            )
-        }
+
         val executor = SingleLLMPromptExecutor(client)
 
         withRetry {
@@ -1188,6 +1174,11 @@ class SingleLLMPromptExecutorIntegrationTest {
             model.provider !== LLMProvider.Google,
             "Google models fail to return manually requested structured output without fixing"
         )
+        assumeTrue(
+            model.provider == LLMProvider.OpenRouter && model.id.contains("gemini"),
+            "Google models fail to return manually requested structured output without fixing"
+        )
+
         val executor = SingleLLMPromptExecutor(client)
 
         withRetry {

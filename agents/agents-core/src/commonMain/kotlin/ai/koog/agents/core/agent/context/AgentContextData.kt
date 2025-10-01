@@ -11,7 +11,8 @@ public class AgentContextData(
     internal val messageHistory: List<Message>,
     internal val nodeId: String,
     internal val lastInput: JsonElement,
-    internal val rollbackStrategy: RollbackStrategy
+    internal val rollbackStrategy: RollbackStrategy,
+    internal val additionalRollbackActions: suspend (AIAgentContext) -> Unit = {}
 )
 
 public enum class RollbackStrategy {

@@ -3,7 +3,7 @@ package ai.koog.agents.core.feature.handler
 /**
  * Represents the context for handling LLM-specific events within the framework.
  */
-public interface LLMEventHandlerContext : EventHandlerContext
+public interface LLMEventHandlerContext : AgentLifecycleEventContext
 
 /**
  * Represents the context for handling a before LLM call event.

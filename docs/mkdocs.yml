@@ -6,8 +6,8 @@ nav:
       - Key concepts: key-concepts.md
       - Getting started:
           - Single-run agents: single-run-agents.md
-          - Act Agent API: act-ai-agent.md
           - Complex workflow agents: complex-workflow-agents.md
+          - Functional agents: functional-agents.md
       - Prompt API: prompt-api.md
       - Tools:
           - Overview: tools-overview.md
@@ -98,7 +98,7 @@ plugins:
           - key-concepts.md: This page provides explanations of key terms and concepts related to Koog and agentic development.
         Getting started:
           - single-run-agents.md: This guide lets you quickly build a single-run agent with minimum required configuration.
-          - act-ai-agent.md: This guide shows you how to build a lightweight, non‑graph agent that you control with a simple loop.
+          - functional-agents.md: This guide shows you how to build a lightweight, non‑graph agent that you control with a simple loop.
           - complex-workflow-agents.md: This page explains how you can create agents that handle complex workflows by defining custom strategies, tools, configurations, and custom input and output types.
         Prompt API:
           - prompt-api.md: This page includes detailed instructions about the use of Prompt API, which provides a comprehensive toolkit for interacting with Large Language Models in production applications.

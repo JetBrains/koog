@@ -1,9 +1,15 @@
 package ai.koog.agents.core.agent
 
+import ai.koog.agents.core.agent.AIAgent.Companion.State.Finished
+import ai.koog.agents.core.agent.AIAgent.Companion.State.Running
 import ai.koog.agents.core.agent.GraphAIAgent.FeatureContext
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.config.AIAgentConfigBase
+import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
+import ai.koog.agents.core.agent.entity.AIAgentStorageKey
+import ai.koog.agents.core.annotation.InternalAgentsApi
+import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.utils.Closeable
 import ai.koog.prompt.dsl.prompt
@@ -29,6 +35,28 @@ public interface AIAgent<Input, Output> : Closeable {
     public val agentConfig: AIAgentConfigBase
 
     /**
+     * Retrieves the current state of the AI agent during its lifecycle.
+     *
+     * This method provides the current `State` of the agent, which can
+     * be one of the defined states: [NotStarted], [Running], [Finished], or [Failed].
+     *
+     * @return The current state of the AI agent.
+     */
+    public suspend fun getState(): State<Output>
+
+    /**
+     * Retrieves the result of the operation if the current state is `State.Finished`.
+     * Throws an `IllegalStateException` if the operation is not in a finished state.
+     *
+     * @return The result of type `Output` when the operation is completed successfully.
+     * @throws IllegalStateException if the operation's state is not `State.Finished`.
+     */
+    public suspend fun result(): Output = when (val state = getState()) {
+        is Finished<Output> -> state.result
+        else -> throw IllegalStateException("Output is not ready, agent's state is: $state")
+    }
+
+    /**
      * Executes the AI agent with the given input and retrieves the resulting output.
      *
      * @param agentInput The input for the agent.
@@ -37,10 +65,112 @@ public interface AIAgent<Input, Output> : Closeable {
     public suspend fun run(agentInput: Input): Output
 
     /**
+     * Retrieves a specific agent feature associated with the given key from the AI agent's storage.
+     *
+     * @param key The unique key used to identify and retrieve the feature from the storage.
+     * @return The feature associated with the given key, or null if no such feature is found.
+     */
+    public fun <Feature : Any> feature(key: AIAgentStorageKey<Feature>): Feature?
+
+    /**
+     * Retrieves a specific agent feature of type [Feature] from the AI agent's storage.
+     * If the requested feature is not found, throws an `IllegalStateException`.
+     *
+     * @param feature The [AIAgentFeature] instance representing the feature to be retrieved,
+     * including its associated key.
+     * @return The feature of type [Feature] if it exists in the agent's storage.
+     * @throws IllegalStateException if the feature is not installed in the agent.
+     */
+    public fun <Feature : Any> featureOrThrow(feature: AIAgentFeature<*, Feature>): Feature = feature(feature.key)
+        ?: throw IllegalStateException("Feature `${feature::class.simpleName}` is not installed to the agent")
+
+    /**
      * The companion object for the AIAgent class, providing functionality to instantiate an AI agent
      * with a flexible configuration, input/output types, and execution strategy.
      */
     public companion object {
+        /**
+         * Represents the state of an AI agent during its lifecycle.
+         *
+         * This sealed interface provides different states to reflect whether the agent
+         * has not started, is currently running, has completed its task successfully with a result,
+         * or has failed with an exception.
+         */
+        public sealed interface State<Output> {
+            /**
+             * Creates and returns a copy of the current state object.
+             *
+             * @return A new instance of `State<Output>` that is a copy of the current object.
+             */
+            public fun copy(): State<Output>
+
+            /**
+             * Represents a state that indicates an action or process has not yet started.
+             *
+             * This class is part of the `State` sealed interface and is used to define
+             * a specific state where no progress, execution, or processing has occurred.
+             */
+            public class NotStarted<Output> : State<Output> {
+                override fun copy(): State<Output> = NotStarted()
+            }
+
+            /**
+             * Represents the starting state of an operation or process.
+             *
+             * This class is a specialization of the `State` class, indicating the initial
+             * state prior to progression or change. It overrides the `copy` method to
+             * return a new instance of the same starting state.
+             *
+             * @param Output The type of output associated with the state.
+             */
+            public class Starting<Output> : State<Output> {
+                override fun copy(): State<Output> = Starting()
+            }
+
+            /**
+             * Represents the `Running` state of an AI agent, indicating that the agent is actively executing its tasks.
+             *
+             * This state provides access to the root context of the agent via the `rootContext` property, allowing
+             * interaction with the overall execution environment, configuration, and state management facilities.
+             *
+             * The `rootContext` is marked with the `@InternalAgentsApi` annotation, meaning its usage is intended for
+             * internal agent-related implementations and may not maintain backwards compatibility.
+             *
+             * @property rootContext Provides access to the root context of the agent, facilitating operations
+             *                       such as state management, feature retrieval, and context-based workflows.
+             *                       This allows the agent to perform actions and manage its execution lifecycle within the given context.
+             */
+            public class Running<Output>(
+                @property:InternalAgentsApi public val rootContext: AIAgentContext
+            ) : State<Output> {
+                @OptIn(InternalAgentsApi::class)
+                override fun copy(): State<Output> = Running(rootContext)
+            }
+
+            /**
+             * Represents the final state of a computation or process with its resulting output.
+             *
+             * @param Output The type of the result produced by the finished computation or process.
+             * @property result The computed result of the finished process.
+             */
+            public class Finished<Output>(
+                public val result: Output
+            ) : State<Output> {
+                override fun copy(): State<Output> = Finished(result)
+            }
+
+            /**
+             * Represents a state indicating an operation has failed.
+             *
+             * @property exception The throwable that caused the failure.
+             */
+            public class Failed<Output>(
+                public val exception: Throwable
+            ) : State<Output> {
+                override fun copy(): State<Output> = Failed(exception)
+            }
+        }
+
         /**
          * Creates an instance of an AI agent based on the provided configuration, input/output types,
          * and execution strategy.
@@ -122,18 +252,20 @@ public interface AIAgent<Input, Output> : Closeable {
         public operator fun <Input, Output> invoke(
             promptExecutor: PromptExecutor,
             agentConfig: AIAgentConfig,
-            func: suspend AIAgentFunctionalContext.(input: Input) -> Output,
+            strategy: AIAgentFunctionalStrategy<Input, Output>,
             toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
             id: String? = null,
-            installFeatures: FeatureContext.() -> Unit = {},
+            clock: Clock = Clock.System,
+            installFeatures: FunctionalAIAgent.FeatureContext.() -> Unit = {},
         ): FunctionalAIAgent<Input, Output> {
             return FunctionalAIAgent(
+                id = id,
                 promptExecutor = promptExecutor,
                 agentConfig = agentConfig,
                 toolRegistry = toolRegistry,
-                strategy = functionalStrategy(
-                    func = func
-                )
+                strategy = strategy,
+                clock = clock,
+                featureContext = installFeatures
             )
         }
 
@@ -257,13 +389,13 @@ public interface AIAgent<Input, Output> : Closeable {
             promptExecutor: PromptExecutor,
             llmModel: LLModel,
             toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
+            strategy: AIAgentFunctionalStrategy<Input, Output>,
             id: String? = null,
             systemPrompt: String = "",
             temperature: Double = 1.0,
             numberOfChoices: Int = 1,
             maxIterations: Int = 50,
             installFeatures: FunctionalAIAgent.FeatureContext.() -> Unit = {},
-            func: suspend AIAgentFunctionalContext.(input: Input) -> Output,
         ): AIAgent<Input, Output> = FunctionalAIAgent(
             promptExecutor = promptExecutor,
             agentConfig = AIAgentConfig(
@@ -281,9 +413,21 @@ public interface AIAgent<Input, Output> : Closeable {
             ),
             featureContext = installFeatures,
             toolRegistry = toolRegistry,
-            strategy = functionalStrategy(
-                func = func
-            )
+            strategy = strategy
         )
     }
 }
+
+/**
+ * Checks whether the AI agent is currently in a running state.
+ *
+ * @return `true` if the AI agent's state is `Running`, otherwise `false`.
+ */
+public suspend fun AIAgent<*, *>.isRunning(): Boolean = this.getState() is Running
+
+/**
+ * Checks whether the AI agent has reached a finished state.
+ *
+ * @return true if the current state of the AI agent is of type `Finished`, false otherwise.
+ */
+public suspend fun AIAgent<*, *>.isFinished(): Boolean = this.getState() is Finished

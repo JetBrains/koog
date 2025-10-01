@@ -166,13 +166,13 @@ class AnthropicSchemaValidationIntegrationTest {
                 },
                 installFeatures = {
                     install(EventHandler) {
-                        onAgentRunError { eventContext ->
+                        onAgentExecutionFailed { eventContext ->
                             println(
                                 "ERROR: ${eventContext.throwable.javaClass.simpleName}(${eventContext.throwable.message})"
                             )
                             println(eventContext.throwable.stackTraceToString())
                         }
-                        onToolCall { eventContext ->
+                        onToolCallStarting { eventContext ->
                             println("Calling tool: ${eventContext.tool.name}")
                             println("Arguments: ${eventContext.toolArgs.toString().take(100)}...")
                         }

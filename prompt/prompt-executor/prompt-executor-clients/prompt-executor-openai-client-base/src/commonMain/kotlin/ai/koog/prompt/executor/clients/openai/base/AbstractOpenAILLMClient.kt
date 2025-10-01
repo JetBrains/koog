@@ -12,7 +12,6 @@ import ai.koog.prompt.executor.clients.openai.base.models.Content
 import ai.koog.prompt.executor.clients.openai.base.models.JsonSchemaObject
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIBaseLLMResponse
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIBaseLLMStreamResponse
-import ai.koog.prompt.executor.clients.openai.base.models.OpenAIChoice
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIContentPart
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIFunction
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIMessage
@@ -406,10 +405,10 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
     }
 
     @OptIn(ExperimentalEncodingApi::class)
-    protected fun OpenAIChoice.toMessageResponses(metaInfo: ResponseMetaInfo): List<Message.Response> {
+    protected fun OpenAIMessage.toMessageResponses(finishReason: String?, metaInfo: ResponseMetaInfo): List<Message.Response> {
         return when {
-            message is OpenAIMessage.Assistant && !message.toolCalls.isNullOrEmpty() -> {
-                message.toolCalls.map { toolCall ->
+            this is OpenAIMessage.Assistant && !this.toolCalls.isNullOrEmpty() -> {
+                this.toolCalls.map { toolCall ->
                     Message.Tool.Call(
                         id = toolCall.id,
                         tool = toolCall.function.name,
@@ -419,20 +418,20 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
                 }
             }
 
-            message.content != null -> listOf(
+            this.content != null -> listOf(
                 Message.Assistant(
-                    content = message.content!!.text(),
+                    content = this.content!!.text(),
                     finishReason = finishReason,
                     metaInfo = metaInfo
                 )
             )
 
-            message is OpenAIMessage.Assistant && message.audio?.data != null -> listOf(
+            this is OpenAIMessage.Assistant && this.audio?.data != null -> listOf(
                 Message.Assistant(
-                    content = message.audio.transcript.orEmpty(),
+                    content = this.audio.transcript.orEmpty(),
                     attachments = listOf(
                         Attachment.Audio(
-                            content = AttachmentContent.Binary.Base64(message.audio.data),
+                            content = AttachmentContent.Binary.Base64(this.audio.data),
                             format = "unknown", // FIXME: clarify format from response
                         )
                     ),

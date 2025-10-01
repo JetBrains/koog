@@ -388,7 +388,7 @@ public class OpenTelemetry {
 
             //region Tool Call
 
-            pipeline.interceptToolExecutionStarting(interceptContext) { eventContext ->
+            pipeline.interceptToolCallStarting(interceptContext) { eventContext ->
                 logger.debug { "Execute OpenTelemetry tool call handler" }
 
                 // Get current NodeExecuteSpan
@@ -416,7 +416,7 @@ public class OpenTelemetry {
                 spanProcessor.startSpan(executeToolSpan)
             }
 
-            pipeline.interceptToolExecutionCompleted(interceptContext) { eventContext ->
+            pipeline.interceptToolCallCompleted(interceptContext) { eventContext ->
                 logger.debug { "Execute OpenTelemetry tool result handler" }
 
                 // Get current ExecuteToolSpan
@@ -445,7 +445,7 @@ public class OpenTelemetry {
                 spanProcessor.endSpan(span = executeToolSpan)
             }
 
-            pipeline.interceptToolExecutionFailed(interceptContext) { eventContext ->
+            pipeline.interceptToolCallFailed(interceptContext) { eventContext ->
                 logger.debug { "Execute OpenTelemetry tool call failure handler" }
 
                 // Get current ExecuteToolSpan

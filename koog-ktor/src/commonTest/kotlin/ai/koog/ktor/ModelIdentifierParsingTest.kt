@@ -174,6 +174,12 @@ class ModelIdentifierParsingTest {
         assertNotNull(sonnet4)
         assertEquals(LLMProvider.Anthropic, sonnet4.provider)
         assertEquals(AnthropicModels.Sonnet_4, sonnet4)
+
+        // Test Sonnet 4.5
+        val sonnet4_5 = getModelFromIdentifier("anthropic.sonnet_4_5")
+        assertNotNull(sonnet4_5)
+        assertEquals(LLMProvider.Anthropic, sonnet4_5.provider)
+        assertEquals(AnthropicModels.Sonnet_4_5, sonnet4_5)
     }
 
     // Google model identifier tests

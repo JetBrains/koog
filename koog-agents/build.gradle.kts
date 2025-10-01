@@ -17,6 +17,23 @@ val excluded = setOf(
     ":koog-spring-boot-starter",
     ":koog-ktor",
     ":docs",
+
+    ":a2a:a2a-core",
+    ":a2a:a2a-server",
+    ":a2a:a2a-client",
+    ":a2a:a2a-transport:a2a-transport-core-jsonrpc",
+    ":a2a:a2a-transport:a2a-transport-server-jsonrpc-http",
+    ":a2a:a2a-transport:a2a-transport-client-jsonrpc-http",
+    ":a2a:a2a-transport:a2a-transport-core-rest",
+    ":a2a:a2a-transport:a2a-transport-server-rest",
+    ":a2a:a2a-transport:a2a-transport-client-rest",
+    ":a2a:a2a-test",
+    ":a2a:test-tck:a2a-test-server-tck",
+
+    ":agents:agents-features:agents-features-a2a-core",
+    ":agents:agents-features:agents-features-a2a-server",
+    ":agents:agents-features:agents-features-a2a-client",
+
     project.path, // the current project should not depend on itself
 )
 

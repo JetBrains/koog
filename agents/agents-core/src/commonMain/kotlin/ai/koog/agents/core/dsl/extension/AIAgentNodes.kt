@@ -507,3 +507,26 @@ public inline fun <reified ToolArg, reified TResult> AIAgentSubgraphBuilderBase<
             toolResult
         }
     }
+
+/**
+ * Creates a node that sets up a structured output for an AI agent subgraph.
+ *
+ * The method defines a new node with a configurable structured output schema
+ * that will be applied during the AI agent's message processing. The schema
+ * is determined by the given configuration.
+ *
+ * @param name An optional name for the node. If null, a default name will be assigned.
+ * @param config The configuration that defines the structured output format and schema.
+ * @return An instance of [AIAgentNodeDelegate] representing the constructed node.
+ */
+@AIAgentBuilderDslMarker
+public inline fun <reified TInput, T> AIAgentSubgraphBuilderBase<*, *>.nodeSetStructuredOutput(
+    name: String? = null,
+    config: StructuredOutputConfig<T>
+): AIAgentNodeDelegate<TInput, TInput> =
+    node(name) { message ->
+        llm.writeSession {
+            prompt = config.updatePrompt(model, prompt)
+            message
+        }
+    }
