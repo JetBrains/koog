@@ -4,6 +4,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.util.concurrent.TimeUnit
 
 /**
  * Shell command executor using ProcessBuilder for JVM platforms.
@@ -23,32 +24,65 @@ public class JvmShellCommandExecutor : ShellCommandExecutor() {
      *
      * @param command Shell command string to execute
      * @param workingDirectory Working directory, or null to use current directory
+     * @param timeoutSeconds Maximum execution time in seconds, or null for no timeout
      * @return [ExecutionResult] containing combined stdout/stderr output and process exit code
      */
-    public override suspend fun execute(
+    override suspend fun execute(
         command: String,
-        workingDirectory: String?
+        workingDirectory: String?,
+        timeoutSeconds: Int?
     ): ExecutionResult = withContext(Dispatchers.IO) {
-        val process = ProcessBuilder(
-            if (IS_WINDOWS) {
-                listOf("cmd.exe", "/c", command)
-            } else {
-                listOf("sh", "-c", command)
-            }
-        ).apply {
-            workingDirectory?.let { directory(File(it)) }
-        }.start()
+        val shellCommand = if (IS_WINDOWS) {
+            listOf("cmd.exe", "/c", command)
+        } else {
+            listOf("sh", "-c", command)
+        }
+
+        val process = ProcessBuilder(shellCommand).apply { workingDirectory?.let { directory(File(it)) } }.start()
 
         val stdout = async { process.inputStream.bufferedReader().readText() }
         val stderr = async { process.errorStream.bufferedReader().readText() }
 
-        val exitCode = process.waitFor()
+        val completed = if (timeoutSeconds != null) {
+            process.waitFor(timeoutSeconds.toLong(), TimeUnit.SECONDS)
+        } else {
+            process.waitFor()
+            true
+        }
+
+        if (!completed) {
+            process.destroyForcibly()
+            stdout.cancel()
+            stderr.cancel()
+
+            val partialStdout = stdout.takeIf { it.isCompleted }?.getCompleted().orEmpty().trimEnd()
+            val partialStderr = stderr.takeIf { it.isCompleted }?.getCompleted().orEmpty().trimEnd()
+
+            val timeoutMessage = "Command timed out after $timeoutSeconds seconds"
+
+            val combinedOutput = buildString {
+                if (partialStdout.isNotEmpty()) appendLine(partialStdout)
+                if (partialStderr.isNotEmpty()) appendLine(partialStderr)
+                append(timeoutMessage)
+            }
+
+            return@withContext ExecutionResult(
+                output = combinedOutput.trimEnd(),
+                exitCode = null
+            )
+        }
+
+        val stdoutResult = stdout.await().trimEnd()
+        val stderrResult = stderr.await().trimEnd()
+
+        val combinedOutput = buildString {
+            if (stdoutResult.isNotEmpty()) appendLine(stdoutResult)
+            if (stderrResult.isNotEmpty()) append(stderrResult)
+        }.trimEnd()
 
         ExecutionResult(
-            output = listOf(stdout.await(), stderr.await())
-                .filter { it.isNotEmpty() }
-                .joinToString("\n"),
-            exitCode = exitCode
+            output = combinedOutput,
+            exitCode = process.exitValue()
         )
     }
 }

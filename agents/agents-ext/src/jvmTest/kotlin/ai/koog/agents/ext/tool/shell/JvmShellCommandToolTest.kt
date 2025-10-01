@@ -381,4 +381,21 @@ class JvmShellCommandToolTest {
         assertEquals(expected, result.textForLLM())
         assertNull(result.exitCode)
     }
+
+    @Test
+    @EnabledOnOs(OS.LINUX, OS.MAC)
+    fun `command with partial output times out`() = runBlocking {
+        val result = execute("for i in {1..10}; do echo \$i; sleep 1; done", timeoutSeconds = 3)
+
+        val expected = """
+            Command: for i in {1..10}; do echo ${'$'}i; sleep 1; done
+            1
+            2
+            3
+            Command timed out after 3 seconds
+        """.trimIndent()
+
+        assertEquals(expected, result.textForLLM())
+        assertNull(result.exitCode)
+    }
 }
