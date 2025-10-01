@@ -26,7 +26,6 @@ import ai.koog.agents.core.feature.remote.client.FeatureMessageRemoteClient
 import ai.koog.agents.core.feature.remote.client.config.DefaultClientConnectionConfig
 import ai.koog.agents.core.feature.remote.server.config.DefaultServerConnectionConfig
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.features.tracing.eventString
 import ai.koog.agents.features.tracing.feature.Tracing
 import ai.koog.agents.features.tracing.mock.MockLLMProvider
 import ai.koog.agents.features.tracing.mock.TestFeatureMessageWriter

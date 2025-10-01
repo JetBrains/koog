@@ -22,7 +22,7 @@ class ModelInfoTest {
         assertEquals(128000L, modelInfo.contextLength)
         assertEquals(4096L, modelInfo.maxOutputTokens)
         assertEquals("openai:gpt-4", modelInfo.eventString)
-        assertEquals("GPT-4", modelInfo.humanReadableName)
+        assertEquals("GPT-4", modelInfo.modelIdentifierName)
     }
 
     @Test
@@ -38,7 +38,7 @@ class ModelInfoTest {
         assertNull(modelInfo.contextLength)
         assertNull(modelInfo.maxOutputTokens)
         assertEquals("anthropic:claude-3", modelInfo.eventString)
-        assertEquals("anthropic/claude-3", modelInfo.humanReadableName)
+        assertEquals("anthropic/claude-3", modelInfo.modelIdentifierName)
     }
 
     @Test
@@ -57,7 +57,7 @@ class ModelInfoTest {
         val modelInfo = ModelInfo.fromString("invalid-format")
 
         assertEquals("unknown", modelInfo.provider)
-        assertEquals("invalid-format", modelInfo.model)
+        assertEquals("undefined", modelInfo.model)
         assertNull(modelInfo.displayName)
         assertNull(modelInfo.contextLength)
         assertNull(modelInfo.maxOutputTokens)
@@ -69,5 +69,16 @@ class ModelInfoTest {
 
         assertEquals("openai", modelInfo.provider)
         assertEquals("gpt-4:extra", modelInfo.model)
+    }
+
+    @Test
+    fun `test UNDEFINED constant`() {
+        val undefined = ModelInfo.UNDEFINED
+
+        assertEquals("unknown", undefined.provider)
+        assertEquals("undefined", undefined.model)
+        assertNull(undefined.displayName)
+        assertNull(undefined.contextLength)
+        assertNull(undefined.maxOutputTokens)
     }
 }

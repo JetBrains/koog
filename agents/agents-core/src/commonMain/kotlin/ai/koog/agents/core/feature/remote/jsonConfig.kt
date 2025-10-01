@@ -4,7 +4,6 @@ import ai.koog.agents.core.feature.message.FeatureEvent
 import ai.koog.agents.core.feature.message.FeatureMessage
 import ai.koog.agents.core.feature.model.FeatureEventMessage
 import ai.koog.agents.core.feature.model.FeatureStringMessage
-import ai.koog.agents.utils.ModelInfo
 import ai.koog.agents.core.feature.model.events.AgentClosingEvent
 import ai.koog.agents.core.feature.model.events.AgentCompletedEvent
 import ai.koog.agents.core.feature.model.events.AgentExecutionFailedEvent
@@ -27,6 +26,7 @@ import ai.koog.agents.core.feature.model.events.ToolCallCompletedEvent
 import ai.koog.agents.core.feature.model.events.ToolCallFailedEvent
 import ai.koog.agents.core.feature.model.events.ToolCallStartingEvent
 import ai.koog.agents.core.feature.model.events.ToolValidationFailedEvent
+import ai.koog.agents.utils.ModelInfo
 import io.ktor.utils.io.InternalAPI
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.KSerializer

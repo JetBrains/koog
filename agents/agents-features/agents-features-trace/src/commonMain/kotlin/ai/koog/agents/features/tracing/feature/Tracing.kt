@@ -30,9 +30,8 @@ import ai.koog.agents.core.feature.model.events.ToolCallStartingEvent
 import ai.koog.agents.core.feature.model.events.ToolValidationFailedEvent
 import ai.koog.agents.core.feature.model.events.startNodeToGraph
 import ai.koog.agents.core.feature.model.toAgentError
-import ai.koog.prompt.llm.toModelInfo
 import ai.koog.agents.core.tools.Tool
-import ai.koog.agents.features.tracing.eventString
+import ai.koog.prompt.llm.toModelInfo
 import io.github.oshai.kotlinlogging.KotlinLogging
 
 /**

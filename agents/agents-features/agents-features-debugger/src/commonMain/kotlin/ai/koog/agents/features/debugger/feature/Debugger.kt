@@ -29,7 +29,6 @@ import ai.koog.agents.core.feature.model.toAgentError
 import ai.koog.agents.core.feature.remote.server.config.DefaultServerConnectionConfig
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.features.debugger.EnvironmentVariablesReader
-import ai.koog.agents.features.debugger.eventString
 import ai.koog.agents.features.debugger.feature.writer.DebuggerFeatureMessageRemoteWriter
 import ai.koog.prompt.llm.toModelInfo
 import io.github.oshai.kotlinlogging.KotlinLogging

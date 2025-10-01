@@ -30,7 +30,24 @@ public data class LLMCallStartingEvent(
     val tools: List<String>,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent() {
-    
+
+    /**
+     * @deprecated Use constructor with model parameter of type [ModelInfo]:
+     *             LLMCallStartingEvent(runId, prompt, model, tools, eventId, timestamp)
+     */
+    @Deprecated(
+        message = "Please use constructor with model parameter of type [ModelInfo]: LLMCallStartingEvent(runId, prompt, model, tools, eventId, timestamp)",
+        replaceWith = ReplaceWith("LLMCallStartingEvent(runId, prompt, model, tools, eventId, timestamp)")
+    )
+    public constructor(
+        runId: String,
+        prompt: Prompt,
+        model: String,
+        tools: List<String>,
+        eventId: String = LLMCallStartingEvent::class.simpleName!!,
+        timestamp: Long = Clock.System.now().toEpochMilliseconds()
+    ) : this(runId, prompt, ModelInfo.fromString(model), tools, eventId, timestamp)
+
     /**
      * @deprecated Use model.eventString instead
      */
@@ -70,7 +87,25 @@ public data class LLMCallCompletedEvent(
     val moderationResponse: ModerationResult? = null,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent() {
-    
+
+    /**
+     * @deprecated Use constructor with model parameter of type [ModelInfo]:
+     *             LLMCallCompletedEvent(runId, prompt, model, responses, moderationResponse, eventId, timestamp)
+     */
+    @Deprecated(
+        message = "Please use constructor with model parameter of type [ModelInfo]: LLMCallCompletedEvent(runId, prompt, model, responses, moderationResponse, eventId, timestamp)",
+        replaceWith = ReplaceWith("LLMCallCompletedEvent(runId, prompt, model, responses, moderationResponse, eventId, timestamp)")
+    )
+    public constructor(
+        runId: String,
+        prompt: Prompt,
+        model: String,
+        responses: List<Message.Response>,
+        moderationResponse: ModerationResult? = null,
+        eventId: String = LLMCallCompletedEvent::class.simpleName!!,
+        timestamp: Long = Clock.System.now().toEpochMilliseconds()
+    ) : this(runId, prompt, ModelInfo.fromString(model), responses, moderationResponse, eventId, timestamp)
+
     /**
      * @deprecated Use model.eventString instead
      */

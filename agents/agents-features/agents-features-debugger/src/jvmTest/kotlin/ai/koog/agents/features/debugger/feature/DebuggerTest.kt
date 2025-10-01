@@ -32,9 +32,7 @@ import ai.koog.agents.core.feature.remote.server.config.DefaultServerConnectionC
 import ai.koog.agents.core.feature.writer.FeatureMessageRemoteWriter
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.debugger.EnvironmentVariablesReader
-import ai.koog.agents.features.debugger.eventString
 import ai.koog.agents.features.debugger.mock.ClientEventsCollector
-import ai.koog.prompt.llm.toModelInfo
 import ai.koog.agents.features.debugger.mock.MockLLMProvider
 import ai.koog.agents.features.debugger.mock.assistantMessage
 import ai.koog.agents.features.debugger.mock.createAgent
@@ -52,6 +50,7 @@ import ai.koog.agents.utils.use
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.llm.toModelInfo
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
 import io.ktor.http.URLProtocol
