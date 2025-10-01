@@ -134,7 +134,7 @@ class EventHandlerTest {
                 "role: ${Message.Role.User}, message: $testLLMResponse" +
                 "}], temperature: $temperature, model: ${model.eventString}, tools: [], responses: [role: ${Message.Role.Assistant}, message: Default test response])",
             "OnNodeExecutionCompleted (run id: $runId, node: test LLM call, input: $testLLMResponse, output: " +
-                "Assistant(content=Default test response, metaInfo=ResponseMetaInfo(timestamp=$ts, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}), attachments=[], finishReason=null))",
+                "Assistant(content=Default test response, metaInfo=ResponseMetaInfo(timestamp=$ts, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}, metadata=null), attachments=[], finishReason=null))",
             "OnNodeExecutionStarting (run id: $runId, node: __finish__, input: $agentResult)",
             "OnNodeExecutionCompleted (run id: $runId, node: __finish__, input: $agentResult, output: $agentResult)",
             "OnStrategyCompleted (run id: $runId, strategy: $strategyName, result: $agentResult)",
@@ -224,13 +224,13 @@ class EventHandlerTest {
                 "role: ${Message.Role.User}, message: $userPrompt" +
                 "}], temperature: $temperature, model: ${model.eventString}, tools: [${dummyTool.name}], responses: [role: ${Message.Role.Tool}, message: {\"dummy\":\"test\"}])",
             "OnNodeExecutionCompleted (run id: $runId, node: test-llm-call, input: $userPrompt, output: " +
-                "Call(id=null, tool=${dummyTool.name}, content={\"dummy\":\"test\"}, metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={})))",
+                "Call(id=null, tool=${dummyTool.name}, content={\"dummy\":\"test\"}, metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}, metadata=null)))",
             "OnNodeExecutionStarting (run id: $runId, node: test-tool-call, input: " +
-                "Call(id=null, tool=${dummyTool.name}, content={\"dummy\":\"test\"}, metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={})))",
+                "Call(id=null, tool=${dummyTool.name}, content={\"dummy\":\"test\"}, metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}, metadata=null)))",
             "OnToolCallStarting (run id: $runId, tool: ${dummyTool.name}, args: Args(dummy=test))",
             "OnToolCallCompleted (run id: $runId, tool: ${dummyTool.name}, args: Args(dummy=test), result: ${dummyTool.result})",
             "OnNodeExecutionCompleted (run id: $runId, node: test-tool-call, input: " +
-                "Call(id=null, tool=${dummyTool.name}, content={\"dummy\":\"test\"}, metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={})), output: ReceivedToolResult(id=null, tool=${dummyTool.name}, content=${dummyTool.result}, result=${dummyTool.result}))",
+                "Call(id=null, tool=${dummyTool.name}, content={\"dummy\":\"test\"}, metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}, metadata=null)), output: ReceivedToolResult(id=null, tool=${dummyTool.name}, content=${dummyTool.result}, result=${dummyTool.result}))",
             "OnNodeExecutionStarting (run id: $runId, node: test-node-llm-send-tool-result, input: ReceivedToolResult(id=null, tool=${dummyTool.name}, content=${dummyTool.result}, result=${dummyTool.result}))",
             "OnLLMCallStarting (run id: $runId, prompt: id: $promptId, messages: [{" +
                 "role: ${Message.Role.System}, message: $systemPrompt, " +
@@ -249,7 +249,7 @@ class EventHandlerTest {
                 "role: ${Message.Role.Tool}, message: ${dummyTool.result}" +
                 "}], temperature: $temperature, model: openai:gpt-4o, tools: [${dummyTool.name}], responses: [role: ${Message.Role.Assistant}, message: Return test result])",
             "OnNodeExecutionCompleted (run id: $runId, node: test-node-llm-send-tool-result, input: " +
-                "ReceivedToolResult(id=null, tool=${dummyTool.name}, content=${dummyTool.result}, result=${dummyTool.result}), output: Assistant(content=Return test result, metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}), attachments=[], finishReason=null))",
+                "ReceivedToolResult(id=null, tool=${dummyTool.name}, content=${dummyTool.result}, result=${dummyTool.result}), output: Assistant(content=Return test result, metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}, metadata=null), attachments=[], finishReason=null))",
             "OnNodeExecutionStarting (run id: $runId, node: __finish__, input: $mockResponse)",
             "OnNodeExecutionCompleted (run id: $runId, node: __finish__, input: $mockResponse, output: $mockResponse)",
             "OnStrategyCompleted (run id: $runId, strategy: $strategyName, result: $mockResponse)",
@@ -327,7 +327,7 @@ class EventHandlerTest {
                 "role: ${Message.Role.User}, message: $testLLMResponse" +
                 "}], temperature: $temperature, model: ${model.eventString}, tools: [${toolRegistry.tools.joinToString { it.name }}], responses: [role: ${Message.Role.Assistant}, message: Default test response])",
             "OnNodeExecutionCompleted (run id: $runId, node: test LLM call, input: $testLLMResponse, output: " +
-                "Assistant(content=Default test response, metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}), attachments=[], finishReason=null))",
+                "Assistant(content=Default test response, metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}, metadata=null), attachments=[], finishReason=null))",
             "OnNodeExecutionStarting (run id: $runId, node: test LLM call with tools, input: $llmCallWithToolsResponse)",
             "OnLLMCallStarting (run id: $runId, prompt: id: $promptId, messages: [{" +
                 "role: ${Message.Role.System}, message: $systemPrompt, " +
@@ -346,7 +346,7 @@ class EventHandlerTest {
                 "role: ${Message.Role.User}, message: $llmCallWithToolsResponse" +
                 "}], temperature: $temperature, model: openai:gpt-4o, tools: [${toolRegistry.tools.joinToString { it.name }}], responses: [role: ${Message.Role.Assistant}, message: Default test response])",
             "OnNodeExecutionCompleted (run id: $runId, node: test LLM call with tools, input: $llmCallWithToolsResponse, output: " +
-                "Assistant(content=Default test response, metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}), attachments=[], finishReason=null))",
+                "Assistant(content=Default test response, metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}, metadata=null), attachments=[], finishReason=null))",
             "OnNodeExecutionStarting (run id: $runId, node: __finish__, input: $agentResult)",
             "OnNodeExecutionCompleted (run id: $runId, node: __finish__, input: $agentResult, output: $agentResult)",
             "OnStrategyCompleted (run id: $runId, strategy: $strategyName, result: $agentResult)",
