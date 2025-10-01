@@ -1,23 +1,26 @@
 package com.example.spring_boot_kotlin_yaml.controller
 
 import com.example.spring_boot_kotlin_yaml.service.AgentService
-import kotlinx.coroutines.runBlocking
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.server.ResponseStatusException
 
+private val logger = KotlinLogging.logger {}
+
 @RestController
-class ChatController(val aiService: AgentService) {
+class ChatController(val agentService: AgentService) {
 
     @PostMapping(value = ["/chat"])
-    fun chat(@RequestBody request: ChatRequest): ChatResponse? = runBlocking {
+    suspend fun chat(@RequestBody request: ChatRequest): ChatResponse {
         try {
-            val result = aiService.createAndRunAgent(request.prompt)
-            return@runBlocking ChatResponse(result)
+            val result = agentService.createAndRunAgent(request.prompt)
+            return ChatResponse(result)
         } catch (e: Exception) {
-            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to run an agent: ${e.message}", e)
+            logger.error(e) { "Failed to run an agent" }
+            throw ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to run an agent")
         }
     }
 }
