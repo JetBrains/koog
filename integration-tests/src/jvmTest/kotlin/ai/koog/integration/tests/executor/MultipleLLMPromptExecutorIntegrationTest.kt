@@ -58,21 +58,13 @@ class MultipleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
         }
 
         @JvmStatic
-        fun modelClientCombinations(): Stream<Arguments> {
-            val openAIKey = readTestOpenAIKeyFromEnv()
-            val anthropicKey = readTestAnthropicKeyFromEnv()
-            val googleKey = readTestGoogleAIKeyFromEnv()
-
-            val openAIClient = OpenAILLMClient(openAIKey)
-            val anthropicClient = AnthropicLLMClient(anthropicKey)
-            val googleClient = GoogleLLMClient(googleKey)
-
+        fun allModels(): Stream<Arguments> {
             return Stream.concat(
                 Stream.concat(
-                    Models.openAIModels().map { model -> Arguments.of(model, openAIClient) },
-                    Models.anthropicModels().map { model -> Arguments.of(model, anthropicClient) }
+                    Models.openAIModels().map { model -> Arguments.of(model) },
+                    Models.anthropicModels().map { model -> Arguments.of(model) }
                 ),
-                Models.googleModels().map { model -> Arguments.of(model, googleClient) }
+                Models.googleModels().map { model -> Arguments.of(model) }
             )
         }
     }
@@ -88,7 +80,7 @@ class MultipleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
     private val googleClient get() = GoogleLLMClient(googleApiKey)
     val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
 
-    override fun getExecutor(): PromptExecutor = executor
+    override fun getExecutor(model: LLModel): PromptExecutor = executor
 
     override fun getClient(model: LLModel): LLMClient = when (model.provider) {
         is LLMProvider.Anthropic -> anthropicClient
@@ -125,193 +117,117 @@ class MultipleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
 
     // Core integration test methods
     @ParameterizedTest
-    @MethodSource("modelClientCombinations")
-    fun integration_testExecute(model: LLModel, client: LLMClient) {
-        val testBase = object : ExecutorIntegrationTestBase() {
-            override fun getExecutor(): PromptExecutor = this@MultipleLLMPromptExecutorIntegrationTest.executor
-            override fun getClient(model: LLModel): LLMClient = client
-        }
-        testBase.integration_testExecute(model)
+    @MethodSource("allModels")
+    override fun integration_testExecute(model: LLModel) {
+        super.integration_testExecute(model)
     }
 
     @ParameterizedTest
-    @MethodSource("modelClientCombinations")
-    fun integration_testExecuteStreaming(model: LLModel, client: LLMClient) {
-        val testBase = object : ExecutorIntegrationTestBase() {
-            override fun getExecutor(): PromptExecutor = this@MultipleLLMPromptExecutorIntegrationTest.executor
-            override fun getClient(model: LLModel): LLMClient = client
-        }
-        testBase.integration_testExecuteStreaming(model)
+    @MethodSource("allModels")
+    override fun integration_testExecuteStreaming(model: LLModel) {
+        super.integration_testExecuteStreaming(model)
     }
 
     @ParameterizedTest
-    @MethodSource("modelClientCombinations")
-    fun integration_testToolsWithRequiredParams(model: LLModel, client: LLMClient) {
-        val testBase = object : ExecutorIntegrationTestBase() {
-            override fun getExecutor(): PromptExecutor = this@MultipleLLMPromptExecutorIntegrationTest.executor
-            override fun getClient(model: LLModel): LLMClient = client
-        }
-        testBase.integration_testToolsWithRequiredParams(model)
+    @MethodSource("allModels")
+    override fun integration_testToolsWithRequiredParams(model: LLModel) {
+        super.integration_testToolsWithRequiredParams(model)
     }
 
     @ParameterizedTest
-    @MethodSource("modelClientCombinations")
-    fun integration_testToolsWithRequiredOptionalParams(model: LLModel, client: LLMClient) {
-        val testBase = object : ExecutorIntegrationTestBase() {
-            override fun getExecutor(): PromptExecutor = this@MultipleLLMPromptExecutorIntegrationTest.executor
-            override fun getClient(model: LLModel): LLMClient = client
-        }
-        testBase.integration_testToolsWithRequiredOptionalParams(model)
+    @MethodSource("allModels")
+    override fun integration_testToolsWithRequiredOptionalParams(model: LLModel) {
+        super.integration_testToolsWithRequiredOptionalParams(model)
     }
 
     @ParameterizedTest
-    @MethodSource("modelClientCombinations")
-    fun integration_testToolsWithOptionalParams(model: LLModel, client: LLMClient) {
-        val testBase = object : ExecutorIntegrationTestBase() {
-            override fun getExecutor(): PromptExecutor = this@MultipleLLMPromptExecutorIntegrationTest.executor
-            override fun getClient(model: LLModel): LLMClient = client
-        }
-        testBase.integration_testToolsWithOptionalParams(model)
+    @MethodSource("allModels")
+    override fun integration_testToolsWithOptionalParams(model: LLModel) {
+        super.integration_testToolsWithOptionalParams(model)
     }
 
     @ParameterizedTest
-    @MethodSource("modelClientCombinations")
-    fun integration_testToolsWithNoParams(model: LLModel, client: LLMClient) {
-        val testBase = object : ExecutorIntegrationTestBase() {
-            override fun getExecutor(): PromptExecutor = this@MultipleLLMPromptExecutorIntegrationTest.executor
-            override fun getClient(model: LLModel): LLMClient = client
-        }
-        testBase.integration_testToolsWithNoParams(model)
+    @MethodSource("allModels")
+    override fun integration_testToolsWithNoParams(model: LLModel) {
+        super.integration_testToolsWithNoParams(model)
     }
 
     @ParameterizedTest
-    @MethodSource("modelClientCombinations")
-    fun integration_testToolsWithListEnumParams(model: LLModel, client: LLMClient) {
-        val testBase = object : ExecutorIntegrationTestBase() {
-            override fun getExecutor(): PromptExecutor = this@MultipleLLMPromptExecutorIntegrationTest.executor
-            override fun getClient(model: LLModel): LLMClient = client
-        }
-        testBase.integration_testToolsWithListEnumParams(model)
+    @MethodSource("allModels")
+    override fun integration_testToolsWithListEnumParams(model: LLModel) {
+        super.integration_testToolsWithListEnumParams(model)
     }
 
     @ParameterizedTest
-    @MethodSource("modelClientCombinations")
-    fun integration_testToolsWithNestedListParams(model: LLModel, client: LLMClient) {
-        val testBase = object : ExecutorIntegrationTestBase() {
-            override fun getExecutor(): PromptExecutor = this@MultipleLLMPromptExecutorIntegrationTest.executor
-            override fun getClient(model: LLModel): LLMClient = client
-        }
-        testBase.integration_testToolsWithNestedListParams(model)
+    @MethodSource("allModels")
+    override fun integration_testToolsWithNestedListParams(model: LLModel) {
+        super.integration_testToolsWithNestedListParams(model)
     }
 
     @ParameterizedTest
-    @MethodSource("modelClientCombinations")
-    fun integration_testRawStringStreaming(model: LLModel, client: LLMClient) {
-        val testBase = object : ExecutorIntegrationTestBase() {
-            override fun getExecutor(): PromptExecutor = this@MultipleLLMPromptExecutorIntegrationTest.executor
-            override fun getClient(model: LLModel): LLMClient = client
-        }
-        testBase.integration_testRawStringStreaming(model)
+    @MethodSource("allModels")
+    override fun integration_testRawStringStreaming(model: LLModel) {
+        super.integration_testRawStringStreaming(model)
     }
 
     @ParameterizedTest
-    @MethodSource("modelClientCombinations")
-    fun integration_testStructuredDataStreaming(model: LLModel, client: LLMClient) {
-        val testBase = object : ExecutorIntegrationTestBase() {
-            override fun getExecutor(): PromptExecutor = this@MultipleLLMPromptExecutorIntegrationTest.executor
-            override fun getClient(model: LLModel): LLMClient = client
-        }
-        testBase.integration_testStructuredDataStreaming(model)
+    @MethodSource("allModels")
+    override fun integration_testStructuredDataStreaming(model: LLModel) {
+        super.integration_testStructuredDataStreaming(model)
     }
 
     @ParameterizedTest
-    @MethodSource("modelClientCombinations")
-    fun integration_testToolChoiceRequired(model: LLModel, client: LLMClient) {
-        val testBase = object : ExecutorIntegrationTestBase() {
-            override fun getExecutor(): PromptExecutor = this@MultipleLLMPromptExecutorIntegrationTest.executor
-            override fun getClient(model: LLModel): LLMClient = client
-        }
-        testBase.integration_testToolChoiceRequired(model)
+    @MethodSource("allModels")
+    override fun integration_testToolChoiceRequired(model: LLModel) {
+        super.integration_testToolChoiceRequired(model)
     }
 
     @ParameterizedTest
-    @MethodSource("modelClientCombinations")
-    fun integration_testToolChoiceNone(model: LLModel, client: LLMClient) {
-        val testBase = object : ExecutorIntegrationTestBase() {
-            override fun getExecutor(): PromptExecutor = this@MultipleLLMPromptExecutorIntegrationTest.executor
-            override fun getClient(model: LLModel): LLMClient = client
-        }
-        testBase.integration_testToolChoiceNone(model)
+    @MethodSource("allModels")
+    override fun integration_testToolChoiceNone(model: LLModel) {
+        super.integration_testToolChoiceNone(model)
     }
 
     @ParameterizedTest
-    @MethodSource("modelClientCombinations")
-    fun integration_testToolChoiceNamed(model: LLModel, client: LLMClient) {
-        val testBase = object : ExecutorIntegrationTestBase() {
-            override fun getExecutor(): PromptExecutor = this@MultipleLLMPromptExecutorIntegrationTest.executor
-            override fun getClient(model: LLModel): LLMClient = client
-        }
-        testBase.integration_testToolChoiceNamed(model)
+    @MethodSource("allModels")
+    override fun integration_testToolChoiceNamed(model: LLModel) {
+        super.integration_testToolChoiceNamed(model)
     }
 
     @ParameterizedTest
-    @MethodSource("modelClientCombinations")
-    fun integration_testBase64EncodedAttachment(model: LLModel, client: LLMClient) {
-        val testBase = object : ExecutorIntegrationTestBase() {
-            override fun getExecutor(): PromptExecutor = this@MultipleLLMPromptExecutorIntegrationTest.executor
-            override fun getClient(model: LLModel): LLMClient = client
-        }
-        testBase.integration_testBase64EncodedAttachment(model)
+    @MethodSource("allModels")
+    override fun integration_testBase64EncodedAttachment(model: LLModel) {
+        super.integration_testBase64EncodedAttachment(model)
     }
 
     @ParameterizedTest
-    @MethodSource("modelClientCombinations")
-    fun integration_testUrlBasedAttachment(model: LLModel, client: LLMClient) {
-        val testBase = object : ExecutorIntegrationTestBase() {
-            override fun getExecutor(): PromptExecutor = this@MultipleLLMPromptExecutorIntegrationTest.executor
-            override fun getClient(model: LLModel): LLMClient = client
-        }
-        testBase.integration_testUrlBasedAttachment(model)
+    @MethodSource("allModels")
+    override fun integration_testUrlBasedAttachment(model: LLModel) {
+        super.integration_testUrlBasedAttachment(model)
     }
 
     @ParameterizedTest
-    @MethodSource("modelClientCombinations")
-    fun integration_testStructuredOutputNative(model: LLModel, client: LLMClient) {
-        val testBase = object : ExecutorIntegrationTestBase() {
-            override fun getExecutor(): PromptExecutor = this@MultipleLLMPromptExecutorIntegrationTest.executor
-            override fun getClient(model: LLModel): LLMClient = client
-        }
-        testBase.integration_testStructuredOutputNative(model)
+    @MethodSource("allModels")
+    override fun integration_testStructuredOutputNative(model: LLModel) {
+        super.integration_testStructuredOutputNative(model)
     }
 
     @ParameterizedTest
-    @MethodSource("modelClientCombinations")
-    fun integration_testStructuredOutputNativeWithFixingParser(model: LLModel, client: LLMClient) {
-        val testBase = object : ExecutorIntegrationTestBase() {
-            override fun getExecutor(): PromptExecutor = this@MultipleLLMPromptExecutorIntegrationTest.executor
-            override fun getClient(model: LLModel): LLMClient = client
-        }
-        testBase.integration_testStructuredOutputNativeWithFixingParser(model)
+    @MethodSource("allModels")
+    override fun integration_testStructuredOutputNativeWithFixingParser(model: LLModel) {
+        super.integration_testStructuredOutputNativeWithFixingParser(model)
     }
 
     @ParameterizedTest
-    @MethodSource("modelClientCombinations")
-    fun integration_testStructuredOutputManual(model: LLModel, client: LLMClient) {
-        val testBase = object : ExecutorIntegrationTestBase() {
-            override fun getExecutor(): PromptExecutor = this@MultipleLLMPromptExecutorIntegrationTest.executor
-            override fun getClient(model: LLModel): LLMClient = client
-        }
-        testBase.integration_testStructuredOutputManual(model)
+    @MethodSource("allModels")
+    override fun integration_testStructuredOutputManual(model: LLModel) {
+        super.integration_testStructuredOutputManual(model)
     }
 
     @ParameterizedTest
-    @MethodSource("modelClientCombinations")
-    fun integration_testStructuredOutputManualWithFixingParser(model: LLModel, client: LLMClient) {
-        val testBase = object : ExecutorIntegrationTestBase() {
-            override fun getExecutor(): PromptExecutor = this@MultipleLLMPromptExecutorIntegrationTest.executor
-            override fun getClient(model: LLModel): LLMClient = client
-        }
-        testBase.integration_testStructuredOutputManualWithFixingParser(model)
+    @MethodSource("allModels")
+    override fun integration_testStructuredOutputManualWithFixingParser(model: LLModel) {
+        super.integration_testStructuredOutputManualWithFixingParser(model)
     }
 
     @Test

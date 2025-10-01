@@ -66,7 +66,7 @@ abstract class ExecutorIntegrationTestBase {
         }
     }
 
-    abstract fun getExecutor(): PromptExecutor
+    abstract fun getExecutor(model: LLModel): PromptExecutor
     fun createCalculatorTool(): ToolDescriptor {
         return ToolDescriptor(
             name = "calculator",
@@ -98,9 +98,9 @@ abstract class ExecutorIntegrationTestBase {
         user("What is 123 + 456?")
     }
 
-    fun integration_testExecute(model: LLModel) = runTest(timeout = 300.seconds) {
+    open fun integration_testExecute(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
-        val executor = getExecutor()
+        val executor = getExecutor(model)
 
         val prompt = Prompt.build("test-prompt") {
             system("You are a helpful assistant.")
@@ -124,13 +124,13 @@ abstract class ExecutorIntegrationTestBase {
         }
     }
 
-    fun integration_testExecuteStreaming(model: LLModel) = runTest(timeout = 300.seconds) {
+    open fun integration_testExecuteStreaming(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
         if (model.id == OpenAIModels.Audio.GPT4oAudio.id || model.id == OpenAIModels.Audio.GPT4oMiniAudio.id) {
             assumeTrue(false, "https://github.com/JetBrains/koog/issues/231")
         }
 
-        val executor = getExecutor()
+        val executor = getExecutor(model)
 
         val prompt = Prompt.build("test-streaming") {
             system("You are a helpful assistant.")
@@ -156,7 +156,7 @@ abstract class ExecutorIntegrationTestBase {
         }
     }
 
-    fun integration_testToolsWithRequiredParams(model: LLModel) = runTest(timeout = 300.seconds) {
+    open fun integration_testToolsWithRequiredParams(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
@@ -188,13 +188,13 @@ abstract class ExecutorIntegrationTestBase {
         }
 
         withRetry(times = 3, testName = "integration_testToolsWithRequiredParams[${model.id}]") {
-            val executor = getExecutor()
+            val executor = getExecutor(model)
             val response = executor.execute(prompt, model, listOf(calculatorTool))
             assertTrue(response.isNotEmpty(), "Response should not be empty")
         }
     }
 
-    fun integration_testToolsWithRequiredOptionalParams(model: LLModel) =
+    open fun integration_testToolsWithRequiredOptionalParams(model: LLModel) =
         runTest(timeout = 300.seconds) {
             Models.assumeAvailable(model.provider)
             assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
@@ -238,7 +238,7 @@ abstract class ExecutorIntegrationTestBase {
                 user("What is 123 + 456?")
             }
 
-            val executor = getExecutor()
+            val executor = getExecutor(model)
 
             withRetry(times = 3, testName = "integration_testToolsWithRequiredOptionalParams[${model.id}]") {
                 val response = executor.execute(prompt, model, listOf(calculatorTool))
@@ -246,7 +246,7 @@ abstract class ExecutorIntegrationTestBase {
             }
         }
 
-    fun integration_testToolsWithOptionalParams(model: LLModel) = runTest(timeout = 300.seconds) {
+    open fun integration_testToolsWithOptionalParams(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
@@ -282,14 +282,14 @@ abstract class ExecutorIntegrationTestBase {
             user("What is 123 + 456?")
         }
 
-        val executor = getExecutor()
+        val executor = getExecutor(model)
         withRetry(times = 3, testName = "integration_testToolsWithOptionalParams[${model.id}]") {
             val response = executor.execute(prompt, model, listOf(calculatorTool))
             assertTrue(response.isNotEmpty(), "Response should not be empty")
         }
     }
 
-    fun integration_testToolsWithNoParams(model: LLModel) = runTest(timeout = 300.seconds) {
+    open fun integration_testToolsWithNoParams(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
@@ -310,7 +310,7 @@ abstract class ExecutorIntegrationTestBase {
             user("What is 123 + 456?")
         }
 
-        val executor = getExecutor()
+        val executor = getExecutor(model)
 
         withRetry(times = 3, testName = "integration_testToolsWithNoParams[${model.id}]") {
             val response =
@@ -319,7 +319,7 @@ abstract class ExecutorIntegrationTestBase {
         }
     }
 
-    fun integration_testToolsWithListEnumParams(model: LLModel) = runTest(timeout = 300.seconds) {
+    open fun integration_testToolsWithListEnumParams(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
@@ -345,7 +345,7 @@ abstract class ExecutorIntegrationTestBase {
             user("Pick me a color!")
         }
 
-        val executor = getExecutor()
+        val executor = getExecutor(model)
 
         withRetry(times = 3, testName = "integration_testToolsWithListEnumParams[${model.id}]") {
             val response = executor.execute(prompt, model, listOf(colorPickerTool))
@@ -353,7 +353,7 @@ abstract class ExecutorIntegrationTestBase {
         }
     }
 
-    fun integration_testToolsWithNestedListParams(model: LLModel) = runTest(timeout = 300.seconds) {
+    open fun integration_testToolsWithNestedListParams(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
@@ -374,7 +374,7 @@ abstract class ExecutorIntegrationTestBase {
             user("Pick me lottery winners and losers! 5 of each")
         }
 
-        val executor = getExecutor()
+        val executor = getExecutor(model)
 
         withRetry(times = 3, testName = "integration_testToolsWithNestedListParams[${model.id}]") {
             val response = executor.execute(prompt, model, listOf(lotteryPickerTool))
@@ -382,7 +382,7 @@ abstract class ExecutorIntegrationTestBase {
         }
     }
 
-    fun integration_testStructuredDataStreaming(model: LLModel) = runTest(timeout = 300.seconds) {
+    open fun integration_testStructuredDataStreaming(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model != OpenAIModels.CostOptimized.GPT4_1Nano, "Model $model is too small for structured streaming")
 
@@ -419,7 +419,7 @@ abstract class ExecutorIntegrationTestBase {
     ) =
         runTest(timeout = 300.seconds) {
             Models.assumeAvailable(model.provider)
-            val executor = getExecutor()
+            val executor = getExecutor(model)
 
             val file = MediaTestUtils.createMarkdownFileForScenario(scenario, testResourcesDir)
 
@@ -492,7 +492,7 @@ abstract class ExecutorIntegrationTestBase {
             Models.assumeAvailable(model.provider)
             assumeTrue(model.capabilities.contains(LLMCapability.Vision.Image), "Model must support vision capability")
 
-            val executor = getExecutor()
+            val executor = getExecutor(model)
 
             val imageFile = MediaTestUtils.getImageFileForScenario(scenario, testResourcesDir)
 
@@ -579,7 +579,7 @@ abstract class ExecutorIntegrationTestBase {
         runTest(timeout = 300.seconds) {
             Models.assumeAvailable(model.provider)
 
-            val executor = getExecutor()
+            val executor = getExecutor(model)
 
             val file = MediaTestUtils.createTextFileForScenario(scenario, testResourcesDir)
 
@@ -668,7 +668,7 @@ abstract class ExecutorIntegrationTestBase {
                 "Model must support audio capability"
             )
 
-            val executor = getExecutor()
+            val executor = getExecutor(model)
 
             val audioFile = MediaTestUtils.createAudioFileForScenario(scenario, testResourcesDir)
 
@@ -715,9 +715,9 @@ abstract class ExecutorIntegrationTestBase {
             }
         }
 
-    fun integration_testBase64EncodedAttachment(model: LLModel) = runTest(timeout = 300.seconds) {
+    open fun integration_testBase64EncodedAttachment(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
-        val executor = getExecutor()
+        val executor = getExecutor(model)
 
         assumeTrue(
             model.capabilities.contains(LLMCapability.Vision.Image),
@@ -761,10 +761,10 @@ abstract class ExecutorIntegrationTestBase {
         }
     }
 
-    fun integration_testUrlBasedAttachment(model: LLModel) = runTest(timeout = 300.seconds) {
+    open fun integration_testUrlBasedAttachment(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.provider !== LLMProvider.Google, "Google models do not support URL attachments")
-        val executor = getExecutor()
+        val executor = getExecutor(model)
 
         assumeTrue(
             model.capabilities.contains(LLMCapability.Vision.Image),
@@ -801,13 +801,13 @@ abstract class ExecutorIntegrationTestBase {
         }
     }
 
-    fun integration_testStructuredOutputNative(model: LLModel) = runTest {
+    open fun integration_testStructuredOutputNative(model: LLModel) = runTest {
         assumeTrue(
             model.capabilities.contains(LLMCapability.Schema.JSON.Standard),
             "Model does not support Standard JSON Schema"
         )
 
-        val executor = getExecutor()
+        val executor = getExecutor(model)
 
         withRetry {
             val result = executor.executeStructured(
@@ -821,13 +821,13 @@ abstract class ExecutorIntegrationTestBase {
         }
     }
 
-    fun integration_testStructuredOutputNativeWithFixingParser(model: LLModel) = runTest {
+    open fun integration_testStructuredOutputNativeWithFixingParser(model: LLModel) = runTest {
         assumeTrue(
             model.capabilities.contains(LLMCapability.Schema.JSON.Standard),
             "Model does not support Standard JSON Schema"
         )
 
-        val executor = getExecutor()
+        val executor = getExecutor(model)
 
         withRetry {
             val result = executor.executeStructured(
@@ -841,17 +841,19 @@ abstract class ExecutorIntegrationTestBase {
         }
     }
 
-    fun integration_testStructuredOutputManual(model: LLModel) = runTest {
+    open fun integration_testStructuredOutputManual(model: LLModel) = runTest {
         assumeTrue(
             model.provider !== LLMProvider.Google,
             "Google models fail to return manually requested structured output without fixing"
         )
-        assumeTrue(
-            model.provider == LLMProvider.OpenRouter && model.id.contains("gemini"),
-            "Google models fail to return manually requested structured output without fixing"
-        )
+        if (model.provider == LLMProvider.OpenRouter) {
+            assumeTrue(
+                model.id.contains("gemini"),
+                "Google models fail to return manually requested structured output without fixing"
+            )
+        }
 
-        val executor = getExecutor()
+        val executor = getExecutor(model)
 
         withRetry {
             val result = executor.executeStructured(
@@ -865,12 +867,12 @@ abstract class ExecutorIntegrationTestBase {
         }
     }
 
-    fun integration_testStructuredOutputManualWithFixingParser(model: LLModel) = runTest {
+    open fun integration_testStructuredOutputManualWithFixingParser(model: LLModel) = runTest {
         assumeTrue(
             (model !== GoogleModels.Gemini2_0FlashLite) && (model !== GoogleModels.Gemini2_0FlashLite001),
             "Gemini Flash Lite 2.0 models fail to return manually requested structured output"
         )
-        val executor = getExecutor()
+        val executor = getExecutor(model)
 
         withRetry(6) {
             val result = executor.executeStructured(
@@ -884,7 +886,7 @@ abstract class ExecutorIntegrationTestBase {
         }
     }
 
-    fun integration_testRawStringStreaming(model: LLModel) = runTest(timeout = 600.seconds) {
+    open fun integration_testRawStringStreaming(model: LLModel) = runTest(timeout = 600.seconds) {
         Models.assumeAvailable(model.provider)
         if (model.id == OpenAIModels.Audio.GPT4oAudio.id || model.id == OpenAIModels.Audio.GPT4oMiniAudio.id) {
             assumeTrue(false, "https://github.com/JetBrains/koog/issues/231")
@@ -916,7 +918,7 @@ abstract class ExecutorIntegrationTestBase {
         }
     }
 
-    fun integration_testToolChoiceRequired(model: LLModel) = runTest(timeout = 300.seconds) {
+    open fun integration_testToolChoiceRequired(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
@@ -941,7 +943,7 @@ abstract class ExecutorIntegrationTestBase {
         }
     }
 
-    fun integration_testToolChoiceNone(model: LLModel) = runTest(timeout = 300.seconds) {
+    open fun integration_testToolChoiceNone(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
@@ -967,7 +969,7 @@ abstract class ExecutorIntegrationTestBase {
         }
     }
 
-    fun integration_testToolChoiceNamed(model: LLModel) = runTest(timeout = 300.seconds) {
+    open fun integration_testToolChoiceNamed(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
 
         assumeTrue(model.capabilities.contains(LLMCapability.ToolChoice), "Model $model does not support tools")

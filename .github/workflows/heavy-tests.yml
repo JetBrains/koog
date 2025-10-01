@@ -29,7 +29,7 @@ jobs:
       matrix:
         include:
           - job-name: "agent-tests"
-            test-group: "ai.koog.integration.tests.agent.* --exclude-tests ai.koog.integration.tests.agent.BedrockNovaAgentIntegrationTest"
+            test-group: "ai.koog.integration.tests.agent.*"
             artifact-name: "agent-tests"
             os: ubuntu-latest
           - job-name: "single-llm-executor-tests"
@@ -41,7 +41,7 @@ jobs:
             artifact-name: "multiple-llm-executor-tests"
             os: ubuntu-latest
           - job-name: "bedrock-tests"
-            test-group: "ai.koog.integration.tests.executor.BedrockExecutorIntegrationTest ai.koog.integration.tests.agent.BedrockNovaAgentIntegrationTest"
+            test-group: "ai.koog.integration.tests.executor.BedrockExecutorIntegrationTest"
             artifact-name: "bedrock-tests"
             os: ubuntu-latest
           - job-name: "other-executor-tests"

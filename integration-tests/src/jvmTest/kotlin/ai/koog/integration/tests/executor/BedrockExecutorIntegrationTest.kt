@@ -8,9 +8,13 @@ import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.TestUtils.readAwsAccessKeyIdFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readAwsSecretAccessKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readAwsSessionTokenFromEnv
+import ai.koog.prompt.executor.clients.LLMClient
+import ai.koog.prompt.executor.clients.bedrock.BedrockClientSettings
+import ai.koog.prompt.executor.clients.bedrock.BedrockLLMClient
 import ai.koog.prompt.executor.llms.all.simpleBedrockExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
+import aws.sdk.kotlin.runtime.auth.credentials.StaticCredentialsProvider
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import org.junit.jupiter.params.ParameterizedTest
@@ -77,14 +81,16 @@ class BedrockExecutorIntegrationTest : ExecutorIntegrationTestBase() {
         readAwsSessionTokenFromEnv(),
     )
 
-    override fun getExecutor(): PromptExecutor = getBedrockExecutor()
+    override fun getExecutor(model: LLModel): PromptExecutor = getBedrockExecutor()
 
-    override fun getClient(model: LLModel): ai.koog.prompt.executor.clients.LLMClient {
-        return ai.koog.prompt.executor.clients.bedrock.BedrockLLMClient(
-            readAwsAccessKeyIdFromEnv(),
-            readAwsSecretAccessKeyFromEnv(),
-            readAwsSessionTokenFromEnv(),
-            ai.koog.prompt.executor.clients.bedrock.BedrockClientSettings()
+    override fun getClient(model: LLModel): LLMClient {
+        return BedrockLLMClient(
+            credentialsProvider = StaticCredentialsProvider {
+                accessKeyId = readAwsAccessKeyIdFromEnv()
+                secretAccessKey = readAwsSecretAccessKeyFromEnv()
+                sessionToken = readAwsSessionTokenFromEnv()
+            },
+            settings = BedrockClientSettings()
         )
     }
 

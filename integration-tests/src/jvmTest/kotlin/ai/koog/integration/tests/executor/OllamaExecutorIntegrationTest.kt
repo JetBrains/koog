@@ -49,6 +49,7 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
         fun setupTestResources() {
             testResourcesDir = Paths.get(OllamaExecutorIntegrationTest::class.java.getResource("/media")!!.toURI())
         }
+
         /*
          * Comment on this part if you want to run tests against a local Ollama client.
          * */
@@ -69,7 +70,6 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
         val moderationModel = OllamaModels.Meta.LLAMA_GUARD_3
          * */
 
-
         @JvmStatic
         fun imageScenarios(): Stream<ImageTestScenario> {
             return ImageTestScenario.entries.minus(ImageTestScenario.LARGE_IMAGE_ANTHROPIC).stream()
@@ -77,156 +77,93 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
 
         @JvmStatic
         fun modelParams(): Stream<Arguments> {
-            return Stream.of(Arguments.of(model, client))
+            return Stream.of(Arguments.of(model))
         }
     }
 
-    override fun getExecutor(): PromptExecutor = executor
+    override fun getExecutor(model: LLModel): PromptExecutor = executor
 
     override fun getClient(model: LLModel): LLMClient = client
 
     // Use base class methods through parameterized tests
     @ParameterizedTest
     @MethodSource("modelParams")
-    fun integration_testExecute(model: LLModel, client: LLMClient) {
-        val exec = getExecutor()
-        val testBase = object : ExecutorIntegrationTestBase() {
-            override fun getExecutor(): PromptExecutor = exec
-            override fun getClient(model: LLModel): LLMClient = client
-        }
-        testBase.integration_testExecute(model)
+    override fun integration_testExecute(model: LLModel) {
+        super.integration_testExecute(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
-    fun integration_testExecuteStreaming(model: LLModel, client: LLMClient) {
-        val exec = getExecutor()
-        val testBase = object : ExecutorIntegrationTestBase() {
-            override fun getExecutor(): PromptExecutor = exec
-            override fun getClient(model: LLModel): LLMClient = client
-        }
-        testBase.integration_testExecuteStreaming(model)
+    override fun integration_testExecuteStreaming(model: LLModel) {
+        super.integration_testExecuteStreaming(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
-    fun integration_testToolsWithRequiredParams(model: LLModel, client: LLMClient) {
-        val exec = getExecutor()
-        val testBase = object : ExecutorIntegrationTestBase() {
-            override fun getExecutor(): PromptExecutor = exec
-            override fun getClient(model: LLModel): LLMClient = client
-        }
-        testBase.integration_testToolsWithRequiredParams(model)
+    override fun integration_testToolsWithRequiredParams(model: LLModel) {
+        super.integration_testToolsWithRequiredParams(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
-    fun integration_testToolsWithRequiredOptionalParams(model: LLModel, client: LLMClient) {
-        val exec = getExecutor()
-        val testBase = object : ExecutorIntegrationTestBase() {
-            override fun getExecutor(): PromptExecutor = exec
-            override fun getClient(model: LLModel): LLMClient = client
-        }
-        testBase.integration_testToolsWithRequiredOptionalParams(model)
+    override fun integration_testToolsWithRequiredOptionalParams(
+        model: LLModel
+    ) {
+        super.integration_testToolsWithRequiredOptionalParams(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
-    fun integration_testToolsWithOptionalParams(model: LLModel, client: LLMClient) {
-        val exec = getExecutor()
-        val testBase = object : ExecutorIntegrationTestBase() {
-            override fun getExecutor(): PromptExecutor = exec
-            override fun getClient(model: LLModel): LLMClient = client
-        }
-        testBase.integration_testToolsWithOptionalParams(model)
+    override fun integration_testToolsWithOptionalParams(model: LLModel) {
+        super.integration_testToolsWithOptionalParams(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
-    fun integration_testToolsWithNoParams(model: LLModel, client: LLMClient) {
-        val exec = getExecutor()
-        val testBase = object : ExecutorIntegrationTestBase() {
-            override fun getExecutor(): PromptExecutor = exec
-            override fun getClient(model: LLModel): LLMClient = client
-        }
-        testBase.integration_testToolsWithNoParams(model)
+    override fun integration_testToolsWithNoParams(model: LLModel) {
+        super.integration_testToolsWithNoParams(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
-    fun integration_testToolsWithListEnumParams(model: LLModel, client: LLMClient) {
-        val exec = getExecutor()
-        val testBase = object : ExecutorIntegrationTestBase() {
-            override fun getExecutor(): PromptExecutor = exec
-            override fun getClient(model: LLModel): LLMClient = client
-        }
-        testBase.integration_testToolsWithListEnumParams(model)
+    override fun integration_testToolsWithListEnumParams(model: LLModel) {
+        super.integration_testToolsWithListEnumParams(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
-    fun integration_testToolsWithNestedListParams(model: LLModel, client: LLMClient) {
-        val exec = getExecutor()
-        val testBase = object : ExecutorIntegrationTestBase() {
-            override fun getExecutor(): PromptExecutor = exec
-            override fun getClient(model: LLModel): LLMClient = client
-        }
-        testBase.integration_testToolsWithNestedListParams(model)
+    override fun integration_testToolsWithNestedListParams(model: LLModel) {
+        super.integration_testToolsWithNestedListParams(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
-    fun integration_testRawStringStreaming(model: LLModel, client: LLMClient) {
-        val exec = getExecutor()
-        val testBase = object : ExecutorIntegrationTestBase() {
-            override fun getExecutor(): PromptExecutor = exec
-            override fun getClient(model: LLModel): LLMClient = client
-        }
-        testBase.integration_testRawStringStreaming(model)
+    override fun integration_testRawStringStreaming(model: LLModel) {
+        super.integration_testRawStringStreaming(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
-    fun integration_testStructuredDataStreaming(model: LLModel, client: LLMClient) {
-        val exec = getExecutor()
-        val testBase = object : ExecutorIntegrationTestBase() {
-            override fun getExecutor(): PromptExecutor = exec
-            override fun getClient(model: LLModel): LLMClient = client
-        }
-        testBase.integration_testStructuredDataStreaming(model)
+    override fun integration_testStructuredDataStreaming(model: LLModel) {
+        super.integration_testStructuredDataStreaming(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
-    fun integration_testToolChoiceRequired(model: LLModel, client: LLMClient) {
-        val exec = getExecutor()
-        val testBase = object : ExecutorIntegrationTestBase() {
-            override fun getExecutor(): PromptExecutor = exec
-            override fun getClient(model: LLModel): LLMClient = client
-        }
-        testBase.integration_testToolChoiceRequired(model)
+    override fun integration_testToolChoiceRequired(model: LLModel) {
+        super.integration_testToolChoiceRequired(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
-    fun integration_testToolChoiceNone(model: LLModel, client: LLMClient) {
-        val exec = getExecutor()
-        val testBase = object : ExecutorIntegrationTestBase() {
-            override fun getExecutor(): PromptExecutor = exec
-            override fun getClient(model: LLModel): LLMClient = client
-        }
-        testBase.integration_testToolChoiceNone(model)
+    override fun integration_testToolChoiceNone(model: LLModel) {
+        super.integration_testToolChoiceNone(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
-    fun integration_testToolChoiceNamed(model: LLModel, client: LLMClient) {
-        val exec = getExecutor()
-        val testBase = object : ExecutorIntegrationTestBase() {
-            override fun getExecutor(): PromptExecutor = exec
-            override fun getClient(model: LLModel): LLMClient = client
-        }
-        testBase.integration_testToolChoiceNamed(model)
+    override fun integration_testToolChoiceNamed(model: LLModel) {
+        super.integration_testToolChoiceNamed(model)
     }
 
     // Ollama-specific moderation tests
