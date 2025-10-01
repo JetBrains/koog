@@ -61,10 +61,10 @@ public class JvmShellCommandExecutor : ShellCommandExecutor() {
             val timeoutMessage = "Command timed out after $timeoutSeconds seconds"
 
             val combinedOutput = buildString {
-                if (partialStdout.isNotEmpty()) appendWithNewline(partialStdout)
-                if (partialStderr.isNotEmpty()) appendWithNewline(partialStderr)
-                appendWithNewline(timeoutMessage)
-            }
+                if (partialStdout.isNotEmpty()) appendLine(partialStdout)
+                if (partialStderr.isNotEmpty()) appendLine(partialStderr)
+                appendLine(timeoutMessage)
+            }.trimEnd()
 
             return@withContext ExecutionResult(
                 output = combinedOutput,
@@ -76,9 +76,9 @@ public class JvmShellCommandExecutor : ShellCommandExecutor() {
         val stderrResult = stderr.await()
 
         val combinedOutput = buildString {
-            if (stdoutResult.isNotEmpty()) appendWithNewline(stdoutResult)
-            if (stderrResult.isNotEmpty()) appendWithNewline(stderrResult)
-        }
+            if (stdoutResult.isNotEmpty()) appendLine(stdoutResult)
+            if (stderrResult.isNotEmpty()) appendLine(stderrResult)
+        }.trimEnd()
 
         ExecutionResult(
             output = combinedOutput,

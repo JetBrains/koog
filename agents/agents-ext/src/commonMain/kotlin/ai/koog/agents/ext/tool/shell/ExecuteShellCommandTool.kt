@@ -72,7 +72,7 @@ public class ExecuteShellCommandTool(
         public fun textForLLM(): String = buildString {
             appendLine("Command: $command")
             if (output.isNotEmpty()) {
-                appendWithNewline(output)
+                appendLine(output)
             } else if (exitCode != null) {
                 appendLine("(no output)")
             }
