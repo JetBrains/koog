@@ -6,8 +6,8 @@ nav:
       - Key concepts: key-concepts.md
       - Getting started:
           - Single-run agents: single-run-agents.md
-          - Complex workflow agents: complex-workflow-agents.md
           - Functional agents: functional-agents.md
+          - Complex workflow agents: complex-workflow-agents.md
       - Prompt API: prompt-api.md
       - Tools:
           - Overview: tools-overview.md
@@ -42,7 +42,7 @@ nav:
               - Overview: features-overview.md
               - Tracing: tracing.md
               - Memory: agent-memory.md
-              - Agent Persistency: agent-persistency.md
+              - Agent Persistence: agent-persistence.md
               - OpenTelemetry:
                   - Overview: opentelemetry-support.md
                   - Langfuse Exporter: opentelemetry-langfuse-exporter.md
@@ -142,7 +142,7 @@ plugins:
           - features-overview.md: This page provides a short overview of features as a way to extend and enhance the functionality of AI agents.
           - tracing.md: This page includes details about the Tracing feature, which provides comprehensive tracing capabilities for AI agents. The page includes configuration and initialization details, examples and quickstart, details about error handling and FAQ and troubleshooting.
           - agent-memory.md: This page provides details about the AgentMemory feature which lets AI agents store, retrieve, and use information across conversations. The page includes configuration and initialization details, examples and quickstart, best practices, error handling and FAQ and troubleshooting.
-          - agent-persistency.md: This page describes Agent Persistency, which is a feature that lets you save and restore the state of an agent at specific points during execution. The page includes key concepts, prerequisites, installation instructions, configuration, and basic and advanced usage guides.
+          - agent-persistence.md: This page describes Agent Persistence, which is a feature that lets you save and restore the state of an agent at specific points during execution. The page includes key concepts, prerequisites, installation instructions, configuration, and basic and advanced usage guides.
         OpenTelemetry:
           - opentelemetry-support.md: This page provides details about the support for OpenTelemetry with the Koog agentic framework for tracing and monitoring AI agents. The page includes details about installation and configuration, span types and attributes, and common exporters.
           - opentelemetry-langfuse-exporter.md: This page provides information about Koog's built-in support for exporting agent traces to Langfuse, a platform for observability and analytics of AI applications. The page provides details about LangFuse integration configuration and an example of its use.
