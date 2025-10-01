@@ -6,20 +6,26 @@ ai:
   koog:
     google:
       api-key: ${GOOGLE_API_KEY}
-      base-url: https://generativelanguage.googleapis.com
+      enabled: true
 
-koog:
+agent:
   version: "1.0.0"
   name: "github-assistant"
   description: "An AI agent that can use GitHub tools."
 
   model:
-    id: "gemini-2.0-flash-lite"
+    id: "gemini-2.5-flash-lite"
     options:
       temperature: 1.0
 
   system_prompt: |
     You are a helpful GitHub assistant.
+
+  s3_persistence:
+    enabled: false
+    region: "us-east-1"
+    bucket: "my_bucket_name"
+    path: "checkpoints/"
 
   tools:
     # MCP server configuration

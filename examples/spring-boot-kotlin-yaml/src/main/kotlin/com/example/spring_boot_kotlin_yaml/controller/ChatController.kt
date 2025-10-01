@@ -1,6 +1,6 @@
 package com.example.spring_boot_kotlin_yaml.controller
 
-import com.example.spring_boot_kotlin_yaml.service.KoogAgentService
+import com.example.spring_boot_kotlin_yaml.service.AgentService
 import kotlinx.coroutines.runBlocking
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.PostMapping
@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.server.ResponseStatusException
 
 @RestController
-class ChatController(val aiService: KoogAgentService) {
+class ChatController(val aiService: AgentService) {
 
     @PostMapping(value = ["/chat"])
     fun chat(@RequestBody request: ChatRequest): ChatResponse? = runBlocking {

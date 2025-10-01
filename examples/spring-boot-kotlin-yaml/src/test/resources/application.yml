@@ -8,7 +8,7 @@ ai:
       api-key: placeholder
       base-url: https://generativelanguage.googleapis.com
 
-koog:
+agent:
   version: "1.0.0"
   name: "github-assistant"
   description: "An AI agent that can use GitHub tools."

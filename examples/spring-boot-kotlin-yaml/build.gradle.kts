@@ -41,6 +41,7 @@ dependencies {
 
     implementation("ai.koog:koog-agents-jvm:0.4.2")
     implementation("ai.koog:koog-spring-boot-starter:0.4.2")
+    implementation("aws.sdk.kotlin:s3:1.5.16")
 
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")

@@ -15,14 +15,16 @@ A Spring Boot application with YAML configuration of Koog AI agent, providing a 
 - Gradle 8.14
 - Google API key
 - GitHub personal access token with corresponding permissions
+- Optional: AWS credentials to try Agent Persistence feature on AWS S3
 
 ## Running the Application
 
 1. Set your Google API key: `export GOOGLE_API_KEY=your_google_key`
 2. Set your GitHub personal access token: `export GITHUB_PERSONAL_ACCESS_TOKEN=your_github_pat`
-3. Run Docker 
-4. Navigate to directory: `cd examples/spring-boot-kotlin-yaml`
-5. Run: `./gradlew bootRun`
+3. Optional: to try Agent Persistence feature fill agent.s3_persistence properties and set your AWS credentials: `export AWS_ACCESS_KEY_ID=your_aws_key_id` and `export AWS_SECRET_ACCESS_KEY=your_aws_secret_key` and 
+4. Run Docker 
+5. Navigate to directory: `cd examples/spring-boot-kotlin-yaml`
+6. Run: `./gradlew bootRun`
 
 Application starts on `http://localhost:8080`.
 
@@ -61,8 +63,8 @@ curl -v -X POST http://localhost:8080/chat \
 ## Key Components
 
 - **`ChatController.kt`**: REST endpoint handling chat requests
-- **`KoogAgentService.kt`**: Creates an AI agent and tools according to YAML configuration.
-- **`KoogConfiguration.kt`**: Data classes corresponding to YAML configuration.
+- **`AgentService.kt`**: Creates an AI agent and tools according to YAML configuration.
+- **`AgentConfiguration.kt`**: Data classes corresponding to YAML configuration.
 
 ## Customization
 
