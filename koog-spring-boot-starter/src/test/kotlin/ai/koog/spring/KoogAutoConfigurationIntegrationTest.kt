@@ -24,7 +24,7 @@ import org.springframework.test.context.TestPropertySource
         KoogAutoConfigurationIntegrationTest.TestConfig::class,
     ],
     properties = [
-        "debug=true",
+        "debug=false", // set to true for troubleshooting
         "spring.main.banner-mode=off"
     ],
     webEnvironment = SpringBootTest.WebEnvironment.NONE

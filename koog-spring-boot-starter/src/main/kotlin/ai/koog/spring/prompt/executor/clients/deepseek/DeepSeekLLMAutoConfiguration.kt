@@ -5,6 +5,7 @@ import ai.koog.prompt.executor.clients.deepseek.DeepSeekLLMClient
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 import ai.koog.spring.conditions.ConditionalOnPropertyNotEmpty
 import ai.koog.spring.prompt.executor.clients.toRetryingClient
+import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -47,6 +48,8 @@ public class DeepSeekLLMAutoConfiguration(
     private val properties: DeepSeekKoogProperties
 ) {
 
+    private val logger = LoggerFactory.getLogger(DeepSeekLLMAutoConfiguration::class.java)
+
     /**
      * Creates a [DeepSeekLLMClient] bean configured with application properties.
      *
@@ -64,6 +67,7 @@ public class DeepSeekLLMAutoConfiguration(
     )
     @ConditionalOnProperty(prefix = DeepSeekKoogProperties.PREFIX, name = ["enabled"], havingValue = "true")
     public fun deepSeekLLMClient(): DeepSeekLLMClient {
+        logger.info("Creating DeepSeekLLMClient with baseUrl=${properties.baseUrl}")
         return DeepSeekLLMClient(
             apiKey = properties.apiKey,
             settings = DeepSeekClientSettings(baseUrl = properties.baseUrl)
@@ -82,10 +86,7 @@ public class DeepSeekLLMAutoConfiguration(
     @Bean
     @ConditionalOnBean(DeepSeekLLMClient::class)
     public fun deepSeekExecutor(client: DeepSeekLLMClient): SingleLLMPromptExecutor {
-        val client = DeepSeekLLMClient(
-            apiKey = properties.apiKey,
-            settings = DeepSeekClientSettings(baseUrl = properties.baseUrl)
-        )
+        logger.info("Creating SingleLLMPromptExecutor (deepSeekExecutor) for DeepSeekLLMClient")
         return SingleLLMPromptExecutor(client.toRetryingClient(properties.retry))
     }
 }

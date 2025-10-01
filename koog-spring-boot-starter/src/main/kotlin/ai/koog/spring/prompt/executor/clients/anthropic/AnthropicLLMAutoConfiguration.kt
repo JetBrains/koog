@@ -61,7 +61,7 @@ public class AnthropicLLMAutoConfiguration(
         name = "api-key"
     )
     public fun anthropicLLMClient(): AnthropicLLMClient {
-        logger.info("Initializing AnthropicLLMClient with: $properties")
+        logger.info("Creating AnthropicLLMClient with baseUrl=${properties.baseUrl}")
         return AnthropicLLMClient(
             apiKey = properties.apiKey,
             settings = AnthropicClientSettings(baseUrl = properties.baseUrl)
@@ -78,6 +78,7 @@ public class AnthropicLLMAutoConfiguration(
     @Bean
     @ConditionalOnBean(AnthropicLLMClient::class)
     public fun anthropicExecutor(client: AnthropicLLMClient): SingleLLMPromptExecutor {
+        logger.info("Creating SingleLLMPromptExecutor (anthropicExecutor) for AnthropicLLMClient")
         return SingleLLMPromptExecutor(client.toRetryingClient(properties.retry))
     }
 }

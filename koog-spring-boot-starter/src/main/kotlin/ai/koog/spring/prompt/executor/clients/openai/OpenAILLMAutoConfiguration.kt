@@ -5,6 +5,7 @@ import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 import ai.koog.spring.conditions.ConditionalOnPropertyNotEmpty
 import ai.koog.spring.prompt.executor.clients.toRetryingClient
+import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -43,6 +44,8 @@ public class OpenAILLMAutoConfiguration(
     private val properties: OpenAIKoogProperties
 ) {
 
+    private val logger = LoggerFactory.getLogger(OpenAILLMAutoConfiguration::class.java)
+
     /**
      * Creates an [OpenAILLMClient] bean configured with application properties.
      *
@@ -60,6 +63,7 @@ public class OpenAILLMAutoConfiguration(
     )
     @ConditionalOnProperty(prefix = OpenAIKoogProperties.PREFIX, name = ["enabled"], havingValue = "true")
     public fun openAILLMClient(): OpenAILLMClient {
+        logger.info("Creating OpenAILLMClient client with baseUrl=${properties.baseUrl}")
         return OpenAILLMClient(
             apiKey = properties.apiKey,
             settings = OpenAIClientSettings(baseUrl = properties.baseUrl)
@@ -76,6 +80,7 @@ public class OpenAILLMAutoConfiguration(
     @Bean
     @ConditionalOnBean(OpenAILLMClient::class)
     public fun openAIExecutor(client: OpenAILLMClient): SingleLLMPromptExecutor {
+        logger.info("Creating SingleLLMPromptExecutor (openAIExecutor) for OpenAILLMClient")
         return SingleLLMPromptExecutor(client.toRetryingClient(properties.retry))
     }
 }
