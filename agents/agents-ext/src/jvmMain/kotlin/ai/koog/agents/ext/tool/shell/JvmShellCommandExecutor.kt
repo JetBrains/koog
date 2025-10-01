@@ -63,7 +63,7 @@ public class JvmShellCommandExecutor : ShellCommandExecutor() {
             val combinedOutput = buildString {
                 if (partialStdout.isNotEmpty()) appendWithNewline(partialStdout)
                 if (partialStderr.isNotEmpty()) appendWithNewline(partialStderr)
-                append(timeoutMessage)
+                appendWithNewline(timeoutMessage)
             }
 
             return@withContext ExecutionResult(

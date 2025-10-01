@@ -58,6 +58,7 @@ class JvmShellCommandToolTest {
     }
 
     // SUCCESSFUL COMMAND EXECUTION TESTS
+
     @Test
     @EnabledOnOs(OS.LINUX, OS.MAC)
     fun `reading file content and filtering with grep`() = runBlocking {
@@ -219,6 +220,7 @@ class JvmShellCommandToolTest {
     }
 
     // NO OUTPUT COMMAND EXECUTION TESTS
+
     @Test
     @EnabledOnOs(OS.LINUX, OS.MAC)
     fun `command with no output shows placeholder`() = runBlocking {
@@ -254,6 +256,7 @@ class JvmShellCommandToolTest {
     }
 
     // COMMAND FAILURE TESTS
+
     @Test
     @EnabledOnOs(OS.LINUX, OS.MAC)
     fun `command fails with error message`() = runBlocking {
@@ -322,6 +325,7 @@ class JvmShellCommandToolTest {
     }
 
     // USER DENIAL TESTS
+
     @Test
     fun `user denies command execution with simple No`() = runBlocking {
         val handler = object : ShellCommandConfirmationHandler {
@@ -359,6 +363,7 @@ class JvmShellCommandToolTest {
     }
 
     // TIMEOUT  TESTS
+
     @Test
     @EnabledOnOs(OS.LINUX, OS.MAC)
     fun `long running command times out`() = runBlocking {
@@ -407,17 +412,14 @@ class JvmShellCommandToolTest {
     @Test
     @EnabledOnOs(OS.WINDOWS)
     fun `command with partial output times out on Windows`() = runBlocking {
-        val result = execute(
-            "for /L %i in (1,1,10) do @echo %i & timeout /t 1 /nobreak >nul",
-            timeoutSeconds = 3
-        )
+        val result = execute("echo 1 & echo 2 & echo 3 & timeout /t 30", timeoutSeconds = 3)
 
         val expected = """
-            Command: for /L %i in (1,1,10) do @echo %i & timeout /t 1 /nobreak >nul
-            1
-            2
-            3
-            Command timed out after 3 seconds
+        Command: echo 1 & echo 2 & echo 3 & timeout /t 30
+        1
+        2
+        3
+        Command timed out after 3 seconds
         """.trimIndent()
 
         assertEquals(expected, result.textForLLM())
