@@ -76,9 +76,10 @@ fun main() = runBlocking {
 
 Currently, the framework supports the JVM, JS, WasmJS and iOS targets.
 
-On JVM, JDK 17 or higher is required to use the framework.
+### Requirements
 
-Please check the [libs.versions.toml](gradle/libs.versions.toml) to know more about the Koog dependencies.
+- JDK 17 or higher is required to use the framework on JVM.
+- kotlinx-coroutines 1.10.2 and kotlinx-serialization 1.8.1 versions should be set explicitly in existing projects. Please check the [libs.versions.toml](gradle/libs.versions.toml) to know more about the Koog dependencies.
 
 ### Gradle (Kotlin DSL)
 
@@ -86,7 +87,7 @@ Please check the [libs.versions.toml](gradle/libs.versions.toml) to know more ab
 
     ```
     dependencies {
-        implementation("ai.koog:koog-agents:0.4.1")
+        implementation("ai.koog:koog-agents:0.4.2")
     }
     ```
 2. Make sure that you have `mavenCentral()` in the list of repositories.
@@ -96,7 +97,7 @@ Please check the [libs.versions.toml](gradle/libs.versions.toml) to know more ab
 
     ```
     dependencies {
-        implementation 'ai.koog:koog-agents:0.4.1'
+        implementation 'ai.koog:koog-agents:0.4.2'
     }
     ```
 2. Make sure that you have `mavenCentral()` in the list of repositories.
@@ -108,7 +109,7 @@ Please check the [libs.versions.toml](gradle/libs.versions.toml) to know more ab
     <dependency>
         <groupId>ai.koog</groupId>
         <artifactId>koog-agents-jvm</artifactId>
-        <version>0.4.1</version>
+        <version>0.4.2</version>
     </dependency>
     ```
 2. Make sure that you have `mavenCentral` in the list of repositories.

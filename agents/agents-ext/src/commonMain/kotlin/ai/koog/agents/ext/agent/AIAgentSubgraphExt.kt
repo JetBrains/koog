@@ -3,6 +3,7 @@ package ai.koog.agents.ext.agent
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
 import ai.koog.agents.core.agent.entity.createStorageKey
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.builder.AIAgentBuilderDslMarker
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphDelegate
@@ -25,21 +26,8 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
-
-/**
- * Represents the result of a verification process for a subgraph.
- *
- * @property correct Indicates whether the subgraph verification was successful.
- * @property message A message providing details about the verification outcome.
- */
-@Serializable
-public data class VerifiedSubgraphResult(
-    val correct: Boolean,
-    val message: String,
-)
 
 /**
  * Utility object providing tools and methods for working with subgraphs and tasks in a controlled
@@ -240,22 +228,43 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
 }
 
 /**
- * [subgraphWithTask] with [VerifiedSubgraphResult] result.
+ * [subgraphWithTask] with [CriticResult] result.
  * It verifies if the task was performed correctly or not, and describes the problems if any.
  */
+@OptIn(InternalAgentsApi::class)
 @Suppress("unused")
 @AIAgentBuilderDslMarker
-public inline fun <reified Input> AIAgentSubgraphBuilderBase<*, *>.subgraphWithVerification(
+public inline fun <reified Input : Any> AIAgentSubgraphBuilderBase<*, *>.subgraphWithVerification(
     toolSelectionStrategy: ToolSelectionStrategy,
     llmModel: LLModel? = null,
     llmParams: LLMParams? = null,
     noinline defineTask: suspend AIAgentGraphContextBase.(input: Input) -> String
-): AIAgentSubgraphDelegate<Input, VerifiedSubgraphResult> = subgraphWithTask(
-    toolSelectionStrategy = toolSelectionStrategy,
-    llmModel = llmModel,
-    llmParams = llmParams,
-    defineTask = defineTask
-)
+): AIAgentSubgraphDelegate<Input, CriticResult<Input>> = subgraph {
+    val inputKey = createStorageKey<Input>("subgraphWithVerification-input-key")
+
+    val saveInput by node<Input, Input> { input ->
+        storage.set(inputKey, input)
+
+        input
+    }
+
+    val verifyTask by subgraphWithTask<Input, CriticResultFromLLM>(
+        toolSelectionStrategy = toolSelectionStrategy,
+        llmModel = llmModel,
+        llmParams = llmParams,
+        defineTask = defineTask
+    )
+
+    val provideResult by node<CriticResultFromLLM, CriticResult<Input>> { result ->
+        CriticResult(
+            successful = result.isCorrect,
+            feedback = result.feedback,
+            input = storage.get(inputKey)!!
+        )
+    }
+
+    nodeStart then saveInput then verifyTask then provideResult then nodeFinish
+}
 
 /**
  * Constructs a subgraph within an AI agent's strategy graph with additional verification capabilities.
@@ -271,16 +280,16 @@ public inline fun <reified Input> AIAgentSubgraphBuilderBase<*, *>.subgraphWithV
  * @param defineTask A suspendable function defining the task that the subgraph will execute,
  *                   which takes an input and produces a string-based task description.
  * @return A delegate representing the constructed subgraph with input type `Input` and output type
- *         as a verified subgraph result `VerifiedSubgraphResult`.
+ *         as a verified subgraph result `CriticResult`.
  */
 @Suppress("unused")
 @AIAgentBuilderDslMarker
-public inline fun <reified Input> AIAgentSubgraphBuilderBase<*, *>.subgraphWithVerification(
+public inline fun <reified Input : Any> AIAgentSubgraphBuilderBase<*, *>.subgraphWithVerification(
     tools: List<Tool<*, *>>,
     llmModel: LLModel? = null,
     llmParams: LLMParams? = null,
     noinline defineTask: suspend AIAgentGraphContextBase.(input: Input) -> String
-): AIAgentSubgraphDelegate<Input, VerifiedSubgraphResult> = subgraphWithVerification(
+): AIAgentSubgraphDelegate<Input, CriticResult<Input>> = subgraphWithVerification(
     toolSelectionStrategy = ToolSelectionStrategy.Tools(tools.map { it.descriptor }),
     llmModel = llmModel,
     llmParams = llmParams,

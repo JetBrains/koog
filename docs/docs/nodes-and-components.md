@@ -462,7 +462,7 @@ You can use this subgraph for the following purposes:
 - Create self-validating components.
 - Generate structured verification results with success/failure status and detailed feedback.
 
-The subgraph ensures that the LLM calls a verification tool at the end of the workflow to check whether the task was successfully completed. It guarantees this verification is performed as the final step and returns a `VerifiedSubgraphResult` that indicates whether a task was completed successfully and provides detailed feedback. 
+The subgraph ensures that the LLM calls a verification tool at the end of the workflow to check whether the task was successfully completed. It guarantees this verification is performed as the final step and returns a `CriticResult` that indicates whether a task was completed successfully and provides detailed feedback. 
 Here is an example:
 
 <!--- INCLUDE
