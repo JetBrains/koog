@@ -50,6 +50,7 @@ class StructuredOutputWithToolsIntegrationTest {
         )
 
         override val argsSerializer: KSerializer<Args> = Args.serializer()
+
         override val name: String = "get_temperature"
         override val description: String = "Get current temperature for a city"
 
@@ -67,6 +68,7 @@ class StructuredOutputWithToolsIntegrationTest {
         )
 
         override val argsSerializer: KSerializer<Args> = Args.serializer()
+
         override val name: String = "get_weather_conditions"
         override val description: String = "Get current weather conditions for a city"
 
@@ -84,6 +86,7 @@ class StructuredOutputWithToolsIntegrationTest {
         )
 
         override val argsSerializer: KSerializer<Args> = Args.serializer()
+
         override val name: String = "get_wind_speed"
         override val description: String = "Get current wind speed for a city"
 
@@ -101,6 +104,7 @@ class StructuredOutputWithToolsIntegrationTest {
         )
 
         override val argsSerializer: KSerializer<Args> = Args.serializer()
+
         override val name: String = "get_humidity"
         override val description: String = "Get current humidity for a city"
 

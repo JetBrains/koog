@@ -968,7 +968,7 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
     )
     public fun <TFeature : Any> interceptBeforeAgentStarted(
         interceptContext: InterceptContext<TFeature>,
-        handle: suspend (ai.koog.agents.core.feature.handler.AgentStartContext<TFeature>) -> Unit
+        handle: suspend (AgentStartingContext<TFeature>) -> Unit
     ) {
         interceptAgentStarting(interceptContext, handle)
     }
@@ -987,7 +987,7 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
     )
     public fun <TFeature : Any> interceptAgentFinished(
         interceptContext: InterceptContext<TFeature>,
-        handle: suspend TFeature.(eventContext: ai.koog.agents.core.feature.handler.AgentFinishedContext) -> Unit
+        handle: suspend TFeature.(eventContext: AgentCompletedContext) -> Unit
     ) {
         interceptAgentCompleted(interceptContext, handle)
     }
@@ -1006,7 +1006,7 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
     )
     public fun <TFeature : Any> interceptAgentRunError(
         interceptContext: InterceptContext<TFeature>,
-        handle: suspend TFeature.(ai.koog.agents.core.feature.handler.AgentRunErrorContext) -> Unit
+        handle: suspend TFeature.(AgentExecutionFailedContext) -> Unit
     ) {
         interceptAgentExecutionFailed(interceptContext, handle)
     }
@@ -1025,7 +1025,7 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
     )
     public fun <TFeature : Any> interceptAgentBeforeClose(
         interceptContext: InterceptContext<TFeature>,
-        handle: suspend TFeature.(ai.koog.agents.core.feature.handler.AgentBeforeCloseContext) -> Unit
+        handle: suspend TFeature.(AgentClosingContext) -> Unit
     ) {
         interceptAgentClosing(interceptContext, handle)
     }
@@ -1044,7 +1044,7 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
     )
     public fun <TFeature : Any> interceptStrategyStart(
         interceptContext: InterceptContext<TFeature>,
-        handle: suspend (ai.koog.agents.core.feature.handler.StrategyStartContext<TFeature>) -> Unit
+        handle: suspend (StrategyStartingContext<TFeature>) -> Unit
     ) {
         interceptStrategyStarting(interceptContext, handle)
     }
@@ -1063,7 +1063,7 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
     )
     public fun <TFeature : Any> interceptStrategyFinished(
         interceptContext: InterceptContext<TFeature>,
-        handle: suspend (ai.koog.agents.core.feature.handler.StrategyFinishedContext<TFeature>) -> Unit
+        handle: suspend (StrategyCompletedContext<TFeature>) -> Unit
     ) {
         interceptStrategyCompleted(interceptContext, handle)
     }
@@ -1082,7 +1082,7 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
     )
     public fun <TFeature : Any> interceptBeforeLLMCall(
         interceptContext: InterceptContext<TFeature>,
-        handle: suspend TFeature.(eventContext: ai.koog.agents.core.feature.handler.BeforeLLMCallContext) -> Unit
+        handle: suspend TFeature.(eventContext: LLMCallStartingContext) -> Unit
     ) {
         interceptLLMCallStarting(interceptContext, handle)
     }
@@ -1101,7 +1101,7 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
     )
     public fun <TFeature : Any> interceptAfterLLMCall(
         interceptContext: InterceptContext<TFeature>,
-        handle: suspend TFeature.(eventContext: ai.koog.agents.core.feature.handler.AfterLLMCallContext) -> Unit
+        handle: suspend TFeature.(eventContext: LLMCallCompletedContext) -> Unit
     ) {
         interceptLLMCallCompleted(interceptContext, handle)
     }
@@ -1121,7 +1121,7 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
     )
     public fun <TFeature : Any> interceptToolCall(
         interceptContext: InterceptContext<TFeature>,
-        handle: suspend TFeature.(eventContext: ai.koog.agents.core.feature.handler.ToolCallContext) -> Unit
+        handle: suspend TFeature.(eventContext: ToolCallStartingContext) -> Unit
     ) {
         interceptToolCallStarting(interceptContext, handle)
     }
