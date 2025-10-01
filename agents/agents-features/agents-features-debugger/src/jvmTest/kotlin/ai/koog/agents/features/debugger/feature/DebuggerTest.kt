@@ -34,6 +34,7 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.debugger.EnvironmentVariablesReader
 import ai.koog.agents.features.debugger.eventString
 import ai.koog.agents.features.debugger.mock.ClientEventsCollector
+import ai.koog.prompt.llm.toModelInfo
 import ai.koog.agents.features.debugger.mock.MockLLMProvider
 import ai.koog.agents.features.debugger.mock.assistantMessage
 import ai.koog.agents.features.debugger.mock.createAgent
@@ -276,14 +277,14 @@ class DebuggerTest {
                     LLMCallStartingEvent(
                         runId = clientEventsCollector.runId,
                         prompt = expectedLLMCallPrompt,
-                        model = testModel.eventString,
+                        model = testModel.toModelInfo(),
                         tools = listOf(dummyTool.name),
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     LLMCallCompletedEvent(
                         runId = clientEventsCollector.runId,
                         prompt = expectedLLMCallPrompt,
-                        model = testModel.eventString,
+                        model = testModel.toModelInfo(),
                         responses = listOf(toolCallMessage(dummyTool.name, content = """{"dummy":"test"}""")),
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),
@@ -331,14 +332,14 @@ class DebuggerTest {
                     LLMCallStartingEvent(
                         runId = clientEventsCollector.runId,
                         prompt = expectedLLMCallWithToolsPrompt,
-                        model = testModel.eventString,
+                        model = testModel.toModelInfo(),
                         tools = listOf(dummyTool.name),
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     LLMCallCompletedEvent(
                         runId = clientEventsCollector.runId,
                         prompt = expectedLLMCallWithToolsPrompt,
-                        model = testModel.eventString,
+                        model = testModel.toModelInfo(),
                         responses = listOf(assistantMessage(mockResponse)),
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),

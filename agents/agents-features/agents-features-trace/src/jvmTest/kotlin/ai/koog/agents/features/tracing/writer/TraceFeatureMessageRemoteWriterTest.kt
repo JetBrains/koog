@@ -44,6 +44,7 @@ import ai.koog.agents.testing.tools.mockLLMAnswer
 import ai.koog.agents.utils.use
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.llm.toModelInfo
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.plugins.sse.SSEClientException
 import io.ktor.http.URLProtocol
@@ -323,14 +324,14 @@ class TraceFeatureMessageRemoteWriterTest {
                     LLMCallStartingEvent(
                         runId = runId,
                         prompt = expectedLLMCallPrompt,
-                        model = testModel.eventString,
+                        model = testModel.toModelInfo(),
                         tools = listOf(dummyTool.name),
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     LLMCallCompletedEvent(
                         runId = runId,
                         prompt = expectedLLMCallPrompt,
-                        model = testModel.eventString,
+                        model = testModel.toModelInfo(),
                         responses = listOf(toolCallMessage(dummyTool.name, content = """{"dummy":"test"}""")),
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),
@@ -378,14 +379,14 @@ class TraceFeatureMessageRemoteWriterTest {
                     LLMCallStartingEvent(
                         runId = runId,
                         prompt = expectedLLMCallWithToolsPrompt,
-                        model = testModel.eventString,
+                        model = testModel.toModelInfo(),
                         tools = listOf(dummyTool.name),
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     LLMCallCompletedEvent(
                         runId = runId,
                         prompt = expectedLLMCallWithToolsPrompt,
-                        model = testModel.eventString,
+                        model = testModel.toModelInfo(),
                         responses = listOf(assistantMessage(mockResponse)),
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),
@@ -664,28 +665,28 @@ class TraceFeatureMessageRemoteWriterTest {
                     LLMCallStartingEvent(
                         runId = runId,
                         prompt = expectedLLMCallPrompt,
-                        model = testModel.eventString,
+                        model = testModel.toModelInfo(),
                         tools = listOf(dummyTool.name),
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     LLMCallCompletedEvent(
                         runId = runId,
                         prompt = expectedLLMCallPrompt,
-                        model = testModel.eventString,
+                        model = testModel.toModelInfo(),
                         responses = listOf(toolCallMessage(dummyTool.name, content = """{"dummy":"test"}""")),
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     LLMCallStartingEvent(
                         runId = runId,
                         prompt = expectedLLMCallWithToolsPrompt,
-                        model = testModel.eventString,
+                        model = testModel.toModelInfo(),
                         tools = listOf(dummyTool.name),
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     LLMCallCompletedEvent(
                         runId = runId,
                         prompt = expectedLLMCallWithToolsPrompt,
-                        model = testModel.eventString,
+                        model = testModel.toModelInfo(),
                         responses = listOf(assistantMessage(mockResponse)),
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),

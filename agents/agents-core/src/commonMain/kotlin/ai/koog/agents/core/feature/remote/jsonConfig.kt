@@ -4,6 +4,7 @@ import ai.koog.agents.core.feature.message.FeatureEvent
 import ai.koog.agents.core.feature.message.FeatureMessage
 import ai.koog.agents.core.feature.model.FeatureEventMessage
 import ai.koog.agents.core.feature.model.FeatureStringMessage
+import ai.koog.agents.utils.ModelInfo
 import ai.koog.agents.core.feature.model.events.AgentClosingEvent
 import ai.koog.agents.core.feature.model.events.AgentCompletedEvent
 import ai.koog.agents.core.feature.model.events.AgentExecutionFailedEvent
@@ -162,6 +163,10 @@ public val defaultFeatureMessageSerializersModule: SerializersModule
             subclass(LLMStreamingFrameReceivedEvent::class, LLMStreamingFrameReceivedEvent.serializer())
             subclass(LLMStreamingFailedEvent::class, LLMStreamingFailedEvent.serializer())
             subclass(LLMStreamingCompletedEvent::class, LLMStreamingCompletedEvent.serializer())
+        }
+
+        polymorphic(ModelInfo::class) {
+            subclass(ModelInfo::class, ModelInfo.serializer())
         }
 
         polymorphic(StrategyStartingEvent::class) {

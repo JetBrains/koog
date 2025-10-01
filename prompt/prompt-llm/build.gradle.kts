@@ -14,6 +14,7 @@ kotlin {
             dependencies {
                 api(libs.kotlinx.serialization.core)
                 api(libs.jetbrains.annotations)
+                api(project(":agents:agents-utils"))
             }
         }
     }
