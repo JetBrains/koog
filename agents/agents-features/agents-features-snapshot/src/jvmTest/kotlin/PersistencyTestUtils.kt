@@ -1,7 +1,16 @@
-import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.concurrent.LinkedBlockingQueue
 
 internal class TestAgentLogsCollector {
-    val logs = ConcurrentLinkedQueue<String>()
+    private val logs = LinkedBlockingQueue<String>()
+
+    fun logs(): List<String> {
+        return logs.toList()
+    }
+
+    fun clear() {
+        logs.clear()
+    }
+
     fun log(message: String) {
         logs.add(message)
     }

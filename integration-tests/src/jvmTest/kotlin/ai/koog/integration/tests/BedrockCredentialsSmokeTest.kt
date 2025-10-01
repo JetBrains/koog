@@ -5,7 +5,7 @@ import aws.sdk.kotlin.services.bedrock.listFoundationModels
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable
 import kotlin.test.Test
-import kotlin.test.assertTrue
+import kotlin.test.assertEquals
 
 /**
  * Verifies that the credentials provided to the build can access the Bedrock control-plane
@@ -23,8 +23,9 @@ class BedrockCredentialsSmokeTest {
 
         BedrockClient { this.region = region }.use { bedrock ->
             val resp = bedrock.listFoundationModels { }
-            assertTrue(
-                (resp.modelSummaries?.isNotEmpty()) == true,
+            assertEquals(
+                true,
+                resp.modelSummaries?.isNotEmpty(),
                 "Bedrock ListFoundationModels returned no models – credentials/region might be wrong"
             )
         }

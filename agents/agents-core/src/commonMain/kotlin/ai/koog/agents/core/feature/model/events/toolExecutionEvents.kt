@@ -15,16 +15,14 @@ import kotlinx.serialization.json.JsonObject
  *
  * @property toolName The unique name of the tool being called;
  * @property toolArgs The arguments provided for the tool execution;
- * @property eventId A string representing the event type;
  * @property timestamp The timestamp of the event, in milliseconds since the Unix epoch.
  */
 @Serializable
-public data class ToolExecutionStartingEvent(
+public data class ToolCallStartingEvent(
     val runId: String,
     val toolCallId: String?,
     val toolName: String,
     val toolArgs: JsonObject,
-    override val eventId: String = ToolExecutionStartingEvent::class.simpleName!!,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent()
 
@@ -37,7 +35,6 @@ public data class ToolExecutionStartingEvent(
  * @property toolName The name of the tool that encountered the validation error;
  * @property toolArgs The arguments associated with the tool at the time of validation failure;
  * @property error A message describing the validation error encountered;
- * @property eventId A string representing the event type;
  * @property timestamp The timestamp of the event, in milliseconds since the Unix epoch.
  */
 @Serializable
@@ -47,7 +44,6 @@ public data class ToolValidationFailedEvent(
     val toolName: String,
     val toolArgs: JsonObject,
     val error: String,
-    override val eventId: String = ToolValidationFailedEvent::class.simpleName!!,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent()
 
@@ -61,17 +57,15 @@ public data class ToolValidationFailedEvent(
  * @property toolName The name of the tool that failed;
  * @property toolArgs The arguments passed to the tool during the failed execution;
  * @property error The error encountered during the tool's execution;
- * @property eventId A string representing the event type;
  * @property timestamp The timestamp of the event, in milliseconds since the Unix epoch.
  */
 @Serializable
-public data class ToolExecutionFailedEvent(
+public data class ToolCallFailedEvent(
     val runId: String,
     val toolCallId: String?,
     val toolName: String,
     val toolArgs: JsonObject,
     val error: AIAgentError,
-    override val eventId: String = ToolExecutionFailedEvent::class.simpleName!!,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent()
 
@@ -85,27 +79,25 @@ public data class ToolExecutionFailedEvent(
  * @property toolName The name of the tool that was executed;
  * @property toolArgs The arguments used for executing the tool;
  * @property result The result of the tool execution, which may be null if no result was produced or an error occurred;
- * @property eventId A string representing the event type;
  * @property timestamp The timestamp of the event, in milliseconds since the Unix epoch.
  */
 @Serializable
-public data class ToolExecutionCompletedEvent(
+public data class ToolCallCompletedEvent(
     val runId: String,
     val toolCallId: String?,
     val toolName: String,
     val toolArgs: JsonObject,
     val result: String?,
-    override val eventId: String = ToolExecutionCompletedEvent::class.simpleName!!,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent()
 
 //region Deprecated
 
 @Deprecated(
-    message = "Use ToolExecutionStartingEvent instead",
-    replaceWith = ReplaceWith("ToolExecutionStartingEvent")
+    message = "Use ToolCallStartingEvent instead",
+    replaceWith = ReplaceWith("ToolCallStartingEvent")
 )
-public typealias ToolCallEvent = ToolExecutionStartingEvent
+public typealias ToolCallEvent = ToolCallStartingEvent
 
 @Deprecated(
     message = "Use ToolValidationFailedEvent instead",
@@ -114,15 +106,15 @@ public typealias ToolCallEvent = ToolExecutionStartingEvent
 public typealias ToolValidationErrorEvent = ToolValidationFailedEvent
 
 @Deprecated(
-    message = "Use ToolExecutionFailedEvent instead",
-    replaceWith = ReplaceWith("ToolExecutionFailedEvent")
+    message = "Use ToolCallFailedEvent instead",
+    replaceWith = ReplaceWith("ToolCallFailedEvent")
 )
-public typealias ToolCallFailureEvent = ToolExecutionFailedEvent
+public typealias ToolCallFailureEvent = ToolCallFailedEvent
 
 @Deprecated(
-    message = "Use ToolExecutionCompletedEvent instead",
-    replaceWith = ReplaceWith("ToolExecutionCompletedEvent")
+    message = "Use ToolCallCompletedEvent instead",
+    replaceWith = ReplaceWith("ToolCallCompletedEvent")
 )
-public typealias ToolCallResultEvent = ToolExecutionCompletedEvent
+public typealias ToolCallResultEvent = ToolCallCompletedEvent
 
 //endregion Deprecated

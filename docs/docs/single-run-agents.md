@@ -150,7 +150,7 @@ val agent = AIAgent(
 Single-run agents support custom event handlers.
 While having an event handler is not required for creating an agent, it might be helpful for testing, debugging, or making hooks for chained agent interactions.
 
-For more information on how to use the `EventHandler` feature for monitoring your agent interactions, see [Agent events](agent-events.md).
+For more information on how to use the `EventHandler` feature for monitoring your agent interactions, see [Event Handlers](agent-event-handlers.md).
 
 ### 8. Run the agent
 

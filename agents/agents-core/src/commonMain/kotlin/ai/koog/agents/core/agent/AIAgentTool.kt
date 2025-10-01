@@ -15,6 +15,9 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.serializer
+import kotlin.concurrent.atomics.AtomicInt
+import kotlin.concurrent.atomics.ExperimentalAtomicApi
+import kotlin.concurrent.atomics.fetchAndIncrement
 
 /**
  * Converts the current AI agent into a tool to allow using it in other agents as a tool.
@@ -29,6 +32,14 @@ import kotlinx.serialization.serializer
  * @param json Optional [Json] instance to customize de/serialization behavior.
  * @return A special tool that wraps the agent functionality.
  */
+@InternalAgentToolsApi
+@Deprecated(
+    level = DeprecationLevel.WARNING,
+    message = "Please use `AIAgentService.createAgentTool(...)`, instead." +
+        "Converting an instance of `AIAgent` into a tool is error-prone because `AIAgent` is essentially a single-use instance," +
+        "while tools can be run multiple times, and moreover - in parallel - by another `AIAgent`. " +
+        "That would cause an error."
+)
 public inline fun <reified Input, reified Output> AIAgent<Input, Output>.asTool(
     agentName: String,
     agentDescription: String,
@@ -36,15 +47,23 @@ public inline fun <reified Input, reified Output> AIAgent<Input, Output>.asTool(
     inputSerializer: KSerializer<Input> = serializer(),
     outputSerializer: KSerializer<Output> = serializer(),
     json: Json = Json.Default,
-): Tool<AgentToolArgs, AgentToolResult> = AIAgentTool(
-    agent = this,
-    agentName = agentName,
-    agentDescription = agentDescription,
-    inputDescription = inputDescription,
-    inputSerializer = inputSerializer,
-    outputSerializer = outputSerializer,
-    json = json,
-)
+): Tool<AgentToolArgs, AgentToolResult> {
+    val service = when (this) {
+        is GraphAIAgent -> AIAgentService.fromAgent(this)
+        is FunctionalAIAgent -> AIAgentService.fromAgent(this)
+        else -> throw UnsupportedOperationException("`asTool` can only be used for `GraphAIAgent` or `FunctionalAIAgent`")
+    }
+
+    return service.createAgentTool(
+        agentName = agentName,
+        agentDescription = agentDescription,
+        inputDescription = inputDescription,
+        inputSerializer = inputSerializer,
+        outputSerializer = outputSerializer,
+        json = json,
+        parentAgentId = this.id
+    )
+}
 
 /**
  * AIAgentTool is a generic tool that wraps an AI agent to facilitate integration
@@ -62,16 +81,24 @@ public inline fun <reified Input, reified Output> AIAgent<Input, Output>.asTool(
  * @property inputSerializer A serializer for converting the input type to/from JSON.
  * @property outputSerializer A serializer for converting the output type to/from JSON.
  * @property json The JSON configuration used for serialization and deserialization.
+ * @param parentAgentId Optional ID of the parent AI agent. Tool agent IDs will be generated as "parentAgentId.<number of tool call>"
  */
 public class AIAgentTool<Input, Output>(
-    private val agent: AIAgent<Input, Output>,
+    private val agentService: AIAgentService<Input, Output>,
     private val agentName: String,
     private val agentDescription: String,
     private val inputDescription: String? = null,
     private val inputSerializer: KSerializer<Input>,
     private val outputSerializer: KSerializer<Output>,
     private val json: Json = Json.Default,
+    private val parentAgentId: String? = null
 ) : Tool<AgentToolArgs, AgentToolResult>() {
+    @OptIn(ExperimentalAtomicApi::class)
+    private val toolCallNumber: AtomicInt = AtomicInt(0)
+
+    @OptIn(ExperimentalAtomicApi::class)
+    private suspend fun nextToolAgentID(): String = "$parentAgentId.${toolCallNumber.fetchAndIncrement()}"
+
     /**
      * Represents the arguments required for the execution of an agent tool.
      * Wraps raw arguments.
@@ -125,7 +152,7 @@ public class AIAgentTool<Input, Output>(
                 inputSerializer,
                 args.args.getValue(descriptor.requiredParameters.first().name)
             )
-            val result = agent.run(input)
+            val result = agentService.createAgentAndRun(input, id = nextToolAgentID())
 
             AgentToolResult(
                 successful = true,

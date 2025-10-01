@@ -1,4 +1,5 @@
 import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.core.agent.AIAgentService
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.RollbackStrategy
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
@@ -60,7 +61,7 @@ class PersistencyRestoreStrategyTests {
     fun `rollback MessageHistoryOnly starts from beginning`() = runTest {
         val provider = InMemoryPersistencyStorageProvider("persistency-restore-history-only")
 
-        val agent = AIAgent(
+        val agentService = AIAgentService(
             promptExecutor = getMockExecutor { },
             strategy = restoreStrategyGraph(),
             agentConfig = AIAgentConfig(
@@ -77,9 +78,9 @@ class PersistencyRestoreStrategyTests {
         }
 
         // run first time to create a history
-        agent.run("Agent Input")
+        agentService.createAgent(id = "same-id").run("Agent Input")
 
-        val result2 = agent.run("Agent Input2")
+        val result2 = agentService.createAgent(id = "same-id").run("Agent Input2")
         assertEquals(
             "History: You are a test agent.\n" +
                 "Agent Input\n" +

@@ -2,6 +2,9 @@
 
 package ai.koog.agents.testing.tools
 
+import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.core.agent.AIAgent.Companion.invoke
+import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
@@ -14,6 +17,7 @@ import ai.koog.agents.core.dsl.builder.BaseBuilder
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentGraphPipeline
+import ai.koog.prompt.llm.OllamaModels
 import ai.koog.prompt.message.Message
 import org.jetbrains.annotations.TestOnly
 import kotlin.reflect.KType
@@ -33,6 +37,14 @@ public class DummyAIAgentContext(
     private val builder: AIAgentContextMockBuilder,
     override val agentId: String = "DummyAgentId",
 ) : AIAgentGraphContextBase {
+    override val parentContext: AIAgentGraphContextBase? = null
+
+    override val agent: GraphAIAgent<*, *> = AIAgent(
+        promptExecutor = getMockExecutor { },
+        llmModel = OllamaModels.Meta.LLAMA_3_2,
+        id = agentId
+    ) as GraphAIAgent<String, String>
+
     /**
      * Indicates whether a Language Learning Model (LLM) is defined in the current context.
      *

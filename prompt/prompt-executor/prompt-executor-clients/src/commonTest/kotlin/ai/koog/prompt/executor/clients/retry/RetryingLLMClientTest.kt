@@ -26,6 +26,7 @@ import kotlinx.datetime.Clock
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertSame
 import kotlin.time.Duration.Companion.milliseconds
 
 class RetryingLLMClientTest {
@@ -63,6 +64,28 @@ class RetryingLLMClientTest {
 
         assertEquals(testResponse, result)
         assertEquals(1, mockClient.executeCalls)
+    }
+
+    @Test
+    fun testConvertLLMClientToRetryingClientWithDefaultConfig() = runTest {
+        val mockClient = MockLLMClient()
+        // when
+        val retryingClient = mockClient.toRetryingClient()
+
+        // then
+        assertSame(actual = retryingClient.config, expected = RetryConfig.DEFAULT)
+    }
+
+    @Test
+    fun testConvertLLMClientToRetryingClientWithCustomConfig() = runTest {
+        // given
+        val mockClient = MockLLMClient()
+        val retryConfig = RetryConfig(maxAttempts = 100500)
+        // when
+        val retryingClient = mockClient.toRetryingClient(retryConfig)
+
+        // then
+        assertSame(actual = retryingClient.config, expected = retryConfig)
     }
 
     @Test

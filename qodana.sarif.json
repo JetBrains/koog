@@ -76874,8 +76874,8 @@
           "kind": "fail",
           "level": "warning",
           "message": {
-            "text": "Method 'getOnToolCallFailure' coverage is below the threshold 50%",
-            "markdown": "Method `getOnToolCallFailure` coverage is below the threshold 50%"
+            "text": "Method 'getOnToolCallFailed' coverage is below the threshold 50%",
+            "markdown": "Method `getOnToolCallFailed` coverage is below the threshold 50%"
           },
           "locations": [
             {
@@ -76890,7 +76890,7 @@
                   "charOffset": 8585,
                   "charLength": 17,
                   "snippet": {
-                    "text": "onToolCallFailure"
+                    "text": "OnToolCallFailed"
                   },
                   "sourceLanguage": "kotlin"
                 },
@@ -76900,7 +76900,7 @@
                   "charOffset": 8570,
                   "charLength": 180,
                   "snippet": {
-                    "text": "    public var onToolCallFailure: suspend (tool: Tool<*, *>, toolArgs: Tool.Args, throwable: Throwable) -> Unit = { tool: Tool<*, *>, toolArgs: Tool.Args, throwable: Throwable -> }"
+                    "text": "    public var onToolCallFailed: suspend (tool: Tool<*, *>, toolArgs: Tool.Args, throwable: Throwable) -> Unit = { tool: Tool<*, *>, toolArgs: Tool.Args, throwable: Throwable -> }"
                   },
                   "sourceLanguage": "kotlin"
                 }
@@ -77048,8 +77048,8 @@
           "kind": "fail",
           "level": "warning",
           "message": {
-            "text": "Method 'setOnToolValidationError' coverage is below the threshold 50%",
-            "markdown": "Method `setOnToolValidationError` coverage is below the threshold 50%"
+            "text": "Method 'setOnToolValidationFailed' coverage is below the threshold 50%",
+            "markdown": "Method `setOnToolValidationFailed` coverage is below the threshold 50%"
           },
           "locations": [
             {
@@ -77064,7 +77064,7 @@
                   "charOffset": 8397,
                   "charLength": 46,
                   "snippet": {
-                    "text": "set(value) = this.onToolValidationError(value)"
+                    "text": "set(value) = this.onToolValidationFailed(value)"
                   },
                   "sourceLanguage": "kotlin"
                 },
@@ -77074,7 +77074,7 @@
                   "charOffset": 8389,
                   "charLength": 54,
                   "snippet": {
-                    "text": "        set(value) = this.onToolValidationError(value)"
+                    "text": "        set(value) = this.onToolValidationFailed(value)"
                   },
                   "sourceLanguage": "kotlin"
                 }
@@ -77280,8 +77280,8 @@
           "kind": "fail",
           "level": "warning",
           "message": {
-            "text": "Method 'setOnStrategyFinished' coverage is below the threshold 50%",
-            "markdown": "Method `setOnStrategyFinished` coverage is below the threshold 50%"
+            "text": "Method 'setOnStrategyCompleted' coverage is below the threshold 50%",
+            "markdown": "Method `setOnStrategyCompleted` coverage is below the threshold 50%"
           },
           "locations": [
             {
@@ -77296,7 +77296,7 @@
                   "charOffset": 5912,
                   "charLength": 43,
                   "snippet": {
-                    "text": "set(value) = this.onStrategyFinished(value)"
+                    "text": "set(value) = this.onStrategyCompleted(value)"
                   },
                   "sourceLanguage": "kotlin"
                 },
@@ -77306,7 +77306,7 @@
                   "charOffset": 5904,
                   "charLength": 51,
                   "snippet": {
-                    "text": "        set(value) = this.onStrategyFinished(value)"
+                    "text": "        set(value) = this.onStrategyCompleted(value)"
                   },
                   "sourceLanguage": "kotlin"
                 }
@@ -79542,8 +79542,8 @@
           "kind": "fail",
           "level": "warning",
           "message": {
-            "text": "Method 'onToolCall' coverage is below the threshold 50%",
-            "markdown": "Method `onToolCall` coverage is below the threshold 50%"
+            "text": "Method 'onToolCallStrarting' coverage is below the threshold 50%",
+            "markdown": "Method `onToolCallStarting` coverage is below the threshold 50%"
           },
           "locations": [
             {
@@ -79558,7 +79558,7 @@
                   "charOffset": 3518,
                   "charLength": 10,
                   "snippet": {
-                    "text": "onToolCall"
+                    "text": "OnToolCallStarting"
                   },
                   "sourceLanguage": "kotlin"
                 },
@@ -80644,8 +80644,8 @@
           "kind": "fail",
           "level": "warning",
           "message": {
-            "text": "Method 'getOnBeforeNode' coverage is below the threshold 50%",
-            "markdown": "Method `getOnBeforeNode` coverage is below the threshold 50%"
+            "text": "Method 'getOnNodeExecutionStarting' coverage is below the threshold 50%",
+            "markdown": "Method `getOnNodeExecutionStarting` coverage is below the threshold 50%"
           },
           "locations": [
             {
@@ -80660,7 +80660,7 @@
                   "charOffset": 6172,
                   "charLength": 12,
                   "snippet": {
-                    "text": "onBeforeNode"
+                    "text": "OnNodeExecutionStarting"
                   },
                   "sourceLanguage": "kotlin"
                 },
@@ -80670,7 +80670,7 @@
                   "charOffset": 6157,
                   "charLength": 195,
                   "snippet": {
-                    "text": "    public var onBeforeNode: suspend (node: AIAgentNodeBase<*, *>, context: AIAgentContextBase, input: Any?) -> Unit = { node: AIAgentNodeBase<*, *>, context: AIAgentContextBase, input: Any? -> }"
+                    "text": "    public var onNodeExecutionStarting: suspend (node: AIAgentNodeBase<*, *>, context: AIAgentContextBase, input: Any?) -> Unit = { node: AIAgentNodeBase<*, *>, context: AIAgentContextBase, input: Any? -> }"
                   },
                   "sourceLanguage": "kotlin"
                 }
@@ -85242,7 +85242,7 @@
                   "charOffset": 4202,
                   "charLength": 10,
                   "snippet": {
-                    "text": "onToolCall"
+                    "text": "OnToolCallStarting"
                   },
                   "sourceLanguage": "kotlin"
                 },
@@ -85284,8 +85284,8 @@
           "kind": "fail",
           "level": "warning",
           "message": {
-            "text": "Method 'getOnBeforeAgentStarted' coverage is below the threshold 50%",
-            "markdown": "Method `getOnBeforeAgentStarted` coverage is below the threshold 50%"
+            "text": "Method 'getOnAgentStarting' coverage is below the threshold 50%",
+            "markdown": "Method `getOnAgentStarting` coverage is below the threshold 50%"
           },
           "locations": [
             {
@@ -85300,7 +85300,7 @@
                   "charOffset": 4405,
                   "charLength": 20,
                   "snippet": {
-                    "text": "onBeforeAgentStarted"
+                    "text": "OnAgentStarting"
                   },
                   "sourceLanguage": "kotlin"
                 },
@@ -85310,7 +85310,7 @@
                   "charOffset": 4390,
                   "charLength": 147,
                   "snippet": {
-                    "text": "    public var onBeforeAgentStarted: suspend (strategy: AIAgentStrategy, agent: AIAgent) -> Unit = { strategy: AIAgentStrategy, agent: AIAgent -> }"
+                    "text": "    public var onAgentStarting: suspend (strategy: AIAgentStrategy, agent: AIAgent) -> Unit = { strategy: AIAgentStrategy, agent: AIAgent -> }"
                   },
                   "sourceLanguage": "kotlin"
                 }
@@ -85342,8 +85342,8 @@
           "kind": "fail",
           "level": "warning",
           "message": {
-            "text": "Method 'getOnToolValidationError' coverage is below the threshold 50%",
-            "markdown": "Method `getOnToolValidationError` coverage is below the threshold 50%"
+            "text": "Method 'getOnToolValidationFailed' coverage is below the threshold 50%",
+            "markdown": "Method `getOnToolValidationFailed` coverage is below the threshold 50%"
           },
           "locations": [
             {
@@ -85358,7 +85358,7 @@
                   "charOffset": 8233,
                   "charLength": 21,
                   "snippet": {
-                    "text": "onToolValidationError"
+                    "text": "onToolValidationFailed"
                   },
                   "sourceLanguage": "kotlin"
                 },
@@ -85368,7 +85368,7 @@
                   "charOffset": 8218,
                   "charLength": 170,
                   "snippet": {
-                    "text": "    public var onToolValidationError: suspend (tool: Tool<*, *>, toolArgs: Tool.Args, value: String) -> Unit = { tool: Tool<*, *>, toolArgs: Tool.Args, value: String -> }"
+                    "text": "    public var onToolValidationFailed: suspend (tool: Tool<*, *>, toolArgs: Tool.Args, value: String) -> Unit = { tool: Tool<*, *>, toolArgs: Tool.Args, value: String -> }"
                   },
                   "sourceLanguage": "kotlin"
                 }
@@ -86444,8 +86444,8 @@
           "kind": "fail",
           "level": "warning",
           "message": {
-            "text": "Method 'setOnToolCallFailure' coverage is below the threshold 50%",
-            "markdown": "Method `setOnToolCallFailure` coverage is below the threshold 50%"
+            "text": "Method 'setOnToolCallFailed' coverage is below the threshold 50%",
+            "markdown": "Method `setOnToolCallFailed` coverage is below the threshold 50%"
           },
           "locations": [
             {
@@ -86460,7 +86460,7 @@
                   "charOffset": 8759,
                   "charLength": 42,
                   "snippet": {
-                    "text": "set(value) = this.onToolCallFailure(value)"
+                    "text": "set(value) = this.onToolCallFailed(value)"
                   },
                   "sourceLanguage": "kotlin"
                 },
@@ -86470,7 +86470,7 @@
                   "charOffset": 8751,
                   "charLength": 50,
                   "snippet": {
-                    "text": "        set(value) = this.onToolCallFailure(value)"
+                    "text": "        set(value) = this.onToolCallFailed(value)"
                   },
                   "sourceLanguage": "kotlin"
                 }
@@ -87314,8 +87314,8 @@
           "kind": "fail",
           "level": "warning",
           "message": {
-            "text": "Method 'getOnAfterNode' coverage is below the threshold 50%",
-            "markdown": "Method `getOnAfterNode` coverage is below the threshold 50%"
+            "text": "Method 'getOnNodeExecutionCompleted' coverage is below the threshold 50%",
+            "markdown": "Method `getOnNodeExecutionCompleted` coverage is below the threshold 50%"
           },
           "locations": [
             {
@@ -87330,7 +87330,7 @@
                   "charOffset": 6528,
                   "charLength": 11,
                   "snippet": {
-                    "text": "onAfterNode"
+                    "text": "OnNodeExecutionCompleted"
                   },
                   "sourceLanguage": "kotlin"
                 },
@@ -87340,7 +87340,7 @@
                   "charOffset": 6513,
                   "charLength": 222,
                   "snippet": {
-                    "text": "    public var onAfterNode: suspend (node: AIAgentNodeBase<*, *>, context: AIAgentContextBase, input: Any?, output: Any?) -> Unit = { node: AIAgentNodeBase<*, *>, context: AIAgentContextBase, input: Any?, output: Any? -> }"
+                    "text": "    public var onNodeExecutionCompleted: suspend (node: AIAgentNodeBase<*, *>, context: AIAgentContextBase, input: Any?, output: Any?) -> Unit = { node: AIAgentNodeBase<*, *>, context: AIAgentContextBase, input: Any?, output: Any? -> }"
                   },
                   "sourceLanguage": "kotlin"
                 }
@@ -87430,8 +87430,8 @@
           "kind": "fail",
           "level": "warning",
           "message": {
-            "text": "Method 'getOnStrategyFinished' coverage is below the threshold 50%",
-            "markdown": "Method `getOnStrategyFinished` coverage is below the threshold 50%"
+            "text": "Method 'getOnStrategyCompleted' coverage is below the threshold 50%",
+            "markdown": "Method `getOnStrategyCompleted` coverage is below the threshold 50%"
           },
           "locations": [
             {
@@ -87446,7 +87446,7 @@
                   "charOffset": 5773,
                   "charLength": 18,
                   "snippet": {
-                    "text": "onStrategyFinished"
+                    "text": "OnStrategyCompleted"
                   },
                   "sourceLanguage": "kotlin"
                 },
@@ -87456,7 +87456,7 @@
                   "charOffset": 5758,
                   "charLength": 145,
                   "snippet": {
-                    "text": "    public var onStrategyFinished: suspend (strategy: AIAgentStrategy, result: String) -> Unit = { strategy: AIAgentStrategy, result: String -> }"
+                    "text": "    public var onStrategyCompleted: suspend (strategy: AIAgentStrategy, result: String) -> Unit = { strategy: AIAgentStrategy, result: String -> }"
                   },
                   "sourceLanguage": "kotlin"
                 }
@@ -90794,8 +90794,8 @@
           "kind": "fail",
           "level": "warning",
           "message": {
-            "text": "Method 'setOnToolCall' coverage is below the threshold 50%",
-            "markdown": "Method `setOnToolCall` coverage is below the threshold 50%"
+            "text": "Method 'setOnToolCallStarting' coverage is below the threshold 50%",
+            "markdown": "Method `setOnToolCallStarting` coverage is below the threshold 50%"
           },
           "locations": [
             {
@@ -90810,7 +90810,7 @@
                   "charOffset": 8048,
                   "charLength": 35,
                   "snippet": {
-                    "text": "set(value) = this.onToolCall(value)"
+                    "text": "set(value) = this.onToolCallStarting(value)"
                   },
                   "sourceLanguage": "kotlin"
                 },
@@ -90820,7 +90820,7 @@
                   "charOffset": 8040,
                   "charLength": 43,
                   "snippet": {
-                    "text": "        set(value) = this.onToolCall(value)"
+                    "text": "        set(value) = this.onToolCallStarting(value)"
                   },
                   "sourceLanguage": "kotlin"
                 }
@@ -91664,8 +91664,8 @@
           "kind": "fail",
           "level": "warning",
           "message": {
-            "text": "Method 'setOnBeforeNode' coverage is below the threshold 50%",
-            "markdown": "Method `setOnBeforeNode` coverage is below the threshold 50%"
+            "text": "Method 'setOnNodeExecutionStarting' coverage is below the threshold 50%",
+            "markdown": "Method `setOnNodeExecutionStarting` coverage is below the threshold 50%"
           },
           "locations": [
             {
@@ -91680,7 +91680,7 @@
                   "charOffset": 6361,
                   "charLength": 37,
                   "snippet": {
-                    "text": "set(value) = this.onBeforeNode(value)"
+                    "text": "set(value) = this.onNodeExecutionStarting(value)"
                   },
                   "sourceLanguage": "kotlin"
                 },
@@ -91690,7 +91690,7 @@
                   "charOffset": 6353,
                   "charLength": 45,
                   "snippet": {
-                    "text": "        set(value) = this.onBeforeNode(value)"
+                    "text": "        set(value) = this.onNodeExecutionStarting(value)"
                   },
                   "sourceLanguage": "kotlin"
                 }
@@ -93752,8 +93752,8 @@
           "kind": "fail",
           "level": "warning",
           "message": {
-            "text": "Method 'setOnAfterNode' coverage is below the threshold 50%",
-            "markdown": "Method `setOnAfterNode` coverage is below the threshold 50%"
+            "text": "Method 'setOnNodeExecutionCompleted' coverage is below the threshold 50%",
+            "markdown": "Method `setOnNodeExecutionCompleted` coverage is below the threshold 50%"
           },
           "locations": [
             {
@@ -93768,7 +93768,7 @@
                   "charOffset": 6744,
                   "charLength": 36,
                   "snippet": {
-                    "text": "set(value) = this.onAfterNode(value)"
+                    "text": "set(value) = this.onNodeExecutionCompleted(value)"
                   },
                   "sourceLanguage": "kotlin"
                 },
@@ -93778,7 +93778,7 @@
                   "charOffset": 6736,
                   "charLength": 44,
                   "snippet": {
-                    "text": "        set(value) = this.onAfterNode(value)"
+                    "text": "        set(value) = this.onNodeExecutionCompleted(value)"
                   },
                   "sourceLanguage": "kotlin"
                 }
@@ -99610,8 +99610,8 @@
           "kind": "fail",
           "level": "warning",
           "message": {
-            "text": "Method 'getOnBeforeLLMCall' coverage is below the threshold 50%",
-            "markdown": "Method `getOnBeforeLLMCall` coverage is below the threshold 50%"
+            "text": "Method 'getOnLLMCallStarting' coverage is below the threshold 50%",
+            "markdown": "Method `getOnLLMCallStarting` coverage is below the threshold 50%"
           },
           "locations": [
             {
@@ -99626,7 +99626,7 @@
                   "charOffset": 7003,
                   "charLength": 15,
                   "snippet": {
-                    "text": "onBeforeLLMCall"
+                    "text": "onLLMCallStarting"
                   },
                   "sourceLanguage": "kotlin"
                 },
@@ -99636,7 +99636,7 @@
                   "charOffset": 6988,
                   "charLength": 216,
                   "snippet": {
-                    "text": "    public var onBeforeLLMCall: suspend (prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, sessionId: String) -> Unit = { prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, sessionId: String -> }"
+                    "text": "    public var onLLMCallStarting: suspend (prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, sessionId: String) -> Unit = { prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, sessionId: String -> }"
                   },
                   "sourceLanguage": "kotlin"
                 }
@@ -100016,8 +100016,8 @@
           "kind": "fail",
           "level": "warning",
           "message": {
-            "text": "Method 'setOnStrategyStarted' coverage is below the threshold 50%",
-            "markdown": "Method `setOnStrategyStarted` coverage is below the threshold 50%"
+            "text": "Method 'setOnStrategyStarting' coverage is below the threshold 50%",
+            "markdown": "Method `setOnStrategyStarting` coverage is below the threshold 50%"
           },
           "locations": [
             {
@@ -100032,7 +100032,7 @@
                   "charOffset": 5587,
                   "charLength": 42,
                   "snippet": {
-                    "text": "set(value) = this.onStrategyStarted(value)"
+                    "text": "set(value) = this.onStrategyStarting(value)"
                   },
                   "sourceLanguage": "kotlin"
                 },
@@ -100042,7 +100042,7 @@
                   "charOffset": 5579,
                   "charLength": 50,
                   "snippet": {
-                    "text": "        set(value) = this.onStrategyStarted(value)"
+                    "text": "        set(value) = this.onStrategyStarting(value)"
                   },
                   "sourceLanguage": "kotlin"
                 }
@@ -102626,8 +102626,8 @@
           "kind": "fail",
           "level": "warning",
           "message": {
-            "text": "Method 'setOnToolCallResult' coverage is below the threshold 50%",
-            "markdown": "Method `setOnToolCallResult` coverage is below the threshold 50%"
+            "text": "Method 'setOnToolCallCompleted' coverage is below the threshold 50%",
+            "markdown": "Method `setOnToolCallCompleted` coverage is below the threshold 50%"
           },
           "locations": [
             {
@@ -102642,7 +102642,7 @@
                   "charOffset": 9112,
                   "charLength": 41,
                   "snippet": {
-                    "text": "set(value) = this.onToolCallResult(value)"
+                    "text": "set(value) = this.onToolCallCompleted(value)"
                   },
                   "sourceLanguage": "kotlin"
                 },
@@ -102652,7 +102652,7 @@
                   "charOffset": 9104,
                   "charLength": 49,
                   "snippet": {
-                    "text": "        set(value) = this.onToolCallResult(value)"
+                    "text": "        set(value) = this.onToolCallCompleted(value)"
                   },
                   "sourceLanguage": "kotlin"
                 }
@@ -102684,8 +102684,8 @@
           "kind": "fail",
           "level": "warning",
           "message": {
-            "text": "Method 'getOnStrategyStarted' coverage is below the threshold 50%",
-            "markdown": "Method `getOnStrategyStarted` coverage is below the threshold 50%"
+            "text": "Method 'getOnStrategyStarting' coverage is below the threshold 50%",
+            "markdown": "Method `getOnStrategyStarting` coverage is below the threshold 50%"
           },
           "locations": [
             {
@@ -102700,7 +102700,7 @@
                   "charOffset": 5481,
                   "charLength": 17,
                   "snippet": {
-                    "text": "onStrategyStarted"
+                    "text": "OnStrategyStarting"
                   },
                   "sourceLanguage": "kotlin"
                 },
@@ -102710,7 +102710,7 @@
                   "charOffset": 5466,
                   "charLength": 112,
                   "snippet": {
-                    "text": "    public var onStrategyStarted: suspend (strategy: AIAgentStrategy) -> Unit = { strategy: AIAgentStrategy -> }"
+                    "text": "    public var onStrategyStarting: suspend (strategy: AIAgentStrategy) -> Unit = { strategy: AIAgentStrategy -> }"
                   },
                   "sourceLanguage": "kotlin"
                 }
@@ -102916,8 +102916,8 @@
           "kind": "fail",
           "level": "warning",
           "message": {
-            "text": "Method 'invokeOnToolCallFailure$koog_agents_agents_agents_features_agents_features_event_handler_commonMain' coverage is below the threshold 50%",
-            "markdown": "Method `invokeOnToolCallFailure$koog_agents_agents_agents_features_agents_features_event_handler_commonMain` coverage is below the threshold 50%"
+            "text": "Method 'invokeOnToolCallFailed$koog_agents_agents_agents_features_agents_features_event_handler_commonMain' coverage is below the threshold 50%",
+            "markdown": "Method `invokeOnToolCallFailed$koog_agents_agents_agents_features_agents_features_event_handler_commonMain` coverage is below the threshold 50%"
           },
           "locations": [
             {
@@ -102932,7 +102932,7 @@
                   "charOffset": 19182,
                   "charLength": 23,
                   "snippet": {
-                    "text": "invokeOnToolCallFailure"
+                    "text": "invokeOnToolCallFailed"
                   },
                   "sourceLanguage": "kotlin"
                 },
@@ -102942,7 +102942,7 @@
                   "charOffset": 19157,
                   "charLength": 111,
                   "snippet": {
-                    "text": "    internal suspend fun invokeOnToolCallFailure(tool: Tool<*, *>, toolArgs: Tool.Args, throwable: Throwable) {"
+                    "text": "    internal suspend fun invokeOnToolCallFailed(tool: Tool<*, *>, toolArgs: Tool.Args, throwable: Throwable) {"
                   },
                   "sourceLanguage": "kotlin"
                 }
@@ -104946,8 +104946,8 @@
           "kind": "fail",
           "level": "warning",
           "message": {
-            "text": "Method 'setOnAgentFinished' coverage is below the threshold 50%",
-            "markdown": "Method `setOnAgentFinished` coverage is below the threshold 50%"
+            "text": "Method 'setOnAgentCompleted' coverage is below the threshold 50%",
+            "markdown": "Method `setOnAgentCompleted` coverage is below the threshold 50%"
           },
           "locations": [
             {
@@ -104962,7 +104962,7 @@
                   "charOffset": 4857,
                   "charLength": 40,
                   "snippet": {
-                    "text": "set(value) = this.onAgentFinished(value)"
+                    "text": "set(value) = this.onAgentCompleted(value)"
                   },
                   "sourceLanguage": "kotlin"
                 },
@@ -104972,7 +104972,7 @@
                   "charOffset": 4849,
                   "charLength": 48,
                   "snippet": {
-                    "text": "        set(value) = this.onAgentFinished(value)"
+                    "text": "        set(value) = this.onAgentCompleted(value)"
                   },
                   "sourceLanguage": "kotlin"
                 }
@@ -110340,8 +110340,8 @@
           "kind": "fail",
           "level": "warning",
           "message": {
-            "text": "Method 'getOnToolCallResult' coverage is below the threshold 50%",
-            "markdown": "Method `getOnToolCallResult` coverage is below the threshold 50%"
+            "text": "Method 'getOnToolCallCompleted' coverage is below the threshold 50%",
+            "markdown": "Method `getOnToolCallCompleted` coverage is below the threshold 50%"
           },
           "locations": [
             {
@@ -110356,7 +110356,7 @@
                   "charOffset": 8941,
                   "charLength": 16,
                   "snippet": {
-                    "text": "onToolCallResult"
+                    "text": "OnToolCallCompleted"
                   },
                   "sourceLanguage": "kotlin"
                 },
@@ -110366,7 +110366,7 @@
                   "charOffset": 8926,
                   "charLength": 177,
                   "snippet": {
-                    "text": "    public var onToolCallResult: suspend (tool: Tool<*, *>, toolArgs: Tool.Args, result: ToolResult?) -> Unit = { tool: Tool<*, *>, toolArgs: Tool.Args, result: ToolResult? -> }"
+                    "text": "    public var onToolCallCompleted: suspend (tool: Tool<*, *>, toolArgs: Tool.Args, result: ToolResult?) -> Unit = { tool: Tool<*, *>, toolArgs: Tool.Args, result: ToolResult? -> }"
                   },
                   "sourceLanguage": "kotlin"
                 }
@@ -112428,8 +112428,8 @@
           "kind": "fail",
           "level": "warning",
           "message": {
-            "text": "Method 'getOnAfterLLMCall' coverage is below the threshold 50%",
-            "markdown": "Method `getOnAfterLLMCall` coverage is below the threshold 50%"
+            "text": "Method 'getLLMCallCompleted' coverage is below the threshold 50%",
+            "markdown": "Method `getOnLLMCallCompleted` coverage is below the threshold 50%"
           },
           "locations": [
             {
@@ -112444,7 +112444,7 @@
                   "charOffset": 7389,
                   "charLength": 14,
                   "snippet": {
-                    "text": "onAfterLLMCall"
+                    "text": "onLLMCallCompleted"
                   },
                   "sourceLanguage": "kotlin"
                 },
@@ -112454,7 +112454,7 @@
                   "charOffset": 7374,
                   "charLength": 285,
                   "snippet": {
-                    "text": "    public var onAfterLLMCall: suspend (prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, responses: List<Message.Response>, sessionId: String) -> Unit = { prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, responses: List<Message.Response>, sessionId: String -> }"
+                    "text": "    public var onLLMCallCompleted: suspend (prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, responses: List<Message.Response>, sessionId: String) -> Unit = { prompt: Prompt, tools: List<ToolDescriptor>, model: LLModel, responses: List<Message.Response>, sessionId: String -> }"
                   },
                   "sourceLanguage": "kotlin"
                 }
@@ -115328,8 +115328,8 @@
           "kind": "fail",
           "level": "warning",
           "message": {
-            "text": "Method 'getOnAgentRunError' coverage is below the threshold 50%",
-            "markdown": "Method `getOnAgentRunError` coverage is below the threshold 50%"
+            "text": "Method 'getOnAgentExecutionFailed' coverage is below the threshold 50%",
+            "markdown": "Method `getOnAgentExecutionFailed` coverage is below the threshold 50%"
           },
           "locations": [
             {
@@ -115344,7 +115344,7 @@
                   "charOffset": 5035,
                   "charLength": 15,
                   "snippet": {
-                    "text": "onAgentRunError"
+                    "text": "OnAgentExecutionFailed"
                   },
                   "sourceLanguage": "kotlin"
                 },
@@ -115354,7 +115354,7 @@
                   "charOffset": 5020,
                   "charLength": 184,
                   "snippet": {
-                    "text": "    public var onAgentRunError: suspend (strategyName: String, sessionId: String?, throwable: Throwable) -> Unit = { strategyName: String, sessionId: String?, throwable: Throwable -> }"
+                    "text": "    public var onAgentExecutionFailed: suspend (strategyName: String, sessionId: String?, throwable: Throwable) -> Unit = { strategyName: String, sessionId: String?, throwable: Throwable -> }"
                   },
                   "sourceLanguage": "kotlin"
                 }
@@ -117126,8 +117126,8 @@
           "kind": "fail",
           "level": "warning",
           "message": {
-            "text": "Method 'setOnBeforeAgentStarted' coverage is below the threshold 50%",
-            "markdown": "Method `setOnBeforeAgentStarted` coverage is below the threshold 50%"
+            "text": "Method 'setOnAgentStarting' coverage is below the threshold 50%",
+            "markdown": "Method `setOnAgentStarting` coverage is below the threshold 50%"
           },
           "locations": [
             {
@@ -117142,7 +117142,7 @@
                   "charOffset": 4546,
                   "charLength": 45,
                   "snippet": {
-                    "text": "set(value) = this.onBeforeAgentStarted(value)"
+                    "text": "set(value) = this.onAgentStarting(value)"
                   },
                   "sourceLanguage": "kotlin"
                 },
@@ -117152,7 +117152,7 @@
                   "charOffset": 4538,
                   "charLength": 53,
                   "snippet": {
-                    "text": "        set(value) = this.onBeforeAgentStarted(value)"
+                    "text": "        set(value) = this.onAgentStarting(value)"
                   },
                   "sourceLanguage": "kotlin"
                 }
@@ -120838,8 +120838,8 @@
           "kind": "fail",
           "level": "warning",
           "message": {
-            "text": "Method 'setOnAfterLLMCall' coverage is below the threshold 50%",
-            "markdown": "Method `setOnAfterLLMCall` coverage is below the threshold 50%"
+            "text": "Method 'setOnLLMCallCompleted' coverage is below the threshold 50%",
+            "markdown": "Method `setOnLLMCallCompleted` coverage is below the threshold 50%"
           },
           "locations": [
             {
@@ -120854,7 +120854,7 @@
                   "charOffset": 7668,
                   "charLength": 39,
                   "snippet": {
-                    "text": "set(value) = this.onAfterLLMCall(value)"
+                    "text": "set(value) = this.onLLMCallCompleted(value)"
                   },
                   "sourceLanguage": "kotlin"
                 },
@@ -120864,7 +120864,7 @@
                   "charOffset": 7660,
                   "charLength": 47,
                   "snippet": {
-                    "text": "        set(value) = this.onAfterLLMCall(value)"
+                    "text": "        set(value) = this.onLLMCallCompleted(value)"
                   },
                   "sourceLanguage": "kotlin"
                 }
@@ -121360,8 +121360,8 @@
           "kind": "fail",
           "level": "warning",
           "message": {
-            "text": "Method 'getOnToolCall' coverage is below the threshold 50%",
-            "markdown": "Method `getOnToolCall` coverage is below the threshold 50%"
+            "text": "Method 'getOnToolCallStarting' coverage is below the threshold 50%",
+            "markdown": "Method `getOnToolCallStarting` coverage is below the threshold 50%"
           },
           "locations": [
             {
@@ -121376,7 +121376,7 @@
                   "charOffset": 7925,
                   "charLength": 10,
                   "snippet": {
-                    "text": "onToolCall"
+                    "text": "OnToolCallStarting"
                   },
                   "sourceLanguage": "kotlin"
                 },
@@ -121386,7 +121386,7 @@
                   "charOffset": 7910,
                   "charLength": 129,
                   "snippet": {
-                    "text": "    public var onToolCall: suspend (tool: Tool<*, *>, toolArgs: Tool.Args) -> Unit = { tool: Tool<*, *>, toolArgs: Tool.Args -> }"
+                    "text": "    public var onToolCallStarting: suspend (tool: Tool<*, *>, toolArgs: Tool.Args) -> Unit = { tool: Tool<*, *>, toolArgs: Tool.Args -> }"
                   },
                   "sourceLanguage": "kotlin"
                 }
@@ -121882,8 +121882,8 @@
           "kind": "fail",
           "level": "warning",
           "message": {
-            "text": "Method 'setOnBeforeLLMCall' coverage is below the threshold 50%",
-            "markdown": "Method `setOnBeforeLLMCall` coverage is below the threshold 50%"
+            "text": "Method 'setOnLLMCallStrarting' coverage is below the threshold 50%",
+            "markdown": "Method `setOnLLMCallStarting` coverage is below the threshold 50%"
           },
           "locations": [
             {
@@ -121898,7 +121898,7 @@
                   "charOffset": 7213,
                   "charLength": 40,
                   "snippet": {
-                    "text": "set(value) = this.onBeforeLLMCall(value)"
+                    "text": "set(value) = this.onLLMCallStarting(value)"
                   },
                   "sourceLanguage": "kotlin"
                 },
@@ -121908,7 +121908,7 @@
                   "charOffset": 7205,
                   "charLength": 48,
                   "snippet": {
-                    "text": "        set(value) = this.onBeforeLLMCall(value)"
+                    "text": "        set(value) = this.onLLMCallStarting(value)"
                   },
                   "sourceLanguage": "kotlin"
                 }
@@ -123100,8 +123100,8 @@
           "kind": "fail",
           "level": "warning",
           "message": {
-            "text": "Method 'getOnAgentFinished' coverage is below the threshold 50%",
-            "markdown": "Method `getOnAgentFinished` coverage is below the threshold 50%"
+            "text": "Method 'getOnAgentCompleted' coverage is below the threshold 50%",
+            "markdown": "Method `getOnAgentCompleted` coverage is below the threshold 50%"
           },
           "locations": [
             {
@@ -123116,7 +123116,7 @@
                   "charOffset": 4729,
                   "charLength": 15,
                   "snippet": {
-                    "text": "onAgentFinished"
+                    "text": "OnAgentCompleted"
                   },
                   "sourceLanguage": "kotlin"
                 },
@@ -123126,7 +123126,7 @@
                   "charOffset": 4714,
                   "charLength": 134,
                   "snippet": {
-                    "text": "    public var onAgentFinished: suspend (strategyName: String, result: String?) -> Unit = { strategyName: String, result: String? -> }"
+                    "text": "    public var onAgentCompleted: suspend (strategyName: String, result: String?) -> Unit = { strategyName: String, result: String? -> }"
                   },
                   "sourceLanguage": "kotlin"
                 }
@@ -125304,8 +125304,8 @@
           "kind": "fail",
           "level": "warning",
           "message": {
-            "text": "Method 'setOnAgentRunError' coverage is below the threshold 50%",
-            "markdown": "Method `setOnAgentRunError` coverage is below the threshold 50%"
+            "text": "Method 'setOnAgentExecutionFailed' coverage is below the threshold 50%",
+            "markdown": "Method `setOnAgentExecutionFailed` coverage is below the threshold 50%"
           },
           "locations": [
             {
@@ -125320,7 +125320,7 @@
                   "charOffset": 5213,
                   "charLength": 40,
                   "snippet": {
-                    "text": "set(value) = this.onAgentRunError(value)"
+                    "text": "set(value) = this.onAgentExecutionFailed(value)"
                   },
                   "sourceLanguage": "kotlin"
                 },
@@ -125330,7 +125330,7 @@
                   "charOffset": 5205,
                   "charLength": 48,
                   "snippet": {
-                    "text": "        set(value) = this.onAgentRunError(value)"
+                    "text": "        set(value) = this.onAgentExecutionFailed(value)"
                   },
                   "sourceLanguage": "kotlin"
                 }
@@ -126116,8 +126116,8 @@
           "kind": "fail",
           "level": "warning",
           "message": {
-            "text": "Method 'onToolCallFailure' coverage is below the threshold 50%",
-            "markdown": "Method `onToolCallFailure` coverage is below the threshold 50%"
+            "text": "Method 'onToolCallFailed' coverage is below the threshold 50%",
+            "markdown": "Method `onToolCallFailed` coverage is below the threshold 50%"
           },
           "locations": [
             {
@@ -126132,7 +126132,7 @@
                   "charOffset": 14208,
                   "charLength": 17,
                   "snippet": {
-                    "text": "onToolCallFailure"
+                    "text": "OnToolCallFailed"
                   },
                   "sourceLanguage": "kotlin"
                 },
@@ -126142,7 +126142,7 @@
                   "charOffset": 14185,
                   "charLength": 103,
                   "snippet": {
-                    "text": "    public suspend fun onToolCallFailure(tool: Tool<*, *>, toolArgs: Tool.Args, throwable: Throwable) {"
+                    "text": "    public suspend fun onToolCallFailed(tool: Tool<*, *>, toolArgs: Tool.Args, throwable: Throwable) {"
                   },
                   "sourceLanguage": "kotlin"
                 }

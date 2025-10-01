@@ -2,6 +2,7 @@ package ai.koog.agents.snapshot.feature
 
 import ai.koog.agents.core.agent.context.RollbackStrategy
 import ai.koog.agents.core.feature.config.FeatureConfig
+import ai.koog.agents.snapshot.feature.RollbackToolRegistry
 import ai.koog.agents.snapshot.providers.NoPersistencyStorageProvider
 import ai.koog.agents.snapshot.providers.PersistencyStorageProvider
 
@@ -42,4 +43,10 @@ public class PersistencyFeatureConfig : FeatureConfig() {
      * Defaults to [RollbackStrategy.Default], ensuring complete rollback functionality unless explicitly configured otherwise.
      */
     public var rollbackStrategy: RollbackStrategy = RollbackStrategy.Default
+
+    /**
+     * Registry for rollback tools used when rolling back to checkpoints.
+     * Configure it during Persistency installation. Do not mutate later in withPersistency.
+     */
+    public var rollbackToolRegistry: RollbackToolRegistry = RollbackToolRegistry.EMPTY
 }

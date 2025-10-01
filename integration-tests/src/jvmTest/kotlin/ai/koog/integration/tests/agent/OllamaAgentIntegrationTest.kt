@@ -155,29 +155,14 @@ class OllamaAgentIntegrationTest {
             toolRegistry = toolRegistry
         ) {
             install(EventHandler) {
-                onToolCall { eventContext ->
-                    println(
-                        "Calling tool ${eventContext.tool.name} with arguments ${
-                            eventContext.toolArgs.toString().lines().first().take(100)
-                        }"
-                    )
-                }
-
-                onBeforeLLMCall { eventContext ->
+                onLLMCallStarting { eventContext ->
                     val promptText = eventContext.prompt.messages.joinToString { "${it.role.name}: ${it.content}" }
-                    val toolsText = eventContext.tools.joinToString { it.name }
-                    println("Prompt with tools:\n$promptText\nAvailable tools:\n$toolsText")
                     promptsAndResponses.add("PROMPT_WITH_TOOLS: $promptText")
                 }
 
-                onAfterLLMCall { eventContext ->
+                onLLMCallCompleted { eventContext ->
                     val responseText = "[${eventContext.responses.joinToString { "${it.role.name}: ${it.content}" }}]"
-                    println("LLM Call response: $responseText")
                     promptsAndResponses.add("RESPONSE: $responseText")
-                }
-
-                onAgentFinished { _ ->
-                    println("Agent execution finished")
                 }
             }
         }

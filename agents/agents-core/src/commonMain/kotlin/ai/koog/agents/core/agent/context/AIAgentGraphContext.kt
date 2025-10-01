@@ -1,5 +1,6 @@
 package ai.koog.agents.core.agent.context
 
+import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
@@ -46,6 +47,8 @@ public interface AIAgentGraphContextBase : AIAgentContext {
      */
     public val agentInputType: KType
 
+    override val agent: GraphAIAgent<*, *>
+
     /**
      * Creates a copy of the current [AIAgentGraphContext], allowing for selective overriding of its properties.
      *
@@ -69,19 +72,24 @@ public interface AIAgentGraphContextBase : AIAgentContext {
         runId: String = this.runId,
         strategyName: String = this.strategyName,
         pipeline: AIAgentGraphPipeline = this.pipeline,
-    ): AIAgentGraphContextBase = AIAgentGraphContext(
-        environment = environment,
-        agentInput = agentInput,
-        agentInputType = agentInputType,
-        config = config,
-        llm = llm,
-        stateManager = stateManager,
-        storage = storage,
-        runId = runId,
-        strategyName = strategyName,
-        pipeline = pipeline,
-        agentId = this.agentId,
-    )
+    ): AIAgentGraphContextBase {
+        val clone = AIAgentGraphContext(
+            environment = environment,
+            agentInput = agentInput,
+            agentInputType = agentInputType,
+            config = config,
+            llm = llm,
+            stateManager = stateManager,
+            storage = storage,
+            runId = runId,
+            strategyName = strategyName,
+            pipeline = pipeline,
+            agent = this.agent,
+            parentContext = this
+        )
+
+        return clone
+    }
 
     /**
      * Creates a copy of the current [AIAgentGraphContext] with deep copies of all mutable properties.
@@ -117,6 +125,7 @@ public interface AIAgentGraphContextBase : AIAgentContext {
  * @param strategyName The identifier for the selected strategy in the agent's lifecycle.
  * @param pipeline The AI agent pipeline responsible for coordinating AI agent execution and processing.
  */
+@OptIn(InternalAgentsApi::class)
 public class AIAgentGraphContext(
     override val environment: AIAgentEnvironment,
     override val agentInputType: KType,
@@ -127,9 +136,9 @@ public class AIAgentGraphContext(
     storage: AIAgentStorage,
     override val runId: String,
     override val strategyName: String,
-    @OptIn(InternalAgentsApi::class)
     override val pipeline: AIAgentGraphPipeline,
-    override val agentId: String,
+    override val agent: GraphAIAgent<*, *>,
+    override val parentContext: AIAgentGraphContextBase? = null
 ) : AIAgentGraphContextBase {
 
     /**
@@ -178,20 +187,6 @@ public class AIAgentGraphContext(
     override val stateManager: AIAgentStateManager
         get() = mutableAIAgentContext.stateManager
 
-    /**
-     * A map storing features associated with the current AI agent context.
-     * The keys represent unique identifiers for specific features, defined as [AIAgentStorageKey].
-     * The values are the features themselves, which can be of any type.
-     *
-     * This map is populated by invoking the [AIAgentPipeline.getAgentFeatures] method, retrieving features
-     * based on the handlers registered for the AI agent's execution context.
-     *
-     * Used internally to manage and access features during the execution of the AI agent pipeline.
-     */
-    @OptIn(InternalAgentsApi::class)
-    private val features: Map<AIAgentStorageKey<*>, Any> =
-        pipeline.getAgentFeatures(this)
-
     private val storeMap: MutableMap<AIAgentStorageKey<*>, Any> = mutableMapOf()
 
     override fun store(key: AIAgentStorageKey<*>, value: Any) {
@@ -206,15 +201,6 @@ public class AIAgentGraphContext(
     override fun remove(key: AIAgentStorageKey<*>): Boolean {
         return storeMap.remove(key) != null
     }
-
-    /**
-     * Retrieves a feature associated with the given key from the current context.
-     *
-     * @param key The key of the feature to retrieve.
-     * @return The feature associated with the specified key, or null if no such feature exists.
-     */
-    @Suppress("UNCHECKED_CAST")
-    override fun <Feature : Any> feature(key: AIAgentStorageKey<Feature>): Feature? = features[key] as Feature?
 
     /**
      * Retrieves an instance of the specified feature from the current context.
@@ -280,7 +266,7 @@ public val agentContextDataAdditionalKey: AIAgentStorageKey<AgentContextData> =
  */
 @InternalAgentsApi
 public fun AIAgentContext.store(data: AgentContextData) {
-    this.store(agentContextDataAdditionalKey, data)
+    this.rootContext().store(agentContextDataAdditionalKey, data)
 }
 
 /**
@@ -296,7 +282,7 @@ public fun AIAgentContext.store(data: AgentContextData) {
  */
 @InternalAgentsApi
 public fun AIAgentContext.getAgentContextData(): AgentContextData? {
-    return this.get(agentContextDataAdditionalKey)
+    return this.rootContext().get(agentContextDataAdditionalKey)
 }
 
 /**
@@ -308,5 +294,5 @@ public fun AIAgentContext.getAgentContextData(): AgentContextData? {
  */
 @OptIn(InternalAgentsApi::class)
 public fun AIAgentContext.removeAgentContextData(): Boolean {
-    return this.remove(agentContextDataAdditionalKey)
+    return this.rootContext().remove(agentContextDataAdditionalKey)
 }

@@ -95,8 +95,14 @@ public class AIAgentGraphStrategy<TInput, TOutput>(
     @OptIn(InternalAgentsApi::class)
     private suspend fun restoreDefault(agentContext: AIAgentGraphContextBase, data: AgentContextData) {
         val nodeId = data.nodeId
+
+        // Perform additional cleanup (ex: rollback tools):
+        data.additionalRollbackActions(agentContext)
+
+        // Set current graph node:
         setExecutionPoint(nodeId, data.lastInput)
 
+        // Reset the message history:
         agentContext.llm.withPrompt {
             this.withMessages { (data.messageHistory) }
         }

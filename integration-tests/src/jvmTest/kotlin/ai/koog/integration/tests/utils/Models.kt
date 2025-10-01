@@ -50,6 +50,7 @@ object Models {
             AnthropicModels.Sonnet_3_5,
             AnthropicModels.Sonnet_3_7,
             AnthropicModels.Sonnet_4,
+            AnthropicModels.Sonnet_4_5,
         )
     }
 
@@ -71,7 +72,10 @@ object Models {
     fun bedrockModels(): Stream<LLModel> {
         return Stream.of(
             BedrockModels.AnthropicClaude35Haiku,
+            BedrockModels.AnthropicClaude4Sonnet,
             BedrockModels.MetaLlama3_1_70BInstruct,
+            BedrockModels.AmazonNovaPro,
+            BedrockModels.AmazonNovaLite,
         )
     }
 
@@ -80,8 +84,7 @@ object Models {
         OpenRouterModels.GPT5Nano,
         OpenRouterModels.DeepSeekV30324,
         OpenRouterModels.Claude4Sonnet,
-        // ToDo add Gemini when KG-203 is fixed
-        // OpenRouterModels.Gemini2_5FlashLite,
+        OpenRouterModels.Gemini2_5FlashLite,
     )
 
     @JvmStatic

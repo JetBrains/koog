@@ -78,3 +78,42 @@ val agent = AIAgent(
 // Run the agent
 val result = agent.execute("Calculate the square root of 16")
 ```
+
+
+### Standard Feature Events
+
+Features in the Koog ecosystem consume standardized Feature Events emitted by agents-core during agent execution. These events are defined in this module under the package `ai.koog.agents.core.feature.model.events`.
+
+- Agent events:
+  - AgentStartingEvent
+  - AgentCompletedEvent
+  - AgentExecutionFailedEvent
+  - AgentClosingEvent
+
+- Strategy events:
+  - GraphStrategyStartingEvent
+  - FunctionalStrategyStartingEvent
+  - StrategyCompletedEvent
+
+- Node execution events:
+  - NodeExecutionStartingEvent
+  - NodeExecutionCompletedEvent
+  - NodeExecutionFailedEvent
+
+- LLM call events:
+  - LLMCallStartingEvent
+  - LLMCallCompletedEvent
+
+- LLM streaming events:
+  - LLMStreamingStartingEvent
+  - LLMStreamingFrameReceivedEvent
+  - LLMStreamingFailedEvent
+  - LLMStreamingCompletedEvent
+
+- Tool execution events:
+  - ToolExecutionStartingEvent
+  - ToolValidationFailedEvent
+  - ToolExecutionFailedEvent
+  - ToolExecutionCompletedEvent
+
+These events are emitted by the agents-core runtime and consumed by features such as Tracing, Debugger, and EventHandler to enable logging, tracing, monitoring, and remote inspection.

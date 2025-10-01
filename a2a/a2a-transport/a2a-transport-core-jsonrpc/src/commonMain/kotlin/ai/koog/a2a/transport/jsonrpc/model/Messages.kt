@@ -1,0 +1,57 @@
+@file:Suppress("MissingKDocForPublicAPI")
+
+package ai.koog.a2a.transport.jsonrpc.model
+
+import ai.koog.a2a.transport.RequestId
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
+
+/**
+ * Default JSON-RPC version.
+ */
+public const val JSONRPC_VERSION: String = "2.0"
+
+@Serializable(with = JSONRPCMessageSerializer::class)
+public sealed interface JSONRPCMessage {
+    public val jsonrpc: String
+}
+
+@Serializable(with = JSONRPCResponseSerializer::class)
+public sealed interface JSONRPCResponse : JSONRPCMessage
+
+@Serializable
+public data class JSONRPCRequest(
+    public val id: RequestId,
+    val method: String,
+    val params: JsonElement = JsonNull,
+    override val jsonrpc: String,
+) : JSONRPCMessage
+
+@Serializable
+public data class JSONRPCNotification(
+    val method: String,
+    val params: JsonElement = JsonNull,
+    override val jsonrpc: String,
+) : JSONRPCMessage
+
+@Serializable
+public data class JSONRPCSuccessResponse(
+    public val id: RequestId,
+    public val result: JsonElement = JsonNull,
+    override val jsonrpc: String,
+) : JSONRPCResponse
+
+@Serializable
+public data class JSONRPCError(
+    val code: Int,
+    val message: String,
+    val data: JsonElement = JsonNull,
+)
+
+@Serializable
+public data class JSONRPCErrorResponse(
+    public val id: RequestId?,
+    public val error: JSONRPCError,
+    override val jsonrpc: String,
+) : JSONRPCResponse

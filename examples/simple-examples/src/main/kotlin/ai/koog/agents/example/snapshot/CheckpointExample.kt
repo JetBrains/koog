@@ -46,7 +46,7 @@ fun main() = runBlocking {
         }
 
         install(EventHandler) {
-            onToolCallFailure {
+            onToolCallFailed {
                 throw Exception("Tool call failed")
             }
         }

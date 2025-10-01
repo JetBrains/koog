@@ -198,13 +198,14 @@ An agent combines an LLM with tools to accomplish tasks.
 
 ```kotlin
 import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.core.agent.AIAgentService
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.reflect.asTools
 import ai.koog.agents.ext.tool.AskUser
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import kotlinx.coroutines.runBlocking
 
-val transferAgent = AIAgent(
+val transferAgentService = AIAgentService(
     executor = openAIExecutor,
     llmModel = OpenAIModels.Reasoning.GPT4oMini,
     systemPrompt = bankingAssistantSystemPrompt,
@@ -225,7 +226,7 @@ val message = "Send 25 euros to Daniel for dinner at the restaurant."
 // - "Transfer 100 euros to Bob for the shared vacation expenses"
 
 runBlocking {
-    val result = transferAgent.run(message)
+    val result = transferAgentService.createAgentAndRun(message)
     result
 }
 ```
@@ -433,7 +434,7 @@ class TransactionAnalysisTools : ToolSet {
 
 
 ```kotlin
-val analysisAgent = AIAgent(
+val analysisAgentService = AIAgentService(
     executor = openAIExecutor,
     llmModel = OpenAIModels.Reasoning.GPT4oMini,
     systemPrompt = "$bankingAssistantSystemPrompt\n$transactionAnalysisPrompt",
@@ -453,7 +454,7 @@ val analysisMessage = "How much have I spent on restaurants this month?"
 // - "Show me all transactions from last week"
 
 runBlocking {
-    val result = analysisAgent.run(analysisMessage)
+    val result = analysisAgentService.createAgentAndRun(analysisMessage)
     result
 }
 ```
@@ -682,7 +683,7 @@ Koog allows you to use agents as tools within other agents, enabling powerful co
 
 
 ```kotlin
-import ai.koog.agents.core.agent.asTool
+import ai.koog.agents.core.agent.createAgentTool
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 
@@ -694,7 +695,7 @@ val classifierAgent = AIAgent(
 
         // Convert agents into tools
         tool(
-            transferAgent.asTool(
+            transferAgentService.createAgentTool(
                 agentName = "transferMoney",
                 agentDescription = "Transfers money and handles all related operations",
                 inputDescriptor = ToolParameterDescriptor(
@@ -706,7 +707,7 @@ val classifierAgent = AIAgent(
         )
 
         tool(
-            analysisAgent.asTool(
+            analysisAgentService.createAgentTool(
                 agentName = "analyzeTransactions",
                 agentDescription = "Performs analytics on user transactions",
                 inputDescriptor = ToolParameterDescriptor(

@@ -11,6 +11,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.images.PullPolicy
+import org.testcontainers.utility.DockerImageName
 
 class OllamaTestFixture {
     private val PORT = 11434
@@ -24,31 +25,77 @@ class OllamaTestFixture {
     val moderationModel = OllamaModels.Meta.LLAMA_GUARD_3
 
     fun setUp() {
-        ollamaContainer = GenericContainer(System.getenv("OLLAMA_IMAGE_URL")).apply {
+        val imageUrl = System.getenv("OLLAMA_IMAGE_URL")
+            ?: throw IllegalStateException("OLLAMA_IMAGE_URL not set")
+
+        ollamaContainer = GenericContainer(DockerImageName.parse(imageUrl)).apply {
             withExposedPorts(PORT)
             withImagePullPolicy(PullPolicy.alwaysPull())
-        }
-        ollamaContainer.start()
-
-        val host = ollamaContainer.host
-        val port = ollamaContainer.getMappedPort(PORT)
-        val baseUrl = "http://$host:$port"
-        waitForOllamaServer(baseUrl)
-
-        client = OllamaClient(baseUrl)
-
-        // Always pull the models to ensure they're available
-        runBlocking {
-            client.getModelOrNull(model.id, pullIfMissing = true)
-            client.getModelOrNull(visionModel.id, pullIfMissing = true)
-            client.getModelOrNull(moderationModel.id, pullIfMissing = true)
+            withCreateContainerCmdModifier { cmd ->
+                cmd.hostConfig?.apply {
+                    withMemory(4L * 1024 * 1024 * 1024) // 4GB RAM
+                    withCpuCount(2L)
+                }
+            }
+            withReuse(false)
         }
 
-        executor = SingleLLMPromptExecutor(client)
+        try {
+            ollamaContainer.start()
+
+            val host = ollamaContainer.host
+            val port = ollamaContainer.getMappedPort(PORT)
+            val baseUrl = "http://$host:$port"
+            waitForOllamaServer(baseUrl)
+
+            client = OllamaClient(baseUrl)
+
+            // Always pull the models to ensure they're available
+            runBlocking {
+                try {
+                    client.getModelOrNull(model.id, pullIfMissing = true)
+                    client.getModelOrNull(visionModel.id, pullIfMissing = true)
+                    client.getModelOrNull(moderationModel.id, pullIfMissing = true)
+                } catch (e: Exception) {
+                    println("Failed to pull models: ${e.message}")
+                    cleanup()
+                    throw e
+                }
+            }
+
+            executor = SingleLLMPromptExecutor(client)
+        } catch (e: Exception) {
+            cleanup()
+            throw e
+        }
     }
 
     fun tearDown() {
-        ollamaContainer.stop()
+        cleanup()
+    }
+
+    private fun cleanup() {
+        try {
+            if (::ollamaContainer.isInitialized) {
+                try {
+                    ollamaContainer.stop()
+                } catch (e: Exception) {
+                    println("Error stopping container: ${e.message}")
+                }
+
+                try {
+                    ollamaContainer.dockerClient?.removeContainerCmd(ollamaContainer.containerId)
+                        ?.withRemoveVolumes(true)
+                        ?.withForce(true)
+                        ?.exec()
+                } catch (e: Exception) {
+                    println("Error removing container: ${e.message}")
+                }
+            }
+        } catch (e: Exception) {
+            println("Error during cleanup: ${e.message}")
+            e.printStackTrace()
+        }
     }
 
     private fun waitForOllamaServer(baseUrl: String) {

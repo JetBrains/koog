@@ -56,7 +56,7 @@ val testAgent = AIAgent(
     var agentFinished = false
 
     handleEvents {
-        onToolExecutionStarting { eventContext ->
+        onToolCallStarting { eventContext ->
             toolCalled = true
             println("[DEBUG_LOG] Tool called: ${eventContext.tool.name}")
         }
@@ -95,15 +95,15 @@ val agent = AIAgent(
         }
 
         // Monitor tool usage
-        onToolExecutionStarting { eventContext ->
+        onToolCallStarting { eventContext ->
             println("Tool called: ${eventContext.tool.name} with args: ${eventContext.toolArgs}")
         }
 
-        onToolExecutionCompleted { eventContext ->
+        onToolCallCompleted { eventContext ->
             println("Tool result: ${eventContext.result}")
         }
 
-        onToolExecutionFailed { eventContext ->
+        onToolCallFailed { eventContext ->
             println("Tool failed: ${eventContext.throwable.message}")
         }
 
