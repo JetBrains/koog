@@ -33,7 +33,6 @@ import ai.koog.integration.tests.utils.TestUtils.readTestGoogleAIKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
-import ai.koog.prompt.executor.clients.bedrock.BedrockModels
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
@@ -68,7 +67,6 @@ import kotlin.io.path.readBytes
 import kotlin.reflect.typeOf
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
-import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
@@ -394,7 +392,7 @@ class AIAgentIntegrationTest {
     }
 
     @ParameterizedTest
-    @MethodSource("openAIModels", "anthropicModels", "googleModels", "bedrockModels")
+    @MethodSource("openAIModels", "anthropicModels", "googleModels", "bedrockModels", "openRouterModels")
     fun integration_AIAgentShouldNotCallToolsByDefault(model: LLModel) = runTest {
         Models.assumeAvailable(model.provider)
         withRetry {
@@ -437,7 +435,7 @@ class AIAgentIntegrationTest {
     }
 
     @ParameterizedTest
-    @MethodSource("openAIModels", "anthropicModels", "googleModels", "bedrockModels")
+    @MethodSource("openAIModels", "anthropicModels", "googleModels", "bedrockModels", "openRouterModels")
     fun integration_AIAgentShouldCallCustomTool(model: LLModel) = runTest {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
@@ -464,40 +462,6 @@ class AIAgentIntegrationTest {
             assertTrue(
                 actualToolCalls.contains(CalculatorTool.name),
                 "The ${CalculatorTool.name} tool was not called for model $model"
-            )
-        }
-    }
-
-    @Test
-    fun integration_BedrockNovaAgentShouldCallTools() = runTest {
-        val model = BedrockModels.AmazonNovaLite
-
-        Models.assumeAvailable(model.provider)
-        assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
-
-        val toolRegistry = ToolRegistry {
-            tool(CalculatorTool)
-        }
-
-        withRetry {
-            val executor = getExecutor(model)
-
-            val agent = AIAgent(
-                promptExecutor = executor,
-                systemPrompt = systemPrompt + "You MUST use tools.",
-                llmModel = model,
-                strategy = singleRunStrategy(ToolCalls.PARALLEL),
-                temperature = 1.0,
-                toolRegistry = toolRegistry,
-                maxIterations = 10,
-                installFeatures = { install(EventHandler.Feature, eventHandlerConfig) },
-            )
-
-            agent.run("How much is 3 times 5?")
-            assertTrue(actualToolCalls.isNotEmpty(), "No tools were called for Bedrock Nova model $model")
-            assertTrue(
-                actualToolCalls.contains(CalculatorTool.name),
-                "The ${CalculatorTool.name} tool was not called for Bedrock Nova model $model"
             )
         }
     }
@@ -554,7 +518,7 @@ class AIAgentIntegrationTest {
     }
 
     @ParameterizedTest
-    @MethodSource("openAIModels", "anthropicModels", "googleModels", "bedrockModels")
+    @MethodSource("openAIModels", "anthropicModels", "googleModels", "bedrockModels", "openRouterModels")
     fun integration_testRequestLLMWithoutToolsTest(model: LLModel) = runTest(timeout = 180.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
@@ -597,7 +561,7 @@ class AIAgentIntegrationTest {
     }
 
     @ParameterizedTest
-    @MethodSource("openAIModels", "anthropicModels", "googleModels", "bedrockModels")
+    @MethodSource("openAIModels", "anthropicModels", "googleModels", "bedrockModels", "openRouterModels")
     fun integration_AIAgentSingleRunWithSequentialToolsTest(model: LLModel) = runTest(timeout = 300.seconds) {
         runMultipleToolsTest(model, ToolCalls.SEQUENTIAL)
     }
@@ -620,7 +584,7 @@ class AIAgentIntegrationTest {
     }
 
     @ParameterizedTest
-    @MethodSource("openAIModels", "anthropicModels", "googleModels", "bedrockModels")
+    @MethodSource("openAIModels", "anthropicModels", "googleModels", "bedrockModels", "openRouterModels")
     fun integration_AIAgentSingleRunNoParallelToolsTest(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
@@ -718,7 +682,7 @@ class AIAgentIntegrationTest {
     }
 
     @ParameterizedTest
-    @MethodSource("openAIModels", "anthropicModels", "googleModels", "bedrockModels")
+    @MethodSource("openAIModels", "anthropicModels", "googleModels", "bedrockModels", "openRouterModels")
     fun integration_AgentCreateAndRestoreTest(model: LLModel) = runTest(timeout = 180.seconds) {
         val checkpointStorageProvider = InMemoryPersistenceStorageProvider()
         val sayHello = "Hello World!"
@@ -806,7 +770,7 @@ class AIAgentIntegrationTest {
     }
 
     @ParameterizedTest
-    @MethodSource("openAIModels", "anthropicModels", "googleModels", "bedrockModels")
+    @MethodSource("openAIModels", "anthropicModels", "googleModels", "bedrockModels", "openRouterModels")
     fun integration_AgentCheckpointRollbackTest(model: LLModel) = runTest(timeout = 180.seconds) {
         val checkpointStorageProvider = InMemoryPersistenceStorageProvider()
 
@@ -921,7 +885,7 @@ class AIAgentIntegrationTest {
     }
 
     @ParameterizedTest
-    @MethodSource("openAIModels", "anthropicModels", "googleModels", "bedrockModels")
+    @MethodSource("openAIModels", "anthropicModels", "googleModels", "bedrockModels", "openRouterModels")
     fun integration_AgentCheckpointContinuousPersistenceTest(model: LLModel) = runTest(timeout = 180.seconds) {
         val checkpointStorageProvider =
             InMemoryPersistenceStorageProvider()
@@ -995,7 +959,7 @@ class AIAgentIntegrationTest {
     }
 
     @ParameterizedTest
-    @MethodSource("openAIModels", "anthropicModels", "googleModels", "bedrockModels")
+    @MethodSource("openAIModels", "anthropicModels", "googleModels", "bedrockModels", "openRouterModels")
     fun integration_AgentCheckpointStorageProvidersTest(model: LLModel) = runTest(timeout = 180.seconds) {
         val strategyName = "storage-providers-strategy"
 
@@ -1062,7 +1026,7 @@ class AIAgentIntegrationTest {
     }
 
     @ParameterizedTest
-    @MethodSource("openAIModels", "anthropicModels", "googleModels", "bedrockModels")
+    @MethodSource("openAIModels", "anthropicModels", "googleModels", "bedrockModels", "openRouterModels")
     fun integration_AgentWithToolsWithoutParamsTest(model: LLModel) = runTest(timeout = 180.seconds) {
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
         val flakyModels = listOf(
@@ -1117,7 +1081,7 @@ class AIAgentIntegrationTest {
     }
 
     @ParameterizedTest
-    @MethodSource("openAIModels", "anthropicModels", "googleModels", "bedrockModels")
+    @MethodSource("openAIModels", "anthropicModels", "googleModels", "bedrockModels", "openRouterModels")
     fun integration_ParallelNodesExecutionTest(model: LLModel) = runTest(timeout = 180.seconds) {
         Models.assumeAvailable(model.provider)
 
@@ -1192,7 +1156,7 @@ class AIAgentIntegrationTest {
     }
 
     @ParameterizedTest
-    @MethodSource("openAIModels", "anthropicModels", "googleModels", "bedrockModels")
+    @MethodSource("openAIModels", "anthropicModels", "googleModels", "bedrockModels", "openRouterModels")
     fun integration_ParallelNodesWithSelectionTest(model: LLModel) = runTest(timeout = 180.seconds) {
         Models.assumeAvailable(model.provider)
 
