@@ -4,19 +4,8 @@ The A2A server enables you to expose AI agents through the standardized A2A (Age
 
 ## Overview
 
-The A2A server acts as a bridge between the A2A protocol transport layer and your custom agent logic. It orchestrates the entire request lifecycle while maintaining protocol compliance and providing robust session management.
-
-### Key Features
-
-- **Protocol Compliance**: Full implementation of A2A protocol v0.3.0 with automatic validation
-- **Request Processing**: Handles all A2A operations (messages, tasks, push notifications) via clean `RequestHandler` interface
-- **Agent Execution**: Delegates business logic to your custom `AgentExecutor` implementation with rich context
-- **Task Management**: Complete task lifecycle management with state tracking, persistence, and history
-- **Streaming Support**: Optional Server-Sent Events (SSE) for real-time partial results and updates
-- **Push Notifications**: Asynchronous webhook notifications for long-running task updates
-- **Security Ready**: Built-in support for authentication schemes, with extensible authorization patterns
-- **Storage Abstractions**: Pluggable storage backends for tasks, messages, and push configurations
-- **Session Management**: Sophisticated session handling with proper cleanup and concurrency control
+The A2A server acts as a bridge between the A2A protocol transport layer and your custom agent logic. 
+It orchestrates the entire request lifecycle while maintaining protocol compliance and providing robust session management.
 
 ## Core Components
 
@@ -226,6 +215,15 @@ transport.start(
 )
 ```
 
+### Storage
+
+The A2A server uses a pluggable storage architecture that separates different types of data.
+All storage implementations are optional and default to in-memory variants for development.
+
+- **TaskStorage**: Task lifecycle management - stores and manages task states, history, and artifacts
+- **MessageStorage**: Conversation history - manages message history within conversation contexts
+- **PushNotificationConfigStorage**: Webhook management - manages webhook configurations for asynchronous notifications
+
 ## Quick Start
 
 ### 1. Create an AgentExecutor
@@ -348,12 +346,3 @@ class TaskAgentExecutor : AgentExecutor {
     }
 }
 ```
-
-### Storage
-
-The A2A server uses a pluggable storage architecture that separates different types of data. 
-All storage implementations are optional and default to in-memory variants for development.
-
-- **TaskStorage**: Task lifecycle management - stores and manages task states, history, and artifacts
-- **MessageStorage**: Conversation history - manages message history within conversation contexts
-- **PushNotificationConfigStorage**: Webhook management - manages webhook configurations for asynchronous notifications

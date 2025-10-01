@@ -1,49 +1,104 @@
 # A2A Client
 
-The A2A client enables you to communicate with A2A-compliant agents over the network. It handles connection management, agent discovery, message exchange, and task operations.
+The A2A client enables you to communicate with A2A-compliant agents over the network. 
+It provides a complete implementation of the [A2A protocol specification](https://a2a-protocol.org/latest/specification/), handling agent discovery, message exchange, task management, and real-time streaming responses.
 
 ## Overview
 
-The A2A client implements the [A2A protocol specification](https://a2a-protocol.org/latest/specification/) and provides:
-
-- **Agent Discovery**: Retrieves and caches AgentCard metadata
-- **Message Exchange**: Send messages and receive responses
-- **Task Management**: Query, cancel, and monitor tasks
-- **Streaming Support**: Receive partial results in real-time
-- **Push Notifications**: Configure webhook callbacks for updates
+The A2A client acts as a bridge between your application and A2A-compliant agents. 
+It orchestrates the entire communication lifecycle while maintaining protocol compliance and providing robust session management.
 
 ## Core Components
 
 ### A2AClient
 
-Main client class for A2A protocol operations:
+The main client class implementing the complete A2A protocol. It serves as the central coordinator that:
+
+- **Manages** connections and agent discovery through pluggable resolvers
+- **Orchestrates** message exchange and task operations with automatic protocol compliance
+- **Handles** streaming responses and real-time communication when supported by agents
+- **Provides** comprehensive error handling and fallback mechanisms for robust applications
 
 ```kotlin
 class A2AClient(
-    private val transport: ClientTransport,
-    private val agentCardResolver: AgentCardResolver
+    private val transport: ClientTransport,        // Network communication layer
+    private val agentCardResolver: AgentCardResolver  // Agent discovery and metadata retrieval
 ) {
+    /**
+     * Connect to the agent and retrieve its capabilities.
+     * This discovers what the agent can do and caches the AgentCard.
+     */
     suspend fun connect(): AgentCard
+
+    /**
+     * Send a message to the agent and receive a single response.
+     * Use this for simple request-response patterns.
+     */
     suspend fun sendMessage(request: Request<MessageSendParams>): Response<CommunicationEvent>
+
+    /**
+     * Send a message with streaming support for real-time responses.
+     * Returns a Flow of events including partial messages and task updates.
+     */
     fun sendMessageStreaming(request: Request<MessageSendParams>): Flow<Response<Event>>
+
+    /**
+     * Query the status and details of a specific task.
+     */
     suspend fun getTask(request: Request<TaskQueryParams>): Response<Task>
+
+    /**
+     * Cancel a running task if the agent supports cancellation.
+     */
     suspend fun cancelTask(request: Request<TaskIdParams>): Response<Task>
+
+    /**
+     * Get the cached agent card without making a network request.
+     * Returns null if connect() hasn't been called yet.
+     */
+    fun cachedAgentCard(): AgentCard?
 }
 ```
 
 ### ClientTransport
 
-Handles the actual network communication:
+The `ClientTransport` interface handles the low-level network communication while the A2A client manages the protocol logic. 
+It abstracts away transport-specific details, allowing you to use different protocols seamlessly.
 
-- **HttpJSONRPCClientTransport**: HTTP JSON-RPC transport
-- **Custom transports**: Implement `ClientTransport` interface
+#### HTTP JSON-RPC Transport
+
+The most common transport for A2A agents:
+
+```kotlin
+val transport = HttpJSONRPCClientTransport(
+    url = "https://agent.example.com/a2a",        // Agent endpoint URL
+    httpClient = HttpClient(CIO) {                // Optional: custom HTTP client
+        install(ContentNegotiation) {
+            json()
+        }
+        install(HttpTimeout) {
+            requestTimeoutMillis = 30000
+        }
+    }
+)
+```
 
 ### AgentCardResolver
 
-Retrieves agent metadata:
+The `AgentCardResolver` interface retrieves agent metadata and capabilities. It enables agent discovery from various sources and supports caching strategies for optimal performance.
 
-- **UrlAgentCardResolver**: Fetch from HTTP endpoint
-- **Custom resolvers**: Implement `AgentCardResolver` interface
+#### URL Agent Card Resolver
+
+Fetch agent cards from HTTP endpoints following A2A conventions:
+
+```kotlin
+val agentCardResolver = UrlAgentCardResolver(
+    baseUrl = "https://agent.example.com",           // Base URL of the agent service
+    path = "/.well-known/agent-card.json",           // Standard agent card location
+    httpClient = HttpClient(CIO),                    // Optional: custom HTTP client
+    authenticatedPath = "/.well-known/agent-card-extended.json"  // Optional: extended card for authenticated users
+)
+```
 
 ## Quick Start
 
@@ -97,7 +152,7 @@ when (val event = response.data) {
 }
 ```
 
-## Usage Patterns
+## Client Implementation Patterns
 
 ### Streaming Responses
 
@@ -144,144 +199,97 @@ if (task.status.state == TaskState.Working) {
 }
 ```
 
-### Push Notifications
+### Simple Chat Client
 
 ```kotlin
-// Configure webhooks for task updates
-if (client.cachedAgentCard()?.capabilities?.pushNotifications == true) {
-    val config = TaskPushNotificationConfig(
-        taskId = "task-123",
-        endpoint = "https://myapp.com/webhooks/task-updates",
-        events = listOf("status-update", "message"),
-        headers = mapOf("Authorization" to "Bearer my-webhook-token")
-    )
+class SimpleChatClient : AgentChatClient {
+    override suspend fun execute(
+        client: A2AClient,
+        userInput: String
+    ) {
+        val message = Message(
+            messageId = UUID.randomUUID().toString(),
+            role = Role.User,
+            parts = listOf(TextPart(userInput)),
+            contextId = "chat-session-${UUID.randomUUID()}"
+        )
 
-    val request = Request(data = config)
-    client.setTaskPushNotificationConfig(request)
-}
-```
+        val request = Request(data = MessageSendParams(message))
 
-### Error Handling
-
-```kotlin
-try {
-    val response = client.sendMessage(request)
-    // Process response
-} catch (e: A2AUnsupportedOperationException) {
-    println("Agent doesn't support this operation")
-} catch (e: A2AInvalidParamsException) {
-    println("Invalid request parameters: ${e.message}")
-} catch (e: A2AException) {
-    println("A2A protocol error: ${e.message}")
-} catch (e: Exception) {
-    println("Network error: ${e.message}")
-}
-```
-
-## Advanced Configuration
-
-### Authentication
-
-```kotlin
-// Add authentication headers
-val authContext = ClientCallContext(
-    additionalHeaders = mapOf(
-        "Authorization" to listOf("Bearer your-jwt-token")
-    )
-)
-
-val response = client.sendMessage(request, authContext)
-```
-
-### Custom Transport
-
-```kotlin
-class WebSocketClientTransport(private val url: String) : ClientTransport {
-    override suspend fun sendMessage(
-        request: Request<MessageSendParams>,
-        ctx: ClientCallContext
-    ): Response<CommunicationEvent> {
-        // WebSocket implementation
-    }
-
-    // Implement other required methods
-}
-
-val client = A2AClient(
-    transport = WebSocketClientTransport("wss://agent.example.com"),
-    agentCardResolver = myResolver
-)
-```
-
-### Custom Agent Card Resolver
-
-```kotlin
-class DatabaseAgentCardResolver(private val agentId: String) : AgentCardResolver {
-    override suspend fun resolve(): AgentCard {
-        // Load from database, cache, service registry, etc.
-        return myDatabase.getAgentCard(agentId)
-    }
-}
-
-val client = A2AClient(
-    transport = transport,
-    agentCardResolver = DatabaseAgentCardResolver("agent-123")
-)
-```
-
-## Complete Example
-
-```kotlin
-suspend fun chatWithAgent() {
-    val transport = HttpJSONRPCClientTransport("https://agent.example.com/a2a")
-    val resolver = UrlAgentCardResolver(
-        baseUrl = "https://agent.example.com",
-        path = "/.well-known/agent-card.json"
-    )
-
-    val client = A2AClient(transport, resolver)
-
-    // Connect and get capabilities
-    val agentCard = client.connect()
-    println("Connected to: ${agentCard.name}")
-
-    // Send message
-    val message = Message(
-        messageId = UUID.randomUUID().toString(),
-        role = Role.User,
-        parts = listOf(TextPart("What can you do?")),
-        contextId = "demo-conversation"
-    )
-
-    val request = Request(data = MessageSendParams(message))
-
-    try {
-        if (agentCard.capabilities.streaming) {
-            // Handle streaming response
-            client.sendMessageStreaming(request).collect { response ->
-                when (val event = response.data) {
-                    is Message -> {
-                        val text = event.parts
-                            .filterIsInstance<TextPart>()
-                            .joinToString { it.text }
-                        print(text)
-                    }
-                }
+        // Send message and receive response
+        val response = client.sendMessage(request)
+        when (val event = response.data) {
+            is Message -> {
+                val text = event.parts
+                    .filterIsInstance<TextPart>()
+                    .joinToString { it.text }
+                println("Agent: $text")
             }
-        } else {
-            // Handle single response
-            val response = client.sendMessage(request)
-            when (val event = response.data) {
-                is Message -> {
-                    val text = event.parts
-                        .filterIsInstance<TextPart>()
-                        .joinToString { it.text }
-                    println("Agent: $text")
-                }
+            is TaskEvent -> {
+                println("Task ${event.taskId} started: ${event.status.state}")
             }
         }
-    } catch (e: A2AException) {
-        println("Error: ${e.message}")
+    }
+}
+```
+
+### Task-Based Client
+
+```kotlin
+class TaskBasedClient : AgentTaskClient {
+    override suspend fun execute(
+        client: A2AClient,
+        taskDescription: String,
+        contextId: String
+    ) {
+        val message = Message(
+            messageId = UUID.randomUUID().toString(),
+            role = Role.User,
+            parts = listOf(TextPart(taskDescription)),
+            contextId = contextId
+        )
+
+        val request = Request(data = MessageSendParams(message))
+
+        // Send initial request and handle task creation
+        when (val event = client.sendMessage(request).data) {
+            is TaskEvent -> {
+                println("Task ${event.taskId} created: ${event.status.state}")
+
+                // Monitor task progress
+                monitorTask(client, event.taskId)
+            }
+            is Message -> {
+                val text = event.parts
+                    .filterIsInstance<TextPart>()
+                    .joinToString { it.text }
+                println("Immediate response: $text")
+            }
+        }
+    }
+
+    private suspend fun monitorTask(client: A2AClient, taskId: String) {
+        var taskCompleted = false
+
+        while (!taskCompleted) {
+            val taskRequest = Request(data = TaskQueryParams(taskId = taskId))
+            val task = client.getTask(taskRequest).data
+
+            println("Task status: ${task.status.state}")
+
+            when (task.status.state) {
+                TaskState.Completed, TaskState.Failed, TaskState.Cancelled -> {
+                    taskCompleted = true
+                    if (task.status.message != null) {
+                        val text = task.status.message.parts
+                            .filterIsInstance<TextPart>()
+                            .joinToString { it.text }
+                        println("Final result: $text")
+                    }
+                }
+                else -> delay(1000) // Poll every second
+            }
+        }
     }
 }
 ```
