@@ -3,14 +3,13 @@
 
 Functional agents are lightweight AI agents that operate without building complex strategy graphs.
 Instead, the agent logic is implemented as a lambda function that handles user input, interacts with an LLM,
-optionally calls tools, and produces a final output. It can perform a single LLM call,
-manage multiple LLM calls in a sequence, or repeat in a loop when needed based on user input and LLM and tool outputs.
-
-This page guides you through the steps necessary to create a minimal functional agent and extend it with tools.
+optionally calls tools, and produces a final output. It can perform a single LLM call, process multiple LLM calls in sequence, or loop based on user input, as well as LLM and tool outputs.
 
 !!! tip
-    - If you are new to Koog and want to create the simplest agent, start with [Single-run agents](single-run-agents.md).
-    - If you want to create an agent with complex strategy graphs, check [Complex workflow agents](complex-workflow-agents.md).
+    - If you already have a simple [single-run agent](single-run-agents.md) as your first MVP, but run into task-specific limitations, use a functional agent to prototype custom logic. You can implement custom control flows in plain Kotlin while still using most Koog features, including history compression and automatic state management.
+    - For production-grade needs, refactor your functional agent into a [complex workflow agent](complex-workflow-agents.md) with strategy graphs. This provides persistence with controllable rollbacks for fault-tolerance and advanced OpenTelemetry tracing with nested graph events.
+
+This page guides you through the steps necessary to create a minimal functional agent and extend it with tools.
 
 ## Prerequisites
 
