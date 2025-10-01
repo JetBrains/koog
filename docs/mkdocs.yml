@@ -24,11 +24,10 @@ nav:
       - History compression: history-compression.md
       - Model Context Protocol: model-context-protocol.md
       - A2A Protocol:
-          - Overview: a2a-protocol.md
-          - A2A client implementation: a2a-client-implementation.md
-          - A2A server implementation: a2a-server-implementation.md
-          - Agent Cards: a2a-agent-cards.md
-          - Messages, Tasks, and Artifacts: a2a-messages-tasks-artifacts.md
+          - Overview: a2a-protocol-overview.md
+          - A2A server implementation: a2a-server.md
+          - A2A client implementation: a2a-client.md
+          - A2A and Koog integration: a2a-koog-integration.md
       - Model capabilities: model-capabilities.md
       - Content moderation: content-moderation.md
       - Backend framework integrations:
@@ -126,11 +125,10 @@ plugins:
         Model Context Protocol:
           - model-context-protocol.md: This page provides details about Koog integration with MCP servers, which allows you to incorporate MCP tools into your Koog agents.
         A2A Protocol:
-          - a2a-protocol.md: This page provides an overview of the A2A (Agent-to-Agent) protocol implementation in the Koog agentic framework.
-          - a2a-client-implementation.md: This page provides details about the A2A client implementation in the Koog agentic framework. The A2A client is responsible for sending requests to A2A servers according to the A2A protocol specification.
-          - a2a-server-implementation.md: This page provides details about the A2A server implementation in the Koog agentic framework. The A2A server is responsible for handling requests from A2A clients according to the A2A protocol specification.
-          - a2a-agent-cards.md: This page provides details about the implementation of Agent Cards in Koog. Agent Cards are metadata documents that describe an agent's capabilities, identity, and interface.
-          - a2a-messages-tasks-artifacts.md: This page provides details about the core concepts of the A2A protocol implementation in the Koog agentic framework. The concepts are Messages, Tasks, Artifacts, and Parts.
+          - a2a-protocol-overview.md: This page provides an overview of the A2A (Agent-to-Agent) protocol implementation in the Koog agentic framework.
+          - a2a-server.md: This page provides details about the A2A server implementation in the Koog agentic framework. The A2A server is responsible for handling requests from A2A clients according to the A2A protocol specification.
+          - a2a-client.md: This page provides details about the A2A client implementation in the Koog agentic framework. The A2A client is responsible for sending requests to A2A servers according to the A2A protocol specification.
+          - a2a-koog-integration.md: This page provides details about the integration of A2A with Koog agents. It includes information about how to define your agent as A2A server and connect it to the Koog agent system.
         Model capabilities:
           - model-capabilities.md: This page provides an overview of different features or parameters that the models support, referred to as model capabilities.
         Content moderation:
