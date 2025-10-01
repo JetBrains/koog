@@ -35,7 +35,7 @@ import io.github.oshai.kotlinlogging.KLogger
  *         addMessageProcessor(TraceFeatureMessageLogWriter(
  *             targetLogger = logger,
  *             format = { message ->
- *                 "[TRACE] ${message.eventId}: ${message::class.simpleName}"
+ *                 "[TRACE] ${message::class.simpleName}"
  *             }
  *         ))
  *     }

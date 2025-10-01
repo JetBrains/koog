@@ -41,17 +41,17 @@ fun main(): Unit = runBlocking {
         toolRegistry = toolRegistry
     ) {
         handleEvents {
-            onToolCall { eventContext ->
+            onToolCallStarting { eventContext ->
                 println("Tool called: tool ${eventContext.tool.name}, args ${eventContext.toolArgs}")
             }
 
-            onAgentRunError { eventContext ->
+            onAgentExecutionFailed { eventContext ->
                 println(
                     "An error occurred: ${eventContext.throwable.message}\n${eventContext.throwable.stackTraceToString()}"
                 )
             }
 
-            onAgentFinished { eventContext ->
+            onAgentCompleted { eventContext ->
                 println("Result: ${eventContext.result}")
             }
         }

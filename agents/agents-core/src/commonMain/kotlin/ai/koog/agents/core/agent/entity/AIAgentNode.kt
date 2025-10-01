@@ -119,7 +119,6 @@ public abstract class AIAgentNodeBase<TInput, TOutput> internal constructor() {
     /**
      * Executes the node operation using the provided execution context and input, bypassing type safety checks.
      * This method internally calls the type-safe `execute` method after casting the input.
-     * The lifecycle hooks `onBeforeNode` and `onAfterNode` are invoked before and after the execution respectively.
      *
      * @param context The execution context that provides runtime information and functionality.
      * @param input The input data to be processed by the node, which may be of any type.

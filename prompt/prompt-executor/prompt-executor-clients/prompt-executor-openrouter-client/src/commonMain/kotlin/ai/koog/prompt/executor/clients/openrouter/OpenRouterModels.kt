@@ -16,11 +16,18 @@ public object OpenRouterModels : LLModelDefinitions {
      */
     private val standardCapabilities: List<LLMCapability> = listOf(
         LLMCapability.Temperature,
-        LLMCapability.Schema.JSON.Standard,
         LLMCapability.Speculation,
         LLMCapability.Tools,
-        LLMCapability.ToolChoice,
         LLMCapability.Completion
+    )
+
+    /**
+     * Additional capabilities available for models out of the Claude family.
+     * Includes structured output support and tool choice.
+     */
+    private val additionalStandardCapabilities: List<LLMCapability> = listOf(
+        LLMCapability.Schema.JSON.Standard,
+        LLMCapability.ToolChoice
     )
 
     /**
@@ -139,7 +146,7 @@ public object OpenRouterModels : LLModelDefinitions {
     public val GPT4oMini: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "openai/gpt-4o-mini",
-        capabilities = multimodalCapabilities,
+        capabilities = multimodalCapabilities + additionalStandardCapabilities,
         contextLength = 128_000,
         maxOutputTokens = 16_400,
     )
@@ -152,7 +159,7 @@ public object OpenRouterModels : LLModelDefinitions {
     public val GPT5Chat: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "openai/gpt-5-chat",
-        capabilities = multimodalCapabilities,
+        capabilities = multimodalCapabilities + additionalStandardCapabilities,
         contextLength = 400_000,
         maxOutputTokens = 128_000,
     )
@@ -167,7 +174,7 @@ public object OpenRouterModels : LLModelDefinitions {
     public val GPT5: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "openai/gpt-5",
-        capabilities = standardCapabilities,
+        capabilities = standardCapabilities + additionalStandardCapabilities,
         contextLength = 400_000,
     )
 
@@ -181,7 +188,7 @@ public object OpenRouterModels : LLModelDefinitions {
     public val GPT5Mini: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "openai/gpt-5-mini",
-        capabilities = standardCapabilities,
+        capabilities = standardCapabilities + additionalStandardCapabilities,
         contextLength = 400_000,
     )
 
@@ -195,7 +202,7 @@ public object OpenRouterModels : LLModelDefinitions {
     public val GPT5Nano: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "openai/gpt-5-nano",
-        capabilities = standardCapabilities,
+        capabilities = standardCapabilities + additionalStandardCapabilities,
         contextLength = 400_000,
     )
 
@@ -209,7 +216,7 @@ public object OpenRouterModels : LLModelDefinitions {
     public val GPT_OSS_120b: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "openai/gpt-oss-120b",
-        capabilities = standardCapabilities,
+        capabilities = standardCapabilities + additionalStandardCapabilities,
         contextLength = 400_000,
     )
 
@@ -223,7 +230,7 @@ public object OpenRouterModels : LLModelDefinitions {
     public val GPT4: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "openai/gpt-4",
-        capabilities = standardCapabilities,
+        capabilities = standardCapabilities + additionalStandardCapabilities,
         contextLength = 32_768,
     )
 
@@ -234,7 +241,7 @@ public object OpenRouterModels : LLModelDefinitions {
     public val GPT4o: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "openai/gpt-4o",
-        capabilities = multimodalCapabilities,
+        capabilities = multimodalCapabilities + additionalStandardCapabilities,
         contextLength = 128_000,
     )
 
@@ -248,7 +255,7 @@ public object OpenRouterModels : LLModelDefinitions {
     public val GPT4Turbo: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "openai/gpt-4-turbo",
-        capabilities = multimodalCapabilities,
+        capabilities = multimodalCapabilities + additionalStandardCapabilities,
         contextLength = 128_000,
     )
 
@@ -261,7 +268,7 @@ public object OpenRouterModels : LLModelDefinitions {
     public val GPT35Turbo: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "openai/gpt-3.5-turbo",
-        capabilities = standardCapabilities,
+        capabilities = standardCapabilities + additionalStandardCapabilities,
         contextLength = 16_385,
     )
 
@@ -275,7 +282,7 @@ public object OpenRouterModels : LLModelDefinitions {
     public val Llama3: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "meta/llama-3-70b",
-        capabilities = standardCapabilities,
+        capabilities = standardCapabilities + additionalStandardCapabilities,
         contextLength = 8_000,
     )
 
@@ -288,7 +295,7 @@ public object OpenRouterModels : LLModelDefinitions {
     public val Llama3Instruct: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "meta/llama-3-70b-instruct",
-        capabilities = standardCapabilities,
+        capabilities = standardCapabilities + additionalStandardCapabilities,
         contextLength = 8_000,
     )
 
@@ -303,7 +310,7 @@ public object OpenRouterModels : LLModelDefinitions {
     public val Mistral7B: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "mistral/mistral-7b",
-        capabilities = standardCapabilities,
+        capabilities = standardCapabilities + additionalStandardCapabilities,
         contextLength = 32_768,
     )
 
@@ -319,7 +326,7 @@ public object OpenRouterModels : LLModelDefinitions {
     public val Mixtral8x7B: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "mistral/mixtral-8x7b",
-        capabilities = standardCapabilities,
+        capabilities = standardCapabilities + additionalStandardCapabilities,
         contextLength = 32_768,
     )
 
@@ -375,7 +382,7 @@ public object OpenRouterModels : LLModelDefinitions {
     public val DeepSeekV30324: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "deepseek/deepseek-chat-v3-0324",
-        capabilities = standardCapabilities,
+        capabilities = standardCapabilities + additionalStandardCapabilities,
         contextLength = 163_800,
         maxOutputTokens = 163_800,
     )
@@ -387,7 +394,7 @@ public object OpenRouterModels : LLModelDefinitions {
     public val Gemini2_5FlashLite: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "google/gemini-2.5-flash-lite",
-        capabilities = multimodalCapabilities,
+        capabilities = multimodalCapabilities + additionalStandardCapabilities,
         contextLength = 1_048_576,
         maxOutputTokens = 65_600,
     )
@@ -399,7 +406,7 @@ public object OpenRouterModels : LLModelDefinitions {
     public val Gemini2_5Flash: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "google/gemini-2.5-flash",
-        capabilities = multimodalCapabilities,
+        capabilities = multimodalCapabilities + additionalStandardCapabilities,
         contextLength = 1_048_576,
         maxOutputTokens = 65_600,
     )
@@ -411,7 +418,7 @@ public object OpenRouterModels : LLModelDefinitions {
     public val Gemini2_5Pro: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "google/gemini-2.5-pro",
-        capabilities = multimodalCapabilities,
+        capabilities = multimodalCapabilities + additionalStandardCapabilities,
         contextLength = 1_048_576,
         maxOutputTokens = 65_600,
     )

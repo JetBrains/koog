@@ -7,7 +7,7 @@ import ai.koog.agents.core.tools.Tool
 /**
  * Represents the context for handling tool-specific events within the framework.
  */
-public interface ToolExecutionEventContext : AgentLifecycleEventContext
+public interface ToolCallEventContext : AgentLifecycleEventContext
 
 /**
  * Represents the context for handling a tool call event.
@@ -15,13 +15,13 @@ public interface ToolExecutionEventContext : AgentLifecycleEventContext
  * @property tool The tool instance that is being executed. It encapsulates the logic and metadata for the operation.
  * @property toolArgs The arguments provided for the tool execution, adhering to the tool's expected input structure.
  */
-public data class ToolExecutionStartingContext(
+public data class ToolCallStartingContext(
     val runId: String,
     val toolCallId: String?,
     val tool: Tool<*, *>,
     val toolArgs: Any?
-) : ToolExecutionEventContext {
-    override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.ToolExecutionStarting
+) : ToolCallEventContext {
+    override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.ToolCallStarting
 }
 
 /**
@@ -37,7 +37,7 @@ public data class ToolValidationFailedContext(
     val tool: Tool<*, *>,
     val toolArgs: Any?,
     val error: String
-) : ToolExecutionEventContext {
+) : ToolCallEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.ToolValidationFailed
 }
 
@@ -48,14 +48,14 @@ public data class ToolValidationFailedContext(
  * @param toolArgs The arguments that were passed to the tool during execution.
  * @param throwable The exception or error that caused the failure.
  */
-public data class ToolExecutionFailedContext(
+public data class ToolCallFailedContext(
     val runId: String,
     val toolCallId: String?,
     val tool: Tool<*, *>,
     val toolArgs: Any?,
     val throwable: Throwable
-) : ToolExecutionEventContext {
-    override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.ToolExecutionFailed
+) : ToolCallEventContext {
+    override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.ToolCallFailed
 }
 
 /**
@@ -65,12 +65,12 @@ public data class ToolExecutionFailedContext(
  * @param toolArgs The arguments required by the tool for execution.
  * @param result An optional result produced by the tool after execution can be null if not applicable.
  */
-public data class ToolExecutionCompletedContext(
+public data class ToolCallCompletedContext(
     val runId: String,
     val toolCallId: String?,
     val tool: Tool<*, *>,
     val toolArgs: Any?,
     val result: Any?
-) : ToolExecutionEventContext {
-    override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.ToolExecutionCompleted
+) : ToolCallEventContext {
+    override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.ToolCallCompleted
 }

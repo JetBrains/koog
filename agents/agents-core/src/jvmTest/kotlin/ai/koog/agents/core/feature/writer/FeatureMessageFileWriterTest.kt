@@ -38,7 +38,7 @@ class FeatureMessageFileWriterTest {
 
         override fun FeatureMessage.toFileString(): String {
             return when (this) {
-                is TestFeatureEventMessage -> "[${this.messageType.value}] ${this.eventId}"
+                is TestFeatureEventMessage -> "[${this.messageType.value}] ${this.testMessage}"
                 is FeatureStringMessage -> "[${this.messageType.value}] ${this.message}"
                 else -> "UNDEFINED"
             }
@@ -117,15 +117,15 @@ class FeatureMessageFileWriterTest {
         TestFeatureMessageFileWriter(tempDir).use { writer ->
             writer.initialize()
 
-            val stringMessage = FeatureStringMessage("Test message")
-            val eventMessage = TestFeatureEventMessage("Test event")
+            val stringMessage = FeatureStringMessage(message = "Test message")
+            val eventMessage = TestFeatureEventMessage(testMessage = "Test event")
 
             writer.onMessage(stringMessage)
             writer.onMessage(eventMessage)
 
             val expectedContent = listOf(
                 "[${stringMessage.messageType.value}] ${stringMessage.message}",
-                "[${eventMessage.messageType.value}] ${eventMessage.eventId}"
+                "[${eventMessage.messageType.value}] ${eventMessage.testMessage}"
             )
 
             val actualContent = writer.targetPath.readLines()

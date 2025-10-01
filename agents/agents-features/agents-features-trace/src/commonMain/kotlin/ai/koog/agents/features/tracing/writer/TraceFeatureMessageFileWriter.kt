@@ -30,7 +30,7 @@ import kotlinx.io.Sink
  *             sinkOpener = fileSystem::sink,
  *             targetPath = "custom-traces.log",
  *             format = { message ->
- *                 "[TRACE] ${message.eventId}: ${message::class.simpleName}"
+ *                 "[TRACE] ${message::class.simpleName}"
  *             }
  *         ))
  *     }
