@@ -36,20 +36,21 @@ import org.springframework.context.annotation.PropertySource
 @EnableConfigurationProperties(
     OllamaKoogProperties::class,
 )
-@ConditionalOnProperty(prefix = OllamaKoogProperties.PREFIX, name = ["enabled"], havingValue = "true")
 public class OllamaLLMAutoConfiguration(
     private val properties: OllamaKoogProperties
 ) {
 
     /**
-     * Creates and configures an instance of [OllamaClient] using the base URL from the provided properties.
+     * Creates an [OllamaClient] bean configured with application properties.
      *
-     * This client is used to communicate with the Ollama LLM service and is a prerequisite
-     * for executing prompts and other interactions with the service.
+     * This method initializes a [OllamaClient] using the API key and base URL
+     * specified in the application's configuration. It is only executed if the
+     * `koog.ai.ollama.enabled` property is set to `true` in the application configuration.
      *
-     * @return an [OllamaClient] configured with the base URL extracted from the application's properties.
+     * @return An [OllamaClient] instance configured with the provided settings.
      */
     @Bean
+    @ConditionalOnProperty(prefix = OllamaKoogProperties.PREFIX, name = ["enabled"], havingValue = "true")
     public fun ollamaLLMClient(): OllamaClient {
         return OllamaClient(
             baseUrl = properties.baseUrl,

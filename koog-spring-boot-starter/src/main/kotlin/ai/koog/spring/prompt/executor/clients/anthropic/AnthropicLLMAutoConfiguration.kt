@@ -23,11 +23,11 @@ import org.springframework.context.annotation.PropertySource
  * - [AnthropicLLMClient]: Configured client for interacting with the Anthropic API.
  * - [SingleLLMPromptExecutor]: Prompt executor that utilizes the configured Anthropic client.
  *
- * To enable this configuration, the `ai.koog.anthropic.enabled` property must be set to `true` and a valid `api-key`
- * must be provided in the application's property files.
+ * To enable this configuration, the `ai.koog.anthropic.enabled` property must be set to `true`
+ * and a valid `ai.koog.anthropic.api-key` must be provided in the application's property files.
  *
- * This configuration reads additional properties from the `classpath:META-INF/config/koog/anthropic-llm.properties`
- * and binds them to the [AnthropicKoogProperties].
+ * This configuration reads additional properties imported via `spring.config.import` from the starter's
+ * application.properties file and binds them to the [AnthropicKoogProperties].
  *
  * @property properties Anthropic-specific configuration properties, automatically injected by Spring's
  *                      configuration properties mechanism.
@@ -37,8 +37,6 @@ import org.springframework.context.annotation.PropertySource
 @EnableConfigurationProperties(
     AnthropicKoogProperties::class,
 )
-@ConditionalOnProperty(prefix = AnthropicKoogProperties.PREFIX, name = ["enabled"], havingValue = "true")
-@ConditionalOnProperty(prefix = AnthropicKoogProperties.PREFIX, name = ["api-key"])
 public class AnthropicLLMAutoConfiguration(
     private val properties: AnthropicKoogProperties
 ) {
@@ -46,13 +44,18 @@ public class AnthropicLLMAutoConfiguration(
     private val logger = LoggerFactory.getLogger(AnthropicLLMAutoConfiguration::class.java)
 
     /**
-     * Creates and initializes an instance of [AnthropicLLMClient] with the specified API key and settings from the
-     * application properties. The client is configured to interact with the Anthropic LLM API using the provided
-     * base URL and credentials.
+     * Creates an [AnthropicLLMClient] bean configured with application properties.
      *
-     * @return An instance of [AnthropicLLMClient] configured for communication with the Anthropic API.
+     * This method initializes a [AnthropicLLMClient] using the API key and base URL
+     * specified in the application's configuration. It is only executed if the
+     * `koog.ai.anthropic.api-key` property is defined and `koog.ai.anthropic.enabled` property is set
+     * to `true` in the application configuration.
+     *
+     * @return An [AnthropicLLMClient] instance configured with the provided settings.
      */
     @Bean
+    @ConditionalOnProperty(prefix = AnthropicKoogProperties.PREFIX, name = ["enabled"], havingValue = "true")
+    @ConditionalOnProperty(prefix = AnthropicKoogProperties.PREFIX, name = ["api-key"])
     public fun anthropicLLMClient(): AnthropicLLMClient {
         logger.info("Initializing AnthropicLLMClient with: $properties")
         return AnthropicLLMClient(

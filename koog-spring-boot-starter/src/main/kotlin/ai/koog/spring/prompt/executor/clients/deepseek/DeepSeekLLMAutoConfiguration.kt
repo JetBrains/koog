@@ -41,13 +41,23 @@ import org.springframework.context.annotation.PropertySource
 @EnableConfigurationProperties(
     DeepSeekKoogProperties::class,
 )
-@ConditionalOnProperty(prefix = DeepSeekKoogProperties.PREFIX, name = ["api-key"])
-@ConditionalOnProperty(prefix = DeepSeekKoogProperties.PREFIX, name = ["enabled"], havingValue = "true")
 public class DeepSeekLLMAutoConfiguration(
     private val properties: DeepSeekKoogProperties
 ) {
 
+    /**
+     * Creates a [DeepSeekLLMClient] bean configured with application properties.
+     *
+     * This method initializes a [DeepSeekLLMClient] using the API key and base URL
+     * specified in the application's configuration. It is only executed if the
+     * `koog.ai.deepseek.api-key` property is defined and `koog.ai.deepseek.enabled` property is set
+     * to `true` in the application configuration.
+     *
+     * @return A [DeepSeekLLMClient] instance configured with the provided settings.
+     */
     @Bean
+    @ConditionalOnProperty(prefix = DeepSeekKoogProperties.PREFIX, name = ["api-key"])
+    @ConditionalOnProperty(prefix = DeepSeekKoogProperties.PREFIX, name = ["enabled"], havingValue = "true")
     public fun deepSeekLLMClient(): DeepSeekLLMClient {
         return DeepSeekLLMClient(
             apiKey = properties.apiKey,

@@ -38,19 +38,23 @@ import org.springframework.context.annotation.PropertySource
 @EnableConfigurationProperties(
     GoogleKoogProperties::class,
 )
-@ConditionalOnProperty(prefix = GoogleKoogProperties.PREFIX, name = ["api-key"])
-@ConditionalOnProperty(prefix = GoogleKoogProperties.PREFIX, name = ["enabled"], havingValue = "true")
 public class GoogleLLMAutoConfiguration(
     private val properties: GoogleKoogProperties
 ) {
 
     /**
-     * Provides a [GoogleLLMClient] bean configured with the API key and base URL
-     * specified in the application's properties.
+     * Creates a [GoogleLLMClient] bean configured with application properties.
      *
-     * @return A configured instance of [GoogleLLMClient].
+     * This method initializes a [GoogleLLMClient] using the API key and base URL
+     * specified in the application's configuration. It is only executed if the
+     * `koog.ai.google.api-key` property is defined and `koog.ai.google.enabled` property is set
+     * to `true` in the application configuration.
+     *
+     * @return A [GoogleLLMClient] instance configured with the provided settings.
      */
     @Bean
+    @ConditionalOnProperty(prefix = GoogleKoogProperties.PREFIX, name = ["api-key"])
+    @ConditionalOnProperty(prefix = GoogleKoogProperties.PREFIX, name = ["enabled"], havingValue = "true")
     public fun googleLLMClient(): GoogleLLMClient {
         return GoogleLLMClient(
             apiKey = properties.apiKey,

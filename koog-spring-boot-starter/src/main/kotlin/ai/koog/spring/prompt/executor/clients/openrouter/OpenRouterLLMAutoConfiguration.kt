@@ -30,20 +30,23 @@ import org.springframework.context.annotation.PropertySource
 @EnableConfigurationProperties(
     OpenRouterKoogProperties::class,
 )
-@ConditionalOnProperty(prefix = OpenRouterKoogProperties.PREFIX, name = ["api-key"])
-@ConditionalOnProperty(prefix = OpenRouterKoogProperties.PREFIX, name = ["enabled"], havingValue = "true")
 public class OpenRouterLLMAutoConfiguration(
     private val properties: OpenRouterKoogProperties
 ) {
 
     /**
-     * Creates and configures an instance of [OpenRouterLLMClient] as a Spring Bean.
-     * The client is initialized with the API key and settings (such as base URL)
-     * obtained from the provided `properties` configuration.
+     * Creates an [OpenRouterLLMClient] bean configured with application properties.
      *
-     * @return An instance of [OpenRouterLLMClient] configured with the given properties.
+     * This method initializes a [OpenRouterLLMClient] using the API key and base URL
+     * specified in the application's configuration. It is only executed if the
+     * `koog.ai.openrouter.api-key` property is defined and `koog.ai.openrouter.enabled` property is set
+     * to `true` in the application configuration.
+     *
+     * @return An [OpenRouterLLMClient] instance configured with the provided settings.
      */
     @Bean
+    @ConditionalOnProperty(prefix = OpenRouterKoogProperties.PREFIX, name = ["api-key"])
+    @ConditionalOnProperty(prefix = OpenRouterKoogProperties.PREFIX, name = ["enabled"], havingValue = "true")
     public fun openRouterLLMClient(): OpenRouterLLMClient {
         return OpenRouterLLMClient(
             apiKey = properties.apiKey,
