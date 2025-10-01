@@ -1,79 +1,230 @@
 # A2A Server
 
-The A2A server enables you to expose AI agents through the standardized A2A protocol. It handles client requests, executes agent logic, manages task lifecycles, and supports streaming responses.
+The A2A server enables you to expose AI agents through the standardized A2A (Agent-to-Agent) protocol. It provides a complete implementation of the [A2A protocol specification](https://a2a-protocol.org/latest/specification/), handling client requests, executing agent logic, managing complex task lifecycles, and supporting real-time streaming responses.
 
 ## Overview
 
-The A2A server implements the [A2A protocol specification](https://a2a-protocol.org/latest/specification/) and provides:
+The A2A server acts as a bridge between the A2A protocol transport layer and your custom agent logic. It orchestrates the entire request lifecycle while maintaining protocol compliance and providing robust session management.
 
-- **Request Processing**: Handles all A2A protocol operations via `RequestHandler` interface
-- **Agent Execution**: Delegates logic to your custom `AgentExecutor` implementation
-- **Task Management**: Tracks task state and lifecycle with storage backends
-- **Streaming Support**: Optional streaming of partial results to clients
-- **Push Notifications**: Optional webhook notifications for task updates
+### Key Features
+
+- **Protocol Compliance**: Full implementation of A2A protocol v0.3.0 with automatic validation
+- **Request Processing**: Handles all A2A operations (messages, tasks, push notifications) via clean `RequestHandler` interface
+- **Agent Execution**: Delegates business logic to your custom `AgentExecutor` implementation with rich context
+- **Task Management**: Complete task lifecycle management with state tracking, persistence, and history
+- **Streaming Support**: Optional Server-Sent Events (SSE) for real-time partial results and updates
+- **Push Notifications**: Asynchronous webhook notifications for long-running task updates
+- **Security Ready**: Built-in support for authentication schemes, with extensible authorization patterns
+- **Storage Abstractions**: Pluggable storage backends for tasks, messages, and push configurations
+- **Session Management**: Sophisticated session handling with proper cleanup and concurrency control
 
 ## Core Components
 
 ### A2AServer
 
-Main server class that implements the A2A protocol:
+The main server class implementing the complete A2A protocol. It serves as the central coordinator that:
+
+- **Validates** incoming requests against protocol specifications
+- **Manages** concurrent sessions and task lifecycles
+- **Orchestrates** communication between transport, storage, and business logic layers
+- **Handles** all protocol operations: message sending, task querying, cancellation, push notifications
 
 ```kotlin
 class A2AServer(
-    agentExecutor: AgentExecutor,
-    agentCard: AgentCard,
-    // Optional storage implementations
-    taskStorage: TaskStorage? = null,
-    messageStorage: MessageStorage? = null,
-    pushNotificationConfigStorage: PushNotificationConfigStorage? = null
+    agentExecutor: AgentExecutor,           // Your business logic implementation
+    agentCard: AgentCard,                   // Agent capabilities and metadata
+    agentCardExtended: AgentCard? = null,   // Optional extended capabilities for authenticated users
+    taskStorage: TaskStorage = InMemoryTaskStorage(),
+    messageStorage: MessageStorage = InMemoryMessageStorage(),
+    pushConfigStorage: PushNotificationConfigStorage? = null,
+    pushSender: PushNotificationSender? = null,
+    idGenerator: IdGenerator = UuidIdGenerator,
+    coroutineScope: CoroutineScope = CoroutineScope(SupervisorJob())
 ) : RequestHandler
 ```
 
 ### AgentExecutor
 
-Your custom agent logic implementation:
+The `AgentExecutor` interface is where you implement your agent's core business logic. It acts as the bridge between the A2A protocol and your specific AI agent capabilities.
 
 ```kotlin
 interface AgentExecutor {
+    /**
+     * Execute your agent's logic for an incoming message.
+     * This is where you process user input, perform AI operations,
+     * and send responses or task updates.
+     */
     suspend fun execute(
-        context: RequestContext<MessageSendParams>,
-        eventProcessor: SessionEventProcessor
+        context: RequestContext<MessageSendParams>,  // Rich context with request data
+        eventProcessor: SessionEventProcessor        // Send messages/task events
     )
 
+    /**
+     * Handle task cancellation requests.
+     * Default implementation throws A2ATaskNotCancelableException.
+     */
     suspend fun cancel(
         context: RequestContext<TaskIdParams>,
         eventProcessor: SessionEventProcessor,
-        agentJob: Deferred<Unit>?
+        agentJob: Deferred<Unit>?                   // The running agent job to cancel
     ) = Unit
 }
 ```
 
-### AgentCard
+#### RequestContext
 
-Describes your agent's capabilities and metadata:
+The `RequestContext` provides rich information about the current request:
 
 ```kotlin
-val agentCard = AgentCard(
-    name = "My Agent",
-    protocolVersion = "0.3.0",
-    description = "A helpful AI assistant",
-    version = "1.0.0",
-    preferredTransport = TransportProtocol.JSONRPC,
-    capabilities = AgentCapabilities(
-        streaming = false,
-        pushNotifications = false
+data class RequestContext<T>(
+    val callContext: ServerCallContext,      // Transport-level context (headers, auth, etc.)
+    val params: T,                           // The actual request parameters
+    val taskStorage: ContextTaskStorage,     // Scoped storage for this context
+    val messageStorage: ContextMessageStorage, // Message history for this context
+    val contextId: String,                   // Unique conversation identifier
+    val taskId: String,                      // Current or new task identifier
+    val task: Task?                          // Existing task if continuing one
+)
+```
+
+#### SessionEventProcessor
+
+The `SessionEventProcessor` communicates with clients:
+
+- **`sendMessage(message)`**: Send immediate responses (chat-style interactions)
+- **`sendTaskEvent(event)`**: Send task-related updates (long-running operations)
+
+```kotlin
+// For immediate responses (like chatbots)
+eventProcessor.sendMessage(
+    Message(
+        messageId = generateId(),
+        role = Role.Agent,
+        parts = listOf(TextPart("Here's your answer!")),
+        contextId = context.contextId
+    )
+)
+
+// For task-based operations
+eventProcessor.sendTaskEvent(
+    TaskStatusUpdateEvent(
+        contextId = context.contextId,
+        taskId = context.taskId,
+        status = TaskStatus(
+            state = TaskState.Working,
+            message = Message(/* progress update */),
+            timestamp = Clock.System.now()
+        ),
+        final = false  // More updates to come
     )
 )
 ```
 
+### AgentCard
 
-### Storage Components
+The `AgentCard` serves as your agent's self-describing manifest. It tells clients what your agent can do, how to communicate with it, and what security requirements it has.
 
-Optional storage backends (defaults to in-memory):
+```kotlin
+val agentCard = AgentCard(
+    // Basic Identity
+    name = "Advanced Recipe Assistant",
+    description = "AI agent specialized in cooking advice, recipe generation, and meal planning",
+    version = "2.1.0",
+    protocolVersion = "0.3.0",
 
-- **TaskStorage**: Persists task state and history
-- **MessageStorage**: Stores conversation messages
-- **PushNotificationConfigStorage**: Manages webhook configurations
+    // Communication Settings
+    url = "https://api.example.com/a2a",
+    preferredTransport = TransportProtocol.JSONRPC,
+
+    // Optional: Multiple transport support
+    additionalInterfaces = listOf(
+        AgentInterface("https://api.example.com/a2a", TransportProtocol.JSONRPC),
+        AgentInterface("https://rest.example.com/v1", TransportProtocol.HTTP_JSON_REST)
+    ),
+
+    // Capabilities Declaration
+    capabilities = AgentCapabilities(
+        streaming = true,              // Support real-time responses
+        pushNotifications = true,      // Send async notifications
+        stateTransitionHistory = true  // Maintain task history
+    ),
+
+    // Content Type Support
+    defaultInputModes = listOf("text/plain", "text/markdown", "image/jpeg"),
+    defaultOutputModes = listOf("text/plain", "text/markdown", "application/json"),
+
+    // Define available security schemes
+    securitySchemes = mapOf(
+        "bearer" to HTTPAuthSecurityScheme(
+            scheme = "Bearer",
+            bearerFormat = "JWT",
+            description = "JWT token authentication"
+        ),
+        "api-key" to APIKeySecurityScheme(
+            `in` = In.Header,
+            name = "X-API-Key",
+            description = "API key for service authentication"
+        )
+    ),
+
+    // Specify security requirements (logical OR of requirements)
+    security = listOf(
+        mapOf("bearer" to listOf("read", "write")),  // Option 1: JWT with read/write scopes
+        mapOf("api-key" to emptyList())              // Option 2: API key
+    ),
+
+    // Enable extended card for authenticated users
+    supportsAuthenticatedExtendedCard = true,
+    
+    // Skills/Capabilities
+    skills = listOf(
+        AgentSkill(
+            id = "recipe-generation",
+            name = "Recipe Generation",
+            description = "Generate custom recipes based on ingredients, dietary restrictions, and preferences",
+            tags = listOf("cooking", "recipes", "nutrition"),
+            examples = listOf(
+                "Create a vegan pasta recipe with mushrooms",
+                "I have chicken, rice, and vegetables. What can I make?"
+            )
+        ),
+        AgentSkill(
+            id = "meal-planning",
+            name = "Meal Planning",
+            description = "Plan weekly meals and generate shopping lists",
+            tags = listOf("meal-planning", "nutrition", "shopping")
+        )
+    ),
+
+    // Optional: Branding
+    iconUrl = "https://example.com/agent-icon.png",
+    documentationUrl = "https://docs.example.com/recipe-agent",
+    provider = AgentProvider(
+        organization = "CookingAI Inc.",
+        url = "https://cookingai.com"
+    )
+)
+```
+
+### Transport Layer
+
+The A2A server supports multiple transport protocols for communicating with clients. 
+The transport layer handles the low-level communication while the A2A server manages the protocol logic.
+
+#### HTTP JSON-RPC Transport
+
+The most common transport for A2A agent
+
+```kotlin
+val transport = HttpJSONRPCServerTransport(server)
+transport.start(
+    engineFactory = CIO,           // Ktor engine (CIO, Netty, Jetty)
+    port = 8080,                   // Server port
+    path = "/a2a",                 // API endpoint path
+    host = "0.0.0.0",             // Bind address (optional)
+    wait = true                    // Block until server stops
+)
+```
 
 ## Quick Start
 
@@ -181,7 +332,6 @@ class TaskAgentExecutor : AgentExecutor {
         )
 
         // Do work...
-        delay(1000)
 
         // Send completion
         eventProcessor.sendTaskEvent(
@@ -199,106 +349,11 @@ class TaskAgentExecutor : AgentExecutor {
 }
 ```
 
-### Streaming Agent
+### Storage
 
-Enable streaming in your AgentCard:
+The A2A server uses a pluggable storage architecture that separates different types of data. 
+All storage implementations are optional and default to in-memory variants for development.
 
-```kotlin
-val agentCard = AgentCard(
-    capabilities = AgentCapabilities(
-        streaming = true  // Enable streaming
-    )
-)
-```
-
-Then send multiple events:
-
-```kotlin
-class StreamingAgentExecutor : AgentExecutor {
-    override suspend fun execute(
-        context: RequestContext<MessageSendParams>,
-        eventProcessor: SessionEventProcessor
-    ) {
-        repeat(3) { i ->
-            val message = Message(
-                messageId = UUID.randomUUID().toString(),
-                role = Role.Agent,
-                parts = listOf(TextPart("Chunk ${i + 1}")),
-                contextId = context.contextId,
-                taskId = context.taskId
-            )
-            eventProcessor.sendMessage(message)
-            delay(500) // Simulate work
-        }
-    }
-}
-```
-
-## Advanced Configuration
-
-### Custom Storage
-
-```kotlin
-class DatabaseTaskStorage : TaskStorage {
-    override suspend fun update(task: Task) {
-        // Store in your database
-    }
-
-    override suspend fun get(taskId: String): Task? {
-        // Retrieve from your database
-    }
-}
-
-val server = A2AServer(
-    agentExecutor = myExecutor,
-    agentCard = agentCard,
-    taskStorage = DatabaseTaskStorage()
-)
-```
-
-### Authentication
-
-Configure authentication in your AgentCard:
-
-```kotlin
-val agentCard = AgentCard(
-    authentication = AgentAuthentication(
-        type = "bearer",
-        instructions = "Provide JWT token in Authorization header"
-    )
-)
-```
-
-### Push Notifications
-
-```kotlin
-val agentCard = AgentCard(
-    capabilities = AgentCapabilities(
-        pushNotifications = true
-    )
-)
-```
-
-## Error Handling
-
-The server automatically handles A2A protocol errors. For custom error handling in your AgentExecutor:
-
-```kotlin
-override suspend fun execute(
-    context: RequestContext<MessageSendParams>,
-    eventProcessor: SessionEventProcessor
-) {
-    try {
-        // Your agent logic
-    } catch (e: Exception) {
-        val errorMessage = Message(
-            messageId = UUID.randomUUID().toString(),
-            role = Role.Agent,
-            parts = listOf(TextPart("Error: ${e.message}")),
-            contextId = context.contextId,
-            taskId = context.taskId
-        )
-        eventProcessor.sendMessage(errorMessage)
-    }
-}
-```
+- **TaskStorage**: Task lifecycle management - stores and manages task states, history, and artifacts
+- **MessageStorage**: Conversation history - manages message history within conversation contexts
+- **PushNotificationConfigStorage**: Webhook management - manages webhook configurations for asynchronous notifications
