@@ -2,11 +2,8 @@ package ai.koog.agents.ext.tool.shell
 
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.annotations.LLMDescription
-import kotlinx.coroutines.TimeoutCancellationException
-import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
-import kotlin.time.Duration.Companion.seconds
 
 /**
  * Executes shell commands with user approval and automatic timeout.
@@ -80,12 +77,10 @@ public class ExecuteShellCommandTool(
     override val resultSerializer: KSerializer<Result> = Result.serializer()
     override val name: String = "__execute_shell_command__"
     override val description: String = """
-        Executes shell commands on the host system with user confirmation.
-        
-        Captures all text printed by the command along with the exit code.
-        Requires user approval before execution. Commands run with configurable timeout (default: 60 seconds).
-        
-        Do not use to change system configuration, install software, or escalate privileges.
+        Executes a shell command.  
+        Depending on configuration, the command may run immediately or ask the user before running.  
+        A working directory and timeout can be provided. If a timeout is reached, any available output is included.  
+        Returns everything the command printed and the exit code, or a message if it was not run or did not finish.
     """.trimIndent()
 
     /**
@@ -102,18 +97,10 @@ public class ExecuteShellCommandTool(
         val confirmation = confirmationHandler.requestConfirmation(args.command, args.workingDirectory)
     ) {
         is ShellCommandConfirmation.Approved -> runCatching {
-            withTimeout(args.timeoutSeconds.seconds) {
-                val result = executor.execute(args.command, args.workingDirectory)
-                Result(args.command, result.exitCode, result.output)
-            }
+            val result = executor.execute(args.command, args.workingDirectory, args.timeoutSeconds)
+            Result(args.command, result.exitCode, result.output)
         }.getOrElse { e ->
-            when (e) {
-                is TimeoutCancellationException ->
-                    Result(args.command, null, "Command timed out after ${args.timeoutSeconds} seconds")
-
-                else ->
-                    Result(args.command, null, "Failed to execute command: ${e.message}")
-            }
+            Result(args.command, null, "Failed to execute command: ${e.message}")
         }
 
         is ShellCommandConfirmation.Denied ->

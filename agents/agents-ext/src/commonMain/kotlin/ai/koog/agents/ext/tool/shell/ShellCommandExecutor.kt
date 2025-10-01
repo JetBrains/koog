@@ -9,18 +9,19 @@ public abstract class ShellCommandExecutor {
      *
      * @param command Command string (e.g., "ls -la | grep txt")
      * @param workingDirectory Working directory, or null to use the current directory
+     * @param timeoutSeconds Maximum execution time in seconds, or null for no timeout
      * @return Output and exit code
      */
-    public abstract suspend fun execute(command: String, workingDirectory: String?): ExecutionResult
+    public abstract suspend fun execute(command: String, workingDirectory: String?, timeoutSeconds: Int? = null): ExecutionResult
 
     /**
      * Command execution result.
      *
      * @property output All text printed by the command (both success and error messages)
-     * @property exitCode Process exit code (0 = success)
+     * @property exitCode Process exit code (0 = success), or null if the process was interrupted or timed out
      */
     public data class ExecutionResult(
         val output: String,
-        val exitCode: Int
+        val exitCode: Int?
     )
 }
