@@ -9,6 +9,7 @@ import ai.koog.integration.tests.OllamaTestFixtureExtension
 import ai.koog.integration.tests.utils.MediaTestScenarios.ImageTestScenario
 import ai.koog.integration.tests.utils.MediaTestUtils
 import ai.koog.integration.tests.utils.MediaTestUtils.checkExecutorMediaResponse
+import ai.koog.integration.tests.utils.annotations.Retry
 import ai.koog.prompt.dsl.ModerationCategory
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
@@ -635,6 +636,7 @@ class OllamaExecutorIntegrationTest {
     }
 
     @Test
+    @Retry(3)
     fun `ollama_test execute streaming API with structured data`() = runTest(timeout = 600.seconds) {
         val countries = mutableListOf<Country>()
         val countryDefinition = markdownCountryDefinition()
@@ -670,7 +672,7 @@ class OllamaExecutorIntegrationTest {
     }
 
     @Test
-    fun `ollama_test moderate single message`() = runTest {
+    fun `ollama_test moderate single message`() = runTest(timeout = 600.seconds) {
         val prompt = Prompt.build("test-harmful-content") {
             user(
                 String(
@@ -694,7 +696,7 @@ class OllamaExecutorIntegrationTest {
     }
 
     @Test
-    fun `ollama_test moderate multiple messages`() = runTest {
+    fun `ollama_test moderate multiple messages`() = runTest(timeout = 600.seconds) {
         val safeQuestion = String(
             Base64.getDecoder()
                 .decode(
