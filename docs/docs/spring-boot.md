@@ -97,6 +97,8 @@ Provider's base urls are set to their default values in the Spring Boot starter,
 
 !!! tip "Environment Variables"
 It's recommended to use environment variables for API keys to keep them secure and out of version control.
+Spring configuration uses LLM provider's well-known environment variables. 
+For example, setting the environment variable `OPENAI_API_KEY` is enough for OpenAI spring configuration to activate.
 
 ### 3. Inject and Use
 

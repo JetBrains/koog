@@ -3,8 +3,10 @@ package ai.koog.spring.prompt.executor.clients.deepseek
 import ai.koog.prompt.executor.clients.deepseek.DeepSeekClientSettings
 import ai.koog.prompt.executor.clients.deepseek.DeepSeekLLMClient
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
+import ai.koog.spring.conditions.ConditionalOnPropertyNotEmpty
 import ai.koog.spring.prompt.executor.clients.toRetryingClient
 import org.springframework.boot.autoconfigure.AutoConfiguration
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
@@ -56,7 +58,10 @@ public class DeepSeekLLMAutoConfiguration(
      * @return A [DeepSeekLLMClient] instance configured with the provided settings.
      */
     @Bean
-    @ConditionalOnProperty(prefix = DeepSeekKoogProperties.PREFIX, name = ["api-key"])
+    @ConditionalOnPropertyNotEmpty(
+        prefix = DeepSeekKoogProperties.PREFIX,
+        name = "api-key"
+    )
     @ConditionalOnProperty(prefix = DeepSeekKoogProperties.PREFIX, name = ["enabled"], havingValue = "true")
     public fun deepSeekLLMClient(): DeepSeekLLMClient {
         return DeepSeekLLMClient(
@@ -75,6 +80,7 @@ public class DeepSeekLLMAutoConfiguration(
      * @return A [SingleLLMPromptExecutor] initialized with an DeepSeek LLM client.
      */
     @Bean
+    @ConditionalOnBean(DeepSeekLLMClient::class)
     public fun deepSeekExecutor(client: DeepSeekLLMClient): SingleLLMPromptExecutor {
         val client = DeepSeekLLMClient(
             apiKey = properties.apiKey,

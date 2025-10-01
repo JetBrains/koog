@@ -3,6 +3,7 @@ package ai.koog.spring.prompt.executor.clients.openai
 import ai.koog.prompt.executor.clients.openai.OpenAIClientSettings
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
+import ai.koog.spring.conditions.ConditionalOnPropertyNotEmpty
 import ai.koog.spring.prompt.executor.clients.toRetryingClient
 import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
@@ -53,7 +54,10 @@ public class OpenAILLMAutoConfiguration(
      * @return An [OpenAILLMClient] instance configured with the provided settings.
      */
     @Bean
-    @ConditionalOnProperty(prefix = OpenAIKoogProperties.PREFIX, name = ["api-key"])
+    @ConditionalOnPropertyNotEmpty(
+        prefix = OpenAIKoogProperties.PREFIX,
+        name = "api-key"
+    )
     @ConditionalOnProperty(prefix = OpenAIKoogProperties.PREFIX, name = ["enabled"], havingValue = "true")
     public fun openAILLMClient(): OpenAILLMClient {
         return OpenAILLMClient(

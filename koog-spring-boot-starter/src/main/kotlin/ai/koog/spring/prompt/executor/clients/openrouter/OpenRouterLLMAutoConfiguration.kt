@@ -3,6 +3,7 @@ package ai.koog.spring.prompt.executor.clients.openrouter
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterClientSettings
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterLLMClient
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
+import ai.koog.spring.conditions.ConditionalOnPropertyNotEmpty
 import ai.koog.spring.prompt.executor.clients.toRetryingClient
 import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
@@ -45,7 +46,10 @@ public class OpenRouterLLMAutoConfiguration(
      * @return An [OpenRouterLLMClient] instance configured with the provided settings.
      */
     @Bean
-    @ConditionalOnProperty(prefix = OpenRouterKoogProperties.PREFIX, name = ["api-key"])
+    @ConditionalOnPropertyNotEmpty(
+        prefix = OpenRouterKoogProperties.PREFIX,
+        name = "api-key"
+    )
     @ConditionalOnProperty(prefix = OpenRouterKoogProperties.PREFIX, name = ["enabled"], havingValue = "true")
     public fun openRouterLLMClient(): OpenRouterLLMClient {
         return OpenRouterLLMClient(

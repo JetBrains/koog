@@ -3,6 +3,7 @@ package ai.koog.spring.prompt.executor.clients.google
 import ai.koog.prompt.executor.clients.google.GoogleClientSettings
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
+import ai.koog.spring.conditions.ConditionalOnPropertyNotEmpty
 import ai.koog.spring.prompt.executor.clients.ollama.OllamaKoogProperties
 import ai.koog.spring.prompt.executor.clients.toRetryingClient
 import org.springframework.boot.autoconfigure.AutoConfiguration
@@ -53,7 +54,10 @@ public class GoogleLLMAutoConfiguration(
      * @return A [GoogleLLMClient] instance configured with the provided settings.
      */
     @Bean
-    @ConditionalOnProperty(prefix = GoogleKoogProperties.PREFIX, name = ["api-key"])
+    @ConditionalOnPropertyNotEmpty(
+        prefix = GoogleKoogProperties.PREFIX,
+        name = "api-key"
+    )
     @ConditionalOnProperty(prefix = GoogleKoogProperties.PREFIX, name = ["enabled"], havingValue = "true")
     public fun googleLLMClient(): GoogleLLMClient {
         return GoogleLLMClient(

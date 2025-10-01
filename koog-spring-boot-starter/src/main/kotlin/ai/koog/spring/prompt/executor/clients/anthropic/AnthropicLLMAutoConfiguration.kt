@@ -3,6 +3,7 @@ package ai.koog.spring.prompt.executor.clients.anthropic
 import ai.koog.prompt.executor.clients.anthropic.AnthropicClientSettings
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
+import ai.koog.spring.conditions.ConditionalOnPropertyNotEmpty
 import ai.koog.spring.prompt.executor.clients.toRetryingClient
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.AutoConfiguration
@@ -55,7 +56,10 @@ public class AnthropicLLMAutoConfiguration(
      */
     @Bean
     @ConditionalOnProperty(prefix = AnthropicKoogProperties.PREFIX, name = ["enabled"], havingValue = "true")
-    @ConditionalOnProperty(prefix = AnthropicKoogProperties.PREFIX, name = ["api-key"])
+    @ConditionalOnPropertyNotEmpty(
+        prefix = AnthropicKoogProperties.PREFIX,
+        name = "api-key"
+    )
     public fun anthropicLLMClient(): AnthropicLLMClient {
         logger.info("Initializing AnthropicLLMClient with: $properties")
         return AnthropicLLMClient(
