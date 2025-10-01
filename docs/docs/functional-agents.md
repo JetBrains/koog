@@ -1,4 +1,3 @@
-
 # Functional agents
 
 Functional agents are lightweight AI agents that operate without building complex strategy graphs.
