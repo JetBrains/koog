@@ -25,3 +25,12 @@ public abstract class ShellCommandExecutor {
         val exitCode: Int?
     )
 }
+
+/**
+ * Appends text to the StringBuilder and ensures it ends with a newline
+ * but only adds one if the text doesn't already end with one.
+ */
+internal fun StringBuilder.appendWithNewline(text: String) {
+    append(text)
+    if (!text.endsWith('\n')) appendLine()
+}

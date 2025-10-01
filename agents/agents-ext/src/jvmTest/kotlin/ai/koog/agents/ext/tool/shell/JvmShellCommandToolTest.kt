@@ -203,7 +203,7 @@ class JvmShellCommandToolTest {
 
         val result = execute("dir /s /b /o:n", workingDirectory = tempDir.toString())
 
-        val tempDirStr = tempDir.toString().replace("\\", "\\\\")
+        val tempDirStr = tempDir.toAbsolutePath().toString()
 
         val expected = """
             Command: dir /s /b /o:n
@@ -309,7 +309,12 @@ class JvmShellCommandToolTest {
         val expected = """
             Command: type file1.txt file2.txt
             Hello from file1
+            
+            file1.txt
+            
+            
             The system cannot find the file specified.
+            Error occurred while processing: file2.txt.
             Exit code: 1
         """.trimIndent()
 
@@ -371,10 +376,10 @@ class JvmShellCommandToolTest {
     @Test
     @EnabledOnOs(OS.WINDOWS)
     fun `long running command times out on Windows`() = runBlocking {
-        val result = execute("timeout /t 10 /nobreak", timeoutSeconds = 1)
+        val result = execute("powershell -Command \"Start-Sleep -Seconds 10\"", timeoutSeconds = 1)
 
         val expected = """
-            Command: timeout /t 10 /nobreak
+            Command: powershell -Command "Start-Sleep -Seconds 10"
             Command timed out after 1 seconds
         """.trimIndent()
 
@@ -389,6 +394,26 @@ class JvmShellCommandToolTest {
 
         val expected = """
             Command: for i in {1..10}; do echo ${'$'}i; sleep 1; done
+            1
+            2
+            3
+            Command timed out after 3 seconds
+        """.trimIndent()
+
+        assertEquals(expected, result.textForLLM())
+        assertNull(result.exitCode)
+    }
+
+    @Test
+    @EnabledOnOs(OS.WINDOWS)
+    fun `command with partial output times out on Windows`() = runBlocking {
+        val result = execute(
+            "for /L %i in (1,1,10) do @echo %i & timeout /t 1 /nobreak >nul",
+            timeoutSeconds = 3
+        )
+
+        val expected = """
+            Command: for /L %i in (1,1,10) do @echo %i & timeout /t 1 /nobreak >nul
             1
             2
             3

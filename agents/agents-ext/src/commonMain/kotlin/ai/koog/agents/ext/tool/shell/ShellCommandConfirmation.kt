@@ -18,7 +18,7 @@ public sealed class ShellCommandConfirmation {
 /**
  * Strategy for obtaining user confirmation before executing shell commands.
  */
-public interface ShellCommandConfirmationHandler {
+public fun interface ShellCommandConfirmationHandler {
     /**
      * Requests confirmation to execute a command.
      *

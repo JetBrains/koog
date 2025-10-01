@@ -55,30 +55,30 @@ public class JvmShellCommandExecutor : ShellCommandExecutor() {
             stdout.cancel()
             stderr.cancel()
 
-            val partialStdout = stdout.takeIf { it.isCompleted }?.getCompleted().orEmpty().trimEnd()
-            val partialStderr = stderr.takeIf { it.isCompleted }?.getCompleted().orEmpty().trimEnd()
+            val partialStdout = stdout.takeIf { it.isCompleted }?.getCompleted().orEmpty()
+            val partialStderr = stderr.takeIf { it.isCompleted }?.getCompleted().orEmpty()
 
             val timeoutMessage = "Command timed out after $timeoutSeconds seconds"
 
             val combinedOutput = buildString {
-                if (partialStdout.isNotEmpty()) appendLine(partialStdout)
-                if (partialStderr.isNotEmpty()) appendLine(partialStderr)
+                if (partialStdout.isNotEmpty()) appendWithNewline(partialStdout)
+                if (partialStderr.isNotEmpty()) appendWithNewline(partialStderr)
                 append(timeoutMessage)
             }
 
             return@withContext ExecutionResult(
-                output = combinedOutput.trimEnd(),
+                output = combinedOutput,
                 exitCode = null
             )
         }
 
-        val stdoutResult = stdout.await().trimEnd()
-        val stderrResult = stderr.await().trimEnd()
+        val stdoutResult = stdout.await()
+        val stderrResult = stderr.await()
 
         val combinedOutput = buildString {
-            if (stdoutResult.isNotEmpty()) appendLine(stdoutResult)
-            if (stderrResult.isNotEmpty()) append(stderrResult)
-        }.trimEnd()
+            if (stdoutResult.isNotEmpty()) appendWithNewline(stdoutResult)
+            if (stderrResult.isNotEmpty()) appendWithNewline(stderrResult)
+        }
 
         ExecutionResult(
             output = combinedOutput,
