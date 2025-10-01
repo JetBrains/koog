@@ -46,7 +46,7 @@ public data class LLMCallStartingEvent(
         tools: List<String>,
         eventId: String = LLMCallStartingEvent::class.simpleName!!,
         timestamp: Long = Clock.System.now().toEpochMilliseconds()
-    ) : this(runId, prompt, ModelInfo.fromString(model), tools, eventId, timestamp)
+    ) : this(runId, prompt, ModelInfo.fromString(model), tools, timestamp)
 
     /**
      * @deprecated Use model.eventString instead
@@ -104,7 +104,7 @@ public data class LLMCallCompletedEvent(
         moderationResponse: ModerationResult? = null,
         eventId: String = LLMCallCompletedEvent::class.simpleName!!,
         timestamp: Long = Clock.System.now().toEpochMilliseconds()
-    ) : this(runId, prompt, ModelInfo.fromString(model), responses, moderationResponse, eventId, timestamp)
+    ) : this(runId, prompt, ModelInfo.fromString(model), responses, moderationResponse, timestamp)
 
     /**
      * @deprecated Use model.eventString instead

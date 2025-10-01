@@ -265,7 +265,7 @@ public class Tracing {
                 val event = LLMStreamingStartingEvent(
                     runId = eventContext.runId,
                     prompt = eventContext.prompt,
-                    model = eventContext.model.eventString,
+                    model = eventContext.model.toModelInfo().eventString,
                     tools = eventContext.tools.map { it.name },
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
@@ -276,7 +276,7 @@ public class Tracing {
                 val event = LLMStreamingCompletedEvent(
                     runId = eventContext.runId,
                     prompt = eventContext.prompt,
-                    model = eventContext.model.eventString,
+                    model = eventContext.model.toModelInfo().eventString,
                     tools = eventContext.tools.map { it.name },
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
