@@ -402,7 +402,6 @@ class JvmShellCommandToolTest {
             1
             2
             3
-            
             Command timed out after 3 seconds
         """.trimIndent()
 
@@ -413,14 +412,17 @@ class JvmShellCommandToolTest {
     @Test
     @EnabledOnOs(OS.WINDOWS)
     fun `command with partial output times out on Windows`() = runBlocking {
-        val result = execute("echo 1 & echo 2 & echo 3 & timeout /t 30", timeoutSeconds = 3)
+        val result = execute(
+            """cmd /c "echo 1 & echo 2 & echo 3 & powershell -Command Start-Sleep -Seconds 10"""",
+            timeoutSeconds = 1
+        )
 
         val expected = """
-        Command: echo 1 & echo 2 & echo 3 & timeout /t 30
-        1
-        2
-        3
-        Command timed out after 3 seconds
+            Command: cmd /c "echo 1 & echo 2 & echo 3 & powershell -Command Start-Sleep -Seconds 10"
+            1 
+            2 
+            3
+            Command timed out after 1 seconds
         """.trimIndent()
 
         assertEquals(expected, result.textForLLM())
