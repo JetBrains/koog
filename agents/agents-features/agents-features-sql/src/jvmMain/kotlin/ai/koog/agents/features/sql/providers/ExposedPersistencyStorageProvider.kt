@@ -107,21 +107,18 @@ public open class CheckpointsTable(tableName: String) : Table(tableName) {
  * - When TTL is not configured (ttlSeconds = null), no TTL processing occurs
  *
  * @constructor Initializes the Exposed persistence provider.
- * @param persistenceId Unique identifier for this agent's persistence data
  * @param database The Exposed Database instance to use
  * @param tableName Name of the table to store checkpoints (default: "agent_checkpoints")
  * @param ttlSeconds Optional TTL for checkpoint entries in seconds (null = no expiration)
  */
 @Suppress("MissingKDocForPublicAPI")
 public abstract class ExposedPersistenceStorageProvider(
-    persistenceId: String,
     protected val database: Database,
     tableName: String = "agent_checkpoints",
     ttlSeconds: Long? = null,
     migrator: SQLPersistenceSchemaMigrator,
     private val json: Json = PersistenceUtils.defaultCheckpointJson
 ) : SQLPersistenceStorageProvider(
-    persistenceId = persistenceId,
     tableName = tableName,
     ttlSeconds = ttlSeconds,
     migrator
@@ -179,12 +176,12 @@ public abstract class ExposedPersistenceStorageProvider(
         }
     }
 
-    override suspend fun getCheckpoints(): List<AgentCheckpointData> {
+    override suspend fun getCheckpoints(agentId: String): List<AgentCheckpointData> {
         return transaction {
             checkpointsTable
                 .select(checkpointsTable.checkpointJson)
                 .where {
-                    checkpointsTable.persistenceId eq this@ExposedPersistenceStorageProvider.persistenceId
+                    checkpointsTable.persistenceId eq agentId
                 }
                 .orderBy(checkpointsTable.createdAt to SortOrder.ASC)
                 .mapNotNull { row ->
@@ -195,14 +192,14 @@ public abstract class ExposedPersistenceStorageProvider(
         }
     }
 
-    override suspend fun saveCheckpoint(agentCheckpointData: AgentCheckpointData) {
+    override suspend fun saveCheckpoint(agentId: String, agentCheckpointData: AgentCheckpointData) {
         val checkpointJson = json.encodeToString(agentCheckpointData)
         val ttlTimestamp = calculateTtlTimestamp(agentCheckpointData.createdAt)
 
         transaction {
             // Use upsert for idempotent saves
             checkpointsTable.upsert {
-                it[checkpointsTable.persistenceId] = this@ExposedPersistenceStorageProvider.persistenceId
+                it[checkpointsTable.persistenceId] = agentId
                 it[checkpointsTable.checkpointId] = agentCheckpointData.checkpointId
                 it[checkpointsTable.createdAt] = agentCheckpointData.createdAt.toEpochMilliseconds()
                 it[checkpointsTable.checkpointJson] = checkpointJson
@@ -211,12 +208,12 @@ public abstract class ExposedPersistenceStorageProvider(
         }
     }
 
-    override suspend fun getLatestCheckpoint(): AgentCheckpointData? {
+    override suspend fun getLatestCheckpoint(agentId: String): AgentCheckpointData? {
         return transaction {
             checkpointsTable
                 .select(checkpointsTable.checkpointJson)
                 .where {
-                    checkpointsTable.persistenceId eq this@ExposedPersistenceStorageProvider.persistenceId
+                    checkpointsTable.persistenceId eq agentId
                 }
                 .orderBy(checkpointsTable.createdAt to SortOrder.DESC)
                 .limit(1)
@@ -228,27 +225,27 @@ public abstract class ExposedPersistenceStorageProvider(
         }
     }
 
-    override suspend fun deleteCheckpoint(checkpointId: String) {
+    override suspend fun deleteCheckpoint(agentId: String, checkpointId: String) {
         transaction {
             checkpointsTable.deleteWhere {
-                (checkpointsTable.persistenceId eq this@ExposedPersistenceStorageProvider.persistenceId) and
+                (checkpointsTable.persistenceId eq agentId) and
                     (checkpointsTable.checkpointId eq checkpointId)
             }
         }
     }
 
-    override suspend fun deleteAllCheckpoints() {
+    override suspend fun deleteAllCheckpoints(agentId: String) {
         transaction {
             checkpointsTable.deleteWhere {
-                checkpointsTable.persistenceId eq this@ExposedPersistenceStorageProvider.persistenceId
+                checkpointsTable.persistenceId eq agentId
             }
         }
     }
 
-    override suspend fun getCheckpointCount(): Long {
+    override suspend fun getCheckpointCount(agentId: String): Long {
         return transaction {
             checkpointsTable.selectAll().where {
-                checkpointsTable.persistenceId eq this@ExposedPersistenceStorageProvider.persistenceId
+                checkpointsTable.persistenceId eq agentId
             }.count()
         }
     }

@@ -180,7 +180,7 @@ public class Persistence(
 
             pipeline.interceptStrategyCompleted(interceptContext) { ctx ->
                 if (config.enableAutomaticPersistence && config.rollbackStrategy == RollbackStrategy.Default) {
-                    ctx.feature.createTombstoneCheckpoint(ctx.feature.clock.now())
+                    ctx.feature.createTombstoneCheckpoint(ctx.agentId, ctx.feature.clock.now())
                 }
             }
         }
@@ -228,7 +228,7 @@ public class Persistence(
             )
         }
 
-        saveCheckpoint(checkpoint)
+        saveCheckpoint(agentContext.agentId, checkpoint)
         return checkpoint
     }
 
@@ -242,9 +242,9 @@ public class Persistence(
      * @return The created tombstone checkpoint data.
      */
     @InternalAgentsApi
-    public suspend fun createTombstoneCheckpoint(time: Instant): AgentCheckpointData {
+    public suspend fun createTombstoneCheckpoint(agentId: String, time: Instant): AgentCheckpointData {
         val checkpoint = tombstoneCheckpoint(time)
-        saveCheckpoint(checkpoint)
+        saveCheckpoint(agentId, checkpoint)
         return checkpoint
     }
 
@@ -261,8 +261,8 @@ public class Persistence(
      *
      * @param checkpointData The checkpoint data to save
      */
-    public suspend fun saveCheckpoint(checkpointData: AgentCheckpointData) {
-        persistenceStorageProvider.saveCheckpoint(checkpointData)
+    public suspend fun saveCheckpoint(agentId: String, checkpointData: AgentCheckpointData) {
+        persistenceStorageProvider.saveCheckpoint(agentId, checkpointData)
     }
 
     /**
@@ -270,8 +270,8 @@ public class Persistence(
      *
      * @return The latest checkpoint data, or null if no checkpoint exists
      */
-    public suspend fun getLatestCheckpoint(): AgentCheckpointData? =
-        persistenceStorageProvider.getLatestCheckpoint()
+    public suspend fun getLatestCheckpoint(agentId: String): AgentCheckpointData? =
+        persistenceStorageProvider.getLatestCheckpoint(agentId)
 
     /**
      * Retrieves a specific checkpoint by ID for the specified agent.
@@ -279,8 +279,8 @@ public class Persistence(
      * @param checkpointId The ID of the checkpoint to retrieve
      * @return The checkpoint data with the specified ID, or null if not found
      */
-    public suspend fun getCheckpointById(checkpointId: String): AgentCheckpointData? =
-        persistenceStorageProvider.getCheckpoints().firstOrNull { it.checkpointId == checkpointId }
+    public suspend fun getCheckpointById(agentId: String, checkpointId: String): AgentCheckpointData? =
+        persistenceStorageProvider.getCheckpoints(agentId).firstOrNull { it.checkpointId == checkpointId }
 
     /**
      * Sets the execution point of an agent to a specific state.
@@ -320,7 +320,7 @@ public class Persistence(
         checkpointId: String,
         agentContext: AIAgentContext
     ): AgentCheckpointData? {
-        val checkpoint: AgentCheckpointData? = getCheckpointById(checkpointId)
+        val checkpoint: AgentCheckpointData? = getCheckpointById(agentContext.agentId, checkpointId)
         if (checkpoint != null) {
             agentContext.store(
                 checkpoint.toAgentContextData(rollbackStrategy) { context ->
@@ -377,7 +377,7 @@ public class Persistence(
     public suspend fun rollbackToLatestCheckpoint(
         agentContext: AIAgentContext
     ): AgentCheckpointData? {
-        val checkpoint: AgentCheckpointData? = getLatestCheckpoint()
+        val checkpoint: AgentCheckpointData? = getLatestCheckpoint(agentContext.agentId)
         if (checkpoint?.isTombstone() ?: true) {
             return null
         }

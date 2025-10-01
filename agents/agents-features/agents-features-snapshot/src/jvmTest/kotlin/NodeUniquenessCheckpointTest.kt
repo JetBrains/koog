@@ -105,7 +105,7 @@ class NodeUniquenessCheckpointTest {
         ) {
             // Install the AgentCheckpoint feature
             install(Persistence) {
-                storage = InMemoryPersistenceStorageProvider("testAgentId")
+                storage = InMemoryPersistenceStorageProvider()
             }
         }
 

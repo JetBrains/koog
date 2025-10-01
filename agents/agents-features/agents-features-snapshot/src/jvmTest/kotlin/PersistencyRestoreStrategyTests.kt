@@ -19,7 +19,9 @@ import org.junit.jupiter.api.Test
 class PersistenceRestoreStrategyTests {
     @Test
     fun `rollback Default resumes from checkpoint node`() = runTest {
-        val provider = InMemoryPersistenceStorageProvider("persistence-restore-default")
+        val provider = InMemoryPersistenceStorageProvider()
+
+        val agentId = "persistency-restore-default"
 
         val checkpoint = AgentCheckpointData(
             checkpointId = "chk-1",
@@ -29,7 +31,7 @@ class PersistenceRestoreStrategyTests {
             messageHistory = listOf(Message.Assistant("History Before", ResponseMetaInfo(Clock.System.now()))),
         )
 
-        provider.saveCheckpoint(checkpoint)
+        provider.saveCheckpoint(agentId, checkpoint)
 
         val agent = AIAgent(
             promptExecutor = getMockExecutor { },
@@ -39,6 +41,7 @@ class PersistenceRestoreStrategyTests {
                 model = OllamaModels.Meta.LLAMA_3_2,
                 maxAgentIterations = 10
             ),
+            id = agentId
         ) {
             install(Persistence) {
                 storage = provider
@@ -59,7 +62,7 @@ class PersistenceRestoreStrategyTests {
 
     @Test
     fun `rollback MessageHistoryOnly starts from beginning`() = runTest {
-        val provider = InMemoryPersistenceStorageProvider("persistence-restore-history-only")
+        val provider = InMemoryPersistenceStorageProvider()
 
         val agentService = AIAgentService(
             promptExecutor = getMockExecutor { },

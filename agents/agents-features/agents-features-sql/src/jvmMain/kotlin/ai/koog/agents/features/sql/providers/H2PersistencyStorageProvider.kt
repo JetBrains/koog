@@ -12,13 +12,12 @@ import org.jetbrains.exposed.sql.transactions.transaction
  * agent checkpoints in H2 databases.
 */
 public class H2PersistenceStorageProvider(
-    persistenceId: String,
     database: Database,
     tableName: String = "agent_checkpoints",
     ttlSeconds: Long? = null,
     migrator: SQLPersistenceSchemaMigrator = H2PersistenceSchemaMigrator(database, tableName),
     json: Json = PersistenceUtils.defaultCheckpointJson
-) : ExposedPersistenceStorageProvider(persistenceId, database, tableName, ttlSeconds, migrator, json) {
+) : ExposedPersistenceStorageProvider(database, tableName, ttlSeconds, migrator, json) {
 
     public override suspend fun <T> transaction(block: suspend () -> T): T =
         newSuspendedTransaction(Dispatchers.IO, database) {
@@ -32,20 +31,17 @@ public class H2PersistenceStorageProvider(
          * Data is lost when the JVM shuts down.
          * Perfect for testing and temporary caching.
          *
-         * @param persistenceId Unique identifier for this agent's persistence data
          * @param databaseName Name of the in-memory database
          * @param options Additional H2 options (e.g., "DB_CLOSE_DELAY=-1")
          * @param tableName Name of the table to store checkpoints
          * @param ttlSeconds Optional TTL for checkpoint entries in seconds
          */
         public fun inMemory(
-            persistenceId: String,
             databaseName: String = "test",
             options: String = "DB_CLOSE_DELAY=-1",
             tableName: String = "agent_checkpoints",
             ttlSeconds: Long? = null
         ): H2PersistenceStorageProvider = H2PersistenceStorageProvider(
-            persistenceId = persistenceId,
             database = Database.connect("jdbc:h2:mem:$databaseName;$options"),
             tableName = tableName,
             ttlSeconds = ttlSeconds
@@ -56,20 +52,17 @@ public class H2PersistenceStorageProvider(
          * Data is persisted to a file on disk.
          * Good balance between performance and persistence.
          *
-         * @param persistenceId Unique identifier for this agent's persistence data
          * @param filePath Path to the database file (without .mv.db extension)
          * @param options Additional H2 options
          * @param tableName Name of the table to store checkpoints
          * @param ttlSeconds Optional TTL for checkpoint entries in seconds
          */
         public fun fileBased(
-            persistenceId: String,
             filePath: String,
             options: String = "",
             tableName: String = "agent_checkpoints",
             ttlSeconds: Long? = null
         ): H2PersistenceStorageProvider = H2PersistenceStorageProvider(
-            persistenceId = persistenceId,
             database = Database.connect(
                 if (options.isNotEmpty()) {
                     "jdbc:h2:file:$filePath;$options"
@@ -85,19 +78,16 @@ public class H2PersistenceStorageProvider(
          * Creates an H2 provider with PostgreSQL compatibility mode.
          * Useful when migrating from PostgreSQL or for compatibility testing.
          *
-         * @param persistenceId Unique identifier for this agent's persistence data
          * @param databasePath Path to database (memory or file)
          * @param tableName Name of the table to store checkpoints
          * @param ttlSeconds Optional TTL for checkpoint entries in seconds
          */
         public fun postgresCompatible(
-            persistenceId: String,
             databasePath: String = "mem:test",
             tableName: String = "agent_checkpoints",
             ttlSeconds: Long? = null
         ): H2PersistenceStorageProvider {
             return H2PersistenceStorageProvider(
-                persistenceId = persistenceId,
                 database = Database.connect("jdbc:h2:$databasePath;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE"),
                 tableName = tableName,
                 ttlSeconds = ttlSeconds

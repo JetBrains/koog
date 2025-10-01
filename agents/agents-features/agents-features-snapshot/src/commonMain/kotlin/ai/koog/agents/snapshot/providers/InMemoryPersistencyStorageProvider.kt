@@ -8,26 +8,25 @@ import kotlinx.coroutines.sync.withLock
  * In-memory implementation of [PersistenceStorageProvider].
  * This provider stores snapshots in a mutable map.
  */
-public class InMemoryPersistenceStorageProvider(private val persistenceId: String) : PersistenceStorageProvider {
+public class InMemoryPersistenceStorageProvider() : PersistenceStorageProvider {
     private val mutex = Mutex()
     private val snapshotMap = mutableMapOf<String, List<AgentCheckpointData>>()
 
-    override suspend fun getCheckpoints(): List<AgentCheckpointData> {
+    override suspend fun getCheckpoints(agentId: String): List<AgentCheckpointData> {
         mutex.withLock {
-            return snapshotMap[persistenceId] ?: emptyList()
+            return snapshotMap[agentId] ?: emptyList()
         }
     }
 
-    override suspend fun saveCheckpoint(agentCheckpointData: AgentCheckpointData) {
+    override suspend fun saveCheckpoint(agentId: String, agentCheckpointData: AgentCheckpointData) {
         mutex.withLock {
-            val agentId = persistenceId
             snapshotMap[agentId] = (snapshotMap[agentId] ?: emptyList()) + agentCheckpointData
         }
     }
 
-    override suspend fun getLatestCheckpoint(): AgentCheckpointData? {
+    override suspend fun getLatestCheckpoint(agentId: String): AgentCheckpointData? {
         mutex.withLock {
-            return snapshotMap[persistenceId]?.maxBy { it.createdAt }
+            return snapshotMap[agentId]?.maxBy { it.createdAt }
         }
     }
 }

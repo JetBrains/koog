@@ -30,11 +30,9 @@ public typealias JVMFilePersistencyStorageProvider = JVMFilePersistenceStoragePr
  */
 public class JVMFilePersistenceStorageProvider(
     root: Path,
-    persistenceId: String,
     json: Json = PersistenceUtils.defaultCheckpointJson
 ) : FilePersistenceStorageProvider<Path>(
     fs = JVMFileSystemProvider.ReadWrite,
     root = root,
-    persistenceId = persistenceId,
     json = json
 )

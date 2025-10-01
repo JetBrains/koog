@@ -28,12 +28,10 @@ import kotlinx.datetime.Instant
  * Implementations must ensure thread-safe database access, typically through connection pooling.
  *
  * @constructor Initializes the SQL persistence provider.
- * @param persistenceId Unique identifier for this agent's persistence data
  * @param tableName Name of the table to store checkpoints (default: "agent_checkpoints")
  * @param ttlSeconds Optional TTL for checkpoint entries in seconds (null = no expiration)
  */
 public abstract class SQLPersistenceStorageProvider(
-    protected val persistenceId: String,
     protected val tableName: String = "agent_checkpoints",
     protected val ttlSeconds: Long? = null,
     protected val migrator: SQLPersistenceSchemaMigrator
@@ -71,15 +69,15 @@ public abstract class SQLPersistenceStorageProvider(
     /**
      * Deletes a specific checkpoint by ID
      */
-    public abstract suspend fun deleteCheckpoint(checkpointId: String)
+    public abstract suspend fun deleteCheckpoint(agentId: String, checkpointId: String)
 
     /**
-     * Deletes all checkpoints for this persistence ID
+     * Deletes all checkpoints for this agent ID
      */
-    public abstract suspend fun deleteAllCheckpoints()
+    public abstract suspend fun deleteAllCheckpoints(agentId: String)
 
     /**
      * Gets the total number of checkpoints stored
      */
-    public abstract suspend fun getCheckpointCount(): Long
+    public abstract suspend fun getCheckpointCount(agentId: String): Long
 }

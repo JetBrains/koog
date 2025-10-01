@@ -29,7 +29,6 @@ public typealias FilePersistencyStorageProvider<Path> = FilePersistenceStoragePr
  * @param root Root file path where the checkpoint storage will organize data.
  */
 public open class FilePersistenceStorageProvider<Path>(
-    private val persistenceId: String,
     private val fs: FileSystemProvider.ReadWrite<Path>,
     private val root: Path,
     private val json: Json = PersistenceUtils.defaultCheckpointJson
@@ -49,9 +48,9 @@ public open class FilePersistenceStorageProvider<Path>(
     /**
      * Directory for a specific agent's checkpoints
      */
-    private suspend fun agentCheckpointsDir(): Path {
+    private suspend fun agentCheckpointsDir(agentId: String): Path {
         val checkpointsDir = checkpointsDir()
-        val agentDir = fs.joinPath(checkpointsDir, persistenceId)
+        val agentDir = fs.joinPath(checkpointsDir, agentId)
         if (!fs.exists(agentDir)) {
             fs.createDirectory(agentDir)
         }
@@ -61,13 +60,13 @@ public open class FilePersistenceStorageProvider<Path>(
     /**
      * Get the path to a specific checkpoint file
      */
-    private suspend fun checkpointPath(checkpointId: String): Path {
-        val agentDir = agentCheckpointsDir()
+    private suspend fun checkpointPath(agentId: String, checkpointId: String): Path {
+        val agentDir = agentCheckpointsDir(agentId)
         return fs.joinPath(agentDir, checkpointId)
     }
 
-    override suspend fun getCheckpoints(): List<AgentCheckpointData> {
-        val agentDir = agentCheckpointsDir()
+    override suspend fun getCheckpoints(agentId: String): List<AgentCheckpointData> {
+        val agentDir = agentCheckpointsDir(agentId)
 
         if (!fs.exists(agentDir)) {
             return emptyList()
@@ -83,14 +82,14 @@ public open class FilePersistenceStorageProvider<Path>(
         }
     }
 
-    override suspend fun saveCheckpoint(agentCheckpointData: AgentCheckpointData) {
-        val checkpointPath = checkpointPath(agentCheckpointData.checkpointId)
+    override suspend fun saveCheckpoint(agentId: String, agentCheckpointData: AgentCheckpointData) {
+        val checkpointPath = checkpointPath(agentId, agentCheckpointData.checkpointId)
         val serialized = json.encodeToString(AgentCheckpointData.serializer(), agentCheckpointData)
         fs.writeText(checkpointPath, serialized)
     }
 
-    override suspend fun getLatestCheckpoint(): AgentCheckpointData? {
-        return getCheckpoints()
+    override suspend fun getLatestCheckpoint(agentId: String): AgentCheckpointData? {
+        return getCheckpoints(agentId)
             .maxByOrNull { it.createdAt }
     }
 }

@@ -14,13 +14,12 @@ import org.jetbrains.exposed.sql.transactions.transaction
  * @constructor Initializes the PostgreSQL persistence provider with connection details.
  */
 public class PostgresPersistenceStorageProvider(
-    persistenceId: String,
     database: Database,
     tableName: String = "agent_checkpoints",
     ttlSeconds: Long? = null,
     migrator: SQLPersistenceSchemaMigrator = PostgresPersistenceSchemaMigrator(database, tableName),
     json: Json = PersistenceUtils.defaultCheckpointJson
-) : ExposedPersistenceStorageProvider(persistenceId, database, tableName, ttlSeconds, migrator, json) {
+) : ExposedPersistenceStorageProvider(database, tableName, ttlSeconds, migrator, json) {
 
     override suspend fun <T> transaction(block: suspend () -> T): T =
         newSuspendedTransaction(Dispatchers.IO, database) { block() }

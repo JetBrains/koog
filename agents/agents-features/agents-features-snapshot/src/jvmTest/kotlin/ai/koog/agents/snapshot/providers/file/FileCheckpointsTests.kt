@@ -49,7 +49,7 @@ class FileCheckpointsTests {
     @BeforeTest
     fun setup() {
         tempDir = Files.createTempDirectory("agent-checkpoint-test")
-        provider = JVMFilePersistenceStorageProvider(tempDir, "testAgentId")
+        provider = JVMFilePersistenceStorageProvider(tempDir)
     }
 
     @AfterTest
@@ -86,7 +86,7 @@ class FileCheckpointsTests {
         )
 
         // Verify that the checkpoint was saved to the file system
-        val checkpoints = provider.getCheckpoints().filter { !it.isTombstone() }
+        val checkpoints = provider.getCheckpoints(agentId).filter { !it.isTombstone() }
         assertEquals(1, checkpoints.size, "Should have one checkpoint")
         assertEquals("checkpointId", checkpoints.first().checkpointId)
     }
@@ -129,7 +129,7 @@ class FileCheckpointsTests {
             )
         )
 
-        provider.saveCheckpoint(testCheckpoint)
+        provider.saveCheckpoint(agentId, testCheckpoint)
 
         val agent = AIAgent(
             promptExecutor = getMockExecutor { },
@@ -180,8 +180,8 @@ class FileCheckpointsTests {
             )
         )
 
-        provider.saveCheckpoint(testCheckpoint)
-        provider.saveCheckpoint(testCheckpoint2)
+        provider.saveCheckpoint(agentId, testCheckpoint)
+        provider.saveCheckpoint(agentId, testCheckpoint2)
 
         val agent = AIAgent(
             promptExecutor = getMockExecutor { },
@@ -226,7 +226,7 @@ class FileCheckpointsTests {
         agent.run("Start the test")
 
         // Verify that checkpoints were automatically created
-        val checkpoints = provider.getCheckpoints()
+        val checkpoints = provider.getCheckpoints(agentId)
         assertTrue(checkpoints.isNotEmpty(), "Should have automatically created checkpoints")
     }
 }

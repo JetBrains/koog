@@ -37,13 +37,12 @@ import org.jetbrains.exposed.sql.transactions.transaction
  * @constructor Initializes the MySQL persistence provider with an Exposed Database instance.
  */
 public class MySQLPersistenceStorageProvider(
-    persistenceId: String,
     database: Database,
     tableName: String = "agent_checkpoints",
     ttlSeconds: Long? = null,
     migrator: SQLPersistenceSchemaMigrator = MySqlPersistenceSchemaMigrator(database, tableName),
     json: Json = PersistenceUtils.defaultCheckpointJson
-) : ExposedPersistenceStorageProvider(persistenceId, database, tableName, ttlSeconds, migrator, json) {
+) : ExposedPersistenceStorageProvider(database, tableName, ttlSeconds, migrator, json) {
 
     override suspend fun <T> transaction(block: suspend () -> T): T =
         newSuspendedTransaction(Dispatchers.IO, database) {

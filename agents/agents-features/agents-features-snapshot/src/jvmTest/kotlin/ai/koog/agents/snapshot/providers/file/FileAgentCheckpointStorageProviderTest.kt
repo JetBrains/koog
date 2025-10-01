@@ -22,7 +22,7 @@ class FileAgentCheckpointStorageProviderTest {
     @BeforeTest
     fun setup() {
         tempDir = Files.createTempDirectory("checkpoint-test")
-        provider = JVMFilePersistenceStorageProvider(tempDir, "testAgentId")
+        provider = JVMFilePersistenceStorageProvider(tempDir)
     }
 
     @AfterTest
@@ -54,11 +54,12 @@ class FileAgentCheckpointStorageProviderTest {
             messageHistory = messageHistory
         )
 
+        val agentId = "testAgentId"
         // Save the checkpoint
-        provider.saveCheckpoint(checkpoint)
+        provider.saveCheckpoint(agentId, checkpoint)
 
         // Retrieve all checkpoints for the agent
-        val checkpoints = provider.getCheckpoints()
+        val checkpoints = provider.getCheckpoints(agentId)
         assertEquals(1, checkpoints.size, "Should have one checkpoint")
 
         // Verify the retrieved checkpoint
@@ -80,7 +81,7 @@ class FileAgentCheckpointStorageProviderTest {
         assertEquals(originalAssistantMsg.content, retrievedAssistantMsg.content)
 
         // Test getLatestCheckpoint
-        val latestCheckpoint = provider.getLatestCheckpoint()
+        val latestCheckpoint = provider.getLatestCheckpoint(agentId)
         assertNotNull(latestCheckpoint, "Latest checkpoint should not be null")
         assertEquals(checkpointId, latestCheckpoint.checkpointId)
 
@@ -96,15 +97,15 @@ class FileAgentCheckpointStorageProviderTest {
         )
 
         // Save the later checkpoint
-        provider.saveCheckpoint(laterCheckpoint)
+        provider.saveCheckpoint(agentId, laterCheckpoint)
 
         // Verify that getLatestCheckpoint returns the later checkpoint
-        val newLatestCheckpoint = provider.getLatestCheckpoint()
+        val newLatestCheckpoint = provider.getLatestCheckpoint(agentId)
         assertNotNull(newLatestCheckpoint, "New latest checkpoint should not be null")
         assertEquals(laterCheckpointId, newLatestCheckpoint.checkpointId)
 
         // Verify that getCheckpoints returns both checkpoints
-        val allCheckpoints = provider.getCheckpoints()
+        val allCheckpoints = provider.getCheckpoints(agentId)
         assertEquals(2, allCheckpoints.size, "Should have two checkpoints")
         assertTrue(allCheckpoints.any { it.checkpointId == checkpointId })
         assertTrue(allCheckpoints.any { it.checkpointId == laterCheckpointId })

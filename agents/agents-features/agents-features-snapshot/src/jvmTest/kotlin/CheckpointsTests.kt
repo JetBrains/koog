@@ -105,7 +105,7 @@ class CheckpointsTests {
             toolRegistry = toolRegistry
         ) {
             install(Persistence) {
-                storage = InMemoryPersistenceStorageProvider("testAgentId")
+                storage = InMemoryPersistenceStorageProvider()
             }
         }
 
@@ -125,7 +125,7 @@ class CheckpointsTests {
             toolRegistry = toolRegistry
         ) {
             install(Persistence) {
-                storage = InMemoryPersistenceStorageProvider("testAgentId")
+                storage = InMemoryPersistenceStorageProvider()
             }
         }
 
@@ -262,7 +262,7 @@ class CheckpointsTests {
             toolRegistry = toolRegistry
         ) {
             install(Persistence) {
-                storage = InMemoryPersistenceStorageProvider("testAgentId")
+                storage = InMemoryPersistenceStorageProvider()
             }
         }
 
@@ -295,7 +295,7 @@ class CheckpointsTests {
             toolRegistry = localToolRegistry
         ) {
             install(Persistence) {
-                storage = InMemoryPersistenceStorageProvider("agent-tools-rollback-1")
+                storage = InMemoryPersistenceStorageProvider()
                 rollbackToolRegistry = RollbackToolRegistry {
                     registerRollback(WriteKVTool, DeleteKVTool)
                 }
@@ -347,7 +347,7 @@ class CheckpointsTests {
 
     @Test
     fun testRestoreFromSingleCheckpoint() = runTest {
-        val checkpointStorageProvider = InMemoryPersistenceStorageProvider("testAgentId")
+        val checkpointStorageProvider = InMemoryPersistenceStorageProvider()
         val time = Clock.System.now()
         val agentId = "testAgentId"
 
@@ -362,7 +362,7 @@ class CheckpointsTests {
             )
         )
 
-        checkpointStorageProvider.saveCheckpoint(testCheckpoint)
+        checkpointStorageProvider.saveCheckpoint(agentId, testCheckpoint)
 
         val agent = AIAgent(
             promptExecutor = getMockExecutor { },
@@ -388,7 +388,7 @@ class CheckpointsTests {
 
     @Test
     fun testRestoreFromLatestCheckpoint() = runTest {
-        val checkpointStorageProvider = InMemoryPersistenceStorageProvider("testAgentId")
+        val checkpointStorageProvider = InMemoryPersistenceStorageProvider()
         val time = Clock.System.now()
         val agentId = "testAgentId"
 
@@ -414,8 +414,8 @@ class CheckpointsTests {
             )
         )
 
-        checkpointStorageProvider.saveCheckpoint(testCheckpoint)
-        checkpointStorageProvider.saveCheckpoint(testCheckpoint2)
+        checkpointStorageProvider.saveCheckpoint(agentId, testCheckpoint)
+        checkpointStorageProvider.saveCheckpoint(agentId, testCheckpoint2)
 
         val agent = AIAgent(
             promptExecutor = getMockExecutor { },

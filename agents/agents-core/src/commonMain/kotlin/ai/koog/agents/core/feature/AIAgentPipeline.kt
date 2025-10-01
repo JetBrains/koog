@@ -313,7 +313,8 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
                 strategy = strategy,
                 feature = handler.feature,
                 result = result,
-                resultType = resultType
+                resultType = resultType,
+                agentId = context.agentId
             )
             handler.handleStrategyCompletedUnsafe(eventContext)
         }

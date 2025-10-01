@@ -26,6 +26,8 @@ import kotlin.test.assertNull
 @ExtendWith(DockerAvailableCondition::class)
 class MySQLPersistenceStorageProviderTest {
 
+    private val agentId = "mysql-agent"
+
     private lateinit var mysql: MySQLContainer<*>
 
     @BeforeAll
@@ -50,7 +52,6 @@ class MySQLPersistenceStorageProviderTest {
             password = mysql.password
         )
         return MySQLPersistenceStorageProvider(
-            persistenceId = "mysql-agent",
             database = db,
             tableName = "agent_checkpoints_test",
             ttlSeconds = ttlSeconds
@@ -63,38 +64,38 @@ class MySQLPersistenceStorageProviderTest {
         p.migrate()
 
         // empty
-        assertNull(p.getLatestCheckpoint())
-        assertEquals(0, p.getCheckpointCount())
+        assertNull(p.getLatestCheckpoint(agentId))
+        assertEquals(0, p.getCheckpointCount(agentId))
 
         // save
         val cp1 = createTestCheckpoint("cp-1")
-        p.saveCheckpoint(cp1)
+        p.saveCheckpoint(agentId, cp1)
 
         // read
-        val latest1 = p.getLatestCheckpoint()
+        val latest1 = p.getLatestCheckpoint(agentId)
         assertNotNull(latest1)
         assertEquals("cp-1", latest1.checkpointId)
-        assertEquals(1, p.getCheckpoints().size)
-        assertEquals(1, p.getCheckpointCount())
+        assertEquals(1, p.getCheckpoints(agentId).size)
+        assertEquals(1, p.getCheckpointCount(agentId))
 
         // upsert same id should be idempotent (no duplicates due PK)
-        p.saveCheckpoint(cp1)
-        assertEquals(1, p.getCheckpoints().size)
+        p.saveCheckpoint(agentId, cp1)
+        assertEquals(1, p.getCheckpoints(agentId).size)
 
         // insert second
         val cp2 = createTestCheckpoint("cp-2")
-        p.saveCheckpoint(cp2)
-        val all = p.getCheckpoints()
+        p.saveCheckpoint(agentId, cp2)
+        val all = p.getCheckpoints(agentId)
         assertEquals(listOf("cp-1", "cp-2"), all.map { it.checkpointId })
-        assertEquals("cp-2", p.getLatestCheckpoint()!!.checkpointId)
+        assertEquals("cp-2", p.getLatestCheckpoint(agentId)!!.checkpointId)
 
         // delete single
-        p.deleteCheckpoint("cp-1")
-        assertEquals(listOf("cp-2"), p.getCheckpoints().map { it.checkpointId })
+        p.deleteCheckpoint(agentId, "cp-1")
+        assertEquals(listOf("cp-2"), p.getCheckpoints(agentId).map { it.checkpointId })
 
         // delete all
-        p.deleteAllCheckpoints()
-        assertEquals(0, p.getCheckpointCount())
+        p.deleteAllCheckpoints(agentId)
+        assertEquals(0, p.getCheckpointCount(agentId))
     }
 
     @Test
@@ -102,16 +103,16 @@ class MySQLPersistenceStorageProviderTest {
         val p = provider(ttlSeconds = 1)
         p.migrate()
 
-        p.saveCheckpoint(createTestCheckpoint("will-expire"))
-        assertEquals(1, p.getCheckpointCount())
+        p.saveCheckpoint(agentId, createTestCheckpoint("will-expire"))
+        assertEquals(1, p.getCheckpointCount(agentId))
 
         // Sleep slightly over 1s to ensure ttl passes
         delay(1100)
         // force cleanup
         p.cleanupExpired()
 
-        assertEquals(0, p.getCheckpointCount())
-        assertNull(p.getLatestCheckpoint())
+        assertEquals(0, p.getCheckpointCount(agentId))
+        assertNull(p.getLatestCheckpoint(agentId))
     }
 
     private fun createTestCheckpoint(id: String): AgentCheckpointData {

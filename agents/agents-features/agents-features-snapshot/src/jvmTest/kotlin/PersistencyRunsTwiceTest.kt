@@ -17,7 +17,7 @@ class PersistenceRunsTwiceTest {
     @Test
     fun `agent runs to end and on second run starts from beginning again`() = runTest {
         // Arrange
-        val provider = InMemoryPersistenceStorageProvider("persistence-test-agent")
+        val provider = InMemoryPersistenceStorageProvider()
 
         val testCollector = TestAgentLogsCollector()
 
@@ -39,6 +39,7 @@ class PersistenceRunsTwiceTest {
         }
 
         val firstAgent = agentService.createAgent(id = "SAME_ID")
+        val agentId1 = "SAME_ID"
 
         // Act: first run
         firstAgent.run("Start the test")
@@ -53,11 +54,11 @@ class PersistenceRunsTwiceTest {
 
         await.until {
             runBlocking {
-                provider.getLatestCheckpoint()?.isTombstone() == true
+                provider.getLatestCheckpoint(agentId1)?.isTombstone() == true
             }
         }
 
-        val firstCheckpoint = provider.getLatestCheckpoint()
+        val firstCheckpoint = provider.getLatestCheckpoint(agentId1)
 
         val secondAgent = agentService.createAgent(id = "SAME_ID")
 
@@ -67,7 +68,7 @@ class PersistenceRunsTwiceTest {
         // And still ends with a tombstone as the latest checkpoint
         await.until {
             runBlocking {
-                val latest2 = provider.getLatestCheckpoint()
+                val latest2 = provider.getLatestCheckpoint(agentId1)
                 latest2?.isTombstone() == true
                 latest2 != firstCheckpoint
             }
@@ -76,7 +77,7 @@ class PersistenceRunsTwiceTest {
 
     @Test
     fun `agent fails on the first run and second run running successfully`() = runTest {
-        val provider = InMemoryPersistenceStorageProvider("persistence-test-agent")
+        val provider = InMemoryPersistenceStorageProvider()
 
         val testCollector = TestAgentLogsCollector()
 
@@ -112,7 +113,7 @@ class PersistenceRunsTwiceTest {
 
         await.until {
             runBlocking {
-                provider.getCheckpoints().size == 2
+                provider.getCheckpoints(agentId).size == 2
             }
         }
 
@@ -131,7 +132,7 @@ class PersistenceRunsTwiceTest {
 
         await.until {
             runBlocking {
-                provider.getCheckpoints().filter { !it.isTombstone() }.size == 4
+                provider.getCheckpoints(agentId).filter { !it.isTombstone() }.size == 4
             }
         }
     }
