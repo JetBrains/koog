@@ -7,7 +7,7 @@ The A2A server enables you to expose AI agents through the standardized A2A (Age
 The A2A server acts as a bridge between the A2A protocol transport layer and your custom agent logic. 
 It orchestrates the entire request lifecycle while maintaining protocol compliance and providing robust session management.
 
-## Core Components
+## Core components
 
 ### A2AServer
 
@@ -18,68 +18,42 @@ The main server class implementing the complete A2A protocol. It serves as the c
 - **Orchestrates** communication between transport, storage, and business logic layers
 - **Handles** all protocol operations: message sending, task querying, cancellation, push notifications
 
-```kotlin
-class A2AServer(
-    agentExecutor: AgentExecutor,           // Your business logic implementation
-    agentCard: AgentCard,                   // Agent capabilities and metadata
-    agentCardExtended: AgentCard? = null,   // Optional extended capabilities for authenticated users
-    taskStorage: TaskStorage = InMemoryTaskStorage(),
-    messageStorage: MessageStorage = InMemoryMessageStorage(),
-    pushConfigStorage: PushNotificationConfigStorage? = null,
-    pushSender: PushNotificationSender? = null,
-    idGenerator: IdGenerator = UuidIdGenerator,
-    coroutineScope: CoroutineScope = CoroutineScope(SupervisorJob())
-) : RequestHandler
-```
+The `A2AServer` accepts two required parameters:
+* `AgentExecutor` which defines business logic implementation of the agent
+* `AgentCard` which defines agent capabilities and metadata
+
+And a number of optional parameters that can be used to customize its storage and transport behavior.
 
 ### AgentExecutor
 
-The `AgentExecutor` interface is where you implement your agent's core business logic. It acts as the bridge between the A2A protocol and your specific AI agent capabilities.
+The `AgentExecutor` interface is where you implement your agent's core business logic. 
+It acts as the bridge between the A2A protocol and your specific AI agent capabilities.
+To start the execution of your agent, you must implement the `execute` method where define your agent's logic.
+To cancel the agent, you must implement the `cancel` method.
 
 ```kotlin
-interface AgentExecutor {
-    /**
-     * Execute your agent's logic for an incoming message.
-     * This is where you process user input, perform AI operations,
-     * and send responses or task updates.
-     */
-    suspend fun execute(
-        context: RequestContext<MessageSendParams>,  // Rich context with request data
-        eventProcessor: SessionEventProcessor        // Send messages/task events
-    )
+class MyAgentExecutor : AgentExecutor {
+    override suspend fun execute(
+        context: RequestContext<MessageSendParams>,
+        eventProcessor: SessionEventProcessor
+    ) {
+        // Agent logic here
+    }
 
-    /**
-     * Handle task cancellation requests.
-     * Default implementation throws A2ATaskNotCancelableException.
-     */
-    suspend fun cancel(
+    override suspend fun cancel(
         context: RequestContext<TaskIdParams>,
         eventProcessor: SessionEventProcessor,
-        agentJob: Deferred<Unit>?                   // The running agent job to cancel
-    ) = Unit
+        agentJob: Deferred<Unit>?
+    ) {
+        // Cancel agent here, optional
+    }
 }
 ```
 
-#### RequestContext
-
-The `RequestContext` provides rich information about the current request:
-
-```kotlin
-data class RequestContext<T>(
-    val callContext: ServerCallContext,      // Transport-level context (headers, auth, etc.)
-    val params: T,                           // The actual request parameters
-    val taskStorage: ContextTaskStorage,     // Scoped storage for this context
-    val messageStorage: ContextMessageStorage, // Message history for this context
-    val contextId: String,                   // Unique conversation identifier
-    val taskId: String,                      // Current or new task identifier
-    val task: Task?                          // Existing task if continuing one
-)
-```
-
-#### SessionEventProcessor
+The `RequestContext` provides rich information about the current request,
+including the `contextId` and `taskId` of the current session, the `message` sent, and the `params` of the request.
 
 The `SessionEventProcessor` communicates with clients:
-
 - **`sendMessage(message)`**: Send immediate responses (chat-style interactions)
 - **`sendTaskEvent(event)`**: Send task-related updates (long-running operations)
 
@@ -197,8 +171,7 @@ val agentCard = AgentCard(
 ### Transport Layer
 
 The A2A itself supports multiple transport protocols for communicating with clients. 
-Koog provides implementations for JSON-RPC server transport over HTTP and SSE.
-For streaming 
+Currently, Koog provides implementations for JSON-RPC server transport over HTTP.
 
 #### HTTP JSON-RPC Transport
 
@@ -208,7 +181,6 @@ transport.start(
     engineFactory = CIO,           // Ktor engine (CIO, Netty, Jetty)
     port = 8080,                   // Server port
     path = "/a2a",                 // API endpoint path
-    host = "0.0.0.0",             // Bind address (optional)
     wait = true                    // Block until server stops
 )
 ```
@@ -222,7 +194,7 @@ All storage implementations are optional and default to in-memory variants for d
 - **MessageStorage**: Conversation history - manages message history within conversation contexts
 - **PushNotificationConfigStorage**: Webhook management - manages webhook configurations for asynchronous notifications
 
-## Quick Start
+## Quickstart
 
 ### 1. Create AgentCard
 Define your agent's capabilities and metadata.

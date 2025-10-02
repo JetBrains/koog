@@ -11,7 +11,7 @@ The A2A client acts as a bridge between your application and A2A-compliant agent
 It orchestrates the entire communication lifecycle while maintaining protocol compliance and providing robust session
 management.
 
-## Core Components
+## Core components
 
 ### A2AClient
 
@@ -22,50 +22,28 @@ The main client class implementing the complete A2A protocol. It serves as the c
 - **Handles** streaming responses and real-time communication when supported by agents
 - **Provides** comprehensive error handling and fallback mechanisms for robust applications
 
-```kotlin
-class A2AClient(
-    private val transport: ClientTransport,        // Network communication layer
-    private val agentCardResolver: AgentCardResolver  // Agent discovery and metadata retrieval
-) {
-    /**
-     * Connect to the agent and retrieve its capabilities.
-     * This discovers what the agent can do and caches the AgentCard.
-     */
-    suspend fun connect(): AgentCard
+The `A2AClient` accepts two required parameters:
 
-    /**
-     * Send a message to the agent and receive a single response.
-     * Use this for simple request-response patterns.
-     */
-    suspend fun sendMessage(request: Request<MessageSendParams>): Response<CommunicationEvent>
+* `ClientTransport` which handles network communication layer
+* `AgentCardResolver` which handles agent discovery and metadata retrieval
 
-    /**
-     * Send a message with streaming support for real-time responses.
-     * Returns a Flow of events including partial messages and task updates.
-     */
-    fun sendMessageStreaming(request: Request<MessageSendParams>): Flow<Response<Event>>
+The `A2AClient` interface provides several key methods for interacting with A2A agents:
 
-    /**
-     * Query the status and details of a specific task.
-     */
-    suspend fun getTask(request: Request<TaskQueryParams>): Response<Task>
-
-    /**
-     * Cancel a running task if the agent supports cancellation.
-     */
-    suspend fun cancelTask(request: Request<TaskIdParams>): Response<Task>
-
-    /**
-     * Get the cached agent card without making a network request.
-     * Returns null if connect() hasn't been called yet.
-     */
-    fun cachedAgentCard(): AgentCard?
-}
-```
+* `connect` method - To connect to the agent and retrieve its capabilities, which discovers what the agent can do and
+  caches the AgentCard
+* `sendMessage` method - To send a message to the agent and receive a single response for simple request-response
+  patterns
+* `sendMessageStreaming` method - To send a message with streaming support for real-time responses, which returns a Flow
+  of events including partial messages and task updates
+* `getTask` method - To query the status and details of a specific task
+* `cancelTask` method - To cancel a running task if the agent supports cancellation
+* `cachedAgentCard` method - To get the cached agent card without making a network request, which returns null if
+  connect hasn't been called yet
 
 ### ClientTransport
 
-The `ClientTransport` interface handles the low-level network communication while the A2A client manages the protocol logic.
+The `ClientTransport` interface handles the low-level network communication while the A2A client manages the protocol
+logic.
 It abstracts away transport-specific details, allowing you to use different protocols seamlessly.
 
 #### HTTP JSON-RPC Transport
@@ -100,11 +78,10 @@ val agentCardResolver = UrlAgentCardResolver(
     baseUrl = "https://agent.example.com",           // Base URL of the agent service
     path = "/.well-known/agent-card.json",           // Standard agent card location
     httpClient = HttpClient(CIO),                    // Optional: custom HTTP client
-    authenticatedPath = "/.well-known/agent-card-extended.json"  // Optional: extended card for authenticated users
 )
 ```
 
-## Quick Start
+## Quickstart
 
 ### 1. Create the Client
 
@@ -204,7 +181,7 @@ if (client.cachedAgentCard()?.capabilities?.streaming == true) {
 }
 ```
 
-### 5. Messages Tasks
+### 5. Manage Tasks
 
 A2A Client provides methods to control server tasks by asking for their status and cancelling them.
 
