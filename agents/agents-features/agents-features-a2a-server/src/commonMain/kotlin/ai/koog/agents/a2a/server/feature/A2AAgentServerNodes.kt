@@ -106,25 +106,6 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeA2AMessageStorageReplace(
     }
 
 /**
- * Creates a node that loads all messages from storage for the current context.
- *
- * This is an alias for [nodeA2AMessageStorageLoad].
- *
- * @param name Optional node name for debugging and tracing
- * @return A node that returns the list of all stored messages
- * @see ai.koog.a2a.server.messages.MessageStorage.getByContext
- */
-@AIAgentBuilderDslMarker
-public fun AIAgentSubgraphBuilderBase<*, *>.nodeA2AMessagesContextLoad(
-    name: String? = null,
-): AIAgentNodeDelegate<Unit, List<A2AMessage>> =
-    node(name) {
-        withA2AAgentServer {
-            context.messageStorage.getAll()
-        }
-    }
-
-/**
  * Parameters for retrieving a single task from storage.
  *
  * @property taskId The unique task identifier
