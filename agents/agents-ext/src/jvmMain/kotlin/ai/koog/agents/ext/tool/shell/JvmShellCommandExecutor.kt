@@ -1,10 +1,12 @@
 package ai.koog.agents.ext.tool.shell
 
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import java.io.File
 import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Shell command executor using ProcessBuilder for JVM platforms.
@@ -38,10 +40,24 @@ public class JvmShellCommandExecutor : ShellCommandExecutor() {
             listOf("sh", "-c", command)
         }
 
-        val process = ProcessBuilder(shellCommand).apply { workingDirectory?.let { directory(File(it)) } }.start()
+        val process = ProcessBuilder(shellCommand)
+            .apply { workingDirectory?.let { directory(File(it)) } }
+            .start()
 
-        val stdout = async { process.inputStream.bufferedReader().readText() }
-        val stderr = async { process.errorStream.bufferedReader().readText() }
+        val stdoutBuilder = StringBuilder()
+        val stderrBuilder = StringBuilder()
+
+        val stdoutJob = launch(Dispatchers.IO) {
+            process.inputStream.bufferedReader().useLines { lines ->
+                lines.forEach { stdoutBuilder.append(it).append('\n') }
+            }
+        }
+
+        val stderrJob = launch(Dispatchers.IO) {
+            process.errorStream.bufferedReader().useLines { lines ->
+                lines.forEach { stderrBuilder.append(it).append('\n') }
+            }
+        }
 
         val completed = if (timeoutSeconds != null) {
             process.waitFor(timeoutSeconds.toLong(), TimeUnit.SECONDS)
@@ -52,32 +68,37 @@ public class JvmShellCommandExecutor : ShellCommandExecutor() {
 
         if (!completed) {
             process.destroyForcibly()
-            stdout.cancel()
-            stderr.cancel()
+            stdoutJob.cancel()
+            stderrJob.cancel()
 
-            val partialStdout = stdout.takeIf { it.isCompleted }?.getCompleted().orEmpty().trimEnd()
-            val partialStderr = stderr.takeIf { it.isCompleted }?.getCompleted().orEmpty().trimEnd()
+            val partialStdout = stdoutBuilder.toString().replace("\r\n", "\n").trimEnd()
+            val partialStderr = stderrBuilder.toString().replace("\r\n", "\n").trimEnd()
 
             val timeoutMessage = "Command timed out after $timeoutSeconds seconds"
 
             val combinedOutput = buildString {
                 if (partialStdout.isNotEmpty()) appendLine(partialStdout)
                 if (partialStderr.isNotEmpty()) appendLine(partialStderr)
-                append(timeoutMessage)
-            }
+                appendLine(timeoutMessage)
+            }.trimEnd()
 
             return@withContext ExecutionResult(
-                output = combinedOutput.trimEnd(),
+                output = combinedOutput,
                 exitCode = null
             )
         }
 
-        val stdoutResult = stdout.await().trimEnd()
-        val stderrResult = stderr.await().trimEnd()
+        withTimeout(1.seconds) {
+            stdoutJob.join()
+            stderrJob.join()
+        }
+
+        val stdoutResult = stdoutBuilder.toString().replace("\r\n", "\n").trimEnd()
+        val stderrResult = stderrBuilder.toString().replace("\r\n", "\n").trimEnd()
 
         val combinedOutput = buildString {
             if (stdoutResult.isNotEmpty()) appendLine(stdoutResult)
-            if (stderrResult.isNotEmpty()) append(stderrResult)
+            if (stderrResult.isNotEmpty()) appendLine(stderrResult)
         }.trimEnd()
 
         ExecutionResult(

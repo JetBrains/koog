@@ -58,6 +58,7 @@ class JvmShellCommandToolTest {
     }
 
     // SUCCESSFUL COMMAND EXECUTION TESTS
+
     @Test
     @EnabledOnOs(OS.LINUX, OS.MAC)
     fun `reading file content and filtering with grep`() = runBlocking {
@@ -203,7 +204,7 @@ class JvmShellCommandToolTest {
 
         val result = execute("dir /s /b /o:n", workingDirectory = tempDir.toString())
 
-        val tempDirStr = tempDir.toString().replace("\\", "\\\\")
+        val tempDirStr = tempDir.toAbsolutePath().toString()
 
         val expected = """
             Command: dir /s /b /o:n
@@ -219,6 +220,7 @@ class JvmShellCommandToolTest {
     }
 
     // NO OUTPUT COMMAND EXECUTION TESTS
+
     @Test
     @EnabledOnOs(OS.LINUX, OS.MAC)
     fun `command with no output shows placeholder`() = runBlocking {
@@ -254,6 +256,7 @@ class JvmShellCommandToolTest {
     }
 
     // COMMAND FAILURE TESTS
+
     @Test
     @EnabledOnOs(OS.LINUX, OS.MAC)
     fun `command fails with error message`() = runBlocking {
@@ -309,7 +312,12 @@ class JvmShellCommandToolTest {
         val expected = """
             Command: type file1.txt file2.txt
             Hello from file1
+            
+            file1.txt
+            
+            
             The system cannot find the file specified.
+            Error occurred while processing: file2.txt.
             Exit code: 1
         """.trimIndent()
 
@@ -317,10 +325,11 @@ class JvmShellCommandToolTest {
     }
 
     // USER DENIAL TESTS
+
     @Test
     fun `user denies command execution with simple No`() = runBlocking {
         val handler = object : ShellCommandConfirmationHandler {
-            override suspend fun requestConfirmation(command: String, workingDirectory: String?) =
+            override suspend fun requestConfirmation(args: ExecuteShellCommandTool.Args) =
                 ShellCommandConfirmation.Denied("No")
         }
 
@@ -338,7 +347,7 @@ class JvmShellCommandToolTest {
     @Test
     fun `user denies with reason`() = runBlocking {
         val handler = object : ShellCommandConfirmationHandler {
-            override suspend fun requestConfirmation(command: String, workingDirectory: String?) =
+            override suspend fun requestConfirmation(args: ExecuteShellCommandTool.Args) =
                 ShellCommandConfirmation.Denied("Cannot delete important files")
         }
 
@@ -354,6 +363,7 @@ class JvmShellCommandToolTest {
     }
 
     // TIMEOUT  TESTS
+
     @Test
     @EnabledOnOs(OS.LINUX, OS.MAC)
     fun `long running command times out`() = runBlocking {
@@ -371,10 +381,10 @@ class JvmShellCommandToolTest {
     @Test
     @EnabledOnOs(OS.WINDOWS)
     fun `long running command times out on Windows`() = runBlocking {
-        val result = execute("timeout /t 10 /nobreak", timeoutSeconds = 1)
+        val result = execute("powershell -Command \"Start-Sleep -Seconds 10\"", timeoutSeconds = 1)
 
         val expected = """
-            Command: timeout /t 10 /nobreak
+            Command: powershell -Command "Start-Sleep -Seconds 10"
             Command timed out after 1 seconds
         """.trimIndent()
 
@@ -393,6 +403,26 @@ class JvmShellCommandToolTest {
             2
             3
             Command timed out after 3 seconds
+        """.trimIndent()
+
+        assertEquals(expected, result.textForLLM())
+        assertNull(result.exitCode)
+    }
+
+    @Test
+    @EnabledOnOs(OS.WINDOWS)
+    fun `command with partial output times out on Windows`() = runBlocking {
+        val result = execute(
+            """cmd /c "echo 1 & echo 2 & echo 3 & powershell -Command Start-Sleep -Seconds 10"""",
+            timeoutSeconds = 1
+        )
+
+        val expected = """
+            Command: cmd /c "echo 1 & echo 2 & echo 3 & powershell -Command Start-Sleep -Seconds 10"
+            1 
+            2 
+            3
+            Command timed out after 1 seconds
         """.trimIndent()
 
         assertEquals(expected, result.textForLLM())

@@ -7,8 +7,7 @@ package ai.koog.agents.ext.tool.shell
  */
 public class BraveModeConfirmationHandler : ShellCommandConfirmationHandler {
     override suspend fun requestConfirmation(
-        command: String,
-        workingDirectory: String?
+        args: ExecuteShellCommandTool.Args
     ): ShellCommandConfirmation = ShellCommandConfirmation.Approved
 }
 
@@ -19,11 +18,11 @@ public class BraveModeConfirmationHandler : ShellCommandConfirmationHandler {
  */
 public class PrintShellCommandConfirmationHandler : ShellCommandConfirmationHandler {
     override suspend fun requestConfirmation(
-        command: String,
-        workingDirectory: String?
+        args: ExecuteShellCommandTool.Args
     ): ShellCommandConfirmation {
-        println("Agent wants to execute: $command")
-        workingDirectory?.let { println("In: $it") }
+        println("Agent wants to execute: ${args.command}")
+        args.workingDirectory?.let { println("In: $it") }
+        println("Timeout: ${args.timeoutSeconds}s")
         print("Confirm (y / n / reason-for-denying): ")
 
         val userResponse = readln().lowercase()
