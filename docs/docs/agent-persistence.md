@@ -63,7 +63,7 @@ val agent = AIAgent(
 ) {
     install(Persistence) {
         // Use in-memory storage for snapshots
-        storage = InMemoryPersistenceStorageProvider("in-memory-storage")
+        storage = InMemoryPersistenceStorageProvider()
         // Enable automatic persistence
         enableAutomaticPersistence = true
     }
