@@ -1,11 +1,11 @@
-# Agent Persistency
+# Agent Persistence
 
-Agent Persistency is a feature that provides checkpoint functionality for AI agents in the Koog framework.
+Agent persistence is a feature that provides checkpoint functionality for AI agents in the Koog framework.
 It lets you save and restore the state of an agent at specific points during execution, enabling capabilities such as:
 
-- Resuming agent execution from a specific point
-- Rolling back to previous states
-- Persisting agent state across sessions
+- Resuming agent execution from a specific point.
+- Rolling back to previous states.
+- Persisting agent state across sessions.
 
 ## Key concepts
 
@@ -22,7 +22,7 @@ Checkpoints are identified by unique IDs and are associated with a specific agen
 
 ## Prerequisites
 
-The Agent Persistency feature requires that all nodes in your agent's strategy have unique names.
+The Agent Persistence feature requires that all nodes in your agent's strategy have unique names.
 This is enforced when the feature is installed:
 
 <!--- INCLUDE
@@ -38,13 +38,13 @@ require(ctx.strategy.metadata.uniqueNames) {
 }
 ```
 
-<!--- KNIT example-agent-persistency-01.kt -->
+<!--- KNIT example-agent-persistence-01.kt -->
 
 Make sure to set unique names for nodes in your graph.
 
 ## Installation
 
-To use the Agent Persistency feature, add it to your agent's configuration:
+To use the Agent Persistence feature, add it to your agent's configuration:
 
 <!--- INCLUDE
 import ai.koog.agents.core.agent.AIAgent
@@ -70,11 +70,11 @@ val agent = AIAgent(
 }
 ```
 
-<!--- KNIT example-agent-persistency-02.kt -->
+<!--- KNIT example-agent-persistence-02.kt -->
 
 ## Configuration options
 
-The Agent Persistency feature has two main configuration options:
+The Agent Persistence feature has two main configuration options:
 
 - **Storage provider**: the provider used to save and retrieve checkpoints.
 - **Continuous persistence**: automatic creation of checkpoints after each node is run.
@@ -105,7 +105,7 @@ install(Persistency) {
 }
 ```
 
-<!--- KNIT example-agent-persistency-03.kt -->
+<!--- KNIT example-agent-persistence-03.kt -->
 
 
 The framework includes the following built-in providers:
@@ -144,7 +144,7 @@ install(Persistency) {
 }
 ```
 
-<!--- KNIT example-agent-persistency-04.kt -->
+<!--- KNIT example-agent-persistence-04.kt -->
 
 When activated, the agent will automatically create a checkpoint after each node is executed,
 allowing for fine-grained recovery.
@@ -180,7 +180,7 @@ suspend fun example(context: AIAgentContext) {
 }
 ```
 
-<!--- KNIT example-agent-persistency-05.kt -->
+<!--- KNIT example-agent-persistence-05.kt -->
 
 ### Restoring from a checkpoint
 
@@ -201,7 +201,7 @@ suspend fun example(context: AIAgentContext, checkpointId: String) {
 }
 ```
 
-<!--- KNIT example-agent-persistency-06.kt -->
+<!--- KNIT example-agent-persistence-06.kt -->
 
 #### Rolling back all side-effects produced by tools
 
@@ -222,7 +222,7 @@ And now you would like to roll back to a checkpoint. Restoring the agent's state
 be sufficient to achieve the exact state of the world before the checkpoint. You should also restore the side-effects produced by your tool calls. In our example,
 this would mean removing `Maria` and `Daniel` from the database.
 
-With Koog Persistency you can achieve that by providing a `RollbackToolRegistry` to `Persistency` feature config:
+With Koog Persistence you can achieve that by providing a `RollbackToolRegistry` to `Persistency` feature config:
 
 <!--- INCLUDE
 import ai.koog.agents.core.agent.AIAgent
@@ -259,16 +259,16 @@ install(Persistency) {
 }
 ```
 
-<!--- KNIT example-agent-persistency-07.kt -->
+<!--- KNIT example-agent-persistence-07.kt -->
 
 ### Using extension functions
 
-The Agent Persistency feature provides convenient extension functions for working with checkpoints:
+The Agent Persistence feature provides convenient extension functions for working with checkpoints:
 
 <!--- INCLUDE
 import ai.koog.agents.core.agent.context.AIAgentContext
-import ai.koog.agents.example.exampleAgentPersistency05.inputData
-import ai.koog.agents.example.exampleAgentPersistency05.inputType
+import ai.koog.agents.example.exampleAgentPersistence05.inputData
+import ai.koog.agents.example.exampleAgentPersistence05.inputType
 import ai.koog.agents.snapshot.feature.persistency
 import ai.koog.agents.snapshot.feature.withPersistency
 -->
@@ -291,7 +291,7 @@ suspend fun example(context: AIAgentContext) {
     }
 }
 ```
-<!--- KNIT example-agent-persistency-08.kt -->
+<!--- KNIT example-agent-persistence-08.kt -->
 
 ## Advanced usage
 
@@ -325,9 +325,9 @@ class MyCustomStorageProvider : PersistencyStorageProvider {
 }
 ```
 
-<!--- KNIT example-agent-persistency-09.kt -->
+<!--- KNIT example-agent-persistence-09.kt -->
 
-To use your custom provider in the feature configuration, set it as the storage when configuring the Agent Persistency
+To use your custom provider in the feature configuration, set it as the storage when configuring the Agent Persistence
 feature in your agent.
 
 <!--- INCLUDE
@@ -367,7 +367,7 @@ install(Persistency) {
 }
 ```
 
-<!--- KNIT example-agent-persistency-10.kt -->
+<!--- KNIT example-agent-persistence-10.kt -->
 
 ### Setting execution points
 
@@ -395,6 +395,6 @@ fun example(context: AIAgentContext) {
 
 ```
 
-<!--- KNIT example-agent-persistency-11.kt -->
+<!--- KNIT example-agent-persistence-11.kt -->
 
 This allows for more fine-grained control over the agent's state beyond just restoring from checkpoints.

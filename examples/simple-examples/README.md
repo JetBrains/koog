@@ -85,6 +85,15 @@ Welcome to the **Koog Framework Simple Examples** collection! This project showc
 | **Bedrock Agent** | AI agents using AWS Bedrock integration              | `runExampleBedrockAgent`           | [📓 BedrockAgent.ipynb](../notebooks/BedrockAgent.ipynb) |
 | **Web Search**    | Agent with web search capabilities                   | `runExampleWebSearchAgent`         | -                                                        |
 
+### Agent-to-Agent (A2A)
+
+Examples demonstrating the A2A protocol for inter-agent communication. See the [A2A README](src/main/kotlin/ai/koog/agents/example/a2a/README.md) for details.
+
+| Example                | Description                                                | Files                                 |
+|------------------------|------------------------------------------------------------|---------------------------------------|
+| **Simple Joke Agent**  | Basic A2A agent with message-based joke generation         | `simplejoke/` (Server + Client)       |
+| **Advanced Joke Agent** | Task-based agent with clarification flow and artifacts | `advancedjoke/` (Server + Client)     |
+
 ### Advanced Patterns
 
 | Feature               | Description                                   | Gradle Task                     | Notebook |
