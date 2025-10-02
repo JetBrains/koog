@@ -1,7 +1,7 @@
 package ai.koog.agents.features.sql.providers
 
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
-import ai.koog.agents.snapshot.providers.PersistencyUtils
+import ai.koog.agents.snapshot.providers.PersistenceUtils
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.sql.Column
@@ -73,7 +73,7 @@ public open class CheckpointsTable(tableName: String) : Table(tableName) {
 }
 
 /**
- * An abstract Exposed-based implementation of [SQLPersistencyStorageProvider] for managing
+ * An abstract Exposed-based implementation of [SQLPersistenceStorageProvider] for managing
  * agent checkpoints in SQL databases using JetBrains Exposed ORM.
  *
  * This class provides a generic SQL implementation that works with any database supported
@@ -113,14 +113,14 @@ public open class CheckpointsTable(tableName: String) : Table(tableName) {
  * @param ttlSeconds Optional TTL for checkpoint entries in seconds (null = no expiration)
  */
 @Suppress("MissingKDocForPublicAPI")
-public abstract class ExposedPersistencyStorageProvider(
+public abstract class ExposedPersistenceStorageProvider(
     persistenceId: String,
     protected val database: Database,
     tableName: String = "agent_checkpoints",
     ttlSeconds: Long? = null,
     migrator: SQLPersistenceSchemaMigrator,
-    private val json: Json = PersistencyUtils.defaultCheckpointJson
-) : SQLPersistencyStorageProvider(
+    private val json: Json = PersistenceUtils.defaultCheckpointJson
+) : SQLPersistenceStorageProvider(
     persistenceId = persistenceId,
     tableName = tableName,
     ttlSeconds = ttlSeconds,
@@ -184,7 +184,7 @@ public abstract class ExposedPersistencyStorageProvider(
             checkpointsTable
                 .select(checkpointsTable.checkpointJson)
                 .where {
-                    checkpointsTable.persistenceId eq this@ExposedPersistencyStorageProvider.persistenceId
+                    checkpointsTable.persistenceId eq this@ExposedPersistenceStorageProvider.persistenceId
                 }
                 .orderBy(checkpointsTable.createdAt to SortOrder.ASC)
                 .mapNotNull { row ->
@@ -202,7 +202,7 @@ public abstract class ExposedPersistencyStorageProvider(
         transaction {
             // Use upsert for idempotent saves
             checkpointsTable.upsert {
-                it[checkpointsTable.persistenceId] = this@ExposedPersistencyStorageProvider.persistenceId
+                it[checkpointsTable.persistenceId] = this@ExposedPersistenceStorageProvider.persistenceId
                 it[checkpointsTable.checkpointId] = agentCheckpointData.checkpointId
                 it[checkpointsTable.createdAt] = agentCheckpointData.createdAt.toEpochMilliseconds()
                 it[checkpointsTable.checkpointJson] = checkpointJson
@@ -216,7 +216,7 @@ public abstract class ExposedPersistencyStorageProvider(
             checkpointsTable
                 .select(checkpointsTable.checkpointJson)
                 .where {
-                    checkpointsTable.persistenceId eq this@ExposedPersistencyStorageProvider.persistenceId
+                    checkpointsTable.persistenceId eq this@ExposedPersistenceStorageProvider.persistenceId
                 }
                 .orderBy(checkpointsTable.createdAt to SortOrder.DESC)
                 .limit(1)
@@ -231,7 +231,7 @@ public abstract class ExposedPersistencyStorageProvider(
     override suspend fun deleteCheckpoint(checkpointId: String) {
         transaction {
             checkpointsTable.deleteWhere {
-                (checkpointsTable.persistenceId eq this@ExposedPersistencyStorageProvider.persistenceId) and
+                (checkpointsTable.persistenceId eq this@ExposedPersistenceStorageProvider.persistenceId) and
                     (checkpointsTable.checkpointId eq checkpointId)
             }
         }
@@ -240,7 +240,7 @@ public abstract class ExposedPersistencyStorageProvider(
     override suspend fun deleteAllCheckpoints() {
         transaction {
             checkpointsTable.deleteWhere {
-                checkpointsTable.persistenceId eq this@ExposedPersistencyStorageProvider.persistenceId
+                checkpointsTable.persistenceId eq this@ExposedPersistenceStorageProvider.persistenceId
             }
         }
     }
@@ -248,7 +248,7 @@ public abstract class ExposedPersistencyStorageProvider(
     override suspend fun getCheckpointCount(): Long {
         return transaction {
             checkpointsTable.selectAll().where {
-                checkpointsTable.persistenceId eq this@ExposedPersistencyStorageProvider.persistenceId
+                checkpointsTable.persistenceId eq this@ExposedPersistenceStorageProvider.persistenceId
             }.count()
         }
     }

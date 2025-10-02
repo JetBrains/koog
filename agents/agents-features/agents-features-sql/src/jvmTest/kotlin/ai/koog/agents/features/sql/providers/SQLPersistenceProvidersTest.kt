@@ -24,7 +24,7 @@ class SQLPersistenceProvidersTest {
 
     @Test
     fun `test save and retrieve checkpoint`() = runBlocking {
-        val provider = H2PersistencyStorageProvider.inMemory(
+        val provider = H2PersistenceStorageProvider.inMemory(
             persistenceId = "test-agent",
             databaseName = "test_db"
         )
@@ -45,7 +45,7 @@ class SQLPersistenceProvidersTest {
 
     @Test
     fun `test multiple checkpoints and ordering`() = runBlocking {
-        val provider = H2PersistencyStorageProvider.inMemory(
+        val provider = H2PersistenceStorageProvider.inMemory(
             persistenceId = "test-agent",
             databaseName = "test_ordering"
         )
@@ -70,11 +70,11 @@ class SQLPersistenceProvidersTest {
 
     @Test
     fun `test persistence ID isolation`() = runBlocking {
-        val provider1 = H2PersistencyStorageProvider.inMemory(
+        val provider1 = H2PersistenceStorageProvider.inMemory(
             persistenceId = "agent-1",
             databaseName = "shared_db"
         )
-        val provider2 = H2PersistencyStorageProvider.inMemory(
+        val provider2 = H2PersistenceStorageProvider.inMemory(
             persistenceId = "agent-2",
             databaseName = "shared_db" // Same database
         )
@@ -98,7 +98,7 @@ class SQLPersistenceProvidersTest {
 
     @Test
     fun `test TTL expiration`() = runBlocking {
-        val provider = H2PersistencyStorageProvider.inMemory(
+        val provider = H2PersistenceStorageProvider.inMemory(
             persistenceId = "ttl-test",
             databaseName = "ttl_db",
             ttlSeconds = 1 // 1 second TTL
@@ -122,11 +122,11 @@ class SQLPersistenceProvidersTest {
     @Test
     fun `verify all providers can be instantiated`() {
         // H2
-        assertNotNull(H2PersistencyStorageProvider.inMemory("test", "test_db"))
+        assertNotNull(H2PersistenceStorageProvider.inMemory("test", "test_db"))
 
         // PostgreSQL
         assertNotNull(
-            PostgresPersistencyStorageProvider(
+            PostgresPersistenceStorageProvider(
                 persistenceId = "test",
                 database = Database.connect(
                     url = "jdbc:postgresql://localhost:5432/test",
@@ -139,7 +139,7 @@ class SQLPersistenceProvidersTest {
 
         // MySQL
         assertNotNull(
-            MySQLPersistencyStorageProvider(
+            MySQLPersistenceStorageProvider(
                 persistenceId = "test",
                 database = Database.connect(
                     url = "jdbc:mysql://localhost:3306/test",

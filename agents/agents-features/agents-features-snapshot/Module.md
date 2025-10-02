@@ -27,18 +27,18 @@ dependencies {
 }
 ```
 
-Then, install the Persistency feature when creating your agent:
+Then, install the Persistence feature when creating your agent:
 
 ```kotlin
 val agent = AIAgent(
     // other configuration parameters
 ) {
-    install(Persistency) {
+    install(Persistence) {
         // Configure the storage provider
-        storage = InMemoryPersistencyStorageProvider("agent-persistence-id")
+        storage = InMemoryPersistenceStorageProvider("agent-persistence-id")
 
         // Optional: enable automatic checkpoint creation after each node
-        enableAutomaticPersistency = true
+        enableAutomaticPersistence = true
 
         // Use `RollbackStrategy.Default` if you want to checkpoint the whole state machine and continue from the same node in your strategy graph, 
         // or `RollbackStrategy.MessageHistoryOnly` if you only want to checkpoint messages
@@ -64,9 +64,9 @@ val agent = AIAgent(
     llmModel = OllamaModels.Meta.LLAMA_3_2,
     strategy = singleRunStrategy(ToolCalls.SEQUENTIAL),
 ) {
-    install(Persistency) {
+    install(Persistence) {
         storage = snapshotProvider
-        enableAutomaticPersistency = true
+        enableAutomaticPersistence = true
     }
 }
 

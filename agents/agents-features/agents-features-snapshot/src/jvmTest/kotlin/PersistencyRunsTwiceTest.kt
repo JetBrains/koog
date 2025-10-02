@@ -1,8 +1,8 @@
 import ai.koog.agents.core.agent.AIAgentService
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.snapshot.feature.Persistency
+import ai.koog.agents.snapshot.feature.Persistence
 import ai.koog.agents.snapshot.feature.isTombstone
-import ai.koog.agents.snapshot.providers.InMemoryPersistencyStorageProvider
+import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.llm.OllamaModels
@@ -12,12 +12,12 @@ import kotlinx.coroutines.test.runTest
 import org.awaitility.kotlin.await
 import org.junit.jupiter.api.Test
 
-class PersistencyRunsTwiceTest {
+class PersistenceRunsTwiceTest {
 
     @Test
     fun `agent runs to end and on second run starts from beginning again`() = runTest {
         // Arrange
-        val provider = InMemoryPersistencyStorageProvider("persistency-test-agent")
+        val provider = InMemoryPersistenceStorageProvider("persistence-test-agent")
 
         val testCollector = TestAgentLogsCollector()
 
@@ -32,9 +32,9 @@ class PersistencyRunsTwiceTest {
                 maxAgentIterations = 10
             ),
         ) {
-            install(Persistency) {
+            install(Persistence) {
                 storage = provider
-                enableAutomaticPersistency = true
+                enableAutomaticPersistence = true
             }
         }
 
@@ -76,7 +76,7 @@ class PersistencyRunsTwiceTest {
 
     @Test
     fun `agent fails on the first run and second run running successfully`() = runTest {
-        val provider = InMemoryPersistencyStorageProvider("persistency-test-agent")
+        val provider = InMemoryPersistenceStorageProvider("persistence-test-agent")
 
         val testCollector = TestAgentLogsCollector()
 
@@ -91,9 +91,9 @@ class PersistencyRunsTwiceTest {
                 maxAgentIterations = 10
             ),
         ) {
-            install(Persistency) {
+            install(Persistence) {
                 storage = provider
-                enableAutomaticPersistency = true
+                enableAutomaticPersistence = true
             }
         }
 

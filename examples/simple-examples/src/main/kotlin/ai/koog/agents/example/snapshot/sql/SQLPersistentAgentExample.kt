@@ -1,8 +1,8 @@
 package ai.koog.agents.example.snapshot.sql
 
-import ai.koog.agents.features.sql.providers.H2PersistencyStorageProvider
-import ai.koog.agents.features.sql.providers.MySQLPersistencyStorageProvider
-import ai.koog.agents.features.sql.providers.PostgresPersistencyStorageProvider
+import ai.koog.agents.features.sql.providers.H2PersistenceStorageProvider
+import ai.koog.agents.features.sql.providers.MySQLPersistenceStorageProvider
+import ai.koog.agents.features.sql.providers.PostgresPersistenceStorageProvider
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
@@ -43,7 +43,7 @@ object SQLPersistentAgentExample {
         println("PostgreSQL Persistence Example")
         println("------------------------------")
 
-        val provider = PostgresPersistencyStorageProvider(
+        val provider = PostgresPersistenceStorageProvider(
             persistenceId = "postgres-agent",
             database = Database.connect(
                 url = "jdbc:postgresql://localhost:5432/agents",
@@ -74,7 +74,7 @@ object SQLPersistentAgentExample {
         println("MySQL Persistence Example")
         println("-------------------------")
 
-        val provider = MySQLPersistencyStorageProvider(
+        val provider = MySQLPersistenceStorageProvider(
             persistenceId = "mysql-agent",
             database = Database.connect(
                 url = "jdbc:mysql://localhost:3306/agents?useSSL=false&serverTimezone=UTC",
@@ -118,7 +118,7 @@ object SQLPersistentAgentExample {
 
         // Example 1: In-memory database (for testing)
         println("\n1. In-Memory H2:")
-        val inMemoryProvider = H2PersistencyStorageProvider.inMemory(
+        val inMemoryProvider = H2PersistenceStorageProvider.inMemory(
             persistenceId = "h2-test-agent",
             databaseName = "test_agents"
         )
@@ -130,7 +130,7 @@ object SQLPersistentAgentExample {
 
         // Example 2: File-based database (for persistence)
         println("\n2. File-Based H2:")
-        val fileProvider = H2PersistencyStorageProvider.fileBased(
+        val fileProvider = H2PersistenceStorageProvider.fileBased(
             persistenceId = "h2-file-agent",
             filePath = "./data/h2/agent_checkpoints",
             ttlSeconds = 86400 // 24 hours
@@ -144,7 +144,7 @@ object SQLPersistentAgentExample {
         // Example 3: PostgreSQL compatibility mode
         println("\n3. PostgreSQL Compatible Mode:")
 
-        val pgCompatProvider = H2PersistencyStorageProvider(
+        val pgCompatProvider = H2PersistenceStorageProvider(
             persistenceId = "postgres-agent",
             database = Database.connect(
                 url = "jdbc:postgresql://localhost:5432/agents",

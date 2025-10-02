@@ -2,7 +2,7 @@ import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.snapshot.feature.withPersistency
+import ai.koog.agents.snapshot.feature.withPersistence
 import kotlinx.serialization.json.JsonPrimitive
 import kotlin.reflect.typeOf
 
@@ -103,10 +103,10 @@ private fun AIAgentSubgraphBuilderBase<*, *>.teleportOnceNode(
 ): AIAgentNodeDelegate<String, String> = node(name) {
     if (!teleportState.teleported) {
         teleportState.teleported = true
-        withPersistency { ctx ->
+        withPersistence { ctx ->
             val history = llm.readSession { this.prompt.messages }
             setExecutionPoint(ctx, teleportToId, history, JsonPrimitive("$it\nTeleported"))
-            return@withPersistency "Teleported"
+            return@withPersistence "Teleported"
         }
     } else {
         // If we've already teleported, just return the input
@@ -131,7 +131,7 @@ private fun AIAgentSubgraphBuilderBase<*, *>.nodeForSecondTry(
 private fun AIAgentSubgraphBuilderBase<*, *>.createCheckpointNode(name: String? = null, checkpointId: String) =
     node<String, String>(name) {
         val input = it
-        withPersistency { ctx ->
+        withPersistence { ctx ->
             createCheckpoint(ctx, name!!, input, typeOf<String>(), checkpointId)
             llm.writeSession {
                 updatePrompt {
@@ -157,7 +157,7 @@ private fun AIAgentSubgraphBuilderBase<*, *>.nodeRollbackToCheckpoint(
             return@node "Skipping rollback"
         }
 
-        withPersistency {
+        withPersistence {
             val checkpoint = rollbackToCheckpoint(checkpointId, it)!!
             teleportState.teleported = true
             llm.writeSession {
@@ -174,7 +174,7 @@ private fun AIAgentSubgraphBuilderBase<*, *>.nodeCreateCheckpoint(
     name: String? = null,
 ): AIAgentNodeDelegate<String, String> = node(name) {
     val input = it
-    withPersistency { ctx ->
+    withPersistence { ctx ->
         val checkpoint = createCheckpoint(
             ctx,
             currentNodeId ?: error("currentNodeId not set"),
@@ -185,7 +185,7 @@ private fun AIAgentSubgraphBuilderBase<*, *>.nodeCreateCheckpoint(
 
         saveCheckpoint(checkpoint ?: error("Checkpoint creation failed"))
 
-        return@withPersistency "$input\nSnapshot created"
+        return@withPersistence "$input\nSnapshot created"
     }
 }
 

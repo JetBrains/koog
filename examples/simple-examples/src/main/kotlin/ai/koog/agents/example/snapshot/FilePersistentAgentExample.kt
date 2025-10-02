@@ -5,8 +5,8 @@ import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.tool.AskUser
 import ai.koog.agents.ext.tool.SayToUser
-import ai.koog.agents.snapshot.feature.Persistency
-import ai.koog.agents.snapshot.providers.file.JVMFilePersistencyStorageProvider
+import ai.koog.agents.snapshot.feature.Persistence
+import ai.koog.agents.snapshot.providers.file.JVMFilePersistenceStorageProvider
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
@@ -38,7 +38,7 @@ fun main() = runBlocking {
     println("Checkpoint directory: $checkpointDir")
 
     // Create the file-based checkpoint provider
-    val provider = JVMFilePersistencyStorageProvider(checkpointDir, "persistent-agent-example")
+    val provider = JVMFilePersistenceStorageProvider(checkpointDir, "persistent-agent-example")
 
     // Create a unique agent ID to identify this agent's checkpoints
     val agentId = "persistent-agent-example"
@@ -68,9 +68,9 @@ fun main() = runBlocking {
         toolRegistry = toolRegistry,
         id = agentId
     ) {
-        install(Persistency) {
+        install(Persistence) {
             storage = provider // Use the file-based checkpoint provider
-            enableAutomaticPersistency = true // Enable automatic checkpoint creation
+            enableAutomaticPersistence = true // Enable automatic checkpoint creation
         }
     }
 
@@ -108,9 +108,9 @@ fun main() = runBlocking {
         toolRegistry = toolRegistry,
         id = agentId
     ) {
-        install(Persistency) {
+        install(Persistence) {
             storage = provider // Use the file-based checkpoint provider
-            enableAutomaticPersistency = true // Enable automatic checkpoint creation
+            enableAutomaticPersistence = true // Enable automatic checkpoint creation
         }
     }
 

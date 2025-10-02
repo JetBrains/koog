@@ -3,8 +3,8 @@ import ai.koog.agents.core.agent.AIAgentService
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.RollbackStrategy
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
-import ai.koog.agents.snapshot.feature.Persistency
-import ai.koog.agents.snapshot.providers.InMemoryPersistencyStorageProvider
+import ai.koog.agents.snapshot.feature.Persistence
+import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.llm.OllamaModels
@@ -16,10 +16,10 @@ import kotlinx.serialization.json.JsonPrimitive
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
-class PersistencyRestoreStrategyTests {
+class PersistenceRestoreStrategyTests {
     @Test
     fun `rollback Default resumes from checkpoint node`() = runTest {
-        val provider = InMemoryPersistencyStorageProvider("persistency-restore-default")
+        val provider = InMemoryPersistenceStorageProvider("persistence-restore-default")
 
         val checkpoint = AgentCheckpointData(
             checkpointId = "chk-1",
@@ -40,10 +40,10 @@ class PersistencyRestoreStrategyTests {
                 maxAgentIterations = 10
             ),
         ) {
-            install(Persistency) {
+            install(Persistence) {
                 storage = provider
-                // We only need restore on start; automatic persistency doesn't matter here
-                enableAutomaticPersistency = true
+                // We only need restore on start; automatic persistence doesn't matter here
+                enableAutomaticPersistence = true
                 rollbackStrategy = RollbackStrategy.Default
             }
         }
@@ -59,7 +59,7 @@ class PersistencyRestoreStrategyTests {
 
     @Test
     fun `rollback MessageHistoryOnly starts from beginning`() = runTest {
-        val provider = InMemoryPersistencyStorageProvider("persistency-restore-history-only")
+        val provider = InMemoryPersistenceStorageProvider("persistence-restore-history-only")
 
         val agentService = AIAgentService(
             promptExecutor = getMockExecutor { },
@@ -70,9 +70,9 @@ class PersistencyRestoreStrategyTests {
                 maxAgentIterations = 10
             ),
         ) {
-            install(Persistency) {
+            install(Persistence) {
                 storage = provider
-                enableAutomaticPersistency = true
+                enableAutomaticPersistence = true
                 rollbackStrategy = RollbackStrategy.MessageHistoryOnly
             }
         }

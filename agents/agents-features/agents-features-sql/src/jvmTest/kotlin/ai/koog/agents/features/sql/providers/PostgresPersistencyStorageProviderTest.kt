@@ -23,7 +23,7 @@ import kotlin.test.assertNull
 
 @TestInstance(Lifecycle.PER_CLASS)
 @ExtendWith(DockerAvailableCondition::class)
-class PostgresPersistencyStorageProviderTest {
+class PostgresPersistenceStorageProviderTest {
 
     private lateinit var postgres: PostgreSQLContainer<*>
 
@@ -41,14 +41,14 @@ class PostgresPersistencyStorageProviderTest {
         postgres.stop()
     }
 
-    private fun provider(ttlSeconds: Long? = null): PostgresPersistencyStorageProvider {
+    private fun provider(ttlSeconds: Long? = null): PostgresPersistenceStorageProvider {
         val db: Database = Database.connect(
             url = postgres.jdbcUrl,
             driver = "org.postgresql.Driver",
             user = postgres.username,
             password = postgres.password
         )
-        return PostgresPersistencyStorageProvider(
+        return PostgresPersistenceStorageProvider(
             persistenceId = "pg-agent",
             database = db,
             tableName = "agent_checkpoints_test",

@@ -2,10 +2,19 @@ package ai.koog.agents.snapshot.providers
 
 import kotlinx.serialization.json.Json
 
+@Deprecated(
+    "`PersistencyUtils` has been renamed to `PersistenceUtils`",
+    replaceWith = ReplaceWith(
+        expression = "PersistenceUtils",
+        "ai.koog.agents.snapshot.providers.PersistenceUtils"
+    )
+)
+public typealias PersistencyUtils = PersistenceUtils
+
 /**
- * Utility object containing configurations and utilities for handling persistency-related operations.
+ * Utility object containing configurations and utilities for handling persistence-related operations.
  */
-public object PersistencyUtils {
+public object PersistenceUtils {
     /**
      * A preconfigured JSON instance for handling serialization and deserialization of checkpoint data.
      *

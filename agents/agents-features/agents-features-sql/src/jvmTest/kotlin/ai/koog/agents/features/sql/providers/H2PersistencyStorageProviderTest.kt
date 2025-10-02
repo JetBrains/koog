@@ -19,10 +19,10 @@ import kotlin.test.assertNull
 
 @TestInstance(Lifecycle.PER_CLASS)
 @ExtendWith(DockerAvailableCondition::class)
-class H2PersistencyStorageProviderTest {
+class H2PersistenceStorageProviderTest {
 
-    private fun provider(ttlSeconds: Long? = null): H2PersistencyStorageProvider {
-        return H2PersistencyStorageProvider.inMemory(
+    private fun provider(ttlSeconds: Long? = null): H2PersistenceStorageProvider {
+        return H2PersistenceStorageProvider.inMemory(
             persistenceId = "h2-agent",
             databaseName = "h2_test_db",
             tableName = "agent_checkpoints_test",

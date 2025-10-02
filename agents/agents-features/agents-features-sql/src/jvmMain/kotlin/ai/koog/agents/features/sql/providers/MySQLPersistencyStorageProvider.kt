@@ -1,6 +1,6 @@
 package ai.koog.agents.features.sql.providers
 
-import ai.koog.agents.snapshot.providers.PersistencyUtils
+import ai.koog.agents.snapshot.providers.PersistenceUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.sql.Database
@@ -8,7 +8,7 @@ import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransacti
 import org.jetbrains.exposed.sql.transactions.transaction
 
 /**
- * MySQL-specific implementation of [ExposedPersistencyStorageProvider] for managing
+ * MySQL-specific implementation of [ExposedPersistenceStorageProvider] for managing
  * agent checkpoints in MySQL databases.
  *
  * This provider is optimized for MySQL 5.7+ and MariaDB 10.2+, leveraging their
@@ -22,7 +22,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
  *
  * ## Example Usage:
  * ```kotlin
- * val provider = MySQLPersistencyStorageProvider(
+ * val provider = MySQLPersistenceStorageProvider(
  *     persistenceId = "my-agent",
  *     database = Database.connect(
  *         url = "jdbc:mysql://localhost:3306/mydb?useSSL=false&serverTimezone=UTC",
@@ -36,14 +36,14 @@ import org.jetbrains.exposed.sql.transactions.transaction
  *
  * @constructor Initializes the MySQL persistence provider with an Exposed Database instance.
  */
-public class MySQLPersistencyStorageProvider(
+public class MySQLPersistenceStorageProvider(
     persistenceId: String,
     database: Database,
     tableName: String = "agent_checkpoints",
     ttlSeconds: Long? = null,
     migrator: SQLPersistenceSchemaMigrator = MySqlPersistenceSchemaMigrator(database, tableName),
-    json: Json = PersistencyUtils.defaultCheckpointJson
-) : ExposedPersistencyStorageProvider(persistenceId, database, tableName, ttlSeconds, migrator, json) {
+    json: Json = PersistenceUtils.defaultCheckpointJson
+) : ExposedPersistenceStorageProvider(persistenceId, database, tableName, ttlSeconds, migrator, json) {
 
     override suspend fun <T> transaction(block: suspend () -> T): T =
         newSuspendedTransaction(Dispatchers.IO, database) {

@@ -12,7 +12,7 @@ The Koog framework implements the following features:
 - [Tracing](tracing.md)
 - [Agent Memory](agent-memory.md)
 - [OpenTelemetry](opentelemetry-support.md)
-- [Agent Persistency (Snapshots)](agent-persistency.md)
+- [Agent Persistence (Snapshots)](agent-persistence.md)
 - Debugger
 - Tokenizer
-- SQL Persistency Providers
+- SQL Persistence Providers

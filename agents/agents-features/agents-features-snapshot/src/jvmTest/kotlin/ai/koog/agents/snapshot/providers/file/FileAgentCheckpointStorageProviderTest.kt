@@ -17,12 +17,12 @@ import kotlin.test.assertTrue
 
 class FileAgentCheckpointStorageProviderTest {
     private lateinit var tempDir: java.nio.file.Path
-    private lateinit var provider: JVMFilePersistencyStorageProvider
+    private lateinit var provider: JVMFilePersistenceStorageProvider
 
     @BeforeTest
     fun setup() {
         tempDir = Files.createTempDirectory("checkpoint-test")
-        provider = JVMFilePersistencyStorageProvider(tempDir, "testAgentId")
+        provider = JVMFilePersistenceStorageProvider(tempDir, "testAgentId")
     }
 
     @AfterTest

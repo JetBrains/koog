@@ -2,8 +2,8 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.tool.SayToUser
-import ai.koog.agents.snapshot.feature.Persistency
-import ai.koog.agents.snapshot.providers.InMemoryPersistencyStorageProvider
+import ai.koog.agents.snapshot.feature.Persistence
+import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.llm.OllamaModels
@@ -36,8 +36,8 @@ class SubgraphCheckpointsTest {
             agentConfig = agentConfig,
             toolRegistry = toolRegistry
         ) {
-            install(Persistency) {
-                storage = InMemoryPersistencyStorageProvider("testAgentId")
+            install(Persistence) {
+                storage = InMemoryPersistenceStorageProvider("testAgentId")
             }
         }
 
@@ -63,8 +63,8 @@ class SubgraphCheckpointsTest {
             agentConfig = agentConfig,
             toolRegistry = toolRegistry
         ) {
-            install(Persistency) {
-                storage = InMemoryPersistencyStorageProvider("testAgentId")
+            install(Persistence) {
+                storage = InMemoryPersistenceStorageProvider("testAgentId")
             }
         }
 
@@ -90,8 +90,8 @@ class SubgraphCheckpointsTest {
             agentConfig = agentConfig,
             toolRegistry = toolRegistry
         ) {
-            install(Persistency) {
-                storage = InMemoryPersistencyStorageProvider("testAgentId")
+            install(Persistence) {
+                storage = InMemoryPersistenceStorageProvider("testAgentId")
             }
         }
 
@@ -118,8 +118,8 @@ class SubgraphCheckpointsTest {
             agentConfig = agentConfig,
             toolRegistry = toolRegistry
         ) {
-            install(Persistency) {
-                storage = InMemoryPersistencyStorageProvider("testAgentId")
+            install(Persistence) {
+                storage = InMemoryPersistenceStorageProvider("testAgentId")
             }
         }
 

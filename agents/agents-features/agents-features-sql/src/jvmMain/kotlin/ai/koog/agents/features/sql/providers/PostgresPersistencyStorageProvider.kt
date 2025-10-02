@@ -1,6 +1,6 @@
 package ai.koog.agents.features.sql.providers
 
-import ai.koog.agents.snapshot.providers.PersistencyUtils
+import ai.koog.agents.snapshot.providers.PersistenceUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.sql.Database
@@ -8,19 +8,19 @@ import org.jetbrains.exposed.sql.transactions.experimental.newSuspendedTransacti
 import org.jetbrains.exposed.sql.transactions.transaction
 
 /**
- * PostgreSQL-specific implementation of [ExposedPersistencyStorageProvider] for managing
+ * PostgreSQL-specific implementation of [ExposedPersistenceStorageProvider] for managing
  * agent checkpoints in PostgreSQL databases.
  *
  * @constructor Initializes the PostgreSQL persistence provider with connection details.
  */
-public class PostgresPersistencyStorageProvider(
+public class PostgresPersistenceStorageProvider(
     persistenceId: String,
     database: Database,
     tableName: String = "agent_checkpoints",
     ttlSeconds: Long? = null,
     migrator: SQLPersistenceSchemaMigrator = PostgresPersistenceSchemaMigrator(database, tableName),
-    json: Json = PersistencyUtils.defaultCheckpointJson
-) : ExposedPersistencyStorageProvider(persistenceId, database, tableName, ttlSeconds, migrator, json) {
+    json: Json = PersistenceUtils.defaultCheckpointJson
+) : ExposedPersistenceStorageProvider(persistenceId, database, tableName, ttlSeconds, migrator, json) {
 
     override suspend fun <T> transaction(block: suspend () -> T): T =
         newSuspendedTransaction(Dispatchers.IO, database) { block() }

@@ -7,8 +7,8 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.reflect.asTools
 import ai.koog.agents.example.calculator.CalculatorTools
 import ai.koog.agents.features.eventHandler.feature.EventHandler
-import ai.koog.agents.snapshot.feature.Persistency
-import ai.koog.agents.snapshot.providers.InMemoryPersistencyStorageProvider
+import ai.koog.agents.snapshot.feature.Persistence
+import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider
 import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.OllamaModels
@@ -29,7 +29,7 @@ fun main() = runBlocking {
 
     val persistenceId = "snapshot-agent-example"
 
-    val snapshotProvider = InMemoryPersistencyStorageProvider(
+    val snapshotProvider = InMemoryPersistenceStorageProvider(
         persistenceId = persistenceId
     )
     val agent = AIAgent(
@@ -40,9 +40,9 @@ fun main() = runBlocking {
         systemPrompt = "You are a calculator. Use tools to calculate asked to result.",
         temperature = 0.0,
     ) {
-        install(Persistency) {
+        install(Persistence) {
             storage = snapshotProvider
-            enableAutomaticPersistency = true
+            enableAutomaticPersistence = true
         }
 
         install(EventHandler) {
@@ -73,9 +73,9 @@ fun main() = runBlocking {
         temperature = 0.0,
         id = agent.id
     ) {
-        install(Persistency) {
+        install(Persistence) {
             storage = snapshotProvider
-            enableAutomaticPersistency = true
+            enableAutomaticPersistence = true
         }
     }
 

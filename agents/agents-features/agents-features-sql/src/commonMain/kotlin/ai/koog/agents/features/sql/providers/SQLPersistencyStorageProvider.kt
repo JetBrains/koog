@@ -1,10 +1,10 @@
 package ai.koog.agents.features.sql.providers
 
-import ai.koog.agents.snapshot.providers.PersistencyStorageProvider
+import ai.koog.agents.snapshot.providers.PersistenceStorageProvider
 import kotlinx.datetime.Instant
 
 /**
- * Abstract base class for SQL-based implementations of [PersistencyStorageProvider].
+ * Abstract base class for SQL-based implementations of [PersistenceStorageProvider].
  *
  * This provider offers a generic SQL abstraction for persisting agent checkpoints
  * to relational databases. Concrete implementations should handle specific SQL
@@ -32,12 +32,12 @@ import kotlinx.datetime.Instant
  * @param tableName Name of the table to store checkpoints (default: "agent_checkpoints")
  * @param ttlSeconds Optional TTL for checkpoint entries in seconds (null = no expiration)
  */
-public abstract class SQLPersistencyStorageProvider(
+public abstract class SQLPersistenceStorageProvider(
     protected val persistenceId: String,
     protected val tableName: String = "agent_checkpoints",
     protected val ttlSeconds: Long? = null,
     protected val migrator: SQLPersistenceSchemaMigrator
-) : PersistencyStorageProvider {
+) : PersistenceStorageProvider {
 
     /**
      * Initializes the database schema if it doesn't exist.

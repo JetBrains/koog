@@ -11,10 +11,10 @@ import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
-import ai.koog.agents.snapshot.feature.Persistency
+import ai.koog.agents.snapshot.feature.Persistence
 import ai.koog.agents.snapshot.feature.RollbackToolRegistry
-import ai.koog.agents.snapshot.feature.withPersistency
-import ai.koog.agents.snapshot.providers.InMemoryPersistencyStorageProvider
+import ai.koog.agents.snapshot.feature.withPersistence
+import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.llm.OllamaModels
@@ -69,7 +69,7 @@ class CheckpointsTests {
                 }
                 val checkpoint by node<String, String> { input ->
                     println("checkpoint save")
-                    withPersistency { ctx ->
+                    withPersistence { ctx ->
                         createCheckpoint(
                             ctx,
                             currentNodeId ?: error("currentNodeId not set"),
@@ -88,7 +88,7 @@ class CheckpointsTests {
                     println("checkpoint load")
                     if (!loaded) {
                         loaded = true
-                        withPersistency { ctx ->
+                        withPersistence { ctx ->
                             rollbackToCheckpoint("cpt-100500", ctx)
                         }
                     }
@@ -104,8 +104,8 @@ class CheckpointsTests {
             agentConfig = agentConfig,
             toolRegistry = toolRegistry
         ) {
-            install(Persistency) {
-                storage = InMemoryPersistencyStorageProvider("testAgentId")
+            install(Persistence) {
+                storage = InMemoryPersistenceStorageProvider("testAgentId")
             }
         }
 
@@ -124,8 +124,8 @@ class CheckpointsTests {
             agentConfig = agentConfig,
             toolRegistry = toolRegistry
         ) {
-            install(Persistency) {
-                storage = InMemoryPersistencyStorageProvider("testAgentId")
+            install(Persistence) {
+                storage = InMemoryPersistenceStorageProvider("testAgentId")
             }
         }
 
@@ -209,7 +209,7 @@ class CheckpointsTests {
 
             // Node that creates a checkpoint
             val saveCheckpoint by node<String, Unit> { input ->
-                withPersistency { ctx ->
+                withPersistence { ctx ->
                     createCheckpoint(
                         ctx,
                         currentNodeId ?: error("currentNodeId not set"),
@@ -261,8 +261,8 @@ class CheckpointsTests {
             agentConfig = agentConfig,
             toolRegistry = toolRegistry
         ) {
-            install(Persistency) {
-                storage = InMemoryPersistencyStorageProvider("testAgentId")
+            install(Persistence) {
+                storage = InMemoryPersistenceStorageProvider("testAgentId")
             }
         }
 
@@ -294,8 +294,8 @@ class CheckpointsTests {
             agentConfig = agentConfig,
             toolRegistry = localToolRegistry
         ) {
-            install(Persistency) {
-                storage = InMemoryPersistencyStorageProvider("agent-tools-rollback-1")
+            install(Persistence) {
+                storage = InMemoryPersistenceStorageProvider("agent-tools-rollback-1")
                 rollbackToolRegistry = RollbackToolRegistry {
                     registerRollback(WriteKVTool, DeleteKVTool)
                 }
@@ -322,7 +322,7 @@ class CheckpointsTests {
             assertContains(databaseMap, "user-2")
             assertContains(databaseMap, "user-3")
 
-            agent.withPersistency { ctx ->
+            agent.withPersistence { ctx ->
                 println("ctx outside: $this")
                 println("ctx outside [hash]: ${this.hashCode()}")
                 rollbackToCheckpoint("ckpt-1", ctx)
@@ -347,7 +347,7 @@ class CheckpointsTests {
 
     @Test
     fun testRestoreFromSingleCheckpoint() = runTest {
-        val checkpointStorageProvider = InMemoryPersistencyStorageProvider("testAgentId")
+        val checkpointStorageProvider = InMemoryPersistenceStorageProvider("testAgentId")
         val time = Clock.System.now()
         val agentId = "testAgentId"
 
@@ -371,7 +371,7 @@ class CheckpointsTests {
             toolRegistry = toolRegistry,
             id = agentId
         ) {
-            install(Persistency) {
+            install(Persistence) {
                 storage = checkpointStorageProvider
             }
         }
@@ -388,7 +388,7 @@ class CheckpointsTests {
 
     @Test
     fun testRestoreFromLatestCheckpoint() = runTest {
-        val checkpointStorageProvider = InMemoryPersistencyStorageProvider("testAgentId")
+        val checkpointStorageProvider = InMemoryPersistenceStorageProvider("testAgentId")
         val time = Clock.System.now()
         val agentId = "testAgentId"
 
@@ -424,7 +424,7 @@ class CheckpointsTests {
             toolRegistry = toolRegistry,
             id = agentId
         ) {
-            install(Persistency) {
+            install(Persistence) {
                 storage = checkpointStorageProvider
             }
         }

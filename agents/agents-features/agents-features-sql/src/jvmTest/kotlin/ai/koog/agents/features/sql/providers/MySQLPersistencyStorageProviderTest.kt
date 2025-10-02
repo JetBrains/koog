@@ -24,7 +24,7 @@ import kotlin.test.assertNull
 
 @TestInstance(Lifecycle.PER_CLASS)
 @ExtendWith(DockerAvailableCondition::class)
-class MySQLPersistencyStorageProviderTest {
+class MySQLPersistenceStorageProviderTest {
 
     private lateinit var mysql: MySQLContainer<*>
 
@@ -42,14 +42,14 @@ class MySQLPersistencyStorageProviderTest {
         mysql.stop()
     }
 
-    private fun provider(ttlSeconds: Long? = null): MySQLPersistencyStorageProvider {
+    private fun provider(ttlSeconds: Long? = null): MySQLPersistenceStorageProvider {
         val db: Database = Database.connect(
             url = mysql.jdbcUrl + "?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC",
             driver = "com.mysql.cj.jdbc.Driver",
             user = mysql.username,
             password = mysql.password
         )
-        return MySQLPersistencyStorageProvider(
+        return MySQLPersistenceStorageProvider(
             persistenceId = "mysql-agent",
             database = db,
             tableName = "agent_checkpoints_test",

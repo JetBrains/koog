@@ -7,8 +7,8 @@ import ai.koog.agents.core.tools.reflect.asTools
 import ai.koog.agents.example.calculator.CalculatorTools
 import ai.koog.agents.ext.tool.AskUser
 import ai.koog.agents.ext.tool.SayToUser
-import ai.koog.agents.snapshot.feature.Persistency
-import ai.koog.agents.snapshot.providers.InMemoryPersistencyStorageProvider
+import ai.koog.agents.snapshot.feature.Persistence
+import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
@@ -37,14 +37,14 @@ fun main() = runBlocking {
         maxAgentIterations = 50
     )
 
-    val snapshotProvider = InMemoryPersistencyStorageProvider("persistent-agent-example")
+    val snapshotProvider = InMemoryPersistenceStorageProvider("persistent-agent-example")
     val agent = AIAgent(
         promptExecutor = executor,
         strategy = SnapshotStrategy.strategy,
         agentConfig = agentConfig,
         toolRegistry = toolRegistry
     ) {
-        install(Persistency) {
+        install(Persistence) {
             storage = snapshotProvider
         }
     }

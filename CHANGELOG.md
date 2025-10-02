@@ -81,7 +81,7 @@ Fixed iOS target publication
 
 ## Major Features
 
-- **Agent Persistency and Checkpoints**: Save and restore agent state to local disk, memory, or easily integrate with
+- **Agent Persistence and Checkpoints**: Save and restore agent state to local disk, memory, or easily integrate with
   any cloud storages or databases. Agents can now roll back to any prior state on demand or automatically restore from
   the latest checkpoint (#305)
 - **Vector Document Storage**: Store embeddings and documents in persistent storage for retrieval-augmented generation (
@@ -147,7 +147,7 @@ Fixed iOS target publication
 - Langfuse Tracing example
 - Moderation example: Moderating iterative joke-generation conversation
 - Parallel Nodes Execution example: Generating jokes using 3 different LLMs in parallel, and choosing the funniest one
-- Snapshot and Persistency example: Taking agent snapshots and restoring its state example
+- Snapshot and Persistence example: Taking agent snapshots and restoring its state example
 
 # 0.2.1
 

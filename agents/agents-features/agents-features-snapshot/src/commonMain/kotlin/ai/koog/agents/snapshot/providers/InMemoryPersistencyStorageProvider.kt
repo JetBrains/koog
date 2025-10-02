@@ -5,10 +5,10 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 /**
- * In-memory implementation of [PersistencyStorageProvider].
+ * In-memory implementation of [PersistenceStorageProvider].
  * This provider stores snapshots in a mutable map.
  */
-public class InMemoryPersistencyStorageProvider(private val persistenceId: String) : PersistencyStorageProvider {
+public class InMemoryPersistenceStorageProvider(private val persistenceId: String) : PersistenceStorageProvider {
     private val mutex = Mutex()
     private val snapshotMap = mutableMapOf<String, List<AgentCheckpointData>>()
 
