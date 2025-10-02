@@ -171,6 +171,7 @@ withA2AAgentServer {
 ```
 
 ### Start A2A Server
+After running the server Koog agent will be discoverable and accessible via the A2A protocol.
 
 ```kotlin
 val agentCard = AgentCard(
@@ -196,4 +197,123 @@ val agentCard = AgentCard(
 val server = A2AServer(agentExecutor = KoogAgentExecutor(), agentCard = agentCard)
 val transport = HttpJSONRPCServerTransport(server)
 transport.start(engineFactory = CIO, port = 8080, path = "/chat", wait = true)
+```
+
+## Connecting Koog Agents to A2A Agents
+
+### Create A2A Client and connect to the A2A Server
+
+```kotlin
+val transport = HttpJSONRPCClientTransport(url = "http://localhost:9999/koog")
+val agentCardResolver =
+    UrlAgentCardResolver(baseUrl = "http://localhost:9999", path = "/koog")
+val client = A2AClient(transport = transport, agentCardResolver = agentCardResolver)
+
+val agentId = "koog"
+client.connect()
+```
+
+### Create Koog Agent and add A2A Client to A2AAgentClient Feature
+To connect to A2A agent from your Koog Agent, you can use the A2AAgentClient feature, which provides a client API for connecting to A2A agents.
+The principle of the client is the same as the server: you install the feature and pass the `A2AAgentClient` feature along with the `RequestContext` and `SessionEventProcessor`.
+
+```kotlin
+val agent = AIAgent(
+    promptExecutor = MultiLLMPromptExecutor(
+        LLMProvider.Google to GoogleLLMClient("api-key")
+    ),
+    toolRegistry = ToolRegistry {
+        // declare tools here
+    },
+    strategy = strategy<String, Unit>("test") {
+
+        val nodeCheckStreaming by nodeA2AClientGetAgentCard().transform { it.capabilities.streaming }
+
+        val nodeA2ASendMessageStreaming by nodeA2AClientSendMessageStreaming()
+        val nodeA2ASendMessage by nodeA2AClientSendMessage()
+
+        val nodeProcessStreaming by node<Flow<Response<Event>>, Unit> {
+            it.collect { response ->
+                when (response.data) {
+                    is Task -> {
+                        // Process task
+                    }
+
+                    is A2AMessage -> {
+                        // Process message
+                    }
+
+                    is TaskStatusUpdateEvent -> {
+                        // Process task status update
+                    }
+
+                    is TaskArtifactUpdateEvent -> {
+                        // Process task artifact update
+                    }
+                }
+            }
+        }
+
+        val nodeProcessEvent by node<CommunicationEvent, Unit> { event ->
+            when (event) {
+                is Task -> {
+                    // Process task
+                }
+
+                is A2AMessage -> {
+                    // Process message
+                }
+            }
+        }
+
+        // If streaming is supported, send a message, process response and finish
+        edge(nodeStart forwardTo nodeCheckStreaming transformed { agentId })
+        edge(
+            nodeCheckStreaming forwardTo nodeA2ASendMessageStreaming
+                onCondition { it == true } transformed { buildA2ARequest(agentId) }
+        )
+        edge(nodeA2ASendMessageStreaming forwardTo nodeProcessStreaming)
+        edge(nodeProcessStreaming forwardTo nodeFinish)
+
+        // If streaming is not supported, send a message, process response and finish
+        edge(
+            nodeCheckStreaming forwardTo nodeA2ASendMessage
+                onCondition { it == false } transformed { buildA2ARequest(agentId) }
+        )
+        edge(nodeA2ASendMessage forwardTo nodeProcessEvent)
+        edge(nodeProcessEvent forwardTo nodeFinish)
+
+        // If streaming is not supported, send a message, process response and finish
+        edge(nodeCheckStreaming forwardTo nodeFinish onCondition { it == null }
+            transformed { println("Failed to get agents card") }
+        )
+
+    },
+    agentConfig = AIAgentConfig(
+        prompt = prompt("agent") { system("You are a helpful assistant.") },
+        model = GoogleModels.Gemini2_5Pro,
+        maxAgentIterations = 10
+    ),
+) {
+    install(A2AAgentClient) {
+        this.a2aClients = mapOf(agentId to client)
+    }
+}
+
+
+@OptIn(ExperimentalUuidApi::class)
+private fun AIAgentGraphContextBase.buildA2ARequest(agentId: String): A2AClientRequest<MessageSendParams> =
+    A2AClientRequest(
+        agentId = agentId,
+        callContext = ClientCallContext.Default,
+        params = MessageSendParams(
+            message = A2AMessage(
+                messageId = Uuid.random().toString(),
+                role = Role.User,
+                parts = listOf(
+                    TextPart(agentInput as String)
+                )
+            )
+        )
+    )
 ```
