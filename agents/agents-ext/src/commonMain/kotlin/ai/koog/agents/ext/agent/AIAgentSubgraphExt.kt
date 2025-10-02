@@ -1,6 +1,7 @@
 package ai.koog.agents.ext.agent
 
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
+import ai.koog.agents.core.agent.context.DetachedPromptExecutorAPI
 import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
 import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.annotation.InternalAgentsApi
@@ -13,7 +14,6 @@ import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
 import ai.koog.agents.core.dsl.extension.onToolCall
 import ai.koog.agents.core.dsl.extension.setToolChoiceRequired
 import ai.koog.agents.core.environment.ReceivedToolResult
-import ai.koog.agents.core.environment.SafeTool
 import ai.koog.agents.core.environment.executeTool
 import ai.koog.agents.core.environment.toSafeResult
 import ai.koog.agents.core.tools.Tool
@@ -21,8 +21,9 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.core.tools.asToolDescriptor
 import ai.koog.agents.core.tools.asToolDescriptorDeserializer
-import ai.koog.agents.ext.agent.SubgraphWithTaskUtils.FINALIZE_SUBGRAPH_TOOL_NAME
+import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import kotlinx.serialization.KSerializer
@@ -35,6 +36,7 @@ import kotlinx.serialization.serializer
  * encapsulate result handling within tool constructs.
  */
 public object SubgraphWithTaskUtils {
+
     /**
      * Represents the name of the internal tool used for finalizing subgraph task results
      * within an AI agent's execution flow. This constant is primarily intended for internal
@@ -56,6 +58,7 @@ public object SubgraphWithTaskUtils {
      */
     @OptIn(InternalAgentToolsApi::class)
     public inline fun <reified T> finishTool(): Tool<T, T> = object : Tool<T, T>() {
+
         /**
          * Provides a serializer for the argument type of the tool.
          *
@@ -79,7 +82,7 @@ public object SubgraphWithTaskUtils {
         override val resultSerializer: KSerializer<T> = serializer()
 
         /**
-         * The descriptor for the tool, derived from the serializer's [SerialDescriptor],
+         * The descriptor for the tool, derived from the serializer's [kotlinx.serialization.descriptors.SerialDescriptor],
          * and converted to a [ToolDescriptor] using the provided tool name.
          *
          * This property defines the metadata of the tool, such as its name and associated parameters,
@@ -102,27 +105,31 @@ public object SubgraphWithTaskUtils {
          */
         override suspend fun execute(args: T): T = args
     }
+
+    /**
+     * The maximum number of times an assistant is allowed to repeat responses within an interaction session,
+     * up to a maximum of 3 times, by default.
+     *
+     * This constant serves as a limit to control the repetition of responses
+     * provided by an assistant within interaction sessions. It can be used
+     * to prevent redundancy in responses and ensure conciseness in communication.
+     */
+    public const val ASSISTANT_RESPONSE_REPEAT_MAX: Int = 3
 }
 
 /**
  * Creates a subgraph, which performs one specific task, defined by [defineTask],
  * using the tools defined by [toolSelectionStrategy].
- * When LLM believes that the task is finished, it will call [finishTool], generating [ProvidedResult] as its argument.
- * The generated [ProvidedResult] is the result of this subgraph.
- * The subgraph returns a wrapper [SafeTool.Result] to handle cases when the model didn't reach the finish condition
- * or didn't generate a final [ProvidedResult] due to an error (reported as [SafeTool.Result.Failure])
- *
  *
  * Use this function if you need the agent to perform a single task which outputs a structured result.
  *
- * @property toolSelectionStrategy Strategy to select tools available to the LLM during this task
- * @property finishTool The tool which LLM must call in order to complete the task.
- * The tool interface here is used as a descriptor of the structured result that LLM must produce.
- * The tool itself is never called.
- * @property llmModel LLM used for this task
- * @property llmParams Specific LLM parameters for this task
- * @property defineTask A block which defines the task. It may just return a system prompt for the task,
- * but may also alter agent context, prompt, storage, etc.
+ * @param Input The input type for the task to be defined in the subgraph.
+ * @param Output The output type for the subgraph's finalized result.
+ * @param toolSelectionStrategy The strategy used to select tools for the subgraph operations.
+ * @param llmModel Optional language model to be used within the subgraph. Defaults to null.
+ * @param llmParams Optional parameters for configuring the language model behavior. Defaults to null.
+ * @param defineTask A suspending lambda function that defines the task for the subgraph, taking the input as a parameter.
+ * @return A delegate that represents the created subgraph, allowing input and output operations.
  */
 @OptIn(InternalAgentToolsApi::class)
 @AIAgentBuilderDslMarker
@@ -137,7 +144,7 @@ public inline fun <reified Input, reified Output> AIAgentSubgraphBuilderBase<*, 
     llmParams = llmParams,
 ) {
     val finishToolDescriptor =
-        serializer<Output>().descriptor.asToolDescriptor(toolName = FINALIZE_SUBGRAPH_TOOL_NAME)
+        serializer<Output>().descriptor.asToolDescriptor(toolName = SubgraphWithTaskUtils.FINALIZE_SUBGRAPH_TOOL_NAME)
 
     setupSubgraphWithTask<Input, Output, Output>(finishToolDescriptor, defineTask)
 }
@@ -147,7 +154,6 @@ public inline fun <reified Input, reified Output> AIAgentSubgraphBuilderBase<*, 
  * input and execute the defined task, eventually producing a result through the provided finish tool.
  *
  * @param tools The list of tools that are available for use within the subgraph.
- * @param finishTool The tool responsible for producing the final result of the subgraph.
  * @param llmModel An optional language model to be used in the subgraph. If not specified, a default model may be used.
  * @param llmParams Optional parameters to customize the behavior of the language model in the subgraph.
  * @param defineTask A suspend function that defines the task to be executed by the subgraph based on the given input.
@@ -310,19 +316,23 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
     finishToolDescriptor: ToolDescriptor,
     noinline defineTask: suspend AIAgentGraphContextBase.(Input) -> String
 ) {
+    val askAssistantToFinishMaximum = SubgraphWithTaskUtils.ASSISTANT_RESPONSE_REPEAT_MAX
+    var askAssistantToFinishCounter = 1
+
     val originalToolsKey = createStorageKey<List<ToolDescriptor>>("all-available-tools")
 
     val setupTask by node<Input, String> { input ->
         llm.writeSession {
-            // Save tools to restore after subgraph is finished
+            // Save tools to restore after the subgraph is finished
             storage.set(originalToolsKey, tools)
 
-            // Apped finish tool to tools if it's not present yet
+            // Append finish tool to tools if it's not present yet
             if (finishToolDescriptor !in tools) {
-                this.tools = tools + finishToolDescriptor
+                this.tools += finishToolDescriptor
             }
 
-            // Model must always call tools in the loop until it decides (via finish tool) that the exit condition is reached
+            // Model must always call tools in the loop until it decides (via finish tool)
+            // that the exit condition is reached
             setToolChoiceRequired()
         }
 
@@ -330,13 +340,13 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
         defineTask(input)
     }
 
-    val finalizeTask by node<ReceivedToolResult, OutputTransformed> { input ->
+    val finalizeTask by node<ReceivedToolResult, OutputTransformed> { toolResult ->
         llm.writeSession {
             // Restore original tools
             tools = storage.get(originalToolsKey)!!
         }
 
-        input.toSafeResult<OutputTransformed>().asSuccessful().result
+        toolResult.toSafeResult<OutputTransformed>().asSuccessful().result
     }
 
     // Helper node to overcome problems of the current api and repeat less code when writing routing conditions
@@ -345,15 +355,17 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
     val nodeCallLLM by nodeLLMRequest()
 
     /**
-     * Works like a normal `nodeExecuteTool` but a bit hacked: if LLM decides to call the fake "finaize_result" tool,
+     * Works like a normal `nodeExecuteTool` but a bit hacked: if LLM decides to call the fake "finalize_result" tool,
      * it doesn't execute it.
      * */
     val callToolHacked by node<Message.Tool.Call, ReceivedToolResult> { toolCall ->
-        if (toolCall.tool == FINALIZE_SUBGRAPH_TOOL_NAME) {
-            val toolResult =
-                Json.decodeFromString(serializer<Output>().asToolDescriptorDeserializer(), toolCall.content)
+        if (toolCall.tool == finishToolDescriptor.name) {
+            val toolResult = Json.decodeFromString(
+                deserializer = serializer<Output>().asToolDescriptorDeserializer(),
+                string = toolCall.content
+            )
 
-            // Append final tool call result to the prompt for further LLM calls to see it (otherwise they would fail)
+            // Append a final tool call result to the prompt for further LLM calls to see it (otherwise they would fail)
             llm.writeSession {
                 updatePrompt {
                     tool {
@@ -364,7 +376,7 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
 
             ReceivedToolResult(
                 id = toolCall.id,
-                tool = FINALIZE_SUBGRAPH_TOOL_NAME,
+                tool = finishToolDescriptor.name,
                 content = toolCall.content,
                 result = toolResult
             )
@@ -372,16 +384,52 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
             environment.executeTool(toolCall)
         }
     }
+
     val sendToolResult by nodeLLMSendToolResult()
+
+    @OptIn(DetachedPromptExecutorAPI::class)
+    val handleAssistantMessage by node<Message.Assistant, Message.Response> { response ->
+        if (llm.model.capabilities.contains(LLMCapability.ToolChoice)) {
+            error(
+                "Subgraph with task must always call tools, but no ${Message.Tool.Call::class.simpleName} was generated, " +
+                    "got instead: ${response::class.simpleName}"
+            )
+        }
+
+        if (askAssistantToFinishMaximum < askAssistantToFinishCounter++) {
+            error(
+                "Unable to finish subgraph with task. Reason: the model '${llm.model.id}' does not support tool choice, " +
+                    "and was not able to call `${finishToolDescriptor.name}` tool after <$askAssistantToFinishMaximum> attempts."
+            )
+        }
+
+        llm.writeSession {
+            // append a new message to the history with feedback:
+            updatePrompt {
+                user {
+                    markdown {
+                        h1("DO NOT CHAT WITH ME DIRECTLY! CALL TOOLS, INSTEAD.")
+                        h2("IF YOU HAVE FINISHED, CALL `${finishToolDescriptor.name}` TOOL!")
+                    }
+                }
+            }
+
+            requestLLM()
+        }
+    }
 
     nodeStart then setupTask then nodeCallLLM then nodeDecide
 
     edge(nodeDecide forwardTo callToolHacked onToolCall { true })
+    edge(nodeDecide forwardTo handleAssistantMessage onCondition { it is Message.Assistant } transformed { it as Message.Assistant })
+    edge(handleAssistantMessage forwardTo nodeDecide)
+
     // throw to terminate the agent early with exception
     edge(
         nodeDecide forwardTo nodeFinish transformed {
             throw IllegalStateException(
-                "Subgraph with task must always call tools, but no tool call was generated, got instead: $it"
+                "Unhandled response from LLM. Subgraph with task must always call tools, " +
+                    "but no ${Message.Tool.Call::class.simpleName} was generated, got instead: $it"
             )
         }
     )
