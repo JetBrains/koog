@@ -33,11 +33,11 @@ public data class LLMCallStartingEvent(
 
     /**
      * @deprecated Use constructor with model parameter of type [ModelInfo]:
-     *             LLMCallStartingEvent(runId, prompt, model, tools, eventId, timestamp)
+     *             LLMCallStartingEvent(runId, prompt, model, tools, timestamp)
      */
     @Deprecated(
-        message = "Please use constructor with model parameter of type [ModelInfo]: LLMCallStartingEvent(runId, prompt, model, tools, eventId, timestamp)",
-        replaceWith = ReplaceWith("LLMCallStartingEvent(runId, prompt, model, tools, eventId, timestamp)")
+        message = "Please use constructor with model parameter of type [ModelInfo]: LLMCallStartingEvent(runId, prompt, model, tools, timestamp)",
+        replaceWith = ReplaceWith("LLMCallStartingEvent(runId, prompt, model, tools, timestamp)")
     )
     public constructor(
         runId: String,
@@ -90,11 +90,11 @@ public data class LLMCallCompletedEvent(
 
     /**
      * @deprecated Use constructor with model parameter of type [ModelInfo]:
-     *             LLMCallCompletedEvent(runId, prompt, model, responses, moderationResponse, eventId, timestamp)
+     *             LLMCallCompletedEvent(runId, prompt, model, responses, moderationResponse, timestamp)
      */
     @Deprecated(
-        message = "Please use constructor with model parameter of type [ModelInfo]: LLMCallCompletedEvent(runId, prompt, model, responses, moderationResponse, eventId, timestamp)",
-        replaceWith = ReplaceWith("LLMCallCompletedEvent(runId, prompt, model, responses, moderationResponse, eventId, timestamp)")
+        message = "Please use constructor with model parameter of type [ModelInfo]: LLMCallCompletedEvent(runId, prompt, model, responses, moderationResponse, timestamp)",
+        replaceWith = ReplaceWith("LLMCallCompletedEvent(runId, prompt, model, responses, moderationResponse, timestamp)")
     )
     public constructor(
         runId: String,

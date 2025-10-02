@@ -67,7 +67,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
  *         // Optionally filter messages
  *         fileWriter.setMessageFilter { message ->
  *             // Only trace LLM calls and tool calls
- *             message is BeforeLLMCallEvent || message is ToolCallEvent
+ *             message is LLMCallStartingEvent || message is ToolCallEvent
  *         }
  *     }
  * }
@@ -79,8 +79,8 @@ import io.github.oshai.kotlinlogging.KotlinLogging
  * AIAgentStrategyStartEvent (runId: session-456, strategyName: my-agent-strategy)
  * AIAgentNodeExecutionStartEvent (runId: session-456, nodeName: definePrompt, input: user query)
  * AIAgentNodeExecutionEndEvent (runId: session-456, nodeName: definePrompt, input: user query, output: processed query)
- * BeforeLLMCallEvent (runId: session-456, prompt: Please analyze the following code...)
- * AfterLLMCallEvent (runId: session-456, response: I've analyzed the code and found...)
+ * LLMCallStartingEvent (runId: session-456, prompt: Please analyze the following code...)
+ * LLMCallCompletedEvent (runId: session-456, response: I've analyzed the code and found...)
  * ToolCallEvent (runId: session-456, toolName: readFile, toolArgs: {"path": "src/main.py"})
  * ToolCallResultEvent (runId: session-456, toolName: readFile, toolArgs: {"path": "src/main.py"}, result: "def main():...")
  * AIAgentStrategyFinishedEvent (runId: session-456, strategyName: my-agent-strategy, result: Success)
