@@ -10,7 +10,7 @@ public sealed class ShellCommandConfirmation {
     /**
      * Command execution denied with explanation.
      *
-     * @property userResponse A free-form user reply when not approving; may be a reason or simply a “no”.
+     * @property userResponse A free-form user reply when not approving; may be a reason or simply a "no".
      */
     public data class Denied(val userResponse: String) : ShellCommandConfirmation()
 }
@@ -22,12 +22,10 @@ public fun interface ShellCommandConfirmationHandler {
     /**
      * Requests confirmation to execute a command.
      *
-     * @param command Command to execute
-     * @param workingDirectory Working directory, or null to use the current directory
+     * @param args Command execution arguments with full context
      * @return Approval or denial decision
      */
     public suspend fun requestConfirmation(
-        command: String,
-        workingDirectory: String?
+        args: ExecuteShellCommandTool.Args
     ): ShellCommandConfirmation
 }

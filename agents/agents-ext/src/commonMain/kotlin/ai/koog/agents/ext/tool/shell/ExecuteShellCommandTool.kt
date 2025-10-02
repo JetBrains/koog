@@ -103,7 +103,7 @@ public class ExecuteShellCommandTool(
      * @return Result containing the command output and exit code, or an error message explaining why it didn't run
      */
     override suspend fun execute(args: Args): Result = when (
-        val confirmation = confirmationHandler.requestConfirmation(args.command, args.workingDirectory)
+        val confirmation = confirmationHandler.requestConfirmation(args)
     ) {
         is ShellCommandConfirmation.Approved -> runCatching {
             val result = executor.execute(args.command, args.workingDirectory, args.timeoutSeconds)
