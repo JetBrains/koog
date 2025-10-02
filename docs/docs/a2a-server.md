@@ -128,7 +128,6 @@ val agentCard = AgentCard(
     // Optional: Multiple transport support
     additionalInterfaces = listOf(
         AgentInterface("https://api.example.com/a2a", TransportProtocol.JSONRPC),
-        AgentInterface("https://rest.example.com/v1", TransportProtocol.HTTP_JSON_REST)
     ),
 
     // Capabilities Declaration
@@ -197,12 +196,11 @@ val agentCard = AgentCard(
 
 ### Transport Layer
 
-The A2A server supports multiple transport protocols for communicating with clients. 
-The transport layer handles the low-level communication while the A2A server manages the protocol logic.
+The A2A itself supports multiple transport protocols for communicating with clients. 
+Koog provides implementations for JSON-RPC server transport over HTTP and SSE.
+For streaming 
 
 #### HTTP JSON-RPC Transport
-
-The most common transport for A2A agent
 
 ```kotlin
 val transport = HttpJSONRPCServerTransport(server)
@@ -226,7 +224,46 @@ All storage implementations are optional and default to in-memory variants for d
 
 ## Quick Start
 
-### 1. Create an AgentExecutor
+### 1. Create AgentCard
+Define your agent's capabilities and metadata.
+```kotlin
+val agentCard = AgentCard(
+    name = "IO Assistant",
+    description = "AI agent specialized in input modification",
+    version = "2.1.0",
+    protocolVersion = "0.3.0",
+
+    // Communication Settings
+    url = "https://api.example.com/a2a",
+    preferredTransport = TransportProtocol.JSONRPC,
+
+    // Capabilities Declaration
+    capabilities =
+        AgentCapabilities(
+            streaming = true,              // Support real-time responses
+            pushNotifications = true,      // Send async notifications
+            stateTransitionHistory = true  // Maintain task history
+        ),
+
+    // Content Type Support
+    defaultInputModes = listOf("text/plain", "text/markdown", "image/jpeg"),
+    defaultOutputModes = listOf("text/plain", "text/markdown", "application/json"),
+
+    // Skills/Capabilities
+    skills = listOf(
+        AgentSkill(
+            id = "echo",
+            name = "echo",
+            description = "Echoes back user messages",
+            tags = listOf("io"),
+        )
+    )
+)
+```
+
+
+### 2. Create an AgentExecutor
+In executor manages implement agent logic, handles incoming requests and sends responses.
 
 ```kotlin
 class EchoAgentExecutor : AgentExecutor {
@@ -254,18 +291,9 @@ class EchoAgentExecutor : AgentExecutor {
 ```
 
 ### 2. Create the Server
+Pass the agent executor and agent card to the server.
 
 ```kotlin
-val agentCard = AgentCard(
-    name = "Echo Agent",
-    description = "Echoes back user messages",
-    version = "1.0.0",
-    capabilities = AgentCapabilities(
-        streaming = false,
-        pushNotifications = false
-    )
-)
-
 val server = A2AServer(
     agentExecutor = EchoAgentExecutor(),
     agentCard = agentCard
@@ -273,7 +301,7 @@ val server = A2AServer(
 ```
 
 ### 3. Add Transport Layer
-
+Create a transport layer and start the server.
 ```kotlin
 // HTTP JSON-RPC transport
 val transport = HttpJSONRPCServerTransport(server)
@@ -288,6 +316,8 @@ transport.start(
 ## Agent Implementation Patterns
 
 ### Simple Response Agent
+If your agent only needs to respond to a single message, you can implement it as a simple agent. 
+It can be also used if agent execution logic is not complex and time-consuming.
 
 ```kotlin
 class SimpleAgentExecutor : AgentExecutor {
@@ -309,7 +339,8 @@ class SimpleAgentExecutor : AgentExecutor {
 ```
 
 ### Task-Based Agent
-
+If the execution logic of your agent is complex and requires multiple steps, you can implement it as a task-based agent.
+It can be also used if agent execution logic is time-consuming and suspending.
 ```kotlin
 class TaskAgentExecutor : AgentExecutor {
     override suspend fun execute(
