@@ -720,7 +720,7 @@ class AIAgentIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels", "bedrockModels")
     fun integration_AgentCreateAndRestoreTest(model: LLModel) = runTest(timeout = 180.seconds) {
-        val checkpointStorageProvider = InMemoryPersistenceStorageProvider("integration_AgentCreateAndRestoreTest")
+        val checkpointStorageProvider = InMemoryPersistenceStorageProvider()
         val sayHello = "Hello World!"
         val hello = "Hello"
         val savedMessage = "Saved the state – the agent is ready to work!"
@@ -776,7 +776,7 @@ class AIAgentIntegrationTest {
 
         agent.run("Start the test")
 
-        val checkpoints = checkpointStorageProvider.getCheckpoints()
+        val checkpoints = checkpointStorageProvider.getCheckpoints(agent.id)
         assertTrue(checkpoints.isNotEmpty(), "No checkpoints were created")
         assertEquals(save, checkpoints.first().nodeId, "Checkpoint has incorrect node ID")
 
@@ -808,7 +808,7 @@ class AIAgentIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels", "bedrockModels")
     fun integration_AgentCheckpointRollbackTest(model: LLModel) = runTest(timeout = 180.seconds) {
-        val checkpointStorageProvider = InMemoryPersistenceStorageProvider("integration_AgentCheckpointRollbackTest")
+        val checkpointStorageProvider = InMemoryPersistenceStorageProvider()
 
         val hello = "Hello"
         val save = "Save"
@@ -924,7 +924,7 @@ class AIAgentIntegrationTest {
     @MethodSource("openAIModels", "anthropicModels", "googleModels", "bedrockModels")
     fun integration_AgentCheckpointContinuousPersistenceTest(model: LLModel) = runTest(timeout = 180.seconds) {
         val checkpointStorageProvider =
-            InMemoryPersistenceStorageProvider("integration_AgentCheckpointContinuousPersistenceTest")
+            InMemoryPersistenceStorageProvider()
 
         val strategyName = "continuous-persistence-strategy"
 
@@ -985,7 +985,7 @@ class AIAgentIntegrationTest {
 
         agent.run(testInput)
 
-        val checkpoints = checkpointStorageProvider.getCheckpoints()
+        val checkpoints = checkpointStorageProvider.getCheckpoints(agent.id)
         assertTrue(checkpoints.size >= 3, notEnoughCheckpointsError)
 
         val nodeIds = checkpoints.map { it.nodeId }.toSet()
@@ -1012,8 +1012,7 @@ class AIAgentIntegrationTest {
         val noCheckpointsError = "No checkpoints were created"
         val incorrectNodeIdError = "Checkpoint has incorrect node ID"
 
-        val fileStorageProvider =
-            JVMFilePersistenceStorageProvider(tempDir, "integration_AgentCheckpointStorageProvidersTest")
+        val fileStorageProvider = JVMFilePersistenceStorageProvider(tempDir)
 
         val simpleStrategy = strategy(strategyName) {
             val nodeHello by node<String, String>(hello) {
@@ -1057,7 +1056,7 @@ class AIAgentIntegrationTest {
 
         agent.run(testInput)
 
-        val checkpoints = fileStorageProvider.getCheckpoints().filter { it.nodeId != "tombstone" }
+        val checkpoints = fileStorageProvider.getCheckpoints(agent.id).filter { it.nodeId != "tombstone" }
         assertTrue(checkpoints.isNotEmpty(), noCheckpointsError)
         assertEquals(bye, checkpoints.first().nodeId, incorrectNodeIdError)
     }

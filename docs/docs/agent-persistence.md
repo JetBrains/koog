@@ -101,7 +101,7 @@ val agent = AIAgent(
 
 ```kotlin
 install(Persistence) {
-    storage = InMemoryPersistenceStorageProvider("in-memory-storage")
+    storage = InMemoryPersistenceStorageProvider()
 }
 ```
 
@@ -315,7 +315,7 @@ class MyCustomStorageProvider : PersistenceStorageProvider {
         // Implementation
     }
     
-    override suspend fun saveCheckpoint(agentCheckpointData: AgentCheckpointData) {
+    override suspend fun saveCheckpoint(agentId: String, agentCheckpointData: AgentCheckpointData) {
         // Implementation
     }
     
@@ -339,15 +339,15 @@ import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
 import ai.koog.prompt.llm.OllamaModels
 
 class MyCustomStorageProvider : PersistenceStorageProvider {
-    override suspend fun getCheckpoints(): List<AgentCheckpointData> {
+    override suspend fun getCheckpoints(agentId: String): List<AgentCheckpointData> {
         TODO("Not yet implemented")
     }
 
-    override suspend fun saveCheckpoint(agentCheckpointData: AgentCheckpointData) {
+    override suspend fun saveCheckpoint(agentId: String, agentCheckpointData: AgentCheckpointData) {
         TODO("Not yet implemented")
     }
 
-    override suspend fun getLatestCheckpoint(): AgentCheckpointData? {
+    override suspend fun getLatestCheckpoint(agentId: String): AgentCheckpointData? {
         TODO("Not yet implemented")
     }
 }
