@@ -1,7 +1,7 @@
 package com.example.agent.service
 
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
-import ai.koog.agents.snapshot.providers.PersistencyStorageProvider
+import ai.koog.agents.snapshot.providers.PersistenceStorageProvider
 import aws.sdk.kotlin.services.s3.S3Client
 import aws.sdk.kotlin.services.s3.model.GetObjectRequest
 import aws.sdk.kotlin.services.s3.model.ListObjectsRequest
@@ -17,12 +17,12 @@ class S3StorageProvider(
     private val awsRegion: String,
     private val bucketName: String,
     private val path: String
-) : PersistencyStorageProvider {
+) : PersistenceStorageProvider {
 
     private val json = Json { prettyPrint = true }
 
 
-    override suspend fun getCheckpoints(): List<AgentCheckpointData> {
+    override suspend fun getCheckpoints(agentId: String): List<AgentCheckpointData> {
         logger.info { "Getting checkpoints from S3 bucket: $bucketName and path: $path" }
 
         val request =
@@ -35,7 +35,7 @@ class S3StorageProvider(
         S3Client.fromEnvironment { region = awsRegion }.use { s3 ->
             val response = s3.listObjects(request)
             response.contents?.forEach { s3Object ->
-                if (s3Object.key != null) {
+                if (s3Object.key != null && s3Object.key!!.startsWith(path + agentId + "/")) {
                     s3ObjectKeys.add(s3Object.key!!)
                 }
             }
@@ -49,7 +49,8 @@ class S3StorageProvider(
                 } else {
                     null
                 }
-            } catch (_: Exception) {
+            } catch (ex: Exception) {
+                logger.error { "Failed to decode s3Object: $objectKey, error: ${ex.message}" }
                 null
             }
         }
@@ -74,7 +75,7 @@ class S3StorageProvider(
         }
     }
 
-    override suspend fun saveCheckpoint(agentCheckpointData: AgentCheckpointData) {
+    override suspend fun saveCheckpoint(agentId: String, agentCheckpointData: AgentCheckpointData) {
         logger.info { "Saving checkpoint to S3 bucket: $bucketName and path: $path" }
 
         val serialized = json.encodeToString(AgentCheckpointData.serializer(), agentCheckpointData)
@@ -85,7 +86,7 @@ class S3StorageProvider(
         val request =
             PutObjectRequest {
                 bucket = bucketName
-                key = path + agentCheckpointData.checkpointId
+                key = path + agentId + "/" + agentCheckpointData.checkpointId
                 metadata = metadataVal
                 body = ByteStream.fromString(serialized)
             }
@@ -95,8 +96,8 @@ class S3StorageProvider(
         }
     }
 
-    override suspend fun getLatestCheckpoint(): AgentCheckpointData? {
-        return getCheckpoints()
+    override suspend fun getLatestCheckpoint(agentId: String): AgentCheckpointData? {
+        return getCheckpoints(agentId)
             .maxByOrNull { it.createdAt }
     }
 }

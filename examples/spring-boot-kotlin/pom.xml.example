@@ -29,7 +29,7 @@
 	<properties>
 		<java.version>17</java.version>
 		<kotlin.version>2.2.10</kotlin.version>
-        <koog.version>0.4.2</koog.version>
+        <koog.version>0.5.0</koog.version>
         <kotlinx.coroutines.version>1.10.2</kotlinx.coroutines.version>
         <kotlinx.serialization.version>1.8.1</kotlinx.serialization.version>
         <aws.sdk.version>1.5.16</aws.sdk.version>

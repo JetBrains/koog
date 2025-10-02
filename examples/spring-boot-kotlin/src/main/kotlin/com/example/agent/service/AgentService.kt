@@ -3,8 +3,8 @@ package com.example.agent.service
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.singleRunStrategy
-import ai.koog.agents.snapshot.feature.Persistency
-import ai.koog.agents.snapshot.providers.PersistencyStorageProvider
+import ai.koog.agents.snapshot.feature.Persistence
+import ai.koog.agents.snapshot.providers.PersistenceStorageProvider
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 import com.example.agent.config.AgentConfiguration
@@ -19,7 +19,7 @@ class AgentService(
     val googleExecutor: SingleLLMPromptExecutor,
     val agentConfiguration: AgentConfiguration,
     val toolRegistryProvider: ToolRegistryProvider,
-    val persistencyStorageProvider: PersistencyStorageProvider?
+    val persistenceStorageProvider: PersistenceStorageProvider?
 ) {
 
     suspend fun createAndRunAgent(userPrompt: String): String {
@@ -34,18 +34,19 @@ class AgentService(
         val executor = googleExecutor
 
         val agent = AIAgent(
+            id = agentConfiguration.name,
             promptExecutor = executor,
             strategy = singleRunStrategy(),
             agentConfig = agentConfig,
             toolRegistry = toolRegistryProvider.provideToolRegistry(agentConfiguration.tools)
         )
         {
-            if (persistencyStorageProvider != null) {
+            if (persistenceStorageProvider != null) {
                 logger.info { "Using AI agent persistence feature" }
-                install(Persistency) {
-                    storage = persistencyStorageProvider!!
-                    // Enable automatic persistency
-                    enableAutomaticPersistency = true
+                install(Persistence) {
+                    storage = persistenceStorageProvider!!
+                    // Enable automatic persistence
+                    enableAutomaticPersistence = true
                 }
             }
         }

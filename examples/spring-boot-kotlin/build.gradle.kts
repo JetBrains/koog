@@ -39,8 +39,8 @@ dependencies {
 	implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 
-    implementation("ai.koog:koog-agents-jvm:0.4.2")
-    implementation("ai.koog:koog-spring-boot-starter:0.4.2")
+    implementation("ai.koog:koog-agents-jvm:0.5.0")
+    implementation("ai.koog:koog-spring-boot-starter:0.5.0")
     implementation("aws.sdk.kotlin:s3:1.5.16")
 
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
