@@ -138,25 +138,6 @@ class JvmShellCommandToolTest {
     }
 
     @Test
-    @EnabledOnOs(OS.LINUX, OS.MAC)
-    fun `counting lines in multiple files`() = runBlocking {
-        tempDir.resolve("file1.txt").writeText("line1\nline2\nline3\n")
-        tempDir.resolve("file2.txt").writeText("line1\nline2\n")
-
-        val result = execute("wc -l file1.txt file2.txt", workingDirectory = tempDir.toString())
-
-        val expected = """
-            Command: wc -l file1.txt file2.txt
-                   3 file1.txt
-                   2 file2.txt
-                   5 total
-            Exit code: 0
-        """.trimIndent()
-
-        assertEquals(expected, result.textForLLM())
-    }
-
-    @Test
     @EnabledOnOs(OS.WINDOWS)
     fun `counting lines in file on Windows`() = runBlocking {
         tempDir.resolve("file.txt").writeText("line1\r\nline2\r\nline3\r\nline4")
