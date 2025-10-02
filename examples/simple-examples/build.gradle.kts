@@ -120,6 +120,10 @@ registerRunExampleTask("runExampleStreamingWithTools", "ai.koog.agents.example.s
  A2A examples
 */
 
-// joke generation
+// Simple joke generation
 registerRunExampleTask("runExampleSimpleJokeAgentServer", "ai.koog.agents.example.a2a.simplejoke.ServerKt")
 registerRunExampleTask("runExampleSimpleJokeAgentClient", "ai.koog.agents.example.a2a.simplejoke.ClientKt")
+
+// Advanced joke generation
+registerRunExampleTask("runExampleAdvancedJokeAgentServer", "ai.koog.agents.example.a2a.advancedjoke.ServerKt")
+registerRunExampleTask("runExampleAdvancedJokeAgentClient", "ai.koog.agents.example.a2a.advancedjoke.ClientKt")
