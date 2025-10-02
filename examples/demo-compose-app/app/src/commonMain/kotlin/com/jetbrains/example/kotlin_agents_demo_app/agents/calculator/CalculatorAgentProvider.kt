@@ -131,11 +131,11 @@ internal class CalculatorAgentProvider : AgentProvider {
                     onToolCallEvent("Tool ${ctx.tool.name}, args ${ctx.toolArgs}")
                 }
 
-                onAgentRunError { ctx ->
+                onAgentExecutionFailed { ctx ->
                     onErrorEvent("${ctx.throwable.message}")
                 }
 
-                onAgentFinished { ctx ->
+                onAgentCompleted { ctx ->
                     // Skip finish event handling
                 }
             }

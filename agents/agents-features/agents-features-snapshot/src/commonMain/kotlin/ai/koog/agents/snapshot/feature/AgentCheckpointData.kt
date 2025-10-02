@@ -2,6 +2,7 @@
 
 package ai.koog.agents.snapshot.feature
 
+import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AgentContextData
 import ai.koog.agents.core.agent.context.RollbackStrategy
 import ai.koog.agents.core.annotation.InternalAgentsApi
@@ -62,12 +63,16 @@ public fun tombstoneCheckpoint(time: Instant): AgentCheckpointData {
  * @return A new [AgentContextData] instance containing the message history, node ID,
  * and last input from the [AgentCheckpointData].
  */
-public fun AgentCheckpointData.toAgentContextData(rollbackStrategy: RollbackStrategy): AgentContextData {
+public fun AgentCheckpointData.toAgentContextData(
+    rollbackStrategy: RollbackStrategy,
+    additionalRollbackAction: suspend (AIAgentContext) -> Unit = {}
+): AgentContextData {
     return AgentContextData(
         messageHistory = messageHistory,
         nodeId = nodeId,
         lastInput = lastInput,
-        rollbackStrategy
+        rollbackStrategy,
+        additionalRollbackAction
     )
 }
 
@@ -79,4 +84,5 @@ public fun AgentCheckpointData.toAgentContextData(rollbackStrategy: RollbackStra
  * @return `true` if the `properties` map contains a key-value pair where the key is "tombstone"
  *         and the value is a JSON primitive set to `true`, otherwise `false`.
  */
-public fun AgentCheckpointData.isTombstone(): Boolean = properties?.get(PersistencyUtils.TOMBSTONE_CHECKPOINT_NAME) == JsonPrimitive(true)
+public fun AgentCheckpointData.isTombstone(): Boolean =
+    properties?.get(PersistencyUtils.TOMBSTONE_CHECKPOINT_NAME) == JsonPrimitive(true)

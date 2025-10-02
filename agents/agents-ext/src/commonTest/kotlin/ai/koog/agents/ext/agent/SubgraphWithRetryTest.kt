@@ -8,6 +8,7 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
+import ai.koog.agents.utils.use
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.llm.OllamaModels
 import ai.koog.prompt.message.Message
@@ -119,7 +120,7 @@ class SubgraphWithRetryTest {
             maxAgentIterations = MAX_AGENT_ITERATIONS,
         )
 
-        val agent = AIAgent(
+        AIAgent(
             promptExecutor = getMockExecutor {},
             strategy = testStrategy,
             agentConfig = agentConfig,
@@ -128,11 +129,11 @@ class SubgraphWithRetryTest {
             },
         ) {
             install(EventHandler) {
-                onAgentFinished { eventContext -> results += eventContext.result }
+                onAgentCompleted { eventContext -> results += eventContext.result }
             }
+        }.use { agent ->
+            agent.run("test input")
         }
-
-        agent.run("test input")
 
         assertEquals(1, results.size)
         val result = results.first() as RetrySubgraphResult<*>
@@ -176,7 +177,7 @@ class SubgraphWithRetryTest {
             maxAgentIterations = MAX_AGENT_ITERATIONS,
         )
 
-        val agent = AIAgent(
+        AIAgent(
             promptExecutor = getMockExecutor {},
             strategy = testStrategy,
             agentConfig = agentConfig,
@@ -185,11 +186,11 @@ class SubgraphWithRetryTest {
             },
         ) {
             install(EventHandler) {
-                onAgentFinished { eventContext -> results += eventContext.result }
+                onAgentCompleted { eventContext -> results += eventContext.result }
             }
+        }.use { agent ->
+            agent.run("test input")
         }
-
-        agent.run("test input")
 
         assertEquals(1, results.size)
         val result = results.first() as RetrySubgraphResult<*>
@@ -229,7 +230,7 @@ class SubgraphWithRetryTest {
             maxAgentIterations = MAX_AGENT_ITERATIONS,
         )
 
-        val agent = AIAgent(
+        AIAgent(
             promptExecutor = getMockExecutor {},
             strategy = testStrategy,
             agentConfig = agentConfig,
@@ -238,17 +239,19 @@ class SubgraphWithRetryTest {
             },
         ) {
             install(EventHandler) {
-                onAgentFinished { eventContext -> results += eventContext.result }
+                onAgentCompleted { eventContext -> results += eventContext.result }
             }
+        }.use { agent ->
+
+            agent.run("test input")
+
+            assertEquals(1, results.size)
+
+            val result = results.first() as RetrySubgraphResult<*>
+            assertEquals(maxAttempts, result.retryCount)
+            assertEquals(maxAttempts, attemptCount.size)
+            assertFalse(result.success)
         }
-
-        agent.run("test input")
-
-        assertEquals(1, results.size)
-        val result = results.first() as RetrySubgraphResult<*>
-        assertEquals(maxAttempts, result.retryCount)
-        assertEquals(maxAttempts, attemptCount.size)
-        assertFalse(result.success)
     }
 
     @Test
@@ -293,7 +296,7 @@ class SubgraphWithRetryTest {
             maxAgentIterations = MAX_AGENT_ITERATIONS,
         )
 
-        val agent = AIAgent(
+        AIAgent(
             promptExecutor = getMockExecutor {},
             strategy = testStrategy,
             agentConfig = agentConfig,
@@ -302,11 +305,11 @@ class SubgraphWithRetryTest {
             },
         ) {
             install(EventHandler) {
-                onAgentFinished { eventContext -> results += eventContext.result }
+                onAgentCompleted { eventContext -> results += eventContext.result }
             }
+        }.use { agent ->
+            agent.run("test input")
         }
-
-        agent.run("test input")
 
         assertEquals(1, results.size)
         assertEquals(SUCCESS, results.first())
@@ -352,7 +355,7 @@ class SubgraphWithRetryTest {
             },
         ) {
             install(EventHandler) {
-                onAgentFinished { eventContext -> results += eventContext.result }
+                onAgentCompleted { eventContext -> results += eventContext.result }
             }
         }
 
@@ -394,7 +397,7 @@ class SubgraphWithRetryTest {
             maxAgentIterations = MAX_AGENT_ITERATIONS,
         )
 
-        val agent = AIAgent(
+        AIAgent(
             promptExecutor = getMockExecutor {},
             strategy = testStrategy,
             agentConfig = agentConfig,
@@ -403,15 +406,16 @@ class SubgraphWithRetryTest {
             },
         ) {
             install(EventHandler) {
-                onAgentFinished { eventContext -> results += eventContext.result }
+                onAgentCompleted { eventContext -> results += eventContext.result }
             }
+        }.use { agent ->
+
+            agent.run("test input")
+
+            assertEquals(1, results.size)
+            assertEquals("failure", results.first())
+            assertEquals(maxAttempts, attemptCount.size)
         }
-
-        agent.run("test input")
-
-        assertEquals(1, results.size)
-        assertEquals("failure", results.first())
-        assertEquals(maxAttempts, attemptCount.size)
     }
 
     @Test

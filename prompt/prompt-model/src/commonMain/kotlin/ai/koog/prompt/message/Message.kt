@@ -230,6 +230,12 @@ public sealed interface MessageMetaInfo {
      * to the current system time if not explicitly set.
      */
     public val timestamp: Instant
+
+    /**
+     * Free-form information associated with a message.
+     * Can be used to store custom metadata that doesn't fit into the standard fields.
+     */
+    public val metadata: JsonObject?
 }
 
 /**
@@ -243,7 +249,8 @@ public sealed interface MessageMetaInfo {
  */
 @Serializable
 public data class RequestMetaInfo(
-    override val timestamp: Instant
+    override val timestamp: Instant,
+    override val metadata: JsonObject? = null
 ) : MessageMetaInfo {
     /**
      * Companion object for `RequestMetaInfo` that provides factory methods and utilities related to creating instances.
@@ -291,7 +298,12 @@ public data class ResponseMetaInfo(
     public val totalTokensCount: Int? = null,
     public val inputTokensCount: Int? = null,
     public val outputTokensCount: Int? = null,
+    @Deprecated(
+        "additionalInfo is deprecated, use metadata instead",
+        ReplaceWith("metadata")
+    )
     public val additionalInfo: Map<String, String> = emptyMap(),
+    override val metadata: JsonObject? = null,
 ) : MessageMetaInfo {
     /**
      * Companion object for the ResponseMetaInfo class.
@@ -302,7 +314,11 @@ public data class ResponseMetaInfo(
          * Creates a ResponseMetadata instance with a timestamp from the provided clock.
          *
          * @param clock The clock to use for generating the timestamp.
-         * @param tokensCount The number of tokens used in the response, or null if not available.
+         * @param totalTokensCount The total number of tokens involved in the response, including both input and output tokens.
+         * @param inputTokensCount The number of tokens used in the input.
+         * @param outputTokensCount The number of tokens generated in the output.
+         * @param additionalInfo Deprecated: use [metadata] instead. Additional metadata as a map of string keys to string values.
+         * @param metadata Additional metadata as a JSON object.
          * @return A new ResponseMetadata instance with the timestamp from the provided clock.
          */
         public fun create(
@@ -310,9 +326,10 @@ public data class ResponseMetaInfo(
             totalTokensCount: Int? = null,
             inputTokensCount: Int? = null,
             outputTokensCount: Int? = null,
-            additionalInfo: Map<String, String> = emptyMap()
+            additionalInfo: Map<String, String> = emptyMap(),
+            metadata: JsonObject? = null,
         ): ResponseMetaInfo =
-            ResponseMetaInfo(clock.now(), totalTokensCount, inputTokensCount, outputTokensCount, additionalInfo)
+            ResponseMetaInfo(clock.now(), totalTokensCount, inputTokensCount, outputTokensCount, additionalInfo, metadata)
 
         /**
          * An empty instance of the [ResponseMetaInfo] with the timestamp set to a distant past.

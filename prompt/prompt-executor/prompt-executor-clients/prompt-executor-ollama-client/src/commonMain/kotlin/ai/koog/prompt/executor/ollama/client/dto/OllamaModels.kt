@@ -72,6 +72,7 @@ internal data class OllamaChatRequestDTO(
     @Serializable
     internal data class Options(
         val temperature: Double? = null,
+        @SerialName("num_ctx") val numCtx: Long? = null,
     )
 }
 

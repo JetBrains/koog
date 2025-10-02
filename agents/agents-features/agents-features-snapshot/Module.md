@@ -36,9 +36,20 @@ val agent = AIAgent(
     install(Persistency) {
         // Configure the storage provider
         storage = InMemoryPersistencyStorageProvider("agent-persistence-id")
-        
+
         // Optional: enable automatic checkpoint creation after each node
         enableAutomaticPersistency = true
+
+        // Use `RollbackStrategy.Default` if you want to checkpoint the whole state machine and continue from the same node in your strategy graph, 
+        // or `RollbackStrategy.MessageHistoryOnly` if you only want to checkpoint messages
+        rollbackStrategy = RollbackStrategy.Default
+        
+        // Optional -- if you want to also roll back all side-effects produced by some tools when rolling back in time to some checkpoint,
+        // you can also provide a `RollbackToolRegistry` and register rollback-tools for each relevant agent tool in your main `ToolRegistry`
+        rollbackToolRegistry = RollbackToolRegistry {
+            registerRollback(::someTool, ::howToRollbackThisTool)
+            registerRollback(::anotherTool, ::sideEffectsRemover)
+        }
     }
 }
 ```

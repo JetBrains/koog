@@ -17,9 +17,9 @@ import ai.koog.agents.core.feature.handler.node.NodeExecutionStartingContext
 import ai.koog.agents.core.feature.handler.streaming.LLMStreamingCompletedContext
 import ai.koog.agents.core.feature.handler.streaming.LLMStreamingFrameReceivedContext
 import ai.koog.agents.core.feature.handler.streaming.LLMStreamingStartingContext
-import ai.koog.agents.core.feature.handler.tool.ToolExecutionCompletedContext
-import ai.koog.agents.core.feature.handler.tool.ToolExecutionFailedContext
-import ai.koog.agents.core.feature.handler.tool.ToolExecutionStartingContext
+import ai.koog.agents.core.feature.handler.tool.ToolCallCompletedContext
+import ai.koog.agents.core.feature.handler.tool.ToolCallFailedContext
+import ai.koog.agents.core.feature.handler.tool.ToolCallStartingContext
 import ai.koog.agents.core.feature.handler.tool.ToolValidationFailedContext
 import io.github.oshai.kotlinlogging.KotlinLogging
 
@@ -33,7 +33,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
  * Example usage:
  * ```
  * handleEvents {
- *     onToolExecutionStarting { eventContext ->
+ *     onToolCallStarting { eventContext ->
  *         println("Tool called: ${eventContext.tool.name} with args ${eventContext.toolArgs}")
  *     }
  *
@@ -58,7 +58,7 @@ public class EventHandler {
      * Example usage:
      * ```
      * handleEvents {
-     *     onToolExecutionStarting { eventContext ->
+     *     onToolCallStarting { eventContext ->
      *         println("Tool called: ${eventContext.tool.name} with args: ${eventContext.toolArgs}")
      *     }
      *
@@ -145,8 +145,8 @@ public class EventHandler {
                 config.invokeOnLLMCallCompleted(eventContext)
             }
 
-            pipeline.interceptToolExecutionStarting(interceptContext) intercept@{ eventContext: ToolExecutionStartingContext ->
-                config.invokeOnToolExecutionStarting(eventContext)
+            pipeline.interceptToolCallStarting(interceptContext) intercept@{ eventContext: ToolCallStartingContext ->
+                config.invokeOnToolCallStarting(eventContext)
             }
 
             pipeline.interceptToolValidationFailed(
@@ -155,16 +155,16 @@ public class EventHandler {
                 config.invokeOnToolValidationFailed(eventContext)
             }
 
-            pipeline.interceptToolExecutionFailed(interceptContext) intercept@{ eventContext: ToolExecutionFailedContext ->
-                config.invokeOnToolExecutionFailed(eventContext)
+            pipeline.interceptToolCallFailed(interceptContext) intercept@{ eventContext: ToolCallFailedContext ->
+                config.invokeOnToolCallFailed(eventContext)
             }
 
-            pipeline.interceptToolExecutionCompleted(interceptContext) intercept@{ eventContext: ToolExecutionCompletedContext ->
-                config.invokeOnToolExecutionCompleted(eventContext)
+            pipeline.interceptToolCallCompleted(interceptContext) intercept@{ eventContext: ToolCallCompletedContext ->
+                config.invokeOnToolCallCompleted(eventContext)
             }
 
             pipeline.interceptLLMStreamingStarting(interceptContext) intercept@{ eventContext: LLMStreamingStartingContext ->
-                config.invokeOnLLMStreammingStarting(eventContext)
+                config.invokeOnLLMStreamingStarting(eventContext)
             }
 
             pipeline.interceptLLMStreamingFrameReceived(interceptContext) intercept@{ eventContext: LLMStreamingFrameReceivedContext ->
@@ -205,7 +205,7 @@ public class EventHandler {
  * ```
  * handleEvents {
  *     // Log when tools are called
- *     onToolExecutionStarting { eventContext ->
+ *     onToolCallStarting { eventContext ->
  *         println("Tool called: ${eventContext.tool.name} with args: ${eventContext.toolArgs}")
  *     }
  *

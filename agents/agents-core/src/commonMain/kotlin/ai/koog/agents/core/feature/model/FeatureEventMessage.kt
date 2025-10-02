@@ -14,8 +14,6 @@ import kotlinx.serialization.Serializable
  * The primary purpose of this class is to represent feature event data with an associated unique event identifier,
  * a timestamp marking its creation, and the message type indicating it is an event-specific message.
  *
- * @property eventId A unique identifier associated with this event.
- *                   This property implements the [ai.koog.agents.core.feature.message.FeatureEvent.eventId] from the parent interface.
  * @property timestamp The time at which this event message was created has represented in milliseconds since the epoch.
  *                     This property implements the [ai.koog.agents.core.feature.message.FeatureMessage.timestamp] from the parent interface.
  * @property messageType The type of the message, which in this case is fixed as [Type.Event].
@@ -23,7 +21,6 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 public data class FeatureEventMessage(
-    override val eventId: String,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds()
 ) : FeatureEvent {
 

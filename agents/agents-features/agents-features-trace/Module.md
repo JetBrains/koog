@@ -7,7 +7,7 @@ Provides implementation of the `Tracing` feature for AI Agents
 The Tracing feature captures comprehensive data about agent execution, including:
 - All LLM calls and their responses
 - Prompts sent to LLMs
-- Tool calls, arguments, and results
+- Tool executions, arguments, and results
 - Graph node visits and execution flow
 - Agent lifecycle events (creation, start, finish, errors)
 - Strategy execution events
@@ -40,8 +40,8 @@ val agent = AIAgent(
 
         // Optionally filter messages
         fileWriter.setMessageFilter { message -> 
-            // Only trace LLM calls and tool calls
-            message is BeforeLLMCallEvent || message is ToolCallEvent 
+            // Only trace LLM calls and tool executions
+            message is LLMCallStartingEvent || message is ToolExecutionStartingEvent 
         }
     }
 }
@@ -70,15 +70,14 @@ val agent = AIAgent(
 Here's an example of the logs produced by tracing:
 
 ```
-AgentCreateEvent (strategy name: my-agent-strategy)
-AgentStartedEvent (strategy name: my-agent-strategy)
-StrategyStartEvent (strategy name: my-agent-strategy)
-NodeExecutionStartEvent (node: definePrompt, input: user query)
-NodeExecutionEndEvent (node: definePrompt, input: user query, output: processed query)
-BeforeLLMCallEvent (prompt: Please analyze the following code...)
-AfterLLMCallEvent (response: I've analyzed the code and found...)
-ToolCallEvent (tool: readFile, tool args: {"path": "src/main.py"})
-ToolCallResultEvent (tool: readFile, tool args: {"path": "src/main.py"}, result: "def main():...")
-StrategyFinishedEvent (strategy name: my-agent-strategy, result: Success)
-AgentFinishedEvent (strategy name: my-agent-strategy, result: Success)
+AgentStartingEvent (strategy name: my-agent-strategy)
+GraphStrategyStartingEvent (strategy name: my-agent-strategy)
+NodeExecutionStartingEvent (node: definePrompt, input: user query)
+NodeExecutionCompletedEvent (node: definePrompt, input: user query, output: processed query)
+LLMCallStartingEvent (prompt: Please analyze the following code...)
+LLMCallCompletedEvent (response: I've analyzed the code and found...)
+ToolExecutionStartingEvent (tool: readFile, tool args: {"path": "src/main.py"})
+ToolExecutionCompletedEvent (tool: readFile, tool args: {"path": "src/main.py"}, result: "def main():...")
+StrategyCompletedEvent (strategy name: my-agent-strategy, result: Success)
+AgentCompletedEvent (strategy name: my-agent-strategy, result: Success)
 ```

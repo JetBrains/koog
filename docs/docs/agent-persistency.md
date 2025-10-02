@@ -203,6 +203,64 @@ suspend fun example(context: AIAgentContext, checkpointId: String) {
 
 <!--- KNIT example-agent-persistency-06.kt -->
 
+#### Rolling back all side-effects produced by tools
+
+It's quite common for some tools to produce side-effects. Specifically, when you are running your agents on the backend, 
+some of the tools would likely perform some database transactions. This makes it much harder for your agent to travel back in time.
+
+Imagine, that you have a tool `createUser` that creates a new user in your database. And your agent has populated multiple tool calls overtime:
+```
+tool call: createUser "Alex"
+
+->>>> checkpoint-1 <<<<-
+
+tool call: createUser "Daniel"
+tool call: createUser "Maria"
+```
+
+And now you would like to roll back to a checkpoint. Restoring the agent's state (including message history, and strategy graph node) alone would not
+be sufficient to achieve the exact state of the world before the checkpoint. You should also restore the side-effects produced by your tool calls. In our example,
+this would mean removing `Maria` and `Daniel` from the database.
+
+With Koog Persistency you can achieve that by providing a `RollbackToolRegistry` to `Persistency` feature config:
+
+<!--- INCLUDE
+import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.snapshot.feature.Persistency
+import ai.koog.agents.snapshot.providers.InMemoryPersistencyStorageProvider
+import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
+import ai.koog.prompt.llm.OllamaModels
+import ai.koog.agents.snapshot.feature.RollbackToolRegistry
+import ai.koog.agents.snapshot.feature.registerRollback
+
+fun createUser(name: String) {}
+
+fun removeUser(name: String) {}
+
+val agent = AIAgent(
+    promptExecutor = simpleOllamaAIExecutor(),
+    llmModel = OllamaModels.Meta.LLAMA_3_2,
+) {
+-->
+<!--- SUFFIX 
+} 
+-->
+
+```kotlin
+install(Persistency) {
+    enableAutomaticPersistency = true
+    rollbackToolRegistry = RollbackToolRegistry {
+        // For every `createUser` tool call there will be a `removeUser` invocation in the reverse order 
+        // when rolling back to the desired execution point.
+        // Note: `removeUser` tool should take the same exact arguments as `createUser`. 
+        // It's the developer's responsibility to make sure that `removeUser` invocation rolls back all side-effects of `createUser`:
+        registerRollback(::createUser, ::removeUser)
+    }
+}
+```
+
+<!--- KNIT example-agent-persistency-07.kt -->
+
 ### Using extension functions
 
 The Agent Persistency feature provides convenient extension functions for working with checkpoints:
@@ -221,7 +279,7 @@ suspend fun example(context: AIAgentContext) {
     val checkpointFeature = context.persistency()
 
     // Or perform an action with the checkpoint feature
-    context.withPersistency(context) { ctx ->
+    context.withPersistency { ctx ->
         // 'this' is the checkpoint feature
         createCheckpoint(
             agentContext = ctx,
@@ -233,7 +291,7 @@ suspend fun example(context: AIAgentContext) {
     }
 }
 ```
-<!--- KNIT example-agent-persistency-07.kt -->
+<!--- KNIT example-agent-persistency-08.kt -->
 
 ## Advanced usage
 
@@ -267,7 +325,7 @@ class MyCustomStorageProvider : PersistencyStorageProvider {
 }
 ```
 
-<!--- KNIT example-agent-persistency-08.kt -->
+<!--- KNIT example-agent-persistency-09.kt -->
 
 To use your custom provider in the feature configuration, set it as the storage when configuring the Agent Persistency
 feature in your agent.
@@ -309,7 +367,7 @@ install(Persistency) {
 }
 ```
 
-<!--- KNIT example-agent-persistency-09.kt -->
+<!--- KNIT example-agent-persistency-10.kt -->
 
 ### Setting execution points
 
@@ -337,6 +395,6 @@ fun example(context: AIAgentContext) {
 
 ```
 
-<!--- KNIT example-agent-persistency-10.kt -->
+<!--- KNIT example-agent-persistency-11.kt -->
 
 This allows for more fine-grained control over the agent's state beyond just restoring from checkpoints.

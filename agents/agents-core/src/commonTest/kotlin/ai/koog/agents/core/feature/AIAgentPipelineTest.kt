@@ -273,8 +273,7 @@ class AIAgentPipelineTest {
 
         val actualEvents = interceptedEvents.filter { it.startsWith("Agent Context: ") }
         val expectedEvents = listOf(
-            "Agent Context: request features from agent context",
-            "Agent Context: request features from agent context",
+            "Agent Context: request features from agent context"
         )
 
         assertEquals(

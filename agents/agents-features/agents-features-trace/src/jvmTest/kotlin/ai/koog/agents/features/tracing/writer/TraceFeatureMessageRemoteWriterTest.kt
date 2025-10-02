@@ -20,8 +20,8 @@ import ai.koog.agents.core.feature.model.events.StrategyCompletedEvent
 import ai.koog.agents.core.feature.model.events.StrategyEventGraph
 import ai.koog.agents.core.feature.model.events.StrategyEventGraphEdge
 import ai.koog.agents.core.feature.model.events.StrategyEventGraphNode
-import ai.koog.agents.core.feature.model.events.ToolExecutionCompletedEvent
-import ai.koog.agents.core.feature.model.events.ToolExecutionStartingEvent
+import ai.koog.agents.core.feature.model.events.ToolCallCompletedEvent
+import ai.koog.agents.core.feature.model.events.ToolCallStartingEvent
 import ai.koog.agents.core.feature.remote.client.FeatureMessageRemoteClient
 import ai.koog.agents.core.feature.remote.client.config.DefaultClientConnectionConfig
 import ai.koog.agents.core.feature.remote.server.config.DefaultServerConnectionConfig
@@ -347,14 +347,14 @@ class TraceFeatureMessageRemoteWriterTest {
                         input = toolCallMessage(dummyTool.name, content = """{"dummy":"test"}""").toString(),
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),
-                    ToolExecutionStartingEvent(
+                    ToolCallStartingEvent(
                         runId = runId,
                         toolCallId = "0",
                         toolName = dummyTool.name,
                         toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),
-                    ToolExecutionCompletedEvent(
+                    ToolCallCompletedEvent(
                         runId = runId,
                         toolCallId = "0",
                         toolName = dummyTool.name,

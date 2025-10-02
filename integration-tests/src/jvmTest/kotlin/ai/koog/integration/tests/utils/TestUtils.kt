@@ -65,11 +65,6 @@ object TestUtils {
             }
     }
 
-    fun readTestDeepSeekKeyFromEnv(): String {
-        return System.getenv("DEEPSEEK_API_TEST_KEY")
-            ?: error("ERROR: environment variable `DEEPSEEK_API_TEST_KEY` is not set")
-    }
-
     @Serializable
     @SerialName("WeatherReport")
     @LLMDescription("Weather report for a specific location")

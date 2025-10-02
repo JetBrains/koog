@@ -16,13 +16,17 @@ import ai.koog.agents.core.feature.model.events.AgentStartingEvent
 import ai.koog.agents.core.feature.model.events.GraphStrategyStartingEvent
 import ai.koog.agents.core.feature.model.events.LLMCallCompletedEvent
 import ai.koog.agents.core.feature.model.events.LLMCallStartingEvent
+import ai.koog.agents.core.feature.model.events.LLMStreamingCompletedEvent
+import ai.koog.agents.core.feature.model.events.LLMStreamingFailedEvent
+import ai.koog.agents.core.feature.model.events.LLMStreamingFrameReceivedEvent
+import ai.koog.agents.core.feature.model.events.LLMStreamingStartingEvent
 import ai.koog.agents.core.feature.model.events.NodeExecutionCompletedEvent
 import ai.koog.agents.core.feature.model.events.NodeExecutionFailedEvent
 import ai.koog.agents.core.feature.model.events.NodeExecutionStartingEvent
 import ai.koog.agents.core.feature.model.events.StrategyCompletedEvent
-import ai.koog.agents.core.feature.model.events.ToolExecutionCompletedEvent
-import ai.koog.agents.core.feature.model.events.ToolExecutionFailedEvent
-import ai.koog.agents.core.feature.model.events.ToolExecutionStartingEvent
+import ai.koog.agents.core.feature.model.events.ToolCallCompletedEvent
+import ai.koog.agents.core.feature.model.events.ToolCallFailedEvent
+import ai.koog.agents.core.feature.model.events.ToolCallStartingEvent
 import ai.koog.agents.core.feature.model.events.ToolValidationFailedEvent
 import ai.koog.agents.core.feature.model.events.startNodeToGraph
 import ai.koog.agents.core.feature.model.toAgentError
@@ -255,14 +259,58 @@ public class Tracing {
 
             //endregion Intercept LLM Call Events
 
+            //region Intercept LLM Streaming Events
+
+            pipeline.interceptLLMStreamingStarting(interceptContext) intercept@{ eventContext ->
+                val event = LLMStreamingStartingEvent(
+                    runId = eventContext.runId,
+                    prompt = eventContext.prompt,
+                    model = eventContext.model.eventString,
+                    tools = eventContext.tools.map { it.name },
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
+                )
+                processMessage(config, event)
+            }
+
+            pipeline.interceptLLMStreamingCompleted(interceptContext) intercept@{ eventContext ->
+                val event = LLMStreamingCompletedEvent(
+                    runId = eventContext.runId,
+                    prompt = eventContext.prompt,
+                    model = eventContext.model.eventString,
+                    tools = eventContext.tools.map { it.name },
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
+                )
+                processMessage(config, event)
+            }
+
+            pipeline.interceptLLMStreamingFrameReceived(interceptContext) intercept@{ eventContext ->
+                val event = LLMStreamingFrameReceivedEvent(
+                    runId = eventContext.runId,
+                    frame = eventContext.streamFrame,
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
+                )
+                processMessage(config, event)
+            }
+
+            pipeline.interceptLLMStreamingFailed(interceptContext) intercept@{ eventContext ->
+                val event = LLMStreamingFailedEvent(
+                    runId = eventContext.runId,
+                    error = eventContext.error.toAgentError(),
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
+                )
+                processMessage(config, event)
+            }
+
+            //endregion Intercept LLM Streaming Events
+
             //region Intercept Tool Call Events
 
-            pipeline.interceptToolExecutionStarting(interceptContext) intercept@{ eventContext ->
+            pipeline.interceptToolCallStarting(interceptContext) intercept@{ eventContext ->
 
                 @Suppress("UNCHECKED_CAST")
                 val tool = eventContext.tool as Tool<Any?, Any?>
 
-                val event = ToolExecutionStartingEvent(
+                val event = ToolCallStartingEvent(
                     runId = eventContext.runId,
                     toolCallId = eventContext.toolCallId,
                     toolName = tool.name,
@@ -288,12 +336,12 @@ public class Tracing {
                 processMessage(config, event)
             }
 
-            pipeline.interceptToolExecutionFailed(interceptContext) intercept@{ eventContext ->
+            pipeline.interceptToolCallFailed(interceptContext) intercept@{ eventContext ->
 
                 @Suppress("UNCHECKED_CAST")
                 val tool = eventContext.tool as Tool<Any?, Any?>
 
-                val event = ToolExecutionFailedEvent(
+                val event = ToolCallFailedEvent(
                     runId = eventContext.runId,
                     toolCallId = eventContext.toolCallId,
                     toolName = tool.name,
@@ -304,12 +352,12 @@ public class Tracing {
                 processMessage(config, event)
             }
 
-            pipeline.interceptToolExecutionCompleted(interceptContext) intercept@{ eventContext ->
+            pipeline.interceptToolCallCompleted(interceptContext) intercept@{ eventContext ->
 
                 @Suppress("UNCHECKED_CAST")
                 val tool = eventContext.tool as Tool<Any?, Any?>
 
-                val event = ToolExecutionCompletedEvent(
+                val event = ToolCallCompletedEvent(
                     runId = eventContext.runId,
                     toolCallId = eventContext.toolCallId,
                     toolName = tool.name,

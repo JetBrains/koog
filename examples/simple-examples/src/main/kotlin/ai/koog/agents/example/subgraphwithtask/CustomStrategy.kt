@@ -4,7 +4,7 @@ import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
-import ai.koog.agents.ext.agent.VerifiedSubgraphResult
+import ai.koog.agents.ext.agent.CriticResult
 import ai.koog.agents.ext.agent.subgraphWithTask
 import ai.koog.agents.ext.agent.subgraphWithVerification
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
@@ -34,7 +34,7 @@ fun customWizardStrategy(
         """.trimIndent()
     }
 
-    val fix by subgraphWithTask<VerifiedSubgraphResult, String>(
+    val fix by subgraphWithTask<CriticResult<String>, String>(
         tools = fixTools,
         llmModel = AnthropicModels.Sonnet_3_7,
     ) { verificationResult ->
@@ -42,7 +42,7 @@ fun customWizardStrategy(
             You are an AI agent that can create files, delete files, create folders, and delete folders.
 
             Your primary task is to fix the project build and makes sure that all the following problems are resolved:
-            ${verificationResult.message}
+            ${verificationResult.feedback}
 
             3. DO NOT FINISH BEFORE YOU CHANGED EVERYTHING THAT IS REQUIRED TO MAKE THE PROJECT WORK.
             4. ONLY CALL TOOLS, DON'T CHAT WITH ME!!!!!!!!!!!!!!!!!!
@@ -67,7 +67,7 @@ fun customWizardStrategy(
 
     edge(nodeStart forwardTo generate transformed { })
     edge(generate forwardTo verify transformed { "Project is generated and is ready for verification." })
-    edge(verify forwardTo fix onCondition { !it.correct })
-    edge(verify forwardTo nodeFinish onCondition { it.correct } transformed { "Project is correct." })
+    edge(verify forwardTo fix onCondition { !it.successful })
+    edge(verify forwardTo nodeFinish onCondition { it.successful } transformed { "Project is correct." })
     edge(fix forwardTo verify)
 }

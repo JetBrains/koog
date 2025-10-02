@@ -20,7 +20,6 @@ import ai.koog.prompt.executor.ollama.client.dto.OllamaPullModelResponseDTO
 import ai.koog.prompt.executor.ollama.client.dto.OllamaShowModelRequestDTO
 import ai.koog.prompt.executor.ollama.client.dto.OllamaShowModelResponseDTO
 import ai.koog.prompt.executor.ollama.client.dto.extractOllamaJsonFormat
-import ai.koog.prompt.executor.ollama.client.dto.extractOllamaOptions
 import ai.koog.prompt.executor.ollama.client.dto.getToolCalls
 import ai.koog.prompt.executor.ollama.client.dto.toOllamaChatMessages
 import ai.koog.prompt.executor.ollama.client.dto.toOllamaModelCard
@@ -57,19 +56,23 @@ import kotlinx.serialization.json.Json
 /**
  * Client for interacting with the Ollama API with comprehensive model support.
  *
+ * Implements:
+ * - [LLMClient] for executing prompts and streaming responses.
+ * - [LLMEmbeddingProvider] for generating embeddings from input text.
+ *
  * @param baseUrl The base URL of the Ollama server. Defaults to "http://localhost:11434".
  * @param baseClient The underlying HTTP client used for making requests.
  * @param timeoutConfig Configuration for connection, request, and socket timeouts.
  * @param clock Clock instance used for tracking response metadata timestamps.
- * Implements:
- * - LLMClient for executing prompts and streaming responses.
- * - LLMEmbeddingProvider for generating embeddings from input text.
+ * @param contextWindowStrategy The [ContextWindowStrategy] to use for computing context window lengths.
+ *   Defaults to [ContextWindowStrategy.None].
  */
 public class OllamaClient(
     public val baseUrl: String = "http://localhost:11434",
     baseClient: HttpClient = HttpClient(engineFactoryProvider()),
     timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig(),
-    private val clock: Clock = Clock.System
+    private val clock: Clock = Clock.System,
+    private val contextWindowStrategy: ContextWindowStrategy = ContextWindowStrategy.Companion.None,
 ) : LLMClient, LLMEmbeddingProvider {
 
     private companion object {
@@ -159,7 +162,7 @@ public class OllamaClient(
                 messages = prompt.toOllamaChatMessages(model),
                 tools = if (tools.isNotEmpty()) tools.map { it.toOllamaTool() } else null,
                 format = prompt.extractOllamaJsonFormat(),
-                options = prompt.extractOllamaOptions(),
+                options = extractOllamaOptions(prompt, model),
                 stream = false,
                 additionalProperties = prompt.params.additionalProperties
             )
@@ -239,7 +242,7 @@ public class OllamaClient(
             OllamaChatRequestDTO(
                 model = model.id,
                 messages = prompt.toOllamaChatMessages(model),
-                options = prompt.extractOllamaOptions(),
+                options = extractOllamaOptions(prompt, model),
                 stream = true,
                 additionalProperties = prompt.params.additionalProperties,
             )
@@ -272,6 +275,16 @@ public class OllamaClient(
                 continue
             }
         }
+    }
+
+    /**
+     * Prepare Ollama chat request options from the given prompt and model.
+     */
+    internal fun extractOllamaOptions(prompt: Prompt, model: LLModel): OllamaChatRequestDTO.Options {
+        return OllamaChatRequestDTO.Options(
+            temperature = prompt.params.temperature,
+            numCtx = contextWindowStrategy.computeContextLength(prompt, model),
+        )
     }
 
     /**
