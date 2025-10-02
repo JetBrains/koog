@@ -11,6 +11,8 @@ For more information and a detailed specification of the A2A protocol, see the o
 ## Key A2A components
 
 Koog provides full implementation of A2A protocol v0.3.0 for both client and server, as well as integration with the Koog agent framework:
-- [A2A Server](a2a-server.md) is an agent or agentic system that exposes an endpoint implementing the A2A protocol. It receives requests from clients, processes tasks, and returns results or status updates. It can also be used independently of Koog agents.
-- [A2A Client](a2a-client.md) is a client application or agent that initiates communication with an A2A server using the A2A protocol. It can also be used independently of Koog agents.
-- [A2A Koog Integration](a2a-koog-integration.md) is a set of classes and utilities that simplify the integration of A2A with Koog Agents. It contains components (A2A features and nodes) for seamless A2A agent connections and communication within the Koog framework.
+* [A2A Server](a2a-server.md) is an agent or agentic system that exposes an endpoint implementing the A2A protocol. It receives requests from clients, processes tasks, and returns results or status updates. It can also be used independently of Koog agents.
+* [A2A Client](a2a-client.md) is a client application or agent that initiates communication with an A2A server using the A2A protocol. It can also be used independently of Koog agents.
+* [A2A Koog Integration](a2a-koog-integration.md) is a set of classes and utilities that simplify the integration of A2A with Koog Agents. It contains components (A2A features and nodes) for seamless A2A agent connections and communication within the Koog framework.
+
+For more examples follow the [examples](https://github.com/JetBrains/koog/tree/develop/examples/simple-examples/src/main/kotlin/ai/koog/agents/example/a2a) in the Koog repository.
