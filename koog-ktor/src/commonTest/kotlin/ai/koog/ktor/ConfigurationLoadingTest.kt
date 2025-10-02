@@ -6,16 +6,88 @@ import ai.koog.prompt.llm.LLMProvider
 import io.ktor.server.config.MapApplicationConfig
 import io.ktor.server.config.mergeWith
 import io.ktor.server.engine.applicationEnvironment
-import kotlinx.coroutines.DelicateCoroutinesApi
+import io.ktor.server.testing.testApplication
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
-@DelicateCoroutinesApi
 class ConfigurationLoadingTest {
+
+    @Test
+    fun testEmptyConfiguration() = testApplication {
+        environment {
+            config = MapApplicationConfig()
+        }
+        install(Koog)
+        startApplication()
+    }
+
+    @Test
+    fun testOllamaConfig() = testApplication {
+        environment { config = buildOllamaConfig() }
+        install(Koog)
+        startApplication()
+    }
+
+    @Test
+    fun testOpenAI() = testApplication {
+        environment { config = buildOpenAIConfig() }
+        install(Koog)
+        startApplication()
+    }
+
+    @Test
+    fun testAnthropic() = testApplication {
+        environment { config = buildAnthropicConfig() }
+        install(Koog)
+        startApplication()
+    }
+
+    @Test
+    fun testGoogle() = testApplication {
+        environment { config = buildGoogleConfig() }
+        install(Koog)
+        startApplication()
+    }
+
+    @Test
+    fun testOpenRouter() = testApplication {
+        environment { config = buildOpenAIConfig() }
+        install(Koog)
+        startApplication()
+    }
+
+    @Test
+    fun testComplete() = testApplication {
+        environment { config = buildCompleteConfig() }
+        install(Koog)
+        startApplication()
+    }
+
+    @Test
+    fun testDeepSeek() = testApplication {
+        environment { config = buildDeepSeekConfig() }
+        install(Koog)
+        startApplication()
+    }
+
+    @Test
+    fun testInvalid() {
+        val message = assertFailsWith<IllegalArgumentException> {
+            testApplication {
+                environment { config = buildInvalidConfig() }
+                install(Koog)
+            }
+        }.message
+        assertEquals(
+            "Found koog.openai but apiKey was missing.",
+            message
+        )
+    }
 
     @Test
     fun testLoadCompleteConfiguration() = runTest {
@@ -181,18 +253,15 @@ class ConfigurationLoadingTest {
 
     @Test
     fun testLoadInvalidConfiguration() = runTest {
-        val koogConfig = applicationEnvironment {
-            config = buildInvalidConfig()
-        }.loadAgentsConfig(GlobalScope)
-
-        // Verify OpenAI configuration is not loaded due to missing API key
-        assertNull(koogConfig.llmConnections[LLMProvider.OpenAI])
-
-        // Verify Anthropic configuration is loaded despite invalid timeout
-        assertNotNull(koogConfig.llmConnections[LLMProvider.Anthropic])
-
-        // Verify fallback settings are not set due to missing model
-        assertNull(koogConfig.fallbackLLMSettings)
+        val message = assertFailsWith(IllegalArgumentException::class) {
+            applicationEnvironment {
+                config = buildInvalidConfig()
+            }.loadAgentsConfig(GlobalScope)
+        }.message
+        assertEquals(
+            "Found koog.openai but apiKey was missing.",
+            message
+        )
     }
 
     private fun buildCompleteConfig() =
@@ -307,5 +376,4 @@ class ConfigurationLoadingTest {
         // Google without API key but with timeout config (should not load)
         "koog.google.timeout.requestTimeoutMillis" to "900000"
     )
-
 }
