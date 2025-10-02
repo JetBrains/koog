@@ -1,0 +1,35 @@
+name: Deploy Docs to GitHub Pages
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy-docs-koog-ai:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Configure Git
+        run: |
+          git config --global core.autocrlf input
+      - uses: actions/checkout@v5
+
+      # Using setup-python on CI to install Python might be faster than with uv (official uv recommendation)
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version-file: "./docs/.python-version"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.8.15"
+          enable-cache: true
+
+      - name: Deploy docs
+        working-directory: ./docs
+        run: |
+          uv sync --frozen --all-extras
+          uv run mkdocs gh-deploy --force
