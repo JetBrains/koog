@@ -24,9 +24,6 @@ val excluded = setOf(
     ":a2a:a2a-transport:a2a-transport-core-jsonrpc",
     ":a2a:a2a-transport:a2a-transport-server-jsonrpc-http",
     ":a2a:a2a-transport:a2a-transport-client-jsonrpc-http",
-    ":a2a:a2a-transport:a2a-transport-core-rest",
-    ":a2a:a2a-transport:a2a-transport-server-rest",
-    ":a2a:a2a-transport:a2a-transport-client-rest",
     ":a2a:a2a-test",
     ":a2a:test-tck:a2a-test-server-tck",
 
