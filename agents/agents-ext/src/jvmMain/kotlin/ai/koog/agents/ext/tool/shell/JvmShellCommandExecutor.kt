@@ -37,7 +37,7 @@ public class JvmShellCommandExecutor : ShellCommandExecutor() {
         val shellCommand = if (IS_WINDOWS) {
             listOf("cmd.exe", "/c", command)
         } else {
-            listOf("sh", "-c", command)
+            listOf("bash", "-c", command)
         }
 
         val process = ProcessBuilder(shellCommand)
