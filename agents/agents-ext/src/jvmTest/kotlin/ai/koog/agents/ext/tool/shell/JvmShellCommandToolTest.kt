@@ -329,7 +329,7 @@ class JvmShellCommandToolTest {
     @Test
     fun `user denies command execution with simple No`() = runBlocking {
         val handler = object : ShellCommandConfirmationHandler {
-            override suspend fun requestConfirmation(command: String, workingDirectory: String?) =
+            override suspend fun requestConfirmation(args: ExecuteShellCommandTool.Args) =
                 ShellCommandConfirmation.Denied("No")
         }
 
@@ -347,7 +347,7 @@ class JvmShellCommandToolTest {
     @Test
     fun `user denies with reason`() = runBlocking {
         val handler = object : ShellCommandConfirmationHandler {
-            override suspend fun requestConfirmation(command: String, workingDirectory: String?) =
+            override suspend fun requestConfirmation(args: ExecuteShellCommandTool.Args) =
                 ShellCommandConfirmation.Denied("Cannot delete important files")
         }
 
