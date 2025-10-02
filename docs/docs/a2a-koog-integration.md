@@ -11,16 +11,57 @@ The integration enables two main patterns:
 
 ## Exposing Koog Agents as A2A Servers
 
-### Using AgentExecutor Pattern
+### Example 1: Simple Chat Assistant with AgentExecutor
 
-The primary way to wrap Koog functionality into an A2A server is by implementing the `AgentExecutor` interface:
+Define a Koog agent first. The logic of the agent can vary, but here's a basic chat assistant:
 
 ```kotlin
-class KoogA2AExecutor : AgentExecutor {
-    private val promptExecutor = MultiLLMPromptExecutor(
-        LLMProvider.OpenAI to OpenAILLMClient(ApiKeyService.openAIApiKey),
-        LLMProvider.Anthropic to AnthropicLLMClient(ApiKeyService.anthropicApiKey)
-    )
+class KoogChatExecutor : AgentExecutor {
+
+    private fun createAgent(
+        context: RequestContext<MessageSendParams>,
+        eventProcessor: SessionEventProcessor
+    ) = AIAgent(
+        promptExecutor = MultiLLMPromptExecutor(
+            LLMProvider.Anthropic to AnthropicLLMClient(ApiKeyService.anthropicApiKey)
+        ),
+        strategy = strategy("chat-strategy") {
+            // Strategy configuration for the agent
+        },
+        agentConfig = AIAgentConfig(
+            prompt = prompt("chat") {
+                system { +"You are a helpful AI assistant. Be concise and clear." }
+            },
+            model = AnthropicModels.Sonnet_4,
+            maxAgentIterations = 1
+        )
+    ) {
+        install(A2AAgentServer) {
+            this.context = context
+            this.eventProcessor = eventProcessor
+        }
+
+        graph {
+            val userMessage = input<Message.User>()
+
+            // Use Koog's LLM prompt processing
+            val response = nodeLLMPrompt(AnthropicModels.Sonnet_4) {
+                system { +"You are a helpful AI assistant. Be concise and clear." }
+                user { +userMessage.content }
+            }
+
+            // Send the response through A2A
+            val a2aResponse = nodeA2ARespondMessage(saveToStorage = true)
+            a2aResponse(response.map { message ->
+                message.toA2AMessage(MessageA2AMetadata(
+                    messageId = UUID.randomUUID().toString(),
+                    contextId = context.contextId
+                ))
+            })
+
+            output(response)
+        }
+    }
 
     override suspend fun execute(
         context: RequestContext<MessageSendParams>,
@@ -28,197 +69,326 @@ class KoogA2AExecutor : AgentExecutor {
     ) {
         val userMessage = context.params.message
 
-        // Save incoming A2A message
-        context.messageStorage.save(userMessage)
+        // Convert A2A message to Koog format
+        val koogMessage = userMessage.toKoogMessage()
 
-        // Convert A2A messages to Koog messages
-        val koogMessages = context.messageStorage.getAll()
-            .map { it.toKoogMessage() }
+        val agent = createAgent(context, eventProcessor)
 
-        // Use Koog's prompt system
-        val prompt = prompt("assistant") {
-            system {
-                +"You are a helpful AI assistant"
-            }
-            messages(koogMessages)
-        }
-
-        // Execute with Koog's LLM client
-        val response = promptExecutor.execute(prompt, AnthropicModels.Sonnet_4)
-            .single()
-            .let { message ->
-                (message as Message.Assistant).toA2AMessage(
-                    a2aMetadata = MessageA2AMetadata(
-                        messageId = UUID.randomUUID().toString(),
-                        contextId = context.contextId
-                    )
-                )
-            }
-
-        // Save and send response
-        context.messageStorage.save(response)
-        eventProcessor.sendMessage(response)
+        // Execute the agent - the A2A response is sent automatically via nodeA2ARespondMessage
+        agent.execute(koogMessage as Message.User)
     }
 }
-```
 
-### Complete Server Setup
-
-```kotlin
-suspend fun startKoogA2AServer() {
-    // Create agent card describing capabilities
+// Server setup
+suspend fun startChatServer() {
     val agentCard = AgentCard(
-        name = "Koog Assistant",
-        description = "AI assistant powered by Koog framework",
+        name = "Koog Chat Assistant",
+        description = "Simple chat assistant powered by Koog",
         version = "1.0.0",
         protocolVersion = "0.3.0",
         preferredTransport = TransportProtocol.JSONRPC,
-        capabilities = AgentCapabilities(
-            streaming = false,
-            pushNotifications = false
-        ),
-        skills = listOf(
-            AgentSkill(
-                id = "general_assistance",
-                name = "General Assistance",
-                description = "Provides helpful responses to user queries",
-                examples = listOf("How do I...?", "What is...?", "Help me with...")
-            )
-        )
+        capabilities = AgentCapabilities(streaming = false, pushNotifications = false)
     )
 
-    // Create A2A server with Koog-powered executor
-    val server = A2AServer(
-        agentExecutor = KoogA2AExecutor(),
-        agentCard = agentCard
-    )
-
-    // Start HTTP JSON-RPC transport
+    val server = A2AServer(agentExecutor = KoogChatExecutor(), agentCard = agentCard)
     val transport = HttpJSONRPCServerTransport(server)
-    transport.start(
-        engineFactory = CIO,
-        port = 8080,
-        path = "/agent",
-        wait = true
-    )
-
-    println("Koog A2A server started at http://localhost:8080/agent")
+    transport.start(engineFactory = CIO, port = 8080, path = "/chat", wait = true)
 }
 ```
 
-### Using Koog AIAgent Features
+### Example 2: Document Analysis Agent with AIAgent Graph
 
-For more advanced integration, use Koog's AIAgent features:
+Define a document analysis agent with more complex processing workflow:
 
 ```kotlin
-// Install A2A server feature in AIAgent
-val agent = aiAgent {
-    install(A2AAgentServer) {
-        // A2A server configuration
+class DocumentAnalysisExecutor : AgentExecutor {
+
+    private fun createAnalysisAgent(
+        context: RequestContext<MessageSendParams>,
+        eventProcessor: SessionEventProcessor
+    ) = AIAgent(
+        promptExecutor = MultiLLMPromptExecutor(
+            LLMProvider.Anthropic to AnthropicLLMClient(ApiKeyService.anthropicApiKey)
+        ),
+        strategy = strategy("document-analysis") {
+            // Multi-step analysis strategy
+        },
+        agentConfig = AIAgentConfig(
+            prompt = prompt("analysis") {
+                system { +"You are a document analysis expert. Provide structured analysis." }
+            },
+            model = AnthropicModels.Sonnet_4,
+            maxAgentIterations = 3
+        )
+    ) {
+        install(A2AAgentServer) {
+            this.context = context
+            this.eventProcessor = eventProcessor
+        }
+
+        graph {
+            val userMessage = input<Message.User>()
+
+            // Extract document content from message parts
+            val documentContent = node { message ->
+                message.content // Assuming content contains the document text
+            }
+
+            // Analyze document structure
+            val structureAnalysis = nodeLLMPrompt(AnthropicModels.Sonnet_4) {
+                system { +"Analyze the document structure and identify key sections." }
+                user { +"Document to analyze:\n${documentContent.get()}" }
+            }
+
+            // Extract key insights
+            val insights = nodeLLMPrompt(AnthropicModels.Sonnet_4) {
+                system { +"Extract key insights and summarize main points." }
+                user { +"Structure: ${structureAnalysis.get().content}\n\nDocument: ${documentContent.get()}" }
+            }
+
+            // Create comprehensive response
+            val finalResponse = node { (structure, keyInsights) ->
+                Message.Assistant(
+                    content = "## Document Analysis\n\n**Structure:**\n${structure.content}\n\n**Key Insights:**\n${keyInsights.content}",
+                    metaInfo = mapOf("analysis_type" to "document_analysis")
+                )
+            }
+
+            // Send the analysis result through A2A
+            val a2aResponse = nodeA2ARespondMessage(saveToStorage = true)
+            a2aResponse(finalResponse.map { message ->
+                message.toA2AMessage(MessageA2AMetadata(
+                    messageId = UUID.randomUUID().toString(),
+                    contextId = context.contextId
+                ))
+            })
+
+            output(finalResponse)
+        }
     }
 
-    graph {
-        // Use A2A-specific nodes
-        val messages = nodeA2AMessageStorageLoad()
-        val koogMessages = node { a2aMessages ->
-            a2aMessages.map { it.toKoogMessage() }
-        }
-        val response = nodeLLMPrompt(AnthropicModels.Sonnet_4) {
-            system { +"You are a helpful assistant" }
-            messages(koogMessages)
-        }
-        val a2aResponse = node { message ->
-            message.toA2AMessage(MessageA2AMetadata(
-                messageId = UUID.randomUUID().toString(),
-                contextId = context.contextId
-            ))
-        }
-        nodeA2ARespondMessage(saveToStorage = true)(a2aResponse)
+    override suspend fun execute(
+        context: RequestContext<MessageSendParams>,
+        eventProcessor: SessionEventProcessor
+    ) {
+        val userMessage = context.params.message
+
+        // Convert A2A message to Koog format
+        val koogMessage = userMessage.toKoogMessage()
+
+        val agent = createAnalysisAgent(context, eventProcessor)
+
+        // Execute the document analysis agent - response sent automatically
+        agent.execute(koogMessage as Message.User)
     }
 }
 ```
 
 ## Connecting Koog Agents to A2A Agents
 
-### Using A2AClient Directly
+### Example 1: Language Translation Service with Direct A2AClient
+
+Connect to a specialized translation A2A agent from within your Koog application:
 
 ```kotlin
-class KoogAgentWithA2AClient {
-    private val a2aClient = A2AClient(
-        transport = HttpJSONRPCClientTransport("https://other-agent.com/a2a"),
+class KoogTranslationService {
+    private val translationClient = A2AClient(
+        transport = HttpJSONRPCClientTransport("https://translate-agent.com/a2a"),
         agentCardResolver = UrlAgentCardResolver(
-            baseUrl = "https://other-agent.com",
+            baseUrl = "https://translate-agent.com",
             path = "/.well-known/agent-card.json"
         )
     )
 
-    suspend fun consultOtherAgent(userQuery: String): String {
-        // Connect to remote agent
-        val agentCard = a2aClient.connect()
+    suspend fun translateText(text: String, targetLanguage: String): String {
+        // Connect to remote translation agent
+        translationClient.connect()
 
-        // Send message
-        val message = Message(
+        // Create translation request message
+        val translationMessage = Message(
             messageId = UUID.randomUUID().toString(),
             role = Role.User,
-            parts = listOf(TextPart(userQuery)),
-            contextId = "consultation-${UUID.randomUUID()}"
+            parts = listOf(TextPart("Translate to $targetLanguage: $text")),
+            contextId = "translation-${UUID.randomUUID()}"
         )
 
-        val request = Request(data = MessageSendParams(message))
-        val response = a2aClient.sendMessage(request)
+        val request = Request(data = MessageSendParams(translationMessage))
+        val response = translationClient.sendMessage(request)
 
-        // Extract response text
+        // Extract translated text
         return when (val event = response.data) {
             is Message -> event.parts
                 .filterIsInstance<TextPart>()
-                .joinToString { it.text }
-            else -> "No text response received"
+                .joinToString(" ") { it.text }
+            else -> "Translation failed - no response received"
         }
+    }
+}
+
+// Usage in Koog executor - define agent first, then wrap in A2A
+class MultilingualChatExecutor : AgentExecutor {
+    private val translationService = KoogTranslationService()
+
+    // Define the multilingual agent first with normal graph API
+    private val multilingualAgent = AIAgent(
+        promptExecutor = MultiLLMPromptExecutor(
+            LLMProvider.Anthropic to AnthropicLLMClient(ApiKeyService.anthropicApiKey)
+        ),
+        strategy = singleRunStrategy(),
+        agentConfig = agentConfig
+    ) {
+        graph {
+            val userMessage = input<Message.User>()
+
+            // Detect if translation is needed
+            val needsTranslation = node { message ->
+                message.content.contains("translate to")
+            }
+
+            // Extract translation parameters
+            val translationParams = node { message ->
+                if (needsTranslation.get()) {
+                    val targetLang = extractTargetLanguage(message.content)
+                    val textToTranslate = extractTextToTranslate(message.content)
+                    Pair(targetLang, textToTranslate)
+                } else null
+            }
+
+            // Handle translation or regular chat
+            val response = node { (needsTranslation, params) ->
+                if (needsTranslation && params != null) {
+                    val translation = translationService.translateText(params.second, params.first)
+                    Message.Assistant("Translation: $translation")
+                } else {
+                    // Regular chat processing would go here
+                    Message.Assistant("I can help with translations. Try asking me to 'translate to [language]: [text]'")
+                }
+            }
+
+            output(response)
+        }
+    }
+
+    override suspend fun execute(
+        context: RequestContext<MessageSendParams>,
+        eventProcessor: SessionEventProcessor
+    ) {
+        val userMessage = context.params.message
+
+        // Convert A2A message to Koog format
+        val koogMessage = userMessage.toKoogMessage()
+
+        // Execute the multilingual agent
+        val response = multilingualAgent.execute(koogMessage as Message.User)
+
+        // Convert back to A2A format and send
+        val a2aResponse = response.toA2AMessage(
+            a2aMetadata = MessageA2AMetadata(
+                messageId = UUID.randomUUID().toString(),
+                contextId = context.contextId
+            )
+        )
+
+        eventProcessor.sendMessage(a2aResponse)
     }
 }
 ```
 
-### Using AIAgent A2A Client Feature
+### Example 2: Research Assistant with AIAgent Client Feature
+
+Use AIAgent's A2A client feature for coordinated research workflows:
 
 ```kotlin
-val agent = aiAgent {
+suspend fun createResearchAssistant() = aiAgent {
     install(A2AAgentClient) {
-        client("expert-agent") {
-            transport = HttpJSONRPCClientTransport("https://expert.com/a2a")
-            agentCardResolver = UrlAgentCardResolver(
-                baseUrl = "https://expert.com",
-                path = "/.well-known/agent-card.json"
+        a2aClients = mapOf(
+            "fact-checker" to A2AClient(
+                transport = HttpJSONRPCClientTransport("https://factcheck.com/a2a"),
+                agentCardResolver = UrlAgentCardResolver("https://factcheck.com", "/.well-known/agent-card.json")
+            ),
+            "web-search" to A2AClient(
+                transport = HttpJSONRPCClientTransport("https://websearch.com/a2a"),
+                agentCardResolver = UrlAgentCardResolver("https://websearch.com", "/.well-known/agent-card.json")
             )
-        }
+        )
     }
 
     graph {
-        val userMessage = input<Message.User>()
+        val userQuery = input<Message.User>()
 
-        // Convert to A2A message
-        val a2aMessage = node { message ->
-            message.toA2AMessage()
+        // Analyze query to determine research strategy
+        val researchPlan = nodeLLMPrompt(AnthropicModels.Sonnet_4) {
+            system { +"Analyze the user query and create a research plan. Determine if fact-checking or web search is needed." }
+            user { +userQuery.content }
         }
 
-        // Send to remote A2A agent
-        val a2aRequest = node { message ->
-            A2AClientRequest(
-                agentId = "expert-agent",
-                params = MessageSendParams(message)
-            )
+        // Perform web search if needed
+        val searchResults = node { plan ->
+            if (plan.content.contains("search")) {
+                withA2AAgentClient {
+                    val searchClient = a2aClientOrThrow("web-search")
+                    val searchMessage = Message(
+                        messageId = UUID.randomUUID().toString(),
+                        role = Role.User,
+                        parts = listOf(TextPart("Search for: ${userQuery.content}")),
+                        contextId = "search-${UUID.randomUUID()}"
+                    )
+                    val request = Request(data = MessageSendParams(searchMessage))
+                    searchClient.sendMessage(request).data
+                }
+            } else null
         }
 
-        val a2aResponse = nodeA2AClientSendMessage()(a2aRequest)
+        // Fact-check findings if needed
+        val factCheckResults = node { (plan, searchData) ->
+            if (plan.content.contains("fact-check") && searchData != null) {
+                withA2AAgentClient {
+                    val factChecker = a2aClientOrThrow("fact-checker")
+                    val factCheckMessage = Message(
+                        messageId = UUID.randomUUID().toString(),
+                        role = Role.User,
+                        parts = listOf(TextPart("Verify these facts: $searchData")),
+                        contextId = "fact-check-${UUID.randomUUID()}"
+                    )
+                    val request = Request(data = MessageSendParams(factCheckMessage))
+                    factChecker.sendMessage(request).data
+                }
+            } else null
+        }
 
-        // Convert response back to Koog format
-        val koogResponse = node { event ->
-            when (event) {
-                is Message -> event.toKoogMessage()
-                else -> Message.Assistant("No response received")
+        // Synthesize final research report
+        val finalReport = nodeLLMPrompt(AnthropicModels.Sonnet_4) {
+            system { +"Synthesize the research findings into a comprehensive report." }
+            user {
+                +"Original query: ${userQuery.content}\n" +
+                "Search results: ${searchResults.get()}\n" +
+                "Fact-check results: ${factCheckResults.get()}"
             }
         }
 
-        output(koogResponse)
+        output(finalReport)
+    }
+}
+
+// Usage
+class ResearchAgentExecutor : AgentExecutor {
+    private val researchAgent by lazy { runBlocking { createResearchAssistant() } }
+
+    override suspend fun execute(
+        context: RequestContext<MessageSendParams>,
+        eventProcessor: SessionEventProcessor
+    ) {
+        val userMessage = context.params.message.toKoogMessage()
+        val report = researchAgent.execute(userMessage as Message.User)
+
+        val a2aResponse = report.toA2AMessage(
+            a2aMetadata = MessageA2AMetadata(
+                messageId = UUID.randomUUID().toString(),
+                contextId = context.contextId
+            )
+        )
+
+        eventProcessor.sendMessage(a2aResponse)
     }
 }
 ```
