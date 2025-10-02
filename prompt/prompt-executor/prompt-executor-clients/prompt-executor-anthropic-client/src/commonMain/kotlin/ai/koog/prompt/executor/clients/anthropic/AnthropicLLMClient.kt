@@ -283,7 +283,9 @@ public open class AnthropicLLMClient(
         for (message in prompt.messages) {
             when (message) {
                 is Message.System -> {
-                    systemMessage.add(SystemAnthropicMessage(message.content))
+                    if (!message.content.isEmpty()) {
+                        systemMessage.add(SystemAnthropicMessage(message.content))
+                    }
                 }
 
                 is Message.User -> {

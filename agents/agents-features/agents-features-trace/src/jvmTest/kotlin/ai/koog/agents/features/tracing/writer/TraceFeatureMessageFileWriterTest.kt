@@ -19,8 +19,8 @@ import ai.koog.agents.core.feature.model.events.LLMCallStartingEvent
 import ai.koog.agents.core.feature.model.events.NodeExecutionCompletedEvent
 import ai.koog.agents.core.feature.model.events.NodeExecutionStartingEvent
 import ai.koog.agents.core.feature.model.events.StrategyCompletedEvent
-import ai.koog.agents.core.feature.model.events.ToolExecutionCompletedEvent
-import ai.koog.agents.core.feature.model.events.ToolExecutionStartingEvent
+import ai.koog.agents.core.feature.model.events.ToolCallCompletedEvent
+import ai.koog.agents.core.feature.model.events.ToolCallStartingEvent
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.tracing.eventString
 import ai.koog.agents.features.tracing.feature.Tracing
@@ -185,8 +185,8 @@ class TraceFeatureMessageFileWriterTest {
                         content = """{"dummy":"test"}"""
                     )
                 })",
-                "${ToolExecutionStartingEvent::class.simpleName} (run id: $runId, tool: ${dummyTool.name}, tool args: {\"dummy\":\"test\"})",
-                "${ToolExecutionCompletedEvent::class.simpleName} (run id: $runId, tool: ${dummyTool.name}, tool args: {\"dummy\":\"test\"}, result: ${dummyTool.result})",
+                "${ToolCallStartingEvent::class.simpleName} (run id: $runId, tool: ${dummyTool.name}, tool args: {\"dummy\":\"test\"})",
+                "${ToolCallCompletedEvent::class.simpleName} (run id: $runId, tool: ${dummyTool.name}, tool args: {\"dummy\":\"test\"}, result: ${dummyTool.result})",
                 "${NodeExecutionCompletedEvent::class.simpleName} (run id: $runId, node: test-tool-call, input: ${
                     toolCallMessage(
                         dummyTool.name,
@@ -258,7 +258,7 @@ class TraceFeatureMessageFileWriterTest {
         val customFormat: (FeatureMessage) -> String = { message ->
             when (message) {
                 is FeatureStringMessage -> "CUSTOM STRING. ${message.message}"
-                is FeatureEvent -> "CUSTOM EVENT. ${message.eventId}"
+                is FeatureEvent -> "CUSTOM EVENT. No event message"
                 else -> "CUSTOM OTHER: ${message::class.simpleName}"
             }
         }
@@ -273,7 +273,7 @@ class TraceFeatureMessageFileWriterTest {
 
         val expectedMessages = listOf(
             "CUSTOM STRING. Test string message",
-            "CUSTOM EVENT. ${AgentStartingEvent::class.simpleName}",
+            "CUSTOM EVENT. No event message",
         )
 
         TraceFeatureMessageFileWriter(

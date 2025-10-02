@@ -84,7 +84,7 @@ class LLMAsJudgeNodeTest {
             runId = "run-1",
             strategyName = "test-strategy",
             pipeline = AIAgentGraphPipeline(),
-            agentId = "agent-01"
+            agent = mockk()
         )
 
         val subgraphContext = object : AIAgentSubgraphBuilderBase<String, String>() {

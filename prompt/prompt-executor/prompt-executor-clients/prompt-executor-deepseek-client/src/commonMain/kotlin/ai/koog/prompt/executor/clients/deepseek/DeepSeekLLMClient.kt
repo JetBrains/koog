@@ -13,13 +13,20 @@ import ai.koog.prompt.executor.clients.openai.base.OpenAIBasedSettings
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIMessage
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAITool
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolChoice
+import ai.koog.prompt.executor.clients.openai.structure.OpenAIBasicJsonSchemaGenerator
+import ai.koog.prompt.executor.clients.openai.structure.OpenAIStandardJsonSchemaGenerator
 import ai.koog.prompt.executor.model.LLMChoice
+import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrameFlowBuilder
+import ai.koog.prompt.structure.RegisteredBasicJsonSchemaGenerators
+import ai.koog.prompt.structure.RegisteredStandardJsonSchemaGenerators
+import ai.koog.prompt.structure.annotations.InternalStructuredOutputApi
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import kotlinx.datetime.Clock
+import kotlin.collections.set
 
 /**
  * Configuration settings for connecting to the DeepSeek API.
@@ -54,8 +61,14 @@ public class DeepSeekLLMClient(
     staticLogger
 ) {
 
+    @OptIn(InternalStructuredOutputApi::class)
     private companion object {
         private val staticLogger = KotlinLogging.logger { }
+
+        init {
+            RegisteredBasicJsonSchemaGenerators[LLMProvider.DeepSeek] = OpenAIBasicJsonSchemaGenerator
+            RegisteredStandardJsonSchemaGenerators[LLMProvider.DeepSeek] = OpenAIStandardJsonSchemaGenerator
+        }
     }
 
     override fun serializeProviderChatRequest(
@@ -92,7 +105,12 @@ public class DeepSeekLLMClient(
 
     override fun processProviderChatResponse(response: DeepSeekChatCompletionResponse): List<LLMChoice> {
         require(response.choices.isNotEmpty()) { "Empty choices in response" }
-        return response.choices.map { it.toMessageResponses(createMetaInfo(response.usage)) }
+        return response.choices.map {
+            it.message.toMessageResponses(
+                it.finishReason,
+                createMetaInfo(response.usage),
+            )
+        }
     }
 
     override fun decodeStreamingResponse(data: String): DeepSeekChatCompletionStreamResponse =

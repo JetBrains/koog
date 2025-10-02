@@ -1,9 +1,11 @@
 package ai.koog.agents.core.agent.context
 
+import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.prompt.message.Message
@@ -26,12 +28,16 @@ public interface AIAgentContext {
     public val environment: AIAgentEnvironment
 
     /**
-     * Represents the unique identifier for the agent.
+     * Represents the [AIAgent] holding the current [AIAgentContext].
      *
-     * This identifier is used to distinguish between different agents and is essential
-     * for tracking and managing the agent's lifecycle, especially in multi-agent scenarios.
      */
-    public val agentId: String
+    public val agent: AIAgent<*, *>
+
+    /**
+     * A unique identifier representing the current agent instance within the context.
+     * The value is derived from the underlying `agent.id`.
+     */
+    public val agentId: String get() = agent.id
 
     /**
      * A unique identifier for the current session associated with the AI agent context.
@@ -94,6 +100,21 @@ public interface AIAgentContext {
     public val strategyName: String
 
     /**
+     * Represents the parent context of the AI Agent.
+     */
+    @InternalAgentsApi
+    public val parentContext: AIAgentContext?
+
+    /**
+     * Provides the root context of the current agent.
+     * If the root context is not defined, this function defaults to returning the current instance.
+     *
+     * @return The root context of type [AIAgentContext], or the current instance if the root context is null.
+     */
+    @OptIn(InternalAgentsApi::class)
+    public fun rootContext(): AIAgentContext = parentContext?.rootContext() ?: this
+
+    /**
      * Stores a feature in the agent's storage using the specified key.
      *
      * @param key A uniquely identifying key of type `AIAgentStorageKey` used to store the feature.
@@ -123,7 +144,7 @@ public interface AIAgentContext {
      * @param key A uniquely identifying key of type `AIAgentStorageKey` used to fetch the corresponding feature.
      * @return The feature associated with the provided key, or null if no matching feature is found.
      */
-    public fun <Feature : Any> feature(key: AIAgentStorageKey<Feature>): Feature?
+    public fun <Feature : Any> feature(key: AIAgentStorageKey<Feature>): Feature? = agent.feature(key)
 
     /**
      * Retrieves a feature of the specified type from the current context.

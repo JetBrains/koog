@@ -98,7 +98,7 @@ in the agent context rather than calling tools directly, as this ensures proper 
 agent environment.
 
 !!! tip
-    Ensure you have implemented proper [error handling](agent-events.md) in your tools to prevent agent failure.
+    Ensure you have implemented proper [error handling](agent-event-handlers.md) in your tools to prevent agent failure.
 
 The tools are called within a specific session context represented by `AIAgentLLMWriteSession`.
 It provides several methods for calling tools so that you can:
@@ -191,7 +191,8 @@ To convert an agent into a tool, use the `asTool()` extension function:
 
 <!--- INCLUDE
 import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.agent.asTool
+import ai.koog.agents.core.agent.AIAgentService
+import ai.koog.agents.core.agent.createAgentTool
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.ToolRegistry
@@ -203,16 +204,16 @@ val analysisToolRegistry = ToolRegistry {}
 
 -->
 ```kotlin
-// Create a specialized agent
-val analysisAgent = AIAgent(
+// Create a specialized agent service, responsible for creating financial analysis agents.
+val analysisAgentService = AIAgentService(
     promptExecutor = simpleOpenAIExecutor(apiKey),
     llmModel = OpenAIModels.Chat.GPT4o,
     systemPrompt = "You are a financial analysis specialist.",
     toolRegistry = analysisToolRegistry
 )
 
-// Convert the agent to a tool
-val analysisAgentTool = analysisAgent.asTool(
+// Create a tool that would run financial analysis agent once called.
+val analysisAgentTool = analysisAgentService.createAgentTool(
     agentName = "analyzeTransactions",
     agentDescription = "Performs financial transaction analysis",
     inputDescription = "Transaction analysis request",

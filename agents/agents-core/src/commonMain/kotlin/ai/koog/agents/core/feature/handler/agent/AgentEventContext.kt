@@ -3,10 +3,10 @@ package ai.koog.agents.core.feature.handler.agent
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.context.AIAgentContext
-import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
+import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
+import ai.koog.agents.core.agent.entity.AIAgentStrategy
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventContext
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventType
-import kotlin.reflect.KType
 
 /**
  * Provides the context for handling events specific to AI agents.
@@ -40,13 +40,11 @@ public data class AgentStartingContext<TFeature>(
  * @property agentId The unique identifier of the agent that completed its execution.
  * @property runId The identifier of the session in which the agent was executed.
  * @property result The optional result of the agent's execution, if available.
- * @property resultType [KType] of the [result].
  */
 public data class AgentCompletedContext(
     public val agentId: String,
     public val runId: String,
     public val result: Any?,
-    public val resultType: KType,
 ) : AgentEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.AgentCompleted
 }
@@ -86,7 +84,7 @@ public data class AgentClosingContext(
  * @property feature An additional feature or configuration associated with the context.
  */
 public class AgentEnvironmentTransformingContext<TFeature>(
-    public val strategy: AIAgentGraphStrategy<*, *>,
+    public val strategy: AIAgentStrategy<*, *, AIAgentGraphContextBase>,
     public val agent: GraphAIAgent<*, *>,
     public val feature: TFeature
 ) : AgentEventContext {

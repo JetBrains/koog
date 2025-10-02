@@ -30,7 +30,7 @@ class FeatureMessageLogWriterTest {
                     "message: ${this.message}"
                 }
                 is FeatureEvent -> {
-                    "event id: ${this.eventId}"
+                    "feature events has no message provided"
                 }
                 else -> {
                     "UNDEFINED"
@@ -70,8 +70,8 @@ class FeatureMessageLogWriterTest {
     @Test
     fun `test logger stream feature provider for event message`() = runBlocking {
         val messages = listOf(
-            TestFeatureEventMessage("test-event-1"),
-            TestFeatureEventMessage("test-event-2"),
+            TestFeatureEventMessage(testMessage = "test-event-1"),
+            TestFeatureEventMessage(testMessage = "test-event-2"),
         )
 
         TestFeatureMessageLogWriter(targetLogger).use { writer ->
@@ -79,7 +79,7 @@ class FeatureMessageLogWriterTest {
             messages.forEach { message -> writer.onMessage(message) }
 
             val expectedLogMessages = messages.map { originalMessage ->
-                "[INFO] Received feature message [${originalMessage.messageType.value}]: event id: ${originalMessage.eventId}"
+                "[INFO] Received feature message [${originalMessage.messageType.value}]: feature events has no message provided"
             }
 
             assertEquals(expectedLogMessages.size, targetLogger.messages.size)
@@ -101,7 +101,7 @@ class FeatureMessageLogWriterTest {
 
             val expectedLogMessages = listOf(
                 "[INFO] Received feature message [${messages[0].messageType.value}]: message: ${(messages[0] as FeatureStringMessage).message}",
-                "[INFO] Received feature message [${messages[1].messageType.value}]: event id: ${(messages[1] as TestFeatureEventMessage).eventId}"
+                "[INFO] Received feature message [${messages[1].messageType.value}]: feature events has no message provided"
             )
 
             assertEquals(expectedLogMessages.size, targetLogger.messages.size)
@@ -141,7 +141,7 @@ class FeatureMessageLogWriterTest {
             messages.forEach { message -> writer.onMessage(message) }
 
             val expectedLogMessages = messages.map { originalMessage ->
-                "[DEBUG] Received feature message [${originalMessage.messageType.value}]: event id: ${originalMessage.eventId}"
+                "[DEBUG] Received feature message [${originalMessage.messageType.value}]: feature events has no message provided"
             }
 
             assertEquals(expectedLogMessages.size, targetLogger.messages.size)

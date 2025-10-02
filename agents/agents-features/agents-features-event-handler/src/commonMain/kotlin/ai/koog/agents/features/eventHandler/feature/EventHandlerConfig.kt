@@ -31,9 +31,9 @@ import ai.koog.agents.core.feature.handler.streaming.LLMStreamingCompletedContex
 import ai.koog.agents.core.feature.handler.streaming.LLMStreamingFailedContext
 import ai.koog.agents.core.feature.handler.streaming.LLMStreamingFrameReceivedContext
 import ai.koog.agents.core.feature.handler.streaming.LLMStreamingStartingContext
-import ai.koog.agents.core.feature.handler.tool.ToolExecutionCompletedContext
-import ai.koog.agents.core.feature.handler.tool.ToolExecutionFailedContext
-import ai.koog.agents.core.feature.handler.tool.ToolExecutionStartingContext
+import ai.koog.agents.core.feature.handler.tool.ToolCallCompletedContext
+import ai.koog.agents.core.feature.handler.tool.ToolCallFailedContext
+import ai.koog.agents.core.feature.handler.tool.ToolCallStartingContext
 import ai.koog.agents.core.feature.handler.tool.ToolValidationFailedContext
 
 /**
@@ -49,7 +49,7 @@ import ai.koog.agents.core.feature.handler.tool.ToolValidationFailedContext
  * Example usage:
  * ```
  * handleEvents {
- *     onToolExecutionStarting { eventContext ->
+ *     onToolCallStarting { eventContext ->
  *         println("Tool called: ${eventContext.tool.name} with args ${eventContext.toolArgs}")
  *     }
  *
@@ -101,13 +101,13 @@ public class EventHandlerConfig : FeatureConfig() {
 
     //region Private Tool Call Handlers
 
-    private var _onToolExecutionStarting: suspend (eventHandler: ToolExecutionStartingContext) -> Unit = { _ -> }
+    private var _onToolCallStarting: suspend (eventHandler: ToolCallStartingContext) -> Unit = { _ -> }
 
     private var _onToolValidationFailed: suspend (eventHandler: ToolValidationFailedContext) -> Unit = { _ -> }
 
-    private var _onToolExecutionFailed: suspend (eventHandler: ToolExecutionFailedContext) -> Unit = { _ -> }
+    private var _onToolCallFailed: suspend (eventHandler: ToolCallFailedContext) -> Unit = { _ -> }
 
-    private var _onToolExecutionCompleted: suspend (eventHandler: ToolExecutionCompletedContext) -> Unit = { _ -> }
+    private var _onToolCallCompleted: suspend (eventHandler: ToolCallCompletedContext) -> Unit = { _ -> }
 
     //endregion Private Tool Call Handlers
 
@@ -266,9 +266,9 @@ public class EventHandlerConfig : FeatureConfig() {
     /**
      * Append handler called when a tool is about to be called.
      */
-    public fun onToolExecutionStarting(handler: suspend (eventContext: ToolExecutionStartingContext) -> Unit) {
-        val originalHandler = this._onToolExecutionStarting
-        this._onToolExecutionStarting = { eventContext ->
+    public fun onToolCallStarting(handler: suspend (eventContext: ToolCallStartingContext) -> Unit) {
+        val originalHandler = this._onToolCallStarting
+        this._onToolCallStarting = { eventContext ->
             originalHandler(eventContext)
             handler.invoke(eventContext)
         }
@@ -288,9 +288,9 @@ public class EventHandlerConfig : FeatureConfig() {
     /**
      * Append handler called when a tool call fails with an exception.
      */
-    public fun onToolExecutionFailed(handler: suspend (eventContext: ToolExecutionFailedContext) -> Unit) {
-        val originalHandler = this._onToolExecutionFailed
-        this._onToolExecutionFailed = { eventContext ->
+    public fun onToolCallFailed(handler: suspend (eventContext: ToolCallFailedContext) -> Unit) {
+        val originalHandler = this._onToolCallFailed
+        this._onToolCallFailed = { eventContext ->
             originalHandler(eventContext)
             handler.invoke(eventContext)
         }
@@ -299,9 +299,9 @@ public class EventHandlerConfig : FeatureConfig() {
     /**
      * Append handler called when a tool call completes successfully.
      */
-    public fun onToolExecutionCompleted(handler: suspend (eventContext: ToolExecutionCompletedContext) -> Unit) {
-        val originalHandler = this._onToolExecutionCompleted
-        this._onToolExecutionCompleted = { eventContext ->
+    public fun onToolCallCompleted(handler: suspend (eventContext: ToolCallCompletedContext) -> Unit) {
+        val originalHandler = this._onToolCallCompleted
+        this._onToolCallCompleted = { eventContext ->
             originalHandler(eventContext)
             handler.invoke(eventContext)
         }
@@ -542,11 +542,11 @@ public class EventHandlerConfig : FeatureConfig() {
      * Append handler called when a tool is about to be called.
      */
     @Deprecated(
-        message = "Use onToolExecutionStarting instead",
-        ReplaceWith("onToolExecutionStarting(handler)", "ai.koog.agents.core.feature.handler.ToolExecutionStartingContext")
+        message = "Use onToolCallStarting instead",
+        ReplaceWith("onToolCallStarting(handler)", "ai.koog.agents.core.feature.handler.ToolCallStartingContext")
     )
     public fun onToolCall(handler: suspend (eventContext: ToolCallContext) -> Unit) {
-        onToolExecutionStarting(handler)
+        onToolCallStarting(handler)
     }
 
     /**
@@ -564,22 +564,22 @@ public class EventHandlerConfig : FeatureConfig() {
      * Append handler called when a tool call fails with an exception.
      */
     @Deprecated(
-        message = "Use onToolExecutionFailed instead",
-        ReplaceWith("onToolExecutionFailed(handler)", "ai.koog.agents.core.feature.handler.ToolExecutionFailedContext")
+        message = "Use onToolCallFailed instead",
+        ReplaceWith("onToolCallFailed(handler)", "ai.koog.agents.core.feature.handler.ToolCallFailedContext")
     )
     public fun onToolCallFailure(handler: suspend (eventContext: ToolCallFailureContext) -> Unit) {
-        onToolExecutionFailed(handler)
+        onToolCallFailed(handler)
     }
 
     /**
      * Append handler called when a tool call completes successfully.
      */
     @Deprecated(
-        message = "Use onToolExecutionCompleted instead",
-        ReplaceWith("onToolExecutionCompleted(handler)", "ai.koog.agents.core.feature.handler.ToolExecutionCompletedContext")
+        message = "Use onToolCallCompleted instead",
+        ReplaceWith("onToolCallCompleted(handler)", "ai.koog.agents.core.feature.handler.ToolCallCompletedContext")
     )
     public fun onToolCallResult(handler: suspend (eventContext: ToolCallResultContext) -> Unit) {
-        onToolExecutionCompleted(handler)
+        onToolCallCompleted(handler)
     }
 
     //endregion Deprecated Handlers
@@ -682,8 +682,8 @@ public class EventHandlerConfig : FeatureConfig() {
     /**
      * Invoke handlers for the tool call event.
      */
-    internal suspend fun invokeOnToolExecutionStarting(eventContext: ToolExecutionStartingContext) {
-        _onToolExecutionStarting.invoke(eventContext)
+    internal suspend fun invokeOnToolCallStarting(eventContext: ToolCallStartingContext) {
+        _onToolCallStarting.invoke(eventContext)
     }
 
     /**
@@ -696,15 +696,15 @@ public class EventHandlerConfig : FeatureConfig() {
     /**
      * Invoke handlers for a tool call failure with an exception event.
      */
-    internal suspend fun invokeOnToolExecutionFailed(eventContext: ToolExecutionFailedContext) {
-        _onToolExecutionFailed.invoke(eventContext)
+    internal suspend fun invokeOnToolCallFailed(eventContext: ToolCallFailedContext) {
+        _onToolCallFailed.invoke(eventContext)
     }
 
     /**
      * Invoke handlers for an event when a tool call is completed successfully.
      */
-    internal suspend fun invokeOnToolExecutionCompleted(eventContext: ToolExecutionCompletedContext) {
-        _onToolExecutionCompleted.invoke(eventContext)
+    internal suspend fun invokeOnToolCallCompleted(eventContext: ToolCallCompletedContext) {
+        _onToolCallCompleted.invoke(eventContext)
     }
 
     //endregion Invoke Tool Call Handlers
@@ -716,7 +716,7 @@ public class EventHandlerConfig : FeatureConfig() {
      *
      * @param eventContext The context containing information about the streaming session about to begin
      */
-    internal suspend fun invokeOnLLMStreammingStarting(eventContext: LLMStreamingStartingContext) {
+    internal suspend fun invokeOnLLMStreamingStarting(eventContext: LLMStreamingStartingContext) {
         _onLLMStreamingStarting.invoke(eventContext)
     }
 

@@ -15,15 +15,16 @@ import kotlinx.coroutines.runBlocking
 fun main() = runBlocking {
     var result: Any? = null
     val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
-        onAgentFinished { eventContext -> result = eventContext.result }
+        onAgentCompleted { eventContext -> result = eventContext.result }
     }
     // Create a single-run agent with a system prompt
     val agent = AIAgent(
         promptExecutor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey),
         llmModel = OpenAIModels.CostOptimized.GPT4oMini,
         systemPrompt = "You are a code assistant. Provide concise code examples.",
-        installFeatures = { install(EventHandler, eventHandlerConfig) }
-    )
+    ) {
+        install(EventHandler, eventHandlerConfig)
+    }
 
     println("Single-run agent started. Enter your request:")
 
