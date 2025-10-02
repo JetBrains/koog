@@ -3,7 +3,6 @@
 package ai.koog.agents.snapshot.providers
 
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
-import ai.koog.agents.snapshot.feature.Persistence
 
 @Deprecated(
     "`PersistencyStorageProvider` has been renamed to `PersistenceStorageProvider`",

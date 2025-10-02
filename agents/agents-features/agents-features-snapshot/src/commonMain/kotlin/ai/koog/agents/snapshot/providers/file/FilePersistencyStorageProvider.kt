@@ -1,7 +1,6 @@
 package ai.koog.agents.snapshot.providers.file
 
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
-import ai.koog.agents.snapshot.feature.Persistence
 import ai.koog.agents.snapshot.providers.PersistenceStorageProvider
 import ai.koog.agents.snapshot.providers.PersistenceUtils
 import ai.koog.rag.base.files.FileSystemProvider
