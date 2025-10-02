@@ -425,22 +425,26 @@ public open class A2AServer(
             }
         }
 
-        // Signal that event collection is setup
-        val collectionStarted: CompletableJob = Job()
+        // Signal that event collection is started
+        val eventCollectinStarted: CompletableJob = Job()
+        // Signal that all events have been collected
+        val eventCollectionFinished: CompletableJob = Job()
 
         // Subscribe to events stream and start emitting them.
         launch {
             session.events
                 .onStart {
-                    collectionStarted.complete()
+                    eventCollectinStarted.complete()
                 }
                 .collect { event ->
                     send(Response(data = event, id = request.id))
                 }
+
+            eventCollectionFinished.complete()
         }
 
         // Ensure event collection is setup to stream events in response.
-        collectionStarted.join()
+        eventCollectinStarted.join()
         // Ensure monitoring is ready to monitor the session.
         monitoringStarted.join()
 
@@ -449,7 +453,8 @@ public open class A2AServer(
          Using await here to propagate any exceptions thrown by the agent execution.
          */
         session.agentJob.await()
-        session.join()
+        // Make sure all events have been collected and sent
+        eventCollectionFinished.join()
     }
 
     override suspend fun onSendMessage(
