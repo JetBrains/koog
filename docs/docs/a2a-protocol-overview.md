@@ -28,4 +28,3 @@ Koog agent framework:
 
 For more examples, follow
 the [examples](https://github.com/JetBrains/koog/tree/develop/examples/simple-examples/src/main/kotlin/ai/koog/agents/example/a2a)
-in the Koog repository.
