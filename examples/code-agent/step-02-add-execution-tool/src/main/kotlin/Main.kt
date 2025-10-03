@@ -9,6 +9,7 @@ import ai.koog.agents.ext.tool.file.ReadFileTool
 import ai.koog.agents.ext.tool.file.WriteFileTool
 import ai.koog.agents.ext.tool.shell.ExecuteShellCommandTool
 import ai.koog.agents.ext.tool.shell.JvmShellCommandExecutor
+import ai.koog.agents.ext.tool.shell.PrintShellCommandConfirmationHandler
 import ai.koog.agents.ext.tool.shell.ShellCommandConfirmation
 import ai.koog.agents.features.eventHandler.feature.handleEvents
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
@@ -22,6 +23,8 @@ val agent = AIAgent(
     systemPrompt = """
         You are a highly skilled programmer tasked with updating the provided codebase according to the given task.
         Your goal is to deliver production-ready code changes that integrate seamlessly with the existing codebase and solve given task.
+        
+        Definition of Done: the code builds from a clean state, new/changed behavior is covered by automated tests, and all tests (new and old) pass.
     """.trimIndent(),
     llmModel = OpenAIModels.Chat.GPT5,
     toolRegistry = ToolRegistry {
@@ -29,7 +32,7 @@ val agent = AIAgent(
         tool(ReadFileTool(JVMFileSystemProvider.ReadOnly))
         tool(WriteFileTool(JVMFileSystemProvider.ReadWrite))
         tool(EditFileTool(JVMFileSystemProvider.ReadWrite))
-        tool(ExecuteShellCommandTool(JvmShellCommandExecutor()) { _ -> ShellCommandConfirmation.Approved })
+        tool(createExecuteShellCommandToolFromEnv())
     },
     maxIterations = 100
 ) {
@@ -37,6 +40,14 @@ val agent = AIAgent(
         onToolCallStarting { ctx ->
             println("Tool called: ${ctx.tool.name}")
         }
+    }
+}
+
+fun createExecuteShellCommandToolFromEnv(): ExecuteShellCommandTool {
+    return if (System.getenv("BRAVE_MODE")?.lowercase() == "true") {
+        ExecuteShellCommandTool(JvmShellCommandExecutor()) { _ -> ShellCommandConfirmation.Approved }
+    } else {
+        ExecuteShellCommandTool(JvmShellCommandExecutor(), PrintShellCommandConfirmationHandler())
     }
 }
 
