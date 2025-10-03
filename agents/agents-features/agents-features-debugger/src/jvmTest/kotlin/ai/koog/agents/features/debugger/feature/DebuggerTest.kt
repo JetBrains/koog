@@ -181,8 +181,10 @@ class DebuggerTest {
 
                     launch {
                         val messageProcessor = messageProcessors.single() as FeatureMessageRemoteWriter
+                        messageProcessor.initialize()
+                        
                         val isServerStartedCheck = withTimeoutOrNull(defaultClientServerTimeout) {
-                            messageProcessor.isOpen.first { it }
+                            messageProcessor.server.isStarted.first { it }
                         } != null
 
                         assertTrue(isServerStartedCheck, "Server did not start in time")
@@ -472,8 +474,10 @@ class DebuggerTest {
 
                     launch {
                         val messageProcessor = messageProcessors.single() as FeatureMessageRemoteWriter
+                        messageProcessor.initialize()
+                        
                         val isServerStartedCheck = withTimeoutOrNull(defaultClientServerTimeout) {
-                            messageProcessor.isOpen.first { it }
+                            messageProcessor.server.isStarted.first { it }
                         } != null
 
                         assertTrue(isServerStartedCheck, "Server did not start in time")
@@ -644,8 +648,10 @@ class DebuggerTest {
 
                     launch {
                         val messageProcessor = messageProcessors.single() as FeatureMessageRemoteWriter
+                        messageProcessor.initialize()
+                        
                         val isServerStartedCheck = withTimeoutOrNull(defaultClientServerTimeout) {
-                            messageProcessor.isOpen.first { it }
+                            messageProcessor.server.isStarted.first { it }
                         } != null
 
                         assertTrue(isServerStartedCheck, "Server did not start in time")
