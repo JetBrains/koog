@@ -34,7 +34,7 @@ val agent = AIAgent(
         tool(EditFileTool(JVMFileSystemProvider.ReadWrite))
         tool(createExecuteShellCommandToolFromEnv())
     },
-    maxIterations = 100
+    maxIterations = 300
 ) {
     handleEvents {
         onToolCallStarting { ctx ->
