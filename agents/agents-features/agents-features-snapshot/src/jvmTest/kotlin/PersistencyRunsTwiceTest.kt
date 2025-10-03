@@ -1,5 +1,6 @@
 import ai.koog.agents.core.agent.AIAgentService
 import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.agent.context.RollbackStrategy
 import ai.koog.agents.snapshot.feature.Persistence
 import ai.koog.agents.snapshot.feature.isTombstone
 import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider
@@ -95,6 +96,7 @@ class PersistenceRunsTwiceTest {
             install(Persistence) {
                 storage = provider
                 enableAutomaticPersistence = true
+                rollbackStrategy = RollbackStrategy.Default
             }
         }
 
@@ -117,6 +119,7 @@ class PersistenceRunsTwiceTest {
             }
         }
 
+        // Clear the collector to isolate the second run
         testCollector.clear()
 
         val secondAgent = agentService.createAgent(id = agentId)
