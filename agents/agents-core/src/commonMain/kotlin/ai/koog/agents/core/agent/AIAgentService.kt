@@ -283,6 +283,100 @@ public interface AIAgentService<Input, Output, TAgent : AIAgent<Input, Output>> 
             installFeatures = installFeatures
         )
     }
+
+    /**
+     * Creates a new instance of an AI agent with the specified parameters.
+     *
+     * @param id An optional unique identifier for the agent. If null, a default identifier will be generated.
+     * @param clock The clock instance used to manage time-related operations. Defaults to the system clock.
+     * @return A new instance of an AI agent configured with the provided parameters.
+     */
+    public suspend fun createAgent(
+        id: String? = null,
+        toolRegistry: ToolRegistry = this.toolRegistry,
+        agentConfig: AIAgentConfig = this.agentConfig,
+        clock: Clock = Clock.System,
+    ): AIAgent<Input, Output>
+
+    /**
+     * Creates a new AI agent with the specified optional parameters ([id], [clock]), executes it with the given input,
+     * and retrieves the resulting output.
+     *
+     * @param agentInput The input to be processed by the AI agent.
+     * @param id An optional unique identifier for the agent. If null, a default identifier will be generated.
+     * @param clock The clock instance used to manage time-related operations. Defaults to the system clock.
+     * @return The output produced by the agent after processing the input.
+     */
+    public suspend fun createAgentAndRun(
+        agentInput: Input,
+        id: String? = null,
+        toolRegistry: ToolRegistry = this.toolRegistry,
+        agentConfig: AIAgentConfig = this.agentConfig,
+        clock: Clock = Clock.System,
+    ): Output = createAgent(id, toolRegistry, agentConfig, clock).run(agentInput)
+
+    /**
+     * Removes the specified AI agent from the service.
+     *
+     * @param agent The AI agent to be removed.
+     * @return True if the agent was successfully removed, or false if the agent was not found.
+     */
+    public suspend fun removeAgent(agent: AIAgent<Input, Output>): Boolean
+
+    /**
+     * Removes an AI agent based on its unique identifier.
+     *
+     * @param id The unique identifier of the AI agent to be removed.
+     * @return True if the agent with the specified ID was successfully removed, or false if no such agent was found.
+     */
+    public suspend fun removeAgentWithId(id: String): Boolean
+
+    /**
+     * Retrieves an AI agent based on its unique identifier.
+     *
+     * @param id The unique identifier of the AI agent to retrieve.
+     * @return The AI agent associated with the specified ID, or null if no agent is found.
+     */
+    public suspend fun agentById(id: String): AIAgent<Input, Output>?
+
+    /**
+     * Retrieves a comprehensive list of all AI agents currently managed by the service,
+     * regardless of their state (active, inactive, or finished).
+     *
+     * @return A list of all AI agents managed by the service.
+     */
+    public suspend fun listAllAgents(): List<AIAgent<Input, Output>>
+
+    /**
+     * Retrieves a list of active AI agents currently managed by the service.
+     *
+     * @return A list containing the currently active AI agents.
+     */
+    public suspend fun listActiveAgents(): List<AIAgent<Input, Output>>
+
+    /**
+     * Retrieves a list of inactive AI agents currently managed by the service.
+     *
+     * @return A list of AI agents that are marked as inactive.
+     */
+    public suspend fun listInactiveAgents(): List<AIAgent<Input, Output>>
+
+    /**
+     * Retrieves a list of AI agents that have completed their tasks and are marked as finished.
+     *
+     * @return A list of finished AI agents.
+     */
+    public suspend fun listFinishedAgents(): List<AIAgent<Input, Output>>
+
+    /**
+     * Closes all AI agents currently managed by the service.
+     *
+     * This method retrieves the list of all agents, regardless of their state (active, inactive, or finished),
+     * and invokes the [AIAgent.close] function on each of them, releasing any underlying resources.
+     */
+    public suspend fun closeAll() {
+        listAllAgents().forEach { it.close() }
+    }
 }
 
 /**
@@ -316,6 +410,8 @@ public abstract class AIAgentServiceBase<Input, Output, TAgent : AIAgent<Input, 
     @InternalAgentsApi
     public abstract fun createManagedAgent(
         id: String? = null,
+        toolRegistry: ToolRegistry,
+        agentConfig: AIAgentConfig,
         clock: Clock = Clock.System,
     ): TAgent
 
@@ -327,8 +423,13 @@ public abstract class AIAgentServiceBase<Input, Output, TAgent : AIAgent<Input, 
      * @return AIAgent instance with the specified configurations.
      */
     @OptIn(InternalAgentsApi::class)
-    final override suspend fun createAgent(id: String?, clock: Clock): TAgent = managedAgentsMutex.withLock {
-        val agent = createManagedAgent(id, clock)
+    final override suspend fun createAgent(
+        id: String?,
+        toolRegistry: ToolRegistry,
+        agentConfig: AIAgentConfig,
+        clock: Clock
+    ): TAgent = managedAgentsMutex.withLock {
+        val agent = createManagedAgent(id, toolRegistry, agentConfig, clock)
         managedAgents[agent.id] = agent
         return agent
     }
@@ -433,6 +534,8 @@ public constructor(
     @InternalAgentsApi
     override fun createManagedAgent(
         id: String?,
+        toolRegistry: ToolRegistry,
+        agentConfig: AIAgentConfig,
         clock: Clock,
     ): GraphAIAgent<Input, Output> = GraphAIAgent(
         inputType = inputType,
@@ -481,6 +584,8 @@ public constructor(
     @InternalAgentsApi
     override fun createManagedAgent(
         id: String?,
+        toolRegistry: ToolRegistry,
+        agentConfig: AIAgentConfig,
         clock: Clock,
     ): FunctionalAIAgent<Input, Output> = FunctionalAIAgent(
         promptExecutor = promptExecutor,
