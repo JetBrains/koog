@@ -18,7 +18,7 @@ import kotlinx.serialization.Serializable
  * DashScope Chat Completions API Request using OpenAI-compatible format
  *
  * @property messages A list of messages comprising the conversation so far.
- * @property model ID of the model to use (e.g., qwen-turbo, qwen-plus, qwen-max, qwen-long).
+ * @property model ID of the model to use (e.g., qwen-flash, qwen-plus, qwen-max, qwen-long).
  * @property stream If set, partial message deltas will be sent.
  * @property temperature What sampling temperature to use, between 0 and 2.
  * @property tools A list of tools the model may call.

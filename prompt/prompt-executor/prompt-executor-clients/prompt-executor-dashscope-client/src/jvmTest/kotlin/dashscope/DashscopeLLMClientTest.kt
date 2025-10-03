@@ -47,7 +47,7 @@ class DashscopeLLMClientTest {
         "object": "chat.completion",
         "created": 1716920000,
         "system_fingerprint": "dummy",
-        "model": "qwen-turbo",
+        "model": "qwen-plus",
         "choices": [
             {
         "index": 0,

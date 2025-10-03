@@ -29,7 +29,7 @@ class DashscopeSerializationTest {
     @Test
     fun `test basic serialization without optional fields`() {
         val request = DashscopeChatCompletionRequest(
-            model = "qwen-turbo",
+            model = "qwen-plus",
             messages = listOf(OpenAIMessage.User(content = Content.Text("Hello"))),
             temperature = 0.7,
             maxTokens = 1000,
@@ -39,7 +39,7 @@ class DashscopeSerializationTest {
         val jsonElement = json.encodeToJsonElement(DashscopeChatCompletionRequest.serializer(), request)
         val jsonObject = jsonElement.jsonObject
 
-        assertEquals("qwen-turbo", jsonObject["model"]?.jsonPrimitive?.contentOrNull)
+        assertEquals("qwen-plus", jsonObject["model"]?.jsonPrimitive?.contentOrNull)
         assertEquals(0.7, jsonObject["temperature"]?.jsonPrimitive?.doubleOrNull)
         assertEquals(1000, jsonObject["maxTokens"]?.jsonPrimitive?.intOrNull)
         assertEquals(false, jsonObject["stream"]?.jsonPrimitive?.booleanOrNull)
@@ -156,7 +156,7 @@ class DashscopeSerializationTest {
     @Test
     fun `test round trip serialization`() {
         val originalRequest = DashscopeChatCompletionRequest(
-            model = "qwen-turbo",
+            model = "qwen-plus",
             messages = listOf(OpenAIMessage.User(content = Content.Text("Test round trip"))),
             temperature = 0.6,
             maxTokens = 500,

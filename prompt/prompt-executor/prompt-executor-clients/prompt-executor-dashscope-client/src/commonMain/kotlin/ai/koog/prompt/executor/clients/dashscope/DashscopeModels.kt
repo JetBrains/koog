@@ -16,7 +16,7 @@ public object DashscopeModels : LLModelDefinitions {
      */
     public val QWEN_FLASH: LLModel = LLModel(
         provider = LLMProvider.Alibaba,
-        id = "qwen-turbo",
+        id = "qwen-flash",
         capabilities = listOf(
             LLMCapability.Completion,
             LLMCapability.Tools,
