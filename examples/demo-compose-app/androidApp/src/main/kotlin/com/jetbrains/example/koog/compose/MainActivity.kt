@@ -17,11 +17,11 @@ class MainActivity : ComponentActivity() {
             KoinApp(
                 executor = MultiLLMPromptExecutor(
                     AndroidLocalLLMProvider to AndroidLLocalLLMClient(
-                        TODO("How and where to get it?!"),
+                        this,
                         "/data/local/tmp/llm"
                     )
                 ),
-                model = AndroidLocalModels.Chat.Llama
+                model = AndroidLocalModels.Chat.Gemma
             )
         }
     }
