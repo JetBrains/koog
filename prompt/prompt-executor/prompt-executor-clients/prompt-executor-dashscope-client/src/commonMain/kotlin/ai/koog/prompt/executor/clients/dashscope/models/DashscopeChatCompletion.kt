@@ -11,8 +11,10 @@ import ai.koog.prompt.executor.clients.openai.base.models.OpenAIStreamOptions
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAITool
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolChoice
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIUsage
+import ai.koog.prompt.executor.clients.serialization.AdditionalPropertiesFlatteningSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
 
 /**
  * DashScope Chat Completions API Request using OpenAI-compatible format
@@ -51,6 +53,7 @@ internal class DashscopeChatCompletionRequest(
     val streamOptions: OpenAIStreamOptions? = null,
     val parallelToolCalls: Boolean? = null,
     val enableSearch: Boolean? = null,
+    val additionalProperties: Map<String, JsonElement>? = null,
 ) : OpenAIBaseLLMRequest
 
 /**
@@ -62,6 +65,7 @@ public class DashscopeChatCompletionResponse(
     override val created: Long,
     override val id: String,
     override val model: String,
+    public val systemFingerprint: String = "",
     @SerialName("object")
     public val objectType: String = "chat.completion",
     public val usage: OpenAIUsage? = null,
@@ -76,7 +80,11 @@ public class DashscopeChatCompletionStreamResponse(
     override val created: Long,
     override val id: String,
     override val model: String,
+    public val systemFingerprint: String = "",
     @SerialName("object")
     public val objectType: String = "chat.completion.chunk",
     public val usage: OpenAIUsage? = null,
 ) : OpenAIBaseLLMStreamResponse
+
+internal object DashscopeChatCompletionRequestSerializer :
+    AdditionalPropertiesFlatteningSerializer<DashscopeChatCompletionRequest>(DashscopeChatCompletionRequest.serializer())

@@ -4,6 +4,7 @@ import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.dashscope.models.DashscopeChatCompletionRequest
+import ai.koog.prompt.executor.clients.dashscope.models.DashscopeChatCompletionRequestSerializer
 import ai.koog.prompt.executor.clients.dashscope.models.DashscopeChatCompletionResponse
 import ai.koog.prompt.executor.clients.dashscope.models.DashscopeChatCompletionStreamResponse
 import ai.koog.prompt.executor.clients.openai.base.AbstractOpenAILLMClient
@@ -11,10 +12,16 @@ import ai.koog.prompt.executor.clients.openai.base.OpenAIBasedSettings
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIMessage
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAITool
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolChoice
+import ai.koog.prompt.executor.clients.openai.structure.OpenAIBasicJsonSchemaGenerator
+import ai.koog.prompt.executor.clients.openai.structure.OpenAIStandardJsonSchemaGenerator
 import ai.koog.prompt.executor.model.LLMChoice
+import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrameFlowBuilder
+import ai.koog.prompt.structure.RegisteredBasicJsonSchemaGenerators
+import ai.koog.prompt.structure.RegisteredStandardJsonSchemaGenerators
+import ai.koog.prompt.structure.annotations.InternalStructuredOutputApi
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import kotlinx.datetime.Clock
@@ -56,8 +63,14 @@ public class DashscopeLLMClient(
     staticLogger
 ) {
 
+    @OptIn(InternalStructuredOutputApi::class)
     private companion object {
         private val staticLogger = KotlinLogging.logger { }
+
+        init {
+            RegisteredBasicJsonSchemaGenerators[LLMProvider.Alibaba] = OpenAIBasicJsonSchemaGenerator
+            RegisteredStandardJsonSchemaGenerators[LLMProvider.Alibaba] = OpenAIStandardJsonSchemaGenerator
+        }
     }
 
     override fun serializeProviderChatRequest(
@@ -91,12 +104,17 @@ public class DashscopeLLMClient(
             enableThinking = dashscopeParams.enableThinking,
         )
 
-        return json.encodeToString(request)
+        return json.encodeToString(DashscopeChatCompletionRequestSerializer, request)
     }
 
     override fun processProviderChatResponse(response: DashscopeChatCompletionResponse): List<LLMChoice> {
         require(response.choices.isNotEmpty()) { "Empty choices in response" }
-        return response.choices.map { it.toMessageResponses(createMetaInfo(response.usage)) }
+        return response.choices.map {
+            it.message.toMessageResponses(
+                it.finishReason,
+                createMetaInfo(response.usage),
+            )
+        }
     }
 
     override fun decodeStreamingResponse(data: String): DashscopeChatCompletionStreamResponse =
