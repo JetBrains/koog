@@ -9,6 +9,7 @@ import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import aws.sdk.kotlin.runtime.auth.credentials.StaticCredentialsProvider
 import aws.sdk.kotlin.services.bedrockruntime.BedrockRuntimeClient
 import aws.sdk.kotlin.services.bedrockruntime.model.ApplyGuardrailRequest
 import aws.sdk.kotlin.services.bedrockruntime.model.ApplyGuardrailResponse
@@ -49,8 +50,10 @@ class BedrockLLMClientTest {
     @Test
     fun `can create BedrockLLMClient`() {
         val client = BedrockLLMClient(
-            awsAccessKeyId = "test-key",
-            awsSecretAccessKey = "test-secret",
+            credentialsProvider = StaticCredentialsProvider {
+                accessKeyId = "test-key"
+                secretAccessKey = "test-secret"
+            },
             settings = BedrockClientSettings(region = BedrockRegions.US_EAST_1.regionCode),
             clock = Clock.System
         )
@@ -217,8 +220,10 @@ class BedrockLLMClientTest {
         )
 
         val client = BedrockLLMClient(
-            awsAccessKeyId = "test-key",
-            awsSecretAccessKey = "test-secret",
+            credentialsProvider = StaticCredentialsProvider {
+                accessKeyId = "test-key"
+                secretAccessKey = "test-secret"
+            },
             settings = customSettings,
             clock = Clock.System
         )
@@ -307,8 +312,10 @@ class BedrockLLMClientTest {
 
         // Mock client for testing tool call request generation
         val client = BedrockLLMClient(
-            awsAccessKeyId = "test-key",
-            awsSecretAccessKey = "test-secret",
+            credentialsProvider = StaticCredentialsProvider {
+                accessKeyId = "test-key"
+                secretAccessKey = "test-secret"
+            },
             settings = BedrockClientSettings(region = BedrockRegions.US_EAST_1.regionCode),
             clock = Clock.System
         )
@@ -464,8 +471,10 @@ class BedrockLLMClientTest {
     fun `moderate method throws exception when moderation guardrails settings are not provided`() = runTest {
         // Create client without moderation guardrails settings
         val client = BedrockLLMClient(
-            awsAccessKeyId = "test-key",
-            awsSecretAccessKey = "test-secret",
+            credentialsProvider = StaticCredentialsProvider {
+                accessKeyId = "test-key"
+                secretAccessKey = "test-secret"
+            },
             settings = BedrockClientSettings(region = BedrockRegions.US_EAST_1.regionCode),
             clock = Clock.System
         )
