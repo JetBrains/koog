@@ -62,7 +62,22 @@ public open class MultiLLMPromptExecutor(
      * @param llmClients Variable number of pairs, where each pair consists of an `LLMProvider` representing
      *                   the provider and a `LLMClient` for communication with that provider.
      */
-    public constructor(vararg llmClients: Pair<LLMProvider, LLMClient>) : this(mapOf(*llmClients))
+    public constructor(
+        vararg llmClients: Pair<LLMProvider, LLMClient>,
+        fallback: FallbackPromptExecutorSettings? = null
+    ) : this(llmClients = mapOf(*llmClients), fallback = fallback)
+
+    /**
+     * Secondary constructor for `MultiLLMPromptExecutor` that accepts a variable number of `LLMClient` instances.
+     * The provided clients are processed to create a mapping of `LLMProvider` to their respective `LLMClient`.
+     *
+     * @param llmClients Vararg parameter of `LLMClient` instances used to construct the executor.
+     */
+    public constructor(vararg llmClients: LLMClient) : this(
+        llmClients.map {
+            it.llmProvider() to it
+        }.associateBy({ it.first }, { it.second })
+    )
 
     /**
      * Companion object for `MultiLLMPromptExecutor` class.

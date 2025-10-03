@@ -72,6 +72,16 @@ public class OpenRouterLLMClient(
         }
     }
 
+    /**
+     * Returns the specific implementation of the `LLMProvider` associated with this client.
+     *
+     * In this case, it identifies the `OpenRouter` provider as the designated LLM provider
+     * for the client.
+     *
+     * @return The `LLMProvider` instance representing OpenRouter.
+     */
+    override fun llmProvider(): LLMProvider = LLMProvider.OpenRouter
+
     override fun serializeProviderChatRequest(
         messages: List<OpenAIMessage>,
         model: LLModel,

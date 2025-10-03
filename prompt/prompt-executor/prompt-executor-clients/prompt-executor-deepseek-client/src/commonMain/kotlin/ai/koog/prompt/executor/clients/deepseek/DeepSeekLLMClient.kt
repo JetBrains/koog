@@ -26,7 +26,6 @@ import ai.koog.prompt.structure.annotations.InternalStructuredOutputApi
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import kotlinx.datetime.Clock
-import kotlin.collections.set
 
 /**
  * Configuration settings for connecting to the DeepSeek API.
@@ -70,6 +69,16 @@ public class DeepSeekLLMClient(
             RegisteredStandardJsonSchemaGenerators[LLMProvider.DeepSeek] = OpenAIStandardJsonSchemaGenerator
         }
     }
+
+    /**
+     * Returns the specific implementation of the `LLMProvider` associated with this client.
+     *
+     * In this case, it identifies the `DeepSeek` provider as the designated LLM provider
+     * for the client.
+     *
+     * @return The `LLMProvider` instance representing DeepSeek.
+     */
+    override fun llmProvider(): LLMProvider = LLMProvider.DeepSeek
 
     override fun serializeProviderChatRequest(
         messages: List<OpenAIMessage>,

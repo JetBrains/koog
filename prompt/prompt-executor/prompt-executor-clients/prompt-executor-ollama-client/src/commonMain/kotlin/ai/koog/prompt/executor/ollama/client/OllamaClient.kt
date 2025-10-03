@@ -148,6 +148,13 @@ public class OllamaClient(
         }
     }
 
+    /**
+     * Provides the type of Language Learning Model (LLM) provider used by the client.
+     *
+     * @return The specific LLMProvider implementation, which is of type LLMProvider.Ollama.
+     */
+    override fun llmProvider(): LLMProvider = LLMProvider.Ollama
+
     override suspend fun execute(
         prompt: Prompt,
         model: LLModel,

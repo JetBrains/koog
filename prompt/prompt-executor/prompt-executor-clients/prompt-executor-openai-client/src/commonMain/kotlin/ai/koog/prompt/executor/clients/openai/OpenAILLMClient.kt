@@ -114,6 +114,16 @@ public open class OpenAILLMClient(
         }
     }
 
+    /**
+     * Returns the specific implementation of the `LLMProvider` associated with this client.
+     *
+     * In this case, it identifies the `OpenAI` provider as the designated LLM provider
+     * for the client.
+     *
+     * @return The `LLMProvider` instance representing OpenAI.
+     */
+    override fun llmProvider(): LLMProvider = LLMProvider.OpenAI
+
     override fun serializeProviderChatRequest(
         messages: List<OpenAIMessage>,
         model: LLModel,
