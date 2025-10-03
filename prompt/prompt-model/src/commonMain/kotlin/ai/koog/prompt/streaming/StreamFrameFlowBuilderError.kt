@@ -11,7 +11,7 @@ public sealed class StreamFrameFlowBuilderError(message: String) : Throwable(mes
      *
      * The first partial tool call data for a new tool call should always include the `id`.
      */
-    public object NoPartialToolCallToComplete :
+    public class NoPartialToolCallToComplete :
         StreamFrameFlowBuilderError("Error constructing tool call, no tool call to complete or no tool call id was provided.")
 
     /**
