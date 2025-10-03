@@ -6,8 +6,10 @@ import ai.koog.agents.memory.model.MemoryScope
 import ai.koog.agents.memory.model.MemorySubject
 import ai.koog.agents.memory.storage.Storage
 import ai.koog.rag.base.files.FileSystemProvider
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 
 /**
@@ -83,6 +85,10 @@ public data class LocalFileMemoryProvider<Path>(
     private val fs: FileSystemProvider.ReadWrite<Path>,
     private val root: Path,
 ) : AgentMemoryProvider {
+    private companion object {
+        private val logger = KotlinLogging.logger { }
+    }
+
     /**
      * Mutex for ensuring thread-safe access to fact storage.
      * This lock prevents race conditions during concurrent read/write operations by:
@@ -141,6 +147,7 @@ public data class LocalFileMemoryProvider<Path>(
      * This method provides atomic read operations with the following guarantees:
      * - Thread safety through mutex locking
      * - Graceful handling of missing files (returns empty map)
+     * - Graceful handling of corrupted JSON files (returns empty map with warning)
      * - Consistent deserialization of stored facts
      *
      * The returned map uses concept keywords as keys for efficient lookup
@@ -151,7 +158,16 @@ public data class LocalFileMemoryProvider<Path>(
      */
     private suspend fun loadFacts(path: Path): Map<String, List<Fact>> = mutex.withLock {
         val content = storage.read(path) ?: return emptyMap()
-        return json.decodeFromString(content)
+
+        return try {
+            json.decodeFromString<Map<String, List<Fact>>>(content)
+        } catch (e: SerializationException) {
+            logger.warn(e) { "Failed to deserialize facts from $path: ${e.message}" }
+            emptyMap()
+        } catch (e: Exception) {
+            logger.error(e) { "Unexpected error loading facts from $path: ${e.message}" }
+            emptyMap()
+        }
     }
 
     /**

@@ -7,8 +7,10 @@ import ai.koog.agents.memory.model.MemorySubject
 import ai.koog.agents.memory.model.SingleFact
 import ai.koog.agents.memory.storage.Aes256GCMEncryptor
 import ai.koog.agents.memory.storage.EncryptedStorage
+import ai.koog.agents.memory.storage.SimpleStorage
 import ai.koog.rag.base.files.FileSystemProvider
 import ai.koog.rag.base.files.JVMFileSystemProvider
+import ai.koog.rag.base.files.writeText
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.Test
@@ -140,5 +142,61 @@ class LocalFileMemoryProviderTest {
         assertTrue(allFacts.contains(fact1))
         assertTrue(allFacts.contains(fact2))
         assertTrue(allFacts.contains(fact3))
+    }
+
+    @Test
+    fun testCorruptedJsonHandling(@TempDir tempDir: Path) = runTest {
+        val fs = JVMFileSystemProvider.ReadWrite
+        val storage = SimpleStorage(fs)
+        val config = LocalMemoryConfig("memory-storage")
+        val provider = LocalFileMemoryProvider(config, storage, fs, tempDir)
+
+        val subject = UserSubject
+        val scope = MemoryScope.Agent("test-agent")
+        val concept = Concept(
+            keyword = "test-concept",
+            description = "Test concept description",
+            factType = FactType.SINGLE
+        )
+        val fact = SingleFact(concept = concept, value = "Test fact content", timestamp = System.currentTimeMillis())
+
+        // First, save a valid fact
+        provider.save(fact, subject, scope)
+        val validFacts = provider.load(concept, subject, scope)
+        assertEquals(1, validFacts.size)
+        assertEquals(fact, validFacts[0])
+
+        // Now corrupt the JSON file by writing invalid JSON directly
+        val storagePath = getStoragePathForTest(config, subject, scope, tempDir)
+        val corruptedJson = """{"invalid": json, "missing": quotes, "broken": syntax}"""
+        fs.writeText(storagePath, corruptedJson)
+
+        // The provider should handle corrupted JSON gracefully and return empty results
+        val corruptedFacts = provider.load(concept, subject, scope)
+        assertEquals(0, corruptedFacts.size)
+
+        // Verify that loadAll also handles corrupted JSON gracefully
+        val allCorruptedFacts = provider.loadAll(subject, scope)
+        assertEquals(0, allCorruptedFacts.size)
+
+        // Verify that loadByDescription also handles corrupted JSON gracefully
+        val descriptionFacts = provider.loadByDescription("test", subject, scope)
+        assertEquals(0, descriptionFacts.size)
+    }
+
+    private fun getStoragePathForTest(
+        config: LocalMemoryConfig,
+        subject: MemorySubject,
+        scope: MemoryScope,
+        root: Path
+    ): Path {
+        val fs = JVMFileSystemProvider.ReadWrite
+        val segments = listOf(config.storageDirectory) + when (scope) {
+            is MemoryScope.Agent -> listOf("agent", scope.name, "subject", subject.name)
+            is MemoryScope.Feature -> listOf("feature", scope.id, "subject", subject.name)
+            is MemoryScope.Product -> listOf("product", scope.name, "subject", subject.name)
+            MemoryScope.CrossProduct -> listOf("organization", "subject", subject.name)
+        }
+        return segments.fold(root) { acc, segment -> fs.joinPath(acc, segment) }
     }
 }
