@@ -76,6 +76,8 @@ internal class ReportingLLMLLMClient(
     private val eventsChannel: Channel<Event>,
     private val underlyingClient: LLMClient
 ) : LLMClient {
+
+    override fun llmProvider(): LLMProvider = underlyingClient.llmProvider()
     sealed interface Event {
         data class Message(
             val llmClient: String,

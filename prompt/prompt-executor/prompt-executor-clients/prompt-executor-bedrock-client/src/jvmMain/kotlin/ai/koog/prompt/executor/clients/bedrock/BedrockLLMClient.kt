@@ -158,6 +158,13 @@ public class BedrockLLMClient(
         }
     }
 
+    /**
+     * Provides the current language learning model provider utilized by this client.
+     *
+     * @return the [LLMProvider] instance, specifically `LLMProvider.Bedrock` for this client.
+     */
+    override fun llmProvider(): LLMProvider = LLMProvider.Bedrock
+
     override suspend fun execute(
         prompt: Prompt,
         model: LLModel,
