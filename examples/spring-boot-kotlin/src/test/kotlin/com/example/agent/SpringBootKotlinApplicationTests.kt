@@ -13,7 +13,7 @@ import org.springframework.test.context.TestPropertySource
 
 @SpringBootTest(
     classes = [
-        KoogBootKotlinApplicationTests.TestConfig::class,
+        SpringBootKotlinApplicationTests.TestConfig::class,
     ],
     properties = [
         "debug=false", // set to true for troubleshooting
@@ -24,14 +24,14 @@ import org.springframework.test.context.TestPropertySource
 @TestPropertySource(
     locations = ["classpath:/application.yml"]
 )
-class KoogBootKotlinApplicationTests {
+class SpringBootKotlinApplicationTests {
 
     @Configuration
     @EnableAutoConfiguration
     @Suppress("unused")
     private class TestConfig
 
-    private val logger = LoggerFactory.getLogger(KoogBootKotlinApplicationTests::class.java)
+    private val logger = LoggerFactory.getLogger(SpringBootKotlinApplicationTests::class.java)
 
     @Autowired
     private lateinit var applicationContext: ApplicationContext
