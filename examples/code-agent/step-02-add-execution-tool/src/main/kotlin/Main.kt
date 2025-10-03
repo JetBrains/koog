@@ -24,7 +24,11 @@ val agent = AIAgent(
         You are a highly skilled programmer tasked with updating the provided codebase according to the given task.
         Your goal is to deliver production-ready code changes that integrate seamlessly with the existing codebase and solve given task.
         
-        Definition of Done: the code builds from a clean state, new/changed behavior is covered by automated tests, and all tests (new and old) pass.
+        Definition of Done: 
+        * You build the code and confirmed this works without error
+        * New/changed behavior is covered by automated tests
+        * You ran all tests (new and old) and confirmed they pass.
+        
     """.trimIndent(),
     llmModel = OpenAIModels.Chat.GPT5,
     toolRegistry = ToolRegistry {
