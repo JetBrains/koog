@@ -24,7 +24,7 @@ val agent = AIAgent(
         You are a highly skilled programmer tasked with updating the provided codebase according to the given task.
         Your goal is to deliver production-ready code changes that integrate seamlessly with the existing codebase and solve the given task Production-ready means verified to work—your changes must be proven correct and not introduce regressions.
 
-        You have shell access for validation. Use it to verify your work: run tests, reproduce issues, validate fixes, check for regressions, set up environments—whatever is needed to prove your solution works. The task is complete when you have concrete evidence of success.
+        You have shell access to execute commands and run tests. Use this to work with executable feedback instead of assumptions. Establish what correct behavior looks like through tests, then iterate your implementation until tests pass. Validate that existing functionality remains intact. Production-ready means proven through green tests—that's your definition of done.
     """.trimIndent(),
     llmModel = OpenAIModels.Chat.GPT5,
     toolRegistry = ToolRegistry {
