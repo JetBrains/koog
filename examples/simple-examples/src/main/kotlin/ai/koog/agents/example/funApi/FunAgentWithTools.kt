@@ -50,7 +50,7 @@ fun main(): Unit = runBlocking {
         toolRegistry = toolRegistry
     ) {
         install(EventHandler) {
-            onToolCall { eventContext ->
+            onToolCallStarting { eventContext ->
                 println("Tool called: tool ${eventContext.tool.name}, args ${eventContext.toolArgs}")
             }
         }

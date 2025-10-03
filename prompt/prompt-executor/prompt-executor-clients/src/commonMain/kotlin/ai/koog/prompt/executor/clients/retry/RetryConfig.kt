@@ -28,7 +28,9 @@ public data class RetryConfig(
         require(maxAttempts >= 1) { "maxAttempts must be at least 1" }
         require(backoffMultiplier >= 1.0) { "backoffMultiplier must be at least 1.0" }
         require(jitterFactor in 0.0..1.0) { "jitterFactor must be between 0.0 and 1.0" }
-        require(initialDelay <= maxDelay) { "initialDelay ($initialDelay) must not be greater than maxDelay ($maxDelay)" }
+        require(initialDelay <= maxDelay) {
+            "initialDelay ($initialDelay) must not be greater than maxDelay ($maxDelay)"
+        }
     }
 
     /**
@@ -97,6 +99,13 @@ public data class RetryConfig(
          * No retry - effectively disables retry logic.
          */
         public val DISABLED: RetryConfig = RetryConfig(maxAttempts = 1)
+
+        /**
+         * The default retry configuration used by clients implementing retry logic.
+         *
+         * Suitable for general-purpose use cases where standard retry behavior is required.
+         */
+        public val DEFAULT: RetryConfig = RetryConfig()
     }
 }
 

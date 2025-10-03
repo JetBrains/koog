@@ -19,19 +19,19 @@ Provides SQL-based persistence providers for agent checkpoints using JetBrains E
 
 ## Providers
 
-### ExposedPersistencyStorageProvider
+### ExposedPersistenceStorageProvider
 Base provider using Exposed ORM with configurable cleanup behavior.
 
-### PostgresPersistencyStorageProvider  
+### PostgresPersistenceStorageProvider  
 Production-ready provider with JSONB support and HikariCP pooling.
 
-### MySQLPersistencyStorageProvider
+### MySQLPersistenceStorageProvider
 Enterprise provider with JSON column support (MySQL 5.7+).
 
-### H2PersistencyStorageProvider
+### H2PersistenceStorageProvider
 Perfect for testing and embedded applications.
 
-### SQLitePersistencyStorageProvider
+### SQLitePersistenceStorageProvider
 Zero-configuration provider for desktop and mobile applications.
 
 All providers implement `AutoCloseable` for proper resource management and support configurable TTL cleanup.

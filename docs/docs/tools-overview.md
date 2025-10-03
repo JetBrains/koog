@@ -98,7 +98,7 @@ in the agent context rather than calling tools directly, as this ensures proper 
 agent environment.
 
 !!! tip
-    Ensure you have implemented proper [error handling](agent-events.md) in your tools to prevent agent failure.
+    Ensure you have implemented proper [error handling](agent-event-handlers.md) in your tools to prevent agent failure.
 
 The tools are called within a specific session context represented by `AIAgentLLMWriteSession`.
 It provides several methods for calling tools so that you can:

@@ -3,35 +3,44 @@ package ai.koog.agents.snapshot.feature
 import ai.koog.agents.core.agent.context.RollbackStrategy
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.snapshot.feature.RollbackToolRegistry
-import ai.koog.agents.snapshot.providers.NoPersistencyStorageProvider
-import ai.koog.agents.snapshot.providers.PersistencyStorageProvider
+import ai.koog.agents.snapshot.providers.NoPersistenceStorageProvider
+import ai.koog.agents.snapshot.providers.PersistenceStorageProvider
+
+@Deprecated(
+    "`PersistencyFeatureConfig` has been renamed to `PersistenceFeatureConfig`",
+    replaceWith = ReplaceWith(
+        expression = "PersistenceFeatureConfig",
+        "ai.koog.agents.snapshot.feature.PersistenceFeatureConfig"
+    )
+)
+public typealias PersistencyFeatureConfig = PersistenceFeatureConfig
 
 /**
  * Configuration class for the Snapshot feature.
  */
-public class PersistencyFeatureConfig : FeatureConfig() {
+public class PersistenceFeatureConfig : FeatureConfig() {
 
     /**
      * Defines the storage mechanism for persisting snapshots in the feature.
-     * This property accepts implementations of [PersistencyStorageProvider],
+     * This property accepts implementations of [PersistenceStorageProvider],
      * which manage how snapshots are stored and retrieved.
      *
-     * By default, the storage is set to [NoPersistencyStorageProvider], a no-op
+     * By default, the storage is set to [NoPersistenceStorageProvider], a no-op
      * implementation that does not persist any data. To enable actual state
-     * persistence, assign a custom implementation of [PersistencyStorageProvider]
+     * persistence, assign a custom implementation of [PersistenceStorageProvider]
      * to this property.
      */
-    public var storage: PersistencyStorageProvider = NoPersistencyStorageProvider()
+    public var storage: PersistenceStorageProvider = NoPersistenceStorageProvider()
 
     /**
      * Controls whether the feature's state should be automatically persisted.
      * When enabled, changes to the checkpoint are saved after each node execution through the assigned
-     * [PersistencyStorageProvider], ensuring the state can be restored later.
+     * [PersistenceStorageProvider], ensuring the state can be restored later.
      *
-     * Set this property to `true` to turn on automatic state persistency,
+     * Set this property to `true` to turn on automatic state persistence,
      * or `false` to disable it.
      */
-    public var enableAutomaticPersistency: Boolean = false
+    public var enableAutomaticPersistence: Boolean = false
 
     /**
      * Determines the strategy to be used for rolling back the agent's state to a previously saved checkpoint.
@@ -46,7 +55,7 @@ public class PersistencyFeatureConfig : FeatureConfig() {
 
     /**
      * Registry for rollback tools used when rolling back to checkpoints.
-     * Configure it during Persistency installation. Do not mutate later in withPersistency.
+     * Configure it during Persistence installation. Do not mutate later in withPersistence.
      */
     public var rollbackToolRegistry: RollbackToolRegistry = RollbackToolRegistry.EMPTY
 }

@@ -2,8 +2,8 @@ import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.tool.SayToUser
-import ai.koog.agents.snapshot.feature.Persistency
-import ai.koog.agents.snapshot.providers.InMemoryPersistencyStorageProvider
+import ai.koog.agents.snapshot.feature.Persistence
+import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
@@ -51,8 +51,8 @@ class SimpleGraphCheckpointTest {
             agentConfig = agentConfig,
             toolRegistry = toolRegistry
         ) {
-            install(Persistency) {
-                storage = InMemoryPersistencyStorageProvider("testAgentId")
+            install(Persistence) {
+                storage = InMemoryPersistenceStorageProvider()
             }
         }
 
@@ -78,7 +78,7 @@ class SimpleGraphCheckpointTest {
     @Test
     fun `test agent creates and saves checkpoints`() = runTest {
         // Create a snapshot provider to store checkpoints
-        val checkpointStorageProvider = InMemoryPersistencyStorageProvider("testAgentId")
+        val checkpointStorageProvider = InMemoryPersistenceStorageProvider()
 
         // Create a mock executor for testing
         val mockExecutor: PromptExecutor = getMockExecutor {
@@ -106,7 +106,7 @@ class SimpleGraphCheckpointTest {
             agentConfig = agentConfig,
             toolRegistry = toolRegistry
         ) {
-            install(Persistency) {
+            install(Persistence) {
                 storage = checkpointStorageProvider
             }
         }
@@ -115,14 +115,14 @@ class SimpleGraphCheckpointTest {
         agent.run("Start the test")
 
         // Verify that a checkpoint was created and saved
-        val checkpoint = checkpointStorageProvider.getCheckpoints().firstOrNull()
+        val checkpoint = checkpointStorageProvider.getCheckpoints(agent.id).firstOrNull()
         assertNotNull(checkpoint, "No checkpoint was created")
         assertEquals("checkpointNode", checkpoint?.nodeId, "Checkpoint has incorrect node ID")
     }
 
     @Test
     fun test_checkpoint_persists_history() = runTest {
-        val checkpointStorageProvider = InMemoryPersistencyStorageProvider("testAgentId")
+        val checkpointStorageProvider = InMemoryPersistenceStorageProvider()
 
         val mockExecutor: PromptExecutor = getMockExecutor {
             // No specific mock responses needed for this test
@@ -148,7 +148,7 @@ class SimpleGraphCheckpointTest {
             agentConfig = agentConfig,
             toolRegistry = toolRegistry
         ) {
-            install(Persistency) {
+            install(Persistence) {
                 storage = checkpointStorageProvider
             }
         }
@@ -157,7 +157,7 @@ class SimpleGraphCheckpointTest {
         agent.run("Start the test")
 
         // Verify that a checkpoint was created and saved
-        val checkpoint = checkpointStorageProvider.getCheckpoints().firstOrNull()
+        val checkpoint = checkpointStorageProvider.getCheckpoints(agent.id).firstOrNull()
         if (checkpoint == null) {
             error("checkpoint is null")
         }

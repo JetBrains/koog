@@ -1,8 +1,8 @@
 import ai.koog.agents.core.agent.AIAgentService
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.snapshot.feature.Persistency
+import ai.koog.agents.snapshot.feature.Persistence
 import ai.koog.agents.snapshot.feature.isTombstone
-import ai.koog.agents.snapshot.providers.InMemoryPersistencyStorageProvider
+import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.llm.OllamaModels
@@ -12,12 +12,12 @@ import kotlinx.coroutines.test.runTest
 import org.awaitility.kotlin.await
 import org.junit.jupiter.api.Test
 
-class PersistencyRunsTwiceTest {
+class PersistenceRunsTwiceTest {
 
     @Test
     fun `agent runs to end and on second run starts from beginning again`() = runTest {
         // Arrange
-        val provider = InMemoryPersistencyStorageProvider("persistency-test-agent")
+        val provider = InMemoryPersistenceStorageProvider()
 
         val testCollector = TestAgentLogsCollector()
 
@@ -32,13 +32,14 @@ class PersistencyRunsTwiceTest {
                 maxAgentIterations = 10
             ),
         ) {
-            install(Persistency) {
+            install(Persistence) {
                 storage = provider
-                enableAutomaticPersistency = true
+                enableAutomaticPersistence = true
             }
         }
 
         val firstAgent = agentService.createAgent(id = "SAME_ID")
+        val agentId1 = "SAME_ID"
 
         // Act: first run
         firstAgent.run("Start the test")
@@ -53,11 +54,11 @@ class PersistencyRunsTwiceTest {
 
         await.until {
             runBlocking {
-                provider.getLatestCheckpoint()?.isTombstone() == true
+                provider.getLatestCheckpoint(agentId1)?.isTombstone() == true
             }
         }
 
-        val firstCheckpoint = provider.getLatestCheckpoint()
+        val firstCheckpoint = provider.getLatestCheckpoint(agentId1)
 
         val secondAgent = agentService.createAgent(id = "SAME_ID")
 
@@ -67,7 +68,7 @@ class PersistencyRunsTwiceTest {
         // And still ends with a tombstone as the latest checkpoint
         await.until {
             runBlocking {
-                val latest2 = provider.getLatestCheckpoint()
+                val latest2 = provider.getLatestCheckpoint(agentId1)
                 latest2?.isTombstone() == true
                 latest2 != firstCheckpoint
             }
@@ -76,7 +77,7 @@ class PersistencyRunsTwiceTest {
 
     @Test
     fun `agent fails on the first run and second run running successfully`() = runTest {
-        val provider = InMemoryPersistencyStorageProvider("persistency-test-agent")
+        val provider = InMemoryPersistenceStorageProvider()
 
         val testCollector = TestAgentLogsCollector()
 
@@ -91,9 +92,9 @@ class PersistencyRunsTwiceTest {
                 maxAgentIterations = 10
             ),
         ) {
-            install(Persistency) {
+            install(Persistence) {
                 storage = provider
-                enableAutomaticPersistency = true
+                enableAutomaticPersistence = true
             }
         }
 
@@ -112,7 +113,7 @@ class PersistencyRunsTwiceTest {
 
         await.until {
             runBlocking {
-                provider.getCheckpoints().size == 2
+                provider.getCheckpoints(agentId).size == 2
             }
         }
 
@@ -131,7 +132,7 @@ class PersistencyRunsTwiceTest {
 
         await.until {
             runBlocking {
-                provider.getCheckpoints().filter { !it.isTombstone() }.size == 4
+                provider.getCheckpoints(agentId).filter { !it.isTombstone() }.size == 4
             }
         }
     }

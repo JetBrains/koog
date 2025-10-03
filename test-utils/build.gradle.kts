@@ -22,6 +22,7 @@ kotlin {
             dependencies {
                 api(kotlin("test-junit5"))
                 api(libs.junit.jupiter.params)
+                api(libs.testcontainers)
                 runtimeOnly(libs.slf4j.simple)
             }
         }

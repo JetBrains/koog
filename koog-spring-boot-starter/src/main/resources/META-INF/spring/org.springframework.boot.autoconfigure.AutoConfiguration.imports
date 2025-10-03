@@ -1,1 +1,6 @@
-ai.koog.spring.KoogAutoConfiguration
+ai.koog.spring.prompt.executor.clients.anthropic.AnthropicLLMAutoConfiguration
+ai.koog.spring.prompt.executor.clients.deepseek.DeepSeekLLMAutoConfiguration
+ai.koog.spring.prompt.executor.clients.google.GoogleLLMAutoConfiguration
+ai.koog.spring.prompt.executor.clients.ollama.OllamaLLMAutoConfiguration
+ai.koog.spring.prompt.executor.clients.openai.OpenAILLMAutoConfiguration
+ai.koog.spring.prompt.executor.clients.openrouter.OpenRouterLLMAutoConfiguration

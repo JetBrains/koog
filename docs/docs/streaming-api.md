@@ -137,7 +137,7 @@ llm.writeSession {
 
 ### Listening to stream events in event handlers
 
-You can listen to stream events in [agent events](agent-events.md).
+You can listen to stream events in [agent event handlers](agent-event-handlers.md).
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
@@ -152,7 +152,7 @@ fun GraphAIAgent.FeatureContext.installStreamingApi() {
 -->
 ```kotlin
 handleEvents {
-    onToolExecutionStarting { context ->
+    onToolCallStarting { context ->
         println("\n🔧 Using ${context.tool.name} with ${context.toolArgs}... ")
     }
     onLLMStreamingFrameReceived { context ->

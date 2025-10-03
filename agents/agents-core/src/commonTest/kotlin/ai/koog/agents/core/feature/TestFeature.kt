@@ -70,11 +70,11 @@ class TestFeature(val events: MutableList<String>, val runIds: MutableList<Strin
                 feature.events += "Node: execution error (name: ${event.node.name}, error: ${event.throwable.message})"
             }
 
-            pipeline.interceptToolExecutionStarting(context) { event ->
+            pipeline.interceptToolCallStarting(context) { event ->
                 feature.events += "Tool: call tool (tool: ${event.tool.name}, args: ${event.toolArgs})"
             }
 
-            pipeline.interceptToolExecutionCompleted(context) { event ->
+            pipeline.interceptToolCallCompleted(context) { event ->
                 feature.events +=
                     "Tool: finish tool call with result (tool: ${event.tool.name}, result: ${event.result?.let(event.tool::encodeResultToStringUnsafe) ?: "null"})"
             }

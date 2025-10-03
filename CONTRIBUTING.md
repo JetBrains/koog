@@ -39,6 +39,28 @@ so do familiarize yourself with the following guidelines.
       name test functions as `testXxx`. Don't use backticks in test names.
 * Comment on the existing issue if you want to work on it. Ensure that the issue not only describes a problem but also describes a solution that has received positive feedback. Propose a solution if none has been suggested.
 
+## Working with AI Code Agents
+
+This project includes some helpful guidelines to make AI coding assistants work better with codebase. 
+
+### Agent Guidelines
+
+You'll find an [AGENT.md](AGENT.md) file in the repository root.
+Think of it as a cheat sheet for AI assistants that explains:
+
+- **How the project works** — the overall architecture and main concepts
+- **Development workflow** — which commands to run and how to build things
+- **Testing patterns** — our approach to mocks and test structure
+- **Code conventions** — the style we follow and why
+
+### How to use `AGENT.md`
+
+When you're pairing with an AI assistant on this project:
+
+1. Share the `AGENT.md` file with your code agent of choice (Junie, Claude Code, Cursor, Copilot, etc.)
+2. The AI will understand our project structure and conventions better
+3. You can even use it as a starting point to create custom configs for specific agents
+
 ## Documentation
 
 The documentation is published on https://docs.koog.ai/. To propose changes or improvements to the documentation, go to the https://github.com/JetBrains/koog-docs repository.

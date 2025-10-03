@@ -146,7 +146,7 @@ class MyCustomStorageProvider : AgentCheckpointStorageProvider {
         // Implementation
     }
     
-    override suspend fun saveCheckpoint(agentCheckpointData: AgentCheckpointData) {
+    override suspend fun saveCheckpoint(agentId: String, agentCheckpointData: AgentCheckpointData) {
         // Implementation
     }
     

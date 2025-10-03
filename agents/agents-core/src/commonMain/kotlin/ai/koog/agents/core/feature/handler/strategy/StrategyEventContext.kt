@@ -46,6 +46,7 @@ public class StrategyCompletedContext<TFeature>(
     public val feature: TFeature,
     public val result: Any?,
     public val resultType: KType,
+    public val agentId: String
 ) : StrategyEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.StrategyCompleted
 }

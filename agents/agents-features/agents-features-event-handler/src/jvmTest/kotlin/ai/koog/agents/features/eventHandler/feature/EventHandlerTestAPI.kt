@@ -9,6 +9,7 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.params.LLMParams
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 
@@ -22,18 +23,27 @@ fun createAgent(
     strategy: AIAgentGraphStrategy<String, String>,
     agentId: String = "test-agent-id",
     promptExecutor: PromptExecutor? = null,
+    promptId: String? = null,
+    systemPrompt: String? = null,
+    userPrompt: String? = null,
+    assistantPrompt: String? = null,
+    temperature: Double? = null,
     toolRegistry: ToolRegistry? = null,
     model: LLModel? = null,
     installFeatures: GraphAIAgent.FeatureContext.() -> Unit = { }
 ): AIAgent<String, String> {
     val agentConfig = AIAgentConfig(
-        prompt = prompt("test", clock = testClock) {
-            system("Test system message")
-            user("Test user message")
-            assistant("Test assistant response")
+        prompt = prompt(
+            id = promptId ?: "Test prompt",
+            clock = testClock,
+            params = LLMParams(temperature = temperature)
+        ) {
+            system(systemPrompt ?: "Test system message")
+            user(userPrompt ?: "Test user message")
+            assistant(assistantPrompt ?: "Test assistant response")
         },
         model = model ?: OpenAIModels.Chat.GPT4o,
-        maxAgentIterations = 10
+        maxAgentIterations = 10,
     )
 
     return AIAgent(

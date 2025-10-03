@@ -31,7 +31,7 @@ fun main(): Unit = runBlocking {
     }
     val agent = openAiAgent(toolRegistry) {
         handleEvents {
-            onToolCall { context ->
+            onToolCallStarting { context ->
                 println("\n🔧 Using ${context.tool.name} with ${context.toolArgs}... ")
             }
             onLLMStreamingFrameReceived { context ->

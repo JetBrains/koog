@@ -28,68 +28,8 @@ class OllamaSimpleAgentIntegrationTest {
     }
 
     val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
-        onAgentStarting { eventContext ->
-            println(
-                "Agent started: agentId=${eventContext.agent.javaClass.simpleName}"
-            )
-        }
-
-        onAgentCompleted { eventContext ->
-            println("Agent finished: agentId=${eventContext.agentId}, result=${eventContext.result}")
-        }
-
-        onAgentExecutionFailed { eventContext ->
-            println("Agent error: agentId=${eventContext.agentId}, error=${eventContext.throwable.message}")
-        }
-
-        onStrategyStarting { eventContext ->
-            println("Strategy started: ${eventContext.strategy.name}")
-        }
-
-        onStrategyCompleted { eventContext ->
-            println("Strategy finished: strategy=${eventContext.strategy.name}, result=${eventContext.result}")
-        }
-
-        onNodeExecutionStarting { eventContext ->
-            println("Before node: node=${eventContext.node.javaClass.simpleName}, input=${eventContext.input}")
-        }
-
-        onNodeExecutionCompleted { eventContext ->
-            println(
-                "After node: node=${eventContext.node.javaClass.simpleName}, input=${eventContext.input}, output=${eventContext.output}"
-            )
-        }
-
-        onLLMCallStarting { eventContext ->
-            println("Before LLM call: prompt=${eventContext.prompt}")
-        }
-
-        onLLMCallCompleted { eventContext ->
-            val lastResponse = eventContext.responses.last().content
-            println("After LLM call: response=${lastResponse.take(100)}${if (lastResponse.length > 100) "..." else ""}")
-        }
-
-        onToolExecutionStarting { eventContext ->
-            println("Tool called: tool=${eventContext.tool.name}, args=${eventContext.toolArgs}")
+        onToolCallStarting { eventContext ->
             actualToolCalls.add(eventContext.tool.name)
-        }
-
-        onToolValidationFailed { eventContext ->
-            println(
-                "Tool validation error: tool=${eventContext.tool.name}, args=${eventContext.toolArgs}, value=${eventContext.error}"
-            )
-        }
-
-        onToolExecutionFailed { eventContext ->
-            println(
-                "Tool call failure: tool=${eventContext.tool.name}, args=${eventContext.toolArgs}, error=${eventContext.throwable.message}"
-            )
-        }
-
-        onToolExecutionCompleted { eventContext ->
-            println(
-                "Tool call result: tool=${eventContext.tool.name}, args=${eventContext.toolArgs}, result=${eventContext.result}"
-            )
         }
     }
 

@@ -48,7 +48,7 @@ CREATE TABLE agent_checkpoints (
 ### PostgreSQL
 
 ```kotlin
-PostgresPersistencyStorageProvider(
+PostgresPersistenceStorageProvider(
     persistenceId = "my-agent",
     database = Database.connect(
         url = "jdbc:postgresql://localhost:5432/agents",
@@ -63,7 +63,7 @@ PostgresPersistencyStorageProvider(
 ### MySQL
 
 ```kotlin
-MySQLPersistencyStorageProvider(
+MySQLPersistenceStorageProvider(
     persistenceId = "my-agent",
     database = Database.connect(
         url = "jdbc:mysql://localhost:3306/agents",
@@ -79,13 +79,13 @@ MySQLPersistencyStorageProvider(
 
 ```kotlin
 // In-memory (for testing)
-H2PersistencyStorageProvider.inMemory(
+H2PersistenceStorageProvider.inMemory(
     persistenceId = "test-agent",
     databaseName = "test_db"
 )
 
 // File-based (for persistence)
-H2PersistencyStorageProvider.fileBased(
+H2PersistenceStorageProvider.fileBased(
     persistenceId = "my-agent",
     filePath = "./data/h2/agent_checkpoints"
 )

@@ -1,6 +1,5 @@
 package ai.koog.agents.core.agent
 
-import ai.koog.agents.core.agent.functionalStrategy
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.testing.tools.getMockExecutor
@@ -52,7 +51,7 @@ class FunctionalAIAgentTest {
             toolRegistry = testToolRegistry
         ) {
             install(EventHandler) {
-                onToolCall { eventContext -> actualToolCalls += eventContext.toolArgs.toString() }
+                onToolCallStarting { eventContext -> actualToolCalls += eventContext.toolArgs.toString() }
             }
         }
 
@@ -92,7 +91,7 @@ class FunctionalAIAgentTest {
             toolRegistry = testToolRegistry,
         ) {
             install(EventHandler) {
-                onToolCall { eventContext -> actualToolCalls += eventContext.toolArgs.toString() }
+                onToolCallStarting { eventContext -> actualToolCalls += eventContext.toolArgs.toString() }
             }
         }
 
@@ -134,7 +133,7 @@ class FunctionalAIAgentTest {
             }
         ) {
             install(EventHandler) {
-                onToolCall { eventContext -> actualToolCalls += eventContext.toolArgs.toString() }
+                onToolCallStarting { eventContext -> actualToolCalls += eventContext.toolArgs.toString() }
             }
         }
 

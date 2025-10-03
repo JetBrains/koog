@@ -198,7 +198,7 @@ suspend fun main() {
             agentConfig = agentConfig,
         ) {
             handleEvents {
-                onToolCall { ctx ->
+                onToolCallStarting { ctx ->
                     println("Tool called: tool ${ctx.tool.name}, args ${ctx.toolArgs}")
                 }
             }

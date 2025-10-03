@@ -8,6 +8,11 @@ Agent features provide a way to extend and enhance the functionality of AI agent
 
 The Koog framework implements the following features:
 
-- [Event Handler](agent-events.md)
+- [Event Handler](agent-event-handlers.md)
 - [Tracing](tracing.md)
 - [Agent Memory](agent-memory.md)
+- [OpenTelemetry](opentelemetry-support.md)
+- [Agent Persistence (Snapshots)](agent-persistence.md)
+- Debugger
+- Tokenizer
+- SQL Persistence Providers

@@ -50,7 +50,7 @@ public annotation class DetachedPromptExecutorAPI
  */
 public class AIAgentLLMContext(
     tools: List<ToolDescriptor>,
-    public val toolRegistry: ToolRegistry = ToolRegistry.Companion.EMPTY,
+    public val toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     prompt: Prompt,
     model: LLModel,
     @property:DetachedPromptExecutorAPI

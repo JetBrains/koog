@@ -1,12 +1,13 @@
 # Overview
 
-Koog is a Kotlin-based framework designed to build and run AI agents entirely in idiomatic Kotlin.
+Koog is an open-source JetBrains framework designed to build and run AI agents entirely in idiomatic Kotlin.
 It lets you create agents that can interact with tools, handle complex workflows, and communicate with users.
 
 The framework supports the following types of agents:
 
 * Single-run agents with minimal configuration that process a single input and provide a response.
   An agent of this type operates within a single cycle of tool-calling to complete its task and provide a response.
+* Functional agents with lightweight, customizable logic defined by a lambda function to handle user input, interact with an LLM, call tools, and produce a final output.
 * Complex workflow agents with advanced capabilities that support custom strategies and configurations.
 
 ## Key features

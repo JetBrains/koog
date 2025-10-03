@@ -170,13 +170,13 @@ val agent = AIAgent(
     toolRegistry = toolRegistry
 ) {
     handleEvents {
-        onToolCall { e ->
+        onToolCallStarting { e ->
             println("Tool called: ${e.tool.name}, args=${e.toolArgs}")
         }
-        onAgentRunError { e ->
+        onAgentExecutionFailed { e ->
             println("Agent error: ${e.throwable.message}")
         }
-        onAgentFinished { e ->
+        onAgentCompleted { e ->
             println("Final result: ${e.result}")
         }
     }
