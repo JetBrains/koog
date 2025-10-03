@@ -14,6 +14,8 @@ kotlin = "2.3.20"
 kotlinx-coroutines = "1.10.2"
 kotlinx-datetime = "0.7.1-0.6.x-compat"
 kotlinx-serialization = "1.11.0"
+genai = "0.10.29"
+localagents = "0.1.0"
 ktlint = "14.2.0"
 ktor = "3.4.2"
 markdown-renderer = "0.39.2"
@@ -50,6 +52,10 @@ ktor-client-darwin = { module = "io.ktor:ktor-client-darwin" }
 ktor-client-js = { module = "io.ktor:ktor-client-js" }
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp" }
 markdown-renderer = { module = "com.mikepenz:multiplatform-markdown-renderer-m3", version.ref = "markdown-renderer" }
+
+# Local Android Models
+genai = { group = "com.google.mediapipe", name = "tasks-genai", version.ref = "genai" }
+localagents = { group = "com.google.ai.edge.localagents", name = "localagents-fc", version.ref = "localagents" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
