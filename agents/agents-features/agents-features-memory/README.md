@@ -149,16 +149,17 @@ memoryProvider.save(
 ### Step 3: Retrieve the Fact
 ```kotlin
 // Get the stored information
-try {
-    val greeting = memoryProvider.load(
-        concept = Concept("greeting", "User's name", FactType.SINGLE),
-        subject = MemorySubjects.User
-    )
-    println("Retrieved: $greeting")
-} catch (e: MemoryNotFoundException) {
+val greetingFacts = memoryProvider.load(
+    concept = Concept("greeting", "User's name", FactType.SINGLE),
+    subject = MemorySubject.User
+)
+
+if (greetingFacts.isEmpty()) {
     println("Information not found. First time here?")
-} catch (e: Exception) {
-    println("Error accessing memory: ${e.message}")
+} else {
+    // For single facts, typically you'd access the first (and only) element
+    val greeting = (greetingFacts.first() as SingleFact).value
+    println("Retrieved: $greeting")
 }
 ```
 
