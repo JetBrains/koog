@@ -42,6 +42,7 @@ internal class DashscopeChatCompletionRequest(
     val toolChoice: OpenAIToolChoice? = null,
     override val topP: Double? = null,
     override val topLogprobs: Int? = null,
+    val logprobs: Boolean? = null,
     val maxTokens: Int? = null,
     val frequencyPenalty: Double? = null,
     val presencePenalty: Double? = null,

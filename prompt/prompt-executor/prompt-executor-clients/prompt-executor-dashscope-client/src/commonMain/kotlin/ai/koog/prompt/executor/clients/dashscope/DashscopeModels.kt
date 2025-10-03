@@ -42,6 +42,8 @@ public object DashscopeModels : LLModelDefinitions {
             LLMCapability.ToolChoice,
             LLMCapability.Temperature,
             LLMCapability.MultipleChoices,
+            LLMCapability.Schema.JSON.Basic,
+            LLMCapability.Schema.JSON.Standard,
         ),
         contextLength = 1_000_000,
         maxOutputTokens = 16_384
