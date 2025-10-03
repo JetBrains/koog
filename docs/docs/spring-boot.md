@@ -7,6 +7,7 @@ agents into your Spring Boot applications with minimal setup.
 
 The `koog-spring-boot-starter` automatically configures LLM clients based on your application properties and provides
 ready-to-use beans for dependency injection. It supports all major LLM providers including:
+
 - OpenAI
 - Anthropic
 - Google
@@ -88,15 +89,27 @@ ai:
 
 Both `ai.koog.PROVIDER.api-key` and `ai.koog.PROVIDER.enabled` properties are used to activate the provider.
 
-If the provider supports the API Key (like OpenAI, Anthropic, Google), then `ai.koog.PROVIDER.enabled` is set to `true` by default.
+If the provider supports the API Key (like OpenAI, Anthropic, Google), then `ai.koog.PROVIDER.enabled` is set to `true`
+by default.
 
 If the provider does not support the API Key, like Ollama, `ai.koog.PROVIDER.enabled` is set to `false` by default,
 and provider should be enabled explicitly in the application configuration.
 
-Provider's base urls are set to their default values in the Spring Boot starter, but you may override it in your application.
+Provider's base urls are set to their default values in the Spring Boot starter, but you may override it in your
+application.
 
 !!! tip "Environment Variables"
 It's recommended to use environment variables for API keys to keep them secure and out of version control.
+Spring configuration uses LLM provider's well-known environment variables.
+For example, setting the environment variable `OPENAI_API_KEY` is enough for OpenAI spring configuration to activate.
+
+| LLM Provider | Environment Variables |
+|--------------|-----------------------|
+| Open AI      | `OPENAI_API_KEY`      |
+| Anthropic    | `ANTHROPIC_API_KEY`   |
+| Google       | `GOOGLE_API_KEY`      |
+| OpenRouter   | `OPENROUTER_API_KEY`  |
+| DeepSeek     | `DEEPSEEK_API_KEY`    |
 
 ### 3. Inject and Use
 

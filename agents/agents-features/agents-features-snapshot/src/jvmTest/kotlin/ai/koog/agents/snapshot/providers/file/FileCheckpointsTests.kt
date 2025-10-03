@@ -3,9 +3,9 @@ import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
-import ai.koog.agents.snapshot.feature.Persistency
+import ai.koog.agents.snapshot.feature.Persistence
 import ai.koog.agents.snapshot.feature.isTombstone
-import ai.koog.agents.snapshot.providers.file.JVMFilePersistencyStorageProvider
+import ai.koog.agents.snapshot.providers.file.JVMFilePersistenceStorageProvider
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.llm.OllamaModels
@@ -32,7 +32,7 @@ import kotlin.time.Duration.Companion.seconds
  */
 class FileCheckpointsTests {
     private lateinit var tempDir: Path
-    private lateinit var provider: JVMFilePersistencyStorageProvider
+    private lateinit var provider: JVMFilePersistenceStorageProvider
 
     val systemPrompt = "You are a test agent."
     val agentConfig = AIAgentConfig(
@@ -49,7 +49,7 @@ class FileCheckpointsTests {
     @BeforeTest
     fun setup() {
         tempDir = Files.createTempDirectory("agent-checkpoint-test")
-        provider = JVMFilePersistencyStorageProvider(tempDir, "testAgentId")
+        provider = JVMFilePersistenceStorageProvider(tempDir)
     }
 
     @AfterTest
@@ -70,7 +70,7 @@ class FileCheckpointsTests {
             toolRegistry = toolRegistry,
             id = agentId
         ) {
-            install(Persistency) {
+            install(Persistence) {
                 storage = provider
             }
         }
@@ -86,7 +86,7 @@ class FileCheckpointsTests {
         )
 
         // Verify that the checkpoint was saved to the file system
-        val checkpoints = provider.getCheckpoints().filter { !it.isTombstone() }
+        val checkpoints = provider.getCheckpoints(agentId).filter { !it.isTombstone() }
         assertEquals(1, checkpoints.size, "Should have one checkpoint")
         assertEquals("checkpointId", checkpoints.first().checkpointId)
     }
@@ -99,7 +99,7 @@ class FileCheckpointsTests {
             agentConfig = agentConfig,
             toolRegistry = toolRegistry
         ) {
-            install(Persistency) {
+            install(Persistence) {
                 storage = provider
             }
         }
@@ -129,7 +129,7 @@ class FileCheckpointsTests {
             )
         )
 
-        provider.saveCheckpoint(testCheckpoint)
+        provider.saveCheckpoint(agentId, testCheckpoint)
 
         val agent = AIAgent(
             promptExecutor = getMockExecutor { },
@@ -138,7 +138,7 @@ class FileCheckpointsTests {
             toolRegistry = toolRegistry,
             id = agentId
         ) {
-            install(Persistency) {
+            install(Persistence) {
                 storage = provider
             }
         }
@@ -180,8 +180,8 @@ class FileCheckpointsTests {
             )
         )
 
-        provider.saveCheckpoint(testCheckpoint)
-        provider.saveCheckpoint(testCheckpoint2)
+        provider.saveCheckpoint(agentId, testCheckpoint)
+        provider.saveCheckpoint(agentId, testCheckpoint2)
 
         val agent = AIAgent(
             promptExecutor = getMockExecutor { },
@@ -190,7 +190,7 @@ class FileCheckpointsTests {
             toolRegistry = toolRegistry,
             id = agentId
         ) {
-            install(Persistency) {
+            install(Persistence) {
                 storage = provider
             }
         }
@@ -216,17 +216,17 @@ class FileCheckpointsTests {
             toolRegistry = toolRegistry,
             id = agentId
         ) {
-            install(Persistency) {
+            install(Persistence) {
                 storage = provider
 
-                enableAutomaticPersistency = true
+                enableAutomaticPersistence = true
             }
         }
 
         agent.run("Start the test")
 
         // Verify that checkpoints were automatically created
-        val checkpoints = provider.getCheckpoints()
+        val checkpoints = provider.getCheckpoints(agentId)
         assertTrue(checkpoints.isNotEmpty(), "Should have automatically created checkpoints")
     }
 }

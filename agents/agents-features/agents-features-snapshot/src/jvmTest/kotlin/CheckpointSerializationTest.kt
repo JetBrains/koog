@@ -1,6 +1,6 @@
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
 import ai.koog.agents.snapshot.feature.tombstoneCheckpoint
-import ai.koog.agents.snapshot.providers.PersistencyUtils
+import ai.koog.agents.snapshot.providers.PersistenceUtils
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
@@ -35,7 +35,7 @@ class CheckpointSerializationTest {
             properties = null
         )
 
-        val json = PersistencyUtils.defaultCheckpointJson
+        val json = PersistenceUtils.defaultCheckpointJson
         val serialized = json.encodeToString(AgentCheckpointData.serializer(), checkpoint)
 
         // properties should be omitted due to explicitNulls = false
@@ -93,7 +93,7 @@ class CheckpointSerializationTest {
             properties = properties
         )
 
-        val json = PersistencyUtils.defaultCheckpointJson
+        val json = PersistenceUtils.defaultCheckpointJson
         val serialized = json.encodeToString(AgentCheckpointData.serializer(), checkpoint)
         val restored = json.decodeFromString(AgentCheckpointData.serializer(), serialized)
 
@@ -104,7 +104,7 @@ class CheckpointSerializationTest {
     @Test
     fun `serialize and deserialize tombstone checkpoint`() {
         val checkpoint = tombstoneCheckpoint(Clock.System.now())
-        val json = PersistencyUtils.defaultCheckpointJson
+        val json = PersistenceUtils.defaultCheckpointJson
         val serialized = json.encodeToString(AgentCheckpointData.serializer(), checkpoint)
         val restored = json.decodeFromString(AgentCheckpointData.serializer(), serialized)
 

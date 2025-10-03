@@ -47,6 +47,7 @@ kotlin {
             dependencies {
                 implementation(kotlin("test-junit5"))
                 implementation(project(":agents:agents-test"))
+                implementation(project(":test-utils"))
                 implementation(libs.mockk)
                 implementation(libs.testcontainers)
                 implementation(libs.testcontainers.postgresql)

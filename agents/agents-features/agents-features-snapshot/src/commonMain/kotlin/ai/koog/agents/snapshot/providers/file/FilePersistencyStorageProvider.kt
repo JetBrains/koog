@@ -1,16 +1,25 @@
 package ai.koog.agents.snapshot.providers.file
 
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
-import ai.koog.agents.snapshot.providers.PersistencyStorageProvider
-import ai.koog.agents.snapshot.providers.PersistencyUtils
+import ai.koog.agents.snapshot.providers.PersistenceStorageProvider
+import ai.koog.agents.snapshot.providers.PersistenceUtils
 import ai.koog.rag.base.files.FileSystemProvider
 import ai.koog.rag.base.files.createDirectory
 import ai.koog.rag.base.files.readText
 import ai.koog.rag.base.files.writeText
 import kotlinx.serialization.json.Json
 
+@Deprecated(
+    "`FilePersistencyStorageProvider` has been renamed to `FilePersistenceStorageProvider`",
+    replaceWith = ReplaceWith(
+        expression = "FilePersistenceStorageProvider",
+        "ai.koog.agents.snapshot.providers.file.FilePersistenceStorageProvider"
+    )
+)
+public typealias FilePersistencyStorageProvider<Path> = FilePersistenceStorageProvider<Path>
+
 /**
- * A file-based implementation of [PersistencyStorageProvider] that stores agent checkpoints in a file system.
+ * A file-based implementation of [PersistenceStorageProvider] that stores agent checkpoints in a file system.
  *
  * This implementation organizes checkpoints by agent ID and uses JSON serialization for storing and retrieving
  * checkpoint data. It relies on [FileSystemProvider.ReadWrite] for file system operations.
@@ -19,12 +28,11 @@ import kotlinx.serialization.json.Json
  * @param fs A file system provider enabling read and write operations for file storage.
  * @param root Root file path where the checkpoint storage will organize data.
  */
-public open class FilePersistencyStorageProvider<Path>(
-    private val persistenceId: String,
+public open class FilePersistenceStorageProvider<Path>(
     private val fs: FileSystemProvider.ReadWrite<Path>,
     private val root: Path,
-    private val json: Json = PersistencyUtils.defaultCheckpointJson
-) : PersistencyStorageProvider {
+    private val json: Json = PersistenceUtils.defaultCheckpointJson
+) : PersistenceStorageProvider {
 
     /**
      * Directory where agent checkpoints are stored
@@ -40,9 +48,9 @@ public open class FilePersistencyStorageProvider<Path>(
     /**
      * Directory for a specific agent's checkpoints
      */
-    private suspend fun agentCheckpointsDir(): Path {
+    private suspend fun agentCheckpointsDir(agentId: String): Path {
         val checkpointsDir = checkpointsDir()
-        val agentDir = fs.joinPath(checkpointsDir, persistenceId)
+        val agentDir = fs.joinPath(checkpointsDir, agentId)
         if (!fs.exists(agentDir)) {
             fs.createDirectory(agentDir)
         }
@@ -52,13 +60,13 @@ public open class FilePersistencyStorageProvider<Path>(
     /**
      * Get the path to a specific checkpoint file
      */
-    private suspend fun checkpointPath(checkpointId: String): Path {
-        val agentDir = agentCheckpointsDir()
+    private suspend fun checkpointPath(agentId: String, checkpointId: String): Path {
+        val agentDir = agentCheckpointsDir(agentId)
         return fs.joinPath(agentDir, checkpointId)
     }
 
-    override suspend fun getCheckpoints(): List<AgentCheckpointData> {
-        val agentDir = agentCheckpointsDir()
+    override suspend fun getCheckpoints(agentId: String): List<AgentCheckpointData> {
+        val agentDir = agentCheckpointsDir(agentId)
 
         if (!fs.exists(agentDir)) {
             return emptyList()
@@ -74,14 +82,14 @@ public open class FilePersistencyStorageProvider<Path>(
         }
     }
 
-    override suspend fun saveCheckpoint(agentCheckpointData: AgentCheckpointData) {
-        val checkpointPath = checkpointPath(agentCheckpointData.checkpointId)
+    override suspend fun saveCheckpoint(agentId: String, agentCheckpointData: AgentCheckpointData) {
+        val checkpointPath = checkpointPath(agentId, agentCheckpointData.checkpointId)
         val serialized = json.encodeToString(AgentCheckpointData.serializer(), agentCheckpointData)
         fs.writeText(checkpointPath, serialized)
     }
 
-    override suspend fun getLatestCheckpoint(): AgentCheckpointData? {
-        return getCheckpoints()
+    override suspend fun getLatestCheckpoint(agentId: String): AgentCheckpointData? {
+        return getCheckpoints(agentId)
             .maxByOrNull { it.createdAt }
     }
 }

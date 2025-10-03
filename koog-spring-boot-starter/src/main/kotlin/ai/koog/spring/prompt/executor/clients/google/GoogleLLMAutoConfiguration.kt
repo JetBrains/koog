@@ -3,8 +3,10 @@ package ai.koog.spring.prompt.executor.clients.google
 import ai.koog.prompt.executor.clients.google.GoogleClientSettings
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
+import ai.koog.spring.conditions.ConditionalOnPropertyNotEmpty
 import ai.koog.spring.prompt.executor.clients.ollama.OllamaKoogProperties
 import ai.koog.spring.prompt.executor.clients.toRetryingClient
+import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -38,20 +40,30 @@ import org.springframework.context.annotation.PropertySource
 @EnableConfigurationProperties(
     GoogleKoogProperties::class,
 )
-@ConditionalOnProperty(prefix = GoogleKoogProperties.PREFIX, name = ["api-key"])
-@ConditionalOnProperty(prefix = GoogleKoogProperties.PREFIX, name = ["enabled"], havingValue = "true")
 public class GoogleLLMAutoConfiguration(
     private val properties: GoogleKoogProperties
 ) {
 
+    private val logger = LoggerFactory.getLogger(GoogleLLMAutoConfiguration::class.java)
+
     /**
-     * Provides a [GoogleLLMClient] bean configured with the API key and base URL
-     * specified in the application's properties.
+     * Creates a [GoogleLLMClient] bean configured with application properties.
      *
-     * @return A configured instance of [GoogleLLMClient].
+     * This method initializes a [GoogleLLMClient] using the API key and base URL
+     * specified in the application's configuration. It is only executed if the
+     * `koog.ai.google.api-key` property is defined and `koog.ai.google.enabled` property is set
+     * to `true` in the application configuration.
+     *
+     * @return A [GoogleLLMClient] instance configured with the provided settings.
      */
     @Bean
+    @ConditionalOnPropertyNotEmpty(
+        prefix = GoogleKoogProperties.PREFIX,
+        name = "api-key"
+    )
+    @ConditionalOnProperty(prefix = GoogleKoogProperties.PREFIX, name = ["enabled"], havingValue = "true")
     public fun googleLLMClient(): GoogleLLMClient {
+        logger.info("Creating GoogleLLMClient with baseUrl=${properties.baseUrl}")
         return GoogleLLMClient(
             apiKey = properties.apiKey,
             settings = GoogleClientSettings(baseUrl = properties.baseUrl)
@@ -70,6 +82,7 @@ public class GoogleLLMAutoConfiguration(
     @Bean
     @ConditionalOnBean(GoogleLLMClient::class)
     public fun googleExecutor(client: GoogleLLMClient): SingleLLMPromptExecutor {
+        logger.info("Creating SingleLLMPromptExecutor (googleExecutor) for GoogleLLMClient")
         return SingleLLMPromptExecutor(client.toRetryingClient(properties.retry))
     }
 }

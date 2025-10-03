@@ -17,6 +17,9 @@ include(":agents:agents-features:agents-features-sql")
 include(":agents:agents-features:agents-features-trace")
 include(":agents:agents-features:agents-features-tokenizer")
 include(":agents:agents-features:agents-features-snapshot")
+include(":agents:agents-features:agents-features-a2a-core")
+include(":agents:agents-features:agents-features-a2a-server")
+include(":agents:agents-features:agents-features-a2a-client")
 
 include(":agents:agents-mcp")
 include(":agents:agents-mcp-server")
@@ -60,6 +63,15 @@ include(":embeddings:embeddings-llm")
 
 include(":rag:rag-base")
 include(":rag:vector-storage")
+
+include(":a2a:a2a-core")
+include(":a2a:a2a-server")
+include(":a2a:a2a-client")
+include(":a2a:a2a-test")
+include(":a2a:a2a-transport:a2a-transport-core-jsonrpc")
+include(":a2a:a2a-transport:a2a-transport-server-jsonrpc-http")
+include(":a2a:a2a-transport:a2a-transport-client-jsonrpc-http")
+include(":a2a:test-tck:a2a-test-server-tck")
 
 include(":koog-spring-boot-starter")
 
