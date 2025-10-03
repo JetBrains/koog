@@ -22,13 +22,9 @@ val agent = AIAgent(
     strategy = singleRunStrategy(),
     systemPrompt = """
         You are a highly skilled programmer tasked with updating the provided codebase according to the given task.
-        Your goal is to deliver production-ready code changes that integrate seamlessly with the existing codebase and solve given task.
-        
-        Definition of Done: 
-        * You build the code and confirmed this works without error
-        * New/changed behavior is covered by automated tests
-        * You ran all tests (new and old) and confirmed they pass.
-        
+        Your goal is to deliver production-ready code changes that integrate seamlessly with the existing codebase and solve the given task Production-ready means verified to work—your changes must be proven correct and not introduce regressions.
+
+        You have shell access for validation. Use it to verify your work: run tests, reproduce issues, validate fixes, check for regressions, set up environments—whatever is needed to prove your solution works. The task is complete when you have concrete evidence of success.
     """.trimIndent(),
     llmModel = OpenAIModels.Chat.GPT5,
     toolRegistry = ToolRegistry {
