@@ -182,9 +182,9 @@ class DebuggerTest {
                     launch {
                         val messageProcessor = messageProcessors.single() as FeatureMessageRemoteWriter
                         messageProcessor.initialize()
-                        
+
                         val isServerStartedCheck = withTimeoutOrNull(defaultClientServerTimeout) {
-                            messageProcessor.server.isStarted.first { it }
+                            messageProcessor.isOpen.first { it }
                         } != null
 
                         assertTrue(isServerStartedCheck, "Server did not start in time")
@@ -475,9 +475,9 @@ class DebuggerTest {
                     launch {
                         val messageProcessor = messageProcessors.single() as FeatureMessageRemoteWriter
                         messageProcessor.initialize()
-                        
+
                         val isServerStartedCheck = withTimeoutOrNull(defaultClientServerTimeout) {
-                            messageProcessor.server.isStarted.first { it }
+                            messageProcessor.isOpen.first { it }
                         } != null
 
                         assertTrue(isServerStartedCheck, "Server did not start in time")
@@ -649,9 +649,9 @@ class DebuggerTest {
                     launch {
                         val messageProcessor = messageProcessors.single() as FeatureMessageRemoteWriter
                         messageProcessor.initialize()
-                        
+
                         val isServerStartedCheck = withTimeoutOrNull(defaultClientServerTimeout) {
-                            messageProcessor.server.isStarted.first { it }
+                            messageProcessor.isOpen.first { it }
                         } != null
 
                         assertTrue(isServerStartedCheck, "Server did not start in time")
@@ -733,7 +733,7 @@ class DebuggerTest {
         """
         'KOOG_DEBUGGER_PORT' environment variable need to be set for a particular test via test framework.
         Currently, test framework that is used for Koog tests does not have ability to set env variables.
-        Setting env variable in Gradle task does not work either, because there are tests that verify both 
+        Setting env variable in Gradle task does not work either, because there are tests that verify both
         cases when env variable is set and when it is not set.
         Disable test for now. Need to be enabled when we can set env variables in tests.
     """
