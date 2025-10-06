@@ -63,7 +63,8 @@ When you're pairing with an AI assistant on this project:
 
 ## Documentation
 
-The documentation is published on https://docs.koog.ai/. To propose changes or improvements to the documentation, go to the https://github.com/JetBrains/koog-docs repository.
+The documentation is published on https://docs.koog.ai/, and its sources are in the
+[docs](https://github.com/JetBrains/koog/tree/develop/docs) folder in this repository.
 
 ## Building
 
