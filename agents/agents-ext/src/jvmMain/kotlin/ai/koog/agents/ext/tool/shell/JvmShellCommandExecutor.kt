@@ -26,13 +26,13 @@ public class JvmShellCommandExecutor : ShellCommandExecutor {
      *
      * @param command Shell command string to execute
      * @param workingDirectory Working directory, or null to use the current directory
-     * @param timeoutSeconds Maximum execution time in seconds, or null for no timeout
+     * @param timeoutSeconds Maximum execution time in seconds
      * @return [ExecutionResult] containing combined stdout/stderr output and process exit code
      */
     override suspend fun execute(
         command: String,
         workingDirectory: String?,
-        timeoutSeconds: Int?
+        timeoutSeconds: Int
     ): ShellCommandExecutor.ExecutionResult = withContext(Dispatchers.IO) {
         val shellCommand = if (IS_WINDOWS) {
             listOf("cmd.exe", "/c", command)
@@ -59,12 +59,7 @@ public class JvmShellCommandExecutor : ShellCommandExecutor {
             }
         }
 
-        val completed = if (timeoutSeconds != null) {
-            process.waitFor(timeoutSeconds.toLong(), TimeUnit.SECONDS)
-        } else {
-            process.waitFor()
-            true
-        }
+        val completed = process.waitFor(timeoutSeconds.toLong(), TimeUnit.SECONDS)
 
         if (!completed) {
             process.destroyForcibly()

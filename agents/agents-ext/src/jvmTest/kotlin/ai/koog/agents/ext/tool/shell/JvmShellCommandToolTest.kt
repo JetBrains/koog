@@ -2,6 +2,8 @@ package ai.koog.agents.ext.tool.shell
 
 import ai.koog.agents.core.tools.DirectToolCallsEnabler
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.condition.EnabledOnOs
@@ -13,6 +15,7 @@ import kotlin.io.path.createFile
 import kotlin.io.path.writeText
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 @OptIn(InternalAgentToolsApi::class)
 class JvmShellCommandToolTest {
@@ -408,5 +411,24 @@ class JvmShellCommandToolTest {
 
         assertEquals(expected, result.textForLLM())
         assertNull(result.exitCode)
+    }
+
+    // CANCELLATION TESTS
+
+    @Test
+    @EnabledOnOs(OS.LINUX, OS.MAC)
+    fun `executor can be cancelled with high timeout`() = runBlocking {
+        val startTime = System.currentTimeMillis()
+
+        val job = launch {
+            execute("sleep 3", null, 999)
+        }
+
+        delay(200)
+        job.cancel()
+        val elapsedMs = System.currentTimeMillis() - startTime
+
+        assertTrue(elapsedMs < 1000, "Should cancel quickly, but took ${elapsedMs}ms")
+        assertTrue(job.isCancelled, "Job should be cancelled")
     }
 }

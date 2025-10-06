@@ -12,7 +12,7 @@ public interface ShellCommandExecutor {
      * @param timeoutSeconds Maximum execution time in seconds, or null for no timeout
      * @return Output and exit code
      */
-    public suspend fun execute(command: String, workingDirectory: String?, timeoutSeconds: Int? = null): ExecutionResult
+    public suspend fun execute(command: String, workingDirectory: String?, timeoutSeconds: Int): ExecutionResult
 
     /**
      * Command execution result.
