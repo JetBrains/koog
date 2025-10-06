@@ -4,7 +4,7 @@
 
 A sample Kotlin Spring Boot application demonstrating how to build an interactive customer-support AI agent using Koog framework.
 The service exposes simple REST endpoints to launch an AI agent that can assist with order-related questions, track state and checkpoints, 
-and perform rollbacks using Koog snapshot Persistence feature.
+and perform rollbacks using Koog's Persistence feature.
 
 ## Description of the application
 

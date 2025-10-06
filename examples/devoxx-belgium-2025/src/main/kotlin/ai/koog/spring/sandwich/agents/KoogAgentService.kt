@@ -39,7 +39,7 @@ class KoogAgentService(
     private val agentIdsByUser = ConcurrentMap<String, ConcurrentMap<String, Unit>>()
     private val agentsById = ConcurrentMap<String, AIAgent<String, OrderUpdateSummary>>()
 
-    private val postgresStorage = createPostgresStorage()
+    private val postgresStorage by lazy { createPostgresStorage() }
 
     private fun createAgent(userId: String): AIAgent<String, OrderUpdateSummary> {
         val userTools = UserTools(userId)
