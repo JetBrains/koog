@@ -365,6 +365,36 @@ public object OpenAIModels : LLModelDefinitions {
             contextLength = 400_000,
             maxOutputTokens = 128_000,
         )
+
+        /**
+         * GPT-5 Codex is a GPT-5 family member specialized for coding and code reasoning:
+         * strong at code generation, editing, refactoring, and tool use.
+         *
+         * 400,000 context window
+         * 128,000 max output tokens
+         * Sep 30, 2024 knowledge cutoff
+         * Reasoning token support
+         *
+         * @see <a href="https://platform.openai.com/docs/models/gpt-5-codex">
+         */
+        public val GPT5Codex: LLModel = LLModel(
+            provider = LLMProvider.OpenAI,
+            id = "gpt-5-codex",
+            capabilities = listOf(
+                LLMCapability.Temperature,
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Schema.JSON.Standard,
+                LLMCapability.Speculation,
+                LLMCapability.Tools,
+                LLMCapability.ToolChoice,
+                LLMCapability.Document,
+                LLMCapability.Completion,
+                LLMCapability.MultipleChoices,
+                LLMCapability.OpenAIEndpoint.Responses
+            ),
+            contextLength = 400_000,
+            maxOutputTokens = 128_000,
+        )
     }
 
     /**
