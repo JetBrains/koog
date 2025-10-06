@@ -31,12 +31,7 @@ val agent = AIAgent(
 ) {
     handleEvents {
         onToolCallStarting { ctx ->
-            val truncatedArgs = if (ctx.toolArgs.toString().length > 100) {
-                ctx.toolArgs.toString().substring(0, 100) + "..."
-            } else {
-                ctx.toolArgs.toString()
-            }
-            println("Tool '${ctx.tool.name}' called with args: $truncatedArgs")
+            println("Tool '${ctx.tool.name}' called with args: ${ctx.toolArgs.toString().take(100)}")
         }
     }
 }
