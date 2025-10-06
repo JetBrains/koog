@@ -3,7 +3,7 @@ package ai.koog.agents.ext.tool.shell
 /**
  * Shell command executor using platform-specific shells (cmd.exe on Windows, sh on Unix).
  */
-public abstract class ShellCommandExecutor {
+public interface ShellCommandExecutor {
     /**
      * Executes a command and captures what it prints.
      *
@@ -12,7 +12,7 @@ public abstract class ShellCommandExecutor {
      * @param timeoutSeconds Maximum execution time in seconds, or null for no timeout
      * @return Output and exit code
      */
-    public abstract suspend fun execute(command: String, workingDirectory: String?, timeoutSeconds: Int? = null): ExecutionResult
+    public suspend fun execute(command: String, workingDirectory: String?, timeoutSeconds: Int? = null): ExecutionResult
 
     /**
      * Command execution result.

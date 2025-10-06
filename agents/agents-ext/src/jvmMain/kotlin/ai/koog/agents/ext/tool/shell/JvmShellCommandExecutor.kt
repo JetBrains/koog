@@ -13,7 +13,7 @@ import kotlin.time.Duration.Companion.seconds
  *
  * @see ShellCommandExecutor
  */
-public class JvmShellCommandExecutor : ShellCommandExecutor() {
+public class JvmShellCommandExecutor : ShellCommandExecutor {
 
     private companion object {
         val IS_WINDOWS = System.getProperty("os.name")
@@ -25,7 +25,7 @@ public class JvmShellCommandExecutor : ShellCommandExecutor() {
      * Executes a shell command and returns combined output and exit code.
      *
      * @param command Shell command string to execute
-     * @param workingDirectory Working directory, or null to use current directory
+     * @param workingDirectory Working directory, or null to use the current directory
      * @param timeoutSeconds Maximum execution time in seconds, or null for no timeout
      * @return [ExecutionResult] containing combined stdout/stderr output and process exit code
      */
@@ -33,7 +33,7 @@ public class JvmShellCommandExecutor : ShellCommandExecutor() {
         command: String,
         workingDirectory: String?,
         timeoutSeconds: Int?
-    ): ExecutionResult = withContext(Dispatchers.IO) {
+    ): ShellCommandExecutor.ExecutionResult = withContext(Dispatchers.IO) {
         val shellCommand = if (IS_WINDOWS) {
             listOf("cmd.exe", "/c", command)
         } else {
@@ -82,7 +82,7 @@ public class JvmShellCommandExecutor : ShellCommandExecutor() {
                 appendLine(timeoutMessage)
             }.trimEnd()
 
-            return@withContext ExecutionResult(
+            return@withContext ShellCommandExecutor.ExecutionResult(
                 output = combinedOutput,
                 exitCode = null
             )
@@ -101,7 +101,7 @@ public class JvmShellCommandExecutor : ShellCommandExecutor() {
             if (stderrResult.isNotEmpty()) appendLine(stderrResult)
         }.trimEnd()
 
-        ExecutionResult(
+        ShellCommandExecutor.ExecutionResult(
             output = combinedOutput,
             exitCode = process.exitValue()
         )
