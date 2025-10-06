@@ -39,6 +39,7 @@ import aws.sdk.kotlin.services.bedrockruntime.model.InvokeModelRequest
 import aws.sdk.kotlin.services.bedrockruntime.model.InvokeModelWithResponseStreamRequest
 import aws.sdk.kotlin.services.bedrockruntime.model.InvokeModelWithResponseStreamResponse
 import aws.sdk.kotlin.services.bedrockruntime.model.ResponseStream
+import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
 import aws.smithy.kotlin.runtime.net.url.Url
 import aws.smithy.kotlin.runtime.retries.StandardRetryStrategy
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -104,27 +105,20 @@ public class BedrockLLMClient(
     /**
      * Creates a new Bedrock LLM client configured with the specified AWS credentials and settings.
      *
-     * @param awsAccessKeyId The AWS access key ID for authentication
-     * @param awsSecretAccessKey The AWS secret access key for authentication
-     * @param awsSessionToken Optional session token for temporary credentials
+     * @param credentialsProvider AWS credentials provider for authentication with AWS services,
+     * e.g. [StaticCredentialsProvider] for providing AWS key and token explicitly.
      * @param settings Configuration settings for the Bedrock client, such as region and endpoint
      * @param clock A clock used for time-based operations
      * @return A configured [LLMClient] instance for Bedrock
      */
     public constructor(
-        awsAccessKeyId: String,
-        awsSecretAccessKey: String,
-        awsSessionToken: String? = null,
+        credentialsProvider: CredentialsProvider,
         settings: BedrockClientSettings = BedrockClientSettings(),
         clock: Clock = Clock.System,
     ) : this(
         bedrockClient = BedrockRuntimeClient {
             this.region = settings.region
-            this.credentialsProvider = StaticCredentialsProvider {
-                this.accessKeyId = awsAccessKeyId
-                this.secretAccessKey = awsSecretAccessKey
-                awsSessionToken?.let { this.sessionToken = it }
-            }
+            this.credentialsProvider = credentialsProvider
 
             // Configure a custom endpoint if provided
             settings.endpointUrl?.let { url ->

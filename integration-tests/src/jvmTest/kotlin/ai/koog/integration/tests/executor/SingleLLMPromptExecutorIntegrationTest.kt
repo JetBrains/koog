@@ -53,6 +53,7 @@ import ai.koog.prompt.params.LLMParams.ToolChoice
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.filterTextOnly
 import ai.koog.prompt.structure.executeStructured
+import aws.sdk.kotlin.runtime.auth.credentials.StaticCredentialsProvider
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -95,10 +96,12 @@ class SingleLLMPromptExecutorIntegrationTest {
             val googleClientInstance = GoogleLLMClient(readTestGoogleAIKeyFromEnv())
             val openRouterClientInstance = OpenRouterLLMClient(readTestOpenRouterKeyFromEnv())
             val bedrockClientInstance = BedrockLLMClient(
-                readAwsAccessKeyIdFromEnv(),
-                readAwsSecretAccessKeyFromEnv(),
-                readAwsSessionTokenFromEnv(),
-                BedrockClientSettings()
+                credentialsProvider = StaticCredentialsProvider {
+                    this.accessKeyId = readAwsAccessKeyIdFromEnv()
+                    this.secretAccessKey = readAwsSecretAccessKeyFromEnv()
+                    readAwsSessionTokenFromEnv()?.let { this.sessionToken = it }
+                },
+                settings = BedrockClientSettings()
             )
 
             return Stream.concat(
@@ -119,10 +122,12 @@ class SingleLLMPromptExecutorIntegrationTest {
         @JvmStatic
         fun bedrockCombinations(): Stream<Arguments> {
             val bedrockClientInstance = BedrockLLMClient(
-                readAwsAccessKeyIdFromEnv(),
-                readAwsSecretAccessKeyFromEnv(),
-                readAwsSessionTokenFromEnv(),
-                BedrockClientSettings(),
+                credentialsProvider = StaticCredentialsProvider {
+                    this.accessKeyId = readAwsAccessKeyIdFromEnv()
+                    this.secretAccessKey = readAwsSecretAccessKeyFromEnv()
+                    readAwsSessionTokenFromEnv()?.let { this.sessionToken = it }
+                },
+                settings = BedrockClientSettings()
             )
 
             return Models.bedrockModels().map { model -> Arguments.of(model, bedrockClientInstance) }
@@ -160,10 +165,12 @@ class SingleLLMPromptExecutorIntegrationTest {
             )
 
             LLMProvider.Bedrock -> BedrockLLMClient(
-                readAwsAccessKeyIdFromEnv(),
-                readAwsSecretAccessKeyFromEnv(),
-                readAwsSessionTokenFromEnv(),
-                BedrockClientSettings()
+                credentialsProvider = StaticCredentialsProvider {
+                    this.accessKeyId = readAwsAccessKeyIdFromEnv()
+                    this.secretAccessKey = readAwsSecretAccessKeyFromEnv()
+                    readAwsSessionTokenFromEnv()?.let { this.sessionToken = it }
+                },
+                settings = BedrockClientSettings()
             )
 
             else -> GoogleLLMClient(
