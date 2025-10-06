@@ -92,6 +92,7 @@ public class ToolCondition<Args, Result>(
 public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tokenizer? = null) {
     private val toolCallExactMatches = mutableMapOf<String, List<Message.Tool.Call>>()
     private val toolCallPartialMatches = mutableMapOf<String, List<Message.Tool.Call>>()
+    private val toolCallConditionalMatches = mutableMapOf<(String) -> Boolean, List<Message.Tool.Call>>()
     private var toolRegistry: ToolRegistry? = null
     private var toolActions: MutableList<ToolCondition<*, *>> = mutableListOf()
 
@@ -184,7 +185,11 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      * @param tool The tool to be called when the input matches
      * @param args The arguments to pass to the tool
      */
-    public fun <Args> addLLMAnswerPartialPattern(pattern: String, tool: Tool<Args, *>, args: Args) {
+    public fun <Args> addLLMAnswerPartialPattern(
+        pattern: String,
+        tool: Tool<Args, *>,
+        args: Args
+    ) {
         toolCallPartialMatches[pattern] = tool.encodeArgsToString(args).let { toolContent ->
             listOf(
                 Message.Tool.Call(
@@ -226,7 +231,10 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      * @param pattern The exact input string to match
      * @param toolCalls Tool calls with args
      */
-    public fun <Args> addLLMAnswerExactPattern(pattern: String, toolCalls: List<Pair<Tool<Args, *>, Args>>) {
+    public fun <Args> addLLMAnswerExactPattern(
+        pattern: String,
+        toolCalls: List<Pair<Tool<Args, *>, Args>>
+    ) {
         toolCallExactMatches[pattern] = toolCalls.map { (tool, args) ->
             tool.encodeArgsToString(args).let { toolContent ->
                 Message.Tool.Call(
@@ -264,6 +272,32 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
         }
 
         assistantExactMatches[pattern] = responses
+    }
+
+    /**
+     * Adds a conditional match for a tool call to the LLM answer processing system.
+     * This method associates a condition with a tool and its arguments, allowing conditional execution
+     * of the tool when the specified condition matches.
+     *
+     * @param condition A predicate function that takes a string input and returns a Boolean, indicating whether the condition is met.
+     * @param tool The tool object to be called if the condition is satisfied.
+     * @param args The arguments to be passed to the tool, which will be encoded to a string for the tool call.
+     */
+    public fun <Args> addLLMAnswerConditionalMatches(
+        condition: (String) -> Boolean,
+        tool: Tool<Args, *>,
+        args: Args
+    ) {
+        toolCallConditionalMatches[condition] = tool.encodeArgsToString(args).let { toolContent ->
+            listOf(
+                Message.Tool.Call(
+                    id = null,
+                    tool = tool.name,
+                    content = toolContent,
+                    metaInfo = ResponseMetaInfo.create(clock, outputTokensCount = tokenizer?.countTokens(toolContent))
+                )
+            )
+        }
     }
 
     /**
@@ -466,6 +500,16 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
             builder.addLLMAnswerPartialPattern(pattern, tool, args)
 
             return pattern
+        }
+
+        /**
+         * Configures the LLM to respond with a tool call based on a custom condition.
+         *
+         * @param condition A predicate function that takes a string input and returns a Boolean.
+         * The condition determines whether the associated tool call should be triggered.
+         */
+        public infix fun onCondition(condition: (String) -> Boolean) {
+            builder.addLLMAnswerConditionalMatches(condition, tool, args)
         }
     }
 
@@ -691,7 +735,8 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      * @return A configured MockLLMExecutor instance
      */
     public fun build(): PromptExecutor {
-        val processedAssistantMatches = assistantExactMatches.mapValues { (_, value) ->
+        // Exact Matches
+        val processedAssistantExactMatches = assistantExactMatches.mapValues { (_, value) ->
             val texts = value.map { text -> text.trimIndent() }
             texts.map { text ->
                 Message.Assistant(
@@ -701,12 +746,13 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
             }
         }
 
-        val combinedExactMatches = (processedAssistantMatches.keys + toolCallExactMatches.keys).associateWith { key ->
-            val assistantList = processedAssistantMatches[key] ?: emptyList()
+        val combinedExactMatches = (processedAssistantExactMatches.keys + toolCallExactMatches.keys).associateWith { key ->
+            val assistantList = processedAssistantExactMatches[key] ?: emptyList()
             val toolCallList = toolCallExactMatches[key] ?: emptyList()
             assistantList + toolCallList
         }
 
+        // Partial Matches
         val processedAssistantPartialMatches = assistantPartialMatches.mapValues { (_, value) ->
             val texts = value.map { text -> text.trimIndent() }
             texts.map { text ->
@@ -724,17 +770,27 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
                 assistantList + toolCallList
             }
 
-        val responseMatcher = ResponseMatcher(
-            partialMatches = combinedPartialMatches.takeIf { it.isNotEmpty() },
-            exactMatches = combinedExactMatches.takeIf { it.isNotEmpty() },
-            conditional = conditionalResponses.takeIf { it.isNotEmpty() }?.mapValues { (_, textResponse) ->
+        // Conditional Matches
+        val processedAssistantConditionalMatches: Map<(String) -> Boolean, List<Message.Response>> =
+            conditionalResponses.takeIf { it.isNotEmpty() }?.mapValues { (_, textResponse) ->
                 listOf(
                     Message.Assistant(
                         content = textResponse,
                         metaInfo = ResponseMetaInfo.create(clock)
                     )
                 )
-            },
+            } ?: emptyMap()
+
+        val combinedConditionalMatches = (processedAssistantConditionalMatches.keys + toolCallConditionalMatches.keys).associateWith { key ->
+            val assistantList = processedAssistantConditionalMatches[key] ?: emptyList()
+            val toolCallList = toolCallConditionalMatches[key] ?: emptyList()
+            assistantList + toolCallList
+        }
+
+        val responseMatcher = ResponseMatcher(
+            partialMatches = combinedPartialMatches.takeIf { it.isNotEmpty() },
+            exactMatches = combinedExactMatches.takeIf { it.isNotEmpty() },
+            conditional = combinedConditionalMatches,
             defaultResponse = listOf(Message.Assistant(defaultResponse, ResponseMetaInfo.create(clock)))
         )
 
