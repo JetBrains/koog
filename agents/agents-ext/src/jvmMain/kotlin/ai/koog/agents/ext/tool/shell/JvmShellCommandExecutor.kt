@@ -1,12 +1,11 @@
 package ai.koog.agents.ext.tool.shell
 
+import ai.koog.agents.ext.tool.shell.ShellCommandExecutor.ExecutionResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeout
 import java.io.File
 import java.util.concurrent.TimeUnit
-import kotlin.time.Duration.Companion.seconds
 
 /**
  * Shell command executor using ProcessBuilder for JVM platforms.
@@ -33,7 +32,7 @@ public class JvmShellCommandExecutor : ShellCommandExecutor {
         command: String,
         workingDirectory: String?,
         timeoutSeconds: Int
-    ): ShellCommandExecutor.ExecutionResult = withContext(Dispatchers.IO) {
+    ): ExecutionResult = withContext(Dispatchers.IO) {
         val shellCommand = if (IS_WINDOWS) {
             val systemRoot = System.getenv("SystemRoot")
                 ?: System.getenv("WINDIR")
@@ -80,16 +79,14 @@ public class JvmShellCommandExecutor : ShellCommandExecutor {
                 appendLine(timeoutMessage)
             }.trimEnd()
 
-            return@withContext ShellCommandExecutor.ExecutionResult(
+            return@withContext ExecutionResult(
                 output = combinedOutput,
                 exitCode = null
             )
         }
 
-        withTimeout(1.seconds) {
-            stdoutJob.join()
-            stderrJob.join()
-        }
+        stdoutJob.join()
+        stderrJob.join()
 
         val stdoutResult = stdoutBuilder.toString().trimEnd()
         val stderrResult = stderrBuilder.toString().trimEnd()
@@ -99,7 +96,7 @@ public class JvmShellCommandExecutor : ShellCommandExecutor {
             if (stderrResult.isNotEmpty()) appendLine(stderrResult)
         }.trimEnd()
 
-        ShellCommandExecutor.ExecutionResult(
+        ExecutionResult(
             output = combinedOutput,
             exitCode = process.exitValue()
         )
