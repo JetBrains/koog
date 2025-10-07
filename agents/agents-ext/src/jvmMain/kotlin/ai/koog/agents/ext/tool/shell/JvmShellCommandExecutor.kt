@@ -49,13 +49,13 @@ public class JvmShellCommandExecutor : ShellCommandExecutor {
 
         val stdoutJob = launch(Dispatchers.IO) {
             process.inputStream.bufferedReader().useLines { lines ->
-                lines.forEach { stdoutBuilder.append(it).append('\n') }
+                lines.forEach { stdoutBuilder.append(it).appendLine() }
             }
         }
 
         val stderrJob = launch(Dispatchers.IO) {
             process.errorStream.bufferedReader().useLines { lines ->
-                lines.forEach { stderrBuilder.append(it).append('\n') }
+                lines.forEach { stderrBuilder.append(it).appendLine() }
             }
         }
 
@@ -66,8 +66,8 @@ public class JvmShellCommandExecutor : ShellCommandExecutor {
             stdoutJob.cancel()
             stderrJob.cancel()
 
-            val partialStdout = stdoutBuilder.toString().replace("\r\n", "\n").trimEnd()
-            val partialStderr = stderrBuilder.toString().replace("\r\n", "\n").trimEnd()
+            val partialStdout = stdoutBuilder.toString().trimEnd()
+            val partialStderr = stderrBuilder.toString().trimEnd()
 
             val timeoutMessage = "Command timed out after $timeoutSeconds seconds"
 
@@ -88,8 +88,8 @@ public class JvmShellCommandExecutor : ShellCommandExecutor {
             stderrJob.join()
         }
 
-        val stdoutResult = stdoutBuilder.toString().replace("\r\n", "\n").trimEnd()
-        val stderrResult = stderrBuilder.toString().replace("\r\n", "\n").trimEnd()
+        val stdoutResult = stdoutBuilder.toString().trimEnd()
+        val stderrResult = stderrBuilder.toString().trimEnd()
 
         val combinedOutput = buildString {
             if (stdoutResult.isNotEmpty()) appendLine(stdoutResult)

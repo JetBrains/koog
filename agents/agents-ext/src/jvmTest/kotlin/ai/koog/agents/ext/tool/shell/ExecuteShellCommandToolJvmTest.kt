@@ -18,7 +18,7 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 @OptIn(InternalAgentToolsApi::class)
-class JvmShellCommandToolTest {
+class ExecuteShellCommandToolJvmTest {
 
     @OptIn(InternalAgentToolsApi::class)
     private val enabler = object : DirectToolCallsEnabler {}
