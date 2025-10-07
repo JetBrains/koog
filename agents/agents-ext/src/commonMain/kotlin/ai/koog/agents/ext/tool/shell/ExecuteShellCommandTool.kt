@@ -31,7 +31,7 @@ public class ExecuteShellCommandTool(
         @property:LLMDescription(
             "The exact shell command line to execute." +
                 "- Examples: 'git status', './gradlew assemble', 'ls -la'" +
-                "- Do not include 'cd' commands; use workingDirectory instead."
+                "- Each call runs in a new isolated shell, so directory changes (like `cd`) do NOT persist. Use workingDirectory instead of cd."
         )
         val command: String,
         @property:LLMDescription(
