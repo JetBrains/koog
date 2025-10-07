@@ -35,9 +35,12 @@ public class JvmShellCommandExecutor : ShellCommandExecutor {
         timeoutSeconds: Int
     ): ShellCommandExecutor.ExecutionResult = withContext(Dispatchers.IO) {
         val shellCommand = if (IS_WINDOWS) {
-            listOf("cmd.exe", "/c", command)
+            val systemRoot = System.getenv("SystemRoot")
+                ?: System.getenv("WINDIR")
+                ?: "C:\\Windows"
+            listOf("$systemRoot\\System32\\cmd.exe", "/c", command)
         } else {
-            listOf("bash", "-c", command)
+            listOf("/bin/bash", "-c", command)
         }
 
         val process = ProcessBuilder(shellCommand)
