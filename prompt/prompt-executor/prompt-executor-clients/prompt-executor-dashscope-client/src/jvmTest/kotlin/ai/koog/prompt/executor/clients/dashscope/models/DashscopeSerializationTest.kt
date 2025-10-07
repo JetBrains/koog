@@ -132,10 +132,13 @@ class DashscopeSerializationTest {
             put("logprobs", JsonPrimitive(true))
             put("topLogprobs", JsonPrimitive(3))
             put("topP", JsonPrimitive(0.95))
-            put("stop", buildJsonArray {
-                add(JsonPrimitive("STOP"))
-                add(JsonPrimitive("END"))
-            })
+            put(
+                "stop",
+                buildJsonArray {
+                    add(JsonPrimitive("STOP"))
+                    add(JsonPrimitive("END"))
+                }
+            )
         }
 
         val request = json.decodeFromJsonElement(DashscopeChatCompletionRequest.serializer(), jsonInput)
