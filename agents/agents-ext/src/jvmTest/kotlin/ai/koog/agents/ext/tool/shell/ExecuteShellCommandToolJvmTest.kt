@@ -30,20 +30,20 @@ class ExecuteShellCommandToolJvmTest {
 
     private suspend fun execute(
         command: String,
-        workingDirectory: String? = null,
         timeoutSeconds: Int = 60,
+        workingDirectory: String? = null,
         confirmationHandler: ShellCommandConfirmationHandler = BraveModeConfirmationHandler()
     ): ExecuteShellCommandTool.Result {
         val tool = ExecuteShellCommandTool(executor, confirmationHandler)
         return tool.execute(
-            ExecuteShellCommandTool.Args(command, workingDirectory, timeoutSeconds),
+            ExecuteShellCommandTool.Args(command, timeoutSeconds, workingDirectory),
             enabler
         )
     }
 
     @Test
     fun `args defaults`() {
-        val args = ExecuteShellCommandTool.Args("echo hello")
+        val args = ExecuteShellCommandTool.Args("echo hello", 60)
 
         assertEquals("echo hello", args.command)
         assertNull(args.workingDirectory)
@@ -56,8 +56,8 @@ class ExecuteShellCommandToolJvmTest {
         val descriptor = tool.descriptor
 
         assertEquals("__execute_shell_command__", descriptor.name)
-        assertEquals(listOf("command"), descriptor.requiredParameters.map { it.name })
-        assertEquals(listOf("workingDirectory", "timeoutSeconds"), descriptor.optionalParameters.map { it.name })
+        assertEquals(listOf("command", "timeoutSeconds"), descriptor.requiredParameters.map { it.name })
+        assertEquals(listOf("workingDirectory"), descriptor.optionalParameters.map { it.name })
     }
 
     // SUCCESSFUL COMMAND EXECUTION TESTS
@@ -421,7 +421,7 @@ class ExecuteShellCommandToolJvmTest {
         val startTime = System.currentTimeMillis()
 
         val job = launch {
-            execute("sleep 3", null, 999)
+            execute("sleep 3", 999)
         }
 
         delay(200)

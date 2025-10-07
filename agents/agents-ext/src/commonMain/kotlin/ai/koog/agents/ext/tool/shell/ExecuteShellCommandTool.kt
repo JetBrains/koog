@@ -35,15 +35,18 @@ public class ExecuteShellCommandTool(
         )
         val command: String,
         @property:LLMDescription(
+            "Maximum execution time, in seconds. " +
+                "Commands that exceed this limit are terminated; " +
+                "commands that finish sooner return immediately. " +
+                "Choose a value that balances long-running work (to avoid cutting it off near completion) " +
+                "against the risk of hangs, infinite loops, or waiting indefinitely."
+        )
+        val timeoutSeconds: Int,
+        @property:LLMDescription(
             "An absolute filesystem path where the command runs. Must exist and be accessible; otherwise execution will fail immediately." +
                 "Optional. Default: uses the current working directory when null."
         )
-        val workingDirectory: String? = null,
-        @property:LLMDescription(
-            "Maximum execution time in seconds. If the command runs longer, it will be terminated." +
-                "Optional. Default: 60 seconds."
-        )
-        val timeoutSeconds: Int = 60
+        val workingDirectory: String? = null
     )
 
     /**
@@ -99,7 +102,7 @@ public class ExecuteShellCommandTool(
      * with the specified timeout. If denied, timed out, or crashes, returns a result explaining
      * what happened.
      *
-     * @param args The command string, optional working directory, and timeout duration
+     * @param args The command string, timeout duration, optional working directory
      * @return Result containing the command output and exit code, or an error message explaining why it didn't run
      */
     override suspend fun execute(args: Args): Result = when (
