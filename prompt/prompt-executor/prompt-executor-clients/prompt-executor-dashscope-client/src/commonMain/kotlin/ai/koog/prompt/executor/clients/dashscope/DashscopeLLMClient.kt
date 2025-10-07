@@ -36,7 +36,7 @@ import kotlinx.datetime.Clock
  * @property timeoutConfig Configuration for connection timeouts including request, connection, and socket timeouts.
  */
 public class DashscopeClientSettings(
-    baseUrl: String = "https://dashscope.aliyuncs.com/",
+    baseUrl: String = "https://dashscope-intl.aliyuncs.com/",
     chatCompletionsPath: String = "compatible-mode/v1/chat/completions",
     timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig()
 ) : OpenAIBasedSettings(baseUrl, chatCompletionsPath, timeoutConfig)
