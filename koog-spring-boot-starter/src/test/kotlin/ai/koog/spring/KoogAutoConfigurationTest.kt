@@ -604,7 +604,7 @@ class KoogAutoConfigurationTest {
             )
             .run { context ->
                 val beanNames = context.getBeanNamesForType<SingleLLMPromptExecutor>()
-                assertEquals(5, beanNames.size)
+                assertEquals(6, beanNames.size)
                 assertTrue("openAIExecutor" in beanNames)
                 assertTrue("anthropicExecutor" in beanNames)
                 assertTrue("googleExecutor" in beanNames)
