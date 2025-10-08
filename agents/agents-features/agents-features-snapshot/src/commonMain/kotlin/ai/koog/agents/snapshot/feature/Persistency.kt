@@ -56,7 +56,7 @@ public typealias Persistency = Persistence
  */
 @OptIn(ExperimentalUuidApi::class, ExperimentalTime::class, InternalAgentsApi::class)
 public class Persistence(
-    private val persistenceStorageProvider: PersistenceStorageProvider,
+    private val persistenceStorageProvider: PersistenceStorageProvider<*>,
     internal val clock: Clock = Clock.System,
 ) {
     /**

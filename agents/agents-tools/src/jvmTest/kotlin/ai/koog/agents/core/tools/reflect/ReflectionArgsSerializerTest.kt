@@ -70,7 +70,13 @@ class ReflectionArgsSerializerTest {
 
         @Tool
         @LLMDescription("Specific tool without tool annotation")
-        suspend fun executeDouble(@LLMDescription("arg Long") argDouble: Double): String {
+        suspend fun executeDouble(@LLMDescription("arg Double") argDouble: Double): String {
+            return "Specific tool called with $argDouble"
+        }
+
+        @Tool("custom_name")
+        @LLMDescription("Specific tool without tool annotation")
+        suspend fun executeCustomName(@LLMDescription("arg Double") argDouble: Double): String {
             return "Specific tool called with $argDouble"
         }
 
@@ -78,9 +84,14 @@ class ReflectionArgsSerializerTest {
         @LLMDescription("Specific tool without tool annotation")
         suspend fun executeWithArgs(
             @LLMDescription("args Tool") args: MySpecificToolArgs,
-            @LLMDescription("args Tool") args2: MySpecificToolArgs
+            @LLMDescription("args2 Tool") args2: MySpecificToolArgs
         ): String {
-            return "Specific tool called with ${args.argLong} and ${args.argDouble}"
+            return "Specific tool called with ${
+                listOf(
+                    args,
+                    args2
+                ).joinToString(", ") { "${it.argLong} and ${it.argDouble}" }
+            }"
         }
 
         suspend fun executeWithListArg(@LLMDescription("args Tool") args: List<MySpecificToolArgs>): String {
@@ -117,12 +128,28 @@ class ReflectionArgsSerializerTest {
     }
 
     @Test
+    fun testToolCustomName() {
+        val toolClass = MySpecificTool()
+        val tool = toolClass::executeCustomName.asTool(ToolsFromCallableTest.Companion.json)
+
+        assertEquals("custom_name", tool.name)
+        assertEquals("custom_name", tool.descriptor.name)
+        assertEquals(
+            "Specific tool called with 42.0",
+            runBlocking {
+                val args = tool.decodeArgs(buildJsonObject { put("argDouble", JsonPrimitive(42.0)) })
+                tool.execute(args, ToolsEnabler)
+            },
+        )
+    }
+
+    @Test
     fun testToolWithArgs() {
         val toolClass = MySpecificTool()
         val tool = toolClass::executeWithArgs.asTool(ToolsFromCallableTest.Companion.json)
 
         assertEquals(
-            "Specific tool called with 42 and 3.14",
+            "Specific tool called with 42 and 3.14, 42 and 3.14",
             runBlocking {
                 val args: ToolFromCallable.VarArgs =
                     tool.decodeArgs(

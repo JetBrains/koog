@@ -3,6 +3,7 @@ package ai.koog.agents.snapshot.providers.file
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
 import ai.koog.agents.snapshot.providers.PersistenceStorageProvider
 import ai.koog.agents.snapshot.providers.PersistenceUtils
+import ai.koog.agents.snapshot.providers.filters.AgentCheckpointPredicateFilter
 import ai.koog.rag.base.files.FileSystemProvider
 import ai.koog.rag.base.files.createDirectory
 import ai.koog.rag.base.files.readText
@@ -32,7 +33,7 @@ public open class FilePersistenceStorageProvider<Path>(
     private val fs: FileSystemProvider.ReadWrite<Path>,
     private val root: Path,
     private val json: Json = PersistenceUtils.defaultCheckpointJson
-) : PersistenceStorageProvider {
+) : PersistenceStorageProvider<AgentCheckpointPredicateFilter> {
 
     /**
      * Directory where agent checkpoints are stored
@@ -65,14 +66,14 @@ public open class FilePersistenceStorageProvider<Path>(
         return fs.joinPath(agentDir, checkpointId)
     }
 
-    override suspend fun getCheckpoints(agentId: String): List<AgentCheckpointData> {
+    override suspend fun getCheckpoints(agentId: String, filter: AgentCheckpointPredicateFilter?): List<AgentCheckpointData> {
         val agentDir = agentCheckpointsDir(agentId)
 
         if (!fs.exists(agentDir)) {
             return emptyList()
         }
 
-        return fs.list(agentDir).mapNotNull { path ->
+        val checkpoints = fs.list(agentDir).mapNotNull { path ->
             try {
                 val content = fs.readText(path)
                 json.decodeFromString<AgentCheckpointData>(content)
@@ -80,6 +81,12 @@ public open class FilePersistenceStorageProvider<Path>(
                 null
             }
         }
+
+        if (filter != null) {
+            return checkpoints.filter { filter.check(it) }
+        }
+
+        return checkpoints
     }
 
     override suspend fun saveCheckpoint(agentId: String, agentCheckpointData: AgentCheckpointData) {
@@ -88,8 +95,7 @@ public open class FilePersistenceStorageProvider<Path>(
         fs.writeText(checkpointPath, serialized)
     }
 
-    override suspend fun getLatestCheckpoint(agentId: String): AgentCheckpointData? {
-        return getCheckpoints(agentId)
+    override suspend fun getLatestCheckpoint(agentId: String, filter: AgentCheckpointPredicateFilter?): AgentCheckpointData? =
+        getCheckpoints(agentId, filter)
             .maxByOrNull { it.createdAt }
-    }
 }

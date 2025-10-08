@@ -393,7 +393,8 @@ class RetryingLLMClientTest {
         private var failuresBeforeSuccess: Int = 0,
         private var streamFailuresBeforeSuccess: Int = 0,
         private val failureMessage: String = "Mock failure",
-        private val throwCancellation: Boolean = false
+        private val throwCancellation: Boolean = false,
+        private val llmProvider: LLMProvider = LLMProvider.OpenAI,
     ) : LLMClient {
 
         var executeCalls = 0
@@ -405,6 +406,8 @@ class RetryingLLMClientTest {
         private var streamFailures = 0
         private var multipleChoicesFailures = 0
         private var moderateFailures = 0
+
+        override fun llmProvider(): LLMProvider = llmProvider
 
         override suspend fun execute(
             prompt: Prompt,

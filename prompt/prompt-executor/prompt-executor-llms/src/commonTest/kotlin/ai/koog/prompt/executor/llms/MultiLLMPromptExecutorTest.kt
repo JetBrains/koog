@@ -41,6 +41,8 @@ class MultiLLMPromptExecutorTest {
             return listOf(Message.Assistant("Anthropic response", ResponseMetaInfo.create(clock = mockClock)))
         }
 
+        override fun llmProvider(): LLMProvider = LLMProvider.Anthropic
+
         override fun executeStreaming(
             prompt: Prompt,
             model: LLModel,
@@ -62,6 +64,8 @@ class MultiLLMPromptExecutorTest {
         ): List<Message.Response> {
             return listOf(Message.Assistant("Gemini response", ResponseMetaInfo.create(clock = mockClock)))
         }
+
+        override fun llmProvider(): LLMProvider = LLMProvider.Google
 
         override fun executeStreaming(
             prompt: Prompt,
@@ -160,9 +164,9 @@ class MultiLLMPromptExecutorTest {
     @Test
     fun testExecuteStreamingWithAnthropic() = runTest {
         val executor = MultiLLMPromptExecutor(
-            LLMProvider.OpenAI to MockOpenAILLMClient(clock = mockClock),
-            LLMProvider.Anthropic to MockAnthropicLLMClient(),
-            LLMProvider.Google to MockGoogleLLMClient()
+            MockOpenAILLMClient(clock = mockClock),
+            MockAnthropicLLMClient(),
+            MockGoogleLLMClient()
         )
 
         val model = AnthropicModels.Sonnet_3_7
@@ -185,9 +189,9 @@ class MultiLLMPromptExecutorTest {
     @Test
     fun testExecuteStreamingWithGoogle() = runTest {
         val executor = MultiLLMPromptExecutor(
-            LLMProvider.OpenAI to MockOpenAILLMClient(clock = mockClock),
-            LLMProvider.Anthropic to MockAnthropicLLMClient(),
-            LLMProvider.Google to MockGoogleLLMClient()
+            MockOpenAILLMClient(clock = mockClock),
+            MockAnthropicLLMClient(),
+            MockGoogleLLMClient()
         )
 
         val model = GoogleModels.Gemini2_0Flash

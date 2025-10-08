@@ -120,7 +120,7 @@ public class StreamFrameFlowBuilder(
             val previous: PendingToolCall? = pendingToolCallRef.load()
             when {
                 previous == null ->
-                    throw StreamFrameFlowBuilderError.NoPartialToolCallToComplete
+                    throw StreamFrameFlowBuilderError.NoPartialToolCallToComplete()
 
                 previous.index != index ->
                     throw StreamFrameFlowBuilderError.UnexpectedPartialToolCallIndex(previous.index, index)

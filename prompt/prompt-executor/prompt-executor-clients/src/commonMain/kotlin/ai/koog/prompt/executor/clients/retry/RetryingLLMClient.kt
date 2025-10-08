@@ -5,6 +5,7 @@ import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.model.LLMChoice
+import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
@@ -36,6 +37,17 @@ public class RetryingLLMClient(
     private val delegate: LLMClient,
     internal val config: RetryConfig = RetryConfig()
 ) : LLMClient {
+
+    /**
+     * Retrieves the configured instance of the `LLMProvider` in use.
+     *
+     * This method returns the `LLMProvider` instance associated with the client,
+     * facilitating identification or interaction with the specific provider of
+     * large language models (e.g., Google, OpenAI, Meta, etc.).
+     *
+     * @return the current `LLMProvider` associated with this client.
+     */
+    override fun llmProvider(): LLMProvider = delegate.llmProvider()
 
     private companion object {
         private val logger = KotlinLogging.logger { }

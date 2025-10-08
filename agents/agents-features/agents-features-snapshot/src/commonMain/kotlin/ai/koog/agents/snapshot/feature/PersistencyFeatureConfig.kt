@@ -2,8 +2,7 @@ package ai.koog.agents.snapshot.feature
 
 import ai.koog.agents.core.agent.context.RollbackStrategy
 import ai.koog.agents.core.feature.config.FeatureConfig
-import ai.koog.agents.snapshot.feature.RollbackToolRegistry
-import ai.koog.agents.snapshot.providers.NoPersistenceStorageProvider
+import ai.koog.agents.snapshot.providers.NoPersistencyStorageProvider
 import ai.koog.agents.snapshot.providers.PersistenceStorageProvider
 
 @Deprecated(
@@ -25,12 +24,12 @@ public class PersistenceFeatureConfig : FeatureConfig() {
      * This property accepts implementations of [PersistenceStorageProvider],
      * which manage how snapshots are stored and retrieved.
      *
-     * By default, the storage is set to [NoPersistenceStorageProvider], a no-op
+     * By default, the storage is set to [NoPersistencyStorageProvider], a no-op
      * implementation that does not persist any data. To enable actual state
      * persistence, assign a custom implementation of [PersistenceStorageProvider]
      * to this property.
      */
-    public var storage: PersistenceStorageProvider = NoPersistenceStorageProvider()
+    public var storage: PersistenceStorageProvider<*> = NoPersistencyStorageProvider()
 
     /**
      * Controls whether the feature's state should be automatically persisted.

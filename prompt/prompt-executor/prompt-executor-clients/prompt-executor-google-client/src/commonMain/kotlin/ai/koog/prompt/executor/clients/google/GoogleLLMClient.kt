@@ -132,6 +132,13 @@ public open class GoogleLLMClient(
         }
     }
 
+    /**
+     * Provides the Large Language Model (LLM) provider associated with this client.
+     *
+     * @return The LLM provider, which is Google for this implementation.
+     */
+    override fun llmProvider(): LLMProvider = LLMProvider.Google
+
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
         require(model.capabilities.contains(LLMCapability.Completion)) {

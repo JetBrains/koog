@@ -8,6 +8,7 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.llm.LLMCapability
+import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Attachment
 import ai.koog.prompt.message.AttachmentContent
@@ -119,6 +120,16 @@ public open class AnthropicLLMClient(
             socketTimeoutMillis = settings.timeoutConfig.socketTimeoutMillis
         }
     }
+
+    /**
+     * Provides the specific Large Language Model (LLM) provider used by the client.
+     *
+     * This method returns the LLM provider that the client is configured to use,
+     * allowing identification and configuration of provider-specific features.
+     *
+     * @return The LLM provider associated with this client, specifically `LLMProvider.Anthropic`.
+     */
+    override fun llmProvider(): LLMProvider = LLMProvider.Anthropic
 
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
         logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }

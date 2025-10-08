@@ -112,12 +112,8 @@ Here is an example of a custom tool implementation using `SimpleTool`:
 
 <!--- INCLUDE
 import ai.koog.agents.core.tools.SimpleTool
-import ai.koog.agents.core.tools.ToolArgs
-import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.agents.core.tools.ToolParameterDescriptor
-import ai.koog.agents.core.tools.ToolParameterType
-import kotlinx.serialization.Serializable
 import ai.koog.agents.core.tools.annotations.LLMDescription
+import kotlinx.serialization.Serializable
 -->
 ```kotlin
 // Create a tool that casts a string expression to a double value

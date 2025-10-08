@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: spring-boot-kotlin
+
+ai:
+  koog:
+    google:
+      api-key: placeholder
+      enabled: true
+
+agent:
+  version: "1.0.0"
+  name: "github-assistant"
+  description: "An AI agent that can use GitHub tools."
+
+  model:
+    id: "gemini-2.0-flash-lite"
+    options:
+      temperature: 1.0
+
+  system_prompt: |
+    You are a helpful GitHub assistant.
