@@ -73,6 +73,8 @@ public class DashscopeLLMClient(
         }
     }
 
+    override fun llmProvider(): LLMProvider = LLMProvider.Alibaba
+
     override fun serializeProviderChatRequest(
         messages: List<OpenAIMessage>,
         model: LLModel,
