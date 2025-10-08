@@ -253,7 +253,6 @@ import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
 import ai.koog.agents.core.dsl.extension.onAssistantMessage
 import ai.koog.agents.core.dsl.extension.onToolCall
 import ai.koog.agents.core.tools.SimpleTool
-import ai.koog.agents.core.tools.ToolArgs
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.prompt
 import kotlinx.serialization.KSerializer

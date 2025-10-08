@@ -156,7 +156,6 @@ If you are not happy with JSON results sent to LLM (in some cases, LLMs can work
 
 <!--- INCLUDE
 import ai.koog.agents.core.tools.Tool
-import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
@@ -178,19 +177,19 @@ object EditFile : Tool<EditFile.Args, EditFile.Result>() {
     @Serializable
     public data class Result(
         private val patchApplyResult: PatchApplyResult
-    ) : ToolResult.TextSerializable() {
+    ) {
 
         @Serializable
         public sealed interface PatchApplyResult {
             @Serializable
             public data class Success(val updatedContent: String) : PatchApplyResult
-            
+
             @Serializable
             public sealed class Failure(public val reason: String) : PatchApplyResult
         }
-        
+
         // Textual output (in Markdown format) that will be visible to the LLM after the tool finishes.
-        override fun textForLLM(): String = markdown {
+        fun textForLLM(): String = markdown {
             if (patchApplyResult is PatchApplyResult.Success) {
                 line {
                     bold("Successfully").text(" edited file (patch applied)")
@@ -213,7 +212,7 @@ object EditFile : Tool<EditFile.Args, EditFile.Result>() {
 
     // Description of the tool, visible to LLM
     override val description = "Edits the given file"
-    
+
     // Function that executes the tool with the provided arguments
     override suspend fun execute(args: Args): Result {
         return TODO("Implement file edit")
