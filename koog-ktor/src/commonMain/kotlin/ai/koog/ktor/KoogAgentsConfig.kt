@@ -732,7 +732,6 @@ public class KoogAgentsConfig(private val scope: CoroutineScope) {
          */
         public var httpClient: HttpClient = HttpClient()
 
-
         /**
          * Configures custom timeout settings for the MistralAI API client.
          *

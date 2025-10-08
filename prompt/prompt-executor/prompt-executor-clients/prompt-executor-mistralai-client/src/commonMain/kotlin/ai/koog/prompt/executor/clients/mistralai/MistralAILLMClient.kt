@@ -74,7 +74,8 @@ public open class MistralAILLMClient(
     baseClient = baseClient,
     clock = clock,
     logger = staticLogger
-), LLMEmbeddingProvider {
+),
+    LLMEmbeddingProvider {
 
     @OptIn(InternalStructuredOutputApi::class)
     private companion object {

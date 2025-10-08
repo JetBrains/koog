@@ -95,7 +95,8 @@ public open class OpenAILLMClient(
     baseClient,
     clock,
     staticLogger
-), LLMEmbeddingProvider {
+),
+    LLMEmbeddingProvider {
 
     /**
      * Returns the specific implementation of the `LLMProvider` associated with this client.

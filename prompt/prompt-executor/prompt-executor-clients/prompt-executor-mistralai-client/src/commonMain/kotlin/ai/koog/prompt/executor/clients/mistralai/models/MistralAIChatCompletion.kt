@@ -14,7 +14,6 @@ import ai.koog.prompt.executor.clients.serialization.AdditionalPropertiesFlatten
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-
 /**
  * Mistral AI Chat Completion Request
  *
