@@ -13,7 +13,6 @@ import org.awaitility.kotlin.await
 import org.junit.jupiter.api.Test
 import kotlin.test.Ignore
 
-
 class PersistenceRunsTwiceTest {
 
     @Test
