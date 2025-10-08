@@ -1,196 +1,287 @@
 package ai.koog.prompt.executor.clients.mistralai
 
-import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.agents.utils.SuitableForIO
+import ai.koog.prompt.dsl.ModerationCategory
+import ai.koog.prompt.dsl.ModerationCategoryResult
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
-import ai.koog.prompt.executor.clients.mistralai.mapper.MistralAIMessageMapper.mapToMistralAIMessage
-import ai.koog.prompt.executor.clients.mistralai.mapper.MistralAIToolMapper.createMistralAITools
-import ai.koog.prompt.executor.clients.mistralai.model.MistralAIChatCompletionsRequest
-import ai.koog.prompt.executor.clients.mistralai.model.MistralAIChoice
-import ai.koog.prompt.executor.clients.mistralai.model.MistralChatCompletionsResponse
-import ai.koog.prompt.executor.clients.mistralai.model.asString
+import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
+import ai.koog.prompt.executor.clients.mistralai.models.MistralAIChatCompletionRequest
+import ai.koog.prompt.executor.clients.mistralai.models.MistralAIChatCompletionRequestSerializer
+import ai.koog.prompt.executor.clients.mistralai.models.MistralAIChatCompletionResponse
+import ai.koog.prompt.executor.clients.mistralai.models.MistralAIChatCompletionStreamResponse
+import ai.koog.prompt.executor.clients.mistralai.models.MistralAIEmbeddingRequest
+import ai.koog.prompt.executor.clients.mistralai.models.MistralAIEmbeddingResponse
+import ai.koog.prompt.executor.clients.mistralai.models.MistralAIModerationRequest
+import ai.koog.prompt.executor.clients.mistralai.models.MistralAIModerationResponse
+import ai.koog.prompt.executor.clients.mistralai.models.MistralAIModerationResult
+import ai.koog.prompt.executor.clients.openai.base.AbstractOpenAILLMClient
+import ai.koog.prompt.executor.clients.openai.base.OpenAIBasedSettings
+import ai.koog.prompt.executor.clients.openai.base.models.Content
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIContentPart
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIMessage
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIStaticContent
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAITool
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolChoice
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIUsage
+import ai.koog.prompt.executor.clients.openai.structure.OpenAIBasicJsonSchemaGenerator
+import ai.koog.prompt.executor.clients.openai.structure.OpenAIStandardJsonSchemaGenerator
 import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.llm.LLMCapability
+import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
-import ai.koog.prompt.message.ResponseMetaInfo
+import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.streaming.StreamFrameFlowBuilder
+import ai.koog.prompt.structure.RegisteredBasicJsonSchemaGenerators
+import ai.koog.prompt.structure.RegisteredStandardJsonSchemaGenerators
+import ai.koog.prompt.structure.annotations.InternalStructuredOutputApi
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
-import io.ktor.client.plugins.HttpTimeout
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.defaultRequest
-import io.ktor.client.request.header
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
-import io.ktor.client.statement.bodyAsText
-import io.ktor.http.ContentType
-import io.ktor.http.contentType
-import io.ktor.http.isSuccess
-import io.ktor.serialization.kotlinx.json.json
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
-import kotlinx.serialization.json.ClassDiscriminatorMode
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonNamingStrategy
-import kotlin.uuid.ExperimentalUuidApi
 
+/**
+ * Represents the settings for configuring a Mistral AI client.
+ *
+ * @property baseUrl The base URL of the Mistral AI API. Defaults to "https://api.mistral.ai".
+ * @property chatCompletionsPath The path of the Mistral AI Chat Completions API. Defaults to "v1/chat/completions".
+ * @property timeoutConfig Configuration for connection timeouts, including request, connect, and socket timeouts.
+ */
 public class MistralAIClientSettings(
-    public val modelVersionsMap: Map<LLModel, String> = DEFAULT_MISTRAL_AI_MODEL_VERSIONS_MAP,
-    public val baseUrl: String = "https://api.mistral.ai",
-    public val apiVersion: String = "1.0.0",
-    public val timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig()
-)
+    baseUrl: String = "https://api.mistral.ai",
+    chatCompletionsPath: String = "v1/chat/completions",
+    public val embeddingsPath: String = "v1/embeddings",
+    public val moderationPath: String = "v1/moderations",
+    timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig()
+) : OpenAIBasedSettings(baseUrl, chatCompletionsPath, timeoutConfig)
 
+/**
+ * Implementation of [LLMClient] for Mistral AI.
+ *
+ * @param apiKey The API key for the Mistral AI API
+ * @param settings The base URL, chat completion path, and timeouts for the Mistral AI
+ * @param clock Clock instance used for tracking response metadata timestamps
+ */
 public open class MistralAILLMClient(
-    private val apiKey: String,
+    apiKey: String,
     private val settings: MistralAIClientSettings = MistralAIClientSettings(),
     baseClient: HttpClient = HttpClient(),
-    private val clock: Clock = Clock.System
-) : LLMClient {
+    clock: Clock = Clock.System
+) : AbstractOpenAILLMClient<MistralAIChatCompletionResponse, MistralAIChatCompletionStreamResponse>(
+    apiKey = apiKey,
+    settings = settings,
+    baseClient = baseClient,
+    clock = clock,
+    logger = staticLogger
+), LLMEmbeddingProvider {
 
+    @OptIn(InternalStructuredOutputApi::class)
     private companion object {
-        private val logger = KotlinLogging.logger { }
+        private val staticLogger = KotlinLogging.logger { }
 
-        private const val DEFAULT_MESSAGE_PATH = "v1/chat/completions"
-    }
-
-    private val json = Json {
-        ignoreUnknownKeys = true
-        isLenient = true
-        namingStrategy = JsonNamingStrategy.SnakeCase
-        classDiscriminatorMode = ClassDiscriminatorMode.NONE // Mistral AI request/responses are not polymorphic
-    }
-
-    private val httpClient = baseClient.config {
-        defaultRequest {
-            url(settings.baseUrl)
-            contentType(ContentType.Application.Json)
-            header("Authorization", "Bearer $apiKey")
-        }
-        install(ContentNegotiation) {
-            json(json)
-        }
-        install(HttpTimeout) {
-            requestTimeoutMillis = settings.timeoutConfig.requestTimeoutMillis // Increase timeout to 60 seconds
-            connectTimeoutMillis = settings.timeoutConfig.connectTimeoutMillis
-            socketTimeoutMillis = settings.timeoutConfig.socketTimeoutMillis
+        init {
+            RegisteredBasicJsonSchemaGenerators[LLMProvider.MistralAI] = OpenAIBasicJsonSchemaGenerator
+            RegisteredStandardJsonSchemaGenerators[LLMProvider.MistralAI] = OpenAIStandardJsonSchemaGenerator
         }
     }
 
-    override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): LLMChoice {
-        return processMistralAiResponse(getMistralAIResponse(prompt, model, tools))
-    }
+    /**
+     * Returns the specific implementation of the `LLMProvider` associated with this client
+     *
+     * In this case, it identifies the `MistralAI` provider as the designated LLM provider for the client.
+     *
+     * @return the `LLMProvider` instance representing MistralAI
+     */
+    override fun llmProvider(): LLMProvider = LLMProvider.MistralAI
 
-    private suspend fun getMistralAIResponse(
-        prompt: Prompt,
+    override fun serializeProviderChatRequest(
+        messages: List<OpenAIMessage>,
         model: LLModel,
-        tools: List<ToolDescriptor>
-    ): MistralChatCompletionsResponse {
-        logger.debug { "Executing prompt: $prompt with tools: $tools and model: $model" }
+        tools: List<OpenAITool>?,
+        toolChoice: OpenAIToolChoice?,
+        params: LLMParams,
+        stream: Boolean
+    ): String {
+        val mistralAIParams = params.toMistralAIParams()
+        val responseFormat = createResponseFormat(params.schema, model)
 
-        require(model.capabilities.contains(LLMCapability.Completion)) {
-            "Model ${model.id} does not support chat completions"
-        }
-
-        require(model.capabilities.contains(LLMCapability.Tools)) {
-            "Model ${model.id} does not support tools"
-        }
-
-        val request = createMistralAIRequest(prompt, tools, model)
-
-        return withContext(Dispatchers.SuitableForIO) {
-            val response = httpClient.post(DEFAULT_MESSAGE_PATH) {
-                setBody(request)
-            }
-
-            if (response.status.isSuccess()) {
-                response.body<MistralChatCompletionsResponse>()
-            } else {
-                val errorBody = response.bodyAsText()
-                logger.error { "Error from Mistral AI API: ${response.status}: $errorBody" }
-                error("Error from Mistral AI API: ${response.status}: $errorBody")
-            }
-        }
-    }
-
-    override fun executeStreaming(prompt: Prompt, model: LLModel): Flow<String> = throw NotImplementedError()
-
-    @OptIn(ExperimentalUuidApi::class)
-    private fun createMistralAIRequest(
-        prompt: Prompt,
-        tools: List<ToolDescriptor>,
-        model: LLModel
-    ): MistralAIChatCompletionsRequest {
-        val mistralAIMessages = prompt.messages.map { message -> mapToMistralAIMessage(message) }
-        val mistralAITools = createMistralAITools(tools)
-
-        return MistralAIChatCompletionsRequest(
-            model = settings.modelVersionsMap[model]
-                ?: throw IllegalArgumentException("Unsupported model: $model"),
-            messages = mistralAIMessages,
-            maxTokens = prompt.params.maxTokens,
-            temperature = prompt.params.temperature,
-            tools = mistralAITools,
-            stream = false
-        )
-    }
-
-    private fun processMistralAiResponse(response: MistralChatCompletionsResponse): LLMChoice {
-        if (response.choices.isEmpty()) {
-            logger.error { "Empty choices in MistralAI response" }
-            error("Empty choices in MistralAI response")
-        }
-
-        val inputTokensCount = response.usage.promptTokens
-        val outputTokensCount = response.usage.completionTokens
-        val totalTokensCount = response.usage.totalTokens
-
-        val metaInfo = ResponseMetaInfo.create(
-            clock,
-            totalTokensCount = totalTokensCount,
-            inputTokensCount = inputTokensCount,
-            outputTokensCount = outputTokensCount
+        val request = MistralAIChatCompletionRequest(
+            model = model.id,
+            temperature = mistralAIParams.temperature,
+            topP = mistralAIParams.topP,
+            maxTokens = mistralAIParams.maxTokens,
+            stream = stream,
+            stop = mistralAIParams.stop,
+            randomSeed = mistralAIParams.randomSeed,
+            messages = messages,
+            responseFormat = responseFormat,
+            tools = tools,
+            toolChoice = mistralAIParams.toolChoice?.toOpenAIToolChoice(),
+            presencePenalty = mistralAIParams.presencePenalty,
+            frequencyPenalty = mistralAIParams.frequencyPenalty,
+            numberOfChoices = mistralAIParams.numberOfChoices,
+            prediction = mistralAIParams.speculation?.let { OpenAIStaticContent(Content.Text(it)) },
+            parallelToolCalls = mistralAIParams.parallelToolCalls,
+            promptMode = mistralAIParams.promptMode,
+            safePrompt = mistralAIParams.safePrompt,
         )
 
-        return response.choices.map { processMistralAIChoice(it, metaInfo) }.first()
+        return json.encodeToString(MistralAIChatCompletionRequestSerializer, request)
     }
 
-    private fun processMistralAIChoice(choice: MistralAIChoice, metaInfo: ResponseMetaInfo): LLMChoice {
-        val message = choice.message
+    override fun processProviderChatResponse(response: MistralAIChatCompletionResponse): List<LLMChoice> {
+        require(response.choices.isNotEmpty()) { "Empty choices in response" }
+        val usageInfo = OpenAIUsage(
+            promptTokens = response.usage.promptTokens,
+            completionTokens = response.usage.completionTokens,
+            totalTokens = response.usage.totalTokens,
+        )
+        return response.choices.map {
+            it.message.toMessageResponses(
+                it.finishReason,
+                createMetaInfo(usageInfo),
+            )
+        }
+    }
 
-        return when {
-            message.toolCalls != null && message.toolCalls.isNotEmpty() ->
-                message.toolCalls.map { toolCall ->
-                    Message.Tool.Call(
-                        id = toolCall.id,
-                        tool = toolCall.function.name,
-                        content = toolCall.function.arguments.asString(),
-                        metaInfo = metaInfo
-                    )
+    override fun decodeStreamingResponse(data: String): MistralAIChatCompletionStreamResponse =
+        json.decodeFromString(data)
+
+    override fun decodeResponse(data: String): MistralAIChatCompletionResponse =
+        json.decodeFromString(data)
+
+    override suspend fun StreamFrameFlowBuilder.processStreamingChunk(chunk: MistralAIChatCompletionStreamResponse) {
+        chunk.choices.firstOrNull()?.let { choice ->
+            choice.delta.content?.let { emitAppend(it) }
+            choice.delta.toolCalls?.forEach { toolCall ->
+                val index = toolCall.index
+                val id = toolCall.id
+                val name = toolCall.function?.name
+                val arguments = toolCall.function?.arguments
+                upsertToolCall(index, id, name, arguments)
+            }
+            val usageInfo = OpenAIUsage(
+                promptTokens = chunk.usage?.promptTokens,
+                completionTokens = chunk.usage?.completionTokens,
+                totalTokens = chunk.usage?.totalTokens,
+            )
+            choice.finishReason?.let { emitEnd(it, createMetaInfo(usageInfo)) }
+        }
+    }
+
+    /**
+     * Embeds the given text using the MistralAI embeddings API.
+     *
+     * @param text The text to embed.
+     * @param model The model to use for embedding. Must have the Embed capability.
+     * @return A list of floating-point values representing the embedding.
+     * @throws IllegalArgumentException if the model does not have the Embed capability.
+     */
+    override suspend fun embed(text: String, model: LLModel): List<Double> {
+        model.requireCapability(LLMCapability.Embed)
+
+        logger.debug { "Embedding text with model: ${model.id}" }
+
+        val request = MistralAIEmbeddingRequest(model = model.id, input = text)
+
+        val mistralAIResponse = httpClient.post(
+            path = settings.embeddingsPath,
+            request = request,
+            requestBodyType = MistralAIEmbeddingRequest::class,
+            responseType = MistralAIEmbeddingResponse::class
+        )
+
+        return mistralAIResponse.data.firstOrNull()?.embedding ?: run {
+            logger.error { "Empty data in MistralAI embedding response" }
+            error("Empty data in MistralAI embedding response")
+        }
+    }
+
+    /**
+     * Moderates text and image content based on the provided model's capabilities.
+     *
+     * @param prompt The prompt containing text messages and optional attachments to be moderated.
+     * @param model The language model to use for moderation. Must have the `Moderation` capability.
+     * @return The moderation result, including flagged content, categories, scores, and associated metadata.
+     * @throws IllegalArgumentException If the specified model does not support moderation.
+     */
+    public override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
+        logger.debug { "Moderating text and image content with model: $model" }
+
+        model.requireCapability(LLMCapability.Moderation)
+        require(prompt.messages.isNotEmpty()) { "Can't moderate an empty prompt" }
+
+        val input = prompt.messages
+            .onEach { message ->
+                (message as? Message.WithAttachments)?.let {
+                    require(it.attachments.isEmpty()) {
+                        "Only text input is supported for MistralAI moderation"
+                    }
                 }
+            }
+            .map { it.toMessageContent(model) }
+            .let { contents ->
+                when {
+                    contents.all { it is Content.Text } -> {
+                        val text = contents.joinToString(separator = "\n\n") { (it as Content.Text).value }
+                        Content.Text(text)
+                    }
 
-            message.content != null -> {
-                listOf(
-                    Message.Assistant(
-                        content = message.content,
-                        finishReason = choice.finishReason.name.lowercase(),
-                        metaInfo = metaInfo
-                    )
+                    else -> {
+                        val parts = contents.flatMap { content ->
+                            when (content) {
+                                is Content.Parts -> content.value
+                                is Content.Text -> listOf(OpenAIContentPart.Text(content.value))
+                            }
+                        }
+                        Content.Parts(parts)
+                    }
+                }
+            }
+
+        val request = MistralAIModerationRequest(model = model.id, input = input)
+
+        val response = httpClient.post(
+            path = settings.moderationPath,
+            request = request,
+            requestBodyType = MistralAIModerationRequest::class,
+            responseType = MistralAIModerationResponse::class
+        )
+
+        val result = response.results.firstOrNull() ?: run {
+            logger.error { "Empty results in MistralAI moderation response" }
+            error("Empty results in MistralAI moderation response")
+        }
+
+        return result.toModerationResult()
+    }
+
+    private fun MistralAIModerationResult.toModerationResult(): ModerationResult {
+        val categoryMapping = buildCategoryMapping()
+
+        return ModerationResult(
+            isHarmful = categoryMapping.any { it.value.detected },
+            categories = categoryMapping
+        )
+    }
+
+    private fun MistralAIModerationResult.buildCategoryMapping(): Map<ModerationCategory, ModerationCategoryResult> =
+        listOf(
+            ModerationCategory.Sexual to (categories.sexual to categoryScores.sexual),
+            ModerationCategory.Hate to (categories.hateAndDiscrimination to categoryScores.hateAndDiscrimination),
+            ModerationCategory.Violence to (categories.violenceAndThreats to categoryScores.violenceAndThreats),
+            ModerationCategory.Illicit to (categories.dangerousAndCriminalContent to categoryScores.dangerousAndCriminalContent),
+            ModerationCategory.SelfHarm to (categories.selfharm to categoryScores.selfharm),
+            ModerationCategory.SpecializedAdvice to (categories.health to categoryScores.health),
+            ModerationCategory.SpecializedAdvice to (categories.financial to categoryScores.financial),
+            ModerationCategory.SpecializedAdvice to (categories.law to categoryScores.law),
+            ModerationCategory.Privacy to (categories.pii to categoryScores.pii)
+        ).groupBy({ it.first }, { it.second })
+            .mapValues { (_, values) ->
+                ModerationCategoryResult(
+                    detected = values.any { it.first },
+                    confidenceScore = values.maxOfOrNull { it.second }
                 )
             }
-
-            else -> {
-                logger.error { "Unexpected response from MistralAI: no tool calls and no content" }
-                error("Unexpected response from MistralAI: no tool calls and no content")
-            }
-        }
-    }
-
-    public override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult = throw NotImplementedError()
 }

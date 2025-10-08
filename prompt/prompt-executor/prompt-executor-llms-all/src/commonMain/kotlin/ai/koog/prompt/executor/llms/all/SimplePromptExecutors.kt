@@ -91,6 +91,10 @@ public fun simpleOllamaAIExecutor(
     baseUrl: String = "http://localhost:11434"
 ): SingleLLMPromptExecutor = SingleLLMPromptExecutor(OllamaClient(baseUrl))
 
-public fun simpleMistralAIExecutor(
-    apiKey: String
-): SingleLLMPromptExecutor = SingleLLMPromptExecutor(MistralAILLMClient(apiKey))
+/**
+ * Creates an instance of `SingleLLMPromptExecutor` with a `MistralAILLMClient`.
+ *
+ * @param apiKey The API token used for authentication with the Mistal AI provider.
+ */
+public fun simpleMistralAIExecutor(apiKey: String): SingleLLMPromptExecutor =
+    SingleLLMPromptExecutor(MistralAILLMClient(apiKey))
