@@ -417,7 +417,7 @@ public open class AnthropicLLMClient(
             system = systemMessages,
             temperature = anthropicParams.temperature,
             toolChoice = toolChoice,
-            tools = tools.ifEmpty { emptyList() }, // Always provide a list for tools
+            tools = tools, // Always provide a list for tools
             topK = anthropicParams.topK,
             topP = anthropicParams.topP,
             additionalProperties = anthropicParams.additionalProperties
