@@ -1,10 +1,7 @@
 package ai.koog.agents.example.userpaystatus
 
 import ai.koog.agents.core.tools.SimpleTool
-import ai.koog.agents.core.tools.ToolArgs
-import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.agents.core.tools.ToolParameterDescriptor
-import ai.koog.agents.core.tools.ToolParameterType
+import ai.koog.agents.core.tools.annotations.LLMDescription
 import kotlinx.serialization.Serializable
 
 private data class Payment(
@@ -26,21 +23,14 @@ private val payments = listOf(
 class PaymentStatusTool : SimpleTool<PaymentStatusTool.Args>() {
 
     @Serializable
-    data class Args(val transactionId: String) : ToolArgs
+    data class Args(
+        @property:LLMDescription("The transaction id.")
+        val transactionId: String
+    )
+
+    override val description: String = "Get payment status of a transaction"
 
     override val argsSerializer = Args.serializer()
-
-    override val descriptor = ToolDescriptor(
-        name = "retrievePaymentStatus",
-        description = "Get payment status of a transaction",
-        requiredParameters = listOf(
-            ToolParameterDescriptor(
-                name = "transactionId",
-                description = "The transaction id.",
-                type = ToolParameterType.String,
-            )
-        )
-    )
 
     override suspend fun doExecute(args: Args): String {
         val transaction = payments.firstOrNull { it.transactionId == args.transactionId }

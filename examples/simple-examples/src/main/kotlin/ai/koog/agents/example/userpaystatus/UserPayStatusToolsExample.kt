@@ -13,11 +13,11 @@ fun main() = runBlocking {
     }
 
     val paymentsAgent = AIAgent(
-        executor = simpleMistralAIExecutor(ApiKeyService.mistralAIApiKey),
-        llmModel = MistralAIModels.MISTRAL_MEDIUM_3_1,
+        promptExecutor = simpleMistralAIExecutor(ApiKeyService.mistralAIApiKey),
+        llmModel = MistralAIModels.Chat.MistralMedium31,
         temperature = 0.0,
         toolRegistry = toolRegistry,
-        maxIterations = 200,
+        maxIterations = 50,
     )
     val paymentStatus = paymentsAgent.run("What's the status of my payment? Transaction ID is T1001")
 
