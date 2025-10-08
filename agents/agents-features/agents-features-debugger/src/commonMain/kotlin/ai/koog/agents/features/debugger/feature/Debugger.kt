@@ -1,10 +1,10 @@
 package ai.koog.agents.features.debugger.feature
 
+import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.feature.AIAgentGraphFeature
-import ai.koog.agents.core.feature.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.InterceptContext
 import ai.koog.agents.core.feature.model.events.AgentClosingEvent
 import ai.koog.agents.core.feature.model.events.AgentCompletedEvent
@@ -26,6 +26,7 @@ import ai.koog.agents.core.feature.model.events.ToolCallStartingEvent
 import ai.koog.agents.core.feature.model.events.ToolValidationFailedEvent
 import ai.koog.agents.core.feature.model.events.startNodeToGraph
 import ai.koog.agents.core.feature.model.toAgentError
+import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.remote.server.config.DefaultServerConnectionConfig
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.features.debugger.EnvironmentVariablesReader
@@ -46,16 +47,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 public class Debugger {
 
     /**
-     * Represents a feature that integrates debugging capabilities into an AI agent's pipeline.
-     *
-     * This companion object provides functionality for configuring and enabling a debugging system
-     * in the AI agent framework. It logs debugging events, connects to a debugging server, and handles
-     * various stages of an agent's lifecycle such as start, finish, and error events.
-     * Debugger Feature also tracks strategy executions, node executions, LLM calls, and tool operation events.
-     *
-     * The feature can be customized using the `DebuggerConfig` and works in tandem with the `AIAgentPipeline` infrastructure
-     * to intercept various events and log them to a remote writer connected to a debugging server. The port for the debugger
-     * server can either be explicitly set in the configuration or derived from environment variables.
+     * Companion object implementing agent feature, handling [Debugger] creation and installation.
      */
     public companion object Feature : AIAgentGraphFeature<DebuggerConfig, Debugger> {
 
@@ -71,7 +63,8 @@ public class Debugger {
         override fun install(
             config: DebuggerConfig,
             pipeline: AIAgentGraphPipeline,
-        ) {
+            agent: GraphAIAgent<*, *>,
+        ): Debugger {
             logger.debug { "Debugger Feature. Start installing feature: ${Debugger::class.simpleName}" }
 
             // Config that will be used to connect to the debugger server where
@@ -88,7 +81,8 @@ public class Debugger {
             val writer = DebuggerFeatureMessageRemoteWriter(connectionConfig = debuggerServerConfig)
             config.addMessageProcessor(writer)
 
-            val interceptContext = InterceptContext(this, Debugger())
+            val debugger = Debugger()
+            val interceptContext = InterceptContext(this, debugger)
 
             //region Intercept Agent Events
 
@@ -317,6 +311,8 @@ public class Debugger {
             }
 
             //endregion Intercept Tool Call Events
+
+            return debugger
         }
 
         //region Private Methods

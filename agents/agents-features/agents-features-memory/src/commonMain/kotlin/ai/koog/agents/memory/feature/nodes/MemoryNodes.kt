@@ -69,7 +69,7 @@ public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeLoadFromMemor
 ): AIAgentNodeDelegate<T, T> = node(name) { input ->
     withMemory {
         concepts.forEach { concept ->
-            loadFactsToAgent(concept, scopes, subjects)
+            loadFactsToAgent(llm, concept, scopes, subjects)
         }
     }
 
@@ -90,7 +90,7 @@ public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeLoadAllFactsF
     scopes: List<MemoryScopeType> = MemoryScopeType.entries
 ): AIAgentNodeDelegate<T, T> = node(name) { input ->
     withMemory {
-        loadAllFactsToAgent(scopes, subjects)
+        loadAllFactsToAgent(llm, scopes, subjects)
     }
 
     input
@@ -116,6 +116,7 @@ public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeSaveToMemory(
     withMemory {
         concepts.forEach { concept ->
             saveFactsFromHistory(
+                llm = llm,
                 concept = concept,
                 subject = subject,
                 scope = scopesProfile.getScope(scope) ?: return@forEach,

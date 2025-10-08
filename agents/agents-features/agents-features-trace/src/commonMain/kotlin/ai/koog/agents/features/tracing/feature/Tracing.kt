@@ -1,11 +1,10 @@
 package ai.koog.agents.features.tracing.feature
 
+import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.annotation.InternalAgentsApi
-import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
-import ai.koog.agents.core.feature.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.InterceptContext
 import ai.koog.agents.core.feature.message.FeatureMessage
 import ai.koog.agents.core.feature.message.FeatureMessageProcessorUtil.onMessageForEachCatching
@@ -30,6 +29,7 @@ import ai.koog.agents.core.feature.model.events.ToolCallStartingEvent
 import ai.koog.agents.core.feature.model.events.ToolValidationFailedEvent
 import ai.koog.agents.core.feature.model.events.startNodeToGraph
 import ai.koog.agents.core.feature.model.toAgentError
+import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.features.tracing.eventString
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -90,21 +90,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 public class Tracing {
 
     /**
-     * Feature implementation for the Tracing functionality.
-     *
-     * This companion object implements [AIAgentFeature] and provides methods for creating
-     * an initial configuration and installing the tracing feature in an agent pipeline.
-     *
-     * To use tracing in your agent, install it during agent creation:
-     *
-     * ```kotlin
-     * val agent = AIAgent(...) {
-     *     install(Tracing) {
-     *         // Configure tracing here
-     *         addMessageProcessor(TraceFeatureMessageLogWriter(logger))
-     *     }
-     * }
-     * ```
+     * Companion object implementing agent feature, handling [Tracing] creation and installation.
      */
     public companion object Feature : AIAgentGraphFeature<TraceFeatureConfig, Tracing> {
 
@@ -118,7 +104,8 @@ public class Tracing {
         override fun install(
             config: TraceFeatureConfig,
             pipeline: AIAgentGraphPipeline,
-        ) {
+            agent: GraphAIAgent<*, *>,
+        ): Tracing {
             logger.info { "Start installing feature: ${Tracing::class.simpleName}" }
 
             if (config.messageProcessors.isEmpty()) {
@@ -127,7 +114,8 @@ public class Tracing {
                 }
             }
 
-            val interceptContext = InterceptContext(this, Tracing())
+            val tracing = Tracing()
+            val interceptContext = InterceptContext(this, tracing)
 
             //region Intercept Agent Events
 
@@ -369,6 +357,8 @@ public class Tracing {
             }
 
             //endregion Intercept Tool Call Events
+
+            return tracing
         }
 
         //region Private Methods

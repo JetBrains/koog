@@ -1,12 +1,13 @@
 package ai.koog.agents.example.features.logging
 
 import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.feature.AIAgentGraphFeature
-import ai.koog.agents.core.feature.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.InterceptContext
 import ai.koog.agents.core.feature.config.FeatureConfig
+import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.example.ApiKeyService
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
@@ -43,15 +44,16 @@ class Logging(val logger: Logger) {
          *
          * The method integrates the feature capabilities into the agent pipeline by setting up interceptors
          * to log information during agent creation, before processing nodes, and after processing nodes by a predefined
-         * hook, e.g. [BeforeNodeHandler], etc.
+         * hook.
          *
          * @param config The configuration for the LoggingFeature, providing logger details.
          * @param pipeline The agent pipeline where logging functionality will be installed.
          */
         override fun install(
             config: Config,
-            pipeline: AIAgentGraphPipeline
-        ) {
+            pipeline: AIAgentGraphPipeline,
+            agent: GraphAIAgent<*, *>,
+        ): Logging {
             val logging = Logging(LoggerFactory.getLogger(config.loggerName))
             val interceptContext = InterceptContext(this, logging)
             pipeline.interceptAgentStarting(interceptContext) { eventContext ->
@@ -83,6 +85,8 @@ class Logging(val logger: Logger) {
             pipeline.interceptLLMCallCompleted(interceptContext) { eventContext ->
                 logger.info("After LLM call with response: ${eventContext.responses}")
             }
+
+            return logging
         }
     }
 }

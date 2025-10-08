@@ -93,7 +93,7 @@ class MessageTokenizerTest {
 
             val checkTokens by node<String, String> {
                 val totalTokens = llm.readSession {
-                    tokenizer.tokenCountFor(prompt)
+                    tokenizer().tokenCountFor(prompt)
                 }
 
                 "Total tokens: $totalTokens"

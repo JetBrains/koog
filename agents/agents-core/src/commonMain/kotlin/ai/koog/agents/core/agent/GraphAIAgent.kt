@@ -1,5 +1,3 @@
-@file:OptIn(InternalAgentsApi::class)
-
 package ai.koog.agents.core.agent
 
 import ai.koog.agents.core.agent.config.AIAgentConfig
@@ -13,9 +11,9 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.GenericAgentEnvironment
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
-import ai.koog.agents.core.feature.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.PromptExecutorProxy
 import ai.koog.agents.core.feature.config.FeatureConfig
+import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.utils.io.Closeable
@@ -23,6 +21,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.datetime.Clock
 import kotlin.reflect.KType
 import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 /**
  * Represents an implementation of an AI agent that provides functionalities to execute prompts,
@@ -38,30 +37,29 @@ import kotlin.uuid.ExperimentalUuidApi
  * @property inputType [KType] representing [Input] - agent input.
  * @property outputType [KType] representing [Output] - agent output.
  * @property promptExecutor Executor used to manage and execute prompt strings.
- * @property strategy Strategy defining the local behavior of the agent.
+ * @property strategy The execution strategy defining how the agent processes input and produces output..
  * @property agentConfig Configuration details for the local agent that define its operational parameters.
  * @property toolRegistry Registry of tools the agent can interact with, defaulting to an empty registry.
  * @property installFeatures Lambda for installing additional features within the agent environment.
  * @property clock The clock used to calculate message timestamps
  * @constructor Initializes the AI agent instance and prepares the feature context and pipeline for use.
  */
-@OptIn(ExperimentalUuidApi::class)
+@Suppress("ktlint:standard:wrapping")
+@OptIn(ExperimentalUuidApi::class, InternalAgentsApi::class)
 public open class GraphAIAgent<Input, Output>(
     public val inputType: KType,
     public val outputType: KType,
     public val promptExecutor: PromptExecutor,
     override val agentConfig: AIAgentConfig,
+    override val strategy: AIAgentGraphStrategy<Input, Output>,
     public val toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
-    strategy: AIAgentGraphStrategy<Input, Output>,
-    id: String? = null, // If null, ID will be initialized as a random UUID lazily
+    override val id: String = Uuid.random().toString(),
     public val clock: Clock = Clock.System,
-    @property:InternalAgentsApi public val installFeatures: FeatureContext.() -> Unit = {}
+    @property:InternalAgentsApi
+    public val installFeatures: FeatureContext.() -> Unit = {}
 ) : StatefulSingleUseAIAgent<Input, Output, AIAgentGraphContextBase>(
-    strategy = strategy,
     logger = logger,
-    agentId = id
-),
-    Closeable {
+), Closeable {
 
     private companion object {
         private val logger = KotlinLogging.logger {}
@@ -70,10 +68,10 @@ public open class GraphAIAgent<Input, Output>(
     override val pipeline: AIAgentGraphPipeline = AIAgentGraphPipeline(clock)
 
     private val environment = GenericAgentEnvironment(
-        this@GraphAIAgent.id,
-        strategy.name,
-        logger,
-        toolRegistry,
+        agentId = id,
+        strategyId = strategy.name,
+        logger = logger,
+        toolRegistry = toolRegistry,
         pipeline = pipeline
     )
 
@@ -95,7 +93,7 @@ public open class GraphAIAgent<Input, Output>(
             feature: AIAgentGraphFeature<Config, Feature>,
             configure: Config.() -> Unit = {}
         ) {
-            agent.install(feature, configure)
+            agent.pipeline.install(feature, configure, agent)
         }
     }
 
@@ -112,12 +110,13 @@ public open class GraphAIAgent<Input, Output>(
         val preparedEnvironment =
             pipeline.onAgentEnvironmentTransforming(
                 strategy = strategy,
-                agent = this@GraphAIAgent,
+                agent = this,
                 baseEnvironment = environment
             )
 
         return AIAgentGraphContext(
             environment = preparedEnvironment,
+            agentId = id,
             agentInput = agentInput,
             agentInputType = inputType,
             config = agentConfig,
@@ -140,13 +139,6 @@ public open class GraphAIAgent<Input, Output>(
             runId = runId,
             strategyName = strategy.name,
             pipeline = pipeline,
-            agent = this@GraphAIAgent,
         )
     }
-
-    private fun <Config : FeatureConfig, Feature : Any> install(
-        feature: AIAgentGraphFeature<Config, Feature>,
-        configure: Config.() -> Unit
-    ) =
-        pipeline.install(feature, configure)
 }

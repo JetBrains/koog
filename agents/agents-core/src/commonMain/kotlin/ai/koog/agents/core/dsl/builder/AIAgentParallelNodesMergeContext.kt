@@ -1,6 +1,5 @@
 package ai.koog.agents.core.dsl.builder
 
-import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
@@ -10,8 +9,7 @@ import ai.koog.agents.core.agent.entity.AIAgentStorage
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
-import ai.koog.agents.core.feature.AIAgentFeature
-import ai.koog.agents.core.feature.AIAgentGraphPipeline
+import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.prompt.message.Message
 import kotlin.reflect.KType
 
@@ -35,7 +33,7 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
 
     // Delegate all properties to the underlying context
     override val environment: AIAgentEnvironment get() = underlyingContextBase.environment
-    override val agent: GraphAIAgent<*, *> get() = underlyingContextBase.agent
+    override val agentId: String get() = underlyingContextBase.agentId
     override val agentInput: Any? get() = underlyingContextBase.agentInput
     override val agentInputType: KType get() = underlyingContextBase.agentInputType
 
@@ -59,16 +57,6 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
         return underlyingContextBase.remove(key)
     }
 
-    // Delegate all methods to the underlying context
-    override fun <Feature : Any> feature(key: AIAgentStorageKey<Feature>): Feature? =
-        underlyingContextBase.feature(key)
-
-    override fun <Feature : Any> feature(feature: AIAgentFeature<*, Feature>): Feature? =
-        underlyingContextBase.feature(feature)
-
-    override fun <Feature : Any> featureOrThrow(feature: AIAgentFeature<*, Feature>): Feature =
-        underlyingContextBase.featureOrThrow(feature)
-
     override suspend fun getHistory(): List<Message> = underlyingContextBase.getHistory()
 
     /**
@@ -76,6 +64,7 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
      */
     override fun copy(
         environment: AIAgentEnvironment,
+        agentId: String,
         agentInput: Any?,
         agentInputType: KType,
         config: AIAgentConfig,
@@ -84,7 +73,7 @@ public class AIAgentParallelNodesMergeContext<Input, Output>(
         storage: AIAgentStorage,
         runId: String,
         strategyName: String,
-        pipeline: AIAgentGraphPipeline
+        pipeline: AIAgentGraphPipeline,
     ): AIAgentGraphContextBase = underlyingContextBase.copy(
         environment = environment,
         agentInput = agentInput,

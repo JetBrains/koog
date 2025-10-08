@@ -1,12 +1,12 @@
 package ai.koog.agents.core.agent.entity
 
-import ai.koog.agents.core.agent.AIAgentMaxNumberOfIterationsReachedException
-import ai.koog.agents.core.agent.AIAgentStuckInTheNodeException
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.context.DetachedPromptExecutorAPI
 import ai.koog.agents.core.agent.context.getAgentContextData
 import ai.koog.agents.core.agent.context.store
+import ai.koog.agents.core.agent.exception.AIAgentMaxNumberOfIterationsReachedException
+import ai.koog.agents.core.agent.exception.AIAgentStuckInTheNodeException
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.extension.replaceHistoryWithTLDR
 import ai.koog.agents.core.prompt.Prompts.selectRelevantTools

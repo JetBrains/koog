@@ -1,15 +1,12 @@
-package ai.koog.agents.core.agent
+package ai.koog.agents.core.agent.context
 
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.core.agent.context.AIAgentContext
-import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
-import ai.koog.agents.core.feature.AIAgentFeature
-import ai.koog.agents.core.feature.AIAgentNonGraphPipeline
+import ai.koog.agents.core.feature.pipeline.AIAgentFunctionalPipeline
 import ai.koog.prompt.message.Message
 
 /**
@@ -36,7 +33,7 @@ import ai.koog.prompt.message.Message
 @Suppress("UNCHECKED_CAST")
 public class AIAgentFunctionalContext(
     override val environment: AIAgentEnvironment,
-    override val agent: FunctionalAIAgent<*, *>,
+    override val agentId: String,
     override val runId: String,
     override val agentInput: Any?,
     override val config: AIAgentConfig,
@@ -44,7 +41,7 @@ public class AIAgentFunctionalContext(
     override val stateManager: AIAgentStateManager,
     override val storage: AIAgentStorage,
     override val strategyName: String,
-    public val pipeline: AIAgentNonGraphPipeline,
+    override val pipeline: AIAgentFunctionalPipeline,
     override val parentContext: AIAgentContext? = null
 ) : AIAgentContext {
 
@@ -57,17 +54,6 @@ public class AIAgentFunctionalContext(
     override fun <T> get(key: AIAgentStorageKey<*>): T? = storeMap[key] as T?
 
     override fun remove(key: AIAgentStorageKey<*>): Boolean = storeMap.remove(key) != null
-
-    @OptIn(InternalAgentsApi::class)
-    private val features: Map<AIAgentStorageKey<*>, Any> =
-        pipeline.getAgentFeatures(this)
-
-    override fun <Feature : Any> feature(key: AIAgentStorageKey<Feature>): Feature? {
-        @Suppress("UNCHECKED_CAST")
-        return features[key] as Feature?
-    }
-
-    override fun <Feature : Any> feature(feature: AIAgentFeature<*, Feature>): Feature? = feature(feature.key)
 
     override suspend fun getHistory(): List<Message> {
         return llm.readSession { prompt.messages }
@@ -88,13 +74,13 @@ public class AIAgentFunctionalContext(
      * @param stateManager The [AIAgentStateManager] to be used, or preserve the current state keeper.
      * @param storage The [AIAgentStorage] to be used, or stick with the current memory bank.
      * @param strategyName The strategy name, or maintain the current game plan.
-     * @param pipeline The [AIAgentNonGraphPipeline] to be used, or keep the current execution superhighway.
+     * @param pipeline The [AIAgentFunctionalPipeline] to be used, or keep the current execution superhighway.
      * @param parentRootContext The parent root context, or maintain the current family tree.
      * @return A shiny new [AIAgentFunctionalContext] with your desired modifications applied!
      */
     public fun copy(
         environment: AIAgentEnvironment = this.environment,
-        agent: FunctionalAIAgent<*, *> = this.agent,
+        agentId: String = this.agentId,
         runId: String = this.runId,
         agentInput: Any? = this.agentInput,
         config: AIAgentConfig = this.config,
@@ -102,12 +88,12 @@ public class AIAgentFunctionalContext(
         stateManager: AIAgentStateManager = this.stateManager,
         storage: AIAgentStorage = this.storage,
         strategyName: String = this.strategyName,
-        pipeline: AIAgentNonGraphPipeline = this.pipeline,
+        pipeline: AIAgentFunctionalPipeline = this.pipeline,
         parentRootContext: AIAgentContext? = this.parentContext,
     ): AIAgentFunctionalContext {
         val freshContext = AIAgentFunctionalContext(
             environment = environment,
-            agent = agent,
+            agentId = agentId,
             runId = runId,
             agentInput = agentInput,
             config = config,

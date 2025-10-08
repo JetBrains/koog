@@ -84,7 +84,7 @@ public inline fun <reified Input, reified Output> AIAgent<Input, Output>.asTool(
  * @param parentAgentId Optional ID of the parent AI agent. Tool agent IDs will be generated as "parentAgentId.<number of tool call>"
  */
 public class AIAgentTool<Input, Output>(
-    private val agentService: AIAgentService<Input, Output>,
+    private val agentService: AIAgentService<Input, Output, *>,
     private val agentName: String,
     private val agentDescription: String,
     private val inputDescription: String? = null,
@@ -97,7 +97,7 @@ public class AIAgentTool<Input, Output>(
     private val toolCallNumber: AtomicInt = AtomicInt(0)
 
     @OptIn(ExperimentalAtomicApi::class)
-    private suspend fun nextToolAgentID(): String = "$parentAgentId.${toolCallNumber.fetchAndIncrement()}"
+    private fun nextToolAgentID(): String = "$parentAgentId.${toolCallNumber.fetchAndIncrement()}"
 
     /**
      * Represents the arguments required for the execution of an agent tool.
@@ -161,11 +161,7 @@ public class AIAgentTool<Input, Output>(
         } catch (e: Throwable) {
             AgentToolResult(
                 successful = false,
-                errorMessage = "Error happened: ${e::class.simpleName}(${e.message})\n${
-                    e.stackTraceToString().take(
-                        100
-                    )
-                }"
+                errorMessage = "Error happened: ${e::class.simpleName}(${e.message})\n${e.stackTraceToString().take(100)}"
             )
         }
     }

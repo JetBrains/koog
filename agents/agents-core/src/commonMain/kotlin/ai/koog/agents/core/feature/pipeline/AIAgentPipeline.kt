@@ -1,4 +1,4 @@
-package ai.koog.agents.core.feature
+package ai.koog.agents.core.feature.pipeline
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.GraphAIAgent
@@ -8,13 +8,14 @@ import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
+import ai.koog.agents.core.feature.AIAgentFeature
+import ai.koog.agents.core.feature.InterceptContext
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventContext
 import ai.koog.agents.core.feature.handler.agent.AgentClosingContext
 import ai.koog.agents.core.feature.handler.agent.AgentClosingHandler
 import ai.koog.agents.core.feature.handler.agent.AgentCompletedContext
 import ai.koog.agents.core.feature.handler.agent.AgentCompletedHandler
-import ai.koog.agents.core.feature.handler.agent.AgentContextHandler
 import ai.koog.agents.core.feature.handler.agent.AgentEnvironmentTransformingContext
 import ai.koog.agents.core.feature.handler.agent.AgentEnvironmentTransformingHandler
 import ai.koog.agents.core.feature.handler.agent.AgentEventHandler
@@ -62,7 +63,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
+import kotlin.reflect.KClass
 import kotlin.reflect.KType
+import kotlin.reflect.safeCast
 
 /**
  * Pipeline for AI agent features that provides interception points for various agent lifecycle events.
@@ -93,13 +96,24 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
         private val logger = KotlinLogging.logger { }
     }
 
+    /**
+     * Represents configured and installed agent feature implementation along with its configuration.
+     * @param featureImpl The feature implementation
+     * @param featureConfig The feature configuration
+     */
+    @Suppress("RedundantVisibilityModifier") // have to put public here, explicitApi requires it
+    protected class RegisteredFeature(
+        public val featureImpl: Any,
+        public val featureConfig: FeatureConfig
+    )
+
     private val featurePrepareDispatcher = Dispatchers.Default.limitedParallelism(5)
 
     /**
      * Map of registered features and their configurations.
      * Keys are feature storage keys, values are feature configurations.
      */
-    protected val registeredFeatures: MutableMap<AIAgentStorageKey<*>, FeatureConfig> = mutableMapOf()
+    protected val registeredFeatures: MutableMap<AIAgentStorageKey<*>, RegisteredFeature> = mutableMapOf()
 
     /**
      * Map of agent handlers registered for different features.
@@ -112,12 +126,6 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
      * Keys are feature storage keys, values are strategy handlers.
      */
     protected val strategyEventHandlers: MutableMap<AIAgentStorageKey<*>, StrategyEventHandler<*>> = mutableMapOf()
-
-    /**
-     * Map of agent context handlers registered for different features.
-     * Keys are feature storage keys, values are agent context handlers.
-     */
-    protected val agentContextHandler: MutableMap<AIAgentStorageKey<*>, AgentContextHandler<*>> = mutableMapOf()
 
     /**
      * Map of tool execution handlers registered for different features.
@@ -139,7 +147,7 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
 
     internal suspend fun prepareFeatures() {
         withContext(featurePrepareDispatcher) {
-            registeredFeatures.values.forEach { featureConfig ->
+            registeredFeatures.values.map { it.featureConfig }.forEach { featureConfig ->
                 featureConfig.messageProcessors.map { processor ->
                     launch {
                         logger.debug { "Start preparing processor: ${processor::class.simpleName}" }
@@ -158,7 +166,34 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
      * ensuring resources are released appropriately.
      */
     internal suspend fun closeFeaturesStreamProviders() {
-        registeredFeatures.values.forEach { config -> config.messageProcessors.forEach { provider -> provider.close() } }
+        registeredFeatures.values.map { it.featureConfig }.forEach { config ->
+            config.messageProcessors.forEach { provider ->
+                provider.close()
+            }
+        }
+    }
+
+    /**
+     * Retrieves a feature implementation from the current pipeline using the specified [feature], if it is registered.
+     *
+     * @param TFeature A feature implementation type.
+     * @param feature A feature to fetch.
+     * @param featureKlass The [KClass] of the feature to be retrieved.
+     * @return The feature associated with the provided key, or null if no matching feature is found.
+     * @throws IllegalArgumentException if the specified [featureKlass] does not correspond to a registered feature.
+     */
+    public fun <TFeature : Any> feature(
+        featureKlass: KClass<TFeature>,
+        feature: AIAgentFeature<*, TFeature>
+    ): TFeature? {
+        val featureImpl = registeredFeatures[feature.key]?.featureImpl ?: return null
+
+        return featureKlass.safeCast(featureImpl)
+            ?: throw IllegalArgumentException(
+                "Feature ${feature.key} is found, but it is not of the expected type.\n" +
+                    "Expected type: ${featureKlass.simpleName}\n" +
+                    "Actual type: ${featureImpl::class.simpleName}"
+            )
     }
 
     //region Trigger Agent Handlers
@@ -234,21 +269,6 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
     }
 
     /**
-     * Retrieves all features associated with the given agent context.
-     *
-     * This method collects features from all registered agent context handlers
-     * that are applicable to the provided context.
-     *
-     * @param context The agent context for which to retrieve features
-     * @return A map of feature keys to their corresponding feature instances
-     */
-    public fun getAgentFeatures(context: AIAgentContext): Map<AIAgentStorageKey<*>, Any> {
-        return agentContextHandler.mapValues { (_, featureProvider) ->
-            featureProvider.handle(context)
-        }
-    }
-
-    /**
      * Transforms the agent environment by applying all registered environment transformers.
      *
      * This method allows features to modify or enhance the agent's environment before it starts execution.
@@ -265,7 +285,8 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
         baseEnvironment: AIAgentEnvironment
     ): AIAgentEnvironment {
         return agentEventHandlers.values.fold(baseEnvironment) { environment, handler ->
-            val eventContext = AgentEnvironmentTransformingContext(strategy = strategy, agent = agent, feature = handler.feature)
+            val eventContext =
+                AgentEnvironmentTransformingContext(strategy = strategy, agent = agent, feature = handler.feature)
             handler.transformEnvironmentUnsafe(eventContext, environment)
         }
     }
@@ -446,7 +467,12 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
      * @param model The language model being used for streaming
      * @param tools The list of available tool descriptors for this streaming session
      */
-    public suspend fun onLLMStreamingStarting(runId: String, prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>) {
+    public suspend fun onLLMStreamingStarting(
+        runId: String,
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>
+    ) {
         val eventContext = LLMStreamingStartingContext(runId, prompt, model, tools)
         llmStreamingEventHandlers.values.forEach { handler -> handler.llmStreamingStartingHandler.handle(eventContext) }
     }
@@ -462,7 +488,11 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
      */
     public suspend fun onLLMStreamingFrameReceived(runId: String, streamFrame: StreamFrame) {
         val eventContext = LLMStreamingFrameReceivedContext(runId, streamFrame)
-        llmStreamingEventHandlers.values.forEach { handler -> handler.llmStreamingFrameReceivedHandler.handle(eventContext) }
+        llmStreamingEventHandlers.values.forEach { handler ->
+            handler.llmStreamingFrameReceivedHandler.handle(
+                eventContext
+            )
+        }
     }
 
     /**
@@ -503,26 +533,6 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
     //endregion Trigger LLM Streaming
 
     //region Interceptors
-
-    /**
-     * Sets a feature handler for agent context events.
-     *
-     * @param feature The feature for which to register the handler
-     * @param handler The handler responsible for processing the feature within the agent context
-     *
-     * Example:
-     * ```
-     * pipeline.interceptContextAgentFeature(MyFeature) { agentContext ->
-     *   // Inspect agent context
-     * }
-     * ```
-     */
-    public fun <TFeature : Any> interceptContextAgentFeature(
-        feature: AIAgentFeature<*, TFeature>,
-        handler: AgentContextHandler<TFeature>,
-    ) {
-        agentContextHandler[feature.key] = handler
-    }
 
     /**
      * Intercepts environment creation to allow features to modify or enhance the agent environment.
@@ -601,7 +611,8 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
         interceptContext: InterceptContext<TFeature>,
         handle: suspend TFeature.(eventContext: AgentCompletedContext) -> Unit
     ) {
-        val handler = agentEventHandlers.getOrPut(interceptContext.feature.key) { AgentEventHandler(interceptContext.featureImpl) }
+        val handler =
+            agentEventHandlers.getOrPut(interceptContext.feature.key) { AgentEventHandler(interceptContext.featureImpl) }
         handler.agentCompletedHandler = AgentCompletedHandler(
             function = createConditionalHandler(interceptContext, handle)
         )
@@ -623,7 +634,8 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
         interceptContext: InterceptContext<TFeature>,
         handle: suspend TFeature.(eventContext: AgentExecutionFailedContext) -> Unit
     ) {
-        val handler = agentEventHandlers.getOrPut(interceptContext.feature.key) { AgentEventHandler(interceptContext.featureImpl) }
+        val handler =
+            agentEventHandlers.getOrPut(interceptContext.feature.key) { AgentEventHandler(interceptContext.featureImpl) }
         handler.agentExecutionFailedHandler = AgentExecutionFailedHandler(
             function = createConditionalHandler(interceptContext, handle)
         )
@@ -648,7 +660,8 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
         interceptContext: InterceptContext<TFeature>,
         handle: suspend TFeature.(eventContext: AgentClosingContext) -> Unit
     ) {
-        val handler = agentEventHandlers.getOrPut(interceptContext.feature.key) { AgentEventHandler(interceptContext.featureImpl) }
+        val handler =
+            agentEventHandlers.getOrPut(interceptContext.feature.key) { AgentEventHandler(interceptContext.featureImpl) }
         handler.agentClosingHandler = AgentClosingHandler(
             function = createConditionalHandler(interceptContext, handle)
         )
@@ -671,7 +684,8 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
         interceptContext: InterceptContext<TFeature>,
         handle: suspend (StrategyStartingContext<TFeature>) -> Unit
     ) {
-        val handler = strategyEventHandlers.getOrPut(interceptContext.feature.key) { StrategyEventHandler(interceptContext.featureImpl) }
+        val handler =
+            strategyEventHandlers.getOrPut(interceptContext.feature.key) { StrategyEventHandler(interceptContext.featureImpl) }
 
         @Suppress("UNCHECKED_CAST")
         if (handler as? StrategyEventHandler<TFeature> == null) {
@@ -704,7 +718,8 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
         interceptContext: InterceptContext<TFeature>,
         handle: suspend (StrategyCompletedContext<TFeature>) -> Unit
     ) {
-        val handler = strategyEventHandlers.getOrPut(interceptContext.feature.key) { StrategyEventHandler(interceptContext.featureImpl) }
+        val handler =
+            strategyEventHandlers.getOrPut(interceptContext.feature.key) { StrategyEventHandler(interceptContext.featureImpl) }
 
         @Suppress("UNCHECKED_CAST")
         if (handler as? StrategyEventHandler<TFeature> == null) {
@@ -1192,7 +1207,7 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
         interceptContext: InterceptContext<*>,
         crossinline handle: suspend (TContext) -> Unit
     ): suspend (TContext) -> Unit = handler@{ eventContext ->
-        val featureConfig = registeredFeatures[interceptContext.feature.key]
+        val featureConfig = registeredFeatures[interceptContext.feature.key]?.featureConfig
 
         if (featureConfig != null && !featureConfig.isAccepted(eventContext)) {
             return@handler
@@ -1205,7 +1220,7 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
         interceptContext: InterceptContext<TFeature>,
         crossinline handle: suspend TFeature.(TContext) -> Unit
     ): suspend (TContext) -> Unit = handler@{ eventContext ->
-        val featureConfig = registeredFeatures[interceptContext.feature.key]
+        val featureConfig = registeredFeatures[interceptContext.feature.key]?.featureConfig
 
         if (featureConfig != null && !featureConfig.isAccepted(eventContext)) {
             return@handler
@@ -1217,15 +1232,16 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
     protected inline fun <TFeature : Any> createConditionalHandler(
         interceptContext: InterceptContext<TFeature>,
         crossinline handle: suspend AgentEnvironmentTransformingContext<TFeature>.(AIAgentEnvironment) -> AIAgentEnvironment
-    ): suspend (AgentEnvironmentTransformingContext<TFeature>, AIAgentEnvironment) -> AIAgentEnvironment = handler@{ eventContext, env ->
-        val featureConfig = registeredFeatures[interceptContext.feature.key]
+    ): suspend (AgentEnvironmentTransformingContext<TFeature>, AIAgentEnvironment) -> AIAgentEnvironment =
+        handler@{ eventContext, env ->
+            val featureConfig = registeredFeatures[interceptContext.feature.key]?.featureConfig
 
-        if (featureConfig != null && !featureConfig.isAccepted(eventContext)) {
-            return@handler env
+            if (featureConfig != null && !featureConfig.isAccepted(eventContext)) {
+                return@handler env
+            }
+
+            eventContext.handle(env)
         }
-
-        eventContext.handle(env)
-    }
 
     protected fun FeatureConfig.isAccepted(eventContext: AgentLifecycleEventContext): Boolean {
         return this.eventFilter.invoke(eventContext)

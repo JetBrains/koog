@@ -1,11 +1,12 @@
 package ai.koog.agents.features.opentelemetry.feature
 
+import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.context.element.getAgentRunInfoElementOrThrow
 import ai.koog.agents.core.agent.context.element.getNodeInfoElement
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.feature.AIAgentGraphFeature
-import ai.koog.agents.core.feature.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.InterceptContext
+import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.features.opentelemetry.attribute.CommonAttributes
 import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes
 import ai.koog.agents.features.opentelemetry.event.AssistantMessageEvent
@@ -34,18 +35,7 @@ import kotlinx.coroutines.currentCoroutineContext
 public class OpenTelemetry {
 
     /**
-     * Companion object implementing the AIAgentFeature interface to provide OpenTelemetry
-     * specific functionality for agents. It manages spans and contexts to trace and monitor
-     * the lifecycle of agent executions, nodes, LLM calls, and tool invocations.
-     *
-     * This class handles:
-     * - Initialization and configuration of OpenTelemetry agents.
-     * - Interception and tracing of agent lifecycle events such as agent start, finish,
-     *   run errors, and various activities like node execution, LLM calls, and tool calls.
-     * - Management of spans and contexts for monitoring and lifecycle completion.
-     *
-     * The implementation includes private utility methods for ensuring spans are handled
-     * correctly and resources are properly released.
+     * Companion object implementing agent feature, handling [OpenTelemetry] creation and installation.
      */
     public companion object Feature : AIAgentGraphFeature<OpenTelemetryConfig, OpenTelemetry> {
 
@@ -59,9 +49,11 @@ public class OpenTelemetry {
 
         override fun install(
             config: OpenTelemetryConfig,
-            pipeline: AIAgentGraphPipeline
-        ) {
-            val interceptContext = InterceptContext(this, OpenTelemetry())
+            pipeline: AIAgentGraphPipeline,
+            agent: GraphAIAgent<*, *>,
+        ): OpenTelemetry {
+            val openTelemetry = OpenTelemetry()
+            val interceptContext = InterceptContext(this, openTelemetry)
             val tracer = config.tracer
             val spanProcessor = SpanProcessor(tracer = tracer, verbose = config.isVerbose)
             val spanAdapter = config.spanAdapter
@@ -280,15 +272,19 @@ public class OpenTelemetry {
                         is Message.System -> {
                             SystemMessageEvent(provider, message)
                         }
+
                         is Message.User -> {
                             UserMessageEvent(provider, message)
                         }
+
                         is Message.Assistant -> {
                             AssistantMessageEvent(provider, message)
                         }
+
                         is Message.Tool.Call -> {
                             ChoiceEvent(provider, message, arguments = message.contentJson)
                         }
+
                         is Message.Tool.Result -> {
                             ToolMessageEvent(
                                 provider = provider,
@@ -350,6 +346,7 @@ public class OpenTelemetry {
                             is Message.Assistant -> {
                                 add(AssistantMessageEvent(provider, message))
                             }
+
                             is Message.Tool.Call -> {
                                 add(ChoiceEvent(provider, message, arguments = message.contentJson, index = index))
                             }
@@ -371,6 +368,7 @@ public class OpenTelemetry {
                         is Message.Assistant -> {
                             SpanAttributes.Response.FinishReasons(reasons = listOf(SpanAttributes.Response.FinishReasonType.Stop))
                         }
+
                         is Message.Tool.Call -> {
                             SpanAttributes.Response.FinishReasons(reasons = listOf(SpanAttributes.Response.FinishReasonType.ToolCalls))
                         }
@@ -437,7 +435,11 @@ public class OpenTelemetry {
                 // End the ExecuteToolSpan span
                 eventContext.result?.let { result ->
                     executeToolSpan.addAttribute(
-                        attribute = SpanAttributes.Tool.OutputValue(output = eventContext.tool.encodeResultToStringUnsafe(result))
+                        attribute = SpanAttributes.Tool.OutputValue(
+                            output = eventContext.tool.encodeResultToStringUnsafe(
+                                result
+                            )
+                        )
                     )
                 }
 
@@ -509,6 +511,8 @@ public class OpenTelemetry {
             }
 
             //endregion Tool Call
+
+            return openTelemetry
         }
     }
 }

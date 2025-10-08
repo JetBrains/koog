@@ -2,32 +2,42 @@ package ai.koog.agents.memory
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.memory.config.MemoryScopeType
 import ai.koog.agents.memory.feature.AgentMemory
+import ai.koog.agents.memory.feature.nodes.nodeLoadAllFactsFromMemory
 import ai.koog.agents.memory.feature.nodes.nodeSaveToMemory
 import ai.koog.agents.memory.feature.nodes.nodeSaveToMemoryAutoDetectFacts
 import ai.koog.agents.memory.feature.withMemory
 import ai.koog.agents.memory.model.Concept
+import ai.koog.agents.memory.model.DefaultTimeProvider
 import ai.koog.agents.memory.model.Fact
 import ai.koog.agents.memory.model.FactType
 import ai.koog.agents.memory.model.MemoryScope
 import ai.koog.agents.memory.model.MemorySubject
 import ai.koog.agents.memory.model.SingleFact
 import ai.koog.agents.memory.providers.AgentMemoryProvider
+import ai.koog.agents.memory.providers.LocalFileMemoryProvider
+import ai.koog.agents.memory.providers.LocalMemoryConfig
+import ai.koog.agents.memory.storage.SimpleStorage
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.agents.testing.tools.mockLLMAnswer
+import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.llm.OllamaModels
+import ai.koog.rag.base.files.JVMFileSystemProvider
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
+import java.nio.file.Path
+import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -412,5 +422,68 @@ class MemoryNodesTest {
             },
             "Project facts should be detected"
         )
+    }
+
+    @Test
+    fun `test memory node actually updates current agent prompt when loading existing facts`(
+        @TempDir tempDir: Path,
+    ) = runTest {
+        val factValue = "Has no sense of humour, if they ask for a joke they expect an interesting fact instead"
+
+        val localMemory = LocalFileMemoryProvider(
+            config = LocalMemoryConfig("user-traits-memory"),
+            storage = SimpleStorage(JVMFileSystemProvider.ReadWrite),
+            fs = JVMFileSystemProvider.ReadWrite,
+            root = tempDir
+        ).also {
+            it.save(
+                fact = SingleFact(
+                    concept = Concept(
+                        "personality-trait",
+                        "A personality trait of every user",
+                        factType = FactType.SINGLE
+                    ),
+                    value = factValue,
+                    timestamp = DefaultTimeProvider.getCurrentTimestamp()
+                ),
+                subject = MemorySubject.Everything,
+                scope = MemoryScope.Agent("memory-loading"),
+            )
+        }
+
+        val strategy = strategy("memory-loading", toolSelectionStrategy = ToolSelectionStrategy.NONE) {
+            val loadAll by nodeLoadAllFactsFromMemory<String>(
+                name = "loadMemoryNode",
+                subjects = listOf(MemorySubject.Everything)
+            )
+
+            val getPrompt by node<String, Prompt>("messageNode") {
+                llm.readSession { prompt }
+            }
+
+            edge(nodeStart forwardTo loadAll)
+            edge(loadAll forwardTo getPrompt)
+            edge(getPrompt forwardTo nodeFinish)
+        }
+
+        val agent = AIAgent(
+            promptExecutor = getMockExecutor {},
+            strategy = strategy,
+            agentConfig = AIAgentConfig(
+                prompt = prompt("memory-loading") {},
+                model = OpenAIModels.Chat.GPT5Nano,
+                maxAgentIterations = 10
+            ),
+            toolRegistry = ToolRegistry.EMPTY
+        ) {
+            install(AgentMemory) {
+                memoryProvider = localMemory
+            }
+        }
+
+        val resultPrompt = agent.run("Why")
+
+        assertEquals(1, resultPrompt.messages.size)
+        assertTrue { factValue in resultPrompt.messages.first().content }
     }
 }

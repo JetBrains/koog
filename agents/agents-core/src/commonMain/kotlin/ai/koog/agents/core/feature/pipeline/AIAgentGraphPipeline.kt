@@ -1,8 +1,11 @@
-package ai.koog.agents.core.feature
+package ai.koog.agents.core.feature.pipeline
 
+import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
+import ai.koog.agents.core.feature.AIAgentGraphFeature
+import ai.koog.agents.core.feature.InterceptContext
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.handler.node.NodeExecutionCompletedContext
 import ai.koog.agents.core.feature.handler.node.NodeExecutionCompletedHandler
@@ -34,22 +37,24 @@ public class AIAgentGraphPipeline(clock: Clock = Clock.System) : AIAgentPipeline
      * This method initializes the feature with a custom configuration and registers it in the pipeline.
      * The feature's message processors are initialized during installation.
      *
-     * @param Config The type of the feature configuration
-     * @param Feature The type of the feature being installed
+     * @param TConfig The type of the feature configuration
+     * @param TFeature The type of the feature being installed
      * @param feature The feature implementation to be installed
      * @param configure A lambda to customize the feature configuration
      */
-    public fun <Config : FeatureConfig, Feature : Any> install(
-        feature: AIAgentGraphFeature<Config, Feature>,
-        configure: Config.() -> Unit
+    public fun <TConfig : FeatureConfig, TFeature : Any> install(
+        feature: AIAgentGraphFeature<TConfig, TFeature>,
+        configure: TConfig.() -> Unit,
+        agent: GraphAIAgent<*, *>,
     ) {
-        val config = feature.createInitialConfig().apply { configure() }
-        feature.install(
-            config = config,
+        val featureConfig = feature.createInitialConfig().apply { configure() }
+        val featureImpl = feature.install(
+            config = featureConfig,
             pipeline = this,
+            agent = agent,
         )
 
-        registeredFeatures[feature.key] = config
+        registeredFeatures[feature.key] = RegisteredFeature(featureImpl, featureConfig)
     }
 
     //region Trigger Node Handlers
