@@ -13,19 +13,7 @@ internal fun LLMParams.toDashscopeParams(): DashscopeParams {
         schema = schema,
         toolChoice = toolChoice,
         user = user,
-        includeThoughts = includeThoughts,
-        thinkingBudget = thinkingBudget,
         additionalProperties = additionalProperties,
-        // DashScope-specific parameters default to null when converting from base LLMParams
-        enableSearch = null,
-        parallelToolCalls = null,
-        enableThinking = null,
-        frequencyPenalty = null,
-        presencePenalty = null,
-        logprobs = null,
-        stop = null,
-        topLogprobs = null,
-        topP = null,
     )
 }
 
@@ -40,8 +28,6 @@ internal fun LLMParams.toDashscopeParams(): DashscopeParams {
  * @property schema JSON Schema to constrain model output (validated when supported).
  * @property toolChoice Controls if/which tool must be called (`none`/`auto`/`required`/specific).
  * @property user A unique identifier for the end-user, which can help DashScope to monitor and detect abuse.
- * @property includeThoughts Request inclusion of model "thoughts"/reasoning traces (model-dependent).
- * @property thinkingBudget Soft cap on tokens spent on internal reasoning (reasoning models).
  * @property additionalProperties Additional properties that can be used to store custom parameters.
  * @property enableSearch Whether to enable web search functionality (DashScope-specific).
  * @property parallelToolCalls Whether multiple tool calls can be made in parallel (DashScope-specific).
@@ -62,8 +48,6 @@ public class DashscopeParams(
     schema: Schema? = null,
     toolChoice: ToolChoice? = null,
     user: String? = null,
-    includeThoughts: Boolean? = null,
-    thinkingBudget: Int? = null,
     additionalProperties: Map<String, JsonElement>? = null,
     public val enableSearch: Boolean? = null,
     public val parallelToolCalls: Boolean? = null,
@@ -75,9 +59,14 @@ public class DashscopeParams(
     public val topLogprobs: Int? = null,
     public val topP: Double? = null,
 ) : LLMParams(
-    temperature, maxTokens, numberOfChoices,
-    speculation, schema, toolChoice,
-    user, includeThoughts, thinkingBudget, additionalProperties,
+    temperature,
+    maxTokens,
+    numberOfChoices,
+    speculation,
+    schema,
+    toolChoice,
+    user,
+    additionalProperties,
 ) {
     init {
         require(topP == null || topP in 0.0..1.0) {
@@ -117,8 +106,6 @@ public class DashscopeParams(
         schema: Schema? = this.schema,
         toolChoice: ToolChoice? = this.toolChoice,
         user: String? = this.user,
-        includeThoughts: Boolean? = this.includeThoughts,
-        thinkingBudget: Int? = this.thinkingBudget,
         additionalProperties: Map<String, JsonElement>? = this.additionalProperties,
         enableSearch: Boolean? = this.enableSearch,
         parallelToolCalls: Boolean? = this.parallelToolCalls,
@@ -137,8 +124,6 @@ public class DashscopeParams(
         schema = schema,
         toolChoice = toolChoice,
         user = user,
-        includeThoughts = includeThoughts,
-        thinkingBudget = thinkingBudget,
         additionalProperties = additionalProperties,
         enableSearch = enableSearch,
         parallelToolCalls = parallelToolCalls,
@@ -162,8 +147,6 @@ public class DashscopeParams(
                 schema == other.schema &&
                 toolChoice == other.toolChoice &&
                 user == other.user &&
-                includeThoughts == other.includeThoughts &&
-                thinkingBudget == other.thinkingBudget &&
                 additionalProperties == other.additionalProperties &&
                 enableSearch == other.enableSearch &&
                 parallelToolCalls == other.parallelToolCalls &&
@@ -178,8 +161,7 @@ public class DashscopeParams(
 
     override fun hashCode(): Int = listOf(
         temperature, maxTokens, numberOfChoices,
-        speculation, schema, toolChoice,
-        user, includeThoughts, thinkingBudget,
+        speculation, schema, toolChoice, user,
         additionalProperties, enableSearch, parallelToolCalls,
         enableThinking, frequencyPenalty, presencePenalty,
         logprobs, stop, topLogprobs, topP,
@@ -196,8 +178,6 @@ public class DashscopeParams(
         append(", schema=$schema")
         append(", toolChoice=$toolChoice")
         append(", user=$user")
-        append(", includeThoughts=$includeThoughts")
-        append(", thinkingBudget=$thinkingBudget")
         append(", additionalProperties=$additionalProperties")
         append(", enableSearch=$enableSearch")
         append(", parallelToolCalls=$parallelToolCalls")

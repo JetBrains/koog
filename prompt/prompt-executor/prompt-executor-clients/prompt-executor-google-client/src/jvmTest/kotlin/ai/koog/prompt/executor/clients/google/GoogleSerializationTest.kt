@@ -1,5 +1,7 @@
 package ai.koog.prompt.executor.clients.google
 
+import ai.koog.prompt.executor.clients.google.models.GoogleGenerationConfig
+import ai.koog.prompt.executor.clients.google.models.GoogleRequest
 import ai.koog.test.utils.verifyDeserialization
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement

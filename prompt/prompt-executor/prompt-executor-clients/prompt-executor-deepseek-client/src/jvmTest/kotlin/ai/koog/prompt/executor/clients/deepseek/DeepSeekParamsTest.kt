@@ -57,8 +57,6 @@ class DeepSeekParamsTest {
             schema = LLMParams.Schema.JSON.Basic("test", JsonObject(mapOf())),
             toolChoice = LLMParams.ToolChoice.Named("calculator"),
             user = "alice",
-            includeThoughts = true,
-            thinkingBudget = 500,
             additionalProperties = mapOf("foo" to JsonPrimitive("bar")),
             frequencyPenalty = 0.5,
             presencePenalty = 0.6,
@@ -80,7 +78,6 @@ class DeepSeekParamsTest {
             numberOfChoices = 3,
             speculation = "sp",
             user = "uid",
-            includeThoughts = false,
             additionalProperties = mapOf("foo" to JsonPrimitive("bar"))
         )
         val ds = base.toDeepSeekParams()
@@ -89,6 +86,5 @@ class DeepSeekParamsTest {
         assertEquals(base.numberOfChoices, ds.numberOfChoices)
         assertEquals(base.speculation, ds.speculation)
         assertEquals(base.user, ds.user)
-        assertEquals(base.includeThoughts, ds.includeThoughts)
     }
 }

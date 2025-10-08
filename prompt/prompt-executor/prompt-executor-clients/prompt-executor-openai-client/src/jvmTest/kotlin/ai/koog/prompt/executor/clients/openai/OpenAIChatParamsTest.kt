@@ -68,7 +68,6 @@ class OpenAIChatParamsTest {
             numberOfChoices = 2,
             speculation = "spec",
             user = "user-id",
-            includeThoughts = true,
             additionalProperties = mapOf("foo" to JsonPrimitive("bar"))
         )
 
@@ -79,7 +78,6 @@ class OpenAIChatParamsTest {
         assertEquals(base.numberOfChoices, chat.numberOfChoices)
         assertEquals(base.speculation, chat.speculation)
         assertEquals(base.user, chat.user)
-        assertEquals(base.includeThoughts, chat.includeThoughts)
         assertEquals(base.additionalProperties, chat.additionalProperties)
     }
 
@@ -119,8 +117,6 @@ class OpenAIChatParamsTest {
             schema = LLMParams.Schema.JSON.Basic("test", JsonObject(mapOf())),
             toolChoice = LLMParams.ToolChoice.Required,
             user = "user-id",
-            includeThoughts = true,
-            thinkingBudget = 1231,
             additionalProperties = mapOf("foo" to JsonPrimitive("bar")),
             frequencyPenalty = 0.43,
             presencePenalty = 0.523,
