@@ -152,7 +152,7 @@ class DashscopeLLMClientTest {
 
         val responses = client.execute(prompt, DashscopeModels.QWEN_FLASH)
 
-        assertTrue(capturedUrl.startsWith("https://dashscope.aliyuncs.com/"))
+        assertTrue(capturedUrl.startsWith("https://dashscope-intl.aliyuncs.com/"))
         assertTrue(capturedUrl.endsWith("compatible-mode/v1/chat/completions"))
         assertEquals(HttpMethod.Post, capturedMethod)
         assertEquals("Bearer $key", capturedAuth)
