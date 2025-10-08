@@ -94,7 +94,7 @@ public fun simpleOllamaAIExecutor(
 /**
  * Creates an instance of `SingleLLMPromptExecutor` with a `MistralAILLMClient`.
  *
- * @param apiKey The API token used for authentication with the Mistal AI provider.
+ * @param apiKey The API token used for authentication with the Mistral AI provider.
  */
 public fun simpleMistralAIExecutor(apiKey: String): SingleLLMPromptExecutor =
     SingleLLMPromptExecutor(MistralAILLMClient(apiKey))

@@ -127,7 +127,7 @@ public abstract class LLMProvider(public val id: String, public val display: Str
     /**
      * Represents the Mistral AI provider within the available set of large language model providers.
      *
-     * DeepSeek is identified by its unique ID ("mistralai") and display name ("MistralAI").
+     * MistralAI is identified by its unique ID ("mistralai") and display name ("MistralAI").
      * It extends the `LLMProvider` sealed class,
      * which serves as a base class for all supported language model providers.
      *
