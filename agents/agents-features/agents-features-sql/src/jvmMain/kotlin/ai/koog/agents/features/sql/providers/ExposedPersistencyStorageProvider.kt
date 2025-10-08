@@ -155,7 +155,7 @@ public abstract class ExposedPersistenceStorageProvider(
             return transaction {
                 checkpointsTable.select(checkpointsTable.checkpointJson).where {
                     (checkpointsTable.persistenceId eq agentId) and
-                            ((checkpointsTable.ttlTimestamp eq null) or (checkpointsTable.ttlTimestamp greaterEq now))
+                        ((checkpointsTable.ttlTimestamp eq null) or (checkpointsTable.ttlTimestamp greaterEq now))
                 }.orderBy(checkpointsTable.createdAt to SortOrder.ASC).mapNotNull { row ->
                     runCatching {
                         json.decodeFromString<AgentCheckpointData>(row[checkpointsTable.checkpointJson])

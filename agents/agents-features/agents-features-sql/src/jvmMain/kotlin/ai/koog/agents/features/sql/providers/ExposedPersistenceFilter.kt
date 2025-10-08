@@ -8,7 +8,7 @@ import org.jetbrains.exposed.sql.Query
  * Implementations translate high-level checkpoint filtering intent into an Exposed [Query]
  * that will be executed by [ExposedPersistenceStorageProvider].
  */
-public interface ExposedPersistenceFilter  {
+public interface ExposedPersistenceFilter {
     /**
      * Build an Exposed DSL [Query] that selects rows from the given [table]
      * matching the desired conditions.
