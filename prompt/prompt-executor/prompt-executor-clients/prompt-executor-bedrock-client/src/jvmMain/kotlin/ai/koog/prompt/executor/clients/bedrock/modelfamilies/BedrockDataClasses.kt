@@ -1,6 +1,6 @@
 package ai.koog.prompt.executor.clients.bedrock.modelfamilies
 
-import ai.koog.prompt.executor.clients.anthropic.AnthropicResponseContent
+import ai.koog.prompt.executor.clients.anthropic.models.AnthropicResponseContent
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement

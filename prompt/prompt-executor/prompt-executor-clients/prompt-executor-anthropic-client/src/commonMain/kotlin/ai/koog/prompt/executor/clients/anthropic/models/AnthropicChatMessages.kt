@@ -1,4 +1,4 @@
-package ai.koog.prompt.executor.clients.anthropic
+package ai.koog.prompt.executor.clients.anthropic.models
 
 import ai.koog.prompt.executor.clients.InternalLLMClientApi
 import ai.koog.prompt.executor.clients.serialization.AdditionalPropertiesFlatteningSerializer
@@ -6,6 +6,7 @@ import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.EncodeDefault.Mode.ALWAYS
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonClassDiscriminator
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 
@@ -18,11 +19,18 @@ import kotlinx.serialization.json.JsonObject
  * @property model The identifier of the Anthropic model to be used for processing the request.
  * @property messages A list of messages constituting the dialogue. Each message contains a role and corresponding content.
  * @property maxTokens The maximum number of tokens to generate in the response. Defaults to 2048.
- * @property temperature The sampling temperature for adjusting randomness in generation. Higher values increase randomness.
- * @property system An optional list of system-level messages defining additional context or instructions.
- * @property tools An optional list of tools that the Anthropic model can utilize during processing.
+ * @property container Container identifier for reuse across requests.
+ * @property mcpServers MCP servers to be used in this request
+ * @property serviceTier Determines whether to use priority capacity (if available) or standard capacity for this request.
+ * @property stopSequence Custom text sequences that will cause the model to stop generating.
  * @property stream Whether responses should be returned as a stream. Defaults to false.
+ * @property system An optional list of system-level messages defining additional context or instructions.
+ * @property temperature The sampling temperature for adjusting randomness in generation. Higher values increase randomness.
+ * @property thinking Configuration for enabling Claude's extended thinking.
  * @property toolChoice An optional specification for tool selection during processing, which may define automatic, specific, or no tool usage.
+ * @property tools An optional list of tools that the Anthropic model can utilize during processing.
+ * @property topK Only sample from the top K options for each subsequent token.
+ * @property topP Use nucleus sampling.
  */
 @InternalLLMClientApi
 @Serializable
@@ -32,13 +40,23 @@ public data class AnthropicMessageRequest(
     @SerialName("max_tokens")
     @EncodeDefault
     val maxTokens: Int = MAX_TOKENS_DEFAULT,
-    val temperature: Double? = null,
-    val system: List<SystemAnthropicMessage>? = null,
-    val tools: List<AnthropicTool>? = null,
+    val container: String? = null,
+    @SerialName("mcp_servers")
+    val mcpServers: List<AnthropicMCPServerURLDefinition>? = null,
+    @SerialName("service_tier")
+    val serviceTier: AnthropicServiceTier? = null,
+    @SerialName("stop_sequence")
+    val stopSequence: List<String>? = null,
     @EncodeDefault
     val stream: Boolean = false,
+    val system: List<SystemAnthropicMessage>? = null,
+    val temperature: Double? = null,
+    val thinking: AnthropicThinking? = null,
     @SerialName("tool_choice")
     val toolChoice: AnthropicToolChoice? = null,
+    val tools: List<AnthropicTool>? = null,
+    val topK: Int? = null,
+    val topP: Double? = null,
     val additionalProperties: Map<String, JsonElement>? = null,
 ) {
     init {
@@ -248,6 +266,90 @@ public sealed interface DocumentSource {
     @Serializable
     @SerialName("text")
     public data class PlainText(val data: String, val mediaType: String) : DocumentSource
+}
+
+/**
+ * Represents an MCP server URL definition for Anthropic client integration.
+ * This class defines the properties needed for connecting to and configuring an MCP server.
+ *
+ * @property name The name or identifier of the MCP server.
+ * @property url The URL endpoint of the MCP server.
+ * @property authorizationToken Optional authorization token for authentication with the MCP server.
+ * @property toolConfiguration Optional configuration for tool usage on the MCP server.
+ * @property type The type of server definition, always set to "url".
+ */
+@Serializable
+public class AnthropicMCPServerURLDefinition(
+    public val name: String,
+    public val url: String,
+    @SerialName("authorization_token")
+    public val authorizationToken: String? = null,
+    @SerialName("tool_configuration")
+    public val toolConfiguration: AnthropicToolConfiguration? = null,
+) {
+
+    /**
+     * The type of mcp server definition, which is always set to "url".
+     */
+    public val type: String = "url"
+}
+
+/**
+ * Represents a configuration for tool usage in Anthropic client interactions.
+ *
+ * @property allowedTools Optional list of tool names that are permitted to be used.
+ * @property enabled Optional flag to enable or disable tool usage globally.
+ */
+@Serializable
+public class AnthropicToolConfiguration(
+    @SerialName("allowed_tools")
+    public val allowedTools: List<String>? = null,
+    public val enabled: Boolean? = null,
+)
+
+/**
+ * Represents the available service tiers for Anthropic API requests.
+ *
+ * This enum defines the options for selecting service capacity when making requests:
+ * - [AUTO]: Automatically selects between priority and standard capacity
+ * - [STANDARD_ONLY]: Forces usage of standard capacity only
+ */
+@Serializable
+public enum class AnthropicServiceTier {
+    @SerialName("auto")
+    AUTO,
+
+    @SerialName("standard_only")
+    STANDARD_ONLY
+}
+
+/**
+ * Configuration for enabling Claude's extended thinking.
+ *
+ * When enabled, responses include thinking content blocks showing Claude's thinking process before the final answer.
+ * Requires a minimum budget of 1,024 tokens and counts towards your `maxTokens` limit.
+ */
+@Serializable
+@JsonClassDiscriminator("type")
+public sealed interface AnthropicThinking {
+
+    /**
+     * @property budgetTokens Determines how many tokens Claude can use for its internal reasoning process.
+     * Larger budgets can enable more thorough analysis for complex problems, improving response quality.
+     */
+    @Serializable
+    @SerialName("enabled")
+    public class Enabled(
+        @SerialName("budget_tokens")
+        public val budgetTokens: Int,
+    ) : AnthropicThinking
+
+    /**
+     *
+     */
+    @Serializable
+    @SerialName("disabled")
+    public class Disabled : AnthropicThinking
 }
 
 /**

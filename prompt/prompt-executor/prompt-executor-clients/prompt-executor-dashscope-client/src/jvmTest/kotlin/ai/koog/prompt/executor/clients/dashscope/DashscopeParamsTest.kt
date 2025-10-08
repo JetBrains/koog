@@ -57,8 +57,6 @@ class DashscopeParamsTest {
             schema = LLMParams.Schema.JSON.Basic("test", JsonObject(mapOf())),
             toolChoice = LLMParams.ToolChoice.Named("calculator"),
             user = "alice",
-            includeThoughts = true,
-            thinkingBudget = 500,
             additionalProperties = mapOf("foo" to JsonPrimitive("bar")),
             enableSearch = true,
             parallelToolCalls = false,
@@ -83,7 +81,6 @@ class DashscopeParamsTest {
             numberOfChoices = 3,
             speculation = "sp",
             user = "uid",
-            includeThoughts = false,
             additionalProperties = mapOf("foo" to JsonPrimitive("bar"))
         )
         val ds = base.toDashscopeParams()
@@ -92,6 +89,5 @@ class DashscopeParamsTest {
         assertEquals(base.numberOfChoices, ds.numberOfChoices)
         assertEquals(base.speculation, ds.speculation)
         assertEquals(base.user, ds.user)
-        assertEquals(base.includeThoughts, ds.includeThoughts)
     }
 }

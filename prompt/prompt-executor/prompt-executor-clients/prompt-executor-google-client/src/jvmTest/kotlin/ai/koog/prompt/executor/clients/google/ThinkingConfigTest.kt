@@ -1,5 +1,7 @@
 package ai.koog.prompt.executor.clients.google
 
+import ai.koog.prompt.executor.clients.google.models.GoogleGenerationConfig
+import ai.koog.prompt.executor.clients.google.models.GoogleThinkingConfig
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.Assertions.assertTrue
 import kotlin.test.Test

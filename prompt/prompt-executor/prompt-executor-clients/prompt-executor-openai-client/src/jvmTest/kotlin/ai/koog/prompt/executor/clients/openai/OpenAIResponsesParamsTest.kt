@@ -71,7 +71,6 @@ class OpenAIResponsesParamsTest {
             numberOfChoices = 2,
             speculation = "spec",
             user = "user-id",
-            includeThoughts = true,
         )
 
         val resp = base.toOpenAIResponsesParams()
@@ -81,7 +80,6 @@ class OpenAIResponsesParamsTest {
         assertEquals(base.numberOfChoices, resp.numberOfChoices)
         assertEquals(base.speculation, resp.speculation)
         assertEquals(base.user, resp.user)
-        assertEquals(base.includeThoughts, resp.includeThoughts)
         assertEquals(base.additionalProperties, resp.additionalProperties)
     }
 
@@ -140,8 +138,6 @@ class OpenAIResponsesParamsTest {
             schema = LLMParams.Schema.JSON.Basic("test", JsonObject(mapOf())),
             toolChoice = LLMParams.ToolChoice.Required,
             user = "user-id",
-            includeThoughts = true,
-            thinkingBudget = 123,
             additionalProperties = mapOf("foo" to JsonPrimitive("bar")),
             background = true,
             include = listOf("a", "b", "c"),
