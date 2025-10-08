@@ -168,28 +168,6 @@ public object MistralAIModels : LLModelDefinitions {
             ),
             contextLength = 128_000
         )
-
-        /**
-         * Ministral 3B - World's best edge model (Premier)
-         *
-         * Released October 2024. Extremely compact yet capable edge model.
-         *
-         * 128k context window
-         *
-         * @see <a href="https://docs.mistral.ai/models/">Mistral AI Models</a>
-         */
-        public val Ministral3B: LLModel = LLModel(
-            provider = LLMProvider.MistralAI,
-            id = "ministral-3b-latest",
-            capabilities = listOf(
-                LLMCapability.Temperature,
-                LLMCapability.Completion,
-                LLMCapability.Tools,
-                LLMCapability.ToolChoice,
-                LLMCapability.MultipleChoices
-            ),
-            contextLength = 128_000
-        )
     }
 
     /**

@@ -4,6 +4,7 @@ import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.deepseek.DeepSeekLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
+import ai.koog.prompt.executor.clients.mistralai.MistralAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterLLMClient
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
@@ -51,6 +52,7 @@ class KoogAutoConfigurationIntegrationTest {
             AnthropicLLMClient::class,
             DeepSeekLLMClient::class,
             GoogleLLMClient::class,
+            MistralAILLMClient::class,
             OpenAILLMClient::class,
             OpenRouterLLMClient::class,
             OllamaClient::class,
@@ -76,6 +78,7 @@ class KoogAutoConfigurationIntegrationTest {
             "anthropicExecutor",
             "deepSeekExecutor",
             "googleExecutor",
+            "mistralAIExecutor",
             "ollamaExecutor",
             "openAIExecutor",
             "openRouterExecutor",

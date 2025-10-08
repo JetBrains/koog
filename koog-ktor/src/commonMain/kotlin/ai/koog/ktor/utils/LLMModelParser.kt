@@ -3,6 +3,7 @@ package ai.koog.ktor.utils
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.deepseek.DeepSeekModels
 import ai.koog.prompt.executor.clients.google.GoogleModels
+import ai.koog.prompt.executor.clients.mistralai.MistralAIModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterModels
 import ai.koog.prompt.llm.LLModel
@@ -31,6 +32,7 @@ internal fun getModelFromIdentifier(identifier: String): LLModel? {
         "openai" -> openAI(parts, identifier)
         "anthropic" -> anthropic(parts, identifier)
         "google" -> google(parts, identifier)
+        "mistral" -> mistral(parts, identifier)
         "openrouter" -> openrouter(parts, identifier)
         "deepseek" -> deepSeek(parts, identifier)
         "ollama" -> ollama(parts, identifier)
@@ -137,6 +139,30 @@ private fun google(parts: List<String>, identifier: String): LLModel? {
     return model
 }
 
+private fun mistral(parts: List<String>, identifier: String): LLModel? {
+    if (parts.size < 3) {
+        logger.debug("Mistral AI model identifier must be in format 'mistral.category.model', got: $identifier")
+        return null
+    }
+
+    val category = parts[1].lowercase()
+    val modelName = parts[2].lowercase()
+
+    val categoryMap = MISTRAL_MODELS_MAP[category]
+    if (categoryMap == null) {
+        logger.debug("Unknown Mistral AI category: $category")
+        return null
+    }
+
+    val model = categoryMap[modelName]
+    if (model == null) {
+        logger.debug("Model '$modelName' not found in Mistral AI category '$category'")
+        return null
+    }
+
+    return model
+}
+
 private fun anthropic(parts: List<String>, identifier: String): LLModel? {
     if (parts.size < 2) {
         logger.debug("Anthropic model identifier must be in format 'anthropic.model', got: $identifier")
@@ -236,6 +262,24 @@ private val GOOGLE_MODELS_MAP = mapOf(
     "gemini2_5pro" to GoogleModels.Gemini2_5Pro,
     "gemini2_5flash" to GoogleModels.Gemini2_5Flash,
     "gemini2_5flashlite" to GoogleModels.Gemini2_5FlashLite,
+)
+
+private val MISTRAL_MODELS_MAP = mapOf(
+    "chat" to mapOf(
+        "mistral_medium_3_1" to MistralAIModels.Chat.MistralMedium31,
+        "mistral_large_2_1" to MistralAIModels.Chat.MistralLarge21,
+        "mistral_small_2" to MistralAIModels.Chat.MistralSmall2,
+        "magistral_medium_1_2" to MistralAIModels.Chat.MagistralMedium12,
+        "codestral" to MistralAIModels.Chat.Codestral,
+        "devstral_medium" to MistralAIModels.Chat.DevstralMedium,
+    ),
+    "embeddings" to mapOf(
+        "mistral_embed" to MistralAIModels.Embeddings.MistralEmbed,
+        "codestral_embed" to MistralAIModels.Embeddings.CodestralEmbed,
+    ),
+    "moderation" to mapOf(
+        "mistral_moderation" to MistralAIModels.Moderation.MistralModeration
+    )
 )
 
 private val OPENROUTER_MODELS_MAP = mapOf(
