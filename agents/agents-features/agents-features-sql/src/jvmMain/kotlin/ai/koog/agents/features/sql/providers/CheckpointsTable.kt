@@ -36,7 +36,7 @@ public open class CheckpointsTable(tableName: String) : Table(tableName) {
     /**
      * Represents the "created_at" column in the CheckpointsTable.
      *
-     * This column stores the creation timestamp of a checkpoint as a Unix time value in milliseconds.
+     * This column stores the creation timestamp of a checkpoint.
      * It is indexed to enable efficient ordering and querying of checkpoints by their creation time.
      */
     public val createdAt: Column<Long> = long("created_at").index()

@@ -3,11 +3,6 @@ package ai.koog.agents.snapshot.providers.filters
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
 
 /**
- * Interface for filtering agent checkpoints.
- */
-public interface AgentCheckpointFilter
-
-/**
  * An interface that extends [AgentCheckpointFilter] to provide a mechanism for evaluating
  * whether a specific agent checkpoint meets the predicate-defined conditions.
  *
@@ -15,7 +10,7 @@ public interface AgentCheckpointFilter
  * should be acted upon, retained, or utilized in a specific context. The evaluation is
  * performed using the [check] function, which implements the predicate logic.
  */
-public interface AgentCheckpointPredicateFilter : AgentCheckpointFilter {
+public interface AgentCheckpointPredicateFilter {
     /**
      * Evaluates whether the provided agent checkpoint data meets the defined conditions.
      *

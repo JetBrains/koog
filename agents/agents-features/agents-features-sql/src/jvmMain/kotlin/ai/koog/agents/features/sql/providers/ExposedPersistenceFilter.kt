@@ -1,6 +1,5 @@
 package ai.koog.agents.features.sql.providers
 
-import ai.koog.agents.snapshot.providers.filters.AgentCheckpointFilter
 import org.jetbrains.exposed.sql.Query
 
 /**
@@ -9,7 +8,7 @@ import org.jetbrains.exposed.sql.Query
  * Implementations translate high-level checkpoint filtering intent into an Exposed [Query]
  * that will be executed by [ExposedPersistenceStorageProvider].
  */
-public interface ExposedPersistenceFilter : AgentCheckpointFilter {
+public interface ExposedPersistenceFilter  {
     /**
      * Build an Exposed DSL [Query] that selects rows from the given [table]
      * matching the desired conditions.

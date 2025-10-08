@@ -11,6 +11,7 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.isNotNull
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.deleteWhere
+import org.jetbrains.exposed.sql.or
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.upsert
 
@@ -150,9 +151,11 @@ public abstract class ExposedPersistenceStorageProvider(
 
     override suspend fun getCheckpoints(agentId: String, filter: ExposedPersistenceFilter?): List<AgentCheckpointData> {
         if (filter == null) {
+            val now = Clock.System.now().toEpochMilliseconds()
             return transaction {
                 checkpointsTable.select(checkpointsTable.checkpointJson).where {
-                    checkpointsTable.persistenceId eq agentId
+                    (checkpointsTable.persistenceId eq agentId) and
+                            ((checkpointsTable.ttlTimestamp eq null) or (checkpointsTable.ttlTimestamp greaterEq now))
                 }.orderBy(checkpointsTable.createdAt to SortOrder.ASC).mapNotNull { row ->
                     runCatching {
                         json.decodeFromString<AgentCheckpointData>(row[checkpointsTable.checkpointJson])
