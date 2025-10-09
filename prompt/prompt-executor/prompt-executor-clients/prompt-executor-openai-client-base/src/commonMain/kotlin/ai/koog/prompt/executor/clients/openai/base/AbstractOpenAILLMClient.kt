@@ -93,6 +93,18 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
     protected val logger: KLogger
 ) : LLMClient {
 
+    protected companion object {
+
+        /**
+         * Register basic and standard openai json schema generator for given provider
+         */
+        @OptIn(InternalStructuredOutputApi::class)
+        public fun registerOpenAIJsonSchemaGenerators(llmProvider: LLMProvider) {
+            RegisteredBasicJsonSchemaGenerators[llmProvider] = OpenAIBasicJsonSchemaGenerator
+            RegisteredStandardJsonSchemaGenerators[llmProvider] = OpenAIStandardJsonSchemaGenerator
+        }
+    }
+
     protected open val clientName: String = this::class.simpleName ?: "UnknownClient"
 
     private val chatCompletionsPath: String = settings.chatCompletionsPath
@@ -121,18 +133,6 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
             requestTimeoutMillis = settings.timeoutConfig.requestTimeoutMillis // Increase timeout to 60 seconds
             connectTimeoutMillis = settings.timeoutConfig.connectTimeoutMillis
             socketTimeoutMillis = settings.timeoutConfig.socketTimeoutMillis
-        }
-    }
-
-    protected companion object {
-
-        /**
-         * Register basic and standard openai json schema generator for given provider
-         */
-        @OptIn(InternalStructuredOutputApi::class)
-        public fun registerOpenAIJsonSchemaGenerators(llmProvider: LLMProvider) {
-            RegisteredBasicJsonSchemaGenerators[llmProvider] = OpenAIBasicJsonSchemaGenerator
-            RegisteredStandardJsonSchemaGenerators[llmProvider] = OpenAIStandardJsonSchemaGenerator
         }
     }
 

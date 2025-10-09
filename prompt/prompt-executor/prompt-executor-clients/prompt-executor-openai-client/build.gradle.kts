@@ -21,6 +21,7 @@ kotlin {
 
         jvmTest {
             dependencies {
+                implementation(project(":test-utils"))
             }
         }
     }
