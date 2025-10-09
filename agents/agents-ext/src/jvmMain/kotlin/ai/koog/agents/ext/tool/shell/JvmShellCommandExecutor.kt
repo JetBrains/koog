@@ -51,13 +51,13 @@ public class JvmShellCommandExecutor : ShellCommandExecutor {
 
         val stdoutJob = launch(Dispatchers.IO) {
             process.inputStream.bufferedReader().useLines { lines ->
-                lines.forEach { stdoutBuilder.append(it).appendLine() }
+                lines.forEach { stdoutBuilder.appendLine(it) }
             }
         }
 
         val stderrJob = launch(Dispatchers.IO) {
             process.errorStream.bufferedReader().useLines { lines ->
-                lines.forEach { stderrBuilder.append(it).appendLine() }
+                lines.forEach { stderrBuilder.appendLine(it) }
             }
         }
 
