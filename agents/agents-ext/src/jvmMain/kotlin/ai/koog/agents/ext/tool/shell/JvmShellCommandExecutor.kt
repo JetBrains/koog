@@ -3,6 +3,7 @@ package ai.koog.agents.ext.tool.shell
 import ai.koog.agents.ext.tool.shell.ShellCommandExecutor.ExecutionResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.concurrent.TimeUnit
@@ -61,44 +62,41 @@ public class JvmShellCommandExecutor : ShellCommandExecutor {
             }
         }
 
-        val completed = process.waitFor(timeoutSeconds.toLong(), TimeUnit.SECONDS)
+        try {
+            val completed = runInterruptible {
+                process.waitFor(timeoutSeconds.toLong(), TimeUnit.SECONDS)
+            }
 
-        if (!completed) {
+            if (!completed) {
+                val combinedPartialOutput = buildCombinedOutput(
+                    stdoutBuilder.toString().trimEnd(),
+                    stderrBuilder.toString().trimEnd(),
+                    "Command timed out after $timeoutSeconds seconds"
+                )
+                return@withContext ExecutionResult(output = combinedPartialOutput, exitCode = null)
+            }
+
+            stdoutJob.join()
+            stderrJob.join()
+
+            val combinedOutput = buildCombinedOutput(
+                stdoutBuilder.toString().trimEnd(),
+                stderrBuilder.toString().trimEnd()
+            )
+
+            return@withContext ExecutionResult(output = combinedOutput, exitCode = process.exitValue())
+        } finally {
             process.destroyForcibly()
             stdoutJob.cancel()
             stderrJob.cancel()
-
-            val partialStdout = stdoutBuilder.toString().trimEnd()
-            val partialStderr = stderrBuilder.toString().trimEnd()
-
-            val timeoutMessage = "Command timed out after $timeoutSeconds seconds"
-
-            val combinedOutput = buildString {
-                if (partialStdout.isNotEmpty()) appendLine(partialStdout)
-                if (partialStderr.isNotEmpty()) appendLine(partialStderr)
-                appendLine(timeoutMessage)
-            }.trimEnd()
-
-            return@withContext ExecutionResult(
-                output = combinedOutput,
-                exitCode = null
-            )
         }
+    }
 
-        stdoutJob.join()
-        stderrJob.join()
-
-        val stdoutResult = stdoutBuilder.toString().trimEnd()
-        val stderrResult = stderrBuilder.toString().trimEnd()
-
-        val combinedOutput = buildString {
-            if (stdoutResult.isNotEmpty()) appendLine(stdoutResult)
-            if (stderrResult.isNotEmpty()) appendLine(stderrResult)
+    private fun buildCombinedOutput(stdout: String, stderr: String, message: String? = null): String {
+        return buildString {
+            if (stdout.isNotEmpty()) appendLine(stdout)
+            if (stderr.isNotEmpty()) appendLine(stderr)
+            message?.let { appendLine(it) }
         }.trimEnd()
-
-        ExecutionResult(
-            output = combinedOutput,
-            exitCode = process.exitValue()
-        )
     }
 }

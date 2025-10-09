@@ -2,6 +2,7 @@ package ai.koog.agents.ext.tool.shell
 
 import ai.koog.agents.core.tools.DirectToolCallsEnabler
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -13,9 +14,12 @@ import java.nio.file.Path
 import kotlin.io.path.createDirectories
 import kotlin.io.path.createFile
 import kotlin.io.path.writeText
+import kotlin.system.measureTimeMillis
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.test.fail
+import kotlin.time.Duration.Companion.seconds
 
 @OptIn(InternalAgentToolsApi::class)
 class ExecuteShellCommandToolJvmTest {
@@ -28,14 +32,13 @@ class ExecuteShellCommandToolJvmTest {
     @TempDir
     lateinit var tempDir: Path
 
-    private suspend fun execute(
+    private suspend fun executeShellCommand(
         command: String,
         timeoutSeconds: Int = 60,
         workingDirectory: String? = null,
         confirmationHandler: ShellCommandConfirmationHandler = BraveModeConfirmationHandler()
     ): ExecuteShellCommandTool.Result {
-        val tool = ExecuteShellCommandTool(executor, confirmationHandler)
-        return tool.execute(
+        return ExecuteShellCommandTool(executor, confirmationHandler).execute(
             ExecuteShellCommandTool.Args(command, timeoutSeconds, workingDirectory),
             enabler
         )
@@ -68,7 +71,7 @@ class ExecuteShellCommandToolJvmTest {
         val file = tempDir.resolve("fruits.txt").createFile()
         file.writeText("apple\nbanana\napricot\ncherry\navocado")
 
-        val result = execute("grep ^a fruits.txt", workingDirectory = tempDir.toString())
+        val result = executeShellCommand("grep ^a fruits.txt", workingDirectory = tempDir.toString())
 
         val expected = """
             Command: grep ^a fruits.txt
@@ -87,7 +90,7 @@ class ExecuteShellCommandToolJvmTest {
         val file = tempDir.resolve("fruits.txt").createFile()
         file.writeText("apple\r\nbanana\r\napricot\r\ncherry\r\navocado")
 
-        val result = execute("findstr /B a fruits.txt", workingDirectory = tempDir.toString())
+        val result = executeShellCommand("findstr /B a fruits.txt", workingDirectory = tempDir.toString())
 
         val expected = """
             Command: findstr /B a fruits.txt
@@ -108,7 +111,7 @@ class ExecuteShellCommandToolJvmTest {
         tempDir.resolve("config.txt").createFile()
         tempDir.resolve("readme.md").createFile()
 
-        val result = execute("find . -name '*.txt' -type f | sort", workingDirectory = tempDir.toString())
+        val result = executeShellCommand("find . -name '*.txt' -type f | sort", workingDirectory = tempDir.toString())
 
         val expected = """
             Command: find . -name '*.txt' -type f | sort
@@ -128,7 +131,7 @@ class ExecuteShellCommandToolJvmTest {
         tempDir.resolve("config.txt").createFile()
         tempDir.resolve("readme.md").createFile()
 
-        val result = execute("dir /b *.txt | sort", workingDirectory = tempDir.toString())
+        val result = executeShellCommand("dir /b *.txt | sort", workingDirectory = tempDir.toString())
 
         val expected = """
             Command: dir /b *.txt | sort
@@ -145,7 +148,7 @@ class ExecuteShellCommandToolJvmTest {
     fun `counting lines in file on Windows`() = runBlocking {
         tempDir.resolve("file.txt").writeText("line1\r\nline2\r\nline3\r\nline4")
 
-        val result = execute("find /c /v \"\" file.txt", workingDirectory = tempDir.toString())
+        val result = executeShellCommand("find /c /v \"\" file.txt", workingDirectory = tempDir.toString())
 
         val expected = """
             Command: find /c /v "" file.txt
@@ -165,7 +168,7 @@ class ExecuteShellCommandToolJvmTest {
         subDir.resolve("Utils.kt").createFile()
         tempDir.resolve("README.md").createFile()
 
-        val result = execute("find . -type f | sort", workingDirectory = tempDir.toString())
+        val result = executeShellCommand("find . -type f | sort", workingDirectory = tempDir.toString())
 
         val expected = """
             Command: find . -type f | sort
@@ -186,7 +189,7 @@ class ExecuteShellCommandToolJvmTest {
         subDir.resolve("Utils.kt").createFile()
         tempDir.resolve("README.md").createFile()
 
-        val result = execute("dir /s /b /o:n", workingDirectory = tempDir.toString())
+        val result = executeShellCommand("dir /s /b /o:n", workingDirectory = tempDir.toString())
 
         val tempDirStr = tempDir.toAbsolutePath().toString()
 
@@ -210,7 +213,7 @@ class ExecuteShellCommandToolJvmTest {
     fun `command with no output shows placeholder`() = runBlocking {
         val testDir = tempDir.resolve("empty_test").createDirectories()
 
-        val result = execute("mkdir newdir", workingDirectory = testDir.toString())
+        val result = executeShellCommand("mkdir newdir", workingDirectory = testDir.toString())
 
         val expected = """
             Command: mkdir newdir
@@ -227,7 +230,7 @@ class ExecuteShellCommandToolJvmTest {
     fun `command with no output shows placeholder on Windows`() = runBlocking {
         val testDir = tempDir.resolve("empty_test").createDirectories()
 
-        val result = execute("mkdir newdir", workingDirectory = testDir.toString())
+        val result = executeShellCommand("mkdir newdir", workingDirectory = testDir.toString())
 
         val expected = """
             Command: mkdir newdir
@@ -244,7 +247,7 @@ class ExecuteShellCommandToolJvmTest {
     @Test
     @EnabledOnOs(OS.LINUX, OS.MAC)
     fun `command fails with error message`() = runBlocking {
-        val result = execute("grep nonexistent /nonexistent/file.txt")
+        val result = executeShellCommand("grep nonexistent /nonexistent/file.txt")
 
         val expected = """
             Command: grep nonexistent /nonexistent/file.txt
@@ -258,7 +261,7 @@ class ExecuteShellCommandToolJvmTest {
     @Test
     @EnabledOnOs(OS.WINDOWS)
     fun `command fails with error message on Windows`() = runBlocking {
-        val result = execute("type C:\\nonexistent\\file.txt")
+        val result = executeShellCommand("type C:\\nonexistent\\file.txt")
 
         val expected = """
             Command: type C:\nonexistent\file.txt
@@ -274,7 +277,7 @@ class ExecuteShellCommandToolJvmTest {
     fun `stdout and stderr are both captured`() = runBlocking {
         tempDir.resolve("file1.txt").writeText("Hello from file1")
 
-        val result = execute("cat file1.txt file2.txt", workingDirectory = tempDir.toString())
+        val result = executeShellCommand("cat file1.txt file2.txt", workingDirectory = tempDir.toString())
 
         val expected = """
             Command: cat file1.txt file2.txt
@@ -291,7 +294,7 @@ class ExecuteShellCommandToolJvmTest {
     fun `stdout and stderr are both captured on Windows`() = runBlocking {
         tempDir.resolve("file1.txt").writeText("Hello from file1")
 
-        val result = execute("type file1.txt file2.txt", workingDirectory = tempDir.toString())
+        val result = executeShellCommand("type file1.txt file2.txt", workingDirectory = tempDir.toString())
 
         val expected = """
             Command: type file1.txt file2.txt
@@ -317,7 +320,7 @@ class ExecuteShellCommandToolJvmTest {
                 ShellCommandConfirmation.Denied("No")
         }
 
-        val result = execute("rm important-file.txt", confirmationHandler = handler)
+        val result = executeShellCommand("rm important-file.txt", confirmationHandler = handler)
 
         val expected = """
             Command: rm important-file.txt
@@ -335,7 +338,7 @@ class ExecuteShellCommandToolJvmTest {
                 ShellCommandConfirmation.Denied("Cannot delete important files")
         }
 
-        val result = execute("rm important-file.txt", confirmationHandler = handler)
+        val result = executeShellCommand("rm important-file.txt", confirmationHandler = handler)
 
         val expected = """
             Command: rm important-file.txt
@@ -351,7 +354,7 @@ class ExecuteShellCommandToolJvmTest {
     @Test
     @EnabledOnOs(OS.LINUX, OS.MAC)
     fun `long running command times out`() = runBlocking {
-        val result = execute("sleep 10", timeoutSeconds = 1)
+        val result = executeShellCommand("sleep 10", timeoutSeconds = 1)
 
         val expected = """
             Command: sleep 10
@@ -365,7 +368,7 @@ class ExecuteShellCommandToolJvmTest {
     @Test
     @EnabledOnOs(OS.WINDOWS)
     fun `long running command times out on Windows`() = runBlocking {
-        val result = execute("powershell -Command \"Start-Sleep -Seconds 10\"", timeoutSeconds = 1)
+        val result = executeShellCommand("powershell -Command \"Start-Sleep -Seconds 10\"", timeoutSeconds = 1)
 
         val expected = """
             Command: powershell -Command "Start-Sleep -Seconds 10"
@@ -379,7 +382,7 @@ class ExecuteShellCommandToolJvmTest {
     @Test
     @EnabledOnOs(OS.LINUX, OS.MAC)
     fun `command with partial output times out`() = runBlocking {
-        val result = execute("for i in {1..10}; do echo \$i; sleep 1; done", timeoutSeconds = 3)
+        val result = executeShellCommand("for i in {1..10}; do echo \$i; sleep 1; done", timeoutSeconds = 3)
 
         val expected = """
             Command: for i in {1..10}; do echo ${'$'}i; sleep 1; done
@@ -396,7 +399,7 @@ class ExecuteShellCommandToolJvmTest {
     @Test
     @EnabledOnOs(OS.WINDOWS)
     fun `command with partial output times out on Windows`() = runBlocking {
-        val result = execute(
+        val result = executeShellCommand(
             """cmd /c "echo 1 & echo 2 & echo 3 & powershell -Command Start-Sleep -Seconds 10"""",
             timeoutSeconds = 1
         )
@@ -417,18 +420,22 @@ class ExecuteShellCommandToolJvmTest {
 
     @Test
     @EnabledOnOs(OS.LINUX, OS.MAC)
-    fun `executor can be cancelled with high timeout`() = runBlocking {
-        val startTime = System.currentTimeMillis()
-
+    fun `executor can be cancelled with timeout`() = runBlocking {
         val job = launch {
-            execute("sleep 3", 999)
+            val result = executeShellCommand("sleep 60", timeoutSeconds = 30)
+            fail("Command should have been cancelled, but completed with: ${result.textForLLM()}")
         }
 
-        delay(200)
-        job.cancel()
-        val elapsedMs = System.currentTimeMillis() - startTime
+        delay(1.seconds)
 
-        assertTrue(elapsedMs < 1000, "Should cancel quickly, but took ${elapsedMs}ms")
+        val cancelDurationMs = measureTimeMillis {
+            job.cancelAndJoin()
+        }
+
+        assertTrue(
+            cancelDurationMs < 1000,
+            "Cancellation should be immediate, but took ${cancelDurationMs}ms"
+        )
         assertTrue(job.isCancelled, "Job should be cancelled")
     }
 }

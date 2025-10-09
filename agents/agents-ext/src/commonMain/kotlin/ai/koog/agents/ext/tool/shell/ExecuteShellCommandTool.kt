@@ -4,6 +4,7 @@ import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * Executes shell commands with user approval and automatic timeout.
@@ -104,14 +105,17 @@ public class ExecuteShellCommandTool(
      *
      * @param args The command string, timeout duration, optional working directory
      * @return Result containing the command output and exit code, or an error message explaining why it didn't run
-     */
+     * @throws CancellationException if canceled while the command is executing
+     **/
     override suspend fun execute(args: Args): Result = when (
         val confirmation = confirmationHandler.requestConfirmation(args)
     ) {
-        is ShellCommandConfirmation.Approved -> runCatching {
+        is ShellCommandConfirmation.Approved -> try {
             val result = executor.execute(args.command, args.workingDirectory, args.timeoutSeconds)
             Result(args.command, result.exitCode, result.output)
-        }.getOrElse { e ->
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
             Result(args.command, null, "Failed to execute command: ${e.message}")
         }
 
