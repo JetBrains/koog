@@ -125,8 +125,12 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
     }
 
     protected companion object {
+
+        /**
+         * Register basic and standard openai json schema generator for given provider
+         */
         @OptIn(InternalStructuredOutputApi::class)
-        protected fun registerOpenAIJsonSchemaGenerators(llmProvider: LLMProvider) {
+        public fun registerOpenAIJsonSchemaGenerators(llmProvider: LLMProvider) {
             RegisteredBasicJsonSchemaGenerators[llmProvider] = OpenAIBasicJsonSchemaGenerator
             RegisteredStandardJsonSchemaGenerators[llmProvider] = OpenAIStandardJsonSchemaGenerator
         }
