@@ -1,6 +1,7 @@
 package ai.koog.prompt.executor.clients.openai.structure
 
 import ai.koog.agents.core.tools.annotations.LLMDescription
+import ai.koog.prompt.executor.clients.openai.base.structure.OpenAIStandardJsonSchemaGenerator
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.ClassDiscriminatorMode

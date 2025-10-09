@@ -13,8 +13,6 @@ kotlin {
         commonMain {
             dependencies {
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client-base"))
-                api(project(":prompt:prompt-structure"))
-                api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
                 implementation(libs.oshai.kotlin.logging)
             }
         }
