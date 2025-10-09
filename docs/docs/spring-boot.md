@@ -328,4 +328,4 @@ API key is required but not provided
 - Explore [Complex Workflow Agents](complex-workflow-agents.md) for advanced use cases
 - See [Tools Overview](tools-overview.md) to extend your agents' capabilities
 - Check out [Examples](examples.md) for real-world implementations
-- Read [Key Concepts](key-concepts.md) to understand the framework better
+- Read [Key Concepts](glossary.md) to understand the framework better

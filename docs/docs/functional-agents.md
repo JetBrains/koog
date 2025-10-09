@@ -14,9 +14,9 @@ This page guides you through the steps necessary to create a minimal functional 
 
 Before you start, make sure that you have the following:
 
-- A working Kotlin/JVM project with Gradle.
+- A working Kotlin/JVM project.
 - Java 17+ installed.
-- A valid API key from the LLM provider used to implement an AI agent. For a list of all available providers, refer to [Overview](index.md).
+- A valid API key from the LLM provider used to implement an AI agent. For a list of all available providers, refer to [LLM providers](llm-providers.md).
 - (Optional) Ollama installed and running locally if you use this provider.
 
 !!! tip
@@ -33,7 +33,7 @@ dependencies {
     implementation("ai.koog:koog-agents:VERSION")
 }
 ```
-For all available installation methods, see [Installation](index.md#installation).
+For all available installation methods, see [Install Koog](getting-started.md#install-koog).
 
 ## Create a minimal functional agent
 

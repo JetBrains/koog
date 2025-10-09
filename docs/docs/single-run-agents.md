@@ -18,7 +18,7 @@ To learn more about configuration options, see [API reference](https://api.koog.
 
 ## Prerequisites
 
-- You have a valid API key from the LLM provider used to implement an AI agent. For a list of all available providers, see [Overview](index.md).
+- You have a valid API key from the LLM provider used to implement an AI agent. For a list of all available providers, see [LLM providers](llm-providers.md).
 
 !!! tip
     Use environment variables or a secure configuration management system to store your API keys.
@@ -38,7 +38,7 @@ dependencies {
 }
 ```
 
-For all available installation methods, see [Installation](index.md#installation).
+For all available installation methods, see [Install Koog](getting-started.md#install-koog).
 
 ### 2. Create an agent 
 

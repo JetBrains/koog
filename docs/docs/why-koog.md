@@ -33,7 +33,7 @@ Koog includes pre-built, composable solutions to simplify and speed up the devel
 Koog supports the development and deployment of agentic applications across a variety of platforms and environments:
 
 *  **Multiplatform support**. You can deploy your agentic applications across JVM, JS, WasmJS, Android, and iOS targets.
-*  **Broad AI integration**. Koog integrates with major LLM providers, including OpenAI and Anthropic, as well as enterprise-level AI clouds like Bedrock. It also supports local models such as Ollama. For the full list of available providers, see [Available LLM providers and platforms](https://docs.koog.ai/#available-llm-providers-and-platforms).
+*  **Broad AI integration**. Koog integrates with major LLM providers, including OpenAI and Anthropic, as well as enterprise-level AI clouds like Bedrock. It also supports local models such as Ollama. For the full list of available providers, see [LLM providers](https://docs.koog.ai/llm-providers/).
 *  **OpenTelemetry support**. Koog provides out-of-the-box integration with popular observability providers like [W&B Weave](https://wandb.ai/site/weave/) and [Langfuse](https://langfuse.com/) for monitoring and debugging AI applications. With native OpenTelemetry support, you can trace, log, and measure your agents using the same tools you already use in your system. To learn more, refer to [OpenTelemetry](https://docs.koog.ai/opentelemetry-support/).
 *  **Spring Boot and Ktor integrations**. Koog integrates with widely used enterprise environments.
       * If you have a Ktor server, you can install Koog as a plugin, configure providers using configuration files, and call agents directly from any route without manually connecting LLM clients.
@@ -59,6 +59,6 @@ and educational resources to empower developers.
 ## Where to start
 
 * Explore Koog capabilities in [Overview](https://docs.koog.ai/).
-* Build your first Koog agent with our [Getting started](https://docs.koog.ai/single-run-agents/) guide.
+* Build your first Koog agent with our [Getting started](https://docs.koog.ai/getting-started/) guide.
 * See the latest updates in Koog [release notes](https://github.com/JetBrains/koog/blob/main/CHANGELOG.md).
 * Learn from [Examples](https://docs.koog.ai/examples/).
