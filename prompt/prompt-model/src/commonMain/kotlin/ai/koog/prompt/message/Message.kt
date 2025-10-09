@@ -294,7 +294,6 @@ public sealed interface Message {
     }
 }
 
-
 /**
  * Represents a contract for implementing entities that encapsulate reasoning or thought processes.
  *
