@@ -6,6 +6,7 @@ import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicInvokeModel
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicInvokeModelContent
+import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicInvokeModelMessage
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicToolChoice
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.anthropic.BedrockAnthropicClaudeSerialization.parseAnthropicStreamChunk
 import ai.koog.prompt.message.Message
@@ -55,7 +56,7 @@ class BedrockAnthropicClaudeSerializationTest {
 
         val userMessageActual = request.messages[0]
         assertEquals(1, request.messages.size)
-        assertEquals("user", userMessageActual.role)
+        assertTrue(userMessageActual is BedrockAnthropicInvokeModelMessage.User)
         assertEquals(1, userMessageActual.content.size)
         assertEquals(userMessage, (userMessageActual.content[0] as BedrockAnthropicInvokeModelContent.Text).text)
     }
@@ -77,16 +78,16 @@ class BedrockAnthropicClaudeSerializationTest {
         val userMessageActual = request.messages[0]
         val userMessageActual2 = request.messages[2]
         val assistantMessage = request.messages[1]
-        assertEquals("user", userMessageActual.role)
+        assertTrue(userMessageActual is BedrockAnthropicInvokeModelMessage.User)
         assertEquals("Hello, who are you?", (userMessageActual.content[0] as BedrockAnthropicInvokeModelContent.Text).text)
 
-        assertEquals("assistant", assistantMessage.role)
+        assertTrue(assistantMessage is BedrockAnthropicInvokeModelMessage.Assistant)
         assertEquals(
             "I'm Claude, an AI assistant created by Anthropic. How can I help you today?",
             (assistantMessage.content[0] as BedrockAnthropicInvokeModelContent.Text).text
         )
 
-        assertEquals("user", userMessageActual2.role)
+        assertTrue(userMessageActual2 is BedrockAnthropicInvokeModelMessage.User)
         assertEquals("Tell me about Paris.", (userMessageActual2.content[0] as BedrockAnthropicInvokeModelContent.Text).text)
     }
 
