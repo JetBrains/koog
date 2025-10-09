@@ -18,6 +18,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.llm.OllamaModels
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import kotlin.js.JsName
@@ -27,6 +28,10 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFails
 
 class SubgraphWithTaskTest {
+
+    companion object {
+        private val logger = KotlinLogging.logger { }
+    }
 
     //region Model With tool_choice Support
 
@@ -69,7 +74,8 @@ class SubgraphWithTaskTest {
                 }
             }
         ).use { agent ->
-            agent.run(inputRequest)
+            val agentResult = agent.run(inputRequest)
+            logger.info { "Agent is finished with result: $agentResult" }
 
             assertEquals(expectedToolCalls.size, actualToolCalls.size)
             assertContentEquals(expectedToolCalls, actualToolCalls)
@@ -155,7 +161,8 @@ class SubgraphWithTaskTest {
                 }
             }
         ).use { agent ->
-            agent.run(inputRequest)
+            val agentResult = agent.run(inputRequest)
+            logger.info { "Agent is finished with result: $agentResult" }
 
             assertEquals(expectedToolCalls.size, actualToolCalls.size)
             assertContentEquals(expectedToolCalls, actualToolCalls)
@@ -229,7 +236,8 @@ class SubgraphWithTaskTest {
                 }
             }
         ).use { agent ->
-            agent.run(inputRequest)
+            val agentResult = agent.run(inputRequest)
+            logger.info { "Agent is finished with result: $agentResult" }
 
             assertEquals(expectedToolCalls.size, actualToolCalls.size)
             assertContentEquals(expectedToolCalls, actualToolCalls)
