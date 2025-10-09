@@ -3,6 +3,7 @@ package ai.koog.spring.prompt.executor.clients.ollama
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 import ai.koog.prompt.executor.ollama.client.OllamaClient
 import ai.koog.spring.prompt.executor.clients.toRetryingClient
+import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -36,21 +37,25 @@ import org.springframework.context.annotation.PropertySource
 @EnableConfigurationProperties(
     OllamaKoogProperties::class,
 )
-@ConditionalOnProperty(prefix = OllamaKoogProperties.PREFIX, name = ["enabled"], havingValue = "true")
 public class OllamaLLMAutoConfiguration(
     private val properties: OllamaKoogProperties
 ) {
 
+    private val logger = LoggerFactory.getLogger(OllamaLLMAutoConfiguration::class.java)
+
     /**
-     * Creates and configures an instance of [OllamaClient] using the base URL from the provided properties.
+     * Creates an [OllamaClient] bean configured with application properties.
      *
-     * This client is used to communicate with the Ollama LLM service and is a prerequisite
-     * for executing prompts and other interactions with the service.
+     * This method initializes a [OllamaClient] using the API key and base URL
+     * specified in the application's configuration. It is only executed if the
+     * `koog.ai.ollama.enabled` property is set to `true` in the application configuration.
      *
-     * @return an [OllamaClient] configured with the base URL extracted from the application's properties.
+     * @return An [OllamaClient] instance configured with the provided settings.
      */
     @Bean
+    @ConditionalOnProperty(prefix = OllamaKoogProperties.PREFIX, name = ["enabled"], havingValue = "true")
     public fun ollamaLLMClient(): OllamaClient {
+        logger.info("Creating OllamaClient with baseUrl=${properties.baseUrl}")
         return OllamaClient(
             baseUrl = properties.baseUrl,
         )
@@ -66,6 +71,7 @@ public class OllamaLLMAutoConfiguration(
     @Bean
     @ConditionalOnBean(OllamaClient::class)
     public fun ollamaExecutor(client: OllamaClient): SingleLLMPromptExecutor {
+        logger.info("Creating SingleLLMPromptExecutor (ollamaExecutor) for OllamaClient")
         return SingleLLMPromptExecutor(client.toRetryingClient(properties.retry))
     }
 }

@@ -3,7 +3,9 @@ package ai.koog.spring.prompt.executor.clients.openai
 import ai.koog.prompt.executor.clients.openai.OpenAIClientSettings
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
+import ai.koog.spring.conditions.ConditionalOnPropertyNotEmpty
 import ai.koog.spring.prompt.executor.clients.toRetryingClient
+import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -38,20 +40,30 @@ import org.springframework.context.annotation.PropertySource
 @EnableConfigurationProperties(
     OpenAIKoogProperties::class,
 )
-@ConditionalOnProperty(prefix = OpenAIKoogProperties.PREFIX, name = ["api-key"])
-@ConditionalOnProperty(prefix = OpenAIKoogProperties.PREFIX, name = ["enabled"], havingValue = "true")
 public class OpenAILLMAutoConfiguration(
     private val properties: OpenAIKoogProperties
 ) {
 
+    private val logger = LoggerFactory.getLogger(OpenAILLMAutoConfiguration::class.java)
+
     /**
-     * Creates and provides an instance of [OpenAILLMClient] as a Spring bean for use in the application context.
-     * The [OpenAILLMClient] is configured using API key and base URL from the associated properties.
+     * Creates an [OpenAILLMClient] bean configured with application properties.
      *
-     * @return a configured instance of [OpenAILLMClient].
+     * This method initializes a [OpenAILLMClient] using the API key and base URL
+     * specified in the application's configuration. It is only executed if the
+     * `koog.ai.openai.api-key` property is defined and `koog.ai.openai.enabled` property is set
+     * to `true` in the application configuration.
+     *
+     * @return An [OpenAILLMClient] instance configured with the provided settings.
      */
     @Bean
+    @ConditionalOnPropertyNotEmpty(
+        prefix = OpenAIKoogProperties.PREFIX,
+        name = "api-key"
+    )
+    @ConditionalOnProperty(prefix = OpenAIKoogProperties.PREFIX, name = ["enabled"], havingValue = "true")
     public fun openAILLMClient(): OpenAILLMClient {
+        logger.info("Creating OpenAILLMClient client with baseUrl=${properties.baseUrl}")
         return OpenAILLMClient(
             apiKey = properties.apiKey,
             settings = OpenAIClientSettings(baseUrl = properties.baseUrl)
@@ -68,6 +80,7 @@ public class OpenAILLMAutoConfiguration(
     @Bean
     @ConditionalOnBean(OpenAILLMClient::class)
     public fun openAIExecutor(client: OpenAILLMClient): SingleLLMPromptExecutor {
+        logger.info("Creating SingleLLMPromptExecutor (openAIExecutor) for OpenAILLMClient")
         return SingleLLMPromptExecutor(client.toRetryingClient(properties.retry))
     }
 }
