@@ -193,8 +193,6 @@ class DebuggerTest {
 
                     launch {
                         val messageProcessor = messageProcessors.single() as FeatureMessageRemoteWriter
-                        messageProcessor.initialize()
-
                         val isServerStartedCheck = withTimeoutOrNull(defaultClientServerTimeout) {
                             messageProcessor.isOpen.first { it }
                         } != null
@@ -498,8 +496,6 @@ class DebuggerTest {
 
                     launch {
                         val messageProcessor = messageProcessors.single() as FeatureMessageRemoteWriter
-                        messageProcessor.initialize()
-
                         val isServerStartedCheck = withTimeoutOrNull(defaultClientServerTimeout) {
                             messageProcessor.isOpen.first { it }
                         } != null
@@ -680,8 +676,6 @@ class DebuggerTest {
 
                     launch {
                         val messageProcessor = messageProcessors.single() as FeatureMessageRemoteWriter
-                        messageProcessor.initialize()
-
                         val isServerStartedCheck = withTimeoutOrNull(defaultClientServerTimeout) {
                             messageProcessor.isOpen.first { it }
                         } != null
