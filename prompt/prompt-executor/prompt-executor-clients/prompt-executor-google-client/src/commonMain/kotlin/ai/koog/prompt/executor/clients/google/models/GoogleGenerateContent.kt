@@ -1,6 +1,7 @@
 package ai.koog.prompt.executor.clients.google.models
 
 import ai.koog.prompt.executor.clients.serialization.AdditionalPropertiesFlatteningSerializer
+import ai.koog.prompt.message.Thinking
 import ai.koog.utils.serializers.ByteArrayAsBase64Serializer
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.SerialName
@@ -69,13 +70,16 @@ internal sealed interface GooglePart {
      *
      * @property text The textual content represented by this class.
      * @property thought An optional boolean indicating a specific contextual attribute.
+     * @property thoughtSignature An opaque signature for the thought so it can be reused in subsequent requests.
+     * A base64-encoded string.
      */
     @Serializable
     @SerialName("text")
     data class Text(
         val text: String,
         override val thought: Boolean? = null,
-    ) : GooglePart
+        val thoughtSignature: String? = null
+    ) : GooglePart, Thinking
 
     /**
      * Represents inline binary data as part of the Google-specific data context.

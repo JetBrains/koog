@@ -152,6 +152,7 @@ public interface PromptCache {
                         is Message.User -> message.copy(metaInfo = RequestMetaInfo.Empty)
                         is Message.System -> message.copy(metaInfo = RequestMetaInfo.Empty)
                         is Message.Assistant -> message.copy(metaInfo = ResponseMetaInfo.Empty)
+                        is Message.Reasoning -> message.copy(metaInfo = ResponseMetaInfo.Empty)
                         is Message.Tool.Call -> message.copy(metaInfo = ResponseMetaInfo.Empty)
                         is Message.Tool.Result -> message.copy(metaInfo = RequestMetaInfo.Empty)
                     }

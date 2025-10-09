@@ -6,6 +6,7 @@ import ai.koog.prompt.executor.clients.openai.base.models.OpenAIChoiceLogProbs
 import ai.koog.prompt.executor.clients.openai.base.models.ReasoningEffort
 import ai.koog.prompt.executor.clients.openai.base.models.ServiceTier
 import ai.koog.prompt.executor.clients.serialization.AdditionalPropertiesFlatteningSerializer
+import ai.koog.prompt.message.Thinking
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -531,7 +532,7 @@ internal sealed interface Item {
         val content: List<Content>? = null,
         val encryptedContent: String? = null,
         val status: OpenAIInputStatus? = null,
-    ) : Item {
+    ) : Item, Thinking {
         val type: String = "reasoning"
 
         /**

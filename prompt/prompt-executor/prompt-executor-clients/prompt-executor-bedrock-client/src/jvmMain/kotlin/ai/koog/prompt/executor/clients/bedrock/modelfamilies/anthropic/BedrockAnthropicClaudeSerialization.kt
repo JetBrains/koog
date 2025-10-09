@@ -23,6 +23,7 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.put
 import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 internal object BedrockAnthropicClaudeSerialization {
 
@@ -34,6 +35,7 @@ internal object BedrockAnthropicClaudeSerialization {
         explicitNulls = false
     }
 
+    @OptIn(ExperimentalUuidApi::class)
     private fun buildMessagesHistory(prompt: Prompt): MutableList<BedrockAnthropicInvokeModelMessage> {
         val messages = mutableListOf<BedrockAnthropicInvokeModelMessage>()
         prompt.messages.forEach { msg ->
@@ -44,8 +46,7 @@ internal object BedrockAnthropicClaudeSerialization {
                     }
                     if (msg.content.isNotEmpty()) {
                         messages.add(
-                            BedrockAnthropicInvokeModelMessage(
-                                role = "user",
+                            BedrockAnthropicInvokeModelMessage.User(
                                 content = listOf(BedrockAnthropicInvokeModelContent.Text(text = msg.content))
                             )
                         )
@@ -55,9 +56,24 @@ internal object BedrockAnthropicClaudeSerialization {
                 is Message.Assistant -> {
                     if (msg.content.isNotEmpty()) {
                         messages.add(
-                            BedrockAnthropicInvokeModelMessage(
-                                role = "assistant",
+                            BedrockAnthropicInvokeModelMessage.Assistant(
                                 content = listOf(BedrockAnthropicInvokeModelContent.Text(text = msg.content))
+                            )
+                        )
+                    }
+                }
+
+                is Message.Reasoning -> {
+                    if (msg.content.isNotEmpty()) {
+                        messages.add(
+                            BedrockAnthropicInvokeModelMessage.Assistant(
+                                content = listOf(
+                                    msg.original as? BedrockAnthropicInvokeModelContent.Thinking
+                                        ?: BedrockAnthropicInvokeModelContent.Thinking(
+                                            signature = Uuid.random().toString(),
+                                            thinking = msg.content
+                                        )
+                                )
                             )
                         )
                     }
@@ -66,8 +82,7 @@ internal object BedrockAnthropicClaudeSerialization {
                 is Message.Tool.Result -> {
                     if (msg.content.isNotEmpty()) {
                         messages.add(
-                            BedrockAnthropicInvokeModelMessage(
-                                role = "user",
+                            BedrockAnthropicInvokeModelMessage.User(
                                 content = listOf(
                                     BedrockAnthropicInvokeModelContent.ToolResult(
                                         toolUseId = msg.id!!,
@@ -82,8 +97,7 @@ internal object BedrockAnthropicClaudeSerialization {
                 is Message.Tool.Call -> {
                     if (msg.content.isNotEmpty()) {
                         messages.add(
-                            BedrockAnthropicInvokeModelMessage(
-                                role = "assistant",
+                            BedrockAnthropicInvokeModelMessage.Assistant(
                                 content = listOf(
                                     BedrockAnthropicInvokeModelContent.ToolCall(
                                         msg.id!!,
@@ -174,31 +188,35 @@ internal object BedrockAnthropicClaudeSerialization {
         val inputTokens = response.usage?.inputTokens
         val outputTokens = response.usage?.outputTokens
         val totalTokens = inputTokens?.let { input -> outputTokens?.let { output -> input + output } }
+        val metaInfo = ResponseMetaInfo.create(
+            clock,
+            totalTokensCount = totalTokens,
+            inputTokensCount = inputTokens,
+            outputTokensCount = outputTokens
+        )
 
         return response.content.map { content ->
             when (content) {
-                is AnthropicResponseContent.Text -> Message.Assistant(
+                is AnthropicContent.Text -> Message.Assistant(
                     content = content.text,
                     finishReason = response.stopReason,
-                    metaInfo = ResponseMetaInfo.create(
-                        clock,
-                        totalTokensCount = totalTokens,
-                        inputTokensCount = inputTokens,
-                        outputTokensCount = outputTokens
-                    )
+                    metaInfo = metaInfo
                 )
 
-                is AnthropicResponseContent.ToolUse -> Message.Tool.Call(
+                is AnthropicContent.Thinking -> Message.Reasoning(
+                    original = content,
+                    content = content.thinking,
+                    metaInfo = metaInfo
+                )
+
+                is AnthropicContent.ToolUse -> Message.Tool.Call(
                     id = content.id,
                     tool = content.name,
                     content = content.input.toString(),
-                    metaInfo = ResponseMetaInfo.create(
-                        clock,
-                        totalTokensCount = totalTokens,
-                        inputTokensCount = inputTokens,
-                        outputTokensCount = outputTokens
-                    )
+                    metaInfo = metaInfo
                 )
+
+                else -> TODO()
             }
         }
     }
@@ -225,15 +243,19 @@ internal object BedrockAnthropicClaudeSerialization {
             "message_delta" -> {
                 streamResponse.message?.content?.map { content ->
                     when (content) {
-                        is AnthropicResponseContent.Text ->
+                        is AnthropicContent.Text ->
                             StreamFrame.Append(content.text)
 
-                        is AnthropicResponseContent.ToolUse ->
+                        is AnthropicContent.Thinking ->
+                            StreamFrame.Append(content.thinking)
+
+                        is AnthropicContent.ToolUse ->
                             StreamFrame.ToolCall(
                                 id = content.id,
                                 name = content.name,
                                 content = content.input.toString()
                             )
+                        else -> TODO()
                     }
                 } ?: emptyList()
             }

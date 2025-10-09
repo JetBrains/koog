@@ -51,6 +51,8 @@ internal fun Prompt.toOllamaChatMessages(model: LLModel): List<OllamaChatMessage
                 role = "tool",
                 content = message.content
             )
+
+            is Message.Reasoning -> throw NotImplementedError("Reasoning is not supported by Ollama")
         }
 
         messages.add(converted)

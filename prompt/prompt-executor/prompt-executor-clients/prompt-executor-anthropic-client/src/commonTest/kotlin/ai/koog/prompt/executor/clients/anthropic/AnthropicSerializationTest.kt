@@ -33,8 +33,7 @@ class AnthropicSerializationTest {
         val request = AnthropicMessageRequest(
             model = "claude-3",
             messages = listOf(
-                AnthropicMessage(
-                    role = "user",
+                AnthropicMessage.User(
                     content = listOf(AnthropicContent.Text("Hello, Claude"))
                 )
             ),
@@ -70,8 +69,7 @@ class AnthropicSerializationTest {
         val request = AnthropicMessageRequest(
             model = "claude-3",
             messages = listOf(
-                AnthropicMessage(
-                    role = "user",
+                AnthropicMessage.User(
                     content = listOf(AnthropicContent.Text("Hello"))
                 )
             ),
@@ -169,8 +167,7 @@ class AnthropicSerializationTest {
         val originalRequest = AnthropicMessageRequest(
             model = "claude-3",
             messages = listOf(
-                AnthropicMessage(
-                    role = "user",
+                AnthropicMessage.User(
                     content = listOf(AnthropicContent.Text("Hello"))
                 )
             ),

@@ -327,6 +327,21 @@ public open class GoogleLLMClient(
                     )
                 }
 
+                is Message.Reasoning -> {
+                    flushCalls()
+                    contents.add(
+                        GoogleContent(
+                            role = "assistant",
+                            parts = listOf(
+                                message.original as? GooglePart ?: GooglePart.Text(
+                                    text = message.content,
+                                    thought = true
+                                )
+                            )
+                        )
+                    )
+                }
+
                 is Message.Tool.Result -> {
                     flushCalls()
                     contents.add(
@@ -589,11 +604,21 @@ public open class GoogleLLMClient(
         val parts = candidate.content?.parts.orEmpty()
         val responses = parts.map { part ->
             when (part) {
-                is GooglePart.Text -> Message.Assistant(
-                    content = part.text,
-                    finishReason = candidate.finishReason,
-                    metaInfo = metaInfo
-                )
+                is GooglePart.Text -> {
+                    if (part.thought ?: false) {
+                        Message.Reasoning(
+                            original = part,
+                            content = part.text,
+                            metaInfo = metaInfo
+                        )
+                    } else {
+                        Message.Assistant(
+                            content = part.text,
+                            finishReason = candidate.finishReason,
+                            metaInfo = metaInfo
+                        )
+                    }
+                }
 
                 is GooglePart.FunctionCall -> Message.Tool.Call(
                     id = Uuid.random().toString(),
