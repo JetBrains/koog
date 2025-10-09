@@ -4,6 +4,7 @@ import ai.koog.prompt.executor.clients.openai.base.models.OpenAIAudioConfig
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIWebSearchOptions
 import ai.koog.prompt.executor.clients.openai.base.models.ReasoningEffort
 import ai.koog.prompt.executor.clients.openai.base.models.ServiceTier
+import ai.koog.prompt.executor.clients.openai.models.OpenAIInclude
 import ai.koog.prompt.executor.clients.openai.models.ReasoningConfig
 import ai.koog.prompt.executor.clients.openai.models.Truncation
 import ai.koog.prompt.params.LLMParams
@@ -307,7 +308,7 @@ public class OpenAIResponsesParams(
     user: String? = null,
     additionalProperties: Map<String, JsonElement>? = null,
     public val background: Boolean? = null,
-    public val include: List<String>? = null,
+    public val include: List<OpenAIInclude>? = null,
     public val maxToolCalls: Int? = null,
     public val parallelToolCalls: Boolean? = null,
     public val reasoning: ReasoningConfig? = null,
@@ -358,7 +359,6 @@ public class OpenAIResponsesParams(
         // include validations
         if (include != null) {
             require(include.isNotEmpty()) { "include must not be empty when provided." }
-            require(include.all { it.isNotBlank() }) { "include entries must be non-blank" }
         }
 
         // maxToolCalls bounds
@@ -380,7 +380,7 @@ public class OpenAIResponsesParams(
         user: String? = this.user,
         additionalProperties: Map<String, JsonElement>? = this.additionalProperties,
         background: Boolean? = this.background,
-        include: List<String>? = this.include,
+        include: List<OpenAIInclude>? = this.include,
         maxToolCalls: Int? = this.maxToolCalls,
         parallelToolCalls: Boolean? = this.parallelToolCalls,
         reasoning: ReasoningConfig? = this.reasoning,

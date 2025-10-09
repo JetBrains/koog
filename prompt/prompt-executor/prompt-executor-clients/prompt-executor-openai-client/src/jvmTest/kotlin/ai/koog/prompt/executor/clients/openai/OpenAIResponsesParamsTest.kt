@@ -2,6 +2,7 @@ package ai.koog.prompt.executor.clients.openai
 
 import ai.koog.prompt.executor.clients.openai.base.models.ReasoningEffort
 import ai.koog.prompt.executor.clients.openai.base.models.ServiceTier
+import ai.koog.prompt.executor.clients.openai.models.OpenAIInclude
 import ai.koog.prompt.executor.clients.openai.models.ReasoningConfig
 import ai.koog.prompt.executor.clients.openai.models.ReasoningSummary
 import ai.koog.prompt.executor.clients.openai.models.Truncation
@@ -115,17 +116,11 @@ class OpenAIResponsesParamsTest {
                 include = emptyList()
             )
         }
-        assertThrows<IllegalArgumentException>("Responses: include entries must be non-blank") {
-            OpenAIResponsesParams(
-                include = listOf("")
-            )
-        }
         assertThrows<IllegalArgumentException>("Responses: maxToolCalls must be >= 0") {
             OpenAIResponsesParams(
                 maxToolCalls = -1
             )
         }
-        OpenAIResponsesParams(include = listOf("output_text"), maxToolCalls = 0)
     }
 
     @Test
@@ -140,7 +135,7 @@ class OpenAIResponsesParamsTest {
             user = "user-id",
             additionalProperties = mapOf("foo" to JsonPrimitive("bar")),
             background = true,
-            include = listOf("a", "b", "c"),
+            include = listOf(OpenAIInclude.REASONING_ENCRYPTED_CONTENT, OpenAIInclude.OUTPUT_TEXT_LOGPROBS),
             maxToolCalls = 10,
             parallelToolCalls = true,
             reasoning = ReasoningConfig(effort = ReasoningEffort.HIGH, summary = ReasoningSummary.DETAILED),
