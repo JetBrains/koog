@@ -13,6 +13,7 @@ kotlin {
             dependencies {
                 api(project(":agents:agents-utils"))
                 api(project(":prompt:prompt-executor:prompt-executor-clients"))
+                api(project(":prompt:prompt-structure"))
                 api(libs.ktor.client.content.negotiation)
                 api(libs.ktor.serialization.kotlinx.json)
                 implementation(libs.oshai.kotlin.logging)
