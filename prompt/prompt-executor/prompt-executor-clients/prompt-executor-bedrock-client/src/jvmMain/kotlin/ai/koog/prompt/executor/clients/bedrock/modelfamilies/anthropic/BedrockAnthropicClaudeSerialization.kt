@@ -216,7 +216,7 @@ internal object BedrockAnthropicClaudeSerialization {
                     metaInfo = metaInfo
                 )
 
-                else -> TODO()
+                else -> throw IllegalArgumentException("Unhandled AnthropicContent type: ${content::class.qualifiedName}. Content: $content")
             }
         }
     }
@@ -255,7 +255,9 @@ internal object BedrockAnthropicClaudeSerialization {
                                 name = content.name,
                                 content = content.input.toString()
                             )
-                        else -> TODO()
+                        else -> throw IllegalArgumentException(
+                            "Unsupported AnthropicContent type in message_delta: ${content::class.simpleName}. Content: $content"
+                        )
                     }
                 } ?: emptyList()
             }
