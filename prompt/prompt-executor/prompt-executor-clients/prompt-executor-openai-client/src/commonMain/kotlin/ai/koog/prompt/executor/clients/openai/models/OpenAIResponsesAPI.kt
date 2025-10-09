@@ -163,19 +163,24 @@ internal class OpenAIResponsesAPIRequest(
 public enum class OpenAIInclude {
     @SerialName("web_search_call.action.sources")
     WEB_SEARCH_CALL_ACTION_SOURCES,
+
     @SerialName("code_interpreter_call.outputs")
     CODE_INTERPRETER_CALL_OUTPUTS,
+
     @SerialName("computer_call_output.output.image_url")
     COMPUTER_CALL_OUTPUT_IMAGE_URL,
+
     @SerialName("file_search_call.results")
     FILE_SEARCH_CALL_RESULTS,
+
     @SerialName("message.input_image.image_url")
     INPUT_IMAGE_URL,
+
     @SerialName("message.output_text.logprobs")
     OUTPUT_TEXT_LOGPROBS,
+
     @SerialName("reasoning.encrypted_content")
     REASONING_ENCRYPTED_CONTENT,
-    ;
 }
 
 @Serializable(with = ItemPolymorphicSerializer::class)
