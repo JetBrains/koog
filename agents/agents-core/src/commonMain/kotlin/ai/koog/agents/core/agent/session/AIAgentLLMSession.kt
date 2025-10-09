@@ -213,6 +213,17 @@ public sealed class AIAgentLLMSession(
     }
 
     /**
+     * Sends a streaming request to the underlying LLM and returns the streamed response.
+     * This method ensures the session is active before executing the request.
+     *
+     * @return A flow emitting `StreamFrame` objects that represent the streaming output of the language model.
+     */
+    public open fun requestLLMStreaming(): Flow<StreamFrame> {
+        validateSession()
+        return executeStreaming(prompt, tools)
+    }
+
+    /**
      * Sends a moderation request to the specified or default large language model (LLM) for content moderation.
      *
      * This method validates the session state before processing the request. It prepares the prompt

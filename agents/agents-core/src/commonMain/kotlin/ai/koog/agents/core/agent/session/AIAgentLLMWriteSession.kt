@@ -487,6 +487,6 @@ public class AIAgentLLMWriteSession internal constructor(
             }
             this.prompt = prompt
         }
-        return super.executeStreaming(prompt, tools)
+        return super.requestLLMStreaming()
     }
 }
