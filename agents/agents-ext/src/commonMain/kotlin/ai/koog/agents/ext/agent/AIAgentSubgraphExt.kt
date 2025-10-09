@@ -11,11 +11,13 @@ import ai.koog.agents.core.dsl.builder.AIAgentSubgraphDelegate
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
+import ai.koog.agents.core.dsl.extension.onIsInstance
 import ai.koog.agents.core.dsl.extension.onToolCall
 import ai.koog.agents.core.dsl.extension.setToolChoiceRequired
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.environment.executeTool
 import ai.koog.agents.core.environment.toSafeResult
+import ai.koog.agents.core.tools.DirectToolCallsEnabler
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
@@ -50,6 +52,20 @@ public object SubgraphWithTaskUtils {
      */
     @InternalAgentToolsApi
     public const val FINALIZE_SUBGRAPH_TOOL_NAME: String = "finalize_task_result"
+
+    /**
+     * A constant string describing the purpose and usage of a tool within the agent framework.
+     *
+     * This constant is intended to represent the action of finalizing a subgraph process and providing
+     * the final result. It is specifically used internally to indicate when a process is considered
+     * complete and the output of that process should be returned.
+     *
+     * Marked with `@InternalAgentToolsApi`, this value is primarily designed for internal use within
+     * the agent tools API and subject to change in future releases. Its usage in external
+     * implementations should be approached with caution.
+     */
+    @InternalAgentToolsApi
+    public const val FINALIZE_SUBGRAPH_TOOL_DESCRIPTION: String = "Call this tool when finish and provide final result"
 
     /**
      * Creates and returns a `Tool` instance with serializers and a descriptor for processing.
@@ -137,16 +153,27 @@ public inline fun <reified Input, reified Output> AIAgentSubgraphBuilderBase<*, 
     toolSelectionStrategy: ToolSelectionStrategy,
     llmModel: LLModel? = null,
     llmParams: LLMParams? = null,
+    assistantResponseRepeatMax: Int? = null,
     noinline defineTask: suspend AIAgentGraphContextBase.(input: Input) -> String
 ): AIAgentSubgraphDelegate<Input, Output> = subgraph(
     toolSelectionStrategy = toolSelectionStrategy,
     llmModel = llmModel,
     llmParams = llmParams,
 ) {
-    val finishToolDescriptor =
-        serializer<Output>().descriptor.asToolDescriptor(toolName = SubgraphWithTaskUtils.FINALIZE_SUBGRAPH_TOOL_NAME)
+    // An identity tool that provides arguments as a tool result without changes.
+    val finishTool = object : Tool<Output, Output>() {
+        override val argsSerializer: KSerializer<Output> = serializer()
+        override val resultSerializer: KSerializer<Output> = serializer()
+        override val name: String = SubgraphWithTaskUtils.FINALIZE_SUBGRAPH_TOOL_NAME
+        override val description: String = SubgraphWithTaskUtils.FINALIZE_SUBGRAPH_TOOL_DESCRIPTION
+        override suspend fun execute(args: Output): Output = args
+    }
 
-    setupSubgraphWithTask<Input, Output, Output>(finishToolDescriptor, defineTask)
+    setupSubgraphWithTask<Input, Output, Output>(
+        finishTool = finishTool,
+        assistantResponseRepeatMax = assistantResponseRepeatMax,
+        defineTask = defineTask
+    )
 }
 
 /**
@@ -193,14 +220,18 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
     finishTool: Tool<Output, OutputTransformed>,
     llmModel: LLModel? = null,
     llmParams: LLMParams? = null,
+    assistantResponseRepeatMax: Int? = null,
     noinline defineTask: suspend AIAgentGraphContextBase.(input: Input) -> String
 ): AIAgentSubgraphDelegate<Input, OutputTransformed> = subgraph(
     toolSelectionStrategy = toolSelectionStrategy,
     llmModel = llmModel,
     llmParams = llmParams,
 ) {
-    val finishToolDescriptor = finishTool.descriptor
-    setupSubgraphWithTask<Input, Output, OutputTransformed>(finishToolDescriptor, defineTask)
+    setupSubgraphWithTask<Input, Output, OutputTransformed>(
+        finishTool = finishTool,
+        assistantResponseRepeatMax = assistantResponseRepeatMax,
+        defineTask = defineTask
+    )
 }
 
 /**
@@ -223,14 +254,18 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
     finishTool: Tool<Output, OutputTransformed>,
     llmModel: LLModel? = null,
     llmParams: LLMParams? = null,
+    assistantResponseRepeatMax: Int? = null,
     noinline defineTask: suspend AIAgentGraphContextBase.(input: Input) -> String
 ): AIAgentSubgraphDelegate<Input, OutputTransformed> = subgraph(
     toolSelectionStrategy = ToolSelectionStrategy.Tools(tools.map { it.descriptor }),
     llmModel = llmModel,
     llmParams = llmParams,
 ) {
-    val finishToolDescriptor = finishTool.descriptor
-    setupSubgraphWithTask<Input, Output, OutputTransformed>(finishToolDescriptor, defineTask)
+    setupSubgraphWithTask<Input, Output, OutputTransformed>(
+        finishTool = finishTool,
+        assistantResponseRepeatMax = assistantResponseRepeatMax,
+        defineTask = defineTask
+    )
 }
 
 /**
@@ -307,19 +342,19 @@ public inline fun <reified Input : Any> AIAgentSubgraphBuilderBase<*, *>.subgrap
  *
  * FOR INTERNAL USAGE ONLY!
  *
- * @param finishToolDescriptor A descriptor for the tool that determines the condition to finalize the subgraph's operation.
+ * @param finishTool A descriptor for the tool that determines the condition to finalize the subgraph's operation.
  * @param defineTask A suspending lambda that defines the main task of the subgraph, producing a task description based on the input.
  */
-@InternalAgentToolsApi
 @OptIn(InternalAgentToolsApi::class)
 public inline fun <reified Input, reified Output, reified OutputTransformed> AIAgentSubgraphBuilderBase<Input, OutputTransformed>.setupSubgraphWithTask(
-    finishToolDescriptor: ToolDescriptor,
+    finishTool: Tool<Output, OutputTransformed>,
+    assistantResponseRepeatMax: Int? = null,
     noinline defineTask: suspend AIAgentGraphContextBase.(Input) -> String
 ) {
-    val askAssistantToFinishMaximum = SubgraphWithTaskUtils.ASSISTANT_RESPONSE_REPEAT_MAX
-    var askAssistantToFinishCounter = 1
-
     val originalToolsKey = createStorageKey<List<ToolDescriptor>>("all-available-tools")
+    val askAssistantToFinishCounterKey = createStorageKey<Int>("ask-assistant-to-finish-counter")
+
+    val maxAssistantResponses = assistantResponseRepeatMax ?: SubgraphWithTaskUtils.ASSISTANT_RESPONSE_REPEAT_MAX
 
     val setupTask by node<Input, String> { input ->
         llm.writeSession {
@@ -327,8 +362,8 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
             storage.set(originalToolsKey, tools)
 
             // Append finish tool to tools if it's not present yet
-            if (finishToolDescriptor !in tools) {
-                this.tools += finishToolDescriptor
+            if (finishTool.descriptor !in tools) {
+                this.tools += finishTool.descriptor
             }
 
             // Model must always call tools in the loop until it decides (via finish tool)
@@ -359,13 +394,20 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
      * it doesn't execute it.
      * */
     val callToolHacked by node<Message.Tool.Call, ReceivedToolResult> { toolCall ->
-        if (toolCall.tool == finishToolDescriptor.name) {
-            val toolResult = Json.decodeFromString(
+        if (toolCall.tool == finishTool.name) {
+            // Execute Finish tool directly and get a result
+            val toolArgs = Json.decodeFromString(
                 deserializer = serializer<Output>().asToolDescriptorDeserializer(),
                 string = toolCall.content
             )
 
-            // Append a final tool call result to the prompt for further LLM calls to see it (otherwise they would fail)
+            val toolResult = finishTool.execute(
+                args = toolArgs,
+                enabler = object : DirectToolCallsEnabler {}
+            )
+
+            // Append a final tool call result to the prompt for further LLM calls
+            // to see it (otherwise they would fail)
             llm.writeSession {
                 updatePrompt {
                     tool {
@@ -376,7 +418,7 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
 
             ReceivedToolResult(
                 id = toolCall.id,
-                tool = finishToolDescriptor.name,
+                tool = finishTool.name,
                 content = toolCall.content,
                 result = toolResult
             )
@@ -396,10 +438,14 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
             )
         }
 
-        if (askAssistantToFinishMaximum < askAssistantToFinishCounter++) {
+        val currentAskAssistantToFinishCounter = storage.get(askAssistantToFinishCounterKey) ?: 1
+        storage.set(askAssistantToFinishCounterKey, currentAskAssistantToFinishCounter + 1)
+
+        if (currentAskAssistantToFinishCounter > maxAssistantResponses) {
             error(
                 "Unable to finish subgraph with task. Reason: the model '${llm.model.id}' does not support tool choice, " +
-                    "and was not able to call `${finishToolDescriptor.name}` tool after <$askAssistantToFinishMaximum> attempts."
+                    "and was not able to call `${finishTool.name}` tool after " +
+                    "<$maxAssistantResponses> attempts."
             )
         }
 
@@ -409,7 +455,7 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
                 user {
                     markdown {
                         h1("DO NOT CHAT WITH ME DIRECTLY! CALL TOOLS, INSTEAD.")
-                        h2("IF YOU HAVE FINISHED, CALL `${finishToolDescriptor.name}` TOOL!")
+                        h2("IF YOU HAVE FINISHED, CALL `${finishTool.name}` TOOL!")
                     }
                 }
             }
@@ -421,7 +467,7 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
     nodeStart then setupTask then nodeCallLLM then nodeDecide
 
     edge(nodeDecide forwardTo callToolHacked onToolCall { true })
-    edge(nodeDecide forwardTo handleAssistantMessage onCondition { it is Message.Assistant } transformed { it as Message.Assistant })
+    edge(nodeDecide forwardTo handleAssistantMessage onIsInstance Message.Assistant::class)
     edge(handleAssistantMessage forwardTo nodeDecide)
 
     // throw to terminate the agent early with exception
@@ -434,7 +480,7 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
         }
     )
 
-    edge(callToolHacked forwardTo finalizeTask onCondition { it.tool == finishToolDescriptor.name })
+    edge(callToolHacked forwardTo finalizeTask onCondition { it.tool == finishTool.name })
     edge(callToolHacked forwardTo sendToolResult)
 
     edge(sendToolResult forwardTo nodeDecide)
