@@ -103,5 +103,20 @@ class McpToolTest {
 
         val contentWithTitle = resultWithTitle.promptMessageContents.first() as TextContent
         assertEquals("Hello, Mr. Test!", contentWithTitle.text)
+
+        val textForLLM = resultWithTitle.textForLLM()
+        assertEquals("Hello, Mr. Test!", textForLLM)
+    }
+
+    @Test
+    fun `test McpTool with empty content`() {
+        val result = McpTool.Result(promptMessageContents = emptyList())
+        assertEquals("[No content]", result.textForLLM())
+    }
+
+    @Test
+    fun `test McpTool with empty result`() {
+        val result = McpTool.Result(promptMessageContents = listOf(TextContent("")))
+        assertEquals("", result.textForLLM())
     }
 }
