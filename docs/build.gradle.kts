@@ -9,6 +9,10 @@ plugins {
     alias(libs.plugins.knit)
 }
 
+kotlin {
+    compilerOptions.allWarningsAsErrors.set(true)
+}
+
 dependencies {
     implementation(project(":agents:agents-test"))
     implementation(project(":koog-agents"))

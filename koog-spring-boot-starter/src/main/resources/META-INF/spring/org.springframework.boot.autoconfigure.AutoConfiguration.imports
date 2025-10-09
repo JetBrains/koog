@@ -4,3 +4,4 @@ ai.koog.spring.prompt.executor.clients.google.GoogleLLMAutoConfiguration
 ai.koog.spring.prompt.executor.clients.ollama.OllamaLLMAutoConfiguration
 ai.koog.spring.prompt.executor.clients.openai.OpenAILLMAutoConfiguration
 ai.koog.spring.prompt.executor.clients.openrouter.OpenRouterLLMAutoConfiguration
+ai.koog.spring.prompt.executor.MultiLLMAutoConfiguration

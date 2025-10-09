@@ -4,6 +4,7 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.LLMChoice
+import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
@@ -65,6 +66,13 @@ public interface LLMClient {
      * @return The result of the moderation analysis, encapsulated in a ModerationResult object.
      */
     public suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult
+
+    /**
+     * Retrieves the LLMProvider instance associated with this client.
+     *
+     * @return The LLMProvider instance used for executing prompts and managing LLM operations.
+     */
+    public fun llmProvider(): LLMProvider
 }
 
 /**

@@ -13,20 +13,14 @@ import ai.koog.prompt.executor.clients.openai.base.OpenAIBasedSettings
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIMessage
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAITool
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolChoice
-import ai.koog.prompt.executor.clients.openai.structure.OpenAIBasicJsonSchemaGenerator
-import ai.koog.prompt.executor.clients.openai.structure.OpenAIStandardJsonSchemaGenerator
 import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrameFlowBuilder
-import ai.koog.prompt.structure.RegisteredBasicJsonSchemaGenerators
-import ai.koog.prompt.structure.RegisteredStandardJsonSchemaGenerators
-import ai.koog.prompt.structure.annotations.InternalStructuredOutputApi
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import kotlinx.datetime.Clock
-import kotlin.collections.set
 
 /**
  * Configuration settings for connecting to the DeepSeek API.
@@ -61,15 +55,24 @@ public class DeepSeekLLMClient(
     staticLogger
 ) {
 
-    @OptIn(InternalStructuredOutputApi::class)
     private companion object {
         private val staticLogger = KotlinLogging.logger { }
 
         init {
-            RegisteredBasicJsonSchemaGenerators[LLMProvider.DeepSeek] = OpenAIBasicJsonSchemaGenerator
-            RegisteredStandardJsonSchemaGenerators[LLMProvider.DeepSeek] = OpenAIStandardJsonSchemaGenerator
+            // On class load register custom OpenAI JSON schema generators for structured output.
+            registerOpenAIJsonSchemaGenerators(LLMProvider.DeepSeek)
         }
     }
+
+    /**
+     * Returns the specific implementation of the `LLMProvider` associated with this client.
+     *
+     * In this case, it identifies the `DeepSeek` provider as the designated LLM provider
+     * for the client.
+     *
+     * @return The `LLMProvider` instance representing DeepSeek.
+     */
+    override fun llmProvider(): LLMProvider = LLMProvider.DeepSeek
 
     override fun serializeProviderChatRequest(
         messages: List<OpenAIMessage>,

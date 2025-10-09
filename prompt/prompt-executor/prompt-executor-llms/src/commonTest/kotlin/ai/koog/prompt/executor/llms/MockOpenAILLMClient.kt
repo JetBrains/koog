@@ -4,6 +4,7 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.LLMClient
+import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
@@ -19,6 +20,8 @@ internal class MockOpenAILLMClient @JvmOverloads constructor(
     private val throwException: Boolean = false,
     private val clock: Clock = Clock.System,
 ) : LLMClient {
+
+    override fun llmProvider(): LLMProvider = LLMProvider.OpenAI
 
     override suspend fun execute(
         prompt: Prompt,

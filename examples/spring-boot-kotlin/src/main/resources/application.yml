@@ -1,0 +1,48 @@
+spring:
+  application:
+    name: spring-boot-kotlin
+
+ai:
+  koog:
+    google:
+      api-key: ${GOOGLE_API_KEY}
+      enabled: true
+
+agent:
+  version: "1.0.0"
+  name: "github-assistant"
+  description: "An AI agent that can use GitHub tools."
+
+  model:
+    id: "gemini-2.5-flash-lite"
+    options:
+      temperature: 1.0
+
+  system_prompt: |
+    You are a helpful GitHub assistant.
+
+  s3_persistence:
+    enabled: false
+    region: "us-east-1"
+    bucket: "my_bucket_name"
+    path: "checkpoints/"
+
+  tools:
+    # MCP server configuration
+    - type: MCP
+      id: "GitHub"
+      options:
+#         An URL to an MCP server to connect via SSE
+#        server_url: "http://localhost:8080"
+        # The Docker image of an MCP server to run
+        docker_image: "ghcr.io/github/github-mcp-server"
+        # A map of Docker environment variables
+        docker_options:
+          GITHUB_PERSONAL_ACCESS_TOKEN: ${GITHUB_PERSONAL_ACCESS_TOKEN}
+
+#    - type: SIMPLE
+#      id: "someOtherTool"
+#      options:
+#        other_options:
+#          OPTION_ONE: "value"
+#          OPTION_TWO: ${SECRET_VALUE}

@@ -11,8 +11,6 @@ import ai.koog.prompt.executor.clients.openai.base.models.OpenAIMessage
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIStaticContent
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAITool
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolChoice
-import ai.koog.prompt.executor.clients.openai.structure.OpenAIBasicJsonSchemaGenerator
-import ai.koog.prompt.executor.clients.openai.structure.OpenAIStandardJsonSchemaGenerator
 import ai.koog.prompt.executor.clients.openrouter.models.OpenRouterChatCompletionRequest
 import ai.koog.prompt.executor.clients.openrouter.models.OpenRouterChatCompletionRequestSerializer
 import ai.koog.prompt.executor.clients.openrouter.models.OpenRouterChatCompletionResponse
@@ -22,9 +20,6 @@ import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrameFlowBuilder
-import ai.koog.prompt.structure.RegisteredBasicJsonSchemaGenerators
-import ai.koog.prompt.structure.RegisteredStandardJsonSchemaGenerators
-import ai.koog.prompt.structure.annotations.InternalStructuredOutputApi
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import kotlinx.datetime.Clock
@@ -62,15 +57,24 @@ public class OpenRouterLLMClient(
     staticLogger
 ) {
 
-    @OptIn(InternalStructuredOutputApi::class)
     private companion object {
         private val staticLogger = KotlinLogging.logger { }
 
         init {
-            RegisteredBasicJsonSchemaGenerators[LLMProvider.OpenRouter] = OpenAIBasicJsonSchemaGenerator
-            RegisteredStandardJsonSchemaGenerators[LLMProvider.OpenRouter] = OpenAIStandardJsonSchemaGenerator
+            // On class load register custom OpenAI JSON schema generators for structured output.
+            registerOpenAIJsonSchemaGenerators(LLMProvider.OpenRouter)
         }
     }
+
+    /**
+     * Returns the specific implementation of the `LLMProvider` associated with this client.
+     *
+     * In this case, it identifies the `OpenRouter` provider as the designated LLM provider
+     * for the client.
+     *
+     * @return The `LLMProvider` instance representing OpenRouter.
+     */
+    override fun llmProvider(): LLMProvider = LLMProvider.OpenRouter
 
     override fun serializeProviderChatRequest(
         messages: List<OpenAIMessage>,

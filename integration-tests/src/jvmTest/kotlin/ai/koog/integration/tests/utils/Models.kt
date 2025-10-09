@@ -25,6 +25,7 @@ object Models {
             OpenAIModels.Chat.GPT5,
             OpenAIModels.Chat.GPT5Mini,
             OpenAIModels.Chat.GPT5Nano,
+            OpenAIModels.Chat.GPT5Codex,
 
             OpenAIModels.Reasoning.O4Mini,
             OpenAIModels.Reasoning.O3Mini,

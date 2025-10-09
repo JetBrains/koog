@@ -53,6 +53,8 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.llm.toModelInfo
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
+import io.ktor.client.HttpClient
+import io.ktor.client.plugins.HttpRequestRetry
 import io.ktor.http.URLProtocol
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.Flow
@@ -62,6 +64,7 @@ import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.io.IOException
 import org.junit.jupiter.api.Disabled
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
@@ -78,6 +81,15 @@ class DebuggerTest {
         private val defaultClientServerTimeout = 30.seconds
         private const val HOST = "127.0.0.1"
     }
+
+    private val testBaseClient: HttpClient
+        get() = HttpClient {
+            install(HttpRequestRetry) {
+                retryOnExceptionIf(maxRetries = 5) { _, cause ->
+                    cause is IOException
+                }
+            }
+        }
 
     @Test
     fun `test feature message remote writer collect events on agent run`() = runBlocking {
@@ -199,7 +211,11 @@ class DebuggerTest {
 
         // Client
         val clientJob = launch {
-            FeatureMessageRemoteClient(connectionConfig = clientConfig, scope = this).use { client ->
+            FeatureMessageRemoteClient(
+                connectionConfig = clientConfig,
+                baseClient = testBaseClient,
+                scope = this
+            ).use { client ->
 
                 val clientEventsCollector =
                     ClientEventsCollector(client = client, expectedEventsCount = 20)
@@ -214,7 +230,8 @@ class DebuggerTest {
                 // Correct run id will be set after the 'collect events job' is finished.
                 val llmCallGraphNode = StrategyEventGraphNode(id = nodeSendLLMCallName, name = nodeSendLLMCallName)
                 val executeToolGraphNode = StrategyEventGraphNode(id = nodeExecuteToolName, name = nodeExecuteToolName)
-                val sendToolResultGraphNode = StrategyEventGraphNode(id = nodeSendToolResultName, name = nodeSendToolResultName)
+                val sendToolResultGraphNode =
+                    StrategyEventGraphNode(id = nodeSendToolResultName, name = nodeSendToolResultName)
 
                 val startGraphNode = StrategyEventGraphNode(id = "__start__", name = "__start__")
                 val finishGraphNode = StrategyEventGraphNode(id = "__finish__", name = "__finish__")
@@ -238,7 +255,10 @@ class DebuggerTest {
                             ),
                             edges = listOf(
                                 StrategyEventGraphEdge(sourceNode = startGraphNode, targetNode = llmCallGraphNode),
-                                StrategyEventGraphEdge(sourceNode = llmCallGraphNode, targetNode = executeToolGraphNode),
+                                StrategyEventGraphEdge(
+                                    sourceNode = llmCallGraphNode,
+                                    targetNode = executeToolGraphNode,
+                                ),
                                 StrategyEventGraphEdge(sourceNode = llmCallGraphNode, targetNode = finishGraphNode),
                                 StrategyEventGraphEdge(
                                     sourceNode = executeToolGraphNode,
@@ -455,7 +475,11 @@ class DebuggerTest {
                 val streamAndCollect by nodeLLMRequestStreamingAndSendResults<String>("stream-and-collect")
 
                 edge(nodeStart forwardTo streamAndCollect)
-                edge(streamAndCollect forwardTo nodeFinish transformed { messages -> messages.firstOrNull()?.content ?: "" })
+                edge(
+                    streamAndCollect forwardTo nodeFinish transformed { messages ->
+                        messages.firstOrNull()?.content ?: ""
+                    }
+                )
             }
 
             createAgent(
@@ -492,7 +516,11 @@ class DebuggerTest {
 
         // Client
         val clientJob = launch {
-            FeatureMessageRemoteClient(connectionConfig = clientConfig, scope = this).use { client ->
+            FeatureMessageRemoteClient(
+                connectionConfig = clientConfig,
+                baseClient = testBaseClient,
+                scope = this
+            ).use { client ->
 
                 val clientEventsCollector =
                     ClientEventsCollector(client = client, expectedEventsCount = 13)
@@ -629,7 +657,11 @@ class DebuggerTest {
                 val streamAndCollect by nodeLLMRequestStreamingAndSendResults<String>("stream-and-collect")
 
                 edge(nodeStart forwardTo streamAndCollect)
-                edge(streamAndCollect forwardTo nodeFinish transformed { messages -> messages.firstOrNull()?.content ?: "" })
+                edge(
+                    streamAndCollect forwardTo nodeFinish transformed { messages ->
+                        messages.firstOrNull()?.content ?: ""
+                    }
+                )
             }
 
             createAgent(
@@ -672,7 +704,11 @@ class DebuggerTest {
 
         // Client
         val clientJob = launch {
-            FeatureMessageRemoteClient(connectionConfig = clientConfig, scope = this).use { client ->
+            FeatureMessageRemoteClient(
+                connectionConfig = clientConfig,
+                baseClient = testBaseClient,
+                scope = this
+            ).use { client ->
 
                 val clientEventsCollector =
                     ClientEventsCollector(client = client, expectedEventsCount = 9)
@@ -775,7 +811,11 @@ class DebuggerTest {
 
         // Client
         val clientJob = launch {
-            FeatureMessageRemoteClient(connectionConfig = clientConfig, scope = this).use { client ->
+            FeatureMessageRemoteClient(
+                connectionConfig = clientConfig,
+                baseClient = testBaseClient,
+                scope = this
+            ).use { client ->
 
                 val clientEventsCollector = ClientEventsCollector(client = client, expectedEventsCount = 6)
                 val collectEventsJob = clientEventsCollector.startCollectEvents(coroutineScope = this@launch)
@@ -864,7 +904,10 @@ class DebuggerTest {
 
         // Check default port available
         val isDefaultPortAvailable = NetUtil.isPortAvailable(DefaultServerConnectionConfig.DEFAULT_PORT)
-        assertTrue(isDefaultPortAvailable, "Default port ${DefaultServerConnectionConfig.DEFAULT_PORT} is not available")
+        assertTrue(
+            isDefaultPortAvailable,
+            "Default port ${DefaultServerConnectionConfig.DEFAULT_PORT} is not available"
+        )
 
         val clientConfig = DefaultClientConnectionConfig(
             host = HOST,
@@ -897,7 +940,11 @@ class DebuggerTest {
 
         // Client
         val clientJob = launch {
-            FeatureMessageRemoteClient(connectionConfig = clientConfig, scope = this).use { client ->
+            FeatureMessageRemoteClient(
+                connectionConfig = clientConfig,
+                baseClient = testBaseClient,
+                scope = this
+            ).use { client ->
 
                 val clientEventsCollector = ClientEventsCollector(client = client, expectedEventsCount = 8)
                 val collectEventsJob = clientEventsCollector.startCollectEvents(coroutineScope = this@launch)

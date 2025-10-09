@@ -4,15 +4,14 @@ import ai.koog.agents.snapshot.feature.AgentCheckpointData
 import ai.koog.agents.snapshot.providers.PersistenceUtils
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
-import org.jetbrains.exposed.sql.Column
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.isNotNull
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.less
-import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.deleteWhere
+import org.jetbrains.exposed.sql.or
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.upsert
 
@@ -44,31 +43,6 @@ public data class CleanupConfig(
          * @return A CleanupConfig instance with the `enabled` property set to `false`.
          */
         public fun disabled(): CleanupConfig = CleanupConfig(enabled = false)
-    }
-}
-
-/**
- * Exposed table definition for storing agent checkpoints.
- *
- * Schema:
- * - Composite primary key: (persistence_id, checkpoint_id)
- * - Timestamp for ordering and querying
- * - JSON column for flexible checkpoint data storage
- * - Optional TTL timestamp for expiration (indexed for efficient cleanup)
- */
-@Suppress("MissingKDocForPublicAPI")
-public open class CheckpointsTable(tableName: String) : Table(tableName) {
-    public val persistenceId: Column<String> = varchar("persistence_id", 255)
-    public val checkpointId: Column<String> = varchar("checkpoint_id", 255)
-    public val createdAt: Column<Long> = long("created_at").index()
-    public val checkpointJson: Column<String> = text("checkpoint_json")
-    public val ttlTimestamp: Column<Long?> = long("ttl_timestamp").nullable().index()
-
-    override val primaryKey: PrimaryKey = PrimaryKey(persistenceId, checkpointId)
-
-    init {
-        // Create composite index for efficient queries
-        index(isUnique = false, persistenceId, createdAt)
     }
 }
 
@@ -118,7 +92,7 @@ public abstract class ExposedPersistenceStorageProvider(
     ttlSeconds: Long? = null,
     migrator: SQLPersistenceSchemaMigrator,
     private val json: Json = PersistenceUtils.defaultCheckpointJson
-) : SQLPersistenceStorageProvider(
+) : SQLPersistenceStorageProvider<ExposedPersistenceFilter>(
     tableName = tableName,
     ttlSeconds = ttlSeconds,
     migrator
@@ -167,8 +141,7 @@ public abstract class ExposedPersistenceStorageProvider(
 
         transaction {
             val deletedCount = checkpointsTable.deleteWhere {
-                (checkpointsTable.ttlTimestamp less now) and
-                    (checkpointsTable.ttlTimestamp.isNotNull())
+                (checkpointsTable.ttlTimestamp less now) and (checkpointsTable.ttlTimestamp.isNotNull())
             }
             if (deletedCount > 0) {
                 lastCleanupTime = now
@@ -176,14 +149,23 @@ public abstract class ExposedPersistenceStorageProvider(
         }
     }
 
-    override suspend fun getCheckpoints(agentId: String): List<AgentCheckpointData> {
-        return transaction {
-            checkpointsTable
-                .select(checkpointsTable.checkpointJson)
-                .where {
-                    checkpointsTable.persistenceId eq agentId
+    override suspend fun getCheckpoints(agentId: String, filter: ExposedPersistenceFilter?): List<AgentCheckpointData> {
+        if (filter == null) {
+            val now = Clock.System.now().toEpochMilliseconds()
+            return transaction {
+                checkpointsTable.select(checkpointsTable.checkpointJson).where {
+                    (checkpointsTable.persistenceId eq agentId) and
+                        ((checkpointsTable.ttlTimestamp eq null) or (checkpointsTable.ttlTimestamp greaterEq now))
+                }.orderBy(checkpointsTable.createdAt to SortOrder.ASC).mapNotNull { row ->
+                    runCatching {
+                        json.decodeFromString<AgentCheckpointData>(row[checkpointsTable.checkpointJson])
+                    }.getOrNull()
                 }
-                .orderBy(checkpointsTable.createdAt to SortOrder.ASC)
+            }
+        }
+
+        return transaction {
+            filter.query(checkpointsTable)
                 .mapNotNull { row ->
                     runCatching {
                         json.decodeFromString<AgentCheckpointData>(row[checkpointsTable.checkpointJson])
@@ -208,14 +190,22 @@ public abstract class ExposedPersistenceStorageProvider(
         }
     }
 
-    override suspend fun getLatestCheckpoint(agentId: String): AgentCheckpointData? {
-        return transaction {
-            checkpointsTable
-                .select(checkpointsTable.checkpointJson)
-                .where {
+    override suspend fun getLatestCheckpoint(agentId: String, filter: ExposedPersistenceFilter?): AgentCheckpointData? {
+        if (filter == null) {
+            return transaction {
+                checkpointsTable.select(checkpointsTable.checkpointJson).where {
                     checkpointsTable.persistenceId eq agentId
+                }.orderBy(checkpointsTable.createdAt to SortOrder.DESC).limit(1).firstOrNull()?.let { row ->
+                    runCatching {
+                        json.decodeFromString<AgentCheckpointData>(row[checkpointsTable.checkpointJson])
+                    }.getOrNull()
                 }
-                .orderBy(checkpointsTable.createdAt to SortOrder.DESC)
+            }
+        }
+
+        return transaction {
+            filter
+                .query(checkpointsTable)
                 .limit(1)
                 .firstOrNull()?.let { row ->
                     runCatching {
@@ -228,8 +218,7 @@ public abstract class ExposedPersistenceStorageProvider(
     override suspend fun deleteCheckpoint(agentId: String, checkpointId: String) {
         transaction {
             checkpointsTable.deleteWhere {
-                (checkpointsTable.persistenceId eq agentId) and
-                    (checkpointsTable.checkpointId eq checkpointId)
+                (checkpointsTable.persistenceId eq agentId) and (checkpointsTable.checkpointId eq checkpointId)
             }
         }
     }

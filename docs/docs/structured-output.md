@@ -543,7 +543,7 @@ import ai.koog.prompt.structure.StructuredOutputConfig
 import ai.koog.prompt.structure.StructureFixingParser
 import ai.koog.prompt.structure.json.JsonStructuredData
 import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
-import ai.koog.prompt.executor.clients.openai.structure.OpenAIBasicJsonSchemaGenerator
+import ai.koog.prompt.executor.clients.openai.base.structure.OpenAIBasicJsonSchemaGenerator
 import ai.koog.prompt.llm.LLMProvider
 import kotlinx.coroutines.runBlocking
 
