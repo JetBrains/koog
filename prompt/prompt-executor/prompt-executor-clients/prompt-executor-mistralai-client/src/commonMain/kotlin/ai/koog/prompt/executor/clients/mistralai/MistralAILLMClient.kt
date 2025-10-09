@@ -25,8 +25,6 @@ import ai.koog.prompt.executor.clients.openai.base.models.OpenAIStaticContent
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAITool
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolChoice
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIUsage
-import ai.koog.prompt.executor.clients.openai.structure.OpenAIBasicJsonSchemaGenerator
-import ai.koog.prompt.executor.clients.openai.structure.OpenAIStandardJsonSchemaGenerator
 import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
@@ -34,9 +32,6 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrameFlowBuilder
-import ai.koog.prompt.structure.RegisteredBasicJsonSchemaGenerators
-import ai.koog.prompt.structure.RegisteredStandardJsonSchemaGenerators
-import ai.koog.prompt.structure.annotations.InternalStructuredOutputApi
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import kotlinx.datetime.Clock
@@ -77,13 +72,12 @@ public open class MistralAILLMClient(
 ),
     LLMEmbeddingProvider {
 
-    @OptIn(InternalStructuredOutputApi::class)
     private companion object {
         private val staticLogger = KotlinLogging.logger { }
 
         init {
-            RegisteredBasicJsonSchemaGenerators[LLMProvider.MistralAI] = OpenAIBasicJsonSchemaGenerator
-            RegisteredStandardJsonSchemaGenerators[LLMProvider.MistralAI] = OpenAIStandardJsonSchemaGenerator
+            // On class load register custom OpenAI JSON schema generators for structured output.
+            registerOpenAIJsonSchemaGenerators(LLMProvider.DeepSeek)
         }
     }
 
