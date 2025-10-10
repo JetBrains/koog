@@ -75,7 +75,7 @@ You do not need to put correct indexes, just set the `01` for each example,
         ```
         <!--- KNIT example-[md-file-name]-01.kt -->
     ```
-2. If you need some imports, add the include comment `<!--- INCLIDE ... -->` before the code block:
+2. If you need some imports, add the include comment `<!--- INCLUDE ... -->` before the code block:
     ```
         <!--- INCLUDE
         import ai.koog.agents.core.agent.AIAgent
@@ -86,7 +86,7 @@ You do not need to put correct indexes, just set the `01` for each example,
         <!--- KNIT example-[md-file-name]-01.kt -->
     ```
 3. If you need to wrap your code with `main` or other functions, 
-use the include comment `<!--- INCLIDE ... -->` for prefix, and the suffix comment `<!--- SUFFIX ... -->` for suffix:
+use the include comment `<!--- INCLUDE ... -->` for prefix, and the suffix comment `<!--- SUFFIX ... -->` for suffix:
     ```
         <!--- INCLUDE
         import ai.koog.agents.core.agent.AIAgent
