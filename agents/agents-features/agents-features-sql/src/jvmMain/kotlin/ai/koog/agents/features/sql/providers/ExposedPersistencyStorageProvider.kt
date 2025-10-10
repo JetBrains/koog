@@ -16,37 +16,6 @@ import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.upsert
 
 /**
- * Configuration for TTL cleanup behavior
- *
- * @property enabled Whether TTL cleanup should be performed automatically
- * @property intervalMs Minimum interval between cleanup operations in milliseconds (default: 1 minute)
- */
-public data class CleanupConfig(
-    val enabled: Boolean = true,
-    val intervalMs: Long = 60_000L
-) {
-    /**
-     * Companion object for CleanupConfig providing factory methods for creating configuration instances.
-     */
-    public companion object {
-        /**
-         * Creates a default CleanupConfig instance with automatic TTL cleanup enabled
-         * and a default interval of 1 minute between cleanup operations.
-         *
-         * @return A CleanupConfig instance with default settings.
-         */
-        public fun default(): CleanupConfig = CleanupConfig()
-
-        /**
-         * Creates a CleanupConfig instance with automatic TTL cleanup disabled.
-         *
-         * @return A CleanupConfig instance with the `enabled` property set to `false`.
-         */
-        public fun disabled(): CleanupConfig = CleanupConfig(enabled = false)
-    }
-}
-
-/**
  * An abstract Exposed-based implementation of [SQLPersistenceStorageProvider] for managing
  * agent checkpoints in SQL databases using JetBrains Exposed ORM.
  *
@@ -65,7 +34,6 @@ public data class CleanupConfig(
  * - PostgreSQL: Full support including JSONB columns
  * - MySQL: JSON column support (5.7+)
  * - H2: JSON stored as TEXT with parsing
- * - SQLite: JSON stored as TEXT with parsing
  *
  * ## Performance Considerations:
  * - Uses database-specific JSON operations where available
@@ -85,7 +53,6 @@ public data class CleanupConfig(
  * @param tableName Name of the table to store checkpoints (default: "agent_checkpoints")
  * @param ttlSeconds Optional TTL for checkpoint entries in seconds (null = no expiration)
  */
-@Suppress("MissingKDocForPublicAPI")
 public abstract class ExposedPersistenceStorageProvider(
     protected val database: Database,
     tableName: String = "agent_checkpoints",
@@ -192,15 +159,7 @@ public abstract class ExposedPersistenceStorageProvider(
 
     override suspend fun getLatestCheckpoint(agentId: String, filter: ExposedPersistenceFilter?): AgentCheckpointData? {
         if (filter == null) {
-            return transaction {
-                checkpointsTable.select(checkpointsTable.checkpointJson).where {
-                    checkpointsTable.persistenceId eq agentId
-                }.orderBy(checkpointsTable.createdAt to SortOrder.DESC).limit(1).firstOrNull()?.let { row ->
-                    runCatching {
-                        json.decodeFromString<AgentCheckpointData>(row[checkpointsTable.checkpointJson])
-                    }.getOrNull()
-                }
-            }
+            return PersistenceUtils.latestCheckpointOf(getCheckpoints(agentId))
         }
 
         return transaction {

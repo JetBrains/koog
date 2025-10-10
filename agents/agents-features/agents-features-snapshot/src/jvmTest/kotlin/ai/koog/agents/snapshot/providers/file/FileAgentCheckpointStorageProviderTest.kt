@@ -51,7 +51,8 @@ class FileAgentCheckpointStorageProviderTest {
             createdAt = createdAt,
             nodeId = nodeId,
             lastInput = lastInput,
-            messageHistory = messageHistory
+            messageHistory = messageHistory,
+            parentId = null
         )
 
         val agentId = "testAgentId"
@@ -93,7 +94,8 @@ class FileAgentCheckpointStorageProviderTest {
             createdAt = laterCreatedAt,
             nodeId = nodeId,
             lastInput = lastInput,
-            messageHistory = messageHistory
+            messageHistory = messageHistory,
+            parentId = checkpoint.checkpointId
         )
 
         // Save the later checkpoint

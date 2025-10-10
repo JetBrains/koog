@@ -41,7 +41,7 @@ class H2PersistenceStorageProviderTest {
         assertEquals(0, p.getCheckpointCount(agentId))
 
         // save
-        val cp1 = createTestCheckpoint("cp-1")
+        val cp1 = createTestCheckpoint("cp-1", null)
         p.saveCheckpoint(agentId, cp1)
 
         // read
@@ -56,7 +56,7 @@ class H2PersistenceStorageProviderTest {
         assertEquals(1, p.getCheckpoints(agentId).size)
 
         // insert second
-        val cp2 = createTestCheckpoint("cp-2")
+        val cp2 = createTestCheckpoint("cp-2", cp1.checkpointId)
         p.saveCheckpoint(agentId, cp2)
         val all = p.getCheckpoints(agentId)
         assertEquals(listOf("cp-1", "cp-2"), all.map { it.checkpointId })
@@ -76,7 +76,7 @@ class H2PersistenceStorageProviderTest {
         val p = provider(ttlSeconds = 1)
         p.migrate()
 
-        p.saveCheckpoint(agentId, createTestCheckpoint("will-expire"))
+        p.saveCheckpoint(agentId, createTestCheckpoint("will-expire", null))
         assertEquals(1, p.getCheckpointCount(agentId))
 
         // Wait slightly over 1s to ensure ttl passes
@@ -88,7 +88,7 @@ class H2PersistenceStorageProviderTest {
         assertNull(p.getLatestCheckpoint(agentId))
     }
 
-    private fun createTestCheckpoint(id: String): AgentCheckpointData {
+    private fun createTestCheckpoint(id: String, parentId: String?): AgentCheckpointData {
         return AgentCheckpointData(
             checkpointId = id,
             createdAt = Clock.System.now(),
@@ -98,7 +98,8 @@ class H2PersistenceStorageProviderTest {
                 Message.System("You are a test assistant", RequestMetaInfo.create(Clock.System)),
                 Message.User("Hello", RequestMetaInfo.create(Clock.System)),
                 Message.Assistant("Hi there!", ResponseMetaInfo.create(Clock.System))
-            )
+            ),
+            parentId = parentId
         )
     }
 }

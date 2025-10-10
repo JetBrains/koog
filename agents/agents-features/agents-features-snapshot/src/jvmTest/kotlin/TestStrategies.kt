@@ -132,7 +132,7 @@ private fun AIAgentSubgraphBuilderBase<*, *>.createCheckpointNode(name: String? 
     node<String, String>(name) {
         val input = it
         withPersistence { ctx ->
-            createCheckpoint(ctx, name!!, input, typeOf<String>(), checkpointId)
+            createCheckpoint(ctx, name!!, input, typeOf<String>(), null, checkpointId)
             llm.writeSession {
                 updatePrompt {
                     user {

@@ -165,11 +165,13 @@ public class Persistence(
                 }
 
                 if (config.enableAutomaticPersistence) {
+                    val parent = getLatestCheckpoint(eventCtx.context.agentId)
                     createCheckpoint(
                         agentContext = eventCtx.context,
                         nodeId = eventCtx.node.id,
                         lastInput = eventCtx.input,
                         lastInputType = eventCtx.inputType,
+                        parentId = parent?.checkpointId
                     )
                 }
             }
@@ -180,7 +182,8 @@ public class Persistence(
 
             pipeline.interceptStrategyCompleted(interceptContext) { ctx ->
                 if (config.enableAutomaticPersistence && config.rollbackStrategy == RollbackStrategy.Default) {
-                    ctx.feature.createTombstoneCheckpoint(ctx.agentId, ctx.feature.clock.now())
+                    val parent = ctx.feature.getLatestCheckpoint(ctx.agentId)
+                    ctx.feature.createTombstoneCheckpoint(ctx.agentId, ctx.feature.clock.now(), parent?.checkpointId)
                 }
             }
         }
@@ -207,7 +210,8 @@ public class Persistence(
         nodeId: String,
         lastInput: Any?,
         lastInputType: KType,
-        checkpointId: String? = null
+        parentId: String?,
+        checkpointId: String? = null,
     ): AgentCheckpointData? {
         val inputJson = trySerializeInput(lastInput, lastInputType)
 
@@ -224,7 +228,8 @@ public class Persistence(
                 messageHistory = prompt.messages,
                 nodeId = nodeId,
                 lastInput = inputJson,
-                createdAt = Clock.System.now()
+                createdAt = Clock.System.now(),
+                parentId = parentId,
             )
         }
 
@@ -242,8 +247,8 @@ public class Persistence(
      * @return The created tombstone checkpoint data.
      */
     @InternalAgentsApi
-    public suspend fun createTombstoneCheckpoint(agentId: String, time: Instant): AgentCheckpointData {
-        val checkpoint = tombstoneCheckpoint(time)
+    public suspend fun createTombstoneCheckpoint(agentId: String, time: Instant, parentId: String?): AgentCheckpointData {
+        val checkpoint = tombstoneCheckpoint(time, parentId)
         saveCheckpoint(agentId, checkpoint)
         return checkpoint
     }
@@ -279,8 +284,10 @@ public class Persistence(
      * @param checkpointId The ID of the checkpoint to retrieve
      * @return The checkpoint data with the specified ID, or null if not found
      */
-    public suspend fun getCheckpointById(agentId: String, checkpointId: String): AgentCheckpointData? =
-        persistenceStorageProvider.getCheckpoints(agentId).firstOrNull { it.checkpointId == checkpointId }
+    public suspend fun getCheckpointById(agentId: String, checkpointId: String): AgentCheckpointData? {
+        val allCps = persistenceStorageProvider.getCheckpoints(agentId)
+        return allCps.firstOrNull { it.checkpointId == checkpointId }
+    }
 
     /**
      * Sets the execution point of an agent to a specific state.

@@ -36,7 +36,6 @@ import kotlin.reflect.typeOf
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
-import kotlin.time.Duration.Companion.seconds
 
 val databaseMap: MutableMap<String, String> = mutableMapOf()
 
@@ -71,11 +70,12 @@ class CheckpointsTests {
                     println("checkpoint save")
                     withPersistence { ctx ->
                         createCheckpoint(
-                            ctx,
-                            currentNodeId ?: error("currentNodeId not set"),
-                            input,
-                            typeOf<String>(),
-                            "cpt-100500"
+                            agentContext = ctx,
+                            nodeId = currentNodeId ?: error("currentNodeId not set"),
+                            lastInput = input,
+                            lastInputType = typeOf<String>(),
+                            checkpointId = "cpt-100500",
+                            parentId = null
                         )
                     }
                     input
@@ -215,7 +215,8 @@ class CheckpointsTests {
                         currentNodeId ?: error("currentNodeId not set"),
                         input,
                         typeOf<String>(),
-                        checkpointId
+                        checkpointId = checkpointId,
+                        parentId = null
                     )
                     llm.writeSession { updatePrompt { user { text("Checkpoint created with ID: $checkpointId") } } }
                 }
@@ -359,7 +360,8 @@ class CheckpointsTests {
             messageHistory = listOf(
                 Message.User("User message", metaInfo = RequestMetaInfo(time)),
                 Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time))
-            )
+            ),
+            parentId = null
         )
 
         checkpointStorageProvider.saveCheckpoint(agentId, testCheckpoint)
@@ -392,6 +394,18 @@ class CheckpointsTests {
         val time = Clock.System.now()
         val agentId = "testAgentId"
 
+        val testCheckpoint2 = AgentCheckpointData(
+            checkpointId = "testCheckpointId",
+            createdAt = time,
+            nodeId = "Node1",
+            lastInput = JsonPrimitive("Test input"),
+            messageHistory = listOf(
+                Message.User("User message", metaInfo = RequestMetaInfo(time)),
+                Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time))
+            ),
+            parentId = null
+        )
+
         val testCheckpoint = AgentCheckpointData(
             checkpointId = "testCheckpointId",
             createdAt = time,
@@ -400,22 +414,12 @@ class CheckpointsTests {
             messageHistory = listOf(
                 Message.User("User message", metaInfo = RequestMetaInfo(time)),
                 Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time))
-            )
+            ),
+            parentId = testCheckpoint2.checkpointId
         )
 
-        val testCheckpoint2 = AgentCheckpointData(
-            checkpointId = "testCheckpointId",
-            createdAt = time - 10.seconds,
-            nodeId = "Node1",
-            lastInput = JsonPrimitive("Test input"),
-            messageHistory = listOf(
-                Message.User("User message", metaInfo = RequestMetaInfo(time)),
-                Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time))
-            )
-        )
-
-        checkpointStorageProvider.saveCheckpoint(agentId, testCheckpoint)
         checkpointStorageProvider.saveCheckpoint(agentId, testCheckpoint2)
+        checkpointStorageProvider.saveCheckpoint(agentId, testCheckpoint)
 
         val agent = AIAgent(
             promptExecutor = getMockExecutor { },
