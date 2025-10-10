@@ -43,20 +43,20 @@ public class JvmShellCommandExecutor : ShellCommandExecutor {
             listOf("/bin/bash", "-c", command)
         }
 
+        val stdoutBuilder = StringBuilder()
+        val stderrBuilder = StringBuilder()
+
         val process = ProcessBuilder(shellCommand)
             .apply { workingDirectory?.let { directory(File(it)) } }
             .start()
 
-        val stdoutBuilder = StringBuilder()
-        val stderrBuilder = StringBuilder()
-
-        val stdoutJob = launch(Dispatchers.IO) {
+        val stdoutJob = launch {
             process.inputStream.bufferedReader().useLines { lines ->
                 lines.forEach { stdoutBuilder.appendLine(it) }
             }
         }
 
-        val stderrJob = launch(Dispatchers.IO) {
+        val stderrJob = launch {
             process.errorStream.bufferedReader().useLines { lines ->
                 lines.forEach { stderrBuilder.appendLine(it) }
             }
@@ -67,7 +67,12 @@ public class JvmShellCommandExecutor : ShellCommandExecutor {
                 process.onExit().await()
             } != null
 
+            stdoutJob.join()
+            stderrJob.join()
+
             if (!isCompleted) {
+                process.destroyForcibly()
+
                 val combinedPartialOutput = buildCombinedOutput(
                     stdoutBuilder.toString().trimEnd(),
                     stderrBuilder.toString().trimEnd(),
@@ -76,9 +81,6 @@ public class JvmShellCommandExecutor : ShellCommandExecutor {
                 return@withContext ExecutionResult(output = combinedPartialOutput, exitCode = null)
             }
 
-            stdoutJob.join()
-            stderrJob.join()
-
             val combinedOutput = buildCombinedOutput(
                 stdoutBuilder.toString().trimEnd(),
                 stderrBuilder.toString().trimEnd()
@@ -86,9 +88,9 @@ public class JvmShellCommandExecutor : ShellCommandExecutor {
 
             return@withContext ExecutionResult(output = combinedOutput, exitCode = process.exitValue())
         } finally {
-            process.destroyForcibly()
-            stdoutJob.cancel()
-            stderrJob.cancel()
+            if (process.isAlive) {
+                process.destroyForcibly()
+            }
         }
     }
 
