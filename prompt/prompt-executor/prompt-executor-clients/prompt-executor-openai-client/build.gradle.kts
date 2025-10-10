@@ -19,14 +19,9 @@ kotlin {
             }
         }
 
-        commonTest {
-            dependencies {
-                implementation(project(":test-utils"))
-            }
-        }
-
         jvmTest {
             dependencies {
+                implementation(project(":test-utils"))
             }
         }
     }

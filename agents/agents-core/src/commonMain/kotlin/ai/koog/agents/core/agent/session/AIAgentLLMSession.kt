@@ -11,11 +11,13 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.structure.StructureFixingParser
 import ai.koog.prompt.structure.StructuredOutputConfig
 import ai.koog.prompt.structure.StructuredResponse
 import ai.koog.prompt.structure.executeStructured
 import ai.koog.prompt.structure.parseResponseToStructuredResponse
+import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.serializer
 
@@ -31,7 +33,7 @@ import kotlinx.serialization.serializer
  */
 @OptIn(ExperimentalStdlibApi::class)
 public sealed class AIAgentLLMSession(
-    protected val executor: PromptExecutor,
+    private val executor: PromptExecutor,
     tools: List<ToolDescriptor>,
     prompt: Prompt,
     model: LLModel,
@@ -105,6 +107,11 @@ public sealed class AIAgentLLMSession(
 
     protected fun preparePrompt(prompt: Prompt, tools: List<ToolDescriptor>): Prompt {
         return config.missingToolsConversionStrategy.convertPrompt(prompt, tools)
+    }
+
+    protected fun executeStreaming(prompt: Prompt, tools: List<ToolDescriptor>): Flow<StreamFrame> {
+        val preparedPrompt = preparePrompt(prompt, tools)
+        return executor.executeStreaming(preparedPrompt, model, tools)
     }
 
     protected suspend fun executeMultiple(prompt: Prompt, tools: List<ToolDescriptor>): List<Message.Response> {
@@ -203,6 +210,17 @@ public sealed class AIAgentLLMSession(
     public open suspend fun requestLLM(): Message.Response {
         validateSession()
         return executeSingle(prompt, tools)
+    }
+
+    /**
+     * Sends a streaming request to the underlying LLM and returns the streamed response.
+     * This method ensures the session is active before executing the request.
+     *
+     * @return A flow emitting `StreamFrame` objects that represent the streaming output of the language model.
+     */
+    public open fun requestLLMStreaming(): Flow<StreamFrame> {
+        validateSession()
+        return executeStreaming(prompt, tools)
     }
 
     /**

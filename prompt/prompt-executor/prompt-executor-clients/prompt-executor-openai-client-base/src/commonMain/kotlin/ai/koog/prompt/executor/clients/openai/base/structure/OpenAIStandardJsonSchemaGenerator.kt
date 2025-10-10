@@ -1,4 +1,4 @@
-package ai.koog.prompt.executor.clients.openai.structure
+package ai.koog.prompt.executor.clients.openai.base.structure
 
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.structure.json.generator.JsonSchemaConsts

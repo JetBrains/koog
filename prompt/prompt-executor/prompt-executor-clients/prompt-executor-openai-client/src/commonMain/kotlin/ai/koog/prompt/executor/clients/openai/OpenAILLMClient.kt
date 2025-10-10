@@ -37,8 +37,6 @@ import ai.koog.prompt.executor.clients.openai.models.OpenAIResponsesToolChoice
 import ai.koog.prompt.executor.clients.openai.models.OpenAIStreamEvent
 import ai.koog.prompt.executor.clients.openai.models.OpenAITextConfig
 import ai.koog.prompt.executor.clients.openai.models.OutputContent
-import ai.koog.prompt.executor.clients.openai.structure.OpenAIBasicJsonSchemaGenerator
-import ai.koog.prompt.executor.clients.openai.structure.OpenAIStandardJsonSchemaGenerator
 import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
@@ -50,9 +48,6 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.StreamFrameFlowBuilder
-import ai.koog.prompt.structure.RegisteredBasicJsonSchemaGenerators
-import ai.koog.prompt.structure.RegisteredStandardJsonSchemaGenerators
-import ai.koog.prompt.structure.annotations.InternalStructuredOutputApi
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import kotlinx.coroutines.flow.Flow
@@ -102,17 +97,6 @@ public open class OpenAILLMClient(
     staticLogger
 ),
     LLMEmbeddingProvider {
-
-    @OptIn(InternalStructuredOutputApi::class)
-    private companion object {
-        private val staticLogger = KotlinLogging.logger { }
-
-        init {
-            // On class load register custom OpenAI JSON schema generators for structured output.
-            RegisteredBasicJsonSchemaGenerators[LLMProvider.OpenAI] = OpenAIBasicJsonSchemaGenerator
-            RegisteredStandardJsonSchemaGenerators[LLMProvider.OpenAI] = OpenAIStandardJsonSchemaGenerator
-        }
-    }
 
     /**
      * Returns the specific implementation of the `LLMProvider` associated with this client.
@@ -229,6 +213,15 @@ public open class OpenAILLMClient(
         )
 
         return json.encodeToString(OpenAIResponsesAPIRequestSerializer, request)
+    }
+
+    private companion object {
+        private val staticLogger = KotlinLogging.logger { }
+
+        init {
+            // On class load register custom OpenAI JSON schema generators for structured output.
+            registerOpenAIJsonSchemaGenerators(LLMProvider.OpenAI)
+        }
     }
 
     override fun processProviderChatResponse(response: OpenAIChatCompletionResponse): List<LLMChoice> {
