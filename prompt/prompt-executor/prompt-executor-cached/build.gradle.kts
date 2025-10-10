@@ -19,6 +19,13 @@ kotlin {
             }
         }
 
+        commonTest {
+            dependencies {
+                implementation(project(":test-utils"))
+                implementation(project(":agents:agents-tools"))
+            }
+        }
+
         jvmTest {
             dependencies {
                 implementation(kotlin("test-junit5"))
