@@ -19,7 +19,7 @@ It lets you create agents that can interact with tools, handle complex workflows
 
 </div>
 
-## Agents
+## Agent types
 
 <div class="grid cards" markdown>
 
@@ -47,7 +47,7 @@ It lets you create agents that can interact with tools, handle complex workflows
 
 <div class="grid cards" markdown>
 
--   :material-chat-processing-outline:{ .lg .middle } [Prompt API](prompt-api.md)
+-   :material-chat-processing-outline:{ .lg .middle } [Prompts](prompt-api.md)
 
     ---
 
