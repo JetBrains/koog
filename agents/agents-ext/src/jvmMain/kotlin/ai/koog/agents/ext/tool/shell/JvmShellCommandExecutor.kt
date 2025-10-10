@@ -2,11 +2,11 @@ package ai.koog.agents.ext.tool.shell
 
 import ai.koog.agents.ext.tool.shell.ShellCommandExecutor.ExecutionResult
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.future.await
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runInterruptible
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import java.io.File
-import java.util.concurrent.TimeUnit
 
 /**
  * Shell command executor using ProcessBuilder for JVM platforms.
@@ -63,11 +63,11 @@ public class JvmShellCommandExecutor : ShellCommandExecutor {
         }
 
         try {
-            val completed = runInterruptible {
-                process.waitFor(timeoutSeconds.toLong(), TimeUnit.SECONDS)
-            }
+            val isCompleted = withTimeoutOrNull(timeoutSeconds * 1000L) {
+                process.onExit().await()
+            } != null
 
-            if (!completed) {
+            if (!isCompleted) {
                 val combinedPartialOutput = buildCombinedOutput(
                     stdoutBuilder.toString().trimEnd(),
                     stderrBuilder.toString().trimEnd(),

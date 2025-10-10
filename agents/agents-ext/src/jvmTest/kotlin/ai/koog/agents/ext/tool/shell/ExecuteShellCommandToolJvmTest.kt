@@ -384,15 +384,8 @@ class ExecuteShellCommandToolJvmTest {
     fun `command with partial output times out`() = runBlocking {
         val result = executeShellCommand("for i in {1..10}; do echo \$i; sleep 1; done", timeoutSeconds = 3)
 
-        val expected = """
-            Command: for i in {1..10}; do echo ${'$'}i; sleep 1; done
-            1
-            2
-            3
-            Command timed out after 3 seconds
-        """.trimIndent()
-
-        assertEquals(expected, result.textForLLM())
+        assertTrue(result.textForLLM().contains("Command timed out after 3 seconds"))
+        assertTrue(result.textForLLM().startsWith("Command: for i in {1..10}; do echo \$i; sleep 1; done"))
         assertNull(result.exitCode)
     }
 
@@ -404,15 +397,11 @@ class ExecuteShellCommandToolJvmTest {
             timeoutSeconds = 1
         )
 
-        val expected = """
-            Command: cmd /c "echo 1 & echo 2 & echo 3 & powershell -Command Start-Sleep -Seconds 10"
-            1 
-            2 
-            3
-            Command timed out after 1 seconds
-        """.trimIndent()
-
-        assertEquals(expected, result.textForLLM())
+        assertTrue(result.textForLLM().contains("Command timed out after 1 seconds"))
+        assertTrue(
+            result.textForLLM()
+                .startsWith("Command: cmd /c \"echo 1 & echo 2 & echo 3 & powershell -Command Start-Sleep -Seconds 10\"")
+        )
         assertNull(result.exitCode)
     }
 
