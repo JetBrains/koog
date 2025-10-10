@@ -184,7 +184,7 @@ public open class AIAgentSubgraph<TInput, TOutput>(
 
     @OptIn(InternalAgentsApi::class)
     private suspend fun executeWithInnerContext(context: AIAgentGraphContextBase, initialInput: TInput): TOutput? {
-        logger.info { formatLog(context, "Executing subgraph $name") }
+        logger.info { formatLog(context, "Executing subgraph '$name'") }
 
         var currentNode: AIAgentNodeBase<*, *> = start
         var currentInput: Any? = initialInput
@@ -215,9 +215,9 @@ public open class AIAgentSubgraph<TInput, TOutput>(
             }
 
             // run the current node and get its output
-            logger.info { formatLog(context, "Executing node ${currentNode.name}") }
+            logger.debug { formatLog(context, "Executing node '${currentNode.name}'") }
             val nodeOutput: Any? = currentNode.executeUnsafe(context, currentInput)
-            logger.info { formatLog(context, "Completed node ${currentNode.name}") }
+            logger.debug { formatLog(context, "Completed node '${currentNode.name}'") }
 
             // forced context data means that we've requested interruption due to jump to other node / rolling back to checkpoint
             if (context.getAgentContextData() != null) {
@@ -242,7 +242,7 @@ public open class AIAgentSubgraph<TInput, TOutput>(
             currentInput = resolvedEdge.output
         }
 
-        logger.info { formatLog(context, "Completed subgraph $name") }
+        logger.debug { formatLog(context, "Completed subgraph $name") }
         @Suppress("UNCHECKED_CAST")
         val result = (currentInput as? TOutput) ?: run {
             logger.error {
