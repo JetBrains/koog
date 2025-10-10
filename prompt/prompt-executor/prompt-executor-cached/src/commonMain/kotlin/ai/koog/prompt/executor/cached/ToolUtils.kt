@@ -5,6 +5,7 @@ import ai.koog.agents.core.tools.ToolParameterType
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
@@ -13,7 +14,7 @@ import kotlinx.serialization.json.put
  */
 // TODO: duplicated code?
 // TODO: yep, should we remove it?
-private fun ToolDescriptor.toJSONSchema(): JsonObject {
+internal fun ToolDescriptor.toJSONSchema(): JsonObject {
     /**
      * Helper function to convert a ToolParameterDescriptor into JSON schema.
      *
@@ -29,6 +30,7 @@ private fun ToolDescriptor.toJSONSchema(): JsonObject {
             is ToolParameterType.Integer -> put("type", "integer")
             is ToolParameterType.Float -> put("type", "number")
             is ToolParameterType.Boolean -> put("type", "boolean")
+            is ToolParameterType.Null -> put("type", "null")
             is ToolParameterType.Enum -> {
                 // Assuming the enum entries expose a 'name' property.
                 val enumValues = type.entries.map { JsonPrimitive(it) }
@@ -39,6 +41,19 @@ private fun ToolDescriptor.toJSONSchema(): JsonObject {
             is ToolParameterType.List -> {
                 put("type", "array")
                 put("items", toolParameterToSchema(type.itemsType))
+            }
+
+            is ToolParameterType.AnyOf -> {
+                put(
+                    "anyOf",
+                    buildJsonArray {
+                        addAll(
+                            type.types.map { parameterType ->
+                                toolParameterToSchema(parameterType.type, parameterType.description)
+                            }
+                        )
+                    }
+                )
             }
 
             is ToolParameterType.Object -> {
@@ -70,11 +85,19 @@ private fun ToolDescriptor.toJSONSchema(): JsonObject {
 
     // Process required parameters.
     for (param in requiredParameters) {
-        properties[param.name] = toolParameterToSchema(param.type)
+        properties[param.name] = buildJsonObject {
+            val schema = toolParameterToSchema(param.type)
+            schema.forEach { (key, value) -> put(key, value) }
+            put("description", param.description)
+        }
     }
     // Process optional parameters.
     for (param in optionalParameters) {
-        properties[param.name] = toolParameterToSchema(param.type)
+        properties[param.name] = buildJsonObject {
+            val schema = toolParameterToSchema(param.type)
+            schema.forEach { (key, value) -> put(key, value) }
+            put("description", param.description)
+        }
     }
 
     // Build the outer JSON schema.

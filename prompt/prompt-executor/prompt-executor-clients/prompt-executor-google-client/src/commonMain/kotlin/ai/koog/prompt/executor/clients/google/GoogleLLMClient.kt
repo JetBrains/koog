@@ -58,6 +58,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonObjectBuilder
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.add
+import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
@@ -514,6 +515,7 @@ public open class GoogleLLMClient(
                 ToolParameterType.Float -> put("type", "number")
                 ToolParameterType.Integer -> put("type", "integer")
                 ToolParameterType.String -> put("type", "string")
+                ToolParameterType.Null -> put("type", "null")
 
                 is ToolParameterType.Enum -> {
                     put("type", "string")
@@ -523,6 +525,19 @@ public open class GoogleLLMClient(
                 is ToolParameterType.List -> {
                     put("type", "array")
                     put("items", buildJsonObject { putType(type.itemsType) })
+                }
+
+                is ToolParameterType.AnyOf -> {
+                    put(
+                        "anyOf",
+                        buildJsonArray {
+                            addAll(
+                                type.types.map { parameterType ->
+                                    buildGoogleParamType(parameterType)
+                                }
+                            )
+                        }
+                    )
                 }
 
                 is ToolParameterType.Object -> {

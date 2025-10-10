@@ -395,6 +395,7 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
             ToolParameterType.Float -> put("type", "number")
             ToolParameterType.Integer -> put("type", "integer")
             ToolParameterType.String -> put("type", "string")
+            ToolParameterType.Null -> put("type", "null")
             is ToolParameterType.Enum -> {
                 put("type", "string")
                 putJsonArray("enum") {
@@ -417,6 +418,16 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
                             put("description", property.description)
                         }
                     }
+                }
+            }
+
+            is ToolParameterType.AnyOf -> {
+                putJsonArray("anyOf") {
+                    addAll(
+                        type.types.map { parameterType ->
+                            parameterType.toJsonSchema()
+                        }
+                    )
                 }
             }
         }

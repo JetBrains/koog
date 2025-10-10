@@ -54,6 +54,8 @@ public sealed class ToolParameterType(public val name: kotlin.String) {
      */
     public data object String : ToolParameterType("STRING")
 
+    public data object Null : ToolParameterType("NULL")
+
     /**
      * Represents an integer type parameter.
      */
@@ -84,6 +86,16 @@ public sealed class ToolParameterType(public val name: kotlin.String) {
      * @property itemsType The type definition for the items within the array.
      */
     public data class List(val itemsType: ToolParameterType) : ToolParameterType("ARRAY")
+
+    /**
+     * Represents an anyOf type parameter.
+     *
+     * @property types The type definition for the items within the array.
+     */
+    public data class AnyOf(val types: Array<ToolParameterDescriptor>) : ToolParameterType("ANYOF") {
+        override fun equals(other: Any?): kotlin.Boolean = other is AnyOf && this.types.contentEquals(other.types)
+        override fun hashCode(): Int = types.contentHashCode()
+    }
 
     /**
      * Represents an object-type parameter used in the tool's parameter schema.

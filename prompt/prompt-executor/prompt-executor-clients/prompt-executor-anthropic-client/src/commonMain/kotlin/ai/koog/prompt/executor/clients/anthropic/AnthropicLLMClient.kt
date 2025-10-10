@@ -282,7 +282,7 @@ public open class AnthropicLLMClient(
     }
 
     @OptIn(ExperimentalUuidApi::class)
-    private fun createAnthropicRequest(
+    internal fun createAnthropicRequest(
         prompt: Prompt,
         tools: List<ToolDescriptor>,
         model: LLModel,
@@ -509,6 +509,7 @@ public open class AnthropicLLMClient(
             ToolParameterType.Float -> JsonObject(mapOf("type" to JsonPrimitive("number")))
             ToolParameterType.Integer -> JsonObject(mapOf("type" to JsonPrimitive("integer")))
             ToolParameterType.String -> JsonObject(mapOf("type" to JsonPrimitive("string")))
+            ToolParameterType.Null -> JsonObject(mapOf("type" to JsonPrimitive("null")))
             is ToolParameterType.Enum -> JsonObject(
                 mapOf(
                     "type" to JsonPrimitive("string"),
@@ -557,6 +558,8 @@ public open class AnthropicLLMClient(
 
                 JsonObject(objectMap)
             }
+
+            is ToolParameterType.AnyOf -> throw IllegalArgumentException("AnyOf type is not supported")
         }
     }
 
