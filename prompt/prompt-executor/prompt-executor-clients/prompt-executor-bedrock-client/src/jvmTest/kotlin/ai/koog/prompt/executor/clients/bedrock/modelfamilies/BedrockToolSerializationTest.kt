@@ -213,7 +213,7 @@ class BedrockToolSerializationTest {
                     ),
                     mapOf(
                         "description" to "String or number value",
-                        "anyOf" to "expected"  // We'll verify anyOf array exists in test
+                        "anyOf" to "expected" // We'll verify anyOf array exists in test
                     )
                 )
             )
