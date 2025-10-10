@@ -43,6 +43,12 @@ kotlin {
                 implementation(libs.kotest.assertions.json)
             }
         }
+
+        jvmTest {
+            dependencies {
+                implementation(libs.ktor.client.cio)
+            }
+        }
     }
 
     explicitApi()
