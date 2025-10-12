@@ -14,6 +14,7 @@ kotlin {
             dependencies {
                 api(project(":agents:agents-tools"))
                 api(project(":agents:agents-utils"))
+                api(project(":utils"))
                 api(project(":prompt:prompt-executor:prompt-executor-clients"))
                 implementation(
                     project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-anthropic-client")

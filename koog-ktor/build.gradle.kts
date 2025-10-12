@@ -13,6 +13,7 @@ kotlin {
         commonMain {
             dependencies {
                 api(project(":koog-agents"))
+                api(project(":utils"))
                 api(libs.kotlinx.coroutines.core)
                 api(libs.kotlinx.serialization.json)
                 api(libs.ktor.server.core)

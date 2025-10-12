@@ -1,6 +1,6 @@
 package ai.koog.agents.core.feature.message
 
-import ai.koog.agents.utils.Closeable
+import ai.koog.utils.Closeable
 import kotlinx.coroutines.flow.StateFlow
 
 /**
