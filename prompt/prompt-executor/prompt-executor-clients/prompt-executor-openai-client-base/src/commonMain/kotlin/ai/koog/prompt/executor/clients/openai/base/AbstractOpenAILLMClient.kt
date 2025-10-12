@@ -3,6 +3,9 @@ package ai.koog.prompt.executor.clients.openai.base
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
+import ai.koog.http.client.KoogHttpClient
+import ai.koog.http.client.ktor.fromKtorClient
+import ai.koog.http.client.post
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
@@ -36,9 +39,6 @@ import ai.koog.prompt.streaming.buildStreamFrameFlow
 import ai.koog.prompt.structure.RegisteredBasicJsonSchemaGenerators
 import ai.koog.prompt.structure.RegisteredStandardJsonSchemaGenerators
 import ai.koog.prompt.structure.annotations.InternalStructuredOutputApi
-import ai.koog.utils.http.KoogHttpClient
-import ai.koog.utils.http.fromKtorClient
-import ai.koog.utils.http.post
 import io.github.oshai.kotlinlogging.KLogger
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.HttpTimeout

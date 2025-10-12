@@ -31,6 +31,10 @@ val excluded = setOf(
     ":agents:agents-features:agents-features-a2a-server",
     ":agents:agents-features:agents-features-a2a-client",
 
+    ":http-client:http-client-test",
+    ":http-client:http-client-okhttp",
+    ":http-client:http-client-java",
+
     project.path, // the current project should not depend on itself
 )
 
@@ -73,6 +77,8 @@ val included = setOf(
     ":prompt:prompt-xml",
     ":rag:rag-base",
     ":rag:vector-storage",
+    ":http-client:http-client-core",
+    ":http-client:http-client-ktor",
     ":utils",
 )
 

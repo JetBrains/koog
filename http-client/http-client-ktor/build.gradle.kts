@@ -12,21 +12,19 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                api(libs.kotlinx.serialization.json)
-                api(libs.jetbrains.annotations)
-                api(libs.kotlinx.coroutines.core)
+                api(project(":http-client:http-client-core"))
+                implementation(project(":utils"))
+                implementation(libs.ktor.client.core)
                 implementation(libs.oshai.kotlin.logging)
-            }
-        }
-
-        commonTest {
-            dependencies {
-                implementation(project(":test-utils"))
             }
         }
 
         jvmTest {
             dependencies {
+                implementation(project(":http-client:http-client-test"))
+                implementation(libs.ktor.client.cio)
+                implementation(libs.ktor.serialization.kotlinx.json)
+                implementation(libs.ktor.client.content.negotiation)
                 implementation(kotlin("test-junit5"))
             }
         }
