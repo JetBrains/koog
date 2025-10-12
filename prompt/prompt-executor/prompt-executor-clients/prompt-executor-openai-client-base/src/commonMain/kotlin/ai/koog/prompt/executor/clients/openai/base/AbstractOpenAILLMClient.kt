@@ -242,11 +242,10 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
             stream = false
         )
 
-        return httpClient.post(
+        return httpClient.post<String, String>(
             path = chatCompletionsPath,
             request = request
-        )
-            .let(::decodeResponse)
+        ).let(::decodeResponse)
     }
 
     @OptIn(ExperimentalUuidApi::class)

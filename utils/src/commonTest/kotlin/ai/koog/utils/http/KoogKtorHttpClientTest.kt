@@ -121,7 +121,7 @@ class KoogKtorHttpClientTest {
         ) { }
 
         try {
-            client.post(
+            client.post<String, String>(
                 path = "https://example.com/fail",
                 request = "PAYLOAD",
             )

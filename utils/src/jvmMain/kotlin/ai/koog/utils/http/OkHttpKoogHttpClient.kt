@@ -99,11 +99,11 @@ internal class OkHttpKoogHttpClient internal constructor(
 
             override fun onEvent(eventSource: EventSource, id: String?, type: String?, data: String) {
                 try {
-                    if (dataFilter.invoke(data)) {
-                        val trimmedData = data.trim()
-                        val decoded = decodeStreamingResponse(trimmedData)
-                        val processed = processStreamingChunk(decoded)
-                        processed?.let { trySend(it) }
+                    if (dataFilter(data)) {
+                        data.trim()
+                            .let(decodeStreamingResponse)
+                            .let(processStreamingChunk)
+                            ?.let { trySend(it) }
                     }
                 } catch (e: Exception) {
                     logger.error(e) { "Error processing SSE event from $clientName: ${e.message}" }

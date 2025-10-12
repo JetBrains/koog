@@ -112,7 +112,7 @@ class OkHttpKoogHttpClientTest {
         )
 
         try {
-            client.post(
+            client.post<String, String>(
                 path = mockServer.url("/fail"),
                 request = "PAYLOAD",
             )
