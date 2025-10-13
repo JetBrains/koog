@@ -26,12 +26,6 @@ kotlin {
             }
         }
 
-        jvmMain {
-            dependencies {
-                api(libs.ktor.client.cio)
-            }
-        }
-
         jsMain {
             dependencies {
                 api(libs.ktor.client.js)
@@ -47,6 +41,7 @@ kotlin {
         jvmTest {
             dependencies {
                 implementation(libs.ktor.client.mock)
+                implementation(libs.ktor.client.cio)
             }
         }
     }

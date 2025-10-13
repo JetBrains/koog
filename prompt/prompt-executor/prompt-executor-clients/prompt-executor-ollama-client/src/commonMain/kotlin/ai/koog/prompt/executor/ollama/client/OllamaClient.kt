@@ -36,7 +36,6 @@ import ai.koog.prompt.streaming.streamFrameFlow
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
-import io.ktor.client.engine.HttpClientEngineFactory
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
@@ -69,7 +68,7 @@ import kotlinx.serialization.json.Json
  */
 public class OllamaClient(
     public val baseUrl: String = "http://localhost:11434",
-    baseClient: HttpClient = HttpClient(engineFactoryProvider()),
+    baseClient: HttpClient = HttpClient(),
     timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig(),
     private val clock: Clock = Clock.System,
     private val contextWindowStrategy: ContextWindowStrategy = ContextWindowStrategy.Companion.None,
@@ -446,5 +445,3 @@ public class OllamaClient(
         }
     }
 }
-
-internal expect fun engineFactoryProvider(): HttpClientEngineFactory<*>

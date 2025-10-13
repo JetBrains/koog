@@ -32,11 +32,7 @@ kotlin {
                 api(libs.ktor.client.content.negotiation)
             }
         }
-        jvmMain {
-            dependencies {
-                api(libs.ktor.client.cio)
-            }
-        }
+
         commonTest {
             dependencies {
                 implementation(kotlin("test"))
@@ -46,6 +42,7 @@ kotlin {
         jvmTest {
             dependencies {
                 implementation(kotlin("test-junit5"))
+                implementation(libs.ktor.client.cio)
                 implementation(libs.ktor.client.mock)
                 runtimeOnly(libs.slf4j.simple)
             }

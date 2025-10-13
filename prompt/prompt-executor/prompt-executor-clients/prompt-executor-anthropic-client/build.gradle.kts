@@ -25,12 +25,6 @@ kotlin {
             }
         }
 
-        jvmMain {
-            dependencies {
-                implementation(libs.ktor.client.cio)
-            }
-        }
-
         jsMain {
             dependencies {
                 implementation(libs.ktor.client.js)
@@ -41,6 +35,12 @@ kotlin {
             dependencies {
                 implementation(project(":test-utils"))
                 implementation(libs.kotest.assertions.json)
+            }
+        }
+
+        jvmTest {
+            dependencies {
+                implementation(libs.ktor.client.cio)
             }
         }
     }

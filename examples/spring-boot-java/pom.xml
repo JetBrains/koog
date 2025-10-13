@@ -33,6 +33,7 @@
         <koog.version>0.4.1-develop-2025-09-05</koog.version>
         <!-- Kotlinx-serialization version must be aligned -->
         <kotlinx-serialization.version>1.8.1</kotlinx-serialization.version>
+        <ktor.version>3.2.13</ktor.version>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -47,6 +48,13 @@
                 <groupId>ai.koog</groupId>
                 <artifactId>koog-spring-boot-starter</artifactId>
                 <version>${koog.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.ktor</groupId>
+                <artifactId>ktor-bom</artifactId>
+                <version>${ktor.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
             <dependency>
                 <groupId>org.springframework.boot</groupId>

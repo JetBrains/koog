@@ -31,33 +31,27 @@ kotlin {
             }
         }
 
-        androidMain {
+        androidUnitTest {
             dependencies {
                 implementation(libs.ktor.client.cio)
             }
         }
 
-        appleMain {
+        appleTest {
             dependencies {
-                api(libs.ktor.client.darwin)
+                implementation(libs.ktor.client.darwin)
             }
         }
 
-        jsMain {
+        jsTest {
             dependencies {
-                api(libs.ktor.client.js)
+                implementation(libs.ktor.client.js)
             }
         }
 
-        wasmJsMain {
+        wasmJsTest {
             dependencies {
-                api(libs.ktor.client.cio)
-            }
-        }
-
-        jvmMain {
-            dependencies {
-                api(libs.ktor.client.cio)
+                implementation(libs.ktor.client.cio)
             }
         }
 
@@ -76,6 +70,7 @@ kotlin {
                 implementation(project(":agents:agents-core"))
                 implementation(project(":agents:agents-features:agents-features-event-handler"))
                 implementation(project(":agents:agents-features:agents-features-trace"))
+                implementation(libs.ktor.client.cio)
             }
         }
     }

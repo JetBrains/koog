@@ -24,7 +24,6 @@ kotlin {
                 api(libs.kotlinx.serialization.json)
                 api(libs.kotlinx.io.core)
                 api(libs.kotlinx.coroutines.core)
-                api(libs.ktor.client.cio)
                 implementation(libs.oshai.kotlin.logging)
             }
         }
@@ -32,7 +31,6 @@ kotlin {
         commonTest {
             dependencies {
                 implementation(project(":test-utils"))
-                implementation(libs.ktor.client.cio)
             }
         }
 
@@ -40,6 +38,7 @@ kotlin {
             dependencies {
                 implementation(project(":agents:agents-test"))
                 implementation(libs.mcp.server)
+                implementation(libs.ktor.client.cio)
             }
         }
     }

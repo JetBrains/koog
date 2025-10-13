@@ -19,11 +19,6 @@ kotlin {
                 implementation(libs.oshai.kotlin.logging)
             }
         }
-        jvmMain {
-            dependencies {
-                api(libs.ktor.client.cio)
-            }
-        }
 
         jsMain {
             dependencies {
@@ -40,6 +35,7 @@ kotlin {
         jvmTest {
             dependencies {
                 implementation(kotlin("test-junit5"))
+                implementation(libs.ktor.client.cio)
             }
         }
     }
