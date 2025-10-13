@@ -118,6 +118,26 @@ kotlin {
                 }
             }
         }
+
+        androidMain.dependencies {
+            api(libs.ktor.client.okhttp)
+        }
+
+        jvmMain.dependencies {
+            api(libs.ktor.client.apache5)
+        }
+
+        appleMain.dependencies {
+            api(libs.ktor.client.darwin)
+        }
+
+        jsMain.dependencies {
+            api(libs.ktor.client.js)
+        }
+
+        wasmJsMain.dependencies {
+            api(libs.ktor.client.js)
+        }
     }
 }
 
