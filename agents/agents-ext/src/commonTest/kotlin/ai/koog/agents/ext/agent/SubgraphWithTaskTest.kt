@@ -17,7 +17,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.llm.OllamaModels
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
-import ai.koog.utils.use
+import ai.koog.utils.io.use
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json

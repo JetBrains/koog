@@ -24,7 +24,7 @@ import ai.koog.agents.utils.HiddenString
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.tokenizer.SimpleRegexBasedTokenizer
-import ai.koog.utils.use
+import ai.koog.utils.io.use
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.opentelemetry.sdk.OpenTelemetrySdk
 import io.opentelemetry.sdk.trace.SdkTracerProvider

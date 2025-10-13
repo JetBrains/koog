@@ -1,4 +1,4 @@
-package ai.koog.utils
+package ai.koog.utils.io
 
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers

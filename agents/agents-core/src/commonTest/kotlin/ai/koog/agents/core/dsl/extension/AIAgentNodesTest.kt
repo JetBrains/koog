@@ -16,7 +16,7 @@ import ai.koog.prompt.llm.OllamaModels
 import ai.koog.prompt.structure.StructuredOutput
 import ai.koog.prompt.structure.StructuredOutputConfig
 import ai.koog.prompt.structure.json.JsonStructuredData
-import ai.koog.utils.use
+import ai.koog.utils.io.use
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import kotlin.test.Test

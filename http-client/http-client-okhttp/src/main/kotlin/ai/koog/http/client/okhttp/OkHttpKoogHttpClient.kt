@@ -1,7 +1,7 @@
 package ai.koog.http.client.okhttp
 
 import ai.koog.http.client.KoogHttpClient
-import ai.koog.utils.SuitableForIO
+import ai.koog.utils.io.SuitableForIO
 import io.github.oshai.kotlinlogging.KLogger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose

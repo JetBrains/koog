@@ -1,4 +1,4 @@
-package ai.koog.utils
+package ai.koog.utils.io
 
 /**
  * Represents a resource or entity that can be closed to release any associated resources.

@@ -1,4 +1,4 @@
-package ai.koog.utils
+package ai.koog.utils.io
 
 import kotlinx.coroutines.test.runTest
 import kotlin.js.JsName
@@ -17,13 +17,15 @@ class CloseableTest {
         }
     }
 
-    @Test @JsName("testCloseableInitiallyNotClosed")
+    @Test
+    @JsName("testCloseableInitiallyNotClosed")
     fun `test closeable initially not closed`() {
         val closeable = TestCloseable()
         assertFalse(closeable.isClosed, "Closeable should not be closed initially")
     }
 
-    @Test @JsName("testCloseableIsClosedAfterCloseMethodCall")
+    @Test
+    @JsName("testCloseableIsClosedAfterCloseMethodCall")
     fun `test closeable is closed after close method call`() = runTest {
         val closeable = TestCloseable()
         assertFalse(closeable.isClosed, "Closeable should not be closed initially")
@@ -31,7 +33,8 @@ class CloseableTest {
         assertTrue(closeable.isClosed, "Closeable should be closed after close() is called")
     }
 
-    @Test @JsName("testUseExtensionFunctionClosesTheResource")
+    @Test
+    @JsName("testUseExtensionFunctionClosesTheResource")
     fun `test use extension function closes the resource`() = runTest {
         val closeable = TestCloseable()
         closeable.use { resource ->
@@ -41,7 +44,8 @@ class CloseableTest {
         assertTrue(closeable.isClosed, "Closeable should be closed after use block execution")
     }
 
-    @Test @JsName("testUseReturnsUnitByDefault")
+    @Test
+    @JsName("testUseReturnsUnitByDefault")
     fun `test use returns Unit by default`() = runTest {
         val closeable = TestCloseable()
 
@@ -51,7 +55,8 @@ class CloseableTest {
         assertEquals(Unit, returnObject, "The return object should return an object of type Unit")
     }
 
-    @Test @JsName("testUseReturnsTheDesiredObject")
+    @Test
+    @JsName("testUseReturnsTheDesiredObject")
     fun `test use returns the desired object`() = runTest {
         val expectedMessage = "Hello world"
         val closeable = TestCloseable()

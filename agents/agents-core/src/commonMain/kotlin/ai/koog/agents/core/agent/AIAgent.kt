@@ -15,7 +15,7 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
-import ai.koog.utils.Closeable
+import ai.koog.utils.io.Closeable
 import kotlinx.datetime.Clock
 import kotlin.reflect.typeOf
 

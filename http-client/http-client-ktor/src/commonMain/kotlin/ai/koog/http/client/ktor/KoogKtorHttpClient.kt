@@ -1,7 +1,7 @@
 package ai.koog.http.client.ktor
 
 import ai.koog.http.client.KoogHttpClient
-import ai.koog.utils.SuitableForIO
+import ai.koog.utils.io.SuitableForIO
 import io.github.oshai.kotlinlogging.KLogger
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
