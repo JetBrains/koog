@@ -31,7 +31,7 @@ import ai.koog.agents.core.feature.remote.client.config.DefaultClientConnectionC
 import ai.koog.agents.core.feature.remote.server.config.DefaultServerConnectionConfig
 import ai.koog.agents.core.feature.writer.FeatureMessageRemoteWriter
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.features.debugger.EnvironmentVariablesReader
+import ai.koog.agents.features.debugger.SystemVariablesReader
 import ai.koog.agents.features.debugger.eventString
 import ai.koog.agents.features.debugger.mock.ClientEventsCollector
 import ai.koog.agents.features.debugger.mock.MockLLMProvider
@@ -57,14 +57,17 @@ import io.ktor.client.HttpClient
 import io.ktor.client.plugins.HttpRequestRetry
 import io.ktor.http.URLProtocol
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.io.IOException
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Disabled
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
@@ -73,7 +76,11 @@ import kotlin.test.assertFails
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.DurationUnit
+import kotlin.time.measureTime
+import kotlin.time.toDuration
 
 class DebuggerTest {
 
@@ -85,11 +92,18 @@ class DebuggerTest {
     private val testBaseClient: HttpClient
         get() = HttpClient {
             install(HttpRequestRetry) {
-                retryOnExceptionIf(maxRetries = 5) { _, cause ->
+                retryOnExceptionIf(maxRetries = 10) { _, cause ->
                     cause is IOException
                 }
             }
         }
+
+    @AfterEach
+    fun cleanup() {
+        // Clean up system properties user in tests to not affect other test runs
+        System.clearProperty(Debugger.KOOG_DEBUGGER_PORT_VM_OPTION)
+        System.clearProperty(Debugger.KOOG_DEBUGGER_WAIT_CONNECTION_TIMEOUT_MS_VM_OPTION)
+    }
 
     @Test
     fun `test feature message remote writer collect events on agent run`() = runBlocking {
@@ -191,6 +205,7 @@ class DebuggerTest {
                 install(Debugger) {
                     setPort(port)
 
+                    // A job to wait for a server to start
                     launch {
                         val messageProcessor = messageProcessors.single() as FeatureMessageRemoteWriter
                         val isServerStartedCheck = withTimeoutOrNull(defaultClientServerTimeout) {
@@ -758,143 +773,53 @@ class DebuggerTest {
         assertNotNull(isFinishedOrNull, "Client or server did not finish in time")
     }
 
+    //region Port
+
     @Test
     @Disabled(
         """
-        'KOOG_DEBUGGER_PORT' environment variable need to be set for a particular test via test framework.
+        '${Debugger.KOOG_DEBUGGER_PORT_ENV_VAR}' environment variable need to be set for a particular test via test framework.
         Currently, test framework that is used for Koog tests does not have ability to set env variables.
         Setting env variable in Gradle task does not work either, because there are tests that verify both 
         cases when env variable is set and when it is not set.
         Disable test for now. Need to be enabled when we can set env variables in tests.
     """
     )
-    fun `test read port from KOOG_DEBUGGER_PORT env variable when not set by property`() = runBlocking {
-        // Agent Config
-        val agentId = "test-agent-id"
-        val strategyName = "test-strategy"
-        val userPrompt = "Call the dummy tool with argument: test"
+    fun `test read port from env variable`() = runBlocking {
+        val portEnvVar = SystemVariablesReader.getEnvironmentVariable(Debugger.KOOG_DEBUGGER_PORT_ENV_VAR)
+        assertNotNull(portEnvVar, "'${Debugger.KOOG_DEBUGGER_PORT_ENV_VAR}' env variable is not set")
 
-        // Test Data
-        val port = EnvironmentVariablesReader.getEnvironmentVariable("KOOG_DEBUGGER_PORT")
-        assertNotNull(port, "'KOOG_DEBUGGER_PORT' env variable is not set")
-
-        val clientConfig = DefaultClientConnectionConfig(host = HOST, port = port.toInt(), protocol = URLProtocol.HTTP)
-
-        val isClientFinished = CompletableDeferred<Boolean>()
-
-        // Server
-        val serverJob = launch {
-            val strategy = strategy<String, String>(strategyName) {
-                edge(nodeStart forwardTo nodeFinish)
-            }
-
-            createAgent(
-                agentId = agentId,
-                strategy = strategy,
-                userPrompt = userPrompt,
-            ) {
-                install(Debugger) {
-                    // Do not set the port value.
-                    // It should be read from the 'KOOG_DEBUGGER_PORT' env variable defined above.
-                }
-            }.use { agent ->
-                agent.run(userPrompt)
-                isClientFinished.await()
-            }
-        }
-
-        // Client
-        val clientJob = launch {
-            FeatureMessageRemoteClient(
-                connectionConfig = clientConfig,
-                baseClient = testBaseClient,
-                scope = this
-            ).use { client ->
-
-                val clientEventsCollector = ClientEventsCollector(client = client, expectedEventsCount = 6)
-                val collectEventsJob = clientEventsCollector.startCollectEvents(coroutineScope = this@launch)
-
-                client.connect()
-                collectEventsJob.join()
-
-                val startGraphNode = StrategyEventGraphNode(id = "__start__", name = "__start__")
-                val finishGraphNode = StrategyEventGraphNode(id = "__finish__", name = "__finish__")
-
-                // Correct run id will be set after the 'collect events job' is finished.
-                val expectedEvents = listOf(
-                    AgentStartingEvent(
-                        agentId = agentId,
-                        runId = clientEventsCollector.runId,
-                    ),
-                    GraphStrategyStartingEvent(
-                        runId = clientEventsCollector.runId,
-                        strategyName = strategyName,
-                        graph = StrategyEventGraph(
-                            nodes = listOf(
-                                startGraphNode,
-                                finishGraphNode
-                            ),
-                            edges = listOf(
-                                StrategyEventGraphEdge(sourceNode = startGraphNode, targetNode = finishGraphNode)
-                            )
-                        ),
-                        timestamp = testClock.now().toEpochMilliseconds()
-                    ),
-                    NodeExecutionStartingEvent(
-                        runId = clientEventsCollector.runId,
-                        nodeName = "__start__",
-                        input = userPrompt,
-                        timestamp = testClock.now().toEpochMilliseconds()
-                    ),
-                    NodeExecutionCompletedEvent(
-                        runId = clientEventsCollector.runId,
-                        nodeName = "__start__",
-                        input = userPrompt,
-                        output = userPrompt,
-                        timestamp = testClock.now().toEpochMilliseconds()
-                    ),
-                    StrategyCompletedEvent(
-                        runId = clientEventsCollector.runId,
-                        strategyName = strategyName,
-                        result = userPrompt,
-                        timestamp = testClock.now().toEpochMilliseconds()
-                    ),
-                    AgentCompletedEvent(
-                        agentId = agentId,
-                        runId = clientEventsCollector.runId,
-                        result = userPrompt,
-                        timestamp = testClock.now().toEpochMilliseconds()
-                    ),
-                )
-
-                assertEquals(
-                    expectedEvents.size,
-                    clientEventsCollector.collectedEvents.size,
-                    "expectedEventsCount variable in the test need to be updated"
-                )
-                assertContentEquals(expectedEvents, clientEventsCollector.collectedEvents)
-
-                isClientFinished.complete(true)
-            }
-        }
-
-        val isFinishedOrNull = withTimeoutOrNull(defaultClientServerTimeout) {
-            listOf(clientJob, serverJob).joinAll()
-        }
-
-        assertNotNull(isFinishedOrNull, "Client or server did not finish in time")
+        runAgentPortConfigThroughSystemVariablesTest(portEnvVar.toInt())
     }
 
     @Test
-    fun `test read default port when not set by property or env var`() = runBlocking {
-        // Agent Config
-        val agentId = "test-agent-id"
-        val strategyName = "test-strategy"
-        val userPrompt = "Call the dummy tool with argument: test"
+    fun `test read port from vm option`() = runBlocking {
+        // Set VM option
+        val port = 56712
+        System.setProperty(Debugger.KOOG_DEBUGGER_PORT_VM_OPTION, port.toString())
 
-        // Test Data
-        val port = EnvironmentVariablesReader.getEnvironmentVariable("KOOG_DEBUGGER_PORT")
-        assertNull(port, "Expected 'KOOG_DEBUGGER_PORT' env variable is not set, but it exists with value: $port")
+        val portEnvVar = SystemVariablesReader.getEnvironmentVariable(name = Debugger.KOOG_DEBUGGER_PORT_ENV_VAR)
+        assertNull(
+            portEnvVar,
+            "Expected '${Debugger.KOOG_DEBUGGER_PORT_ENV_VAR}' env variable is not set, but it is defined with value: <$portEnvVar>"
+        )
+
+        val portVMOption = SystemVariablesReader.getVMOption(name = Debugger.KOOG_DEBUGGER_PORT_VM_OPTION)
+        assertNotNull(
+            portVMOption,
+            "Expected '${Debugger.KOOG_DEBUGGER_PORT_VM_OPTION}' VM option is not set"
+        )
+
+        runAgentPortConfigThroughSystemVariablesTest(port = portVMOption.toInt())
+    }
+
+    @Test
+    fun `test read default port when not set by property or env variable or vm option`() = runBlocking {
+        val portEnvVar = SystemVariablesReader.getEnvironmentVariable(Debugger.KOOG_DEBUGGER_PORT_ENV_VAR)
+        assertNull(portEnvVar, "Expected '${Debugger.KOOG_DEBUGGER_PORT_ENV_VAR}' env variable is not set, but it exists with value: $portEnvVar")
+
+        val portVMOption = SystemVariablesReader.getEnvironmentVariable(Debugger.KOOG_DEBUGGER_PORT_ENV_VAR)
+        assertNull(portVMOption, "Expected '${Debugger.KOOG_DEBUGGER_PORT_VM_OPTION}' VM option is not set, but it exists with value: $portVMOption")
 
         // Check default port available
         val isDefaultPortAvailable = NetUtil.isPortAvailable(DefaultServerConnectionConfig.DEFAULT_PORT)
@@ -903,15 +828,27 @@ class DebuggerTest {
             "Default port ${DefaultServerConnectionConfig.DEFAULT_PORT} is not available"
         )
 
-        val clientConfig = DefaultClientConnectionConfig(
-            host = HOST,
-            port = DefaultServerConnectionConfig.DEFAULT_PORT,
-            protocol = URLProtocol.HTTP
-        )
+        runAgentPortConfigThroughSystemVariablesTest(port = DefaultServerConnectionConfig.DEFAULT_PORT)
+    }
 
-        val isClientFinished = CompletableDeferred<Boolean>()
+    //endregion Port
+
+    //region Client Connection Wait Timeout
+
+    @Test
+    fun `test client connection waiting timeout is set by property`() = runBlocking {
+        // Agent Config
+        val agentId = "test-agent-id"
+        val strategyName = "test-strategy"
+        val userPrompt = "Call the dummy tool with argument: test"
+
+        // Test Data
+        val port = findAvailablePort()
+        val clientConnectionWaitTimeout = 1.seconds
+        var actualAgentRunTime = Duration.ZERO
 
         // Server
+        // The server will read the env variable or VM option to get a port value.
         val serverJob = launch {
             val strategy = strategy<String, String>(strategyName) {
                 edge(nodeStart forwardTo nodeFinish)
@@ -923,8 +860,114 @@ class DebuggerTest {
                 userPrompt = userPrompt,
             ) {
                 install(Debugger) {
-                    // Do not set the port value.
-                    // It should take the default value when the 'KOOG_DEBUGGER_PORT' env variable is not defined.
+                    setPort(port)
+                    // Set connection awaiting timeout
+                    setAwaitInitialConnectionTimeout(clientConnectionWaitTimeout)
+                }
+            }.use { agent ->
+                actualAgentRunTime = measureTime {
+                    withTimeoutOrNull(defaultClientServerTimeout) {
+                        agent.run(userPrompt)
+                    }
+                }
+            }
+        }
+
+        val isFinishedOrNull = withTimeoutOrNull(defaultClientServerTimeout) {
+            serverJob.join()
+        }
+
+        assertNotNull(isFinishedOrNull, "Client or server did not finish in time")
+
+        assertTrue(
+            actualAgentRunTime in clientConnectionWaitTimeout..<defaultClientServerTimeout,
+            "Expected actual agent run time is over <$clientConnectionWaitTimeout>, but got: <$actualAgentRunTime>"
+        )
+    }
+
+    @Disabled(
+        """
+        '${Debugger.KOOG_DEBUGGER_WAIT_CONNECTION_MS_ENV_VAR}' environment variable need to be set for a particular test via test framework.
+        Currently, test framework that is used for Koog tests does not have ability to set env variables.
+        Setting env variable in Gradle task does not work either, because there are tests that verify both 
+        cases when env variable is set and when it is not set.
+        Disable test for now. Need to be enabled when we can set env variables in tests.
+    """
+    )
+    @Test
+    fun `test client connection waiting timeout is set by env variable`() = runBlocking {
+        val connectionWaitTimeoutMsEnvVar = SystemVariablesReader.getEnvironmentVariable(Debugger.KOOG_DEBUGGER_WAIT_CONNECTION_MS_ENV_VAR)
+        assertNotNull(connectionWaitTimeoutMsEnvVar, "'${Debugger.KOOG_DEBUGGER_WAIT_CONNECTION_MS_ENV_VAR}' env variable is not set")
+
+        runAgentConnectionWaitConfigThroughSystemVariablesTest(
+            timeout = connectionWaitTimeoutMsEnvVar.toLong().toDuration(DurationUnit.MILLISECONDS)
+        )
+    }
+
+    @Test
+    fun `test client connection waiting timeout is set by vm option`() = runBlocking {
+        // Set VM option
+        val timeout = 1.seconds
+        System.setProperty(
+            Debugger.KOOG_DEBUGGER_WAIT_CONNECTION_TIMEOUT_MS_VM_OPTION,
+            timeout.inWholeMilliseconds.toString()
+        )
+
+        val connectionWaitTimeoutEnvVar =
+            SystemVariablesReader.getEnvironmentVariable(name = Debugger.KOOG_DEBUGGER_WAIT_CONNECTION_MS_ENV_VAR)
+
+        assertNull(
+            connectionWaitTimeoutEnvVar,
+            "Expected '${Debugger.KOOG_DEBUGGER_WAIT_CONNECTION_MS_ENV_VAR}' env variable is not set, " +
+                "but it is defined with value: <$connectionWaitTimeoutEnvVar>"
+        )
+
+        val connectionWaitTimeoutMsVMOption =
+            SystemVariablesReader.getVMOption(name = Debugger.KOOG_DEBUGGER_WAIT_CONNECTION_TIMEOUT_MS_VM_OPTION)
+
+        assertNotNull(
+            connectionWaitTimeoutMsVMOption,
+            "Expected '${Debugger.KOOG_DEBUGGER_WAIT_CONNECTION_TIMEOUT_MS_VM_OPTION}' VM option is not set"
+        )
+
+        runAgentConnectionWaitConfigThroughSystemVariablesTest(
+            timeout = connectionWaitTimeoutMsVMOption.toLong().toDuration(DurationUnit.MILLISECONDS)
+        )
+    }
+
+    //endregion Client Connection Wait Timeout
+
+    //region Private Methods
+
+    private suspend fun runAgentPortConfigThroughSystemVariablesTest(port: Int) = withContext(Dispatchers.Default) {
+        // Agent Config
+        val agentId = "test-agent-id"
+        val strategyName = "test-strategy"
+        val userPrompt = "Call the dummy tool with argument: test"
+
+        val clientConfig = DefaultClientConnectionConfig(
+            host = HOST,
+            port = port,
+            protocol = URLProtocol.HTTP
+        )
+
+        val isClientFinished = CompletableDeferred<Boolean>()
+
+        // Server
+        // The server will read the env variable or VM option to get a port value.
+        val serverJob = launch {
+            val strategy = strategy<String, String>(strategyName) {
+                edge(nodeStart forwardTo nodeFinish)
+            }
+
+            createAgent(
+                agentId = agentId,
+                strategy = strategy,
+                userPrompt = userPrompt,
+            ) {
+                install(Debugger) {
+                    // Do not set the port value explicitly through parameter.
+                    // Use System env var 'KOOG_DEBUGGER_PORT' or VM option 'koog.debugger.port'
                 }
             }.use { agent ->
                 agent.run(userPrompt)
@@ -1027,4 +1070,54 @@ class DebuggerTest {
 
         assertNotNull(isFinishedOrNull, "Client or server did not finish in time")
     }
+
+    private suspend fun runAgentConnectionWaitConfigThroughSystemVariablesTest(timeout: Duration) = withContext(Dispatchers.Default) {
+        // Agent Config
+        val agentId = "test-agent-id"
+        val strategyName = "test-strategy"
+        val userPrompt = "Call the dummy tool with argument: test"
+
+        // Test Data
+        val port = findAvailablePort()
+        var actualAgentRunTime = Duration.ZERO
+
+        // Server
+        // The server will read the env variable or VM option to get a port value.
+        val serverJob = launch {
+            val strategy = strategy<String, String>(strategyName) {
+                edge(nodeStart forwardTo nodeFinish)
+            }
+
+            createAgent(
+                agentId = agentId,
+                strategy = strategy,
+                userPrompt = userPrompt,
+            ) {
+                install(Debugger) {
+                    setPort(port)
+                    // Do not set the connection awaiting timeout explicitly through parameter.
+                    // Use System env var 'KOOG_DEBUGGER_WAIT_CONNECTION_MS_ENV_VAR' or VM option 'koog.debugger.wait.connection.ms'
+                }
+            }.use { agent ->
+                actualAgentRunTime = measureTime {
+                    withTimeoutOrNull(defaultClientServerTimeout) {
+                        agent.run(userPrompt)
+                    }
+                }
+            }
+        }
+
+        val isFinishedOrNull = withTimeoutOrNull(defaultClientServerTimeout) {
+            serverJob.join()
+        }
+
+        assertNotNull(isFinishedOrNull, "Client or server did not finish in time")
+
+        assertTrue(
+            actualAgentRunTime in timeout..<defaultClientServerTimeout,
+            "Expected actual agent run time is over <$timeout>, but got: <$actualAgentRunTime>"
+        )
+    }
+
+    //endregion Private Methods
 }
