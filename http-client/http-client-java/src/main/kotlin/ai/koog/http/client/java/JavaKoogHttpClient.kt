@@ -29,7 +29,7 @@ import kotlin.reflect.KClass
  * @property httpClient The configured Java HttpClient instance used for making HTTP requests.
  */
 @Experimental
-internal class JavaKoogHttpClient internal constructor(
+public class JavaKoogHttpClient internal constructor(
     private val clientName: String,
     private val logger: KLogger,
     private val httpClient: HttpClient,
@@ -69,8 +69,12 @@ internal class JavaKoogHttpClient internal constructor(
             }
         } else {
             val errorBody = response.body()
-            logger.error { "Error from $clientName API: ${response.statusCode()}: $errorBody" }
-            error("Error from $clientName API: ${response.statusCode()}: $errorBody")
+            val errorMessage = "Error from $clientName API: ${response.statusCode()}"
+
+            logger.error { errorMessage }
+            logger.trace { "$errorMessage\nBody:\n$errorBody" }
+
+            error(errorMessage)
         }
     }
 

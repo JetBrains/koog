@@ -115,7 +115,6 @@ abstract class KoogHttpClientTestSuite {
             assertNotNull(e.message) {
                 assertContains(it, "Error from TestClient API")
                 assertContains(it, "400")
-                assertContains(it, "Bad things")
             }
         } finally {
             mockServer.stop()

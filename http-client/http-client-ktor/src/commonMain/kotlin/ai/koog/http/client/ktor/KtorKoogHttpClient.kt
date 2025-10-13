@@ -44,7 +44,7 @@ import kotlin.reflect.KClass
  * The configuration is applied using the Ktor `HttpClient.config` method.
  */
 @Experimental
-internal class KoogKtorHttpClient internal constructor(
+public class KtorKoogHttpClient internal constructor(
     private val clientName: String,
     private val logger: KLogger,
     baseClient: HttpClient = HttpClient(),
@@ -61,7 +61,7 @@ internal class KoogKtorHttpClient internal constructor(
      * POST requests and Server-Sent Events (SSE) streaming, supporting request and response
      * serialization and deserialization for different data types.
      */
-    val ktorClient: HttpClient = baseClient.config(configurer)
+    public val ktorClient: HttpClient = baseClient.config(configurer)
 
     override suspend fun <T : Any, R : Any> post(
         path: String,
@@ -87,8 +87,12 @@ internal class KoogKtorHttpClient internal constructor(
             }
         } else {
             val errorBody = response.bodyAsText()
-            logger.error { "Error from $clientName API: ${response.status}: $errorBody" }
-            error("Error from $clientName API: ${response.status}: $errorBody")
+            val errorMessage = "Error from $clientName API: ${response.status}"
+
+            logger.error { errorMessage }
+            logger.trace { "$errorMessage\nBody:\n$errorBody" }
+
+            error(errorMessage)
         }
     }
 
@@ -131,7 +135,11 @@ internal class KoogKtorHttpClient internal constructor(
         } catch (e: SSEClientException) {
             e.response?.let { response ->
                 val body = response.readRawBytes().decodeToString()
-                logger.error(e) { "Error from $clientName API: ${response.status}: ${e.message}.\nBody:\n$body" }
+                val errorMessage = "Error from $clientName API: ${response.status}: ${e.message}"
+
+                logger.error(e) { errorMessage }
+                logger.trace(e) { "$errorMessage\nBody:\n$body" }
+
                 error("Error from $clientName API: ${response.status}: ${e.message}")
             }
         } catch (e: Exception) {
@@ -161,4 +169,4 @@ public fun KoogHttpClient.Companion.fromKtorClient(
     logger: KLogger,
     baseClient: HttpClient = HttpClient(),
     configurer: HttpClientConfig<out HttpClientEngineConfig>.() -> Unit
-): KoogHttpClient = KoogKtorHttpClient(clientName, logger, baseClient, configurer)
+): KoogHttpClient = KtorKoogHttpClient(clientName, logger, baseClient, configurer)

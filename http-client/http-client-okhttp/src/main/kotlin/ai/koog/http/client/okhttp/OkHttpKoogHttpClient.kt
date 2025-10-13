@@ -34,7 +34,7 @@ import kotlin.reflect.KClass
  * @property okHttpClient The configured OkHttp client instance used for making HTTP requests.
  */
 @Experimental
-internal class OkHttpKoogHttpClient internal constructor(
+public class OkHttpKoogHttpClient internal constructor(
     private val clientName: String,
     private val logger: KLogger,
     private val okHttpClient: OkHttpClient,
@@ -69,8 +69,12 @@ internal class OkHttpKoogHttpClient internal constructor(
                 }
             } else {
                 val errorBody = response.body.string()
-                logger.error { "Error from $clientName API: ${response.code}: $errorBody" }
-                error("Error from $clientName API: ${response.code}: $errorBody")
+                val errorMessage = "Error from $clientName API: ${response.code}"
+
+                logger.error { errorMessage }
+                logger.trace { "$errorMessage\nBody:\n$errorBody" }
+
+                error(errorMessage)
             }
         }
     }
@@ -118,13 +122,16 @@ internal class OkHttpKoogHttpClient internal constructor(
             }
 
             override fun onFailure(eventSource: EventSource, t: Throwable?, response: Response?) {
+                val body = response?.body?.string()
                 val errorMessage = if (response != null) {
-                    val body = response.body.string()
-                    "Error from $clientName API: ${response.code}: ${t?.message}.\nBody:\n$body"
+                    "Error from $clientName API: ${response.code}: ${t?.message}"
                 } else {
                     "Exception during streaming from $clientName: ${t?.message ?: "Unknown error"}"
                 }
+
                 logger.error(t) { errorMessage }
+                logger.trace(t) { "$errorMessage\nBody:\n$body" }
+
                 close(IllegalStateException(errorMessage, t))
             }
         }
