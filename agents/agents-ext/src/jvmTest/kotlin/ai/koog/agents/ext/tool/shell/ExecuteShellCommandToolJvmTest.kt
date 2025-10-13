@@ -19,7 +19,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.test.fail
-import kotlin.time.Duration.Companion.seconds
 
 @OptIn(InternalAgentToolsApi::class)
 class ExecuteShellCommandToolJvmTest {
@@ -209,27 +208,8 @@ class ExecuteShellCommandToolJvmTest {
     // NO OUTPUT COMMAND EXECUTION TESTS
 
     @Test
-    @EnabledOnOs(OS.LINUX, OS.MAC)
     fun `command with no output shows placeholder`() = runBlocking {
         val testDir = tempDir.resolve("empty_test").createDirectories()
-
-        val result = executeShellCommand("mkdir newdir", workingDirectory = testDir.toString())
-
-        val expected = """
-            Command: mkdir newdir
-            (no output)
-            Exit code: 0
-        """.trimIndent()
-
-        assertEquals(expected, result.textForLLM())
-        assertEquals(0, result.exitCode)
-    }
-
-    @Test
-    @EnabledOnOs(OS.WINDOWS)
-    fun `command with no output shows placeholder on Windows`() = runBlocking {
-        val testDir = tempDir.resolve("empty_test").createDirectories()
-
         val result = executeShellCommand("mkdir newdir", workingDirectory = testDir.toString())
 
         val expected = """
@@ -330,7 +310,8 @@ class ExecuteShellCommandToolJvmTest {
 
     @Test
     fun `user denies with reason`() = runBlocking {
-        val handler = ShellCommandConfirmationHandler { ShellCommandConfirmation.Denied("Cannot delete important files") }
+        val handler =
+            ShellCommandConfirmationHandler { ShellCommandConfirmation.Denied("Cannot delete important files") }
 
         val result = executeShellCommand("rm important-file.txt", confirmationHandler = handler)
 
@@ -348,10 +329,10 @@ class ExecuteShellCommandToolJvmTest {
     @Test
     @EnabledOnOs(OS.LINUX, OS.MAC)
     fun `long running command times out`() = runBlocking {
-        val result = executeShellCommand("sleep 2", timeoutSeconds = 1)
+        val result = executeShellCommand("sleep 1.1", timeoutSeconds = 1)
 
         val expected = """
-            Command: sleep 2
+            Command: sleep 1.1
             Command timed out after 1 seconds
         """.trimIndent()
 
@@ -362,10 +343,10 @@ class ExecuteShellCommandToolJvmTest {
     @Test
     @EnabledOnOs(OS.WINDOWS)
     fun `long running command times out on Windows`() = runBlocking {
-        val result = executeShellCommand("powershell -Command \"Start-Sleep -Seconds 10\"", timeoutSeconds = 1)
+        val result = executeShellCommand("powershell -Command \"Start-Sleep -Milliseconds 1100\"", timeoutSeconds = 1)
 
         val expected = """
-            Command: powershell -Command "Start-Sleep -Seconds 10"
+            Command: powershell -Command "Start-Sleep -Milliseconds 1100"
             Command timed out after 1 seconds
         """.trimIndent()
 
@@ -376,10 +357,10 @@ class ExecuteShellCommandToolJvmTest {
     @Test
     @EnabledOnOs(OS.LINUX, OS.MAC)
     fun `command with partial output times out`() = runBlocking {
-        val result = executeShellCommand("for i in {1..10}; do echo \$i; sleep 1; done", timeoutSeconds = 3)
+        val result = executeShellCommand("for i in {1..3}; do echo \$i; sleep 0.5; done", timeoutSeconds = 1)
 
-        assertTrue(result.textForLLM().contains("Command timed out after 3 seconds"))
-        assertTrue(result.textForLLM().startsWith("Command: for i in {1..10}; do echo \$i; sleep 1; done"))
+        assertTrue(result.textForLLM().contains("Command timed out after 1 seconds"))
+        assertTrue(result.textForLLM().startsWith("Command: for i in {1..3}; do echo \$i; sleep 0.5; done"))
         assertNull(result.exitCode)
     }
 
@@ -387,14 +368,14 @@ class ExecuteShellCommandToolJvmTest {
     @EnabledOnOs(OS.WINDOWS)
     fun `command with partial output times out on Windows`() = runBlocking {
         val result = executeShellCommand(
-            """cmd /c "echo 1 & echo 2 & echo 3 & powershell -Command Start-Sleep -Seconds 10"""",
+            "powershell -Command \"1..3 | ForEach-Object { Write-Output \$_; Start-Sleep -Milliseconds 500 }\"",
             timeoutSeconds = 1
         )
 
         assertTrue(result.textForLLM().contains("Command timed out after 1 seconds"))
         assertTrue(
             result.textForLLM()
-                .startsWith("Command: cmd /c \"echo 1 & echo 2 & echo 3 & powershell -Command Start-Sleep -Seconds 10\"")
+                .startsWith("Command: powershell -Command \"1..3 | ForEach-Object { Write-Output \$_; Start-Sleep -Milliseconds 500 }\"")
         )
         assertNull(result.exitCode)
     }
@@ -405,18 +386,18 @@ class ExecuteShellCommandToolJvmTest {
     @EnabledOnOs(OS.LINUX, OS.MAC)
     fun `executor can be cancelled with timeout`() = runBlocking {
         val job = launch {
-            val result = executeShellCommand("sleep 60", timeoutSeconds = 30)
+            val result = executeShellCommand("sleep 1.1", timeoutSeconds = 1)
             fail("Command should have been cancelled, but completed with: ${result.textForLLM()}")
         }
 
-        delay(1.seconds)
+        delay(10)
 
         val cancelDurationMs = measureTimeMillis {
             job.cancelAndJoin()
         }
 
         assertTrue(
-            cancelDurationMs < 1000,
+            cancelDurationMs < 20,
             "Cancellation should be immediate, but took ${cancelDurationMs}ms"
         )
         assertTrue(job.isCancelled, "Job should be cancelled")
