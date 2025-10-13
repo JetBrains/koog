@@ -30,7 +30,6 @@ kotlin {
 
         jvmMain {
             dependencies {
-                api(libs.ktor.client.cio)
                 implementation(
                     project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-anthropic-client")
                 )
@@ -46,6 +45,7 @@ kotlin {
 
         jvmTest {
             dependencies {
+                implementation(libs.ktor.client.cio)
             }
         }
     }

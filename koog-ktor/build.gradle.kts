@@ -34,9 +34,16 @@ kotlin {
             }
         }
 
+        androidUnitTest {
+            dependencies {
+                implementation(libs.ktor.client.cio)
+            }
+        }
+
         jsTest {
             dependencies {
                 implementation(kotlin("test-js"))
+                implementation(libs.ktor.client.js)
             }
         }
 
@@ -44,6 +51,13 @@ kotlin {
             dependencies {
                 implementation(kotlin("test-junit5"))
                 implementation(libs.kotlinx.coroutines.test)
+                implementation(libs.ktor.client.cio)
+            }
+        }
+
+        appleTest {
+            dependencies {
+                implementation(libs.ktor.client.darwin)
             }
         }
     }

@@ -7,7 +7,8 @@ hotReload = "1.0.0-beta08"
 jetbrains-lifecycle = "2.9.4"
 jetbrains-navigation = "2.9.0"
 koin-bom = "4.1.1"
-koog = "0.4.3-feat-100-06"
+koog = "0.4.3-develop-20250927-0204"
+ktor = "3.3.0"
 kotlin = "2.2.20"
 kotlinx-serialization = "1.9.0"
 
@@ -17,6 +18,7 @@ jetbrains-navigation-compose = { module = "org.jetbrains.androidx.navigation:nav
 
 koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koin-bom" }
 koin-compose = { module = "io.insert-koin:koin-compose" }
+ktor-bom = { module = "io.ktor:ktor-bom", version.ref = "ktor" }
 
 # Kotlinx Serialization
 kotlinx-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinx-serialization" }
@@ -33,6 +35,11 @@ androidx-datastore-preferences = { module = "androidx.datastore:datastore-prefer
 # Koog
 koog-agents-core = { module = "ai.koog:agents-core", version.ref = "koog" }
 koog-prompt-executor-llms-all = { module = "ai.koog:prompt-executor-llms-all", version.ref = "koog" }
+
+ktor-client-apache5 = { module = "io.ktor:ktor-client-apache5" }
+ktor-client-darwin = { module = "io.ktor:ktor-client-darwin" }
+ktor-client-js = { module = "io.ktor:ktor-client-js" }
+ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

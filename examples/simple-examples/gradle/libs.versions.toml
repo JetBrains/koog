@@ -13,7 +13,9 @@ oshai-logging = "7.0.7"
 kotlin-bom = { module = "org.jetbrains.kotlin:kotlin-bom", version.ref = "kotlin" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
-ktor-server-cio = { module = "io.ktor:ktor-server-cio", version.ref = "ktor3" }
+ktor-bom = { module = "io.ktor:ktor-bom", version.ref = "ktor3" }
+ktor-server-cio = { module = "io.ktor:ktor-server-cio" }
+ktor-client-cio = { module = "io.ktor:ktor-client-cio" }
 logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 opentelemetry-bom = { module = "io.opentelemetry:opentelemetry-bom", version.ref = "opentelemetry" }

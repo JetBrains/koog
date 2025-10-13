@@ -23,6 +23,7 @@ kotlin {
                 implementation(libs.kotlinx.coroutines.test)
                 implementation(project(":agents:agents-mcp"))
                 implementation(project(":agents:agents-test"))
+                runtimeOnly(libs.ktor.client.cio)
                 runtimeOnly(libs.slf4j.simple)
             }
         }

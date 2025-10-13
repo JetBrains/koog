@@ -24,6 +24,12 @@ kotlin {
                 implementation(project(":test-utils"))
             }
         }
+
+        jvmTest {
+            dependencies {
+                implementation(libs.ktor.client.cio)
+            }
+        }
     }
 
     explicitApi()

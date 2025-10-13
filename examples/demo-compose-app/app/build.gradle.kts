@@ -63,25 +63,34 @@ kotlin {
             implementation(libs.kotlinx.serialization.core)
             implementation(libs.kotlinx.serialization.json)
             implementation(project.dependencies.platform(libs.koin.bom))
+            implementation(project.dependencies.platform(libs.ktor.bom))
         }
 
         androidMain.dependencies {
             implementation(compose.uiTooling)
             implementation(libs.androidx.datastore.preferences)
             implementation(libs.kotlinx.coroutines.android)
+            implementation(libs.ktor.client.okhttp)
         }
 
         jvmMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.androidx.datastore.preferences)
             implementation(libs.kotlinx.coroutines.swing)
+            implementation(libs.ktor.client.apache5)
         }
 
         iosMain.dependencies {
             implementation(libs.androidx.datastore.preferences)
+            implementation(libs.ktor.client.darwin)
         }
 
         webMain.dependencies {
+            implementation(libs.ktor.client.js)
+        }
+
+        wasmJsMain.dependencies {
+            implementation(libs.ktor.client.js)
         }
     }
 }
@@ -146,9 +155,3 @@ compose.desktop {
 tasks.withType<ComposeHotRun>().configureEach {
     mainClass = "MainKt"
 }
-
-configurations.all {
-    // FIXME exclude netty from Koog dependencies?
-    exclude(group = "io.netty", module = "*")
-}
-
