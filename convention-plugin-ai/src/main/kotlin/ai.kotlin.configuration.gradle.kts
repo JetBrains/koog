@@ -18,7 +18,7 @@ val kotlinBomVersion = requireNotNull(libs.kotlin.bom.get().version)
 
 extensions.getByType<KotlinProjectExtension>().apply {
     jvmToolchain {
-        languageVersion.set(JavaLanguageVersion.of(17))
+        languageVersion.set(JavaLanguageVersion.of(libs.versions.jdkVersion.get().toInt()))
     }
 
     sourceSets.all {
