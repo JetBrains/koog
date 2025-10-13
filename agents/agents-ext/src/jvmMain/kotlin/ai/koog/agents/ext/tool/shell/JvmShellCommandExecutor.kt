@@ -62,30 +62,36 @@ public class JvmShellCommandExecutor : ShellCommandExecutor {
             }
         }
 
-        val isCompleted = withTimeoutOrNull(timeoutSeconds * 1000L) {
-            process.onExit().await()
-        } != null
+        try {
+            val isCompleted = withTimeoutOrNull(timeoutSeconds * 1000L) {
+                process.onExit().await()
+            } != null
 
-        stdoutJob.join()
-        stderrJob.join()
+            stdoutJob.join()
+            stderrJob.join()
 
-        if (!isCompleted) {
-            process.destroyForcibly()
+            if (!isCompleted) {
+                process.destroyForcibly()
 
-            val combinedPartialOutput = buildCombinedOutput(
+                val combinedPartialOutput = buildCombinedOutput(
+                    stdoutBuilder.toString().trimEnd(),
+                    stderrBuilder.toString().trimEnd(),
+                    "Command timed out after $timeoutSeconds seconds"
+                )
+                return@withContext ExecutionResult(output = combinedPartialOutput, exitCode = null)
+            }
+
+            val combinedOutput = buildCombinedOutput(
                 stdoutBuilder.toString().trimEnd(),
-                stderrBuilder.toString().trimEnd(),
-                "Command timed out after $timeoutSeconds seconds"
+                stderrBuilder.toString().trimEnd()
             )
-            return@withContext ExecutionResult(output = combinedPartialOutput, exitCode = null)
+
+            return@withContext ExecutionResult(output = combinedOutput, exitCode = process.exitValue())
+        } finally {
+            if (process.isAlive) {
+                process.destroyForcibly()
+            }
         }
-
-        val combinedOutput = buildCombinedOutput(
-            stdoutBuilder.toString().trimEnd(),
-            stderrBuilder.toString().trimEnd()
-        )
-
-        return@withContext ExecutionResult(output = combinedOutput, exitCode = process.exitValue())
     }
 
     private fun buildCombinedOutput(stdout: String, stderr: String, message: String? = null): String {
