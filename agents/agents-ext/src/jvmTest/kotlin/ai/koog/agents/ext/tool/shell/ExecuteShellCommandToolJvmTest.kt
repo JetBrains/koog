@@ -354,10 +354,10 @@ class ExecuteShellCommandToolJvmTest {
     @Test
     @EnabledOnOs(OS.LINUX, OS.MAC)
     fun `long running command times out`() = runBlocking {
-        val result = executeShellCommand("sleep 10", timeoutSeconds = 1)
+        val result = executeShellCommand("sleep 2", timeoutSeconds = 1)
 
         val expected = """
-            Command: sleep 10
+            Command: sleep 2
             Command timed out after 1 seconds
         """.trimIndent()
 
