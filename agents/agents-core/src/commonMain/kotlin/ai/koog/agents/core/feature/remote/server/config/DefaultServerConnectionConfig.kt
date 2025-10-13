@@ -1,5 +1,11 @@
 package ai.koog.agents.core.feature.remote.server.config
 
+import ai.koog.agents.core.feature.remote.server.config.DefaultServerConnectionConfig.Companion.DEFAULT_AWAIT_INITIAL_CONNECTION
+import ai.koog.agents.core.feature.remote.server.config.DefaultServerConnectionConfig.Companion.DEFAULT_HOST
+import ai.koog.agents.core.feature.remote.server.config.DefaultServerConnectionConfig.Companion.DEFAULT_PORT
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
+
 /**
  * Default implementation of the server connection configuration.
  *
@@ -9,17 +15,20 @@ package ai.koog.agents.core.feature.remote.server.config
  *
  * @param host The hostname or IP address of the server to connect to. Defaults to '127.0.0.1';
  * @param port The port number on which the server will listen to. Defaults to 50881;
- * @param waitConnection Indicates whether the server waits for a first connection before continuing.
+ * @param awaitInitialConnection Indicates whether the server waits for a first connection before continuing.
  *        Set to 'false' by default.
+ * @param awaitInitialConnectionTimeout The timeout duration for waiting for the first connection.
  */
 public class DefaultServerConnectionConfig(
     host: String? = null,
     port: Int? = null,
-    waitConnection: Boolean? = null,
+    awaitInitialConnection: Boolean? = null,
+    awaitInitialConnectionTimeout: Duration? = null,
 ) : ServerConnectionConfig(
     host = host ?: DEFAULT_HOST,
     port = port ?: DEFAULT_PORT,
-    waitConnection = waitConnection ?: DEFAULT_WAIT_CONNECTION,
+    awaitInitialConnection = awaitInitialConnection ?: DEFAULT_AWAIT_INITIAL_CONNECTION,
+    awaitInitialConnectionTimeout = awaitInitialConnectionTimeout ?: defaultAwaitInitialConnectionTimeout,
 ) {
 
     /**
@@ -34,7 +43,7 @@ public class DefaultServerConnectionConfig(
      *
      * @property DEFAULT_PORT The default port number the server will listen to.
      * @property DEFAULT_HOST The default host address for the connection.
-     * @property DEFAULT_WAIT_CONNECTION Indicates whether the server waits for a first connection before continuing.
+     * @property DEFAULT_AWAIT_INITIAL_CONNECTION Indicates whether the server waits for a first connection before continuing.
      */
     public companion object {
 
@@ -55,6 +64,15 @@ public class DefaultServerConnectionConfig(
          * an initial connection and continues with its execution. It is used as a default value
          * for the `waitConnection` parameter in the `DefaultServerConnectionConfig` class.
          */
-        public const val DEFAULT_WAIT_CONNECTION: Boolean = false
+        public const val DEFAULT_AWAIT_INITIAL_CONNECTION: Boolean = false
+
+        /**
+         * The default timeout duration for waiting for the first client connection.
+         *
+         * This value is used in `DefaultServerConnectionConfig` to define the timeout period
+         * within which a client connection needs to be established after the server starts.
+         * By default, it is set to 30 seconds.
+         */
+        public val defaultAwaitInitialConnectionTimeout: Duration = 30.seconds
     }
 }
