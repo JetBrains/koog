@@ -88,6 +88,7 @@ public class JvmShellCommandExecutor : ShellCommandExecutor {
 
             return@withContext ExecutionResult(output = combinedOutput, exitCode = process.exitValue())
         } finally {
+            // Kill the process even when canceled, otherwise it keeps running
             if (process.isAlive) {
                 process.destroyForcibly()
             }
