@@ -12,19 +12,14 @@ import ai.koog.agents.ext.tool.shell.JvmShellCommandExecutor
 import ai.koog.agents.ext.tool.shell.PrintShellCommandConfirmationHandler
 import ai.koog.agents.ext.tool.shell.ShellCommandConfirmation
 import ai.koog.agents.features.eventHandler.feature.handleEvents
-import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
-import ai.koog.prompt.executor.clients.retry.RetryingLLMClient
-import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
+import ai.koog.prompt.executor.llms.all.simpleAnthropicExecutor
+import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.koog.rag.base.files.JVMFileSystemProvider
 import kotlinx.coroutines.runBlocking
 
 val agent = AIAgent(
-    promptExecutor = SingleLLMPromptExecutor(
-        RetryingLLMClient(AnthropicLLMClient(
-            System.getenv("ANTHROPIC_API_KEY")
-        ))
-    ),
+    promptExecutor = simpleAnthropicExecutor(System.getenv("ANTHROPIC_API_KEY")),
     strategy = singleRunStrategy(),
     systemPrompt = """
         You are a highly skilled programmer tasked with updating the provided codebase according to the given task.
