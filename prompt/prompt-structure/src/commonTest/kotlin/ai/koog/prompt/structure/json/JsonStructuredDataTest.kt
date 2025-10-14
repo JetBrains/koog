@@ -234,11 +234,16 @@ class JsonStructuredDataTest {
     }
 
     @Test
-    fun testJsonWithMarkdownFencesParsing() {
+    fun testJsonWithMarkdownBlockParsing() {
         val structure = JsonStructuredData.createJsonStructure<WeatherInfo>()
         val jsonString =
-            """```json
-            {"city": "London", "temperature": 15, "description": "Cloudy", "humidity": 80
+            """```
+            {
+                "city": "London",
+                "temperature": 15,
+                "description": "Cloudy",
+                "humidity": 80
+            }
             ```""".trimMargin()
 
         val parsed = structure.parse(jsonString)
@@ -248,4 +253,39 @@ class JsonStructuredDataTest {
         assertEquals("Cloudy", parsed.description)
         assertEquals(80, parsed.humidity)
     }
+
+    @Test
+    fun testJsonWithMarkdownLanguageBlockParsing() {
+        val structure = JsonStructuredData.createJsonStructure<WeatherInfo>()
+        val jsonString =
+            """```json
+            {
+                "city": "London",
+                "temperature": 15,
+                "description": "Cloudy",
+                "humidity": 80
+            }
+            ```""".trimMargin()
+
+        val parsed = structure.parse(jsonString)
+
+        assertEquals("London", parsed.city)
+        assertEquals(15, parsed.temperature)
+        assertEquals("Cloudy", parsed.description)
+        assertEquals(80, parsed.humidity)
+    }
+
+    @Test
+    fun testJsonWithSingleLineMarkdownParsing() {
+        val structure = JsonStructuredData.createJsonStructure<WeatherInfo>()
+        val jsonString ="""`{"city": "Dublin","temperature": 12,"description": "Rainy","humidity": 90}`""".trimMargin()
+
+        val parsed = structure.parse(jsonString)
+
+        assertEquals("Dublin", parsed.city)
+        assertEquals(12, parsed.temperature)
+        assertEquals("Rainy", parsed.description)
+        assertEquals(90, parsed.humidity)
+    }
+
 }

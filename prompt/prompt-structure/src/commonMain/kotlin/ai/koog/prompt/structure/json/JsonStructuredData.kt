@@ -45,8 +45,11 @@ public class JsonStructuredData<TStruct>(
     // LLMs often enclose JSON output in Markdown code blocks.
     // Stripping them saves extra LLM call which would be required to fix the string.
     private fun String.stripMarkdown() = when {
-        startsWith("```json") -> removePrefix("```json").removeSuffix("```").trim()
-        startsWith("```") -> removePrefix("```").removeSuffix("```").trim()
+        startsWith("```json") -> removePrefix("```json").removeSuffix("```")
+        startsWith("```") -> removePrefix("```").removeSuffix("```")
+        startsWith("`") -> removePrefix("`").removeSuffix("`")
+        startsWith("~~~json") -> removePrefix("~~~json").removeSuffix("~~~").trim()
+        startsWith("~~~") -> removePrefix("~~~").removeSuffix("~~~").trim()
         else -> this
     }
 
