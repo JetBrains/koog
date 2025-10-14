@@ -232,4 +232,20 @@ class JsonStructuredDataTest {
         assertEquals(manualOutput, config.default)
         assertEquals(nativeOutput, config.byProvider[LLMProvider.OpenAI])
     }
+
+    @Test
+    fun testJsonWithMarkdownFencesParsing() {
+        val structure = JsonStructuredData.createJsonStructure<WeatherInfo>()
+        val jsonString =
+            """```json
+            {"city": "London", "temperature": 15, "description": "Cloudy", "humidity": 80
+            ```""".trimMargin()
+
+        val parsed = structure.parse(jsonString)
+
+        assertEquals("London", parsed.city)
+        assertEquals(15, parsed.temperature)
+        assertEquals("Cloudy", parsed.description)
+        assertEquals(80, parsed.humidity)
+    }
 }
