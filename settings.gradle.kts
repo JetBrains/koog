@@ -77,6 +77,12 @@ include(":a2a:a2a-transport:a2a-transport-server-jsonrpc-http")
 include(":a2a:a2a-transport:a2a-transport-client-jsonrpc-http")
 include(":a2a:test-tck:a2a-test-server-tck")
 
+include(":http-client:http-client-core")
+include(":http-client:http-client-test")
+include(":http-client:http-client-ktor")
+include(":http-client:http-client-okhttp")
+include(":http-client:http-client-java")
+
 include(":koog-spring-boot-starter")
 
 include(":koog-ktor")

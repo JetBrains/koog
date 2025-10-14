@@ -592,7 +592,7 @@ Here is the full code sample:
 <!--- INCLUDE
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
-import ai.koog.agents.utils.use
+import ai.koog.utils.io.use
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import io.opentelemetry.exporter.logging.LoggingSpanExporter

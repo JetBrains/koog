@@ -6,9 +6,9 @@ import ai.koog.agents.core.agent.ToolCalls
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.singleRunStrategy
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.utils.use
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
+import ai.koog.utils.io.use
 import io.ktor.server.application.pluginOrNull
 import io.ktor.server.routing.RoutingContext
 import kotlin.reflect.KType

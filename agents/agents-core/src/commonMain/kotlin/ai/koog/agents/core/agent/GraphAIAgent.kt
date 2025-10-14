@@ -17,8 +17,8 @@ import ai.koog.agents.core.feature.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.PromptExecutorProxy
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.utils.Closeable
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.utils.io.Closeable
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.datetime.Clock
 import kotlin.reflect.KType

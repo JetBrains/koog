@@ -1,6 +1,6 @@
 package ai.koog.agents.mcp
 
-import ai.koog.agents.utils.SuitableForIO
+import ai.koog.utils.io.SuitableForIO
 import io.ktor.server.cio.CIO
 import io.ktor.server.engine.embeddedServer
 import io.modelcontextprotocol.kotlin.sdk.CallToolResult

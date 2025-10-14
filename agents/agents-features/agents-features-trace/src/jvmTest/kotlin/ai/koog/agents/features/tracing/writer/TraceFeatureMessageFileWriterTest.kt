@@ -36,9 +36,9 @@ import ai.koog.agents.features.tracing.traceString
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.agents.testing.tools.mockLLMAnswer
-import ai.koog.agents.utils.use
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.LLModel
+import ai.koog.utils.io.use
 import kotlinx.coroutines.test.runTest
 import kotlinx.io.Sink
 import kotlinx.io.buffered

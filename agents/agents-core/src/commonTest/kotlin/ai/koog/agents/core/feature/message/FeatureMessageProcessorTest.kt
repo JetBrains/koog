@@ -3,7 +3,7 @@ package ai.koog.agents.core.feature.message
 import ai.koog.agents.core.feature.mock.TestFeatureEventMessage
 import ai.koog.agents.core.feature.mock.TestFeatureMessageProcessor
 import ai.koog.agents.core.feature.model.FeatureStringMessage
-import ai.koog.agents.utils.use
+import ai.koog.utils.io.use
 import kotlinx.coroutines.test.runTest
 import kotlin.js.JsName
 import kotlin.test.Test

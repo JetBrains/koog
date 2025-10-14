@@ -13,7 +13,7 @@ kotlin {
         commonMain {
             dependencies {
                 api(project(":agents:agents-tools"))
-                api(project(":agents:agents-utils"))
+                api(project(":utils"))
                 api(project(":prompt:prompt-executor:prompt-executor-clients"))
                 api(project(":prompt:prompt-llm"))
                 api(project(":prompt:prompt-model"))
