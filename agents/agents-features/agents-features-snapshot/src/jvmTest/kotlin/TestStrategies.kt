@@ -132,7 +132,7 @@ private fun AIAgentSubgraphBuilderBase<*, *>.createCheckpointNode(name: String? 
     node<String, String>(name) {
         val input = it
         withPersistence { ctx ->
-            createCheckpoint(ctx, name!!, input, typeOf<String>(), null, checkpointId)
+            createCheckpoint(ctx, name!!, input, typeOf<String>(), 0L, checkpointId)
             llm.writeSession {
                 updatePrompt {
                     user {
@@ -180,7 +180,7 @@ private fun AIAgentSubgraphBuilderBase<*, *>.nodeCreateCheckpoint(
             currentNodeId ?: error("currentNodeId not set"),
             input,
             typeOf<String>(),
-            "snapshot-id"
+            0L
         )
 
         saveCheckpoint(ctx.agentId, checkpoint ?: error("Checkpoint creation failed"))

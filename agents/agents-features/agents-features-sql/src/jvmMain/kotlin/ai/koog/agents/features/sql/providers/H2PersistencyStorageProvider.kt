@@ -126,6 +126,7 @@ public class H2PersistenceSchemaMigrator(private val database: Database, private
                 created_at BIGINT NOT NULL,
                 checkpoint_json TEXT NOT NULL,
                 ttl_timestamp BIGINT NULL,
+                version BIGINT NOT NULL,
                 
                 -- Primary key constraint
                 CONSTRAINT ${tableName}_pkey PRIMARY KEY (persistence_id, checkpoint_id)
@@ -143,6 +144,12 @@ public class H2PersistenceSchemaMigrator(private val database: Database, private
             exec(
                 """
             CREATE INDEX IF NOT EXISTS idx_${tableName}_ttl_timestamp ON $tableName (ttl_timestamp)
+                """.trimIndent()
+            )
+
+            exec(
+                """
+            CREATE UNIQUE INDEX IF NOT EXISTS ${tableName}_persistence_id_version_idx ON $tableName (persistence_id, version);
                 """.trimIndent()
             )
         }

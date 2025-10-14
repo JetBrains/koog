@@ -35,7 +35,7 @@ public class InMemoryPersistenceStorageProvider() : PersistenceStorageProvider<A
                 return snapshotMap[agentId]?.filter { filter.check(it) }?.maxByOrNull { it.createdAt }
             }
 
-            return PersistenceUtils.latestCheckpointOf(snapshotMap[agentId] ?: emptyList())
+            return snapshotMap[agentId]?.maxBy { it.version }
         }
     }
 }

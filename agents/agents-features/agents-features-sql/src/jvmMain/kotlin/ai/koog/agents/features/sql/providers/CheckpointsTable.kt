@@ -61,10 +61,18 @@ public open class CheckpointsTable(tableName: String) : Table(tableName) {
      */
     public val ttlTimestamp: Column<Long?> = long("ttl_timestamp").nullable().index()
 
+    /**
+     * Represents the version of the checkpoint.
+     *
+     * This column stores a long integer indicating the version of the checkpoint.
+     */
+    public val version: Column<Long> = long("version")
+
     override val primaryKey: PrimaryKey = PrimaryKey(persistenceId, checkpointId)
 
     init {
         // Create composite index for efficient queries
         index(isUnique = false, persistenceId, createdAt)
+        index(isUnique = true, persistenceId, version)
     }
 }

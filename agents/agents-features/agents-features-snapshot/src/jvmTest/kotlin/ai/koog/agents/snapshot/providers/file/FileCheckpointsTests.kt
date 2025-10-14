@@ -127,7 +127,7 @@ class FileCheckpointsTests {
                 Message.User("User message", metaInfo = RequestMetaInfo(time)),
                 Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time))
             ),
-            parentId = null
+            version = 0L
         )
 
         provider.saveCheckpoint(agentId, testCheckpoint)
@@ -168,7 +168,7 @@ class FileCheckpointsTests {
                 Message.User("Earlier message", metaInfo = RequestMetaInfo(time)),
                 Message.Assistant("Earlier response", metaInfo = ResponseMetaInfo(time))
             ),
-            parentId = null
+            version = 0L
         )
 
         val testCheckpoint = AgentCheckpointData(
@@ -180,7 +180,7 @@ class FileCheckpointsTests {
                 Message.User("User message", metaInfo = RequestMetaInfo(time)),
                 Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time))
             ),
-            parentId = testCheckpoint2.checkpointId
+            version = testCheckpoint2.version.plus(1)
         )
 
         provider.saveCheckpoint(agentId, testCheckpoint)

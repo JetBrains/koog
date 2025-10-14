@@ -171,7 +171,7 @@ public class Persistence(
                         nodeId = eventCtx.node.id,
                         lastInput = eventCtx.input,
                         lastInputType = eventCtx.inputType,
-                        parentId = parent?.checkpointId
+                        version = parent?.version?.plus(1) ?: 0L,
                     )
                 }
             }
@@ -183,7 +183,11 @@ public class Persistence(
             pipeline.interceptStrategyCompleted(interceptContext) { ctx ->
                 if (config.enableAutomaticPersistence && config.rollbackStrategy == RollbackStrategy.Default) {
                     val parent = ctx.feature.getLatestCheckpoint(ctx.agentId)
-                    ctx.feature.createTombstoneCheckpoint(ctx.agentId, ctx.feature.clock.now(), parent?.checkpointId)
+                    ctx.feature.createTombstoneCheckpoint(
+                        ctx.agentId,
+                        ctx.feature.clock.now(),
+                        parent?.version?.plus(1) ?: 0L
+                    )
                 }
             }
         }
@@ -210,7 +214,7 @@ public class Persistence(
         nodeId: String,
         lastInput: Any?,
         lastInputType: KType,
-        parentId: String?,
+        version: Long,
         checkpointId: String? = null,
     ): AgentCheckpointData? {
         val inputJson = trySerializeInput(lastInput, lastInputType)
@@ -229,7 +233,7 @@ public class Persistence(
                 nodeId = nodeId,
                 lastInput = inputJson,
                 createdAt = Clock.System.now(),
-                parentId = parentId,
+                version = version,
             )
         }
 
@@ -247,7 +251,7 @@ public class Persistence(
      * @return The created tombstone checkpoint data.
      */
     @InternalAgentsApi
-    public suspend fun createTombstoneCheckpoint(agentId: String, time: Instant, parentId: String?): AgentCheckpointData {
+    public suspend fun createTombstoneCheckpoint(agentId: String, time: Instant, parentId: Long): AgentCheckpointData {
         val checkpoint = tombstoneCheckpoint(time, parentId)
         saveCheckpoint(agentId, checkpoint)
         return checkpoint

@@ -32,7 +32,7 @@ public data class AgentCheckpointData(
     val nodeId: String,
     val lastInput: JsonElement,
     val messageHistory: List<Message>,
-    val parentId: String?,
+    val version: Long,
     val properties: Map<String, JsonElement>? = null
 )
 
@@ -44,7 +44,7 @@ public data class AgentCheckpointData(
  * @return An `AgentCheckpointData` instance with predefined properties indicating a tombstone state.
  */
 @OptIn(ExperimentalUuidApi::class)
-public fun tombstoneCheckpoint(time: Instant, parentId: String?): AgentCheckpointData {
+public fun tombstoneCheckpoint(time: Instant, version: Long): AgentCheckpointData {
     return AgentCheckpointData(
         checkpointId = Uuid.random().toString(),
         createdAt = time,
@@ -52,7 +52,7 @@ public fun tombstoneCheckpoint(time: Instant, parentId: String?): AgentCheckpoin
         lastInput = JsonNull,
         messageHistory = emptyList(),
         properties = mapOf(PersistenceUtils.TOMBSTONE_CHECKPOINT_NAME to JsonPrimitive(true)),
-        parentId = parentId
+        version = version
     )
 }
 

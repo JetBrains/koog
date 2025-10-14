@@ -8,6 +8,7 @@ import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
 import ai.koog.agents.snapshot.feature.Persistence
+import ai.koog.agents.snapshot.feature.isTombstone
 import ai.koog.agents.snapshot.feature.tombstoneCheckpoint
 import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider
 import ai.koog.agents.snapshot.providers.PersistenceStorageProvider
@@ -34,7 +35,6 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.utility.DockerImageName
 import kotlin.test.assertEquals
-import kotlin.test.assertNull
 
 @TestInstance(Lifecycle.PER_CLASS)
 @ExtendWith(DockerAvailableCondition::class)
@@ -148,9 +148,9 @@ class PostgresPersistenceAgentRunTest {
         val agentId = "pg-agent-preseed-1"
         val time = Clock.System.now()
 
-        val cp1 = createTestCheckpoint("cp-1", parentId = null, time = time)
-        val cp2 = createTestCheckpoint("cp-2", parentId = cp1.checkpointId, time = time)
-        val tomb = tombstoneCheckpoint(time = Clock.System.now(), parentId = cp2.checkpointId)
+        val cp1 = createTestCheckpoint("cp-1", time = time, version = 0)
+        val cp2 = createTestCheckpoint("cp-2", version = cp1.version + 1, time = time)
+        val tomb = tombstoneCheckpoint(time = Clock.System.now(), version = cp2.version + 1)
 
         // Save in order: cp1 -> cp2 -> tombstone
         provider.saveCheckpoint(agentId, cp1)
@@ -159,8 +159,7 @@ class PostgresPersistenceAgentRunTest {
 
         // Pre-run assertions about the chain
         val seeded = provider.getLatestCheckpoint(agentId)
-        assertNull(seeded, "Latest checkpoint must be null because chain ends with tombstone")
-        seeded shouldBe null
+        seeded?.isTombstone() shouldBe true
 
         // Create agent with persistence but without automatic persistence to keep seeded chain intact
         val agent = AIAgent(
@@ -180,20 +179,20 @@ class PostgresPersistenceAgentRunTest {
         val latest = provider.getLatestCheckpoint(agentId)
 
         output shouldBe "History: You are a test agent.\n" +
-                "Node 1 output\n" +
-                "Node 2 output"
+            "Node 1 output\n" +
+            "Node 2 output"
 
-        latest shouldBe null
+        latest?.isTombstone() shouldBe true
     }
 
     fun preSeedFinishedChainPlusUnfinishedTest(provider: PersistenceStorageProvider<*>) = runBlocking<Unit> {
         val agentId = "pg-agent-preseed-2"
         val time = Clock.System.now()
 
-        val cp1 = createTestCheckpoint("cp-1", parentId = null, time = time)
-        val cp2 = createTestCheckpoint("cp-2", parentId = cp1.checkpointId, time = time)
-        val tomb = tombstoneCheckpoint(time = Clock.System.now(), parentId = cp2.checkpointId)
-        val cp3 = createTestCheckpoint("cp-3", parentId = tomb.checkpointId, time = time, "Node1")
+        val cp1 = createTestCheckpoint("cp-1", version = 0, time = time)
+        val cp2 = createTestCheckpoint("cp-2", version = cp1.version + 1, time = time)
+        val tomb = tombstoneCheckpoint(time = Clock.System.now(), version = cp2.version + 1)
+        val cp3 = createTestCheckpoint("cp-3", version = tomb.version + 1, time = time, "Node1")
 
         // Save in order: cp1 -> cp2 -> tombstone -> cp3
         provider.saveCheckpoint(agentId, cp1)
@@ -222,10 +221,10 @@ class PostgresPersistenceAgentRunTest {
         val output = agent.run("Start the test")
 
         output shouldBeEqual "History: You are a test agent.\n" +
-                "Node 1 output\n" +
-                "Node 2 output\n" +
-                "Node 1 output\n" +
-                "Node 2 output"
+            "Node 1 output\n" +
+            "Node 2 output\n" +
+            "Node 1 output\n" +
+            "Node 2 output"
 
         // Post-run: latest should still be cp3 since we did not persist new checkpoints
         val latestAfter = provider.getLatestCheckpoint(agentId)
@@ -237,7 +236,7 @@ class PostgresPersistenceAgentRunTest {
         val agentId = "pg-agent-preseed-3"
         val time = Clock.System.now()
 
-        val cp1 = createTestCheckpoint("cp-1", parentId = null, time = time, nodeId = "Node1")
+        val cp1 = createTestCheckpoint("cp-1", version = 0, time = time, nodeId = "Node1")
 
         // Save single checkpoint
         provider.saveCheckpoint(agentId, cp1)
@@ -264,17 +263,17 @@ class PostgresPersistenceAgentRunTest {
         val latest = provider.getLatestCheckpoint(agentId)
 
         output shouldBe "History: You are a test agent.\n" +
-                "Node 1 output\n" +
-                "Node 2 output\n" +
-                "Node 1 output\n" +
-                "Node 2 output"
+            "Node 1 output\n" +
+            "Node 2 output\n" +
+            "Node 1 output\n" +
+            "Node 2 output"
 
         latest?.checkpointId shouldBe "cp-1"
     }
 
     private fun createTestCheckpoint(
         id: String,
-        parentId: String?,
+        version: Long,
         time: Instant,
         nodeId: String = "Node2"
     ): AgentCheckpointData {
@@ -288,7 +287,7 @@ class PostgresPersistenceAgentRunTest {
                 Message.User("Node 1 output", RequestMetaInfo(time)),
                 Message.Assistant("Node 2 output", ResponseMetaInfo(time))
             ),
-            parentId = parentId
+            version = version
         )
     }
 }

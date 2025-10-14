@@ -75,7 +75,7 @@ class CheckpointsTests {
                             lastInput = input,
                             lastInputType = typeOf<String>(),
                             checkpointId = "cpt-100500",
-                            parentId = null
+                            version = 0
                         )
                     }
                     input
@@ -216,7 +216,7 @@ class CheckpointsTests {
                         input,
                         typeOf<String>(),
                         checkpointId = checkpointId,
-                        parentId = null
+                        version = 0
                     )
                     llm.writeSession { updatePrompt { user { text("Checkpoint created with ID: $checkpointId") } } }
                 }
@@ -361,7 +361,7 @@ class CheckpointsTests {
                 Message.User("User message", metaInfo = RequestMetaInfo(time)),
                 Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time))
             ),
-            parentId = null
+            version = 0
         )
 
         checkpointStorageProvider.saveCheckpoint(agentId, testCheckpoint)
@@ -403,7 +403,7 @@ class CheckpointsTests {
                 Message.User("User message", metaInfo = RequestMetaInfo(time)),
                 Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time))
             ),
-            parentId = null
+            version = 0
         )
 
         val testCheckpoint = AgentCheckpointData(
@@ -415,7 +415,7 @@ class CheckpointsTests {
                 Message.User("User message", metaInfo = RequestMetaInfo(time)),
                 Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time))
             ),
-            parentId = testCheckpoint2.checkpointId
+            version = testCheckpoint2.version + 1
         )
 
         checkpointStorageProvider.saveCheckpoint(agentId, testCheckpoint2)

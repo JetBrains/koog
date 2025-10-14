@@ -32,7 +32,7 @@ class CheckpointSerializationTest {
             nodeId = "NodeA",
             lastInput = JsonPrimitive("last-input"),
             messageHistory = sampleMessages(now),
-            parentId = null
+            version = 0L
         )
 
         val json = PersistenceUtils.defaultCheckpointJson
@@ -91,7 +91,7 @@ class CheckpointSerializationTest {
             lastInput = JsonObject(mapOf("inputKey" to JsonPrimitive("inputVal"))),
             messageHistory = sampleMessages(now),
             properties = properties,
-            parentId = null
+            version = 0L
         )
 
         val json = PersistenceUtils.defaultCheckpointJson
@@ -104,7 +104,7 @@ class CheckpointSerializationTest {
 
     @Test
     fun `serialize and deserialize tombstone checkpoint`() {
-        val checkpoint = tombstoneCheckpoint(Clock.System.now(), null)
+        val checkpoint = tombstoneCheckpoint(Clock.System.now(), 0L)
         val json = PersistenceUtils.defaultCheckpointJson
         val serialized = json.encodeToString(AgentCheckpointData.serializer(), checkpoint)
         val restored = json.decodeFromString(AgentCheckpointData.serializer(), serialized)

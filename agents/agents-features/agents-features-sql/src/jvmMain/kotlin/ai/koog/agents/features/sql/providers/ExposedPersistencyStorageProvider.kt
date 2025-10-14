@@ -123,7 +123,7 @@ public abstract class ExposedPersistenceStorageProvider(
                 checkpointsTable.select(checkpointsTable.checkpointJson).where {
                     (checkpointsTable.persistenceId eq agentId) and
                         ((checkpointsTable.ttlTimestamp eq null) or (checkpointsTable.ttlTimestamp greaterEq now))
-                }.orderBy(checkpointsTable.createdAt to SortOrder.ASC).mapNotNull { row ->
+                }.mapNotNull { row ->
                     runCatching {
                         json.decodeFromString<AgentCheckpointData>(row[checkpointsTable.checkpointJson])
                     }.getOrNull()
@@ -146,20 +146,35 @@ public abstract class ExposedPersistenceStorageProvider(
         val ttlTimestamp = calculateTtlTimestamp(agentCheckpointData.createdAt)
 
         transaction {
-            // Use upsert for idempotent saves
             checkpointsTable.upsert {
                 it[checkpointsTable.persistenceId] = agentId
                 it[checkpointsTable.checkpointId] = agentCheckpointData.checkpointId
                 it[checkpointsTable.createdAt] = agentCheckpointData.createdAt.toEpochMilliseconds()
                 it[checkpointsTable.checkpointJson] = checkpointJson
                 it[checkpointsTable.ttlTimestamp] = ttlTimestamp
+                it[checkpointsTable.version] = agentCheckpointData.version
             }
         }
     }
 
     override suspend fun getLatestCheckpoint(agentId: String, filter: ExposedPersistenceFilter?): AgentCheckpointData? {
         if (filter == null) {
-            return PersistenceUtils.latestCheckpointOf(getCheckpoints(agentId))
+            val now = Clock.System.now().toEpochMilliseconds()
+            return transaction {
+                checkpointsTable
+                    .select(checkpointsTable.checkpointJson)
+                    .where {
+                        (checkpointsTable.persistenceId eq agentId) and
+                            ((checkpointsTable.ttlTimestamp eq null) or (checkpointsTable.ttlTimestamp greaterEq now))
+                    }
+                    .orderBy(checkpointsTable.version to SortOrder.DESC)
+                    .limit(1)
+                    .firstNotNullOfOrNull { row ->
+                        runCatching {
+                            json.decodeFromString<AgentCheckpointData>(row[checkpointsTable.checkpointJson])
+                        }
+                    }?.getOrNull()
+            }
         }
 
         return transaction {
