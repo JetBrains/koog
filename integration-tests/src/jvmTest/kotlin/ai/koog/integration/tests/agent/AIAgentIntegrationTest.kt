@@ -742,7 +742,7 @@ class AIAgentIntegrationTest {
                         nodeId = save,
                         lastInput = input,
                         lastInputType = typeOf<String>(),
-                        version = parent?.checkpointId
+                        version = parent?.version?.plus(1) ?: 0
                     )
                 }
                 savedMessage
@@ -849,7 +849,7 @@ class AIAgentIntegrationTest {
                         nodeId = save,
                         lastInput = input,
                         lastInputType = typeOf<String>(),
-                        version = parent?.checkpointId
+                        version = parent?.version?.plus(1) ?: 0
                     )
                 }
                 executionLog.append(saySaveLog)
@@ -1031,7 +1031,7 @@ class AIAgentIntegrationTest {
                         nodeId = bye,
                         lastInput = input,
                         lastInputType = typeOf<String>(),
-                        version = parent?.checkpointId
+                        version = parent?.version?.plus(1) ?: 0
                     )
                 }
                 sayBye

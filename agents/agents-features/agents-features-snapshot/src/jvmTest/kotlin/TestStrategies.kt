@@ -287,26 +287,6 @@ internal fun loggingGraphStrategy(collector: TestAgentLogsCollector) = strategy(
     edge(node2 forwardTo nodeFinish)
 }
 
-internal fun loggingGraphWithHistoryCollectionStrategy(collector: TestAgentLogsCollector) = strategy("logging-test") {
-    val node1 by loggingNode(
-        "Node1",
-        message = "First Step",
-        collector = collector
-    )
-
-    val node2 by loggingNode(
-        "Node2",
-        message = "Second Step",
-        collector = collector
-    )
-    val historyNode by collectHistoryNode("History Node")
-
-    edge(nodeStart forwardTo node1)
-    edge(node1 forwardTo node2)
-    edge(node2 forwardTo historyNode)
-    edge(historyNode forwardTo nodeFinish)
-}
-
 internal fun loggingGraphForRunFromSecondTry(collector: TestAgentLogsCollector) = strategy("logging-test") {
     val node1 by loggingNode(
         "Node1",

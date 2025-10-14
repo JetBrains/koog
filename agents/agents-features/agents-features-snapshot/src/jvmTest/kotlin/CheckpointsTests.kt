@@ -172,8 +172,7 @@ class CheckpointsTests {
     )
 
     private fun createGraphWithOptionalToolCallAndRollback(
-        checkpointId: String,
-        appendToolCall: Boolean
+        checkpointId: String
     ): TestRollbackableStrategy {
         val commands = Channel<String>(capacity = 100500)
         val notifications = Channel<String>(capacity = 100500)
@@ -287,7 +286,7 @@ class CheckpointsTests {
             tool(DeleteKVTool)
         }
 
-        val rollbackConfig = createGraphWithOptionalToolCallAndRollback("ckpt-1", appendToolCall = true)
+        val rollbackConfig = createGraphWithOptionalToolCallAndRollback("ckpt-1")
 
         val agentService = AIAgentService(
             promptExecutor = getMockExecutor { },
@@ -312,7 +311,7 @@ class CheckpointsTests {
 
         println("before second launch")
 
-        val task2 = launch {
+        launch {
             assertEquals("after-checkpoint", rollbackConfig.notifications.receive())
             rollbackConfig.commands.send("continue")
 
