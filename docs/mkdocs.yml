@@ -47,15 +47,13 @@ nav:
               - Custom subgraphs: custom-subgraphs.md
           - Embeddings: embeddings.md
           - Ranked document storage: ranked-document-storage.md
-          - Features:
-              - Overview: features-overview.md
-              - Tracing: tracing.md
-              - Memory: agent-memory.md
-              - Agent Persistence: agent-persistence.md
-              - OpenTelemetry:
-                  - Overview: opentelemetry-support.md
-                  - Langfuse Exporter: opentelemetry-langfuse-exporter.md
-                  - Weave Exporter: opentelemetry-weave-exporter.md
+          - Tracing: tracing.md
+          - Memory: agent-memory.md
+          - Agent persistence: agent-persistence.md
+          - OpenTelemetry:
+              - Overview: opentelemetry-support.md
+              - Langfuse Exporter: opentelemetry-langfuse-exporter.md
+              - Weave Exporter: opentelemetry-weave-exporter.md
       - Testing: testing.md
   - Why Koog: why-koog.md
   - Examples:
@@ -90,6 +88,9 @@ markdown_extensions:
   - admonition
   - pymdownx.tabbed:
       alternate_style: true
+      slugify: !!python/object/apply:pymdownx.slugs.slugify
+        kwds:
+          case: lower
   - pymdownx.emoji:
       emoji_index: !!python/name:material.extensions.emoji.twemoji
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
@@ -160,10 +161,11 @@ plugins:
           - embeddings.md: This page provides information on how to generate and compare embeddings of text and code. The page includes a getting started section for local embeddings, details about OpenAI embeddings and examples of comparison of embeddings.
         Ranked document storage:
           - ranked-document-storage.md: This guide provides details about the implementation and use of Resource-Augmented Generation (RAG) systems in Koog. The page includes sections about existing RAG implementations and how to implement your own RAG systems in Koog.
-        Features:
-          - features-overview.md: This page provides a short overview of features as a way to extend and enhance the functionality of AI agents.
+        Tracing:
           - tracing.md: This page includes details about the Tracing feature, which provides comprehensive tracing capabilities for AI agents. The page includes configuration and initialization details, examples and quickstart, details about error handling and FAQ and troubleshooting.
+        Agent memory:
           - agent-memory.md: This page provides details about the AgentMemory feature which lets AI agents store, retrieve, and use information across conversations. The page includes configuration and initialization details, examples and quickstart, best practices, error handling and FAQ and troubleshooting.
+        Agent persistence:
           - agent-persistence.md: This page describes Agent Persistence, which is a feature that lets you save and restore the state of an agent at specific points during execution. The page includes key concepts, prerequisites, installation instructions, configuration, and basic and advanced usage guides.
         OpenTelemetry:
           - opentelemetry-support.md: This page provides details about the support for OpenTelemetry with the Koog agentic framework for tracing and monitoring AI agents. The page includes details about installation and configuration, span types and attributes, and common exporters.
