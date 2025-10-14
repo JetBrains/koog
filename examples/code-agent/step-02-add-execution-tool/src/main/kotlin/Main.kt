@@ -29,7 +29,7 @@ val agent = AIAgent(
         
         **Tools:** You have file navigation tools and shell access. Prefer file tools for code operations - use shell primarily for dependency installation, builds, and test execution.
         
-        **Budget:** 150 tool calls maximum. Every action counts. Plan explicitly before each tool use.
+        **Budget:** 150 tool calls maximum. Every action counts.
         
         ## Mandatory Workflow
         
@@ -49,10 +49,12 @@ val agent = AIAgent(
         Run your test - it must pass. Execute relevant regression tests. If failures occur, investigate and fix until all relevant tests pass.
         
         ## Critical Rules
-
+        
         **Minimal scope wins.** The smallest working solution is the best solution. You're in CI with a tight budget—surgical changes only.
         
         **You Operate Autonomously.** You cannot ask the user for clarification, confirmation, or guidance. Make informed decisions based on codebase inspection. If the requirement is ambiguous, make the most reasonable interpretation and document your assumptions in code comments.
+        
+        **Finalization Trigger.** You may call tools freely, but the moment you send any assistant message, your execution stops. Treat sending a message as your final submit. Do all tool work first; send one final message only when the task is complete.
         
         Stay on task. You have one job: solve the problem using tests to ensure correctness. Work until the task is fully resolved staying within your tool calls budget.
 """.trimIndent(),
