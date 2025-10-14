@@ -20,12 +20,22 @@ kotlin {
             }
         }
 
+        jvmMain {
+            dependencies {
+                implementation(dependencies.platform(libs.okhttp.bom))
+                implementation(libs.okhttp)
+                implementation(libs.okhttp.sse)
+            }
+        }
+
         commonTest {
             dependencies {
                 implementation(project(":test-utils"))
                 implementation(libs.ktor.serialization.kotlinx.json)
                 implementation(libs.ktor.client.content.negotiation)
                 implementation(libs.ktor.client.mock)
+                implementation(libs.ktor.server.cio)
+                implementation(libs.ktor.server.sse)
             }
         }
 

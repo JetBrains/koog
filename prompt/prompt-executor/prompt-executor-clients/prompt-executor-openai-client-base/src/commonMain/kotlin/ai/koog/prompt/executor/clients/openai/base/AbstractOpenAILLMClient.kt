@@ -38,6 +38,7 @@ import ai.koog.prompt.structure.RegisteredStandardJsonSchemaGenerators
 import ai.koog.prompt.structure.annotations.InternalStructuredOutputApi
 import ai.koog.utils.http.KoogHttpClient
 import ai.koog.utils.http.fromKtorClient
+import ai.koog.utils.http.post
 import io.github.oshai.kotlinlogging.KLogger
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.HttpTimeout
@@ -98,6 +99,7 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
         /**
          * Register basic and standard openai json schema generator for given provider
          */
+        @Suppress("RedundantVisibilityModifier") // it is required here due to explicitApi
         @OptIn(InternalStructuredOutputApi::class)
         public fun registerOpenAIJsonSchemaGenerators(llmProvider: LLMProvider) {
             RegisteredBasicJsonSchemaGenerators[llmProvider] = OpenAIBasicJsonSchemaGenerator
