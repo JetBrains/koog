@@ -64,12 +64,7 @@ public class Koog(
             val job = Job(application.coroutineContext[Job])
             val scope = CoroutineScope(Dispatchers.SuitableForIO + job)
 
-            val config = try {
-                pipeline.environment.loadAgentsConfig(scope)
-            } catch (e: Exception) {
-                pipeline.environment.log.error("Failed to read Koog configuration from application config", e)
-                KoogAgentsConfig(scope)
-            }.apply(configure)
+            val config = pipeline.environment.loadAgentsConfig(scope).apply(configure)
 
             job.complete()
 

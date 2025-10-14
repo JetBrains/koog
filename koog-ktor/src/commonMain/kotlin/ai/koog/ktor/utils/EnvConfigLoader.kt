@@ -75,70 +75,81 @@ internal fun ApplicationEnvironment.loadAgentsConfig(scope: CoroutineScope): Koo
 }
 
 private fun KoogAgentsConfig.ollama(envConfig: ApplicationConfig) = apply {
-    ollama {
-        envConfig.propertyOrNull("koog.ollama.baseUrl")?.getString()?.let { baseUrl = it }
-        timeouts { configure(envConfig.config("koog.ollama.timeout")) }
+    if (envConfig.propertyOrNull("koog.ollama") != null) {
+        ollama {
+            envConfig.propertyOrNull("koog.ollama.baseUrl")?.getString()?.let { baseUrl = it }
+            timeouts { configure("koog.ollama.timeout", envConfig) }
+        }
     }
 }
 
-private fun KoogAgentsConfig.openrouter(envConfig: ApplicationConfig) =
-    config(envConfig.config("koog.openrouter")) { apiKey, baseUrlOrNull ->
+private fun KoogAgentsConfig.openrouter(envConfig: ApplicationConfig) = apply {
+    config(envConfig, "koog.openrouter") { apiKey, baseUrlOrNull ->
         openRouter(apiKey) {
             baseUrlOrNull?.let { baseUrl = it }
-            timeouts { configure(envConfig.config("timeout")) }
+            timeouts { configure("koog.openrouter.timeout", envConfig) }
         }
     }
+}
 
 private fun KoogAgentsConfig.deepSeek(envConfig: ApplicationConfig) =
-    config(envConfig.config("koog.deepseek")) { apiKey, baseUrlOrNull ->
+    config(envConfig, "koog.deepseek") { apiKey, baseUrlOrNull ->
         deepSeek(apiKey) {
             baseUrlOrNull?.let { baseUrl = it }
-            timeouts { configure(envConfig.config("timeout")) }
+            timeouts { configure("koog.deepseek.timeout", envConfig) }
         }
     }
 
 private fun KoogAgentsConfig.google(envConfig: ApplicationConfig) =
-    config(envConfig.config("koog.google")) { apiKey, baseUrlOrNull ->
+    config(envConfig, "koog.google") { apiKey, baseUrlOrNull ->
         google(apiKey) {
             baseUrlOrNull?.let { baseUrl = it }
-            timeouts { configure(envConfig.config("timeout")) }
+            timeouts { configure("koog.google.timeout", envConfig) }
         }
     }
 
 private fun KoogAgentsConfig.openAI(envConfig: ApplicationConfig) =
-    config(envConfig.config("koog.openai")) { apiKey, baseUrlOrNull ->
+    config(envConfig, "koog.openai") { apiKey, baseUrlOrNull ->
         openAI(apiKey) {
             baseUrlOrNull?.let { baseUrl = it }
-            timeouts { configure(envConfig.config("timeout")) }
+            timeouts { configure("koog.openai.timeout", envConfig) }
         }
     }
 
 private fun KoogAgentsConfig.anthropic(envConfig: ApplicationConfig) =
-    config(envConfig.config("koog.anthropic")) { apiKey, baseUrlOrNull ->
+    config(envConfig, "koog.anthropic") { apiKey, baseUrlOrNull ->
         anthropic(apiKey) {
             baseUrlOrNull?.let { baseUrl = it }
-            timeouts { configure(envConfig.config("timeout")) }
+            timeouts { configure("koog.anthropic.timeout", envConfig) }
         }
     }
 
-private inline fun KoogAgentsConfig.config(config: ApplicationConfig, block: (String, String?) -> Unit) = apply {
-    config.propertyOrNull("apikey")?.getString()?.let { apiKey ->
-        block(apiKey, config.propertyOrNull("baseUrl")?.getString())
-    }
+private inline fun KoogAgentsConfig.config(
+    appConfig: ApplicationConfig,
+    key: String,
+    block: (String, String?) -> Unit
+) = apply {
+    appConfig.propertyOrNull(key) ?: return@apply
+    val config = appConfig.config(key)
+    val apiKey = config.propertyOrNull("apikey")?.getString()
+    requireNotNull(apiKey) { "Found $key but apiKey was missing." }
+    block(apiKey, config.propertyOrNull("baseUrl")?.getString())
 }
 
-private fun KoogAgentsConfig.TimeoutConfiguration.configure(config: ApplicationConfig) {
-    config.propertyOrNull("requestTimeoutMillis")
-        ?.getString()
-        ?.toLongOrNull()
-        ?.let { requestTimeout = it.milliseconds }
+private fun KoogAgentsConfig.TimeoutConfiguration.configure(key: String, config: ApplicationConfig) {
+    if (config.propertyOrNull(key) == null) {
+        config.propertyOrNull("requestTimeoutMillis")
+            ?.getString()
+            ?.toLongOrNull()
+            ?.let { requestTimeout = it.milliseconds }
 
-    config.propertyOrNull("connectTimeoutMillis")
-        ?.getString()
-        ?.toLongOrNull()
-        ?.let { connectTimeout = it.milliseconds }
-    config.propertyOrNull("socketTimeoutMillis")
-        ?.getString()
-        ?.toLongOrNull()
-        ?.let { socketTimeout = it.milliseconds }
+        config.propertyOrNull("connectTimeoutMillis")
+            ?.getString()
+            ?.toLongOrNull()
+            ?.let { connectTimeout = it.milliseconds }
+        config.propertyOrNull("socketTimeoutMillis")
+            ?.getString()
+            ?.toLongOrNull()
+            ?.let { socketTimeout = it.milliseconds }
+    }
 }

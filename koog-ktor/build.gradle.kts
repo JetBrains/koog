@@ -31,7 +31,7 @@ kotlin {
                 implementation(kotlin("test"))
                 implementation(libs.kotlinx.coroutines.core)
                 implementation(libs.kotlinx.coroutines.test)
-                implementation(libs.ktor.server.core)
+                implementation(libs.ktor.server.test.host)
             }
         }
 
