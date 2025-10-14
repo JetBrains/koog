@@ -152,7 +152,7 @@ jobs:
 
   qodana:
     needs: [ tests ]
-    if: github.repository == 'jetbrains/koog'
+    if: github.repository == 'jetbrains/koog' && (github.event_name == 'push' || github.event.pull_request.head.repo.fork == false)
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -171,6 +171,7 @@ jobs:
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
+          cache: gradle
 
       # Download the coverage data artifact
       - name: Download coverage data
