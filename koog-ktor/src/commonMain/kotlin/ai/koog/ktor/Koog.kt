@@ -64,12 +64,7 @@ public class Koog(
             val job = Job(application.coroutineContext[Job])
             val scope = CoroutineScope(Dispatchers.SuitableForIO + job)
 
-            val config = try {
-                pipeline.environment.loadAgentsConfig(scope)
-            } catch (e: Exception) {
-                pipeline.environment.log.error("Failed to read Koog configuration from application config", e)
-                KoogAgentsConfig(scope)
-            }.apply(configure)
+            val config = resolveKoogConfig(pipeline, scope, configure)
 
             job.complete()
 
@@ -83,6 +78,36 @@ public class Koog(
                 config.agentFeatures,
                 job
             )
+        }
+
+        /**
+         * Resolves the effective Koog configuration used by the plugin.
+         *
+         * Behavior:
+         * - If the programmatic DSL (install(Koog) { ... }) explicitly configured at least one LLM connection,
+         *   this programmatic configuration is used as-is.
+         * - Otherwise, the configuration is loaded from the Ktor ApplicationConfig (application.yaml/application.conf)
+         *
+         * @param pipeline The Ktor application call pipeline (routing or application) providing access to the environment.
+         * @param scope The coroutine scope used to create KoogAgentsConfig and its internals.
+         * @param configure The programmatic Koog DSL block supplied by the user within install(Koog) { ... }.
+         * @return The resolved, final [KoogAgentsConfig] instance to be used by the plugin.
+         */
+        private fun resolveKoogConfig(
+            pipeline: ApplicationCallPipeline,
+            scope: CoroutineScope,
+            configure: KoogAgentsConfig.() -> Unit
+        ): KoogAgentsConfig {
+            val programmatic = KoogAgentsConfig(scope).apply(configure)
+            if (programmatic.llmConnections.isNotEmpty()) return programmatic
+
+            val env = try {
+                pipeline.environment.loadAgentsConfig(scope)
+            } catch (e: Exception) {
+                pipeline.environment.log.error("Failed to read Koog configuration from application config", e)
+                null
+            }
+            return (env ?: KoogAgentsConfig(scope)).apply(configure)
         }
 
         /**
