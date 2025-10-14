@@ -1,13 +1,13 @@
 package ai.koog.http.client.java
 
 import ai.koog.http.client.KoogHttpClient
-import ai.koog.http.client.test.KoogHttpClientTestSuite
+import ai.koog.http.client.test.BaseKoogHttpClientTest
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.json.Json
 import java.net.http.HttpClient
 import kotlin.test.Test
 
-class JavaKoogHttpClientTest : KoogHttpClientTestSuite() {
+class JavaKoogHttpClientTest : BaseKoogHttpClientTest() {
     override fun createClient(): KoogHttpClient {
         return KoogHttpClient.fromJavaHttpClient(
             clientName = "TestClient",

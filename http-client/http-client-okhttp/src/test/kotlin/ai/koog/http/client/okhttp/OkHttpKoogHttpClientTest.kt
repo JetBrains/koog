@@ -1,13 +1,13 @@
 package ai.koog.http.client.okhttp
 
 import ai.koog.http.client.KoogHttpClient
-import ai.koog.http.client.test.KoogHttpClientTestSuite
+import ai.koog.http.client.test.BaseKoogHttpClientTest
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.json.Json
 import okhttp3.OkHttpClient
 import kotlin.test.Test
 
-class OkHttpKoogHttpClientTest : KoogHttpClientTestSuite() {
+class OkHttpKoogHttpClientTest : BaseKoogHttpClientTest() {
 
     override fun createClient(): KoogHttpClient {
         return KoogHttpClient.fromOkHttpClient(

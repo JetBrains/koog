@@ -1,7 +1,7 @@
 package ai.koog.http.client.ktor
 
 import ai.koog.http.client.KoogHttpClient
-import ai.koog.http.client.test.KoogHttpClientTestSuite
+import ai.koog.http.client.test.BaseKoogHttpClientTest
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
@@ -14,7 +14,7 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 
-class KoogKtorHttpClientTest : KoogHttpClientTestSuite() {
+class KtorKoogHttpClientTest : BaseKoogHttpClientTest() {
     override fun createClient(): KoogHttpClient {
         val baseClient = HttpClient(CIO) {}
         return KoogHttpClient.fromKtorClient(

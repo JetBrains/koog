@@ -79,6 +79,7 @@ version = run {
 
 buildscript {
     dependencies {
+        classpath(platform(libs.okhttp.bom))
         classpath(libs.okhttp)
     }
 }

@@ -18,7 +18,7 @@ import kotlin.test.fail
  *
  * Subclasses must implement [createClient] to provide the specific client implementation to test.
  */
-abstract class KoogHttpClientTestSuite {
+abstract class BaseKoogHttpClientTest {
     @Serializable
     data class TestRequest(val request: String)
 
