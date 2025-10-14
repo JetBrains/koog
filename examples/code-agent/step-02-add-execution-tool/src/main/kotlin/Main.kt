@@ -12,7 +12,7 @@ import ai.koog.agents.ext.tool.shell.JvmShellCommandExecutor
 import ai.koog.agents.ext.tool.shell.PrintShellCommandConfirmationHandler
 import ai.koog.agents.ext.tool.shell.ShellCommandConfirmation
 import ai.koog.agents.features.eventHandler.feature.handleEvents
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.koog.rag.base.files.JVMFileSystemProvider
 import kotlinx.coroutines.runBlocking
@@ -26,7 +26,7 @@ val agent = AIAgent(
 
         You have shell access to execute commands and run tests. Use this to work with executable feedback instead of assumptions. Establish what correct behavior looks like through tests, then iterate your implementation until tests pass. Validate that existing functionality remains intact. Production-ready means proven through green tests—that's your definition of done.
     """.trimIndent(),
-    llmModel = OpenAIModels.Chat.GPT5Codex,
+    llmModel = AnthropicModels.Sonnet_4_5,
     toolRegistry = ToolRegistry {
         tool(ListDirectoryTool(JVMFileSystemProvider.ReadOnly))
         tool(ReadFileTool(JVMFileSystemProvider.ReadOnly))
