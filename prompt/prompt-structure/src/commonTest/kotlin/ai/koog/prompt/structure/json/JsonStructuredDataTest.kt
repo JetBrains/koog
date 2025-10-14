@@ -244,7 +244,8 @@ class JsonStructuredDataTest {
                 "description": "Cloudy",
                 "humidity": 80
             }
-            ```""".trimMargin()
+            ```
+            """.trimMargin()
 
         val parsed = structure.parse(jsonString)
 
@@ -265,7 +266,8 @@ class JsonStructuredDataTest {
                 "description": "Cloudy",
                 "humidity": 80
             }
-            ```""".trimMargin()
+            ```
+            """.trimMargin()
 
         val parsed = structure.parse(jsonString)
 
@@ -278,7 +280,7 @@ class JsonStructuredDataTest {
     @Test
     fun testJsonWithSingleLineMarkdownParsing() {
         val structure = JsonStructuredData.createJsonStructure<WeatherInfo>()
-        val jsonString ="""`{"city": "Dublin","temperature": 12,"description": "Rainy","humidity": 90}`""".trimMargin()
+        val jsonString = """`{"city": "Dublin","temperature": 12,"description": "Rainy","humidity": 90}`""".trimMargin()
 
         val parsed = structure.parse(jsonString)
 
@@ -287,5 +289,4 @@ class JsonStructuredDataTest {
         assertEquals("Rainy", parsed.description)
         assertEquals(90, parsed.humidity)
     }
-
 }
