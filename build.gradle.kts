@@ -138,7 +138,6 @@ tasks.register("reportProjectVersionToTeamCity") {
     }
 }
 
-
 tasks {
     val packSonatypeCentralBundle by registering(Zip::class) {
         group = "publishing"
