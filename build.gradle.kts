@@ -40,17 +40,16 @@ version = run {
                 "-$branch-$date"
             }
         } else if (releaseBuild) {
-            when (branch) {
-                "main" -> {
-                    if (customVersion.isNullOrBlank()) {
-                        ""
-                    } else {
-                        println("Custom version is not allowed during release from the main branch")
-                        ""
+            when {
+                branch == "main" || isCustomReleaseBranch(branch) -> {
+                    if (!customVersion.isNullOrBlank() && branch == "main") {
+                        throw GradleException("Custom version is not allowed during release from the main branch")
                     }
+
+                    ""
                 }
 
-                "develop" -> {
+                branch == "develop" -> {
                     if (!customVersion.isNullOrBlank()) {
                         throw GradleException("Custom version is not allowed during release from the develop branch")
                     } else if (tcCounter.isNullOrBlank()) {
@@ -76,6 +75,8 @@ version = run {
 
     "$main$feat"
 }
+
+fun isCustomReleaseBranch(branchName: String): Boolean = branchName.matches(Regex("""^\d+\.\d+\.\d+$"""))
 
 buildscript {
     dependencies {
@@ -160,7 +161,8 @@ tasks {
             val uriBase = "https://central.sonatype.com/api/v1/publisher/upload"
 
             val mainBranch = System.getenv("BRANCH_KOOG_IS_RELEASING_FROM") == "main"
-            val publishingType = if (mainBranch) {
+            val customReleaseBranch = isCustomReleaseBranch(System.getenv("BRANCH_KOOG_IS_RELEASING_FROM"))
+            val publishingType = if (mainBranch || customReleaseBranch) {
                 println("Publishing from the main branch, so publishing as AUTOMATIC.")
                 "AUTOMATIC"
             } else {
