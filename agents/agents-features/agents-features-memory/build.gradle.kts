@@ -29,17 +29,12 @@ kotlin {
             }
         }
 
-        jvmMain {
-            dependencies {
-                api(libs.ktor.client.cio)
-            }
-        }
-
         jvmTest {
             dependencies {
                 implementation(kotlin("test-junit5"))
                 implementation(project(":agents:agents-test"))
                 implementation(libs.mockk)
+                implementation(libs.ktor.client.cio)
             }
         }
     }

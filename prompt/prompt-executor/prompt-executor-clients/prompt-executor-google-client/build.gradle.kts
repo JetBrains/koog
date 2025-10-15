@@ -13,7 +13,7 @@ kotlin {
         commonMain {
             dependencies {
                 api(project(":agents:agents-tools"))
-                api(project(":agents:agents-utils"))
+                api(project(":utils"))
                 api(project(":prompt:prompt-executor:prompt-executor-clients"))
                 api(project(":prompt:prompt-llm"))
                 api(project(":prompt:prompt-model"))
@@ -26,15 +26,9 @@ kotlin {
             }
         }
 
-        jvmMain {
+        jsTest {
             dependencies {
-                api(libs.ktor.client.cio)
-            }
-        }
-
-        jsMain {
-            dependencies {
-                api(libs.ktor.client.js)
+                implementation(libs.ktor.client.js)
             }
         }
 
@@ -47,6 +41,7 @@ kotlin {
         jvmTest {
             dependencies {
                 implementation(libs.ktor.client.mock)
+                implementation(libs.ktor.client.cio)
             }
         }
     }

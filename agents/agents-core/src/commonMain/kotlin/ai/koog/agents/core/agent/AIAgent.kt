@@ -11,11 +11,11 @@ import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.utils.Closeable
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
+import ai.koog.utils.io.Closeable
 import kotlinx.datetime.Clock
 import kotlin.reflect.typeOf
 

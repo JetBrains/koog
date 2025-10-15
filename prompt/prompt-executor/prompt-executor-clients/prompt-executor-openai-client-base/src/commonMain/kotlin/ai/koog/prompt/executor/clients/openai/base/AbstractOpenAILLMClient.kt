@@ -3,8 +3,9 @@ package ai.koog.prompt.executor.clients.openai.base
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
-import ai.koog.agents.utils.KoogHttpClient
-import ai.koog.agents.utils.fromKtorClient
+import ai.koog.http.client.KoogHttpClient
+import ai.koog.http.client.ktor.fromKtorClient
+import ai.koog.http.client.post
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
@@ -98,6 +99,7 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
         /**
          * Register basic and standard openai json schema generator for given provider
          */
+        @Suppress("RedundantVisibilityModifier") // it is required here due to explicitApi
         @OptIn(InternalStructuredOutputApi::class)
         public fun registerOpenAIJsonSchemaGenerators(llmProvider: LLMProvider) {
             RegisteredBasicJsonSchemaGenerators[llmProvider] = OpenAIBasicJsonSchemaGenerator
@@ -240,11 +242,10 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
             stream = false
         )
 
-        return httpClient.post(
+        return httpClient.post<String, String>(
             path = chatCompletionsPath,
             request = request
-        )
-            .let(::decodeResponse)
+        ).let(::decodeResponse)
     }
 
     @OptIn(ExperimentalUuidApi::class)

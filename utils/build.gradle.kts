@@ -13,12 +13,21 @@ kotlin {
         commonMain {
             dependencies {
                 api(libs.kotlinx.serialization.json)
+                api(libs.jetbrains.annotations)
+                api(libs.kotlinx.coroutines.core)
+                implementation(libs.oshai.kotlin.logging)
             }
         }
 
         commonTest {
             dependencies {
                 implementation(project(":test-utils"))
+            }
+        }
+
+        jvmTest {
+            dependencies {
+                implementation(kotlin("test-junit5"))
             }
         }
     }

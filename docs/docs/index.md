@@ -48,6 +48,8 @@ For detailed guidance on using these providers with dedicated LLM clients, refer
 
 To use Koog, you need to include all necessary dependencies in your build configuration.
 
+**NB!** Ktor [client](https://ktor.io/docs/client-engines.html) and [server](https://ktor.io/docs/server-engines.html) engine dependencies are not included in the library by default, so you should add engines of your choice yourself.
+
 ### Gradle
 
 #### Gradle (Kotlin DSL)
@@ -57,8 +59,12 @@ To use Koog, you need to include all necessary dependencies in your build config
     ```
     dependencies {
         implementation("ai.koog:koog-agents:LATEST_VERSION")
+       // include Ktor client dependency explicitly
+        implementation("io.ktor:ktor-client-cio:$ktor_version")
     }
     ```
+   Ktor [client](https://ktor.io/docs/client-engines.html) and [server](https://ktor.io/docs/server-engines.html) 
+   engine dependencies are not included in the library by default, so you should add engines of your choice yourself. 
 
 2. Make sure that you have `mavenCentral()` in the list of repositories.
 
@@ -69,6 +75,7 @@ To use Koog, you need to include all necessary dependencies in your build config
     ```
     dependencies {
         implementation 'ai.koog:koog-agents:LATEST_VERSION'
+        implementation 'io.ktor:ktor-client-cio:KTOR_VERSION'
     }
     ```
 
@@ -78,12 +85,42 @@ To use Koog, you need to include all necessary dependencies in your build config
 
 1. Add dependencies to the `pom.xml` file:
 
-    ```
+    ```xml
     <dependency>
         <groupId>ai.koog</groupId>
         <artifactId>koog-agents-jvm</artifactId>
         <version>LATEST_VERSION</version>
     </dependency>
+    ```
+
+2. Add Ktor dependencies. Check for Ktor versions [here](https://mvnrepository.com/artifact/io.ktor/ktor-bom).
+    ```xml
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>io.ktor</groupId>
+                <artifactId>ktor-bom</artifactId>
+                <version>KTOR_VERSION</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+   
+    <dependencies>
+        <dependency>
+            <groupId>io.ktor</groupId>
+            <artifactId>ktor-client-cio-jvm</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <!-- Add a Ktor server dependency if you are using features like MCP -->
+        <dependency>
+            <groupId>io.ktor</groupId>
+            <artifactId>ktor-server-netty-jvm</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+    </dependencies>
+
     ```
 
 2. Make sure that you have `mavenCentral` in the list of repositories.

@@ -13,7 +13,7 @@ kotlin {
         commonMain {
             dependencies {
                 api(project(":agents:agents-tools"))
-                api(project(":agents:agents-utils"))
+                api(project(":utils"))
                 api(project(":prompt:prompt-executor:prompt-executor-clients"))
                 api(project(":prompt:prompt-llm"))
                 api(project(":prompt:prompt-model"))
@@ -22,12 +22,6 @@ kotlin {
                 api(libs.ktor.client.content.negotiation)
                 api(libs.ktor.serialization.kotlinx.json)
                 implementation(libs.oshai.kotlin.logging)
-            }
-        }
-
-        jvmMain {
-            dependencies {
-                implementation(libs.ktor.client.cio)
             }
         }
 
@@ -41,6 +35,12 @@ kotlin {
             dependencies {
                 implementation(project(":test-utils"))
                 implementation(libs.kotest.assertions.json)
+            }
+        }
+
+        jvmTest {
+            dependencies {
+                implementation(libs.ktor.client.cio)
             }
         }
     }

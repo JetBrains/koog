@@ -7,7 +7,7 @@ import ai.koog.agents.core.feature.remote.server.FeatureMessageRemoteServer
 import ai.koog.agents.core.feature.remote.server.config.DefaultServerConnectionConfig
 import ai.koog.agents.core.feature.writer.TestFeatureEventMessage
 import ai.koog.agents.testing.network.NetUtil.findAvailablePort
-import ai.koog.agents.utils.use
+import ai.koog.utils.io.use
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.URLProtocol
 import kotlinx.coroutines.CompletableDeferred

@@ -1,7 +1,7 @@
 package ai.koog.agents.core.feature.remote.server
 
 import ai.koog.agents.core.feature.message.FeatureMessage
-import ai.koog.agents.utils.Closeable
+import ai.koog.utils.io.Closeable
 import kotlinx.coroutines.flow.StateFlow
 
 /**

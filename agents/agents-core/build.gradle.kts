@@ -14,6 +14,7 @@ kotlin {
             dependencies {
                 api(project(":agents:agents-tools"))
                 api(project(":agents:agents-utils"))
+                api(project(":utils"))
                 api(project(":prompt:prompt-executor:prompt-executor-model"))
                 api(project(":prompt:prompt-llm"))
                 api(project(":prompt:prompt-structure"))
@@ -48,6 +49,7 @@ kotlin {
                 implementation(kotlin("test-junit5"))
                 implementation("org.jetbrains.lincheck:lincheck:3.1")
                 implementation(libs.junit.jupiter.params)
+                implementation(libs.ktor.client.cio)
             }
         }
     }

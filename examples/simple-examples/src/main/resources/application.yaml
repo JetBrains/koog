@@ -4,8 +4,33 @@ ktor:
       - ai.koog.agents.example.ktor.KtorIntegrationExampleKt.main
 
 koog:
-  openai.apikey: "your-openai-api-key"
-  anthropic.apikey: "your-anthropic-api-key"
-  google.apikey: "your-google-api-key"
-  openrouter.apikey: "your-openrouter-api-key"
-  ollama.enable: true
+  openai:
+  apikey: "your-openai-api-key"
+  timeout:
+    requestTimeoutMillis: 900000
+    connectTimeoutMillis: 60000
+    socketTimeoutMillis: 900000
+  anthropic:
+    apikey: "your-anthropic-api-key"
+    timeout:
+      requestTimeoutMillis: 900000
+      connectTimeoutMillis: 60000
+      socketTimeoutMillis: 900000
+  google:
+    apikey: "your-google-api-key"
+    timeout:
+      requestTimeoutMillis: 900000
+      connectTimeoutMillis: 60000
+      socketTimeoutMillis: 900000
+  openrouter:
+    apikey: "your-openrouter-api-key"
+    timeout:
+      requestTimeoutMillis: 900000
+      connectTimeoutMillis: 60000
+      socketTimeoutMillis: 900000
+  ollama:
+    enable: true
+    timeout:
+      requestTimeoutMillis: 900000
+      connectTimeoutMillis: 60000
+      socketTimeoutMillis: 900000

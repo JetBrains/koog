@@ -13,6 +13,7 @@ kotlin {
         commonMain {
             dependencies {
                 api(project(":koog-agents"))
+                api(project(":utils"))
                 api(libs.kotlinx.coroutines.core)
                 api(libs.kotlinx.serialization.json)
                 api(libs.ktor.server.core)
@@ -30,13 +31,20 @@ kotlin {
                 implementation(kotlin("test"))
                 implementation(libs.kotlinx.coroutines.core)
                 implementation(libs.kotlinx.coroutines.test)
-                implementation(libs.ktor.server.core)
+                implementation(libs.ktor.server.test.host)
+            }
+        }
+
+        androidUnitTest {
+            dependencies {
+                implementation(libs.ktor.client.cio)
             }
         }
 
         jsTest {
             dependencies {
                 implementation(kotlin("test-js"))
+                implementation(libs.ktor.client.js)
             }
         }
 
@@ -44,6 +52,13 @@ kotlin {
             dependencies {
                 implementation(kotlin("test-junit5"))
                 implementation(libs.kotlinx.coroutines.test)
+                implementation(libs.ktor.client.cio)
+            }
+        }
+
+        appleTest {
+            dependencies {
+                implementation(libs.ktor.client.darwin)
             }
         }
     }

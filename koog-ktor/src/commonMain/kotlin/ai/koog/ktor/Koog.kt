@@ -2,11 +2,11 @@ package ai.koog.ktor
 
 import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
-import ai.koog.agents.utils.SuitableForIO
 import ai.koog.ktor.utils.loadAgentsConfig
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
+import ai.koog.utils.io.SuitableForIO
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCallPipeline
 import io.ktor.server.application.Plugin
@@ -64,12 +64,7 @@ public class Koog(
             val job = Job(application.coroutineContext[Job])
             val scope = CoroutineScope(Dispatchers.SuitableForIO + job)
 
-            val config = try {
-                pipeline.environment.loadAgentsConfig(scope)
-            } catch (e: Exception) {
-                pipeline.environment.log.error("Failed to read Koog configuration from application config", e)
-                KoogAgentsConfig(scope)
-            }.apply(configure)
+            val config = pipeline.environment.loadAgentsConfig(scope).apply(configure)
 
             job.complete()
 

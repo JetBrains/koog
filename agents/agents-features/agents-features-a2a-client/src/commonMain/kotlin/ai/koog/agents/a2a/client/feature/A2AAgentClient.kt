@@ -43,7 +43,7 @@ public class A2AAgentClient(
         /**
          * Map of [A2AClient] instances keyed by agent ID for accessing remote A2A agents.
          */
-        public val a2aClients: Map<String, A2AClient> = mapOf()
+        public var a2aClients: Map<String, A2AClient> = mapOf()
     }
 
     public companion object Feature :

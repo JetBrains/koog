@@ -20,6 +20,7 @@ dependencies {
     implementation(project.dependencies.platform(libs.spring.boot.bom))
     api(libs.bundles.spring.boot.core)
     api(libs.reactor.kotlin.extensions)
+    runtimeOnly(libs.ktor.client.apache5)
 
     testImplementation(libs.spring.boot.starter.test)
     testRuntimeOnly(libs.junit.platform.launcher)
