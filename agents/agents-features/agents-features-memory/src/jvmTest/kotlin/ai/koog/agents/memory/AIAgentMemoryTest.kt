@@ -31,7 +31,6 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkConstructor
 import io.mockk.slot
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
@@ -234,9 +233,6 @@ class AIAgentMemoryTest {
         // Create a slot to capture the prompt update
         val promptUpdateSlot = slot<PromptBuilder.() -> Unit>()
 
-        // Mock LLM context to capture prompt updates
-        mockkConstructor(AIAgentLLMWriteSession::class)
-
         val llm = mockk<AIAgentLLMContext> {
             coEvery {
                 writeSession<Any?>(any<suspend AIAgentLLMWriteSession.() -> Any?>())
@@ -256,7 +252,7 @@ class AIAgentMemoryTest {
             scopesProfile = MemoryScopesProfile(MemoryScopeType.AGENT to "test-agent")
         )
 
-        memory.loadFactsToAgent(llm = llm, concept = concept)
+        memory.loadFactsToAgent(llm, concept, subjects = listOf(MemorySubjects.User))
 
         // Verify that writeSession was called and the prompt was updated with facts
         coVerify {
