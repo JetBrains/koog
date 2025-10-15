@@ -369,7 +369,7 @@ class ModelCapabilitiesIntegrationTest {
                         val ex = assertFails(prompt, model)
                         assertExceptionMessageContains(
                             ex,
-                            "EXPECTED_ERROR chat completions",
+                            "$EXPECTED_ERROR chat completions",
                             "not a chat completion"
                         )
                     }
