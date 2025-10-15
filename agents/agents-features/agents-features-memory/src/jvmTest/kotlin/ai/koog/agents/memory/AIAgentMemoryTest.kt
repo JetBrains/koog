@@ -148,42 +148,27 @@ class AIAgentMemoryTest {
         val featureFact = SingleFact(concept = concept, value = "feature fact", timestamp = testTimestamp)
         val productFact = SingleFact(concept = concept, value = "product fact", timestamp = testTimestamp)
 
-        // Mock responses for all subjects for Agent scope
-        MemorySubject.registeredSubjects.forEach { subject ->
-            coEvery {
-                memoryProvider.load(concept, subject, MemoryScope.Agent("test-agent"))
-            } returns when (subject) {
-                MemorySubjects.User -> listOf(agentFact)
-                else -> emptyList()
-            }
-        }
+        // Mock responses for User subject with specific scopes
+        coEvery {
+            memoryProvider.load(concept, MemorySubjects.User, MemoryScope.Agent("test-agent"))
+        } returns listOf(agentFact)
 
-        // Mock responses for all subjects for Feature scope
-        MemorySubject.registeredSubjects.forEach { subject ->
-            coEvery {
-                memoryProvider.load(concept, subject, MemoryScope.Feature("test-feature"))
-            } returns when (subject) {
-                MemorySubjects.User -> listOf(featureFact)
-                else -> emptyList()
-            }
-        }
+        coEvery {
+            memoryProvider.load(concept, MemorySubjects.User, MemoryScope.Feature("test-feature"))
+        } returns listOf(featureFact)
 
-        // Mock responses for all subjects for Product scope
-        MemorySubject.registeredSubjects.forEach { subject ->
-            coEvery {
-                memoryProvider.load(concept, subject, MemoryScope.Product("test-product"))
-            } returns when (subject) {
-                MemorySubjects.User -> listOf(productFact)
-                else -> emptyList()
-            }
-        }
+        coEvery {
+            memoryProvider.load(concept, MemorySubjects.User, MemoryScope.Product("test-product"))
+        } returns listOf(productFact)
 
-        // Mock responses for CrossProduct scope
-        MemorySubject.registeredSubjects.forEach { subject ->
-            coEvery {
-                memoryProvider.load(concept, subject, MemoryScope.CrossProduct)
-            } returns emptyList()
-        }
+        coEvery {
+            memoryProvider.load(concept, MemorySubjects.User, MemoryScope.CrossProduct)
+        } returns emptyList()
+
+        // All other requests
+        coEvery {
+            memoryProvider.load(any(), any(), any())
+        } returns emptyList()
 
         val response = mockk<Message.Response>()
         every { response.content } returns "OK"
