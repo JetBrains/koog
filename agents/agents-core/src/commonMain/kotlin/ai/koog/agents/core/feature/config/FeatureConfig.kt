@@ -12,24 +12,28 @@ import ai.koog.agents.core.feature.message.FeatureMessageProcessor
  */
 public abstract class FeatureConfig {
 
+    private val _messageProcessors = mutableListOf<FeatureMessageProcessor>()
+
+    private var _eventFilter: (AgentLifecycleEventContext) -> Boolean = { true }
+
     /**
-     * A list of [FeatureMessageProcessor] instances registered with the feature configuration.
+     * Provides a read-only list of `FeatureMessageProcessor` instances registered with the feature configuration.
      */
-    public var messageProcessors: List<FeatureMessageProcessor> = emptyList()
-        private set
+    public val messageProcessors: List<FeatureMessageProcessor>
+        get() = _messageProcessors.toList()
+
+    /**
+     * A filter for events to be processed by a feature.
+     */
+    public val eventFilter: (AgentLifecycleEventContext) -> Boolean
+        get() = _eventFilter
 
     /**
      * Adds a message processor to the configuration.
      */
     public fun addMessageProcessor(processor: FeatureMessageProcessor) {
-        messageProcessors = messageProcessors + processor
+        _messageProcessors.add(processor)
     }
-
-    /**
-     * A filter for events to be processed by a feature.
-     */
-    public var eventFilter: (AgentLifecycleEventContext) -> Boolean = { true }
-        private set
 
     /**
      * A filter for messages to be sent to the tracing message processors.
@@ -49,6 +53,6 @@ public abstract class FeatureConfig {
      * ```
      */
     public fun setEventFilter(filter: (AgentLifecycleEventContext) -> Boolean) {
-        eventFilter = filter
+        _eventFilter = filter
     }
 }
