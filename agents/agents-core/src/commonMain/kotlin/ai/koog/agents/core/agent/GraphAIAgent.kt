@@ -20,8 +20,6 @@ import ai.koog.utils.io.Closeable
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.datetime.Clock
 import kotlin.reflect.KType
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 /**
  * Represents an implementation of an AI agent that provides functionalities to execute prompts,
@@ -41,11 +39,12 @@ import kotlin.uuid.Uuid
  * @property agentConfig Configuration details for the local agent that define its operational parameters.
  * @property toolRegistry Registry of tools the agent can interact with, defaulting to an empty registry.
  * @property installFeatures Lambda for installing additional features within the agent environment.
+ * @param id Unique identifier for the agent. Random UUID will be generated if set to null.
  * @property clock The clock used to calculate message timestamps
  * @constructor Initializes the AI agent instance and prepares the feature context and pipeline for use.
  */
 @Suppress("ktlint:standard:wrapping")
-@OptIn(ExperimentalUuidApi::class, InternalAgentsApi::class)
+@OptIn(InternalAgentsApi::class)
 public open class GraphAIAgent<Input, Output>(
     public val inputType: KType,
     public val outputType: KType,
@@ -53,12 +52,13 @@ public open class GraphAIAgent<Input, Output>(
     override val agentConfig: AIAgentConfig,
     override val strategy: AIAgentGraphStrategy<Input, Output>,
     public val toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
-    override val id: String = Uuid.random().toString(),
+    id: String? = null,
     public val clock: Clock = Clock.System,
     @property:InternalAgentsApi
     public val installFeatures: FeatureContext.() -> Unit = {}
 ) : StatefulSingleUseAIAgent<Input, Output, AIAgentGraphContextBase>(
     logger = logger,
+    id = id,
 ), Closeable {
 
     private companion object {
@@ -68,7 +68,7 @@ public open class GraphAIAgent<Input, Output>(
     override val pipeline: AIAgentGraphPipeline = AIAgentGraphPipeline(clock)
 
     private val environment = GenericAgentEnvironment(
-        agentId = id,
+        agentId = this.id,
         strategyId = strategy.name,
         logger = logger,
         toolRegistry = toolRegistry,

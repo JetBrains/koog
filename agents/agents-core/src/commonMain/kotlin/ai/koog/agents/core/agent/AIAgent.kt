@@ -17,7 +17,6 @@ import ai.koog.utils.io.Closeable
 import kotlinx.datetime.Clock
 import kotlin.reflect.typeOf
 import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 /**
  * Represents a basic interface for AI agent.
@@ -161,7 +160,7 @@ public interface AIAgent<Input, Output> : Closeable {
          * @param agentConfig The configuration for the AI agent, including the prompt, model, and other parameters.
          * @param toolRegistry The registry of tools available for use by the agent. Defaults to an empty registry.
          * @param strategy The strategy for executing the AI agent's graph logic, including workflows and decision-making.
-         * @param id A unique identifier for the agent. Defaults to random UUID.
+         * @param id Unique identifier for the agent. Random UUID will be generated if set to null.
          * @param clock The clock to be used for time-related operations. Defaults to the system clock.
          * @param installFeatures A lambda expression to install additional features in the agent's feature context. Defaults to an empty implementation.
          * @return An instance of an AI agent configured with the specified parameters and capable of executing its logic.
@@ -172,7 +171,7 @@ public interface AIAgent<Input, Output> : Closeable {
             agentConfig: AIAgentConfig,
             strategy: AIAgentGraphStrategy<Input, Output>,
             toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
-            id: String = Uuid.random().toString(),
+            id: String? = null,
             clock: Clock = Clock.System,
             noinline installFeatures: FeatureContext.() -> Unit = {},
         ): AIAgent<Input, Output> {
@@ -197,7 +196,7 @@ public interface AIAgent<Input, Output> : Closeable {
          * @param agentConfig Configuration settings for the AI agent.
          * @param strategy The strategy to be used for the AI agent's execution graph. Defaults to a single-run strategy.
          * @param toolRegistry Registry of tools available for the AI agent to use. Defaults to an empty registry.
-         * @param id A unique identifier for the agent. Defaults to a random UUID.
+         * @param id Unique identifier for the agent. Random UUID will be generated if set to null.
          * @param installFeatures Lambda function for installing additional features into the feature context. Defaults to an empty lambda.
          * @return An instance of AIAgent configured with the graph strategy.
          */
@@ -207,7 +206,7 @@ public interface AIAgent<Input, Output> : Closeable {
             agentConfig: AIAgentConfig,
             strategy: AIAgentGraphStrategy<String, String> = singleRunStrategy(),
             toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
-            id: String = Uuid.random().toString(),
+            id: String? = null,
             installFeatures: FeatureContext.() -> Unit = {},
         ): AIAgent<String, String> = GraphAIAgent(
             inputType = typeOf<String>(),
@@ -230,7 +229,7 @@ public interface AIAgent<Input, Output> : Closeable {
          * @param agentConfig The configuration for the AI agent, including prompt setup, language model, and iteration limits.
          * @param toolRegistry The registry containing available tools for the AI agent. Defaults to an empty registry.
          * @param strategy The strategy for executing the agent's logic, including workflows and decision-making.
-         * @param id A unique identifier for the agent. Defaults to a random UUID.
+         * @param id Unique identifier for the agent. Random UUID will be generated if set to null.
          * @return A `FunctionalAIAgent` instance configured with the provided parameters and execution strategy.
          */
         @OptIn(ExperimentalUuidApi::class)
@@ -239,7 +238,7 @@ public interface AIAgent<Input, Output> : Closeable {
             agentConfig: AIAgentConfig,
             strategy: AIAgentFunctionalStrategy<Input, Output>,
             toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
-            id: String = Uuid.random().toString(),
+            id: String? = null,
             clock: Clock = Clock.System,
             installFeatures: FunctionalAIAgent.FeatureContext.() -> Unit = {},
         ): FunctionalAIAgent<Input, Output> {
@@ -261,7 +260,7 @@ public interface AIAgent<Input, Output> : Closeable {
          * @param llmModel The specific large language model to be used for the agent.
          * @param strategy The strategy that defines the agent's workflow, defaulting to the [singleRunStrategy].
          * @param toolRegistry The set of tools available for the agent, defaulting to an empty registry.
-         * @param id A unique identifier for the agent. Defaults to a random UUID.
+         * @param id Unique identifier for the agent. Random UUID will be generated if set to null.
          * @param systemPrompt The system-level prompt used as context for the agent, defaulting to an empty string.
          * @param temperature The randomness or creativity of the model's responses, with valid values ranging typically from 0.0 to 1.0. Defaults to 1.0.
          * @param numberOfChoices The number of response choices to be generated, defaulting to 1.
@@ -275,7 +274,7 @@ public interface AIAgent<Input, Output> : Closeable {
             llmModel: LLModel,
             strategy: AIAgentGraphStrategy<String, String> = singleRunStrategy(),
             toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
-            id: String = Uuid.random().toString(),
+            id: String? = null,
             systemPrompt: String = "",
             temperature: Double = 1.0,
             numberOfChoices: Int = 1,
@@ -311,7 +310,7 @@ public interface AIAgent<Input, Output> : Closeable {
          * @param llmModel The language model [LLModel] to be used by the agent.
          * @param strategy The agent strategy [AIAgentGraphStrategy] defining how the agent processes inputs and outputs.
          * @param toolRegistry An optional [ToolRegistry] specifying the tools available to the agent for execution. Defaults to `[ToolRegistry.EMPTY]`.
-         * @param id A unique identifier for the agent. Defaults to random UUID.
+         * @param id Unique identifier for the agent. Random UUID will be generated if set to null.
          * @param clock A `Clock` instance used for time-related operations. Defaults to `Clock.System`.
          * @param systemPrompt A string representing the system-level prompt for the agent. Defaults to an empty string.
          * @param temperature A double value controlling the randomness of the model's output. Defaults to `1.0`.
@@ -326,7 +325,7 @@ public interface AIAgent<Input, Output> : Closeable {
             llmModel: LLModel,
             strategy: AIAgentGraphStrategy<Input, Output>,
             toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
-            id: String = Uuid.random().toString(),
+            id: String? = null,
             clock: Clock = Clock.System,
             systemPrompt: String = "",
             temperature: Double = 1.0,
@@ -364,7 +363,7 @@ public interface AIAgent<Input, Output> : Closeable {
          * @param llmModel The language model configuration defining the underlying LLM instance and its behavior.
          * @param func The operational strategy for the AI agent, which determines how to handle the provided input.
          * @param toolRegistry Registry containing tools available to the agent for use during execution. Default is an empty registry.
-         * @param id A unique identifier for the AI agent. Defaults to random UUID.
+         * @param id Unique identifier for the agent. Random UUID will be generated if set to null.
          * @param systemPrompt The system prompt that sets the initial context or instructions for the AI agent.
          * @param temperature The temperature setting for the language model, which adjusts the diversity of output. Default is 1.0.
          * @param numberOfChoices The number of response choices to generate when querying the language model. Default is 1.

@@ -16,8 +16,6 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.executor.model.PromptExecutor
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.datetime.Clock
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 /**
  * Represents the core AI agent for processing input and generating output using
@@ -30,15 +28,17 @@ import kotlin.uuid.Uuid
  * @property agentConfig The configuration for the agent, including the prompt structure and execution parameters.
  * @property strategy The strategy for processing input and generating output.
  * @property toolRegistry The registry of tools available for the agent. Defaults to an empty registry if not specified.
+ * @property clock The clock used to calculate message timestamps
+ * @param id Unique identifier for the agent. Random UUID will be generated if set to null.
  * @property installFeatures Lambda for installing additional features within the agent environment.
  */
-@OptIn(InternalAgentsApi::class, ExperimentalUuidApi::class)
+@OptIn(InternalAgentsApi::class)
 public class FunctionalAIAgent<Input, Output>(
     public val promptExecutor: PromptExecutor,
     override val agentConfig: AIAgentConfig,
     override val strategy: AIAgentFunctionalStrategy<Input, Output>,
     public val toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
-    override val id: String = Uuid.random().toString(),
+    id: String? = null,
     public val clock: Clock = Clock.System,
     @property:InternalAgentsApi
     public val installFeatures: FeatureContext.() -> Unit = {}
@@ -52,7 +52,7 @@ public class FunctionalAIAgent<Input, Output>(
     override val pipeline: AIAgentFunctionalPipeline = AIAgentFunctionalPipeline(clock)
 
     private val environment = GenericAgentEnvironment(
-        agentId = id,
+        agentId = this.id,
         strategyId = strategy.name,
         logger = logger,
         toolRegistry = toolRegistry,

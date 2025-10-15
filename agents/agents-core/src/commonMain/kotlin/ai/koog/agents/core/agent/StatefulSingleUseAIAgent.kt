@@ -28,10 +28,12 @@ import kotlin.uuid.Uuid
  * @param Output the type of the output produced by the agent.
  * @param TContext the type of the context used during the agent's execution, extending [AIAgentContext].
  * @property logger the logger used for logging execution details and errors.
+ * @param id the unique identifier for the agent. Random UUID will be generated if set to null.
  */
 @OptIn(ExperimentalUuidApi::class)
 public abstract class StatefulSingleUseAIAgent<Input, Output, TContext : AIAgentContext>(
     protected val logger: KLogger,
+    id: String? = null,
 ) : AIAgent<Input, Output> {
     /**
      * A mutex used to synchronize access to the state of the agent. Ensures that only one coroutine
@@ -43,6 +45,8 @@ public abstract class StatefulSingleUseAIAgent<Input, Output, TContext : AIAgent
     private var state: State<Output> = NotStarted()
 
     final override suspend fun getState(): State<Output> = agentStateMutex.withLock { state.copy() }
+
+    final override val id: String by lazy { id ?: Uuid.random().toString() }
 
     /**
      * The execution strategy defining how the agent processes input and produces output.

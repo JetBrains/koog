@@ -20,7 +20,6 @@ import kotlinx.serialization.serializer
 import kotlin.reflect.KType
 import kotlin.reflect.typeOf
 import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 /**
  * [AIAgentService] is a core interface for managing AI agents. The service allows creation, removal, and
@@ -65,13 +64,13 @@ public interface AIAgentService<Input, Output, TAgent : AIAgent<Input, Output>> 
     /**
      * Creates a new instance of an AI agent with the specified parameters.
      *
-     * @param id A unique identifier for the agent. Defaults to a random UUID.
+     * @param id Unique identifier for the agent. Random UUID will be generated if set to null.
      * @param clock The clock instance used to manage time-related operations. Defaults to the system clock.
      * @return A new instance of an AI agent configured with the provided parameters.
      */
     @OptIn(ExperimentalUuidApi::class)
     public suspend fun createAgent(
-        id: String = Uuid.random().toString(),
+        id: String? = null,
         clock: Clock = Clock.System
     ): TAgent
 
@@ -80,14 +79,14 @@ public interface AIAgentService<Input, Output, TAgent : AIAgent<Input, Output>> 
      * and retrieves the resulting output.
      *
      * @param agentInput The input to be processed by the AI agent.
-     * @param id A unique identifier for the agent. Defaults to a random UUID.
+     * @param id Unique identifier for the agent. Random UUID will be generated if set to null.
      * @param clock The clock instance used to manage time-related operations. Defaults to the system clock.
      * @return The output produced by the agent after processing the input.
      */
     @OptIn(ExperimentalUuidApi::class)
     public suspend fun createAgentAndRun(
         agentInput: Input,
-        id: String = Uuid.random().toString(),
+        id: String? = null,
         clock: Clock = Clock.System
     ): Output = createAgent(id, clock).run(agentInput)
 
@@ -314,25 +313,25 @@ public abstract class AIAgentServiceBase<Input, Output, TAgent : AIAgent<Input, 
      * Creates and registers a managed AI agent with an optional identifier and clock instance.
      *
      * @param clock The clock instance used for time-related operations within the agent.
-     * @param id A unique identified for the agent. Defaults to a random UUID.
+     * @param id Unique identifier for the agent. Random UUID will be generated if set to null.
      * @return A managed AI agent instance implementing the AIAgent interface.
      */
     @OptIn(ExperimentalUuidApi::class)
     @InternalAgentsApi
     public abstract fun createManagedAgent(
-        id: String = Uuid.random().toString(),
+        id: String? = null,
         clock: Clock = Clock.System,
     ): TAgent
 
     /**
      * Creates and registers a new AI agent using the provided agent ID and clock.
      *
-     * @param id A unique identifier for the agent. Defaults to a random UUID.
+     * @param id Unique identifier for the agent. Random UUID will be generated if set to null.
      * @param clock A clock instance to manage time-related operations for the agent.
      * @return AIAgent instance with the specified configurations.
      */
     @OptIn(InternalAgentsApi::class)
-    final override suspend fun createAgent(id: String, clock: Clock): TAgent = managedAgentsMutex.withLock {
+    final override suspend fun createAgent(id: String?, clock: Clock): TAgent = managedAgentsMutex.withLock {
         val agent = createManagedAgent(id, clock)
         managedAgents[agent.id] = agent
         return agent
@@ -437,7 +436,7 @@ public constructor(
 
     @InternalAgentsApi
     override fun createManagedAgent(
-        id: String,
+        id: String?,
         clock: Clock,
     ): GraphAIAgent<Input, Output> = GraphAIAgent(
         inputType = inputType,
@@ -480,13 +479,13 @@ public constructor(
      * Creates and returns a managed instance of [FunctionalAIAgent].
      *
      * @param clock The clock instance used for time-related operations within the agent.
-     * @param id An unique identified for the agent. Defaults to a random UUID.
+     * @param id Unique identifier for the agent. Random UUID will be generated if set to null.
      * @return A managed AI agent instance implementing the AIAgent interface.
      */
     @OptIn(ExperimentalUuidApi::class)
     @InternalAgentsApi
     override fun createManagedAgent(
-        id: String,
+        id: String?,
         clock: Clock,
     ): FunctionalAIAgent<Input, Output> = FunctionalAIAgent(
         promptExecutor = promptExecutor,
