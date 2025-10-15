@@ -15,7 +15,7 @@ Before you start, make sure you have the following:
 To use Koog, you need to include all necessary dependencies in your build configuration.
 
 !!! note
-    Check the latest version in the Maven Central Repository.
+    Replace `LATEST_VERSION` with the latest version of Koog published on Maven Central.
 
 === "Gradle (Kotlin DSL)"
 
@@ -72,9 +72,15 @@ To use Koog, you need to include all necessary dependencies in your build config
         </repositories>
         ```
 
+!!! note
+    When integrating Koog with [Ktor servers](ktor-plugin.md), [Spring applications](spring-boot.md), or [MCP tools](model-context-protocol.md),
+    you need to include the additional dependencies in your build configuration.
+    For the exact dependencies, refer to the relevant pages in the Koog documentation.
+
+
 ## Set an API key
 
-!!! note
+!!! tip
     Use environment variables or a secure configuration management system to store your API keys.
     Avoid hardcoding API keys directly in your source code.
 
