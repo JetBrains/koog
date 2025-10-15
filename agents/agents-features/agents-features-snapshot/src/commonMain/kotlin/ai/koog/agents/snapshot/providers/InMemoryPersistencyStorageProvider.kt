@@ -34,7 +34,8 @@ public class InMemoryPersistenceStorageProvider() : PersistenceStorageProvider<A
             if (filter != null) {
                 return snapshotMap[agentId]?.filter { filter.check(it) }?.maxByOrNull { it.createdAt }
             }
-            return snapshotMap[agentId]?.maxBy { it.createdAt }
+
+            return snapshotMap[agentId]?.maxBy { it.version }
         }
     }
 }

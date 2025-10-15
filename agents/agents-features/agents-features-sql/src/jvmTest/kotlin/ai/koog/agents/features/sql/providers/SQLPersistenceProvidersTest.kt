@@ -32,7 +32,7 @@ class SQLPersistenceProvidersTest {
         provider.migrate()
 
         // Create and save checkpoint
-        val checkpoint = createTestCheckpoint("test-1")
+        val checkpoint = createTestCheckpoint("test-1", 0L)
         provider.saveCheckpoint(agentId, checkpoint)
 
         // Retrieve and verify
@@ -53,9 +53,13 @@ class SQLPersistenceProvidersTest {
         provider.migrate()
 
         // Save multiple checkpoints
-        provider.saveCheckpoint(agentId, createTestCheckpoint("checkpoint-1"))
-        provider.saveCheckpoint(agentId, createTestCheckpoint("checkpoint-2"))
-        provider.saveCheckpoint(agentId, createTestCheckpoint("checkpoint-3"))
+        val checkpoint1 = createTestCheckpoint("checkpoint-1", 0L)
+        val checkpoint2 = createTestCheckpoint("checkpoint-2", checkpoint1.version.plus(1))
+        val checkpoint3 = createTestCheckpoint("checkpoint-3", checkpoint2.version.plus(1))
+
+        provider.saveCheckpoint(agentId, checkpoint1)
+        provider.saveCheckpoint(agentId, checkpoint2)
+        provider.saveCheckpoint(agentId, checkpoint3)
 
         // Verify count and ordering
         val allCheckpoints = provider.getCheckpoints(agentId)
@@ -84,8 +88,8 @@ class SQLPersistenceProvidersTest {
         provider2.migrate()
 
         // Save to different agents
-        provider1.saveCheckpoint(agentId, createTestCheckpoint("agent1-data"))
-        provider2.saveCheckpoint(agentId2, createTestCheckpoint("agent2-data"))
+        provider1.saveCheckpoint(agentId, createTestCheckpoint("agent1-data", 0L))
+        provider2.saveCheckpoint(agentId2, createTestCheckpoint("agent2-data", 0L))
 
         // Verify isolation
         val agent1Checkpoints = provider1.getCheckpoints(agentId)
@@ -109,7 +113,7 @@ class SQLPersistenceProvidersTest {
         provider.migrate()
 
         // Save checkpoint
-        provider.saveCheckpoint(agentId, createTestCheckpoint("expire-soon"))
+        provider.saveCheckpoint(agentId, createTestCheckpoint("expire-soon", 0L))
         assertEquals(1, provider.getCheckpointCount(agentId))
 
         // Wait for expiration
@@ -151,7 +155,7 @@ class SQLPersistenceProvidersTest {
         )
     }
 
-    private fun createTestCheckpoint(id: String): AgentCheckpointData {
+    private fun createTestCheckpoint(id: String, version: Long): AgentCheckpointData {
         return AgentCheckpointData(
             checkpointId = id,
             createdAt = Clock.System.now(),
@@ -161,7 +165,8 @@ class SQLPersistenceProvidersTest {
                 Message.System("You are a test assistant", RequestMetaInfo.create(Clock.System)),
                 Message.User("Hello", RequestMetaInfo.create(Clock.System)),
                 Message.Assistant("Hi there!", ResponseMetaInfo.create(Clock.System))
-            )
+            ),
+            version = version
         )
     }
 }

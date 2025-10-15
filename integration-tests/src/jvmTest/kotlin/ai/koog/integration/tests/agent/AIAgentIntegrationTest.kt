@@ -700,11 +700,13 @@ class AIAgentIntegrationTest {
             val nodeSave by node<String, String>(save) { input ->
                 // Create a checkpoint
                 withPersistence { agentContext ->
+                    val parent = getLatestCheckpoint(agentContext.agentId)
                     createCheckpoint(
                         agentContext = agentContext,
                         nodeId = save,
                         lastInput = input,
                         lastInputType = typeOf<String>(),
+                        version = parent?.version?.plus(1) ?: 0
                     )
                 }
                 savedMessage
@@ -805,11 +807,13 @@ class AIAgentIntegrationTest {
 
             val nodeSave by node<String, String>(save) { input ->
                 withPersistence { agentContext ->
+                    val parent = getLatestCheckpoint(agentContext.agentId)
                     createCheckpoint(
                         agentContext = agentContext,
                         nodeId = save,
                         lastInput = input,
                         lastInputType = typeOf<String>(),
+                        version = parent?.version?.plus(1) ?: 0
                     )
                 }
                 executionLog.append(saySaveLog)
@@ -985,11 +989,13 @@ class AIAgentIntegrationTest {
 
             val nodeBye by node<String, String>(bye) { input ->
                 withPersistence { agentContext ->
+                    val parent = getLatestCheckpoint(agentContext.agentId)
                     createCheckpoint(
                         agentContext = agentContext,
                         nodeId = bye,
                         lastInput = input,
                         lastInputType = typeOf<String>(),
+                        version = parent?.version?.plus(1) ?: 0
                     )
                 }
                 sayBye

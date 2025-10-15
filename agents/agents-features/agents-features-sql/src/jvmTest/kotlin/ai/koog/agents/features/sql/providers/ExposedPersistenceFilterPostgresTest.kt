@@ -73,13 +73,19 @@ class ExposedPersistenceFilterPostgresTest {
 
         val baseTime = Clock.System.now()
 
-        // Seed data: 3 for agentId, 2 for otherAgent
-        p.saveCheckpoint(agentId, createTestCheckpoint("cp-a1", baseTime - 10.seconds))
-        p.saveCheckpoint(agentId, createTestCheckpoint("cp-a2", baseTime - 5.seconds))
-        p.saveCheckpoint(agentId, createTestCheckpoint("cp-a3", baseTime))
+        val checkpoint1 = createTestCheckpoint("cp-a1", baseTime - 10.seconds, version = 0)
+        val checkpoint2 = createTestCheckpoint("cp-a2", baseTime - 5.seconds, version = checkpoint1.version.plus(1))
+        val checkpoint3 = createTestCheckpoint("cp-a3", baseTime, version = checkpoint2.version.plus(1))
 
-        p.saveCheckpoint(otherAgent, createTestCheckpoint("cp-b1", baseTime - 7.seconds))
-        p.saveCheckpoint(otherAgent, createTestCheckpoint("cp-b2", baseTime + 1.seconds))
+        // Seed data: 3 for agentId, 2 for otherAgent
+        p.saveCheckpoint(agentId, checkpoint1)
+        p.saveCheckpoint(agentId, checkpoint2)
+        p.saveCheckpoint(agentId, checkpoint3)
+
+        val checkpointB1 = createTestCheckpoint("cp-b1", baseTime - 3.seconds, version = 0)
+        val checkpointB2 = createTestCheckpoint("cp-b2", baseTime + 2.seconds, version = checkpointB1.version.plus(1))
+        p.saveCheckpoint(otherAgent, checkpointB1)
+        p.saveCheckpoint(otherAgent, checkpointB2)
 
         // Build filter: for agentId and createdAt >= baseTime - 5s
         val filter = CreatedAfterForAgentFilter(agentId, threshold = baseTime - 5.seconds)
@@ -101,9 +107,13 @@ class ExposedPersistenceFilterPostgresTest {
         val agentId = "agent-prefix-1"
         val baseTime = Clock.System.now()
 
-        p.saveCheckpoint(agentId, createTestCheckpoint("order-001", baseTime - 2.seconds))
-        p.saveCheckpoint(agentId, createTestCheckpoint("order-002", baseTime - 1.seconds))
-        p.saveCheckpoint(agentId, createTestCheckpoint("note-001", baseTime))
+        val checkpoint1 = createTestCheckpoint("order-001", baseTime - 2.seconds, version = 0)
+        val checkpoint2 = createTestCheckpoint("order-002", baseTime - 1.seconds, version = checkpoint1.version.plus(1))
+        val checkpoint3 = createTestCheckpoint("note-001", baseTime, version = checkpoint2.version.plus(1))
+
+        p.saveCheckpoint(agentId, checkpoint1)
+        p.saveCheckpoint(agentId, checkpoint2)
+        p.saveCheckpoint(agentId, checkpoint3)
 
         val filter = CheckpointIdPrefixFilter(agentId, prefix = "order-")
 
@@ -115,7 +125,7 @@ class ExposedPersistenceFilterPostgresTest {
         assertEquals("order-002", latest.checkpointId)
     }
 
-    private fun createTestCheckpoint(id: String, createdAt: Instant): AgentCheckpointData {
+    private fun createTestCheckpoint(id: String, createdAt: Instant, version: Long): AgentCheckpointData {
         return AgentCheckpointData(
             checkpointId = id,
             createdAt = createdAt,
@@ -125,7 +135,8 @@ class ExposedPersistenceFilterPostgresTest {
                 Message.System("You are a test assistant", RequestMetaInfo.create(Clock.System)),
                 Message.User("Hello", RequestMetaInfo.create(Clock.System)),
                 Message.Assistant("Hi there!", ResponseMetaInfo.create(Clock.System))
-            )
+            ),
+            version = version
         )
     }
 
