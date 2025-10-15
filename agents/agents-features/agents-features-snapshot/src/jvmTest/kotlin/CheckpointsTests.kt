@@ -36,7 +36,6 @@ import kotlin.reflect.typeOf
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
-import kotlin.time.Duration.Companion.seconds
 
 val databaseMap: MutableMap<String, String> = mutableMapOf()
 
@@ -71,11 +70,12 @@ class CheckpointsTests {
                     println("checkpoint save")
                     withPersistence { ctx ->
                         createCheckpoint(
-                            ctx,
-                            currentNodeId ?: error("currentNodeId not set"),
-                            input,
-                            typeOf<String>(),
-                            "cpt-100500"
+                            agentContext = ctx,
+                            nodeId = currentNodeId ?: error("currentNodeId not set"),
+                            lastInput = input,
+                            lastInputType = typeOf<String>(),
+                            checkpointId = "cpt-100500",
+                            version = 0
                         )
                     }
                     input
@@ -172,8 +172,7 @@ class CheckpointsTests {
     )
 
     private fun createGraphWithOptionalToolCallAndRollback(
-        checkpointId: String,
-        appendToolCall: Boolean
+        checkpointId: String
     ): TestRollbackableStrategy {
         val commands = Channel<String>(capacity = 100500)
         val notifications = Channel<String>(capacity = 100500)
@@ -215,7 +214,8 @@ class CheckpointsTests {
                         currentNodeId ?: error("currentNodeId not set"),
                         input,
                         typeOf<String>(),
-                        checkpointId
+                        checkpointId = checkpointId,
+                        version = 0
                     )
                     llm.writeSession { updatePrompt { user { text("Checkpoint created with ID: $checkpointId") } } }
                 }
@@ -286,7 +286,7 @@ class CheckpointsTests {
             tool(DeleteKVTool)
         }
 
-        val rollbackConfig = createGraphWithOptionalToolCallAndRollback("ckpt-1", appendToolCall = true)
+        val rollbackConfig = createGraphWithOptionalToolCallAndRollback("ckpt-1")
 
         val agentService = AIAgentService(
             promptExecutor = getMockExecutor { },
@@ -311,7 +311,7 @@ class CheckpointsTests {
 
         println("before second launch")
 
-        val task2 = launch {
+        launch {
             assertEquals("after-checkpoint", rollbackConfig.notifications.receive())
             rollbackConfig.commands.send("continue")
 
@@ -359,7 +359,8 @@ class CheckpointsTests {
             messageHistory = listOf(
                 Message.User("User message", metaInfo = RequestMetaInfo(time)),
                 Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time))
-            )
+            ),
+            version = 0
         )
 
         checkpointStorageProvider.saveCheckpoint(agentId, testCheckpoint)
@@ -392,6 +393,18 @@ class CheckpointsTests {
         val time = Clock.System.now()
         val agentId = "testAgentId"
 
+        val testCheckpoint2 = AgentCheckpointData(
+            checkpointId = "testCheckpointId",
+            createdAt = time,
+            nodeId = "Node1",
+            lastInput = JsonPrimitive("Test input"),
+            messageHistory = listOf(
+                Message.User("User message", metaInfo = RequestMetaInfo(time)),
+                Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time))
+            ),
+            version = 0
+        )
+
         val testCheckpoint = AgentCheckpointData(
             checkpointId = "testCheckpointId",
             createdAt = time,
@@ -400,22 +413,12 @@ class CheckpointsTests {
             messageHistory = listOf(
                 Message.User("User message", metaInfo = RequestMetaInfo(time)),
                 Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time))
-            )
+            ),
+            version = testCheckpoint2.version + 1
         )
 
-        val testCheckpoint2 = AgentCheckpointData(
-            checkpointId = "testCheckpointId",
-            createdAt = time - 10.seconds,
-            nodeId = "Node1",
-            lastInput = JsonPrimitive("Test input"),
-            messageHistory = listOf(
-                Message.User("User message", metaInfo = RequestMetaInfo(time)),
-                Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time))
-            )
-        )
-
-        checkpointStorageProvider.saveCheckpoint(agentId, testCheckpoint)
         checkpointStorageProvider.saveCheckpoint(agentId, testCheckpoint2)
+        checkpointStorageProvider.saveCheckpoint(agentId, testCheckpoint)
 
         val agent = AIAgent(
             promptExecutor = getMockExecutor { },

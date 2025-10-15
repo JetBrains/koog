@@ -67,7 +67,7 @@ class PostgresPersistenceStorageProviderTest {
         assertEquals(0, p.getCheckpointCount(agentId))
 
         // save
-        val cp1 = createTestCheckpoint("cp-1")
+        val cp1 = createTestCheckpoint("cp-1", 0L)
         p.saveCheckpoint(agentId, cp1)
 
         // read
@@ -82,7 +82,7 @@ class PostgresPersistenceStorageProviderTest {
         assertEquals(1, p.getCheckpoints(agentId).size)
 
         // insert second
-        val cp2 = createTestCheckpoint("cp-2")
+        val cp2 = createTestCheckpoint("cp-2", cp1.version.plus(1))
         p.saveCheckpoint(agentId, cp2)
         val all = p.getCheckpoints(agentId)
         assertEquals(listOf("cp-1", "cp-2"), all.map { it.checkpointId })
@@ -102,7 +102,7 @@ class PostgresPersistenceStorageProviderTest {
         val p = provider(ttlSeconds = 1)
         p.migrate()
 
-        p.saveCheckpoint(agentId, createTestCheckpoint("will-expire"))
+        p.saveCheckpoint(agentId, createTestCheckpoint("will-expire", 0L))
         assertEquals(1, p.getCheckpointCount(agentId))
 
         // Force cleanup by calling cleanupExpired directly to avoid time-based throttle
@@ -114,7 +114,7 @@ class PostgresPersistenceStorageProviderTest {
         assertNull(p.getLatestCheckpoint(agentId))
     }
 
-    private fun createTestCheckpoint(id: String): AgentCheckpointData {
+    private fun createTestCheckpoint(id: String, version: Long): AgentCheckpointData {
         return AgentCheckpointData(
             checkpointId = id,
             createdAt = Clock.System.now(),
@@ -124,7 +124,8 @@ class PostgresPersistenceStorageProviderTest {
                 Message.System("You are a test assistant", RequestMetaInfo.create(Clock.System)),
                 Message.User("Hello", RequestMetaInfo.create(Clock.System)),
                 Message.Assistant("Hi there!", ResponseMetaInfo.create(Clock.System))
-            )
+            ),
+            version = version
         )
     }
 }
