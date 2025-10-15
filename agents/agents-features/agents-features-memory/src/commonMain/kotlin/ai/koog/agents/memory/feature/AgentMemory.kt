@@ -16,6 +16,9 @@ import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.memory.config.MemoryScopeType
 import ai.koog.agents.memory.config.MemoryScopesProfile
+import ai.koog.agents.memory.feature.similarity.EmbeddingProvider
+import ai.koog.agents.memory.feature.summarization.SummaryProvider
+import ai.koog.agents.memory.feature.summarization.SummaryResult
 import ai.koog.agents.memory.model.Concept
 import ai.koog.agents.memory.model.DefaultTimeProvider.getCurrentTimestamp
 import ai.koog.agents.memory.model.Fact
@@ -24,6 +27,7 @@ import ai.koog.agents.memory.model.MemoryScope
 import ai.koog.agents.memory.model.MemorySubject
 import ai.koog.agents.memory.model.MultipleFacts
 import ai.koog.agents.memory.model.SingleFact
+import ai.koog.agents.memory.model.TokenBudget
 import ai.koog.agents.memory.prompts.MemoryPrompts
 import ai.koog.agents.memory.providers.AgentMemoryProvider
 import ai.koog.agents.memory.providers.NoMemory
@@ -35,6 +39,7 @@ import ai.koog.prompt.structure.StructuredOutputConfig
 import ai.koog.prompt.structure.json.JsonStructuredData
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.Serializable
+import kotlin.math.max
 
 /**
  * Memory implementation for AI agents that provides persistent storage and retrieval of facts.
@@ -104,7 +109,13 @@ public class AgentMemory(
     @property:InternalAgentsApi
     public val llm: AIAgentLLMContext,
     @property:InternalAgentsApi
-    public val scopesProfile: MemoryScopesProfile
+    public val scopesProfile: MemoryScopesProfile,
+    @property:InternalAgentsApi
+    public val summaryProvider: SummaryProvider? = null,
+    @property:InternalAgentsApi
+    public val defaultTokenBudget: TokenBudget? = null,
+    @property:InternalAgentsApi
+    public val embeddingProvider: EmbeddingProvider? = null
 ) {
     private val logger = KotlinLogging.logger { }
 
@@ -170,6 +181,21 @@ public class AgentMemory(
             set(value) {
                 scopesProfile.names[MemoryScopeType.PRODUCT] = value
             }
+
+        /**
+         * Optional default token budget applied when loading facts (null keeps existing behaviour).
+         */
+        public var defaultTokenBudget: TokenBudget? = null
+
+        /**
+         * Optional provider for generating concise fact summaries.
+         */
+        public var summaryProvider: SummaryProvider? = null
+
+        /**
+         * Optional provider for similarity-based ranking when loading facts.
+         */
+        public var embeddingProvider: EmbeddingProvider? = null
 
         private companion object {
             const val UNKNOWN_NAME = "unknown"
@@ -269,7 +295,14 @@ public class AgentMemory(
             pipeline.interceptContextAgentFeature(this) { agentContext ->
                 config.agentName = agentContext.strategyName
 
-                AgentMemory(config.memoryProvider, agentContext.llm, config.scopesProfile)
+                AgentMemory(
+                    config.memoryProvider,
+                    agentContext.llm,
+                    config.scopesProfile,
+                    config.summaryProvider,
+                    config.defaultTokenBudget,
+                    config.embeddingProvider
+                )
             }
         }
 
@@ -277,7 +310,14 @@ public class AgentMemory(
             pipeline.interceptContextAgentFeature(this) { agentContext ->
                 config.agentName = agentContext.strategyName
 
-                AgentMemory(config.memoryProvider, agentContext.llm, config.scopesProfile)
+                AgentMemory(
+                    config.memoryProvider,
+                    agentContext.llm,
+                    config.scopesProfile,
+                    config.summaryProvider,
+                    config.defaultTokenBudget,
+                    config.embeddingProvider
+                )
             }
         }
     }
@@ -304,12 +344,14 @@ public class AgentMemory(
      * @param subject The subject categorization for the facts (e.g., User, Project)
      * @param scope The visibility scope for the facts (e.g., Agent, Feature, Product)
      * @param retrievalModel LLM that will be used for fact retrieval from the history (by default, the same model as the current one will be used)
+     * @param enrich When true, runs the configured [SummaryProvider] to attach summaries/keywords to the stored fact
      */
     public suspend fun saveFactsFromHistory(
         concept: Concept,
         subject: MemorySubject,
         scope: MemoryScope,
-        retrievalModel: LLModel? = null
+        retrievalModel: LLModel? = null,
+        enrich: Boolean = true
     ) {
         llm.writeSession {
             val initialModel = model
@@ -318,10 +360,11 @@ public class AgentMemory(
                 logger.info { "Using model: ${retrievalModel.id}" }
             }
             val facts = retrieveFactsFromHistory(concept)
+            val factToSave = enrichFactIfNeeded(facts, enrich)
 
             // Save facts to memory
-            agentMemory.save(facts, subject, scope)
-            logger.info { "Saved fact for concept '${concept.keyword}' in scope $scope: $facts" }
+            agentMemory.save(factToSave, subject, scope)
+            logger.info { "Saved fact for concept '${concept.keyword}' in scope $scope: $factToSave" }
             if (retrievalModel != null) {
                 model = initialModel
                 logger.info { "Switching back to model: ${initialModel.id}" }
@@ -352,13 +395,17 @@ public class AgentMemory(
      * @param concept The concept to load facts about
      * @param scopes List of memory scopes to search in (Agent, Feature, etc.). By default all scopes are used.
      * @param subjects List of subjects to search in (User, Project, etc.). By default all registered subjects are used.
+     * @param budget Optional token budget limiting the total number of injected facts and their combined size
+     * @param query Optional similarity query text used for relevance ranking when an [EmbeddingProvider] is available
      */
     @OptIn(InternalAgentsApi::class)
     public suspend fun loadFactsToAgent(
         concept: Concept,
         scopes: List<MemoryScopeType> = MemoryScopeType.entries,
         subjects: List<MemorySubject> = MemorySubject.registeredSubjects,
-    ): Unit = loadFactsToAgentImpl(scopes, subjects) { subject, scope ->
+        budget: TokenBudget? = defaultTokenBudget,
+        query: String? = null,
+    ): Unit = loadFactsToAgentImpl(scopes, subjects, budget, query) { subject, scope ->
         agentMemory.load(concept, subject, scope)
     }
 
@@ -380,11 +427,15 @@ public class AgentMemory(
      *
      * @param scopes List of memory scopes to search in (Agent, Feature, etc.). By default all scopes are used.
      * @param subjects List of subjects to search in (User, Project, etc.). By default all registered subjects are used.
+     * @param budget Optional token budget limiting the total number of injected facts and their combined size
+     * @param query Optional similarity query text used for relevance ranking when an [EmbeddingProvider] is available
      */
     public suspend fun loadAllFactsToAgent(
         scopes: List<MemoryScopeType> = MemoryScopeType.entries,
         subjects: List<MemorySubject> = MemorySubject.registeredSubjects,
-    ): Unit = loadFactsToAgentImpl(scopes, subjects, agentMemory::loadAll)
+        budget: TokenBudget? = defaultTokenBudget,
+        query: String? = null,
+    ): Unit = loadFactsToAgentImpl(scopes, subjects, budget, query, agentMemory::loadAll)
 
     /**
      * Implementation method for loading facts from memory and adding them to the LLM chat history.
@@ -403,10 +454,12 @@ public class AgentMemory(
     private suspend fun loadFactsToAgentImpl(
         scopes: List<MemoryScopeType>,
         subjects: List<MemorySubject>,
+        budget: TokenBudget?,
+        query: String?,
         loadFacts: suspend (subject: MemorySubject, scope: MemoryScope) -> List<Fact>
     ) {
         // Load facts for all matching scopes
-        val facts = mutableListOf<Fact>()
+        val collectedFacts = mutableListOf<Fact>()
 
         // Sort subjects by specificity (MACHINE -> USER -> PROJECT -> ORGANIZATION)
         val sortedSubjects = subjects.sortedBy { it.priorityLevel }
@@ -441,7 +494,7 @@ public class AgentMemory(
 
                         is MultipleFacts -> {
                             logger.info { "Adding multiple facts: ${fact.values.joinToString()}" }
-                            facts.add(fact)
+                            collectedFacts.add(fact)
                         }
                     }
                 }
@@ -450,11 +503,17 @@ public class AgentMemory(
 
         logger.info { "Single facts by keyword: ${singleFactsByKeyword.mapValues { it.value.second.value }}" }
         // Add the most specific single facts to the result
-        facts.addAll(singleFactsByKeyword.values.map { it.second })
+        collectedFacts.addAll(singleFactsByKeyword.values.map { it.second })
 
-        val factsByConcept = facts.groupBy { it.concept }
+        val rankedFacts = rankFactsIfNeeded(collectedFacts, query)
+        val budgetedFacts = applyTokenBudget(rankedFacts, budget)
+        val droppedFacts = rankedFacts.size - budgetedFacts.size
+        val factsByConcept = budgetedFacts.groupBy { it.concept }
 
-        logger.info { "Found ${facts.size} facts for ${factsByConcept.size} concepts" }
+        logger.info {
+            "Found ${budgetedFacts.size} facts for ${factsByConcept.size} concepts " +
+                "(query='${query ?: "n/a"}', budget=${budget?.maxTokens ?: "∞"}/${budget?.maxFacts ?: "∞"}, dropped=$droppedFacts)"
+        }
 
         // Add facts to LLM chat history
         if (factsByConcept.isNotEmpty()) {
@@ -467,13 +526,18 @@ public class AgentMemory(
                         facts.forEach { fact ->
                             when (fact) {
                                 is SingleFact -> appendLine(
-                                    "- [${fact.concept.keyword}]: ${fact.value}"
+                                    "- [${fact.concept.keyword}]: ${fact.summary ?: fact.value}"
                                 )
 
                                 is MultipleFacts -> {
-                                    appendLine("- [${fact.concept.keyword}]:")
-                                    fact.values.forEach { value ->
-                                        appendLine("  - $value")
+                                    val summary = fact.summary
+                                    if (summary != null) {
+                                        appendLine("- [${fact.concept.keyword}]: $summary")
+                                    } else {
+                                        appendLine("- [${fact.concept.keyword}]:")
+                                        fact.values.forEach { value ->
+                                            appendLine("  - $value")
+                                        }
                                     }
                                 }
                             }
@@ -485,7 +549,106 @@ public class AgentMemory(
                     logger.info { "Prompt updated" }
                 }
             }
-            logger.info { "Loaded ${facts.size} facts into LLM memory" }
+            logger.info { "Loaded ${budgetedFacts.size} facts into LLM memory" }
+        }
+    }
+
+    private suspend fun rankFactsIfNeeded(facts: List<Fact>, query: String?): List<Fact> {
+        val provider = embeddingProvider ?: return facts
+        val sanitizedQuery = query?.takeIf { it.isNotBlank() } ?: return facts
+
+        return try {
+            val queryEmbedding = provider.embed(sanitizedQuery)
+            val scored = facts.map { fact ->
+                val text = fact.displayText()
+                val embedding = provider.embed(text)
+                val score = provider.similarity(queryEmbedding, embedding)
+                fact to score
+            }
+            scored.sortedByDescending { it.second }.map { it.first }
+        } catch (throwable: Throwable) {
+            logger.warn(throwable) { "Failed to rank facts by similarity – returning original order" }
+            facts
+        }
+    }
+
+    private fun applyTokenBudget(facts: List<Fact>, budget: TokenBudget?): List<Fact> {
+        val effectiveBudget = budget ?: return facts
+        if (effectiveBudget.maxFacts <= 0 || effectiveBudget.maxTokens <= 0) return emptyList()
+
+        var tokens = 0
+        val result = mutableListOf<Fact>()
+        for (fact in facts) {
+            if (result.size >= effectiveBudget.maxFacts) break
+            val estimate = estimateTokensForFact(fact)
+            if (tokens + estimate > effectiveBudget.maxTokens) {
+                continue
+            }
+            result.add(fact)
+            tokens += estimate
+        }
+
+        if (result.isEmpty() && facts.isNotEmpty()) {
+            result.add(facts.first())
+        }
+
+        return result
+    }
+
+    private fun estimateTokensForFact(fact: Fact): Int = when (fact) {
+        is SingleFact -> estimateTokens(fact.summary ?: fact.value)
+        is MultipleFacts -> {
+            val summary = fact.summary
+            if (summary != null) {
+                estimateTokens(summary)
+            } else {
+                fact.values.sumOf { estimateTokens(it) } + 1
+            }
+        }
+    }
+
+    private fun estimateTokens(text: String): Int = max(1, text.length / 4 + 1)
+
+    private fun Fact.displayText(): String = when (this) {
+        is SingleFact -> summary ?: value
+        is MultipleFacts -> summary ?: values.joinToString(separator = " ")
+    }
+}
+
+private val enrichmentLogger = KotlinLogging.logger { }
+
+@PublishedApi
+@OptIn(InternalAgentsApi::class)
+internal suspend fun AgentMemory.enrichFactIfNeeded(fact: Fact, enrich: Boolean): Fact {
+    if (!enrich) return fact
+    val provider = summaryProvider ?: return fact
+    return try {
+        val result = provider.summarize(fact)
+        fact.withSummary(result)
+    } catch (throwable: Throwable) {
+        enrichmentLogger.warn(throwable) { "Failed to enrich fact '${fact.concept.keyword}' – using original fact" }
+        fact
+    }
+}
+
+private fun Fact.withSummary(result: SummaryResult): Fact = when (this) {
+    is SingleFact -> {
+        val newSummary = result.summary ?: summary
+        val newKeywords = if (result.keywords.isEmpty()) keywords else result.keywords
+        if (newSummary == summary && newKeywords == keywords) {
+            this
+        } else {
+            copy(summary = newSummary, keywords = newKeywords)
+        }
+    }
+
+    is MultipleFacts -> {
+        val newSummary = result.summary ?: summary
+        val newKeywords = if (result.keywords.isEmpty()) keywords else result.keywords
+        if (newSummary == summary && newKeywords == keywords) {
+            this
+        } else {
+            copy(summary = newSummary, keywords = newKeywords)
         }
     }
 }

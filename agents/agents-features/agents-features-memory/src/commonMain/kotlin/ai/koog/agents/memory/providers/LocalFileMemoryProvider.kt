@@ -4,6 +4,8 @@ import ai.koog.agents.memory.model.Concept
 import ai.koog.agents.memory.model.Fact
 import ai.koog.agents.memory.model.MemoryScope
 import ai.koog.agents.memory.model.MemorySubject
+import ai.koog.agents.memory.model.MultipleFacts
+import ai.koog.agents.memory.model.SingleFact
 import ai.koog.agents.memory.storage.Storage
 import ai.koog.rag.base.files.FileSystemProvider
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -316,8 +318,23 @@ public data class LocalFileMemoryProvider<Path>(
         val path = getStoragePath(subject, scope)
         val facts = loadFacts(path)
 
+        val loweredDescription = description.lowercase()
         return facts.values.flatten().filter { fact ->
-            fact.concept.description.contains(description, ignoreCase = true)
+            fact.concept.description.contains(description, ignoreCase = true) ||
+                fact.concept.keyword.contains(description, ignoreCase = true) ||
+                when (fact) {
+                    is SingleFact -> {
+                        fact.value.contains(description, ignoreCase = true) ||
+                            (fact.summary?.contains(description, ignoreCase = true) == true) ||
+                            fact.keywords.any { it.contains(loweredDescription, ignoreCase = true) }
+                    }
+
+                    is MultipleFacts -> {
+                        fact.summary?.contains(description, ignoreCase = true) == true ||
+                            fact.values.any { it.contains(description, ignoreCase = true) } ||
+                            fact.keywords.any { it.contains(loweredDescription, ignoreCase = true) }
+                    }
+                }
         }
     }
 }

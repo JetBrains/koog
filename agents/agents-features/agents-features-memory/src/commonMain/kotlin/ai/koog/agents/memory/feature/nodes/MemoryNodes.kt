@@ -5,6 +5,7 @@ import ai.koog.agents.core.dsl.builder.AIAgentBuilderDslMarker
 import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.memory.config.MemoryScopeType
+import ai.koog.agents.memory.feature.enrichFactIfNeeded
 import ai.koog.agents.memory.feature.withMemory
 import ai.koog.agents.memory.model.Concept
 import ai.koog.agents.memory.model.DefaultTimeProvider
@@ -13,6 +14,7 @@ import ai.koog.agents.memory.model.FactType
 import ai.koog.agents.memory.model.MemorySubject
 import ai.koog.agents.memory.model.MultipleFacts
 import ai.koog.agents.memory.model.SingleFact
+import ai.koog.agents.memory.model.TokenBudget
 import ai.koog.agents.memory.prompts.MemoryPrompts
 import ai.koog.prompt.llm.LLModel
 import kotlinx.serialization.Serializable
@@ -34,8 +36,10 @@ public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeLoadFromMemor
     name: String? = null,
     concept: Concept,
     subject: MemorySubject,
-    scope: MemoryScopeType = MemoryScopeType.AGENT
-): AIAgentNodeDelegate<T, T> = nodeLoadFromMemory(name, listOf(concept), listOf(subject), listOf(scope))
+    scope: MemoryScopeType = MemoryScopeType.AGENT,
+    budget: TokenBudget? = null,
+    query: String? = null
+): AIAgentNodeDelegate<T, T> = nodeLoadFromMemory(name, listOf(concept), listOf(subject), listOf(scope), budget, query)
 
 /**
  * Node that loads facts from memory for a given concept
@@ -49,8 +53,10 @@ public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeLoadFromMemor
     name: String? = null,
     concepts: List<Concept>,
     subject: MemorySubject,
-    scope: MemoryScopeType = MemoryScopeType.AGENT
-): AIAgentNodeDelegate<T, T> = nodeLoadFromMemory(name, concepts, listOf(subject), listOf(scope))
+    scope: MemoryScopeType = MemoryScopeType.AGENT,
+    budget: TokenBudget? = null,
+    query: String? = null
+): AIAgentNodeDelegate<T, T> = nodeLoadFromMemory(name, concepts, listOf(subject), listOf(scope), budget, query)
 
 /**
  * Node that loads facts from memory for a given concept
@@ -65,11 +71,13 @@ public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeLoadFromMemor
     name: String? = null,
     concepts: List<Concept>,
     subjects: List<MemorySubject> = MemorySubject.registeredSubjects,
-    scopes: List<MemoryScopeType> = MemoryScopeType.entries
+    scopes: List<MemoryScopeType> = MemoryScopeType.entries,
+    budget: TokenBudget? = null,
+    query: String? = null
 ): AIAgentNodeDelegate<T, T> = node(name) { input ->
     withMemory {
         concepts.forEach { concept ->
-            loadFactsToAgent(concept, scopes, subjects)
+            loadFactsToAgent(concept, scopes, subjects, budget, query)
         }
     }
 
@@ -87,10 +95,12 @@ public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeLoadFromMemor
 public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeLoadAllFactsFromMemory(
     name: String? = null,
     subjects: List<MemorySubject> = MemorySubject.registeredSubjects,
-    scopes: List<MemoryScopeType> = MemoryScopeType.entries
+    scopes: List<MemoryScopeType> = MemoryScopeType.entries,
+    budget: TokenBudget? = null,
+    query: String? = null
 ): AIAgentNodeDelegate<T, T> = node(name) { input ->
     withMemory {
-        loadAllFactsToAgent(scopes, subjects)
+        loadAllFactsToAgent(scopes, subjects, budget, query)
     }
 
     input
@@ -111,7 +121,8 @@ public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeSaveToMemory(
     subject: MemorySubject,
     scope: MemoryScopeType,
     concepts: List<Concept>,
-    retrievalModel: LLModel? = null
+    retrievalModel: LLModel? = null,
+    enrich: Boolean = true
 ): AIAgentNodeDelegate<T, T> = node(name) { input ->
     withMemory {
         concepts.forEach { concept ->
@@ -119,7 +130,8 @@ public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeSaveToMemory(
                 concept = concept,
                 subject = subject,
                 scope = scopesProfile.getScope(scope) ?: return@forEach,
-                retrievalModel = retrievalModel
+                retrievalModel = retrievalModel,
+                enrich = enrich
             )
         }
     }
@@ -141,8 +153,9 @@ public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeSaveToMemory(
     concept: Concept,
     subject: MemorySubject,
     scope: MemoryScopeType,
-    retrievalModel: LLModel? = null
-): AIAgentNodeDelegate<T, T> = nodeSaveToMemory(name, subject, scope, listOf(concept), retrievalModel)
+    retrievalModel: LLModel? = null,
+    enrich: Boolean = true
+): AIAgentNodeDelegate<T, T> = nodeSaveToMemory(name, subject, scope, listOf(concept), retrievalModel, enrich)
 
 /**
  * Node that automatically detects and extracts facts from the chat history and saves them to memory.
@@ -160,7 +173,8 @@ public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeSaveToMemoryA
     name: String? = null,
     scopes: List<MemoryScopeType> = listOf(MemoryScopeType.AGENT),
     subjects: List<MemorySubject> = MemorySubject.registeredSubjects,
-    retrievalModel: LLModel? = null
+    retrievalModel: LLModel? = null,
+    enrich: Boolean = true
 ): AIAgentNodeDelegate<T, T> = node(name) { input ->
     llm.writeSession {
         val initialModel = model
@@ -179,7 +193,8 @@ public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeSaveToMemoryA
             scopes.mapNotNull(scopesProfile::getScope).forEach { scope ->
                 val facts = parseFactsFromResponse(response.content)
                 facts.forEach { (subject, fact) ->
-                    agentMemory.save(fact, subject, scope)
+                    val factToSave = enrichFactIfNeeded(fact, enrich)
+                    agentMemory.save(factToSave, subject, scope)
                 }
             }
         }

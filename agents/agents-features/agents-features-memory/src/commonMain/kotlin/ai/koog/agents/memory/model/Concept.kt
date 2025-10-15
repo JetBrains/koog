@@ -94,7 +94,9 @@ public sealed interface Fact {
 public data class SingleFact(
     override val concept: Concept,
     override val timestamp: Long,
-    val value: String
+    val value: String,
+    val summary: String? = null,
+    val keywords: List<String> = emptyList()
 ) : Fact
 
 /**
@@ -108,7 +110,9 @@ public data class SingleFact(
 public data class MultipleFacts(
     override val concept: Concept,
     override val timestamp: Long,
-    val values: List<String>
+    val values: List<String>,
+    val summary: String? = null,
+    val keywords: List<String> = emptyList()
 ) : Fact
 
 /**
