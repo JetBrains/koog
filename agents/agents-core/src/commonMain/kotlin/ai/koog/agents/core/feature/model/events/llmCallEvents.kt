@@ -5,6 +5,7 @@ import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.message.Message
 import kotlinx.datetime.Clock
+import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 
 /**
@@ -26,7 +27,7 @@ import kotlinx.serialization.Serializable
 public data class LLMCallStartingEvent(
     val runId: String,
     val prompt: Prompt,
-    val model: ModelInfo,
+    @Contextual val model: ModelInfo,
     val tools: List<String>,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent() {
@@ -82,7 +83,7 @@ public data class LLMCallStartingEvent(
 public data class LLMCallCompletedEvent(
     val runId: String,
     val prompt: Prompt,
-    val model: ModelInfo,
+    @Contextual val model: ModelInfo,
     val responses: List<Message.Response>,
     val moderationResponse: ModerationResult? = null,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),

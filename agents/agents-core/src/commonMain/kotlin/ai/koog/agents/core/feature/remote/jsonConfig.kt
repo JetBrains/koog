@@ -26,7 +26,6 @@ import ai.koog.agents.core.feature.model.events.ToolCallCompletedEvent
 import ai.koog.agents.core.feature.model.events.ToolCallFailedEvent
 import ai.koog.agents.core.feature.model.events.ToolCallStartingEvent
 import ai.koog.agents.core.feature.model.events.ToolValidationFailedEvent
-import ai.koog.agents.utils.ModelInfo
 import io.ktor.utils.io.InternalAPI
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.KSerializer
@@ -163,10 +162,6 @@ public val defaultFeatureMessageSerializersModule: SerializersModule
             subclass(LLMStreamingFrameReceivedEvent::class, LLMStreamingFrameReceivedEvent.serializer())
             subclass(LLMStreamingFailedEvent::class, LLMStreamingFailedEvent.serializer())
             subclass(LLMStreamingCompletedEvent::class, LLMStreamingCompletedEvent.serializer())
-        }
-
-        polymorphic(ModelInfo::class) {
-            subclass(ModelInfo::class, ModelInfo.serializer())
         }
 
         polymorphic(StrategyStartingEvent::class) {
