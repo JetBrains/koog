@@ -1,7 +1,6 @@
 package ai.koog.agents.core.environment
 
-import ai.koog.agents.core.agent.AIAgentTerminationByClientException
-import ai.koog.agents.core.engine.UnexpectedAIAgentMessageException
+import ai.koog.agents.core.agent.exception.AIAgentTerminationByClientException
 import ai.koog.agents.core.model.message.EnvironmentToAgentErrorMessage
 import ai.koog.agents.core.model.message.EnvironmentToAgentMessage
 import ai.koog.agents.core.model.message.EnvironmentToAgentTerminationMessage
@@ -30,7 +29,7 @@ internal object AIAgentEnvironmentUtils {
             }
 
             else -> {
-                throw UnexpectedAIAgentMessageException()
+                throw IllegalStateException("Unexpected message for agent")
             }
         }
     }

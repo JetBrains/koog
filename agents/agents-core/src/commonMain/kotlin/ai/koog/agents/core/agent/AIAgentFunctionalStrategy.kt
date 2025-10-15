@@ -1,19 +1,20 @@
 package ai.koog.agents.core.agent
 
+import ai.koog.agents.core.agent.context.AIAgentFunctionalContext
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
 
 /**
  * A strategy for implementing AI agent behavior that operates in a loop-based manner.
  *
  * The [AIAgentFunctionalStrategy] class allows for the definition of a custom looping logic
- * that processes input and produces output by utilizing an [AIAgentFunctionalContext]. This strategy
+ * that processes input and produces output by utilizing an [ai.koog.agents.core.agent.context.AIAgentFunctionalContext]. This strategy
  * can be used to define iterative decision-making or execution processes for AI agents.
  *
  * @param TInput The type of input data processed by the strategy.
  * @param TOutput The type of output data produced by the strategy.
  * @property name The name of the strategy, providing a way to identify and describe the strategy.
  * @property func A suspending function representing the loop logic for the strategy. It accepts
- * input data of type [TInput] and an [AIAgentFunctionalContext] to execute the loop and produce the output.
+ * input data of type [TInput] and an [ai.koog.agents.core.agent.context.AIAgentFunctionalContext] to execute the loop and produce the output.
  */
 public class AIAgentFunctionalStrategy<TInput, TOutput>(
     override val name: String,

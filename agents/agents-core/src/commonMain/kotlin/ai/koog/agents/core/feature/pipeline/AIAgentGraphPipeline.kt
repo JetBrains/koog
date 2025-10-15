@@ -1,8 +1,9 @@
-package ai.koog.agents.core.feature
+package ai.koog.agents.core.feature.pipeline
 
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
+import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.handler.node.NodeExecutionCompletedContext
 import ai.koog.agents.core.feature.handler.node.NodeExecutionCompletedHandler
@@ -34,22 +35,22 @@ public class AIAgentGraphPipeline(clock: Clock = Clock.System) : AIAgentPipeline
      * This method initializes the feature with a custom configuration and registers it in the pipeline.
      * The feature's message processors are initialized during installation.
      *
-     * @param Config The type of the feature configuration
-     * @param Feature The type of the feature being installed
+     * @param TConfig The type of the feature configuration
+     * @param TFeature The type of the feature being installed
      * @param feature The feature implementation to be installed
      * @param configure A lambda to customize the feature configuration
      */
-    public fun <Config : FeatureConfig, Feature : Any> install(
-        feature: AIAgentGraphFeature<Config, Feature>,
-        configure: Config.() -> Unit
+    public fun <TConfig : FeatureConfig, TFeature : Any> install(
+        feature: AIAgentGraphFeature<TConfig, TFeature>,
+        configure: TConfig.() -> Unit,
     ) {
-        val config = feature.createInitialConfig().apply { configure() }
-        feature.install(
-            config = config,
+        val featureConfig = feature.createInitialConfig().apply { configure() }
+        val featureImpl = feature.install(
+            config = featureConfig,
             pipeline = this,
         )
 
-        registeredFeatures[feature.key] = config
+        registeredFeatures[feature.key] = RegisteredFeature(featureImpl, featureConfig)
     }
 
     //region Trigger Node Handlers
@@ -114,67 +115,72 @@ public class AIAgentGraphPipeline(clock: Clock = Clock.System) : AIAgentPipeline
     /**
      * Intercepts node execution before it starts.
      *
+     * @param feature The feature associated with this handler.
      * @param handle The handler that processes before-node events
      *
      * Example:
      * ```
-     * pipeline.interceptNodeExecutionStarting(interceptContext) { eventContext ->
+     * pipeline.interceptNodeExecutionStarting(feature) { eventContext ->
      *     logger.info("Node ${eventContext.node.name} is about to execute with input: ${eventContext.input}")
      * }
      * ```
      */
-    public fun <TFeature : Any> interceptNodeExecutionStarting(
-        interceptContext: InterceptContext<TFeature>,
-        handle: suspend TFeature.(eventContext: NodeExecutionStartingContext) -> Unit
+    public fun interceptNodeExecutionStarting(
+        feature: AIAgentGraphFeature<*, *>,
+        handle: suspend (eventContext: NodeExecutionStartingContext) -> Unit
     ) {
-        val handler = executeNodeHandlers.getOrPut(interceptContext.feature.key) { NodeExecutionEventHandler() }
+        val handler = executeNodeHandlers.getOrPut(feature.key) { NodeExecutionEventHandler() }
+
         handler.nodeExecutionStartingHandler = NodeExecutionStartingHandler(
-            function = createConditionalHandler(interceptContext, handle)
+            function = createConditionalHandler(feature, handle)
         )
     }
 
     /**
      * Intercepts node execution after it completes.
      *
+     * @param feature The feature associated with this handler.
      * @param handle The handler that processes after-node events
      *
      * Example:
      * ```
-     * pipeline.interceptNodeExecutionCompleted(interceptContext) { eventContext ->
+     * pipeline.interceptNodeExecutionCompleted(feature) { eventContext ->
      *     logger.info("Node ${eventContext.node.name} executed with input: ${eventContext.input} and produced output: ${eventContext.output}")
      * }
      * ```
      */
-    public fun <TFeature : Any> interceptNodeExecutionCompleted(
-        interceptContext: InterceptContext<TFeature>,
-        handle: suspend TFeature.(eventContext: NodeExecutionCompletedContext) -> Unit
+    public fun interceptNodeExecutionCompleted(
+        feature: AIAgentGraphFeature<*, *>,
+        handle: suspend (eventContext: NodeExecutionCompletedContext) -> Unit
     ) {
-        val handler = executeNodeHandlers.getOrPut(interceptContext.feature.key) { NodeExecutionEventHandler() }
+        val handler = executeNodeHandlers.getOrPut(feature.key) { NodeExecutionEventHandler() }
+
         handler.nodeExecutionCompletedHandler = NodeExecutionCompletedHandler(
-            function = createConditionalHandler(interceptContext, handle)
+            function = createConditionalHandler(feature, handle)
         )
     }
 
     /**
      * Intercepts and handles node execution errors for a given feature.
      *
-     * @param interceptContext The context containing the feature and its implementation required for interception.
-     * @param handle A suspend function that processes the node execution error within the scope of the provided feature.
+     * @param feature The feature associated with this handler.
+     * @param handle A suspend function that processes the node execution error.
      *
      * Example:
      * ```
-     * pipeline.interceptNodeExecutionFailed(interceptContext) { eventContext ->
+     * pipeline.interceptNodeExecutionFailed(feature) { eventContext ->
      *     logger.error("Node ${eventContext.node.name} execution failed with error: ${eventContext.throwable}")
      * }
      * ```
      */
-    public fun <TFeature : Any> interceptNodeExecutionFailed(
-        interceptContext: InterceptContext<TFeature>,
-        handle: suspend TFeature.(eventContext: NodeExecutionFailedContext) -> Unit
+    public fun interceptNodeExecutionFailed(
+        feature: AIAgentGraphFeature<*, *>,
+        handle: suspend (eventContext: NodeExecutionFailedContext) -> Unit
     ) {
-        val handler = executeNodeHandlers.getOrPut(interceptContext.feature.key) { NodeExecutionEventHandler() }
+        val handler = executeNodeHandlers.getOrPut(feature.key) { NodeExecutionEventHandler() }
+
         handler.nodeExecutionFailedHandler = NodeExecutionFailedHandler(
-            function = createConditionalHandler(interceptContext, handle)
+            function = createConditionalHandler(feature, handle)
         )
     }
 

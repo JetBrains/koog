@@ -257,34 +257,6 @@ class AIAgentPipelineTest {
     }
 
     @Test
-    @JsName("testPipelineInterceptorsForStageContextEvents")
-    fun `test pipeline interceptors for stage context events`() = runTest {
-        val interceptedEvents = mutableListOf<String>()
-        val strategy = strategy<String, String>("test-interceptors-strategy") {
-            edge(nodeStart forwardTo nodeFinish transformed { "Done" })
-        }
-
-        val agentInput = "Hello World!"
-        createAgent(strategy = strategy) {
-            install(TestFeature) { events = interceptedEvents }
-        }.use { agent ->
-            agent.run(agentInput)
-        }
-
-        val actualEvents = interceptedEvents.filter { it.startsWith("Agent Context: ") }
-        val expectedEvents = listOf(
-            "Agent Context: request features from agent context"
-        )
-
-        assertEquals(
-            expectedEvents.size,
-            actualEvents.size,
-            "Miss intercepted events. Expected ${expectedEvents.size}, but received: ${actualEvents.size}"
-        )
-        assertContentEquals(expectedEvents, actualEvents)
-    }
-
-    @Test
     @JsName("testSeveralAgentsShareOnePipeline")
     fun `test several agents share one pipeline`() = runTest {
         val interceptedEvents = mutableListOf<String>()

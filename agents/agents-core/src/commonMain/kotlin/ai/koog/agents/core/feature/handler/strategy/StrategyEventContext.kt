@@ -16,15 +16,12 @@ public interface StrategyEventContext : AgentLifecycleEventContext
 /**
  * Represents the context for updating AI agent strategies during execution.
  *
- * @param TFeature The type of feature associated with the strategy update.
  * @property runId A unique identifier for the session during which the strategy is being updated.
  * @property strategy The strategy being updated, encapsulating the AI agent's workflow logic.
- * @property feature The feature bound to the strategy update, providing additional contextual information.
  */
-public class StrategyStartingContext<TFeature>(
+public class StrategyStartingContext(
     public val runId: String,
     public val strategy: AIAgentStrategy<*, *, *>,
-    public val feature: TFeature,
     public val context: AIAgentContext,
 ) : StrategyEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.StrategyStarting
@@ -33,17 +30,14 @@ public class StrategyStartingContext<TFeature>(
 /**
  * Represents the context associated with the completion of an AI agent strategy execution.
  *
- * @param TFeature The type of feature associated with the strategy update.
  * @property runId A unique identifier for the session during which the strategy is being updated.
  * @property strategy The strategy being updated, encapsulating the AI agent's workflow logic.
- * @property feature The feature bound to the strategy update, providing additional contextual information.
  * @property result Strategy result.
  * @property resultType [KType] representing the type of the [result]
  */
-public class StrategyCompletedContext<TFeature>(
+public class StrategyCompletedContext(
     public val runId: String,
     public val strategy: AIAgentStrategy<*, *, *>,
-    public val feature: TFeature,
     public val result: Any?,
     public val resultType: KType,
     public val agentId: String

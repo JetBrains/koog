@@ -2,7 +2,7 @@ package ai.koog.agents.core.environment
 
 import ai.koog.agents.core.agent.context.element.getAgentRunInfoElementOrThrow
 import ai.koog.agents.core.environment.AIAgentEnvironmentUtils.mapToToolResult
-import ai.koog.agents.core.feature.AIAgentPipeline
+import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
 import ai.koog.agents.core.model.message.AIAgentEnvironmentToolResultToAgentContent
 import ai.koog.agents.core.model.message.AgentToolCallToEnvironmentContent
 import ai.koog.agents.core.model.message.AgentToolCallsToEnvironmentMessage

@@ -4,13 +4,14 @@ import ai.koog.a2a.model.MessageSendParams
 import ai.koog.a2a.server.session.RequestContext
 import ai.koog.a2a.server.session.SessionEventProcessor
 import ai.koog.agents.core.agent.context.AIAgentContext
+import ai.koog.agents.core.agent.context.featureOrThrow
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.entity.createStorageKey
+import ai.koog.agents.core.feature.AIAgentFunctionalFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
-import ai.koog.agents.core.feature.AIAgentGraphPipeline
-import ai.koog.agents.core.feature.AIAgentNonGraphFeature
-import ai.koog.agents.core.feature.AIAgentNonGraphPipeline
 import ai.koog.agents.core.feature.config.FeatureConfig
+import ai.koog.agents.core.feature.pipeline.AIAgentFunctionalPipeline
+import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
@@ -57,31 +58,36 @@ public class A2AAgentServer(
         public lateinit var eventProcessor: SessionEventProcessor
     }
 
+    /**
+     * Companion object implementing agent feature, handling [A2AAgentServer] creation and installation.
+     */
     public companion object Feature :
         AIAgentGraphFeature<Config, A2AAgentServer>,
-        AIAgentNonGraphFeature<Config, A2AAgentServer> {
+        AIAgentFunctionalFeature<Config, A2AAgentServer> {
 
         override val key: AIAgentStorageKey<A2AAgentServer> =
             createStorageKey<A2AAgentServer>("agents-features-a2a-server")
 
         override fun createInitialConfig(): Config = Config()
 
+        /**
+         * Creates a feature implementation using the provided configuration.
+         */
+        private fun createFeature(config: Config): A2AAgentServer =
+            A2AAgentServer(config.context, config.eventProcessor)
+
         override fun install(
             config: Config,
-            pipeline: AIAgentGraphPipeline
-        ) {
-            pipeline.interceptContextAgentFeature(this) { _ ->
-                A2AAgentServer(config.context, config.eventProcessor)
-            }
+            pipeline: AIAgentGraphPipeline,
+        ): A2AAgentServer {
+            return createFeature(config)
         }
 
         override fun install(
             config: Config,
-            pipeline: AIAgentNonGraphPipeline
-        ) {
-            pipeline.interceptContextAgentFeature(this) {
-                A2AAgentServer(config.context, config.eventProcessor)
-            }
+            pipeline: AIAgentFunctionalPipeline,
+        ): A2AAgentServer {
+            return createFeature(config)
         }
     }
 }

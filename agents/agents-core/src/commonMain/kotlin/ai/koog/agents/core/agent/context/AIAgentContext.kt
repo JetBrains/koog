@@ -1,6 +1,5 @@
 package ai.koog.agents.core.agent.context
 
-import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
@@ -8,7 +7,9 @@ import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.AIAgentFeature
+import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
 import ai.koog.prompt.message.Message
+import kotlin.reflect.KClass
 
 /**
  * The [AIAgentContext] interface represents the context of an AI agent in the lifecycle.
@@ -28,16 +29,14 @@ public interface AIAgentContext {
     public val environment: AIAgentEnvironment
 
     /**
-     * Represents the [AIAgent] holding the current [AIAgentContext].
-     *
+     * A unique identifier representing the current agent instance within the context.
      */
-    public val agent: AIAgent<*, *>
+    public val agentId: String
 
     /**
-     * A unique identifier representing the current agent instance within the context.
-     * The value is derived from the underlying `agent.id`.
+     * Represents the pipeline associated with the AI agent.
      */
-    public val agentId: String get() = agent.id
+    public val pipeline: AIAgentPipeline
 
     /**
      * A unique identifier for the current session associated with the AI agent context.
@@ -106,15 +105,6 @@ public interface AIAgentContext {
     public val parentContext: AIAgentContext?
 
     /**
-     * Provides the root context of the current agent.
-     * If the root context is not defined, this function defaults to returning the current instance.
-     *
-     * @return The root context of type [AIAgentContext], or the current instance if the root context is null.
-     */
-    @OptIn(InternalAgentsApi::class)
-    public fun rootContext(): AIAgentContext = parentContext?.rootContext() ?: this
-
-    /**
      * Stores a feature in the agent's storage using the specified key.
      *
      * @param key A uniquely identifying key of type `AIAgentStorageKey` used to store the feature.
@@ -139,35 +129,6 @@ public interface AIAgentContext {
     public fun remove(key: AIAgentStorageKey<*>): Boolean
 
     /**
-     * Retrieves a feature from the current context using the specified key.
-     *
-     * @param key A uniquely identifying key of type `AIAgentStorageKey` used to fetch the corresponding feature.
-     * @return The feature associated with the provided key, or null if no matching feature is found.
-     */
-    public fun <Feature : Any> feature(key: AIAgentStorageKey<Feature>): Feature? = agent.feature(key)
-
-    /**
-     * Retrieves a feature of the specified type from the current context.
-     *
-     * @param feature The [AIAgentFeature] instance representing the feature to retrieve.
-     *                This parameter defines the configuration and unique identity of the feature.
-     * @return The feature instance of type [Feature], or null if the feature is not available in the context.
-     */
-    public fun <Feature : Any> feature(feature: AIAgentFeature<*, Feature>): Feature?
-
-    /**
-     * Retrieves a feature of the specified type from the context or throws an exception if it is not available.
-     *
-     * @param feature The [AIAgentFeature] defining the specific feature to be retrieved. This provides
-     *                the configuration and unique identification of the feature.
-     * @return The instance of the requested feature of type [Feature].
-     * @throws IllegalStateException if the requested feature is not installed in the agent.
-     */
-    public fun <Feature : Any> featureOrThrow(feature: AIAgentFeature<*, Feature>): Feature =
-        feature(feature)
-            ?: throw IllegalStateException("Feature `${feature::class.simpleName}` is not installed to the agent")
-
-    /**
      * Retrieves the history of messages exchanged during the agent's execution.
      */
     public suspend fun getHistory(): List<Message>
@@ -180,3 +141,48 @@ public interface AIAgentContext {
  */
 public inline fun <reified T> AIAgentContext.agentInput(): T =
     agentInput as? T ?: throw ClassCastException("Can't cast agent input to ${T::class}. Agent input: $agentInput")
+
+/**
+ * Provides the root context of the current agent.
+ * If the root context is not defined, this function defaults to returning the current instance.
+ *
+ * @return The root context of type [AIAgentContext], or the current instance if the root context is null.
+ */
+@OptIn(InternalAgentsApi::class)
+public fun AIAgentContext.rootContext(): AIAgentContext = this.parentContext?.rootContext() ?: this
+
+/**
+ * Retrieves a feature from the [AIAgentContext.pipeline] associated with this context using the specified key.
+ *
+ * @param TFeature A feature implementation type.
+ * @param feature A feature to fetch.
+ * @param featureClass The [KClass] of the feature to be retrieved.
+ * @return The feature associated with the provided key, or null if no matching feature is found.
+ * @throws IllegalArgumentException if the specified [featureClass] does not correspond to a registered feature.
+ */
+public fun <TFeature : Any> AIAgentContext.feature(
+    featureClass: KClass<TFeature>,
+    feature: AIAgentFeature<*, TFeature>
+): TFeature? = pipeline.feature(featureClass, feature)
+
+/**
+ * Retrieves a feature from the [AIAgentContext.pipeline] associated with this context using the specified key.
+ *
+ * @param feature A feature to fetch.
+ * @return The feature associated with the provided key, or null if no matching feature is found.
+ * @throws IllegalArgumentException if the specified [feature] does not correspond to a registered feature.
+ */
+public inline fun <reified TFeature : Any> AIAgentContext.feature(feature: AIAgentFeature<*, TFeature>): TFeature? =
+    feature(TFeature::class, feature)
+
+/**
+ * Retrieves a feature from the [AIAgentContext.pipeline] associated with this context using the specified key or throws
+ * an exception if it is not available.
+ *
+ * @param feature A feature to fetch.
+ * @return The feature associated with the provided key
+ * @throws IllegalStateException if the [TFeature] feature does not correspond to a registered feature.
+ * @throws NoSuchElementException if the feature is not found.
+ */
+public inline fun <reified TFeature : Any> AIAgentContext.featureOrThrow(feature: AIAgentFeature<*, TFeature>): TFeature =
+    feature(feature) ?: throw NoSuchElementException("Feature ${feature.key} is not found.")

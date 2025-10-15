@@ -3,16 +3,12 @@ package ai.koog.agents.core.feature.handler.agent
 import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
-import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 
 /**
  * Feature implementation for agent and strategy interception.
- *
- * @param TFeature The type of feature
- * @property feature The feature instance
  */
-public class AgentEventHandler<TFeature : Any>(public val feature: TFeature) {
+public class AgentEventHandler {
 
     /**
      * A handler invoked before an agent is started. This can be used to perform custom logic
@@ -21,7 +17,7 @@ public class AgentEventHandler<TFeature : Any>(public val feature: TFeature) {
      * The handler is triggered with the context of the agent start process.
      * It is intended to allow for feature-specific setup or preparation.
      */
-    public var agentStartingHandler: AgentStartingHandler<TFeature> =
+    public var agentStartingHandler: AgentStartingHandler =
         AgentStartingHandler { _ -> }
 
     /**
@@ -61,7 +57,7 @@ public class AgentEventHandler<TFeature : Any>(public val feature: TFeature) {
      * Allows customization of the environment during agent creation or updates by applying
      * the provided transformation logic.
      */
-    public var agentEnvironmentTransformingHandler: AgentEnvironmentTransformingHandler<TFeature> =
+    public var agentEnvironmentTransformingHandler: AgentEnvironmentTransformingHandler =
         AgentEnvironmentTransformingHandler { _, environment -> environment }
 
     /**
@@ -70,22 +66,10 @@ public class AgentEventHandler<TFeature : Any>(public val feature: TFeature) {
      * @param environment The AgentEnvironment to be transformed
      */
     public suspend fun transformEnvironment(
-        context: AgentEnvironmentTransformingContext<TFeature>,
+        context: AgentEnvironmentTransformingContext,
         environment: AIAgentEnvironment
     ): AIAgentEnvironment =
         agentEnvironmentTransformingHandler.transform(context, environment)
-
-    /**
-     * Transforms the provided AgentEnvironment using the configured environment transformer.
-     *
-     * @param environment The AgentEnvironment to be transformed
-     */
-    @Suppress("UNCHECKED_CAST")
-    internal suspend fun transformEnvironmentUnsafe(
-        context: AgentEnvironmentTransformingContext<*>,
-        environment: AIAgentEnvironment
-    ) =
-        transformEnvironment(context as AgentEnvironmentTransformingContext<TFeature>, environment)
 
     /**
      * Handles the logic to be executed before an agent starts.
@@ -93,21 +77,8 @@ public class AgentEventHandler<TFeature : Any>(public val feature: TFeature) {
      * @param context The context containing necessary information about the agent,
      *                strategy, and feature to be processed before the agent starts.
      */
-    public suspend fun handleAgentStarting(context: AgentStartingContext<TFeature>) {
+    public suspend fun handleAgentStarting(context: AgentStartingContext) {
         agentStartingHandler.handle(context)
-    }
-
-    /**
-     * Handles preliminary processes required before an agent is started, using an unsafe context cast.
-     *
-     * @param eventContext The agent start context containing information about the agent,
-     *                strategy, and associated feature. The context is cast unsafely to
-     *                the expected generic type.
-     */
-    @Suppress("UNCHECKED_CAST")
-    @InternalAgentsApi
-    public suspend fun handleAgentStartingUnsafe(eventContext: AgentStartingContext<*>) {
-        handleAgentStarting(eventContext as AgentStartingContext<TFeature>)
     }
 }
 
@@ -115,10 +86,8 @@ public class AgentEventHandler<TFeature : Any>(public val feature: TFeature) {
  * Handler for transforming an instance of AgentEnvironment.
  *
  * Ex: useful for mocks in tests
- *
- * @param TFeature The type of the feature associated with the agent.
  */
-public fun interface AgentEnvironmentTransformingHandler<TFeature : Any> {
+public fun interface AgentEnvironmentTransformingHandler {
 
     /**
      * Transforms the provided agent environment based on the given context.
@@ -128,7 +97,7 @@ public fun interface AgentEnvironmentTransformingHandler<TFeature : Any> {
      * @return The transformed agent environment
      */
     public suspend fun transform(
-        context: AgentEnvironmentTransformingContext<TFeature>,
+        context: AgentEnvironmentTransformingContext,
         environment: AIAgentEnvironment
     ): AIAgentEnvironment
 }
@@ -152,11 +121,9 @@ public fun interface AgentContextHandler<FeatureT : Any> {
 /**
  * Functional interface to define a handler that is invoked before an agent starts.
  * This handler allows custom pre-start logic to be executed with access to the
- * provided agent start context and associated feature.
- *
- * @param TFeature The type of the feature associated with the agent.
+ * provided agent start context.
  */
-public fun interface AgentStartingHandler<TFeature : Any> {
+public fun interface AgentStartingHandler {
 
     /**
      * Handles operations to be performed before an agent is started.
@@ -164,7 +131,7 @@ public fun interface AgentStartingHandler<TFeature : Any> {
      *
      * @param context The context that encapsulates the agent, its strategy, and the associated feature
      */
-    public suspend fun handle(context: AgentStartingContext<TFeature>)
+    public suspend fun handle(context: AgentStartingContext)
 }
 
 /**

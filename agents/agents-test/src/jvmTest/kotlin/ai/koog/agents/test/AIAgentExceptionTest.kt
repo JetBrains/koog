@@ -1,6 +1,6 @@
 package ai.koog.agents.test
 
-import ai.koog.agents.core.agent.AIAgentException
+import ai.koog.agents.core.agent.exception.AIAgentException
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertSame

@@ -1,5 +1,6 @@
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.AIAgentService
+import ai.koog.agents.core.agent.GraphAIAgentService
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.dsl.builder.AIAgentGraphStrategyBuilder
@@ -288,7 +289,7 @@ class CheckpointsTests {
 
         val rollbackConfig = createGraphWithOptionalToolCallAndRollback("ckpt-1")
 
-        val agentService = AIAgentService(
+        val agentService: GraphAIAgentService<String, String> = AIAgentService(
             promptExecutor = getMockExecutor { },
             strategy = rollbackConfig.strategy,
             agentConfig = agentConfig,
@@ -322,10 +323,10 @@ class CheckpointsTests {
             assertContains(databaseMap, "user-2")
             assertContains(databaseMap, "user-3")
 
-            agent.withPersistence { ctx ->
+            agent.withPersistence { agent ->
                 println("ctx outside: $this")
                 println("ctx outside [hash]: ${this.hashCode()}")
-                rollbackToCheckpoint("ckpt-1", ctx)
+                rollbackToCheckpoint("ckpt-1", agent)
             }
 
             rollbackConfig.commands.send("go further!")
