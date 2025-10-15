@@ -1,9 +1,15 @@
 package ai.koog.agents.core.environment
 
 import ai.koog.agents.core.CalculatorChatExecutor.testClock
+import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
+import ai.koog.agents.core.tools.asToolDescriptorSerializer
 import ai.koog.prompt.message.Message
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.encodeToJsonElement
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.serializer
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -23,6 +29,13 @@ class SafeToolTest {
     companion object {
         private const val TEST_RESULT = "Test result"
         private const val TEST_ERROR = "Error: Test error"
+
+        private val json = Json {
+            ignoreUnknownKeys = true
+            encodeDefaults = true
+            explicitNulls = false
+            decodeEnumsCaseInsensitive = true
+        }
     }
 
     private fun testFunction(param1: String, param2: Int): String {
@@ -66,6 +79,7 @@ class SafeToolTest {
         private val shouldSucceed: Boolean = true,
         private val resultContent: String = "Success content",
     ) : AIAgentEnvironment {
+        @OptIn(InternalAgentToolsApi::class)
         override suspend fun executeTools(toolCalls: List<Message.Tool.Call>): List<ReceivedToolResult> {
             return toolCalls.map { toolCall ->
                 if (shouldSucceed) {
@@ -73,7 +87,7 @@ class SafeToolTest {
                         id = toolCall.id,
                         tool = toolCall.tool,
                         content = resultContent,
-                        result = TEST_RESULT
+                        result = json.encodeToJsonElement(serializer<String>().asToolDescriptorSerializer(), TEST_RESULT)
                     )
                 } else {
                     ReceivedToolResult(
@@ -98,7 +112,6 @@ class SafeToolTest {
         assertEquals(safeTool.toolFunction, ::testFunction)
 
         val result = safeTool.execute("test", 123)
-
         assertTrue(result.isSuccessful())
         assertEquals(TEST_RESULT, result.asSuccessful().result)
         assertEquals("Success content", result.content)
@@ -190,7 +203,7 @@ class SafeToolTest {
                             id = toolCall.id,
                             tool = toolCall.tool,
                             content = "Success: $result",
-                            result = result
+                            result = json.encodeToJsonElement(result).jsonObject
                         )
                     } catch (e: Exception) {
                         ReceivedToolResult(
@@ -263,6 +276,7 @@ class SafeToolTest {
         assertEquals(TEST_RESULT, result.asSuccessful().result)
     }
 
+    @OptIn(InternalAgentToolsApi::class)
     @Test
     fun testWithComplexArgumentsInDirectCallEnvironment() = runTest {
         val directCallEnvironment = object : AIAgentEnvironment {
@@ -277,12 +291,13 @@ class SafeToolTest {
                         )
 
                         val result = testFunctionWithComplexArgs("direct-test", listOf(10, 11, 12), complexData)
+                        val resultSerializer = serializer<String>().asToolDescriptorSerializer()
 
                         ReceivedToolResult(
                             id = toolCall.id,
                             tool = toolCall.tool,
                             content = "Success: $result",
-                            result = result
+                            result = json.encodeToJsonElement(resultSerializer, result)
                         )
                     } catch (e: Exception) {
                         ReceivedToolResult(

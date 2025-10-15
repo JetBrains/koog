@@ -8,6 +8,7 @@ import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
 import ai.koog.agents.core.dsl.extension.onAssistantMessage
 import ai.koog.agents.core.dsl.extension.onToolCall
+import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.utils.SerializationUtils
 import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.assertMapsEqual
@@ -540,6 +541,7 @@ class OpenTelemetryTest {
         }
     }
 
+    @OptIn(InternalAgentsApi::class)
     @Test
     fun `test spans are created for agent with tool call`() = runTest {
         MockSpanExporter().use { mockExporter ->
@@ -640,7 +642,15 @@ class OpenTelemetryTest {
                         "attributes" to mapOf(
                             "gen_ai.conversation.id" to mockExporter.lastRunId,
                             "koog.node.name" to "test-node-llm-send-tool-result",
-                            "koog.node.input" to TestGetWeatherTool.DEFAULT_PARIS_RESULT,
+                            "koog.node.input" to SerializationUtils.encodeDataToStringOrDefault(
+                                ReceivedToolResult(
+                                    toolCallId,
+                                    TestGetWeatherTool.name,
+                                    TestGetWeatherTool.DEFAULT_PARIS_RESULT,
+                                    TestGetWeatherTool.encodeResult(TestGetWeatherTool.DEFAULT_PARIS_RESULT)
+                                ),
+                                typeOf<ReceivedToolResult>()
+                            ),
                             "koog.node.output" to @OptIn(InternalAgentsApi::class)
                             SerializationUtils.encodeDataToStringOrDefault(
                                 data = Message.Assistant(
@@ -713,7 +723,16 @@ class OpenTelemetryTest {
                                 ),
                                 dataType = typeOf<Message.Tool.Call>()
                             ),
-                            "koog.node.output" to TestGetWeatherTool.DEFAULT_PARIS_RESULT
+                            "koog.node.output" to
+                                SerializationUtils.encodeDataToStringOrDefault(
+                                    ReceivedToolResult(
+                                        toolCallId,
+                                        TestGetWeatherTool.name,
+                                        TestGetWeatherTool.DEFAULT_PARIS_RESULT,
+                                        TestGetWeatherTool.encodeResult(TestGetWeatherTool.DEFAULT_PARIS_RESULT)
+                                    ),
+                                    typeOf<ReceivedToolResult>()
+                                )
                         ),
                         "events" to emptyMap()
                     )
@@ -1711,7 +1730,7 @@ class OpenTelemetryTest {
                     assertEquals(
                         expectedArgValue,
                         actualArgValue,
-                        "Attribute values should be the same for the span (name: $spanName)\n" +
+                        "Attribute values should be the same for the span (key:$actualArgName name: $spanName)\n" +
                             "Expected: <$expectedArgValue>,\n" +
                             "Actual: <$actualArgValue>"
                     )

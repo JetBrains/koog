@@ -10,6 +10,7 @@ import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreamingAndSendResults
 import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
 import ai.koog.agents.core.dsl.extension.onAssistantMessage
 import ai.koog.agents.core.dsl.extension.onToolCall
+import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.feature.debugger.Debugger
 import ai.koog.agents.core.feature.model.AIAgentError
 import ai.koog.agents.core.feature.model.events.AgentCompletedEvent
@@ -77,7 +78,6 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.io.IOException
-import kotlinx.serialization.json.JsonPrimitive
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.parallel.Execution
@@ -142,6 +142,7 @@ class DebuggerTest {
         System.clearProperty(Debugger.KOOG_DEBUGGER_WAIT_CONNECTION_TIMEOUT_MS_VM_OPTION)
     }
 
+    @OptIn(InternalAgentsApi::class)
     @Test
     fun `test feature message remote writer collect events on agent run`() = runBlocking {
         // Agent Config
@@ -438,15 +439,13 @@ class DebuggerTest {
                             data = toolCallMessage(toolName = dummyTool.name, content = """{"dummy":"$requestedDummyToolArgs"}"""),
                             dataType = typeOf<Message.Tool.Call>()
                         ),
-                        // TODO: KG-485. Update to include serialized [ReceivedToolResult] when it became a serializable type.
-                        output = JsonPrimitive(dummyTool.result),
+                        output = SerializationUtils.encodeDataToJsonElementOrNull(ReceivedToolResult("0", dummyTool.name, dummyTool.result, dummyTool.encodeResult(dummyTool.result)), typeOf<ReceivedToolResult>()),
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     NodeExecutionStartingEvent(
                         runId = clientEventsCollector.runId,
                         nodeName = "test-node-llm-send-tool-result",
-                        // TODO: KG-485. Update to include serialized [ReceivedToolResult] when it became a serializable type.
-                        input = JsonPrimitive(dummyTool.result),
+                        input = SerializationUtils.encodeDataToJsonElementOrNull(ReceivedToolResult("0", dummyTool.name, dummyTool.result, dummyTool.encodeResult(dummyTool.result)), typeOf<ReceivedToolResult>()),
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     LLMCallStartingEvent(
@@ -468,8 +467,7 @@ class DebuggerTest {
                     NodeExecutionCompletedEvent(
                         runId = clientEventsCollector.runId,
                         nodeName = "test-node-llm-send-tool-result",
-                        // TODO: KG-485. Update to include serialized [ReceivedToolResult] when it became a serializable type.
-                        input = JsonPrimitive(dummyTool.result),
+                        input = SerializationUtils.encodeDataToJsonElementOrNull(ReceivedToolResult("0", dummyTool.name, dummyTool.result, dummyTool.encodeResult(dummyTool.result)), typeOf<ReceivedToolResult>()),
                         output = @OptIn(InternalAgentsApi::class)
                         SerializationUtils.encodeDataToJsonElementOrNull(
                             data = assistantMessage(mockResponse),

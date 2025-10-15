@@ -2,6 +2,7 @@ package ai.koog.agents.testing.tools
 
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.environment.ReceivedToolResult
+import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.prompt.executor.model.PromptExecutor
@@ -79,14 +80,16 @@ public class MockEnvironment(
                 .find { it.satisfies(functionCall) }
                 ?.invokeAndSerialize(functionCall)
                 ?.let { (result, content) ->
+                    val tool: Tool<*, *> = toolRegistry.getTool(functionCall.tool)
                     return ReceivedToolResult(
                         id = functionCall.id,
                         tool = functionCall.tool,
                         content = content,
-                        result = result
+                        result = tool.encodeResultUnsafe(result)
                     )
                 }
         }
+
         val tool = toolRegistry.getTool(functionCall.tool)
 
         val args = tool.decodeArgs(functionCall.contentJson)
@@ -96,7 +99,7 @@ public class MockEnvironment(
             id = functionCall.id,
             tool = functionCall.tool,
             content = tool.encodeResultToStringUnsafe(result),
-            result = result
+            result = tool.encodeResultUnsafe(result)
         )
     }
 

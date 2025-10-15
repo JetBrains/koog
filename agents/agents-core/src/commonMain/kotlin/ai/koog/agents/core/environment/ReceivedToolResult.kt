@@ -7,6 +7,8 @@ import ai.koog.prompt.dsl.PromptBuilder
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import kotlinx.datetime.Clock
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
 
 /**
  * Represents the result or response received from a tool operation.
@@ -16,11 +18,12 @@ import kotlinx.datetime.Clock
  * @property content The main content or message associated with the tool result.
  * @property result The detailed result produced by the tool, implementing the [ToolResult] interface.
  */
+@Serializable
 public data class ReceivedToolResult(
     val id: String?,
     val tool: String,
     val content: String,
-    val result: Any?
+    val result: JsonElement?
 ) {
     /**
      * Converts the current `ReceivedToolResult` instance into a `Message.Tool.Result` object.

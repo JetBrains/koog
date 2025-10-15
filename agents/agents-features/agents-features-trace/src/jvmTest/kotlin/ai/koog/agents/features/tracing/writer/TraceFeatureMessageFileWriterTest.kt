@@ -45,7 +45,6 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.io.Sink
 import kotlinx.io.buffered
 import kotlinx.io.files.SystemFileSystem
-import kotlinx.serialization.json.JsonPrimitive
 import org.junit.jupiter.api.io.TempDir
 import java.nio.file.Files
 import java.nio.file.Path
@@ -223,12 +222,12 @@ class TraceFeatureMessageFileWriterTest {
                             ),
                             dataType = typeOf<Message.Tool.Call>()
                         )}, " +
-                    "output: ${JsonPrimitive(dummyTool.result)}" +
+                    "output: {\"id\":\"0\",\"tool\":\"${dummyTool.name}\",\"content\":\"${dummyTool.result}\",\"result\":${dummyTool.encodeResult(dummyTool.result)}}" +
                     ")",
                 "${NodeExecutionStartingEvent::class.simpleName} (" +
                     "run id: $runId, " +
                     "node: test-node-llm-send-tool-result, " +
-                    "input: ${JsonPrimitive(dummyTool.result)}" +
+                    "input: {\"id\":\"0\",\"tool\":\"${dummyTool.name}\",\"content\":\"${dummyTool.result}\",\"result\":${dummyTool.encodeResult(dummyTool.result)}}" +
                     ")",
                 "${LLMCallStartingEvent::class.simpleName} (run id: $runId, prompt: ${
                     expectedPrompt.copy(
@@ -239,7 +238,7 @@ class TraceFeatureMessageFileWriterTest {
                                 "0",
                                 dummyTool.name,
                                 dummyTool.result,
-                                dummyTool.result
+                                dummyTool.encodeResult(dummyTool.result)
                             ).toMessage(clock = testClock)
                         )
                     ).traceString
@@ -253,13 +252,13 @@ class TraceFeatureMessageFileWriterTest {
                                 "0",
                                 dummyTool.name,
                                 dummyTool.result,
-                                dummyTool.result
+                                dummyTool.encodeResult(dummyTool.result)
                             ).toMessage(clock = testClock)
                         )
                     ).traceString
                 }, model: ${testModel.toModelInfo().modelIdentifierName}, responses: [{${expectedResponse.traceString}}])",
                 "${NodeExecutionCompletedEvent::class.simpleName} (run id: $runId, node: test-node-llm-send-tool-result, " +
-                    "input: ${JsonPrimitive(dummyTool.result)}, " +
+                    "input: {\"id\":\"0\",\"tool\":\"${dummyTool.name}\",\"content\":\"${dummyTool.result}\",\"result\":${dummyTool.encodeResult(dummyTool.result)}}, " +
                     "output: ${
                         @OptIn(InternalAgentsApi::class)
                         SerializationUtils.encodeDataToJsonElementOrNull(
@@ -524,7 +523,7 @@ class TraceFeatureMessageFileWriterTest {
                                 "0",
                                 dummyTool.name,
                                 dummyTool.result,
-                                dummyTool.result
+                                dummyTool.encodeResult(dummyTool.result)
                             ).toMessage(clock = testClock)
                         )
                     ).traceString
@@ -538,7 +537,7 @@ class TraceFeatureMessageFileWriterTest {
                                 "0",
                                 dummyTool.name,
                                 dummyTool.result,
-                                dummyTool.result
+                                dummyTool.encodeResult(dummyTool.result)
                             ).toMessage(clock = testClock)
                         )
                     ).traceString

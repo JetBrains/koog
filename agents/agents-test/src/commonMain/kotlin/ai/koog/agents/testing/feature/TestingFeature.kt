@@ -1234,7 +1234,7 @@ public fun Testing.Config.SubgraphAssertionsBuilder<*, *>.assistantMessage(
  * ```
  */
 public fun <Result> toolResult(tool: Tool<*, Result>, result: Result): ReceivedToolResult =
-    ReceivedToolResult(null, tool.name, tool.encodeResultToString(result), result)
+    ReceivedToolResult(null, tool.name, tool.encodeResultToString(result), tool.encodeResult(result))
 
 /**
  * Constructs a `ReceivedToolResult` object using the provided tool and result string.
@@ -1258,7 +1258,7 @@ public fun <Result> toolResult(tool: Tool<*, Result>, result: Result): ReceivedT
  * ```
  */
 public fun toolResult(tool: SimpleTool<*>, result: String): ReceivedToolResult =
-    ReceivedToolResult(null, tool.name, result, result)
+    ReceivedToolResult(null, tool.name, result, tool.encodeResult(result))
 
 /**
  * Enables and configures the Testing feature for a Kotlin AI Agent instance.

@@ -10,7 +10,7 @@ import ai.koog.prompt.message.Message
  * This property is primarily intended for debugging or logging purposes, offering a concise overview of
  * the `Prompt` object's state.
  */
-internal val Prompt.traceString: String
+public val Prompt.traceString: String
     get() {
         val builder = StringBuilder()
             .append("id: ").append(id)
@@ -35,5 +35,5 @@ internal val Prompt.traceString: String
  * This property is useful for logging or debugging purposes where a concise yet descriptive
  * summary of the message content and its associated role is required.
  */
-internal val Message.Response.traceString: String
+public val Message.Response.traceString: String
     get() = "role: $role, message: $content"

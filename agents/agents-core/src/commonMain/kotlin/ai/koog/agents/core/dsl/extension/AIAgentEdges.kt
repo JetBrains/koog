@@ -146,7 +146,7 @@ public inline fun <IncomingOutput, IntermediateOutput, OutgoingInput, reified Re
 ): AIAgentEdgeBuilderIntermediate<IncomingOutput, ReceivedToolResult, OutgoingInput> {
     return onIsInstance(ReceivedToolResult::class)
         .onCondition { toolResult ->
-            (toolResult.tool == tool.name) && block(toolResult.toSafeResult())
+            (toolResult.tool == tool.name) && block(toolResult.toSafeResult(tool))
         }
 }
 
