@@ -42,7 +42,7 @@ The basic form of testing involves mocking LLM responses to ensure deterministic
 <!--- INCLUDE
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.tools.getMockExecutor
-import ai.koog.agents.testing.tools.mockLLMAnswer
+
 
 val toolRegistry = ToolRegistry {}
 
@@ -1089,7 +1089,7 @@ Use pattern matching methods:
 
 <!--- INCLUDE
 import ai.koog.agents.testing.tools.getMockExecutor
-import ai.koog.agents.testing.tools.mockLLMAnswer
+
 
 val promptExecutor = 
 -->

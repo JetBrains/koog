@@ -18,7 +18,6 @@ import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.memory.config.MemoryScopeType
 import ai.koog.agents.memory.config.MemoryScopesProfile
 import ai.koog.agents.memory.model.Concept
-import ai.koog.agents.memory.model.DefaultTimeProvider.getCurrentTimestamp
 import ai.koog.agents.memory.model.Fact
 import ai.koog.agents.memory.model.FactType
 import ai.koog.agents.memory.model.MemoryScope
@@ -35,6 +34,7 @@ import ai.koog.prompt.structure.StructuredOutput
 import ai.koog.prompt.structure.StructuredOutputConfig
 import ai.koog.prompt.structure.json.JsonStructuredData
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
 
 /**
@@ -448,8 +448,9 @@ public class AgentMemory(
  * @return A Fact object (either SingleFact or MultipleFacts) containing the extracted information
  */
 @OptIn(InternalAgentsApi::class)
-internal suspend fun AIAgentLLMWriteSession.retrieveFactsFromHistory(
-    concept: Concept
+public suspend fun AIAgentLLMWriteSession.retrieveFactsFromHistory(
+    concept: Concept,
+    clock: Clock = Clock.System,
 ): Fact {
     @Serializable
     @LLMDescription("Fact text")
@@ -504,7 +505,7 @@ internal suspend fun AIAgentLLMWriteSession.retrieveFactsFromHistory(
         return@rewritePrompt newPrompt
     }
 
-    val timestamp = getCurrentTimestamp()
+    val timestamp = clock.now().toEpochMilliseconds()
 
     val facts = when (concept.factType) {
         FactType.SINGLE -> {

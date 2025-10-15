@@ -119,12 +119,24 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
     public var handleLastAssistantMessage: Boolean = false
 
     /**
-     * Companion object for the MockLLMBuilder class.
-     * Provides access to the current builder instance during configuration.
+     * Creates a mock LLM text response.
+     *
+     * This function is the entry point for configuring how the LLM should respond with text
+     * when it receives specific inputs.
+     *
+     * @param response The text response to return
+     * @return A [DefaultResponseReceiver] for further configuration
+     *
+     * Example usage:
+     * ```kotlin
+     * // Mock a simple text response
+     * mockLLMAnswer("Hello!") onRequestContains "Hello"
+     *
+     * // Mock a default response
+     * mockLLMAnswer("I don't know how to answer that.").asDefaultResponse
+     * ```
      */
-    internal companion object {
-        var currentBuilder: MockLLMBuilder? = null
-    }
+    public fun mockLLMAnswer(response: String): DefaultResponseReceiver = DefaultResponseReceiver(response, this)
 
     /**
      * Sets the default response to be returned when no other response matches.
@@ -814,26 +826,6 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
 }
 
 /**
- * Creates a mock LLM text response.
- *
- * This function is the entry point for configuring how the LLM should respond with text
- * when it receives specific inputs.
- *
- * @param response The text response to return
- * @return A [DefaultResponseReceiver] for further configuration
- *
- * Example usage:
- * ```kotlin
- * // Mock a simple text response
- * mockLLMAnswer("Hello!") onRequestContains "Hello"
- *
- * // Mock a default response
- * mockLLMAnswer("I don't know how to answer that.").asDefaultResponse
- * ```
- */
-public fun mockLLMAnswer(response: String): DefaultResponseReceiver = DefaultResponseReceiver(response)
-
-/**
  * Receiver class for configuring text responses from the LLM.
  *
  * This class is part of the fluent API for configuring how the LLM should respond
@@ -841,64 +833,10 @@ public fun mockLLMAnswer(response: String): DefaultResponseReceiver = DefaultRes
  *
  * @property response The text response to return
  */
-public class DefaultResponseReceiver(public val response: String) {
-    /**
-     * Companion object for the DefaultResponseReceiver class.
-     * Stores and manages the configured responses.
-     */
-    internal companion object {
-        private var defaultResponse: String? = null
-        private val partialMatches = mutableMapOf<String, String>()
-        private val exactMatches = mutableMapOf<String, String>()
-        private val conditionalMatches = mutableMapOf<(String) -> Boolean, String>()
-
-        /**
-         * Gets the configured default response.
-         *
-         * @return The default response, or null if none is configured
-         */
-        fun getDefaultResponse(): String? {
-            return defaultResponse
-        }
-
-        /**
-         * Gets the configured partial matches.
-         *
-         * @return A map of patterns to responses
-         */
-        fun getPartialMatches(): Map<String, String> {
-            return partialMatches
-        }
-
-        /**
-         * Gets the configured exact matches.
-         *
-         * @return A map of patterns to responses
-         */
-        fun getExactMatches(): Map<String, String> {
-            return exactMatches
-        }
-
-        /**
-         * Gets the configured conditional matches.
-         *
-         * @return A map of conditions to responses
-         */
-        fun getConditionalMatches(): Map<(String) -> Boolean, String> {
-            return conditionalMatches
-        }
-
-        /**
-         * Clears all configured matches and the default response.
-         */
-        fun clearMatches() {
-            partialMatches.clear()
-            exactMatches.clear()
-            conditionalMatches.clear()
-            defaultResponse = null
-        }
-    }
-
+public class DefaultResponseReceiver(
+    internal val response: String,
+    internal val builder: MockLLMBuilder,
+) {
     /**
      * Sets this response as the default response to be returned when no other response matches.
      *
@@ -906,7 +844,7 @@ public class DefaultResponseReceiver(public val response: String) {
      */
     public val asDefaultResponse: String
         get() {
-            defaultResponse = response
+            builder.setDefaultResponse(response)
             return response
         }
 
@@ -917,7 +855,10 @@ public class DefaultResponseReceiver(public val response: String) {
      * @return The response string for method chaining
      */
     public infix fun onRequestContains(pattern: String): String {
-        partialMatches[pattern] = response
+        with(builder) {
+            response.onUserRequestContains(pattern)
+        }
+
         return response
     }
 
@@ -928,7 +869,10 @@ public class DefaultResponseReceiver(public val response: String) {
      * @return The response string for method chaining
      */
     public infix fun onRequestEquals(pattern: String): String {
-        exactMatches[pattern] = response
+        with(builder) {
+            response.onUserRequestEquals(pattern)
+        }
+
         return response
     }
 
@@ -939,7 +883,10 @@ public class DefaultResponseReceiver(public val response: String) {
      * @return The response string for method chaining
      */
     public infix fun onCondition(condition: (String) -> Boolean): String {
-        conditionalMatches[condition] = response
+        with(builder) {
+            response.onCondition(condition)
+        }
+
         return response
     }
 }
@@ -983,35 +930,12 @@ public fun getMockExecutor(
     handleLastAssistantMessage: Boolean = false,
     init: MockLLMBuilder.() -> Unit
 ): PromptExecutor {
-    // Clear previous matches
-    DefaultResponseReceiver.clearMatches()
-
     // Call MockLLMBuilder and apply toolRegistry, eventHandler and set currentBuilder to this (to add mocked tool calls)
-    val builder = MockLLMBuilder(clock, tokenizer).apply {
-        this.handleLastAssistantMessage = handleLastAssistantMessage
-        toolRegistry?.let { setToolRegistry(it) }
-        MockLLMBuilder.currentBuilder = this
-        init()
-        MockLLMBuilder.currentBuilder = null
-    }
-
-    // Apply stored responses from DefaultResponseReceiver
-    DefaultResponseReceiver.getDefaultResponse()?.let { builder.setDefaultResponse(it) }
-
-    // Add partial matches from DefaultResponseReceiver
-    DefaultResponseReceiver.getPartialMatches().forEach { (pattern, response) ->
-        builder.apply { response.onUserRequestContains(pattern) }
-    }
-
-    // Add exact matches from DefaultResponseReceiver
-    DefaultResponseReceiver.getExactMatches().forEach { (pattern, response) ->
-        builder.apply { response.onUserRequestEquals(pattern) }
-    }
-
-    // Add conditional matches from DefaultResponseReceiver
-    DefaultResponseReceiver.getConditionalMatches().forEach { (condition, response) ->
-        builder.apply { response.onCondition(condition) }
-    }
-
-    return builder.build()
+    return MockLLMBuilder(clock, tokenizer)
+        .apply {
+            this.handleLastAssistantMessage = handleLastAssistantMessage
+            toolRegistry?.let { setToolRegistry(it) }
+            init()
+        }
+        .build()
 }

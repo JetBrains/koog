@@ -9,7 +9,6 @@ import ai.koog.agents.memory.config.MemoryScopeType
 import ai.koog.agents.memory.config.MemoryScopesProfile
 import ai.koog.agents.memory.feature.AgentMemory
 import ai.koog.agents.memory.model.Concept
-import ai.koog.agents.memory.model.DefaultTimeProvider
 import ai.koog.agents.memory.model.Fact
 import ai.koog.agents.memory.model.FactType
 import ai.koog.agents.memory.model.MemoryScope
@@ -33,7 +32,6 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkConstructor
-import io.mockk.mockkObject
 import io.mockk.slot
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
@@ -299,11 +297,6 @@ class AIAgentMemoryTest {
         val memoryProvider = mockk<AgentMemoryProvider>()
         val promptExecutor = mockk<PromptExecutor>()
         val savedFacts = mutableListOf<SingleFact>()
-
-        // Mock DefaultTimeProvider to return sequential timestamps
-        mockkObject(DefaultTimeProvider)
-        var currentTime = 1000L
-        every { DefaultTimeProvider.getCurrentTimestamp() } answers { currentTime++ }
 
         // Mock LLM response
         val response = mockk<Message.Response>()
