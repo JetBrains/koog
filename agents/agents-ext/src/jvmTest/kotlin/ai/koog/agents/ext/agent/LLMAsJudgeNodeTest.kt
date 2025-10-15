@@ -30,8 +30,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 
 class LLMAsJudgeNodeTest {
-    private val defaultName = "re_act"
-
     private val testClock: Clock = object : Clock {
         override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z")
     }
@@ -113,9 +111,9 @@ class LLMAsJudgeNodeTest {
 
         val expectedXMLHistory = """
             <previous_conversation>
-            <user>
+            <system>
             System message
-            </user>
+            </system>
             <user>
             User question
             </user>

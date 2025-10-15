@@ -69,7 +69,7 @@ public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.llmAsAJudge(
                 append("<previous_conversation>\n")
                 initialPrompt.messages.forEach { message ->
                     when (message) {
-                        is Message.System -> append("<user>\n${message.content}\n</user>\n")
+                        is Message.System -> append("<system>\n${message.content}\n</system>\n")
                         is Message.User -> append("<user>\n${message.content}\n</user>\n")
                         is Message.Assistant -> append("<assistant>\n${message.content}\n</assistant>\n")
                         is Message.Tool.Call -> append(
