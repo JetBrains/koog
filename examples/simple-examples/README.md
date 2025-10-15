@@ -177,7 +177,7 @@ Run any example using:
 - **[Interactive Notebooks](../notebooks/)** - Jupyter notebooks for hands-on learning
 - **[Full Documentation](https://docs.koog.ai/)** - Complete framework documentation
 - **[API Reference](https://api.koog.ai/)** - Detailed API documentation
-- **[Getting Started Guide](https://docs.koog.ai/single-run-agents/)** - Framework introduction
+- **[Getting Started Guide](https://docs.koog.ai/getting-started/)** - Framework introduction
 
 ## 🔄 Composite Build Information
 

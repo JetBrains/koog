@@ -5,7 +5,7 @@ Instead, the agent logic is implemented as a lambda function that handles user i
 optionally calls tools, and produces a final output. It can perform a single LLM call, process multiple LLM calls in sequence, or loop based on user input, as well as LLM and tool outputs.
 
 !!! tip
-    - If you already have a simple [single-run agent](single-run-agents.md) as your first MVP, but run into task-specific limitations, use a functional agent to prototype custom logic. You can implement custom control flows in plain Kotlin while still using most Koog features, including history compression and automatic state management.
+    - If you already have a [basic agent](basic-agents.md) as your first MVP, but run into task-specific limitations, use a functional agent to prototype custom logic. You can implement custom control flows in plain Kotlin while still using most Koog features, including history compression and automatic state management.
     - For production-grade needs, refactor your functional agent into a [complex workflow agent](complex-workflow-agents.md) with strategy graphs. This provides persistence with controllable rollbacks for fault-tolerance and advanced OpenTelemetry tracing with nested graph events.
 
 This page guides you through the steps necessary to create a minimal functional agent and extend it with tools.

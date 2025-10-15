@@ -495,5 +495,5 @@ To use Koog, you need to include all necessary dependencies in your build config
 ## What's next
 
 - Explore [key features](key-features.md) of Koog.
-- Learn more about available [agent types](single-run-agents.md).
+- Learn more about available [agent types](basic-agents.md).
 

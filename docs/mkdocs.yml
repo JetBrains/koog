@@ -9,7 +9,7 @@ nav:
           - Glossary: glossary.md
       - Getting started: getting-started.md
       - Agent types:
-          - Single-run agents: single-run-agents.md
+          - Basic agents: basic-agents.md
           - Functional agents: functional-agents.md
           - Complex workflow agents: complex-workflow-agents.md
       - Prompt API: prompt-api.md
@@ -102,6 +102,7 @@ plugins:
         'simple-api-getting-started.md': 'index.md'
         'advanced-tool-implementation.md': 'class-based-tools.md'
         'key-concepts.md': 'glossary.md'
+        'single-run-agents.md': 'basic-agents.md'
   - llmstxt:
       markdown_description: Koog is a Kotlin-based framework designed to build and run AI agents entirely in idiomatic Kotlin.
       full_output: llms-full.txt
@@ -115,7 +116,7 @@ plugins:
         Getting started:
           - getting-started.md: This page provides a guide on installing Koog and creating a minimal AI agent.
         Agent types:
-          - single-run-agents.md: This guide lets you build a single-run agent with minimum required configuration.
+          - basic-agents.md: This guide lets you build a basic agent with minimum required configuration.
           - functional-agents.md: This guide shows you how to build a lightweight, non‑graph agent that you control with a simple loop.
           - complex-workflow-agents.md: This page explains how you can create agents that handle complex workflows by defining custom strategies, tools, configurations, and custom input and output types.
         Prompt API:

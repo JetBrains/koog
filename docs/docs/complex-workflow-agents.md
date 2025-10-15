@@ -1,10 +1,10 @@
 # Complex workflow agents
 
-In addition to single-run agents, the `AIAgent` class lets you build agents that handle complex workflows by defining 
+In addition to basic agents, the `AIAgent` class lets you build agents that handle complex workflows by defining 
 custom strategies, tools, configurations, and custom input/output types.
 
 !!! tip
-    If you are new to Koog and want to create the simplest agent, start with [Single-run agents](single-run-agents.md).
+    If you are new to Koog and want to create the simplest agent, start with [Basic agents](basic-agents.md).
 
 The process of creating and configuring such an agent typically includes the following steps:
 

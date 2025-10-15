@@ -25,7 +25,7 @@ You can customize agent capabilities with a modular feature system and deploy yo
 
 <div class="grid cards" markdown>
 
--   :material-robot-outline:{ .lg .middle } [**Single-run agents**](single-run-agents.md)
+-   :material-robot-outline:{ .lg .middle } [**Basic agents**](basic-agents.md)
 
     ---
 
