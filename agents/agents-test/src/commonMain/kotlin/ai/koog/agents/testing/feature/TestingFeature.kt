@@ -20,7 +20,6 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.feature.AIAgentGraphFeature
-import ai.koog.agents.core.feature.InterceptContext
 import ai.koog.agents.core.feature.PromptExecutorProxy
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
@@ -936,8 +935,7 @@ public class Testing {
             agent: GraphAIAgent<*, *>,
         ): Testing {
             val testing = Testing()
-            val interceptContext = InterceptContext(this, testing)
-            pipeline.interceptEnvironmentCreated(interceptContext) { agentEnvironment ->
+            pipeline.interceptEnvironmentCreated(this) { agentEnvironment ->
                 MockEnvironment(agent.toolRegistry, agent.promptExecutor, agentEnvironment)
             }
 
@@ -946,11 +944,11 @@ public class Testing {
 
                 var agent: AIAgent<*, *>? = null
 
-                pipeline.interceptAgentStarting(interceptContext) { eventContext ->
+                pipeline.interceptAgentStarting(this) { eventContext ->
                     agent = eventContext.agent
                 }
 
-                pipeline.interceptStrategyStarting(interceptContext) { eventContext ->
+                pipeline.interceptStrategyStarting(this) { eventContext ->
                     val agentToUse = agent as GraphAIAgent<*, *>
                     val strategyGraph = eventContext.strategy as AIAgentGraphStrategy<*, *>
 

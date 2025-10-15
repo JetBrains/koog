@@ -5,7 +5,6 @@ import ai.koog.agents.core.agent.context.element.getAgentRunInfoElementOrThrow
 import ai.koog.agents.core.agent.context.element.getNodeInfoElement
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.feature.AIAgentGraphFeature
-import ai.koog.agents.core.feature.InterceptContext
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.features.opentelemetry.attribute.CommonAttributes
 import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes
@@ -53,7 +52,6 @@ public class OpenTelemetry {
             agent: GraphAIAgent<*, *>,
         ): OpenTelemetry {
             val openTelemetry = OpenTelemetry()
-            val interceptContext = InterceptContext(this, openTelemetry)
             val tracer = config.tracer
             val spanProcessor = SpanProcessor(tracer = tracer, verbose = config.isVerbose)
             val spanAdapter = config.spanAdapter
@@ -74,7 +72,7 @@ public class OpenTelemetry {
 
             //region Agent
 
-            pipeline.interceptAgentStarting(interceptContext) { eventContext ->
+            pipeline.interceptAgentStarting(this) { eventContext ->
                 logger.debug { "Execute OpenTelemetry before agent started handler" }
 
                 // Check if CreateAgentSpan is already added (when running the same agent >= 1 times)
@@ -102,7 +100,7 @@ public class OpenTelemetry {
                 spanProcessor.startSpan(invokeAgentSpan)
             }
 
-            pipeline.interceptAgentCompleted(interceptContext) { eventContext ->
+            pipeline.interceptAgentCompleted(this) { eventContext ->
                 logger.debug { "Execute OpenTelemetry agent finished handler" }
 
                 // Make sure all spans inside InvokeAgentSpan are finished
@@ -122,7 +120,7 @@ public class OpenTelemetry {
                 spanProcessor.endSpan(span = invokeAgentSpan)
             }
 
-            pipeline.interceptAgentExecutionFailed(interceptContext) { eventContext ->
+            pipeline.interceptAgentExecutionFailed(this) { eventContext ->
                 logger.debug { "Execute OpenTelemetry agent run error handler" }
 
                 // Make sure all spans inside InvokeAgentSpan are finished
@@ -151,7 +149,7 @@ public class OpenTelemetry {
                 )
             }
 
-            pipeline.interceptAgentClosing(interceptContext) { eventContext ->
+            pipeline.interceptAgentClosing(this) { eventContext ->
                 logger.debug { "Execute OpenTelemetry before agent closed handler" }
 
                 val agentSpanId = CreateAgentSpan.createId(agentId = eventContext.agentId)
@@ -165,7 +163,7 @@ public class OpenTelemetry {
 
             //region Node
 
-            pipeline.interceptNodeExecutionStarting(interceptContext) { eventContext ->
+            pipeline.interceptNodeExecutionStarting(this) { eventContext ->
                 logger.debug { "Execute OpenTelemetry before node handler" }
 
                 // Get current InvokeAgentSpan
@@ -188,7 +186,7 @@ public class OpenTelemetry {
                 spanProcessor.startSpan(nodeExecuteSpan)
             }
 
-            pipeline.interceptNodeExecutionCompleted(interceptContext) { eventContext ->
+            pipeline.interceptNodeExecutionCompleted(this) { eventContext ->
                 logger.debug { "Execute OpenTelemetry after node handler" }
 
                 // Find current NodeExecuteSpan
@@ -207,7 +205,7 @@ public class OpenTelemetry {
                 spanProcessor.endSpan(nodeExecuteSpan)
             }
 
-            pipeline.interceptNodeExecutionFailed(interceptContext) { eventContext ->
+            pipeline.interceptNodeExecutionFailed(this) { eventContext ->
                 logger.debug { "Execute OpenTelemetry node execution error handler" }
 
                 // Find current NodeExecuteSpan
@@ -233,7 +231,7 @@ public class OpenTelemetry {
 
             //region LLM Call
 
-            pipeline.interceptLLMCallStarting(interceptContext) { eventContext ->
+            pipeline.interceptLLMCallStarting(this) { eventContext ->
                 logger.debug { "Execute OpenTelemetry before LLM call handler" }
 
                 // Get current NodeExecuteSpan
@@ -302,7 +300,7 @@ public class OpenTelemetry {
                 spanProcessor.startSpan(inferenceSpan)
             }
 
-            pipeline.interceptLLMCallCompleted(interceptContext) { eventContext ->
+            pipeline.interceptLLMCallCompleted(this) { eventContext ->
                 logger.debug { "Execute OpenTelemetry after LLM call handler" }
 
                 // Find current InferenceSpan
@@ -386,7 +384,7 @@ public class OpenTelemetry {
 
             //region Tool Call
 
-            pipeline.interceptToolCallStarting(interceptContext) { eventContext ->
+            pipeline.interceptToolCallStarting(this) { eventContext ->
                 logger.debug { "Execute OpenTelemetry tool call handler" }
 
                 // Get current NodeExecuteSpan
@@ -414,7 +412,7 @@ public class OpenTelemetry {
                 spanProcessor.startSpan(executeToolSpan)
             }
 
-            pipeline.interceptToolCallCompleted(interceptContext) { eventContext ->
+            pipeline.interceptToolCallCompleted(this) { eventContext ->
                 logger.debug { "Execute OpenTelemetry tool result handler" }
 
                 // Get current ExecuteToolSpan
@@ -447,7 +445,7 @@ public class OpenTelemetry {
                 spanProcessor.endSpan(span = executeToolSpan)
             }
 
-            pipeline.interceptToolCallFailed(interceptContext) { eventContext ->
+            pipeline.interceptToolCallFailed(this) { eventContext ->
                 logger.debug { "Execute OpenTelemetry tool call failure handler" }
 
                 // Get current ExecuteToolSpan
@@ -476,7 +474,7 @@ public class OpenTelemetry {
                 )
             }
 
-            pipeline.interceptToolValidationFailed(interceptContext) { eventContext ->
+            pipeline.interceptToolValidationFailed(this) { eventContext ->
                 logger.debug { "Execute OpenTelemetry tool validation error handler" }
 
                 // Get current ExecuteToolSpan

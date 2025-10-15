@@ -3,6 +3,7 @@ package ai.koog.agents.features.opentelemetry
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.AIAgentService
 import ai.koog.agents.core.agent.GraphAIAgent
+import ai.koog.agents.core.agent.GraphAIAgentService
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.tools.ToolRegistry
@@ -60,7 +61,7 @@ internal object OpenTelemetryTestAPI {
         userPrompt: String? = null,
         assistantPrompt: String? = null,
         installFeatures: GraphAIAgent.FeatureContext.() -> Unit = { }
-    ): AIAgentService<String, String> {
+    ): GraphAIAgentService<String, String> {
         val agentConfig = AIAgentConfig(
             prompt = prompt(
                 id = promptId ?: "Test prompt",

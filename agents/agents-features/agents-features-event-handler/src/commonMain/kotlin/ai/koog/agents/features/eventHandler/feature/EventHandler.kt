@@ -6,7 +6,6 @@ import ai.koog.agents.core.agent.GraphAIAgent.FeatureContext
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.feature.AIAgentFunctionalFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
-import ai.koog.agents.core.feature.InterceptContext
 import ai.koog.agents.core.feature.handler.llm.LLMCallCompletedContext
 import ai.koog.agents.core.feature.handler.llm.LLMCallStartingContext
 import ai.koog.agents.core.feature.handler.node.NodeExecutionCompletedContext
@@ -67,10 +66,9 @@ public class EventHandler {
             logger.info { "Start installing feature: ${EventHandler::class.simpleName}" }
 
             val eventHandler = EventHandler()
-            val interceptContext: InterceptContext<EventHandler> = InterceptContext(this, eventHandler)
 
-            registerCommonPipelineHandlers(config, pipeline, interceptContext)
-            registerGraphPipelineHandlers(config, pipeline, interceptContext)
+            registerCommonPipelineHandlers(config, pipeline)
+            registerGraphPipelineHandlers(config, pipeline)
 
             return eventHandler
         }
@@ -81,9 +79,8 @@ public class EventHandler {
             agent: FunctionalAIAgent<*, *>,
         ): EventHandler {
             val eventHandler = EventHandler()
-            val interceptContext: InterceptContext<EventHandler> = InterceptContext(this, eventHandler)
 
-            registerCommonPipelineHandlers(config, pipeline, interceptContext)
+            registerCommonPipelineHandlers(config, pipeline)
 
             return eventHandler
         }
@@ -91,23 +88,20 @@ public class EventHandler {
         private fun registerGraphPipelineHandlers(
             config: EventHandlerConfig,
             pipeline: AIAgentGraphPipeline,
-            interceptContext: InterceptContext<EventHandler>
         ) {
-            pipeline.interceptAgentStarting(interceptContext) intercept@{ eventContext ->
+            pipeline.interceptAgentStarting(this) intercept@{ eventContext ->
                 config.invokeOnAgentStarting(eventContext)
             }
 
-            pipeline.interceptNodeExecutionStarting(interceptContext) intercept@{ eventContext: NodeExecutionStartingContext ->
+            pipeline.interceptNodeExecutionStarting(this) intercept@{ eventContext: NodeExecutionStartingContext ->
                 config.invokeOnNodeExecutionStarting(eventContext)
             }
 
-            pipeline.interceptNodeExecutionCompleted(interceptContext) intercept@{ eventContext: NodeExecutionCompletedContext ->
+            pipeline.interceptNodeExecutionCompleted(this) intercept@{ eventContext: NodeExecutionCompletedContext ->
                 config.invokeOnNodeExecutionCompleted(eventContext)
             }
 
-            pipeline.interceptNodeExecutionFailed(
-                interceptContext
-            ) intercept@{ eventContext: NodeExecutionFailedContext ->
+            pipeline.interceptNodeExecutionFailed(this) intercept@{ eventContext: NodeExecutionFailedContext ->
                 config.invokeOnNodeExecutionFailed(eventContext)
             }
         }
@@ -115,67 +109,66 @@ public class EventHandler {
         private fun registerCommonPipelineHandlers(
             config: EventHandlerConfig,
             pipeline: AIAgentPipeline,
-            interceptContext: InterceptContext<EventHandler>
         ) {
-            pipeline.interceptAgentCompleted(interceptContext) intercept@{ eventContext ->
+            pipeline.interceptAgentCompleted(this) intercept@{ eventContext ->
                 config.invokeOnAgentCompleted(eventContext)
             }
 
-            pipeline.interceptAgentExecutionFailed(interceptContext) intercept@{ eventContext ->
+            pipeline.interceptAgentExecutionFailed(this) intercept@{ eventContext ->
                 config.invokeOnAgentExecutionFailed(eventContext)
             }
 
-            pipeline.interceptAgentClosing(interceptContext) intercept@{ eventContext ->
+            pipeline.interceptAgentClosing(this) intercept@{ eventContext ->
                 config.invokeOnAgentClosing(eventContext)
             }
 
-            pipeline.interceptStrategyStarting(interceptContext) intercept@{ eventContext ->
+            pipeline.interceptStrategyStarting(this) intercept@{ eventContext ->
                 config.invokeOnStrategyStarting(eventContext)
             }
 
-            pipeline.interceptStrategyCompleted(interceptContext) intercept@{ eventContext ->
+            pipeline.interceptStrategyCompleted(this) intercept@{ eventContext ->
                 config.invokeOnStrategyCompleted(eventContext)
             }
 
-            pipeline.interceptLLMCallStarting(interceptContext) intercept@{ eventContext: LLMCallStartingContext ->
+            pipeline.interceptLLMCallStarting(this) intercept@{ eventContext: LLMCallStartingContext ->
                 config.invokeOnLLMCallStarting(eventContext)
             }
 
-            pipeline.interceptLLMCallCompleted(interceptContext) intercept@{ eventContext: LLMCallCompletedContext ->
+            pipeline.interceptLLMCallCompleted(this) intercept@{ eventContext: LLMCallCompletedContext ->
                 config.invokeOnLLMCallCompleted(eventContext)
             }
 
-            pipeline.interceptToolCallStarting(interceptContext) intercept@{ eventContext: ToolCallStartingContext ->
+            pipeline.interceptToolCallStarting(this) intercept@{ eventContext: ToolCallStartingContext ->
                 config.invokeOnToolCallStarting(eventContext)
             }
 
             pipeline.interceptToolValidationFailed(
-                interceptContext
+                this
             ) intercept@{ eventContext: ToolValidationFailedContext ->
                 config.invokeOnToolValidationFailed(eventContext)
             }
 
-            pipeline.interceptToolCallFailed(interceptContext) intercept@{ eventContext: ToolCallFailedContext ->
+            pipeline.interceptToolCallFailed(this) intercept@{ eventContext: ToolCallFailedContext ->
                 config.invokeOnToolCallFailed(eventContext)
             }
 
-            pipeline.interceptToolCallCompleted(interceptContext) intercept@{ eventContext: ToolCallCompletedContext ->
+            pipeline.interceptToolCallCompleted(this) intercept@{ eventContext: ToolCallCompletedContext ->
                 config.invokeOnToolCallCompleted(eventContext)
             }
 
-            pipeline.interceptLLMStreamingStarting(interceptContext) intercept@{ eventContext: LLMStreamingStartingContext ->
+            pipeline.interceptLLMStreamingStarting(this) intercept@{ eventContext: LLMStreamingStartingContext ->
                 config.invokeOnLLMStreamingStarting(eventContext)
             }
 
-            pipeline.interceptLLMStreamingFrameReceived(interceptContext) intercept@{ eventContext: LLMStreamingFrameReceivedContext ->
+            pipeline.interceptLLMStreamingFrameReceived(this) intercept@{ eventContext: LLMStreamingFrameReceivedContext ->
                 config.invokeOnLLMStreamingFrameReceived(eventContext)
             }
 
-            pipeline.interceptLLMStreamingFailed(interceptContext) intercept@{ eventContext ->
+            pipeline.interceptLLMStreamingFailed(this) intercept@{ eventContext ->
                 config.invokeOnLLMStreamingFailed(eventContext)
             }
 
-            pipeline.interceptLLMStreamingCompleted(interceptContext) intercept@{ eventContext: LLMStreamingCompletedContext ->
+            pipeline.interceptLLMStreamingCompleted(this) intercept@{ eventContext: LLMStreamingCompletedContext ->
                 config.invokeOnLLMStreamingCompleted(eventContext)
             }
         }

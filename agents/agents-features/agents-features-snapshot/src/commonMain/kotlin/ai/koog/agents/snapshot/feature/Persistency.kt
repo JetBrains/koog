@@ -14,7 +14,6 @@ import ai.koog.agents.core.agent.entity.AIAgentSubgraph
 import ai.koog.agents.core.agent.featureOrThrow
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.feature.AIAgentGraphFeature
-import ai.koog.agents.core.feature.InterceptContext
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.tools.DirectToolCallsEnabler
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
@@ -121,16 +120,15 @@ public class Persistence(
             val persistence = Persistence(config.storage)
             persistence.rollbackStrategy = config.rollbackStrategy
             persistence.rollbackToolRegistry = config.rollbackToolRegistry
-            val interceptContext = InterceptContext(this, persistence)
 
-            pipeline.interceptStrategyStarting(interceptContext) { ctx ->
+            pipeline.interceptStrategyStarting(this) { ctx ->
                 val strategy = ctx.strategy as AIAgentGraphStrategy<*, *>
 
                 require(strategy.metadata.uniqueNames) {
                     "Checkpoint feature requires unique node names in the strategy metadata"
                 }
 
-                val checkpoint = ctx.feature.rollbackToLatestCheckpoint(ctx.context)
+                val checkpoint = persistence.rollbackToLatestCheckpoint(ctx.context)
 
                 if (checkpoint != null) {
                     logger.info { "Restoring checkpoint: ${checkpoint.checkpointId} to node ${checkpoint.nodeId}" }
@@ -139,14 +137,14 @@ public class Persistence(
                 }
             }
 
-            pipeline.interceptNodeExecutionCompleted(interceptContext) { eventCtx ->
-                if (isTechnicalNode(eventCtx.node.id)) {
+            pipeline.interceptNodeExecutionCompleted(this) { eventCtx ->
+                if (persistence.isTechnicalNode(eventCtx.node.id)) {
                     return@interceptNodeExecutionCompleted
                 }
 
                 if (config.enableAutomaticPersistence) {
-                    val parent = getLatestCheckpoint(eventCtx.context.agentId)
-                    createCheckpoint(
+                    val parent = persistence.getLatestCheckpoint(eventCtx.context.agentId)
+                    persistence.createCheckpoint(
                         agentContext = eventCtx.context,
                         nodeId = eventCtx.node.id,
                         lastInput = eventCtx.input,
@@ -156,16 +154,16 @@ public class Persistence(
                 }
             }
 
-            pipeline.interceptNodeExecutionStarting(interceptContext) { eventCtx ->
+            pipeline.interceptNodeExecutionStarting(this) { eventCtx ->
                 persistence.currentNodeId = eventCtx.node.id
             }
 
-            pipeline.interceptStrategyCompleted(interceptContext) { ctx ->
+            pipeline.interceptStrategyCompleted(this) { ctx ->
                 if (config.enableAutomaticPersistence && config.rollbackStrategy == RollbackStrategy.Default) {
-                    val parent = ctx.feature.getLatestCheckpoint(ctx.agentId)
-                    ctx.feature.createTombstoneCheckpoint(
+                    val parent = persistence.getLatestCheckpoint(ctx.agentId)
+                    persistence.createTombstoneCheckpoint(
                         ctx.agentId,
-                        ctx.feature.clock.now(),
+                        persistence.clock.now(),
                         parent?.version?.plus(1) ?: 0L
                     )
                 }
