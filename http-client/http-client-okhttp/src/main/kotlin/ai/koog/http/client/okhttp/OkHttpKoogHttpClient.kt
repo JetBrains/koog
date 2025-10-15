@@ -69,11 +69,9 @@ public class OkHttpKoogHttpClient internal constructor(
                 }
             } else {
                 val errorBody = response.body.string()
-                val errorMessage = "Error from $clientName API: ${response.code}"
+                val errorMessage = "Error from $clientName API: ${response.code}\nBody:\n$errorBody"
 
                 logger.error { errorMessage }
-                logger.trace { "$errorMessage\nBody:\n$errorBody" }
-
                 error(errorMessage)
             }
         }
@@ -122,15 +120,14 @@ public class OkHttpKoogHttpClient internal constructor(
             }
 
             override fun onFailure(eventSource: EventSource, t: Throwable?, response: Response?) {
-                val body = response?.body?.string()
                 val errorMessage = if (response != null) {
-                    "Error from $clientName API: ${response.code}: ${t?.message}"
+                    val body = response.body.string()
+                    "Error from $clientName API: ${response.code}: ${t?.message}\nBody:\n$body"
                 } else {
                     "Exception during streaming from $clientName: ${t?.message ?: "Unknown error"}"
                 }
 
                 logger.error(t) { errorMessage }
-                logger.trace(t) { "$errorMessage\nBody:\n$body" }
 
                 close(IllegalStateException(errorMessage, t))
             }
