@@ -7,11 +7,11 @@ import ai.koog.integration.tests.utils.TestUtils
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
-import ai.koog.prompt.executor.clients.bedrock.BedrockModels
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.clients.openrouter.OpenRouterLLMClient
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterModels
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
@@ -114,7 +114,8 @@ class ToolDescriptorIntegrationTest {
                 OpenAIModels.CostOptimized.GPT4_1Mini,
                 AnthropicModels.Sonnet_3_7,
                 GoogleModels.Gemini2_5Flash,
-                BedrockModels.AnthropicClaude35Haiku,
+                // TODO hard to test locally, sort things out with getting proper AWS credentials locally
+                // BedrockModels.AnthropicClaude35Haiku,
                 OpenRouterModels.Mistral7B,
             )
         }
@@ -327,7 +328,9 @@ class ToolDescriptorIntegrationTest {
         val client = when (model.provider) {
             is LLMProvider.Anthropic -> AnthropicLLMClient(TestUtils.readTestAnthropicKeyFromEnv())
             is LLMProvider.Google -> GoogleLLMClient(TestUtils.readTestGoogleAIKeyFromEnv())
-            else -> OpenAILLMClient(TestUtils.readTestOpenAIKeyFromEnv())
+            is LLMProvider.OpenRouter -> OpenRouterLLMClient(TestUtils.readTestOpenRouterKeyFromEnv())
+            is LLMProvider.OpenAI -> OpenAILLMClient(TestUtils.readTestOpenAIKeyFromEnv())
+            else -> error("Unknown LLM provider: ${model.provider}")
         }
 
         val testTool = tool as TestTool<*, *>

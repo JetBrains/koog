@@ -128,9 +128,6 @@ class ModelCapabilitiesIntegrationTest {
     @OptIn(ExperimentalEncodingApi::class)
     fun integration_positiveCapabilityShouldWork(model: LLModel, capability: LLMCapability) =
         runTest(timeout = 300.seconds) {
-            val startTime = System.currentTimeMillis()
-            println("[$startTime] Starting: ${Thread.currentThread().name} - ${model.id} with $capability")
-
             when (capability) {
                 LLMCapability.Completion -> {
                     val prompt = prompt("cap-completion-positive") {
