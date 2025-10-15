@@ -1,7 +1,5 @@
 package ai.koog.agents.features.eventHandler.feature
 
-import ai.koog.agents.core.agent.FunctionalAIAgent
-import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.GraphAIAgent.FeatureContext
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.feature.AIAgentFunctionalFeature
@@ -61,7 +59,6 @@ public class EventHandler {
         override fun install(
             config: EventHandlerConfig,
             pipeline: AIAgentGraphPipeline,
-            agent: GraphAIAgent<*, *>,
         ): EventHandler {
             logger.info { "Start installing feature: ${EventHandler::class.simpleName}" }
 
@@ -76,7 +73,6 @@ public class EventHandler {
         override fun install(
             config: EventHandlerConfig,
             pipeline: AIAgentFunctionalPipeline,
-            agent: FunctionalAIAgent<*, *>,
         ): EventHandler {
             val eventHandler = EventHandler()
 

@@ -44,6 +44,7 @@ public class FunctionalAIAgent<Input, Output>(
     public val installFeatures: FeatureContext.() -> Unit = {}
 ) : StatefulSingleUseAIAgent<Input, Output, AIAgentFunctionalContext>(
     logger = logger,
+    id = id,
 ) {
     private companion object {
         private val logger = KotlinLogging.logger {}
@@ -74,7 +75,7 @@ public class FunctionalAIAgent<Input, Output>(
             feature: AIAgentFunctionalFeature<Config, Feature>,
             configure: Config.() -> Unit = {}
         ) {
-            agent.pipeline.install(feature, configure, agent)
+            agent.pipeline.install(feature, configure)
         }
     }
 

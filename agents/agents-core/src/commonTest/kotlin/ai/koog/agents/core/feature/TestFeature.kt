@@ -1,6 +1,5 @@
 package ai.koog.agents.core.feature
 
-import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.feature.config.FeatureConfig
@@ -22,7 +21,6 @@ class TestFeature(val events: MutableList<String>, val runIds: MutableList<Strin
         override fun install(
             config: Config,
             pipeline: AIAgentGraphPipeline,
-            agent: GraphAIAgent<*, *>,
         ): TestFeature {
             val testFeature = TestFeature(
                 events = config.events ?: mutableListOf(),

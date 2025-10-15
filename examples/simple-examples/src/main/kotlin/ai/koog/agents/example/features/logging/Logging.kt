@@ -51,7 +51,6 @@ class Logging(val logger: Logger) {
         override fun install(
             config: Config,
             pipeline: AIAgentGraphPipeline,
-            agent: GraphAIAgent<*, *>,
         ): Logging {
             val logging = Logging(LoggerFactory.getLogger(config.loggerName))
 

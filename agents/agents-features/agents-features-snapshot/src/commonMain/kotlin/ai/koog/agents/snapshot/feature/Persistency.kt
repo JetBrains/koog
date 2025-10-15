@@ -1,7 +1,6 @@
 package ai.koog.agents.snapshot.feature
 
 import ai.koog.agents.core.agent.AIAgent.Companion.State.Running
-import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.StatefulSingleUseAIAgent
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AgentContextData
@@ -115,7 +114,6 @@ public class Persistence(
         override fun install(
             config: PersistenceFeatureConfig,
             pipeline: AIAgentGraphPipeline,
-            agent: GraphAIAgent<*, *>,
         ): Persistence {
             val persistence = Persistence(config.storage)
             persistence.rollbackStrategy = config.rollbackStrategy

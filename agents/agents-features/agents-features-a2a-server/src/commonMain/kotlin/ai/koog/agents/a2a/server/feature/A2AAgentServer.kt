@@ -3,8 +3,6 @@ package ai.koog.agents.a2a.server.feature
 import ai.koog.a2a.model.MessageSendParams
 import ai.koog.a2a.server.session.RequestContext
 import ai.koog.a2a.server.session.SessionEventProcessor
-import ai.koog.agents.core.agent.FunctionalAIAgent
-import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.featureOrThrow
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
@@ -81,7 +79,6 @@ public class A2AAgentServer(
         override fun install(
             config: Config,
             pipeline: AIAgentGraphPipeline,
-            agent: GraphAIAgent<*, *>,
         ): A2AAgentServer {
             return createFeature(config)
         }
@@ -89,7 +86,6 @@ public class A2AAgentServer(
         override fun install(
             config: Config,
             pipeline: AIAgentFunctionalPipeline,
-            agent: FunctionalAIAgent<*, *>,
         ): A2AAgentServer {
             return createFeature(config)
         }

@@ -61,7 +61,7 @@ public abstract class StatefulSingleUseAIAgent<Input, Output, TContext : AIAgent
      * executing workflows, handling inputs, and generating outputs in the
      * AI agent's functionality.
      */
-    public abstract val pipeline: AIAgentPipeline
+    protected abstract val pipeline: AIAgentPipeline
 
     /**
      * Executes the agent's main functionality, coordinating with various components
@@ -177,6 +177,20 @@ public abstract class StatefulSingleUseAIAgent<Input, Output, TContext : AIAgent
     public abstract suspend fun prepareContext(agentInput: Input, runId: String): TContext
 
     /**
+     * Retrieves a feature from the agent's pipeline associated with this agent using the specified key.
+     *
+     * @param TFeature A feature implementation type.
+     * @param feature A feature to fetch.
+     * @param featureKlass The [KClass] of the feature to be retrieved.
+     * @return The feature associated with the provided key, or null if no matching feature is found.
+     * @throws IllegalArgumentException if the specified [featureKlass] does not correspond to a registered feature.
+     */
+    public fun <TFeature : Any> feature(
+        featureKlass: KClass<TFeature>,
+        feature: AIAgentFeature<*, TFeature>
+    ): TFeature? = pipeline.feature(featureKlass, feature)
+
+    /**
      * Formats a log message with the specified agent ID, run ID, and message content.
      *
      * @param agentId The unique identifier of the agent generating the log.
@@ -187,20 +201,6 @@ public abstract class StatefulSingleUseAIAgent<Input, Output, TContext : AIAgent
     protected fun formatLog(agentId: String, runId: String, message: String): String =
         "[agent id: $agentId, run id: $runId] $message"
 }
-
-/**
- * Retrieves a feature from the [StatefulSingleUseAIAgent.pipeline] associated with this agent using the specified key.
- *
- * @param TFeature A feature implementation type.
- * @param feature A feature to fetch.
- * @param featureKlass The [KClass] of the feature to be retrieved.
- * @return The feature associated with the provided key, or null if no matching feature is found.
- * @throws IllegalArgumentException if the specified [featureKlass] does not correspond to a registered feature.
- */
-public fun <TFeature : Any> StatefulSingleUseAIAgent<*, *, *>.feature(
-    featureKlass: KClass<TFeature>,
-    feature: AIAgentFeature<*, TFeature>
-): TFeature? = pipeline.feature(featureKlass, feature)
 
 /**
  * Retrieves a feature from the [StatefulSingleUseAIAgent.pipeline] associated with this agent using the specified key.

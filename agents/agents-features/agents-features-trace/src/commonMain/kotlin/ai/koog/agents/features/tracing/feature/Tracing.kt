@@ -1,6 +1,5 @@
 package ai.koog.agents.features.tracing.feature
 
-import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.annotation.InternalAgentsApi
@@ -103,7 +102,6 @@ public class Tracing {
         override fun install(
             config: TraceFeatureConfig,
             pipeline: AIAgentGraphPipeline,
-            agent: GraphAIAgent<*, *>,
         ): Tracing {
             logger.info { "Start installing feature: ${Tracing::class.simpleName}" }
 

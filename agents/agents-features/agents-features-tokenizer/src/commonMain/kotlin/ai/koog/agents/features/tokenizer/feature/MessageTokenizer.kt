@@ -1,7 +1,5 @@
 package ai.koog.agents.features.tokenizer.feature
 
-import ai.koog.agents.core.agent.FunctionalAIAgent
-import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.featureOrThrow
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
@@ -71,7 +69,6 @@ public class MessageTokenizer(public val promptTokenizer: PromptTokenizer) {
         override fun install(
             config: MessageTokenizerConfig,
             pipeline: AIAgentGraphPipeline,
-            agent: GraphAIAgent<*, *>,
         ): MessageTokenizer {
             return createFeature(config)
         }
@@ -79,7 +76,6 @@ public class MessageTokenizer(public val promptTokenizer: PromptTokenizer) {
         override fun install(
             config: MessageTokenizerConfig,
             pipeline: AIAgentFunctionalPipeline,
-            agent: FunctionalAIAgent<*, *>,
         ): MessageTokenizer {
             return createFeature(config)
         }

@@ -1,6 +1,5 @@
 package ai.koog.agents.features.debugger.feature
 
-import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.annotation.InternalAgentsApi
@@ -62,7 +61,6 @@ public class Debugger {
         override fun install(
             config: DebuggerConfig,
             pipeline: AIAgentGraphPipeline,
-            agent: GraphAIAgent<*, *>,
         ): Debugger {
             logger.debug { "Debugger Feature. Start installing feature: ${Debugger::class.simpleName}" }
 

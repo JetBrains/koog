@@ -1,6 +1,5 @@
 package ai.koog.agents.core.feature.pipeline
 
-import ai.koog.agents.core.agent.FunctionalAIAgent
 import ai.koog.agents.core.feature.AIAgentFunctionalFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
 import kotlinx.datetime.Clock
@@ -27,13 +26,11 @@ public class AIAgentFunctionalPipeline(clock: Clock = Clock.System) : AIAgentPip
     public fun <TConfig : FeatureConfig, TFeature : Any> install(
         feature: AIAgentFunctionalFeature<TConfig, TFeature>,
         configure: TConfig.() -> Unit,
-        agent: FunctionalAIAgent<*, *>,
     ) {
         val featureConfig = feature.createInitialConfig().apply { configure() }
         val featureImpl = feature.install(
             config = featureConfig,
             pipeline = this,
-            agent = agent,
         )
 
         registeredFeatures[feature.key] = RegisteredFeature(featureImpl, featureConfig)

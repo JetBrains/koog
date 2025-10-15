@@ -1,6 +1,5 @@
 package ai.koog.agents.core.feature.pipeline
 
-import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
@@ -44,13 +43,11 @@ public class AIAgentGraphPipeline(clock: Clock = Clock.System) : AIAgentPipeline
     public fun <TConfig : FeatureConfig, TFeature : Any> install(
         feature: AIAgentGraphFeature<TConfig, TFeature>,
         configure: TConfig.() -> Unit,
-        agent: GraphAIAgent<*, *>,
     ) {
         val featureConfig = feature.createInitialConfig().apply { configure() }
         val featureImpl = feature.install(
             config = featureConfig,
             pipeline = this,
-            agent = agent,
         )
 
         registeredFeatures[feature.key] = RegisteredFeature(featureImpl, featureConfig)

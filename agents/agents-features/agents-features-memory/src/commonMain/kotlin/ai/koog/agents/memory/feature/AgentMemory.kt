@@ -1,7 +1,5 @@
 package ai.koog.agents.memory.feature
 
-import ai.koog.agents.core.agent.FunctionalAIAgent
-import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.agents.core.agent.context.featureOrThrow
@@ -15,6 +13,7 @@ import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.pipeline.AIAgentFunctionalPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
+import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.memory.config.MemoryScopeType
 import ai.koog.agents.memory.config.MemoryScopesProfile
@@ -191,26 +190,32 @@ public class AgentMemory(
          */
         private fun createFeature(
             config: Config,
-            strategyName: String,
+            pipeline: AIAgentPipeline,
         ): AgentMemory {
-            if (config.agentName == Config.UNKNOWN_NAME) {
-                config.agentName = strategyName
+            val memory = AgentMemory(config.memoryProvider, config.scopesProfile)
+
+            pipeline.interceptStrategyStarting(this) { ctx ->
+                // Setting default agent name the same as strategy name
+                // TODO not very robust
+                memory.scopesProfile.let {
+                    if (MemoryScopeType.AGENT !in it.names) {
+                        it.names[MemoryScopeType.AGENT] = ctx.strategy.name
+                    }
+                }
             }
 
-            return AgentMemory(config.memoryProvider, config.scopesProfile)
+            return memory
         }
 
         override fun install(
             config: Config,
             pipeline: AIAgentGraphPipeline,
-            agent: GraphAIAgent<*, *>,
-        ): AgentMemory = createFeature(config, agent.strategy.name)
+        ): AgentMemory = createFeature(config, pipeline)
 
         override fun install(
             config: Config,
             pipeline: AIAgentFunctionalPipeline,
-            agent: FunctionalAIAgent<*, *>,
-        ): AgentMemory = createFeature(config, agent.strategy.name)
+        ): AgentMemory = createFeature(config, pipeline)
     }
 
     /**

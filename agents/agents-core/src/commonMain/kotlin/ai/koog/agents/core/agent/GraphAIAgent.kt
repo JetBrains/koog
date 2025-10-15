@@ -93,7 +93,7 @@ public open class GraphAIAgent<Input, Output>(
             feature: AIAgentGraphFeature<Config, Feature>,
             configure: Config.() -> Unit = {}
         ) {
-            agent.pipeline.install(feature, configure, agent)
+            agent.pipeline.install(feature, configure)
         }
     }
 

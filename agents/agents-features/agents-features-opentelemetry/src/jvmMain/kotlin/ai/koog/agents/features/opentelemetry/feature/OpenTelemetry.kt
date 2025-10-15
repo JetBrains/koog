@@ -1,6 +1,5 @@
 package ai.koog.agents.features.opentelemetry.feature
 
-import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.context.element.getAgentRunInfoElementOrThrow
 import ai.koog.agents.core.agent.context.element.getNodeInfoElement
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
@@ -49,7 +48,6 @@ public class OpenTelemetry {
         override fun install(
             config: OpenTelemetryConfig,
             pipeline: AIAgentGraphPipeline,
-            agent: GraphAIAgent<*, *>,
         ): OpenTelemetry {
             val openTelemetry = OpenTelemetry()
             val tracer = config.tracer

@@ -932,7 +932,6 @@ public class Testing {
         override fun install(
             config: Config,
             pipeline: AIAgentGraphPipeline,
-            agent: GraphAIAgent<*, *>,
         ): Testing {
             val testing = Testing()
             pipeline.interceptEnvironmentCreated(this) { agentEnvironment ->

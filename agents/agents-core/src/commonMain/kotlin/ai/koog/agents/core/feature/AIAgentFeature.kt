@@ -1,7 +1,5 @@
 package ai.koog.agents.core.feature
 
-import ai.koog.agents.core.agent.FunctionalAIAgent
-import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.pipeline.AIAgentFunctionalPipeline
@@ -35,14 +33,10 @@ public interface AIAgentFeature<TConfig : FeatureConfig, TFeatureImpl : Any> {
  */
 public interface AIAgentGraphFeature<TConfig : FeatureConfig, TFeatureImpl : Any> : AIAgentFeature<TConfig, TFeatureImpl> {
     /**
-     * Installs the feature into the specified [pipeline] associated with the [agent].
+     * Installs the feature into the specified [pipeline].
      * @return The implementation of the feature.
      */
-    public fun install(
-        config: TConfig,
-        pipeline: AIAgentGraphPipeline,
-        agent: GraphAIAgent<*, *>
-    ): TFeatureImpl
+    public fun install(config: TConfig, pipeline: AIAgentGraphPipeline): TFeatureImpl
 }
 
 /**
@@ -53,12 +47,8 @@ public interface AIAgentGraphFeature<TConfig : FeatureConfig, TFeatureImpl : Any
  */
 public interface AIAgentFunctionalFeature<TConfig : FeatureConfig, TFeatureImpl : Any> : AIAgentFeature<TConfig, TFeatureImpl> {
     /**
-     * Installs the feature into the specified [pipeline] associated with the [agent]..
+     * Installs the feature into the specified [pipeline].
      * @return The implementation of the feature.
      */
-    public fun install(
-        config: TConfig,
-        pipeline: AIAgentFunctionalPipeline,
-        agent: FunctionalAIAgent<*, *>
-    ): TFeatureImpl
+    public fun install(config: TConfig, pipeline: AIAgentFunctionalPipeline): TFeatureImpl
 }

@@ -1,8 +1,6 @@
 package ai.koog.agents.a2a.client.feature
 
 import ai.koog.a2a.client.A2AClient
-import ai.koog.agents.core.agent.FunctionalAIAgent
-import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.featureOrThrow
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
@@ -70,7 +68,6 @@ public class A2AAgentClient(
         override fun install(
             config: Config,
             pipeline: AIAgentGraphPipeline,
-            agent: GraphAIAgent<*, *>,
         ): A2AAgentClient {
             return createFeature(config)
         }
@@ -78,7 +75,6 @@ public class A2AAgentClient(
         override fun install(
             config: Config,
             pipeline: AIAgentFunctionalPipeline,
-            agent: FunctionalAIAgent<*, *>,
         ): A2AAgentClient {
             return createFeature(config)
         }
