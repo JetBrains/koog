@@ -181,14 +181,14 @@ public abstract class StatefulSingleUseAIAgent<Input, Output, TContext : AIAgent
      *
      * @param TFeature A feature implementation type.
      * @param feature A feature to fetch.
-     * @param featureKlass The [KClass] of the feature to be retrieved.
+     * @param featureClass The [KClass] of the feature to be retrieved.
      * @return The feature associated with the provided key, or null if no matching feature is found.
-     * @throws IllegalArgumentException if the specified [featureKlass] does not correspond to a registered feature.
+     * @throws IllegalArgumentException if the specified [featureClass] does not correspond to a registered feature.
      */
     public fun <TFeature : Any> feature(
-        featureKlass: KClass<TFeature>,
+        featureClass: KClass<TFeature>,
         feature: AIAgentFeature<*, TFeature>
-    ): TFeature? = pipeline.feature(featureKlass, feature)
+    ): TFeature? = pipeline.feature(featureClass, feature)
 
     /**
      * Formats a log message with the specified agent ID, run ID, and message content.

@@ -177,20 +177,20 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
      *
      * @param TFeature A feature implementation type.
      * @param feature A feature to fetch.
-     * @param featureKlass The [KClass] of the feature to be retrieved.
+     * @param featureClass The [KClass] of the feature to be retrieved.
      * @return The feature associated with the provided key, or null if no matching feature is found.
-     * @throws IllegalArgumentException if the specified [featureKlass] does not correspond to a registered feature.
+     * @throws IllegalArgumentException if the specified [featureClass] does not correspond to a registered feature.
      */
     public fun <TFeature : Any> feature(
-        featureKlass: KClass<TFeature>,
+        featureClass: KClass<TFeature>,
         feature: AIAgentFeature<*, TFeature>
     ): TFeature? {
         val featureImpl = registeredFeatures[feature.key]?.featureImpl ?: return null
 
-        return featureKlass.safeCast(featureImpl)
+        return featureClass.safeCast(featureImpl)
             ?: throw IllegalArgumentException(
                 "Feature ${feature.key} is found, but it is not of the expected type.\n" +
-                    "Expected type: ${featureKlass.simpleName}\n" +
+                    "Expected type: ${featureClass.simpleName}\n" +
                     "Actual type: ${featureImpl::class.simpleName}"
             )
     }
