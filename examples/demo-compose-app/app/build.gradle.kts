@@ -1,5 +1,8 @@
+@file:OptIn(ExperimentalKotlinGradlePluginApi::class)
+
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.compose.reload.gradle.ComposeHotRun
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSetTree
 
 plugins {
@@ -12,7 +15,7 @@ plugins {
 }
 
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(libs.versions.jdkVersion.get().toInt())
 
     androidTarget {
         // https://www.jetbrains.com/help/kotlin-multiplatform-dev/compose-test.html
@@ -22,7 +25,6 @@ kotlin {
     jvm()
 
     listOf(
-        // iosX64(),
         iosArm64(),
         iosSimulatorArm64()
     ).forEach {
@@ -60,6 +62,7 @@ kotlin {
             implementation(libs.koog.agents.core)
             implementation(libs.koog.prompt.executor.llms.all)
             implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.kotlinx.datetime)
             implementation(libs.kotlinx.serialization.core)
             implementation(libs.kotlinx.serialization.json)
             implementation(project.dependencies.platform(libs.koin.bom))
@@ -96,7 +99,7 @@ kotlin {
 }
 
 android {
-    namespace = "com.jetbrains.example.kotlin_agents_demo_app"
+    namespace = "com.jetbrains.example.koog.compose"
     compileSdk = 36
 
     buildFeatures {
@@ -104,7 +107,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.jetbrains.example.kotlin_agents_demo_app"
+        applicationId = "com.jetbrains.example.koog.compose"
         minSdk = 24
         targetSdk = 36
         versionCode = 1
@@ -146,7 +149,7 @@ compose.desktop {
             }
             macOS {
                 // iconFile.set(project.file("desktopAppIcons/MacosIcon.icns"))
-                bundleID = "com.jetbrains.example.kotlin_agents_demo_app.desktopApp"
+                bundleID = "com.jetbrains.example.koog.compose.desktopApp"
             }
         }
     }

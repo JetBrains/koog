@@ -1,5 +1,5 @@
 [versions]
-agp = "8.11.1"
+agp = "8.13.0"
 annotations = "26.0.2"
 assertj = "3.27.4"
 awaitility = "4.3.0"
@@ -8,8 +8,8 @@ dokka = "2.0.0"
 exposed = "0.58.0"
 h2 = "2.2.224"
 hikaricp = "6.2.1"
-jetsign = "45.47"
 jdkVersion = "17"
+jetsign = "45.47"
 junit = "5.8.2"
 knit = "0.5.0"
 kotest = "6.0.3"
@@ -26,6 +26,7 @@ logback = "1.5.13"
 mcp = "0.7.2"
 mockito = "5.19.0"
 mockk = "1.13.8"
+mokksy = "0.5.0-Alpha3"
 mysql = "8.0.33"
 netty = "4.2.6.Final"
 okhttp = "5.2.1"
@@ -37,7 +38,6 @@ spring-boot = "3.5.3"
 spring-management = "1.1.7"
 sqlite = "3.46.1.3"
 testcontainers = "1.19.7"
-mokksy = "0.5.0-Alpha3"
 
 [libraries]
 jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "annotations" }
@@ -87,7 +87,6 @@ mcp-client = { module = "io.modelcontextprotocol:kotlin-sdk-client", version.ref
 mcp-server = { module = "io.modelcontextprotocol:kotlin-sdk-server", version.ref = "mcp" }
 slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
 jetsign-gradle-plugin = { module = "com.jetbrains:jet-sign", version.ref = "jetsign" }
-kotest-assertions = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
 testcontainers = { module = "org.testcontainers:testcontainers", version.ref = "testcontainers" }
 testcontainers-junit = { module = "org.testcontainers:junit-jupiter", version.ref = "testcontainers" }
 testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.ref = "testcontainers" }
