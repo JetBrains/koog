@@ -103,7 +103,7 @@ class AIAgentMemoryTest {
             memoryProvider.save(any(), any(), any())
         } returns Unit
 
-        val llmContext = AIAgentLLMContext(
+        val llm = AIAgentLLMContext(
             tools = emptyList(),
             prompt = prompt("test") { },
             model = testModel,
@@ -115,12 +115,12 @@ class AIAgentMemoryTest {
 
         val memory = AgentMemory(
             agentMemory = memoryProvider,
-            llm = llmContext,
             scopesProfile = MemoryScopesProfile()
         )
         val concept = Concept("test", "test description", FactType.SINGLE)
 
         memory.saveFactsFromHistory(
+            llm = llm,
             concept = concept,
             subject = MemorySubjects.User,
             scope = MemoryScope.Agent("test")
@@ -194,7 +194,7 @@ class AIAgentMemoryTest {
             promptExecutor.execute(any(), any(), any())
         } returns listOf(response)
 
-        val llmContext = AIAgentLLMContext(
+        val llm = AIAgentLLMContext(
             tools = emptyList(),
             prompt = prompt("test") { },
             model = testModel,
@@ -206,7 +206,6 @@ class AIAgentMemoryTest {
 
         val memory = AgentMemory(
             agentMemory = memoryProvider,
-            llm = llmContext,
             scopesProfile = MemoryScopesProfile(
                 MemoryScopeType.AGENT to "test-agent",
                 MemoryScopeType.FEATURE to "test-feature",
@@ -215,7 +214,7 @@ class AIAgentMemoryTest {
             )
         )
 
-        memory.loadFactsToAgent(concept, subjects = listOf(MemorySubjects.User))
+        memory.loadFactsToAgent(llm = llm, concept = concept, subjects = listOf(MemorySubjects.User))
 
         coVerify {
             memoryProvider.load(concept, MemorySubjects.User, MemoryScope.Agent("test-agent"))
@@ -255,7 +254,7 @@ class AIAgentMemoryTest {
         // Mock LLM context to capture prompt updates
         mockkConstructor(AIAgentLLMWriteSession::class)
 
-        val llmContext = mockk<AIAgentLLMContext> {
+        val llm = mockk<AIAgentLLMContext> {
             coEvery {
                 writeSession<Any?>(any<suspend AIAgentLLMWriteSession.() -> Any?>())
             } coAnswers {
@@ -271,15 +270,14 @@ class AIAgentMemoryTest {
 
         val memory = AgentMemory(
             agentMemory = memoryProvider,
-            llm = llmContext,
             scopesProfile = MemoryScopesProfile(MemoryScopeType.AGENT to "test-agent")
         )
 
-        memory.loadFactsToAgent(concept)
+        memory.loadFactsToAgent(llm = llm, concept = concept)
 
         // Verify that writeSession was called and the prompt was updated with facts
         coVerify {
-            llmContext.writeSession(any())
+            llm.writeSession(any())
         }
         assertTrue(promptUpdateSlot.isCaptured, "Prompt update should be captured")
 
@@ -319,7 +317,7 @@ class AIAgentMemoryTest {
             memoryProvider.save(capture(savedFacts), any(), any())
         } returns Unit
 
-        val llmContext = AIAgentLLMContext(
+        val llm = AIAgentLLMContext(
             tools = emptyList(),
             prompt = prompt("test") { },
             model = testModel,
@@ -331,7 +329,6 @@ class AIAgentMemoryTest {
 
         val memory = AgentMemory(
             agentMemory = memoryProvider,
-            llm = llmContext,
             scopesProfile = MemoryScopesProfile()
         )
 
@@ -342,6 +339,7 @@ class AIAgentMemoryTest {
         // Save multiple facts
         repeat(3) { index ->
             memory.saveFactsFromHistory(
+                llm = llm,
                 concept = concept,
                 subject = subject,
                 scope = scope
@@ -398,7 +396,7 @@ class AIAgentMemoryTest {
             memoryProvider.save(capture(savedFacts), capture(savedSubjects), capture(savedScopes))
         } returns Unit
 
-        val llmContext = AIAgentLLMContext(
+        val llm = AIAgentLLMContext(
             tools = emptyList(),
             prompt = prompt("test") {
                 system("Test system message")
@@ -414,7 +412,6 @@ class AIAgentMemoryTest {
 
         val memory = AgentMemory(
             agentMemory = memoryProvider,
-            llm = llmContext,
             scopesProfile = MemoryScopesProfile()
         )
 
@@ -423,6 +420,7 @@ class AIAgentMemoryTest {
         val testScope = MemoryScope.Agent("test")
 
         memory.saveFactsFromHistory(
+            llm = llm,
             concept = concept,
             subject = testSubject,
             scope = testScope,
@@ -485,7 +483,7 @@ class AIAgentMemoryTest {
             memoryProvider.save(capture(savedFacts), any(), any())
         } returns Unit
 
-        val llmContext = AIAgentLLMContext(
+        val llm = AIAgentLLMContext(
             tools = emptyList(),
             prompt = prompt("test") {
                 system("Test system message")
@@ -501,7 +499,6 @@ class AIAgentMemoryTest {
 
         val memory = AgentMemory(
             agentMemory = memoryProvider,
-            llm = llmContext,
             scopesProfile = MemoryScopesProfile()
         )
 
@@ -509,6 +506,7 @@ class AIAgentMemoryTest {
             Concept("language-preferences", "User's programming language preferences by domain", FactType.MULTIPLE)
 
         memory.saveFactsFromHistory(
+            llm = llm,
             concept = concept,
             subject = MemorySubjects.User,
             scope = MemoryScope.Agent(testScopeName),
@@ -567,7 +565,7 @@ class AIAgentMemoryTest {
             promptExecutor.execute(any(), any(), any())
         } returns listOf(response)
 
-        val llmContext = AIAgentLLMContext(
+        val llm = AIAgentLLMContext(
             tools = emptyList(),
             prompt = prompt("test") { },
             model = testModel,
@@ -579,14 +577,14 @@ class AIAgentMemoryTest {
 
         val memory = AgentMemory(
             agentMemory = memoryProvider,
-            llm = llmContext,
             scopesProfile = MemoryScopesProfile(
                 MemoryScopeType.AGENT to "test-agent",
             )
         )
 
         memory.loadFactsToAgent(
-            concept,
+            llm = llm,
+            concept = concept,
             scopes = listOf(MemoryScopeType.AGENT),
             subjects = listOf(MemorySubjects.User)
         )

@@ -1,9 +1,9 @@
 package ai.koog.agents.core.feature
 
-import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.feature.config.FeatureConfig
+import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.prompt.message.Message
 
 class TestFeature(val events: MutableList<String>, val runIds: MutableList<String>) {
@@ -20,64 +20,59 @@ class TestFeature(val events: MutableList<String>, val runIds: MutableList<Strin
 
         override fun install(
             config: Config,
-            pipeline: AIAgentGraphPipeline
-        ) {
-            val feature = TestFeature(
+            pipeline: AIAgentGraphPipeline,
+        ): TestFeature {
+            val testFeature = TestFeature(
                 events = config.events ?: mutableListOf(),
                 runIds = config.runIds ?: mutableListOf()
             )
 
-            val context = InterceptContext(this, feature)
-
-            pipeline.interceptAgentStarting(context) { eventContext ->
-                feature.runIds += eventContext.runId
-                feature.events += "Agent: before agent started (id: ${eventContext.agent.id}, run id: ${eventContext.runId})"
+            pipeline.interceptAgentStarting(this) { eventContext ->
+                testFeature.runIds += eventContext.runId
+                testFeature.events += "Agent: before agent started (id: ${eventContext.agent.id}, run id: ${eventContext.runId})"
             }
 
-            pipeline.interceptStrategyStarting(context) { eventContext ->
-                feature.events += "Agent: strategy started (strategy name: ${eventContext.strategy.name})"
+            pipeline.interceptStrategyStarting(this) { eventContext ->
+                testFeature.events += "Agent: strategy started (strategy name: ${eventContext.strategy.name})"
             }
 
-            pipeline.interceptContextAgentFeature(this) { _: AIAgentContext ->
-                feature.events += "Agent Context: request features from agent context"
-                TestFeature(mutableListOf(), mutableListOf())
-            }
-
-            pipeline.interceptLLMCallStarting(context) { event ->
-                feature.events +=
+            pipeline.interceptLLMCallStarting(this) { event ->
+                testFeature.events +=
                     "LLM: start LLM call (prompt: ${event.prompt.messages.firstOrNull {
                         it.role == Message.Role.User
                     }?.content}, tools: [${event.tools.joinToString { it.name }}])"
             }
 
-            pipeline.interceptLLMCallCompleted(context) { event ->
-                feature.events +=
+            pipeline.interceptLLMCallCompleted(this) { event ->
+                testFeature.events +=
                     "LLM: finish LLM call (responses: [${event.responses.joinToString(", ") {
                         "${it.role.name}: ${it.content}"
                     }}])"
             }
 
-            pipeline.interceptNodeExecutionStarting(context) { event ->
-                feature.events += "Node: start node (name: ${event.node.name}, input: ${event.input})"
+            pipeline.interceptNodeExecutionStarting(this) { event ->
+                testFeature.events += "Node: start node (name: ${event.node.name}, input: ${event.input})"
             }
 
-            pipeline.interceptNodeExecutionCompleted(context) { event ->
-                feature.events +=
+            pipeline.interceptNodeExecutionCompleted(this) { event ->
+                testFeature.events +=
                     "Node: finish node (name: ${event.node.name}, input: ${event.input}, output: ${event.output})"
             }
 
-            pipeline.interceptNodeExecutionFailed(context) { event ->
-                feature.events += "Node: execution error (name: ${event.node.name}, error: ${event.throwable.message})"
+            pipeline.interceptNodeExecutionFailed(this) { event ->
+                testFeature.events += "Node: execution error (name: ${event.node.name}, error: ${event.throwable.message})"
             }
 
-            pipeline.interceptToolCallStarting(context) { event ->
-                feature.events += "Tool: call tool (tool: ${event.tool.name}, args: ${event.toolArgs})"
+            pipeline.interceptToolCallStarting(this) { event ->
+                testFeature.events += "Tool: call tool (tool: ${event.tool.name}, args: ${event.toolArgs})"
             }
 
-            pipeline.interceptToolCallCompleted(context) { event ->
-                feature.events +=
+            pipeline.interceptToolCallCompleted(this) { event ->
+                testFeature.events +=
                     "Tool: finish tool call with result (tool: ${event.tool.name}, result: ${event.result?.let(event.tool::encodeResultToStringUnsafe) ?: "null"})"
             }
+
+            return testFeature
         }
     }
 }

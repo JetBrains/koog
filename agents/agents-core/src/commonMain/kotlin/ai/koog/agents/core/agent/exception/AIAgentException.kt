@@ -1,4 +1,4 @@
-package ai.koog.agents.core.agent
+package ai.koog.agents.core.agent.exception
 
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase
 

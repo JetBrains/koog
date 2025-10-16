@@ -336,7 +336,7 @@ val agent = AIAgent(
 // install the EventHandler feature
 installFeatures = {
     install(EventHandler) {
-        onAgentStarting { eventContext: AgentStartingContext<*> ->
+        onAgentStarting { eventContext: AgentStartingContext ->
             println("Starting agent: ${eventContext.agent.id}")
         }
         onAgentCompleted { eventContext: AgentCompletedContext ->
@@ -371,7 +371,7 @@ val agent = AIAgent(
     agentConfig = agentConfig,
     installFeatures = {
         install(EventHandler) {
-            onAgentStarting { eventContext: AgentStartingContext<*> ->
+            onAgentStarting { eventContext: AgentStartingContext ->
                 println("Starting agent: ${eventContext.agent.id}")
             }
             onAgentCompleted { eventContext: AgentCompletedContext ->
@@ -514,7 +514,7 @@ val agent = AIAgent(
     agentConfig = agentConfig,
     installFeatures = {
         install(EventHandler) {
-            onAgentStarting { eventContext: AgentStartingContext<*> ->
+            onAgentStarting { eventContext: AgentStartingContext ->
                 println("Starting agent: ${eventContext.agent.id}")
             }
             onAgentCompleted { eventContext: AgentCompletedContext ->

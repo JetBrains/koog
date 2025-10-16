@@ -1,19 +1,19 @@
 package ai.koog.agents.snapshot.feature
 
-import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.AIAgent.Companion.State.Running
+import ai.koog.agents.core.agent.StatefulSingleUseAIAgent
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AgentContextData
 import ai.koog.agents.core.agent.context.RollbackStrategy
+import ai.koog.agents.core.agent.context.featureOrThrow
 import ai.koog.agents.core.agent.context.store
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.entity.AIAgentSubgraph
+import ai.koog.agents.core.agent.featureOrThrow
 import ai.koog.agents.core.annotation.InternalAgentsApi
-import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
-import ai.koog.agents.core.feature.AIAgentGraphPipeline
-import ai.koog.agents.core.feature.InterceptContext
+import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.tools.DirectToolCallsEnabler
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.snapshot.providers.PersistenceStorageProvider
@@ -67,7 +67,7 @@ public class Persistence(
      * (e.g., message history, context) are restored during a rollback. Available
      * strategies include restoring the full state or limiting restoration to specific parts.
      *
-     * By default, the strategy is set to `RollbackStrategy.Default`, which restores the
+     * By default, the strategy is set to [RollbackStrategy.Default], which restores the
      * entire context of the agent, including message history and other stateful data.
      * Alternative strategies, such as `MessageHistoryOnly`, can be used for partial rollbacks.
      */
@@ -98,7 +98,7 @@ public class Persistence(
         private set
 
     /**
-     * Feature companion object that implements [AIAgentFeature] for the checkpoint functionality.
+     * Companion object implementing agent feature, handling [Persistence] creation and installation.
      */
     public companion object Feature : AIAgentGraphFeature<PersistenceFeatureConfig, Persistence> {
         private val logger = KotlinLogging.logger { }
@@ -107,50 +107,26 @@ public class Persistence(
             prettyPrint = true
         }
 
-        /**
-         * The storage key used to identify this feature in the agent's feature registry.
-         */
         override val key: AIAgentStorageKey<Persistence> = AIAgentStorageKey("agents-features-snapshot")
 
-        /**
-         * Creates the default configuration for this feature.
-         *
-         * @return A new instance of [PersistenceFeatureConfig] with default settings
-         */
         override fun createInitialConfig(): PersistenceFeatureConfig = PersistenceFeatureConfig()
 
-        /**
-         * Installs the checkpoint feature into the agent pipeline.
-         *
-         * This method sets up the necessary interceptors to:
-         * - Restore the latest checkpoint when the agent starts
-         * - Track the current node being executed
-         * - Create checkpoints after node execution (if continuous persistence is enabled)
-         *
-         * @param config The configuration for the checkpoint feature
-         * @param pipeline The agent pipeline to install the feature into
-         */
         override fun install(
             config: PersistenceFeatureConfig,
-            pipeline: AIAgentGraphPipeline
-        ) {
-            val featureImpl = Persistence(config.storage)
-            featureImpl.rollbackStrategy = config.rollbackStrategy
-            featureImpl.rollbackToolRegistry = config.rollbackToolRegistry
-            val interceptContext = InterceptContext(this, featureImpl)
+            pipeline: AIAgentGraphPipeline,
+        ): Persistence {
+            val persistence = Persistence(config.storage)
+            persistence.rollbackStrategy = config.rollbackStrategy
+            persistence.rollbackToolRegistry = config.rollbackToolRegistry
 
-            pipeline.interceptContextAgentFeature(this) { _ ->
-                return@interceptContextAgentFeature featureImpl
-            }
-
-            pipeline.interceptStrategyStarting(interceptContext) { ctx ->
+            pipeline.interceptStrategyStarting(this) { ctx ->
                 val strategy = ctx.strategy as AIAgentGraphStrategy<*, *>
 
                 require(strategy.metadata.uniqueNames) {
                     "Checkpoint feature requires unique node names in the strategy metadata"
                 }
 
-                val checkpoint = ctx.feature.rollbackToLatestCheckpoint(ctx.context)
+                val checkpoint = persistence.rollbackToLatestCheckpoint(ctx.context)
 
                 if (checkpoint != null) {
                     logger.info { "Restoring checkpoint: ${checkpoint.checkpointId} to node ${checkpoint.nodeId}" }
@@ -159,30 +135,39 @@ public class Persistence(
                 }
             }
 
-            pipeline.interceptNodeExecutionCompleted(interceptContext) { eventCtx ->
-                if (isTechnicalNode(eventCtx.node.id)) {
+            pipeline.interceptNodeExecutionCompleted(this) { eventCtx ->
+                if (persistence.isTechnicalNode(eventCtx.node.id)) {
                     return@interceptNodeExecutionCompleted
                 }
 
                 if (config.enableAutomaticPersistence) {
-                    createCheckpoint(
+                    val parent = persistence.getLatestCheckpoint(eventCtx.context.agentId)
+                    persistence.createCheckpoint(
                         agentContext = eventCtx.context,
                         nodeId = eventCtx.node.id,
                         lastInput = eventCtx.input,
                         lastInputType = eventCtx.inputType,
+                        version = parent?.version?.plus(1) ?: 0L,
                     )
                 }
             }
 
-            pipeline.interceptNodeExecutionStarting(interceptContext) { eventCtx ->
-                featureImpl.currentNodeId = eventCtx.node.id
+            pipeline.interceptNodeExecutionStarting(this) { eventCtx ->
+                persistence.currentNodeId = eventCtx.node.id
             }
 
-            pipeline.interceptStrategyCompleted(interceptContext) { ctx ->
+            pipeline.interceptStrategyCompleted(this) { ctx ->
                 if (config.enableAutomaticPersistence && config.rollbackStrategy == RollbackStrategy.Default) {
-                    ctx.feature.createTombstoneCheckpoint(ctx.agentId, ctx.feature.clock.now())
+                    val parent = persistence.getLatestCheckpoint(ctx.agentId)
+                    persistence.createTombstoneCheckpoint(
+                        ctx.agentId,
+                        persistence.clock.now(),
+                        parent?.version?.plus(1) ?: 0L
+                    )
                 }
             }
+
+            return persistence
         }
     }
 
@@ -207,7 +192,8 @@ public class Persistence(
         nodeId: String,
         lastInput: Any?,
         lastInputType: KType,
-        checkpointId: String? = null
+        version: Long,
+        checkpointId: String? = null,
     ): AgentCheckpointData? {
         val inputJson = trySerializeInput(lastInput, lastInputType)
 
@@ -224,7 +210,8 @@ public class Persistence(
                 messageHistory = prompt.messages,
                 nodeId = nodeId,
                 lastInput = inputJson,
-                createdAt = Clock.System.now()
+                createdAt = Clock.System.now(),
+                version = version,
             )
         }
 
@@ -242,8 +229,8 @@ public class Persistence(
      * @return The created tombstone checkpoint data.
      */
     @InternalAgentsApi
-    public suspend fun createTombstoneCheckpoint(agentId: String, time: Instant): AgentCheckpointData {
-        val checkpoint = tombstoneCheckpoint(time)
+    public suspend fun createTombstoneCheckpoint(agentId: String, time: Instant, parentId: Long): AgentCheckpointData {
+        val checkpoint = tombstoneCheckpoint(time, parentId)
         saveCheckpoint(agentId, checkpoint)
         return checkpoint
     }
@@ -279,8 +266,10 @@ public class Persistence(
      * @param checkpointId The ID of the checkpoint to retrieve
      * @return The checkpoint data with the specified ID, or null if not found
      */
-    public suspend fun getCheckpointById(agentId: String, checkpointId: String): AgentCheckpointData? =
-        persistenceStorageProvider.getCheckpoints(agentId).firstOrNull { it.checkpointId == checkpointId }
+    public suspend fun getCheckpointById(agentId: String, checkpointId: String): AgentCheckpointData? {
+        val allCps = persistenceStorageProvider.getCheckpoints(agentId)
+        return allCps.firstOrNull { it.checkpointId == checkpointId }
+    }
 
     /**
      * Sets the execution point of an agent to a specific state.
@@ -334,7 +323,7 @@ public class Persistence(
                             rollbackToolRegistry.getRollbackTool(toolCall.tool)?.let { rollbackTool ->
                                 val toolArgs = rollbackTool.decodeArgs(toolCall.contentJson)
 
-                                rollbackTool.executeUnsafe(toolArgs, DirectToolCallsEnablerImpl)
+                                rollbackTool.executeUnsafe(toolArgs, object : DirectToolCallsEnabler {})
                             }
                         }
                 }
@@ -393,30 +382,30 @@ public class Persistence(
  * @return The [Persistence] feature instance for this agent
  * @throws IllegalStateException if the checkpoint feature is not installed
  */
-public fun AIAgentContext.persistence(): Persistence = agent.persistence()
-
-/**
- * Retrieves the persistence feature for the AI agent.
- *
- * @return The persistence feature associated with the AI agent.
- * @throws IllegalStateException if the persistence feature is not available.
- */
-public fun AIAgent<*, *>.persistence(): Persistence = featureOrThrow(Persistence.Feature)
+public fun AIAgentContext.persistence(): Persistence = featureOrThrow(Persistence)
 
 /**
  * Executes the provided action within the context of the AI agent's persistence layer.
  *
- * This function enhances agents with persistent state management capabilities by leveraging the `Persistence` component
- * within the current `AIAgentContext`. The supplied action is executed with the persistence layer, enabling operations
+ * This function enhances agents with persistent state management capabilities by leveraging the [Persistence component
+ * within the current [AIAgentContext]. The supplied action is executed with the persistence layer, enabling operations
  * that require consistent and reliable state management across the lifecycle of the agent.
  *
- * @param action A suspendable lambda function that receives the `Persistence` instance and the current `AIAgentContext`
+ * @param action A suspendable lambda function that receives the [Persistence] instance and the current [AIAgentContext]
  *               as its parameters. This allows custom logic that interacts with the persistence layer to be executed.
  * @return A result of type [T] produced by the execution of the provided action.
  */
 public suspend fun <T> AIAgentContext.withPersistence(
     action: suspend Persistence.(AIAgentContext) -> T
 ): T = this.persistence().action(this)
+
+/**
+ * Extension function to access the checkpoint feature from an agent.
+ *
+ * @return The [Persistence] feature instance for this agent
+ * @throws IllegalStateException if the checkpoint feature is not installed
+ */
+public fun StatefulSingleUseAIAgent<*, *, *>.persistence(): Persistence = featureOrThrow(Persistence)
 
 /**
  * Executes the provided action within the context of the agent's persistence layer if the agent is in a running state.
@@ -430,12 +419,9 @@ public suspend fun <T> AIAgentContext.withPersistence(
  * @throws IllegalStateException If the agent is not in a running state when this function is called.
  */
 @OptIn(InternalAgentsApi::class)
-public suspend fun <T> AIAgent<*, *>.withPersistence(
+public suspend fun <T> StatefulSingleUseAIAgent<*, *, *>.withPersistence(
     action: suspend Persistence.(AIAgentContext) -> T
 ): T = when (val state = getState()) {
     is Running<*> -> this.persistence().action(state.rootContext)
     else -> throw IllegalStateException("Agent is not running. Current agents's state: $state")
 }
-
-@OptIn(InternalAgentToolsApi::class)
-private object DirectToolCallsEnablerImpl : DirectToolCallsEnabler

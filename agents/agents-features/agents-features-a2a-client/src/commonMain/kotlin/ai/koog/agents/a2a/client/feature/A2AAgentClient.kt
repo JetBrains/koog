@@ -2,13 +2,14 @@ package ai.koog.agents.a2a.client.feature
 
 import ai.koog.a2a.client.A2AClient
 import ai.koog.agents.core.agent.context.AIAgentContext
+import ai.koog.agents.core.agent.context.featureOrThrow
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.entity.createStorageKey
+import ai.koog.agents.core.feature.AIAgentFunctionalFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
-import ai.koog.agents.core.feature.AIAgentGraphPipeline
-import ai.koog.agents.core.feature.AIAgentNonGraphFeature
-import ai.koog.agents.core.feature.AIAgentNonGraphPipeline
 import ai.koog.agents.core.feature.config.FeatureConfig
+import ai.koog.agents.core.feature.pipeline.AIAgentFunctionalPipeline
+import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
@@ -46,31 +47,36 @@ public class A2AAgentClient(
         public var a2aClients: Map<String, A2AClient> = mapOf()
     }
 
+    /**
+     * Companion object implementing agent feature, handling [A2AAgentClient] creation and installation.
+     */
     public companion object Feature :
         AIAgentGraphFeature<Config, A2AAgentClient>,
-        AIAgentNonGraphFeature<Config, A2AAgentClient> {
+        AIAgentFunctionalFeature<Config, A2AAgentClient> {
 
         override val key: AIAgentStorageKey<A2AAgentClient> =
             createStorageKey<A2AAgentClient>("agents-features-a2a-client")
 
         override fun createInitialConfig(): Config = Config()
 
+        /**
+         * Creates a feature implementation using the provided configuration.
+         */
+        private fun createFeature(config: Config): A2AAgentClient =
+            A2AAgentClient(config.a2aClients)
+
         override fun install(
             config: Config,
-            pipeline: AIAgentGraphPipeline
-        ) {
-            pipeline.interceptContextAgentFeature(this) { _ ->
-                A2AAgentClient(config.a2aClients)
-            }
+            pipeline: AIAgentGraphPipeline,
+        ): A2AAgentClient {
+            return createFeature(config)
         }
 
         override fun install(
             config: Config,
-            pipeline: AIAgentNonGraphPipeline
-        ) {
-            pipeline.interceptContextAgentFeature(this) {
-                A2AAgentClient(config.a2aClients)
-            }
+            pipeline: AIAgentFunctionalPipeline,
+        ): A2AAgentClient {
+            return createFeature(config)
         }
     }
 }
@@ -81,7 +87,7 @@ public class A2AAgentClient(
  * @return The installed A2AAgentClient feature
  * @throws IllegalStateException if the feature is not installed
  */
-public fun AIAgentContext.a2aAgentClient(): A2AAgentClient = featureOrThrow(A2AAgentClient.Feature)
+public fun AIAgentContext.a2aAgentClient(): A2AAgentClient = featureOrThrow(A2AAgentClient)
 
 /**
  * Executes an action with the [A2AAgentClient] feature as the receiver.
@@ -108,4 +114,5 @@ public inline fun <T> AIAgentContext.withA2AAgentClient(action: A2AAgentClient.(
  * @throws NoSuchElementException if no client is registered with the given agent ID
  */
 public fun A2AAgentClient.a2aClientOrThrow(agentId: String): A2AClient =
-    a2aClients[agentId] ?: throw NoSuchElementException("A2A agent with id $agentId not found in the current agent context. Make sure to register it in the A2AAgentClient feature.")
+    a2aClients[agentId]
+        ?: throw NoSuchElementException("A2A agent with id $agentId not found in the current agent context. Make sure to register it in the A2AAgentClient feature.")

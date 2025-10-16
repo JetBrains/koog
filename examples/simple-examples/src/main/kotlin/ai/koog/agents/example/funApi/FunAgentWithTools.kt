@@ -1,15 +1,15 @@
 package ai.koog.agents.example.funApi
 
 import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.agent.asAssistantMessage
-import ai.koog.agents.core.agent.compressHistory
-import ai.koog.agents.core.agent.containsToolCalls
-import ai.koog.agents.core.agent.executeMultipleTools
-import ai.koog.agents.core.agent.extractToolCalls
+import ai.koog.agents.core.dsl.extension.asAssistantMessage
+import ai.koog.agents.core.dsl.extension.compressHistory
+import ai.koog.agents.core.dsl.extension.containsToolCalls
+import ai.koog.agents.core.dsl.extension.executeMultipleTools
+import ai.koog.agents.core.dsl.extension.extractToolCalls
 import ai.koog.agents.core.agent.functionalStrategy
-import ai.koog.agents.core.agent.latestTokenUsage
-import ai.koog.agents.core.agent.requestLLMMultiple
-import ai.koog.agents.core.agent.sendMultipleToolResults
+import ai.koog.agents.core.dsl.extension.latestTokenUsage
+import ai.koog.agents.core.dsl.extension.requestLLMMultiple
+import ai.koog.agents.core.dsl.extension.sendMultipleToolResults
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.reflect.asTools
 import ai.koog.agents.features.eventHandler.feature.EventHandler

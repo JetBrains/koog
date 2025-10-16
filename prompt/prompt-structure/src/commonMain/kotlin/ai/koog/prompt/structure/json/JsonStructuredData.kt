@@ -36,11 +36,22 @@ public class JsonStructuredData<TStruct>(
     ) -> TextContentBuilderBase<*> = ::defaultDefinitionPrompt
 ) : StructuredData<TStruct, LLMParams.Schema.JSON>(id, schema, examples) {
 
-    override fun parse(text: String): TStruct = json.decodeFromString(serializer, text)
+    override fun parse(text: String): TStruct = json.decodeFromString(serializer, text.trim().stripMarkdown())
 
     override fun pretty(value: TStruct): String = json.encodeToString(serializer, value)
 
     override fun definition(builder: TextContentBuilderBase<*>): TextContentBuilderBase<*> = definitionPrompt(builder, this)
+
+    // LLMs often enclose JSON output in Markdown code blocks.
+    // Stripping them saves extra LLM call which would be required to fix the string.
+    private fun String.stripMarkdown() = when {
+        startsWith("```json") -> removePrefix("```json").removeSuffix("```")
+        startsWith("```") -> removePrefix("```").removeSuffix("```")
+        startsWith("`") -> removePrefix("`").removeSuffix("`")
+        startsWith("~~~json") -> removePrefix("~~~json").removeSuffix("~~~").trim()
+        startsWith("~~~") -> removePrefix("~~~").removeSuffix("~~~").trim()
+        else -> this
+    }
 
     /**
      * Companion object for the [JsonStructuredData] class, providing utility methods to facilitate the

@@ -9,7 +9,7 @@ import ai.koog.agents.core.agent.entity.StartNode
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.environment.AIAgentEnvironment
-import ai.koog.agents.core.feature.AIAgentGraphPipeline
+import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
@@ -75,6 +75,7 @@ class LLMAsJudgeNodeTest {
 
         val context = AIAgentGraphContext(
             environment = mockEnv,
+            agentId = "test-agent",
             agentInputType = typeOf<String>(),
             agentInput = "Hello",
             config = mockk(),
@@ -84,7 +85,6 @@ class LLMAsJudgeNodeTest {
             runId = "run-1",
             strategyName = "test-strategy",
             pipeline = AIAgentGraphPipeline(),
-            agent = mockk()
         )
 
         val subgraphContext = object : AIAgentSubgraphBuilderBase<String, String>() {

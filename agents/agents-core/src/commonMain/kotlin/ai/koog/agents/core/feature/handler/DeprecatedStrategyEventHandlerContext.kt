@@ -24,7 +24,7 @@ public typealias StrategyEventHandlerContext = ai.koog.agents.core.feature.handl
         imports = arrayOf("ai.koog.agents.core.feature.handler.strategy.StrategyStartingContext")
     )
 )
-public typealias StrategyStartContext<TFeature> = ai.koog.agents.core.feature.handler.strategy.StrategyStartingContext<TFeature>
+public typealias StrategyStartContext = ai.koog.agents.core.feature.handler.strategy.StrategyStartingContext
 
 /**
  * Represents the context associated with the completion of an AI agent strategy execution.
@@ -36,4 +36,4 @@ public typealias StrategyStartContext<TFeature> = ai.koog.agents.core.feature.ha
         imports = arrayOf("ai.koog.agents.core.feature.handler.strategy.StrategyCompletedContext")
     )
 )
-public typealias StrategyFinishedContext<TFeature> = ai.koog.agents.core.feature.handler.strategy.StrategyCompletedContext<TFeature>
+public typealias StrategyFinishedContext = ai.koog.agents.core.feature.handler.strategy.StrategyCompletedContext

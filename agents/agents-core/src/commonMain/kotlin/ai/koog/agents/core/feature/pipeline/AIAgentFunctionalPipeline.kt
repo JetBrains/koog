@@ -1,5 +1,6 @@
-package ai.koog.agents.core.feature
+package ai.koog.agents.core.feature.pipeline
 
+import ai.koog.agents.core.feature.AIAgentFunctionalFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
 import kotlinx.datetime.Clock
 
@@ -12,26 +13,26 @@ import kotlinx.datetime.Clock
  *
  * @param clock The clock used for time-based operations within the pipeline
  */
-public class AIAgentNonGraphPipeline(clock: Clock = Clock.System) : AIAgentPipeline(clock) {
+public class AIAgentFunctionalPipeline(clock: Clock = Clock.System) : AIAgentPipeline(clock) {
 
     /**
      * Installs a non-graph feature into the pipeline with the provided configuration.
      *
-     * @param Config The type of the feature configuration
-     * @param Feature The type of the feature being installed
+     * @param TConfig The type of the feature configuration
+     * @param TFeature The type of the feature being installed
      * @param feature The feature implementation to be installed
      * @param configure A lambda to customize the feature configuration
      */
-    public fun <Config : FeatureConfig, Feature : Any> install(
-        feature: AIAgentNonGraphFeature<Config, Feature>,
-        configure: Config.() -> Unit
+    public fun <TConfig : FeatureConfig, TFeature : Any> install(
+        feature: AIAgentFunctionalFeature<TConfig, TFeature>,
+        configure: TConfig.() -> Unit,
     ) {
-        val config = feature.createInitialConfig().apply { configure() }
-        feature.install(
-            config = config,
+        val featureConfig = feature.createInitialConfig().apply { configure() }
+        val featureImpl = feature.install(
+            config = featureConfig,
             pipeline = this,
         )
 
-        registeredFeatures[feature.key] = config
+        registeredFeatures[feature.key] = RegisteredFeature(featureImpl, featureConfig)
     }
 }

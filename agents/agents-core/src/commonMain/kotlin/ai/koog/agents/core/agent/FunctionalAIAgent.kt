@@ -1,23 +1,21 @@
-@file:OptIn(ExperimentalUuidApi::class)
-
 package ai.koog.agents.core.agent
 
 import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.agent.context.AIAgentFunctionalContext
 import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.GenericAgentEnvironment
 import ai.koog.agents.core.feature.AIAgentFeature
-import ai.koog.agents.core.feature.AIAgentNonGraphFeature
-import ai.koog.agents.core.feature.AIAgentNonGraphPipeline
+import ai.koog.agents.core.feature.AIAgentFunctionalFeature
 import ai.koog.agents.core.feature.PromptExecutorProxy
 import ai.koog.agents.core.feature.config.FeatureConfig
+import ai.koog.agents.core.feature.pipeline.AIAgentFunctionalPipeline
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.executor.model.PromptExecutor
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.datetime.Clock
-import kotlin.uuid.ExperimentalUuidApi
 
 /**
  * Represents the core AI agent for processing input and generating output using
@@ -25,37 +23,40 @@ import kotlin.uuid.ExperimentalUuidApi
  *
  * @param Input The type of input data expected by the agent.
  * @param Output The type of output data produced by the agent.
- * @param id The unique identifier for the agent instance.
- * @param promptExecutor The executor responsible for processing prompts and interacting with language models.
- * @param agentConfig The configuration for the agent, including the prompt structure and execution parameters.
- * @param toolRegistry The registry of tools available for the agent. Defaults to an empty registry if not specified.
+ * @property id The unique identifier for the agent instance.
+ * @property promptExecutor The executor responsible for processing prompts and interacting with language models.
+ * @property agentConfig The configuration for the agent, including the prompt structure and execution parameters.
+ * @property strategy The strategy for processing input and generating output.
+ * @property toolRegistry The registry of tools available for the agent. Defaults to an empty registry if not specified.
+ * @property clock The clock used to calculate message timestamps
+ * @param id Unique identifier for the agent. Random UUID will be generated if set to null.
+ * @property installFeatures Lambda for installing additional features within the agent environment.
  */
 @OptIn(InternalAgentsApi::class)
 public class FunctionalAIAgent<Input, Output>(
     public val promptExecutor: PromptExecutor,
     override val agentConfig: AIAgentConfig,
+    override val strategy: AIAgentFunctionalStrategy<Input, Output>,
     public val toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
-    strategy: AIAgentFunctionalStrategy<Input, Output>,
     id: String? = null,
     public val clock: Clock = Clock.System,
-    @property:InternalAgentsApi public val featureContext: FeatureContext.() -> Unit = {}
+    @property:InternalAgentsApi
+    public val installFeatures: FeatureContext.() -> Unit = {}
 ) : StatefulSingleUseAIAgent<Input, Output, AIAgentFunctionalContext>(
-    strategy = strategy,
     logger = logger,
-    agentId = id,
+    id = id,
 ) {
-
     private companion object {
         private val logger = KotlinLogging.logger {}
     }
 
-    override val pipeline: AIAgentNonGraphPipeline = AIAgentNonGraphPipeline(clock)
+    override val pipeline: AIAgentFunctionalPipeline = AIAgentFunctionalPipeline(clock)
 
     private val environment = GenericAgentEnvironment(
-        this@FunctionalAIAgent.id,
-        strategy.name,
-        logger,
-        toolRegistry,
+        agentId = this.id,
+        strategyId = strategy.name,
+        logger = logger,
+        toolRegistry = toolRegistry,
         pipeline = pipeline
     )
 
@@ -71,22 +72,15 @@ public class FunctionalAIAgent<Input, Output>(
          * @param configure an optional lambda to customize the configuration of the feature, where the provided [Config] can be modified
          */
         public fun <Config : FeatureConfig, Feature : Any> install(
-            feature: AIAgentNonGraphFeature<Config, Feature>,
+            feature: AIAgentFunctionalFeature<Config, Feature>,
             configure: Config.() -> Unit = {}
         ) {
-            agent.install(feature, configure)
+            agent.pipeline.install(feature, configure)
         }
     }
 
-    private fun <Config : FeatureConfig, Feature : Any> install(
-        feature: AIAgentNonGraphFeature<Config, Feature>,
-        configure: Config.() -> Unit
-    ) {
-        pipeline.install(feature, configure)
-    }
-
     init {
-        FeatureContext(this).featureContext()
+        FeatureContext(this).installFeatures()
     }
 
     override suspend fun prepareContext(agentInput: Input, runId: String): AIAgentFunctionalContext {
@@ -106,13 +100,13 @@ public class FunctionalAIAgent<Input, Output>(
         )
 
         return AIAgentFunctionalContext(
-            environment,
-            this@FunctionalAIAgent,
-            runId,
-            agentInput,
-            agentConfig,
-            llm,
-            AIAgentStateManager(),
+            environment = environment,
+            agentId = id,
+            runId = runId,
+            agentInput = agentInput,
+            config = agentConfig,
+            llm = llm,
+            stateManager = AIAgentStateManager(),
             storage = AIAgentStorage(),
             strategyName = strategy.name,
             pipeline = pipeline

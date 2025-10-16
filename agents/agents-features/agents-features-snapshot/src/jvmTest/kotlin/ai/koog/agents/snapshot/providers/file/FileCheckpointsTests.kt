@@ -126,7 +126,8 @@ class FileCheckpointsTests {
             messageHistory = listOf(
                 Message.User("User message", metaInfo = RequestMetaInfo(time)),
                 Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time))
-            )
+            ),
+            version = 0L
         )
 
         provider.saveCheckpoint(agentId, testCheckpoint)
@@ -158,17 +159,6 @@ class FileCheckpointsTests {
         val time = Clock.System.now()
         val agentId = "testAgentId"
 
-        val testCheckpoint = AgentCheckpointData(
-            checkpointId = "testCheckpointId",
-            createdAt = time,
-            nodeId = "Node2",
-            lastInput = JsonPrimitive("Test input"),
-            messageHistory = listOf(
-                Message.User("User message", metaInfo = RequestMetaInfo(time)),
-                Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time))
-            )
-        )
-
         val testCheckpoint2 = AgentCheckpointData(
             checkpointId = "testCheckpointId2",
             createdAt = time - 10.seconds,
@@ -177,7 +167,20 @@ class FileCheckpointsTests {
             messageHistory = listOf(
                 Message.User("Earlier message", metaInfo = RequestMetaInfo(time)),
                 Message.Assistant("Earlier response", metaInfo = ResponseMetaInfo(time))
-            )
+            ),
+            version = 0L
+        )
+
+        val testCheckpoint = AgentCheckpointData(
+            checkpointId = "testCheckpointId",
+            createdAt = time,
+            nodeId = "Node2",
+            lastInput = JsonPrimitive("Test input"),
+            messageHistory = listOf(
+                Message.User("User message", metaInfo = RequestMetaInfo(time)),
+                Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo(time))
+            ),
+            version = testCheckpoint2.version.plus(1)
         )
 
         provider.saveCheckpoint(agentId, testCheckpoint)

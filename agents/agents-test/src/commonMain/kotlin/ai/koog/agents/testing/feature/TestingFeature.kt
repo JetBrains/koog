@@ -20,11 +20,10 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.feature.AIAgentGraphFeature
-import ai.koog.agents.core.feature.AIAgentGraphPipeline
-import ai.koog.agents.core.feature.AIAgentPipeline
-import ai.koog.agents.core.feature.InterceptContext
 import ai.koog.agents.core.feature.PromptExecutorProxy
 import ai.koog.agents.core.feature.config.FeatureConfig
+import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
+import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.testing.tools.AIAgentContextMockBuilder
@@ -922,57 +921,37 @@ public class Testing {
     }
 
     /**
-     * Companion object that defines the `Testing` feature as a `AIAgentFeature`.
-     * This feature provides testing capabilities for validating graph-based stages, nodes,
-     * reachability, outputs, and edges within an AI agent pipeline.
+     * Companion object implementing agent feature, handling [Testing] creation and installation.
      */
     @TestOnly
     public companion object Feature : AIAgentGraphFeature<Config, Testing> {
-        /**
-         * A storage key uniquely identifying the `Testing` feature within the local agent's storage.
-         * The key is generated using the `createStorageKey` function and associates the
-         * `Testing` feature type with its specific storage context.
-         */
         override val key: AIAgentStorageKey<Testing> = createStorageKey("graph-testing-feature")
 
-        /**
-         * Creates the initial configuration for the graph testing feature.
-         *
-         * @return an instance of [Config] containing the initial setup for assertions and stage configuration.
-         */
         override fun createInitialConfig(): Config = Config()
 
-        /**
-         * Installs the `Testing` feature into the specified `AIAgentPipeline` with the provided configuration.
-         * The feature primarily validates stages, nodes, and connectivity of the AI agent pipeline.
-         *
-         * @param config The `Config` object containing setup and assertions for testing the pipeline.
-         * @param pipeline The `AIAgentPipeline` instance to install the feature into.
-         */
         override fun install(
             config: Config,
-            pipeline: AIAgentGraphPipeline
-        ) {
-            val feature = Testing()
-            val interceptContext = InterceptContext(this, feature)
-            pipeline.interceptEnvironmentCreated(interceptContext) { agentEnvironment ->
+            pipeline: AIAgentGraphPipeline,
+        ): Testing {
+            val testing = Testing()
+            pipeline.interceptEnvironmentCreated(this) { agentEnvironment ->
                 MockEnvironment(agent.toolRegistry, agent.promptExecutor, agentEnvironment)
             }
 
             if (config.enableGraphTesting) {
-                feature.graphAssertions.add(config.getAssertions())
+                testing.graphAssertions.add(config.getAssertions())
 
                 var agent: AIAgent<*, *>? = null
 
-                pipeline.interceptAgentStarting(interceptContext) { eventContext ->
+                pipeline.interceptAgentStarting(this) { eventContext ->
                     agent = eventContext.agent
                 }
 
-                pipeline.interceptStrategyStarting(interceptContext) { eventContext ->
+                pipeline.interceptStrategyStarting(this) { eventContext ->
                     val agentToUse = agent as GraphAIAgent<*, *>
                     val strategyGraph = eventContext.strategy as AIAgentGraphStrategy<*, *>
 
-                    val strategyAssertions = feature.graphAssertions.find { it.name == strategyGraph.name }
+                    val strategyAssertions = testing.graphAssertions.find { it.name == strategyGraph.name }
                     config.assert(
                         strategyAssertions != null,
                         "Assertions for strategyGraph with name `${strategyGraph.name}` not found in configuration."
@@ -988,6 +967,8 @@ public class Testing {
                     )
                 }
             }
+
+            return testing
         }
 
         private suspend fun <Input, Output> verifyGraph(

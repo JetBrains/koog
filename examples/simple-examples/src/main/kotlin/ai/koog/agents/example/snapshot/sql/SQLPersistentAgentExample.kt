@@ -58,7 +58,7 @@ object SQLPersistentAgentExample {
         provider.migrate()
 
         // Create and save checkpoint
-        val checkpoint = createSampleCheckpoint("postgres-checkpoint-1")
+        val checkpoint = createSampleCheckpoint("postgres-checkpoint-1", version = 0)
         provider.saveCheckpoint(agentId = agentId, agentCheckpointData = checkpoint)
         println("Saved checkpoint: ${checkpoint.checkpointId}")
 
@@ -90,9 +90,9 @@ object SQLPersistentAgentExample {
 
         // Save multiple checkpoints
         val checkpoints = listOf(
-            createSampleCheckpoint("mysql-checkpoint-1"),
-            createSampleCheckpoint("mysql-checkpoint-2"),
-            createSampleCheckpoint("mysql-checkpoint-3")
+            createSampleCheckpoint("mysql-checkpoint-1", version = 1),
+            createSampleCheckpoint("mysql-checkpoint-2", version = 2),
+            createSampleCheckpoint("mysql-checkpoint-3", version = 3)
         )
 
         checkpoints.forEach { checkpoint ->
@@ -123,7 +123,7 @@ object SQLPersistentAgentExample {
         )
 
         inMemoryProvider.migrate()
-        val testCheckpoint = createSampleCheckpoint("h2-memory-checkpoint")
+        val testCheckpoint = createSampleCheckpoint("h2-memory-checkpoint", version = 1)
         inMemoryProvider.saveCheckpoint(agentId, testCheckpoint)
         println("   Saved to in-memory: ${testCheckpoint.checkpointId}")
 
@@ -137,7 +137,7 @@ object SQLPersistentAgentExample {
         )
 
         fileProvider.migrate()
-        val fileCheckpoint = createSampleCheckpoint("h2-file-checkpoint")
+        val fileCheckpoint = createSampleCheckpoint("h2-file-checkpoint", version = 1)
         fileProvider.saveCheckpoint(h2AgentId, fileCheckpoint)
         println("   Saved to file: ${fileCheckpoint.checkpointId}")
 
@@ -158,7 +158,7 @@ object SQLPersistentAgentExample {
         )
 
         pgCompatProvider.migrate()
-        val pgCheckpoint = createSampleCheckpoint("h2-pgcompat-checkpoint")
+        val pgCheckpoint = createSampleCheckpoint("h2-pgcompat-checkpoint", version = 2)
         pgCompatProvider.saveCheckpoint(postgresAgentId, pgCheckpoint)
         println("   Saved with PG compatibility: ${pgCheckpoint.checkpointId}")
     }
@@ -166,7 +166,7 @@ object SQLPersistentAgentExample {
     /**
      * Creates a sample checkpoint for testing
      */
-    private fun createSampleCheckpoint(checkpointId: String): AgentCheckpointData {
+    private fun createSampleCheckpoint(checkpointId: String, version: Long): AgentCheckpointData {
         return AgentCheckpointData(
             checkpointId = checkpointId,
             createdAt = Clock.System.now(),
@@ -176,7 +176,8 @@ object SQLPersistentAgentExample {
                 Message.System("You are a helpful assistant", RequestMetaInfo.create(Clock.System)),
                 Message.User("Hello, agent!", RequestMetaInfo.create(Clock.System)),
                 Message.Assistant("Hello! How can I help you today?", ResponseMetaInfo.create(Clock.System))
-            )
+            ),
+            version = version
         )
     }
 }

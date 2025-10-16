@@ -4,8 +4,6 @@ import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.feature.AIAgentGraphFeature
-import ai.koog.agents.core.feature.AIAgentGraphPipeline
-import ai.koog.agents.core.feature.InterceptContext
 import ai.koog.agents.core.feature.model.events.AgentClosingEvent
 import ai.koog.agents.core.feature.model.events.AgentCompletedEvent
 import ai.koog.agents.core.feature.model.events.AgentExecutionFailedEvent
@@ -26,12 +24,20 @@ import ai.koog.agents.core.feature.model.events.ToolCallStartingEvent
 import ai.koog.agents.core.feature.model.events.ToolValidationFailedEvent
 import ai.koog.agents.core.feature.model.events.startNodeToGraph
 import ai.koog.agents.core.feature.model.toAgentError
+import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.remote.server.config.DefaultServerConnectionConfig
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.features.debugger.EnvironmentVariablesReader
 import ai.koog.agents.features.debugger.feature.writer.DebuggerFeatureMessageRemoteWriter
 import ai.koog.prompt.llm.toModelInfo
+import ai.koog.agents.features.debugger.eventString
+import ai.koog.agents.features.debugger.feature.writer.DebuggerFeatureMessageRemoteWriter
+import ai.koog.agents.features.debugger.readEnvironmentVariable
+import ai.koog.agents.features.debugger.readVMOption
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlin.time.Duration
+import kotlin.time.DurationUnit
+import kotlin.time.toDuration
 
 /**
  * Debugger feature provides the functionality of monitoring and recording events during
@@ -46,22 +52,33 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 public class Debugger {
 
     /**
-     * Represents a feature that integrates debugging capabilities into an AI agent's pipeline.
-     *
-     * This companion object provides functionality for configuring and enabling a debugging system
-     * in the AI agent framework. It logs debugging events, connects to a debugging server, and handles
-     * various stages of an agent's lifecycle such as start, finish, and error events.
-     * Debugger Feature also tracks strategy executions, node executions, LLM calls, and tool operation events.
-     *
-     * The feature can be customized using the `DebuggerConfig` and works in tandem with the `AIAgentPipeline` infrastructure
-     * to intercept various events and log them to a remote writer connected to a debugging server. The port for the debugger
-     * server can either be explicitly set in the configuration or derived from environment variables.
+     * Companion object implementing agent feature, handling [Debugger] creation and installation.
      */
     public companion object Feature : AIAgentGraphFeature<DebuggerConfig, Debugger> {
 
         private val logger = KotlinLogging.logger { }
 
-        private const val KOOG_DEBUGGER_PORT_ENV_VAR: String = "KOOG_DEBUGGER_PORT"
+        /**
+         * The name of the environment variable used to specify the port number for the Koog debugger.
+         */
+        public const val KOOG_DEBUGGER_PORT_ENV_VAR: String = "KOOG_DEBUGGER_PORT"
+
+        /**
+         * Name of the environment variable used to specify the timeout duration (in milliseconds)
+         * for the debugger to wait for a connection.
+         */
+        public const val KOOG_DEBUGGER_WAIT_CONNECTION_MS_ENV_VAR: String = "KOOG_DEBUGGER_WAIT_CONNECTION_MS"
+
+        /**
+         * The name of the VM option used to specify the port number for the Koog debugger.
+         */
+        public const val KOOG_DEBUGGER_PORT_VM_OPTION: String = "koog.debugger.port"
+
+        /**
+         * The name of the JVM option used to configure the timeout duration (in milliseconds)
+         * for the Koog debugger to wait for a connection.
+         */
+        public const val KOOG_DEBUGGER_WAIT_CONNECTION_TIMEOUT_MS_VM_OPTION: String = "koog.debugger.wait.connection.ms"
 
         override val key: AIAgentStorageKey<Debugger> =
             AIAgentStorageKey("agents-features-debugger")
@@ -71,28 +88,32 @@ public class Debugger {
         override fun install(
             config: DebuggerConfig,
             pipeline: AIAgentGraphPipeline,
-        ) {
+        ): Debugger {
             logger.debug { "Debugger Feature. Start installing feature: ${Debugger::class.simpleName}" }
 
             // Config that will be used to connect to the debugger server where
             // port is taken from environment variables if not set explicitly
 
-            val port = config.port ?: readPortFromEnvironmentVariables()
+            val port = config.port ?: readPortValue()
             logger.debug { "Debugger Feature. Use debugger port: $port" }
+
+            val awaitInitialConnectionTimeout = config.awaitInitialConnectionTimeout ?: readWaitConnectionTimeout()
+            logger.debug { "Debugger Feature. Use debugger server wait connection timeout: $awaitInitialConnectionTimeout" }
 
             val debuggerServerConfig = DefaultServerConnectionConfig(
                 port = port,
-                waitConnection = true
+                awaitInitialConnection = true,
+                awaitInitialConnectionTimeout = awaitInitialConnectionTimeout,
             )
 
             val writer = DebuggerFeatureMessageRemoteWriter(connectionConfig = debuggerServerConfig)
             config.addMessageProcessor(writer)
 
-            val interceptContext = InterceptContext(this, Debugger())
+            val debugger = Debugger()
 
             //region Intercept Agent Events
 
-            pipeline.interceptAgentStarting(interceptContext) intercept@{ eventContext ->
+            pipeline.interceptAgentStarting(this) intercept@{ eventContext ->
                 val event = AgentStartingEvent(
                     agentId = eventContext.agent.id,
                     runId = eventContext.runId,
@@ -101,7 +122,7 @@ public class Debugger {
                 writer.onMessage(event)
             }
 
-            pipeline.interceptAgentCompleted(interceptContext) intercept@{ eventContext ->
+            pipeline.interceptAgentCompleted(this) intercept@{ eventContext ->
                 val event = AgentCompletedEvent(
                     agentId = eventContext.agentId,
                     runId = eventContext.runId,
@@ -111,7 +132,7 @@ public class Debugger {
                 writer.onMessage(event)
             }
 
-            pipeline.interceptAgentExecutionFailed(interceptContext) intercept@{ eventContext ->
+            pipeline.interceptAgentExecutionFailed(this) intercept@{ eventContext ->
                 val event = AgentExecutionFailedEvent(
                     agentId = eventContext.agentId,
                     runId = eventContext.runId,
@@ -121,7 +142,7 @@ public class Debugger {
                 writer.onMessage(event)
             }
 
-            pipeline.interceptAgentClosing(interceptContext) intercept@{ eventContext ->
+            pipeline.interceptAgentClosing(this) intercept@{ eventContext ->
                 val event = AgentClosingEvent(
                     agentId = eventContext.agentId,
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
@@ -133,7 +154,7 @@ public class Debugger {
 
             //region Intercept Strategy Events
 
-            pipeline.interceptStrategyStarting(interceptContext) intercept@{ eventContext ->
+            pipeline.interceptStrategyStarting(this) intercept@{ eventContext ->
 
                 val strategy = eventContext.strategy as AIAgentGraphStrategy
 
@@ -147,7 +168,7 @@ public class Debugger {
                 writer.onMessage(event)
             }
 
-            pipeline.interceptStrategyCompleted(interceptContext) intercept@{ eventContext ->
+            pipeline.interceptStrategyCompleted(this) intercept@{ eventContext ->
                 val event = StrategyCompletedEvent(
                     runId = eventContext.runId,
                     strategyName = eventContext.strategy.name,
@@ -161,7 +182,7 @@ public class Debugger {
 
             //region Intercept Node Events
 
-            pipeline.interceptNodeExecutionStarting(interceptContext) intercept@{ eventContext ->
+            pipeline.interceptNodeExecutionStarting(this) intercept@{ eventContext ->
                 val event = NodeExecutionStartingEvent(
                     runId = eventContext.context.runId,
                     nodeName = eventContext.node.name,
@@ -171,7 +192,7 @@ public class Debugger {
                 writer.onMessage(event)
             }
 
-            pipeline.interceptNodeExecutionCompleted(interceptContext) intercept@{ eventContext ->
+            pipeline.interceptNodeExecutionCompleted(this) intercept@{ eventContext ->
                 val event = NodeExecutionCompletedEvent(
                     runId = eventContext.context.runId,
                     nodeName = eventContext.node.name,
@@ -186,7 +207,7 @@ public class Debugger {
 
             //region Intercept LLM Call Events
 
-            pipeline.interceptLLMCallStarting(interceptContext) intercept@{ eventContext ->
+            pipeline.interceptLLMCallStarting(this) intercept@{ eventContext ->
                 val event = LLMCallStartingEvent(
                     runId = eventContext.runId,
                     prompt = eventContext.prompt,
@@ -197,7 +218,7 @@ public class Debugger {
                 writer.onMessage(event)
             }
 
-            pipeline.interceptLLMCallCompleted(interceptContext) intercept@{ eventContext ->
+            pipeline.interceptLLMCallCompleted(this) intercept@{ eventContext ->
                 val event = LLMCallCompletedEvent(
                     runId = eventContext.runId,
                     prompt = eventContext.prompt,
@@ -213,7 +234,7 @@ public class Debugger {
 
             //region Intercept LLM Streaming Events
 
-            pipeline.interceptLLMStreamingStarting(interceptContext) intercept@{ eventContext ->
+            pipeline.interceptLLMStreamingStarting(this) intercept@{ eventContext ->
                 val event = LLMStreamingStartingEvent(
                     runId = eventContext.runId,
                     prompt = eventContext.prompt,
@@ -224,7 +245,7 @@ public class Debugger {
                 writer.onMessage(event)
             }
 
-            pipeline.interceptLLMStreamingFrameReceived(interceptContext) intercept@{ eventContext ->
+            pipeline.interceptLLMStreamingFrameReceived(this) intercept@{ eventContext ->
                 val event = LLMStreamingFrameReceivedEvent(
                     runId = eventContext.runId,
                     frame = eventContext.streamFrame,
@@ -233,7 +254,7 @@ public class Debugger {
                 writer.onMessage(event)
             }
 
-            pipeline.interceptLLMStreamingFailed(interceptContext) intercept@{ eventContext ->
+            pipeline.interceptLLMStreamingFailed(this) intercept@{ eventContext ->
                 val event = LLMStreamingFailedEvent(
                     runId = eventContext.runId,
                     error = eventContext.error.toAgentError(),
@@ -242,7 +263,7 @@ public class Debugger {
                 writer.onMessage(event)
             }
 
-            pipeline.interceptLLMStreamingCompleted(interceptContext) intercept@{ eventContext ->
+            pipeline.interceptLLMStreamingCompleted(this) intercept@{ eventContext ->
                 val event = LLMStreamingCompletedEvent(
                     runId = eventContext.runId,
                     prompt = eventContext.prompt,
@@ -257,7 +278,7 @@ public class Debugger {
 
             //region Intercept Tool Call Events
 
-            pipeline.interceptToolCallStarting(interceptContext) intercept@{ eventContext ->
+            pipeline.interceptToolCallStarting(this) intercept@{ eventContext ->
                 @Suppress("UNCHECKED_CAST")
                 val tool = eventContext.tool as Tool<Any?, Any?>
 
@@ -271,7 +292,7 @@ public class Debugger {
                 writer.onMessage(event)
             }
 
-            pipeline.interceptToolValidationFailed(interceptContext) intercept@{ eventContext ->
+            pipeline.interceptToolValidationFailed(this) intercept@{ eventContext ->
                 @Suppress("UNCHECKED_CAST")
                 val tool = eventContext.tool as Tool<Any?, Any?>
 
@@ -286,7 +307,7 @@ public class Debugger {
                 writer.onMessage(event)
             }
 
-            pipeline.interceptToolCallFailed(interceptContext) intercept@{ eventContext ->
+            pipeline.interceptToolCallFailed(this) intercept@{ eventContext ->
                 @Suppress("UNCHECKED_CAST")
                 val tool = eventContext.tool as Tool<Any?, Any?>
 
@@ -301,7 +322,7 @@ public class Debugger {
                 writer.onMessage(event)
             }
 
-            pipeline.interceptToolCallCompleted(interceptContext) intercept@{ eventContext ->
+            pipeline.interceptToolCallCompleted(this) intercept@{ eventContext ->
                 @Suppress("UNCHECKED_CAST")
                 val tool = eventContext.tool as Tool<Any?, Any?>
 
@@ -317,16 +338,28 @@ public class Debugger {
             }
 
             //endregion Intercept Tool Call Events
+
+            return debugger
         }
 
         //region Private Methods
 
-        private fun readPortFromEnvironmentVariables(): Int? {
-            val debuggerPortVariable =
-                EnvironmentVariablesReader.getEnvironmentVariable(name = KOOG_DEBUGGER_PORT_ENV_VAR)
+        private fun readPortValue(): Int? {
+            val debuggerPortValue =
+                readEnvironmentVariable(name = KOOG_DEBUGGER_PORT_ENV_VAR)
+                    ?: readVMOption(name = KOOG_DEBUGGER_PORT_VM_OPTION)
 
-            logger.debug { "Debugger Feature. Reading port from environment variable: KOOG_DEBUGGER_PORT_ENV_VAR=$debuggerPortVariable" }
-            return debuggerPortVariable?.toIntOrNull()
+            logger.debug { "Debugger Feature. Reading Koog debugger port value from system variables: $debuggerPortValue" }
+            return debuggerPortValue?.toIntOrNull()
+        }
+
+        private fun readWaitConnectionTimeout(): Duration? {
+            val debuggerWaitConnectionTimeoutValue =
+                readEnvironmentVariable(name = KOOG_DEBUGGER_WAIT_CONNECTION_MS_ENV_VAR)
+                    ?: readVMOption(name = KOOG_DEBUGGER_WAIT_CONNECTION_TIMEOUT_MS_VM_OPTION)
+
+            logger.debug { "Debugger Feature. Reading Koog debugger wait connection timeout value from system variables: $debuggerWaitConnectionTimeoutValue" }
+            return debuggerWaitConnectionTimeoutValue?.toLongOrNull()?.toDuration(DurationUnit.MILLISECONDS)
         }
 
         //endregion Private Methods

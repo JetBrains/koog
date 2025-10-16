@@ -1,9 +1,9 @@
 package ai.koog.integration.tests.agent
 
 import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.agent.AIAgentException
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.agentInput
+import ai.koog.agents.core.agent.exception.AIAgentException
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeExecuteTool

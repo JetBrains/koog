@@ -34,6 +34,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.measureTime
 
 class FeatureMessageRemoteServerTest {
 
@@ -129,7 +130,7 @@ class FeatureMessageRemoteServerTest {
     @Test
     fun `test server is started with wait connection flag and no connected clients`() = runBlocking {
         val port = findAvailablePort()
-        val serverConfig = DefaultServerConnectionConfig(port = port, waitConnection = true)
+        val serverConfig = DefaultServerConnectionConfig(port = port, awaitInitialConnection = true)
         FeatureMessageRemoteServer(connectionConfig = serverConfig).use { server ->
             val serverJob = launch(Dispatchers.IO) {
                 logger.info { "Server is started on port: ${server.connectionConfig.port}" }
@@ -151,7 +152,7 @@ class FeatureMessageRemoteServerTest {
     @Test
     fun `test server is waiting for connected clients before continue`() = runBlocking {
         val port = findAvailablePort()
-        val serverConfig = DefaultServerConnectionConfig(port = port, waitConnection = true)
+        val serverConfig = DefaultServerConnectionConfig(port = port, awaitInitialConnection = true)
         FeatureMessageRemoteServer(connectionConfig = serverConfig).use { server ->
 
             val isClientConnected = MutableStateFlow(false)
@@ -163,7 +164,7 @@ class FeatureMessageRemoteServerTest {
                 logger.info { "Server is finished successfully" }
             }
 
-            val clientConnectedTimeout = 5.seconds
+            val clientConnectedTimeout = 1.seconds
             val isServerConnected = withTimeoutOrNull(clientConnectedTimeout) {
                 isClientConnected.first { it }
             } != null
@@ -178,7 +179,7 @@ class FeatureMessageRemoteServerTest {
     @Test
     fun `test server is started with wait connection flag client connected`() = runBlocking {
         val port = findAvailablePort()
-        val serverConfig = DefaultServerConnectionConfig(port = port, waitConnection = true)
+        val serverConfig = DefaultServerConnectionConfig(port = port, awaitInitialConnection = true)
         val clientConfig = DefaultClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP)
 
         FeatureMessageRemoteServer(connectionConfig = serverConfig).use { server ->
@@ -210,6 +211,52 @@ class FeatureMessageRemoteServerTest {
 
                 assertTrue(isServerReceiveConnection.value, "Server did not receive a connection: $defaultClientServerTimeout")
             }
+        }
+    }
+
+    @Test
+    fun `test server is started with wait connection timeout`() = runBlocking {
+        val port = findAvailablePort()
+        val waitConnectionTimeout = 1.seconds
+
+        val serverConfig = DefaultServerConnectionConfig(
+            port = port,
+            awaitInitialConnection = true,
+            awaitInitialConnectionTimeout = waitConnectionTimeout
+        )
+
+        FeatureMessageRemoteServer(connectionConfig = serverConfig).use { server ->
+
+            val isServerFinished = MutableStateFlow(false)
+
+            val serverJob = launch(Dispatchers.IO) {
+                logger.info { "Server is started on port: ${server.connectionConfig.port}" }
+                server.start()
+                isServerFinished.value = true
+                logger.info { "Server is finished successfully" }
+            }
+
+            val serverFinishedDuration = measureTime {
+                withTimeoutOrNull(defaultClientServerTimeout) {
+                    isServerFinished.first { it }
+                }
+            }
+
+            val isClientConnected = server.isClientConnected.value
+
+            serverJob.cancelAndJoin()
+
+            assertTrue(
+                isServerFinished.value,
+                "Server finished timeout exceeded the timeout value: $defaultClientServerTimeout"
+            )
+
+            assertFalse(isClientConnected, "Client is connected unexpectedly")
+
+            assertTrue(
+                serverFinishedDuration in waitConnectionTimeout..<defaultClientServerTimeout,
+                "Server finished duration is less than wait connection timeout: $waitConnectionTimeout, but got: $serverFinishedDuration"
+            )
         }
     }
 
