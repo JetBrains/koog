@@ -1,5 +1,6 @@
 package ai.koog.agents.ext.agent
 
+import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.context.DetachedPromptExecutorAPI
 import ai.koog.agents.core.agent.entity.ToolSelectionStrategy
@@ -158,19 +159,23 @@ public inline fun <reified Input, reified Output> AIAgentSubgraphBuilderBase<*, 
     llmParams = llmParams,
 ) {
     // An identity tool that provides arguments as a tool result without changes.
-    val finishTool = object : Tool<Output, Output>() {
-        override val argsSerializer: KSerializer<Output> = serializer()
-        override val resultSerializer: KSerializer<Output> = serializer()
-        override val name: String = SubgraphWithTaskUtils.FINALIZE_SUBGRAPH_TOOL_NAME
-        override val description: String = SubgraphWithTaskUtils.FINALIZE_SUBGRAPH_TOOL_DESCRIPTION
-        override suspend fun execute(args: Output): Output = args
-    }
+    val finishTool = identityTool<Output>()
 
     setupSubgraphWithTask<Input, Output, Output>(
         finishTool = finishTool,
         assistantResponseRepeatMax = assistantResponseRepeatMax,
         defineTask = defineTask
     )
+}
+
+@PublishedApi
+@OptIn(InternalAgentToolsApi::class)
+internal inline fun <reified Output> identityTool(): Tool<Output, Output> = object : Tool<Output, Output>() {
+    override val argsSerializer: KSerializer<Output> = serializer()
+    override val resultSerializer: KSerializer<Output> = serializer()
+    override val name: String = SubgraphWithTaskUtils.FINALIZE_SUBGRAPH_TOOL_NAME
+    override val description: String = SubgraphWithTaskUtils.FINALIZE_SUBGRAPH_TOOL_DESCRIPTION
+    override suspend fun execute(args: Output): Output = args
 }
 
 /**
@@ -342,7 +347,7 @@ public inline fun <reified Input : Any> AIAgentSubgraphBuilderBase<*, *>.subgrap
  * @param finishTool A descriptor for the tool that determines the condition to finalize the subgraph's operation.
  * @param defineTask A suspending lambda that defines the main task of the subgraph, producing a task description based on the input.
  */
-@OptIn(InternalAgentToolsApi::class)
+@OptIn(InternalAgentToolsApi::class, InternalAgentsApi::class)
 public inline fun <reified Input, reified Output, reified OutputTransformed> AIAgentSubgraphBuilderBase<Input, OutputTransformed>.setupSubgraphWithTask(
     finishTool: Tool<Output, OutputTransformed>,
     assistantResponseRepeatMax: Int? = null,
@@ -392,29 +397,7 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
      * */
     val callToolHacked by node<Message.Tool.Call, ReceivedToolResult> { toolCall ->
         if (toolCall.tool == finishTool.name) {
-            // Execute Finish tool directly and get a result
-            val toolArgs = finishTool.decodeArgs(toolCall.contentJson)
-
-            val toolResult = finishTool.execute(
-                args = toolArgs
-            )
-
-            // Append a final tool call result to the prompt for further LLM calls
-            // to see it (otherwise they would fail)
-            llm.writeSession {
-                appendPrompt {
-                    tool {
-                        result(toolCall.id, toolCall.tool, toolCall.content)
-                    }
-                }
-            }
-
-            ReceivedToolResult(
-                id = toolCall.id,
-                tool = finishTool.name,
-                content = toolCall.content,
-                result = toolResult
-            )
+            executeFinishTool<Output, OutputTransformed>(toolCall, finishTool)
         } else {
             environment.executeTool(toolCall)
         }
@@ -479,4 +462,35 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
     edge(sendToolResult forwardTo nodeDecide)
 
     edge(finalizeTask forwardTo nodeFinish)
+}
+
+@OptIn(InternalAgentToolsApi::class)
+@PublishedApi
+internal suspend inline fun <reified Output, reified OutputTransformed> AIAgentContext.executeFinishTool(
+    toolCall: Message.Tool.Call,
+    finishTool: Tool<Output, OutputTransformed>
+): ReceivedToolResult {
+    // Execute Finish tool directly and get a result
+    val toolArgs = finishTool.decodeArgs(toolCall.contentJson)
+
+    val toolResult = finishTool.execute(
+        args = toolArgs
+    )
+
+    // Append a final tool call result to the prompt for further LLM calls
+    // to see it (otherwise they would fail)
+    llm.writeSession {
+        appendPrompt {
+            tool {
+                result(toolCall.id, toolCall.tool, toolCall.content)
+            }
+        }
+    }
+
+    return ReceivedToolResult(
+        id = toolCall.id,
+        tool = finishTool.name,
+        content = toolCall.content,
+        result = toolResult
+    )
 }
