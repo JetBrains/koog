@@ -84,9 +84,10 @@ object Models {
     @JvmStatic
     fun openRouterModels(): Stream<LLModel> = Stream.of(
         OpenRouterModels.GPT5Nano,
-        OpenRouterModels.DeepSeekV30324,
         OpenRouterModels.Claude4Sonnet,
         OpenRouterModels.Gemini2_5FlashLite,
+        OpenRouterModels.DeepSeekV30324,
+        OpenRouterModels.Qwen2_5,
     )
 
     @JvmStatic
