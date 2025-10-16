@@ -219,24 +219,38 @@ public object JVMFileSystemProvider {
         /**
          * Determines if the beginning of a file's content is text-based, as opposed to binary.
          * This method reads a specified amount of data from the start of the file,
-         * attempts decoding with a list of provided character sets, and checks if any succeed.
+         * checks for null bytes, and attempts decoding with a list of provided character sets.
          *
-         * @param headMaxSize The maximum number of bytes to read from the start of the file. Defaults to 1024 bytes.
+         * @param headMaxSize The maximum number of bytes to read from the start of the file. Defaults to 8000 bytes.
          * @param charsetsToTry A list of character sets to attempt decoding the file's content. Defaults to a list containing UTF-8.
-         * @return True if the file's head data is successfully decoded with one of the given character sets, otherwise false.
+         * @return True if the file's head data contains no null bytes and is successfully decoded with one of the given character sets,
+         * otherwise false.
          */
         private fun Path.isFileHeadTextBased(
-            headMaxSize: Int = 1024,
+            headMaxSize: Int = 8000,
             charsetsToTry: List<Charset> = listOf(
                 Charsets.UTF_8,
             )
         ): Boolean {
             return runCatching {
-                val headData = inputStream().use { stream ->
+                val bytes = inputStream().use { stream ->
                     val buffer = ByteArray(headMaxSize)
-                    stream.read(buffer, 0, headMaxSize).let { ByteBuffer.wrap(buffer.copyOf(it)) }
+                    val bytesRead = stream.read(buffer, 0, headMaxSize)
+                    if (bytesRead <= 0) return false
+                    buffer.copyOf(bytesRead)
                 }
-                charsetsToTry.any { runCatching { it.newDecoder().decode(headData) }.isSuccess }
+
+                // check for null bytes
+                if (bytes.any { it == 0.toByte() }) {
+                    return false
+                }
+
+                val headData = ByteBuffer.wrap(bytes)
+                charsetsToTry.any { charset ->
+                    runCatching {
+                        charset.newDecoder().decode(headData.duplicate())
+                    }.isSuccess
+                }
             }.getOrElse { false }
         }
 
