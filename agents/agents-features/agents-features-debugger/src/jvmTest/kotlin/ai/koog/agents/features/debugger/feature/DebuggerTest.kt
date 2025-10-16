@@ -32,7 +32,6 @@ import ai.koog.agents.core.feature.remote.server.config.DefaultServerConnectionC
 import ai.koog.agents.core.feature.writer.FeatureMessageRemoteWriter
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.debugger.SystemVariablesReader
-import ai.koog.agents.features.debugger.eventString
 import ai.koog.agents.features.debugger.mock.ClientEventsCollector
 import ai.koog.agents.features.debugger.mock.MockLLMProvider
 import ai.koog.agents.features.debugger.mock.assistantMessage
@@ -50,14 +49,17 @@ import ai.koog.agents.testing.tools.mockLLMAnswer
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.llm.toModelInfo
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.utils.io.use
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.HttpRequestRetry
 import io.ktor.http.URLProtocol
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
@@ -65,6 +67,7 @@ import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.io.IOException
 import org.junit.jupiter.api.AfterEach
@@ -87,6 +90,22 @@ class DebuggerTest {
     companion object {
         private val defaultClientServerTimeout = 30.seconds
         private const val HOST = "127.0.0.1"
+    }
+
+    private suspend fun FeatureMessageRemoteClient.connectWithRetry(timeout: Duration) {
+        withTimeout(timeout) {
+            while (true) {
+                try {
+                    connect()
+                    return@withTimeout
+                } catch (exception: Exception) {
+                    if (exception is CancellationException) {
+                        throw exception
+                    }
+                    delay(100)
+                }
+            }
+        }
     }
 
     private val testBaseClient: HttpClient
@@ -165,7 +184,6 @@ class DebuggerTest {
         val clientConfig = DefaultClientConnectionConfig(host = HOST, port = port, protocol = URLProtocol.HTTP)
 
         val isClientFinished = CompletableDeferred<Boolean>()
-        val isServerStarted = CompletableDeferred<Boolean>()
 
         // Server
         val serverJob = launch {
@@ -205,7 +223,6 @@ class DebuggerTest {
                 install(Debugger) {
                     setPort(port)
 
-                    // A job to wait for a server to start
                     launch {
                         val messageProcessor = messageProcessors.single() as FeatureMessageRemoteWriter
                         val isServerStartedCheck = withTimeoutOrNull(defaultClientServerTimeout) {
@@ -213,7 +230,6 @@ class DebuggerTest {
                         } != null
 
                         assertTrue(isServerStartedCheck, "Server did not start in time")
-                        isServerStarted.complete(true)
                     }
                 }
             }.use { agent ->
@@ -236,8 +252,7 @@ class DebuggerTest {
                 val collectEventsJob =
                     clientEventsCollector.startCollectEvents(coroutineScope = this@launch)
 
-                isServerStarted.await()
-                client.connect()
+                client.connectWithRetry(defaultClientServerTimeout)
                 collectEventsJob.join()
 
                 // Correct run id will be set after the 'collect events job' is finished.
@@ -311,14 +326,14 @@ class DebuggerTest {
                     LLMCallStartingEvent(
                         runId = clientEventsCollector.runId,
                         prompt = expectedLLMCallPrompt,
-                        model = testModel.eventString,
+                        model = testModel.toModelInfo(),
                         tools = listOf(dummyTool.name),
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     LLMCallCompletedEvent(
                         runId = clientEventsCollector.runId,
                         prompt = expectedLLMCallPrompt,
-                        model = testModel.eventString,
+                        model = testModel.toModelInfo(),
                         responses = listOf(toolCallMessage(dummyTool.name, content = """{"dummy":"test"}""")),
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),
@@ -366,14 +381,14 @@ class DebuggerTest {
                     LLMCallStartingEvent(
                         runId = clientEventsCollector.runId,
                         prompt = expectedLLMCallWithToolsPrompt,
-                        model = testModel.eventString,
+                        model = testModel.toModelInfo(),
                         tools = listOf(dummyTool.name),
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     LLMCallCompletedEvent(
                         runId = clientEventsCollector.runId,
                         prompt = expectedLLMCallWithToolsPrompt,
-                        model = testModel.eventString,
+                        model = testModel.toModelInfo(),
                         responses = listOf(assistantMessage(mockResponse)),
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),
@@ -480,7 +495,6 @@ class DebuggerTest {
         val clientConfig = DefaultClientConnectionConfig(host = HOST, port = port, protocol = URLProtocol.HTTP)
 
         val isClientFinished = CompletableDeferred<Boolean>()
-        val isServerStarted = CompletableDeferred<Boolean>()
 
         // Server
         val serverJob = launch {
@@ -516,7 +530,6 @@ class DebuggerTest {
                         } != null
 
                         assertTrue(isServerStartedCheck, "Server did not start in time")
-                        isServerStarted.complete(true)
                     }
                 }
             }.use { agent ->
@@ -539,8 +552,7 @@ class DebuggerTest {
                 val collectEventsJob =
                     clientEventsCollector.startCollectEvents(coroutineScope = this@launch)
 
-                isServerStarted.await()
-                client.connect()
+                client.connectWithRetry(defaultClientServerTimeout)
                 collectEventsJob.join()
 
                 // Correct run id will be set after the 'collect events job' is finished.
@@ -548,7 +560,7 @@ class DebuggerTest {
                     LLMStreamingStartingEvent(
                         runId = clientEventsCollector.runId,
                         prompt = expectedLLMCallPrompt,
-                        model = testModel.eventString,
+                        model = testModel.toModelInfo().modelIdentifierName,
                         tools = listOf(dummyTool.name),
                         timestamp = testClock.now().toEpochMilliseconds(),
                     ),
@@ -560,7 +572,7 @@ class DebuggerTest {
                     LLMStreamingCompletedEvent(
                         runId = clientEventsCollector.runId,
                         prompt = expectedLLMCallPrompt,
-                        model = testModel.eventString,
+                        model = testModel.toModelInfo().modelIdentifierName,
                         tools = listOf(dummyTool.name),
                         timestamp = testClock.now().toEpochMilliseconds(),
                     )
@@ -660,7 +672,6 @@ class DebuggerTest {
         val clientConfig = DefaultClientConnectionConfig(host = HOST, port = port, protocol = URLProtocol.HTTP)
 
         val isClientFinished = CompletableDeferred<Boolean>()
-        val isServerStarted = CompletableDeferred<Boolean>()
 
         // Server
         val serverJob = launch {
@@ -696,7 +707,6 @@ class DebuggerTest {
                         } != null
 
                         assertTrue(isServerStartedCheck, "Server did not start in time")
-                        isServerStarted.complete(true)
                     }
                 }
             }.use { agent ->
@@ -725,8 +735,7 @@ class DebuggerTest {
                 val collectEventsJob =
                     clientEventsCollector.startCollectEvents(coroutineScope = this@launch)
 
-                isServerStarted.await()
-                client.connect()
+                client.connectWithRetry(defaultClientServerTimeout)
                 collectEventsJob.join()
 
                 // Correct run id will be set after the 'collect events job' is finished.
@@ -734,7 +743,7 @@ class DebuggerTest {
                     LLMStreamingStartingEvent(
                         runId = clientEventsCollector.runId,
                         prompt = expectedLLMCallPrompt,
-                        model = testModel.eventString,
+                        model = testModel.toModelInfo().modelIdentifierName,
                         tools = listOf(dummyTool.name),
                         timestamp = testClock.now().toEpochMilliseconds(),
                     ),
@@ -746,7 +755,7 @@ class DebuggerTest {
                     LLMStreamingCompletedEvent(
                         runId = clientEventsCollector.runId,
                         prompt = expectedLLMCallPrompt,
-                        model = testModel.eventString,
+                        model = testModel.toModelInfo().modelIdentifierName,
                         tools = listOf(dummyTool.name),
                         timestamp = testClock.now().toEpochMilliseconds(),
                     )
@@ -780,7 +789,7 @@ class DebuggerTest {
         """
         '${Debugger.KOOG_DEBUGGER_PORT_ENV_VAR}' environment variable need to be set for a particular test via test framework.
         Currently, test framework that is used for Koog tests does not have ability to set env variables.
-        Setting env variable in Gradle task does not work either, because there are tests that verify both 
+        Setting env variable in Gradle task does not work either, because there are tests that verify both
         cases when env variable is set and when it is not set.
         Disable test for now. Need to be enabled when we can set env variables in tests.
     """

@@ -112,7 +112,7 @@ val logWriter = MyFeatureMessageLogWriter(targetLogger = KotlinLogger.logger("my
     initialize()
     setMessageFilter { message ->
         // Only log AfterLLMCall messages
-        message is AfterLLMCallEvent
+        message is LLMCallCompletedEvent
     }
 }
 
@@ -161,8 +161,8 @@ Every `FeatureMessageProcessor` now supports message filtering via `setMessageFi
 Example: only process LLM call start/end events
 ```kotlin
 myFeatureMessageProcessor.setMessageFilter { message ->
-    message is BeforeLLMCallEvent ||
-    message is AfterLLMCallEvent
+    message is LLMCallStartingEvent ||
+    message is LLMCallCompletedEvent
 }
 ```
 
@@ -171,7 +171,7 @@ You can use the same approach with any concrete processor implementation (e.g., 
 val logWriter = MyFeatureMessageLogWriter(targetLogger = KotlinLogger.logger("my.feature.logger"))
 logWriter.initialize()
 logWriter.setMessageFilter { message -> 
-    message is AfterLLMCallEvent && message.content.contains("keyword")
+    message is LLMCallCompletedEvent && message.content.contains("keyword")
 }
 
 install(MyFeature) {
