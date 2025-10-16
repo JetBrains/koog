@@ -56,8 +56,10 @@ import ai.koog.utils.io.use
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.HttpRequestRetry
 import io.ktor.http.URLProtocol
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
@@ -65,6 +67,7 @@ import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.io.IOException
 import org.junit.jupiter.api.AfterEach
@@ -87,6 +90,22 @@ class DebuggerTest {
     companion object {
         private val defaultClientServerTimeout = 30.seconds
         private const val HOST = "127.0.0.1"
+    }
+
+    private suspend fun FeatureMessageRemoteClient.connectWithRetry(timeout: Duration) {
+        withTimeout(timeout) {
+            while (true) {
+                try {
+                    connect()
+                    return@withTimeout
+                } catch (exception: Exception) {
+                    if (exception is CancellationException) {
+                        throw exception
+                    }
+                    delay(100)
+                }
+            }
+        }
     }
 
     private val testBaseClient: HttpClient
@@ -165,7 +184,6 @@ class DebuggerTest {
         val clientConfig = DefaultClientConnectionConfig(host = HOST, port = port, protocol = URLProtocol.HTTP)
 
         val isClientFinished = CompletableDeferred<Boolean>()
-        val isServerStarted = CompletableDeferred<Boolean>()
 
         // Server
         val serverJob = launch {
@@ -205,7 +223,6 @@ class DebuggerTest {
                 install(Debugger) {
                     setPort(port)
 
-                    // A job to wait for a server to start
                     launch {
                         val messageProcessor = messageProcessors.single() as FeatureMessageRemoteWriter
                         val isServerStartedCheck = withTimeoutOrNull(defaultClientServerTimeout) {
@@ -213,7 +230,6 @@ class DebuggerTest {
                         } != null
 
                         assertTrue(isServerStartedCheck, "Server did not start in time")
-                        isServerStarted.complete(true)
                     }
                 }
             }.use { agent ->
@@ -236,8 +252,7 @@ class DebuggerTest {
                 val collectEventsJob =
                     clientEventsCollector.startCollectEvents(coroutineScope = this@launch)
 
-                isServerStarted.await()
-                client.connect()
+                client.connectWithRetry(defaultClientServerTimeout)
                 collectEventsJob.join()
 
                 // Correct run id will be set after the 'collect events job' is finished.
@@ -480,7 +495,6 @@ class DebuggerTest {
         val clientConfig = DefaultClientConnectionConfig(host = HOST, port = port, protocol = URLProtocol.HTTP)
 
         val isClientFinished = CompletableDeferred<Boolean>()
-        val isServerStarted = CompletableDeferred<Boolean>()
 
         // Server
         val serverJob = launch {
@@ -516,7 +530,6 @@ class DebuggerTest {
                         } != null
 
                         assertTrue(isServerStartedCheck, "Server did not start in time")
-                        isServerStarted.complete(true)
                     }
                 }
             }.use { agent ->
@@ -539,8 +552,7 @@ class DebuggerTest {
                 val collectEventsJob =
                     clientEventsCollector.startCollectEvents(coroutineScope = this@launch)
 
-                isServerStarted.await()
-                client.connect()
+                client.connectWithRetry(defaultClientServerTimeout)
                 collectEventsJob.join()
 
                 // Correct run id will be set after the 'collect events job' is finished.
@@ -660,7 +672,6 @@ class DebuggerTest {
         val clientConfig = DefaultClientConnectionConfig(host = HOST, port = port, protocol = URLProtocol.HTTP)
 
         val isClientFinished = CompletableDeferred<Boolean>()
-        val isServerStarted = CompletableDeferred<Boolean>()
 
         // Server
         val serverJob = launch {
@@ -696,7 +707,6 @@ class DebuggerTest {
                         } != null
 
                         assertTrue(isServerStartedCheck, "Server did not start in time")
-                        isServerStarted.complete(true)
                     }
                 }
             }.use { agent ->
@@ -725,8 +735,7 @@ class DebuggerTest {
                 val collectEventsJob =
                     clientEventsCollector.startCollectEvents(coroutineScope = this@launch)
 
-                isServerStarted.await()
-                client.connect()
+                client.connectWithRetry(defaultClientServerTimeout)
                 collectEventsJob.join()
 
                 // Correct run id will be set after the 'collect events job' is finished.

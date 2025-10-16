@@ -5,6 +5,7 @@ version = rootProject.version
 
 plugins {
     id("ai.kotlin.multiplatform")
+    alias(libs.plugins.kotlin.serialization)
 }
 
 kotlin {
