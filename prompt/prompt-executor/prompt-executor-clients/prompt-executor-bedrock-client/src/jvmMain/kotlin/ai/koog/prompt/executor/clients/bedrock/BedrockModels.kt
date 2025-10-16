@@ -196,7 +196,7 @@ public object BedrockModels : LLModelDefinitions {
     ).effectiveModel
 
     /**
-     * Claude 4.5 Sonnet - Latest high-performance model with enhanced capabilities
+     * Claude 4.5 Sonnet - High-performance model with enhanced capabilities
      *
      * This model offers:
      * - Superior coding and agentic capabilities
@@ -209,6 +209,19 @@ public object BedrockModels : LLModelDefinitions {
     public val AnthropicClaude4_5Sonnet: LLModel = BedrockModel(
         AnthropicModels.Sonnet_4_5,
         "anthropic.claude-sonnet-4-5-20250929-v1:0",
+    ).effectiveModel
+
+    /**
+     * Claude Haiku 4.5 - Anthropic's most powerful model for powering real-world agents,
+     * with industry-leading capabilities around coding, and computer use.
+     *
+     * It delivers near-frontier performance for a wide range of use cases, and stands out as
+     * one of the best coding and agent models – with the right speed and cost to power free products
+     * and high-volume user experiences.
+     */
+    public val AnthropicClaude4_5Haiku: LLModel = BedrockModel(
+        AnthropicModels.Haiku_4_5,
+        "anthropic.claude-haiku-4-5-20251001-v1:0",
     ).effectiveModel
 
     /**

@@ -139,6 +139,7 @@ class BedrockLLMClientTest {
             BedrockModels.AnthropicClaude41Opus,
             BedrockModels.AnthropicClaude4Sonnet,
             BedrockModels.AnthropicClaude4_5Sonnet,
+            BedrockModels.AnthropicClaude4_5Haiku,
         )
 
         claude4Models.forEach { model ->
@@ -244,6 +245,7 @@ class BedrockLLMClientTest {
         assertTrue(BedrockModels.AnthropicClaude4_5Sonnet.id.contains("anthropic.claude-sonnet-4-5-20250929-v1:0"))
         assertTrue(BedrockModels.AnthropicClaude35SonnetV2.id.contains("anthropic.claude-3-5-sonnet-20241022-v2:0"))
         assertTrue(BedrockModels.AnthropicClaude35Haiku.id.contains("anthropic.claude-3-5-haiku-20241022-v1:0"))
+        assertTrue(BedrockModels.AnthropicClaude4_5Haiku.id.contains("anthropic.claude-haiku-4-5-20251001-v1:0"))
         assertTrue(BedrockModels.AnthropicClaude3Opus.id.contains("anthropic.claude-3-opus"))
         assertTrue(BedrockModels.AnthropicClaude3Sonnet.id.contains("anthropic.claude-3-sonnet"))
         assertTrue(BedrockModels.AnthropicClaude3Haiku.id.contains("anthropic.claude-3-haiku"))
@@ -301,6 +303,7 @@ class BedrockLLMClientTest {
         val claude41Opus = BedrockModels.AnthropicClaude41Opus
         val claude4Sonnet = BedrockModels.AnthropicClaude4Sonnet
         val claude45Sonnet = BedrockModels.AnthropicClaude4_5Sonnet
+        val claude45Haiku = BedrockModels.AnthropicClaude4_5Haiku
         assertTrue(claude4Opus.capabilities.contains(LLMCapability.Tools))
         assertTrue(claude4Opus.capabilities.contains(LLMCapability.ToolChoice))
         assertTrue(claude41Opus.capabilities.contains(LLMCapability.Tools))
@@ -309,6 +312,8 @@ class BedrockLLMClientTest {
         assertTrue(claude4Sonnet.capabilities.contains(LLMCapability.ToolChoice))
         assertTrue(claude45Sonnet.capabilities.contains(LLMCapability.Tools))
         assertTrue(claude45Sonnet.capabilities.contains(LLMCapability.ToolChoice))
+        assertTrue(claude45Haiku.capabilities.contains(LLMCapability.Tools))
+        assertTrue(claude45Haiku.capabilities.contains(LLMCapability.ToolChoice))
 
         // Mock client for testing tool call request generation
         val client = BedrockLLMClient(
@@ -334,6 +339,7 @@ class BedrockLLMClientTest {
         val claude41Opus = BedrockModels.AnthropicClaude41Opus
         val claude4Sonnet = BedrockModels.AnthropicClaude4Sonnet
         val claude45Sonnet = BedrockModels.AnthropicClaude4_5Sonnet
+        val claude45Haiku = BedrockModels.AnthropicClaude4_5Haiku
         assertTrue(claude4Opus.capabilities.contains(LLMCapability.Tools))
         assertTrue(claude4Opus.capabilities.contains(LLMCapability.ToolChoice))
         assertTrue(claude4Opus.capabilities.contains(LLMCapability.Vision.Image))
@@ -346,6 +352,9 @@ class BedrockLLMClientTest {
         assertTrue(claude45Sonnet.capabilities.contains(LLMCapability.Tools))
         assertTrue(claude45Sonnet.capabilities.contains(LLMCapability.ToolChoice))
         assertTrue(claude45Sonnet.capabilities.contains(LLMCapability.Vision.Image))
+        assertTrue(claude45Haiku.capabilities.contains(LLMCapability.Tools))
+        assertTrue(claude45Haiku.capabilities.contains(LLMCapability.ToolChoice))
+        assertTrue(claude45Haiku.capabilities.contains(LLMCapability.Vision.Image))
 
         // Verify Claude 3.5 models have comprehensive tool support
         val claude35Sonnet = BedrockModels.AnthropicClaude35SonnetV2
