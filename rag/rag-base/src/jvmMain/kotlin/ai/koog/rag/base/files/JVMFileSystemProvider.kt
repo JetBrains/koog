@@ -236,7 +236,7 @@ public object JVMFileSystemProvider {
                 val bytes = inputStream().use { stream ->
                     val buffer = ByteArray(headMaxSize)
                     val bytesRead = stream.read(buffer, 0, headMaxSize)
-                    if (bytesRead <= 0) return true
+                    if (bytesRead <= 0) return false
                     buffer.copyOf(bytesRead)
                 }
 
