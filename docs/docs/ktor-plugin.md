@@ -1,6 +1,6 @@
 # Ktor Integration: Koog plugin
 
-Koog fits naturally into your Ktor server allowing you to write server-side AI applications using ideomatic Kotlin API from both sides. 
+Koog fits naturally into your Ktor server allowing you to write server-side AI applications using ideomatic Kotlin API from both sides.
 
 Install the Koog plugin once, configure your LLM providers in application.conf/YAML or in code, and then call agents right from your routes. No more wiring LLM clients across modules – your routes just request an agent and are ready to go.
 
@@ -90,6 +90,7 @@ fun Application.module() {
 ```
 
 Notes
+
 - aiAgent requires a concrete model (LLModel) – choose per‑route, per‑use.
 - For lower‑level LLM access, use llm() (PromptExecutor) directly.
 
@@ -205,6 +206,7 @@ install(Koog) {
 ## Model identifiers in config (fallback)
 
 When configuring llm.fallback in YAML/CONF, use these identifier formats:
+
 - OpenAI: openai.chat.gpt4_1, openai.reasoning.o3, openai.costoptimized.gpt4_1mini, openai.audio.gpt4oaudio, openai.moderation.omni
 - Anthropic: anthropic.sonnet_3_7, anthropic.opus_4, anthropic.haiku_3_5
 - Google: google.gemini2_5pro, google.gemini2_0flash001
@@ -213,6 +215,7 @@ When configuring llm.fallback in YAML/CONF, use these identifier formats:
 - Ollama: ollama.meta.llama3.2, ollama.alibaba.qwq:32b, ollama.groq.llama3-grok-tool-use:8b
 
 Note
+
 - For OpenAI you must include the category (chat, reasoning, costoptimized, audio, embeddings, moderation).
 - For Ollama, both ollama.model and ollama.<maker>.<model> are supported.
 
