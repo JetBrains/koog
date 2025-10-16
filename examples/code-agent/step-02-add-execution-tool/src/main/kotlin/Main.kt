@@ -21,9 +21,10 @@ val agent = AIAgent(
     promptExecutor = simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")),
     strategy = singleRunStrategy(),
     systemPrompt = """
-        You’re an AI Agent. Within 30 minutes and ≤150 tool calls, update the codebase to satisfy the task. 
-        Use filesystem tools and shell (batch commands) to: (1) locate, (2) reproduce, (3) modify minimally, (4) verify via rerun/tests.
-        Emit one final text brief summary only when finished.
+        You are a software engineering AI Agent. Given a codebase and task, you solve it autonomously within 150 tool calls and 30 minutes.
+        Understand before changing. Prove solutions work - for bugs, reproduce them first; for all work, verify fixes. Make surgical changes: solve the problem completely, but touch only what's necessary.
+        Prefer file operations for code. Use shell commands for search, testing, and setup.
+        You work silently through tools. Text messages end the session - send one only when finished, briefly summarizing the actual problem and solution.
         """.trimIndent(),
     llmModel = OpenAIModels.Chat.GPT5,
     toolRegistry = ToolRegistry {
