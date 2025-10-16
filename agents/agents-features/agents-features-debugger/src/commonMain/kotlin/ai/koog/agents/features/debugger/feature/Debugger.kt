@@ -27,13 +27,10 @@ import ai.koog.agents.core.feature.model.toAgentError
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.remote.server.config.DefaultServerConnectionConfig
 import ai.koog.agents.core.tools.Tool
-import ai.koog.agents.features.debugger.EnvironmentVariablesReader
-import ai.koog.agents.features.debugger.feature.writer.DebuggerFeatureMessageRemoteWriter
-import ai.koog.prompt.llm.toModelInfo
-import ai.koog.agents.features.debugger.eventString
 import ai.koog.agents.features.debugger.feature.writer.DebuggerFeatureMessageRemoteWriter
 import ai.koog.agents.features.debugger.readEnvironmentVariable
 import ai.koog.agents.features.debugger.readVMOption
+import ai.koog.prompt.llm.toModelInfo
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlin.time.Duration
 import kotlin.time.DurationUnit

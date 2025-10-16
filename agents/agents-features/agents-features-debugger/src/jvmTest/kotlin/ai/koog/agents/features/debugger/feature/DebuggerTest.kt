@@ -31,9 +31,7 @@ import ai.koog.agents.core.feature.remote.client.config.DefaultClientConnectionC
 import ai.koog.agents.core.feature.remote.server.config.DefaultServerConnectionConfig
 import ai.koog.agents.core.feature.writer.FeatureMessageRemoteWriter
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.features.debugger.EnvironmentVariablesReader
 import ai.koog.agents.features.debugger.SystemVariablesReader
-import ai.koog.agents.features.debugger.eventString
 import ai.koog.agents.features.debugger.mock.ClientEventsCollector
 import ai.koog.agents.features.debugger.mock.MockLLMProvider
 import ai.koog.agents.features.debugger.mock.assistantMessage
