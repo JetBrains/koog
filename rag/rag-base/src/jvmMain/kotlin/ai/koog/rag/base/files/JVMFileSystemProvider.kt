@@ -240,21 +240,17 @@ public object JVMFileSystemProvider {
                     buffer.copyOf(bytesRead)
                 }
 
-                val bytesToCheck = bytes.size
-
                 // check for null bytes
-                for (i in 0 until bytesToCheck) {
-                    if (bytes[i] == 0.toByte()) {
-                        return false
-                    }
+                if (bytes.any { it == 0.toByte() }) {
+                    return false
                 }
 
-                val headData = ByteBuffer.wrap(bytes, 0, bytesToCheck)
+                val headData = ByteBuffer.wrap(bytes)
                 charsetsToTry.any { charset ->
                     runCatching {
                         charset.newDecoder().decode(headData.duplicate())
                         true
-                    }.getOrElse { false }
+                    }.isSuccess
                 }
             }.getOrElse { false }
         }
