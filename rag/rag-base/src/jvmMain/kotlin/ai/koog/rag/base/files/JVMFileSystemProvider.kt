@@ -249,7 +249,6 @@ public object JVMFileSystemProvider {
                 charsetsToTry.any { charset ->
                     runCatching {
                         charset.newDecoder().decode(headData.duplicate())
-                        true
                     }.isSuccess
                 }
             }.getOrElse { false }
