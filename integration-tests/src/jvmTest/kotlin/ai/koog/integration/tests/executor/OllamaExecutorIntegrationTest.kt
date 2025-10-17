@@ -137,31 +137,31 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
     @ParameterizedTest
     @MethodSource("modelParams")
     fun ollama_testRawStringStreaming(model: LLModel) {
-        super.integration_testRawStringStreaming(model)
+        integration_testRawStringStreaming(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
     fun ollama_testStructuredDataStreaming(model: LLModel) {
-        super.integration_testStructuredDataStreaming(model)
+        integration_testStructuredDataStreaming(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
     fun ollama_testToolChoiceRequired(model: LLModel) {
-        super.integration_testToolChoiceRequired(model)
+        integration_testToolChoiceRequired(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
     fun ollama_testToolChoiceNone(model: LLModel) {
-        super.integration_testToolChoiceNone(model)
+        integration_testToolChoiceNone(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
     fun ollama_testToolChoiceNamed(model: LLModel) {
-        super.integration_testToolChoiceNamed(model)
+        integration_testToolChoiceNamed(model)
     }
 
     // Ollama-specific moderation tests

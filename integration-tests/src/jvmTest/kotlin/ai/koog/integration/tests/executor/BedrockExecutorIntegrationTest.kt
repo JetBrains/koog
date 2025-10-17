@@ -121,6 +121,18 @@ class BedrockExecutorIntegrationTest : ExecutorIntegrationTestBase() {
 
     @ParameterizedTest
     @MethodSource("bedrockCombinations")
+    fun integration_testToolsWithNullParamsBedrock(model: LLModel) {
+        integration_testToolsWithNullParams(model)
+    }
+
+    @ParameterizedTest
+    @MethodSource("bedrockCombinations")
+    fun integration_testToolsWithAnyOfParamsBedrock(model: LLModel) {
+        integration_testToolsWithAnyOfParams(model)
+    }
+
+    @ParameterizedTest
+    @MethodSource("bedrockCombinations")
     fun integration_testRawStringStreamingBedrock(model: LLModel) {
         integration_testRawStringStreaming(model)
     }
