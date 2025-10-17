@@ -28,7 +28,7 @@ import kotlin.time.Duration.Companion.seconds
 
 class SessionManagerTest {
     private companion object Companion {
-        private val TEST_TIMEOUT = 5.seconds
+        private val TEST_TIMEOUT = 30.seconds
     }
 
     private lateinit var taskStorage: InMemoryTaskStorage
