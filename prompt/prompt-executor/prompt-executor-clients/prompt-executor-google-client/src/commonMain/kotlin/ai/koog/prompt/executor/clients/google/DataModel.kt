@@ -1,6 +1,10 @@
 package ai.koog.prompt.executor.clients.google
 
-import ai.koog.prompt.executor.clients.serialization.AdditionalPropertiesFlatteningSerializer
+import ai.koog.prompt.executor.clients.google.GoogleFunctionCallingMode.ANY
+import ai.koog.prompt.executor.clients.google.GoogleFunctionCallingMode.AUTO
+import ai.koog.prompt.executor.clients.google.GoogleFunctionCallingMode.NONE
+import ai.koog.prompt.executor.clients.serialization.AdditionalPropertiesSerializer
+import ai.koog.prompt.executor.clients.serialization.RemainSerialName
 import ai.koog.utils.serializers.ByteArrayAsBase64Serializer
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.SerialName
@@ -301,6 +305,8 @@ internal class GoogleGenerationConfig(
     val topP: Double? = null,
     val topK: Int? = null,
     val thinkingConfig: GoogleThinkingConfig? = null,
+    @RemainSerialName
+    @SerialName("additionalProperties")
     val additionalProperties: Map<String, JsonElement>? = null,
 )
 
@@ -490,4 +496,4 @@ internal object GooglePartSerializer : JsonContentPolymorphicSerializer<GooglePa
  * `GoogleGenerationConfig`'s structure to manage known and unknown properties.
  */
 internal object GoogleGenerationConfigSerializer :
-    AdditionalPropertiesFlatteningSerializer<GoogleGenerationConfig>(GoogleGenerationConfig.serializer())
+    AdditionalPropertiesSerializer<GoogleGenerationConfig>(GoogleGenerationConfig.serializer())

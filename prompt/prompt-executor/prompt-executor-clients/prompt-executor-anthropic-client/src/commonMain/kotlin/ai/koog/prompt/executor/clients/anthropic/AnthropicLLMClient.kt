@@ -6,6 +6,7 @@ import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
+import ai.koog.prompt.executor.clients.serialization.RemainSerialNameJsonNamingStrategyWrapper
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -100,7 +101,7 @@ public open class AnthropicLLMClient(
         isLenient = true
         encodeDefaults = true // Ensure default values are included in serialization
         explicitNulls = false
-        namingStrategy = JsonNamingStrategy.SnakeCase
+        namingStrategy = RemainSerialNameJsonNamingStrategyWrapper(JsonNamingStrategy.SnakeCase)
     }
 
     private val httpClient = baseClient.config {

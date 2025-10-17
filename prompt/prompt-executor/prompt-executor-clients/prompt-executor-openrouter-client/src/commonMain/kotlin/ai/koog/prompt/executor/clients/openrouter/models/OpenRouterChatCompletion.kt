@@ -10,7 +10,8 @@ import ai.koog.prompt.executor.clients.openai.base.models.OpenAITool
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolCall
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolChoice
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIUsage
-import ai.koog.prompt.executor.clients.serialization.AdditionalPropertiesFlatteningSerializer
+import ai.koog.prompt.executor.clients.serialization.AdditionalPropertiesSerializer
+import ai.koog.prompt.executor.clients.serialization.RemainSerialName
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
@@ -49,6 +50,8 @@ internal class OpenRouterChatCompletionRequest(
     val route: String? = null,
     val provider: ProviderPreferences? = null,
     val user: String? = null,
+    @RemainSerialName
+    @SerialName("additionalProperties")
     val additionalProperties: Map<String, JsonElement>? = null,
 ) : OpenAIBaseLLMRequest
 
@@ -182,4 +185,4 @@ public class OpenRouterChatCompletionStreamResponse(
 ) : OpenAIBaseLLMStreamResponse
 
 internal object OpenRouterChatCompletionRequestSerializer :
-    AdditionalPropertiesFlatteningSerializer<OpenRouterChatCompletionRequest>(OpenRouterChatCompletionRequest.serializer())
+    AdditionalPropertiesSerializer<OpenRouterChatCompletionRequest>(OpenRouterChatCompletionRequest.serializer())

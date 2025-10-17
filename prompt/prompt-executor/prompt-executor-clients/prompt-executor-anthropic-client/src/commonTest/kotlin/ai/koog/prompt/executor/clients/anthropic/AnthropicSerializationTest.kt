@@ -1,9 +1,11 @@
 package ai.koog.prompt.executor.clients.anthropic
 
+import ai.koog.prompt.executor.clients.serialization.RemainSerialNameJsonNamingStrategyWrapper
 import ai.koog.test.utils.verifyDeserialization
 import io.kotest.assertions.json.shouldEqualJson
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNamingStrategy
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.contentOrNull
@@ -22,6 +24,7 @@ class AnthropicSerializationTest {
         isLenient = true
         encodeDefaults = true // Ensure default values are included in serialization
         explicitNulls = false
+        namingStrategy = RemainSerialNameJsonNamingStrategyWrapper(JsonNamingStrategy.SnakeCase)
     }
 
     @Test

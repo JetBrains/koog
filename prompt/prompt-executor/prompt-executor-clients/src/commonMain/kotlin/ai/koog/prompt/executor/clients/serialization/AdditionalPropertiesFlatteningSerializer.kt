@@ -1,8 +1,14 @@
 package ai.koog.prompt.executor.clients.serialization
 
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.elementNames
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonEncoder
 import kotlinx.serialization.json.JsonTransformingSerializer
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
@@ -15,12 +21,22 @@ import kotlinx.serialization.json.jsonObject
  *
  * @param knownProperties Set of known property names for the type
  */
-public abstract class AdditionalPropertiesFlatteningSerializer<T>(tSerializer: KSerializer<T>) :
+private class AdditionalPropertiesFlatteningSerializer<T>(
+    tSerializer: KSerializer<T>,
+    private val json: Json
+) :
     JsonTransformingSerializer<T>(tSerializer) {
 
     private val additionalPropertiesField = "additionalProperties"
 
-    private val knownProperties = tSerializer.descriptor.elementNames
+    private val knownProperties =
+        if (json.configuration.namingStrategy == null) {
+            tSerializer.descriptor.elementNames
+        } else {
+            tSerializer.descriptor.elementNames.mapIndexed { index, string ->
+                json.configuration.namingStrategy!!.serialNameForJson(tSerializer.descriptor, index, string)
+            }
+        }
 
     override fun transformSerialize(element: JsonElement): JsonElement {
         val obj = element.jsonObject
@@ -58,3 +74,35 @@ public abstract class AdditionalPropertiesFlatteningSerializer<T>(tSerializer: K
         }
     }
 }
+
+/**
+ * Wrap AdditionalPropertiesFlatteningSerializer
+ */
+public open class AdditionalPropertiesSerializer<T>(
+    private val baseSerializer: KSerializer<T>
+): KSerializer<T> {
+    override val descriptor: SerialDescriptor
+        get() = baseSerializer.descriptor
+
+    override fun serialize(encoder: Encoder, value: T) {
+        if (encoder is JsonEncoder) {
+            val json = encoder.json
+            val delegate = AdditionalPropertiesFlatteningSerializer(baseSerializer, json)
+            delegate.serialize(encoder, value)
+        } else {
+            baseSerializer.serialize(encoder, value)
+        }
+    }
+
+    override fun deserialize(decoder: Decoder): T {
+        if (decoder is JsonDecoder) {
+            val json = decoder.json
+            val delegate = AdditionalPropertiesFlatteningSerializer(baseSerializer, json)
+            return delegate.deserialize(decoder)
+        }
+        return baseSerializer.deserialize(decoder)
+    }
+
+}
+
+

@@ -11,7 +11,8 @@ import ai.koog.prompt.executor.clients.openai.base.models.OpenAIStreamOptions
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAITool
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolChoice
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIUsage
-import ai.koog.prompt.executor.clients.serialization.AdditionalPropertiesFlatteningSerializer
+import ai.koog.prompt.executor.clients.serialization.AdditionalPropertiesSerializer
+import ai.koog.prompt.executor.clients.serialization.RemainSerialName
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
@@ -53,6 +54,8 @@ internal class DashscopeChatCompletionRequest(
     val streamOptions: OpenAIStreamOptions? = null,
     val parallelToolCalls: Boolean? = null,
     val enableSearch: Boolean? = null,
+    @RemainSerialName
+    @SerialName("additionalProperties")
     val additionalProperties: Map<String, JsonElement>? = null,
 ) : OpenAIBaseLLMRequest
 
@@ -87,4 +90,4 @@ public class DashscopeChatCompletionStreamResponse(
 ) : OpenAIBaseLLMStreamResponse
 
 internal object DashscopeChatCompletionRequestSerializer :
-    AdditionalPropertiesFlatteningSerializer<DashscopeChatCompletionRequest>(DashscopeChatCompletionRequest.serializer())
+    AdditionalPropertiesSerializer<DashscopeChatCompletionRequest>(DashscopeChatCompletionRequest.serializer())

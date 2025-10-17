@@ -2,8 +2,10 @@ package ai.koog.prompt.executor.clients.deepseek.models
 
 import ai.koog.prompt.executor.clients.openai.base.models.Content
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIMessage
+import ai.koog.prompt.executor.clients.serialization.RemainSerialNameJsonNamingStrategyWrapper
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNamingStrategy
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.json.booleanOrNull
@@ -25,6 +27,7 @@ class DeepSeekSerializationTest {
     private val json = Json {
         ignoreUnknownKeys = false
         explicitNulls = false
+        namingStrategy = RemainSerialNameJsonNamingStrategyWrapper(JsonNamingStrategy.SnakeCase)
     }
 
     @Test
@@ -42,7 +45,7 @@ class DeepSeekSerializationTest {
 
         assertEquals("deepseek-chat", jsonObject["model"]?.jsonPrimitive?.contentOrNull)
         assertEquals(0.7, jsonObject["temperature"]?.jsonPrimitive?.doubleOrNull)
-        assertEquals(1000, jsonObject["maxTokens"]?.jsonPrimitive?.intOrNull)
+        assertEquals(1000, jsonObject["max_tokens"]?.jsonPrimitive?.intOrNull)
         assertEquals(false, jsonObject["stream"]?.jsonPrimitive?.booleanOrNull)
         assertNull(jsonObject["customProperty"])
     }
@@ -92,7 +95,7 @@ class DeepSeekSerializationTest {
                 }
             )
             put("temperature", JsonPrimitive(0.7))
-            put("maxTokens", JsonPrimitive(1000))
+            put("max_tokens", JsonPrimitive(1000))
             put("stream", JsonPrimitive(false))
         }
 
