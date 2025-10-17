@@ -446,7 +446,13 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
                     Message.Tool.Call(
                         id = toolCall.id,
                         tool = toolCall.function.name,
-                        content = toolCall.function.arguments,
+                        /*
+                         If the tool has no arguments, OpenRouter puts an empty string in the arguments instead of an empty object
+                         But we always expect arguments to be a JSON object. Fixing this.
+                         */
+                        content = toolCall.function.arguments
+                            .takeIf { it.isNotEmpty() }
+                            ?: "{}",
                         metaInfo = metaInfo
                     )
                 }
