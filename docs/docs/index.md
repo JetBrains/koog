@@ -41,7 +41,7 @@ The LLM providers and platforms whose LLMs you can use to power your agent capab
 - Ollama
 - Bedrock
 
-For detailed guidance on using these providers with dedicated LLM clients, refer to [Runnning prompts with LLM clients](prompt-api.md#running-prompts-with-llm-clients).
+For detailed guidance on using these providers with dedicated LLM clients, refer to [Running prompts with LLM clients](prompt-api.md#running-prompts-with-llm-clients).
 
 
 ## Installation
