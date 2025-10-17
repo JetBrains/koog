@@ -78,7 +78,9 @@ public abstract class StatefulSingleUseAIAgent<Input, Output, TContext : AIAgent
     final override suspend fun run(agentInput: Input): Output {
         agentStateMutex.withLock {
             if (state !is NotStarted) {
-                throw IllegalStateException("Agent was already started")
+                throw IllegalStateException(
+                    "Agent was already started. Please use AIAgentService.createAgentAndRun(agentInput) to run an agent multiple times."
+                )
             }
             state = State.Starting()
         }
