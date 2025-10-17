@@ -85,25 +85,25 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
     // Use base class methods through parameterized tests
     @ParameterizedTest
     @MethodSource("modelParams")
-    override fun integration_testExecute(model: LLModel) {
+    fun ollama_testExecute(model: LLModel) {
         super.integration_testExecute(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
-    override fun integration_testExecuteStreaming(model: LLModel) {
+    fun ollama_testExecuteStreaming(model: LLModel) {
         super.integration_testExecuteStreaming(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
-    override fun integration_testToolsWithRequiredParams(model: LLModel) {
+    fun ollama_testToolsWithRequiredParams(model: LLModel) {
         super.integration_testToolsWithRequiredParams(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
-    override fun integration_testToolsWithRequiredOptionalParams(
+    fun ollama_testToolsWithRequiredOptionalParams(
         model: LLModel
     ) {
         super.integration_testToolsWithRequiredOptionalParams(model)
@@ -111,55 +111,55 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
 
     @ParameterizedTest
     @MethodSource("modelParams")
-    override fun integration_testToolsWithOptionalParams(model: LLModel) {
+    fun ollama_testToolsWithOptionalParams(model: LLModel) {
         super.integration_testToolsWithOptionalParams(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
-    override fun integration_testToolsWithNoParams(model: LLModel) {
+    fun ollama_testToolsWithNoParams(model: LLModel) {
         super.integration_testToolsWithNoParams(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
-    override fun integration_testToolsWithListEnumParams(model: LLModel) {
+    fun ollama_testToolsWithListEnumParams(model: LLModel) {
         super.integration_testToolsWithListEnumParams(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
-    override fun integration_testToolsWithNestedListParams(model: LLModel) {
+    fun ollama_testToolsWithNestedListParams(model: LLModel) {
         super.integration_testToolsWithNestedListParams(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
-    override fun integration_testRawStringStreaming(model: LLModel) {
+    fun ollama_testRawStringStreaming(model: LLModel) {
         super.integration_testRawStringStreaming(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
-    override fun integration_testStructuredDataStreaming(model: LLModel) {
+    fun ollama_testStructuredDataStreaming(model: LLModel) {
         super.integration_testStructuredDataStreaming(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
-    override fun integration_testToolChoiceRequired(model: LLModel) {
+    fun ollama_testToolChoiceRequired(model: LLModel) {
         super.integration_testToolChoiceRequired(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
-    override fun integration_testToolChoiceNone(model: LLModel) {
+    fun ollama_testToolChoiceNone(model: LLModel) {
         super.integration_testToolChoiceNone(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
-    override fun integration_testToolChoiceNamed(model: LLModel) {
+    fun ollama_testToolChoiceNamed(model: LLModel) {
         super.integration_testToolChoiceNamed(model)
     }
 

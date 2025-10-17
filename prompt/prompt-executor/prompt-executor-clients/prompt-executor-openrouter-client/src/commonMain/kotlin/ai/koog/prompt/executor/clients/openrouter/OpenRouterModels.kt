@@ -381,7 +381,7 @@ public object OpenRouterModels : LLModelDefinitions {
     public val DeepSeekV30324: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "deepseek/deepseek-chat-v3-0324",
-        capabilities = standardCapabilities + additionalCapabilities,
+        capabilities = standardCapabilities,
         contextLength = 163_800,
         maxOutputTokens = 163_800,
     )

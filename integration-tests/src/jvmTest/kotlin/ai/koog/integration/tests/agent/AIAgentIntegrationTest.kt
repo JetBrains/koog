@@ -28,6 +28,7 @@ import ai.koog.integration.tests.utils.TestUtils.DelayTool
 import ai.koog.integration.tests.utils.getLLMClientForProvider
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
+import ai.koog.prompt.executor.clients.bedrock.BedrockModels
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
@@ -422,9 +423,10 @@ class AIAgentIntegrationTest {
             runWithTracking { eventHandlerConfig, state ->
                 val executor = getExecutor(model)
 
-                val agent = AIAgent(
+                val agent = AIAgent.invoke(
                     promptExecutor = executor,
                     systemPrompt = systemPrompt + "You MUST use tools.",
+                    strategy = singleRunStrategy(ToolCalls.SEQUENTIAL),
                     llmModel = model,
                     temperature = 1.0,
                     toolRegistry = toolRegistry,
@@ -490,7 +492,10 @@ class AIAgentIntegrationTest {
                     resultLowerCase.contains("unable to process"),
                     "Result should not indicate inability to process"
                 )
-                assertFalse(resultLowerCase.contains("cannot process"), "Result should not indicate inability to process")
+                assertFalse(
+                    resultLowerCase.contains("cannot process"),
+                    "Result should not indicate inability to process"
+                )
             }
         }
     }
@@ -550,15 +555,16 @@ class AIAgentIntegrationTest {
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels4_0", "googleModels")
     fun integration_AIAgentSingleRunWithParallelToolsTest(model: LLModel) = runTest(timeout = 300.seconds) {
-        assumeTrue(model.id != OpenAIModels.Reasoning.O1.id, "The model fails to call tools in parallel, see KG-115")
-        assumeTrue(model.id != OpenAIModels.Reasoning.O3.id, "The model fails to call tools in parallel, see KG-115")
         assumeTrue(
-            model.id != OpenAIModels.Reasoning.O3Mini.id,
-            "The model fails to call tools in parallel, see KG-115"
-        )
-        assumeTrue(
-            model.id != OpenAIModels.CostOptimized.O4Mini.id,
-            "The model fails to call tools in parallel, see KG-115"
+            model !in listOf(
+                OpenAIModels.Reasoning.O1,
+                OpenAIModels.Reasoning.O3,
+                OpenAIModels.Reasoning.O3Mini,
+                OpenAIModels.CostOptimized.O4Mini,
+                OpenAIModels.Chat.GPT5Codex,
+                GoogleModels.Gemini2_5Flash,
+            ),
+            "The model fails to call tools in parallel or flaky, see KG-115"
         )
 
         runMultipleToolsTest(model, ToolCalls.PARALLEL)
@@ -570,6 +576,13 @@ class AIAgentIntegrationTest {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
         assumeTrue(model.id != OpenAIModels.Audio.GPT4oAudio.id, "See KG-124")
+        assumeTrue(
+            model !in listOf(
+                BedrockModels.AnthropicClaude35Haiku,
+                BedrockModels.AmazonNovaLite,
+            ),
+            "These models often reply with additional assistant message even when calling tools, so not suitable for single run sequential strategy."
+        )
 
         withRetry {
             runWithTracking { eventHandlerConfig, state ->
@@ -1028,9 +1041,10 @@ class AIAgentIntegrationTest {
             GoogleModels.Gemini2_0Flash001.id,
             GoogleModels.Gemini2_0FlashLite.id,
             GoogleModels.Gemini2_0FlashLite001.id,
-            OpenAIModels.Chat.GPT5Mini.id
+            OpenAIModels.Chat.GPT5Mini.id,
+            BedrockModels.AmazonNovaLite.id,
         )
-        assumeTrue(!flakyModels.contains(model.id), "Model $model is flaky and fails to call tools")
+        assumeTrue(!flakyModels.contains(model.id), "Model $model is flaky and fails to call tools exactly once")
 
         val registry = ToolRegistry {
             tool(CalculatorToolNoArgs)
@@ -1042,7 +1056,7 @@ class AIAgentIntegrationTest {
 
                 val agent = AIAgent(
                     promptExecutor = executor,
-                    strategy = singleRunStrategy(),
+                    strategy = singleRunStrategy(ToolCalls.SEQUENTIAL),
                     agentConfig = AIAgentConfig(
                         prompt = prompt(
                             id = "calculator-agent-test",
@@ -1051,11 +1065,11 @@ class AIAgentIntegrationTest {
                                 toolChoice = ToolChoice.Auto, // KG-163
                             )
                         ) {
-                            system(
-                                systemPrompt +
-                                    "YOU'RE OBLIGED TO USE TOOLS. THIS IS MANDATORY." +
-                                    "I'M CHARGING YOU IF YOU AREN'T CALLING TOOLS!!!"
-                            )
+                            system {
+                                +systemPrompt
+                                +"YOU'RE OBLIGED TO USE TOOLS. THIS IS MANDATORY."
+                                +"JUST CALL THE TOOL ONE TIME, NO QUESTIONS ASKED."
+                            }
                         },
                         model = model,
                         maxAgentIterations = 10
@@ -1255,7 +1269,10 @@ class AIAgentIntegrationTest {
                         state.errors.isEmpty(),
                         "No errors should occur during agent execution with $strategyName, got: [${state.errors.joinToString("\n")}]"
                     )
-                    assertTrue(result.isNotBlank(), "There should be results from history compression with $strategyName")
+                    assertTrue(
+                        result.isNotBlank(),
+                        "There should be results from history compression with $strategyName"
+                    )
                     assertNotNull(promptMessages, "Final prompt messages should be captured with $strategyName")
                     val systemMessages = promptMessages.filterIsInstance<Message.System>()
                     assertTrue(

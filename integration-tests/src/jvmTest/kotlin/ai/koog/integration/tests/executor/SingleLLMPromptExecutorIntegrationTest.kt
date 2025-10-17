@@ -34,6 +34,21 @@ class SingleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
             )
         }
 
+        // Bedrock doesn't support tool choice 'none'
+        @JvmStatic
+        fun toolChoiceNoneModels(): Stream<Arguments> {
+            return Stream.concat(
+                Stream.concat(
+                    Models.openAIModels().map { model -> Arguments.of(model) },
+                    Models.anthropicModels().map { model -> Arguments.of(model) }
+                ),
+                Stream.concat(
+                    Models.googleModels().map { model -> Arguments.of(model) },
+                    Models.openRouterModels().map { model -> Arguments.of(model) }
+                ),
+            )
+        }
+
         @JvmStatic
         fun markdownScenarioModelCombinations(): Stream<Arguments> {
             return MediaTestScenarios.markdownScenarioModelCombinations()
@@ -126,7 +141,7 @@ class SingleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("toolChoiceNoneModels")
     override fun integration_testToolChoiceNone(model: LLModel) {
         super.integration_testToolChoiceNone(model)
     }

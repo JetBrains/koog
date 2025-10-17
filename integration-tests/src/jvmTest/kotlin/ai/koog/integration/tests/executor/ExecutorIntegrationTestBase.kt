@@ -921,7 +921,10 @@ abstract class ExecutorIntegrationTestBase {
 
     open fun integration_testToolChoiceRequired(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
-        assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
+        assumeTrue(
+            model.capabilities.containsAll(listOf(LLMCapability.Tools, LLMCapability.ToolChoice)),
+            "Model $model does not support tools and tool choice"
+        )
 
         val calculatorTool = createCalculatorTool()
         val prompt = createCalculatorPrompt()
