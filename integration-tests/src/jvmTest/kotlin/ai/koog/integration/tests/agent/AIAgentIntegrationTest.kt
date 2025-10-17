@@ -170,13 +170,13 @@ class AIAgentIntegrationTest {
                     id = "multiple-tool-calls-agent",
                     params = LLMParams(
                         temperature = 1.0,
-                        toolChoice = ToolChoice.Auto,
+                        toolChoice = ToolChoice.Required,
                     )
                 ) {
                     system("You are a helpful assistant.")
                 },
                 model = model,
-                maxAgentIterations = 10,
+                maxAgentIterations = 30,
             ),
             toolRegistry = toolRegistry,
             installFeatures = { install(EventHandler.Feature, eventHandlerConfig) },
@@ -575,7 +575,7 @@ class AIAgentIntegrationTest {
     fun integration_AIAgentSingleRunNoParallelToolsTest(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
-        assumeTrue(model.id != OpenAIModels.Audio.GPT4oAudio.id, "See KG-124")
+
         assumeTrue(
             model !in listOf(
                 BedrockModels.AnthropicClaude35Haiku,
@@ -598,8 +598,8 @@ class AIAgentIntegrationTest {
                     "There should be no parallel tool calls in a Sequential single run scenario"
                 )
                 assertTrue(
-                    state.singleToolCalls.isNotEmpty(),
-                    "There should be exactly 2 single tool calls in a Sequential single run scenario"
+                    state.singleToolCalls.size >= 2,
+                    "There should be more or equal than 2 single tool calls in a Sequential single run scenario"
                 )
                 assertEquals(
                     CalculatorTool.name,

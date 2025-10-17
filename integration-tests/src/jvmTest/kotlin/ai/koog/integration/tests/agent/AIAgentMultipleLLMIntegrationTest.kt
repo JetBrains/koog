@@ -147,8 +147,8 @@ class AIAgentMultipleLLMIntegrationTest {
 
         @JvmStatic
         fun getModels(): Stream<LLModel> = Stream.of(
-            AnthropicModels.Sonnet_3_7,
-            OpenAIModels.Chat.GPT4o,
+            AnthropicModels.Sonnet_4_5,
+            OpenAIModels.Chat.GPT5,
         )
 
         @JvmStatic
@@ -381,7 +381,7 @@ class AIAgentMultipleLLMIntegrationTest {
             val anthropicSubgraph by subgraph<String, Unit>("anthropic") {
                 val definePromptAnthropic by node<Unit, Unit> {
                     llm.writeSession {
-                        model = AnthropicModels.Sonnet_3_7
+                        model = AnthropicModels.Sonnet_4_5
                         rewritePrompt {
                             prompt("test", params = LLMParams(toolChoice = LLMParams.ToolChoice.Auto)) {
                                 system(
@@ -410,7 +410,7 @@ class AIAgentMultipleLLMIntegrationTest {
             val openaiSubgraph by subgraph("openai") {
                 val definePromptOpenAI by node<Unit, Unit> {
                     llm.writeSession {
-                        model = OpenAIModels.Chat.GPT4o
+                        model = OpenAIModels.Chat.GPT5
                         rewritePrompt {
                             prompt("test", params = LLMParams(toolChoice = LLMParams.ToolChoice.Auto)) {
                                 system(
@@ -456,7 +456,7 @@ class AIAgentMultipleLLMIntegrationTest {
         return AIAgent(
             promptExecutor = executor,
             strategy = strategy,
-            agentConfig = AIAgentConfig(prompt, OpenAIModels.Chat.GPT4o, maxAgentIterations),
+            agentConfig = AIAgentConfig(prompt, OpenAIModels.Chat.GPT5, maxAgentIterations),
             toolRegistry = tools,
         ) {
             install(EventHandler, eventHandlerConfig)
@@ -686,7 +686,7 @@ class AIAgentMultipleLLMIntegrationTest {
     @Test
     fun integration_testAnthropicAgentEnumSerialization() {
         runBlocking {
-            val llmModel = AnthropicModels.Sonnet_3_7
+            val llmModel = AnthropicModels.Sonnet_4_5
             Models.assumeAvailable(llmModel.provider)
             val agent = AIAgent(
                 promptExecutor = simpleAnthropicExecutor(anthropicApiKey),
