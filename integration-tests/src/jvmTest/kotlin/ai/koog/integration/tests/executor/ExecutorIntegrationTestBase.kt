@@ -21,9 +21,9 @@ import ai.koog.integration.tests.utils.TestUtils.StructuredTest.getConfigFixingP
 import ai.koog.integration.tests.utils.TestUtils.StructuredTest.getConfigNoFixingParserNative
 import ai.koog.integration.tests.utils.TestUtils.markdownCountryDefinition
 import ai.koog.integration.tests.utils.TestUtils.parseMarkdownStreamToCountries
+import ai.koog.integration.tests.utils.getLLMClientForProvider
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.PromptExecutor
@@ -67,6 +67,7 @@ abstract class ExecutorIntegrationTestBase {
     }
 
     abstract fun getExecutor(model: LLModel): PromptExecutor
+
     fun createCalculatorTool(): ToolDescriptor {
         return ToolDescriptor(
             name = "calculator",
@@ -403,7 +404,7 @@ abstract class ExecutorIntegrationTestBase {
         }
 
         withRetry(times = 3, testName = "integration_testStructuredDataStreaming[${model.id}]") {
-            val markdownStream = getClient(model).executeStreaming(prompt, model)
+            val markdownStream = getLLMClientForProvider(model.provider).executeStreaming(prompt, model)
 
             parseMarkdownStreamToCountries(markdownStream).collect { country ->
                 countries.add(country)
@@ -900,7 +901,7 @@ abstract class ExecutorIntegrationTestBase {
         val responseChunks = mutableListOf<StreamFrame>()
 
         withRetry(times = 3, testName = "integration_testRawStringStreaming[${model.id}]") {
-            getClient(model).executeStreaming(prompt, model).collect { chunk ->
+            getLLMClientForProvider(model.provider).executeStreaming(prompt, model).collect { chunk ->
                 responseChunks.add(chunk)
             }
 
@@ -928,7 +929,7 @@ abstract class ExecutorIntegrationTestBase {
         /** tool choice auto is default and thus is tested by [integration_testToolsWithRequiredParams] */
 
         withRetry(times = 3, testName = "integration_testToolChoiceRequired[${model.id}]") {
-            val response = getClient(model).execute(
+            val response = getLLMClientForProvider(model.provider).execute(
                 prompt.withParams(
                     prompt.params.copy(
                         toolChoice = ToolChoice.Required
@@ -951,7 +952,7 @@ abstract class ExecutorIntegrationTestBase {
         val prompt = createCalculatorPrompt()
 
         withRetry(times = 3, testName = "integration_testToolChoiceNone[${model.id}]") {
-            val response = getClient(model).execute(
+            val response = getLLMClientForProvider(model.provider).execute(
                 Prompt.build("test-tools") {
                     system("You are a helpful assistant. Do not use calculator tool, it's broken!")
                     user("What is 123 + 456?")
@@ -983,7 +984,7 @@ abstract class ExecutorIntegrationTestBase {
         )
 
         withRetry(times = 3, testName = "integration_testToolChoiceNamed[${model.id}]") {
-            val response = getClient(model).execute(
+            val response = getLLMClientForProvider(model.provider).execute(
                 prompt.withParams(
                     prompt.params.copy(
                         toolChoice = ToolChoice.Named(nothingTool.name)
@@ -1003,7 +1004,4 @@ abstract class ExecutorIntegrationTestBase {
             assertEquals("nothing", toolCall.tool, "Tool name should be 'nothing'")
         }
     }
-
-    // Abstract method to be implemented by subclasses for client access
-    abstract fun getClient(model: LLModel): LLMClient
 }

@@ -9,7 +9,6 @@ import ai.koog.integration.tests.utils.MediaTestUtils.checkExecutorMediaResponse
 import ai.koog.prompt.dsl.ModerationCategory
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.executor.ollama.client.findByNameOrNull
 import ai.koog.prompt.llm.LLMCapability.Completion
@@ -82,8 +81,6 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
     }
 
     override fun getExecutor(model: LLModel): PromptExecutor = executor
-
-    override fun getClient(model: LLModel): LLMClient = client
 
     // Use base class methods through parameterized tests
     @ParameterizedTest
