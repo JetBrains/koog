@@ -15,31 +15,43 @@ annotation class InjectOllamaTestFixture
 class OllamaTestFixtureExtension : BeforeAllCallback, AfterAllCallback {
 
     companion object {
-        private val FIXTURES = ConcurrentHashMap<String, MutableList<OllamaTestFixture>>()
+        private val SHARED_FIXTURE_LOCK = Any()
+        private var sharedFixture: OllamaTestFixture? = null
+        private var activeConsumers: Int = 0
+        private val TEST_CONSUMERS = ConcurrentHashMap<String, Int>()
+
+        init {
+            Runtime.getRuntime().addShutdownHook(
+                Thread {
+                    synchronized(SHARED_FIXTURE_LOCK) {
+                        sharedFixture?.runCatching { tearDown() }
+                        sharedFixture = null
+                        activeConsumers = 0
+                    }
+                }
+            )
+        }
     }
 
     override fun beforeAll(context: ExtensionContext) {
         val testClass = context.requiredTestClass
         val testId = context.uniqueId
-        val fixtures = mutableListOf<OllamaTestFixture>()
-
         try {
+            var injectedFields = 0
             findFields(testClass).forEach { field ->
                 field.isAccessible = true
-                val fixture = OllamaTestFixture()
-
+                val fixture = acquireSharedFixture()
                 try {
-                    fixture.setUp()
                     field.set(null, fixture)
-                    fixtures.add(fixture)
+                    injectedFields += 1
                 } catch (e: Exception) {
-                    println("Failed to setup fixture for field ${field.name}: ${e.message}")
-                    fixtures.forEach { it.tearDown() }
+                    println("Failed to inject fixture for field ${field.name}: ${e.message}")
+                    releaseSharedFixture()
                     throw e
                 }
             }
 
-            FIXTURES[testId] = fixtures
+            TEST_CONSUMERS[testId] = injectedFields
         } catch (e: Exception) {
             println("Error in beforeAll: ${e.message}")
             throw e
@@ -48,20 +60,10 @@ class OllamaTestFixtureExtension : BeforeAllCallback, AfterAllCallback {
 
     override fun afterAll(context: ExtensionContext) {
         val testId = context.uniqueId
-        val fixtures = FIXTURES.remove(testId) ?: emptyList()
+        val fixturesCount = TEST_CONSUMERS.remove(testId) ?: 0
 
         val testClass = context.requiredTestClass
-        val errors = mutableListOf<Exception>()
-
-        fixtures.forEach { fixture ->
-            try {
-                fixture.tearDown()
-            } catch (e: Exception) {
-                println("Failed to teardown fixture: ${e.message}")
-                e.printStackTrace()
-                errors.add(e)
-            }
-        }
+        repeat(fixturesCount) { releaseSharedFixture() }
 
         try {
             findFields(testClass).forEach { field ->
@@ -75,10 +77,6 @@ class OllamaTestFixtureExtension : BeforeAllCallback, AfterAllCallback {
         } catch (e: Exception) {
             println("Error nullifying fields: ${e.message}")
         }
-
-        if (errors.isNotEmpty()) {
-            throw errors.first()
-        }
     }
 
     private fun findFields(testClass: Class<*>): List<Field> {
@@ -87,6 +85,26 @@ class OllamaTestFixtureExtension : BeforeAllCallback, AfterAllCallback {
             InjectOllamaTestFixture::class.java,
         ) { field ->
             ModifierSupport.isStatic(field) && field.type == OllamaTestFixture::class.java
+        }
+    }
+
+    private fun acquireSharedFixture(): OllamaTestFixture {
+        synchronized(SHARED_FIXTURE_LOCK) {
+            if (sharedFixture == null) {
+                val fixture = OllamaTestFixture()
+                fixture.setUp()
+                sharedFixture = fixture
+            }
+            activeConsumers += 1
+            return sharedFixture!!
+        }
+    }
+
+    private fun releaseSharedFixture() {
+        synchronized(SHARED_FIXTURE_LOCK) {
+            if (activeConsumers > 0) {
+                activeConsumers -= 1
+            }
         }
     }
 }

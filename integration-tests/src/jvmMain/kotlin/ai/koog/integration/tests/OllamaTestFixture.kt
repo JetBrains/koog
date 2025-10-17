@@ -10,7 +10,6 @@ import io.ktor.http.isSuccess
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.testcontainers.containers.GenericContainer
-import org.testcontainers.images.PullPolicy
 import org.testcontainers.utility.DockerImageName
 
 class OllamaTestFixture {
@@ -25,12 +24,15 @@ class OllamaTestFixture {
     val moderationModel = OllamaModels.Meta.LLAMA_GUARD_3
 
     fun setUp() {
+        if (::ollamaContainer.isInitialized && ollamaContainer.isRunning) {
+            return
+        }
+
         val imageUrl = System.getenv("OLLAMA_IMAGE_URL")
             ?: throw IllegalStateException("OLLAMA_IMAGE_URL not set")
 
         ollamaContainer = GenericContainer(DockerImageName.parse(imageUrl)).apply {
             withExposedPorts(PORT)
-            withImagePullPolicy(PullPolicy.alwaysPull())
             withCreateContainerCmdModifier { cmd ->
                 cmd.hostConfig?.apply {
                     withMemory(4L * 1024 * 1024 * 1024) // 4GB RAM
