@@ -55,8 +55,6 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.parallel.Execution
-import org.junit.jupiter.api.parallel.ExecutionMode
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
@@ -141,7 +139,6 @@ internal fun LLMClient.reportingTo(
     eventsChannel: Channel<Event>
 ) = ReportingLLMLLMClient(eventsChannel, this)
 
-@Execution(ExecutionMode.SAME_THREAD)
 class AIAgentMultipleLLMIntegrationTest {
 
     companion object {
@@ -815,14 +812,14 @@ class AIAgentMultipleLLMIntegrationTest {
             }
         }
 
-        val agent = createTestMultiLLMAgent(
-            fs,
-            eventHandlerConfig,
-            maxAgentIterations = 20,
-            prompt = prompt,
-        )
-
         withRetry(5) {
+            val agent = createTestMultiLLMAgent(
+                fs,
+                eventHandlerConfig,
+                maxAgentIterations = 20,
+                prompt = prompt,
+            )
+
             val result = agent.run("Hi! Please analyse my image.")
             assertNotNull(result, "Result should not be null")
             assertTrue(result.isNotBlank(), "Result should not be empty or blank")
