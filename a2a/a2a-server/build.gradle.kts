@@ -27,7 +27,7 @@ kotlin {
                 implementation(project(":a2a:a2a-test"))
                 implementation(kotlin("test"))
                 implementation(libs.kotlinx.coroutines.test)
-                implementation(libs.kotest.assertions)
+                implementation(libs.kotest.assertions.core)
             }
         }
 

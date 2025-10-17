@@ -29,7 +29,7 @@ import ai.koog.agents.core.feature.model.events.startNodeToGraph
 import ai.koog.agents.core.feature.model.toAgentError
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.tools.Tool
-import ai.koog.agents.features.tracing.eventString
+import ai.koog.prompt.llm.toModelInfo
 import io.github.oshai.kotlinlogging.KotlinLogging
 
 /**
@@ -65,7 +65,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
  *         // Optionally filter messages
  *         fileWriter.setMessageFilter { message ->
  *             // Only trace LLM calls and tool calls
- *             message is BeforeLLMCallEvent || message is ToolCallEvent
+ *             message is LLMCallStartingEvent || message is ToolCallEvent
  *         }
  *     }
  * }
@@ -77,8 +77,8 @@ import io.github.oshai.kotlinlogging.KotlinLogging
  * AIAgentStrategyStartEvent (runId: session-456, strategyName: my-agent-strategy)
  * AIAgentNodeExecutionStartEvent (runId: session-456, nodeName: definePrompt, input: user query)
  * AIAgentNodeExecutionEndEvent (runId: session-456, nodeName: definePrompt, input: user query, output: processed query)
- * BeforeLLMCallEvent (runId: session-456, prompt: Please analyze the following code...)
- * AfterLLMCallEvent (runId: session-456, response: I've analyzed the code and found...)
+ * LLMCallStartingEvent (runId: session-456, prompt: Please analyze the following code...)
+ * LLMCallCompletedEvent (runId: session-456, response: I've analyzed the code and found...)
  * ToolCallEvent (runId: session-456, toolName: readFile, toolArgs: {"path": "src/main.py"})
  * ToolCallResultEvent (runId: session-456, toolName: readFile, toolArgs: {"path": "src/main.py"}, result: "def main():...")
  * AIAgentStrategyFinishedEvent (runId: session-456, strategyName: my-agent-strategy, result: Success)
@@ -222,7 +222,7 @@ public class Tracing {
                 val event = LLMCallStartingEvent(
                     runId = eventContext.runId,
                     prompt = eventContext.prompt,
-                    model = eventContext.model.eventString,
+                    model = eventContext.model.toModelInfo(),
                     tools = eventContext.tools.map { it.name },
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
@@ -233,7 +233,7 @@ public class Tracing {
                 val event = LLMCallCompletedEvent(
                     runId = eventContext.runId,
                     prompt = eventContext.prompt,
-                    model = eventContext.model.eventString,
+                    model = eventContext.model.toModelInfo(),
                     responses = eventContext.responses,
                     moderationResponse = eventContext.moderationResponse,
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
@@ -249,7 +249,7 @@ public class Tracing {
                 val event = LLMStreamingStartingEvent(
                     runId = eventContext.runId,
                     prompt = eventContext.prompt,
-                    model = eventContext.model.eventString,
+                    model = eventContext.model.toModelInfo().eventString,
                     tools = eventContext.tools.map { it.name },
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
@@ -260,7 +260,7 @@ public class Tracing {
                 val event = LLMStreamingCompletedEvent(
                     runId = eventContext.runId,
                     prompt = eventContext.prompt,
-                    model = eventContext.model.eventString,
+                    model = eventContext.model.toModelInfo().eventString,
                     tools = eventContext.tools.map { it.name },
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )

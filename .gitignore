@@ -1,6 +1,6 @@
 .gradle
 **/.kotlin
-/.idea
+.idea
 build
 **/.claude/settings.local.json
 env.properties

@@ -288,6 +288,8 @@ internal fun loggingGraphStrategy(collector: TestAgentLogsCollector) = strategy(
 }
 
 internal fun loggingGraphForRunFromSecondTry(collector: TestAgentLogsCollector) = strategy("logging-test") {
+    val teleportState = TeleportState()
+
     val node1 by loggingNode(
         "Node1",
         message = "First Step",
@@ -302,8 +304,8 @@ internal fun loggingGraphForRunFromSecondTry(collector: TestAgentLogsCollector) 
 
     val nodeForSecondTry by nodeForSecondTry(
         "NodeForSecondTry",
+        teleportState = teleportState,
         collector = collector,
-        teleportState = TeleportState(),
     )
 
     edge(nodeStart forwardTo node1)

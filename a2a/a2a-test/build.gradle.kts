@@ -14,7 +14,7 @@ kotlin {
                 api(libs.kotlinx.coroutines.core)
                 api(libs.kotlinx.coroutines.test)
                 api(libs.kotlinx.serialization.json)
-                implementation(libs.kotest.assertions)
+                implementation(libs.kotest.assertions.core)
                 implementation(libs.kotlinx.coroutines.test)
             }
         }

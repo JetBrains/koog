@@ -47,6 +47,7 @@ object Models {
 
             AnthropicModels.Haiku_3,
             AnthropicModels.Haiku_3_5,
+            AnthropicModels.Haiku_4_5,
 
             AnthropicModels.Sonnet_3_5,
             AnthropicModels.Sonnet_3_7,
@@ -83,9 +84,10 @@ object Models {
     @JvmStatic
     fun openRouterModels(): Stream<LLModel> = Stream.of(
         OpenRouterModels.GPT5Nano,
-        OpenRouterModels.DeepSeekV30324,
         OpenRouterModels.Claude4Sonnet,
         OpenRouterModels.Gemini2_5FlashLite,
+        OpenRouterModels.DeepSeekV30324,
+        OpenRouterModels.Qwen2_5,
     )
 
     @JvmStatic

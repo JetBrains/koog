@@ -41,8 +41,8 @@ public abstract class FeatureMessageProcessor : Closeable {
      * Example:
      * ```kotlin
      *   processor.setMessageFilter { message ->
-     *     message is BeforeLLMCallEvent ||
-     *     message is AfterLLMCallEvent
+     *     message is LLMCallStartingEvent ||
+     *     message is LLMCallCompletedEvent
      *   }
      * ```
      */
