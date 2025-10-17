@@ -44,7 +44,7 @@ object Models {
     fun bedrockModels(): Stream<LLModel> {
         return Stream.of(
             BedrockModels.MetaLlama3_1_70BInstruct,
-            BedrockModels.AmazonNovaPro,
+            BedrockModels.AmazonNovaPremier,
         )
     }
 

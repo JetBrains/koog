@@ -170,13 +170,13 @@ class AIAgentIntegrationTest {
                     id = "multiple-tool-calls-agent",
                     params = LLMParams(
                         temperature = 1.0,
-                        toolChoice = ToolChoice.Required,
+                        toolChoice = ToolChoice.Auto,
                     )
                 ) {
                     system("You are a helpful assistant.")
                 },
                 model = model,
-                maxAgentIterations = 30,
+                maxAgentIterations = 10,
             ),
             toolRegistry = toolRegistry,
             installFeatures = { install(EventHandler.Feature, eventHandlerConfig) },
