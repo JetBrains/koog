@@ -185,7 +185,7 @@ This powerful feature enables you to create hierarchical agent architectures whe
 
 ### Converting agents to tools
 
-To convert an agent into a tool, use the `asTool()` extension function:
+To convert an agent into a tool, use the `AIAgentService` and the `createAgentTool()` extension function:
 
 <!--- INCLUDE
 import ai.koog.agents.core.agent.AIAgent
