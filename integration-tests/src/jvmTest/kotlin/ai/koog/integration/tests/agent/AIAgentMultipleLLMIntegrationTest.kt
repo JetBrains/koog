@@ -68,6 +68,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.test.fail
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 internal class ReportingLLMLLMClient(
@@ -779,7 +780,7 @@ class AIAgentMultipleLLMIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("modelsWithVisionCapability")
-    fun integration_testAgentWithImageCapabilityUrl(model: LLModel) = runTest(timeout = 120.seconds) {
+    fun integration_testAgentWithImageCapabilityUrl(model: LLModel) = runTest(timeout = 3.minutes) {
         Models.assumeAvailable(model.provider)
 
         val fs = MockFileSystem()

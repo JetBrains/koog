@@ -1,12 +1,8 @@
 package ai.koog.integration.tests.utils
 
-import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
-import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
-import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.bedrock.BedrockModels
 import ai.koog.prompt.executor.clients.google.GoogleModels
-import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterModels
 import ai.koog.prompt.llm.LLMCapability
@@ -85,28 +81,25 @@ object Models {
     fun openRouterModels(): Stream<LLModel> = Stream.of(
         OpenRouterModels.GPT5Nano,
         OpenRouterModels.Claude4Sonnet,
-        OpenRouterModels.Gemini2_5FlashLite,
+        OpenRouterModels.Gemini2_5Flash,
         OpenRouterModels.DeepSeekV30324,
         OpenRouterModels.Qwen2_5,
     )
 
     @JvmStatic
     fun modelsWithVisionCapability(): Stream<Arguments> {
-        val openAIClient = OpenAILLMClient(readTestOpenAIKeyFromEnv())
-        val anthropicClient = AnthropicLLMClient(readTestAnthropicKeyFromEnv())
-
         return Stream.concat(
             openAIModels()
                 .filter { model ->
                     model.capabilities.contains(LLMCapability.Vision.Image)
                 }
-                .map { model -> Arguments.of(model, openAIClient) },
+                .map { model -> Arguments.of(model, getLLMClientForProvider(model.provider)) },
 
             anthropicModels()
                 .filter { model ->
                     model.capabilities.contains(LLMCapability.Vision.Image)
                 }
-                .map { model -> Arguments.of(model, anthropicClient) }
+                .map { model -> Arguments.of(model, getLLMClientForProvider(model.provider)) },
         )
     }
 

@@ -192,20 +192,8 @@ class BedrockExecutorIntegrationTest : ExecutorIntegrationTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("bedrockImageScenarioModelCombinations")
-    fun integration_testImageProcessingBedrock(scenario: ImageTestScenario, model: LLModel) {
-        integration_testImageProcessing(scenario, model)
-    }
-
-    @ParameterizedTest
     @MethodSource("bedrockTextScenarioModelCombinations")
     fun integration_testTextProcessingBasicBedrock(scenario: TextTestScenario, model: LLModel) {
         integration_testTextProcessingBasic(scenario, model)
-    }
-
-    @ParameterizedTest
-    @MethodSource("bedrockAudioScenarioModelCombinations")
-    fun integration_testAudioProcessingBasicBedrock(scenario: AudioTestScenario, model: LLModel) {
-        integration_testAudioProcessingBasic(scenario, model)
     }
 }

@@ -6,16 +6,10 @@ import ai.koog.integration.tests.utils.MediaTestScenarios.ImageTestScenario
 import ai.koog.integration.tests.utils.MediaTestScenarios.MarkdownTestScenario
 import ai.koog.integration.tests.utils.MediaTestScenarios.TextTestScenario
 import ai.koog.integration.tests.utils.Models
-import ai.koog.integration.tests.utils.TestUtils.readAwsAccessKeyIdFromEnv
-import ai.koog.integration.tests.utils.TestUtils.readAwsSecretAccessKeyFromEnv
-import ai.koog.integration.tests.utils.TestUtils.readAwsSessionTokenFromEnv
 import ai.koog.integration.tests.utils.getLLMClientForProvider
-import ai.koog.prompt.executor.clients.bedrock.BedrockClientSettings
-import ai.koog.prompt.executor.clients.bedrock.BedrockLLMClient
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
-import aws.sdk.kotlin.runtime.auth.credentials.StaticCredentialsProvider
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
@@ -23,16 +17,6 @@ import java.util.stream.Stream
 
 class SingleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
     companion object {
-
-        val bedrockClientInstance = BedrockLLMClient(
-            credentialsProvider = StaticCredentialsProvider {
-                this.accessKeyId = readAwsAccessKeyIdFromEnv()
-                this.secretAccessKey = readAwsSecretAccessKeyFromEnv()
-                readAwsSessionTokenFromEnv()?.let { this.sessionToken = it }
-            },
-            settings = BedrockClientSettings()
-        )
-
         @JvmStatic
         fun allModels(): Stream<Arguments> {
             return Stream.concat(
