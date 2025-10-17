@@ -185,6 +185,66 @@ val myStrategy = strategy<String, String>("my-strategy") {
 ```
 <!--- KNIT example-custom-strategy-graphs-05.kt -->
 
+## Visualizing strategy graph 
+
+On JVM you may generate a [Mermaid state diagram](https://mermaid.js.org/syntax/stateDiagram.html) for the strategy graph.
+
+For the graph created in the previous example, you can run:
+
+<!--- INCLUDE
+import ai.koog.agents.core.agent.asMermaidDiagram
+import ai.koog.agents.core.dsl.builder.forwardTo
+import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.extension.nodeExecuteTool
+import ai.koog.agents.core.dsl.extension.nodeLLMRequest
+import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
+import ai.koog.agents.core.dsl.extension.onAssistantMessage
+import ai.koog.agents.core.dsl.extension.onToolCall
+
+fun main() {
+    val myStrategy = strategy("my-strategy") {
+        val nodeCallLLM by nodeLLMRequest()
+        val executeToolCall by nodeExecuteTool()
+        val sendToolResult by nodeLLMSendToolResult()
+    
+        edge(nodeStart forwardTo nodeCallLLM)
+        edge(nodeCallLLM forwardTo nodeFinish onAssistantMessage { true })
+        edge(nodeCallLLM forwardTo executeToolCall onToolCall { true })
+        edge(executeToolCall forwardTo sendToolResult)
+        edge(sendToolResult forwardTo nodeFinish onAssistantMessage { true })
+        edge(sendToolResult forwardTo executeToolCall onToolCall { true })
+    }
+-->
+<!--- SUFFIX
+}
+-->
+
+```kotlin
+val mermaidDiagram: String = myStrategy.asMermaidDiagram()
+
+println(mermaidDiagram)
+```
+
+and the output will be:
+```mermaid
+---
+title: my-strategy
+---
+stateDiagram
+    state "nodeCallLLM" as nodeCallLLM
+    state "executeToolCall" as executeToolCall
+    state "sendToolResult" as sendToolResult
+
+    [*] --> nodeCallLLM
+    nodeCallLLM --> [*] : transformed
+    nodeCallLLM --> executeToolCall : onCondition
+    executeToolCall --> sendToolResult
+    sendToolResult --> [*] : transformed
+    sendToolResult --> executeToolCall : onCondition
+```
+
+<!--- KNIT example-custom-strategy-graphs-06.kt -->
+
 ## Advanced strategy techniques
 
 ### History compression
@@ -215,7 +275,7 @@ val processMultipleResults by nodeLLMSendMultipleToolResults()
 edge(someNode forwardTo executeMultipleTools)
 edge(executeMultipleTools forwardTo processMultipleResults)
 ```
-<!--- KNIT example-custom-strategy-graphs-06.kt -->
+<!--- KNIT example-custom-strategy-graphs-07.kt -->
 
 You can also use the `toParallelToolCallsRaw` extension function for streaming data:
 
@@ -228,7 +288,7 @@ You can also use the `toParallelToolCallsRaw` extension function for streaming d
 ```kotlin
 parseMarkdownStreamToBooks(markdownStream).toParallelToolCallsRaw(BookTool::class).collect()
 ```
-<!--- KNIT example-custom-strategy-graphs-07.kt -->
+<!--- KNIT example-custom-strategy-graphs-08.kt -->
 
 To learn more, see [Tools](tools-overview.md#parallel-tool-calls). 
 
@@ -257,7 +317,7 @@ val calc by parallel<String, Int>(
     selectByMax { it }
 }
 ```
-<!--- KNIT example-custom-strategy-graphs-08.kt -->
+<!--- KNIT example-custom-strategy-graphs-09.kt -->
 
 The code above creates a node named `calc` that runs the `nodeCalcTokens`, `nodeCalcSymbols`, and `nodeCalcWords` nodes 
 in parallel and returns the results as an instance of `AsyncParallelResult`.
@@ -298,7 +358,7 @@ edge(
             onCondition { input -> input.contains("B") }
 )
 ```
-<!--- KNIT example-custom-strategy-graphs-09.kt -->
+<!--- KNIT example-custom-strategy-graphs-10.kt -->
 
 ## Best practices
 
@@ -383,7 +443,7 @@ fun toneStrategy(name: String, toolRegistry: ToolRegistry): AIAgentGraphStrategy
     }
 }
 ```
-<!--- KNIT example-custom-strategy-graphs-10.kt -->
+<!--- KNIT example-custom-strategy-graphs-11.kt -->
 
 This strategy does the following:
 
