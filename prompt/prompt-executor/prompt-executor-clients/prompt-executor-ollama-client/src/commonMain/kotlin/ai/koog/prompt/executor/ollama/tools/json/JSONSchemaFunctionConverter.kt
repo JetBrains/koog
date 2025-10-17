@@ -7,6 +7,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonArray
 
 /**
  * Converts the current ToolDescriptor instance into a JSON Schema representation.
@@ -33,6 +34,7 @@ public fun ToolDescriptor.toJSONSchema(): JsonObject {
             is ToolParameterType.Integer -> put("type", "integer")
             is ToolParameterType.Float -> put("type", "number")
             is ToolParameterType.Boolean -> put("type", "boolean")
+            is ToolParameterType.Null -> put("type", "null")
             is ToolParameterType.Enum -> {
                 // Assuming the enum entries expose a 'name' property.
                 val enumValues = type.entries.map { JsonPrimitive(it) }
@@ -43,6 +45,16 @@ public fun ToolDescriptor.toJSONSchema(): JsonObject {
             is ToolParameterType.List -> {
                 put("type", "array")
                 put("items", toolParameterToSchema(type.itemsType))
+            }
+
+            is ToolParameterType.AnyOf -> {
+                putJsonArray("anyOf") {
+                    addAll(
+                        type.types.map { parameterType ->
+                            toolParameterToSchema(parameterType.type, parameterType.description)
+                        }
+                    )
+                }
             }
 
             is ToolParameterType.Object -> {

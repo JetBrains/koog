@@ -162,6 +162,7 @@ private fun JsonObjectBuilder.fillJsonSchema(type: ToolParameterType) {
         ToolParameterType.Float -> put("type", "number")
         ToolParameterType.Integer -> put("type", "integer")
         ToolParameterType.String -> put("type", "string")
+        ToolParameterType.Null -> put("type", "null")
         is ToolParameterType.Enum -> {
             put("type", "string")
             putJsonArray("enum") {
@@ -172,6 +173,16 @@ private fun JsonObjectBuilder.fillJsonSchema(type: ToolParameterType) {
         is ToolParameterType.List -> {
             put("type", "array")
             putJsonObject("items") { fillJsonSchema(type.itemsType) }
+        }
+
+        is ToolParameterType.AnyOf -> {
+            putJsonArray("anyOf") {
+                addAll(
+                    type.types.map { propertiesType ->
+                        propertiesType.toJsonSchema()
+                    }
+                )
+            }
         }
 
         is ToolParameterType.Object -> {

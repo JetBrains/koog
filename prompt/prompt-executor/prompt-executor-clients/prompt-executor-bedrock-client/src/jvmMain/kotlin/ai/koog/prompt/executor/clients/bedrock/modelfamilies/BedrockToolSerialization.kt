@@ -26,6 +26,7 @@ internal object BedrockToolSerialization {
             ToolParameterType.Float -> put("type", "number")
             ToolParameterType.Integer -> put("type", "integer")
             ToolParameterType.String -> put("type", "string")
+            ToolParameterType.Null -> put("type", "null")
 
             is ToolParameterType.Enum -> {
                 put("type", "string")
@@ -42,6 +43,16 @@ internal object BedrockToolSerialization {
                         ToolParameterType.String -> put("type", "string")
                         else -> put("type", "string")
                     }
+                }
+            }
+
+            is ToolParameterType.AnyOf -> {
+                putJsonArray("anyOf") {
+                    addAll(
+                        type.types.map { parameterType ->
+                            buildToolParameterSchema(parameterType)
+                        }
+                    )
                 }
             }
 
