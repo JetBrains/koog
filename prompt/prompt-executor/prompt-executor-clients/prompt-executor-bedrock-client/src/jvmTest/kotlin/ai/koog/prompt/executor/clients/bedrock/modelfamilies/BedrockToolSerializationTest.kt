@@ -89,6 +89,19 @@ class BedrockToolSerializationTest {
                     )
                 ),
 
+                // Null
+                Arguments.of(
+                    ToolParameterDescriptor(
+                        name = "nullValue",
+                        description = "Null parameter",
+                        type = ToolParameterType.Null
+                    ),
+                    mapOf(
+                        "description" to "Null parameter",
+                        "type" to "null"
+                    )
+                ),
+
                 // Enum
                 Arguments.of(
                     ToolParameterDescriptor(
@@ -184,6 +197,24 @@ class BedrockToolSerializationTest {
                         "description" to objectParamDesc,
                         "type" to "object"
                     )
+                ),
+
+                // AnyOf (String or Number)
+                Arguments.of(
+                    ToolParameterDescriptor(
+                        name = "anyOfValue",
+                        description = "String or number value",
+                        type = ToolParameterType.AnyOf(
+                            types = arrayOf(
+                                ToolParameterDescriptor(name = "", description = "String option", type = ToolParameterType.String),
+                                ToolParameterDescriptor(name = "", description = "Number option", type = ToolParameterType.Float)
+                            )
+                        )
+                    ),
+                    mapOf(
+                        "description" to "String or number value",
+                        "anyOf" to "expected" // We'll verify anyOf array exists in test
+                    )
                 )
             )
         }
@@ -218,6 +249,12 @@ class BedrockToolSerializationTest {
                     (value as Map<*, *>).forEach { (itemKey, itemValue) ->
                         assertEquals(itemValue, items[itemKey.toString()]?.jsonPrimitive?.content)
                     }
+                }
+
+                "anyOf" -> {
+                    val anyOf = schema["anyOf"]?.jsonArray
+                    assertNotNull(anyOf, "anyOf array should exist in schema")
+                    assertTrue(anyOf.size > 0, "anyOf array should not be empty")
                 }
             }
         }

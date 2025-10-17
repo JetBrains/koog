@@ -1,5 +1,5 @@
 [versions]
-agp = "8.13.0"
+agp = "8.12.3"
 androidx-datastore = "1.1.7"
 compose-multiplatform = "1.9.1"
 hotReload = "1.0.0-rc02"
