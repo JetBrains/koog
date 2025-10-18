@@ -20,6 +20,7 @@ concurrency:
 env:
   JAVA_VERSION: 17
   JAVA_DISTRIBUTION: 'corretto'
+  JAVA_OPTS: "-Xms8g -Xmx8g -Dfile.encoding=UTF-8 -Djava.awt.headless=true -Dkotlin.daemon.jvm.options=-Xmx6g"
 
 jobs:
   compilation:
