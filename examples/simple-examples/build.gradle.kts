@@ -70,7 +70,7 @@ registerRunExampleTask("runExampleCalculatorV2", "ai.koog.agents.example.calcula
 registerRunExampleTask("runExampleCalculatorLocal", "ai.koog.agents.example.calculator.local.CalculatorKt")
 registerRunExampleTask("runExampleErrorFixing", "ai.koog.agents.example.errors.ErrorFixingAgentKt")
 registerRunExampleTask("runExampleErrorFixingLocal", "ai.koog.agents.example.errors.local.ErrorFixingLocalAgentKt")
-registerRunExampleTask("runExampleGuesser", "ai.koog.agents.example.guesser.GuesserKt")
+registerRunExampleTask("runExampleGuesser", "ai.koog.agents.example.guesser.NumberGuessingAgentKt")
 registerRunExampleTask("runExampleEssay", "ai.koog.agents.example.essay.EssayWriterKt")
 registerRunExampleTask(
     "runExampleFleetProjectTemplateGeneration",
