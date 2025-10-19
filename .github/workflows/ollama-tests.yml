@@ -46,21 +46,21 @@ jobs:
           df -h
           echo "=== Docker system info ==="
           docker system df
-
+          
           # Stop and remove all containers
           docker ps -aq | xargs -r docker rm -f || true
-
-          # Remove all Docker images (we'll pull Ollama fresh, only cache volumes)
+          
+          # Remove all Docker images, networks, and volumes
+          docker system prune -af --volumes
           docker image prune -af
-
-          # Remove unused networks
+          docker volume prune -af
           docker network prune -f
-
+          
           # Clean package caches
           sudo apt-get clean
           sudo apt-get autoclean
           sudo apt-get autoremove -y
-
+          
           # Remove large directories
           sudo rm -rf /usr/share/dotnet
           sudo rm -rf /opt/ghc
@@ -71,11 +71,14 @@ jobs:
           sudo rm -rf /usr/local/.ghcup
           sudo rm -rf /home/runner/.dotnet
           sudo rm -rf /opt/hostedtoolcache
-
+          
           # Clean npm and yarn caches
           sudo rm -rf /home/runner/.npm
           sudo rm -rf /home/runner/.yarn
-
+          
+          # Clean Gradle cache from previous runs
+          sudo rm -rf /home/runner/.gradle
+          
           echo "=== Disk space after cleanup ==="
           df -h
 
@@ -91,35 +94,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
-          cache-disabled: false
-
-      # Cache Docker volume containing Ollama models
-      - name: Cache Ollama models volume
-        uses: actions/cache@v4
-        with:
-          path: ~/ollama-cache
-          key: ollama-models-${{ runner.os }}-${{ github.run_id }}
-          restore-keys: |
-            ollama-models-${{ runner.os }}-
-
-      # Restore Ollama volume from cache
-      - name: Restore Ollama volume from cache
-        run: |
-          if [ -f ~/ollama-cache/ollama-volume.tar ]; then
-            echo "=== Restoring Ollama volume from cache ==="
-
-            # Create the volume
-            docker volume create ollama-models || true
-
-            # Restore volume contents from cache
-            docker run --rm -v ollama-models:/data -v ~/ollama-cache:/backup alpine sh -c "cd /data && tar xf /backup/ollama-volume.tar --strip 1" || echo "No data to restore or restore failed"
-
-            echo "=== Volume restored ==="
-            docker volume ls
-          else
-            echo "=== No cached volume found, will create fresh ==="
-            docker volume create ollama-models || true
-          fi
+          cache-disabled: true
 
       - name: Check disk space before tests
         run: |
@@ -135,12 +110,11 @@ jobs:
       - name: JvmOllamaTest with Gradle Wrapper
         env:
           OLLAMA_IMAGE_URL: ${{ vars.OLLAMA_IMAGE_URL }}
-          OLLAMA_VOLUME_NAME: ollama-models
           GRADLE_OPTS: "-Dorg.gradle.daemon=false -Xmx1g -XX:MaxMetaspaceSize=512m"
         run: |
           echo "=== Starting tests with available disk space ==="
           df -h / | tail -1
-
+          
           ./gradlew jvmOllamaTest \
             --tests "${{ matrix.test-group }}" \
             --no-parallel \
@@ -149,46 +123,26 @@ jobs:
             --no-configuration-cache \
             --continue \
             --stacktrace
-
+          
           echo "=== Test completed, checking disk space ==="
           df -h / | tail -1
         timeout-minutes: 60
-
-      # Save volume to cache after tests
-      - name: Save Ollama volume to cache
-        if: always()
-        run: |
-          echo "=== Saving Ollama volume to cache ==="
-          mkdir -p ~/ollama-cache
-
-          # Export the volume contents to a tar file
-          docker run --rm -v ollama-models:/data -v ~/ollama-cache:/backup alpine sh -c "cd /data && tar cf /backup/ollama-volume.tar ." || echo "Failed to save volume"
-
-          if [ -f ~/ollama-cache/ollama-volume.tar ]; then
-            echo "=== Volume saved successfully ==="
-            ls -lh ~/ollama-cache/ollama-volume.tar
-          else
-            echo "=== Volume save failed ==="
-          fi
 
       - name: Cleanup Docker resources
         if: always()
         run: |
           echo "=== Stopping all containers ==="
           docker ps -q | xargs -r docker stop || true
-
+          
           echo "=== Removing all containers ==="
           docker ps -aq | xargs -r docker rm -f || true
-
-          echo "=== Removing all images ==="
-          docker image prune -af
-
-          echo "=== Pruning system (preserving ollama-models volume) ==="
-          docker system prune -af
-
-          echo "=== Current volumes (ollama-models should be preserved) ==="
-          docker volume ls
-
+          
+          echo "=== Removing Ollama images ==="
+          docker images | grep ollama | awk '{print $3}' | xargs -r docker rmi -f || true
+          
+          echo "=== Pruning system ==="
+          docker system prune -af --volumes
+          
           echo "=== Final disk space ==="
           df -h
 
