@@ -97,10 +97,26 @@ jobs:
           echo "=== Memory info ==="
           free -h
 
+      - name: Install and start Ollama
+        run: |
+          echo "=== Installing Ollama ==="
+          curl -fsSL https://ollama.com/install.sh | sh
+
+          echo "=== Starting Ollama in background ==="
+          nohup ollama serve > /tmp/ollama.log 2>&1 &
+          OLLAMA_PID=$!
+          echo "OLLAMA_PID=$OLLAMA_PID" >> $GITHUB_ENV
+          echo "Ollama PID: $OLLAMA_PID"
+
+          echo "=== Waiting for Ollama to be ready ==="
+          timeout 10 bash -c 'until curl -s http://localhost:11434 > /dev/null 2>&1; do echo "Waiting..."; sleep 2; done'
+
+          echo "=== Ollama started successfully ==="
+          curl -s http://localhost:11434
+
       - name: JvmOllamaTest with Gradle Wrapper
         env:
-          OLLAMA_IMAGE_URL: ${{ vars.OLLAMA_IMAGE_URL }}
-          OLLAMA_VOLUME_NAME: ollama-models
+          OLLAMA_LOCAL_URL: http://localhost:11434
           GRADLE_OPTS: "-Dorg.gradle.daemon=false -Xmx1g -XX:MaxMetaspaceSize=512m"
         run: |
           echo "=== Starting tests with available disk space ==="
@@ -128,6 +144,21 @@ jobs:
           docker system df
           echo "=== Largest directories in /home/runner ==="
           sudo du -sh /home/runner/* 2>/dev/null | sort -hr | head -10 || true
+
+      - name: Stop Ollama
+        if: always()
+        run: |
+          echo "=== Stopping Ollama ==="
+          if [ -n "$OLLAMA_PID" ]; then
+            kill $OLLAMA_PID || true
+            echo "Ollama process $OLLAMA_PID stopped"
+          else
+            echo "No Ollama PID found, attempting pkill"
+            pkill -f "ollama serve" || true
+          fi
+
+          echo "=== Ollama logs (last 50 lines) ==="
+          tail -50 /tmp/ollama.log || echo "No Ollama logs found"
 
       - name: Collect reports
         if: always()
