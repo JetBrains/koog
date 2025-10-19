@@ -88,13 +88,12 @@ jobs:
         with:
           java-version: '17'
           distribution: 'corretto'
+          cache: gradle
 
       # Configure Gradle for optimal use in GitHub Actions, including caching of downloaded dependencies.
       # See: https://github.com/gradle/actions/blob/main/setup-gradle/README.md
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
-        with:
-          cache-disabled: true
 
       - name: Check disk space before tests
         run: |
