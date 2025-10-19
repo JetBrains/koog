@@ -55,11 +55,6 @@ jobs:
           docker image prune -af
           docker network prune -f
 
-          # Clean package caches
-          sudo apt-get clean
-          sudo apt-get autoclean
-          sudo apt-get autoremove -y
-
           # Remove large directories that we don't need
           sudo rm -rf /usr/share/dotnet
           sudo rm -rf /opt/ghc
