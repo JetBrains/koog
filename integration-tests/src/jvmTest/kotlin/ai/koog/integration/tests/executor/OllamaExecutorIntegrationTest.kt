@@ -60,15 +60,6 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
         val moderationModel get() = fixture.moderationModel
         val client get() = fixture.client
 
-        /*
-         * Uncomment this part and add required imports if you want to run tests against a local Ollama client.
-        val client = OllamaClient()
-        val executor = SingleLLMPromptExecutor(client)
-        val model = OllamaModels.Meta.LLAMA_3_2
-        val visionModel = OllamaModels.Granite.GRANITE_3_2_VISION
-        val moderationModel = OllamaModels.Meta.LLAMA_GUARD_3
-         * */
-
         @JvmStatic
         fun imageScenarios(): Stream<ImageTestScenario> {
             return ImageTestScenario.entries.minus(ImageTestScenario.LARGE_IMAGE_ANTHROPIC).stream()
