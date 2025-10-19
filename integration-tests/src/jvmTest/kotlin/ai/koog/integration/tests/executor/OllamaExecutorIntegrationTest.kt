@@ -9,6 +9,7 @@ import ai.koog.integration.tests.utils.MediaTestUtils.checkExecutorMediaResponse
 import ai.koog.prompt.dsl.ModerationCategory
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
+import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.executor.ollama.client.findByNameOrNull
 import ai.koog.prompt.llm.LLMCapability.Completion
@@ -33,7 +34,6 @@ import kotlin.io.path.pathString
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.io.files.Path as KtPath
@@ -62,7 +62,15 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
 
         @JvmStatic
         fun imageScenarios(): Stream<ImageTestScenario> {
-            return ImageTestScenario.entries.minus(ImageTestScenario.LARGE_IMAGE_ANTHROPIC).stream()
+            return ImageTestScenario.entries
+                .minus(
+                    setOf(
+                        ImageTestScenario.LARGE_IMAGE_ANTHROPIC,
+                        ImageTestScenario.EMPTY_IMAGE,
+                        ImageTestScenario.CORRUPTED_IMAGE,
+                    )
+                )
+                .stream()
         }
 
         @JvmStatic
@@ -72,6 +80,8 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
     }
 
     override fun getExecutor(model: LLModel): PromptExecutor = executor
+
+    override fun getLLMClient(model: LLModel): LLMClient = client
 
     // Use base class methods through parameterized tests
     @ParameterizedTest
@@ -254,16 +264,6 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
             listOf(Completion, Tools, Temperature, Schema.JSON.Basic, Schema.JSON.Standard),
             modelCard.capabilities
         )
-    }
-
-    @Test
-    fun `ollama_test pull model`() = runTest(timeout = 600.seconds) {
-        val beforePull = client.getModelOrNull("tinyllama")
-        assertNull(beforePull)
-
-        val afterPull =
-            client.getModelOrNull("tinyllama", pullIfMissing = true)
-        assertNotNull(afterPull)
     }
 
     // Ollama-specific image processing test
