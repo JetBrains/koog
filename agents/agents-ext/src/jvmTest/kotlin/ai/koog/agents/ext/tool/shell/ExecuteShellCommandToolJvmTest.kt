@@ -330,11 +330,13 @@ class ExecuteShellCommandToolJvmTest {
     @Test
     @EnabledOnOs(OS.LINUX, OS.MAC)
     fun `long running command times out`() = runBlocking {
-        val result = executeShellCommand("sleep 1.1", timeoutSeconds = 1)
+        val command = "sleep 5"
+        val timeout = 1
+        val result = executeShellCommand(command, timeoutSeconds = timeout)
 
         val expected = """
-            Command: sleep 1.1
-            Command timed out after 1 seconds
+            Command: $command
+            Command timed out after $timeout seconds
         """.trimIndent()
 
         assertEquals(expected, result.textForLLM())
