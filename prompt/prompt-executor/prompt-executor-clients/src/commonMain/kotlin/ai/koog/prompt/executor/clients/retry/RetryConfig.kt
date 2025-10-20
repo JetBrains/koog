@@ -179,7 +179,8 @@ public object DefaultRetryAfterExtractor : RetryAfterExtractor {
     private val patterns = listOf(
         Regex("retry\\s+after\\s+(\\d+)\\s+second", RegexOption.IGNORE_CASE),
         Regex("retry-after:\\s*(\\d+)", RegexOption.IGNORE_CASE),
-        Regex("wait\\s+(\\d+)\\s+second", RegexOption.IGNORE_CASE)
+        Regex("wait\\s+(\\d+)\\s+second", RegexOption.IGNORE_CASE),
+        Regex("try again in\\s+(\\d+)(\\.\\d{1,3})?s", RegexOption.IGNORE_CASE)
     )
 
     override fun extract(message: String): Duration? {
