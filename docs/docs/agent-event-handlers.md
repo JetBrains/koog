@@ -58,7 +58,7 @@ handleEvents {
     // Other event handlers
 }
 ```
-<!--- KNIT example-events-01.kt -->
+<!--- KNIT example-event-handlers-01.kt -->
 
 For more details about event handler configuration, see [API reference](https://api.koog.ai/agents/agents-features/agents-features-event-handler/ai.koog.agents.features.eventHandler.feature/-event-handler-config/index.html).
 
@@ -90,4 +90,4 @@ val agent = AIAgent(
     }
 }
 ```
-<!--- KNIT example-events-02.kt -->
+<!--- KNIT example-event-handlers-02.kt -->

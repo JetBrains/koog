@@ -316,7 +316,7 @@ install(Tracing) {
     }
 }
 ```
-<!--- KNIT example-tracing-01.kt -->
+<!--- KNIT example-events-01.kt -->
 
 ### Can I use multiple message processors?
 
@@ -363,7 +363,7 @@ install(Tracing) {
     addMessageProcessor(TraceFeatureMessageRemoteWriter(connectionConfig))
 }
 ```
-<!--- KNIT example-tracing-02.kt -->
+<!--- KNIT example-events-02.kt -->
 
 ### How can I create a custom message processor?
 
@@ -429,6 +429,6 @@ install(Tracing) {
     addMessageProcessor(CustomTraceProcessor())
 }
 ```
-<!--- KNIT example-tracing-03.kt -->
+<!--- KNIT example-events-03.kt -->
 
 For more information about existing event types that can be handled by message processors, see [Predefined event types](#predefined-event-types).
