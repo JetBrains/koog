@@ -1,6 +1,7 @@
 package ai.koog.prompt
 
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.message.Content
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
@@ -58,7 +59,7 @@ class PromptTest {
             user(userMessage)
             message(
                 Message.Assistant(
-                    content = assistantMessage,
+                    content = Content.Text(assistantMessage),
                     metaInfo = testRespMetaInfo,
                     finishReason = finishReason
                 )
@@ -117,11 +118,11 @@ class PromptTest {
         assertTrue(prompt.messages[3] is Message.Tool.Call)
         assertTrue(prompt.messages[4] is Message.Tool.Result)
 
-        assertEquals(systemMessage, prompt.messages[0].content)
-        assertEquals(userMessage, prompt.messages[1].content)
-        assertEquals(assistantMessage, prompt.messages[2].content)
-        assertEquals(toolContent, prompt.messages[3].content)
-        assertEquals(toolResult, prompt.messages[4].content)
+        assertEquals(systemMessage, prompt.messages[0].content.text())
+        assertEquals(userMessage, prompt.messages[1].content.text())
+        assertEquals(assistantMessage, prompt.messages[2].content.text())
+        assertEquals(toolContent, prompt.messages[3].content.text())
+        assertEquals(toolResult, prompt.messages[4].content.text())
         assertEquals(toolName, (prompt.messages[3] as Message.Tool.Call).tool)
         assertEquals(toolName, (prompt.messages[4] as Message.Tool.Result).tool)
     }
@@ -238,17 +239,17 @@ class PromptTest {
         val assistantMessage = "I'll help you with Kotlin programming"
 
         val newMessages = listOf(
-            Message.System(systemMessage, testReqMetaInfo),
-            Message.User(userMessage, testReqMetaInfo),
-            Message.Assistant(assistantMessage, testRespMetaInfo)
+            Message.System(Content.Text(systemMessage), testReqMetaInfo),
+            Message.User(Content.Text(userMessage), testReqMetaInfo),
+            Message.Assistant(Content.Text(assistantMessage), testRespMetaInfo)
         )
 
         val updatedPrompt = basicPrompt.withMessages { newMessages }
 
         assertEquals(3, updatedPrompt.messages.size)
-        assertEquals(systemMessage, updatedPrompt.messages[0].content)
-        assertEquals(userMessage, updatedPrompt.messages[1].content)
-        assertEquals(assistantMessage, updatedPrompt.messages[2].content)
+        assertEquals(systemMessage, updatedPrompt.messages[0].content.text())
+        assertEquals(userMessage, updatedPrompt.messages[1].content.text())
+        assertEquals(assistantMessage, updatedPrompt.messages[2].content.text())
     }
 
     @Test
@@ -334,8 +335,8 @@ class PromptTest {
 
     @Test
     fun testMessageWithEmptyContent() {
-        val emptySystemMessage = Message.System("", testReqMetaInfo)
-        val emptyUserMessage = Message.User("", testReqMetaInfo)
+        val emptySystemMessage = Message.System(Content.Text(""), testReqMetaInfo)
+        val emptyUserMessage = Message.User(Content.Text(""), testReqMetaInfo)
         val emptyAssistantMessage = Message.Assistant("", testRespMetaInfo)
         val emptyToolCallMessage = Message.Tool.Call(toolCallId, toolName, "", testRespMetaInfo)
         val emptyToolResultMessage = Message.Tool.Result(toolCallId, toolName, "", testReqMetaInfo)

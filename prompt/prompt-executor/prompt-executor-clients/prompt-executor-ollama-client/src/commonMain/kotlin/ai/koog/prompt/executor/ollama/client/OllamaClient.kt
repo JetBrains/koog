@@ -27,6 +27,7 @@ import ai.koog.prompt.executor.ollama.client.dto.toOllamaTool
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.message.Content
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
@@ -215,7 +216,7 @@ public class OllamaClient(
             content.isNotEmpty() && toolCalls.isEmpty() -> {
                 listOf(
                     Message.Assistant(
-                        content = content,
+                        content = Content.Text(content),
                         metaInfo = responseMetadata
                     )
                 )
@@ -228,7 +229,7 @@ public class OllamaClient(
             else -> {
                 val toolCallMessages = messages.getToolCalls(responseMetadata)
                 val assistantMessage = Message.Assistant(
-                    content = content,
+                    content = Content.Text(content),
                     metaInfo = responseMetadata
                 )
                 listOf(assistantMessage) + toolCallMessages
@@ -368,9 +369,9 @@ public class OllamaClient(
             "Moderation model from Ollama must return an assistant message" +
                 " (actual response: ${singleResponse::class.simpleName})"
         }
-        val contentLines = singleResponse.content.lines()
+        val contentLines = singleResponse.content.text().lines()
         val moderationResult = contentLines.first()
-        val hazardCategories = singleResponse.content.removePrefix(moderationResult)
+        val hazardCategories = singleResponse.content.text().removePrefix(moderationResult)
 
         return ModerationResult(
             isHarmful = parseModerationResult(moderationResult),

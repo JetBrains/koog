@@ -10,7 +10,6 @@ import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import ai.koog.prompt.executor.clients.openai.base.AbstractOpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.base.OpenAIBasedSettings
-import ai.koog.prompt.executor.clients.openai.base.models.Content
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIAudioConfig
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIAudioFormat
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIAudioVoice
@@ -41,8 +40,9 @@ import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.message.Attachment
 import ai.koog.prompt.message.AttachmentContent
+import ai.koog.prompt.message.Content
+import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
@@ -56,6 +56,7 @@ import kotlinx.datetime.Clock
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
+import ai.koog.prompt.executor.clients.openai.base.models.Content as OpenAIContent
 
 /**
  * Represents the settings for configuring an OpenAI client.
@@ -141,7 +142,7 @@ public open class OpenAILLMClient(
             numberOfChoices = model.takeIf { it.supports(LLMCapability.MultipleChoices) }
                 ?.let { chatParams.numberOfChoices },
             parallelToolCalls = chatParams.parallelToolCalls,
-            prediction = chatParams.speculation?.let { OpenAIStaticContent(Content.Text(it)) },
+            prediction = chatParams.speculation?.let { OpenAIStaticContent(OpenAIContent.Text(it)) },
             presencePenalty = chatParams.presencePenalty,
             promptCacheKey = chatParams.promptCacheKey,
             reasoningEffort = chatParams.reasoningEffort,
@@ -388,8 +389,8 @@ public open class OpenAILLMClient(
 
         val input = prompt.messages
             .map { message ->
-                if (message is Message.WithAttachments) {
-                    require(message.attachments.all { it is Attachment.Image }) {
+                if (message.content is Content.Parts) {
+                    require((message.content as Content.Parts).value.all { it is ContentPart.Image || it is ContentPart.Text }) {
                         "Only image attachments are supported for moderation"
                     }
                 }
@@ -403,19 +404,19 @@ public open class OpenAILLMClient(
 
                  Otherwise create a single content instance with all the parts
                  */
-                if (contents.all { it is Content.Text }) {
-                    val text = contents.joinToString(separator = "\n\n") { (it as Content.Text).value }
+                if (contents.all { it is OpenAIContent.Text }) {
+                    val text = contents.joinToString(separator = "\n\n") { (it as OpenAIContent.Text).value }
 
-                    Content.Text(text)
+                    OpenAIContent.Text(text)
                 } else {
                     val parts = contents.flatMap { content ->
                         when (content) {
-                            is Content.Parts -> content.value
-                            is Content.Text -> listOf(OpenAIContentPart.Text(content.value))
+                            is OpenAIContent.Parts -> content.value
+                            is OpenAIContent.Text -> listOf(OpenAIContentPart.Text(content.value))
                         }
                     }
 
-                    Content.Parts(parts)
+                    OpenAIContent.Parts(parts)
                 }
             }
 
@@ -580,7 +581,12 @@ public open class OpenAILLMClient(
                 when (message) {
                     is Message.System -> {
                         flushPendingCalls()
-                        add(Item.InputMessage(role = "developer", content = listOf(InputContent.Text(message.content))))
+                        add(
+                            Item.InputMessage(
+                                role = "developer",
+                                content = listOf(InputContent.Text(message.content.text()))
+                            )
+                        )
                     }
 
                     is Message.User -> {
@@ -594,7 +600,7 @@ public open class OpenAILLMClient(
                             Item.OutputMessage(
                                 role = "assistant",
                                 content = listOf(
-                                    OutputContent.Text(text = message.content, annotations = emptyList())
+                                    OutputContent.Text(text = message.content.text(), annotations = emptyList())
                                 ),
                             )
                         )
@@ -605,7 +611,7 @@ public open class OpenAILLMClient(
                         add(
                             Item.FunctionToolCallOutput(
                                 callId = message.id ?: Uuid.random().toString(),
-                                output = message.content
+                                output = message.content.text()
                             )
                         )
                     }
@@ -614,7 +620,7 @@ public open class OpenAILLMClient(
                         pendingCalls += Item.FunctionToolCall(
                             callId = message.id ?: Uuid.random().toString(),
                             name = message.tool,
-                            arguments = message.content
+                            arguments = message.content.text()
                         )
                     }
                 }
@@ -625,52 +631,53 @@ public open class OpenAILLMClient(
         return messages
     }
 
-    private fun Message.toInputMessage(model: LLModel): List<InputContent> {
-        if (this !is Message.WithAttachments || attachments.isEmpty()) {
-            return listOf(InputContent.Text(content))
+    private fun Message.toInputMessage(model: LLModel): List<InputContent> = when (val content = this.content) {
+        is Content.Text -> {
+            listOf(InputContent.Text(content.value))
         }
 
-        val parts = buildList {
-            if (content.isNotEmpty()) {
-                add(InputContent.Text(content))
-            }
-
-            attachments.forEach { attachment ->
-                when (attachment) {
-                    is Attachment.Image -> {
-                        model.requireCapability(LLMCapability.Vision.Image)
-
-                        val imageUrl: String = when (val content = attachment.content) {
-                            is AttachmentContent.URL -> content.url
-                            is AttachmentContent.Binary -> "data:${attachment.mimeType};base64,${content.asBase64()}"
-                            else -> throw IllegalArgumentException("Unsupported image attachment content: ${content::class}")
+        is Content.Parts -> {
+            val parts = buildList {
+                content.value.forEach { part ->
+                    when (part) {
+                        is ContentPart.Text -> {
+                            add(InputContent.Text(part.text))
                         }
 
-                        add(InputContent.Image(imageUrl = imageUrl))
+                        is ContentPart.Image -> {
+                            model.requireCapability(LLMCapability.Vision.Image)
+
+                            val imageUrl: String = when (val content = part.content) {
+                                is AttachmentContent.URL -> content.url
+                                is AttachmentContent.Binary -> "data:${part.mimeType};base64,${content.asBase64()}"
+                                else -> throw IllegalArgumentException("Unsupported image attachment content: ${content::class}")
+                            }
+
+                            add(InputContent.Image(imageUrl = imageUrl))
+                        }
+
+                        is ContentPart.File -> {
+                            model.requireCapability(LLMCapability.Document)
+
+                            val fileData = when (val content = part.content) {
+                                is AttachmentContent.Binary -> "data:${part.mimeType};base64,${content.asBase64()}"
+                                else -> null
+                            }
+
+                            val fileUrl = when (val content = part.content) {
+                                is AttachmentContent.URL -> content.url
+                                else -> null
+                            }
+
+                            add(InputContent.File(fileData = fileData, fileUrl = fileUrl, filename = part.fileName))
+                        }
+
+                        else -> throw IllegalArgumentException("Unsupported attachment type: $part, for model: $model with Responses API")
                     }
-
-                    is Attachment.File -> {
-                        model.requireCapability(LLMCapability.Document)
-
-                        val fileData = when (val content = attachment.content) {
-                            is AttachmentContent.Binary -> "data:${attachment.mimeType};base64,${content.asBase64()}"
-                            else -> null
-                        }
-
-                        val fileUrl = when (val content = attachment.content) {
-                            is AttachmentContent.URL -> content.url
-                            else -> null
-                        }
-
-                        add(InputContent.File(fileData = fileData, fileUrl = fileUrl, filename = attachment.fileName))
-                    }
-
-                    else -> throw IllegalArgumentException("Unsupported attachment type: $attachment, for model: $model with Responses API")
                 }
             }
+            parts
         }
-
-        return parts
     }
 
     private fun processResponsesAPIResponse(response: OpenAIResponsesAPIResponse): List<Message.Response> {
@@ -690,12 +697,12 @@ public open class OpenAILLMClient(
                     is Item.FunctionToolCall -> Message.Tool.Call(
                         id = output.callId,
                         tool = output.name,
-                        content = output.arguments,
+                        content = Content.Text(output.arguments),
                         metaInfo = metaInfo
                     )
 
                     is Item.OutputMessage -> Message.Assistant(
-                        content = output.text(),
+                        content = Content.Text(output.text()),
                         finishReason = output.status?.name,
                         metaInfo = metaInfo
                     )

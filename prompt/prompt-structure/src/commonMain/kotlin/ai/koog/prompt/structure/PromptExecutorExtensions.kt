@@ -318,8 +318,8 @@ public suspend fun <T> PromptExecutor.parseResponseToStructuredResponse(
     // Use fixingParser if provided, otherwise parse directly
     val structure = config.structure(model)
     val structureResponse = config.fixingParser
-        ?.parse(this, structure, response.content)
-        ?: structure.parse(response.content)
+        ?.parse(this, structure, response.content.text())
+        ?: structure.parse(response.content.text())
 
     return StructuredResponse(
         structure = structureResponse,

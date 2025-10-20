@@ -84,7 +84,7 @@ public class StructureFixingParser(
         val response = executor.execute(prompt = prompt, model = fixingModel).single()
         require(response is Message.Assistant) { "Response for fixing structure must be an assistant message, got ${response::class.simpleName} instead" }
 
-        return response.content
+        return response.content.text()
     }
 
     /**

@@ -9,7 +9,7 @@ import kotlin.reflect.typeOf
 
 /**
  * A builder class responsible for constructing an instance of `AIAgentStrategy`.
- * The `AIAgentStrategyBuilder` serves as a specific configuration for creating AI agent strategies
+ * The `AIAgentGraphStrategyBuilder` serves as a specific configuration for creating AI agent strategies
  * with a defined start and finish node, along with a designated tool selection strategy.
  *
  * @param name The name of the strategy being built, serving as a unique identifier.

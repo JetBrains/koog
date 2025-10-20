@@ -64,7 +64,7 @@ class AIAgentConfigTest {
         assertEquals(testModel, config.model)
         assertEquals(MAX_ITERATIONS, config.maxAgentIterations)
         assertEquals(testId, config.prompt.id)
-        assertEquals(testPromptContent, systemMessage?.content)
+        assertEquals(testPromptContent, systemMessage?.content?.text())
     }
 
     @Test
@@ -79,7 +79,7 @@ class AIAgentConfigTest {
         assertEquals("koog-agents", config.prompt.id)
         val systemMessage = config.prompt.messages.firstOrNull()
         assertNotNull(systemMessage)
-        assertEquals(TEST_PROMPT_CONTENT, systemMessage.content)
+        assertEquals(TEST_PROMPT_CONTENT, systemMessage.content.text())
     }
 
     @Test
@@ -88,7 +88,7 @@ class AIAgentConfigTest {
         val systemMessage = config.prompt.messages.firstOrNull()
 
         assertNotNull(systemMessage)
-        assertEquals("", systemMessage.content)
+        assertEquals("", systemMessage.content.text())
     }
 
     @Test

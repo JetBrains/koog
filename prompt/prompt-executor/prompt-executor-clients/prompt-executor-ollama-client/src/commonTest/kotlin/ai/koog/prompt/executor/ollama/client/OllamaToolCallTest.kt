@@ -72,8 +72,8 @@ class OllamaToolCallTest {
         assertEquals("get_weather", toolCall.tool)
         assertTrue(toolCall.id!!.startsWith("ollama_tool_call_"))
         assertTrue(toolCall.id!!.length > "ollama_tool_call_".length)
-        assertTrue(toolCall.content.contains("New York"))
-        assertTrue(toolCall.content.contains("celsius"))
+        assertTrue(toolCall.content.text().contains("New York"))
+        assertTrue(toolCall.content.text().contains("celsius"))
     }
 
     @Test
@@ -115,12 +115,12 @@ class OllamaToolCallTest {
         val weatherCall = toolCalls[0]
         assertEquals("get_weather", weatherCall.tool)
         assertTrue(weatherCall.id!!.startsWith("ollama_tool_call_"))
-        assertTrue(weatherCall.content.contains("Paris"))
+        assertTrue(weatherCall.content.text().contains("Paris"))
 
         val calculatorCall = toolCalls[1]
         assertEquals("calculator", calculatorCall.tool)
         assertTrue(calculatorCall.id!!.startsWith("ollama_tool_call_"))
-        assertTrue(calculatorCall.content.contains("2 + 2"))
+        assertTrue(calculatorCall.content.text().contains("2 + 2"))
 
         // IDs should be different for different tool calls
         assertTrue(weatherCall.id != calculatorCall.id)

@@ -1,10 +1,12 @@
 package ai.koog.prompt.dsl
 
-import ai.koog.prompt.message.Attachment
 import ai.koog.prompt.message.AttachmentContent
+import ai.koog.prompt.message.Content
+import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class PromptBuilderTest {
@@ -15,7 +17,7 @@ class PromptBuilderTest {
             user(
                 "Check this image",
                 listOf(
-                    Attachment.Image(
+                    ContentPart.Image(
                         content = AttachmentContent.URL("https://example.com/test.png"),
                         format = "png",
                         mimeType = "image/png",
@@ -27,24 +29,27 @@ class PromptBuilderTest {
 
         assertEquals(1, prompt.messages.size, "Prompt should have one message")
         assertTrue(prompt.messages[0] is Message.User, "Message should be a User message")
-        assertEquals("Check this image", prompt.messages[0].content, "Message content should match")
 
         val userMessage = prompt.messages[0] as Message.User
-        val singleContent = userMessage.attachments.single()
+        assertIs<Content.Parts>(userMessage.content, "User message with attachments should have Parts content")
 
-        val expectedImage = Attachment.Image(
+        val parts = userMessage.content.value
+        assertEquals(2, parts.size, "Should have text part and image part")
+
+        val expectedText = ContentPart.Text("Check this image")
+        assertEquals(expectedText, parts[0], "First part should be text")
+
+        val expectedImage = ContentPart.Image(
             content = AttachmentContent.URL("https://example.com/test.png"),
             format = "png",
             mimeType = "image/png",
             fileName = "test.png"
         )
-        assertEquals(expectedImage, singleContent, "Attachment should match expected Image")
+        assertEquals(expectedImage, parts[1], "Second part should match expected Image")
     }
 
     @Test
     fun testUserMessageWithAttachmentBuilder() {
-        // Note: There's a bug in PromptBuilder.user() method where it uses attachments.lastIndex instead of attachments.size
-        // in the subList call, which causes the last attachment to be skipped. This test is adjusted to match the current behavior.
         val prompt = Prompt.build("test") {
             user("Check these files") {
                 image("https://example.com/photo.jpg")
@@ -52,30 +57,33 @@ class PromptBuilderTest {
             }
         }
 
-        // Due to the bug, only the first attachment is included, so there's only one message
         assertEquals(1, prompt.messages.size, "Prompt should have one message")
         assertTrue(prompt.messages[0] is Message.User, "Message should be a User message")
 
-        assertEquals("Check these files", prompt.messages[0].content, "Message content should match")
-
         val userMessage = prompt.messages[0] as Message.User
-        assertEquals(2, userMessage.attachments.size, "Should have two attachments")
+        assertIs<Content.Parts>(userMessage.content, "User message with attachments should have Parts content")
 
-        val expectedImage = Attachment.Image(
+        val parts = userMessage.content.value
+        assertEquals(3, parts.size, "Should have text part, image part, and file part")
+
+        val expectedText = ContentPart.Text("Check these files")
+        assertEquals(expectedText, parts[0], "First part should be text")
+
+        val expectedImage = ContentPart.Image(
             content = AttachmentContent.URL("https://example.com/photo.jpg"),
             format = "jpg",
             mimeType = "image/jpg",
             fileName = "photo.jpg"
         )
-        assertEquals(expectedImage, userMessage.attachments[0], "First attachment should match expected Image")
+        assertEquals(expectedImage, parts[1], "Second part should match expected Image")
 
-        val expectedFile = Attachment.File(
+        val expectedFile = ContentPart.File(
             content = AttachmentContent.URL("https://example.com/report.pdf"),
             format = "pdf",
             mimeType = "application/pdf",
             fileName = "report.pdf"
         )
-        assertEquals(expectedFile, userMessage.attachments[1], "Second attachment should match expected File")
+        assertEquals(expectedFile, parts[2], "Third part should match expected File")
     }
 
     @Test
@@ -95,19 +103,22 @@ class PromptBuilderTest {
         assertEquals(1, prompt.messages.size, "Prompt should have one message")
         assertTrue(prompt.messages[0] is Message.User, "Message should be a User message")
 
-        val expectedContent = "Here's my question:\nHow do I implement a binary search in Kotlin?"
-        assertEquals(expectedContent, prompt.messages[0].content, "Message content should match")
-
         val userMessage = prompt.messages[0] as Message.User
-        val singleContent = userMessage.attachments.single()
+        assertIs<Content.Parts>(userMessage.content, "User message with attachments should have Parts content")
 
-        val expectedImage = Attachment.Image(
+        val parts = userMessage.content.value
+        assertEquals(2, parts.size, "Should have text part and image part")
+
+        val expectedText = ContentPart.Text("Here's my question:\nHow do I implement a binary search in Kotlin?")
+        assertEquals(expectedText, parts[0], "First part should be text")
+
+        val expectedImage = ContentPart.Image(
             content = AttachmentContent.URL("https://example.com/screenshot.png"),
             format = "png",
             mimeType = "image/png",
             fileName = "screenshot.png"
         )
-        assertEquals(expectedImage, singleContent, "Attachment should match expected Image")
+        assertEquals(expectedImage, parts[1], "Second part should match expected Image")
     }
 
     @Test
@@ -129,35 +140,38 @@ class PromptBuilderTest {
 
         assertEquals(1, prompt.messages.size, "Prompt should have 1 message")
 
-        // First message should have the text and all attachments
         val userMessage = prompt.messages.first() as Message.User
-        assertEquals("Please analyze these files", userMessage.content, "First message content should match")
+        assertIs<Content.Parts>(userMessage.content, "User message with attachments should have Parts content")
 
-        assertEquals(3, userMessage.attachments.size, "Should have three attachments")
+        val parts = userMessage.content.value
+        assertEquals(4, parts.size, "Should have text part and three attachment parts")
 
-        val expectedImage = Attachment.Image(
+        val expectedText = ContentPart.Text("Please analyze these files")
+        assertEquals(expectedText, parts[0], "First part should be text")
+
+        val expectedImage = ContentPart.Image(
             content = AttachmentContent.URL("https://example.com/chart.png"),
             format = "png",
             mimeType = "image/png",
             fileName = "chart.png"
         )
-        assertEquals(expectedImage, userMessage.attachments[0], "First attachment should match expected Image")
+        assertEquals(expectedImage, parts[1], "Second part should match expected Image")
 
-        val expectedPdfFile = Attachment.File(
+        val expectedPdfFile = ContentPart.File(
             content = AttachmentContent.URL("https://example.com/data.pdf"),
             format = "pdf",
             mimeType = "application/pdf",
             fileName = "data.pdf"
         )
-        assertEquals(expectedPdfFile, userMessage.attachments[1], "Second attachment should match expected PDF File")
+        assertEquals(expectedPdfFile, parts[2], "Third part should match expected PDF File")
 
-        val expectedDocxFile = Attachment.File(
+        val expectedDocxFile = ContentPart.File(
             content = AttachmentContent.URL("https://example.com/report.docx"),
             format = "docx",
             mimeType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             fileName = "report.docx"
         )
-        assertEquals(expectedDocxFile, userMessage.attachments[2], "Third attachment should match expected DOCX File")
+        assertEquals(expectedDocxFile, parts[3], "Fourth part should match expected DOCX File")
     }
 
     @Test
@@ -198,7 +212,7 @@ class PromptBuilderTest {
             }
         }
 
-        assertEquals(5, prompt.messages.size, "Prompt should have 4 messages")
+        assertEquals(5, prompt.messages.size, "Prompt should have 5 messages")
 
         assertTrue(prompt.messages[0] is Message.System, "First message should be a System message")
         assertTrue(prompt.messages[1] is Message.User, "Second message should be a User message")
@@ -206,39 +220,50 @@ class PromptBuilderTest {
         assertTrue(prompt.messages[3] is Message.Tool.Call, "Fourth message should be a Tool Call message")
         assertTrue(prompt.messages[4] is Message.Tool.Result, "Fifth message should be a Tool Result message")
 
+        // System message should have Text content
+        val systemMessage = prompt.messages[0] as Message.System
+        assertIs<Content.Text>(systemMessage.content, "System message should have Text content")
         assertEquals(
             "You are a helpful assistant. Please answer user questions accurately.",
-            prompt.messages[0].content
+            systemMessage.content.text()
         )
 
+        // User message should have Parts content (text + attachment)
         val userMessage = prompt.messages[1] as Message.User
-        assertEquals(
-            "I have a question about programming.\nHow do I implement a binary search in Kotlin?",
-            userMessage.content
-        )
+        assertIs<Content.Parts>(userMessage.content, "User message with attachments should have Parts content")
 
-        assertEquals(1, userMessage.attachments.size, "User message should have an image attachment")
+        val userParts = userMessage.content.value
+        assertEquals(2, userParts.size, "Should have text part and image part")
 
-        val expectedImage = Attachment.Image(
+        val expectedUserText = ContentPart.Text("I have a question about programming.\nHow do I implement a binary search in Kotlin?")
+        assertEquals(expectedUserText, userParts[0], "First part should be text")
+
+        val expectedImage = ContentPart.Image(
             content = AttachmentContent.URL("https://example.com/code_example.png"),
             format = "png",
             mimeType = "image/png",
             fileName = "code_example.png"
         )
-        assertEquals(expectedImage, userMessage.attachments.single(), "Attachment should match expected Image")
+        assertEquals(expectedImage, userParts[1], "Second part should match expected Image")
 
+        // Assistant message should have Text content
         val assistantMessage = prompt.messages[2] as Message.Assistant
-        assertTrue(assistantMessage.content.contains("Here's how you can implement binary search in Kotlin:"))
-        assertTrue(assistantMessage.content.contains("```kotlin"))
+        assertIs<Content.Text>(assistantMessage.content, "Assistant message should have Text content")
+        val assistantText = assistantMessage.content.text()
+        assertTrue(assistantText.contains("Here's how you can implement binary search in Kotlin:"))
+        assertTrue(assistantText.contains("```kotlin"))
 
+        // Tool messages should have Text content
         val toolCallMessage = prompt.messages[3] as Message.Tool.Call
         assertEquals("tool_1", toolCallMessage.id)
         assertEquals("code_analyzer", toolCallMessage.tool)
-        assertEquals("Analyzing the code example...", toolCallMessage.content)
+        assertIs<Content.Text>(toolCallMessage.content, "Tool call message should have Text content")
+        assertEquals("Analyzing the code example...", toolCallMessage.content.text())
 
         val toolResultMessage = prompt.messages[4] as Message.Tool.Result
         assertEquals("tool_1", toolResultMessage.id)
         assertEquals("code_analyzer", toolResultMessage.tool)
-        assertEquals("The code looks correct.", toolResultMessage.content)
+        assertIs<Content.Text>(toolResultMessage.content, "Tool result message should have Text content")
+        assertEquals("The code looks correct.", toolResultMessage.content.text())
     }
 }

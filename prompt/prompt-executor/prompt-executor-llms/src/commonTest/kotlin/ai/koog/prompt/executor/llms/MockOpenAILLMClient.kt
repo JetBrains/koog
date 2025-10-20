@@ -6,6 +6,7 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.message.Content
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
@@ -33,7 +34,7 @@ internal class MockOpenAILLMClient @JvmOverloads constructor(
         } else {
             return listOf(
                 Message.Assistant(
-                    executeResponseContent,
+                    Content.Text(executeResponseContent),
                     ResponseMetaInfo.create(clock)
                 )
             )

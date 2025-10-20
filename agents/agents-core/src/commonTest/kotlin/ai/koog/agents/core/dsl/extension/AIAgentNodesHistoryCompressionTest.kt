@@ -80,7 +80,7 @@ class AIAgentNodesHistoryCompressionTest {
 
         // Verify that the final messages include the TLDR
         val tldrMessages = testExecutor.messages.filterIsInstance<Message.Assistant>()
-            .filter { it.content.startsWith("TLDR") }
+            .filter { it.content.text().startsWith("TLDR") }
         assertEquals(1, tldrMessages.size, "There should be exactly one TLDR message in the final history")
     }
 
@@ -132,7 +132,7 @@ class AIAgentNodesHistoryCompressionTest {
 
         // Verify that the final messages include the TLDR
         val tldrMessages = testExecutor.messages.filterIsInstance<Message.Assistant>()
-            .filter { it.content.startsWith("TLDR") }
+            .filter { it.content.text().startsWith("TLDR") }
         assertEquals(1, tldrMessages.size, "There should be exactly one TLDR message in the final history")
     }
 
@@ -195,7 +195,7 @@ class AIAgentNodesHistoryCompressionTest {
 
         // Verify that the final messages include the TLDRs
         val tldrMessages = testExecutor.messages.filterIsInstance<Message.Assistant>()
-            .filter { it.content.startsWith("TLDR") }
+            .filter { it.content.text().startsWith("TLDR") }
 
         assertEquals(8, testExecutor.tldrCount)
         assertEquals(

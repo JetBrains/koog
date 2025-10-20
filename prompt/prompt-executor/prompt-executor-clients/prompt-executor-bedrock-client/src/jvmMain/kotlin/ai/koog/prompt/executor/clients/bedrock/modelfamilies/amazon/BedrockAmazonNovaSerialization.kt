@@ -5,6 +5,7 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockToolSerialization
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.message.Content
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
@@ -44,7 +45,7 @@ internal object BedrockAmazonNovaSerialization {
     internal fun createNovaRequest(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): NovaRequest {
         val systemMessages = prompt.messages
             .filterIsInstance<Message.System>()
-            .map { NovaSystemMessage(text = it.content) }
+            .map { NovaSystemMessage(text = it.content.text()) }
             .takeIf { it.isNotEmpty() }
 
         val conversationMessages = prompt.messages
@@ -52,12 +53,12 @@ internal object BedrockAmazonNovaSerialization {
                 when (msg) {
                     is Message.User -> NovaMessage(
                         role = "user",
-                        content = NovaContent(text = msg.content)
+                        content = NovaContent(text = msg.content.text())
                     )
 
                     is Message.Assistant -> NovaMessage(
                         role = "assistant",
-                        content = NovaContent(text = msg.content)
+                        content = NovaContent(text = msg.content.text())
                     )
 
                     is Message.Tool.Call -> NovaMessage(
@@ -76,7 +77,7 @@ internal object BedrockAmazonNovaSerialization {
                         content = NovaContent(
                             toolResult = NovaToolResult(
                                 msg.id ?: Uuid.random().toString(),
-                                NovaToolResultContent(msg.content),
+                                NovaToolResultContent(msg.content.text()),
                                 // right now, `Message.Tool.Result` does not know
                                 // if the call was successful or not
                                 "success"
@@ -121,7 +122,7 @@ internal object BedrockAmazonNovaSerialization {
         return response.output.message.content.map { content ->
             when {
                 content.text != null -> Message.Assistant(
-                    content = content.text,
+                    content = Content.Text(content.text),
                     finishReason = response.stopReason,
                     metaInfo = metaInfo
                 )
@@ -129,7 +130,7 @@ internal object BedrockAmazonNovaSerialization {
                 content.toolUse != null -> Message.Tool.Call(
                     id = content.toolUse.toolUseId,
                     tool = content.toolUse.name,
-                    content = content.toolUse.input.toString(),
+                    content = Content.Text(content.toolUse.input.toString()),
                     metaInfo = metaInfo
                 )
 

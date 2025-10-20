@@ -15,7 +15,7 @@ internal object EventBodyFields {
                     buildMap {
                         val functionMap = buildMap {
                             put("name", HiddenString(tool.tool))
-                            put("arguments", HiddenString(tool.content))
+                            put("arguments", HiddenString(tool.content.text()))
                         }
 
                         put("function", functionMap)

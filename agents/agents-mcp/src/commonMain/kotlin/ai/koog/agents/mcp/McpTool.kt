@@ -2,8 +2,6 @@ package ai.koog.agents.mcp
 
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.agents.core.tools.ToolResult
-import ai.koog.agents.core.tools.ToolResultUtils
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.modelcontextprotocol.kotlin.sdk.PromptMessageContent
 import io.modelcontextprotocol.kotlin.sdk.TextContent
@@ -98,6 +96,35 @@ public class McpTool(
     }
 
     /**
+     * Custom serializer for the Result class.
+     *
+     * This serializer uses the toStringDefault() method for non-JSON encoders,
+     * while maintaining full JSON serialization for JsonEncoder.
+     */
+    public class ResultSerializer : KSerializer<Result> {
+        private val defaultSerializer = Result.serializer()
+
+        override val descriptor: SerialDescriptor = defaultSerializer.descriptor
+
+        override fun serialize(encoder: Encoder, value: Result) {
+            when (encoder) {
+                is JsonEncoder -> {
+                    // For JSON encoding, use the default serialization
+                    defaultSerializer.serialize(encoder, value)
+                }
+                else -> {
+                    // For other encoders (like string output), use toStringDefault
+                    encoder.encodeString(value.toStringDefault())
+                }
+            }
+        }
+
+        override fun deserialize(decoder: Decoder): Result {
+            return defaultSerializer.deserialize(decoder)
+        }
+    }
+
+    /**
      * Result of an MCP tool call.
      *
      * This class wraps a list of PromptMessageContent objects returned by an MCP tool.
@@ -105,8 +132,8 @@ public class McpTool(
      *
      * @property promptMessageContents The list of content items returned by the MCP tool.
      */
-    @Serializable
-    public class Result(public val promptMessageContents: List<PromptMessageContent>) : ToolResult.TextSerializable() {
+    @Serializable(with = ResultSerializer::class)
+    public class Result(public val promptMessageContents: List<PromptMessageContent>) {
         /**
          * Converts the result to a string representation.
          *
@@ -115,7 +142,7 @@ public class McpTool(
          *
          * @return A string representation of the result.
          */
-        override fun textForLLM(): String {
+        public fun textForLLM(): String {
             if (promptMessageContents.isEmpty()) {
                 return "[No content]"
             }
@@ -128,10 +155,17 @@ public class McpTool(
                 }
             }
         }
+
+        /**
+         * Default string representation using textForLLM.
+         *
+         * @return A string representation of the result.
+         */
+        public fun toStringDefault(): String = textForLLM()
     }
 
     override val argsSerializer: KSerializer<Args> = ArgsSerializer()
-    override val resultSerializer: KSerializer<Result> = ToolResultUtils.toTextSerializer()
+    override val resultSerializer: KSerializer<Result> = ResultSerializer()
 
     /**
      * Executes the MCP tool with the given arguments.

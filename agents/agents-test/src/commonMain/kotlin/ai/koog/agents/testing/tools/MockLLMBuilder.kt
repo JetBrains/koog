@@ -5,6 +5,7 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.ToolResult
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.message.Content
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.tokenizer.Tokenizer
@@ -183,7 +184,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
                 Message.Tool.Call(
                     id = toolCallId,
                     tool = tool.name,
-                    content = toolContent,
+                    content = Content.Text(toolContent),
                     metaInfo = ResponseMetaInfo.create(clock, outputTokensCount = tokenizer?.countTokens(toolContent))
                 )
             )
@@ -207,7 +208,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
                 Message.Tool.Call(
                     id = null,
                     tool = tool.name,
-                    content = toolContent,
+                    content = Content.Text(toolContent),
                     metaInfo = ResponseMetaInfo.create(clock, outputTokensCount = tokenizer?.countTokens(toolContent))
                 )
             )
@@ -230,7 +231,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
                 Message.Tool.Call(
                     id = null,
                     tool = tool.name,
-                    content = toolContent,
+                    content = Content.Text(toolContent),
                     metaInfo = ResponseMetaInfo.create(clock, outputTokensCount = tokenizer?.countTokens(toolContent))
                 )
             }
@@ -252,7 +253,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
                 Message.Tool.Call(
                     id = null,
                     tool = tool.name,
-                    content = toolContent,
+                    content = Content.Text(toolContent),
                     metaInfo = ResponseMetaInfo.create(clock, outputTokensCount = tokenizer?.countTokens(toolContent))
                 )
             }
@@ -277,7 +278,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
                 Message.Tool.Call(
                     id = null,
                     tool = tool.name,
-                    content = toolContent,
+                    content = Content.Text(toolContent),
                     metaInfo = ResponseMetaInfo.create(clock, outputTokensCount = tokenizer?.countTokens(toolContent))
                 )
             }
@@ -305,7 +306,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
                 Message.Tool.Call(
                     id = null,
                     tool = tool.name,
-                    content = toolContent,
+                    content = Content.Text(toolContent),
                     metaInfo = ResponseMetaInfo.create(clock, outputTokensCount = tokenizer?.countTokens(toolContent))
                 )
             )
@@ -339,7 +340,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
                 Message.Tool.Call(
                     id = null,
                     tool = tool.name,
-                    content = toolContent,
+                    content = Content.Text(toolContent),
                     metaInfo = ResponseMetaInfo.create(clock, outputTokensCount = tokenizer?.countTokens(toolContent))
                 )
             }
@@ -752,7 +753,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
             val texts = value.map { text -> text.trimIndent() }
             texts.map { text ->
                 Message.Assistant(
-                    text,
+                    Content.Text(text),
                     ResponseMetaInfo.create(clock, outputTokensCount = tokenizer?.countTokens(text))
                 )
             }
@@ -769,7 +770,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
             val texts = value.map { text -> text.trimIndent() }
             texts.map { text ->
                 Message.Assistant(
-                    text,
+                    Content.Text(text),
                     ResponseMetaInfo.create(clock, outputTokensCount = tokenizer?.countTokens(text))
                 )
             }
@@ -787,7 +788,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
             conditionalResponses.takeIf { it.isNotEmpty() }?.mapValues { (_, textResponse) ->
                 listOf(
                     Message.Assistant(
-                        content = textResponse,
+                        content = Content.Text(textResponse),
                         metaInfo = ResponseMetaInfo.create(clock)
                     )
                 )
@@ -803,7 +804,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
             partialMatches = combinedPartialMatches.takeIf { it.isNotEmpty() },
             exactMatches = combinedExactMatches.takeIf { it.isNotEmpty() },
             conditional = combinedConditionalMatches,
-            defaultResponse = listOf(Message.Assistant(defaultResponse, ResponseMetaInfo.create(clock)))
+            defaultResponse = listOf(Message.Assistant(Content.Text(defaultResponse), ResponseMetaInfo.create(clock)))
         )
 
         val moderationResponseMatcher = ResponseMatcher(

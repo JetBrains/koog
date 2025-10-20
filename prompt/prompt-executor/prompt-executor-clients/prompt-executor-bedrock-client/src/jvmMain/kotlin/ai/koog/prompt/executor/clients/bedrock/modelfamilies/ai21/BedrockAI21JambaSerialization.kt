@@ -5,6 +5,7 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockToolSerialization
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.message.Content
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
@@ -30,15 +31,15 @@ internal object BedrockAI21JambaSerialization {
         prompt.messages.forEach { msg ->
             when (msg) {
                 is Message.System -> messages.add(
-                    JambaMessage(role = "system", content = msg.content)
+                    JambaMessage(role = "system", content = msg.content.text())
                 )
 
                 is Message.User -> messages.add(
-                    JambaMessage(role = "user", content = msg.content)
+                    JambaMessage(role = "user", content = msg.content.text())
                 )
 
                 is Message.Assistant -> messages.add(
-                    JambaMessage(role = "assistant", content = msg.content)
+                    JambaMessage(role = "assistant", content = msg.content.text())
                 )
 
                 is Message.Tool.Call -> {
@@ -50,7 +51,7 @@ internal object BedrockAI21JambaSerialization {
                             id = msg.id ?: Uuid.random().toString(),
                             function = JambaFunctionCall(
                                 name = msg.tool,
-                                arguments = msg.content
+                                arguments = msg.content.text()
                             )
                         )
                         messages[messages.lastIndex] = lastMessage.copy(toolCalls = updatedToolCalls)
@@ -65,7 +66,7 @@ internal object BedrockAI21JambaSerialization {
                                         id = msg.id ?: Uuid.random().toString(),
                                         function = JambaFunctionCall(
                                             name = msg.tool,
-                                            arguments = msg.content
+                                            arguments = msg.content.text()
                                         )
                                     )
                                 )
@@ -77,7 +78,7 @@ internal object BedrockAI21JambaSerialization {
                 is Message.Tool.Result -> messages.add(
                     JambaMessage(
                         role = "tool",
-                        content = msg.content,
+                        content = msg.content.text(),
                         toolCallId = msg.id ?: Uuid.random().toString()
                     )
                 )
@@ -147,7 +148,7 @@ internal object BedrockAI21JambaSerialization {
             choice.message.content?.let { content ->
                 messages.add(
                     Message.Assistant(
-                        content = content,
+                        content = Content.Text(content),
                         finishReason = choice.finishReason,
                         metaInfo = metaInfo
                     )
@@ -160,7 +161,7 @@ internal object BedrockAI21JambaSerialization {
                     Message.Tool.Call(
                         id = toolCall.id,
                         tool = toolCall.function.name,
-                        content = toolCall.function.arguments,
+                        content = Content.Text(toolCall.function.arguments),
                         metaInfo = metaInfo
                     )
                 )

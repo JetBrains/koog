@@ -47,7 +47,7 @@ private fun singleRunWithParallelAbility(parallelTools: Boolean) = strategy("sin
     edge(
         nodeCallLLM forwardTo nodeFinish
             onMultipleAssistantMessages { true }
-            transformed { it.joinToString("\n") { message -> message.content } }
+            transformed { it.joinToString("\n") { message -> message.content.text() } }
     )
 
     edge(nodeExecuteTool forwardTo nodeSendToolResult)
@@ -55,7 +55,7 @@ private fun singleRunWithParallelAbility(parallelTools: Boolean) = strategy("sin
     edge(
         nodeSendToolResult forwardTo nodeFinish
             onMultipleAssistantMessages { true }
-            transformed { it.joinToString("\n") { message -> message.content } }
+            transformed { it.joinToString("\n") { message -> message.content.text() } }
     )
 
     edge(nodeSendToolResult forwardTo nodeExecuteTool onMultipleToolCalls { true })

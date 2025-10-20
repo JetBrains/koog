@@ -135,7 +135,7 @@ class AIAgentNodesTest {
             assertTrue(executionEvents.contains("compress -> nodeFinish"), "Should transition from compress to finish")
 
             assertTrue(
-                agentConfig.prompt.messages.any { it.content.contains("testing history compression") },
+                agentConfig.prompt.messages.any { it.content.text().contains("testing history compression") },
                 "Prompt should contain test content for compression"
             )
             assertTrue(

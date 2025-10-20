@@ -5,6 +5,7 @@ import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.message.Content
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
@@ -58,17 +59,17 @@ class TestLLMExecutor : PromptExecutor {
         messages.addAll(prompt.messages)
 
         // For compression test, return a TLDR summary
-        if (prompt.messages.any { it.content.contains("Create a comprehensive summary of this conversation") }) {
+        if (prompt.messages.any { it.content.text().contains("Create a comprehensive summary of this conversation") }) {
             tldrCount++
             val tldrResponse = Message.Assistant(
-                "TLDR #$tldrCount: Summary of conversation history",
+                Content.Text("TLDR #$tldrCount: Summary of conversation history"),
                 metaInfo = ResponseMetaInfo.create(testClock)
             )
             messages.add(tldrResponse)
             return tldrResponse
         }
 
-        val response = Message.Assistant("Default test response", metaInfo = ResponseMetaInfo.create(testClock))
+        val response = Message.Assistant(Content.Text("Default test response"), metaInfo = ResponseMetaInfo.create(testClock))
         messages.add(response)
         return response
     }

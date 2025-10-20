@@ -5,8 +5,9 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.ollama.tools.json.toJSONSchema
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.message.Attachment
 import ai.koog.prompt.message.AttachmentContent
+import ai.koog.prompt.message.Content
+import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
@@ -22,14 +23,14 @@ internal fun Prompt.toOllamaChatMessages(model: LLModel): List<OllamaChatMessage
         val converted = when (message) {
             is Message.System -> OllamaChatMessageDTO(
                 role = "system",
-                content = message.content
+                content = message.content.text()
             )
 
             is Message.User -> message.toOllamaChatMessage(model)
 
             is Message.Assistant -> OllamaChatMessageDTO(
                 role = "assistant",
-                content = message.content
+                content = message.content.text()
             )
 
             is Message.Tool.Call -> OllamaChatMessageDTO(
@@ -39,7 +40,7 @@ internal fun Prompt.toOllamaChatMessages(model: LLModel): List<OllamaChatMessage
                     OllamaToolCallDTO(
                         function = OllamaToolCallDTO.Call(
                             name = message.tool,
-                            arguments = Json.parseToJsonElement(message.content)
+                            arguments = Json.parseToJsonElement(message.content.text())
                         )
                         // Note: Ollama doesn't support tool call IDs in requests,
                         // so we don't include the message.id here
@@ -49,7 +50,7 @@ internal fun Prompt.toOllamaChatMessages(model: LLModel): List<OllamaChatMessage
 
             is Message.Tool.Result -> OllamaChatMessageDTO(
                 role = "tool",
-                content = message.content
+                content = message.content.text()
             )
         }
 
@@ -59,32 +60,43 @@ internal fun Prompt.toOllamaChatMessages(model: LLModel): List<OllamaChatMessage
 }
 
 private fun Message.User.toOllamaChatMessage(model: LLModel): OllamaChatMessageDTO {
-    val images = mutableListOf<String>()
+    return when (val content = this.content) {
+        is Content.Text -> {
+            OllamaChatMessageDTO(
+                role = "user",
+                content = content.value,
+            )
+        }
 
-    attachments.forEach { attachment ->
-        when (attachment) {
-            is Attachment.Image -> {
-                require(LLMCapability.Vision.Image in model.capabilities) {
-                    "Model ${model.id} doesn't support images"
+        is Content.Parts -> {
+            val images = mutableListOf<String>()
+
+            content.value.forEach { part ->
+                when (part) {
+                    is ContentPart.Image -> {
+                        require(LLMCapability.Vision.Image in model.capabilities) {
+                            "Model ${model.id} doesn't support images"
+                        }
+
+                        val image: String = when (val content = part.content) {
+                            is AttachmentContent.Binary -> content.asBase64()
+                            else -> throw IllegalArgumentException("Unsupported image attachment content: ${content::class}")
+                        }
+
+                        images += image
+                    }
+
+                    else -> throw IllegalArgumentException("Unsupported attachment type: $part")
                 }
-
-                val image: String = when (val content = attachment.content) {
-                    is AttachmentContent.Binary -> content.asBase64()
-                    else -> throw IllegalArgumentException("Unsupported image attachment content: ${content::class}")
-                }
-
-                images += image
             }
 
-            else -> throw IllegalArgumentException("Unsupported attachment type: $attachment")
+            OllamaChatMessageDTO(
+                role = "user",
+                content = content.text(),
+                images = images.takeIf { it.isNotEmpty() }
+            )
         }
     }
-
-    return OllamaChatMessageDTO(
-        role = "user",
-        content = this.content,
-        images = images.takeIf { it.isNotEmpty() }
-    )
 }
 
 /**
@@ -134,7 +146,7 @@ internal fun OllamaChatMessageDTO.getFirstToolCall(responseMetadata: ResponseMet
         // Ollama doesn't provide tool call IDs, so we create one based on content
         id = generateToolCallId(name, content),
         tool = name,
-        content = content,
+        content = Content.Text(content),
         metaInfo = responseMetadata
     )
 }
@@ -155,7 +167,7 @@ internal fun OllamaChatMessageDTO.getToolCalls(responseMetadata: ResponseMetaInf
         Message.Tool.Call(
             id = generateToolCallId(name, content, index),
             tool = name,
-            content = content,
+            content = Content.Text(content),
             metaInfo = responseMetadata
         )
     }

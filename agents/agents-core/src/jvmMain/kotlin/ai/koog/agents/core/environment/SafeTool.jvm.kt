@@ -5,6 +5,7 @@ package ai.koog.agents.core.environment
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.reflect.ToolFromCallable
 import ai.koog.agents.core.tools.reflect.asTool
+import ai.koog.prompt.message.Content
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import kotlinx.datetime.Clock
@@ -153,7 +154,7 @@ public data class SafeToolFromCallable<TResult>(
             Message.Tool.Call(
                 id = null,
                 tool = tool.name,
-                content = tool.encodeArgsToString(encodeArgs(*args)),
+                content = Content.Text(tool.encodeArgsToString(encodeArgs(*args))),
                 metaInfo = ResponseMetaInfo.create(clock = clock)
             )
         ).toSafeResultFromCallable()
@@ -170,7 +171,7 @@ public data class SafeToolFromCallable<TResult>(
             Message.Tool.Call(
                 id = null,
                 tool = tool.name,
-                content = tool.encodeArgsToString(encodeArgs(*args)),
+                content = Content.Text(tool.encodeArgsToString(encodeArgs(*args))),
                 metaInfo = ResponseMetaInfo.create(clock = clock)
             )
         ).content

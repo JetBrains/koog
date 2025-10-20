@@ -155,7 +155,7 @@ class SubgraphWithTaskTest {
                     }
 
                     onLLMCallStarting {
-                        actualLLMCalls += it.prompt.messages.last().content
+                        actualLLMCalls += it.prompt.messages.last().content.text()
                     }
                 }
             }
@@ -230,7 +230,7 @@ class SubgraphWithTaskTest {
                     }
 
                     onLLMCallStarting {
-                        actualLLMCalls += it.prompt.messages.last().content
+                        actualLLMCalls += it.prompt.messages.last().content.text()
                     }
                 }
             }
@@ -301,7 +301,7 @@ class SubgraphWithTaskTest {
                     }
 
                     onLLMCallStarting {
-                        actualLLMCalls += it.prompt.messages.last().content
+                        actualLLMCalls += it.prompt.messages.last().content.text()
                     }
                 }
             }

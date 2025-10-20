@@ -23,8 +23,9 @@ import ai.koog.prompt.executor.clients.anthropic.models.SystemAnthropicMessage
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.message.Attachment
 import ai.koog.prompt.message.AttachmentContent
+import ai.koog.prompt.message.Content
+import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
@@ -308,8 +309,8 @@ public open class AnthropicLLMClient(
         for (message in prompt.messages) {
             when (message) {
                 is Message.System -> {
-                    if (!message.content.isEmpty()) {
-                        systemMessage.add(SystemAnthropicMessage(message.content))
+                    if (!message.content.text().isEmpty()) {
+                        systemMessage.add(SystemAnthropicMessage(message.content.text()))
                     }
                 }
 
@@ -321,7 +322,7 @@ public open class AnthropicLLMClient(
                     messages.add(
                         AnthropicMessage(
                             role = "assistant",
-                            content = listOf(AnthropicContent.Text(message.content))
+                            content = listOf(AnthropicContent.Text(message.content.text()))
                         )
                     )
                 }
@@ -333,7 +334,7 @@ public open class AnthropicLLMClient(
                             content = listOf(
                                 AnthropicContent.ToolResult(
                                     toolUseId = message.id ?: "",
-                                    content = message.content
+                                    content = message.content.text()
                                 )
                             )
                         )
@@ -349,7 +350,7 @@ public open class AnthropicLLMClient(
                                 AnthropicContent.ToolUse(
                                     id = message.id ?: Uuid.random().toString(),
                                     name = message.tool,
-                                    input = Json.parseToJsonElement(message.content).jsonObject
+                                    input = Json.parseToJsonElement(message.content.text()).jsonObject
                                 )
                             )
                         )
@@ -428,50 +429,52 @@ public open class AnthropicLLMClient(
 
     private fun Message.User.toAnthropicUserMessage(model: LLModel): AnthropicMessage {
         val listOfContent = buildList {
-            if (content.isNotEmpty() || attachments.isEmpty()) {
-                add(AnthropicContent.Text(content))
-            }
+            when (val content = content) {
+                is Content.Text -> add(AnthropicContent.Text(content.value))
+                is Content.Parts -> content.value.forEach { part ->
+                    when (part) {
+                        is ContentPart.Text -> add(AnthropicContent.Text(part.text))
 
-            attachments.forEach { attachment ->
-                when (attachment) {
-                    is Attachment.Image -> {
-                        require(model.capabilities.contains(LLMCapability.Vision.Image)) {
-                            "Model ${model.id} does not support images"
+                        is ContentPart.Image -> {
+                            require(model.capabilities.contains(LLMCapability.Vision.Image)) {
+                                "Model ${model.id} does not support images"
+                            }
+
+                            val imageSource: ImageSource = when (val content = part.content) {
+                                is AttachmentContent.URL -> ImageSource.Url(content.url)
+                                is AttachmentContent.Binary -> ImageSource.Base64(content.asBase64(), part.mimeType)
+                                else -> throw IllegalArgumentException(
+                                    "Unsupported image attachment content: ${content::class}"
+                                )
+                            }
+
+                            add(AnthropicContent.Image(imageSource))
                         }
 
-                        val imageSource: ImageSource = when (val content = attachment.content) {
-                            is AttachmentContent.URL -> ImageSource.Url(content.url)
-                            is AttachmentContent.Binary -> ImageSource.Base64(content.asBase64(), attachment.mimeType)
-                            else -> throw IllegalArgumentException(
-                                "Unsupported image attachment content: ${content::class}"
-                            )
+                        is ContentPart.File -> {
+                            require(model.capabilities.contains(LLMCapability.Document)) {
+                                "Model ${model.id} does not support files"
+                            }
+
+                            val documentSource: DocumentSource = when (val content = part.content) {
+                                is AttachmentContent.URL -> DocumentSource.Url(content.url)
+                                is AttachmentContent.Binary -> DocumentSource.Base64(
+                                    content.asBase64(),
+                                    part.mimeType
+
+                                )
+
+                                is AttachmentContent.PlainText -> DocumentSource.PlainText(
+                                    content.text,
+                                    part.mimeType
+                                )
+                            }
+
+                            add(AnthropicContent.Document(documentSource))
                         }
 
-                        add(AnthropicContent.Image(imageSource))
+                        else -> throw IllegalArgumentException("Unsupported attachment type: $part")
                     }
-
-                    is Attachment.File -> {
-                        require(model.capabilities.contains(LLMCapability.Document)) {
-                            "Model ${model.id} does not support files"
-                        }
-
-                        val documentSource: DocumentSource = when (val content = attachment.content) {
-                            is AttachmentContent.URL -> DocumentSource.Url(content.url)
-                            is AttachmentContent.Binary -> DocumentSource.Base64(
-                                content.asBase64(),
-                                attachment.mimeType
-                            )
-
-                            is AttachmentContent.PlainText -> DocumentSource.PlainText(
-                                content.text,
-                                attachment.mimeType
-                            )
-                        }
-
-                        add(AnthropicContent.Document(documentSource))
-                    }
-
-                    else -> throw IllegalArgumentException("Unsupported attachment type: $attachment")
                 }
             }
         }
@@ -489,7 +492,7 @@ public open class AnthropicLLMClient(
             when (content) {
                 is AnthropicResponseContent.Text -> {
                     Message.Assistant(
-                        content = content.text,
+                        content = Content.Text(content.text),
                         finishReason = response.stopReason,
                         metaInfo = ResponseMetaInfo.create(
                             clock,
@@ -504,7 +507,7 @@ public open class AnthropicLLMClient(
                     Message.Tool.Call(
                         id = content.id,
                         tool = content.name,
-                        content = content.input.toString(),
+                        content = Content.Text(content.input.toString()),
                         metaInfo = ResponseMetaInfo.create(
                             clock,
                             totalTokensCount = totalTokensCount,
@@ -522,7 +525,7 @@ public open class AnthropicLLMClient(
             // If no messages where returned, return an empty message and check stopReason
             responses.isEmpty() -> listOf(
                 Message.Assistant(
-                    content = "",
+                    content = Content.Text(""),
                     finishReason = response.stopReason,
                     metaInfo = ResponseMetaInfo.create(
                         clock,

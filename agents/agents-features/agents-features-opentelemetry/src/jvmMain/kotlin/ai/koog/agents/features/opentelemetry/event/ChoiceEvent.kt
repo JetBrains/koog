@@ -29,7 +29,7 @@ internal class ChoiceEvent(
                 addBodyField(
                     EventBodyFields.Message(
                         role = message.role,
-                        content = message.content
+                        content = message.content.text()
                     )
                 )
 

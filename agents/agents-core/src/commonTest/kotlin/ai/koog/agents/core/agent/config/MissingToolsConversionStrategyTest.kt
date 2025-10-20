@@ -2,6 +2,7 @@ package ai.koog.agents.core.agent.config
 
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.prompt
+import ai.koog.prompt.message.Content
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
@@ -35,33 +36,33 @@ class MissingToolsConversionStrategyTest {
         private val testToolCall = Message.Tool.Call(
             id = "test-call-id",
             tool = "test-tool",
-            content = """{"param": "value"}""",
+            content = Content.Text("""{"param": "value"}"""),
             metaInfo = ResponseMetaInfo.create(testClock),
         )
 
         private val anotherToolCall = Message.Tool.Call(
             id = "another-call-id",
             tool = "another-tool",
-            content = """{"param": "another-value"}""",
+            content = Content.Text("""{"param": "another-value"}"""),
             metaInfo = ResponseMetaInfo.create(testClock),
         )
 
         private val testToolResult = Message.Tool.Result(
             id = "test-call-id",
             tool = "test-tool",
-            content = "Test result content",
+            content = Content.Text("Test result content"),
             metaInfo = RequestMetaInfo.create(testClock),
         )
 
         private val anotherToolResult = Message.Tool.Result(
             id = "another-call-id",
             tool = "another-tool",
-            content = "Another test result content",
+            content = Content.Text("Another test result content"),
             metaInfo = RequestMetaInfo.create(testClock),
         )
 
         private val regularMessage = Message.User(
-            content = "Regular message content",
+            content = Content.Text("Regular message content"),
             metaInfo = RequestMetaInfo.create(testClock),
         )
     }
@@ -72,7 +73,7 @@ class MissingToolsConversionStrategyTest {
         val expectedContent =
             "{\"tool_call_id\":\"test-call-id\",\"tool_name\":\"test-tool\",\"tool_args\":{\"param\":\"value\"}}"
 
-        assertEquals(expectedContent, result.content)
+        assertEquals(expectedContent, result.content.text())
     }
 
     @Test
@@ -81,7 +82,7 @@ class MissingToolsConversionStrategyTest {
         val expectedContent =
             "{\"tool_call_id\":\"test-call-id\",\"tool_name\":\"test-tool\",\"tool_result\":\"Test result content\"}"
 
-        assertEquals(expectedContent, result.content)
+        assertEquals(expectedContent, result.content.text())
     }
 
     @Test
@@ -110,12 +111,12 @@ class MissingToolsConversionStrategyTest {
         val expectedToolResultContent =
             "{\"tool_call_id\":\"test-call-id\",\"tool_name\":\"test-tool\",\"tool_result\":\"Test result content\"}"
 
-        assertEquals("User message", messages[0].content)
-        assertEquals("Assistant message", messages[1].content)
+        assertEquals("User message", messages[0].content.text())
+        assertEquals("Assistant message", messages[1].content.text())
         assertTrue(messages[2] is Message.Assistant)
         assertTrue(messages[3] is Message.User)
-        assertEquals(expectedToolCallContent, messages[2].content)
-        assertEquals(expectedToolResultContent, messages[3].content)
+        assertEquals(expectedToolCallContent, messages[2].content.text())
+        assertEquals(expectedToolResultContent, messages[3].content.text())
     }
 
     @Test
@@ -141,8 +142,8 @@ class MissingToolsConversionStrategyTest {
             "{\"tool_call_id\":\"another-call-id\",\"tool_name\":\"another-tool\",\"tool_result\":\"Another test result content\"}"
 
         // first two messages should remain unchanged
-        assertEquals("User message", messages[0].content)
-        assertEquals("Assistant message", messages[1].content)
+        assertEquals("User message", messages[0].content.text())
+        assertEquals("Assistant message", messages[1].content.text())
 
         // testToolCall and testToolResult should remain as tool messages
         assertTrue(messages[2] is Message.Tool.Call)
@@ -152,8 +153,8 @@ class MissingToolsConversionStrategyTest {
 
         assertTrue(messages[4] is Message.Assistant)
         assertTrue(messages[5] is Message.User)
-        assertEquals(expectedAnotherToolCallContent, messages[4].content)
-        assertEquals(expectedAnotherToolResultContent, messages[5].content)
+        assertEquals(expectedAnotherToolCallContent, messages[4].content.text())
+        assertEquals(expectedAnotherToolResultContent, messages[5].content.text())
     }
 
     @Test
@@ -219,7 +220,7 @@ class MissingToolsConversionStrategyTest {
         val nullIdToolCall = Message.Tool.Call(
             id = null,
             tool = "test-tool",
-            content = """{"param": "value"}""",
+            content = Content.Text("""{"param": "value"}"""),
             metaInfo = ResponseMetaInfo.create(testClock)
         )
 
@@ -227,7 +228,7 @@ class MissingToolsConversionStrategyTest {
         val expectedContent = "{\"tool_name\":\"test-tool\",\"tool_args\":{\"param\":\"value\"}}"
 
         assertTrue(result is Message.Assistant)
-        assertEquals(expectedContent, result.content)
+        assertEquals(expectedContent, result.content.text())
     }
 
     @Test
@@ -235,7 +236,7 @@ class MissingToolsConversionStrategyTest {
         val nullIdToolResult = Message.Tool.Result(
             id = null,
             tool = "test-tool",
-            content = "Test result content",
+            content = Content.Text("Test result content"),
             metaInfo = RequestMetaInfo.create(testClock)
         )
 
@@ -243,6 +244,6 @@ class MissingToolsConversionStrategyTest {
         val expectedContent = "{\"tool_name\":\"test-tool\",\"tool_result\":\"Test result content\"}"
 
         assertTrue(result is Message.User)
-        assertEquals(expectedContent, result.content)
+        assertEquals(expectedContent, result.content.text())
     }
 }

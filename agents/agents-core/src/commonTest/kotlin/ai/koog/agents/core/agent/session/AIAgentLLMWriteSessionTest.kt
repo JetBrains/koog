@@ -19,6 +19,7 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.llm.OllamaModels
+import ai.koog.prompt.message.Content
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
@@ -33,9 +34,9 @@ import kotlin.test.assertTrue
 
 @OptIn(InternalAgentToolsApi::class)
 class AIAgentLLMWriteSessionTest {
-    private fun systemMessage(content: String) = Message.System(content, RequestMetaInfo.create(testClock))
-    private fun userMessage(content: String) = Message.User(content, RequestMetaInfo.create(testClock))
-    private fun assistantMessage(content: String) = Message.Assistant(content, ResponseMetaInfo.create(testClock))
+    private fun systemMessage(content: String) = Message.System(Content.Text(content), RequestMetaInfo.create(testClock))
+    private fun userMessage(content: String) = Message.User(Content.Text(content), RequestMetaInfo.create(testClock))
+    private fun assistantMessage(content: String) = Message.Assistant(Content.Text(content), ResponseMetaInfo.create(testClock))
 
     private object TestToolsEnabler : DirectToolCallsEnabler
 
@@ -182,7 +183,7 @@ class AIAgentLLMWriteSessionTest {
 
         val response = session.requestLLM()
 
-        assertEquals("This is a test response", response.content)
+        assertEquals("This is a test response", response.content.text())
         assertEquals(initialMessageCount + 1, session.prompt.messages.size)
         assertEquals(assistantMessage("This is a test response"), session.prompt.messages.last())
     }
@@ -198,7 +199,7 @@ class AIAgentLLMWriteSessionTest {
 
         val response = session.requestLLMWithoutTools()
 
-        assertEquals("Response without tools", response.content)
+        assertEquals("Response without tools", response.content.text())
         assertEquals(initialMessageCount + 1, session.prompt.messages.size)
         assertEquals(assistantMessage("Response without tools"), session.prompt.messages.last())
     }
@@ -302,7 +303,7 @@ class AIAgentLLMWriteSessionTest {
         assertEquals(userMessage("Additional user message"), session.prompt.messages[2])
 
         val response = session.requestLLM()
-        assertEquals("Updated prompt response", response.content)
+        assertEquals("Updated prompt response", response.content.text())
     }
 
     @Test
@@ -330,7 +331,7 @@ class AIAgentLLMWriteSessionTest {
         assertEquals(userMessage("Rewritten user message"), session.prompt.messages[1])
 
         val response = session.requestLLM()
-        assertEquals("Rewritten prompt response", response.content)
+        assertEquals("Rewritten prompt response", response.content.text())
     }
 
     @Test
@@ -349,7 +350,7 @@ class AIAgentLLMWriteSessionTest {
         assertEquals(newModel, session.model)
 
         val response = session.requestLLM()
-        assertEquals("Changed model response", response.content)
+        assertEquals("Changed model response", response.content.text())
     }
 
     @Test
@@ -364,6 +365,6 @@ class AIAgentLLMWriteSessionTest {
         assertEquals(0.5, session.prompt.params.temperature)
 
         val response = session.requestLLM()
-        assertEquals("Changed params response", response.content)
+        assertEquals("Changed params response", response.content.text())
     }
 }

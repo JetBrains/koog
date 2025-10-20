@@ -18,8 +18,9 @@ import ai.koog.prompt.executor.clients.bedrock.modelfamilies.meta.LlamaRequest
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.message.Attachment
 import ai.koog.prompt.message.AttachmentContent
+import ai.koog.prompt.message.Content
+import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.utils.io.SuitableForIO
@@ -428,9 +429,9 @@ public class BedrockLLMClient(
 
         content = buildList {
             prompt.messages.filterIsInstance<MessageType>().forEach { message ->
-                add(GuardrailContentBlock.Text(GuardrailTextBlock { text = message.content }))
-                if (message is Message.WithAttachments) {
-                    message.attachments.filterIsInstance<Attachment.Image>().forEach { image ->
+                add(GuardrailContentBlock.Text(GuardrailTextBlock { text = message.content.text() }))
+                if (message.content is Content.Parts) {
+                    (message.content as Content.Parts).value.filterIsInstance<ContentPart.Image>().forEach { image ->
                         add(
                             GuardrailContentBlock.Image(
                                 GuardrailImageBlock {

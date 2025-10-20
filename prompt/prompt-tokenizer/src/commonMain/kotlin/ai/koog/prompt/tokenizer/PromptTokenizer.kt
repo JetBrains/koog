@@ -44,7 +44,7 @@ public class OnDemandTokenizer(private val tokenizer: Tokenizer) : PromptTokeniz
      *                The content of the message is analyzed to estimate the token count.
      * @return The estimated number of tokens in the message content.
      */
-    public override fun tokenCountFor(message: Message): Int = tokenizer.countTokens(message.content)
+    public override fun tokenCountFor(message: Message): Int = tokenizer.countTokens(message.content.text())
 
     /**
      * Calculates the total number of tokens spent for the given prompt based on its messages.
@@ -85,7 +85,7 @@ public class CachingTokenizer(private val tokenizer: Tokenizer) : PromptTokenize
      * @return The number of tokens in the content of the message
      */
     public override fun tokenCountFor(message: Message): Int = cache.getOrPut(message) {
-        tokenizer.countTokens(message.content)
+        tokenizer.countTokens(message.content.text())
     }
 
     /**
