@@ -77,12 +77,20 @@ fun toolCallMessage(toolName: String, content: String): Message.Tool.Call =
         metaInfo = ResponseMetaInfo.create(testClock)
     )
 
-fun toolResult(toolCallId: String?, toolName: String, content: String, result: String): ReceivedToolResult =
+fun receivedToolResult(toolCallId: String?, toolName: String, content: String, result: String): ReceivedToolResult =
     ReceivedToolResult(
         id = toolCallId,
         tool = toolName,
         content = content,
         result = result
+    )
+
+fun toolResultMessage(toolCallId: String?, toolName: String, content: String, metaInfo: RequestMetaInfo): Message.Tool.Result =
+    Message.Tool.Result(
+        id = toolCallId,
+        tool = toolName,
+        content = content,
+        metaInfo = metaInfo
     )
 
 /**

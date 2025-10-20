@@ -286,7 +286,7 @@ public class FeatureMessageRemoteServer(
                         data = serverEventData,
                     )
 
-                    logger.debug { "Feature Message Remote Server. Sending SSE server event: $serverEvent" }
+                    logger.trace { "Feature Message Remote Server. Sending SSE server event: $serverEvent" }
                     send(serverEvent)
                 } catch (t: CancellationException) {
                     logger.info {

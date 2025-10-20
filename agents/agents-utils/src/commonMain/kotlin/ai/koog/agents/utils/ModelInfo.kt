@@ -38,7 +38,12 @@ public data class ModelInfo(
      */
     public val modelIdentifierName: String get() = displayName ?: "$provider/$model"
 
+    /**
+     * Companion object for the ModelInfo class that provides utility methods and constants
+     * related to model information parsing and representation.
+     */
     public companion object {
+
         /**
          * Represents an undefined or invalid ModelInfo instance
          * Used when model information cannot be determined or parsed

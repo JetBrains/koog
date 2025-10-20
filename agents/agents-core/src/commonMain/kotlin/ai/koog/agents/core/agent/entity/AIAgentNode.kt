@@ -163,7 +163,7 @@ public open class AIAgentNode<TInput, TOutput> internal constructor(
                     executeResult
                 } catch (t: Throwable) {
                     logger.error(t) { "Error executing node (name: $name): ${t.message}" }
-                    context.pipeline.onNodeExecutionFailed(this@AIAgentNode, context, t)
+                    context.pipeline.onNodeExecutionFailed(this@AIAgentNode, context, input, inputType, t)
                     throw t
                 }
 

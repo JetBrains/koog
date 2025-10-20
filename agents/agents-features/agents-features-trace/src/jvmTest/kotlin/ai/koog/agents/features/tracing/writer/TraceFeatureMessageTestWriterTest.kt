@@ -1,5 +1,6 @@
 package ai.koog.agents.features.tracing.writer
 
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeExecuteTool
@@ -16,7 +17,7 @@ import ai.koog.agents.core.feature.model.events.NodeExecutionFailedEvent
 import ai.koog.agents.core.feature.model.events.ToolCallCompletedEvent
 import ai.koog.agents.core.feature.model.events.ToolCallStartingEvent
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.features.tracing.eventString
+import ai.koog.agents.core.utils.SerializationUtil
 import ai.koog.agents.features.tracing.feature.Tracing
 import ai.koog.agents.features.tracing.mock.RecursiveTool
 import ai.koog.agents.features.tracing.mock.TestFeatureMessageWriter
@@ -31,6 +32,7 @@ import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.llm.toModelInfo
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
@@ -40,6 +42,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Instant
 import org.junit.jupiter.api.Assertions.assertEquals
+import kotlin.reflect.typeOf
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
@@ -299,6 +302,11 @@ class TraceFeatureMessageTestWriterTest {
                     NodeExecutionFailedEvent(
                         runId = writer.runId,
                         nodeName = nodeWithErrorName,
+                        input = @OptIn(InternalAgentsApi::class)
+                        SerializationUtil.trySerializeDataToJsonElement(
+                            data = "",
+                            dataType = typeOf<String>()
+                        ),
                         error = AIAgentError(testErrorMessage, expectedStackTrace, null),
                         timestamp = testClock.now().toEpochMilliseconds()
                     )
@@ -372,7 +380,7 @@ class TraceFeatureMessageTestWriterTest {
                     LLMStreamingStartingEvent(
                         runId = writer.runId,
                         prompt = expectedPrompt,
-                        model = model.eventString,
+                        model = model.toModelInfo().modelIdentifierName,
                         tools = toolRegistry.tools.map { it.name },
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),
@@ -384,7 +392,7 @@ class TraceFeatureMessageTestWriterTest {
                     LLMStreamingCompletedEvent(
                         runId = writer.runId,
                         prompt = expectedPrompt,
-                        model = model.eventString,
+                        model = model.toModelInfo().modelIdentifierName,
                         tools = toolRegistry.tools.map { it.name },
                         timestamp = testClock.now().toEpochMilliseconds()
                     )
@@ -485,7 +493,7 @@ class TraceFeatureMessageTestWriterTest {
                     LLMStreamingStartingEvent(
                         runId = writer.runId,
                         prompt = expectedPrompt,
-                        model = model.eventString,
+                        model = model.toModelInfo().modelIdentifierName,
                         tools = toolRegistry.tools.map { it.name },
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),
@@ -497,7 +505,7 @@ class TraceFeatureMessageTestWriterTest {
                     LLMStreamingCompletedEvent(
                         runId = writer.runId,
                         prompt = expectedPrompt,
-                        model = model.eventString,
+                        model = model.toModelInfo().modelIdentifierName,
                         tools = toolRegistry.tools.map { it.name },
                         timestamp = testClock.now().toEpochMilliseconds()
                     )
