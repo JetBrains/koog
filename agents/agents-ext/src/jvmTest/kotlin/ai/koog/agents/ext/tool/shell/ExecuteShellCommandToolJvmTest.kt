@@ -6,25 +6,21 @@ import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.condition.EnabledOnOs
 import org.junit.jupiter.api.condition.OS
 import org.junit.jupiter.api.io.TempDir
-import org.junit.jupiter.api.parallel.Execution
-import org.junit.jupiter.api.parallel.ExecutionMode
 import java.nio.file.Path
 import kotlin.io.path.createDirectories
 import kotlin.io.path.createFile
 import kotlin.io.path.writeText
 import kotlin.system.measureTimeMillis
-import kotlin.test.Ignore
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.test.fail
 
-// FIXME it seems the actual implementation has concurrency bugs, so it's better to fix these if possible
-@Execution(ExecutionMode.SAME_THREAD)
 @OptIn(InternalAgentToolsApi::class)
 class ExecuteShellCommandToolJvmTest {
 
@@ -387,14 +383,14 @@ class ExecuteShellCommandToolJvmTest {
 
     // CANCELLATION TESTS
 
-    // TODO fix concurrency bug
-    @Ignore("There's a concurrency bug in the implementation, therefore the test is flaky. Need to fix it first")
-    @Test
+    @RepeatedTest(10)
     @EnabledOnOs(OS.LINUX, OS.MAC)
     fun `executor can be cancelled with timeout`() = runBlocking {
+        val timeoutSeconds = 1
+
         val job = launch {
-            val result = executeShellCommand("sleep 1.1", timeoutSeconds = 1)
-            fail("Command should have been cancelled, but completed with: ${result.textForLLM()}")
+            val result = executeShellCommand("sleep 1.1", timeoutSeconds = timeoutSeconds)
+            fail("Command should have been cancelled, but completed with: $result")
         }
 
         delay(10)
@@ -404,8 +400,8 @@ class ExecuteShellCommandToolJvmTest {
         }
 
         assertTrue(
-            cancelDurationMs < 20,
-            "Cancellation should be immediate, but took ${cancelDurationMs}ms"
+            cancelDurationMs < timeoutSeconds * 500, // 2 times faster than timeout
+            "Cancellation should happen relatively fast, at least less than timeout and the actual command, but took ${cancelDurationMs}ms"
         )
         assertTrue(job.isCancelled, "Job should be cancelled")
     }

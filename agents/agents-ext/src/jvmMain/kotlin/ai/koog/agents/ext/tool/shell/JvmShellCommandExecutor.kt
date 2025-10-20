@@ -7,6 +7,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import java.io.File
+import java.io.IOException
 
 /**
  * Shell command executor using ProcessBuilder for JVM platforms.
@@ -50,43 +51,64 @@ public class JvmShellCommandExecutor : ShellCommandExecutor {
             .apply { workingDirectory?.let { directory(File(it)) } }
             .start()
 
-        val stdoutJob = launch {
-            process.inputStream.bufferedReader().useLines { lines ->
-                lines.forEach { stdoutBuilder.appendLine(it) }
-            }
-        }
-
-        val stderrJob = launch {
-            process.errorStream.bufferedReader().useLines { lines ->
-                lines.forEach { stderrBuilder.appendLine(it) }
-            }
-        }
-
         try {
+            /*
+             PLEASE NOTE: the way output is collected potentially allows for race conditions.
+             Since output collection job is started AFTER the process has started, it is possible for some events to
+             be emitted before the collection is set up, leading to missed events in the collected output.
+
+             The actual impact is likely to be minimal, but this is still a potential bug source.
+             Maybe a better collection strategy could be used in the future, like piping to temp files and then reading
+             from them. It is tricky and maybe even impossible to implement this fully in memory, since input streams
+             are available only once the process has started.
+             */
+            val stdoutJob = launch {
+                process.inputStream.bufferedReader().useLines { lines ->
+                    try {
+                        lines.forEach { stdoutBuilder.appendLine(it) }
+                    } catch (_: IOException) {
+                        // Ignore IO exception if the stream is closed and silently stop stream collection
+                    }
+                }
+            }
+
+            val stderrJob = launch {
+                process.errorStream.bufferedReader().useLines { lines ->
+                    try {
+                        lines.forEach { stderrBuilder.appendLine(it) }
+                    } catch (_: IOException) {
+                        // Ignore IO exception if the stream is closed and silently stop stream collection
+                    }
+                }
+            }
+
             val isCompleted = withTimeoutOrNull(timeoutSeconds * 1000L) {
                 process.onExit().await()
             } != null
+
+            if (!isCompleted) {
+                process.destroyForcibly()
+            }
 
             stdoutJob.join()
             stderrJob.join()
 
             if (!isCompleted) {
-                process.destroyForcibly()
-
                 val combinedPartialOutput = buildCombinedOutput(
                     stdoutBuilder.toString().trimEnd(),
                     stderrBuilder.toString().trimEnd(),
                     "Command timed out after $timeoutSeconds seconds"
                 )
-                return@withContext ExecutionResult(output = combinedPartialOutput, exitCode = null)
+
+                ExecutionResult(output = combinedPartialOutput, exitCode = null)
+            } else {
+                val combinedOutput = buildCombinedOutput(
+                    stdoutBuilder.toString().trimEnd(),
+                    stderrBuilder.toString().trimEnd()
+                )
+
+                ExecutionResult(output = combinedOutput, exitCode = process.exitValue())
             }
-
-            val combinedOutput = buildCombinedOutput(
-                stdoutBuilder.toString().trimEnd(),
-                stderrBuilder.toString().trimEnd()
-            )
-
-            return@withContext ExecutionResult(output = combinedOutput, exitCode = process.exitValue())
         } finally {
             // Kill the process even when canceled, otherwise it keeps running
             if (process.isAlive) {
