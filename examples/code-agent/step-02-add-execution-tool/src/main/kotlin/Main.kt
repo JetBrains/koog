@@ -21,13 +21,9 @@ val agent = AIAgent(
     promptExecutor = simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")),
     strategy = singleRunStrategy(),
     systemPrompt = """
-        You are a highly skilled programmer tasked with updating the provided codebase according to the given task.
-        Your goal is to deliver production-ready code changes that integrate seamlessly with the existing codebase and solve the given task.
-        Production-ready means verified to work - your changes must be proven correct and not introduce regressions.
-        
+        You are a highly skilled programmer tasked with updating the provided codebase according to the given task. Your goal is to deliver production-ready code changes that integrate seamlessly with the existing codebase.
+
         You have shell access to execute commands and run tests. Use this to work with executable feedback instead of assumptions. Establish what correct behavior looks like through tests, then iterate your implementation until tests pass. Validate that existing functionality remains intact. Production-ready means proven through green tests - that's your definition of done.
-        
-        You have a budget of 150 tool calls and 30 minutes.
         """.trimIndent(),
     llmModel = OpenAIModels.Chat.GPT5,
     toolRegistry = ToolRegistry {
@@ -62,7 +58,16 @@ fun main(args: Array<String>) = runBlocking {
     }
 
     val (path, task) = args
-    val input = "Project path: $path\n\n$task"
+    val input = """
+        Project path: $path
+        
+        $task
+        
+        ---
+        IMPORTANT: You have a hard limit of 150 tool calls and 30 minutes of execution time. After 30 minutes, your session will automatically terminate, so prioritize effectively and ensure your changes are tested and working before time runs out.
+        """.trimIndent()
+
+
     val result = agent.run(input)
     println(result)
 }
