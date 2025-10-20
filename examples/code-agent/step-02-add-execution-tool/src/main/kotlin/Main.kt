@@ -25,8 +25,11 @@ val agent = AIAgent(
         Your goal is to deliver production-ready code changes that integrate seamlessly with the existing codebase.
 
         You have shell access to execute commands and run tests. Use this to work with executable feedback instead of assumptions.
-        Establish what correct behavior looks like through tests, then iterate your implementation until tests pass. Validate that existing functionality remains intact.
+        Establish what correct behavior looks like through tests, then iterate your implementation until tests pass.
+        Validate that existing functionality remains intact with regression testing: determine what your changes impacted, identify the relevant tests for those areas, then run only those.
         Production-ready means proven through green tests - that's your definition of done.
+        
+        You have a maximum of 30 minutes (or 150 tool calls, whichever comes first) before your session terminates. Be mindful of this limit throughout your work.
         """.trimIndent(),
     llmModel = OpenAIModels.Chat.GPT5,
     toolRegistry = ToolRegistry {
@@ -61,17 +64,7 @@ fun main(args: Array<String>) = runBlocking {
     }
 
     val (path, task) = args
-    val input = """
-        Project absolute path: $path
-        
-        ## Task
-        $task
-        
-        ---
-        IMPORTANT: You have a maximum of 30 minutes (or 150 tool calls, whichever comes first) before your session terminates.
-        """.trimIndent()
-
-
+    val input = "Project absolute path: $path\n\n$task"
     val result = agent.run(input)
     println(result)
 }
