@@ -175,7 +175,7 @@ class AIAgentIntegrationTest {
                 ) {
                     system(
                         "You are a helpful assistant. " +
-                            "YOU MUST CALL TOOLS OR I WILL CHARGE YOU."
+                            "JUST CALL THE TOOLS, NO QUESTIONS ASKED."
                     )
                 },
                 model = model,
@@ -428,7 +428,7 @@ class AIAgentIntegrationTest {
 
                 val agent = AIAgent.invoke(
                     promptExecutor = executor,
-                    systemPrompt = systemPrompt + "ALWAYS USE TOOLS! THIS IS YOUR LEGAL OBLIGATION!",
+                    systemPrompt = systemPrompt + "JUST CALL THE TOOLS, NO QUESTIONS ASKED!",
                     strategy = singleRunStrategy(ToolCalls.SEQUENTIAL),
                     llmModel = model,
                     temperature = 1.0,

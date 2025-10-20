@@ -409,11 +409,10 @@ abstract class ExecutorIntegrationTestBase {
 
         val executor = getExecutor(model)
 
-        withRetry(times = 3, testName = "integration_testToolsWithNestedListParams[${model.id}]") {
+        withRetry(times = 3, testName = "integration_testToolsWithNullParams[${model.id}]") {
             val response = executor.execute(prompt, model, listOf(nullGiverTool))
             assertTrue(response.isNotEmpty(), "Response should not be empty")
-            assertEquals(
-                true,
+            assertTrue(
                 response.first { it is Message.Tool.Call }.content.contains("null"),
                 "Tool call response should contain null"
             )
@@ -457,7 +456,7 @@ abstract class ExecutorIntegrationTestBase {
 
         val executor = getExecutor(model)
 
-        withRetry(times = 3, testName = "integration_testToolsWithNestedListParams[${model.id}]") {
+        withRetry(times = 3, testName = "integration_testToolsWithAnyOfParams[${model.id}]") {
             val response = executor.execute(prompt, model, listOf(anyOfTool))
             assertTrue(response.isNotEmpty(), "Response should not be empty")
             assertTrue(response.any { it is Message.Tool.Call })
