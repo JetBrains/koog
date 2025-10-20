@@ -924,10 +924,7 @@ abstract class ExecutorIntegrationTestBase {
 
     open fun integration_testToolChoiceRequired(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
-        assumeTrue(
-            model.capabilities.containsAll(listOf(LLMCapability.Tools, LLMCapability.ToolChoice)),
-            "Model $model does not support tools and tool choice"
-        )
+        assumeTrue(LLMCapability.ToolChoice in model.capabilities, "Model $model does not support tool choice")
 
         val calculatorTool = createCalculatorTool()
         val prompt = createCalculatorPrompt()
@@ -952,15 +949,9 @@ abstract class ExecutorIntegrationTestBase {
 
     open fun integration_testToolChoiceNone(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
-        assumeTrue(
-            model.capabilities.containsAll(
-                listOf(
-                    LLMCapability.Tools,
-                    LLMCapability.ToolChoice,
-                )
-            ),
-            "Model $model does not support tools"
-        )
+
+        assumeTrue(model.provider != LLMProvider.Bedrock, "Bedrock API doesn't support 'none' tool choice.")
+        assumeTrue(LLMCapability.ToolChoice in model.capabilities, "Model $model does not support tool choice")
 
         val calculatorTool = createCalculatorTool()
         val prompt = createCalculatorPrompt()

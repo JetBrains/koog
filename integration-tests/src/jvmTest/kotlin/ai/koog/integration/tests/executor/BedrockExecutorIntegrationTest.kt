@@ -10,7 +10,6 @@ import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
-import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
@@ -136,12 +135,6 @@ class BedrockExecutorIntegrationTest : ExecutorIntegrationTestBase() {
     @MethodSource("bedrockCombinations")
     fun integration_testToolChoiceRequiredBedrock(model: LLModel) {
         integration_testToolChoiceRequired(model)
-    }
-
-    @ParameterizedTest
-    @MethodSource("bedrockCombinations")
-    fun integration_testToolChoiceNoneBedrock(model: LLModel) {
-        assumeTrue(false, "Bedrock API doesn't support 'none' tool choice.")
     }
 
     @ParameterizedTest
