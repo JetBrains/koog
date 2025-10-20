@@ -1,159 +1,157 @@
 # Overview
 
-Koog is an open-source JetBrains framework designed to build and run AI agents entirely in idiomatic Kotlin.
-It lets you create agents that can interact with tools, handle complex workflows, and communicate with users.
+Koog is an open-source JetBrains framework for building AI agents with an idiomatic, type-safe Kotlin DSL designed specifically for JVM and Kotlin developers.
+It lets you create agents that interact with tools, handle complex workflows, and communicate with users.
 
-The framework supports the following types of agents:
+You can customize agent capabilities with a modular feature system and deploy your agents across JVM, JS, WasmJS, Android, and iOS targets using Kotlin Multiplatform.
 
-* Single-run agents with minimal configuration that process a single input and provide a response.
-  An agent of this type operates within a single cycle of tool-calling to complete its task and provide a response.
-* Functional agents with lightweight, customizable logic defined by a lambda function to handle user input, interact with an LLM, call tools, and produce a final output.
-* Complex workflow agents with advanced capabilities that support custom strategies and configurations.
+<div class="grid cards" markdown>
 
-## Key features
+-   :material-rocket-launch:{ .lg .middle } [**Getting started**](getting-started.md)
 
-Key features of Koog include:
+    ---
 
-- **Multiplatform development**: Deploy agents across JVM, JS, WasmJS, Android, and iOS targets using Kotlin Multiplatform.
-- **Reliability and fault-tolerance**: Handle failures with built-in retries and restore the agent state at specific points during execution with the agent persistence feature.
-- **Intelligent history compression**: Optimize token usage while maintaining context in long-running conversations using advanced built-in history compression techniques.
-- **Enterprise-ready integrations**: Utilize integration with popular JVM frameworks such as Spring Boot and Ktor to embed Koog into your applications.
-- **Observability with OpenTelemetry exporters**: Monitor and debug applications with built-in support for popular observability providers (W&B Weave, Langfuse).
-- **LLM switching and seamless history adaptation**: Switch to a different LLM at any point without losing the existing conversation history, or reroute between multiple LLM providers.
-- **Integration with JVM and Kotlin applications**: Build AI agents with an idiomatic, type-safe Kotlin DSL designed specifically for JVM and Kotlin developers.
-- **Model Context Protocol integration**: Use Model Context Protocol (MCP) tools in AI agents.
-- **Knowledge retrieval and memory**: Retain and retrieve knowledge across conversations using vector embeddings, ranked document storage, and shared agent memory.
-- **Powerful Streaming API**: Process responses in real-time with streaming support and parallel tool calls.
-- **Modular feature system**: Customize agent capabilities through a composable architecture.
-- **Flexible graph workflows**: Design complex agent behaviors using intuitive graph-based workflows.
-- **Custom tool creation**: Enhance your agents with tools that access external systems and APIs.
-- **Comprehensive tracing**: Debug and monitor agent execution with detailed, configurable tracing.
+    Build and run your first AI agent
 
-## Available LLM providers and platforms
+-   :material-book-open-variant:{ .lg .middle } [**Glossary**](glossary.md)
 
-The LLM providers and platforms whose LLMs you can use to power your agent capabilities:
+    ---
 
-- Google
-- OpenAI
-- Anthropic
-- DeepSeek
-- OpenRouter
-- Ollama
-- Bedrock
+    Learn the essential terms
 
-For detailed guidance on using these providers with dedicated LLM clients, refer to [Runnning prompts with LLM clients](prompt-api.md#running-prompts-with-llm-clients).
+</div>
 
+## Agent types
 
-## Installation
+<div class="grid cards" markdown>
 
-To use Koog, you need to include all necessary dependencies in your build configuration.
+-   :material-robot-outline:{ .lg .middle } [**Basic agents**](basic-agents.md)
 
-**NB!** Ktor [client](https://ktor.io/docs/client-engines.html) and [server](https://ktor.io/docs/server-engines.html) engine dependencies are not included in the library by default, so you should add engines of your choice yourself.
+    ---
 
-### Gradle
+    Create and run agents that process a single input and provide a response
 
-#### Gradle (Kotlin DSL)
+-   :material-script-text-outline:{ .lg .middle } [**Functional agents**](functional-agents.md)
 
-1. Add dependencies to the `build.gradle.kts` file:
+    ---
 
-    ```
-    dependencies {
-        implementation("ai.koog:koog-agents:LATEST_VERSION")
-       // include Ktor client dependency explicitly
-        implementation("io.ktor:ktor-client-cio:$ktor_version")
-    }
-    ```
-   Ktor [client](https://ktor.io/docs/client-engines.html) and [server](https://ktor.io/docs/server-engines.html) 
-   engine dependencies are not included in the library by default, so you should add engines of your choice yourself. 
+    Create and run lightweight agents with custom logic in plain Kotlin 
 
-2. Make sure that you have `mavenCentral()` in the list of repositories.
+-   :material-graph-outline:{ .lg .middle } [**Complex workflow agents**](complex-workflow-agents.md)
 
-#### Gradle (Groovy)
+    ---
 
-1. Add dependencies to the `build.gradle` file:
+    Create and run agents that handle complex workflows with custom strategies
 
-    ```
-    dependencies {
-        implementation 'ai.koog:koog-agents:LATEST_VERSION'
-        implementation 'io.ktor:ktor-client-cio:KTOR_VERSION'
-    }
-    ```
+</div>
 
-2. Make sure that you have `mavenCentral()` in the list of repositories.
+## Core functionality
 
-### Maven
+<div class="grid cards" markdown>
 
-1. Add dependencies to the `pom.xml` file:
+-   :material-chat-processing-outline:{ .lg .middle } [**Prompts**](prompt-api.md)
 
-    ```xml
-    <dependency>
-        <groupId>ai.koog</groupId>
-        <artifactId>koog-agents-jvm</artifactId>
-        <version>LATEST_VERSION</version>
-    </dependency>
-    ```
+    ---
 
-2. Add Ktor dependencies. Check for Ktor versions [here](https://mvnrepository.com/artifact/io.ktor/ktor-bom).
-    ```xml
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>io.ktor</groupId>
-                <artifactId>ktor-bom</artifactId>
-                <version>KTOR_VERSION</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
-   
-    <dependencies>
-        <dependency>
-            <groupId>io.ktor</groupId>
-            <artifactId>ktor-client-cio-jvm</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-        <!-- Add a Ktor server dependency if you are using features like MCP -->
-        <dependency>
-            <groupId>io.ktor</groupId>
-            <artifactId>ktor-server-netty-jvm</artifactId>
-            <scope>runtime</scope>
-        </dependency>
-    </dependencies>
+    Create prompts, run them using LLM clients or prompt executors,
+    switch between LLMs and providers, and handle failures with built-in retries
 
-    ```
+-   :material-wrench:{ .lg .middle } [**Tools**](tools-overview.md)
 
-2. Make sure that you have `mavenCentral` in the list of repositories.
+    ---
 
+    Enhance your agents with built‑in, annotation‑based, or class‑based tools
+    that can access external systems and APIs
 
-## Quickstart example
+-   :material-share-variant-outline:{ .lg .middle } [**Strategies**](predefined-agent-strategies.md)
 
-To help you get started with AI agents, here is a quick example of a single-run agent:
+    ---
 
-!!! note
-    Before you run the example, assign a corresponding API key as an environment variable. For details, see [Getting started](single-run-agents.md).
+    Design complex agent behaviors using intuitive graph-based workflows
 
-<!--- INCLUDE
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
-import kotlinx.coroutines.runBlocking
--->
-```kotlin
-fun main() {
-    runBlocking {
-        val apiKey = System.getenv("OPENAI_API_KEY") // or Anthropic, Google, OpenRouter, etc.
+-   :material-bell-outline:{ .lg .middle } [**Events**](agent-events.md)
 
-        val agent = AIAgent(
-            promptExecutor = simpleOpenAIExecutor(apiKey), // or Anthropic, Google, OpenRouter, etc.
-            systemPrompt = "You are a helpful assistant. Answer user questions concisely.",
-            llmModel = OpenAIModels.Chat.GPT4o
-        )
+    ---
 
-        val result = agent.run("Hello! How can you help me?")
-        println(result)
-    }
-}
-```
-<!--- KNIT example-index-01.kt -->
-For more details, see [Getting started](single-run-agents.md).
+    Monitor and process agent lifecycle, strategy, node, LLM call, and tool call events with predefined handlers
+
+</div>
+
+## Advanced usage
+
+<div class="grid cards" markdown>
+
+-   :material-history:{ .lg .middle } [**History compression**](history-compression.md)
+
+    ---
+
+    Optimize token usage while maintaining context in long-running conversations using advanced techniques
+
+-   :material-state-machine:{ .lg .middle } [**Agent persistence**](agent-persistence.md)
+
+    ---
+
+    Restore the agent state at specific points during execution
+        
+
+-   :material-code-braces:{ .lg .middle } [**Structured output**](structured-output.md)
+
+    ---
+
+    Generate responses in structured formats
+
+-   :material-waves:{ .lg .middle } [**Streaming API**](streaming-api.md)
+
+    ---
+
+    Process responses in real-time with streaming support and parallel tool calls
+
+-   :material-database-search:{ .lg .middle } [**Knowledge retrieval**](embeddings.md)
+
+    ---
+
+    Retain and retrieve knowledge across conversations using [vector embeddings](embeddings.md), [ranked document storage](ranked-document-storage.md), and [shared agent memory](agent-memory.md)
+
+-   :material-timeline-text:{ .lg .middle } [**Tracing**](tracing.md)
+
+    ---
+
+    Debug and monitor agent execution with detailed, configurable tracing
+
+</div>
+
+## Integrations
+
+<div class="grid cards" markdown>
+
+-   :material-puzzle:{ .lg .middle } [**Model Context Protocol (MCP)**](model-context-protocol.md)
+
+    ---
+
+    Use MCP tools directly in AI agents
+
+-   :material-leaf:{ .lg .middle } [**Spring Boot**](spring-boot.md)
+
+    ---
+
+    Add Koog to your Spring applications
+
+-   :material-cloud-outline:{ .lg .middle } [**Ktor**](ktor-plugin.md)
+
+    ---
+
+    Integrate Koog with Ktor servers
+
+-   :material-chart-timeline-variant:{ .lg .middle } [**OpenTelemetry**](opentelemetry-support.md)
+
+    ---
+
+    Trace, log, and measure your agent with popular observability tools
+
+-   :material-lan:{ .lg .middle } [**A2A Protocol**](a2a-protocol-overview.md)
+
+    ---
+
+    Connect agents and services over a shared protocol
+
+</div>

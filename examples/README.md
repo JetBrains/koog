@@ -129,7 +129,7 @@ Each project has a dedicated README with instructions
 
 - 📖 **[Full Documentation](https://docs.koog.ai/)**
 - 🎯 **[Examples Guide](https://docs.koog.ai/examples/)**
-- 🚀 **[Getting Started](https://docs.koog.ai/single-run-agents/)**
+- 🚀 **[Getting Started](https://docs.koog.ai/getting-started/)**
 - 🔧 **[API Reference](https://api.koog.ai/)**
 
 ---

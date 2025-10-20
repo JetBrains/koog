@@ -1,10 +1,10 @@
 # Complex workflow agents
 
-In addition to single-run agents, the `AIAgent` class lets you build agents that handle complex workflows by defining 
+In addition to basic agents, the `AIAgent` class lets you build agents that handle complex workflows by defining 
 custom strategies, tools, configurations, and custom input/output types.
 
 !!! tip
-    If you are new to Koog and want to create the simplest agent, start with [Single-run agents](single-run-agents.md).
+    If you are new to Koog and want to create the simplest agent, start with [Basic agents](basic-agents.md).
 
 The process of creating and configuring such an agent typically includes the following steps:
 
@@ -17,7 +17,7 @@ The process of creating and configuring such an agent typically includes the fol
 
 ## Prerequisites
 
-- You have a valid API key from the LLM provider used to implement an AI agent. For a list of all available providers, see [Overview](index.md).
+- You have a valid API key from the LLM provider used to implement an AI agent. For a list of all available providers, see [LLM providers](llm-providers.md).
 
 !!! tip
     Use environment variables or a secure configuration management system to store your API keys.
@@ -35,7 +35,7 @@ dependencies {
 }
 ```
 
-For all available installation methods, see [Installation](index.md#installation).
+For all available installation methods, see [Install Koog](getting-started.md#install-koog).
 
 ### 2. Provide a prompt executor
 

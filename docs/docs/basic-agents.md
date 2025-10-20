@@ -1,13 +1,13 @@
-# Single-run agents
+# Basic agents
 
 The `AIAgent` class is the core component that lets you create AI agents in your Kotlin applications.
 
 You can build simple agents with minimal configuration or create sophisticated agents with advanced capabilities by
 defining custom strategies, tools, configurations, and custom input/output types.
 
-This page guides you through the steps necessary to create a single-run agent with customizable tools and configurations.
+This page guides you through the steps necessary to create a basic agent with customizable tools and configurations.
 
-A single-run agent processes a single input and provides a response.
+A basic agent processes a single input and provides a response.
 It operates within a single cycle of tool-calling to complete its task and provide a response.
 This agent can return either a message or a tool result.
 The tool result is returned if the tool registry is provided to the agent.
@@ -18,13 +18,13 @@ To learn more about configuration options, see [API reference](https://api.koog.
 
 ## Prerequisites
 
-- You have a valid API key from the LLM provider used to implement an AI agent. For a list of all available providers, see [Overview](index.md).
+- You have a valid API key from the LLM provider used to implement an AI agent. For a list of all available providers, see [LLM providers](llm-providers.md).
 
 !!! tip
     Use environment variables or a secure configuration management system to store your API keys.
     Avoid hardcoding API keys directly in your source code.
 
-## Creating a single-run agent
+## Creating a basic agent
 
 ### 1. Add dependencies
 
@@ -38,7 +38,7 @@ dependencies {
 }
 ```
 
-For all available installation methods, see [Installation](index.md#installation).
+For all available installation methods, see [Install Koog](getting-started.md#install-koog).
 
 ### 2. Create an agent 
 
@@ -55,7 +55,7 @@ val agent = AIAgent(
     llmModel = OpenAIModels.Chat.GPT4o
 )
 ```
-<!--- KNIT example-single-run-01.kt -->
+<!--- KNIT example-basic-01.kt -->
 
 ### 3. Add a system prompt
 
@@ -73,7 +73,7 @@ val agent = AIAgent(
     llmModel = OpenAIModels.Chat.GPT4o
 )
 ```
-<!--- KNIT example-single-run-02.kt -->
+<!--- KNIT example-basic-02.kt -->
 
 ### 4. Configure LLM output
 
@@ -92,7 +92,7 @@ val agent = AIAgent(
     temperature = 0.7
 )
 ```
-<!--- KNIT example-single-run-03.kt -->
+<!--- KNIT example-basic-03.kt -->
 
 ### 5. Add tools
 
@@ -119,7 +119,7 @@ val agent = AIAgent(
     }
 )
 ```
-<!--- KNIT example-single-run-04.kt -->
+<!--- KNIT example-basic-04.kt -->
 In the example, `SayToUser` is the built-in tool. To learn how to create a custom tool, see [Tools](tools-overview.md).
 
 ### 6. Adjust agent iterations
@@ -145,11 +145,11 @@ val agent = AIAgent(
     maxIterations = 30
 )
 ```
-<!--- KNIT example-single-run-05.kt -->
+<!--- KNIT example-basic-05.kt -->
 
 ### 7. Handle events during agent runtime
 
-Single-run agents support custom event handlers.
+Basic agents support custom event handlers.
 While having an event handler is not required for creating an agent, it might be helpful for testing, debugging, or making hooks for chained agent interactions.
 
 For more information on how to use the `EventHandler` feature for monitoring your agent interactions, see [Event Handlers](agent-event-handlers.md).
@@ -182,7 +182,7 @@ fun main() = runBlocking {
     val result = agent.run("Hello! How can you help me?")
 }
 ```
-<!--- KNIT example-single-run-06.kt -->
+<!--- KNIT example-basic-06.kt -->
 
 The agent produces the following output:
 

@@ -1,4 +1,4 @@
-# Key concepts
+# Glossary
 
 ## Agent
 
