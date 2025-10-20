@@ -3,6 +3,7 @@ package ai.koog.agents.core.feature.model.events
 import ai.koog.agents.core.feature.model.AIAgentError
 import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
 
 /**
  * Represents an event triggered when the execution of a specific AI agent node starts.
@@ -23,7 +24,7 @@ import kotlinx.serialization.Serializable
 public data class NodeExecutionStartingEvent(
     val runId: String,
     val nodeName: String,
-    val input: String,
+    val input: JsonElement?,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent()
 
@@ -43,8 +44,8 @@ public data class NodeExecutionStartingEvent(
 public data class NodeExecutionCompletedEvent(
     val runId: String,
     val nodeName: String,
-    val input: String,
-    val output: String,
+    val input: JsonElement?,
+    val output: JsonElement?,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent()
 
@@ -62,6 +63,7 @@ public data class NodeExecutionCompletedEvent(
  *
  * @property runId A unique identifier associated with the specific run of the AI agent;
  * @property nodeName The name of the node where the error occurred;
+ * @property input The input data provided to the node;
  * @property error An instance of `AIAgentError` containing the error details, such as a message, stack trace, and optional cause;
  * @property timestamp The timestamp of the event, in milliseconds since the Unix epoch.
  */
@@ -69,6 +71,7 @@ public data class NodeExecutionCompletedEvent(
 public data class NodeExecutionFailedEvent(
     val runId: String,
     val nodeName: String,
+    val input: JsonElement?,
     val error: AIAgentError,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent()

@@ -3,6 +3,7 @@ package ai.koog.agents.features.tracing.feature
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.annotation.InternalAgentsApi
+import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.message.FeatureMessage
 import ai.koog.agents.core.feature.message.FeatureMessageProcessorUtil.onMessageForEachCatching
@@ -29,8 +30,13 @@ import ai.koog.agents.core.feature.model.events.startNodeToGraph
 import ai.koog.agents.core.feature.model.toAgentError
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.tools.Tool
+import ai.koog.agents.core.utils.SerializationUtil
 import ai.koog.prompt.llm.toModelInfo
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
+import kotlin.reflect.KType
 
 /**
  * Feature that collects comprehensive tracing data during agent execution and sends it to configured feature message processors.
@@ -187,7 +193,7 @@ public class Tracing {
                 val event = NodeExecutionStartingEvent(
                     runId = eventContext.context.runId,
                     nodeName = eventContext.node.name,
-                    input = eventContext.input?.toString() ?: "",
+                    input = getNodeData(eventContext.input, eventContext.inputType),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 processMessage(config, event)
@@ -197,8 +203,8 @@ public class Tracing {
                 val event = NodeExecutionCompletedEvent(
                     runId = eventContext.context.runId,
                     nodeName = eventContext.node.name,
-                    input = eventContext.input?.toString() ?: "",
-                    output = eventContext.output?.toString() ?: "",
+                    input = getNodeData(eventContext.input, eventContext.inputType),
+                    output = getNodeData(eventContext.output, eventContext.outputType),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 processMessage(config, event)
@@ -208,6 +214,7 @@ public class Tracing {
                 val event = NodeExecutionFailedEvent(
                     runId = eventContext.context.runId,
                     nodeName = eventContext.node.name,
+                    input = getNodeData(eventContext.input, eventContext.inputType),
                     error = eventContext.throwable.toAgentError(),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
@@ -249,7 +256,7 @@ public class Tracing {
                 val event = LLMStreamingStartingEvent(
                     runId = eventContext.runId,
                     prompt = eventContext.prompt,
-                    model = eventContext.model.toModelInfo().eventString,
+                    model = eventContext.model.toModelInfo().modelIdentifierName,
                     tools = eventContext.tools.map { it.name },
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
@@ -260,7 +267,7 @@ public class Tracing {
                 val event = LLMStreamingCompletedEvent(
                     runId = eventContext.runId,
                     prompt = eventContext.prompt,
-                    model = eventContext.model.toModelInfo().eventString,
+                    model = eventContext.model.toModelInfo().modelIdentifierName,
                     tools = eventContext.tools.map { it.name },
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
@@ -361,6 +368,27 @@ public class Tracing {
 
         private suspend fun processMessage(config: TraceFeatureConfig, message: FeatureMessage) {
             config.messageProcessors.onMessageForEachCatching(message)
+        }
+
+        /**
+         * Retrieves the JSON representation of the given data based on its type.
+         *
+         * Note: See [KG-485](https://youtrack.jetbrains.com/issue/KG-485)
+         *       Workaround for processing non-serializable [ReceivedToolResult] type in the node input/output.
+         */
+        private fun getNodeData(data: Any?, dataType: KType): JsonElement? {
+            data ?: return null
+
+            return when (data) {
+                is ReceivedToolResult -> {
+                    runCatching { Json.parseToJsonElement(data.content) }.getOrNull()
+                        ?: JsonPrimitive(data.content)
+                }
+                else -> {
+                    @OptIn(InternalAgentsApi::class)
+                    SerializationUtil.trySerializeDataToJsonElement(data, dataType)
+                }
+            }
         }
 
         //endregion Private Methods
