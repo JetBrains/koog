@@ -510,7 +510,7 @@ public class EventHandlerConfig : FeatureConfig() {
      */
     @Deprecated(
         message = "Use onNodeExecutionError instead",
-        ReplaceWith("onNodeExecutionError(handler)", "ai.koog.agents.core.feature.handler.NodeExecutionFailedContext")
+        ReplaceWith("onNodeExecutionFailed(handler)", "ai.koog.agents.core.feature.handler.NodeExecutionFailedContext")
     )
     public fun onNodeExecutionError(handler: suspend (eventContext: NodeExecutionErrorContext) -> Unit) {
         onNodeExecutionFailed(handler)
