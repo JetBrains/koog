@@ -28,10 +28,11 @@ public data class BedrockModel(
     /**
      * Returns the effective model ID, only adds an inference profile prefix if supported.
      */
-    val effectiveModelId: String = if (allowInferenceProfilePrefix)
+    val effectiveModelId: String = if (allowInferenceProfilePrefix) {
         "$inferenceProfilePrefix.$modelId"
-    else
+    } else {
         modelId
+    }
 
     /**
      * Returns the LLModel with the effective model ID.

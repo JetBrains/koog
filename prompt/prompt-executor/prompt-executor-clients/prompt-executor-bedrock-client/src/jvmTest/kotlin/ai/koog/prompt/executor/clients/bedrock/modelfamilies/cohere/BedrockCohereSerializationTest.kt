@@ -2,9 +2,9 @@ package ai.koog.prompt.executor.clients.bedrock.modelfamilies.cohere
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
-import kotlin.test.assertNotNull
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class BedrockCohereSerializationTest {
 
@@ -59,7 +59,7 @@ class BedrockCohereSerializationTest {
         assertEquals("embeddings", resp.responseType)
         assertNotNull(resp.embeddings)
         assertTrue(resp.embeddings.containsKey("float"))
-        assertEquals(listOf(listOf(0.1,0.2), listOf(0.3,0.4)), resp.embeddings["float"])
+        assertEquals(listOf(listOf(0.1, 0.2), listOf(0.3, 0.4)), resp.embeddings["float"])
         assertEquals(listOf("foo", "bar"), resp.texts)
     }
 

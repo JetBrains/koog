@@ -43,11 +43,11 @@ internal data class TitanEmbedTextV2Request(
 @Serializable
 internal data class TitanEmbedTextV2Response(
     @SerialName("embedding")
-    val embedding: List<Double>? = null, // Usually present, fallback to embeddingsByType if not
+    val embedding: List<Double>? = null,
     @SerialName("inputTextTokenCount")
     val inputTextTokenCount: Int,
     @SerialName("embeddingsByType")
-    val embeddingsByType: Map<String, List<Double>>? = null // e.g., {"float": [...], "binary": [...]}
+    val embeddingsByType: Map<String, List<Double>>? = null
 )
 
 internal object BedrockAmazonTitanEmbeddingSerialization {
@@ -68,12 +68,14 @@ internal object BedrockAmazonTitanEmbeddingSerialization {
         dimensions: Int? = null,
         normalize: Boolean? = null,
         embeddingTypes: List<String>? = null
-    ): String = json.encodeToString(TitanEmbedTextV2Request(
-        inputText = text,
-        dimensions = dimensions,
-        normalize = normalize,
-        embeddingTypes = embeddingTypes
-    ))
+    ): String = json.encodeToString(
+        TitanEmbedTextV2Request(
+            inputText = text,
+            dimensions = dimensions,
+            normalize = normalize,
+            embeddingTypes = embeddingTypes
+        )
+    )
 
     /**
      * Parse a G1 response given raw JSON string.

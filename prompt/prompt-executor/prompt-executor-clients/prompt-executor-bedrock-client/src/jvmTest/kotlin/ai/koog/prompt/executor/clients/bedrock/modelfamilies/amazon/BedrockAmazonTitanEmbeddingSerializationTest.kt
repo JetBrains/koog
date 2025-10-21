@@ -2,8 +2,8 @@ package ai.koog.prompt.executor.clients.bedrock.modelfamilies.amazon
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
 
 class BedrockAmazonTitanEmbeddingSerializationTest {
 
@@ -81,7 +81,7 @@ class BedrockAmazonTitanEmbeddingSerializationTest {
         """.trimIndent()
         val resp = BedrockAmazonTitanEmbeddingSerialization.parseV2Response(responseJson)
         val value = BedrockAmazonTitanEmbeddingSerialization.extractV2Embedding(resp)
-        assertEquals(listOf(0.1,0.2,0.3), value)
+        assertEquals(listOf(0.1, 0.2, 0.3), value)
     }
 
     @Test

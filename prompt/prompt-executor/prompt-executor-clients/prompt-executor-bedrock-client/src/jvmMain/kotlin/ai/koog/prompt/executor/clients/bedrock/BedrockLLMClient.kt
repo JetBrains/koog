@@ -203,7 +203,7 @@ public class BedrockLLMClient(
             return@withContext when (modelFamily) {
                 is BedrockModelFamilies.AI21Jamba -> BedrockAI21JambaSerialization.parseJambaResponse(responseBodyString, clock)
                 is BedrockModelFamilies.AmazonNova -> BedrockAmazonNovaSerialization.parseNovaResponse(responseBodyString, clock)
-                is BedrockModelFamilies.AnthropicClaude-> BedrockAnthropicClaudeSerialization.parseAnthropicResponse(responseBodyString, clock)
+                is BedrockModelFamilies.AnthropicClaude -> BedrockAnthropicClaudeSerialization.parseAnthropicResponse(responseBodyString, clock)
                 is BedrockModelFamilies.Meta -> BedrockMetaLlamaSerialization.parseLlamaResponse(responseBodyString, clock)
                 is BedrockModelFamilies.TitanEmbedding, is BedrockModelFamilies.Cohere -> error("Model family ${modelFamily.display} does not support chat completions; use embed() API instead.")
             }

@@ -2,7 +2,7 @@ package ai.koog.prompt.executor.clients.bedrock.modelfamilies.cohere
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.*
+import kotlinx.serialization.json.Json
 
 /**
  * Cohere Embed Models - Serialization & utility for AWS Bedrock API.
@@ -21,7 +21,7 @@ internal data class CohereEmbedRequest(
     @SerialName("embedding_types")
     val embeddingTypes: List<String>? = null,
     @SerialName("images")
-    val images: List<String>? = null // Only one of texts or images is supported
+    val images: List<String>? = null
 )
 
 /** RESPONSE SCHEMA FOR COHERE EMBED */
@@ -32,7 +32,7 @@ internal data class CohereEmbedResponse(
     @SerialName("response_type")
     val responseType: String? = null,
     @SerialName("embeddings")
-    val embeddings: Map<String, List<List<Double>>>? = null, // "float", "int8", etc.: list of embeddings, one per input
+    val embeddings: Map<String, List<List<Double>>>? = null,
     @SerialName("texts")
     val texts: List<String>? = null
 )
