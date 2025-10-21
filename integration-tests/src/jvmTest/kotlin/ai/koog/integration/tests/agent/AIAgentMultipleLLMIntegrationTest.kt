@@ -40,14 +40,16 @@ import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.channels.ClosedReceiveChannelException
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer
@@ -92,15 +94,17 @@ internal class ReportingLLMLLMClient(
         model: LLModel,
         tools: List<ToolDescriptor>
     ): List<Message.Response> {
-        eventsChannel.trySend(
-            Event.Message(
-                llmClient = underlyingClient::class.simpleName ?: "Unknown",
-                method = "execute",
-                prompt = prompt,
-                tools = tools.map { it.name },
-                model = model
+        CoroutineScope(currentCoroutineContext()).launch {
+            eventsChannel.send(
+                Event.Message(
+                    llmClient = underlyingClient::class.simpleName ?: "null",
+                    method = "execute",
+                    prompt = prompt,
+                    tools = tools.map { it.name },
+                    model = model
+                )
             )
-        )
+        }
         return underlyingClient.execute(prompt, model, tools)
     }
 
@@ -108,17 +112,20 @@ internal class ReportingLLMLLMClient(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
-    ): Flow<StreamFrame> {
-        eventsChannel.trySend(
-            Event.Message(
-                llmClient = underlyingClient::class.simpleName ?: "Unknown",
-                method = "executeStreaming",
-                prompt = prompt,
-                tools = tools.map { it.name },
-                model = model
+    ): Flow<StreamFrame> = flow {
+        coroutineScope {
+            eventsChannel.send(
+                Event.Message(
+                    llmClient = underlyingClient::class.simpleName ?: "null",
+                    method = "execute",
+                    prompt = prompt,
+                    tools = emptyList(),
+                    model = model
+                )
             )
-        )
-        return underlyingClient.executeStreaming(prompt, model, tools)
+        }
+        underlyingClient.executeStreaming(prompt, model, tools)
+            .collect(this)
     }
 
     override suspend fun moderate(
@@ -517,7 +524,7 @@ class AIAgentMultipleLLMIntegrationTest {
         val eventsChannel = Channel<Event>(Channel.UNLIMITED)
         val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
             onAgentCompleted { _ ->
-                eventsChannel.trySend(Event.Termination)
+                eventsChannel.send(Event.Termination)
             }
         }
 
@@ -528,32 +535,9 @@ class AIAgentMultipleLLMIntegrationTest {
             eventsChannel = eventsChannel,
         )
 
-        val messagesDeferred = async {
-            val messages = mutableListOf<Event.Message>()
-            try {
-                for (msg in eventsChannel) {
-                    when (msg) {
-                        is Event.Message -> messages.add(msg)
-                        is Event.Termination -> break
-                    }
-                }
-            } catch (e: ClosedReceiveChannelException) {
-                // ignore
-            }
-            messages
-        }
-
-        val result = try {
-            withTimeout(8.minutes.inWholeMilliseconds) {
-                agent.run(
-                    "Generate me a project in Ktor that has a GET endpoint that returns the capital of France. Write a test"
-                )
-            }
-        } finally {
-            eventsChannel.close()
-        }
-
-        val messages = messagesDeferred.await()
+        val result = agent.run(
+            "Generate me a project in Ktor that has a GET endpoint that returns the capital of France. Write a test"
+        )
 
         assertNotNull(result)
 
@@ -561,6 +545,15 @@ class AIAgentMultipleLLMIntegrationTest {
             fs.fileCount() > 0,
             "Agent must have created at least one file"
         )
+
+        val messages = mutableListOf<Event.Message>()
+        for (msg in eventsChannel) {
+            if (msg is Event.Message) {
+                messages.add(msg)
+            } else {
+                break
+            }
+        }
 
         assertTrue(
             messages.any { it.llmClient == "AnthropicLLMClient" },
