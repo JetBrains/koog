@@ -324,58 +324,36 @@ class ExecuteShellCommandToolJvmTest {
 
     @Test
     @EnabledOnOs(OS.LINUX, OS.MAC)
-    fun `long running command times out`() = runBlocking {
-        val command = "sleep 5"
-        val timeout = 1
-        val result = executeShellCommand(command, timeoutSeconds = timeout)
-
-        val expected = """
-            Command: $command
-            Command timed out after $timeout seconds
-        """.trimIndent()
-
-        assertEquals(expected, result.textForLLM())
-        assertNull(result.exitCode)
-    }
-
-    @Test
-    @EnabledOnOs(OS.WINDOWS)
-    fun `long running command times out on Windows`() = runBlocking {
-        val result = executeShellCommand("powershell -Command \"Start-Sleep -Milliseconds 1100\"", timeoutSeconds = 1)
-
-        val expected = """
-            Command: powershell -Command "Start-Sleep -Milliseconds 1100"
-            Command timed out after 1 seconds
-        """.trimIndent()
-
-        assertEquals(expected, result.textForLLM())
-        assertNull(result.exitCode)
-    }
-
-    @Test
-    @EnabledOnOs(OS.LINUX, OS.MAC)
     fun `command with partial output times out`() = runBlocking {
-        val result = executeShellCommand("for i in {1..3}; do echo \$i; sleep 0.5; done", timeoutSeconds = 1)
+        val result: ExecuteShellCommandTool.Result
+        val executionTimeMs = measureTimeMillis {
+            result = executeShellCommand("for i in {1..3}; do echo \$i; sleep 1; done", timeoutSeconds = 1)
+        }
 
         assertTrue(result.textForLLM().contains("Command timed out after 1 seconds"))
-        assertTrue(result.textForLLM().startsWith("Command: for i in {1..3}; do echo \$i; sleep 0.5; done"))
+        assertTrue(result.textForLLM().startsWith("Command: for i in {1..3}; do echo \$i; sleep 1; done"))
         assertNull(result.exitCode)
+        assertTrue(executionTimeMs <= 1200, "Timeout should occur quickly, but took ${executionTimeMs}ms")
     }
 
     @Test
     @EnabledOnOs(OS.WINDOWS)
     fun `command with partial output times out on Windows`() = runBlocking {
-        val result = executeShellCommand(
-            "powershell -Command \"1..3 | ForEach-Object { Write-Output \$_; Start-Sleep -Milliseconds 500 }\"",
-            timeoutSeconds = 1
-        )
+        val result: ExecuteShellCommandTool.Result
+        val executionTimeMs = measureTimeMillis {
+            result = executeShellCommand(
+                """cmd /c "echo 1 & echo 2 & echo 3 & powershell -Command Start-Sleep -Seconds 2"""",
+                timeoutSeconds = 1
+            )
+        }
 
         assertTrue(result.textForLLM().contains("Command timed out after 1 seconds"))
         assertTrue(
             result.textForLLM()
-                .startsWith("Command: powershell -Command \"1..3 | ForEach-Object { Write-Output \$_; Start-Sleep -Milliseconds 500 }\"")
+                .startsWith("Command: cmd /c \"echo 1 & echo 2 & echo 3 & powershell -Command Start-Sleep -Seconds 2\"")
         )
         assertNull(result.exitCode)
+        assertTrue(executionTimeMs <= 1300, "Timeout should occur quickly, but took ${executionTimeMs}ms")
     }
 
     // CANCELLATION TESTS
