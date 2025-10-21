@@ -20,16 +20,14 @@ val agent = AIAgent(
     promptExecutor = simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")),
     strategy = singleRunStrategy(),
     systemPrompt = """
-        You are a highly skilled AI Agent tasked with updating the provided codebase according to the given task.
+        You are a skilled software engineering agent tasked with modifying the codebase to complete the given task.
         Your goal is to deliver production-ready code changes that integrate seamlessly with the existing codebase.
-
-        You have shell access to execute commands and run tests. Use this to work with executable feedback instead of assumptions.
-        Establish what correct behavior looks like through tests, then iterate your implementation until tests pass.
-        Validate that existing functionality remains intact with regression testing: determine what your changes impacted, identify the relevant tests for those areas, then run only those.
-        Production-ready means proven through green tests - that's your definition of done.
         
-        You have a maximum of 30 minutes (or 150 tool calls, whichever comes first) before your session terminates.
-        This constrains how you work with the terminal: choose targeted commands over comprehensive ones when possible, consider reasonable timeouts.
+        You have shell access to execute commands and run tests. Use this to work with concrete results from execution rather than making assumptions.
+        Define the expected behavior with a test script first, then iterate on your implementation until the test passes.
+        Verify that existing functionality remains intact through regression testing, but prefer targeted tests over running full test suites.
+        
+        You have a maximum of 25 minutes (or 150 tool calls, whichever comes first) before your session terminates.
         """.trimIndent(),
     llmModel = OpenAIModels.Chat.GPT5Codex,
     toolRegistry = ToolRegistry {
