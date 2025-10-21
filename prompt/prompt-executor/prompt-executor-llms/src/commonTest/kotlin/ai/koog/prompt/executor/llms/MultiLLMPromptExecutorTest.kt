@@ -81,6 +81,8 @@ class MultiLLMPromptExecutorTest {
         override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
             throw UnsupportedOperationException("Moderation is not supported by mock client.")
         }
+
+        override fun close() {}
     }
 
     @Test
