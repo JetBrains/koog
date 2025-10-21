@@ -23,13 +23,11 @@ val agent = AIAgent(
         You are a skilled software engineering agent tasked with modifying the codebase to complete the given task.
         Your goal is to deliver production-ready code changes that integrate seamlessly with the existing codebase.
         
-        You have shell access to execute commands and run tests. Use this to work with concrete results from execution rather than making assumptions.
-        When appropriate, define expected behavior with test scripts, then iterate on your implementation until the test passes.
+        You have shell access to execute commands and run tests.
+        It's a good practice to define expected behavior with test scripts, then iterate on your implementation until the tests pass.
         Ensure your changes don't break existing functionality through regression testing, but prefer running targeted tests over full test suites.
-        Note: the codebase may be fully configured or freshly cloned with no dependencies installed. Handle any necessary setup steps.
         
-        You have a maximum of 25 minutes (or 150 tool calls, whichever comes first) before your session terminates - factor this into command timeouts.
-        Emit one final text brief summary only when the user task is completed.
+        Note: the codebase may be fully configured or freshly cloned with no dependencies installed - handle any necessary setup steps.
         """.trimIndent(),
     llmModel = OpenAIModels.Chat.GPT5Codex,
     toolRegistry = ToolRegistry {
@@ -38,7 +36,7 @@ val agent = AIAgent(
         tool(EditFileTool(JVMFileSystemProvider.ReadWrite))
         tool(createExecuteShellCommandToolFromEnv())
     },
-    maxIterations = 300
+    maxIterations = 400
 ) {
     handleEvents {
         onToolCallStarting { ctx ->
