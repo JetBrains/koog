@@ -41,12 +41,10 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
 import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withTimeout
@@ -89,23 +87,20 @@ internal class ReportingLLMLLMClient(
         data object Termination : Event
     }
 
-    @OptIn(DelicateCoroutinesApi::class)
     override suspend fun execute(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
     ): List<Message.Response> {
-        if (!eventsChannel.isClosedForSend) {
-            eventsChannel.send(
-                Event.Message(
-                    llmClient = underlyingClient::class.simpleName ?: "Unknown",
-                    method = "execute",
-                    prompt = prompt,
-                    tools = tools.map { it.name },
-                    model = model
-                )
+        eventsChannel.trySend(
+            Event.Message(
+                llmClient = underlyingClient::class.simpleName ?: "Unknown",
+                method = "execute",
+                prompt = prompt,
+                tools = tools.map { it.name },
+                model = model
             )
-        }
+        )
         return underlyingClient.execute(prompt, model, tools)
     }
 
@@ -113,28 +108,23 @@ internal class ReportingLLMLLMClient(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
-    ): Flow<StreamFrame> = flow {
-        coroutineScope {
-            eventsChannel.send(
-                Event.Message(
-                    llmClient = underlyingClient::class.simpleName ?: "null",
-                    method = "execute",
-                    prompt = prompt,
-                    tools = emptyList(),
-                    model = model
-                )
+    ): Flow<StreamFrame> {
+        eventsChannel.trySend(
+            Event.Message(
+                llmClient = underlyingClient::class.simpleName ?: "Unknown",
+                method = "executeStreaming",
+                prompt = prompt,
+                tools = tools.map { it.name },
+                model = model
             )
-        }
-        underlyingClient.executeStreaming(prompt, model, tools)
-            .collect(this)
+        )
+        return underlyingClient.executeStreaming(prompt, model, tools)
     }
 
     override suspend fun moderate(
         prompt: Prompt,
         model: LLModel
-    ): ModerationResult {
-        throw NotImplementedError("Moderation not needed for this test")
-    }
+    ): ModerationResult = throw NotImplementedError("Moderation not needed for this test")
 }
 
 internal fun LLMClient.reportingTo(
@@ -527,8 +517,7 @@ class AIAgentMultipleLLMIntegrationTest {
         val eventsChannel = Channel<Event>(Channel.UNLIMITED)
         val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
             onAgentCompleted { _ ->
-                eventsChannel.send(Event.Termination)
-                eventsChannel.close()
+                eventsChannel.trySend(Event.Termination)
             }
         }
 
@@ -539,32 +528,32 @@ class AIAgentMultipleLLMIntegrationTest {
             eventsChannel = eventsChannel,
         )
 
-        val agentJob = async {
-            agent.run(
-                "Generate me a project in Ktor that has a GET endpoint that returns the capital of France. Write a test"
-            )
-        }
-
-        val messages = mutableListOf<Event.Message>()
-
-        try {
-            withTimeout(8.minutes.inWholeMilliseconds) {
+        val messagesDeferred = async {
+            val messages = mutableListOf<Event.Message>()
+            try {
                 for (msg in eventsChannel) {
-                    if (msg is Event.Message) {
-                        messages.add(msg)
-                    } else if (msg is Event.Termination) {
-                        break
+                    when (msg) {
+                        is Event.Message -> messages.add(msg)
+                        is Event.Termination -> break
                     }
                 }
+            } catch (e: ClosedReceiveChannelException) {
+                // ignore
             }
-        } catch (e: TimeoutCancellationException) {
-            println("Warning: Event collection timed out: [${e.message}]")
+            messages
+        }
+
+        val result = try {
+            withTimeout(8.minutes.inWholeMilliseconds) {
+                agent.run(
+                    "Generate me a project in Ktor that has a GET endpoint that returns the capital of France. Write a test"
+                )
+            }
         } finally {
             eventsChannel.close()
         }
 
-        val result = agentJob.await()
-
+        val messages = messagesDeferred.await()
 
         assertNotNull(result)
 
