@@ -2,8 +2,10 @@ package ai.koog.prompt.executor.clients.dashscope.models
 
 import ai.koog.prompt.executor.clients.openai.base.models.Content
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIMessage
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIStreamDelta
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.buildJsonArray
@@ -192,5 +194,172 @@ class DashscopeSerializationTest {
         assertEquals(originalRequest.topP, deserializedRequest.topP)
         assertEquals(originalRequest.stop, deserializedRequest.stop)
         assertEquals(originalRequest.messages.size, deserializedRequest.messages.size)
+    }
+
+    @Test
+    fun `test chat completion response deserialization with systemFingerprint`() {
+        val jsonInput = buildJsonObject {
+            put("id", JsonPrimitive("chatcmpl-123"))
+            put("object", JsonPrimitive("chat.completion"))
+            put("created", JsonPrimitive(1677652288))
+            put("model", JsonPrimitive("qwen-plus"))
+            put("systemFingerprint", JsonNull)
+            put(
+                "choices",
+                buildJsonArray {
+                    addJsonObject {
+                        put("index", JsonPrimitive(0))
+                        put("finishReason", JsonPrimitive("stop"))
+                        put(
+                            "message",
+                            buildJsonObject {
+                                put("role", "assistant")
+                                put("content", "Hello! How can I help you?")
+                            }
+                        )
+                    }
+                }
+            )
+            put(
+                "usage",
+                buildJsonObject {
+                    put("promptTokens", JsonPrimitive(10))
+                    put("completionTokens", JsonPrimitive(20))
+                    put("totalTokens", JsonPrimitive(30))
+                }
+            )
+        }
+
+        val response = json.decodeFromJsonElement(DashscopeChatCompletionResponse.serializer(), jsonInput)
+
+        assertEquals("chatcmpl-123", response.id)
+        assertEquals("qwen-plus", response.model)
+        assertEquals(1677652288L, response.created)
+        assertEquals(null, response.systemFingerprint)
+        assertEquals("chat.completion", response.objectType)
+        assertEquals(1, response.choices.size)
+        assertNotNull(response.usage)
+        assertEquals(10, response.usage?.promptTokens)
+        assertEquals(20, response.usage?.completionTokens)
+        assertEquals(30, response.usage?.totalTokens)
+    }
+
+    @Test
+    fun `test chat completion response deserialization without systemFingerprint`() {
+        val jsonInput = buildJsonObject {
+            put("id", JsonPrimitive("chatcmpl-456"))
+            put("object", JsonPrimitive("chat.completion"))
+            put("created", JsonPrimitive(1677652300))
+            put("model", JsonPrimitive("qwen-max"))
+            put(
+                "choices",
+                buildJsonArray {
+                    addJsonObject {
+                        put("index", JsonPrimitive(0))
+                        put("finishReason", JsonPrimitive("stop"))
+                        put(
+                            "message",
+                            buildJsonObject {
+                                put("role", "assistant")
+                                put("content", "Test response")
+                            }
+                        )
+                    }
+                }
+            )
+        }
+
+        val response = json.decodeFromJsonElement(DashscopeChatCompletionResponse.serializer(), jsonInput)
+
+        assertEquals("chatcmpl-456", response.id)
+        assertEquals("qwen-max", response.model)
+        assertEquals(1677652300L, response.created)
+        assertNull(response.systemFingerprint)
+        assertEquals("chat.completion", response.objectType)
+        assertEquals(1, response.choices.size)
+        assertNull(response.usage)
+    }
+
+    @Test
+    fun `test chat completion stream response deserialization with systemFingerprint`() {
+        val jsonInput = buildJsonObject {
+            put("id", JsonPrimitive("chatcmpl-789"))
+            put("object", JsonPrimitive("chat.completion.chunk"))
+            put("created", JsonPrimitive(1677652400))
+            put("model", JsonPrimitive("qwen-turbo"))
+            put("systemFingerprint", JsonNull)
+            put(
+                "choices",
+                buildJsonArray {
+                    addJsonObject {
+                        put("index", JsonPrimitive(0))
+                        put("finishReason", JsonPrimitive(null as String?))
+                        put(
+                            "delta",
+                            buildJsonObject {
+                                put("role", "assistant")
+                                put("content", "Hello")
+                            }
+                        )
+                    }
+                }
+            )
+        }
+
+        val response = json.decodeFromJsonElement(DashscopeChatCompletionStreamResponse.serializer(), jsonInput)
+
+        assertEquals("chatcmpl-789", response.id)
+        assertEquals("qwen-turbo", response.model)
+        assertEquals(1677652400L, response.created)
+        assertNull(response.systemFingerprint)
+        assertEquals("chat.completion.chunk", response.objectType)
+        assertEquals(1, response.choices.size)
+        assertNull(response.usage)
+    }
+
+    @Test
+    fun `test chat completion stream response deserialization without systemFingerprint`() {
+        val jsonInput = buildJsonObject {
+            put("id", JsonPrimitive("chatcmpl-012"))
+            put("object", JsonPrimitive("chat.completion.chunk"))
+            put("created", JsonPrimitive(1677652500))
+            put("model", JsonPrimitive("qwen-long"))
+            put(
+                "choices",
+                buildJsonArray {
+                    addJsonObject {
+                        put("index", JsonPrimitive(0))
+                        put("finishReason", JsonPrimitive("stop"))
+                        put(
+                            "delta",
+                            buildJsonObject {
+                                put("content", "Final chunk")
+                            }
+                        )
+                    }
+                }
+            )
+            put(
+                "usage",
+                buildJsonObject {
+                    put("promptTokens", JsonPrimitive(15))
+                    put("completionTokens", JsonPrimitive(25))
+                    put("totalTokens", JsonPrimitive(40))
+                }
+            )
+        }
+
+        val response = json.decodeFromJsonElement(DashscopeChatCompletionStreamResponse.serializer(), jsonInput)
+
+        assertEquals("chatcmpl-012", response.id)
+        assertEquals("qwen-long", response.model)
+        assertEquals(1677652500L, response.created)
+        assertNull(response.systemFingerprint)
+        assertEquals("chat.completion.chunk", response.objectType)
+        assertEquals(1, response.choices.size)
+        assertNotNull(response.usage)
+        assertEquals(15, response.usage?.promptTokens)
+        assertEquals(25, response.usage?.completionTokens)
+        assertEquals(40, response.usage?.totalTokens)
     }
 }
