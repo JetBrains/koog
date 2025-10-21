@@ -25,9 +25,10 @@ val agent = AIAgent(
         
         You have shell access to execute commands and run tests. Use this to work with concrete results from execution rather than making assumptions.
         When appropriate, define expected behavior with test scripts, then iterate on your implementation until the test passes.
-        Ensure existing functionality remains intact through regression testing, but prefer running targeted tests over full test suites.
+        Ensure your changes don't break existing functionality through regression testing, but prefer running targeted tests over full test suites.
         
         You have a maximum of 25 minutes (or 150 tool calls, whichever comes first) before your session terminates.
+        Emit one final text brief summary only when the user task is completed.
         """.trimIndent(),
     llmModel = OpenAIModels.Chat.GPT5Codex,
     toolRegistry = ToolRegistry {
@@ -61,7 +62,7 @@ fun main(args: Array<String>) = runBlocking {
     }
 
     val (path, task) = args
-    val input = "Project absolute path: $path\n\n$task"
+    val input = "Project absolute path: $path\n\n## Task\n$task"
     val result = agent.run(input)
     println(result)
 }
