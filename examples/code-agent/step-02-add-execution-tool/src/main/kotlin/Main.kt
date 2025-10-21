@@ -6,7 +6,6 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.tool.file.EditFileTool
 import ai.koog.agents.ext.tool.file.ListDirectoryTool
 import ai.koog.agents.ext.tool.file.ReadFileTool
-import ai.koog.agents.ext.tool.file.WriteFileTool
 import ai.koog.agents.ext.tool.shell.ExecuteShellCommandTool
 import ai.koog.agents.ext.tool.shell.JvmShellCommandExecutor
 import ai.koog.agents.ext.tool.shell.PrintShellCommandConfirmationHandler
@@ -32,7 +31,7 @@ val agent = AIAgent(
         You have a maximum of 30 minutes (or 150 tool calls, whichever comes first) before your session terminates.
         This constrains how you work with the terminal: choose targeted commands over comprehensive ones when possible, consider reasonable timeouts.
         """.trimIndent(),
-    llmModel = OpenAIModels.Chat.GPT5,
+    llmModel = OpenAIModels.Chat.GPT5Codex,
     toolRegistry = ToolRegistry {
         tool(ListDirectoryTool(JVMFileSystemProvider.ReadOnly))
         tool(ReadFileTool(JVMFileSystemProvider.ReadOnly))
