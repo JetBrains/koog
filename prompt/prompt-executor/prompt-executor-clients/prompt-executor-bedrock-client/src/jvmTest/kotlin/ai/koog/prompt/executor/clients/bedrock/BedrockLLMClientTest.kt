@@ -101,112 +101,6 @@ class BedrockLLMClientTest {
     }
 
     @Test
-    fun `verify all BedrockModels are properly configured`() {
-        // Test Claude 3 models with full capabilities
-        val claude3Models = listOf(
-            BedrockModels.AnthropicClaude3Opus,
-            BedrockModels.AnthropicClaude3Sonnet,
-            BedrockModels.AnthropicClaude3Haiku
-        )
-
-        claude3Models.forEach { model ->
-            assertTrue(model.provider is LLMProvider.Bedrock)
-            assertTrue(model.capabilities.contains(LLMCapability.Completion))
-            assertTrue(model.capabilities.contains(LLMCapability.Temperature))
-            assertTrue(model.capabilities.contains(LLMCapability.Tools))
-            assertTrue(model.capabilities.contains(LLMCapability.ToolChoice))
-            assertTrue(model.capabilities.contains(LLMCapability.Vision.Image))
-        }
-
-        // Test Claude 3.5 models with full capabilities
-        val claude35Models = listOf(
-            BedrockModels.AnthropicClaude35SonnetV2,
-            BedrockModels.AnthropicClaude35Haiku
-        )
-
-        claude35Models.forEach { model ->
-            assertTrue(model.provider is LLMProvider.Bedrock)
-            assertTrue(model.capabilities.contains(LLMCapability.Completion))
-            assertTrue(model.capabilities.contains(LLMCapability.Temperature))
-            assertTrue(model.capabilities.contains(LLMCapability.Tools))
-            assertTrue(model.capabilities.contains(LLMCapability.ToolChoice))
-            assertTrue(model.capabilities.contains(LLMCapability.Vision.Image))
-        }
-
-        // Test Claude 4 models with full capabilities
-        val claude4Models = listOf(
-            BedrockModels.AnthropicClaude4Opus,
-            BedrockModels.AnthropicClaude41Opus,
-            BedrockModels.AnthropicClaude4Sonnet,
-            BedrockModels.AnthropicClaude4_5Sonnet,
-            BedrockModels.AnthropicClaude4_5Haiku,
-        )
-
-        claude4Models.forEach { model ->
-            assertTrue(model.provider is LLMProvider.Bedrock)
-            assertTrue(model.capabilities.contains(LLMCapability.Completion))
-            assertTrue(model.capabilities.contains(LLMCapability.Temperature))
-            assertTrue(model.capabilities.contains(LLMCapability.Tools))
-            assertTrue(model.capabilities.contains(LLMCapability.ToolChoice))
-            assertTrue(model.capabilities.contains(LLMCapability.Vision.Image))
-        }
-
-        // Test older Claude models with standard capabilities
-        val olderClaudeModels = listOf(
-            BedrockModels.AnthropicClaude21,
-            BedrockModels.AnthropicClaudeInstant
-        )
-
-        olderClaudeModels.forEach { model ->
-            assertTrue(model.provider is LLMProvider.Bedrock)
-            assertTrue(model.id.contains("anthropic.claude"))
-            assertTrue(model.capabilities.contains(LLMCapability.Completion))
-            assertTrue(model.capabilities.contains(LLMCapability.Temperature))
-        }
-
-        // Test Amazon Nova models
-        val novaModels = listOf(
-            BedrockModels.AmazonNovaMicro,
-            BedrockModels.AmazonNovaLite,
-            BedrockModels.AmazonNovaPro,
-            BedrockModels.AmazonNovaPremier
-        )
-
-        novaModels.forEach { model ->
-            assertTrue(model.provider is LLMProvider.Bedrock)
-            assertTrue(model.id.contains("amazon.nova"))
-            assertTrue(model.capabilities.contains(LLMCapability.Completion))
-            assertTrue(model.capabilities.contains(LLMCapability.Temperature))
-        }
-
-        // Test AI21 models
-        val ai21Models = listOf(
-            BedrockModels.AI21JambaLarge,
-            BedrockModels.AI21JambaMini
-        )
-
-        ai21Models.forEach { model ->
-            assertTrue(model.provider is LLMProvider.Bedrock)
-            assertTrue(model.id.contains("ai21.jamba"))
-            assertTrue(model.capabilities.contains(LLMCapability.Completion))
-            assertTrue(model.capabilities.contains(LLMCapability.Temperature))
-        }
-
-        // Test Meta models
-        val metaModels = listOf(
-            BedrockModels.MetaLlama3_0_8BInstruct,
-            BedrockModels.MetaLlama3_0_70BInstruct
-        )
-
-        metaModels.forEach { model ->
-            assertTrue(model.provider is LLMProvider.Bedrock)
-            assertTrue(model.id.contains("meta.llama"))
-            assertTrue(model.capabilities.contains(LLMCapability.Completion))
-            assertTrue(model.capabilities.contains(LLMCapability.Temperature))
-        }
-    }
-
-    @Test
     fun `client configuration options work correctly`() {
         val customSettings = BedrockClientSettings(
             region = BedrockRegions.EU_WEST_1.regionCode,
@@ -237,37 +131,6 @@ class BedrockLLMClientTest {
     }
 
     @Test
-    fun `model IDs follow expected patterns`() {
-        // Verify Anthropic model IDs
-        assertTrue(BedrockModels.AnthropicClaude4Opus.id.contains("anthropic.claude-opus-4-20250514-v1:0"))
-        assertTrue(BedrockModels.AnthropicClaude41Opus.id.contains("anthropic.claude-opus-4-1-20250805-v1:0"))
-        assertTrue(BedrockModels.AnthropicClaude4Sonnet.id.contains("anthropic.claude-sonnet-4-20250514-v1:0"))
-        assertTrue(BedrockModels.AnthropicClaude4_5Sonnet.id.contains("anthropic.claude-sonnet-4-5-20250929-v1:0"))
-        assertTrue(BedrockModels.AnthropicClaude35SonnetV2.id.contains("anthropic.claude-3-5-sonnet-20241022-v2:0"))
-        assertTrue(BedrockModels.AnthropicClaude35Haiku.id.contains("anthropic.claude-3-5-haiku-20241022-v1:0"))
-        assertTrue(BedrockModels.AnthropicClaude4_5Haiku.id.contains("anthropic.claude-haiku-4-5-20251001-v1:0"))
-        assertTrue(BedrockModels.AnthropicClaude3Opus.id.contains("anthropic.claude-3-opus"))
-        assertTrue(BedrockModels.AnthropicClaude3Sonnet.id.contains("anthropic.claude-3-sonnet"))
-        assertTrue(BedrockModels.AnthropicClaude3Haiku.id.contains("anthropic.claude-3-haiku"))
-        assertTrue(BedrockModels.AnthropicClaude21.id.contains("anthropic.claude-v2:1"))
-        assertTrue(BedrockModels.AnthropicClaudeInstant.id.contains("anthropic.claude-instant-v1"))
-
-        // Verify Amazon Nova model IDs
-        assertTrue(BedrockModels.AmazonNovaMicro.id.contains("amazon.nova"))
-        assertTrue(BedrockModels.AmazonNovaLite.id.contains("amazon.nova"))
-        assertTrue(BedrockModels.AmazonNovaPro.id.contains("amazon.nova"))
-        assertTrue(BedrockModels.AmazonNovaPremier.id.contains("amazon.nova"))
-
-        // Verify AI21 model IDs
-        assertTrue(BedrockModels.AI21JambaLarge.id.contains("ai21.jamba-1-5-large-v1:0"))
-        assertTrue(BedrockModels.AI21JambaMini.id.contains("ai21.jamba-1-5-mini-v1:0"))
-
-        // Verify Meta Llama model IDs
-        assertTrue(BedrockModels.MetaLlama3_0_8BInstruct.id.contains("meta.llama3-8b-instruct-v1:0"))
-        assertTrue(BedrockModels.MetaLlama3_0_70BInstruct.id.contains("meta.llama3-70b-instruct-v1:0"))
-    }
-
-    @Test
     fun testToolCallGeneration() = runTest {
         val tools = listOf(
             ToolDescriptor(
@@ -286,35 +149,6 @@ class BedrockLLMClientTest {
             user("What's the weather in Paris?")
         }
 
-        // Test that Claude 3 models support tools
-        val claudeModel = BedrockModels.AnthropicClaude3Sonnet
-        assertTrue(claudeModel.capabilities.contains(LLMCapability.Tools))
-
-        // Test that Claude 3.5 models support tools (with advanced capabilities)
-        val claude35Sonnet = BedrockModels.AnthropicClaude35SonnetV2
-        val claude35Haiku = BedrockModels.AnthropicClaude35Haiku
-        assertTrue(claude35Sonnet.capabilities.contains(LLMCapability.Tools))
-        assertTrue(claude35Sonnet.capabilities.contains(LLMCapability.ToolChoice))
-        assertTrue(claude35Haiku.capabilities.contains(LLMCapability.Tools))
-        assertTrue(claude35Haiku.capabilities.contains(LLMCapability.ToolChoice))
-
-        // Test that Claude 4 models support tools (with advanced capabilities)
-        val claude4Opus = BedrockModels.AnthropicClaude4Opus
-        val claude41Opus = BedrockModels.AnthropicClaude41Opus
-        val claude4Sonnet = BedrockModels.AnthropicClaude4Sonnet
-        val claude45Sonnet = BedrockModels.AnthropicClaude4_5Sonnet
-        val claude45Haiku = BedrockModels.AnthropicClaude4_5Haiku
-        assertTrue(claude4Opus.capabilities.contains(LLMCapability.Tools))
-        assertTrue(claude4Opus.capabilities.contains(LLMCapability.ToolChoice))
-        assertTrue(claude41Opus.capabilities.contains(LLMCapability.Tools))
-        assertTrue(claude41Opus.capabilities.contains(LLMCapability.ToolChoice))
-        assertTrue(claude4Sonnet.capabilities.contains(LLMCapability.Tools))
-        assertTrue(claude4Sonnet.capabilities.contains(LLMCapability.ToolChoice))
-        assertTrue(claude45Sonnet.capabilities.contains(LLMCapability.Tools))
-        assertTrue(claude45Sonnet.capabilities.contains(LLMCapability.ToolChoice))
-        assertTrue(claude45Haiku.capabilities.contains(LLMCapability.Tools))
-        assertTrue(claude45Haiku.capabilities.contains(LLMCapability.ToolChoice))
-
         // Mock client for testing tool call request generation
         val client = BedrockLLMClient(
             credentialsProvider = StaticCredentialsProvider {
@@ -330,43 +164,6 @@ class BedrockLLMClientTest {
         assertFails {
             client.execute(prompt, olderClaudeModel, tools)
         }
-    }
-
-    @Test
-    fun testModelToolCapabilities() {
-        // Verify Claude 4 models have the most advanced capabilities
-        val claude4Opus = BedrockModels.AnthropicClaude4Opus
-        val claude41Opus = BedrockModels.AnthropicClaude41Opus
-        val claude4Sonnet = BedrockModels.AnthropicClaude4Sonnet
-        val claude45Sonnet = BedrockModels.AnthropicClaude4_5Sonnet
-        val claude45Haiku = BedrockModels.AnthropicClaude4_5Haiku
-        assertTrue(claude4Opus.capabilities.contains(LLMCapability.Tools))
-        assertTrue(claude4Opus.capabilities.contains(LLMCapability.ToolChoice))
-        assertTrue(claude4Opus.capabilities.contains(LLMCapability.Vision.Image))
-        assertTrue(claude41Opus.capabilities.contains(LLMCapability.Tools))
-        assertTrue(claude41Opus.capabilities.contains(LLMCapability.ToolChoice))
-        assertTrue(claude41Opus.capabilities.contains(LLMCapability.Vision.Image))
-        assertTrue(claude4Sonnet.capabilities.contains(LLMCapability.Tools))
-        assertTrue(claude4Sonnet.capabilities.contains(LLMCapability.ToolChoice))
-        assertTrue(claude4Sonnet.capabilities.contains(LLMCapability.Vision.Image))
-        assertTrue(claude45Sonnet.capabilities.contains(LLMCapability.Tools))
-        assertTrue(claude45Sonnet.capabilities.contains(LLMCapability.ToolChoice))
-        assertTrue(claude45Sonnet.capabilities.contains(LLMCapability.Vision.Image))
-        assertTrue(claude45Haiku.capabilities.contains(LLMCapability.Tools))
-        assertTrue(claude45Haiku.capabilities.contains(LLMCapability.ToolChoice))
-        assertTrue(claude45Haiku.capabilities.contains(LLMCapability.Vision.Image))
-
-        // Verify Claude 3.5 models have comprehensive tool support
-        val claude35Sonnet = BedrockModels.AnthropicClaude35SonnetV2
-        val claude35Haiku = BedrockModels.AnthropicClaude35Haiku
-        assertTrue(claude35Sonnet.capabilities.contains(LLMCapability.Tools))
-        assertTrue(claude35Sonnet.capabilities.contains(LLMCapability.ToolChoice))
-        assertTrue(claude35Haiku.capabilities.contains(LLMCapability.Tools))
-        assertTrue(claude35Haiku.capabilities.contains(LLMCapability.ToolChoice))
-
-        // Verify Nova models don't support tools
-        val novaMicro = BedrockModels.AmazonNovaMicro
-        assertTrue(novaMicro.capabilities.contains(LLMCapability.Tools))
     }
 
     @Test

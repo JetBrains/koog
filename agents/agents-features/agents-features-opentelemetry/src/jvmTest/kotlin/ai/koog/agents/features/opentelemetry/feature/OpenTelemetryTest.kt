@@ -19,7 +19,6 @@ import ai.koog.agents.features.opentelemetry.mock.MockSpanExporter
 import ai.koog.agents.features.opentelemetry.mock.TestGetWeatherTool
 import ai.koog.agents.features.opentelemetry.span.GenAIAgentSpan
 import ai.koog.agents.testing.tools.getMockExecutor
-import ai.koog.agents.testing.tools.mockLLMAnswer
 import ai.koog.agents.utils.HiddenString
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.message.Message
@@ -31,7 +30,7 @@ import io.opentelemetry.sdk.trace.SdkTracerProvider
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor
 import io.opentelemetry.sdk.trace.export.SpanExporter
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
 import java.util.Properties
 import kotlin.test.Test
@@ -54,7 +53,7 @@ class OpenTelemetryTest {
     }
 
     @Test
-    fun `test Open Telemetry feature default configuration`() = runBlocking {
+    fun `test Open Telemetry feature default configuration`() = runTest {
         val testClock = Clock.System
 
         val strategy = strategy("test-strategy") {
@@ -88,7 +87,7 @@ class OpenTelemetryTest {
     }
 
     @Test
-    fun `test Open Telemetry feature custom configuration`() = runBlocking {
+    fun `test Open Telemetry feature custom configuration`() = runTest {
         val testClock = Clock.System
 
         val strategy = strategy("test-strategy") {
@@ -126,7 +125,7 @@ class OpenTelemetryTest {
     }
 
     @Test
-    fun `test spans are created for agent with one llm call`() = runBlocking {
+    fun `test spans are created for agent with one llm call`() = runTest {
         MockSpanExporter().use { mockExporter ->
 
             val systemPrompt = "You are the application that predicts weather"
@@ -275,7 +274,7 @@ class OpenTelemetryTest {
     }
 
     @Test
-    fun `test spans for same agent run multiple times`() = runBlocking {
+    fun `test spans for same agent run multiple times`() = runTest {
         MockSpanExporter().use { mockExporter ->
 
             val systemPrompt = "You are the application that predicts weather"
@@ -494,7 +493,7 @@ class OpenTelemetryTest {
     }
 
     @Test
-    fun `test spans are created for agent with tool call`() = runBlocking {
+    fun `test spans are created for agent with tool call`() = runTest {
         MockSpanExporter().use { mockExporter ->
 
             val systemPrompt = "You are the application that predicts weather"
@@ -716,7 +715,7 @@ class OpenTelemetryTest {
     }
 
     @Test
-    fun `test spans for agent with tool call and verbose level set to false`() = runBlocking {
+    fun `test spans for agent with tool call and verbose level set to false`() = runTest {
         MockSpanExporter().use { mockExporter ->
 
             val systemPrompt = "You are the application that predicts weather"
@@ -938,7 +937,7 @@ class OpenTelemetryTest {
     }
 
     @Test
-    fun `test spans are created for agent with parallel nodes execution`() = runBlocking {
+    fun `test spans are created for agent with parallel nodes execution`() = runTest {
         MockSpanExporter().use { mockExporter ->
 
             val userPrompt = "What's the best joke about programming?"
@@ -1065,7 +1064,7 @@ class OpenTelemetryTest {
     }
 
     @Test
-    fun `test install Open Telemetry feature with custom sdk, should use provided sdk`() = runBlocking {
+    fun `test install Open Telemetry feature with custom sdk, should use provided sdk`() = runTest {
         val strategy = strategy<String, String>("test-strategy") {
             edge(nodeStart forwardTo nodeFinish transformed { "Done" })
         }
@@ -1086,7 +1085,7 @@ class OpenTelemetryTest {
     }
 
     @Test
-    fun `test Open Telemetry feature with custom sdk configuration emits correct spans`() = runBlocking {
+    fun `test Open Telemetry feature with custom sdk configuration emits correct spans`() = runTest {
         MockSpanExporter().use { mockExporter ->
             val userPrompt = "What's the weather in Paris?"
 
@@ -1122,7 +1121,7 @@ class OpenTelemetryTest {
     }
 
     @Test
-    fun `test spans are created for agent with node execution error`() = runBlocking {
+    fun `test spans are created for agent with node execution error`() = runTest {
         MockSpanExporter().use { mockExporter ->
 
             val userPrompt = "What's the weather in Paris?"
@@ -1218,7 +1217,7 @@ class OpenTelemetryTest {
     }
 
     @Test
-    fun `test span adapter applies custom attribute to invoke agent span`() = runBlocking {
+    fun `test span adapter applies custom attribute to invoke agent span`() = runTest {
         MockSpanExporter().use { mockExporter ->
 
             val userPrompt = "What's the weather in Paris?"
@@ -1300,7 +1299,7 @@ class OpenTelemetryTest {
     }
 
     @Test
-    fun `test tokens attributes are captured for inference spans`() = runBlocking {
+    fun `test tokens attributes are captured for inference spans`() = runTest {
         MockSpanExporter().use { mockExporter ->
 
             val systemPrompt = "You are the application that predicts weather"

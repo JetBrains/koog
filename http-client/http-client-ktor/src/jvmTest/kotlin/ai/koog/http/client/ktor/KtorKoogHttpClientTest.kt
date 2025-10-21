@@ -12,8 +12,11 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
 import kotlin.test.Test
 
+@Execution(ExecutionMode.SAME_THREAD)
 class KtorKoogHttpClientTest : BaseKoogHttpClientTest() {
     override fun createClient(): KoogHttpClient {
         val baseClient = HttpClient(CIO) {}

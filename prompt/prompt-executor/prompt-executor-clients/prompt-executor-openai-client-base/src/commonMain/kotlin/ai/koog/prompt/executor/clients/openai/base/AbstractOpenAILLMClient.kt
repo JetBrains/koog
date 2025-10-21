@@ -217,7 +217,11 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
-    ): List<LLMChoice> = processProviderChatResponse(getResponse(prompt, model, tools))
+    ): List<LLMChoice> {
+        model.requireCapability(LLMCapability.MultipleChoices)
+
+        return processProviderChatResponse(getResponse(prompt, model, tools))
+    }
 
     private suspend fun getResponse(
         prompt: Prompt,
@@ -442,7 +446,13 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
                     Message.Tool.Call(
                         id = toolCall.id,
                         tool = toolCall.function.name,
-                        content = toolCall.function.arguments,
+                        /*
+                         If the tool has no arguments, OpenRouter puts an empty string in the arguments instead of an empty object
+                         But we always expect arguments to be a JSON object. Fixing this.
+                         */
+                        content = toolCall.function.arguments
+                            .takeIf { it.isNotEmpty() }
+                            ?: "{}",
                         metaInfo = metaInfo
                     )
                 }
@@ -477,8 +487,10 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
         }
     }
 
-    protected fun LLModel.requireCapability(capability: LLMCapability) {
-        require(supports(capability)) { "Model $id does not support ${capability.id}" }
+    protected fun LLModel.requireCapability(capability: LLMCapability, message: String? = null) {
+        require(supports(capability)) {
+            "Model $id does not support ${capability.id}" + (message?.let { ": $it" } ?: "")
+        }
     }
 
     /**

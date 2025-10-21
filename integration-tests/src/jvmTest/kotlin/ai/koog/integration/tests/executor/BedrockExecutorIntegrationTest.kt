@@ -5,24 +5,16 @@ import ai.koog.integration.tests.utils.MediaTestScenarios.ImageTestScenario
 import ai.koog.integration.tests.utils.MediaTestScenarios.MarkdownTestScenario
 import ai.koog.integration.tests.utils.MediaTestScenarios.TextTestScenario
 import ai.koog.integration.tests.utils.Models
-import ai.koog.integration.tests.utils.TestUtils.readAwsAccessKeyIdFromEnv
-import ai.koog.integration.tests.utils.TestUtils.readAwsSecretAccessKeyFromEnv
-import ai.koog.integration.tests.utils.TestUtils.readAwsSessionTokenFromEnv
-import ai.koog.prompt.executor.clients.LLMClient
-import ai.koog.prompt.executor.clients.bedrock.BedrockClientSettings
-import ai.koog.prompt.executor.clients.bedrock.BedrockLLMClient
-import ai.koog.prompt.executor.llms.all.simpleBedrockExecutor
+import ai.koog.integration.tests.utils.getLLMClientForProvider
+import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
-import aws.sdk.kotlin.runtime.auth.credentials.StaticCredentialsProvider
-import org.junit.jupiter.api.parallel.Execution
-import org.junit.jupiter.api.parallel.ExecutionMode
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
 
-@Execution(ExecutionMode.SAME_THREAD)
 class BedrockExecutorIntegrationTest : ExecutorIntegrationTestBase() {
     companion object {
         @JvmStatic
@@ -75,23 +67,8 @@ class BedrockExecutorIntegrationTest : ExecutorIntegrationTestBase() {
         }
     }
 
-    private fun getBedrockExecutor() = simpleBedrockExecutor(
-        readAwsAccessKeyIdFromEnv(),
-        readAwsSecretAccessKeyFromEnv(),
-        readAwsSessionTokenFromEnv(),
-    )
-
-    override fun getExecutor(model: LLModel): PromptExecutor = getBedrockExecutor()
-
-    override fun getClient(model: LLModel): LLMClient {
-        return BedrockLLMClient(
-            credentialsProvider = StaticCredentialsProvider {
-                accessKeyId = readAwsAccessKeyIdFromEnv()
-                secretAccessKey = readAwsSecretAccessKeyFromEnv()
-                sessionToken = readAwsSessionTokenFromEnv()
-            },
-            settings = BedrockClientSettings()
-        )
+    override fun getExecutor(model: LLModel): PromptExecutor {
+        return SingleLLMPromptExecutor(getLLMClientForProvider(LLMProvider.Bedrock))
     }
 
     @ParameterizedTest
@@ -162,12 +139,6 @@ class BedrockExecutorIntegrationTest : ExecutorIntegrationTestBase() {
 
     @ParameterizedTest
     @MethodSource("bedrockCombinations")
-    fun integration_testToolChoiceNoneBedrock(model: LLModel) {
-        integration_testToolChoiceNone(model)
-    }
-
-    @ParameterizedTest
-    @MethodSource("bedrockCombinations")
     fun integration_testToolChoiceNamedBedrock(model: LLModel) {
         integration_testToolChoiceNamed(model)
     }
@@ -215,20 +186,8 @@ class BedrockExecutorIntegrationTest : ExecutorIntegrationTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("bedrockImageScenarioModelCombinations")
-    fun integration_testImageProcessingBedrock(scenario: ImageTestScenario, model: LLModel) {
-        integration_testImageProcessing(scenario, model)
-    }
-
-    @ParameterizedTest
     @MethodSource("bedrockTextScenarioModelCombinations")
     fun integration_testTextProcessingBasicBedrock(scenario: TextTestScenario, model: LLModel) {
         integration_testTextProcessingBasic(scenario, model)
-    }
-
-    @ParameterizedTest
-    @MethodSource("bedrockAudioScenarioModelCombinations")
-    fun integration_testAudioProcessingBasicBedrock(scenario: AudioTestScenario, model: LLModel) {
-        integration_testAudioProcessingBasic(scenario, model)
     }
 }

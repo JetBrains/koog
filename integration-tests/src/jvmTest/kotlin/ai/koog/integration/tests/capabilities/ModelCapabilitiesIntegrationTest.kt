@@ -35,6 +35,8 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
@@ -55,6 +57,7 @@ import kotlinx.io.files.Path as KtPath
 private const val EXPECTED_ERROR = "does not support"
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@Execution(ExecutionMode.CONCURRENT)
 class ModelCapabilitiesIntegrationTest {
     private lateinit var openAIClient: OpenAILLMClient
     private lateinit var anthropicClient: AnthropicLLMClient
@@ -507,6 +510,7 @@ class ModelCapabilitiesIntegrationTest {
                         assertExceptionMessageContains(
                             ex,
                             "$EXPECTED_ERROR multiple choices",
+                            "$EXPECTED_ERROR ${LLMCapability.MultipleChoices.id}",
                             "Not implemented for this client"
                         )
                     }
@@ -607,10 +611,7 @@ class ModelCapabilitiesIntegrationTest {
                         val ex = assertFails(prompt, model)
                         assertExceptionMessageContains(
                             ex,
-                            EXPECTED_ERROR,
-                            "Unsupported OpenAI API endpoint",
-                            "not a chat completion",
-                            "Unsupported"
+                            "$EXPECTED_ERROR ${LLMCapability.OpenAIEndpoint.Completions.id}",
                         )
                     }
                 }
@@ -625,9 +626,7 @@ class ModelCapabilitiesIntegrationTest {
                         val ex = assertFails(prompt, model)
                         assertExceptionMessageContains(
                             ex,
-                            EXPECTED_ERROR,
-                            "Unsupported OpenAI API endpoint",
-                            "Unsupported"
+                            "$EXPECTED_ERROR ${LLMCapability.OpenAIEndpoint.Responses.id}",
                         )
                     }
                 }

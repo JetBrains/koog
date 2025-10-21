@@ -5,12 +5,12 @@ import org.gradle.api.tasks.testing.TestFilter
 enum class TestType(
     internal val namePattern: String,
     val shortName: String,
-    val parallelism: Boolean = true,
+    val parallelism: Boolean,
     internal val maxHeapForJvm: String? = null
 ) {
-    DEFAULT("", "test"),
-    INTEGRATION("*.integration_*", "integration"),
-    OLLAMA("*.ollama_*", "ollama");
+    DEFAULT("", "test", parallelism = true),
+    INTEGRATION("*.integration_*", "integration", parallelism = true),
+    OLLAMA("*.ollama_*", "ollama", parallelism = false);
 
     companion object {
         internal val testTypesWithoutMain = values().asList().minus(DEFAULT)

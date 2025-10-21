@@ -14,7 +14,6 @@ import ai.koog.agents.memory.feature.nodes.nodeSaveToMemory
 import ai.koog.agents.memory.feature.nodes.nodeSaveToMemoryAutoDetectFacts
 import ai.koog.agents.memory.feature.withMemory
 import ai.koog.agents.memory.model.Concept
-import ai.koog.agents.memory.model.DefaultTimeProvider
 import ai.koog.agents.memory.model.Fact
 import ai.koog.agents.memory.model.FactType
 import ai.koog.agents.memory.model.MemoryScope
@@ -26,7 +25,6 @@ import ai.koog.agents.memory.providers.LocalMemoryConfig
 import ai.koog.agents.memory.storage.SimpleStorage
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
-import ai.koog.agents.testing.tools.mockLLMAnswer
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
@@ -444,7 +442,7 @@ class MemoryNodesTest {
                         factType = FactType.SINGLE
                     ),
                     value = factValue,
-                    timestamp = DefaultTimeProvider.getCurrentTimestamp()
+                    timestamp = 42L,
                 ),
                 subject = MemorySubject.Everything,
                 scope = MemoryScope.Agent("memory-loading"),

@@ -16,11 +16,14 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.TestInstance.Lifecycle
 import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
 @TestInstance(Lifecycle.PER_METHOD)
 @ExtendWith(DockerAvailableCondition::class)
+@Execution(ExecutionMode.SAME_THREAD)
 class H2PersistenceStorageProviderTest {
 
     private val agentId = "h2-agent"

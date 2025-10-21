@@ -13,9 +13,9 @@ kotlin {
         jvmMain {
             dependencies {
                 implementation(project(":prompt:prompt-executor:prompt-executor-llms-all"))
+
                 implementation(libs.testcontainers)
                 implementation(libs.ktor.server.netty)
-                implementation(kotlin("test"))
                 implementation(kotlin("test-junit5"))
                 runtimeOnly(libs.ktor.client.apache5)
                 runtimeOnly(libs.slf4j.simple)
@@ -69,7 +69,7 @@ tasks.withType<Test> {
 
 // Try loading envs from file for integration tests only.
 tasks.withType<Test>()
-    .matching { it.name == "jvmIntegrationTest" }
+    .matching { it.name in listOf("jvmIntegrationTest", "jvmOllamaTest") }
     .configureEach {
         doFirst {
             logger.info("Loading envs from local file")

@@ -5,8 +5,11 @@ import ai.koog.http.client.test.BaseKoogHttpClientTest
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.json.Json
 import okhttp3.OkHttpClient
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
 import kotlin.test.Test
 
+@Execution(ExecutionMode.SAME_THREAD)
 class OkHttpKoogHttpClientTest : BaseKoogHttpClientTest() {
 
     override fun createClient(): KoogHttpClient {

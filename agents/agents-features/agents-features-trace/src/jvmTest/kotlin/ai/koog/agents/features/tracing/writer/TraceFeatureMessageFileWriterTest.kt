@@ -35,7 +35,6 @@ import ai.koog.agents.features.tracing.mock.userMessage
 import ai.koog.agents.features.tracing.traceString
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
-import ai.koog.agents.testing.tools.mockLLMAnswer
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.llm.toModelInfo

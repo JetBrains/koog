@@ -714,11 +714,23 @@ public open class OpenAILLMClient(
 
     internal fun determineParams(params: LLMParams, model: LLModel): OpenAIParams = when {
         "openai.azure.com" in settings.baseUrl -> params.toOpenAIChatParams() // TODO: create a separate Azure Client
-        params is OpenAIResponsesParams && model.supports(LLMCapability.OpenAIEndpoint.Responses) -> params
-        params is OpenAIChatParams && model.supports(LLMCapability.OpenAIEndpoint.Completions) -> params
+        params is OpenAIResponsesParams -> {
+            model.requireCapability(
+                LLMCapability.OpenAIEndpoint.Responses,
+                message = "Must be supported to use OpenAI responses params."
+            )
+            params
+        }
+        params is OpenAIChatParams -> {
+            model.requireCapability(
+                LLMCapability.OpenAIEndpoint.Completions,
+                message = "Must be supported to use OpenAI chat params."
+            )
+            params
+        }
         model.supports(LLMCapability.OpenAIEndpoint.Completions) -> params.toOpenAIChatParams()
         model.supports(LLMCapability.OpenAIEndpoint.Responses) -> params.toOpenAIResponsesParams()
-        else -> error("Unsupported OpenAI API endpoint for model: ${model.id}")
+        else -> error("Cannot determine proper LLM params for OpenAI model: ${model.id}")
     }
 
     private inline fun <T> selectExecutionStrategy(

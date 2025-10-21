@@ -28,9 +28,9 @@ There are two types of facts:
 - **SingleFact**: a single value associated with a concept. For example, an IDE user's current preferred theme:
 <!--- INCLUDE
 import ai.koog.agents.memory.model.Concept
-import ai.koog.agents.memory.model.DefaultTimeProvider
 import ai.koog.agents.memory.model.FactType
 import ai.koog.agents.memory.model.SingleFact
+import kotlinx.datetime.Clock
 -->
 ```kotlin
 // Storing favorite IDE theme (single value)
@@ -40,16 +40,16 @@ val themeFact = SingleFact(
         "User's preferred IDE theme", 
         factType = FactType.SINGLE),
     value = "Dark Theme",
-    timestamp = DefaultTimeProvider.getCurrentTimestamp()
+    timestamp = Clock.System.now().toEpochMilliseconds(),
 )
 ```
 <!--- KNIT example-agent-memory-01.kt -->
 - **MultipleFacts**: multiple values associated with a concept. For example, all languages that a user knows:
 <!--- INCLUDE
 import ai.koog.agents.memory.model.Concept
-import ai.koog.agents.memory.model.DefaultTimeProvider
 import ai.koog.agents.memory.model.FactType
 import ai.koog.agents.memory.model.MultipleFacts
+import kotlinx.datetime.Clock
 -->
 ```kotlin
 // Storing programming languages (multiple values)
@@ -60,7 +60,7 @@ val languagesFact = MultipleFacts(
         factType = FactType.MULTIPLE
     ),
     values = listOf("Kotlin", "Java", "Python"),
-    timestamp = DefaultTimeProvider.getCurrentTimestamp()
+    timestamp = Clock.System.now().toEpochMilliseconds(),
 )
 ```
 <!--- KNIT example-agent-memory-02.kt -->
@@ -213,10 +213,10 @@ val memoryProvider = LocalFileMemoryProvider(
 import ai.koog.agents.example.exampleAgentMemory03.MemorySubjects
 import ai.koog.agents.example.exampleAgentMemory06.memoryProvider
 import ai.koog.agents.memory.model.Concept
-import ai.koog.agents.memory.model.DefaultTimeProvider
 import ai.koog.agents.memory.model.FactType
 import ai.koog.agents.memory.model.MemoryScope
 import ai.koog.agents.memory.model.SingleFact
+import kotlinx.datetime.Clock
 
 suspend fun main() {
 -->
@@ -228,7 +228,7 @@ memoryProvider.save(
     fact = SingleFact(
         concept = Concept("greeting", "User's name", FactType.SINGLE),
         value = "John",
-        timestamp = DefaultTimeProvider.getCurrentTimestamp()
+        timestamp = Clock.System.now().toEpochMilliseconds(),
     ),
     subject = MemorySubjects.User,
     scope = MemoryScope.Product("my-app"),
@@ -339,10 +339,10 @@ the user's favorite programming language.
 import ai.koog.agents.example.exampleAgentMemory03.MemorySubjects
 import ai.koog.agents.example.exampleAgentMemory06.memoryProvider
 import ai.koog.agents.memory.model.Concept
-import ai.koog.agents.memory.model.DefaultTimeProvider
 import ai.koog.agents.memory.model.FactType
 import ai.koog.agents.memory.model.MemoryScope
 import ai.koog.agents.memory.model.SingleFact
+import kotlinx.datetime.Clock
 
 suspend fun main() {
 -->
@@ -354,7 +354,7 @@ memoryProvider.save(
     fact = SingleFact(
         concept = Concept("preferred-language", "What programming language is preferred by the user?", FactType.SINGLE),
         value = "Kotlin",
-        timestamp = DefaultTimeProvider.getCurrentTimestamp()
+        timestamp = Clock.System.now().toEpochMilliseconds(),
     ),
     subject = MemorySubjects.User,
     scope = MemoryScope.Product("my-app")
@@ -448,18 +448,18 @@ In the example above, the LLM would search for the user-related facts and projec
 import ai.koog.agents.example.exampleAgentMemory03.MemorySubjects
 import ai.koog.agents.example.exampleAgentMemory06.memoryProvider
 import ai.koog.agents.memory.model.Concept
-import ai.koog.agents.memory.model.DefaultTimeProvider
 import ai.koog.agents.memory.model.FactType
 import ai.koog.agents.memory.model.MemoryScope
 import ai.koog.agents.memory.model.SingleFact
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.Clock
 
 fun main() {
     runBlocking {
         val fact = SingleFact(
             concept = Concept("preferred-language", "What programming language is preferred by the user?", FactType.SINGLE),
             value = "Kotlin",
-            timestamp = DefaultTimeProvider.getCurrentTimestamp()
+            timestamp = Clock.System.now().toEpochMilliseconds()
         )
         val subject = MemorySubjects.User
         val scope = MemoryScope.Product("my-app")

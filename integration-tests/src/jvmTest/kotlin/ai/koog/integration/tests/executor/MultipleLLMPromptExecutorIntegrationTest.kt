@@ -6,21 +6,14 @@ import ai.koog.integration.tests.utils.MediaTestScenarios.ImageTestScenario
 import ai.koog.integration.tests.utils.MediaTestScenarios.MarkdownTestScenario
 import ai.koog.integration.tests.utils.MediaTestScenarios.TextTestScenario
 import ai.koog.integration.tests.utils.Models
-import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
-import ai.koog.integration.tests.utils.TestUtils.readTestGoogleAIKeyFromEnv
-import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
 import ai.koog.integration.tests.utils.annotations.Retry
+import ai.koog.integration.tests.utils.getLLMClientForProvider
 import ai.koog.prompt.dsl.ModerationCategory
 import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.executor.clients.LLMClient
-import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
-import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleModels
-import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
-import ai.koog.prompt.executor.llms.all.DefaultMultiLLMPromptExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -69,24 +62,19 @@ class MultipleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
         }
     }
 
-    // API keys for testing
-    private val openAIApiKey: String get() = readTestOpenAIKeyFromEnv()
-    private val anthropicApiKey: String get() = readTestAnthropicKeyFromEnv()
-    private val googleApiKey: String get() = readTestGoogleAIKeyFromEnv()
+    private val executor: MultiLLMPromptExecutor = run {
+        val providers = allModels()
+            .toList()
+            .map { it.get().single() as LLModel }
+            .map { it.provider }
+            .distinct()
 
-    // LLM clients
-    private val openAIClient get() = OpenAILLMClient(openAIApiKey)
-    private val anthropicClient get() = AnthropicLLMClient(anthropicApiKey)
-    private val googleClient get() = GoogleLLMClient(googleApiKey)
-    val executor = DefaultMultiLLMPromptExecutor(openAIClient, anthropicClient, googleClient)
+        val clients = providers.associateWith { getLLMClientForProvider(it) }
+
+        MultiLLMPromptExecutor(clients)
+    }
 
     override fun getExecutor(model: LLModel): PromptExecutor = executor
-
-    override fun getClient(model: LLModel): LLMClient = when (model.provider) {
-        is LLMProvider.Anthropic -> anthropicClient
-        is LLMProvider.Google -> googleClient
-        else -> openAIClient
-    }
 
     @ParameterizedTest
     @MethodSource("markdownScenarioModelCombinations")
@@ -319,16 +307,6 @@ class MultipleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
         Models.assumeAvailable(LLMProvider.OpenAI)
         Models.assumeAvailable(LLMProvider.Anthropic)
         Models.assumeAvailable(LLMProvider.Google)
-
-        val openAIClient = OpenAILLMClient(openAIApiKey)
-        val anthropicClient = AnthropicLLMClient(anthropicApiKey)
-        val googleClient = GoogleLLMClient(googleApiKey)
-
-        val executor = MultiLLMPromptExecutor(
-            LLMProvider.OpenAI to openAIClient,
-            LLMProvider.Anthropic to anthropicClient,
-            LLMProvider.Google to googleClient
-        )
 
         val prompt = prompt("multiple-system-messages-test") {
             system("You are a helpful assistant.")

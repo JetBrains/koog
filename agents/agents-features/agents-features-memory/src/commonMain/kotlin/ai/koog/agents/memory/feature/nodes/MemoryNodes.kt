@@ -7,7 +7,6 @@ import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.memory.config.MemoryScopeType
 import ai.koog.agents.memory.feature.withMemory
 import ai.koog.agents.memory.model.Concept
-import ai.koog.agents.memory.model.DefaultTimeProvider
 import ai.koog.agents.memory.model.Fact
 import ai.koog.agents.memory.model.FactType
 import ai.koog.agents.memory.model.MemorySubject
@@ -15,6 +14,7 @@ import ai.koog.agents.memory.model.MultipleFacts
 import ai.koog.agents.memory.model.SingleFact
 import ai.koog.agents.memory.prompts.MemoryPrompts
 import ai.koog.prompt.llm.LLModel
+import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
@@ -202,13 +202,14 @@ internal data class SubjectWithFact(
     val value: String
 )
 
-private fun getCurrentTimestamp(): Long = DefaultTimeProvider.getCurrentTimestamp()
-
 /**
  * Parsing facts from response.
  */
 @InternalAgentsApi
-public fun parseFactsFromResponse(content: String): List<Pair<MemorySubject, Fact>> {
+public fun parseFactsFromResponse(
+    content: String,
+    clock: Clock = Clock.System,
+): List<Pair<MemorySubject, Fact>> {
     val parsedFacts = Json.decodeFromString<List<SubjectWithFact>>(content)
     val groupedFacts = parsedFacts.groupBy { it.subject to it.keyword }
 
@@ -223,7 +224,7 @@ public fun parseFactsFromResponse(content: String): List<Pair<MemorySubject, Fac
                         factType = FactType.SINGLE
                     ),
                     value = singleFact.value,
-                    timestamp = getCurrentTimestamp()
+                    timestamp = clock.now().toEpochMilliseconds()
                 )
             }
 
@@ -235,7 +236,7 @@ public fun parseFactsFromResponse(content: String): List<Pair<MemorySubject, Fac
                         factType = FactType.MULTIPLE
                     ),
                     values = facts.map { it.value },
-                    timestamp = getCurrentTimestamp()
+                    timestamp = clock.now().toEpochMilliseconds()
                 )
             }
         }

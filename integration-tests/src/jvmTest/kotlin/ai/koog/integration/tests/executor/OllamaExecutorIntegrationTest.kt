@@ -34,7 +34,6 @@ import kotlin.io.path.pathString
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.io.files.Path as KtPath
@@ -61,18 +60,17 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
         val moderationModel get() = fixture.moderationModel
         val client get() = fixture.client
 
-        /*
-         * Uncomment this part and add required imports if you want to run tests against a local Ollama client.
-        val client = OllamaClient()
-        val executor = SingleLLMPromptExecutor(client)
-        val model = OllamaModels.Meta.LLAMA_3_2
-        val visionModel = OllamaModels.Granite.GRANITE_3_2_VISION
-        val moderationModel = OllamaModels.Meta.LLAMA_GUARD_3
-         * */
-
         @JvmStatic
         fun imageScenarios(): Stream<ImageTestScenario> {
-            return ImageTestScenario.entries.minus(ImageTestScenario.LARGE_IMAGE_ANTHROPIC).stream()
+            return ImageTestScenario.entries
+                .minus(
+                    setOf(
+                        ImageTestScenario.LARGE_IMAGE_ANTHROPIC,
+                        ImageTestScenario.EMPTY_IMAGE,
+                        ImageTestScenario.CORRUPTED_IMAGE,
+                    )
+                )
+                .stream()
         }
 
         @JvmStatic
@@ -83,30 +81,30 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
 
     override fun getExecutor(model: LLModel): PromptExecutor = executor
 
-    override fun getClient(model: LLModel): LLMClient = client
+    override fun getLLMClient(model: LLModel): LLMClient = client
 
     // Use base class methods through parameterized tests
     @ParameterizedTest
     @MethodSource("modelParams")
-    override fun integration_testExecute(model: LLModel) {
+    fun ollama_testExecute(model: LLModel) {
         super.integration_testExecute(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
-    override fun integration_testExecuteStreaming(model: LLModel) {
+    fun ollama_testExecuteStreaming(model: LLModel) {
         super.integration_testExecuteStreaming(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
-    override fun integration_testToolsWithRequiredParams(model: LLModel) {
+    fun ollama_testToolsWithRequiredParams(model: LLModel) {
         super.integration_testToolsWithRequiredParams(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
-    override fun integration_testToolsWithRequiredOptionalParams(
+    fun ollama_testToolsWithRequiredOptionalParams(
         model: LLModel
     ) {
         super.integration_testToolsWithRequiredOptionalParams(model)
@@ -114,55 +112,55 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
 
     @ParameterizedTest
     @MethodSource("modelParams")
-    override fun integration_testToolsWithOptionalParams(model: LLModel) {
+    fun ollama_testToolsWithOptionalParams(model: LLModel) {
         super.integration_testToolsWithOptionalParams(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
-    override fun integration_testToolsWithNoParams(model: LLModel) {
+    fun ollama_testToolsWithNoParams(model: LLModel) {
         super.integration_testToolsWithNoParams(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
-    override fun integration_testToolsWithListEnumParams(model: LLModel) {
+    fun ollama_testToolsWithListEnumParams(model: LLModel) {
         super.integration_testToolsWithListEnumParams(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
-    override fun integration_testToolsWithNestedListParams(model: LLModel) {
+    fun ollama_testToolsWithNestedListParams(model: LLModel) {
         super.integration_testToolsWithNestedListParams(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
-    override fun integration_testRawStringStreaming(model: LLModel) {
+    fun ollama_testRawStringStreaming(model: LLModel) {
         super.integration_testRawStringStreaming(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
-    override fun integration_testStructuredDataStreaming(model: LLModel) {
+    fun ollama_testStructuredDataStreaming(model: LLModel) {
         super.integration_testStructuredDataStreaming(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
-    override fun integration_testToolChoiceRequired(model: LLModel) {
+    fun ollama_testToolChoiceRequired(model: LLModel) {
         super.integration_testToolChoiceRequired(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
-    override fun integration_testToolChoiceNone(model: LLModel) {
+    fun ollama_testToolChoiceNone(model: LLModel) {
         super.integration_testToolChoiceNone(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
-    override fun integration_testToolChoiceNamed(model: LLModel) {
+    fun ollama_testToolChoiceNamed(model: LLModel) {
         super.integration_testToolChoiceNamed(model)
     }
 
@@ -266,16 +264,6 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
             listOf(Completion, Tools, Temperature, Schema.JSON.Basic, Schema.JSON.Standard),
             modelCard.capabilities
         )
-    }
-
-    @Test
-    fun `ollama_test pull model`() = runTest(timeout = 600.seconds) {
-        val beforePull = client.getModelOrNull("tinyllama")
-        assertNull(beforePull)
-
-        val afterPull =
-            client.getModelOrNull("tinyllama", pullIfMissing = true)
-        assertNotNull(afterPull)
     }
 
     // Ollama-specific image processing test

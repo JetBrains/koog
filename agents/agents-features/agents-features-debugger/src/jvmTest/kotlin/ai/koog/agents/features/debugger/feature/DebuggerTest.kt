@@ -45,7 +45,6 @@ import ai.koog.agents.testing.network.NetUtil
 import ai.koog.agents.testing.network.NetUtil.findAvailablePort
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
-import ai.koog.agents.testing.tools.mockLLMAnswer
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
@@ -72,6 +71,8 @@ import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.io.IOException
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -85,6 +86,7 @@ import kotlin.time.DurationUnit
 import kotlin.time.measureTime
 import kotlin.time.toDuration
 
+@Execution(ExecutionMode.SAME_THREAD)
 class DebuggerTest {
 
     companion object {

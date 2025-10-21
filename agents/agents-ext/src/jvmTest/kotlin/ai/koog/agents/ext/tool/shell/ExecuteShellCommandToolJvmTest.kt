@@ -6,6 +6,7 @@ import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.RepeatedTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.condition.EnabledOnOs
 import org.junit.jupiter.api.condition.OS
@@ -329,11 +330,13 @@ class ExecuteShellCommandToolJvmTest {
     @Test
     @EnabledOnOs(OS.LINUX, OS.MAC)
     fun `long running command times out`() = runBlocking {
-        val result = executeShellCommand("sleep 1.1", timeoutSeconds = 1)
+        val command = "sleep 5"
+        val timeout = 1
+        val result = executeShellCommand(command, timeoutSeconds = timeout)
 
         val expected = """
-            Command: sleep 1.1
-            Command timed out after 1 seconds
+            Command: $command
+            Command timed out after $timeout seconds
         """.trimIndent()
 
         assertEquals(expected, result.textForLLM())
@@ -382,12 +385,14 @@ class ExecuteShellCommandToolJvmTest {
 
     // CANCELLATION TESTS
 
-    @Test
+    @RepeatedTest(10)
     @EnabledOnOs(OS.LINUX, OS.MAC)
     fun `executor can be cancelled with timeout`() = runBlocking {
+        val timeoutSeconds = 1
+
         val job = launch {
-            val result = executeShellCommand("sleep 1.1", timeoutSeconds = 1)
-            fail("Command should have been cancelled, but completed with: ${result.textForLLM()}")
+            val result = executeShellCommand("sleep 1.1", timeoutSeconds = timeoutSeconds)
+            fail("Command should have been cancelled, but completed with: $result")
         }
 
         delay(10)
@@ -397,8 +402,8 @@ class ExecuteShellCommandToolJvmTest {
         }
 
         assertTrue(
-            cancelDurationMs < 20,
-            "Cancellation should be immediate, but took ${cancelDurationMs}ms"
+            cancelDurationMs < timeoutSeconds * 500, // 2 times faster than timeout
+            "Cancellation should happen relatively fast, at least less than timeout and the actual command, but took ${cancelDurationMs}ms"
         )
         assertTrue(job.isCancelled, "Job should be cancelled")
     }

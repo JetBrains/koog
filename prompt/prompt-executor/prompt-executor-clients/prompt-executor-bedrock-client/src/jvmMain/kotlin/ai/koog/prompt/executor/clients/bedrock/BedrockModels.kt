@@ -108,25 +108,25 @@ public object BedrockModels : LLModelDefinitions {
         LLMCapability.Completion
     )
 
-    // Capabilities for models that support tools/functions
-    private val toolCapabilities: List<LLMCapability> = standardCapabilities + listOf(
+    // Tool calling capabilities
+    private val toolCapabilities: List<LLMCapability> = listOf(
         LLMCapability.Tools,
         LLMCapability.ToolChoice,
-        LLMCapability.Schema.JSON.Standard
     )
+
+    // Multimodal capabilities (text and images)
+    private val multimodalCapabilities: List<LLMCapability> = listOf(
+        LLMCapability.Vision.Image,
+        LLMCapability.Document
+    )
+
+    // Full capabilities (multimodal + tools)
+    private val fullCapabilities: List<LLMCapability> =
+        standardCapabilities + toolCapabilities + multimodalCapabilities
 
     // Capabilities of the nova models
     private val novaCapabilities: List<LLMCapability> = standardCapabilities + listOf(
         LLMCapability.Tools,
-    )
-
-    // Full capabilities (multimodal + tools)
-    private val fullCapabilities: List<LLMCapability> = standardCapabilities + listOf(
-        LLMCapability.Tools,
-        LLMCapability.ToolChoice,
-        LLMCapability.Schema.JSON.Standard,
-        LLMCapability.Vision.Image,
-        LLMCapability.Document,
     )
 
     /**
@@ -140,7 +140,7 @@ public object BedrockModels : LLModelDefinitions {
      * - Tool/function calling
      */
     public val AnthropicClaude3Opus: LLModel = BedrockModel(
-        AnthropicModels.Opus_3,
+        AnthropicModels.Opus_3.withoutMultimodalCapabilities(),
         "anthropic.claude-3-opus-20240229-v1:0",
     ).effectiveModel
 
@@ -157,7 +157,7 @@ public object BedrockModels : LLModelDefinitions {
      * - Memory capabilities for maintaining continuity
      */
     public val AnthropicClaude4Opus: LLModel = BedrockModel(
-        AnthropicModels.Opus_4,
+        AnthropicModels.Opus_4.withoutMultimodalCapabilities(),
         "anthropic.claude-opus-4-20250514-v1:0",
     ).effectiveModel
 
@@ -174,7 +174,7 @@ public object BedrockModels : LLModelDefinitions {
      * - Memory capabilities for maintaining continuity
      */
     public val AnthropicClaude41Opus: LLModel = BedrockModel(
-        AnthropicModels.Opus_4_1,
+        AnthropicModels.Opus_4_1.withoutMultimodalCapabilities(),
         "anthropic.claude-opus-4-1-20250805-v1:0",
     ).effectiveModel
 
@@ -191,7 +191,7 @@ public object BedrockModels : LLModelDefinitions {
      * - Precise instruction following
      */
     public val AnthropicClaude4Sonnet: LLModel = BedrockModel(
-        AnthropicModels.Sonnet_4,
+        AnthropicModels.Sonnet_4.withoutMultimodalCapabilities(),
         "anthropic.claude-sonnet-4-20250514-v1:0",
     ).effectiveModel
 
@@ -207,7 +207,7 @@ public object BedrockModels : LLModelDefinitions {
      * - Optimized for both quality and efficiency
      */
     public val AnthropicClaude4_5Sonnet: LLModel = BedrockModel(
-        AnthropicModels.Sonnet_4_5,
+        AnthropicModels.Sonnet_4_5.withoutMultimodalCapabilities(),
         "anthropic.claude-sonnet-4-5-20250929-v1:0",
     ).effectiveModel
 
@@ -220,7 +220,7 @@ public object BedrockModels : LLModelDefinitions {
      * and high-volume user experiences.
      */
     public val AnthropicClaude4_5Haiku: LLModel = BedrockModel(
-        AnthropicModels.Haiku_4_5,
+        AnthropicModels.Haiku_4_5.withoutMultimodalCapabilities(),
         "anthropic.claude-haiku-4-5-20251001-v1:0",
     ).effectiveModel
 
@@ -256,7 +256,7 @@ public object BedrockModels : LLModelDefinitions {
      * - Multimodal understanding with vision
      */
     public val AnthropicClaude35SonnetV2: LLModel = BedrockModel(
-        AnthropicModels.Sonnet_3_5,
+        AnthropicModels.Sonnet_3_5.withoutMultimodalCapabilities(),
         "anthropic.claude-3-5-sonnet-20241022-v2:0",
     ).effectiveModel
 
@@ -273,7 +273,7 @@ public object BedrockModels : LLModelDefinitions {
      * - Processing large volumes of data
      */
     public val AnthropicClaude35Haiku: LLModel = BedrockModel(
-        AnthropicModels.Haiku_3_5,
+        AnthropicModels.Haiku_3_5.withoutMultimodalCapabilities(),
         "anthropic.claude-3-5-haiku-20241022-v1:0",
     ).effectiveModel
 
@@ -288,7 +288,7 @@ public object BedrockModels : LLModelDefinitions {
      * - Tool/function calling
      */
     public val AnthropicClaude3Haiku: LLModel = BedrockModel(
-        AnthropicModels.Haiku_3,
+        AnthropicModels.Haiku_3.withoutMultimodalCapabilities(),
         "anthropic.claude-3-haiku-20240307-v1:0",
     ).effectiveModel
 
@@ -426,7 +426,7 @@ public object BedrockModels : LLModelDefinitions {
         LLModel(
             provider = LLMProvider.Bedrock,
             id = "ai21.jamba-1-5-large-v1:0",
-            capabilities = toolCapabilities,
+            capabilities = standardCapabilities + toolCapabilities,
             contextLength = 256_000,
         ),
     ).effectiveModel
@@ -447,7 +447,7 @@ public object BedrockModels : LLModelDefinitions {
         LLModel(
             provider = LLMProvider.Bedrock,
             id = "ai21.jamba-1-5-mini-v1:0",
-            capabilities = toolCapabilities,
+            capabilities = standardCapabilities + toolCapabilities,
             contextLength = 256_000,
         ),
     ).effectiveModel
@@ -651,6 +651,20 @@ public object BedrockModels : LLModelDefinitions {
             contextLength = 128_000,
         ),
     ).effectiveModel
+}
+
+/**
+ * Multimodality is currently not supported by Bedrock client.
+ * This is a helper function to copy existing model definitions while removing multimodal capabilities.
+ */
+private fun LLModel.withoutMultimodalCapabilities(): LLModel {
+    return copy(
+        capabilities = capabilities.filter {
+            it !is LLMCapability.Vision &&
+                it !is LLMCapability.Audio &&
+                it !is LLMCapability.Document
+        }
+    )
 }
 
 /**

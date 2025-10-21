@@ -87,11 +87,9 @@ public class KtorKoogHttpClient internal constructor(
             }
         } else {
             val errorBody = response.bodyAsText()
-            val errorMessage = "Error from $clientName API: ${response.status}"
+            val errorMessage = "Error from $clientName API: ${response.status}\nBody:\n$errorBody"
 
             logger.error { errorMessage }
-            logger.trace { "$errorMessage\nBody:\n$errorBody" }
-
             error(errorMessage)
         }
     }
@@ -135,12 +133,10 @@ public class KtorKoogHttpClient internal constructor(
         } catch (e: SSEClientException) {
             e.response?.let { response ->
                 val body = response.readRawBytes().decodeToString()
-                val errorMessage = "Error from $clientName API: ${response.status}: ${e.message}"
+                val errorMessage = "Error from $clientName API: ${response.status}: ${e.message}\nBody:\n$body"
 
                 logger.error(e) { errorMessage }
-                logger.trace(e) { "$errorMessage\nBody:\n$body" }
-
-                error("Error from $clientName API: ${response.status}: ${e.message}")
+                error(errorMessage)
             }
         } catch (e: Exception) {
             logger.error { "Exception during streaming from $clientName: $e" }

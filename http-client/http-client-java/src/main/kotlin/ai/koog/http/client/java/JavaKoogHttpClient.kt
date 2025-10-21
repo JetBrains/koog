@@ -69,11 +69,9 @@ public class JavaKoogHttpClient internal constructor(
             }
         } else {
             val errorBody = response.body()
-            val errorMessage = "Error from $clientName API: ${response.statusCode()}"
+            val errorMessage = "Error from $clientName API: ${response.statusCode()}\nBody:\n$errorBody"
 
             logger.error { errorMessage }
-            logger.trace { "$errorMessage\nBody:\n$errorBody" }
-
             error(errorMessage)
         }
     }

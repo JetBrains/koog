@@ -9,7 +9,6 @@ import ai.koog.agents.memory.config.MemoryScopeType
 import ai.koog.agents.memory.config.MemoryScopesProfile
 import ai.koog.agents.memory.feature.AgentMemory
 import ai.koog.agents.memory.model.Concept
-import ai.koog.agents.memory.model.DefaultTimeProvider
 import ai.koog.agents.memory.model.Fact
 import ai.koog.agents.memory.model.FactType
 import ai.koog.agents.memory.model.MemoryScope
@@ -32,8 +31,6 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkConstructor
-import io.mockk.mockkObject
 import io.mockk.slot
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
@@ -150,42 +147,27 @@ class AIAgentMemoryTest {
         val featureFact = SingleFact(concept = concept, value = "feature fact", timestamp = testTimestamp)
         val productFact = SingleFact(concept = concept, value = "product fact", timestamp = testTimestamp)
 
-        // Mock responses for all subjects for Agent scope
-        MemorySubject.registeredSubjects.forEach { subject ->
-            coEvery {
-                memoryProvider.load(concept, subject, MemoryScope.Agent("test-agent"))
-            } returns when (subject) {
-                MemorySubjects.User -> listOf(agentFact)
-                else -> emptyList()
-            }
-        }
+        // Mock responses for User subject with specific scopes
+        coEvery {
+            memoryProvider.load(concept, MemorySubjects.User, MemoryScope.Agent("test-agent"))
+        } returns listOf(agentFact)
 
-        // Mock responses for all subjects for Feature scope
-        MemorySubject.registeredSubjects.forEach { subject ->
-            coEvery {
-                memoryProvider.load(concept, subject, MemoryScope.Feature("test-feature"))
-            } returns when (subject) {
-                MemorySubjects.User -> listOf(featureFact)
-                else -> emptyList()
-            }
-        }
+        coEvery {
+            memoryProvider.load(concept, MemorySubjects.User, MemoryScope.Feature("test-feature"))
+        } returns listOf(featureFact)
 
-        // Mock responses for all subjects for Product scope
-        MemorySubject.registeredSubjects.forEach { subject ->
-            coEvery {
-                memoryProvider.load(concept, subject, MemoryScope.Product("test-product"))
-            } returns when (subject) {
-                MemorySubjects.User -> listOf(productFact)
-                else -> emptyList()
-            }
-        }
+        coEvery {
+            memoryProvider.load(concept, MemorySubjects.User, MemoryScope.Product("test-product"))
+        } returns listOf(productFact)
 
-        // Mock responses for CrossProduct scope
-        MemorySubject.registeredSubjects.forEach { subject ->
-            coEvery {
-                memoryProvider.load(concept, subject, MemoryScope.CrossProduct)
-            } returns emptyList()
-        }
+        coEvery {
+            memoryProvider.load(concept, MemorySubjects.User, MemoryScope.CrossProduct)
+        } returns emptyList()
+
+        // All other requests
+        coEvery {
+            memoryProvider.load(any(), any(), any())
+        } returns emptyList()
 
         val response = mockk<Message.Response>()
         every { response.content } returns "OK"
@@ -251,9 +233,6 @@ class AIAgentMemoryTest {
         // Create a slot to capture the prompt update
         val promptUpdateSlot = slot<PromptBuilder.() -> Unit>()
 
-        // Mock LLM context to capture prompt updates
-        mockkConstructor(AIAgentLLMWriteSession::class)
-
         val llm = mockk<AIAgentLLMContext> {
             coEvery {
                 writeSession<Any?>(any<suspend AIAgentLLMWriteSession.() -> Any?>())
@@ -273,7 +252,7 @@ class AIAgentMemoryTest {
             scopesProfile = MemoryScopesProfile(MemoryScopeType.AGENT to "test-agent")
         )
 
-        memory.loadFactsToAgent(llm = llm, concept = concept)
+        memory.loadFactsToAgent(llm, concept, subjects = listOf(MemorySubjects.User))
 
         // Verify that writeSession was called and the prompt was updated with facts
         coVerify {
@@ -299,11 +278,6 @@ class AIAgentMemoryTest {
         val memoryProvider = mockk<AgentMemoryProvider>()
         val promptExecutor = mockk<PromptExecutor>()
         val savedFacts = mutableListOf<SingleFact>()
-
-        // Mock DefaultTimeProvider to return sequential timestamps
-        mockkObject(DefaultTimeProvider)
-        var currentTime = 1000L
-        every { DefaultTimeProvider.getCurrentTimestamp() } answers { currentTime++ }
 
         // Mock LLM response
         val response = mockk<Message.Response>()

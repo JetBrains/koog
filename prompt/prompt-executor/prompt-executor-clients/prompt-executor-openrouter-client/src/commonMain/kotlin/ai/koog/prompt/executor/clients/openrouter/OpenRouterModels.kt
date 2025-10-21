@@ -22,8 +22,7 @@ public object OpenRouterModels : LLModelDefinitions {
     )
 
     /**
-     * Additional capabilities available for models out of the Claude family.
-     * Includes structured output support and tool choice.
+     * Structured output support and tool choice.
      */
     private val additionalCapabilities: List<LLMCapability> = listOf(
         LLMCapability.Schema.JSON.Standard,
@@ -309,8 +308,8 @@ public object OpenRouterModels : LLModelDefinitions {
      */
     public val Mistral7B: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
-        id = "mistral/mistral-7b",
-        capabilities = standardCapabilities + additionalCapabilities,
+        id = "mistralai/mistral-7b-instruct",
+        capabilities = standardCapabilities,
         contextLength = 32_768,
     )
 
@@ -325,8 +324,8 @@ public object OpenRouterModels : LLModelDefinitions {
      */
     public val Mixtral8x7B: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
-        id = "mistral/mixtral-8x7b",
-        capabilities = standardCapabilities + additionalCapabilities,
+        id = "mistralai/mixtral-8x7b-instruct",
+        capabilities = standardCapabilities,
         contextLength = 32_768,
     )
 
@@ -382,7 +381,7 @@ public object OpenRouterModels : LLModelDefinitions {
     public val DeepSeekV30324: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "deepseek/deepseek-chat-v3-0324",
-        capabilities = standardCapabilities + additionalCapabilities,
+        capabilities = standardCapabilities,
         contextLength = 163_800,
         maxOutputTokens = 163_800,
     )
@@ -430,7 +429,7 @@ public object OpenRouterModels : LLModelDefinitions {
     public val Qwen2_5: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "qwen/qwen-2.5-72b-instruct",
-        capabilities = standardCapabilities + additionalCapabilities,
+        capabilities = standardCapabilities,
         contextLength = 131_072,
         maxOutputTokens = 8_192,
     )

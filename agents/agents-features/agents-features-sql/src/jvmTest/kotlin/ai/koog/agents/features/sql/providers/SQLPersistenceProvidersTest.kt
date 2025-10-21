@@ -9,6 +9,8 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.JsonPrimitive
 import org.jetbrains.exposed.sql.Database
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -20,6 +22,7 @@ import kotlin.test.assertNull
  * Focuses on H2 in-memory database for actual functionality tests
  * and compilation verification for other providers.
  */
+@Execution(ExecutionMode.SAME_THREAD)
 class SQLPersistenceProvidersTest {
 
     @Test

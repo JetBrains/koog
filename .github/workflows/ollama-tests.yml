@@ -49,19 +49,13 @@ jobs:
           
           # Stop and remove all containers
           docker ps -aq | xargs -r docker rm -f || true
-          
-          # Remove all Docker images, networks, and volumes
-          docker system prune -af --volumes
+
+          # Remove Docker images and networks (but keep volumes for potential caching)
+          docker system prune -af
           docker image prune -af
-          docker volume prune -af
           docker network prune -f
-          
-          # Clean package caches
-          sudo apt-get clean
-          sudo apt-get autoclean
-          sudo apt-get autoremove -y
-          
-          # Remove large directories
+
+          # Remove large directories that we don't need
           sudo rm -rf /usr/share/dotnet
           sudo rm -rf /opt/ghc
           sudo rm -rf /usr/local/share/boost
@@ -71,13 +65,10 @@ jobs:
           sudo rm -rf /usr/local/.ghcup
           sudo rm -rf /home/runner/.dotnet
           sudo rm -rf /opt/hostedtoolcache
-          
+
           # Clean npm and yarn caches
           sudo rm -rf /home/runner/.npm
           sudo rm -rf /home/runner/.yarn
-          
-          # Clean Gradle cache from previous runs
-          sudo rm -rf /home/runner/.gradle
           
           echo "=== Disk space after cleanup ==="
           df -h
@@ -88,13 +79,12 @@ jobs:
         with:
           java-version: '17'
           distribution: 'corretto'
+          cache: gradle
 
       # Configure Gradle for optimal use in GitHub Actions, including caching of downloaded dependencies.
       # See: https://github.com/gradle/actions/blob/main/setup-gradle/README.md
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
-        with:
-          cache-disabled: true
 
       - name: Check disk space before tests
         run: |
@@ -107,9 +97,26 @@ jobs:
           echo "=== Memory info ==="
           free -h
 
+      - name: Install and start Ollama
+        run: |
+          echo "=== Installing Ollama ==="
+          curl -fsSL https://ollama.com/install.sh | sh
+
+          echo "=== Starting Ollama in background ==="
+          nohup ollama serve > /tmp/ollama.log 2>&1 &
+          OLLAMA_PID=$!
+          echo "OLLAMA_PID=$OLLAMA_PID" >> $GITHUB_ENV
+          echo "Ollama PID: $OLLAMA_PID"
+
+          echo "=== Waiting for Ollama to be ready ==="
+          timeout 10 bash -c 'until curl -s http://localhost:11434 > /dev/null 2>&1; do echo "Waiting..."; sleep 2; done'
+
+          echo "=== Ollama started successfully ==="
+          curl -s http://localhost:11434
+
       - name: JvmOllamaTest with Gradle Wrapper
         env:
-          OLLAMA_IMAGE_URL: ${{ vars.OLLAMA_IMAGE_URL }}
+          OLLAMA_LOCAL_URL: http://localhost:11434
           GRADLE_OPTS: "-Dorg.gradle.daemon=false -Xmx1g -XX:MaxMetaspaceSize=512m"
         run: |
           echo "=== Starting tests with available disk space ==="
@@ -119,32 +126,12 @@ jobs:
             --tests "${{ matrix.test-group }}" \
             --no-parallel \
             --no-daemon \
-            --no-build-cache \
-            --no-configuration-cache \
             --continue \
             --stacktrace
           
           echo "=== Test completed, checking disk space ==="
           df -h / | tail -1
         timeout-minutes: 60
-
-      - name: Cleanup Docker resources
-        if: always()
-        run: |
-          echo "=== Stopping all containers ==="
-          docker ps -q | xargs -r docker stop || true
-          
-          echo "=== Removing all containers ==="
-          docker ps -aq | xargs -r docker rm -f || true
-          
-          echo "=== Removing Ollama images ==="
-          docker images | grep ollama | awk '{print $3}' | xargs -r docker rmi -f || true
-          
-          echo "=== Pruning system ==="
-          docker system prune -af --volumes
-          
-          echo "=== Final disk space ==="
-          df -h
 
       - name: Check disk space after tests
         if: always()
@@ -157,6 +144,21 @@ jobs:
           docker system df
           echo "=== Largest directories in /home/runner ==="
           sudo du -sh /home/runner/* 2>/dev/null | sort -hr | head -10 || true
+
+      - name: Stop Ollama
+        if: always()
+        run: |
+          echo "=== Stopping Ollama ==="
+          if [ -n "$OLLAMA_PID" ]; then
+            kill $OLLAMA_PID || true
+            echo "Ollama process $OLLAMA_PID stopped"
+          else
+            echo "No Ollama PID found, attempting pkill"
+            pkill -f "ollama serve" || true
+          fi
+
+          echo "=== Ollama logs (last 50 lines) ==="
+          tail -50 /tmp/ollama.log || echo "No Ollama logs found"
 
       - name: Collect reports
         if: always()
