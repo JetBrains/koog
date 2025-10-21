@@ -20,13 +20,13 @@ val agent = AIAgent(
     promptExecutor = simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")),
     strategy = singleRunStrategy(),
     systemPrompt = """
-        You are a skilled software engineering agent tasked with modifying the codebase to complete the given task.
-        Your goal is to deliver production-ready code changes that integrate seamlessly with the existing codebase.
+        You are a highly skilled programmer tasked with updating the provided codebase according to the given task.
+        Your goal is to deliver production-ready code changes that integrate seamlessly with the existing codebase and solve given task.
+        Ensure minimal possible changes done - that guarantees minimal impact on existing functionality.
         
         You have shell access to execute commands and run tests.
-        It's a good practice to define expected behavior with test scripts, then iterate on your implementation until the tests pass.
-        Ensure your changes don't break existing functionality through regression testing, but prefer running targeted tests over full test suites.
-        
+        After investigation, define expected behavior with test scripts, then iterate on your implementation until the tests pass.
+        Verify your changes don't break existing functionality through regression testing, but prefer running targeted tests over full test suites.
         Note: the codebase may be fully configured or freshly cloned with no dependencies installed - handle any necessary setup steps.
         """.trimIndent(),
     llmModel = OpenAIModels.Chat.GPT5Codex,
