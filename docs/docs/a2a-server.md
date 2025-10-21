@@ -2,6 +2,23 @@
 
 The A2A server enables you to expose AI agents through the standardized A2A (Agent-to-Agent) protocol. It provides a complete implementation of the [A2A protocol specification](https://a2a-protocol.org/latest/specification/), handling client requests, executing agent logic, managing complex task lifecycles, and supporting real-time streaming responses.
 
+## Dependencies
+
+To use the A2A server in your project, add the following dependencies to your `build.gradle.kts`:
+
+```kotlin
+dependencies {
+    // Core A2A server library
+    implementation("ai.koog:a2a-server:$koogVersion")
+
+    // HTTP JSON-RPC transport (most common)
+    implementation("ai.koog:a2a-transport-server-jsonrpc-http:$koogVersion")
+
+    // Ktor server engine (choose one that fits your needs)
+    implementation("io.ktor:ktor-server-netty:$ktorVersion")
+}
+```
+
 ## Overview
 
 The A2A server acts as a bridge between the A2A protocol transport layer and your custom agent logic. 
