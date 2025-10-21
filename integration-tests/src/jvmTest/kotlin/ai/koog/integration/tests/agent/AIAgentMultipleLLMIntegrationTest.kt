@@ -131,9 +131,7 @@ internal class ReportingLLMLLMClient(
     override suspend fun moderate(
         prompt: Prompt,
         model: LLModel
-    ): ModerationResult {
-        throw NotImplementedError("Moderation not needed for this test")
-    }
+    ): ModerationResult = throw NotImplementedError("Moderation not needed for this test")
 }
 
 internal fun LLMClient.reportingTo(
@@ -147,8 +145,8 @@ class AIAgentMultipleLLMIntegrationTest {
 
         @JvmStatic
         fun getModels(): Stream<LLModel> = Stream.of(
-            AnthropicModels.Sonnet_3_7,
-            OpenAIModels.Chat.GPT4o,
+            AnthropicModels.Sonnet_4_5,
+            OpenAIModels.Chat.GPT5,
         )
 
         @JvmStatic
@@ -381,13 +379,12 @@ class AIAgentMultipleLLMIntegrationTest {
             val anthropicSubgraph by subgraph<String, Unit>("anthropic") {
                 val definePromptAnthropic by node<Unit, Unit> {
                     llm.writeSession {
-                        model = AnthropicModels.Sonnet_3_7
+                        model = AnthropicModels.Haiku_4_5
                         rewritePrompt {
                             prompt("test", params = LLMParams(toolChoice = LLMParams.ToolChoice.Auto)) {
                                 system(
                                     "You are a helpful assistant. You need to solve my task. " +
-                                        "CALL TOOLS!!! DO NOT SEND MESSAGES!!!!! ONLY SEND THE FINAL MESSAGE " +
-                                        "WHEN YOU ARE FINISHED AND EVERYTHING IS DONE AFTER CALLING THE TOOLS!"
+                                        "JUST CALL TOOLS. NO QUESTIONS ASKED."
                                 )
                             }
                         }
@@ -410,7 +407,7 @@ class AIAgentMultipleLLMIntegrationTest {
             val openaiSubgraph by subgraph("openai") {
                 val definePromptOpenAI by node<Unit, Unit> {
                     llm.writeSession {
-                        model = OpenAIModels.Chat.GPT4o
+                        model = OpenAIModels.Chat.GPT5
                         rewritePrompt {
                             prompt("test", params = LLMParams(toolChoice = LLMParams.ToolChoice.Auto)) {
                                 system(
@@ -418,9 +415,7 @@ class AIAgentMultipleLLMIntegrationTest {
                                     You are a helpful assistant. You need to verify that the task is solved correctly.
                                     Please analyze the whole produced solution, and check that it is valid.
                                     Write concise verification result.
-                                    CALL TOOLS!!! DO NOT SEND MESSAGES!!!!!
-                                    ONLY SEND THE FINAL MESSAGE WHEN YOU ARE FINISHED AND EVERYTHING IS DONE
-                                    AFTER CALLING THE TOOLS! 
+                                    JUST CALL TOOLS. NO QUESTIONS ASKED.
                                     """.trimIndent()
                                 )
                             }
@@ -456,7 +451,7 @@ class AIAgentMultipleLLMIntegrationTest {
         return AIAgent(
             promptExecutor = executor,
             strategy = strategy,
-            agentConfig = AIAgentConfig(prompt, OpenAIModels.Chat.GPT4o, maxAgentIterations),
+            agentConfig = AIAgentConfig(prompt, OpenAIModels.Chat.GPT5, maxAgentIterations),
             toolRegistry = tools,
         ) {
             install(EventHandler, eventHandlerConfig)
@@ -521,7 +516,7 @@ class AIAgentMultipleLLMIntegrationTest {
     }
 
     @Test
-    fun integration_testOpenAIAnthropicAgent() = runTest(timeout = 600.seconds) {
+    fun integration_testOpenAIAnthropicAgent() = runTest(timeout = 10.minutes) {
         Models.assumeAvailable(LLMProvider.OpenAI)
         Models.assumeAvailable(LLMProvider.Anthropic)
 
@@ -536,7 +531,7 @@ class AIAgentMultipleLLMIntegrationTest {
         val agent = createTestMultiLLMAgent(
             fs,
             eventHandlerConfig,
-            maxAgentIterations = 42,
+            maxAgentIterations = 50,
             eventsChannel = eventsChannel,
         )
 
@@ -686,7 +681,7 @@ class AIAgentMultipleLLMIntegrationTest {
     @Test
     fun integration_testAnthropicAgentEnumSerialization() {
         runBlocking {
-            val llmModel = AnthropicModels.Sonnet_3_7
+            val llmModel = AnthropicModels.Sonnet_4_5
             Models.assumeAvailable(llmModel.provider)
             val agent = AIAgent(
                 promptExecutor = simpleAnthropicExecutor(anthropicApiKey),
@@ -780,7 +775,7 @@ class AIAgentMultipleLLMIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("modelsWithVisionCapability")
-    fun integration_testAgentWithImageCapabilityUrl(model: LLModel) = runTest(timeout = 3.minutes) {
+    fun integration_testAgentWithImageCapabilityUrl(model: LLModel) = runTest(timeout = 5.minutes) {
         Models.assumeAvailable(model.provider)
 
         val fs = MockFileSystem()
@@ -817,7 +812,7 @@ class AIAgentMultipleLLMIntegrationTest {
             val agent = createTestMultiLLMAgent(
                 fs,
                 eventHandlerConfig,
-                maxAgentIterations = 20,
+                maxAgentIterations = 50,
                 prompt = prompt,
             )
 

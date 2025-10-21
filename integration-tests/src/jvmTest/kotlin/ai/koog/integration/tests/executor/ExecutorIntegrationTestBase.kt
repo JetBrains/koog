@@ -386,6 +386,83 @@ abstract class ExecutorIntegrationTestBase {
         }
     }
 
+    open fun integration_testToolsWithNullParams(model: LLModel) = runTest(timeout = 300.seconds) {
+        Models.assumeAvailable(model.provider)
+        assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
+
+        val nullGiverTool = ToolDescriptor(
+            name = "nullGiver",
+            description = "A tool that returns a null value",
+            requiredParameters = listOf(
+                ToolParameterDescriptor(
+                    name = "Null",
+                    description = "A null",
+                    type = ToolParameterType.Null
+                )
+            )
+        )
+
+        val prompt = Prompt.build("test-tools") {
+            system("You are a helpful assistant. ALWAYS CALL TOOL FIRST.")
+            user("Hi. Call a tool.")
+        }
+
+        val executor = getExecutor(model)
+
+        withRetry(times = 3, testName = "integration_testToolsWithNullParams[${model.id}]") {
+            val response = executor.execute(prompt, model, listOf(nullGiverTool))
+            assertTrue(response.isNotEmpty(), "Response should not be empty")
+            assertTrue(
+                response.first { it is Message.Tool.Call }.content.contains("null"),
+                "Tool call response should contain null"
+            )
+        }
+    }
+
+    open fun integration_testToolsWithAnyOfParams(model: LLModel) = runTest(timeout = 300.seconds) {
+        Models.assumeAvailable(model.provider)
+        assumeTrue(model.provider != LLMProvider.Anthropic, "Anthropic does not support anyOf")
+        assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
+
+        val anyOfTool = ToolDescriptor(
+            name = "stringNumberGiver",
+            description = "A tool that returns a string or number value",
+            requiredParameters = listOf(
+                ToolParameterDescriptor(
+                    name = "anyOfParam",
+                    description = "String or number parameter",
+                    type = ToolParameterType.AnyOf(
+                        types = arrayOf(
+                            ToolParameterDescriptor(
+                                name = "String",
+                                description = "String option",
+                                type = ToolParameterType.String
+                            ),
+                            ToolParameterDescriptor(
+                                name = "Number",
+                                description = "Number option",
+                                type = ToolParameterType.Float
+                            )
+                        )
+                    )
+                )
+            )
+        )
+
+        val prompt = Prompt.build("test-tools") {
+            system("You are a helpful assistant. ALWAYS CALL TOOL FIRST.")
+            user("Hi. Give me a word and a number.")
+        }
+
+        val executor = getExecutor(model)
+
+        withRetry(times = 3, testName = "integration_testToolsWithAnyOfParams[${model.id}]") {
+            val response = executor.execute(prompt, model, listOf(anyOfTool))
+            assertTrue(response.isNotEmpty(), "Response should not be empty")
+            assertTrue(response.any { it is Message.Tool.Call })
+        }
+    }
+
     open fun integration_testStructuredDataStreaming(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model != OpenAIModels.CostOptimized.GPT4_1Nano, "Model $model is too small for structured streaming")

@@ -60,14 +60,15 @@ object MediaTestScenarios {
         CORRUPTED_AUDIO
     }
 
+    val models = listOf(
+        AnthropicModels.Sonnet_4_5,
+        GoogleModels.Gemini2_5Flash, // see KG-256
+        OpenAIModels.Chat.GPT5,
+    )
+
     @JvmStatic
     fun markdownScenarioModelCombinations(): Stream<Arguments> {
         val scenarios = MarkdownTestScenario.entries.toTypedArray()
-        val models = listOf(
-            AnthropicModels.Sonnet_3_7,
-            GoogleModels.Gemini2_0Flash, // see KG-256
-            OpenAIModels.Chat.GPT4o,
-        )
         return scenarios.flatMap { scenario ->
             models.map { model ->
                 Arguments.of(scenario, model)
@@ -78,11 +79,6 @@ object MediaTestScenarios {
     @JvmStatic
     fun imageScenarioModelCombinations(): Stream<Arguments> {
         val scenarios = ImageTestScenario.entries.toTypedArray()
-        val models = listOf(
-            OpenAIModels.Chat.GPT4o,
-            AnthropicModels.Sonnet_3_7,
-            GoogleModels.Gemini2_5Pro
-        )
         return scenarios.flatMap { scenario ->
             models.map { model ->
                 Arguments.of(scenario, model)
@@ -93,11 +89,6 @@ object MediaTestScenarios {
     @JvmStatic
     fun textScenarioModelCombinations(): Stream<Arguments> {
         val scenarios = TextTestScenario.entries.toTypedArray()
-        val models = listOf(
-            OpenAIModels.Chat.GPT4o,
-            AnthropicModels.Sonnet_3_7,
-            GoogleModels.Gemini2_5Pro
-        )
         return scenarios.flatMap { scenario ->
             models.map { model ->
                 Arguments.of(scenario, model)
@@ -109,7 +100,7 @@ object MediaTestScenarios {
     fun audioScenarioModelCombinations(): Stream<Arguments> {
         val scenarios = AudioTestScenario.entries.toTypedArray()
         val models = listOf(
-            OpenAIModels.Audio.GPT4oAudio,
+            OpenAIModels.Audio.GptAudio,
             GoogleModels.Gemini2_5Pro
         )
         return scenarios.flatMap { scenario ->

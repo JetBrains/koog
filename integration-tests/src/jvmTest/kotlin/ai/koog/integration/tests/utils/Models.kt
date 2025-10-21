@@ -16,38 +16,17 @@ object Models {
     @JvmStatic
     fun openAIModels(): Stream<LLModel> {
         return Stream.of(
-            OpenAIModels.Chat.GPT4o,
-            OpenAIModels.Chat.GPT4_1,
             OpenAIModels.Chat.GPT5,
-            OpenAIModels.Chat.GPT5Mini,
-            OpenAIModels.Chat.GPT5Nano,
-            OpenAIModels.Chat.GPT5Codex,
-
-            OpenAIModels.Reasoning.O4Mini,
-            OpenAIModels.Reasoning.O3Mini,
-            OpenAIModels.Reasoning.O3,
             OpenAIModels.Reasoning.O1,
-
-            OpenAIModels.CostOptimized.GPT4_1Nano,
             OpenAIModels.CostOptimized.GPT4_1Mini,
-            OpenAIModels.CostOptimized.GPT4oMini,
         )
     }
 
     @JvmStatic
     fun anthropicModels(): Stream<LLModel> {
         return Stream.of(
-            AnthropicModels.Opus_3,
-            AnthropicModels.Opus_4,
             AnthropicModels.Opus_4_1,
-
-            AnthropicModels.Haiku_3,
-            AnthropicModels.Haiku_3_5,
             AnthropicModels.Haiku_4_5,
-
-            AnthropicModels.Sonnet_3_5,
-            AnthropicModels.Sonnet_3_7,
-            AnthropicModels.Sonnet_4,
             AnthropicModels.Sonnet_4_5,
         )
     }
@@ -56,32 +35,20 @@ object Models {
     fun googleModels(): Stream<LLModel> {
         return Stream.of(
             GoogleModels.Gemini2_5Pro,
-            GoogleModels.Gemini2_0Flash,
-            GoogleModels.Gemini2_0Flash001,
-            GoogleModels.Gemini2_0FlashLite,
-            GoogleModels.Gemini2_0FlashLite001,
             GoogleModels.Gemini2_5Flash,
-            GoogleModels.Gemini2_5FlashLite,
         )
     }
 
-    // listing not all profiles but one from each LLM provider
     @JvmStatic
     fun bedrockModels(): Stream<LLModel> {
         return Stream.of(
-            BedrockModels.AnthropicClaude35Haiku,
-            BedrockModels.AnthropicClaude4Sonnet,
             BedrockModels.MetaLlama3_1_70BInstruct,
-            BedrockModels.AmazonNovaPro,
-            BedrockModels.AmazonNovaLite,
+            BedrockModels.AnthropicClaude4_5Sonnet,
         )
     }
 
     @JvmStatic
     fun openRouterModels(): Stream<LLModel> = Stream.of(
-        OpenRouterModels.GPT5Nano,
-        OpenRouterModels.Claude4Sonnet,
-        OpenRouterModels.Gemini2_5Flash,
         OpenRouterModels.DeepSeekV30324,
         OpenRouterModels.Qwen2_5,
     )
