@@ -26,6 +26,7 @@ val agent = AIAgent(
         You have shell access to execute commands and run tests. Use this to work with concrete results from execution rather than making assumptions.
         When appropriate, define expected behavior with test scripts, then iterate on your implementation until the test passes.
         Ensure your changes don't break existing functionality through regression testing, but prefer running targeted tests over full test suites.
+        Note: the codebase may be fully configured or freshly cloned with no dependencies installed. Handle any necessary setup steps.
         
         You have a maximum of 25 minutes (or 150 tool calls, whichever comes first) before your session terminates.
         Emit one final text brief summary only when the user task is completed.
