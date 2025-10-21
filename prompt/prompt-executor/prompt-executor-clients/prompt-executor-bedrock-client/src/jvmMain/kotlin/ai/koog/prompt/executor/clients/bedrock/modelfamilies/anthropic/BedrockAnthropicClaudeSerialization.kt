@@ -11,7 +11,7 @@ import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicInv
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicResponse
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicToolChoice
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockToolSerialization
-import ai.koog.prompt.message.Content
+import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
@@ -40,39 +40,39 @@ internal object BedrockAnthropicClaudeSerialization {
         prompt.messages.forEach { msg ->
             when (msg) {
                 is Message.User -> {
-                    require(msg.content is Content.Text) {
+                    require(msg.parts.all { it is ContentPart.Text }) {
                         "Amazon Bedrock Anthropic requests currently supports text-only user messages"
                     }
-                    if (msg.content.text().isNotEmpty()) {
+                    if (msg.content.isNotEmpty()) {
                         messages.add(
                             BedrockAnthropicInvokeModelMessage(
                                 role = "user",
-                                content = listOf(BedrockAnthropicInvokeModelContent.Text(text = msg.content.text()))
+                                content = listOf(BedrockAnthropicInvokeModelContent.Text(text = msg.content))
                             )
                         )
                     }
                 }
 
                 is Message.Assistant -> {
-                    if (msg.content.text().isNotEmpty()) {
+                    if (msg.content.isNotEmpty()) {
                         messages.add(
                             BedrockAnthropicInvokeModelMessage(
                                 role = "assistant",
-                                content = listOf(BedrockAnthropicInvokeModelContent.Text(text = msg.content.text()))
+                                content = listOf(BedrockAnthropicInvokeModelContent.Text(text = msg.content))
                             )
                         )
                     }
                 }
 
                 is Message.Tool.Result -> {
-                    if (msg.content.text().isNotEmpty()) {
+                    if (msg.content.isNotEmpty()) {
                         messages.add(
                             BedrockAnthropicInvokeModelMessage(
                                 role = "user",
                                 content = listOf(
                                     BedrockAnthropicInvokeModelContent.ToolResult(
                                         toolUseId = msg.id!!,
-                                        content = msg.content.text()
+                                        content = msg.content
                                     )
                                 )
                             )
@@ -81,7 +81,7 @@ internal object BedrockAnthropicClaudeSerialization {
                 }
 
                 is Message.Tool.Call -> {
-                    if (msg.content.text().isNotEmpty()) {
+                    if (msg.content.isNotEmpty()) {
                         messages.add(
                             BedrockAnthropicInvokeModelMessage(
                                 role = "assistant",
@@ -89,7 +89,7 @@ internal object BedrockAnthropicClaudeSerialization {
                                     BedrockAnthropicInvokeModelContent.ToolCall(
                                         msg.id!!,
                                         msg.tool,
-                                        json.decodeFromString(msg.content.text())
+                                        json.decodeFromString(msg.content)
                                     )
                                 )
                             )
@@ -108,7 +108,7 @@ internal object BedrockAnthropicClaudeSerialization {
         prompt: Prompt,
         tools: List<ToolDescriptor>
     ): BedrockAnthropicInvokeModel {
-        val systemText = prompt.messages.filterIsInstance<Message.System>().joinToString("\n") { it.content.text() }
+        val systemText = prompt.messages.filterIsInstance<Message.System>().joinToString("\n") { it.content }
         val messages = buildMessagesHistory(prompt)
 
         val params: LLMParams = prompt.params
@@ -179,7 +179,7 @@ internal object BedrockAnthropicClaudeSerialization {
         return response.content.map { content ->
             when (content) {
                 is AnthropicResponseContent.Text -> Message.Assistant(
-                    content = Content.Text(content.text),
+                    content = content.text,
                     finishReason = response.stopReason,
                     metaInfo = ResponseMetaInfo.create(
                         clock,
@@ -192,7 +192,7 @@ internal object BedrockAnthropicClaudeSerialization {
                 is AnthropicResponseContent.ToolUse -> Message.Tool.Call(
                     id = content.id,
                     tool = content.name,
-                    content = Content.Text(content.input.toString()),
+                    content = content.input.toString(),
                     metaInfo = ResponseMetaInfo.create(
                         clock,
                         totalTokensCount = totalTokens,

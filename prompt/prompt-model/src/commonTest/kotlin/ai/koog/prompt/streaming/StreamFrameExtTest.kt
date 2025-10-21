@@ -1,6 +1,5 @@
 package ai.koog.prompt.streaming
 
-import ai.koog.prompt.message.Content
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import kotlinx.coroutines.test.runTest
@@ -94,7 +93,7 @@ private fun endFrame(finishReason: String? = null, metaInfo: ResponseMetaInfo = 
     StreamFrame.End(finishReason, metaInfo)
 
 private fun toolCallMessage(id: String, name: String, content: String, info: ResponseMetaInfo = ResponseMetaInfo.Empty) =
-    Message.Tool.Call(id, name, Content.Text(content), info)
+    Message.Tool.Call(id, name, content, info)
 
 private fun assistantMessage(content: String, finishReason: String? = null, metaInfo: ResponseMetaInfo = ResponseMetaInfo.Empty) =
-    Message.Assistant(Content.Text(content), metaInfo, finishReason = finishReason)
+    Message.Assistant(content, metaInfo, finishReason = finishReason)

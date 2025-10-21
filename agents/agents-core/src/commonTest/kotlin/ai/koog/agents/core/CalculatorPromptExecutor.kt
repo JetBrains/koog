@@ -5,7 +5,6 @@ import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.message.Content
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
@@ -32,26 +31,24 @@ object CalculatorChatExecutor : PromptExecutor {
     }
 
     override suspend fun execute(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): List<Message.Response> {
-        val input = prompt.messages.filterIsInstance<Message.User>().joinToString("\n") { it.content.text() }
+        val input = prompt.messages.filterIsInstance<Message.User>().joinToString("\n") { it.content }
         val numbers = input.split(Regex("[^0-9.]")).filter { it.isNotEmpty() }.map { it.toFloat() }
         val result = when {
             plusAliases.any { it in input } && tools.contains(CalculatorTools.PlusTool.descriptor) -> {
                 Message.Tool.Call(
                     id = "1",
                     tool = CalculatorTools.PlusTool.name,
-                    content = Content.Text(
-                        json.encodeToString(
-                            buildJsonObject {
-                                put("a", numbers[0])
-                                put("b", numbers[1])
-                            }
-                        )
+                    content = json.encodeToString(
+                        buildJsonObject {
+                            put("a", numbers[0])
+                            put("b", numbers[1])
+                        }
                     ),
                     metaInfo = ResponseMetaInfo.create(testClock)
                 )
             }
 
-            else -> Message.Assistant(Content.Text("Unknown operation"), metaInfo = ResponseMetaInfo.create(testClock))
+            else -> Message.Assistant("Unknown operation", metaInfo = ResponseMetaInfo.create(testClock))
         }
         return listOf(result)
     }

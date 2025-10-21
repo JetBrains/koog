@@ -19,7 +19,6 @@ import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.AttachmentContent
-import ai.koog.prompt.message.Content
 import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
@@ -43,6 +42,7 @@ import aws.sdk.kotlin.services.bedrockruntime.model.ResponseStream
 import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
 import aws.smithy.kotlin.runtime.net.url.Url
 import aws.smithy.kotlin.runtime.retries.StandardRetryStrategy
+import aws.smithy.kotlin.runtime.util.type
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -429,19 +429,21 @@ public class BedrockLLMClient(
 
         content = buildList {
             prompt.messages.filterIsInstance<MessageType>().forEach { message ->
-                add(GuardrailContentBlock.Text(GuardrailTextBlock { text = message.content.text() }))
-                if (message.content is Content.Parts) {
-                    (message.content as Content.Parts).value.filterIsInstance<ContentPart.Image>().forEach { image ->
-                        add(
+                message.parts.forEach { part ->
+                    when (part) {
+                        is ContentPart.Text -> {
+                            add(GuardrailContentBlock.Text(GuardrailTextBlock { text = part.text }))
+                        }
+                        is ContentPart.Image -> {
                             GuardrailContentBlock.Image(
                                 GuardrailImageBlock {
-                                    format = when (image.format) {
+                                    format = when (part.format) {
                                         "jpg", "jpeg", "JPG", "JPEG" -> GuardrailImageFormat.Jpeg
                                         "png", "PNG" -> GuardrailImageFormat.Png
-                                        else -> GuardrailImageFormat.SdkUnknown(image.format)
+                                        else -> GuardrailImageFormat.SdkUnknown(part.format)
                                     }
 
-                                    when (val imageContent = image.content) {
+                                    when (val imageContent = part.content) {
                                         is AttachmentContent.Binary.Base64 -> source = Bytes(imageContent.asBytes())
                                         is AttachmentContent.Binary.Bytes -> source = Bytes(imageContent.data)
                                         is AttachmentContent.PlainText ->
@@ -452,7 +454,10 @@ public class BedrockLLMClient(
                                     }
                                 }
                             )
-                        )
+                        }
+                        else -> {
+                            logger.debug { "Skipping message part $part" }
+                        }
                     }
                 }
             }

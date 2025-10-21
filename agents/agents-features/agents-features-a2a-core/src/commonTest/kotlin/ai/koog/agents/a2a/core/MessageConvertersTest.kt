@@ -7,7 +7,6 @@ import ai.koog.a2a.model.FileWithUri
 import ai.koog.a2a.model.Role
 import ai.koog.a2a.model.TextPart
 import ai.koog.prompt.message.AttachmentContent
-import ai.koog.prompt.message.Content
 import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
@@ -85,7 +84,7 @@ class MessageConvertersTest {
             )
         )
         val expected: Message = Message.User(
-            content = Content.Parts(expectedParts),
+            parts = expectedParts,
             metaInfo = RequestMetaInfo(timestamp = fixedInstant, metadata = expectedMetadata),
         )
 
@@ -117,7 +116,7 @@ class MessageConvertersTest {
             )
         )
         val expected = Message.Assistant(
-            content = Content.Text("Agent says hi"),
+            content = "Agent says hi",
             metaInfo = ResponseMetaInfo(timestamp = fixedInstant, metadata = expectedMetadata),
         )
 
@@ -148,7 +147,7 @@ class MessageConvertersTest {
         )
 
         val koog: Message = Message.User(
-            content = Content.Parts(listOf(text, plain, bin, url)),
+            parts = listOf(text, plain, bin, url),
             metaInfo = RequestMetaInfo(timestamp = fixedInstant),
         )
 
@@ -193,7 +192,7 @@ class MessageConvertersTest {
     @Test
     fun testKoogToA2A_Assistant() {
         val koog: Message = Message.Assistant(
-            content = Content.Text("Answer"),
+            content = "Answer",
             metaInfo = ResponseMetaInfo(timestamp = fixedInstant),
         )
         val actual = koog.toA2AMessage(
@@ -222,7 +221,7 @@ class MessageConvertersTest {
     @Test
     fun testKoogToA2A_unsupportedKoogMessageThrows() {
         val sys: Message = Message.System(
-            content = Content.Text("system"),
+            content = "system",
             metaInfo = RequestMetaInfo(timestamp = fixedInstant)
         )
         assertFailsWith<IllegalArgumentException> {

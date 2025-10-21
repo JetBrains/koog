@@ -9,7 +9,6 @@ import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.llm.OllamaModels
-import ai.koog.prompt.message.Content
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
@@ -69,86 +68,86 @@ class HistoryCompressionStrategiesTest {
         }
 
         val simpleHistory = listOf(
-            Message.System(Content.Text("System message"), metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
-            Message.User(Content.Text("User message"), metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
-            Message.Assistant(Content.Text("Assistant message"), metaInfo = ResponseMetaInfo.create(testClock(2.minutes)))
+            Message.System("System message", metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
+            Message.User("User message", metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
+            Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo.create(testClock(2.minutes)))
         )
 
         val multipleUserMessagesHistory = listOf(
-            Message.System(Content.Text("System message"), metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
-            Message.User(Content.Text("User message 0"), metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
-            Message.User(Content.Text("User message 1"), metaInfo = RequestMetaInfo.create(testClock(2.minutes))),
-            Message.Assistant(Content.Text("Assistant message"), metaInfo = ResponseMetaInfo.create(testClock(3.minutes))),
+            Message.System("System message", metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
+            Message.User("User message 0", metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
+            Message.User("User message 1", metaInfo = RequestMetaInfo.create(testClock(2.minutes))),
+            Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo.create(testClock(3.minutes))),
         )
 
         val leadingUserMessagesHistory = listOf(
-            Message.User(Content.Text("User message"), metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
-            Message.System(Content.Text("System message"), metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
-            Message.Assistant(Content.Text("Assistant message"), metaInfo = ResponseMetaInfo.create(testClock(2.minutes))),
+            Message.User("User message", metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
+            Message.System("System message", metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
+            Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo.create(testClock(2.minutes))),
         )
 
         val trailingToolCallHistory = listOf(
-            Message.System(Content.Text("System message"), metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
-            Message.User(Content.Text("User message"), metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
-            Message.Assistant(Content.Text("Assistant message"), metaInfo = ResponseMetaInfo.create(testClock(2.minutes))),
-            Message.Tool.Call("ID", "DummyTool", Content.Text("Args"), metaInfo = ResponseMetaInfo.create(testClock(3.minutes))),
+            Message.System("System message", metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
+            Message.User("User message", metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
+            Message.Assistant("Assistant message", metaInfo = ResponseMetaInfo.create(testClock(2.minutes))),
+            Message.Tool.Call("ID", "DummyTool", "Args", metaInfo = ResponseMetaInfo.create(testClock(3.minutes))),
         )
 
         val multipleSystemMessagesHistory = listOf(
-            Message.System(Content.Text("System message 0"), metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
-            Message.User(Content.Text("User message 0"), metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
-            Message.Assistant(Content.Text("Assistant message 0"), metaInfo = ResponseMetaInfo.create(testClock(2.minutes))),
-            Message.System(Content.Text("System message 1"), metaInfo = RequestMetaInfo.create(testClock(3.minutes))),
-            Message.User(Content.Text("User message 1"), metaInfo = RequestMetaInfo.create(testClock(4.minutes))),
-            Message.Assistant(Content.Text("Assistant message 1"), metaInfo = ResponseMetaInfo.create(testClock(5.minutes))),
-            Message.System(Content.Text("System message 2"), metaInfo = RequestMetaInfo.create(testClock(6.minutes))),
+            Message.System("System message 0", metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
+            Message.User("User message 0", metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
+            Message.Assistant("Assistant message 0", metaInfo = ResponseMetaInfo.create(testClock(2.minutes))),
+            Message.System("System message 1", metaInfo = RequestMetaInfo.create(testClock(3.minutes))),
+            Message.User("User message 1", metaInfo = RequestMetaInfo.create(testClock(4.minutes))),
+            Message.Assistant("Assistant message 1", metaInfo = ResponseMetaInfo.create(testClock(5.minutes))),
+            Message.System("System message 2", metaInfo = RequestMetaInfo.create(testClock(6.minutes))),
         )
 
         val longMessagesHistory = listOf(
-            Message.System(Content.Text("System message 0"), metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
-            Message.User(Content.Text("User message 0"), metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
-            Message.Assistant(Content.Text("Assistant message 0"), metaInfo = ResponseMetaInfo.create(testClock(2.minutes))),
+            Message.System("System message 0", metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
+            Message.User("User message 0", metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
+            Message.Assistant("Assistant message 0", metaInfo = ResponseMetaInfo.create(testClock(2.minutes))),
             Message.Tool.Call(
                 "id1",
                 "DummyTool",
-                Content.Text(dummyArgsContent),
+                dummyArgsContent,
                 metaInfo = ResponseMetaInfo.create(testClock(3.minutes))
             ),
-            Message.Tool.Result("id1", "DummyTool", Content.Text("Result"), metaInfo = RequestMetaInfo.create(testClock(4.minutes))),
+            Message.Tool.Result("id1", "DummyTool", "Result", metaInfo = RequestMetaInfo.create(testClock(4.minutes))),
             Message.Tool.Call(
                 "id2",
                 "DummyTool",
-                Content.Text(dummyArgsContent),
+                dummyArgsContent,
                 metaInfo = ResponseMetaInfo.create(testClock(5.minutes))
             ),
-            Message.Tool.Result("id2", "DummyTool", Content.Text("Result"), metaInfo = RequestMetaInfo.create(testClock(6.minutes))),
-            Message.System(Content.Text("System message 1"), metaInfo = RequestMetaInfo.create(testClock(7.minutes))),
-            Message.User(Content.Text("User message 1"), metaInfo = RequestMetaInfo.create(testClock(8.minutes))),
-            Message.Assistant(Content.Text("Assistant message 1"), metaInfo = ResponseMetaInfo.create(testClock(9.minutes))),
+            Message.Tool.Result("id2", "DummyTool", "Result", metaInfo = RequestMetaInfo.create(testClock(6.minutes))),
+            Message.System("System message 1", metaInfo = RequestMetaInfo.create(testClock(7.minutes))),
+            Message.User("User message 1", metaInfo = RequestMetaInfo.create(testClock(8.minutes))),
+            Message.Assistant("Assistant message 1", metaInfo = ResponseMetaInfo.create(testClock(9.minutes))),
             Message.Tool.Call(
                 "id3",
                 "DummyTool",
-                Content.Text(dummyArgsContent),
+                dummyArgsContent,
                 metaInfo = ResponseMetaInfo.create(testClock(10.minutes))
             ),
-            Message.Tool.Result("id3", "DummyTool", Content.Text("Result"), metaInfo = RequestMetaInfo.create(testClock(11.minutes))),
+            Message.Tool.Result("id3", "DummyTool", "Result", metaInfo = RequestMetaInfo.create(testClock(11.minutes))),
             Message.Tool.Call(
                 "id4",
                 "DummyTool",
-                Content.Text(dummyArgsContent),
+                dummyArgsContent,
                 metaInfo = ResponseMetaInfo.create(testClock(12.minutes))
             ),
-            Message.Tool.Result("id4", "DummyTool", Content.Text("Result"), metaInfo = RequestMetaInfo.create(testClock(13.minutes))),
-            Message.Assistant(Content.Text("Assistant message 2"), metaInfo = ResponseMetaInfo.create(testClock(14.minutes))),
-            Message.System(Content.Text("System message 2"), metaInfo = RequestMetaInfo.create(testClock(15.minutes))),
-            Message.Assistant(Content.Text("Assistant message 3"), metaInfo = ResponseMetaInfo.create(testClock(16.minutes))),
+            Message.Tool.Result("id4", "DummyTool", "Result", metaInfo = RequestMetaInfo.create(testClock(13.minutes))),
+            Message.Assistant("Assistant message 2", metaInfo = ResponseMetaInfo.create(testClock(14.minutes))),
+            Message.System("System message 2", metaInfo = RequestMetaInfo.create(testClock(15.minutes))),
+            Message.Assistant("Assistant message 3", metaInfo = ResponseMetaInfo.create(testClock(16.minutes))),
             Message.Tool.Call(
                 "id5",
                 "DummyTool",
-                Content.Text(dummyArgsContent),
+                dummyArgsContent,
                 metaInfo = ResponseMetaInfo.create(testClock(17.minutes))
             ),
-            Message.Tool.Result("id5", "DummyTool", Content.Text("Result"), metaInfo = RequestMetaInfo.create(testClock(18.minutes))),
+            Message.Tool.Result("id5", "DummyTool", "Result", metaInfo = RequestMetaInfo.create(testClock(18.minutes))),
         )
 
         @JvmStatic
@@ -156,53 +155,53 @@ class HistoryCompressionStrategiesTest {
             Arguments.of(
                 simpleHistory,
                 listOf(
-                    Message.System(Content.Text("System message"), metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
-                    Message.User(Content.Text("User message"), metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
-                    Message.Assistant(Content.Text("TLDR"), metaInfo = ResponseMetaInfo.create(testClock(2.minutes)))
+                    Message.System("System message", metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
+                    Message.User("User message", metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
+                    Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(2.minutes)))
                 )
             ),
             Arguments.of(
                 trailingToolCallHistory,
                 listOf(
-                    Message.System(Content.Text("System message"), metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
-                    Message.User(Content.Text("User message"), metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
-                    Message.Assistant(Content.Text("TLDR"), metaInfo = ResponseMetaInfo.create(testClock(2.minutes)))
+                    Message.System("System message", metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
+                    Message.User("User message", metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
+                    Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(2.minutes)))
                 )
             ),
             Arguments.of(
                 multipleUserMessagesHistory,
                 listOf(
-                    Message.System(Content.Text("System message"), metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
-                    Message.User(Content.Text("User message 0"), metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
-                    Message.Assistant(Content.Text("TLDR"), metaInfo = ResponseMetaInfo.create(testClock(2.minutes)))
+                    Message.System("System message", metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
+                    Message.User("User message 0", metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
+                    Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(2.minutes)))
                 )
             ),
             Arguments.of(
                 leadingUserMessagesHistory,
                 listOf(
-                    Message.User(Content.Text("User message"), metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
-                    Message.System(Content.Text("System message"), metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
-                    Message.Assistant(Content.Text("TLDR"), metaInfo = ResponseMetaInfo.create(testClock(2.minutes)))
+                    Message.User("User message", metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
+                    Message.System("System message", metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
+                    Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(2.minutes)))
                 )
             ),
             Arguments.of(
                 multipleSystemMessagesHistory,
                 listOf(
-                    Message.System(Content.Text("System message 0"), metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
-                    Message.User(Content.Text("User message 0"), metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
-                    Message.System(Content.Text("System message 1"), metaInfo = RequestMetaInfo.create(testClock(3.minutes))),
-                    Message.System(Content.Text("System message 2"), metaInfo = RequestMetaInfo.create(testClock(6.minutes))),
-                    Message.Assistant(Content.Text("TLDR"), metaInfo = ResponseMetaInfo.create(testClock(7.minutes)))
+                    Message.System("System message 0", metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
+                    Message.User("User message 0", metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
+                    Message.System("System message 1", metaInfo = RequestMetaInfo.create(testClock(3.minutes))),
+                    Message.System("System message 2", metaInfo = RequestMetaInfo.create(testClock(6.minutes))),
+                    Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(7.minutes)))
                 )
             ),
             Arguments.of(
                 longMessagesHistory,
                 listOf(
-                    Message.System(Content.Text("System message 0"), metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
-                    Message.User(Content.Text("User message 0"), metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
-                    Message.System(Content.Text("System message 1"), metaInfo = RequestMetaInfo.create(testClock(7.minutes))),
-                    Message.System(Content.Text("System message 2"), metaInfo = RequestMetaInfo.create(testClock(15.minutes))),
-                    Message.Assistant(Content.Text("TLDR"), metaInfo = ResponseMetaInfo.create(testClock(19.minutes)))
+                    Message.System("System message 0", metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
+                    Message.User("User message 0", metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
+                    Message.System("System message 1", metaInfo = RequestMetaInfo.create(testClock(7.minutes))),
+                    Message.System("System message 2", metaInfo = RequestMetaInfo.create(testClock(15.minutes))),
+                    Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(19.minutes)))
                 )
             ),
         )
@@ -212,59 +211,59 @@ class HistoryCompressionStrategiesTest {
             Arguments.of(
                 simpleHistory,
                 listOf(
-                    Message.System(Content.Text("System message"), metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
-                    Message.User(Content.Text("User message"), metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
-                    Message.Assistant(Content.Text("TLDR"), metaInfo = ResponseMetaInfo.create(testClock(2.minutes)))
+                    Message.System("System message", metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
+                    Message.User("User message", metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
+                    Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(2.minutes)))
                 )
             ),
             Arguments.of(
                 trailingToolCallHistory,
                 listOf(
-                    Message.System(Content.Text("System message"), metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
-                    Message.User(Content.Text("User message"), metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
-                    Message.Assistant(Content.Text("TLDR"), metaInfo = ResponseMetaInfo.create(testClock(2.minutes)))
+                    Message.System("System message", metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
+                    Message.User("User message", metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
+                    Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(2.minutes)))
                 )
             ),
             Arguments.of(
                 multipleUserMessagesHistory,
                 listOf(
-                    Message.System(Content.Text("System message"), metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
-                    Message.User(Content.Text("User message 0"), metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
-                    Message.Assistant(Content.Text("TLDR"), metaInfo = ResponseMetaInfo.create(testClock(2.minutes)))
+                    Message.System("System message", metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
+                    Message.User("User message 0", metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
+                    Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(2.minutes)))
                 )
             ),
             Arguments.of(
                 leadingUserMessagesHistory,
                 listOf(
-                    Message.User(Content.Text("User message"), metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
-                    Message.System(Content.Text("System message"), metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
-                    Message.Assistant(Content.Text("TLDR"), metaInfo = ResponseMetaInfo.create(testClock(2.minutes)))
+                    Message.User("User message", metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
+                    Message.System("System message", metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
+                    Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(2.minutes)))
                 )
             ),
             Arguments.of(
                 multipleSystemMessagesHistory,
                 listOf(
-                    Message.System(Content.Text("System message 0"), metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
-                    Message.User(Content.Text("User message 0"), metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
-                    Message.Assistant(Content.Text("TLDR"), metaInfo = ResponseMetaInfo.create(testClock(2.minutes))),
-                    Message.System(Content.Text("System message 1"), metaInfo = RequestMetaInfo.create(testClock(3.minutes))),
-                    Message.User(Content.Text("User message 1"), metaInfo = RequestMetaInfo.create(testClock(4.minutes))),
-                    Message.Assistant(Content.Text("TLDR"), metaInfo = ResponseMetaInfo.create(testClock(5.minutes))),
-                    Message.System(Content.Text("System message 2"), metaInfo = RequestMetaInfo.create(testClock(6.minutes))),
-                    Message.Assistant(Content.Text("TLDR"), metaInfo = ResponseMetaInfo.create(testClock(7.minutes)))
+                    Message.System("System message 0", metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
+                    Message.User("User message 0", metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
+                    Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(2.minutes))),
+                    Message.System("System message 1", metaInfo = RequestMetaInfo.create(testClock(3.minutes))),
+                    Message.User("User message 1", metaInfo = RequestMetaInfo.create(testClock(4.minutes))),
+                    Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(5.minutes))),
+                    Message.System("System message 2", metaInfo = RequestMetaInfo.create(testClock(6.minutes))),
+                    Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(7.minutes)))
                 )
             ),
             Arguments.of(
                 longMessagesHistory,
                 listOf(
-                    Message.System(Content.Text("System message 0"), metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
-                    Message.User(Content.Text("User message 0"), metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
-                    Message.Assistant(Content.Text("TLDR"), metaInfo = ResponseMetaInfo.create(testClock(2.minutes))),
-                    Message.System(Content.Text("System message 1"), metaInfo = RequestMetaInfo.create(testClock(7.minutes))),
-                    Message.User(Content.Text("User message 1"), metaInfo = RequestMetaInfo.create(testClock(8.minutes))),
-                    Message.Assistant(Content.Text("TLDR"), metaInfo = ResponseMetaInfo.create(testClock(9.minutes))),
-                    Message.System(Content.Text("System message 2"), metaInfo = RequestMetaInfo.create(testClock(15.minutes))),
-                    Message.Assistant(Content.Text("TLDR"), metaInfo = ResponseMetaInfo.create(testClock(16.minutes)))
+                    Message.System("System message 0", metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
+                    Message.User("User message 0", metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
+                    Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(2.minutes))),
+                    Message.System("System message 1", metaInfo = RequestMetaInfo.create(testClock(7.minutes))),
+                    Message.User("User message 1", metaInfo = RequestMetaInfo.create(testClock(8.minutes))),
+                    Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(9.minutes))),
+                    Message.System("System message 2", metaInfo = RequestMetaInfo.create(testClock(15.minutes))),
+                    Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(16.minutes)))
                 )
             )
         )
@@ -275,31 +274,31 @@ class HistoryCompressionStrategiesTest {
                 simpleHistory,
                 2,
                 listOf(
-                    Message.System(Content.Text("System message"), metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
-                    Message.User(Content.Text("User message"), metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
-                    Message.Assistant(Content.Text("TLDR"), metaInfo = ResponseMetaInfo.create(testClock(2.minutes)))
+                    Message.System("System message", metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
+                    Message.User("User message", metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
+                    Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(2.minutes)))
                 )
             ),
             Arguments.of(
                 multipleSystemMessagesHistory,
                 3,
                 listOf(
-                    Message.System(Content.Text("System message 0"), metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
-                    Message.User(Content.Text("User message 0"), metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
-                    Message.System(Content.Text("System message 1"), metaInfo = RequestMetaInfo.create(testClock(2.minutes))),
-                    Message.System(Content.Text("System message 2"), metaInfo = RequestMetaInfo.create(testClock(3.minutes))),
-                    Message.Assistant(Content.Text("TLDR"), metaInfo = ResponseMetaInfo.create(testClock(4.minutes)))
+                    Message.System("System message 0", metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
+                    Message.User("User message 0", metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
+                    Message.System("System message 1", metaInfo = RequestMetaInfo.create(testClock(2.minutes))),
+                    Message.System("System message 2", metaInfo = RequestMetaInfo.create(testClock(3.minutes))),
+                    Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(4.minutes)))
                 )
             ),
             Arguments.of(
                 longMessagesHistory,
                 5,
                 listOf(
-                    Message.System(Content.Text("System message 0"), metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
-                    Message.User(Content.Text("User message 0"), metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
-                    Message.System(Content.Text("System message 1"), metaInfo = RequestMetaInfo.create(testClock(7.minutes))),
-                    Message.System(Content.Text("System message 2"), metaInfo = RequestMetaInfo.create(testClock(15.minutes))),
-                    Message.Assistant(Content.Text("TLDR"), metaInfo = ResponseMetaInfo.create(testClock(19.minutes)))
+                    Message.System("System message 0", metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
+                    Message.User("User message 0", metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
+                    Message.System("System message 1", metaInfo = RequestMetaInfo.create(testClock(7.minutes))),
+                    Message.System("System message 2", metaInfo = RequestMetaInfo.create(testClock(15.minutes))),
+                    Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(19.minutes)))
                 )
             )
         )
@@ -310,20 +309,20 @@ class HistoryCompressionStrategiesTest {
                 simpleHistory,
                 Instant.parse("2023-01-01T00:00:00Z"),
                 listOf(
-                    Message.System(Content.Text("System message"), metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
-                    Message.User(Content.Text("User message"), metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
-                    Message.Assistant(Content.Text("TLDR"), metaInfo = ResponseMetaInfo.create(testClock(2.minutes)))
+                    Message.System("System message", metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
+                    Message.User("User message", metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
+                    Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(2.minutes)))
                 )
             ),
             Arguments.of(
                 longMessagesHistory,
                 Instant.parse("2023-01-01T00:07:00Z"),
                 listOf(
-                    Message.System(Content.Text("System message 0"), metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
-                    Message.User(Content.Text("User message 0"), metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
-                    Message.System(Content.Text("System message 1"), metaInfo = RequestMetaInfo.create(testClock(7.minutes))),
-                    Message.System(Content.Text("System message 2"), metaInfo = RequestMetaInfo.create(testClock(15.minutes))),
-                    Message.Assistant(Content.Text("TLDR"), metaInfo = ResponseMetaInfo.create(testClock(19.minutes)))
+                    Message.System("System message 0", metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
+                    Message.User("User message 0", metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
+                    Message.System("System message 1", metaInfo = RequestMetaInfo.create(testClock(7.minutes))),
+                    Message.System("System message 2", metaInfo = RequestMetaInfo.create(testClock(15.minutes))),
+                    Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(19.minutes)))
                 )
             )
         )
@@ -334,31 +333,31 @@ class HistoryCompressionStrategiesTest {
                 multipleSystemMessagesHistory,
                 2,
                 listOf(
-                    Message.System(Content.Text("System message 0"), metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
-                    Message.User(Content.Text("User message 0"), metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
-                    Message.System(Content.Text("System message 1"), metaInfo = RequestMetaInfo.create(testClock(3.minutes))),
-                    Message.System(Content.Text("System message 2"), metaInfo = RequestMetaInfo.create(testClock(6.minutes))),
-                    Message.Assistant(Content.Text("TLDR"), metaInfo = ResponseMetaInfo.create(testClock(7.minutes))),
-                    Message.Assistant(Content.Text("TLDR"), metaInfo = ResponseMetaInfo.create(testClock(8.minutes))),
-                    Message.Assistant(Content.Text("TLDR"), metaInfo = ResponseMetaInfo.create(testClock(9.minutes))),
-                    Message.Assistant(Content.Text("TLDR"), metaInfo = ResponseMetaInfo.create(testClock(10.minutes)))
+                    Message.System("System message 0", metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
+                    Message.User("User message 0", metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
+                    Message.System("System message 1", metaInfo = RequestMetaInfo.create(testClock(3.minutes))),
+                    Message.System("System message 2", metaInfo = RequestMetaInfo.create(testClock(6.minutes))),
+                    Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(7.minutes))),
+                    Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(8.minutes))),
+                    Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(9.minutes))),
+                    Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(10.minutes)))
                 )
             ),
             Arguments.of(
                 longMessagesHistory,
                 3,
                 listOf(
-                    Message.System(Content.Text("System message 0"), metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
-                    Message.User(Content.Text("User message 0"), metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
-                    Message.System(Content.Text("System message 1"), metaInfo = RequestMetaInfo.create(testClock(7.minutes))),
-                    Message.System(Content.Text("System message 2"), metaInfo = RequestMetaInfo.create(testClock(15.minutes))),
-                    Message.Assistant(Content.Text("TLDR"), metaInfo = ResponseMetaInfo.create(testClock(19.minutes))),
-                    Message.Assistant(Content.Text("TLDR"), metaInfo = ResponseMetaInfo.create(testClock(20.minutes))),
-                    Message.Assistant(Content.Text("TLDR"), metaInfo = ResponseMetaInfo.create(testClock(21.minutes))),
-                    Message.Assistant(Content.Text("TLDR"), metaInfo = ResponseMetaInfo.create(testClock(22.minutes))),
-                    Message.Assistant(Content.Text("TLDR"), metaInfo = ResponseMetaInfo.create(testClock(23.minutes))),
-                    Message.Assistant(Content.Text("TLDR"), metaInfo = ResponseMetaInfo.create(testClock(24.minutes))),
-                    Message.Assistant(Content.Text("TLDR"), metaInfo = ResponseMetaInfo.create(testClock(25.minutes))),
+                    Message.System("System message 0", metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
+                    Message.User("User message 0", metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
+                    Message.System("System message 1", metaInfo = RequestMetaInfo.create(testClock(7.minutes))),
+                    Message.System("System message 2", metaInfo = RequestMetaInfo.create(testClock(15.minutes))),
+                    Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(19.minutes))),
+                    Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(20.minutes))),
+                    Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(21.minutes))),
+                    Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(22.minutes))),
+                    Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(23.minutes))),
+                    Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(24.minutes))),
+                    Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(25.minutes))),
                 )
             )
         )

@@ -1,6 +1,5 @@
 package ai.koog.prompt.dsl
 
-import ai.koog.prompt.message.Content
 import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
@@ -58,7 +57,7 @@ public class PromptBuilder internal constructor(
      * @param content The content of the system message
      */
     public fun system(content: String) {
-        messages.add(Message.System(Content.Text(content), RequestMetaInfo.create(clock)))
+        messages.add(Message.System(content, RequestMetaInfo.create(clock)))
     }
 
     /**
@@ -88,8 +87,8 @@ public class PromptBuilder internal constructor(
      *
      * @param parts Parts of the user message
      */
-    public fun user(parts: List<ContentPart> = emptyList()) {
-        messages.add(Message.User(Content.Parts(parts), RequestMetaInfo.create(clock)))
+    public fun user(parts: List<ContentPart>) {
+        messages.add(Message.User(parts, RequestMetaInfo.create(clock)))
     }
 
     /**
@@ -101,32 +100,7 @@ public class PromptBuilder internal constructor(
      * @param content Content of the user message
      */
     public fun user(content: String) {
-        messages.add(Message.User(Content.Text(content), RequestMetaInfo.create(clock)))
-    }
-
-    /**
-     * Adds a user message to the prompt with optional attachments.
-     *
-     * User messages represent input from the user to the language model.
-     * This method supports adding text content along with a list of attachments such as images, audio, or documents.
-     *
-     * @param content Content of the user message
-     */
-    public fun user(content: Content) {
         messages.add(Message.User(content, RequestMetaInfo.create(clock)))
-    }
-
-    /**
-     * Adds a user message to the prompt with optional attachments.
-     *
-     * User messages represent input from the user to the language model.
-     * This method supports adding text content along with a list of attachments such as images, audio, or documents.
-     *
-     * @param content The content of the user message.
-     * @param attachments The list of attachments associated with the user message. Defaults to an empty list if no attachments are provided.
-     */
-    public fun user(content: String, attachments: List<ContentPart>) {
-        user(listOf(ContentPart.Text(content)) + attachments)
     }
 
     /**
@@ -146,35 +120,10 @@ public class PromptBuilder internal constructor(
      * }
      * ```
      *
-     * @param content The content of the user message
      * @param block Optional lambda to configure attachments using AttachmentBuilder
      */
-    public fun user(content: String, block: ContentPartsBuilder.() -> Unit) {
-        user(content, ContentPartsBuilder().apply(block).build())
-    }
-
-    /**
-     * Adds a user message to the prompt using a ContentBuilderWithAttachment.
-     *
-     * This allows for more complex message construction with both text and attachments.
-     *
-     * Example:
-     * ```kotlin
-     * user {
-     *          text("I have a question about programming.")
-     *          text("How do I implement a binary search in Kotlin?")
-     *
-     *      attachments {
-     *          image("screenshot.png")
-     *      }
-     * }
-     * ```
-     *
-     * @param body The initialization block for the ContentBuilderWithAttachment
-     */
-    public fun user(body: MessageContentBuilder.() -> Unit) {
-        val messageContent = MessageContentBuilder().apply(body).build()
-        user(messageContent)
+    public fun user(block: ContentPartsBuilder.() -> Unit) {
+        user(ContentPartsBuilder().apply(block).build())
     }
 
     /**
@@ -190,7 +139,7 @@ public class PromptBuilder internal constructor(
      * @param content The content of the assistant message
      */
     public fun assistant(content: String) {
-        messages.add(Message.Assistant(Content.Text(content), finishReason = null, metaInfo = ResponseMetaInfo.create(clock)))
+        messages.add(Message.Assistant(content, finishReason = null, metaInfo = ResponseMetaInfo.create(clock)))
     }
 
     /**
@@ -276,7 +225,7 @@ public class PromptBuilder internal constructor(
          * @param content The content or payload of the tool call.
          */
         public fun call(id: String?, tool: String, content: String) {
-            call(Message.Tool.Call(id, tool, Content.Text(content), ResponseMetaInfo.create(clock)))
+            call(Message.Tool.Call(id, tool, content, ResponseMetaInfo.create(clock)))
         }
 
         /**
@@ -305,7 +254,7 @@ public class PromptBuilder internal constructor(
          * @param content The content or payload of the tool result.
          */
         public fun result(id: String?, tool: String, content: String) {
-            result(Message.Tool.Result(id, tool, Content.Text(content), RequestMetaInfo.create(clock)))
+            result(Message.Tool.Result(id, tool, content, RequestMetaInfo.create(clock)))
         }
     }
 

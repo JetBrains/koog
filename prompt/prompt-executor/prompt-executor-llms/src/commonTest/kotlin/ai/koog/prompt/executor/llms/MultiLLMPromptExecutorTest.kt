@@ -9,7 +9,6 @@ import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.message.Content
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
@@ -39,7 +38,7 @@ class MultiLLMPromptExecutorTest {
             model: LLModel,
             tools: List<ToolDescriptor>
         ): List<Message.Response> {
-            return listOf(Message.Assistant(Content.Text("Anthropic response"), ResponseMetaInfo.create(clock = mockClock)))
+            return listOf(Message.Assistant("Anthropic response", ResponseMetaInfo.create(clock = mockClock)))
         }
 
         override fun llmProvider(): LLMProvider = LLMProvider.Anthropic
@@ -67,7 +66,7 @@ class MultiLLMPromptExecutorTest {
             model: LLModel,
             tools: List<ToolDescriptor>
         ): List<Message.Response> {
-            return listOf(Message.Assistant(Content.Text("Gemini response"), ResponseMetaInfo.create(clock = mockClock)))
+            return listOf(Message.Assistant("Gemini response", ResponseMetaInfo.create(clock = mockClock)))
         }
 
         override fun llmProvider(): LLMProvider = LLMProvider.Google
@@ -102,7 +101,7 @@ class MultiLLMPromptExecutorTest {
 
         val response = executor.execute(prompt = prompt, model = model).single()
 
-        assertEquals(Content.Text("OpenAI response"), response.content)
+        assertEquals("OpenAI response", response.content)
     }
 
     @Test
@@ -121,7 +120,7 @@ class MultiLLMPromptExecutorTest {
 
         val response = executor.execute(prompt = prompt, model = model).single()
 
-        assertEquals(Content.Text("Anthropic response"), response.content)
+        assertEquals("Anthropic response", response.content)
     }
 
     @Test
@@ -140,7 +139,7 @@ class MultiLLMPromptExecutorTest {
 
         val response = executor.execute(prompt = prompt, model = model).single()
 
-        assertEquals(Content.Text("Gemini response"), response.content)
+        assertEquals("Gemini response", response.content)
     }
 
     @Test

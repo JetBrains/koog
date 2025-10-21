@@ -41,7 +41,6 @@ import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.AttachmentContent
-import ai.koog.prompt.message.Content
 import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
@@ -389,10 +388,8 @@ public open class OpenAILLMClient(
 
         val input = prompt.messages
             .map { message ->
-                if (message.content is Content.Parts) {
-                    require((message.content as Content.Parts).value.all { it is ContentPart.Image || it is ContentPart.Text }) {
-                        "Only image attachments are supported for moderation"
-                    }
+                require(message.parts.all { it is ContentPart.Text || it is ContentPart.Image }) {
+                    "Only image attachments are supported for moderation"
                 }
 
                 message.toMessageContent(model)
@@ -584,7 +581,7 @@ public open class OpenAILLMClient(
                         add(
                             Item.InputMessage(
                                 role = "developer",
-                                content = listOf(InputContent.Text(message.content.text()))
+                                content = listOf(InputContent.Text(message.content))
                             )
                         )
                     }
@@ -600,7 +597,7 @@ public open class OpenAILLMClient(
                             Item.OutputMessage(
                                 role = "assistant",
                                 content = listOf(
-                                    OutputContent.Text(text = message.content.text(), annotations = emptyList())
+                                    OutputContent.Text(text = message.content, annotations = emptyList())
                                 ),
                             )
                         )
@@ -611,7 +608,7 @@ public open class OpenAILLMClient(
                         add(
                             Item.FunctionToolCallOutput(
                                 callId = message.id ?: Uuid.random().toString(),
-                                output = message.content.text()
+                                output = message.content
                             )
                         )
                     }
@@ -620,7 +617,7 @@ public open class OpenAILLMClient(
                         pendingCalls += Item.FunctionToolCall(
                             callId = message.id ?: Uuid.random().toString(),
                             name = message.tool,
-                            arguments = message.content.text()
+                            arguments = message.content
                         )
                     }
                 }
@@ -631,52 +628,45 @@ public open class OpenAILLMClient(
         return messages
     }
 
-    private fun Message.toInputMessage(model: LLModel): List<InputContent> = when (val content = this.content) {
-        is Content.Text -> {
-            listOf(InputContent.Text(content.value))
-        }
-
-        is Content.Parts -> {
-            val parts = buildList {
-                content.value.forEach { part ->
-                    when (part) {
-                        is ContentPart.Text -> {
-                            add(InputContent.Text(part.text))
-                        }
-
-                        is ContentPart.Image -> {
-                            model.requireCapability(LLMCapability.Vision.Image)
-
-                            val imageUrl: String = when (val content = part.content) {
-                                is AttachmentContent.URL -> content.url
-                                is AttachmentContent.Binary -> "data:${part.mimeType};base64,${content.asBase64()}"
-                                else -> throw IllegalArgumentException("Unsupported image attachment content: ${content::class}")
-                            }
-
-                            add(InputContent.Image(imageUrl = imageUrl))
-                        }
-
-                        is ContentPart.File -> {
-                            model.requireCapability(LLMCapability.Document)
-
-                            val fileData = when (val content = part.content) {
-                                is AttachmentContent.Binary -> "data:${part.mimeType};base64,${content.asBase64()}"
-                                else -> null
-                            }
-
-                            val fileUrl = when (val content = part.content) {
-                                is AttachmentContent.URL -> content.url
-                                else -> null
-                            }
-
-                            add(InputContent.File(fileData = fileData, fileUrl = fileUrl, filename = part.fileName))
-                        }
-
-                        else -> throw IllegalArgumentException("Unsupported attachment type: $part, for model: $model with Responses API")
+    private fun Message.toInputMessage(model: LLModel): List<InputContent> {
+        return buildList {
+            parts.forEach { part ->
+                when (part) {
+                    is ContentPart.Text -> {
+                        add(InputContent.Text(part.text))
                     }
+
+                    is ContentPart.Image -> {
+                        model.requireCapability(LLMCapability.Vision.Image)
+
+                        val imageUrl: String = when (val content = part.content) {
+                            is AttachmentContent.URL -> content.url
+                            is AttachmentContent.Binary -> "data:${part.mimeType};base64,${content.asBase64()}"
+                            else -> throw IllegalArgumentException("Unsupported image attachment content: ${content::class}")
+                        }
+
+                        add(InputContent.Image(imageUrl = imageUrl))
+                    }
+
+                    is ContentPart.File -> {
+                        model.requireCapability(LLMCapability.Document)
+
+                        val fileData = when (val content = part.content) {
+                            is AttachmentContent.Binary -> "data:${part.mimeType};base64,${content.asBase64()}"
+                            else -> null
+                        }
+
+                        val fileUrl = when (val content = part.content) {
+                            is AttachmentContent.URL -> content.url
+                            else -> null
+                        }
+
+                        add(InputContent.File(fileData = fileData, fileUrl = fileUrl, filename = part.fileName))
+                    }
+
+                    else -> throw IllegalArgumentException("Unsupported attachment type: $part, for model: $model with Responses API")
                 }
             }
-            parts
         }
     }
 
@@ -697,12 +687,12 @@ public open class OpenAILLMClient(
                     is Item.FunctionToolCall -> Message.Tool.Call(
                         id = output.callId,
                         tool = output.name,
-                        content = Content.Text(output.arguments),
+                        content = output.arguments,
                         metaInfo = metaInfo
                     )
 
                     is Item.OutputMessage -> Message.Assistant(
-                        content = Content.Text(output.text()),
+                        content = output.text(),
                         finishReason = output.status?.name,
                         metaInfo = metaInfo
                     )

@@ -485,7 +485,7 @@ class SubgraphWithRetryTest {
         assertIs<Message.User>(actualConditionDescriptionMessage)
         assertEquals(
             "Condition description",
-            actualConditionDescriptionMessage.content.text(),
+            actualConditionDescriptionMessage.content,
             "Condition description message should be added to the prompt"
         )
         for (i in 1..numRetries - 1) {
@@ -493,7 +493,7 @@ class SubgraphWithRetryTest {
             assertIs<Message.User>(actualFeedbackMessage)
             assertEquals(
                 "Retry $i",
-                actualFeedbackMessage.content.text(),
+                actualFeedbackMessage.content,
                 "Feedback message number $i should be added to the prompt"
             )
         }

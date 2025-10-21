@@ -398,7 +398,7 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
             // Execute Finish tool directly and get a result
             val toolArgs = Json.decodeFromString(
                 deserializer = serializer<Output>().asToolDescriptorDeserializer(),
-                string = toolCall.content.text()
+                string = toolCall.content
             )
 
             val toolResult = finishTool.execute(
@@ -411,7 +411,7 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
             llm.writeSession {
                 updatePrompt {
                     tool {
-                        result(toolCall.id, toolCall.tool, toolCall.content.text())
+                        result(toolCall.id, toolCall.tool, toolCall.content)
                     }
                 }
             }
@@ -419,7 +419,7 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
             ReceivedToolResult(
                 id = toolCall.id,
                 tool = finishTool.name,
-                content = toolCall.content.text(),
+                content = toolCall.content,
                 result = toolResult
             )
         } else {

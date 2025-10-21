@@ -6,7 +6,6 @@ import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.environment.SafeTool
 import ai.koog.agents.core.environment.toSafeResult
 import ai.koog.agents.core.tools.Tool
-import ai.koog.prompt.message.Content
 import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import kotlin.reflect.KClass
@@ -196,7 +195,7 @@ public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput> AIAgentEdge
 ): AIAgentEdgeBuilderIntermediate<IncomingOutput, String, OutgoingInput> {
     return onIsInstance(Message.Assistant::class)
         .onCondition { signature -> block(signature) }
-        .transformed { it.content.text() }
+        .transformed { it.content }
 }
 
 /**
@@ -224,11 +223,11 @@ public infix fun <IncomingOutput, OutgoingInput> AIAgentEdgeBuilderIntermediate<
 @EdgeTransformationDslMarker
 public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput> AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.onAssistantMessageWithMedia(
     block: suspend (Message.Assistant) -> Boolean
-): AIAgentEdgeBuilderIntermediate<IncomingOutput, List<ContentPart>, OutgoingInput> {
+): AIAgentEdgeBuilderIntermediate<IncomingOutput, List<ContentPart.Attachment>, OutgoingInput> {
     return onIsInstance(Message.Assistant::class)
         .onCondition {
-            (it.content is Content.Parts) && ((it.content as Content.Parts).value.any { part -> part is ContentPart.Attachment })
+            it.parts.any { part -> part is ContentPart.Attachment }
         }
         .onCondition { signature -> block(signature) }
-        .transformed { (it.content as Content.Parts).value }
+        .transformed { it.parts.filterIsInstance<ContentPart.Attachment>() }
 }

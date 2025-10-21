@@ -116,8 +116,8 @@ public suspend fun AIAgentLLMWriteSession.replaceHistoryWithTLDR(
     // Store memory-related messages if needed
     val memoryMessages = if (preserveMemory) {
         prompt.messages.filter { message ->
-            message.content.text().contains("Here are the relevant facts from memory") ||
-                message.content.text().contains("Memory feature is not enabled")
+            message.content.contains("Here are the relevant facts from memory") ||
+                message.content.contains("Memory feature is not enabled")
         }
     } else {
         emptyList()

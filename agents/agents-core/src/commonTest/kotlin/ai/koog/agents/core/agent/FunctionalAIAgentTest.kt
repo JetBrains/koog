@@ -50,7 +50,7 @@ class FunctionalAIAgentTest {
                     responses = sendMultipleToolResults(results)
                 }
 
-                responses.single().asAssistantMessage().content.text()
+                responses.single().asAssistantMessage().content
             },
             llmModel = OllamaModels.Meta.LLAMA_3_2,
             toolRegistry = testToolRegistry
@@ -90,7 +90,7 @@ class FunctionalAIAgentTest {
                     updatePrompt { user(inputParam) }
                     requestLLM()
                 }
-                resp.content.text()
+                resp.content
             },
             llmModel = OllamaModels.Meta.LLAMA_3_2,
             toolRegistry = testToolRegistry,
@@ -145,6 +145,6 @@ class FunctionalAIAgentTest {
         val result = agent.run("Solve task")
 
         assertEquals(1, actualToolCalls.size)
-        assertEquals("Tools called!", result.text())
+        assertEquals("Tools called!", result)
     }
 }

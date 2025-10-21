@@ -9,7 +9,6 @@ import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.message.Content
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
@@ -48,7 +47,7 @@ class RetryingLLMClientTest {
 
     private val testResponse = listOf(
         Message.Assistant(
-            content = Content.Text("Test response"),
+            content = "Test response",
             metaInfo = testMetaInfo
         )
     )
@@ -334,8 +333,8 @@ class RetryingLLMClientTest {
     @Test
     fun testRetryMultipleChoices() = runTest {
         val choices = listOf(
-            listOf(Message.Assistant(Content.Text("Choice 1"), testMetaInfo)),
-            listOf(Message.Assistant(Content.Text("Choice 2"), testMetaInfo))
+            listOf(Message.Assistant("Choice 1", testMetaInfo)),
+            listOf(Message.Assistant("Choice 2", testMetaInfo))
         )
 
         val mockClient = MockLLMClient(

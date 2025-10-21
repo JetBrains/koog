@@ -1,6 +1,5 @@
 package ai.koog.agents.core.agent.config
 
-import ai.koog.prompt.message.Content
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.Message.Assistant
 import ai.koog.prompt.message.Message.User
@@ -58,14 +57,12 @@ public interface ToolCallDescriber {
          */
         override fun describeToolCall(message: Message.Tool.Call): Message {
             return Assistant(
-                content = Content.Text(
-                    Json.encodeToString(
-                        buildJsonObject {
-                            message.id?.let { put("tool_call_id", JsonPrimitive(it)) }
-                            put("tool_name", JsonPrimitive(message.tool))
-                            put("tool_args", message.contentJson)
-                        }
-                    )
+                content = Json.encodeToString(
+                    buildJsonObject {
+                        message.id?.let { put("tool_call_id", JsonPrimitive(it)) }
+                        put("tool_name", JsonPrimitive(message.tool))
+                        put("tool_args", message.contentJson)
+                    }
                 ),
                 metaInfo = message.metaInfo
             )
@@ -80,14 +77,12 @@ public interface ToolCallDescriber {
          */
         override fun describeToolResult(message: Message.Tool.Result): Message {
             return User(
-                content = Content.Text(
-                    Json.encodeToString(
-                        buildJsonObject {
-                            message.id?.let { put("tool_call_id", JsonPrimitive(it)) }
-                            put("tool_name", JsonPrimitive(message.tool))
-                            put("tool_result", JsonPrimitive(message.content.text()))
-                        }
-                    )
+                content = Json.encodeToString(
+                    buildJsonObject {
+                        message.id?.let { put("tool_call_id", JsonPrimitive(it)) }
+                        put("tool_name", JsonPrimitive(message.tool))
+                        put("tool_result", JsonPrimitive(message.content))
+                    }
                 ),
                 metaInfo = message.metaInfo
             )

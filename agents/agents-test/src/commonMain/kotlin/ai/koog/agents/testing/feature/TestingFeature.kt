@@ -30,7 +30,6 @@ import ai.koog.agents.testing.tools.AIAgentContextMockBuilder
 import ai.koog.agents.testing.tools.AIAgentContextMockBuilderBase
 import ai.koog.agents.testing.tools.DummyAIAgentContext
 import ai.koog.agents.testing.tools.MockEnvironment
-import ai.koog.prompt.message.Content
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.tokenizer.Tokenizer
@@ -1188,7 +1187,7 @@ public fun <Args> Testing.Config.SubgraphAssertionsBuilder<*, *>.toolCallMessage
     return Message.Tool.Call(
         id = null,
         tool = tool.name,
-        content = Content.Text(toolContent),
+        content = toolContent,
         metaInfo = ResponseMetaInfo.create(clock, outputTokensCount = tokenCount)
     )
 }
@@ -1207,7 +1206,7 @@ public fun Testing.Config.SubgraphAssertionsBuilder<*, *>.assistantMessage(
     val tokenCount = tokenizer?.countTokens(text)
 
     return Message.Assistant(
-        content = Content.Text(text),
+        content = text,
         finishReason = finishReason,
         metaInfo = ResponseMetaInfo.create(clock, outputTokensCount = tokenCount)
     )

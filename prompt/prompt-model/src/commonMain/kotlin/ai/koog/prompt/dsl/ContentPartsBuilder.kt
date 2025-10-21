@@ -2,6 +2,7 @@ package ai.koog.prompt.dsl
 
 import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.ContentPart
+import ai.koog.prompt.text.TextContentBuilder
 import kotlinx.io.buffered
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
@@ -9,22 +10,22 @@ import kotlinx.io.readByteArray
 import kotlinx.io.readString
 
 /**
- * A builder for constructing attachments for prompt messages.
+ * A builder for constructing parts for prompt messages.
  *
  * Example usage:
  * ```kotlin
- * val attachments = AttachmentBuilder().apply {
+ * val parts = AttachmentBuilder().apply {
+ *     text("Hello!")
  *     image("screenshot.png")
  *     binaryFile("report.pdf")
  * }.build()
  * ```
  *
  * @see ContentPart
- * @see MessageContentBuilder
  */
 @PromptDSL
 public class ContentPartsBuilder {
-    private val contentParts = mutableListOf<ContentPart>()
+    private val parts = mutableListOf<ContentPart>()
 
     private class FileData(val name: String, val extension: String)
 
@@ -67,15 +68,36 @@ public class ContentPartsBuilder {
     /**
      * Adds [ContentPart] to the list of contentParts.
      */
-    public fun attachment(contentPart: ContentPart) {
-        contentParts.add(contentPart)
+    public fun part(contentPart: ContentPart) {
+        parts.add(contentPart)
     }
 
     /**
-     * Adds [ContentPart.Image] to the list of attachments.
+     * Adds [ContentPart.Text] with given content to the list of parts.
+     */
+    public fun text(content: String) {
+        text(ContentPart.Text(content))
+    }
+
+    /**
+     * Adds [ContentPart.Text] with given content to the list of parts.
+     */
+    public fun text(body: TextContentBuilder.() -> Unit) {
+        text(TextContentBuilder().apply(body).build())
+    }
+
+    /**
+     * Adds [ContentPart.Text] to the list of parts.
+     */
+    public fun text(part: ContentPart.Text) {
+        part(part)
+    }
+
+    /**
+     * Adds [ContentPart.Image] to the list of parts.
      */
     public fun image(image: ContentPart.Image) {
-        attachment(image)
+        part(image)
     }
 
     /**
@@ -113,10 +135,10 @@ public class ContentPartsBuilder {
     }
 
     /**
-     * Adds [ContentPart.Audio] to the list of attachments.
+     * Adds [ContentPart.Audio] to the list of parts.
      */
     public fun audio(audio: ContentPart.Audio) {
-        contentParts.add(audio)
+        parts.add(audio)
     }
 
     /**
@@ -154,10 +176,10 @@ public class ContentPartsBuilder {
     }
 
     /**
-     * Adds [ContentPart.Video] to the list of attachments.
+     * Adds [ContentPart.Video] to the list of parts.
      */
     public fun video(video: ContentPart.Video) {
-        contentParts.add(video)
+        parts.add(video)
     }
 
     /**
@@ -195,10 +217,10 @@ public class ContentPartsBuilder {
     }
 
     /**
-     * Adds [ContentPart.File] to the list of attachments.
+     * Adds [ContentPart.File] to the list of parts.
      */
     public fun file(file: ContentPart.File) {
-        contentParts.add(file)
+        parts.add(file)
     }
 
     /**
@@ -263,5 +285,5 @@ public class ContentPartsBuilder {
      *
      * @return A list containing all the attachment items created through the builder methods
      */
-    public fun build(): List<ContentPart> = contentParts
+    public fun build(): List<ContentPart> = parts
 }

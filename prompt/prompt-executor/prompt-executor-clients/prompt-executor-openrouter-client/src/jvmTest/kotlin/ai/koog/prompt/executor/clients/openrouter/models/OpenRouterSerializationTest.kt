@@ -238,7 +238,7 @@ class OpenRouterSerializationTest {
         assertEquals("stop", choice.finishReason)
 
         val message = choice.message as OpenAIMessage.Assistant
-        assertEquals("Hello there!", message.content?.text())
+        assertEquals("Hello there!", message.content)
 
         assertNotNull(response.usage)
         assertEquals(10, response.usage.promptTokens)

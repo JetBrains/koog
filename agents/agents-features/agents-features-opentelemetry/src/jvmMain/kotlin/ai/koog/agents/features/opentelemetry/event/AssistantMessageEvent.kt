@@ -20,7 +20,7 @@ internal class AssistantMessageEvent(
 
         when (message) {
             is Message.Assistant -> {
-                addBodyField(EventBodyFields.Content(content = message.content.text()))
+                addBodyField(EventBodyFields.Content(content = message.content))
                 arguments?.let { addBodyField(EventBodyFields.Arguments(it)) }
             }
 

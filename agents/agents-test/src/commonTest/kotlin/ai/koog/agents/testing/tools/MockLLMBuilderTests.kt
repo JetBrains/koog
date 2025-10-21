@@ -46,7 +46,7 @@ class MockLLMBuilderTests {
         }
 
         val response = mockExecutor.execute(prompt, OllamaModels.Meta.LLAMA_3_2).single()
-        assertEquals("Hello, world!", response.content.text())
+        assertEquals("Hello, world!", response.content)
 
         // Test default response
         val prompt2 = prompt("test2") {
@@ -54,7 +54,7 @@ class MockLLMBuilderTests {
         }
 
         val response2 = mockExecutor.execute(prompt2, OllamaModels.Meta.LLAMA_3_2).single()
-        assertEquals("Default response", response2.content.text())
+        assertEquals("Default response", response2.content)
     }
 
     @Test
@@ -69,7 +69,7 @@ class MockLLMBuilderTests {
         }
 
         val response = mockExecutor.execute(prompt, OllamaModels.Meta.LLAMA_3_2).single()
-        assertEquals("Exact match response", response.content.text())
+        assertEquals("Exact match response", response.content)
 
         // Test that partial match doesn't work for exact matching
         val prompt2 = prompt("test-exact-partial") {
@@ -77,7 +77,7 @@ class MockLLMBuilderTests {
         }
 
         val response2 = mockExecutor.execute(prompt2, OllamaModels.Meta.LLAMA_3_2).single()
-        assertEquals("Default response", response2.content.text())
+        assertEquals("Default response", response2.content)
     }
 
     @Test
@@ -93,7 +93,7 @@ class MockLLMBuilderTests {
         }
 
         val response = mockExecutor.execute(prompt, OllamaModels.Meta.LLAMA_3_2).single()
-        assertEquals("Partial match response", response.content.text())
+        assertEquals("Partial match response", response.content)
     }
 
     @Test
@@ -109,7 +109,7 @@ class MockLLMBuilderTests {
         }
 
         val response = mockExecutor.execute(prompt, OllamaModels.Meta.LLAMA_3_2).single()
-        assertEquals("Conditional response", response.content.text())
+        assertEquals("Conditional response", response.content)
 
         // Test that condition not matching returns default
         val prompt2 = prompt("test-conditional-short") {
@@ -117,7 +117,7 @@ class MockLLMBuilderTests {
         }
 
         val response2 = mockExecutor.execute(prompt2, OllamaModels.Meta.LLAMA_3_2).single()
-        assertEquals("Default response", response2.content.text())
+        assertEquals("Default response", response2.content)
     }
 
     @Test
@@ -200,7 +200,7 @@ class MockLLMBuilderTests {
         assertTrue(responses.any { it is Message.Tool.Call })
 
         val textResponse = responses.first { it is Message.Assistant } as Message.Assistant
-        assertEquals("This is a mixed response with tool calls", textResponse.content.text())
+        assertEquals("This is a mixed response with tool calls", textResponse.content)
 
         val toolCall = responses.first { it is Message.Tool.Call } as Message.Tool.Call
         assertEquals("test_tool", toolCall.tool)

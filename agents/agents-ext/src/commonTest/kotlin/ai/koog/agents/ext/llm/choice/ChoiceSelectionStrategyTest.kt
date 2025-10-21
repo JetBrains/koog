@@ -8,7 +8,6 @@ import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.llm.OllamaModels
-import ai.koog.prompt.message.Content
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
@@ -36,9 +35,9 @@ class ChoiceSelectionStrategyTest {
 
         // Create two different choices
         val firstChoice: LLMChoice =
-            listOf(Message.Assistant(Content.Text("First choice"), metaInfo = ResponseMetaInfo.create(testClock)))
+            listOf(Message.Assistant("First choice", metaInfo = ResponseMetaInfo.create(testClock)))
         val secondChoice: LLMChoice =
-            listOf(Message.Assistant(Content.Text("Second choice"), metaInfo = ResponseMetaInfo.create(testClock)))
+            listOf(Message.Assistant("Second choice", metaInfo = ResponseMetaInfo.create(testClock)))
         val choices = listOf(firstChoice, secondChoice)
 
         // Act
@@ -60,7 +59,7 @@ class ChoiceSelectionStrategyTest {
             ): List<Message.Response> {
                 return listOf(
                     Message.Assistant(
-                        Content.Text("Default response"),
+                        "Default response",
                         metaInfo = ResponseMetaInfo.create(testClock)
                     )
                 )
@@ -79,9 +78,9 @@ class ChoiceSelectionStrategyTest {
                 tools: List<ToolDescriptor>
             ): List<LLMChoice> {
                 val choice1 =
-                    listOf(Message.Assistant(Content.Text("Choice 1"), metaInfo = ResponseMetaInfo.create(testClock)))
+                    listOf(Message.Assistant("Choice 1", metaInfo = ResponseMetaInfo.create(testClock)))
                 val choice2 =
-                    listOf(Message.Assistant(Content.Text("Choice 2"), metaInfo = ResponseMetaInfo.create(testClock)))
+                    listOf(Message.Assistant("Choice 2", metaInfo = ResponseMetaInfo.create(testClock)))
                 return listOf(choice1, choice2)
             }
 
@@ -109,7 +108,7 @@ class ChoiceSelectionStrategyTest {
         val result = executor.execute(testPrompt, testModel, emptyList())
 
         assertEquals(
-            Content.Text("Choice 2"),
+            "Choice 2",
             (result.first() as Message.Assistant).content,
             "PromptExecutorChoice should delegate to strategy and return the chosen choice"
         )

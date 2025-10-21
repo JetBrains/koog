@@ -1,7 +1,6 @@
 package ai.koog.prompt.tokenizer
 
 import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.message.Content
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
@@ -88,11 +87,11 @@ class PromptTokenizerTest {
         val responseMetainfo = ResponseMetaInfo.create(Clock.System)
         // Count tokens for individual messages
         val systemTokens = promptTokenizer.tokenCountFor(
-            Message.System(Content.Text("You are a helpful assistant."), requestMetainfo)
+            Message.System("You are a helpful assistant.", requestMetainfo)
         )
-        val userTokens = promptTokenizer.tokenCountFor(Message.User(Content.Text("What is the capital of France?"), requestMetainfo))
+        val userTokens = promptTokenizer.tokenCountFor(Message.User("What is the capital of France?", requestMetainfo))
         val assistantTokens = promptTokenizer.tokenCountFor(
-            Message.Assistant(Content.Text("Paris is the capital of France."), responseMetainfo)
+            Message.Assistant("Paris is the capital of France.", responseMetainfo)
         )
 
         // Print token counts for each message

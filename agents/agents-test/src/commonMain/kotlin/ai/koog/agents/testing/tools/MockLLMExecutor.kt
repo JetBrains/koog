@@ -145,9 +145,9 @@ internal class MockLLMExecutor(
      */
     fun handlePrompt(prompt: Prompt): List<Message.Response> {
         logger.debug { "Handling prompt with messages:" }
-        prompt.messages.forEach { logger.debug { "Message content: ${it.content.text().take(300)}..." } }
+        prompt.messages.forEach { logger.debug { "Message content: ${it.content.take(300)}..." } }
 
-        val inputTokensCount = tokenizer?.let { prompt.messages.map { it.content.text() }.sumOf(it::countTokens) }
+        val inputTokensCount = tokenizer?.let { prompt.messages.map { it.content }.sumOf(it::countTokens) }
 
         val lastMessage = getLastMessage(prompt) ?: return responseMatcher.defaultResponse
 
@@ -185,7 +185,7 @@ internal class MockLLMExecutor(
         lastMessage: Message,
         inputTokensCount: Int?
     ): List<Message.Response>? = if (!responseMatcher.conditional.isNullOrEmpty()) {
-        responseMatcher.conditional.entries.firstOrNull { it.key(lastMessage.content.text()) }?.let { (_, response) ->
+        responseMatcher.conditional.entries.firstOrNull { it.key(lastMessage.content) }?.let { (_, response) ->
             logger.debug { "Returning response for conditional match: $response" }
             response
         }
@@ -209,7 +209,7 @@ internal class MockLLMExecutor(
         partialMatches: Map<String, TResponse>?
     ): TResponse? {
         return partialMatches?.entries?.firstNotNullOfOrNull { (pattern, response) ->
-            if (message.content.text().contains(pattern)) {
+            if (message.content.contains(pattern)) {
                 response
             } else {
                 null
@@ -229,7 +229,7 @@ internal class MockLLMExecutor(
         exactMatches: Map<String, TResponse>?
     ): TResponse? {
         return exactMatches?.entries?.firstNotNullOfOrNull { (pattern, response) ->
-            if (message.content.text() == pattern) {
+            if (message.content == pattern) {
                 response
             } else {
                 null

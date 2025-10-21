@@ -285,7 +285,7 @@ public class OpenTelemetry {
                             ToolMessageEvent(
                                 provider = provider,
                                 toolCallId = message.id,
-                                content = message.content.text()
+                                content = message.content
                             )
                         }
                     }

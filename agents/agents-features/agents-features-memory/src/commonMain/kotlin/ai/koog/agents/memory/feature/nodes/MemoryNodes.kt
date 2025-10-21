@@ -178,7 +178,7 @@ public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeSaveToMemoryA
 
         withMemory {
             scopes.mapNotNull(scopesProfile::getScope).forEach { scope ->
-                val facts = parseFactsFromResponse(response.content.text())
+                val facts = parseFactsFromResponse(response.content)
                 facts.forEach { (subject, fact) ->
                     agentMemory.save(fact, subject, scope)
                 }

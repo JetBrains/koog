@@ -8,7 +8,6 @@ import ai.koog.a2a.model.Part
 import ai.koog.a2a.model.Role
 import ai.koog.a2a.model.TextPart
 import ai.koog.prompt.message.AttachmentContent
-import ai.koog.prompt.message.Content
 import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
@@ -46,11 +45,11 @@ public fun A2AMessage.toKoogMessage(
         )
     )
 
-    val content = parts.toKoogContent()
+    val parts = parts.map { it.toKoogPart() }
 
     return when (role) {
         Role.User -> Message.User(
-            content = content,
+            parts = parts,
             metaInfo = RequestMetaInfo(
                 timestamp = clock.now(),
                 metadata = metadata,
@@ -58,7 +57,7 @@ public fun A2AMessage.toKoogMessage(
         )
 
         Role.Agent -> Message.Assistant(
-            content = content,
+            parts = parts,
             metaInfo = ResponseMetaInfo(
                 timestamp = clock.now(),
                 metadata = metadata,
@@ -87,7 +86,7 @@ public fun Message.toA2AMessage(
         else -> throw IllegalArgumentException("A2A can't handle this Koog message type: $this")
     }
 
-    val parts = content.toA2AParts()
+    val parts = parts.map { it.toA2APart() }
 
     return A2AMessage(
         messageId = actualMetadata?.messageId ?: Uuid.random().toString(),
@@ -99,14 +98,6 @@ public fun Message.toA2AMessage(
         contextId = actualMetadata?.contextId,
         metadata = actualMetadata?.metadata
     )
-}
-
-/**
- * Convert Koog [Content] to list of A2A [Part]
- */
-public fun Content.toA2AParts(): List<Part> = when (this) {
-    is Content.Text -> listOf(TextPart(this.value))
-    is Content.Parts -> this.value.map { part -> part.toA2APart() }
 }
 
 /**
@@ -140,17 +131,6 @@ public fun ContentPart.toA2APart(): Part = when (this) {
 
         FilePart(file)
     }
-}
-
-/**
- * Converts list of A2A [Part] to Koog [Content].
- */
-public fun List<Part>.toKoogContent(): Content {
-    if (this.size == 1 && this.first() is TextPart) {
-        return Content.Text((this.first() as TextPart).text)
-    }
-
-    return Content.Parts(this.map { it.toKoogPart() })
 }
 
 /**

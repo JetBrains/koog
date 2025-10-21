@@ -1,13 +1,15 @@
 package ai.koog.prompt.dsl
 
+import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.ContentPart
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
-class AttachmentBuilderTest {
+class ContentPartsBuilderTest {
 
     @Test
     fun testEmptyBuilder() {
@@ -19,9 +21,9 @@ class AttachmentBuilderTest {
 
     @Test
     fun testAddSingleImage() {
-        val builder = ContentPartsBuilder()
-        builder.image("https://example.com/test.png")
-        val result = builder.build()
+        val result = ContentPartsBuilder().apply {
+            image("https://example.com/test.png")
+        }.build()
 
         assertEquals(1, result.size, "Should contain one attachment")
         assertEquals(
@@ -37,15 +39,15 @@ class AttachmentBuilderTest {
     @Test
     fun testAddSingleAudio() {
         val audioData = byteArrayOf(1, 2, 3, 4, 5)
-        val builder = ContentPartsBuilder()
-        builder.audio(
-            ContentPart.Audio(
-                content = AttachmentContent.Binary.Bytes(audioData),
-                format = "mp3",
-                fileName = "audio.mp3"
+        val result = ContentPartsBuilder().apply {
+            audio(
+                ContentPart.Audio(
+                    content = AttachmentContent.Binary.Bytes(audioData),
+                    format = "mp3",
+                    fileName = "audio.mp3"
+                )
             )
-        )
-        val result = builder.build()
+        }.build()
 
         assertEquals(1, result.size, "Should contain one attachment")
         assertEquals(
@@ -61,16 +63,16 @@ class AttachmentBuilderTest {
     @Test
     fun testAddSingleDocument() {
         val documentData = byteArrayOf(1, 2, 3, 4, 5)
-        val builder = ContentPartsBuilder()
-        builder.file(
-            ContentPart.File(
-                content = AttachmentContent.Binary.Bytes(documentData),
-                format = "pdf",
-                mimeType = "application/pdf",
-                fileName = "report.pdf"
+        val result = ContentPartsBuilder().apply {
+            file(
+                ContentPart.File(
+                    content = AttachmentContent.Binary.Bytes(documentData),
+                    format = "pdf",
+                    mimeType = "application/pdf",
+                    fileName = "report.pdf"
+                )
             )
-        )
-        val result = builder.build()
+        }.build()
 
         assertEquals(1, result.size, "Should contain one attachment")
         assertEquals(
@@ -89,30 +91,30 @@ class AttachmentBuilderTest {
         val audioData = byteArrayOf(1, 2, 3, 4, 5)
         val imageData = byteArrayOf(10, 20, 30, 40, 50)
         val documentData = byteArrayOf(60, 70, 80, 90, 100)
-        val builder = ContentPartsBuilder()
-        builder.image(
-            ContentPart.Image(
-                content = AttachmentContent.Binary.Bytes(imageData),
-                format = "jpg",
-                fileName = "photo.jpg"
+        val result = ContentPartsBuilder().apply {
+            image(
+                ContentPart.Image(
+                    content = AttachmentContent.Binary.Bytes(imageData),
+                    format = "jpg",
+                    fileName = "photo.jpg"
+                )
             )
-        )
-        builder.audio(
-            ContentPart.Audio(
-                content = AttachmentContent.Binary.Bytes(audioData),
-                format = "wav",
-                fileName = "audio.wav"
+            audio(
+                ContentPart.Audio(
+                    content = AttachmentContent.Binary.Bytes(audioData),
+                    format = "wav",
+                    fileName = "audio.wav"
+                )
             )
-        )
-        builder.file(
-            ContentPart.File(
-                content = AttachmentContent.Binary.Bytes(documentData),
-                format = "pdf",
-                mimeType = "application/pdf",
-                fileName = "document.pdf"
+            file(
+                ContentPart.File(
+                    content = AttachmentContent.Binary.Bytes(documentData),
+                    format = "pdf",
+                    mimeType = "application/pdf",
+                    fileName = "document.pdf"
+                )
             )
-        )
-        val result = builder.build()
+        }.build()
 
         assertEquals(3, result.size, "Should contain three attachments")
         assertEquals(
@@ -239,13 +241,14 @@ class AttachmentBuilderTest {
 
     @Test
     fun testImageBase64Behavior() {
-        val image = ContentPart.Image(
-            content = AttachmentContent.Binary.Base64("simulated_base64_content"),
-            format = "png",
-            fileName = "local_image.png"
-        )
         val result = ContentPartsBuilder().apply {
-            image(image)
+            image(
+                ContentPart.Image(
+                    content = AttachmentContent.Binary.Base64("simulated_base64_content"),
+                    format = "png",
+                    fileName = "local_image.png"
+                )
+            )
         }.build()
 
         assertEquals(1, result.size, "Should contain one attachment")
@@ -262,14 +265,15 @@ class AttachmentBuilderTest {
 
     @Test
     fun testDocumentBase64Behavior() {
-        val document = ContentPart.File(
-            content = AttachmentContent.Binary.Base64("simulated_base64_content"),
-            format = "pdf",
-            mimeType = "application/pdf",
-            fileName = "local_document.pdf"
-        )
         val result = ContentPartsBuilder().apply {
-            file(document)
+            file(
+                ContentPart.File(
+                    content = AttachmentContent.Binary.Base64("simulated_base64_content"),
+                    format = "pdf",
+                    mimeType = "application/pdf",
+                    fileName = "local_document.pdf"
+                )
+            )
         }.build()
 
         assertEquals(1, result.size, "Should contain one attachment")
@@ -357,10 +361,98 @@ class AttachmentBuilderTest {
         }.build()
 
         assertEquals(1, result.size, "Should contain one attachment")
-        val resultFile = result[0] as ContentPart.File
+        val resultFile = result[0]
+        assertIs<ContentPart.File>(resultFile, "Part should be recognized as File")
         assertTrue(resultFile.content is AttachmentContent.PlainText, "File should be recognized as PlainText content")
         assertEquals("This is a text file content", (resultFile.content).text, "Text content should match")
         assertEquals("text/plain", resultFile.mimeType, "MIME type should match")
         assertEquals("document.txt", resultFile.fileName, "File name should match")
+    }
+
+    @Test
+    fun testText() {
+        val result = ContentPartsBuilder().apply {
+            text("This is a text content")
+        }.build()
+
+        assertEquals(1, result.size, "Should contain one attachment")
+        val resultText = result[0]
+        assertIs<ContentPart.Text>(resultText, "Part should be recognized as Text")
+        assertEquals("This is a text content", resultText.text)
+    }
+
+    @Test
+    fun testMultipleText() {
+        val result = ContentPartsBuilder().apply {
+            text("This is a text content")
+            text("This is another text content")
+        }.build()
+
+        assertEquals(2, result.size, "Should contain two attachments")
+        val resultFirstText = result[0]
+        assertIs<ContentPart.Text>(resultFirstText, "Part should be recognized as Text")
+        assertEquals("This is a text content", resultFirstText.text)
+        val resultSecondText = result[1]
+        assertIs<ContentPart.Text>(resultSecondText, "Part should be recognized as Text")
+        assertEquals("This is another text content", resultSecondText.text)
+    }
+
+    @Test
+    fun testTextWithTextBuilder() {
+        val result = ContentPartsBuilder().apply {
+            text {
+                text("This is a text content")
+                newline()
+                text("This is another text content")
+            }
+        }.build()
+
+        assertEquals(1, result.size, "Should contain one attachment")
+        val resultText = result[0]
+        assertIs<ContentPart.Text>(resultText, "Part should be recognized as Text")
+        assertEquals("This is a text content\nThis is another text content", resultText.text)
+    }
+
+    @Test
+    fun testTextWithMarkdownBuilder() {
+        val result = ContentPartsBuilder().apply {
+            text(
+                markdown {
+                    numbered {
+                        text("This is a markdown content")
+                        text("This is another text content")
+                    }
+                }
+            )
+        }.build()
+
+        assertEquals(1, result.size, "Should contain one attachment")
+        val resultText = result[0]
+        assertIs<ContentPart.Text>(resultText, "Part should be recognized as Text")
+        assertEquals("1. This is a text content\n2. This is another text content", resultText.text)
+    }
+
+    @Test
+    fun testMultipleTextWithAttachment() {
+        val result = ContentPartsBuilder().apply {
+            text("This is the first image")
+            image("https://example.com/first")
+            text("This is the second image")
+            image("https://example.com/second")
+        }.build()
+
+        assertEquals(4, result.size, "Should contain two attachments")
+        val resultFirstText = result[0]
+        assertIs<ContentPart.Text>(resultFirstText, "Part should be recognized as Text")
+        assertEquals("This is the first image", resultFirstText.text)
+        val resultFirstImage = result[1]
+        assertIs<ContentPart.Image>(resultFirstImage, "Part should be recognized as Image")
+        assertEquals(AttachmentContent.URL("https://example.com/first"), resultFirstImage.content)
+        val resultSecondText = result[2]
+        assertIs<ContentPart.Text>(resultSecondText, "Part should be recognized as Text")
+        assertEquals("This is the second image", resultSecondText.text)
+        val resultSecondImage = result[3]
+        assertIs<ContentPart.Image>(resultSecondImage, "Part should be recognized as Image")
+        assertEquals(AttachmentContent.URL("https://example.com/second"), resultSecondImage.content)
     }
 }

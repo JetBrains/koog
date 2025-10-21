@@ -3,7 +3,6 @@ package ai.koog.prompt.executor.clients.bedrock.modelfamilies.meta
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.message.Content
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
@@ -48,7 +47,7 @@ internal object BedrockMetaLlamaSerialization {
 
         return listOf(
             Message.Assistant(
-                content = Content.Text(response.generation),
+                content = response.generation,
                 finishReason = response.stopReason,
                 metaInfo = ResponseMetaInfo.Companion.create(
                     clock = clock,

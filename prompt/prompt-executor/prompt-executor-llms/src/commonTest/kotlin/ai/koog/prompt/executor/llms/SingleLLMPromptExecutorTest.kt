@@ -9,7 +9,6 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.message.Content
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
@@ -41,7 +40,7 @@ class SingleLLMPromptExecutorTest {
     @Test
     fun testExecute() = runTest {
         val responses = listOf(
-            Message.Assistant(Content.Text("Hello"), ResponseMetaInfo.create(mockClock))
+            Message.Assistant("Hello", ResponseMetaInfo.create(mockClock))
         )
         val client = CapturingLLMClient(executeResponses = responses)
         val executor = SingleLLMPromptExecutor(client)
@@ -76,8 +75,8 @@ class SingleLLMPromptExecutorTest {
     fun testExecuteMultipleChoices() = runTest {
         val meta = ResponseMetaInfo.create(mockClock)
         val choices: List<LLMChoice> = listOf(
-            listOf(Message.Assistant(Content.Text("Hi there!"), meta)),
-            listOf(Message.Assistant(Content.Text("Hello world!"), meta)),
+            listOf(Message.Assistant("Hi there!", meta)),
+            listOf(Message.Assistant("Hello world!", meta)),
         )
 
         val client = CapturingLLMClient(choices = choices)

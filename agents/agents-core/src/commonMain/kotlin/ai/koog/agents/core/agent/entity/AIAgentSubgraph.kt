@@ -119,7 +119,9 @@ public open class AIAgentSubgraph<TInput, TOutput>(
 
             updatePrompt {
                 user {
-                    selectRelevantTools(tools, toolSelectionStrategy.subtaskDescription)
+                    text {
+                        selectRelevantTools(tools, toolSelectionStrategy.subtaskDescription)
+                    }
                 }
             }
 

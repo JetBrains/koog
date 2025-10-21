@@ -15,7 +15,7 @@ internal class UserMessageEvent(
 
         // Body Fields
         addBodyField(EventBodyFields.Role(role = message.role))
-        addBodyField(EventBodyFields.Content(content = message.content.text()))
+        addBodyField(EventBodyFields.Content(content = message.content))
     }
 
     override val name: String = super.name.concatName("user.message")

@@ -28,7 +28,6 @@ import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.AttachmentContent
-import ai.koog.prompt.message.Content
 import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
@@ -269,7 +268,7 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
             when (message) {
                 is Message.System -> {
                     flushPendingCalls()
-                    messages += OpenAIMessage.System(content = OpenAIContent.Text(message.content.text()))
+                    messages += OpenAIMessage.System(content = OpenAIContent.Text(message.content))
                 }
 
                 is Message.User -> {
@@ -279,13 +278,13 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
 
                 is Message.Assistant -> {
                     flushPendingCalls()
-                    messages += OpenAIMessage.Assistant(content = OpenAIContent.Text(message.content.text()))
+                    messages += OpenAIMessage.Assistant(content = OpenAIContent.Text(message.content))
                 }
 
                 is Message.Tool.Result -> {
                     flushPendingCalls()
                     messages += OpenAIMessage.Tool(
-                        content = OpenAIContent.Text(message.content.text()),
+                        content = OpenAIContent.Text(message.content),
                         toolCallId = message.id ?: Uuid.random().toString()
                     )
                 }
@@ -293,7 +292,7 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
                 is Message.Tool.Call -> {
                     pendingCalls += OpenAIToolCall(
                         message.id ?: Uuid.random().toString(),
-                        function = OpenAIFunction(message.tool, message.content.text())
+                        function = OpenAIFunction(message.tool, message.content)
                     )
                 }
             }
@@ -303,14 +302,12 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
         return messages
     }
 
-    protected fun Message.toMessageContent(model: LLModel): OpenAIContent = when (val content = this.content) {
-        is Content.Text -> {
-            OpenAIContent.Text(content.value)
+    protected fun Message.toMessageContent(model: LLModel): OpenAIContent {
+        if (this.hasOnlyTextContent()) {
+            return OpenAIContent.Text(content)
         }
 
-        is Content.Parts -> {
-            OpenAIContent.Parts(content.value.map { part -> part.toContentPart(model) })
-        }
+        return OpenAIContent.Parts(parts.map { part -> part.toContentPart(model) })
     }
 
     private fun ContentPart.toContentPart(model: LLModel): OpenAIContentPart = when (this) {
@@ -463,7 +460,7 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
 
             this.content != null -> listOf(
                 Message.Assistant(
-                    content = Content.Text(this.content!!.text()),
+                    content = this.content!!.text(),
                     finishReason = finishReason,
                     metaInfo = metaInfo
                 )
@@ -471,17 +468,15 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
 
             this is OpenAIMessage.Assistant && this.audio?.data != null -> listOf(
                 Message.Assistant(
-                    content = Content.Parts(
-                        buildList {
-                            this@toMessageResponses.audio.transcript?.let { add(ContentPart.Text(it)) }
-                            add(
-                                ContentPart.Audio(
-                                    content = AttachmentContent.Binary.Base64(this@toMessageResponses.audio.data),
-                                    format = "unknown", // FIXME: clarify format from response
-                                )
+                    parts = buildList {
+                        this@toMessageResponses.audio.transcript?.let { add(ContentPart.Text(it)) }
+                        add(
+                            ContentPart.Audio(
+                                content = AttachmentContent.Binary.Base64(this@toMessageResponses.audio.data),
+                                format = "unknown", // FIXME: clarify format from response
                             )
-                        }
-                    ),
+                        )
+                    },
                     finishReason = finishReason,
                     metaInfo = metaInfo
                 )

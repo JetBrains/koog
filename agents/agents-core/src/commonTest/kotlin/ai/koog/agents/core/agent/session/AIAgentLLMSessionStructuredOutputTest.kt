@@ -7,7 +7,6 @@ import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.message.Content
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.structure.StructuredOutput
@@ -69,7 +68,7 @@ class AIAgentLLMSessionStructuredOutputTest : AgentTestBase() {
         """.trimIndent()
 
         val assistantMessage = Message.Assistant(
-            content = Content.Text(jsonResponse),
+            content = jsonResponse,
             metaInfo = ResponseMetaInfo.create(testClock)
         )
 
@@ -121,7 +120,7 @@ class AIAgentLLMSessionStructuredOutputTest : AgentTestBase() {
         """.trimIndent()
 
         val assistantMessage = Message.Assistant(
-            content = Content.Text(jsonResponse),
+            content = jsonResponse,
             metaInfo = ResponseMetaInfo.create(testClock)
         )
 
@@ -201,7 +200,7 @@ class AIAgentLLMSessionStructuredOutputTest : AgentTestBase() {
         """.trimIndent()
 
         val assistantMessage = Message.Assistant(
-            content = Content.Text(jsonResponse),
+            content = jsonResponse,
             metaInfo = ResponseMetaInfo.create(testClock)
         )
 

@@ -27,7 +27,7 @@ class AIAgentGenericTypesTest {
 
         val customStrategy = strategy<CustomInput, CustomOutput>("custom-strategy") {
             val processInput = { input: CustomInput -> input.query }
-            val processOutput = { output: Message.Response -> CustomOutput(result = output.content.text(), confidence = 0.95) }
+            val processOutput = { output: Message.Response -> CustomOutput(result = output.content, confidence = 0.95) }
 
             val callLLM by nodeLLMRequest()
 
@@ -59,8 +59,8 @@ class AIAgentGenericTypesTest {
             val convertToString = { input: Int -> "Is $input an even number?" }
 
             val parseResponse = { output: Message.Response ->
-                output.content.text().contains("yes", ignoreCase = true) ||
-                    output.content.text().contains("even", ignoreCase = true)
+                output.content.contains("yes", ignoreCase = true) ||
+                    output.content.contains("even", ignoreCase = true)
             }
 
             val callLLM by nodeLLMRequest()

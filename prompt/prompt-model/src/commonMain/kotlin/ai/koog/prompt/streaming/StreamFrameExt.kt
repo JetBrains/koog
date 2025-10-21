@@ -1,6 +1,5 @@
 package ai.koog.prompt.streaming
 
-import ai.koog.prompt.message.Content
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 
@@ -9,8 +8,8 @@ import ai.koog.prompt.message.ResponseMetaInfo
  */
 public fun Message.Response.toStreamFrame(): StreamFrame =
     when (this) {
-        is Message.Assistant -> StreamFrame.Append(content.text())
-        is Message.Tool.Call -> StreamFrame.ToolCall(id, tool, content.text())
+        is Message.Assistant -> StreamFrame.Append(content)
+        is Message.Tool.Call -> StreamFrame.ToolCall(id, tool, content)
     }
 
 /**
@@ -41,7 +40,7 @@ public fun Iterable<StreamFrame>.toMessageResponses(): List<Message.Response> {
                 Message.Tool.Call(
                     id = it.id,
                     tool = it.name,
-                    content = Content.Text(it.content),
+                    content = it.content,
                     metaInfo = end?.metaInfo ?: ResponseMetaInfo.Empty
                 )
             )
@@ -49,7 +48,7 @@ public fun Iterable<StreamFrame>.toMessageResponses(): List<Message.Response> {
         assistantContent?.let {
             add(
                 Message.Assistant(
-                    content = Content.Text(it),
+                    content = it,
                     finishReason = end?.finishReason,
                     metaInfo = end?.metaInfo ?: ResponseMetaInfo.Empty
                 )

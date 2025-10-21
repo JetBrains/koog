@@ -27,7 +27,6 @@ import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.AttachmentContent
-import ai.koog.prompt.message.Content
 import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
@@ -309,7 +308,7 @@ public open class GoogleLLMClient(
         for (message in prompt.messages) {
             when (message) {
                 is Message.System -> {
-                    systemMessageParts.add(GooglePart.Text(message.content.text()))
+                    systemMessageParts.add(GooglePart.Text(message.content))
                 }
 
                 is Message.User -> {
@@ -323,7 +322,7 @@ public open class GoogleLLMClient(
                     contents.add(
                         GoogleContent(
                             role = "model",
-                            parts = listOf(GooglePart.Text(message.content.text()))
+                            parts = listOf(GooglePart.Text(message.content))
                         )
                     )
                 }
@@ -338,7 +337,7 @@ public open class GoogleLLMClient(
                                     functionResponse = GoogleData.FunctionResponse(
                                         id = message.id,
                                         name = message.tool,
-                                        response = buildJsonObject { put("result", message.content.text()) }
+                                        response = buildJsonObject { put("result", message.content) }
                                     )
                                 )
                             )
@@ -351,7 +350,7 @@ public open class GoogleLLMClient(
                         functionCall = GoogleData.FunctionCall(
                             id = message.id,
                             name = message.tool,
-                            args = json.decodeFromString(message.content.text())
+                            args = json.decodeFromString(message.content)
                         )
                     )
                 }
@@ -443,77 +442,70 @@ public open class GoogleLLMClient(
 
     private fun Message.User.toGoogleContent(model: LLModel): GoogleContent {
         val contentParts = buildList {
-            when (val content = content) {
-                is Content.Text -> {
-                    add(GooglePart.Text(content.value))
-                }
-                is Content.Parts -> {
-                    content.value.forEach { part ->
-                        when (part) {
-                            is ContentPart.Text -> {
-                                add(GooglePart.Text(part.text))
-                            }
+            parts.forEach { part ->
+                when (part) {
+                    is ContentPart.Text -> {
+                        add(GooglePart.Text(part.text))
+                    }
 
-                            is ContentPart.Image -> {
-                                require(model.capabilities.contains(LLMCapability.Vision.Image)) {
-                                    "Model ${model.id} does not support images"
-                                }
-
-                                val blob: GoogleData.Blob = when (val content = part.content) {
-                                    is AttachmentContent.Binary -> GoogleData.Blob(part.mimeType, content.asBytes())
-                                    else -> throw IllegalArgumentException(
-                                        "Unsupported image attachment content: ${content::class}"
-                                    )
-                                }
-
-                                add(GooglePart.InlineData(blob))
-                            }
-
-                            is ContentPart.Audio -> {
-                                require(model.capabilities.contains(LLMCapability.Audio)) {
-                                    "Model ${model.id} does not support audio"
-                                }
-
-                                val blob: GoogleData.Blob = when (val content = part.content) {
-                                    is AttachmentContent.Binary -> GoogleData.Blob(part.mimeType, content.asBytes())
-                                    else -> throw IllegalArgumentException(
-                                        "Unsupported audio attachment content: ${content::class}"
-                                    )
-                                }
-
-                                add(GooglePart.InlineData(blob))
-                            }
-
-                            is ContentPart.File -> {
-                                require(model.capabilities.contains(LLMCapability.Document)) {
-                                    "Model ${model.id} does not support documents"
-                                }
-
-                                val blob: GoogleData.Blob = when (val content = part.content) {
-                                    is AttachmentContent.Binary -> GoogleData.Blob(part.mimeType, content.asBytes())
-                                    else -> throw IllegalArgumentException(
-                                        "Unsupported file attachment content: ${content::class}"
-                                    )
-                                }
-
-                                add(GooglePart.InlineData(blob))
-                            }
-
-                            is ContentPart.Video -> {
-                                require(model.capabilities.contains(LLMCapability.Vision.Video)) {
-                                    "Model ${model.id} does not support video"
-                                }
-
-                                val blob: GoogleData.Blob = when (val content = part.content) {
-                                    is AttachmentContent.Binary -> GoogleData.Blob(part.mimeType, content.asBytes())
-                                    else -> throw IllegalArgumentException(
-                                        "Unsupported video attachment content: ${content::class}"
-                                    )
-                                }
-
-                                add(GooglePart.InlineData(blob))
-                            }
+                    is ContentPart.Image -> {
+                        require(model.capabilities.contains(LLMCapability.Vision.Image)) {
+                            "Model ${model.id} does not support images"
                         }
+
+                        val blob: GoogleData.Blob = when (val content = part.content) {
+                            is AttachmentContent.Binary -> GoogleData.Blob(part.mimeType, content.asBytes())
+                            else -> throw IllegalArgumentException(
+                                "Unsupported image attachment content: ${content::class}"
+                            )
+                        }
+
+                        add(GooglePart.InlineData(blob))
+                    }
+
+                    is ContentPart.Audio -> {
+                        require(model.capabilities.contains(LLMCapability.Audio)) {
+                            "Model ${model.id} does not support audio"
+                        }
+
+                        val blob: GoogleData.Blob = when (val content = part.content) {
+                            is AttachmentContent.Binary -> GoogleData.Blob(part.mimeType, content.asBytes())
+                            else -> throw IllegalArgumentException(
+                                "Unsupported audio attachment content: ${content::class}"
+                            )
+                        }
+
+                        add(GooglePart.InlineData(blob))
+                    }
+
+                    is ContentPart.File -> {
+                        require(model.capabilities.contains(LLMCapability.Document)) {
+                            "Model ${model.id} does not support documents"
+                        }
+
+                        val blob: GoogleData.Blob = when (val content = part.content) {
+                            is AttachmentContent.Binary -> GoogleData.Blob(part.mimeType, content.asBytes())
+                            else -> throw IllegalArgumentException(
+                                "Unsupported file attachment content: ${content::class}"
+                            )
+                        }
+
+                        add(GooglePart.InlineData(blob))
+                    }
+
+                    is ContentPart.Video -> {
+                        require(model.capabilities.contains(LLMCapability.Vision.Video)) {
+                            "Model ${model.id} does not support video"
+                        }
+
+                        val blob: GoogleData.Blob = when (val content = part.content) {
+                            is AttachmentContent.Binary -> GoogleData.Blob(part.mimeType, content.asBytes())
+                            else -> throw IllegalArgumentException(
+                                "Unsupported video attachment content: ${content::class}"
+                            )
+                        }
+
+                        add(GooglePart.InlineData(blob))
                     }
                 }
             }
@@ -598,7 +590,7 @@ public open class GoogleLLMClient(
         val responses = parts.map { part ->
             when (part) {
                 is GooglePart.Text -> Message.Assistant(
-                    content = Content.Text(part.text),
+                    content = part.text,
                     finishReason = candidate.finishReason,
                     metaInfo = metaInfo
                 )
@@ -606,7 +598,7 @@ public open class GoogleLLMClient(
                 is GooglePart.FunctionCall -> Message.Tool.Call(
                     id = Uuid.random().toString(),
                     tool = part.functionCall.name,
-                    content = Content.Text(part.functionCall.args.toString()),
+                    content = part.functionCall.args.toString(),
                     metaInfo = metaInfo
                 )
 
@@ -620,7 +612,7 @@ public open class GoogleLLMClient(
             // If no messages where returned, return an empty message and check finishReason
             responses.isEmpty() -> listOf(
                 Message.Assistant(
-                    content = Content.Text(""),
+                    content = "",
                     finishReason = candidate.finishReason,
                     metaInfo = metaInfo
                 )

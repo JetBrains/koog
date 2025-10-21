@@ -4,7 +4,6 @@ import ai.koog.agents.core.model.message.AIAgentEnvironmentToolResultToAgentCont
 import ai.koog.agents.core.model.message.EnvironmentToolResultToAgentContent
 import ai.koog.agents.core.tools.ToolResult
 import ai.koog.prompt.dsl.PromptBuilder
-import ai.koog.prompt.message.Content
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import kotlinx.datetime.Clock
@@ -32,7 +31,7 @@ public data class ReceivedToolResult(
     public fun toMessage(clock: Clock = Clock.System): Message.Tool.Result = Message.Tool.Result(
         id = id,
         tool = tool,
-        content = Content.Text(content),
+        content = content,
         metaInfo = RequestMetaInfo.create(clock)
     )
 }
