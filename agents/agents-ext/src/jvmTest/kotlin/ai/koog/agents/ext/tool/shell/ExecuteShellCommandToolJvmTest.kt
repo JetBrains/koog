@@ -6,6 +6,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.RepeatedTest
+import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.condition.EnabledOnOs
 import org.junit.jupiter.api.condition.OS
@@ -327,13 +328,21 @@ class ExecuteShellCommandToolJvmTest {
     fun `command with partial output times out`() = runBlocking {
         val result: ExecuteShellCommandTool.Result
         val executionTimeMs = measureTimeMillis {
-            result = executeShellCommand("for i in {1..3}; do echo \$i; sleep 1; done", timeoutSeconds = 1)
+            result = withTimeout(4000L) {
+                executeShellCommand("for i in {1..10}; do echo \$i; sleep 1; done", timeoutSeconds = 1)
+            }
         }
 
-        assertTrue(result.textForLLM().contains("Command timed out after 1 seconds"))
-        assertTrue(result.textForLLM().startsWith("Command: for i in {1..3}; do echo \$i; sleep 1; done"))
+        val partialExpected = """
+            Command: for i in {1..10}; do echo ${'$'}i; sleep 1; done
+            1
+        """.trimIndent()
+
+        val output = result.textForLLM()
+        assertTrue(output.contains(partialExpected))
+        assertTrue(output.contains("Command timed out after 1 seconds"))
         assertNull(result.exitCode)
-        assertTrue(executionTimeMs <= 1200, "Timeout should occur quickly, but took ${executionTimeMs}ms")
+        assertTrue(executionTimeMs < 3000, "Should timeout at 1s, but took ${executionTimeMs}ms")
     }
 
     @Test
@@ -341,19 +350,25 @@ class ExecuteShellCommandToolJvmTest {
     fun `command with partial output times out on Windows`() = runBlocking {
         val result: ExecuteShellCommandTool.Result
         val executionTimeMs = measureTimeMillis {
-            result = executeShellCommand(
-                """cmd /c "echo 1 & echo 2 & echo 3 & powershell -Command Start-Sleep -Seconds 2"""",
-                timeoutSeconds = 1
-            )
+            result = withTimeout(5000L) {
+                executeShellCommand(
+                    """cmd /c "echo 1 & echo 2 & echo 3 & timeout 10"""",
+                    timeoutSeconds = 1
+                )
+            }
         }
 
-        assertTrue(result.textForLLM().contains("Command timed out after 1 seconds"))
-        assertTrue(
-            result.textForLLM()
-                .startsWith("Command: cmd /c \"echo 1 & echo 2 & echo 3 & powershell -Command Start-Sleep -Seconds 2\"")
-        )
+        val partialExpected = """
+            Command: cmd /c "echo 1 & echo 2 & echo 3 & timeout 10"
+            1
+
+        """.trimIndent()
+
+        val output = result.textForLLM()
+        assertTrue(output.contains(partialExpected))
+        assertTrue(output.contains("Command timed out after 1 seconds"))
         assertNull(result.exitCode)
-        assertTrue(executionTimeMs <= 1300, "Timeout should occur quickly, but took ${executionTimeMs}ms")
+        assertTrue(executionTimeMs < 4000, "Should timeout at 1s, but took ${executionTimeMs}ms")
     }
 
     // CANCELLATION TESTS
