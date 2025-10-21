@@ -28,12 +28,14 @@ val agent = AIAgent(
         Establish what correct behavior looks like through tests, then iterate your implementation until tests pass.
         Validate that existing functionality remains intact with regression testing: determine what your changes impacted, identify the relevant tests for those areas, then run only those.
         Production-ready means proven through green tests - that's your definition of done.
+        
+        You have a maximum of 30 minutes (or 150 tool calls, whichever comes first) before your session terminates.
+        This constrains how you work with the terminal: choose targeted commands over comprehensive ones when possible, consider reasonable timeouts.
         """.trimIndent(),
     llmModel = OpenAIModels.Chat.GPT5,
     toolRegistry = ToolRegistry {
         tool(ListDirectoryTool(JVMFileSystemProvider.ReadOnly))
         tool(ReadFileTool(JVMFileSystemProvider.ReadOnly))
-        tool(WriteFileTool(JVMFileSystemProvider.ReadWrite))
         tool(EditFileTool(JVMFileSystemProvider.ReadWrite))
         tool(createExecuteShellCommandToolFromEnv())
     },
