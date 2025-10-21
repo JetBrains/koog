@@ -40,16 +40,16 @@ import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer
@@ -89,15 +89,16 @@ internal class ReportingLLMLLMClient(
         data object Termination : Event
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     override suspend fun execute(
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
     ): List<Message.Response> {
-        CoroutineScope(currentCoroutineContext()).launch {
+        if (!eventsChannel.isClosedForSend) {
             eventsChannel.send(
                 Event.Message(
-                    llmClient = underlyingClient::class.simpleName ?: "null",
+                    llmClient = underlyingClient::class.simpleName ?: "Unknown",
                     method = "execute",
                     prompt = prompt,
                     tools = tools.map { it.name },
@@ -518,7 +519,7 @@ class AIAgentMultipleLLMIntegrationTest {
     }
 
     @Test
-    fun integration_testOpenAIAnthropicAgent() = runTest(timeout = 600.seconds) {
+    fun integration_testOpenAIAnthropicAgent() = runTest(timeout = 10.minutes) {
         Models.assumeAvailable(LLMProvider.OpenAI)
         Models.assumeAvailable(LLMProvider.Anthropic)
 
@@ -527,6 +528,7 @@ class AIAgentMultipleLLMIntegrationTest {
         val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
             onAgentCompleted { _ ->
                 eventsChannel.send(Event.Termination)
+                eventsChannel.close()
             }
         }
 
@@ -537,9 +539,32 @@ class AIAgentMultipleLLMIntegrationTest {
             eventsChannel = eventsChannel,
         )
 
-        val result = agent.run(
-            "Generate me a project in Ktor that has a GET endpoint that returns the capital of France. Write a test"
-        )
+        val agentJob = async {
+            agent.run(
+                "Generate me a project in Ktor that has a GET endpoint that returns the capital of France. Write a test"
+            )
+        }
+
+        val messages = mutableListOf<Event.Message>()
+
+        try {
+            withTimeout(8.minutes.inWholeMilliseconds) {
+                for (msg in eventsChannel) {
+                    if (msg is Event.Message) {
+                        messages.add(msg)
+                    } else if (msg is Event.Termination) {
+                        break
+                    }
+                }
+            }
+        } catch (e: TimeoutCancellationException) {
+            println("Warning: Event collection timed out: [${e.message}]")
+        } finally {
+            eventsChannel.close()
+        }
+
+        val result = agentJob.await()
+
 
         assertNotNull(result)
 
@@ -547,15 +572,6 @@ class AIAgentMultipleLLMIntegrationTest {
             fs.fileCount() > 0,
             "Agent must have created at least one file"
         )
-
-        val messages = mutableListOf<Event.Message>()
-        for (msg in eventsChannel) {
-            if (msg is Event.Message) {
-                messages.add(msg)
-            } else {
-                break
-            }
-        }
 
         assertTrue(
             messages.any { it.llmClient == "AnthropicLLMClient" },
