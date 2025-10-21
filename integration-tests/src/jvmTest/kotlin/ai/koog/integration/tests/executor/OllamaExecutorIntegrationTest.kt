@@ -280,13 +280,13 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
             system("You are a helpful assistant that can analyze images.")
 
             user {
-                markdown {
-                    +"I'm sending you an image. Please analyze it and identify the image format if possible."
-                }
+                text(
+                    markdown {
+                        +"I'm sending you an image. Please analyze it and identify the image format if possible."
+                    }
+                )
 
-                attachments {
-                    image(KtPath(imageFile.pathString))
-                }
+                image(KtPath(imageFile.pathString))
             }
         }
 

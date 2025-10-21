@@ -32,8 +32,8 @@ import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.markdown.markdown
-import ai.koog.prompt.message.Attachment
 import ai.koog.prompt.message.AttachmentContent
+import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams.ToolChoice
 import ai.koog.prompt.streaming.StreamFrame
@@ -510,14 +510,14 @@ abstract class ExecutorIntegrationTestBase {
                         system("You are a helpful assistant that can analyze markdown files.")
 
                         user {
-                            markdown {
-                                +"I'm sending you a markdown file with different markdown elements. "
-                                +"Please list all the markdown elements used in it and describe its structure clearly."
-                            }
+                            text(
+                                markdown {
+                                    +"I'm sending you a markdown file with different markdown elements. "
+                                    +"Please list all the markdown elements used in it and describe its structure clearly."
+                                }
+                            )
 
-                            attachments {
-                                textFile(KtPath(file.pathString), "text/plain")
-                            }
+                            textFile(KtPath(file.pathString), "text/plain")
                         }
                     }
                 } else {
@@ -581,25 +581,25 @@ abstract class ExecutorIntegrationTestBase {
                 system("You are a helpful assistant that can analyze images.")
 
                 user {
-                    markdown {
-                        +"I'm sending you an image. Please analyze it and identify the image format if possible."
-                    }
+                    text(
+                        markdown {
+                            +"I'm sending you an image. Please analyze it and identify the image format if possible."
+                        }
+                    )
 
-                    attachments {
-                        when (scenario) {
-                            ImageTestScenario.LARGE_IMAGE, ImageTestScenario.LARGE_IMAGE_ANTHROPIC -> {
-                                image(
-                                    Attachment.Image(
-                                        content = AttachmentContent.Binary.Bytes(imageFile.readBytes()),
-                                        format = "jpg",
-                                        mimeType = "image/jpeg"
-                                    )
+                    when (scenario) {
+                        ImageTestScenario.LARGE_IMAGE, ImageTestScenario.LARGE_IMAGE_ANTHROPIC -> {
+                            image(
+                                ContentPart.Image(
+                                    content = AttachmentContent.Binary.Bytes(imageFile.readBytes()),
+                                    format = "jpg",
+                                    mimeType = "image/jpeg"
                                 )
-                            }
+                            )
+                        }
 
-                            else -> {
-                                image(KtPath(imageFile.pathString))
-                            }
+                        else -> {
+                            image(KtPath(imageFile.pathString))
                         }
                     }
                 }
@@ -670,13 +670,13 @@ abstract class ExecutorIntegrationTestBase {
                         system("You are a helpful assistant that can analyze and process text.")
 
                         user {
-                            markdown {
-                                +"I'm sending you a text file. Please analyze it and summarize its content."
-                            }
+                            text(
+                                markdown {
+                                    +"I'm sending you a text file. Please analyze it and summarize its content."
+                                }
+                            )
 
-                            attachments {
-                                textFile(KtPath(file.pathString), "text/plain")
-                            }
+                            textFile(KtPath(file.pathString), "text/plain")
                         }
                     }
                 } else {
@@ -684,11 +684,13 @@ abstract class ExecutorIntegrationTestBase {
                         system("You are a helpful assistant that can analyze and process text.")
 
                         user {
-                            markdown {
-                                +"I'm sending you a text file. Please analyze it and summarize its content."
-                                newline()
-                                +file.readText()
-                            }
+                            text(
+                                markdown {
+                                    +"I'm sending you a text file. Please analyze it and summarize its content."
+                                    newline()
+                                    +file.readText()
+                                }
+                            )
                         }
                     }
                 }
@@ -757,11 +759,8 @@ abstract class ExecutorIntegrationTestBase {
                 system("You are a helpful assistant.")
 
                 user {
-                    +"I'm sending you an audio file. Please tell me a couple of words about it."
-
-                    attachments {
-                        audio(KtPath(audioFile.pathString))
-                    }
+                    text("I'm sending you an audio file. Please tell me a couple of words about it.")
+                    audio(KtPath(audioFile.pathString))
                 }
             }
 
@@ -821,13 +820,13 @@ abstract class ExecutorIntegrationTestBase {
             system("You are a helpful assistant that can analyze different types of media files.")
 
             user {
-                markdown {
-                    +"I'm sending you an image. Please analyze them and tell me about their content."
-                }
+                text(
+                    markdown {
+                        +"I'm sending you an image. Please analyze them and tell me about their content."
+                    }
+                )
 
-                attachments {
-                    image(KtPath(tempImageFile.pathString))
-                }
+                image(KtPath(tempImageFile.pathString))
             }
         }
 
@@ -859,13 +858,13 @@ abstract class ExecutorIntegrationTestBase {
             system("You are a helpful assistant that can analyze images.")
 
             user {
-                markdown {
-                    +"I'm sending you an image from a URL. Please analyze it and tell me about its content."
-                }
+                text(
+                    markdown {
+                        +"I'm sending you an image from a URL. Please analyze it and tell me about its content."
+                    }
+                )
 
-                attachments {
-                    image(imageUrl)
-                }
+                image(imageUrl)
             }
         }
 
