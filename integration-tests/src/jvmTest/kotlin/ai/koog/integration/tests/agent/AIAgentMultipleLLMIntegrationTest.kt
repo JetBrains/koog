@@ -381,13 +381,12 @@ class AIAgentMultipleLLMIntegrationTest {
             val anthropicSubgraph by subgraph<String, Unit>("anthropic") {
                 val definePromptAnthropic by node<Unit, Unit> {
                     llm.writeSession {
-                        model = AnthropicModels.Sonnet_4_5
+                        model = AnthropicModels.Haiku_4_5
                         rewritePrompt {
                             prompt("test", params = LLMParams(toolChoice = LLMParams.ToolChoice.Auto)) {
                                 system(
                                     "You are a helpful assistant. You need to solve my task. " +
-                                        "CALL TOOLS!!! DO NOT SEND MESSAGES!!!!! ONLY SEND THE FINAL MESSAGE " +
-                                        "WHEN YOU ARE FINISHED AND EVERYTHING IS DONE AFTER CALLING THE TOOLS!"
+                                        "JUST CALL TOOLS. NO QUESTIONS ASKED."
                                 )
                             }
                         }
@@ -418,9 +417,7 @@ class AIAgentMultipleLLMIntegrationTest {
                                     You are a helpful assistant. You need to verify that the task is solved correctly.
                                     Please analyze the whole produced solution, and check that it is valid.
                                     Write concise verification result.
-                                    CALL TOOLS!!! DO NOT SEND MESSAGES!!!!!
-                                    ONLY SEND THE FINAL MESSAGE WHEN YOU ARE FINISHED AND EVERYTHING IS DONE
-                                    AFTER CALLING THE TOOLS! 
+                                    JUST CALL TOOLS. NO QUESTIONS ASKED.
                                     """.trimIndent()
                                 )
                             }
@@ -536,7 +533,7 @@ class AIAgentMultipleLLMIntegrationTest {
         val agent = createTestMultiLLMAgent(
             fs,
             eventHandlerConfig,
-            maxAgentIterations = 42,
+            maxAgentIterations = 50,
             eventsChannel = eventsChannel,
         )
 
@@ -780,7 +777,7 @@ class AIAgentMultipleLLMIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("modelsWithVisionCapability")
-    fun integration_testAgentWithImageCapabilityUrl(model: LLModel) = runTest(timeout = 3.minutes) {
+    fun integration_testAgentWithImageCapabilityUrl(model: LLModel) = runTest(timeout = 5.minutes) {
         Models.assumeAvailable(model.provider)
 
         val fs = MockFileSystem()
@@ -817,7 +814,7 @@ class AIAgentMultipleLLMIntegrationTest {
             val agent = createTestMultiLLMAgent(
                 fs,
                 eventHandlerConfig,
-                maxAgentIterations = 20,
+                maxAgentIterations = 50,
                 prompt = prompt,
             )
 

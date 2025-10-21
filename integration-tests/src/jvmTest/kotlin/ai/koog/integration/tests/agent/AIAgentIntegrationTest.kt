@@ -173,10 +173,10 @@ class AIAgentIntegrationTest {
                         toolChoice = ToolChoice.Auto,
                     )
                 ) {
-                    system(
-                        "You are a helpful assistant. " +
-                            "JUST CALL THE TOOLS, NO QUESTIONS ASKED."
-                    )
+                    system {
+                        +"You are a helpful assistant. "
+                        +"JUST CALL THE TOOLS, NO QUESTIONS ASKED."
+                    }
                 },
                 model = model,
                 maxAgentIterations = 10,
@@ -1261,7 +1261,11 @@ class AIAgentIntegrationTest {
 
                     assertTrue(
                         state.errors.isEmpty(),
-                        "No errors should occur during agent execution with $strategyName, got: [${state.errors.joinToString("\n")}]"
+                        "No errors should occur during agent execution with $strategyName, got: [${
+                            state.errors.joinToString(
+                                "\n"
+                            )
+                        }]"
                     )
                     assertTrue(
                         result.isNotBlank(),

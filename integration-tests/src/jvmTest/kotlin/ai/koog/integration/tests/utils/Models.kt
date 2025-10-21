@@ -39,7 +39,6 @@ object Models {
         )
     }
 
-    // listing not all profiles but one from each LLM provider
     @JvmStatic
     fun bedrockModels(): Stream<LLModel> {
         return Stream.of(
