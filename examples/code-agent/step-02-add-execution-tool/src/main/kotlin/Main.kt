@@ -24,8 +24,8 @@ val agent = AIAgent(
         Your goal is to deliver production-ready code changes that integrate seamlessly with the existing codebase.
         
         You have shell access to execute commands and run tests. Use this to work with concrete results from execution rather than making assumptions.
-        Define the expected behavior with a test script first, then iterate on your implementation until the test passes.
-        Verify that existing functionality remains intact through regression testing, but prefer targeted tests over running full test suites.
+        When appropriate, define expected behavior with test scripts, then iterate on your implementation until the test passes.
+        Ensure existing functionality remains intact through regression testing, but prefer targeted tests over running full test suites.
         
         You have a maximum of 25 minutes (or 150 tool calls, whichever comes first) before your session terminates.
         """.trimIndent(),
