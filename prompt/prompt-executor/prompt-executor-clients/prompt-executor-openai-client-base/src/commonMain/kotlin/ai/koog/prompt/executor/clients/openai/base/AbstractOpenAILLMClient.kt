@@ -89,7 +89,7 @@ public abstract class OpenAIBasedSettings(
 public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse, TStreamResponse : OpenAIBaseLLMStreamResponse>(
     private val apiKey: String,
     settings: OpenAIBasedSettings,
-    baseClient: HttpClient = HttpClient(),
+    private val baseClient: HttpClient = HttpClient(),
     protected val clock: Clock = Clock.System,
     protected val logger: KLogger
 ) : LLMClient {
@@ -519,5 +519,9 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
                 )
             }
         }
+    }
+
+    override fun close() {
+        baseClient.close()
     }
 }

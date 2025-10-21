@@ -51,4 +51,6 @@ class MockLLMExecutor : PromptExecutor {
     ): ModerationResult {
         throw UnsupportedOperationException("Moderation is not needed for TestLLMExecutor")
     }
+
+    override fun close() {}
 }

@@ -444,4 +444,8 @@ public class OllamaClient(
             throw e
         }
     }
+
+    override fun close() {
+        client.close()
+    }
 }

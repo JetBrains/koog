@@ -59,4 +59,8 @@ public open class SingleLLMPromptExecutor(
     }
 
     override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult = llmClient.moderate(prompt, model)
+
+    override fun close() {
+        llmClient.close()
+    }
 }

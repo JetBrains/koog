@@ -76,4 +76,6 @@ object CalculatorChatExecutor : PromptExecutor {
     ): ModerationResult {
         throw UnsupportedOperationException("Moderation is not needed for CalculatorExecutor")
     }
+
+    override fun close() {}
 }

@@ -576,4 +576,8 @@ public open class AnthropicLLMClient(
         logger.warn { "Moderation is not supported by Anthropic API" }
         throw UnsupportedOperationException("Moderation is not supported by Anthropic API.")
     }
+
+    override fun close() {
+        httpClient.close()
+    }
 }

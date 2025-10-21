@@ -13,8 +13,10 @@ import kotlinx.coroutines.flow.Flow
 /**
  * Common interface for direct communication with LLM providers.
  * This interface defines methods for executing prompts and streaming responses.
+ *
+ * Implements [AutoCloseable] as LLM clients typically work with IO resources. Always close it when finished.
  */
-public interface LLMClient {
+public interface LLMClient : AutoCloseable {
     /**
      * Executes a prompt and returns a list of response messages.
      *

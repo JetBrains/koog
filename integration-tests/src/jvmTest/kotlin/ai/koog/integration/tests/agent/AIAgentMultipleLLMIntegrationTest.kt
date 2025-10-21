@@ -131,7 +131,14 @@ internal class ReportingLLMLLMClient(
     override suspend fun moderate(
         prompt: Prompt,
         model: LLModel
-    ): ModerationResult = throw NotImplementedError("Moderation not needed for this test")
+    ): ModerationResult {
+        throw NotImplementedError("Moderation not needed for this test")
+    }
+
+    override fun close() {
+        underlyingClient.close()
+        eventsChannel.close()
+    }
 }
 
 internal fun LLMClient.reportingTo(
