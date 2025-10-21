@@ -54,7 +54,7 @@ The integration enables two main patterns:
 
 Let's define a Koog agent first. The logic of the agent can vary, but here's an example basic single run agent with
 tools.
-The agent resaves a message from the user, forwards it to the llm.
+The agent receives a message from the user, forwards it to the llm.
 If the llm response contains a tool call, the agent executes the tool and forwards the result to the llm.
 If the llm response contains an assistant message, the agent sends the assistant message to the user and finishes.
 
