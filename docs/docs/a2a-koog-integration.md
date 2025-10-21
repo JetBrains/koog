@@ -3,6 +3,44 @@
 Koog provides seamless integration with the A2A protocol, allowing you to expose Koog agents as A2A servers and connect
 Koog agents to other A2A-compliant agents.
 
+## Dependencies
+
+A2A Koog integration requires specific feature modules depending on your use case:
+
+### For Exposing Koog Agents as A2A Servers
+
+Add these dependencies to your `build.gradle.kts`:
+
+```kotlin
+dependencies {
+    // Koog A2A server integration feature
+    implementation("ai.koog:agents-features-a2a-server:$koogVersion")
+
+    // HTTP JSON-RPC transport
+    implementation("ai.koog:a2a-transport-server-jsonrpc-http:$koogVersion")
+
+    // Ktor server engine (choose one that fits your needs)
+    implementation("io.ktor:ktor-server-netty:$ktorVersion")
+}
+```
+
+### For Connecting Koog Agents to A2A Agents
+
+Add these dependencies to your `build.gradle.kts`:
+
+```kotlin
+dependencies {
+    // Koog A2A client integration feature
+    implementation("ai.koog:agents-features-a2a-client:$koogVersion")
+
+    // HTTP JSON-RPC transport
+    implementation("ai.koog:a2a-transport-client-jsonrpc-http:$koogVersion")
+
+    // Ktor client engine (choose one that fits your needs)
+    implementation("io.ktor:ktor-client-cio:$ktorVersion")
+}
+```
+
 ## Overview
 
 The integration enables two main patterns:
@@ -153,7 +191,7 @@ communicate with the A2A client inside the Koog agent.
 To install the feature, call the `install` function on the agent and pass the `A2AAgentServer` feature along with the `RequestContext` and `SessionEventProcessor`:
 ```kotlin
 // Install the feature
-agent.install(A2AAgentServer) {
+install(A2AAgentServer) {
     this.context = context
     this.eventProcessor = eventProcessor
 }
@@ -166,7 +204,7 @@ It retrieves the installed `A2AAgentServer` feature and provides it as the recei
 // Usage within agent nodes
 withA2AAgentServer {
     // 'this' is now A2AAgentServer instance
-    sendTaskUpdate("Processing your request...", TaskState.Working)
+    eventProcessor.sendTaskUpdate("Processing your request...", TaskState.Working)
 }
 ```
 
@@ -196,7 +234,7 @@ val agentCard = AgentCard(
 // Server setup
 val server = A2AServer(agentExecutor = KoogAgentExecutor(), agentCard = agentCard)
 val transport = HttpJSONRPCServerTransport(server)
-transport.start(engineFactory = CIO, port = 8080, path = "/chat", wait = true)
+transport.start(engineFactory = Netty, port = 8080, path = "/chat", wait = true)
 ```
 
 ## Connecting Koog Agents to A2A Agents
