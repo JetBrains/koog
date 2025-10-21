@@ -45,7 +45,7 @@ public sealed interface ContentPart {
      */
     @Serializable
     @SerialName("text")
-    public class Text(public val text: String) : ContentPart
+    public data class Text(public val text: String) : ContentPart
 
     /**
      * Image attachment (jpg, png, gif, etc.).

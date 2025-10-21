@@ -453,10 +453,12 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
             // append a new message to the history with feedback:
             updatePrompt {
                 user {
-                    markdown {
-                        h1("DO NOT CHAT WITH ME DIRECTLY! CALL TOOLS, INSTEAD.")
-                        h2("IF YOU HAVE FINISHED, CALL `${finishTool.name}` TOOL!")
-                    }
+                    text(
+                        markdown {
+                            h1("DO NOT CHAT WITH ME DIRECTLY! CALL TOOLS, INSTEAD.")
+                            h2("IF YOU HAVE FINISHED, CALL `${finishTool.name}` TOOL!")
+                        }
+                    )
                 }
             }
 

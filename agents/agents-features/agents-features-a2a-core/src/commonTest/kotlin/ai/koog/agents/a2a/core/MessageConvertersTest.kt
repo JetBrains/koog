@@ -53,9 +53,8 @@ class MessageConvertersTest {
         val actual: Message = a2a.toKoogMessage(clock = fixedClock)
 
         val expectedParts = listOf(
-            ContentPart.Text(
-                "Hello\n" + prettyJson.encodeToString(json)
-            ),
+            ContentPart.Text("Hello"),
+            ContentPart.Text(prettyJson.encodeToString(json)),
             ContentPart.File(
                 format = "",
                 mimeType = "application/octet-stream",

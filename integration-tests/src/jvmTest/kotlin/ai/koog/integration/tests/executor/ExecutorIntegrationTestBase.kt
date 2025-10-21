@@ -525,12 +525,14 @@ abstract class ExecutorIntegrationTestBase {
                         system("You are a helpful assistant that can analyze markdown files.")
 
                         user {
-                            markdown {
-                                +"I'm sending you a markdown file with different markdown elements. "
-                                +"Please list all the markdown elements used in it and describe its structure clearly."
-                                newline()
-                                +file.readText()
-                            }
+                            text(
+                                markdown {
+                                    +"I'm sending you a markdown file with different markdown elements. "
+                                    +"Please list all the markdown elements used in it and describe its structure clearly."
+                                    newline()
+                                    +file.readText()
+                                }
+                            )
                         }
                     }
                 }

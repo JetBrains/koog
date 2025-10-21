@@ -419,8 +419,8 @@ class ContentPartsBuilderTest {
             text(
                 markdown {
                     numbered {
-                        text("This is a markdown content")
-                        text("This is another text content")
+                        item("This is a markdown content")
+                        item("This is another markdown content")
                     }
                 }
             )
@@ -429,16 +429,16 @@ class ContentPartsBuilderTest {
         assertEquals(1, result.size, "Should contain one attachment")
         val resultText = result[0]
         assertIs<ContentPart.Text>(resultText, "Part should be recognized as Text")
-        assertEquals("1. This is a text content\n2. This is another text content", resultText.text)
+        assertEquals("1. This is a markdown content\n2. This is another markdown content", resultText.text)
     }
 
     @Test
     fun testMultipleTextWithAttachment() {
         val result = ContentPartsBuilder().apply {
             text("This is the first image")
-            image("https://example.com/first")
+            image("https://example.com/first.png")
             text("This is the second image")
-            image("https://example.com/second")
+            image("https://example.com/second.png")
         }.build()
 
         assertEquals(4, result.size, "Should contain two attachments")
@@ -447,12 +447,12 @@ class ContentPartsBuilderTest {
         assertEquals("This is the first image", resultFirstText.text)
         val resultFirstImage = result[1]
         assertIs<ContentPart.Image>(resultFirstImage, "Part should be recognized as Image")
-        assertEquals(AttachmentContent.URL("https://example.com/first"), resultFirstImage.content)
+        assertEquals(AttachmentContent.URL("https://example.com/first.png"), resultFirstImage.content)
         val resultSecondText = result[2]
         assertIs<ContentPart.Text>(resultSecondText, "Part should be recognized as Text")
         assertEquals("This is the second image", resultSecondText.text)
         val resultSecondImage = result[3]
         assertIs<ContentPart.Image>(resultSecondImage, "Part should be recognized as Image")
-        assertEquals(AttachmentContent.URL("https://example.com/second"), resultSecondImage.content)
+        assertEquals(AttachmentContent.URL("https://example.com/second.png"), resultSecondImage.content)
     }
 }

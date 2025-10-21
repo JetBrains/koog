@@ -165,10 +165,8 @@ class PromptBuilderTest {
     fun testComplexPromptWithAllMessageTypes() {
         val prompt = Prompt.build("test") {
             system {
-                text {
-                    text("You are a helpful assistant.")
-                    text(" Please answer user questions accurately.")
-                }
+                text("You are a helpful assistant.")
+                text(" Please answer user questions accurately.")
             }
 
             user {

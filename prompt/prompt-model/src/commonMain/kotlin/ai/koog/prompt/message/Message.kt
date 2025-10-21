@@ -20,7 +20,7 @@ public sealed interface Message {
      * The content of the message.
      */
     public val content: String
-        get() = parts.filterIsInstance<ContentPart.Text>().joinToString(separator = "\n")
+        get() = parts.filterIsInstance<ContentPart.Text>().joinToString(separator = "\n") { it.text }
 
     /**
      * The text content of the message.
@@ -111,12 +111,14 @@ public sealed interface Message {
         /**
          * Single content part user message constructor
          */
-        public constructor(part: ContentPart, metaInfo: RequestMetaInfo) : this(listOf(part), metaInfo)
+        public constructor(part: ContentPart, metaInfo: RequestMetaInfo) :
+            this(listOf(part), metaInfo)
 
         /**
          * Text content user message constructor
          */
-        public constructor(content: String, metaInfo: RequestMetaInfo) : this(ContentPart.Text(content), metaInfo)
+        public constructor(content: String, metaInfo: RequestMetaInfo) :
+            this(ContentPart.Text(content), metaInfo)
     }
 
     /**
@@ -140,7 +142,7 @@ public sealed interface Message {
          * Single content part assistant message constructor
          */
         public constructor(part: ContentPart, metaInfo: ResponseMetaInfo, finishReason: String? = null) :
-            this(listOf(part), metaInfo)
+            this(listOf(part), metaInfo, finishReason)
 
         /**
          * Text content assistant message constructor
