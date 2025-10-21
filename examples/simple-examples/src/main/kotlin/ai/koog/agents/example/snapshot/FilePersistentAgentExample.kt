@@ -9,7 +9,6 @@ import ai.koog.agents.snapshot.feature.Persistence
 import ai.koog.agents.snapshot.providers.file.JVMFilePersistenceStorageProvider
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
-import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.OllamaModels
 import kotlinx.coroutines.runBlocking
 import java.nio.file.Files
@@ -30,9 +29,6 @@ import kotlin.uuid.ExperimentalUuidApi
  */
 @OptIn(ExperimentalUuidApi::class)
 fun main() = runBlocking {
-    // Create a prompt executor for the agent
-    val executor: PromptExecutor = simpleOllamaAIExecutor()
-
     // Create a temporary directory for storing checkpoints
     val checkpointDir = Files.createTempDirectory("agent-checkpoints")
     println("Checkpoint directory: $checkpointDir")
@@ -60,70 +56,72 @@ fun main() = runBlocking {
 
     println("Creating and running agent with continuous persistence...")
 
-    // Create the agent with the file-based checkpoint provider and continuous persistence
-    val agent = AIAgent(
-        promptExecutor = executor,
-        strategy = SnapshotStrategy.strategy,
-        agentConfig = agentConfig,
-        toolRegistry = toolRegistry,
-        id = agentId
-    ) {
-        install(Persistence) {
-            storage = provider // Use the file-based checkpoint provider
-            enableAutomaticPersistence = true // Enable automatic checkpoint creation
+    simpleOllamaAIExecutor().use { executor ->
+        // Create the agent with the file-based checkpoint provider and continuous persistence
+        val agent = AIAgent(
+            promptExecutor = executor,
+            strategy = SnapshotStrategy.strategy,
+            agentConfig = agentConfig,
+            toolRegistry = toolRegistry,
+            id = agentId
+        ) {
+            install(Persistence) {
+                storage = provider // Use the file-based checkpoint provider
+                enableAutomaticPersistence = true // Enable automatic checkpoint creation
+            }
         }
-    }
 
-    // Run the agent with an initial input
-    val result = agent.run("Hello, can you help me with a task?")
-    println("Agent result: $result")
+        // Run the agent with an initial input
+        val result = agent.run("Hello, can you help me with a task?")
+        println("Agent result: $result")
 
-    // Retrieve all checkpoints created during the agent's execution
-    val checkpoints = provider.getCheckpoints(agentId)
-    println("\nRetrieved ${checkpoints.size} checkpoints for agent $agentId")
+        // Retrieve all checkpoints created during the agent's execution
+        val checkpoints = provider.getCheckpoints(agentId)
+        println("\nRetrieved ${checkpoints.size} checkpoints for agent $agentId")
 
-    // Print checkpoint details
-    checkpoints.forEachIndexed { index, checkpoint ->
-        println("Checkpoint ${index + 1}:")
-        println("  ID: ${checkpoint.checkpointId}")
-        println("  Created at: ${checkpoint.createdAt}")
-        println("  Node ID: ${checkpoint.nodeId}")
-        println("  Message history size: ${checkpoint.messageHistory.size}")
-    }
-
-    // Verify that the checkpoint files exist in the file system
-    val checkpointsDir = checkpointDir.resolve("checkpoints").resolve(agentId)
-    if (checkpointsDir.exists()) {
-        println("\nCheckpoint files in directory: ${checkpointsDir.toFile().list()?.joinToString()}")
-    }
-
-    println("\nNow creating a new agent instance with the same ID to demonstrate restoration...")
-
-    // Create a new agent instance with the same ID
-    // It will automatically restore from the latest checkpoint
-    val restoredAgent = AIAgent(
-        promptExecutor = executor,
-        strategy = SnapshotStrategy.strategy,
-        agentConfig = agentConfig,
-        toolRegistry = toolRegistry,
-        id = agentId
-    ) {
-        install(Persistence) {
-            storage = provider // Use the file-based checkpoint provider
-            enableAutomaticPersistence = true // Enable automatic checkpoint creation
+        // Print checkpoint details
+        checkpoints.forEachIndexed { index, checkpoint ->
+            println("Checkpoint ${index + 1}:")
+            println("  ID: ${checkpoint.checkpointId}")
+            println("  Created at: ${checkpoint.createdAt}")
+            println("  Node ID: ${checkpoint.nodeId}")
+            println("  Message history size: ${checkpoint.messageHistory.size}")
         }
+
+        // Verify that the checkpoint files exist in the file system
+        val checkpointsDir = checkpointDir.resolve("checkpoints").resolve(agentId)
+        if (checkpointsDir.exists()) {
+            println("\nCheckpoint files in directory: ${checkpointsDir.toFile().list()?.joinToString()}")
+        }
+
+        println("\nNow creating a new agent instance with the same ID to demonstrate restoration...")
+
+        // Create a new agent instance with the same ID
+        // It will automatically restore from the latest checkpoint
+        val restoredAgent = AIAgent(
+            promptExecutor = executor,
+            strategy = SnapshotStrategy.strategy,
+            agentConfig = agentConfig,
+            toolRegistry = toolRegistry,
+            id = agentId
+        ) {
+            install(Persistence) {
+                storage = provider // Use the file-based checkpoint provider
+                enableAutomaticPersistence = true // Enable automatic checkpoint creation
+            }
+        }
+
+        // Run the restored agent with a new input
+        // The agent will continue the conversation from where it left off
+        val restoredResult = restoredAgent.run("Now I need help with my project.")
+        println("Restored agent result: $restoredResult")
+
+        // Get the latest checkpoint after the second run
+        val latestCheckpoint = provider.getLatestCheckpoint(agentId)
+        println("\nLatest checkpoint after restoration:")
+        println("  ID: ${latestCheckpoint?.checkpointId}")
+        println("  Created at: ${latestCheckpoint?.createdAt}")
+        println("  Node ID: ${latestCheckpoint?.nodeId}")
+        println("  Message history size: ${latestCheckpoint?.messageHistory?.size}")
     }
-
-    // Run the restored agent with a new input
-    // The agent will continue the conversation from where it left off
-    val restoredResult = restoredAgent.run("Now I need help with my project.")
-    println("Restored agent result: $restoredResult")
-
-    // Get the latest checkpoint after the second run
-    val latestCheckpoint = provider.getLatestCheckpoint(agentId)
-    println("\nLatest checkpoint after restoration:")
-    println("  ID: ${latestCheckpoint?.checkpointId}")
-    println("  Created at: ${latestCheckpoint?.createdAt}")
-    println("  Node ID: ${latestCheckpoint?.nodeId}")
-    println("  Message history size: ${latestCheckpoint?.messageHistory?.size}")
 }
