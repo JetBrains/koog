@@ -61,21 +61,15 @@ val prompt = prompt("multimodal_input") {
 
     user {
         +"Describe these images"
-
-        attachments {
-            image("https://example.com/test.png")
-            image(Path("/User/koog/image.png"))
-        }
+        
+        image("https://example.com/test.png")
+        image(Path("/User/koog/image.png"))
     }
 }
 ```
 <!--- KNIT example-prompt-api-02.kt -->
 
 ### Textual prompt content
-
-To accommodate for the support for various attachment types and create a clear distinction between text and file inputs in a prompt, you put text messages in a dedicated `content` parameter within a user prompt.
-To add file inputs, provide them as a list within the `attachments` parameter.
-
 The general format of a user message that includes a text message and a list of attachments is as follows:
 
 <!--- INCLUDE
@@ -87,23 +81,23 @@ val prompt = prompt("prompt") {
 }
 -->
 ```kotlin
-user(
-    content = "This is the user message",
-    attachments = listOf(
-        // Add attachments
-    )
-)
+user {
+    +"This is the text part of the user message"
+    // Add attachment
+    image("https://example.com/capture.png")
+    file("https://example.com/data.pdf", "application/pdf")
+}
 ```
 <!--- KNIT example-prompt-api-03.kt -->
 
 ### File attachments
 
-To include an attachment, provide the file in the `attachments` parameter, following the format below:
+To include an attachment, provide the file following the format below:
 
 <!--- INCLUDE
 import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.message.Attachment
 import ai.koog.prompt.message.AttachmentContent
+import ai.koog.prompt.message.ContentPart
 
 val prompt = prompt("prompt") {
 -->
@@ -111,17 +105,17 @@ val prompt = prompt("prompt") {
 }
 -->
 ```kotlin
-user(
-    content = "Describe this image",
-    attachments = listOf(
-        Attachment.Image(
+user {
+    +"Describe this image"
+    image(
+        ContentPart.Image(
             content = AttachmentContent.URL("https://example.com/capture.png"),
             format = "png",
             mimeType = "image/png",
             fileName = "capture.png"
         )
     )
-)
+}
 ```
 <!--- KNIT example-prompt-api-04.kt -->
 
@@ -205,11 +199,9 @@ val prompt = prompt("mixed_content") {
 
     user {
         +"Compare the image with the document content."
-
-        attachments {
-            image(Path("/User/koog/page.png"))
-            binaryFile(Path("/User/koog/page.pdf"), "application/pdf")
-        }
+        image(Path("/User/koog/page.png"))
+        binaryFile(Path("/User/koog/page.pdf"), "application/pdf")
+        +"Structure the result as a table"
     }
 }
 ```

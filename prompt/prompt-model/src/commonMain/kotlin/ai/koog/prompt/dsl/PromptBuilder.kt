@@ -92,7 +92,7 @@ public class PromptBuilder internal constructor(
     }
 
     /**
-     * Adds a user message to the prompt with optional attachments.
+     * Adds a user message to the prompt.
      *
      * User messages represent input from the user to the language model.
      * This method supports adding text content.
@@ -101,6 +101,34 @@ public class PromptBuilder internal constructor(
      */
     public fun user(content: String) {
         messages.add(Message.User(content, RequestMetaInfo.create(clock)))
+    }
+
+    /**
+     * Adds a user message to the prompt with optional attachments.
+     *
+     * User messages represent input from the user to the language model.
+     * This method supports adding text content.
+     *
+     * @param content Content of the user message
+     * @param block Lambda to configure attachments using [ContentPartsBuilder]
+     */
+    @Deprecated("Use user(block: ContentPartsBuilder.() -> Unit instead.")
+    public fun user(content: String, block: ContentPartsBuilder.() -> Unit) {
+        user(content, ContentPartsBuilder().apply(block).build())
+    }
+
+    /**
+     * Adds a user message to the prompt with optional attachments.
+     *
+     * User messages represent input from the user to the language model.
+     * This method supports adding text content.
+     *
+     * @param content Content of the user message
+     * @param attachments Attachments to be added to the message
+     */
+    @Deprecated("Use user(block: ContentPartsBuilder.() -> Unit instead.")
+    public fun user(content: String, attachments: List<ContentPart> = emptyList()) {
+        user(listOf(ContentPart.Text(content)) + attachments)
     }
 
     /**
