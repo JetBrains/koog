@@ -16,58 +16,61 @@ import ai.koog.agents.example.simpleapi.SwitchTools
 import ai.koog.agents.features.eventHandler.feature.handleEvents
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.llms.all.simpleAnthropicExecutor
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
-import kotlinx.coroutines.runBlocking
 
-fun main(): Unit = runBlocking {
+suspend fun main() {
     val switch = Switch()
 
     val toolRegistry = ToolRegistry {
         tools(SwitchTools(switch).asTools())
     }
-    val agent = openAiAgent(toolRegistry) {
-        handleEvents {
-            onToolCallStarting { context ->
-                println("\n🔧 Using ${context.tool.name} with ${context.toolArgs}... ")
-            }
-            onLLMStreamingFrameReceived { context ->
-                (context.streamFrame as? StreamFrame.Append)?.let { frame ->
-                    print(frame.text)
+
+    simpleOpenAIExecutor(ApiKeyService.openAIApiKey).use { executor ->
+        val agent = openAiAgent(toolRegistry, executor) {
+            handleEvents {
+                onToolCallStarting { context ->
+                    println("\n🔧 Using ${context.tool.name} with ${context.toolArgs}... ")
+                }
+                onLLMStreamingFrameReceived { context ->
+                    (context.streamFrame as? StreamFrame.Append)?.let { frame ->
+                        print(frame.text)
+                    }
+                }
+                onLLMStreamingFailed {
+                    println("❌ Error: ${it.error}")
+                }
+                onLLMStreamingCompleted {
+                    println("")
                 }
             }
-            onLLMStreamingFailed {
-                println("❌ Error: ${it.error}")
-            }
-            onLLMStreamingCompleted {
-                println("")
-            }
         }
-    }
 
-    println("Streaming chat agent started\nUse /quit to quit\nEnter your message:")
-    var input = ""
-    while (input != "/quit") {
-        input = readln()
+        println("Streaming chat agent started\nUse /quit to quit\nEnter your message:")
+        var input = ""
+        while (input != "/quit") {
+            input = readln()
 
-        // Example message:
-        // Tell me if the switch if on or off. Elaborate on how you will determine that. After that, if it was off, turn it on. Be very verbose in all the steps
+            // Example message:
+            // Tell me if the switch if on or off. Elaborate on how you will determine that. After that, if it was off, turn it on. Be very verbose in all the steps
 
-        agent.run(input)
+            agent.run(input)
 
-        println()
-        println("Enter your message:")
+            println()
+            println("Enter your message:")
+        }
     }
 }
 
 private fun openAiAgent(
     toolRegistry: ToolRegistry,
+    executor: PromptExecutor,
     installFeatures: FeatureContext.() -> Unit = {}
 ) = AIAgent(
-    promptExecutor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey),
+    promptExecutor = executor,
     strategy = streamingWithToolsStrategy(),
     llmModel = OpenAIModels.CostOptimized.GPT4oMini,
     systemPrompt = "You're responsible for running a Switch and perform operations on it by request",
@@ -79,9 +82,10 @@ private fun openAiAgent(
 @Suppress("unused")
 private fun anthropicAgent(
     toolRegistry: ToolRegistry,
+    executor: PromptExecutor,
     installFeatures: FeatureContext.() -> Unit = {}
 ) = AIAgent(
-    promptExecutor = simpleAnthropicExecutor(ApiKeyService.anthropicApiKey),
+    promptExecutor = executor,
     strategy = streamingWithToolsStrategy(),
     llmModel = AnthropicModels.Sonnet_3_7,
     systemPrompt = "You're responsible for running a Switch and perform operations on it by request",

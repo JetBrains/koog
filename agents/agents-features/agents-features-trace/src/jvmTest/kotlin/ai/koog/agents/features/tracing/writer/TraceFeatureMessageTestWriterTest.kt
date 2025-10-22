@@ -439,6 +439,8 @@ class TraceFeatureMessageTestWriterTest {
             ): ai.koog.prompt.dsl.ModerationResult {
                 throw UnsupportedOperationException("Not used in test")
             }
+
+            override fun close() {}
         }
 
         TestFeatureMessageWriter().use { writer ->

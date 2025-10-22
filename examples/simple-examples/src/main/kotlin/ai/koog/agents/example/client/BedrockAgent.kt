@@ -12,9 +12,8 @@ import ai.koog.prompt.executor.clients.bedrock.BedrockClientSettings
 import ai.koog.prompt.executor.clients.bedrock.BedrockModels
 import ai.koog.prompt.executor.clients.bedrock.BedrockRegions
 import ai.koog.prompt.executor.llms.all.simpleBedrockExecutor
-import kotlinx.coroutines.runBlocking
 
-fun main(): Unit = runBlocking {
+suspend fun main() {
     val switch = Switch()
 
     val toolRegistry = ToolRegistry {
@@ -28,25 +27,25 @@ fun main(): Unit = runBlocking {
     )
 
     // Create Bedrock LLM client
-    val executor = simpleBedrockExecutor(
+    simpleBedrockExecutor(
         awsAccessKeyId = ApiKeyService.awsAccessKey,
         awsSecretAccessKey = ApiKeyService.awsSecretAccessKey,
         settings = bedrockSettings
-    )
+    ).use { executor ->
+        val agent = AIAgent(
+            promptExecutor = executor,
+            strategy = singleRunStrategy(ToolCalls.SEQUENTIAL),
+            llmModel = BedrockModels.AnthropicClaude4Sonnet, // Use Claude 3.5 Sonnet
+            systemPrompt = "You're responsible for running a Switch and perform operations on it by request",
+            temperature = 0.0,
+            toolRegistry = toolRegistry
+        )
 
-    val agent = AIAgent(
-        promptExecutor = executor,
-        strategy = singleRunStrategy(ToolCalls.SEQUENTIAL),
-        llmModel = BedrockModels.AnthropicClaude4Sonnet, // Use Claude 3.5 Sonnet
-        systemPrompt = "You're responsible for running a Switch and perform operations on it by request",
-        temperature = 0.0,
-        toolRegistry = toolRegistry
-    )
+        println("Bedrock Agent with Switch Tools - Chat started")
+        println("You can ask me to turn the switch on/off or check its current state.")
+        println("Type your request:")
 
-    println("Bedrock Agent with Switch Tools - Chat started")
-    println("You can ask me to turn the switch on/off or check its current state.")
-    println("Type your request:")
-
-    val input = readln()
-    println(agent.run(input))
+        val input = readln()
+        println(agent.run(input))
+    }
 }

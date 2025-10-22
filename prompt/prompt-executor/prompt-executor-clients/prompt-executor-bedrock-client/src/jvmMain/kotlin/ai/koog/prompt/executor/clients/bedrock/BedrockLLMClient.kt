@@ -457,4 +457,8 @@ public class BedrockLLMClient(
             }
         }
     }
+
+    override fun close() {
+        bedrockClient.close()
+    }
 }

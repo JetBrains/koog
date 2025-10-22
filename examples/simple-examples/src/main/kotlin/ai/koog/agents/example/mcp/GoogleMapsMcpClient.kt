@@ -5,7 +5,6 @@ import ai.koog.agents.mcp.McpToolRegistryProvider
 import ai.koog.agents.mcp.defaultStdioTransport
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
-import kotlinx.coroutines.runBlocking
 
 /**
  * Example of using the MCP (Model Context Protocol) integration with Google Maps.
@@ -19,7 +18,7 @@ import kotlinx.coroutines.runBlocking
  * The example specifically shows how to get the elevation of the JetBrains office in Munich
  * by using the maps_geocode and maps_elevation tools provided by the MCP server.
  */
-fun main() {
+suspend fun main() {
     // Get the API key from environment variables
     val googleMapsApiKey =
         System.getenv("GOOGLE_MAPS_API_KEY") ?: error("GOOGLE_MAPS_API_KEY environment variable not set")
@@ -39,20 +38,20 @@ fun main() {
     Thread.sleep(2000)
 
     try {
-        runBlocking {
-            // Create the ToolRegistry with tools from the MCP server
-            val toolRegistry = McpToolRegistryProvider.fromTransport(
-                transport = McpToolRegistryProvider.defaultStdioTransport(process)
-            )
+        // Create the ToolRegistry with tools from the MCP server
+        val toolRegistry = McpToolRegistryProvider.fromTransport(
+            transport = McpToolRegistryProvider.defaultStdioTransport(process)
+        )
 
-            toolRegistry.tools.forEach {
-                println(it.name)
-                println(it.descriptor)
-            }
+        toolRegistry.tools.forEach {
+            println(it.name)
+            println(it.descriptor)
+        }
 
+        simpleOpenAIExecutor(openAIApiToken).use { executor ->
             // Create the runner
             val agent = AIAgent(
-                promptExecutor = simpleOpenAIExecutor(openAIApiToken),
+                promptExecutor = executor,
                 llmModel = OpenAIModels.Chat.GPT4o,
                 toolRegistry = toolRegistry,
             )

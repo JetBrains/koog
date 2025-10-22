@@ -25,14 +25,13 @@ import ai.koog.prompt.structure.StructuredOutputConfig
 import ai.koog.prompt.structure.json.JsonStructuredData
 import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
 import ai.koog.prompt.text.text
-import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 
 private val json = Json {
     prettyPrint = true
 }
 
-fun main(): Unit = runBlocking {
+suspend fun main() {
     /*
      This structure has a generic schema that is suitable for manual structured output mode.
      But to use native structured output support in different LLM providers you might need to use custom JSON schema generators
@@ -108,30 +107,33 @@ fun main(): Unit = runBlocking {
         maxAgentIterations = 5
     )
 
-    val agent = AIAgent<FullWeatherForecastRequest, FullWeatherForecast>(
-        promptExecutor = MultiLLMPromptExecutor(
-            LLMProvider.OpenAI to OpenAILLMClient(ApiKeyService.openAIApiKey),
-            LLMProvider.Anthropic to AnthropicLLMClient(ApiKeyService.anthropicApiKey),
-            LLMProvider.Google to GoogleLLMClient(ApiKeyService.googleApiKey),
-        ),
-        strategy = agentStrategy, // no tools needed for this example
-        agentConfig = agentConfig
-    ) {
-        handleEvents {
-            onAgentExecutionFailed { eventContext ->
-                println("An error occurred: ${eventContext.throwable.message}\n${eventContext.throwable.stackTraceToString()}")
+    MultiLLMPromptExecutor(
+        LLMProvider.OpenAI to OpenAILLMClient(ApiKeyService.openAIApiKey),
+        LLMProvider.Anthropic to AnthropicLLMClient(ApiKeyService.anthropicApiKey),
+        LLMProvider.Google to GoogleLLMClient(ApiKeyService.googleApiKey),
+    ).use { executor ->
+
+        val agent = AIAgent<FullWeatherForecastRequest, FullWeatherForecast>(
+            promptExecutor = executor,
+            strategy = agentStrategy, // no tools needed for this example
+            agentConfig = agentConfig
+        ) {
+            handleEvents {
+                onAgentExecutionFailed { eventContext ->
+                    println("An error occurred: ${eventContext.throwable.message}\n${eventContext.throwable.stackTraceToString()}")
+                }
             }
         }
-    }
 
-    println(
-        """
+        println(
+            """
         === Full Weather Forecast Example ===
         This example demonstrates how to use structured output with full schema support
         to get properly structured output from the LLM.
-        """.trimIndent()
-    )
+            """.trimIndent()
+        )
 
-    val result: FullWeatherForecast = agent.run(FullWeatherForecastRequest(city = "New York", country = "USA"))
-    println("Agent run result: $result")
+        val result: FullWeatherForecast = agent.run(FullWeatherForecastRequest(city = "New York", country = "USA"))
+        println("Agent run result: $result")
+    }
 }

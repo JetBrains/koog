@@ -650,4 +650,8 @@ public open class GoogleLLMClient(
         logger.warn { "Moderation is not supported by Google API" }
         throw UnsupportedOperationException("Moderation is not supported by Google API.")
     }
+
+    override fun close() {
+        httpClient.close()
+    }
 }

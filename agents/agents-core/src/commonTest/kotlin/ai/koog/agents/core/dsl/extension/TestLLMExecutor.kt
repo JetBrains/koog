@@ -72,4 +72,6 @@ class TestLLMExecutor : PromptExecutor {
         messages.add(response)
         return response
     }
+
+    override fun close() {}
 }

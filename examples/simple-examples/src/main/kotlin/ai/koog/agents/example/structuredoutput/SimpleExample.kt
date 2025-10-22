@@ -18,7 +18,6 @@ import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.structure.StructureFixingParser
 import ai.koog.prompt.text.text
-import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -166,7 +165,11 @@ private val json = Json {
     prettyPrint = true
 }
 
-fun main(): Unit = runBlocking {
+suspend fun main() {
+    val openAIClient = OpenAILLMClient(ApiKeyService.openAIApiKey)
+    val anthropicClient = AnthropicLLMClient(ApiKeyService.anthropicApiKey)
+    val googleClient = GoogleLLMClient(ApiKeyService.googleApiKey)
+
     val agentStrategy = strategy<WeatherForecastRequest, WeatherForecast>("weather-forecast") {
         val prepareRequest by node<WeatherForecastRequest, String> { request ->
             text {
@@ -177,18 +180,18 @@ fun main(): Unit = runBlocking {
         }
 
         /*
-         Simple API, let it figure out the optimal approach to get structured output itself.
-         So only the structure has to be supplied.
+     Simple API, let it figure out the optimal approach to get structured output itself.
+     So only the structure has to be supplied.
          */
         val getStructuredForecast by nodeLLMRequestStructured<WeatherForecast>(
             /*
-             Optional: If the model you are using does not support native structured output, you can provide examples to help
-             it better understand the format.
+         Optional: If the model you are using does not support native structured output, you can provide examples to help
+         it better understand the format.
              */
             examples = listOf(),
             /*
-             Optional: If the model provides inaccurate structure leading to serialization exceptions, you can try fixing
-             parser to attempt to fix malformed output.
+         Optional: If the model provides inaccurate structure leading to serialization exceptions, you can try fixing
+         parser to attempt to fix malformed output.
              */
             fixingParser = StructureFixingParser(
                 fixingModel = OpenAIModels.CostOptimized.GPT4oMini,
@@ -215,30 +218,32 @@ fun main(): Unit = runBlocking {
         maxAgentIterations = 5
     )
 
-    val agent = AIAgent<WeatherForecastRequest, WeatherForecast>(
-        promptExecutor = MultiLLMPromptExecutor(
-            LLMProvider.OpenAI to OpenAILLMClient(ApiKeyService.openAIApiKey),
-            LLMProvider.Anthropic to AnthropicLLMClient(ApiKeyService.anthropicApiKey),
-            LLMProvider.Google to GoogleLLMClient(ApiKeyService.googleApiKey),
-        ),
-        strategy = agentStrategy, // no tools needed for this example
-        agentConfig = agentConfig
-    ) {
-        handleEvents {
-            onAgentExecutionFailed { ctx ->
-                println("An error occurred: ${ctx.throwable.message}\n${ctx.throwable.stackTraceToString()}")
+    MultiLLMPromptExecutor(
+        LLMProvider.OpenAI to openAIClient,
+        LLMProvider.Anthropic to anthropicClient,
+        LLMProvider.Google to googleClient,
+    ).use { executor ->
+        val agent = AIAgent<WeatherForecastRequest, WeatherForecast>(
+            promptExecutor = executor,
+            strategy = agentStrategy, // no tools needed for this example
+            agentConfig = agentConfig
+        ) {
+            handleEvents {
+                onAgentExecutionFailed { ctx ->
+                    println("An error occurred: ${ctx.throwable.message}\n${ctx.throwable.stackTraceToString()}")
+                }
             }
         }
+
+        println(
+            """
+            === Simple Weather Forecast Example ===
+            This example demonstrates how to use structured output with simple schema support
+            to get properly structured output from the LLM.
+            """.trimIndent()
+        )
+
+        val result: WeatherForecast = agent.run(WeatherForecastRequest(city = "New York", country = "USA"))
+        println("Agent run result: $result")
     }
-
-    println(
-        """
-        === Simple Weather Forecast Example ===
-        This example demonstrates how to use structured output with simple schema support
-        to get properly structured output from the LLM.
-        """.trimIndent()
-    )
-
-    val result: WeatherForecast = agent.run(WeatherForecastRequest(city = "New York", country = "USA"))
-    println("Agent run result: $result")
 }

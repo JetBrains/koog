@@ -164,7 +164,6 @@ suspend fun main() {
 
 suspend fun main() {
     //region API keys
-    val openAIApiKey = ApiKeyService.openAIApiKey
     val brightDataKey = ApiKeyService.brightDataKey
     //endregion
 
@@ -189,22 +188,24 @@ suspend fun main() {
         )
     //endregion
 
-    //region Agent
-    val agent =
-        AIAgent<String, String>(
-            promptExecutor = simpleOpenAIExecutor(openAIApiKey),
-            strategy = singleRunStrategy(),
-            toolRegistry = toolRegistry,
-            agentConfig = agentConfig,
-        ) {
-            handleEvents {
-                onToolCallStarting { ctx ->
-                    println("Tool called: tool ${ctx.tool.name}, args ${ctx.toolArgs}")
+    simpleOpenAIExecutor(ApiKeyService.openAIApiKey).use { executor ->
+        //region Agent
+        val agent =
+            AIAgent<String, String>(
+                promptExecutor = executor,
+                strategy = singleRunStrategy(),
+                toolRegistry = toolRegistry,
+                agentConfig = agentConfig,
+            ) {
+                handleEvents {
+                    onToolCallStarting { ctx ->
+                        println("Tool called: tool ${ctx.tool.name}, args ${ctx.toolArgs}")
+                    }
                 }
             }
-        }
-    //endregion
+        //endregion
 
-    val result: String = agent.run("Tell me in details about the Koog framework.")
-    println(result)
+        val result: String = agent.run("Tell me in details about the Koog framework.")
+        println(result)
+    }
 }

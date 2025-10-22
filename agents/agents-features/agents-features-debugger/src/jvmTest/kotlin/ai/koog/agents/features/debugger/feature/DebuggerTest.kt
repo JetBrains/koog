@@ -667,6 +667,8 @@ class DebuggerTest {
             ): ai.koog.prompt.dsl.ModerationResult {
                 throw UnsupportedOperationException("Not used in test")
             }
+
+            override fun close() {}
         }
 
         // Test Data
