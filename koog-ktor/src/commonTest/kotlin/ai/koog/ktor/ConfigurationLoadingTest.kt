@@ -139,6 +139,7 @@ class ConfigurationLoadingTest {
         assertNull(koogConfig.llmConnections[LLMProvider.OpenAI])
         assertNull(koogConfig.llmConnections[LLMProvider.Anthropic])
         assertNull(koogConfig.llmConnections[LLMProvider.Google])
+        assertNull(koogConfig.llmConnections[LLMProvider.MistralAI])
         assertNull(koogConfig.llmConnections[LLMProvider.OpenRouter])
         assertNull(koogConfig.llmConnections[LLMProvider.DeepSeek])
         assertNull(koogConfig.llmConnections[LLMProvider.Ollama])
@@ -280,6 +281,7 @@ class ConfigurationLoadingTest {
         assertNull(koogConfig.llmConnections[LLMProvider.OpenAI])
         assertNull(koogConfig.llmConnections[LLMProvider.Anthropic])
         assertNull(koogConfig.llmConnections[LLMProvider.Google])
+        assertNull(koogConfig.llmConnections[LLMProvider.MistralAI])
         assertNull(koogConfig.llmConnections[LLMProvider.OpenRouter])
         assertNull(koogConfig.llmConnections[LLMProvider.DeepSeek])
     }
