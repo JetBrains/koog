@@ -4,7 +4,9 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
- *
+ * Represents a part of a message.
+ * Parts can be text [ContentPart.Text], images [ContentPart.Image], audio [ContentPart.Audio], or files [ContentPart.File].
+ * All attachment parts (all except [ContentPart.Text]) must implement [Attachment] interface.
  */
 @Serializable
 public sealed interface ContentPart {
