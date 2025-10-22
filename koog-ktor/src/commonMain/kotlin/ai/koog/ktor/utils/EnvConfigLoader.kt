@@ -109,10 +109,10 @@ private fun KoogAgentsConfig.google(envConfig: ApplicationConfig) =
     }
 
 private fun KoogAgentsConfig.mistral(envConfig: ApplicationConfig) =
-    config(envConfig.config("koog.mistral")) { apiKey, baseUrlOrNull ->
+    config(envConfig, "koog.mistral") { apiKey, baseUrlOrNull ->
         mistral(apiKey) {
             baseUrlOrNull?.let { baseUrl = it }
-            timeouts { configure(envConfig.config("timeout")) }
+            timeouts { configure("koog.mistral.timeout", envConfig) }
         }
     }
 

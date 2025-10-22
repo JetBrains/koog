@@ -47,8 +47,6 @@ class MistralAIParamsTest {
             schema = LLMParams.Schema.JSON.Basic("test", JsonObject(mapOf())),
             toolChoice = LLMParams.ToolChoice.Named("calculator"),
             user = "alice",
-            includeThoughts = true,
-            thinkingBudget = 500,
             additionalProperties = mapOf("foo" to JsonPrimitive("bar")),
             frequencyPenalty = 0.5,
             presencePenalty = 0.6,
@@ -72,7 +70,6 @@ class MistralAIParamsTest {
             numberOfChoices = 3,
             speculation = "sp",
             user = "uid",
-            includeThoughts = false,
             additionalProperties = mapOf("foo" to JsonPrimitive("bar"))
         )
         val mistralAI = base.toMistralAIParams()
@@ -81,6 +78,5 @@ class MistralAIParamsTest {
         assertEquals(base.numberOfChoices, mistralAI.numberOfChoices)
         assertEquals(base.speculation, mistralAI.speculation)
         assertEquals(base.user, mistralAI.user)
-        assertEquals(base.includeThoughts, mistralAI.includeThoughts)
     }
 }
