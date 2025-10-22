@@ -1,14 +1,139 @@
 package ai.koog.prompt.dsl
 
+import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.text.text
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 class PromptBuilderTest {
+
+    @Test
+    fun testUserMessageWithString() {
+        val prompt = Prompt.build("test") {
+            user("Hello, how are you?")
+            user { +"Hello, how are you?" }
+        }
+        val expectedText = ContentPart.Text("Hello, how are you?")
+
+        assertEquals(2, prompt.messages.size, "Prompt should have two messages")
+
+        assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
+        assertEquals(1, prompt.messages[0].parts.size, "Should have only text part")
+        assertEquals(expectedText, prompt.messages[0].parts[0], "Should have same text")
+
+        assertIs<Message.User>(prompt.messages[1], "Message should be a User message")
+        assertEquals(1, prompt.messages[1].parts.size, "Should have only text part")
+        assertEquals(expectedText, prompt.messages[1].parts[0], "Should have same text")
+    }
+
+    @Test
+    fun testUserMessageWithText() {
+        val prompt = Prompt.build("test") {
+            user(text { +"Hello, how are you?" })
+            user { text { +"Hello, how are you?" } }
+        }
+        val expectedText = ContentPart.Text("Hello, how are you?")
+
+        assertEquals(2, prompt.messages.size, "Prompt should have two messages")
+
+        assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
+        assertEquals(1, prompt.messages[0].parts.size, "Should have only text part")
+        assertEquals(expectedText, prompt.messages[0].parts[0], "Should have same text")
+
+        assertIs<Message.User>(prompt.messages[1], "Message should be a User message")
+        assertEquals(1, prompt.messages[1].parts.size, "Should have only text part")
+        assertEquals(expectedText, prompt.messages[1].parts[0], "Should have same text")
+    }
+
+    @Test
+    fun testUserMessageWithMarkdown() {
+        val prompt = Prompt.build("test") {
+            user(markdown { +"Hello, how are you?" })
+            user { markdown { +"Hello, how are you?" } }
+        }
+        val expectedText = ContentPart.Text("Hello, how are you?")
+
+        assertEquals(2, prompt.messages.size, "Prompt should have two messages")
+
+        assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
+        assertEquals(1, prompt.messages[0].parts.size, "Should have only text part")
+        assertEquals(expectedText, prompt.messages[0].parts[0], "Should have same text")
+
+        assertIs<Message.User>(prompt.messages[1], "Message should be a User message")
+        assertEquals(1, prompt.messages[1].parts.size, "Should have only text part")
+        assertEquals(expectedText, prompt.messages[1].parts[0], "Should have same text")
+    }
+
+    @Test
+    fun testUserMessageWithTextBuilder() {
+        val prompt = Prompt.build("test") {
+            user {
+                +"Hello, how are you?"
+                +"Good, and you?"
+                text(" Let's go to the beach!")
+            }
+        }
+
+        assertEquals(1, prompt.messages.size, "Prompt should have one message")
+        assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
+
+        assertEquals(1, prompt.messages[0].parts.size, "Should have only text part")
+        assertEquals(
+            ContentPart.Text("Hello, how are you?\nGood, and you? Let's go to the beach!"),
+            prompt.messages[0].parts[0],
+            "Should have same text"
+        )
+    }
+
+    @Test
+    fun testUserMessageMultipleTextWithMultipleAttachment() {
+        val prompt = Prompt.build("test") {
+            user {
+                +"Hello, how are you?"
+                +"Here is my photo"
+                image("https://example.com/photo1.jpg")
+                +"I'm good!"
+                +"And here is mine"
+                image("https://example.com/photo2.jpg")
+            }
+        }
+
+        assertEquals(1, prompt.messages.size, "Prompt should have one message")
+        assertIs<Message.User>(prompt.messages[0], "Message should be a User message")
+
+        assertEquals(4, prompt.messages[0].parts.size, "Should have 4 parts")
+        assertEquals(
+            ContentPart.Text("Hello, how are you?\nHere is my photo"),
+            prompt.messages[0].parts[0],
+            "Should have same text"
+        )
+
+        val expectedFirstImage = ContentPart.Image(
+            content = AttachmentContent.URL("https://example.com/photo1.jpg"),
+            format = "jpg",
+            mimeType = "image/jpg",
+            fileName = "photo1.jpg"
+        )
+        assertEquals(expectedFirstImage, prompt.messages[0].parts[1], "Should have same image url")
+        assertEquals(
+            ContentPart.Text("I'm good!\nAnd here is mine"),
+            prompt.messages[0].parts[2],
+            "Should have same text"
+        )
+
+        val expectedSecondImage = ContentPart.Image(
+            content = AttachmentContent.URL("https://example.com/photo2.jpg"),
+            format = "jpg",
+            mimeType = "image/jpg",
+            fileName = "photo2.jpg"
+        )
+        assertEquals(expectedSecondImage, prompt.messages[0].parts[3], "Should have same image url")
+    }
 
     @Test
     fun testUserMessageWithAttachments() {
@@ -45,7 +170,7 @@ class PromptBuilderTest {
     }
 
     @Test
-    fun testUserMessageWithAttachmentBuilder() {
+    fun testUserMessageWithContentPartsBuilder() {
         val prompt = Prompt.build("test") {
             user {
                 text("Check these files")
@@ -85,11 +210,9 @@ class PromptBuilderTest {
     fun testUserMessageWithContentBuilderWithAttachment() {
         val prompt = Prompt.build("test") {
             user {
-                text {
-                    text("Here's my question:")
-                    newline()
-                    text("How do I implement a binary search in Kotlin?")
-                }
+                text("Here's my question:")
+                newline()
+                text("How do I implement a binary search in Kotlin?")
                 image("https://example.com/screenshot.png")
             }
         }
@@ -170,12 +293,9 @@ class PromptBuilderTest {
             }
 
             user {
-                text {
-                    text("I have a question about programming.")
-                    newline()
-                    text("How do I implement a binary search in Kotlin?")
-                }
-
+                text("I have a question about programming.")
+                newline()
+                text("How do I implement a binary search in Kotlin?")
                 image("https://example.com/code_example.png")
             }
 

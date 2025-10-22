@@ -2,7 +2,7 @@ package ai.koog.prompt.dsl
 
 import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.ContentPart
-import ai.koog.prompt.text.TextContentBuilder
+import ai.koog.prompt.text.TextContentBuilderBase
 import kotlinx.io.buffered
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
@@ -11,10 +11,11 @@ import kotlinx.io.readString
 
 /**
  * A builder for constructing parts for prompt messages.
+ * All parts are added to a list in declaration order and can be retrieved through the [build] method.
  *
  * Example usage:
  * ```kotlin
- * val parts = AttachmentBuilder().apply {
+ * val parts = ContentPartsBuilder().apply {
  *     text("Hello!")
  *     image("screenshot.png")
  *     binaryFile("report.pdf")
@@ -24,7 +25,7 @@ import kotlinx.io.readString
  * @see ContentPart
  */
 @PromptDSL
-public class ContentPartsBuilder {
+public class ContentPartsBuilder : TextContentBuilderBase<List<ContentPart>>() {
     private val parts = mutableListOf<ContentPart>()
 
     private class FileData(val name: String, val extension: String)
@@ -66,24 +67,22 @@ public class ContentPartsBuilder {
     }
 
     /**
+     * Flushes the text builder and adds its content as a text part if there is any.
+     */
+    private fun flushTextBuilder() {
+        if (caret.offset != 0) {
+            parts.add(ContentPart.Text(textBuilder.toString()))
+            textBuilder.clear()
+        }
+    }
+
+    /**
      * Adds [ContentPart] to the list of contentParts.
      */
     public fun part(contentPart: ContentPart) {
+        // If there were some text accumulated, flush it to the text part
+        flushTextBuilder()
         parts.add(contentPart)
-    }
-
-    /**
-     * Adds [ContentPart.Text] with given content to the list of parts.
-     */
-    public fun text(content: String) {
-        text(ContentPart.Text(content))
-    }
-
-    /**
-     * Adds [ContentPart.Text] with given content to the list of parts.
-     */
-    public fun text(body: TextContentBuilder.() -> Unit) {
-        text(TextContentBuilder().apply(body).build())
     }
 
     /**
@@ -285,5 +284,9 @@ public class ContentPartsBuilder {
      *
      * @return A list containing all the attachment items created through the builder methods
      */
-    public fun build(): List<ContentPart> = parts
+    public override fun build(): List<ContentPart> {
+        // If there were some text accumulated, flush it to the text part
+        flushTextBuilder()
+        return parts
+    }
 }

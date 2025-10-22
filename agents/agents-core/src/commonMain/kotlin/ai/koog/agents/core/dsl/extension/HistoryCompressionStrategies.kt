@@ -43,9 +43,7 @@ public abstract class HistoryCompressionStrategy {
             dropTrailingToolCalls()
             updatePrompt {
                 user {
-                    text {
-                        summarizeInTLDR()
-                    }
+                    summarizeInTLDR()
                 }
             }
             listOf(llmSession.requestLLMWithoutTools())

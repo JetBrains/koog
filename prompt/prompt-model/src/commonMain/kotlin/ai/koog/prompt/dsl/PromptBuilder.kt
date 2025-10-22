@@ -83,7 +83,7 @@ public class PromptBuilder internal constructor(
      * Adds a user message to the prompt with optional attachments.
      *
      * User messages represent input from the user to the language model.
-     * This method supports adding text content along with a list of attachments such as images, audio, or documents.
+     * This method supports adding parts of the message such as text content or attachments.
      *
      * @param parts Parts of the user message
      */
@@ -95,7 +95,7 @@ public class PromptBuilder internal constructor(
      * Adds a user message to the prompt with optional attachments.
      *
      * User messages represent input from the user to the language model.
-     * This method supports adding text content along with a list of attachments such as images, audio, or documents.
+     * This method supports adding text content.
      *
      * @param content Content of the user message
      */
@@ -107,20 +107,18 @@ public class PromptBuilder internal constructor(
      * Adds a user message to the prompt with attachments.
      *
      * User messages represent input from the user to the language model.
-     * This method allows attaching content like images, audio, or documents.
+     * This method allows adding parts of the message such as text content or attachments using a [ContentPartsBuilder].
      *
-     * Example:
-     * ```kotlin
-     * // Simple text message
-     * user("What is the capital of France?")
-     *
-     * // Message with attachments using a lambda
-     * user("Please analyze this image") {
-     *     image("photo.jpg")
+     * Example:```
+     * user {
+     *     test("Image 1:")
+     *     image("photo1.jpg")
+     *     test("Image 2:")
+     *     image("photo3.jpg")
      * }
      * ```
      *
-     * @param block Optional lambda to configure attachments using AttachmentBuilder
+     * @param block Lambda to configure attachments using [ContentPartsBuilder]
      */
     public fun user(block: ContentPartsBuilder.() -> Unit) {
         user(ContentPartsBuilder().apply(block).build())

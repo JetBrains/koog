@@ -226,7 +226,7 @@ public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput> AIAgentEdge
 ): AIAgentEdgeBuilderIntermediate<IncomingOutput, List<ContentPart.Attachment>, OutgoingInput> {
     return onIsInstance(Message.Assistant::class)
         .onCondition {
-            it.parts.any { part -> part is ContentPart.Attachment }
+            it.hasAttachments()
         }
         .onCondition { signature -> block(signature) }
         .transformed { it.parts.filterIsInstance<ContentPart.Attachment>() }

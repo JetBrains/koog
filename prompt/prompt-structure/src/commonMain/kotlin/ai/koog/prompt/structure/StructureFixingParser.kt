@@ -130,15 +130,13 @@ public class StructureFixingParser(
                 }
             }
             user {
-                text(
-                    markdown {
-                        h2("EXCEPTION")
-                        codeblock(exception.message ?: "Unknown exception")
+                markdown {
+                    h2("EXCEPTION")
+                    codeblock(exception.message ?: "Unknown exception")
 
-                        h2("CONTENT")
-                        codeblock(content)
-                    }
-                )
+                    h2("CONTENT")
+                    codeblock(content)
+                }
             }
         }
     }

@@ -524,16 +524,14 @@ abstract class ExecutorIntegrationTestBase {
                     prompt("markdown-test-${scenario.name.lowercase()}") {
                         system("You are a helpful assistant that can analyze markdown files.")
 
-                        user {
-                            text(
-                                markdown {
-                                    +"I'm sending you a markdown file with different markdown elements. "
-                                    +"Please list all the markdown elements used in it and describe its structure clearly."
-                                    newline()
-                                    +file.readText()
-                                }
-                            )
-                        }
+                        user(
+                            markdown {
+                                +"I'm sending you a markdown file with different markdown elements. "
+                                +"Please list all the markdown elements used in it and describe its structure clearly."
+                                newline()
+                                +file.readText()
+                            }
+                        )
                     }
                 }
 
@@ -685,15 +683,13 @@ abstract class ExecutorIntegrationTestBase {
                     prompt("text-test-${scenario.name.lowercase()}") {
                         system("You are a helpful assistant that can analyze and process text.")
 
-                        user {
-                            text(
-                                markdown {
-                                    +"I'm sending you a text file. Please analyze it and summarize its content."
-                                    newline()
-                                    +file.readText()
-                                }
-                            )
-                        }
+                        user(
+                            markdown {
+                                +"I'm sending you a text file. Please analyze it and summarize its content."
+                                newline()
+                                +file.readText()
+                            }
+                        )
                     }
                 }
 

@@ -161,9 +161,7 @@ class ModelCapabilitiesIntegrationTest {
                     val prompt = prompt("cap-vision-image-positive") {
                         system("You are a helpful assistant that can describe images.")
                         user {
-                            text(
-                                markdown { +"Describe the image in 5-10 words." }
-                            )
+                            markdown { +"Describe the image in 5-10 words." }
                             image(
                                 ContentPart.Image(
                                     content = AttachmentContent.Binary.Base64(base64),
@@ -187,9 +185,7 @@ class ModelCapabilitiesIntegrationTest {
                     val prompt = prompt("cap-audio-positive") {
                         system("You are a helpful assistant that can transcribe audio.")
                         user {
-                            text(
-                                markdown { +"Transcribe the attached audio in 5-10 words." }
-                            )
+                            markdown { +"Transcribe the attached audio in 5-10 words." }
                             audio(
                                 ContentPart.Audio(
                                     AttachmentContent.Binary.Base64(base64),
@@ -211,9 +207,7 @@ class ModelCapabilitiesIntegrationTest {
                     val prompt = prompt("cap-document-positive") {
                         system("You are a helpful assistant that can read attached documents.")
                         user {
-                            text(
-                                markdown { +"Summarize the attached text file in 5-10 words." }
-                            )
+                            markdown { +"Summarize the attached text file in 5-10 words." }
                             textFile(KtPath(file.pathString), "text/plain")
                         }
                     }
@@ -259,9 +253,7 @@ class ModelCapabilitiesIntegrationTest {
                     val prompt = prompt("cap-vision-video-positive") {
                         system("You are a helpful assistant that can analyze short videos.")
                         user {
-                            text(
-                                markdown { +"Describe in 5-10 words what you can infer from the attached video." }
-                            )
+                            markdown { +"Describe in 5-10 words what you can infer from the attached video." }
                             video(
                                 ContentPart.Video(
                                     content = AttachmentContent.Binary.Base64(base64),
@@ -406,9 +398,7 @@ class ModelCapabilitiesIntegrationTest {
                     val prompt = prompt("cap-vision-image-negative") {
                         system("You are a helpful assistant that can describe images.")
                         user {
-                            text(
-                                markdown { +"Describe the image in 5-10 words." }
-                            )
+                            markdown { +"Describe the image in 5-10 words." }
                             image(
                                 ContentPart.Image(
                                     content = AttachmentContent.Binary.Base64(base64),
@@ -437,9 +427,7 @@ class ModelCapabilitiesIntegrationTest {
                     val prompt = prompt("cap-audio-negative") {
                         system("You are a helpful assistant that can transcribe audio.")
                         user {
-                            text(
-                                markdown { +"Transcribe the attached audio in 5-10 words." }
-                            )
+                            markdown { +"Transcribe the attached audio in 5-10 words." }
                             audio(
                                 ContentPart.Audio(
                                     AttachmentContent.Binary.Base64(base64),
@@ -466,9 +454,7 @@ class ModelCapabilitiesIntegrationTest {
                     val prompt = prompt("cap-document-negative") {
                         system("You are a helpful assistant that can read attached documents.")
                         user {
-                            text(
-                                markdown { +"Summarize the attached text file in 5-10 words." }
-                            )
+                            markdown { +"Summarize the attached text file in 5-10 words." }
                             textFile(KtPath(file.pathString), "text/plain")
                         }
                     }
@@ -526,9 +512,7 @@ class ModelCapabilitiesIntegrationTest {
                     val prompt = prompt("cap-vision-video-positive") {
                         system("You are a helpful assistant that can analyze short videos.")
                         user {
-                            text(
-                                markdown { +"Describe in 5-10 words what you can infer from the attached video." }
-                            )
+                            markdown { +"Describe in 5-10 words what you can infer from the attached video." }
                             video(
                                 ContentPart.Video(
                                     content = AttachmentContent.Binary.Base64(base64),

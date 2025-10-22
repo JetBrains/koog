@@ -803,13 +803,11 @@ class AIAgentMultipleLLMIntegrationTest {
             system("You are a professional helpful assistant.")
 
             user {
-                text(
-                    markdown {
-                        +"I'm sending you an image."
-                        br()
-                        +"Please analyze this image and identify the image format if possible."
-                    }
-                )
+                markdown {
+                    +"I'm sending you an image."
+                    br()
+                    +"Please analyze this image and identify the image format if possible."
+                }
                 image("https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg")
             }
         }

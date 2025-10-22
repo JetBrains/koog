@@ -384,27 +384,22 @@ class ContentPartsBuilderTest {
     @Test
     fun testMultipleText() {
         val result = ContentPartsBuilder().apply {
-            text("This is a text content")
-            text("This is another text content")
+            text("This is a text content.")
+            text(" This is another text content")
         }.build()
 
-        assertEquals(2, result.size, "Should contain two attachments")
-        val resultFirstText = result[0]
-        assertIs<ContentPart.Text>(resultFirstText, "Part should be recognized as Text")
-        assertEquals("This is a text content", resultFirstText.text)
-        val resultSecondText = result[1]
-        assertIs<ContentPart.Text>(resultSecondText, "Part should be recognized as Text")
-        assertEquals("This is another text content", resultSecondText.text)
+        assertEquals(1, result.size, "Should contain two attachments")
+        val resultText = result[0]
+        assertIs<ContentPart.Text>(resultText, "Part should be recognized as Text")
+        assertEquals("This is a text content. This is another text content", resultText.text)
     }
 
     @Test
     fun testTextWithTextBuilder() {
         val result = ContentPartsBuilder().apply {
-            text {
-                text("This is a text content")
-                newline()
-                text("This is another text content")
-            }
+            text("This is a text content")
+            newline()
+            text("This is another text content")
         }.build()
 
         assertEquals(1, result.size, "Should contain one attachment")
@@ -416,14 +411,12 @@ class ContentPartsBuilderTest {
     @Test
     fun testTextWithMarkdownBuilder() {
         val result = ContentPartsBuilder().apply {
-            text(
-                markdown {
-                    numbered {
-                        item("This is a markdown content")
-                        item("This is another markdown content")
-                    }
+            markdown {
+                numbered {
+                    item("This is a markdown content")
+                    item("This is another markdown content")
                 }
-            )
+            }
         }.build()
 
         assertEquals(1, result.size, "Should contain one attachment")
