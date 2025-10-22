@@ -11,7 +11,6 @@ import ai.koog.prompt.executor.clients.anthropic.models.AnthropicMessage
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicMessageRequest
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicMessageRequestSerializer
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicResponse
-import ai.koog.prompt.executor.clients.anthropic.models.AnthropicResponseContent
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicStreamResponse
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicTool
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicToolChoice
