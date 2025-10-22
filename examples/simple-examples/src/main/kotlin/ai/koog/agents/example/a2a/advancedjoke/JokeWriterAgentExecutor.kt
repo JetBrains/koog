@@ -225,7 +225,7 @@ private fun jokeWriterStrategy() = strategy<A2AMessage, Unit>("joke-writer") {
         llm.writeSession {
             updatePrompt {
                 user {
-                    +text {
+                    text {
                         +"Generate a joke based on the following user request:"
                         xml {
                             tag("subject") {

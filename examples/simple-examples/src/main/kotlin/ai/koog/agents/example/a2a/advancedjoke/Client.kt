@@ -15,7 +15,6 @@ import ai.koog.a2a.model.TaskStatusUpdateEvent
 import ai.koog.a2a.model.TextPart
 import ai.koog.a2a.transport.Request
 import ai.koog.a2a.transport.client.jsonrpc.http.HttpJSONRPCClientTransport
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
