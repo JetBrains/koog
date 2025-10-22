@@ -61,6 +61,11 @@ tasks.withType<KotlinJvmCompile>().configureEach {
     }
 }
 
+tasks.withType<JavaCompile>().configureEach {
+    sourceCompatibility = JavaVersion.VERSION_11.toString()
+    targetCompatibility = JavaVersion.VERSION_11.toString()
+}
+
 configurations.all {
     resolutionStrategy {
         eachDependency {
