@@ -44,7 +44,6 @@ class OpenRouterParamsValidationTest {
             numberOfChoices = 1,
             speculation = "router",
             user = "user",
-            includeThoughts = true,
         )
         val or = base.toOpenRouterParams()
         assert(base.temperature == or.temperature)
@@ -52,7 +51,6 @@ class OpenRouterParamsValidationTest {
         assert(base.numberOfChoices == or.numberOfChoices)
         assert(base.speculation == or.speculation)
         assert(base.user == or.user)
-        assert(base.includeThoughts == or.includeThoughts)
     }
 
     @Test
@@ -63,7 +61,6 @@ class OpenRouterParamsValidationTest {
             numberOfChoices = 1,
             speculation = "copy",
             user = "user",
-            includeThoughts = true,
             additionalProperties = mapOf("foo" to JsonPrimitive("bar")),
             topP = 1.0,
             topK = 3,
@@ -78,7 +75,6 @@ class OpenRouterParamsValidationTest {
     fun `Should create from LLMParams`() {
         val source = LLMParams(
             additionalProperties = mapOf("foo" to JsonPrimitive("bar")),
-            includeThoughts = true,
             maxTokens = 321,
             numberOfChoices = 54,
             speculation = "copy",
@@ -92,7 +88,6 @@ class OpenRouterParamsValidationTest {
 
         // then
         target.additionalProperties shouldBe source.additionalProperties
-        target.includeThoughts shouldBe source.includeThoughts
         target.maxTokens shouldBe source.maxTokens
         target.numberOfChoices shouldBe source.numberOfChoices
         target.speculation shouldBe source.speculation

@@ -1,4 +1,4 @@
-package ai.koog.prompt.executor.clients.google
+package ai.koog.prompt.executor.clients.google.models
 
 import ai.koog.prompt.executor.clients.serialization.AdditionalPropertiesFlatteningSerializer
 import ai.koog.utils.serializers.ByteArrayAsBase64Serializer
@@ -325,7 +325,7 @@ internal class GoogleToolConfig(
  * API reference: https://ai.google.dev/gemini-api/docs/thinking#set-budget
  */
 @Serializable
-internal data class GoogleThinkingConfig(
+public data class GoogleThinkingConfig(
     val includeThoughts: Boolean? = null,
     val thinkingBudget: Int? = null
 )

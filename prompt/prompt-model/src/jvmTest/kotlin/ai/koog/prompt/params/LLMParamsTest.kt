@@ -266,8 +266,6 @@ class LLMParamsTest {
             schema = originalSchema,
             toolChoice = originalToolChoice,
             user = TEST_USER,
-            includeThoughts = true,
-            thinkingBudget = 50,
             additionalProperties = mapOf("foo" to JsonPrimitive("bar"))
         )
 

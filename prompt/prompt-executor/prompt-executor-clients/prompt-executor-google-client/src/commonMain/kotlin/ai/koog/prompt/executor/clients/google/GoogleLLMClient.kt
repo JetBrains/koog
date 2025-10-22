@@ -7,6 +7,18 @@ import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
+import ai.koog.prompt.executor.clients.google.models.GoogleCandidate
+import ai.koog.prompt.executor.clients.google.models.GoogleContent
+import ai.koog.prompt.executor.clients.google.models.GoogleData
+import ai.koog.prompt.executor.clients.google.models.GoogleFunctionCallingConfig
+import ai.koog.prompt.executor.clients.google.models.GoogleFunctionCallingMode
+import ai.koog.prompt.executor.clients.google.models.GoogleFunctionDeclaration
+import ai.koog.prompt.executor.clients.google.models.GoogleGenerationConfig
+import ai.koog.prompt.executor.clients.google.models.GooglePart
+import ai.koog.prompt.executor.clients.google.models.GoogleRequest
+import ai.koog.prompt.executor.clients.google.models.GoogleResponse
+import ai.koog.prompt.executor.clients.google.models.GoogleTool
+import ai.koog.prompt.executor.clients.google.models.GoogleToolConfig
 import ai.koog.prompt.executor.clients.google.structure.GoogleBasicJsonSchemaGenerator
 import ai.koog.prompt.executor.clients.google.structure.GoogleResponseFormat
 import ai.koog.prompt.executor.clients.google.structure.GoogleStandardJsonSchemaGenerator
@@ -369,7 +381,9 @@ public open class GoogleLLMClient(
             .takeIf { it.isNotEmpty() }
             ?.let { GoogleContent(parts = it) }
 
-        val responseFormat: GoogleResponseFormat? = prompt.params.schema?.let { schema ->
+        val googleParams = prompt.params.toGoogleParams()
+
+        val responseFormat: GoogleResponseFormat? = googleParams.schema?.let { schema ->
             require(schema.capability in model.capabilities) {
                 "Model ${model.id} does not support structured output schema ${schema.name}"
             }
@@ -394,17 +408,16 @@ public open class GoogleLLMClient(
             responseMimeType = responseFormat?.responseMimeType,
             responseSchema = responseFormat?.responseSchema,
             responseJsonSchema = responseFormat?.responseJsonSchema,
-            temperature = if (model.capabilities.contains(LLMCapability.Temperature)) prompt.params.temperature else null,
-            candidateCount = if (model.capabilities.contains(LLMCapability.MultipleChoices)) prompt.params.numberOfChoices else null,
-            maxOutputTokens = prompt.params.maxTokens,
-            thinkingConfig = GoogleThinkingConfig(
-                includeThoughts = prompt.params.includeThoughts.takeIf { it == true },
-                thinkingBudget = prompt.params.thinkingBudget
-            ).takeIf { it.includeThoughts != null || it.thinkingBudget != null },
-            additionalProperties = prompt.params.additionalProperties
+            maxOutputTokens = googleParams.maxTokens,
+            temperature = if (model.capabilities.contains(LLMCapability.Temperature)) googleParams.temperature else null,
+            candidateCount = if (model.capabilities.contains(LLMCapability.MultipleChoices)) googleParams.numberOfChoices else null,
+            topP = googleParams.topP,
+            topK = googleParams.topK,
+            thinkingConfig = googleParams.thinkingConfig,
+            additionalProperties = googleParams.additionalProperties
         )
 
-        val functionCallingConfig = when (val toolChoice = prompt.params.toolChoice) {
+        val functionCallingConfig = when (val toolChoice = googleParams.toolChoice) {
             LLMParams.ToolChoice.Auto -> GoogleFunctionCallingConfig(GoogleFunctionCallingMode.AUTO)
             LLMParams.ToolChoice.None -> GoogleFunctionCallingConfig(GoogleFunctionCallingMode.NONE)
             LLMParams.ToolChoice.Required -> GoogleFunctionCallingConfig(GoogleFunctionCallingMode.ANY)

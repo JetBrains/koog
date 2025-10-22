@@ -6,6 +6,20 @@ import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
+import ai.koog.prompt.executor.clients.anthropic.models.AnthropicContent
+import ai.koog.prompt.executor.clients.anthropic.models.AnthropicMessage
+import ai.koog.prompt.executor.clients.anthropic.models.AnthropicMessageRequest
+import ai.koog.prompt.executor.clients.anthropic.models.AnthropicMessageRequestSerializer
+import ai.koog.prompt.executor.clients.anthropic.models.AnthropicResponse
+import ai.koog.prompt.executor.clients.anthropic.models.AnthropicResponseContent
+import ai.koog.prompt.executor.clients.anthropic.models.AnthropicStreamResponse
+import ai.koog.prompt.executor.clients.anthropic.models.AnthropicTool
+import ai.koog.prompt.executor.clients.anthropic.models.AnthropicToolChoice
+import ai.koog.prompt.executor.clients.anthropic.models.AnthropicToolSchema
+import ai.koog.prompt.executor.clients.anthropic.models.AnthropicUsage
+import ai.koog.prompt.executor.clients.anthropic.models.DocumentSource
+import ai.koog.prompt.executor.clients.anthropic.models.ImageSource
+import ai.koog.prompt.executor.clients.anthropic.models.SystemAnthropicMessage
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -365,7 +379,20 @@ public open class AnthropicLLMClient(
             )
         }
 
-        val toolChoice = when (val toolChoice = prompt.params.toolChoice) {
+        return serializeAnthropicMessageRequest(messages, systemMessage, model, anthropicTools, prompt.params, stream)
+    }
+
+    private fun serializeAnthropicMessageRequest(
+        messages: List<AnthropicMessage>,
+        systemMessages: List<SystemAnthropicMessage>,
+        model: LLModel,
+        tools: List<AnthropicTool>,
+        params: LLMParams,
+        stream: Boolean
+    ): String {
+        val anthropicParams = params.toAnthropicParams()
+
+        val toolChoice = when (val toolChoice = anthropicParams.toolChoice) {
             LLMParams.ToolChoice.Auto -> AnthropicToolChoice.Auto
             LLMParams.ToolChoice.None -> AnthropicToolChoice.None
             LLMParams.ToolChoice.Required -> AnthropicToolChoice.Any
@@ -373,23 +400,29 @@ public open class AnthropicLLMClient(
             null -> null
         }
 
-        require(prompt.params.schema == null) {
+        require(anthropicParams.schema == null) {
             "Anthropic does not currently support native structured output."
         }
 
         // Always include max_tokens as it's required by the API
         val request = AnthropicMessageRequest(
-            model = settings.modelVersionsMap[model]
-                ?: throw IllegalArgumentException("Unsupported model: $model"),
+            model = settings.modelVersionsMap[model] ?: throw IllegalArgumentException("Unsupported model: $model"),
             messages = messages,
-            maxTokens = prompt.params.maxTokens ?: AnthropicMessageRequest.MAX_TOKENS_DEFAULT,
-            temperature = prompt.params.temperature,
-            system = systemMessage,
-            tools = if (tools.isNotEmpty()) anthropicTools else emptyList(), // Always provide a list for tools
+            maxTokens = anthropicParams.maxTokens ?: AnthropicMessageRequest.MAX_TOKENS_DEFAULT,
+            container = anthropicParams.container,
+            mcpServers = anthropicParams.mcpServers,
+            serviceTier = anthropicParams.serviceTier,
+            stopSequence = anthropicParams.stopSequences,
             stream = stream,
+            system = systemMessages,
+            temperature = anthropicParams.temperature,
             toolChoice = toolChoice,
-            additionalProperties = prompt.params.additionalProperties
+            tools = tools, // Always provide a list for tools
+            topK = anthropicParams.topK,
+            topP = anthropicParams.topP,
+            additionalProperties = anthropicParams.additionalProperties
         )
+
         return json.encodeToString(AnthropicMessageRequestSerializer, request)
     }
 
@@ -424,7 +457,11 @@ public open class AnthropicLLMClient(
 
                         val documentSource: DocumentSource = when (val content = attachment.content) {
                             is AttachmentContent.URL -> DocumentSource.Url(content.url)
-                            is AttachmentContent.Binary -> DocumentSource.Base64(content.asBase64(), attachment.mimeType)
+                            is AttachmentContent.Binary -> DocumentSource.Base64(
+                                content.asBase64(),
+                                attachment.mimeType
+                            )
+
                             is AttachmentContent.PlainText -> DocumentSource.PlainText(
                                 content.text,
                                 attachment.mimeType

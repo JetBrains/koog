@@ -1,7 +1,7 @@
 package ai.koog.prompt.executor.clients.bedrock.modelfamilies.ai21
 
-import ai.koog.prompt.executor.clients.anthropic.AnthropicMessageRequest
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
+import ai.koog.prompt.executor.clients.anthropic.models.AnthropicMessageRequest
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.ai21.JambaRequest.Companion.MAX_TOKENS_DEFAULT
 import ai.koog.test.utils.verifyDeserialization
 import kotlinx.serialization.json.Json
