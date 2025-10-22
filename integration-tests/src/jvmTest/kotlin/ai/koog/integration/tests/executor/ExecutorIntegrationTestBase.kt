@@ -25,7 +25,7 @@ import ai.koog.integration.tests.utils.getLLMClientForProvider
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.LLMClient
-import ai.koog.prompt.executor.clients.bedrock.BedrockLLMClient
+import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.PromptExecutor
@@ -1013,7 +1013,7 @@ abstract class ExecutorIntegrationTestBase {
 
     open fun integration_testEmbed(model: LLModel) = runTest {
         val client = getLLMClient(model)
-        if (client !is BedrockLLMClient) {
+        if (client !is LLMEmbeddingProvider) {
             return@runTest
         }
         val testText = "integration test embedding"

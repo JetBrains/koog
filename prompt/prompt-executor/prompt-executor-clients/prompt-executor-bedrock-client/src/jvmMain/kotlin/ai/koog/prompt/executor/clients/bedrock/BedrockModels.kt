@@ -10,29 +10,25 @@ import kotlinx.serialization.Serializable
 /**
  * Represents a Bedrock model with an optional inference profile prefix.
  *
- * This allows users to specify an inference profile prefix that will be prepended
- * to the model ID when making requests to AWS Bedrock.
+ * This allows users to explicitly specify an inference profile prefix that will be prepended
+ * to the model ID when making requests to AWS Bedrock. If the prefix is `null`, no prefix will
+ * be added, and the model ID will be used as-is. If a value is provided, the effective model ID
+ * will be "<prefix>.<modelId>".
  *
- * @param model The base LLModel to use
+ * @param model The base LLModel to use.
  * @param modelId The ID of the used model. Defaults to the ID of the provided model.
- * @param inferenceProfilePrefix Optional prefix to prepend to the model ID
+ * @param inferenceProfilePrefix Optional prefix to prepend to the model ID. If `null`, no prefix is used.
  */
-
 @Serializable
 public data class BedrockModel(
     val model: LLModel,
     val modelId: String = model.id,
-    val inferenceProfilePrefix: String = BedrockInferencePrefixes.US.prefix,
-    val allowInferenceProfilePrefix: Boolean = true
+    val inferenceProfilePrefix: String? = BedrockInferencePrefixes.US.prefix
 ) {
     /**
-     * Returns the effective model ID, only adds an inference profile prefix if supported.
+     * Returns the effective model ID, only adds inference profile prefix if provided.
      */
-    val effectiveModelId: String = if (allowInferenceProfilePrefix) {
-        "$inferenceProfilePrefix.$modelId"
-    } else {
-        modelId
-    }
+    val effectiveModelId: String = inferenceProfilePrefix?.let { "$it.$modelId" } ?: modelId
 
     /**
      * Returns the LLModel with the effective model ID.
@@ -686,7 +682,7 @@ public object BedrockModels : LLModelDefinitions {
                 capabilities = embedCapabilities,
                 contextLength = 8_192,
             ),
-            allowInferenceProfilePrefix = false
+            inferenceProfilePrefix = null
         ).effectiveModel
 
         /**
@@ -701,7 +697,7 @@ public object BedrockModels : LLModelDefinitions {
                 capabilities = embedCapabilities,
                 contextLength = 8_192,
             ),
-            allowInferenceProfilePrefix = false
+            inferenceProfilePrefix = null
         ).effectiveModel
 
         /**
@@ -716,7 +712,7 @@ public object BedrockModels : LLModelDefinitions {
                 capabilities = embedCapabilities,
                 contextLength = 8_192,
             ),
-            allowInferenceProfilePrefix = false
+            inferenceProfilePrefix = null
         ).effectiveModel
 
         /**
@@ -731,7 +727,7 @@ public object BedrockModels : LLModelDefinitions {
                 capabilities = embedCapabilities,
                 contextLength = 8_192,
             ),
-            allowInferenceProfilePrefix = false
+            inferenceProfilePrefix = null
         ).effectiveModel
     }
 }
@@ -768,7 +764,6 @@ public fun LLModel.withInferenceProfile(inferencePrefix: String): LLModel {
     require(provider == LLMProvider.Bedrock) {
         "withInferencePrefix() can only be used with Bedrock models, but model provider is $provider"
     }
-
     val baseModelId = if (id.contains('.')) {
         val potentialPrefix = id.substringBefore('.')
         val validPrefixes = BedrockInferencePrefixes.entries.map { it.prefix }
@@ -781,6 +776,5 @@ public fun LLModel.withInferenceProfile(inferencePrefix: String): LLModel {
     } else {
         id
     }
-
     return copy(id = "$inferencePrefix.$baseModelId")
 }

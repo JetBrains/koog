@@ -84,6 +84,31 @@ class BedrockLLMClientTest {
     }
 
     @Test
+    fun `can apply inference profile prefix to embedding model with default null prefix`() {
+        val originalModel = BedrockModels.Embeddings.CohereEmbedEnglishV3
+        val euModel = originalModel.withInferenceProfile(BedrockInferencePrefixes.EU.prefix)
+        val apModel = originalModel.withInferenceProfile(BedrockInferencePrefixes.AP.prefix)
+
+        // Default should not have any prefix
+        assertFalse(originalModel.id.contains(".cohere.embed-english-v3"))
+        assertFalse(originalModel.id.startsWith(BedrockInferencePrefixes.EU.prefix + "."))
+        assertFalse(originalModel.id.startsWith(BedrockInferencePrefixes.AP.prefix + "."))
+
+        // Overridden should have explicit prefix
+        assertTrue(euModel.id.startsWith(BedrockInferencePrefixes.EU.prefix + "."))
+        assertTrue(apModel.id.startsWith(BedrockInferencePrefixes.AP.prefix + "."))
+
+        // Make sure model ids are as expected
+        assertEquals("${BedrockInferencePrefixes.EU.prefix}.cohere.embed-english-v3", euModel.id)
+        assertEquals("${BedrockInferencePrefixes.AP.prefix}.cohere.embed-english-v3", apModel.id)
+
+        // Capabilities and other properties should remain unchanged
+        assertEquals(originalModel.provider, euModel.provider)
+        assertEquals(originalModel.capabilities, euModel.capabilities)
+        assertEquals(originalModel.contextLength, euModel.contextLength)
+    }
+
+    @Test
     fun `withInferencePrefix throws exception for non-Bedrock models`() {
         val nonBedrockModel = LLModel(
             provider = LLMProvider.Anthropic,

@@ -171,15 +171,7 @@ public class BedrockLLMClient(
     ): List<Message.Response> {
         logger.debug { "Executing prompt for model: ${model.id}" }
         val modelFamily = getBedrockModelFamily(model)
-        when (modelFamily) {
-            is BedrockModelFamilies.TitanEmbedding,
-            is BedrockModelFamilies.Cohere -> {
-                throw IllegalArgumentException("Model ${model.id} does not support chat completions and cannot be used with execute(). Use the embed() instead.")
-            }
-            else -> {
-                model.requireCapability(LLMCapability.Completion, "Model ${model.id} does not support chat completions")
-            }
-        }
+        model.requireCapability(LLMCapability.Completion, "Model ${model.id} does not support chat completions")
         // Check tool support
         if (tools.isNotEmpty() && !model.capabilities.contains(LLMCapability.Tools)) {
             throw IllegalArgumentException("Model ${model.id} does not support tools")
@@ -218,15 +210,7 @@ public class BedrockLLMClient(
     ): Flow<StreamFrame> {
         logger.debug { "Executing streaming prompt for model: ${model.id}" }
         val modelFamily = getBedrockModelFamily(model)
-        when (modelFamily) {
-            is BedrockModelFamilies.TitanEmbedding,
-            is BedrockModelFamilies.Cohere -> {
-                throw IllegalArgumentException("Model ${model.id} does not support streaming chat completions. Use the embed() API for embedding models.")
-            }
-            else -> {
-                model.requireCapability(LLMCapability.Completion, "Model ${model.id} does not support chat completions")
-            }
-        }
+        model.requireCapability(LLMCapability.Completion, "Model ${model.id} does not support chat completions")
         val requestBody = createRequestBody(prompt, model, tools)
         val streamRequest = InvokeModelWithResponseStreamRequest {
             this.modelId = model.id
