@@ -81,9 +81,7 @@ object Models {
     fun bedrockEmbeddingModels(): Stream<LLModel> {
         return Stream.of(
             BedrockModels.Embeddings.AmazonTitanEmbedText,
-            BedrockModels.Embeddings.AmazonTitanEmbedTextV2,
             BedrockModels.Embeddings.CohereEmbedEnglishV3,
-            BedrockModels.Embeddings.CohereEmbedMultilingualV3
         )
     }
 
