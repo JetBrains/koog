@@ -333,9 +333,10 @@ public open class GoogleLLMClient(
                         GoogleContent(
                             role = "assistant",
                             parts = listOf(
-                                message.original as? GooglePart ?: GooglePart.Text(
+                                GooglePart.Text(
                                     text = message.content,
-                                    thought = true
+                                    thoughtSignature = message.encrypted,
+                                    thought = true,
                                 )
                             )
                         )
@@ -607,7 +608,7 @@ public open class GoogleLLMClient(
                 is GooglePart.Text -> {
                     if (part.thought ?: false) {
                         Message.Reasoning(
-                            original = part,
+                            encrypted = part.thoughtSignature,
                             content = part.text,
                             metaInfo = metaInfo
                         )

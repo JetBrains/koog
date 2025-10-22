@@ -283,7 +283,7 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
 
                 is Message.Reasoning -> {
                     flushPendingCalls()
-                    messages += message.original as? OpenAIMessage.Assistant ?: OpenAIMessage.Assistant(
+                    messages += OpenAIMessage.Assistant(
                         content = Content.Text(message.content),
                         reasoningContent = message.content
                     )
@@ -468,7 +468,6 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
 
             this is OpenAIMessage.Assistant && this.reasoningContent != null && this.content != null -> listOf(
                 Message.Reasoning(
-                    original = this,
                     content = this.reasoningContent,
                     metaInfo = metaInfo
                 ),

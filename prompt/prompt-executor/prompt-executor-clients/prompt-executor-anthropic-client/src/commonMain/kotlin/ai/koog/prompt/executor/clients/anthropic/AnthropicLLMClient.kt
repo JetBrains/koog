@@ -328,9 +328,9 @@ public open class AnthropicLLMClient(
                     messages.add(
                         AnthropicMessage.Assistant(
                             content = listOf(
-                                message.original as? AnthropicContent.Thinking ?: AnthropicContent.Thinking(
-                                    signature = Uuid.random().toString(),
-                                    thinking = message.content // TODO: Use signature from original message if available
+                                AnthropicContent.Thinking(
+                                    signature = message.encrypted!!,
+                                    thinking = message.content
                                 )
                             )
                         )
@@ -505,7 +505,7 @@ public open class AnthropicLLMClient(
                 }
 
                 is AnthropicContent.Thinking -> {
-                    Message.Reasoning(original = content, content = content.thinking, metaInfo = metaInfo)
+                    Message.Reasoning(encrypted = content.signature, content = content.thinking, metaInfo = metaInfo)
                 }
 
                 is AnthropicContent.ToolUse -> {

@@ -605,9 +605,10 @@ public open class OpenAILLMClient(
                     is Message.Reasoning -> {
                         flushPendingCalls()
                         add(
-                            message.original as? Item.Reasoning ?: Item.Reasoning(
-                                Uuid.random().toString(),
-                                listOf(Item.Reasoning.Summary(message.content))
+                            Item.Reasoning(
+                                id = message.id ?: Uuid.random().toString(),
+                                encryptedContent = message.encrypted,
+                                summary = listOf(Item.Reasoning.Summary(message.content))
                             )
                         )
                     }
@@ -706,7 +707,8 @@ public open class OpenAILLMClient(
                     )
 
                     is Item.Reasoning -> Message.Reasoning(
-                        original = output,
+                        id = output.id,
+                        encrypted = output.encryptedContent,
                         content = output.summary.joinToString(separator = "\n") { it.text },
                         metaInfo = metaInfo
                     )
@@ -732,6 +734,7 @@ public open class OpenAILLMClient(
             )
             params
         }
+
         params is OpenAIChatParams -> {
             model.requireCapability(
                 LLMCapability.OpenAIEndpoint.Completions,
@@ -739,6 +742,7 @@ public open class OpenAILLMClient(
             )
             params
         }
+
         model.supports(LLMCapability.OpenAIEndpoint.Completions) -> params.toOpenAIChatParams()
         model.supports(LLMCapability.OpenAIEndpoint.Responses) -> params.toOpenAIResponsesParams()
         else -> error("Cannot determine proper LLM params for OpenAI model: ${model.id}")

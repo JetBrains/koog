@@ -22,8 +22,6 @@ import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.put
-import kotlin.uuid.ExperimentalUuidApi
-import kotlin.uuid.Uuid
 
 internal object BedrockAnthropicClaudeSerialization {
 
@@ -35,7 +33,6 @@ internal object BedrockAnthropicClaudeSerialization {
         explicitNulls = false
     }
 
-    @OptIn(ExperimentalUuidApi::class)
     private fun buildMessagesHistory(prompt: Prompt): MutableList<BedrockAnthropicInvokeModelMessage> {
         val messages = mutableListOf<BedrockAnthropicInvokeModelMessage>()
         prompt.messages.forEach { msg ->
@@ -68,11 +65,10 @@ internal object BedrockAnthropicClaudeSerialization {
                         messages.add(
                             BedrockAnthropicInvokeModelMessage.Assistant(
                                 content = listOf(
-                                    msg.original as? BedrockAnthropicInvokeModelContent.Thinking
-                                        ?: BedrockAnthropicInvokeModelContent.Thinking(
-                                            signature = Uuid.random().toString(),
-                                            thinking = msg.content
-                                        )
+                                    BedrockAnthropicInvokeModelContent.Thinking(
+                                        signature = msg.encrypted!!,
+                                        thinking = msg.content
+                                    )
                                 )
                             )
                         )
@@ -181,7 +177,6 @@ internal object BedrockAnthropicClaudeSerialization {
         )
     }
 
-    @OptIn(ExperimentalUuidApi::class)
     internal fun parseAnthropicResponse(responseBody: String, clock: Clock = Clock.System): List<Message.Response> {
         val response = json.decodeFromString<BedrockAnthropicResponse>(responseBody)
 
@@ -204,7 +199,7 @@ internal object BedrockAnthropicClaudeSerialization {
                 )
 
                 is AnthropicContent.Thinking -> Message.Reasoning(
-                    original = content,
+                    encrypted = content.signature,
                     content = content.thinking,
                     metaInfo = metaInfo
                 )
@@ -255,6 +250,7 @@ internal object BedrockAnthropicClaudeSerialization {
                                 name = content.name,
                                 content = content.input.toString()
                             )
+
                         else -> throw IllegalArgumentException(
                             "Unsupported AnthropicContent type in message_delta. Content: $content"
                         )

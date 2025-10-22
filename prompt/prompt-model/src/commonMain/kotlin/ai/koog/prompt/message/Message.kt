@@ -3,7 +3,6 @@ package ai.koog.prompt.message
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.Transient
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
@@ -160,9 +159,8 @@ public sealed interface Message {
      * Represents a reasoning message exchanged in a chat system, encapsulating the content,
      * role, and associated metadata, with an optional reference to the original thinking process.
      *
-     * @property original An optional reference to the original [Thinking] process that generated this reasoning,
-     *                    providing context or tracing capabilities during operations. This property is transient and
-     *                    will not be serialized.
+     * @property id An optional identifier for the reasoning process.
+     * @property encrypted The encrypted content of the reasoning message.
      * @property content The content of the message as a string.
      * @property role The [Role] of the message, indicating its source or function in the chat (e.g., assistant, user).
      *                Defaults to [Role.Assistant].
@@ -171,8 +169,8 @@ public sealed interface Message {
      */
     @Serializable
     public data class Reasoning(
-        @Transient
-        public val original: Thinking? = null,
+        public val id: String? = null,
+        public val encrypted: String? = null,
         override val content: String,
         override val role: Role = Role.Assistant,
         override val metaInfo: ResponseMetaInfo
