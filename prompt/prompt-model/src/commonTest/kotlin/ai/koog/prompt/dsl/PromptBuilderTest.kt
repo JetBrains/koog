@@ -170,6 +170,42 @@ class PromptBuilderTest {
     }
 
     @Test
+    fun testUserMessageWithAttachmentsOldAPI() {
+        val prompt = Prompt.build("test") {
+            user {
+                text("Check this image")
+                attachments {
+                    image(
+                        ContentPart.Image(
+                            content = AttachmentContent.URL("https://example.com/test.png"),
+                            format = "png",
+                            mimeType = "image/png",
+                            fileName = "test.png"
+                        )
+                    )
+                }
+            }
+        }
+
+        assertEquals(1, prompt.messages.size, "Prompt should have one message")
+        assertTrue(prompt.messages[0] is Message.User, "Message should be a User message")
+
+        val userMessage = prompt.messages[0] as Message.User
+        assertEquals(2, userMessage.parts.size, "Should have text part and image part")
+
+        val expectedText = ContentPart.Text("Check this image")
+        assertEquals(expectedText, userMessage.parts[0], "First part should be text")
+
+        val expectedImage = ContentPart.Image(
+            content = AttachmentContent.URL("https://example.com/test.png"),
+            format = "png",
+            mimeType = "image/png",
+            fileName = "test.png"
+        )
+        assertEquals(expectedImage, userMessage.parts[1], "Second part should match expected Image")
+    }
+
+    @Test
     fun testUserMessageWithContentPartsBuilder() {
         val prompt = Prompt.build("test") {
             user {

@@ -280,6 +280,14 @@ public class ContentPartsBuilder : TextContentBuilderBase<List<ContentPart>>() {
     }
 
     /**
+     * Configures media attachments for this content builder.
+     */
+    @Deprecated("Redundant, attach parts without attachments block")
+    public fun attachments(body: ContentPartsBuilder.() -> Unit) {
+        ContentPartsBuilder().apply(body).build().forEach { part(it) }
+    }
+
+    /**
      * Constructs and returns the accumulated list of attachment items.
      *
      * @return A list containing all the attachment items created through the builder methods
