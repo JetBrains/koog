@@ -2,10 +2,9 @@ package ai.koog.prompt.executor.clients.dashscope.models
 
 import ai.koog.prompt.executor.clients.openai.base.models.Content
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIMessage
-import ai.koog.prompt.executor.clients.openai.base.models.OpenAIStreamDelta
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.buildJsonArray
