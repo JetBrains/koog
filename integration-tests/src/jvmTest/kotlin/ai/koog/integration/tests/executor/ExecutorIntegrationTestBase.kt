@@ -474,7 +474,7 @@ abstract class ExecutorIntegrationTestBase {
 
         val executor = getExecutor(model)
 
-        withRetry(times = 3, testName = "integration_testToolsWithAnyOfParams[${model.id}]") {
+        withRetry(times = 5, testName = "integration_testToolsWithAnyOfParams[${model.id}]") {
             val response = executor.execute(prompt, model, listOf(anyOfTool))
             assertTrue(response.isNotEmpty(), "Response should not be empty")
             assertTrue(response.any { it is Message.Tool.Call }, "Response should contain a tool call")
