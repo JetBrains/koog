@@ -208,12 +208,18 @@ class AIAgentIntegrationTest {
         val sendToolResult by nodeLLMSendToolResult("send_tool_result")
 
         edge(nodeStart forwardTo callLLM)
-        edge(callLLM forwardTo executeTool onToolCall { toolCall ->
-            if (toolCall.tool != CalculatorTool.name) false else run {
-                val args = CalculatorTool.decodeArgs(toolCall.contentJson)
-                args.operation == CalculatorOperation.MULTIPLY && ((args.a == 7 && args.b == 2) || (args.a == 2 && args.b == 7))
+        edge(
+            callLLM forwardTo executeTool onToolCall { toolCall ->
+                if (toolCall.tool != CalculatorTool.name) {
+                    false
+                } else {
+                    run {
+                        val args = CalculatorTool.decodeArgs(toolCall.contentJson)
+                        args.operation == CalculatorOperation.MULTIPLY && ((args.a == 7 && args.b == 2) || (args.a == 2 && args.b == 7))
+                    }
+                }
             }
-        })
+        )
         if (compressBeforeToolResult) {
             edge(executeTool forwardTo compressToolResult)
             edge(compressToolResult forwardTo sendToolResult)

@@ -362,25 +362,19 @@ class AIAgentMultipleLLMIntegrationTest {
         eventHandlerConfig: EventHandlerConfig.() -> Unit,
         maxAgentIterations: Int,
         prompt: Prompt = prompt("test") {},
-        eventsChannel: Channel<Event>? = null,
+        initialExecutor: MultiLLMPromptExecutor? = null,
     ): AIAgent<String, String> {
-        val openAIClient = if (eventsChannel != null) {
-            OpenAILLMClient(openAIApiKey).reportingTo(eventsChannel)
+        var executor: MultiLLMPromptExecutor
+        if (initialExecutor == null) {
+            val openAIClient = OpenAILLMClient(openAIApiKey)
+            val anthropicClient = AnthropicLLMClient(anthropicApiKey)
+            executor = MultiLLMPromptExecutor(
+                LLMProvider.OpenAI to openAIClient,
+                LLMProvider.Anthropic to anthropicClient
+            )
         } else {
-            OpenAILLMClient(openAIApiKey)
+            executor = initialExecutor
         }
-
-        val anthropicClient = if (eventsChannel != null) {
-            AnthropicLLMClient(anthropicApiKey).reportingTo(eventsChannel)
-        } else {
-            AnthropicLLMClient(anthropicApiKey)
-        }
-
-        val executor = MultiLLMPromptExecutor(
-            LLMProvider.OpenAI to openAIClient,
-            LLMProvider.Anthropic to anthropicClient
-        )
-
         val strategy = strategy<String, String>("test") {
             val anthropicSubgraph by subgraph<String, Unit>("anthropic") {
                 val definePromptAnthropic by node<Unit, Unit> {
@@ -535,11 +529,18 @@ class AIAgentMultipleLLMIntegrationTest {
             }
         }
 
+        val openAIClient = OpenAILLMClient(openAIApiKey).reportingTo(eventsChannel)
+        val anthropicClient = AnthropicLLMClient(anthropicApiKey).reportingTo(eventsChannel)
+        val reportingExecutor = MultiLLMPromptExecutor(
+            LLMProvider.OpenAI to openAIClient,
+            LLMProvider.Anthropic to anthropicClient
+        )
+
         val agent = createTestMultiLLMAgent(
             fs,
             eventHandlerConfig,
             maxAgentIterations = 50,
-            eventsChannel = eventsChannel,
+            initialExecutor = reportingExecutor,
         )
 
         val result = agent.run(
@@ -728,15 +729,6 @@ class AIAgentMultipleLLMIntegrationTest {
     fun integration_testAgentWithImageCapability(model: LLModel) = runTest(timeout = 2.minutes) {
         Models.assumeAvailable(model.provider)
         val fs = MockFileSystem()
-        val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
-            onToolCallStarting { eventContext ->
-                println(
-                    "Calling tool ${eventContext.tool.name} with arguments ${
-                        eventContext.toolArgs.toString().lines().first().take(100)
-                    }"
-                )
-            }
-        }
 
         val imageFile = File(testResourcesDir, "test.png")
         assertTrue(imageFile.exists(), "Image test file should exist")
@@ -747,7 +739,7 @@ class AIAgentMultipleLLMIntegrationTest {
         withRetry {
             val agent = createTestMultiLLMAgent(
                 fs,
-                eventHandlerConfig,
+                { },
                 maxAgentIterations = 20,
             )
 
