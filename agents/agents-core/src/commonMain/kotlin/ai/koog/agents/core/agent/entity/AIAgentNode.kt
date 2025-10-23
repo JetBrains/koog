@@ -152,7 +152,7 @@ public open class AIAgentNode<TInput, TOutput> internal constructor(
 
     @InternalAgentsApi
     override suspend fun execute(context: AIAgentGraphContextBase, input: TInput): TOutput =
-        withContext(NodeInfoContextElement(nodeName = name)) {
+        withContext(NodeInfoContextElement(nodeName = name, input = input, inputType = inputType)) {
             logger.debug { "Start executing node (name: $name)" }
             context.pipeline.onNodeExecutionStarting(this@AIAgentNode, context, input, inputType)
 

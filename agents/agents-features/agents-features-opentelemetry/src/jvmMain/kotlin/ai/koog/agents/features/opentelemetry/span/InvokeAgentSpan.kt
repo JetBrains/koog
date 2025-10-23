@@ -10,9 +10,9 @@ import io.opentelemetry.api.trace.SpanKind
  */
 internal class InvokeAgentSpan(
     parent: CreateAgentSpan,
-    provider: LLMProvider,
-    runId: String,
-    agentId: String,
+    val provider: LLMProvider,
+    val runId: String,
+    val agentId: String,
 ) : GenAIAgentSpan(parent) {
 
     companion object {

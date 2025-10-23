@@ -29,13 +29,12 @@ import ai.koog.agents.core.feature.model.toAgentError
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.remote.server.config.DefaultServerConnectionConfig
 import ai.koog.agents.core.tools.Tool
-import ai.koog.agents.core.utils.SerializationUtil
+import ai.koog.agents.core.utils.SerializationUtils
 import ai.koog.agents.features.debugger.feature.writer.DebuggerFeatureMessageRemoteWriter
 import ai.koog.agents.features.debugger.readEnvironmentVariable
 import ai.koog.agents.features.debugger.readVMOption
 import ai.koog.prompt.llm.toModelInfo
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 import kotlin.reflect.KType
@@ -387,14 +386,11 @@ public class Debugger {
         private fun getNodeData(data: Any?, dataType: KType): JsonElement? {
             data ?: return null
 
-            return when (data) {
-                is ReceivedToolResult -> {
-                    runCatching { Json.parseToJsonElement(data.content) }.getOrNull()
-                        ?: JsonPrimitive(data.content)
-                }
-                else -> {
-                    @OptIn(InternalAgentsApi::class)
-                    SerializationUtil.trySerializeDataToJsonElement(data, dataType)
+            @OptIn(InternalAgentsApi::class)
+            return SerializationUtils.encodeDataToJsonElementOrDefault(data, dataType) {
+                when (data) {
+                    is ReceivedToolResult -> SerializationUtils.parseDataToJsonElementOrDefault(data.content)
+                    else -> JsonPrimitive(data.toString())
                 }
             }
         }

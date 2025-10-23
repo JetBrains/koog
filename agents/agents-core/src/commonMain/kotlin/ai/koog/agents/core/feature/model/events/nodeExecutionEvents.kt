@@ -2,7 +2,7 @@ package ai.koog.agents.core.feature.model.events
 
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.feature.model.AIAgentError
-import ai.koog.agents.core.utils.SerializationUtil
+import ai.koog.agents.core.utils.SerializationUtils
 import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
@@ -46,7 +46,7 @@ public data class NodeExecutionStartingEvent(
         runId = runId,
         nodeName = nodeName,
         input = @OptIn(InternalAgentsApi::class)
-        SerializationUtil.tryParseToJsonElement(input),
+        SerializationUtils.parseDataToJsonElementOrDefault(input),
         timestamp = timestamp
     )
 }
@@ -89,9 +89,9 @@ public data class NodeExecutionCompletedEvent(
         runId = runId,
         nodeName = nodeName,
         input = @OptIn(InternalAgentsApi::class)
-        SerializationUtil.tryParseToJsonElement(input),
+        SerializationUtils.parseDataToJsonElementOrDefault(input),
         output = @OptIn(InternalAgentsApi::class)
-        SerializationUtil.tryParseToJsonElement(output),
+        SerializationUtils.parseDataToJsonElementOrDefault(output),
         timestamp = timestamp
     )
 }

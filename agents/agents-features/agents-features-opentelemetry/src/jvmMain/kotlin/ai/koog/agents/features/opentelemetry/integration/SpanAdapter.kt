@@ -26,7 +26,7 @@ internal abstract class SpanAdapter {
      * to perform any final processing, modifications, or cleanup tasks required before the span
      * is completed.
      *
-     * @param span The GenAI agent span to process before it is finished.
+     * @param span The GenAI span to process before it is finished.
      */
     open fun onBeforeSpanFinished(span: GenAIAgentSpan) { }
 }

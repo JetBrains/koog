@@ -32,7 +32,7 @@ import ai.koog.agents.core.feature.remote.client.config.DefaultClientConnectionC
 import ai.koog.agents.core.feature.remote.server.config.DefaultServerConnectionConfig
 import ai.koog.agents.core.feature.writer.FeatureMessageRemoteWriter
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.core.utils.SerializationUtil
+import ai.koog.agents.core.utils.SerializationUtils
 import ai.koog.agents.features.debugger.SystemVariablesReader
 import ai.koog.agents.features.debugger.mock.ClientEventsCollector
 import ai.koog.agents.features.debugger.mock.MockLLMProvider
@@ -324,7 +324,7 @@ class DebuggerTest {
                         runId = clientEventsCollector.runId,
                         nodeName = "__start__",
                         input = @OptIn(InternalAgentsApi::class)
-                        SerializationUtil.trySerializeDataToJsonElement(
+                        SerializationUtils.encodeDataToJsonElementOrNull(
                             data = userPrompt,
                             dataType = typeOf<String>()
                         ),
@@ -334,12 +334,12 @@ class DebuggerTest {
                         runId = clientEventsCollector.runId,
                         nodeName = "__start__",
                         input = @OptIn(InternalAgentsApi::class)
-                        SerializationUtil.trySerializeDataToJsonElement(
+                        SerializationUtils.encodeDataToJsonElementOrNull(
                             data = userPrompt,
                             dataType = typeOf<String>()
                         ),
                         output = @OptIn(InternalAgentsApi::class)
-                        SerializationUtil.trySerializeDataToJsonElement(
+                        SerializationUtils.encodeDataToJsonElementOrNull(
                             data = userPrompt,
                             dataType = typeOf<String>()
                         ),
@@ -349,7 +349,7 @@ class DebuggerTest {
                         runId = clientEventsCollector.runId,
                         nodeName = "test-llm-call",
                         input = @OptIn(InternalAgentsApi::class)
-                        SerializationUtil.trySerializeDataToJsonElement(
+                        SerializationUtils.encodeDataToJsonElementOrNull(
                             data = userPrompt,
                             dataType = typeOf<String>()
                         ),
@@ -373,12 +373,12 @@ class DebuggerTest {
                         runId = clientEventsCollector.runId,
                         nodeName = "test-llm-call",
                         input = @OptIn(InternalAgentsApi::class)
-                        SerializationUtil.trySerializeDataToJsonElement(
+                        SerializationUtils.encodeDataToJsonElementOrNull(
                             data = userPrompt,
                             dataType = typeOf<String>()
                         ),
                         output = @OptIn(InternalAgentsApi::class)
-                        SerializationUtil.trySerializeDataToJsonElement(
+                        SerializationUtils.encodeDataToJsonElementOrNull(
                             data = toolCallMessage(dummyTool.name, content = """{"dummy":"$requestedDummyToolArgs"}"""),
                             dataType = typeOf<Message>()
                         ),
@@ -388,7 +388,7 @@ class DebuggerTest {
                         runId = clientEventsCollector.runId,
                         nodeName = "test-tool-call",
                         input = @OptIn(InternalAgentsApi::class)
-                        SerializationUtil.trySerializeDataToJsonElement(
+                        SerializationUtils.encodeDataToJsonElementOrNull(
                             data = toolCallMessage(dummyTool.name, content = """{"dummy":"$requestedDummyToolArgs"}"""),
                             dataType = typeOf<Message.Tool.Call>()
                         ),
@@ -413,7 +413,7 @@ class DebuggerTest {
                         runId = clientEventsCollector.runId,
                         nodeName = "test-tool-call",
                         input = @OptIn(InternalAgentsApi::class)
-                        SerializationUtil.trySerializeDataToJsonElement(
+                        SerializationUtils.encodeDataToJsonElementOrNull(
                             data = toolCallMessage(toolName = dummyTool.name, content = """{"dummy":"$requestedDummyToolArgs"}"""),
                             dataType = typeOf<Message.Tool.Call>()
                         ),
@@ -448,7 +448,7 @@ class DebuggerTest {
                         // TODO: KG-485. Update to include serialized [ReceivedToolResult] when it became a serializable type.
                         input = JsonPrimitive(dummyTool.result),
                         output = @OptIn(InternalAgentsApi::class)
-                        SerializationUtil.trySerializeDataToJsonElement(
+                        SerializationUtils.encodeDataToJsonElementOrNull(
                             data = assistantMessage(mockResponse),
                             dataType = typeOf<Message>()
                         ),
@@ -458,7 +458,7 @@ class DebuggerTest {
                         runId = clientEventsCollector.runId,
                         nodeName = "__finish__",
                         input = @OptIn(InternalAgentsApi::class)
-                        SerializationUtil.trySerializeDataToJsonElement(
+                        SerializationUtils.encodeDataToJsonElementOrNull(
                             data = mockResponse,
                             dataType = typeOf<String>()
                         ),
@@ -468,12 +468,12 @@ class DebuggerTest {
                         runId = clientEventsCollector.runId,
                         nodeName = "__finish__",
                         input = @OptIn(InternalAgentsApi::class)
-                        SerializationUtil.trySerializeDataToJsonElement(
+                        SerializationUtils.encodeDataToJsonElementOrNull(
                             data = mockResponse,
                             dataType = typeOf<String>()
                         ),
                         output = @OptIn(InternalAgentsApi::class)
-                        SerializationUtil.trySerializeDataToJsonElement(
+                        SerializationUtils.encodeDataToJsonElementOrNull(
                             data = mockResponse,
                             dataType = typeOf<String>()
                         ),
@@ -1095,7 +1095,7 @@ class DebuggerTest {
                         runId = clientEventsCollector.runId,
                         nodeName = "__start__",
                         input = @OptIn(InternalAgentsApi::class)
-                        SerializationUtil.trySerializeDataToJsonElement(
+                        SerializationUtils.encodeDataToJsonElementOrNull(
                             data = userPrompt,
                             dataType = typeOf<String>()
                         ),
@@ -1105,12 +1105,12 @@ class DebuggerTest {
                         runId = clientEventsCollector.runId,
                         nodeName = "__start__",
                         input = @OptIn(InternalAgentsApi::class)
-                        SerializationUtil.trySerializeDataToJsonElement(
+                        SerializationUtils.encodeDataToJsonElementOrNull(
                             data = userPrompt,
                             dataType = typeOf<String>()
                         ),
                         output = @OptIn(InternalAgentsApi::class)
-                        SerializationUtil.trySerializeDataToJsonElement(
+                        SerializationUtils.encodeDataToJsonElementOrNull(
                             data = userPrompt,
                             dataType = typeOf<String>()
                         ),
@@ -1120,7 +1120,7 @@ class DebuggerTest {
                         runId = clientEventsCollector.runId,
                         nodeName = "__finish__",
                         input = @OptIn(InternalAgentsApi::class)
-                        SerializationUtil.trySerializeDataToJsonElement(
+                        SerializationUtils.encodeDataToJsonElementOrNull(
                             data = userPrompt,
                             dataType = typeOf<String>()
                         ),
@@ -1130,12 +1130,12 @@ class DebuggerTest {
                         runId = clientEventsCollector.runId,
                         nodeName = "__finish__",
                         input = @OptIn(InternalAgentsApi::class)
-                        SerializationUtil.trySerializeDataToJsonElement(
+                        SerializationUtils.encodeDataToJsonElementOrNull(
                             data = userPrompt,
                             dataType = typeOf<String>()
                         ),
                         output = @OptIn(InternalAgentsApi::class)
-                        SerializationUtil.trySerializeDataToJsonElement(
+                        SerializationUtils.encodeDataToJsonElementOrNull(
                             data = userPrompt,
                             dataType = typeOf<String>()
                         ),

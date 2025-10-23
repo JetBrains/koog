@@ -23,7 +23,7 @@ import ai.koog.agents.core.feature.model.events.StrategyCompletedEvent
 import ai.koog.agents.core.feature.model.events.ToolCallCompletedEvent
 import ai.koog.agents.core.feature.model.events.ToolCallStartingEvent
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.core.utils.SerializationUtil
+import ai.koog.agents.core.utils.SerializationUtils
 import ai.koog.agents.features.tracing.feature.Tracing
 import ai.koog.agents.features.tracing.mock.MockLLMProvider
 import ai.koog.agents.features.tracing.mock.TestLogger
@@ -170,7 +170,7 @@ class TraceFeatureMessageLogWriterTest {
                     "input: \"$userPrompt\", " +
                     "output: ${
                         @OptIn(InternalAgentsApi::class)
-                        SerializationUtil.trySerializeDataToJsonElement(
+                        SerializationUtils.encodeDataToJsonElementOrNull(
                             data = toolCallMessage(
                                 toolName = dummyTool.name,
                                 content = """{"dummy":"test"}"""
@@ -181,7 +181,7 @@ class TraceFeatureMessageLogWriterTest {
                 "[INFO] Received feature message [event]: ${NodeExecutionStartingEvent::class.simpleName} (run id: $runId, node: test-tool-call, " +
                     "input: ${
                         @OptIn(InternalAgentsApi::class)
-                        SerializationUtil.trySerializeDataToJsonElement(
+                        SerializationUtils.encodeDataToJsonElementOrNull(
                             data = toolCallMessage(
                                 toolName = dummyTool.name,
                                 content = """{"dummy":"test"}"""
@@ -194,7 +194,7 @@ class TraceFeatureMessageLogWriterTest {
                 "[INFO] Received feature message [event]: ${NodeExecutionCompletedEvent::class.simpleName} (run id: $runId, node: test-tool-call, " +
                     "input: ${
                         @OptIn(InternalAgentsApi::class)
-                        SerializationUtil.trySerializeDataToJsonElement(
+                        SerializationUtils.encodeDataToJsonElementOrNull(
                             data = toolCallMessage(
                                 toolName = dummyTool.name,
                                 content = """{"dummy":"test"}"""
@@ -238,7 +238,7 @@ class TraceFeatureMessageLogWriterTest {
                     "input: ${JsonPrimitive(dummyTool.result)}, " +
                     "output: ${
                         @OptIn(InternalAgentsApi::class)
-                        SerializationUtil.trySerializeDataToJsonElement(
+                        SerializationUtils.encodeDataToJsonElementOrNull(
                             data = expectedResponse,
                             dataType = typeOf<Message>()
                         )}" +
