@@ -11,6 +11,7 @@ import aws.sdk.kotlin.runtime.auth.credentials.StaticCredentialsProvider
  *
  * @param awsAccessKeyId Your AWS Access Key ID.
  * @param awsSecretAccessKey Your AWS Secret Access Key.
+ * @param awsSessionToken Optional AWS session token for temporary security credentials (required if using temporary credentials, such as those from STS).
  * @param settings Custom client settings for region and timeouts.
  */
 public fun simpleBedrockExecutor(
@@ -21,7 +22,7 @@ public fun simpleBedrockExecutor(
 ): SingleLLMPromptExecutor =
     SingleLLMPromptExecutor(
         BedrockLLMClient(
-            credentialsProvider = StaticCredentialsProvider {
+            identityProvider = StaticCredentialsProvider {
                 this.accessKeyId = awsAccessKeyId
                 this.secretAccessKey = awsSecretAccessKey
                 awsSessionToken?.let { this.sessionToken = it }
@@ -45,7 +46,7 @@ public fun simpleBedrockExecutorWithApiKey(
 ): SingleLLMPromptExecutor =
     SingleLLMPromptExecutor(
         BedrockLLMClient(
-            bearerTokenProvider = StaticBearerTokenProvider(bedrockApiKey),
+            identityProvider = StaticBearerTokenProvider(bedrockApiKey),
             settings = settings,
         )
     )

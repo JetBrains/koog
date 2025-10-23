@@ -50,7 +50,7 @@ class BedrockLLMClientTest {
     @Test
     fun `can create BedrockLLMClient`() {
         val client = BedrockLLMClient(
-            credentialsProvider = StaticCredentialsProvider {
+            identityProvider = StaticCredentialsProvider {
                 accessKeyId = "test-key"
                 secretAccessKey = "test-secret"
             },
@@ -64,7 +64,7 @@ class BedrockLLMClientTest {
     @Test
     fun `can create BedrockLLMClient with API key`() {
         val client = BedrockLLMClient(
-            bearerTokenProvider = StaticBearerTokenProvider(token = "test-token"),
+            identityProvider = StaticBearerTokenProvider(token = "test-token"),
             settings = BedrockClientSettings(region = BedrockRegions.US_EAST_1.regionCode),
             clock = Clock.System
         )
@@ -125,7 +125,7 @@ class BedrockLLMClientTest {
         )
 
         val client = BedrockLLMClient(
-            credentialsProvider = StaticCredentialsProvider {
+            identityProvider = StaticCredentialsProvider {
                 accessKeyId = "test-key"
                 secretAccessKey = "test-secret"
             },
@@ -161,7 +161,7 @@ class BedrockLLMClientTest {
 
         // Mock client for testing tool call request generation
         val client = BedrockLLMClient(
-            credentialsProvider = StaticCredentialsProvider {
+            identityProvider = StaticCredentialsProvider {
                 accessKeyId = "test-key"
                 secretAccessKey = "test-secret"
             },
@@ -287,7 +287,7 @@ class BedrockLLMClientTest {
     fun `moderate method throws exception when moderation guardrails settings are not provided`() = runTest {
         // Create client without moderation guardrails settings
         val client = BedrockLLMClient(
-            credentialsProvider = StaticCredentialsProvider {
+            identityProvider = StaticCredentialsProvider {
                 accessKeyId = "test-key"
                 secretAccessKey = "test-secret"
             },
