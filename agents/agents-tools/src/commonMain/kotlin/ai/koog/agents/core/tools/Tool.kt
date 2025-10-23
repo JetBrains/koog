@@ -9,30 +9,9 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 
 /**
- * This interface serves as a safeguard for controlling direct tool calls from outside
- * of the AIAgent or Environment context.
- *
- * Tool calls must not be performed by a user directly as this might cause issues
- * and side-effects, such as:
- * - Missing EventHandler events
- * - Bugs with feature pipelines
- * - Inability to test/mock
- * - And other potential problems
- *
- * For this reason, all tools should be called using the environment context.
- * Consider using methods like `findTool(tool: Class)` or similar, to retrieve a
- * `SafeTool`, and then call `execute` on it. This ensures that the tool call is
- * delegated properly to the underlying `environment` object.
- *
- * @suppress
- */
-@InternalAgentToolsApi
-public interface DirectToolCallsEnabler
-
-/**
  * Represents a tool that, when executed, makes changes to the environment.
  */
-@Suppress("UNCHECKED_CAST", "unused")
+@Suppress("unused")
 public abstract class Tool<TArgs, TResult> {
     /**
      * Serializer responsible for encoding and decoding the arguments required for the tool execution.
@@ -94,74 +73,33 @@ public abstract class Tool<TArgs, TResult> {
     /**
      * Executes the tool's logic with the provided arguments.
      *
-     * Tool calls must not be performed directly by a user as this might cause issues
-     * and side-effects, such as:
+     * In the actual agent implementation, it is not recommended to call tools directly as this might cause issues, such as:
      * - Missing EventHandler events
      * - Bugs with feature pipelines
      * - Inability to test/mock
-     * - And other potential problems
      *
-     * For this reason, all tools should be called using the environment context.
-     * Consider using methods like `findTool(tool: Class)` or similar, to retrieve a
-     * `SafeTool`, and then call `execute` on it. This ensures that the tool call is
-     * delegated properly to the underlying `environment` object.
+     * Consider using methods like `findTool(tool: Class)` or similar, to retrieve a `SafeTool`, and then call `execute`
+     * on it. This ensures that the tool call is delegated properly to the underlying `environment` object.
      *
      * @param args The input arguments required to execute the tool.
      * @return The result of the tool's execution.
      */
-    protected abstract suspend fun execute(args: TArgs): TResult
+    public abstract suspend fun execute(args: TArgs): TResult
 
     /**
      * Executes the tool with the provided arguments, bypassing type safety checks.
      *
-     * Tool calls must not be performed directly by a user as this might cause issues
-     * and side-effects, such as:
-     * - Missing EventHandler events
-     * - Bugs with feature pipelines
-     * - Inability to test/mock
-     * - And other potential problems
-     *
-     * For this reason, all tools should be called using the environment context.
-     * Consider using methods like `findTool(tool: Class)` or similar, to retrieve a
-     * `SafeTool`, and then call `execute` on it. This ensures that the tool call is
-     * delegated properly to the underlying `environment` object.
-     *
-     * This method allows the execution of the tool using arguments of any type, casting them to the expected type internally.
-     * It requires a `DirectToolCallsEnabler` to validate that the unsafe execution is intentional and properly encapsulated.
-     *
-     * @param args The input arguments for the tool execution, provided as a generic `Any?` type. The method attempts to cast this to the expected argument type `TArgs`.
-     * @param enabler An instance of `DirectToolCallsEnabler` that authorizes this unsafe execution path. Direct calls without proper enabling are not allowed.
-     * @return The result of executing the tool, as an instance of type `TResult`.
-     * @throws ClassCastException if the provided arguments cannot be cast to the expected type `TArgs`.
+     * @param args The input arguments for the tool execution, provided as a generic [Any] type. The method attempts to cast this to the expected argument type [TArgs].
+     * @return The result of executing the tool, as an instance of type [TResult].
+     * @throws ClassCastException if the provided arguments cannot be cast to the expected type [TArgs].
      *
      * @suppress
      */
     @InternalAgentToolsApi
-    public suspend fun executeUnsafe(args: Any?, enabler: DirectToolCallsEnabler): TResult = execute(args as TArgs)
-
-    /**
-     * Executes the tool using the provided arguments and enabler.
-     *
-     * Tool calls must not be performed directly by a user as this might cause issues
-     * and side-effects, such as:
-     * - Missing EventHandler events
-     * - Bugs with feature pipelines
-     * - Inability to test/mock
-     * - And other potential problems
-     *
-     * For this reason, all tools should be called using the environment context.
-     * Consider using methods like `findTool(tool: Class)` or similar, to retrieve a
-     * `SafeTool`, and then call `execute` on it. This ensures that the tool call is
-     * delegated properly to the underlying `environment` object.
-     *
-     * @param args The arguments of type TArgs that are required for the execution of the tool.
-     * @param enabler An instance of DirectToolCallsEnabler that ensures direct tool calls are controlled within the proper context.
-     * @return The result of type TResult produced by executing the tool with the provided arguments.
-     *
-     * @suppress
-     */
-    @InternalAgentToolsApi
-    public suspend fun execute(args: TArgs, enabler: DirectToolCallsEnabler): TResult = execute(args)
+    public suspend fun executeUnsafe(args: Any?): TResult {
+        @Suppress("UNCHECKED_CAST")
+        return execute(args as TArgs)
+    }
 
     /**
      * Decodes the provided raw JSON arguments into an instance of the specified arguments type.
@@ -205,18 +143,23 @@ public abstract class Tool<TArgs, TResult> {
      * @param result The result object of type `Tool.Result` to be encoded.
      * @return A JSON string representation of the provided result.
      */
-    public fun encodeResultToStringUnsafe(result: Any?): String = encodeResultToString(result as TResult)
+    public fun encodeResultToStringUnsafe(result: Any?): String {
+        @Suppress("UNCHECKED_CAST")
+        return encodeResultToString(result as TResult)
+    }
 
     /**
      * Base type, representing tool arguments.
      */
-    @Deprecated("Use ToolArgs instead", ReplaceWith("ToolArgs", "ai.koog.agents.core.tools.ToolArgs"))
+    @Deprecated("Extending Tool.Args is no longer required. Tool arguments are entirely handled by KotlinX Serialization.")
+    @Suppress("DEPRECATION")
     public interface Args : ToolArgs
 
     /**
      * Args implementation that can be used for tools that expect no arguments.
      */
+    @Deprecated("Extending Tool.Args is no longer required. Tool arguments are entirely handled by KotlinX Serialization.")
+    @Suppress("DEPRECATION")
     @Serializable
-    @Deprecated("Use ToolArgs.Empty instead", ReplaceWith("ToolArgs.Empty", "ai.koog.agents.core.tools.ToolArgs.Empty"))
     public data object EmptyArgs : Args
 }

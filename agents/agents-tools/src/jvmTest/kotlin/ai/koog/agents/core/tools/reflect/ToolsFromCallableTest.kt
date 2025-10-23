@@ -2,7 +2,6 @@
 
 package ai.koog.agents.core.tools.reflect
 
-import ai.koog.agents.core.tools.DirectToolCallsEnabler
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.core.tools.annotations.Tool
@@ -206,8 +205,6 @@ class MyTools : Tools {
 @OptIn(InternalAgentToolsApi::class)
 class ToolsFromCallableTest {
     companion object {
-        object ToolsEnabler : DirectToolCallsEnabler
-
         val tools = MyTools()
         val json = Json
 
@@ -311,7 +308,7 @@ class ToolsFromCallableTest {
         val tool = callable.asTool(json)
         val args = tool.decodeArgs(argumentJson)
         val result = runBlocking {
-            tool.execute(args, ToolsEnabler)
+            tool.execute(args)
         }
         assertEquals(
             expectedResult,

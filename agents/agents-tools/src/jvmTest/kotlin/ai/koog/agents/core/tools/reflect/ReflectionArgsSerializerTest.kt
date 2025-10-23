@@ -6,7 +6,6 @@ import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.core.tools.annotations.Tool
 import ai.koog.agents.core.tools.reflect.ToolFromCallable.VarArgsSerializer
-import ai.koog.agents.core.tools.reflect.ToolsFromCallableTest.Companion.ToolsEnabler
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -108,7 +107,7 @@ class ReflectionArgsSerializerTest {
             "Specific tool called with 42",
             runBlocking {
                 val args = tool.decodeArgs(buildJsonObject { put("argLong", JsonPrimitive(42)) })
-                tool.execute(args, ToolsEnabler)
+                tool.execute(args)
             },
         )
     }
@@ -122,7 +121,7 @@ class ReflectionArgsSerializerTest {
             "Specific tool called with 42.0",
             runBlocking {
                 val args = tool.decodeArgs(buildJsonObject { put("argDouble", JsonPrimitive(42.0)) })
-                tool.execute(args, ToolsEnabler)
+                tool.execute(args)
             },
         )
     }
@@ -138,7 +137,7 @@ class ReflectionArgsSerializerTest {
             "Specific tool called with 42.0",
             runBlocking {
                 val args = tool.decodeArgs(buildJsonObject { put("argDouble", JsonPrimitive(42.0)) })
-                tool.execute(args, ToolsEnabler)
+                tool.execute(args)
             },
         )
     }
@@ -170,7 +169,7 @@ class ReflectionArgsSerializerTest {
                             )
                         }
                     )
-                tool.execute(args, ToolsEnabler)
+                tool.execute(args)
             }
         )
     }
@@ -205,7 +204,7 @@ class ReflectionArgsSerializerTest {
                             )
                         }
                     )
-                tool.execute(args, ToolsEnabler)
+                tool.execute(args)
             }
         )
     }

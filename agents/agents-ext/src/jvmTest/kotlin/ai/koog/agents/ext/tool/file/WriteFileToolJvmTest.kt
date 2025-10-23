@@ -1,6 +1,5 @@
 package ai.koog.agents.ext.tool.file
 
-import ai.koog.agents.core.tools.DirectToolCallsEnabler
 import ai.koog.agents.core.tools.ToolException
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.ext.tool.file.render.norm
@@ -20,14 +19,13 @@ import kotlin.test.assertTrue
 class WriteFileToolJvmTest {
 
     private val fs = JVMFileSystemProvider.ReadWrite
-    private val enabler = object : DirectToolCallsEnabler {}
     private val tool = WriteFileTool(fs)
 
     @TempDir
     lateinit var tempDir: Path
 
     private suspend fun write(path: Path, content: String): WriteFileTool.Result =
-        tool.execute(WriteFileTool.Args(path.toString(), content), enabler)
+        tool.execute(WriteFileTool.Args(path.toString(), content))
 
     @Test
     fun `descriptor is configured correctly`() {

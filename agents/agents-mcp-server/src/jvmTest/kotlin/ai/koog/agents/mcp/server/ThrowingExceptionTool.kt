@@ -1,6 +1,5 @@
 package ai.koog.agents.mcp.server
 
-import ai.koog.agents.core.tools.DirectToolCallsEnabler
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.testing.tools.RandomNumberTool
@@ -26,7 +25,7 @@ internal class ThrowingExceptionTool : Tool<RandomNumberTool.Args, Int>() {
             if (throwing) {
                 throw IOException("Can not do something during IO")
             } else {
-                tool.execute(args, object : DirectToolCallsEnabler {})
+                tool.execute(args)
             }
         }
             .also { last = it }

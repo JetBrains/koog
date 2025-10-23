@@ -1,6 +1,5 @@
 package ai.koog.agents.core.tools.serialization
 
-import ai.koog.agents.core.tools.DirectToolCallsEnabler
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.core.tools.annotations.LLMDescription
@@ -19,9 +18,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
-
-@OptIn(InternalAgentToolsApi::class)
-object ToolParameterTypeTestEnabler : DirectToolCallsEnabler
 
 // Complex tool params = objects, lists of enums, nested lists.
 @OptIn(InternalAgentToolsApi::class)
@@ -42,8 +38,7 @@ class ToolComplexParameterTypesTest {
                         }
                     }
                 }
-            ),
-            ToolParameterTypeTestEnabler
+            )
         )
 
         assertEquals("John", result.person.name)
@@ -135,8 +130,7 @@ class ToolComplexParameterTypesTest {
                         put("custom2", "value2")
                     }
                 }
-            ),
-            ToolParameterTypeTestEnabler
+            )
         )
 
         assertEquals("MyConfig", result.config.name)
@@ -177,8 +171,7 @@ class ToolComplexParameterTypesTest {
                         }
                     }
                 }
-            ),
-            ToolParameterTypeTestEnabler
+            )
         )
 
         assertEquals(2, result.people.size)
@@ -195,8 +188,7 @@ class ToolComplexParameterTypesTest {
                 buildJsonObject {
                     putJsonArray("people") {}
                 }
-            ),
-            ToolParameterTypeTestEnabler
+            )
         )
 
         assertEquals(0, result.people.size)
@@ -234,8 +226,7 @@ class ToolComplexParameterTypesTest {
                         add("RED")
                     }
                 }
-            ),
-            ToolParameterTypeTestEnabler
+            )
         )
 
         assertEquals(3, result.colors.size)
@@ -264,8 +255,7 @@ class ToolComplexParameterTypesTest {
                         add("JOHN")
                     }
                 }
-            ),
-            ToolParameterTypeTestEnabler
+            )
         )
 
         assertEquals(3, result.colors.size)
@@ -294,8 +284,7 @@ class ToolComplexParameterTypesTest {
                     }
                     putJsonArray("optional") {}
                 }
-            ),
-            ToolParameterTypeTestEnabler
+            )
         )
 
         assertEquals(3, result.colors.size)
@@ -331,8 +320,7 @@ class ToolComplexParameterTypesTest {
                     putJsonArray("colors") {}
                     putJsonArray("names") {}
                 }
-            ),
-            ToolParameterTypeTestEnabler
+            )
         )
 
         assertEquals(0, result.colors.size)
@@ -396,8 +384,7 @@ class ToolComplexParameterTypesTest {
                         }
                     }
                 }
-            ),
-            ToolParameterTypeTestEnabler
+            )
         )
 
         assertEquals(2, result.nestedList.size)
@@ -418,8 +405,7 @@ class ToolComplexParameterTypesTest {
                 buildJsonObject {
                     putJsonArray("nestedList") {}
                 }
-            ),
-            ToolParameterTypeTestEnabler
+            )
         )
 
         assertEquals(0, result.nestedList.size)

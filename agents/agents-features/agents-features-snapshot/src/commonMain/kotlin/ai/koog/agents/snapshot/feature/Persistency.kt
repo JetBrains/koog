@@ -14,7 +14,6 @@ import ai.koog.agents.core.agent.featureOrThrow
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
-import ai.koog.agents.core.tools.DirectToolCallsEnabler
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.core.utils.SerializationUtil
 import ai.koog.agents.snapshot.providers.PersistenceStorageProvider
@@ -309,7 +308,7 @@ public class Persistence(
                             rollbackToolRegistry.getRollbackTool(toolCall.tool)?.let { rollbackTool ->
                                 val toolArgs = rollbackTool.decodeArgs(toolCall.contentJson)
 
-                                rollbackTool.executeUnsafe(toolArgs, object : DirectToolCallsEnabler {})
+                                rollbackTool.executeUnsafe(toolArgs)
                             }
                         }
                 }

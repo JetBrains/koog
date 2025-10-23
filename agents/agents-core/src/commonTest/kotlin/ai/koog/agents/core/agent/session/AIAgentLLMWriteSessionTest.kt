@@ -4,7 +4,6 @@ import ai.koog.agents.core.CalculatorChatExecutor.testClock
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.environment.ReceivedToolResult
-import ai.koog.agents.core.tools.DirectToolCallsEnabler
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
@@ -37,15 +36,13 @@ class AIAgentLLMWriteSessionTest {
     private fun userMessage(content: String) = Message.User(content, RequestMetaInfo.create(testClock))
     private fun assistantMessage(content: String) = Message.Assistant(content, ResponseMetaInfo.create(testClock))
 
-    private object TestToolsEnabler : DirectToolCallsEnabler
-
     private class TestEnvironment(private val toolRegistry: ToolRegistry) : AIAgentEnvironment {
         @OptIn(InternalAgentToolsApi::class)
         override suspend fun executeTools(toolCalls: List<Message.Tool.Call>): List<ReceivedToolResult> {
             return toolCalls.map { toolCall ->
                 val tool = toolRegistry.getTool(toolCall.tool)
                 val args = tool.decodeArgs(toolCall.contentJson)
-                val result = tool.executeUnsafe(args, TestToolsEnabler)
+                val result = tool.executeUnsafe(args)
 
                 ReceivedToolResult(
                     id = toolCall.id,
