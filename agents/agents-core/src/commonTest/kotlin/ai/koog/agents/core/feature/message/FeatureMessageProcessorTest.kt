@@ -2,9 +2,16 @@ package ai.koog.agents.core.feature.message
 
 import ai.koog.agents.core.feature.mock.TestFeatureEventMessage
 import ai.koog.agents.core.feature.mock.TestFeatureMessageProcessor
+import ai.koog.agents.core.feature.model.AIAgentError
 import ai.koog.agents.core.feature.model.FeatureStringMessage
+import ai.koog.agents.core.feature.model.events.NodeExecutionCompletedEvent
+import ai.koog.agents.core.feature.model.events.NodeExecutionFailedEvent
+import ai.koog.agents.core.feature.model.events.NodeExecutionStartingEvent
 import ai.koog.utils.io.use
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+import kotlinx.serialization.json.JsonPrimitive
 import kotlin.js.JsName
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
@@ -13,6 +20,10 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class FeatureMessageProcessorTest {
+
+    private val testClock: Clock = object : Clock {
+        override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z")
+    }
 
     //region onMessage
 
@@ -129,4 +140,221 @@ class FeatureMessageProcessorTest {
     }
 
     //endregion Filter
+
+    //region Node Events
+
+    @Test
+    @JsName("testNodeExecutionStartingEvenWithStringInputParameter")
+    fun `test node execution starting even with string input parameter`() = runTest {
+        TestFeatureMessageProcessor().use { processor ->
+
+            val testRunId = "test-run-id"
+            val testNodeName = "test-node"
+            val testInput = "Test input"
+
+            val nodeExecutionStartingEvent = NodeExecutionStartingEvent(
+                runId = testRunId,
+                nodeName = testNodeName,
+                input = testInput,
+                timestamp = testClock.now().toEpochMilliseconds()
+            )
+
+            processor.onMessage(nodeExecutionStartingEvent)
+
+            // Verify messages
+            val expectedMessages = listOf(
+                NodeExecutionStartingEvent(
+                    runId = testRunId,
+                    nodeName = testNodeName,
+                    input = JsonPrimitive(testInput),
+                    timestamp = testClock.now().toEpochMilliseconds()
+                )
+            )
+
+            assertEquals(expectedMessages.size, processor.processedMessages.size)
+            assertContentEquals(expectedMessages, processor.processedMessages)
+        }
+    }
+
+    @Test
+    @JsName("testNodeExecutionCompletedEvenWithStringInputAndOutputParameters")
+    fun `test node execution completed even with string input and output parameters`() = runTest {
+        TestFeatureMessageProcessor().use { processor ->
+
+            val testRunId = "test-run-id"
+            val testNodeName = "test-node"
+            val testInput = "Test input"
+            val testOutput = "Test output"
+
+            val nodeExecutionCompletedEvent = NodeExecutionCompletedEvent(
+                runId = testRunId,
+                nodeName = testNodeName,
+                input = testInput,
+                output = testOutput,
+                timestamp = testClock.now().toEpochMilliseconds()
+            )
+
+            processor.onMessage(nodeExecutionCompletedEvent)
+
+            val expectedMessages = listOf(
+                NodeExecutionCompletedEvent(
+                    runId = testRunId,
+                    nodeName = testNodeName,
+                    input = JsonPrimitive(testInput),
+                    output = JsonPrimitive(testOutput),
+                    timestamp = testClock.now().toEpochMilliseconds()
+                )
+            )
+
+            assertEquals(expectedMessages.size, processor.processedMessages.size)
+            assertContentEquals(expectedMessages, processor.processedMessages)
+        }
+    }
+
+    @Test
+    @JsName("testNodeExecutionFailedEvenWithoutInputParameter")
+    fun `test node execution failed even without input parameter`() = runTest {
+        TestFeatureMessageProcessor().use { processor ->
+
+            val testRunId = "test-run-id"
+            val testNodeName = "test-node"
+            val testError = AIAgentError(
+                message = "Test error message",
+                stackTrace = "Test stack trace",
+                cause = "Test cause"
+            )
+
+            // Node Execution Failed Event
+            val nodeExecutionFailedEvent = NodeExecutionFailedEvent(
+                runId = testRunId,
+                nodeName = testNodeName,
+                error = testError,
+                timestamp = testClock.now().toEpochMilliseconds()
+            )
+
+            processor.onMessage(nodeExecutionFailedEvent)
+
+            val expectedMessages = listOf(
+                NodeExecutionFailedEvent(
+                    runId = testRunId,
+                    nodeName = testNodeName,
+                    input = null,
+                    error = testError,
+                    timestamp = testClock.now().toEpochMilliseconds()
+                )
+            )
+
+            assertEquals(expectedMessages.size, processor.processedMessages.size)
+            assertContentEquals(expectedMessages, processor.processedMessages)
+        }
+    }
+
+    @Test
+    @JsName("testNodeExecutionStartingEvenWithJsonInputParameter")
+    fun `test node execution starting even with json input parameter`() = runTest {
+        TestFeatureMessageProcessor().use { processor ->
+
+            val testRunId = "test-run-id"
+            val testNodeName = "test-node"
+            val testInput = JsonPrimitive("Test input")
+
+            val nodeExecutionStartingEvent = NodeExecutionStartingEvent(
+                runId = testRunId,
+                nodeName = testNodeName,
+                input = testInput,
+                timestamp = testClock.now().toEpochMilliseconds()
+            )
+
+            processor.onMessage(nodeExecutionStartingEvent)
+
+            val expectedMessages = listOf(
+                NodeExecutionStartingEvent(
+                    runId = testRunId,
+                    nodeName = testNodeName,
+                    input = testInput,
+                    timestamp = testClock.now().toEpochMilliseconds()
+                )
+            )
+
+            assertEquals(expectedMessages.size, processor.processedMessages.size)
+            assertContentEquals(expectedMessages, processor.processedMessages)
+        }
+    }
+
+    @Test
+    @JsName("testNodeExecutionCompletedEvenWithJsonInputAndOutputParameters")
+    fun `test node execution completed even with json input and output parameters`() = runTest {
+        TestFeatureMessageProcessor().use { processor ->
+
+            val testRunId = "test-run-id"
+            val testNodeName = "test-node"
+            val testInput = JsonPrimitive("Test input")
+            val testOutput = JsonPrimitive("Test output")
+
+            val nodeExecutionCompletedEvent = NodeExecutionCompletedEvent(
+                runId = testRunId,
+                nodeName = testNodeName,
+                input = testInput,
+                output = testOutput,
+                timestamp = testClock.now().toEpochMilliseconds()
+            )
+
+            processor.onMessage(nodeExecutionCompletedEvent)
+
+            val expectedMessages = listOf(
+                NodeExecutionCompletedEvent(
+                    runId = testRunId,
+                    nodeName = testNodeName,
+                    input = testInput,
+                    output = testOutput,
+                    timestamp = testClock.now().toEpochMilliseconds()
+                )
+            )
+
+            assertEquals(expectedMessages.size, processor.processedMessages.size)
+            assertContentEquals(expectedMessages, processor.processedMessages)
+        }
+    }
+
+    @Test
+    @JsName("testNodeExecutionFailedEvenWithInputParameter")
+    fun `test node execution failed even with input parameter`() = runTest {
+        TestFeatureMessageProcessor().use { processor ->
+
+            val testRunId = "test-run-id"
+            val testNodeName = "test-node"
+            val testInput = JsonPrimitive("Test input")
+            val testError = AIAgentError(
+                message = "Test error message",
+                stackTrace = "Test stack trace",
+                cause = "Test cause"
+            )
+
+            // Node Execution Failed Event
+            val nodeExecutionFailedEvent = NodeExecutionFailedEvent(
+                runId = testRunId,
+                nodeName = testNodeName,
+                input = testInput,
+                error = testError,
+                timestamp = testClock.now().toEpochMilliseconds()
+            )
+
+            processor.onMessage(nodeExecutionFailedEvent)
+
+            val expectedMessages = listOf(
+                NodeExecutionFailedEvent(
+                    runId = testRunId,
+                    nodeName = testNodeName,
+                    input = testInput,
+                    error = testError,
+                    timestamp = testClock.now().toEpochMilliseconds()
+                )
+            )
+
+            assertEquals(expectedMessages.size, processor.processedMessages.size)
+            assertContentEquals(expectedMessages, processor.processedMessages)
+        }
+    }
+
+    //endregion Node Events
 }
