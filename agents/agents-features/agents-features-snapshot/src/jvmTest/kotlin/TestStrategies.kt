@@ -14,7 +14,7 @@ fun AIAgentSubgraphBuilderBase<*, *>.simpleNode(
     output: String,
 ): AIAgentNodeDelegate<String, String> = node(name) {
     llm.writeSession {
-        updatePrompt { user { text(output) } }
+        appendPrompt { user { text(output) } }
     }
     return@node it + "\n" + output
 }
@@ -23,7 +23,7 @@ fun AIAgentSubgraphBuilderBase<*, *>.inputLogNode(
     name: String? = null,
 ): AIAgentNodeDelegate<String, String> = node(name) {
     llm.writeSession {
-        updatePrompt { user { text(it) } }
+        appendPrompt { user { text(it) } }
     }
     return@node it
 }
@@ -134,7 +134,7 @@ private fun AIAgentSubgraphBuilderBase<*, *>.createCheckpointNode(name: String? 
         withPersistence { ctx ->
             createCheckpoint(ctx, name!!, input, typeOf<String>(), 0L, checkpointId)
             llm.writeSession {
-                updatePrompt {
+                appendPrompt {
                     user {
                         text("Checkpoint created with ID: $checkpointId")
                     }
@@ -152,7 +152,7 @@ private fun AIAgentSubgraphBuilderBase<*, *>.nodeRollbackToCheckpoint(
     node<String, String>(name) {
         if (teleportState.teleported) {
             llm.writeSession {
-                updatePrompt { user { text("Skipped rollback because it was already performed") } }
+                appendPrompt { user { text("Skipped rollback because it was already performed") } }
             }
             return@node "Skipping rollback"
         }
@@ -161,7 +161,7 @@ private fun AIAgentSubgraphBuilderBase<*, *>.nodeRollbackToCheckpoint(
             val checkpoint = rollbackToCheckpoint(checkpointId, it)!!
             teleportState.teleported = true
             llm.writeSession {
-                updatePrompt { user { text("Rolling back to node ${checkpoint.nodeId}") } }
+                appendPrompt { user { text("Rolling back to node ${checkpoint.nodeId}") } }
             }
         }
         return@node "$it\nrolled back"

@@ -18,7 +18,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendResultsMultipleChoices(
 ): AIAgentNodeDelegate<List<ReceivedToolResult>, List<LLMChoice>> =
     node(name) { results ->
         llm.writeSession {
-            updatePrompt {
+            appendPrompt {
                 tool {
                     results.forEach { result(it) }
                 }
@@ -42,7 +42,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeSelectLLMChoice(
     node(name) { choices ->
         llm.writeSession {
             choiceSelectionStrategy.choose(prompt, choices).also { choice ->
-                choice.forEach { updatePrompt { message(it) } }
+                choice.forEach { appendPrompt { message(it) } }
             }
         }
     }

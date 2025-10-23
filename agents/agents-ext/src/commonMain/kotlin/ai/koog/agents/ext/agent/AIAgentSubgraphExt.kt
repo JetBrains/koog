@@ -409,7 +409,7 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
             // Append a final tool call result to the prompt for further LLM calls
             // to see it (otherwise they would fail)
             llm.writeSession {
-                updatePrompt {
+                appendPrompt {
                     tool {
                         result(toolCall.id, toolCall.tool, toolCall.content)
                     }
@@ -451,7 +451,7 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
 
         llm.writeSession {
             // append a new message to the history with feedback:
-            updatePrompt {
+            appendPrompt {
                 user {
                     markdown {
                         h1("DO NOT CHAT WITH ME DIRECTLY! CALL TOOLS, INSTEAD.")
