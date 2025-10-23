@@ -334,16 +334,16 @@ public suspend fun AIAgentFunctionalContext.sendMultipleToolResults(
  *
  * @param tool The tool to execute.
  * @param toolArgs The arguments to pass to the tool.
- * @param doUpdatePrompt Specifies whether to add tool call details to the prompt.
+ * @param doAppendPrompt Specifies whether to add tool call details to the prompt.
  * @return The result of the tool execution.
  */
 public suspend inline fun <reified ToolArg : ToolArgs, reified TResult : ToolResult> AIAgentFunctionalContext.executeSingleTool(
     tool: Tool<ToolArg, TResult>,
     toolArgs: ToolArg,
-    doUpdatePrompt: Boolean = true
+    doAppendPrompt: Boolean = true
 ): SafeTool.Result<TResult> {
     return llm.writeSession {
-        if (doUpdatePrompt) {
+        if (doAppendPrompt) {
             appendPrompt {
                 user(
                     "Tool call: ${tool.name} was explicitly called with args: ${
@@ -355,7 +355,7 @@ public suspend inline fun <reified ToolArg : ToolArgs, reified TResult : ToolRes
 
         val toolResult = callTool<ToolArg, TResult>(tool, toolArgs)
 
-        if (doUpdatePrompt) {
+        if (doAppendPrompt) {
             appendPrompt {
                 user(
                     "Tool call: ${tool.name} was explicitly called and returned result: ${
@@ -371,7 +371,6 @@ public suspend inline fun <reified ToolArg : ToolArgs, reified TResult : ToolRes
 /**
  * Compresses the current LLM prompt (message history) into a summary, replacing messages with a TLDR.
  *
- * @param input The input value that will be returned unchanged after compression.
  * @param strategy Determines which messages to include in compression.
  * @param preserveMemory Specifies whether to retain message memory after compression.
  * @return The input value, unchanged.

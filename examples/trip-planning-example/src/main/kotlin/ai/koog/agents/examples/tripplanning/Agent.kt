@@ -148,7 +148,7 @@ private fun plannerStrategy(
     // Set additional system instructions
     val setup by node<UserInput, String> { userInput ->
         llm.writeSession {
-            updatePrompt {
+            appendPrompt {
                 system {
                     +"Today's date is ${userInput.currentDate}."
                     // +"User's timezone is ${userInput.timezone}."

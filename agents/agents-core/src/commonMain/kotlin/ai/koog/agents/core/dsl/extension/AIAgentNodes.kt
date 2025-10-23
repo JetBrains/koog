@@ -47,7 +47,7 @@ public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeDoNothing(
  * @param body Lambda to modify the prompt using PromptBuilder.
  */
 @AIAgentBuilderDslMarker
-public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeUpdatePrompt(
+public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeAppendPrompt(
     name: String? = null,
     noinline body: PromptBuilder.() -> Unit
 ): AIAgentNodeDelegate<T, T> =
@@ -60,6 +60,20 @@ public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeUpdatePrompt(
 
         input
     }
+
+/**
+ * A node that adds messages to the LLM prompt using the provided prompt builder.
+ * The input is passed as it is to the output.
+ *
+ * @param name Optional node name, defaults to delegate's property name.
+ * @param body Lambda to modify the prompt using PromptBuilder.
+ */
+@AIAgentBuilderDslMarker
+@Deprecated("Use nodeAppendPrompt instead", ReplaceWith("nodeAppendPrompt(name, body)"))
+public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeUpdatePrompt(
+    name: String? = null,
+    noinline body: PromptBuilder.() -> Unit
+): AIAgentNodeDelegate<T, T> = nodeAppendPrompt(name, body)
 
 /**
  * A node that appends a user message to the LLM prompt and gets a response where the LLM can only call tools.
@@ -470,17 +484,17 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendMultipleToolResults(
  *
  * @param name Optional node name.
  * @param tool The tool to execute.
- * @param doUpdatePrompt Specifies whether to add tool call details to the prompt.
+ * @param doAppendPrompt Specifies whether to add tool call details to the prompt.
  */
 @AIAgentBuilderDslMarker
 public inline fun <reified ToolArg, reified TResult> AIAgentSubgraphBuilderBase<*, *>.nodeExecuteSingleTool(
     name: String? = null,
     tool: Tool<ToolArg, TResult>,
-    doUpdatePrompt: Boolean = true
+    doAppendPrompt: Boolean = true
 ): AIAgentNodeDelegate<ToolArg, SafeTool.Result<TResult>> =
     node(name) { toolArgs ->
         llm.writeSession {
-            if (doUpdatePrompt) {
+            if (doAppendPrompt) {
                 appendPrompt {
                     // Why not tool message? Because it requires id != null to send it back to the LLM,
                     // The only workaround is to generate it
@@ -494,7 +508,7 @@ public inline fun <reified ToolArg, reified TResult> AIAgentSubgraphBuilderBase<
 
             val toolResult = callTool<ToolArg, TResult>(tool, toolArgs)
 
-            if (doUpdatePrompt) {
+            if (doAppendPrompt) {
                 appendPrompt {
                     user(
                         "Tool call: ${tool.name} was explicitly called and returned result: ${

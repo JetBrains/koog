@@ -335,7 +335,7 @@ public class AIAgentLLMWriteSession internal constructor(
      */
     @Deprecated("Use `appendPrompt` instead", ReplaceWith("appendPrompt(body)"))
     public fun updatePrompt(body: PromptBuilder.() -> Unit) {
-        prompt = prompt(prompt, clock, body)
+        appendPrompt(body)
     }
 
     /**

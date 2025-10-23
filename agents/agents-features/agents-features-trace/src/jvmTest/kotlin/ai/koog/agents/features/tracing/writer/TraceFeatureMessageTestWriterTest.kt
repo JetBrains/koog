@@ -3,10 +3,10 @@ package ai.koog.agents.features.tracing.writer
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.extension.nodeAppendPrompt
 import ai.koog.agents.core.dsl.extension.nodeExecuteTool
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreamingAndSendResults
-import ai.koog.agents.core.dsl.extension.nodeUpdatePrompt
 import ai.koog.agents.core.feature.model.AIAgentError
 import ai.koog.agents.core.feature.model.events.LLMCallStartingEvent
 import ai.koog.agents.core.feature.model.events.LLMStreamingCompletedEvent
@@ -60,12 +60,12 @@ class TraceFeatureMessageTestWriterTest {
     @Test
     fun `test subsequent LLM calls`() = runBlocking {
         val strategy = strategy("tracing-test-strategy") {
-            val setPrompt by nodeUpdatePrompt<String>("Set prompt") {
+            val setPrompt by nodeAppendPrompt<String>("Set prompt") {
                 system("System 1")
                 user("User 1")
             }
 
-            val updatePrompt by nodeUpdatePrompt<String>("Update prompt") {
+            val appendPrompt by nodeAppendPrompt<String>("Update prompt") {
                 system("System 2")
                 user("User 2")
             }
@@ -76,8 +76,8 @@ class TraceFeatureMessageTestWriterTest {
 
             edge(nodeStart forwardTo setPrompt)
             edge(setPrompt forwardTo llmRequest0)
-            edge(llmRequest0 forwardTo updatePrompt transformed { _ -> "" })
-            edge(updatePrompt forwardTo llmRequest1 transformed { _ -> "" })
+            edge(llmRequest0 forwardTo appendPrompt transformed { _ -> "" })
+            edge(appendPrompt forwardTo llmRequest1 transformed { _ -> "" })
             edge(llmRequest1 forwardTo nodeFinish transformed { input -> input.content })
         }
 

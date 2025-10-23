@@ -82,7 +82,7 @@ private fun createAgent(
             // Convenience function to transform A2A message into Koog message
             val input = inputMessage.toKoogMessage()
             llm.writeSession {
-                updatePrompt {
+                appendPrompt {
                     message(input)
                 }
             }
@@ -108,7 +108,7 @@ private fun createAgent(
             val toolResult = environment.executeTool(toolCall)
 
             llm.writeSession {
-                updatePrompt {
+                appendPrompt {
                     tool {
                         result(toolResult)
                     }

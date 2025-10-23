@@ -19,7 +19,7 @@ fun main(): Unit = runBlocking {
             val mdDefinition = markdownBookDefinition()
 
             llm.writeSession {
-                updatePrompt { user(input) }
+                appendPrompt { user(input) }
                 val markdownStream = requestLLMStreaming(mdDefinition).filterTextOnly()
                 parseMarkdownStreamToBooks(markdownStream).collect { book ->
                     books.add(book)

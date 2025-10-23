@@ -104,7 +104,7 @@ fun streamingWithToolsStrategy() = strategy("streaming_loop") {
 
     val applyRequestToSession by node<List<Message.Request>, List<Message.Request>> { input ->
         llm.writeSession {
-            updatePrompt {
+            appendPrompt {
                 input.filterIsInstance<Message.User>()
                     .forEach {
                         user(it.content)

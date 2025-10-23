@@ -271,7 +271,7 @@ val strategy = strategy<String, String>("strategy_name") {
 ```kotlin
 val summarizeTextNode by node<String, String>("node_name") { input ->
     llm.writeSession {
-        updatePrompt {
+        appendPrompt {
             user("Please summarize the following text: $input")
         }
 
