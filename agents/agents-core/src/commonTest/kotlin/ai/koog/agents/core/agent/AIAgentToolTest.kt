@@ -3,7 +3,6 @@ package ai.koog.agents.core.agent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.tools.DirectToolCallsEnabler
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.testing.tools.getMockExecutor
@@ -19,9 +18,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
-
-@OptIn(InternalAgentToolsApi::class)
-object Enabler : DirectToolCallsEnabler
 
 class AIAgentToolTest {
 
@@ -96,7 +92,7 @@ class AIAgentToolTest {
     @Test
     fun testAsToolExecution() = runTest {
         val args = tool.decodeArgs(argsJson)
-        val result = tool.execute(args, Enabler)
+        val result = tool.execute(args)
 
         assertTrue(result.successful)
         assertEquals(RESPONSE, result.result?.jsonPrimitive?.content)
@@ -117,7 +113,7 @@ class AIAgentToolTest {
         )
 
         val args = tool.decodeArgs(argsJson)
-        val result = tool.execute(args, Enabler)
+        val result = tool.execute(args)
 
         assertEquals(false, result.successful)
         assertEquals(null, result.result)
@@ -140,7 +136,7 @@ class AIAgentToolTest {
         )
 
         val args = tool.decodeArgs(argsJson)
-        val result = tool.execute(args, Enabler)
+        val result = tool.execute(args)
 
         assertEquals(
             AIAgentTool.AgentToolResult(

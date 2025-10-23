@@ -1,6 +1,5 @@
 package ai.koog.agents.ext.tool.file
 
-import ai.koog.agents.core.tools.DirectToolCallsEnabler
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.ext.utils.InMemoryFS
 import ai.koog.rag.base.files.readText
@@ -34,7 +33,7 @@ class EditFileToolDifferentFileTypesTest {
             original = "print(\"debug\")\n    ",
             replacement = ""
         )
-        tool.execute(args, object : DirectToolCallsEnabler {})
+        tool.execute(args)
 
         // Then
         val updated = mockedFS.readText(path)
@@ -62,7 +61,7 @@ class EditFileToolDifferentFileTypesTest {
             original = "\"value\"",
             replacement = "\"newValue\""
         )
-        tool.execute(args, object : DirectToolCallsEnabler {})
+        tool.execute(args)
 
         // Then
         val updated = mockedFS.readText(path)
@@ -83,7 +82,7 @@ class EditFileToolDifferentFileTypesTest {
             original = "<item>value</item>",
             replacement = "<item>newValue</item>"
         )
-        tool.execute(args, object : DirectToolCallsEnabler {})
+        tool.execute(args)
 
         // Then
         val updated = mockedFS.readText(path)

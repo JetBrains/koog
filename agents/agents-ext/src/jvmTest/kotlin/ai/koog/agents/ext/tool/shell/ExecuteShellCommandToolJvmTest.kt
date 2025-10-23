@@ -1,6 +1,5 @@
 package ai.koog.agents.ext.tool.shell
 
-import ai.koog.agents.core.tools.DirectToolCallsEnabler
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
@@ -24,9 +23,6 @@ import kotlin.test.fail
 @OptIn(InternalAgentToolsApi::class)
 class ExecuteShellCommandToolJvmTest {
 
-    @OptIn(InternalAgentToolsApi::class)
-    private val enabler = object : DirectToolCallsEnabler {}
-
     private val executor = JvmShellCommandExecutor()
 
     @TempDir
@@ -39,8 +35,7 @@ class ExecuteShellCommandToolJvmTest {
         confirmationHandler: ShellCommandConfirmationHandler = BraveModeConfirmationHandler()
     ): ExecuteShellCommandTool.Result {
         return ExecuteShellCommandTool(executor, confirmationHandler).execute(
-            ExecuteShellCommandTool.Args(command, timeoutSeconds, workingDirectory),
-            enabler
+            ExecuteShellCommandTool.Args(command, timeoutSeconds, workingDirectory)
         )
     }
 

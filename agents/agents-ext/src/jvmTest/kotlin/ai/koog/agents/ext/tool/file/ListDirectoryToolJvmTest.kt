@@ -1,6 +1,5 @@
 package ai.koog.agents.ext.tool.file
 
-import ai.koog.agents.core.tools.DirectToolCallsEnabler
 import ai.koog.agents.core.tools.ToolException
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.ext.tool.file.render.norm
@@ -21,9 +20,6 @@ import kotlin.test.assertTrue
 class ListDirectoryToolJvmTest {
 
     private val fs = JVMFileSystemProvider.ReadOnly
-
-    @OptIn(InternalAgentToolsApi::class)
-    private val enabler = object : DirectToolCallsEnabler {}
     private val tool = ListDirectoryTool(fs)
 
     @TempDir
@@ -32,7 +28,7 @@ class ListDirectoryToolJvmTest {
     private fun createDir(name: String): Path = tempDir.resolve(name).createDirectories()
 
     private suspend fun list(path: Path, depth: Int = 1, filter: String? = null): ListDirectoryTool.Result =
-        tool.execute(ListDirectoryTool.Args(path.toString(), depth, filter), enabler)
+        tool.execute(ListDirectoryTool.Args(path.toString(), depth, filter))
 
     @Test
     fun `Args uses correct defaults`() {

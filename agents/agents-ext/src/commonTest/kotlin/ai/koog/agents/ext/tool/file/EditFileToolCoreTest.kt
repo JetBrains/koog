@@ -1,6 +1,5 @@
 package ai.koog.agents.ext.tool.file
 
-import ai.koog.agents.core.tools.DirectToolCallsEnabler
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.ext.utils.InMemoryFS
 import ai.koog.rag.base.files.readText
@@ -29,7 +28,7 @@ class EditFileToolCoreTest {
             original = "World",
             replacement = "Koog"
         )
-        tool.execute(args, object : DirectToolCallsEnabler {})
+        tool.execute(args)
 
         // Then
         val updated = mockedFS.readText(path)
@@ -51,7 +50,7 @@ class EditFileToolCoreTest {
             original = "World",
             replacement = "Koog"
         )
-        val result = tool.execute(args, object : DirectToolCallsEnabler {})
+        val result = tool.execute(args)
 
         // Then
         val markdownReport = result.textForLLM()
@@ -80,7 +79,7 @@ class EditFileToolCoreTest {
             original = "world", // different case than in file
             replacement = "Koog"
         )
-        tool.execute(args, object : DirectToolCallsEnabler {})
+        tool.execute(args)
 
         // Then
         val updated = mockedFS.readText(path)
@@ -115,7 +114,7 @@ class EditFileToolCoreTest {
             original = "Hello    World", // more spaces than in file
             replacement = "Hello Koog"
         )
-        tool.execute(args, object : DirectToolCallsEnabler {})
+        tool.execute(args)
 
         // Then
         val updated = mockedFS.readText(path)
@@ -150,7 +149,7 @@ class EditFileToolCoreTest {
             original = "Hello World", // less spaces than in file
             replacement = "Hello Koog"
         )
-        tool.execute(args, object : DirectToolCallsEnabler {})
+        tool.execute(args)
 
         // Then
         val updated = mockedFS.readText(path)
@@ -185,7 +184,7 @@ class EditFileToolCoreTest {
             original = "Hello World\n",
             replacement = ""
         )
-        tool.execute(args, object : DirectToolCallsEnabler {})
+        tool.execute(args)
 
         // Then
         val updated = mockedFS.readText(path)
@@ -213,7 +212,7 @@ class EditFileToolCoreTest {
             original = "",
             replacement = newContent
         )
-        tool.execute(args, object : DirectToolCallsEnabler {})
+        tool.execute(args)
 
         // Then
         assertEquals(true, mockedFS.exists(path))
@@ -245,7 +244,7 @@ class EditFileToolCoreTest {
             original = "",
             replacement = replacementContent
         )
-        tool.execute(args, object : DirectToolCallsEnabler {})
+        tool.execute(args)
 
         // Then
         val updated = mockedFS.readText(path)
@@ -275,7 +274,7 @@ class EditFileToolCoreTest {
             original = "Delta", // does not exist in file
             replacement = "Omega"
         )
-        val result = tool.execute(args, object : DirectToolCallsEnabler {})
+        val result = tool.execute(args)
 
         // Then
         val markdownReport = result.textForLLM()
