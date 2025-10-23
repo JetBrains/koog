@@ -77,7 +77,7 @@ public class ContentPartsBuilder : TextContentBuilderBase<List<ContentPart>>() {
     }
 
     /**
-     * Adds [ContentPart] to the list of contentParts.
+     * Adds [ContentPart] to the list of parts.
      */
     public fun part(contentPart: ContentPart) {
         // If there were some text accumulated, flush it to the text part

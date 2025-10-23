@@ -11,7 +11,6 @@ import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicInv
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicResponse
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicToolChoice
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockToolSerialization
-import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
@@ -40,7 +39,7 @@ internal object BedrockAnthropicClaudeSerialization {
         prompt.messages.forEach { msg ->
             when (msg) {
                 is Message.User -> {
-                    require(msg.parts.all { it is ContentPart.Text }) {
+                    require(!msg.hasAttachments()) {
                         "Amazon Bedrock Anthropic requests currently supports text-only user messages"
                     }
                     if (msg.content.isNotEmpty()) {
