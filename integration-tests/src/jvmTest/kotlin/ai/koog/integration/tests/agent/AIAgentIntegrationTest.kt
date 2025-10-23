@@ -1000,14 +1000,14 @@ class AIAgentIntegrationTest {
                 sayWorld
             }
 
-            val node3 by node<String, String>(bye) {
+            val nodeBye by node<String, String>(bye) {
                 sayBye
             }
 
             edge(nodeStart forwardTo nodeHello)
             edge(nodeHello forwardTo nodeWorld)
-            edge(nodeWorld forwardTo node3)
-            edge(node3 forwardTo nodeFinish)
+            edge(nodeWorld forwardTo nodeBye)
+            edge(nodeBye forwardTo nodeFinish)
         }
 
         val agent = AIAgent(
@@ -1110,6 +1110,77 @@ class AIAgentIntegrationTest {
         val checkpoints = fileStorageProvider.getCheckpoints(agent.id).filter { it.nodeId != "tombstone" }
         assertTrue(checkpoints.isNotEmpty(), noCheckpointsError)
         assertEquals(bye, checkpoints.first().nodeId, incorrectNodeIdError)
+    }
+
+    @ParameterizedTest
+    @MethodSource("openAIModels", "anthropicModels", "googleModels", "bedrockModels", "openRouterModels")
+    @Ignore("KG-499 Infinite loop on an attempt to serialize input for checkpoint creation for nodeSendToolResult")
+    fun integration_AgentCheckpointWithToolCallsTest(model: LLModel) = runTest(timeout = 180.seconds) {
+        assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
+
+        val storageProvider = InMemoryPersistenceStorageProvider()
+        val registry = ToolRegistry {
+            tool(CalculatorTool)
+        }
+
+        withRetry {
+            runWithTracking { eventHandlerConfig, state ->
+                val executor = getExecutor(model)
+
+                val agent = AIAgent(
+                    promptExecutor = executor,
+                    strategy = singleRunStrategy(ToolCalls.SEQUENTIAL),
+                    agentConfig = AIAgentConfig(
+                        prompt = prompt(
+                            id = "calculator-agent-persistence-test",
+                            params = LLMParams(
+                                temperature = 1.0,
+                                toolChoice = ToolChoice.Required,
+                            )
+                        ) {
+                            system {
+                                +systemPrompt
+                                +"Always use the calculator tool once to answer math questions."
+                                +"JUST CALL THE TOOL, NO QUESTIONS ASKED."
+                            }
+                        },
+                        model = model,
+                        maxAgentIterations = 10
+                    ),
+                    toolRegistry = registry,
+                    installFeatures = {
+                        install(EventHandler.Feature, eventHandlerConfig)
+                        install(Persistence) {
+                            storage = storageProvider
+                            enableAutomaticPersistence = true
+                        }
+                    },
+                )
+
+                agent.run("What is 12 + 34?")
+
+                assertEquals(
+                    listOf(CalculatorTool.descriptor.name),
+                    state.actualToolCalls,
+                    "${CalculatorTool.descriptor.name} tool should be called for model $model with persistence"
+                )
+                assertTrue(state.errors.isEmpty(), "There should be no errors")
+
+                val nonTombstoneCheckpoints =
+                    storageProvider.getCheckpoints(agent.id).filter { it.nodeId != "tombstone" }
+                assertTrue(nonTombstoneCheckpoints.isNotEmpty(), "No checkpoints were created with Persistence enabled")
+
+                val toolCallPresentInHistory = nonTombstoneCheckpoints.any { cp ->
+                    cp.messageHistory.any { msg ->
+                        msg is Message.Tool.Call && msg.tool == CalculatorTool.name
+                    }
+                }
+                assertTrue(
+                    toolCallPresentInHistory,
+                    "Checkpoint message history should contain a tool call to '${CalculatorTool.name}'"
+                )
+            }
+        }
     }
 
     @ParameterizedTest
