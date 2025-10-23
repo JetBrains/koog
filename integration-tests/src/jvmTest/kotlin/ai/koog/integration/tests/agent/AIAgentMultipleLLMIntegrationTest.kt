@@ -49,7 +49,6 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
@@ -70,7 +69,6 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.test.fail
 import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.seconds
 
 internal class ReportingLLMLLMClient(
     private val eventsChannel: Channel<Event>,
@@ -593,7 +591,7 @@ class AIAgentMultipleLLMIntegrationTest {
     @ParameterizedTest
     @MethodSource("getModels")
     fun `integration_test agent with not registered subgraph tool result fails`(model: LLModel) =
-        runTest(timeout = 600.seconds) {
+        runTest(timeout = 10.minutes) {
             Models.assumeAvailable(LLMProvider.OpenAI)
             Models.assumeAvailable(LLMProvider.Anthropic)
 
@@ -613,7 +611,7 @@ class AIAgentMultipleLLMIntegrationTest {
     @ParameterizedTest
     @MethodSource("getModels")
     fun `integration_test agent with registered subgraph tool result runs`(model: LLModel) =
-        runTest(timeout = 600.seconds) {
+        runTest(timeout = 10.minutes) {
             Models.assumeAvailable(LLMProvider.OpenAI)
             Models.assumeAvailable(LLMProvider.Anthropic)
 
@@ -659,7 +657,7 @@ class AIAgentMultipleLLMIntegrationTest {
         }
 
     @Test
-    fun integration_testTerminationOnIterationsLimitExhaustion() = runTest(timeout = 600.seconds) {
+    fun integration_testTerminationOnIterationsLimitExhaustion() = runTest(timeout = 10.minutes) {
         Models.assumeAvailable(LLMProvider.OpenAI)
         Models.assumeAvailable(LLMProvider.Anthropic)
 
@@ -690,7 +688,7 @@ class AIAgentMultipleLLMIntegrationTest {
 
     @Test
     fun integration_testAnthropicAgentEnumSerialization() {
-        runBlocking {
+        runTest(timeout = 10.minutes) {
             val llmModel = AnthropicModels.Sonnet_4_5
             Models.assumeAvailable(llmModel.provider)
             val agent = AIAgent(
@@ -727,7 +725,7 @@ class AIAgentMultipleLLMIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("modelsWithVisionCapability")
-    fun integration_testAgentWithImageCapability(model: LLModel) = runTest(timeout = 120.seconds) {
+    fun integration_testAgentWithImageCapability(model: LLModel) = runTest(timeout = 2.minutes) {
         Models.assumeAvailable(model.provider)
         val fs = MockFileSystem()
         val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
@@ -785,7 +783,7 @@ class AIAgentMultipleLLMIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("modelsWithVisionCapability")
-    fun integration_testAgentWithImageCapabilityUrl(model: LLModel) = runTest(timeout = 5.minutes) {
+    fun integration_testAgentWithImageCapabilityUrl(model: LLModel) = runTest(timeout = 10.minutes) {
         Models.assumeAvailable(model.provider)
 
         val fs = MockFileSystem()
@@ -815,7 +813,7 @@ class AIAgentMultipleLLMIntegrationTest {
             }
         }
 
-        withRetry(5) {
+        withRetry(3) {
             val agent = createTestMultiLLMAgent(
                 fs,
                 eventHandlerConfig,
