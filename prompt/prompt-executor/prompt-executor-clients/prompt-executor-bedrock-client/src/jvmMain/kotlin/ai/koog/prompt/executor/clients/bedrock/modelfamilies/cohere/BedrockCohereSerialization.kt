@@ -15,7 +15,7 @@ internal data class CohereEmbedRequest(
     @SerialName("texts")
     val texts: List<String>,
     @SerialName("input_type")
-    val inputType: String? = null,
+    val inputType: String,
     @SerialName("truncate")
     val truncate: String? = null,
     @SerialName("embedding_types")
@@ -32,7 +32,7 @@ internal data class CohereEmbedResponse(
     @SerialName("response_type")
     val responseType: String? = null,
     @SerialName("embeddings")
-    val embeddings: Map<String, List<List<Double>>>? = null,
+    val embeddings: List<List<Double>>? = null,
     @SerialName("texts")
     val texts: List<String>? = null
 )
@@ -43,7 +43,7 @@ internal object BedrockCohereSerialization {
     /** Create request JSON for embeddings (text only). */
     fun createV3TextRequest(
         texts: List<String>,
-        inputType: String? = null,
+        inputType: String = "search_document",
         truncate: String? = null,
         embeddingTypes: List<String>? = null
     ): String = json.encodeToString(
@@ -61,21 +61,14 @@ internal object BedrockCohereSerialization {
         json.decodeFromString(responseBody)
 
     /**
-     * Get embedding vectors of a chosen type (e.g., "float") for all texts.
-     * By default, returns "float" embeddings.
-     * Throws if none found.
+     * Returns the embeddings from the response.
+     * For Bedrock Cohere v3 API, this is a list of embedding vectors (one per input text).
+     *
+     * @param response The Cohere embedding response.
+     * @return A list of embedding vectors (List<List<Double>>). Each inner list is one embedding vector.
+     * @throws IllegalStateException if no embeddings are found in the response.
      */
-    fun extractEmbeddings(
-        response: CohereEmbedResponse,
-        type: String = "float"
-    ): List<List<Double>> =
-        response.embeddings?.get(type)
-            ?: error("No embedding type '$type' found in Cohere response. Available: ${response.embeddings?.keys}")
-
-    /**
-     * Helper to get the first set of "float" embeddings for single text input.
-     */
-    fun extractFirstFloatEmbedding(response: CohereEmbedResponse): List<Double> =
-        extractEmbeddings(response, type = "float").firstOrNull()
-            ?: error("No embedding found in Cohere response")
+    fun extractEmbeddings(response: CohereEmbedResponse): List<List<Double>> =
+        response.embeddings?.takeIf { it.isNotEmpty() }
+            ?: error("No embeddings found in Cohere response")
 }

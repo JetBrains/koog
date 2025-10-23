@@ -40,16 +40,10 @@ class BedrockCohereSerializationTest {
             {
                 "id": "rsp123",
                 "response_type": "embeddings",
-                "embeddings": {
-                    "float": [
-                        [0.1, 0.2],
-                        [0.3, 0.4]
-                    ],
-                    "int8": [
-                        [1, 2],
-                        [3, 4]
-                    ]
-                },
+                "embeddings": [
+                    [0.1, 0.2],
+                    [0.3, 0.4]
+                ],
                 "texts": ["foo", "bar"]
             }
         """.trimIndent()
@@ -58,96 +52,55 @@ class BedrockCohereSerializationTest {
         assertEquals("rsp123", resp.id)
         assertEquals("embeddings", resp.responseType)
         assertNotNull(resp.embeddings)
-        assertTrue(resp.embeddings.containsKey("float"))
-        assertEquals(listOf(listOf(0.1, 0.2), listOf(0.3, 0.4)), resp.embeddings["float"])
+        assertEquals(listOf(listOf(0.1, 0.2), listOf(0.3, 0.4)), resp.embeddings)
         assertEquals(listOf("foo", "bar"), resp.texts)
     }
 
     @Test
-    fun `extractEmbeddings returns all float embeddings per input`() {
+    fun `extractEmbeddings returns all embeddings per input`() {
         val responseJson = """
             {
-                "embeddings": {
-                    "float": [
-                        [0.5, 0.6, 0.7],
-                        [1.1, 1.2, 1.3]
-                    ]
-                },
+                "embeddings": [
+                    [0.5, 0.6, 0.7],
+                    [1.1, 1.2, 1.3]
+                ],
                 "texts": ["input1", "input2"]
             }
         """.trimIndent()
 
         val resp = BedrockCohereSerialization.parseResponse(responseJson)
-        val all = BedrockCohereSerialization.extractEmbeddings(resp, type = "float")
+        val all = BedrockCohereSerialization.extractEmbeddings(resp)
         assertEquals(2, all.size)
         assertEquals(listOf(0.5, 0.6, 0.7), all.first())
         assertEquals(listOf(1.1, 1.2, 1.3), all[1])
     }
 
     @Test
-    fun `extractFirstFloatEmbedding returns floats for single text input`() {
+    fun `extractEmbeddings throws if no embeddings present`() {
         val responseJson = """
             {
-                "embeddings": {
-                    "float": [
-                        [2.5, 3.1]
-                    ]
-                }
-            }
-        """.trimIndent()
-
-        val resp = BedrockCohereSerialization.parseResponse(responseJson)
-        val first = BedrockCohereSerialization.extractFirstFloatEmbedding(resp)
-        assertEquals(listOf(2.5, 3.1), first)
-    }
-
-    @Test
-    fun `extractEmbeddings throws if requested type is missing`() {
-        val responseJson = """
-            {
-                "embeddings": {
-                    "float": [
-                        [0.0, 0.1]
-                    ]
-                }
+                "embeddings": []
             }
         """.trimIndent()
         val resp = BedrockCohereSerialization.parseResponse(responseJson)
         assertFailsWith<IllegalStateException> {
-            BedrockCohereSerialization.extractEmbeddings(resp, type = "binary")
+            BedrockCohereSerialization.extractEmbeddings(resp)
         }
     }
 
     @Test
-    fun `extractFirstFloatEmbedding throws if no embeddings present`() {
+    fun `parseResponse handles embeddings correctly`() {
         val responseJson = """
             {
-                "embeddings": {
-                    "float": []
-                }
+                "embeddings": [
+                    [1.0, -1.0, 1.0],
+                    [0.0, 2.0, -2.0]
+                ]
             }
         """.trimIndent()
         val resp = BedrockCohereSerialization.parseResponse(responseJson)
-        assertFailsWith<IllegalStateException> {
-            BedrockCohereSerialization.extractFirstFloatEmbedding(resp)
-        }
-    }
-
-    @Test
-    fun `parseResponse handles only int8 embeddings`() {
-        val responseJson = """
-            {
-                "embeddings": {
-                    "int8": [
-                        [1, -1, 1],
-                        [0, 2, -2]
-                    ]
-                }
-            }
-        """.trimIndent()
-        val resp = BedrockCohereSerialization.parseResponse(responseJson)
-        val ints = BedrockCohereSerialization.extractEmbeddings(resp, type = "int8")
-        assertEquals(listOf(1, -1, 1), ints[0].map { it.toInt() })
-        assertEquals(listOf(0, 2, -2), ints[1].map { it.toInt() })
+        val embeddings = BedrockCohereSerialization.extractEmbeddings(resp)
+        assertEquals(listOf(1.0, -1.0, 1.0), embeddings[0])
+        assertEquals(listOf(0.0, 2.0, -2.0), embeddings[1])
     }
 }

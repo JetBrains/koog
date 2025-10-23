@@ -294,7 +294,7 @@ public class BedrockLLMClient(
                 }
                 is BedrockModelFamilies.Cohere -> {
                     val cohereResponse = BedrockCohereSerialization.parseResponse(responseBodyString)
-                    BedrockCohereSerialization.extractFirstFloatEmbedding(cohereResponse)
+                    BedrockCohereSerialization.extractEmbeddings(cohereResponse).first()
                 }
                 else -> error("Model family: ${modelFamily.display} does not support embeddings; use execute() or executeStreaming() for completion models.")
             }
