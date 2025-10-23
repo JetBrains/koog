@@ -9,9 +9,9 @@ import io.opentelemetry.api.trace.SpanKind
  */
 internal class ExecuteToolSpan(
     parent: NodeExecuteSpan,
-    tool: Tool<*, *>,
-    private val toolArgs: Any?,
-    toolCallId: String?,
+    val tool: Tool<*, *>,
+    val toolArgs: Any?,
+    val toolCallId: String?,
 ) : GenAIAgentSpan(parent) {
 
     companion object {

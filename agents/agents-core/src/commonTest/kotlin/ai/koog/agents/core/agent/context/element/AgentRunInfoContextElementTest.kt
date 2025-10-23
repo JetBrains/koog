@@ -93,12 +93,12 @@ class AgentRunInfoContextElementTest : AgentTestBase() {
         )
 
         withContext(element) {
-            val retrievedElement = coroutineContext.getAgentRunInfoElementOrThrow()
+            val retrievedElement = getAgentRunInfoElementOrThrow()
             assertEquals(element, retrievedElement)
         }
 
         assertFailsWith<IllegalStateException> {
-            coroutineContext.getAgentRunInfoElementOrThrow()
+            getAgentRunInfoElementOrThrow()
         }
     }
 }

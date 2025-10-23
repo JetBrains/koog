@@ -11,12 +11,12 @@ import io.opentelemetry.api.trace.SpanKind
  */
 internal class InferenceSpan(
     parent: NodeExecuteSpan,
-    provider: LLMProvider,
-    runId: String,
-    model: LLModel,
-    promptId: String,
-    temperature: Double,
-    maxTokens: Int? = null
+    val provider: LLMProvider,
+    val runId: String,
+    val model: LLModel,
+    val promptId: String,
+    val temperature: Double,
+    val maxTokens: Int? = null
 ) : GenAIAgentSpan(parent) {
 
     companion object {

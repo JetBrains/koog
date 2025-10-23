@@ -2,6 +2,7 @@ package ai.koog.agents.features.opentelemetry.span
 
 import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute
 import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes
+import ai.koog.agents.utils.HiddenString
 import io.opentelemetry.api.trace.SpanKind
 
 /**
@@ -11,8 +12,9 @@ import io.opentelemetry.api.trace.SpanKind
  */
 internal class NodeExecuteSpan(
     parent: InvokeAgentSpan,
-    runId: String,
+    val runId: String,
     val nodeName: String,
+    val nodeInput: String?
 ) : GenAIAgentSpan(parent) {
 
     companion object {
@@ -36,5 +38,8 @@ internal class NodeExecuteSpan(
     init {
         addAttribute(SpanAttributes.Conversation.Id(runId))
         addAttribute(CustomAttribute("koog.node.name", nodeName))
+        nodeInput?.let { input ->
+            addAttribute(CustomAttribute("koog.node.input", HiddenString(input)))
+        }
     }
 }
