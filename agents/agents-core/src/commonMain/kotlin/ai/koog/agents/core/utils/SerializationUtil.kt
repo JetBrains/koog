@@ -5,6 +5,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.serializerOrNull
 import kotlin.reflect.KType
 
@@ -50,5 +51,23 @@ public object SerializationUtil {
         }
 
         return json.encodeToJsonElement(serializer, data)
+    }
+
+    /**
+     * Attempts to parse the given string into a [JsonElement]. If the parsing fails due to a
+     * [SerializationException], it falls back to returning a [JsonPrimitive] wrapping the original string.
+     *
+     * @param data The input string to be parsed into a [JsonElement].
+     * @return A [JsonElement] if parsing succeeds; otherwise, a [JsonPrimitive] containing the original string.
+     */
+    @InternalAgentsApi
+    public fun tryParseToJsonElement(data: String): JsonElement {
+        logger.debug { "Parsing data to JsonElement: $data" }
+        return try {
+            json.parseToJsonElement(data)
+        } catch (e: SerializationException) {
+            logger.debug { "Failed to parse data to JsonElement: ${e.message}. Return JsonPrimitive instance" }
+            JsonPrimitive(data)
+        }
     }
 }
