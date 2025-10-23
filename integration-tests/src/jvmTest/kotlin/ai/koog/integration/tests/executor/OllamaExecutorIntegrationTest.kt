@@ -284,9 +284,7 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
                     +"I'm sending you an image. Please analyze it and identify the image format if possible."
                 }
 
-                attachments {
-                    image(KtPath(imageFile.pathString))
-                }
+                image(KtPath(imageFile.pathString))
             }
         }
 

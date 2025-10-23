@@ -808,10 +808,7 @@ class AIAgentMultipleLLMIntegrationTest {
                     br()
                     +"Please analyze this image and identify the image format if possible."
                 }
-
-                attachments {
-                    image("https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg")
-                }
+                image("https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg")
             }
         }
 

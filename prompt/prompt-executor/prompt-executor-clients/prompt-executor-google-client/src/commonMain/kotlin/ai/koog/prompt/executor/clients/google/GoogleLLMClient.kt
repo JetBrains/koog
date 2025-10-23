@@ -26,8 +26,8 @@ import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.message.Attachment
 import ai.koog.prompt.message.AttachmentContent
+import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
@@ -442,18 +442,19 @@ public open class GoogleLLMClient(
 
     private fun Message.User.toGoogleContent(model: LLModel): GoogleContent {
         val contentParts = buildList {
-            if (content.isNotEmpty() || attachments.isEmpty()) {
-                add(GooglePart.Text(content))
-            }
-            attachments.forEach { attachment ->
-                when (attachment) {
-                    is Attachment.Image -> {
+            parts.forEach { part ->
+                when (part) {
+                    is ContentPart.Text -> {
+                        add(GooglePart.Text(part.text))
+                    }
+
+                    is ContentPart.Image -> {
                         require(model.capabilities.contains(LLMCapability.Vision.Image)) {
                             "Model ${model.id} does not support images"
                         }
 
-                        val blob: GoogleData.Blob = when (val content = attachment.content) {
-                            is AttachmentContent.Binary -> GoogleData.Blob(attachment.mimeType, content.asBytes())
+                        val blob: GoogleData.Blob = when (val content = part.content) {
+                            is AttachmentContent.Binary -> GoogleData.Blob(part.mimeType, content.asBytes())
                             else -> throw IllegalArgumentException(
                                 "Unsupported image attachment content: ${content::class}"
                             )
@@ -462,13 +463,13 @@ public open class GoogleLLMClient(
                         add(GooglePart.InlineData(blob))
                     }
 
-                    is Attachment.Audio -> {
+                    is ContentPart.Audio -> {
                         require(model.capabilities.contains(LLMCapability.Audio)) {
                             "Model ${model.id} does not support audio"
                         }
 
-                        val blob: GoogleData.Blob = when (val content = attachment.content) {
-                            is AttachmentContent.Binary -> GoogleData.Blob(attachment.mimeType, content.asBytes())
+                        val blob: GoogleData.Blob = when (val content = part.content) {
+                            is AttachmentContent.Binary -> GoogleData.Blob(part.mimeType, content.asBytes())
                             else -> throw IllegalArgumentException(
                                 "Unsupported audio attachment content: ${content::class}"
                             )
@@ -477,13 +478,13 @@ public open class GoogleLLMClient(
                         add(GooglePart.InlineData(blob))
                     }
 
-                    is Attachment.File -> {
+                    is ContentPart.File -> {
                         require(model.capabilities.contains(LLMCapability.Document)) {
                             "Model ${model.id} does not support documents"
                         }
 
-                        val blob: GoogleData.Blob = when (val content = attachment.content) {
-                            is AttachmentContent.Binary -> GoogleData.Blob(attachment.mimeType, content.asBytes())
+                        val blob: GoogleData.Blob = when (val content = part.content) {
+                            is AttachmentContent.Binary -> GoogleData.Blob(part.mimeType, content.asBytes())
                             else -> throw IllegalArgumentException(
                                 "Unsupported file attachment content: ${content::class}"
                             )
@@ -492,13 +493,13 @@ public open class GoogleLLMClient(
                         add(GooglePart.InlineData(blob))
                     }
 
-                    is Attachment.Video -> {
+                    is ContentPart.Video -> {
                         require(model.capabilities.contains(LLMCapability.Vision.Video)) {
                             "Model ${model.id} does not support video"
                         }
 
-                        val blob: GoogleData.Blob = when (val content = attachment.content) {
-                            is AttachmentContent.Binary -> GoogleData.Blob(attachment.mimeType, content.asBytes())
+                        val blob: GoogleData.Blob = when (val content = part.content) {
+                            is AttachmentContent.Binary -> GoogleData.Blob(part.mimeType, content.asBytes())
                             else -> throw IllegalArgumentException(
                                 "Unsupported video attachment content: ${content::class}"
                             )

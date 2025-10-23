@@ -39,7 +39,7 @@ internal object BedrockAnthropicClaudeSerialization {
         prompt.messages.forEach { msg ->
             when (msg) {
                 is Message.User -> {
-                    require(msg.attachments.isEmpty()) {
+                    require(!msg.hasAttachments()) {
                         "Amazon Bedrock Anthropic requests currently supports text-only user messages"
                     }
                     if (msg.content.isNotEmpty()) {

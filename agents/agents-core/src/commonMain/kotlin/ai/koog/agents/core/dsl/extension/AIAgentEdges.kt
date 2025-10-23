@@ -6,7 +6,7 @@ import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.environment.SafeTool
 import ai.koog.agents.core.environment.toSafeResult
 import ai.koog.agents.core.tools.Tool
-import ai.koog.prompt.message.Attachment
+import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import kotlin.reflect.KClass
 
@@ -223,11 +223,11 @@ public infix fun <IncomingOutput, OutgoingInput> AIAgentEdgeBuilderIntermediate<
 @EdgeTransformationDslMarker
 public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput> AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput>.onAssistantMessageWithMedia(
     block: suspend (Message.Assistant) -> Boolean
-): AIAgentEdgeBuilderIntermediate<IncomingOutput, Attachment, OutgoingInput> {
+): AIAgentEdgeBuilderIntermediate<IncomingOutput, List<ContentPart.Attachment>, OutgoingInput> {
     return onIsInstance(Message.Assistant::class)
         .onCondition {
-            it.attachments.isNotEmpty()
+            it.hasAttachments()
         }
         .onCondition { signature -> block(signature) }
-        .transformed { it.attachments.single() }
+        .transformed { it.parts.filterIsInstance<ContentPart.Attachment>() }
 }
