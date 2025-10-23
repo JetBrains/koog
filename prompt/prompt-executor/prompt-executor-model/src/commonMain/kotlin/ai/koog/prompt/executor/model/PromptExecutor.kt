@@ -15,9 +15,11 @@ public typealias LLMChoice = List<Message.Response>
  * This defines methods for executing prompts against models with or without tool assistance,
  * as well as for streaming responses.
  *
+ * Implements [AutoCloseable] as prompt executors typically work with LLM clients. Always close it when finished.
+ *
  * Note: a single [PromptExecutor] might embed multiple LLM clients for different LLM providers supporting different models.
  */
-public interface PromptExecutor {
+public interface PromptExecutor : AutoCloseable {
 
     /**
      * Executes a given prompt using the specified language model and tools, returning a list of responses from the model.

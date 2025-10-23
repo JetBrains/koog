@@ -7,7 +7,6 @@ import ai.koog.agents.features.opentelemetry.integration.langfuse.addLangfuseExp
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporter
-import kotlinx.coroutines.runBlocking
 
 /**
  * Example of Koog agents tracing to [Langfuse](https://langfuse.com/)
@@ -22,20 +21,22 @@ import kotlinx.coroutines.runBlocking
  *
  * @see <a href="https://langfuse.com/docs/opentelemetry/get-started#opentelemetry-endpoint">Langfuse OpenTelemetry Docs</a>
  */
-fun main() = runBlocking {
-    val agent = AIAgent(
-        promptExecutor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey),
-        llmModel = OpenAIModels.CostOptimized.GPT4oMini,
-        systemPrompt = "You are a code assistant. Provide concise code examples."
-    ) {
-        install(OpenTelemetry) {
-            addLangfuseExporter()
+suspend fun main() {
+    simpleOpenAIExecutor(ApiKeyService.openAIApiKey).use { executor ->
+        val agent = AIAgent(
+            promptExecutor = executor,
+            llmModel = OpenAIModels.CostOptimized.GPT4oMini,
+            systemPrompt = "You are a code assistant. Provide concise code examples."
+        ) {
+            install(OpenTelemetry) {
+                addLangfuseExporter()
+            }
         }
+
+        println("Running agent with Langfuse tracing")
+
+        val result = agent.run("Tell me a joke about programming")
+
+        println("Result: $result\nSee traces on the Langfuse instance")
     }
-
-    println("Running agent with Langfuse tracing")
-
-    val result = agent.run("Tell me a joke about programming")
-
-    println("Result: $result\nSee traces on the Langfuse instance")
 }

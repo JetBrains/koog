@@ -16,15 +16,13 @@ import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.tools.DirectToolCallsEnabler
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
+import ai.koog.agents.core.utils.SerializationUtil
 import ai.koog.agents.snapshot.providers.PersistenceStorageProvider
 import ai.koog.prompt.message.Message
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
-import kotlinx.serialization.SerializationException
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.serializer
 import kotlin.reflect.KType
 import kotlin.time.ExperimentalTime
 import kotlin.uuid.ExperimentalUuidApi
@@ -102,10 +100,6 @@ public class Persistence(
      */
     public companion object Feature : AIAgentGraphFeature<PersistenceFeatureConfig, Persistence> {
         private val logger = KotlinLogging.logger { }
-
-        private val json = Json {
-            prettyPrint = true
-        }
 
         override val key: AIAgentStorageKey<Persistence> = AIAgentStorageKey("agents-features-snapshot")
 
@@ -195,7 +189,7 @@ public class Persistence(
         version: Long,
         checkpointId: String? = null,
     ): AgentCheckpointData? {
-        val inputJson = trySerializeInput(lastInput, lastInputType)
+        val inputJson = SerializationUtil.trySerializeDataToJsonElement(lastInput, lastInputType)
 
         if (inputJson == null) {
             logger.warn {
@@ -233,14 +227,6 @@ public class Persistence(
         val checkpoint = tombstoneCheckpoint(time, parentId)
         saveCheckpoint(agentId, checkpoint)
         return checkpoint
-    }
-
-    private fun trySerializeInput(input: Any?, inputType: KType): JsonElement? {
-        return try {
-            json.encodeToJsonElement(json.serializersModule.serializer(inputType), input)
-        } catch (_: SerializationException) {
-            return null
-        }
     }
 
     /**

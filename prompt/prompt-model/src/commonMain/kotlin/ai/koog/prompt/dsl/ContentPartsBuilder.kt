@@ -1,7 +1,8 @@
 package ai.koog.prompt.dsl
 
-import ai.koog.prompt.message.Attachment
 import ai.koog.prompt.message.AttachmentContent
+import ai.koog.prompt.message.ContentPart
+import ai.koog.prompt.text.TextContentBuilderBase
 import kotlinx.io.buffered
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
@@ -9,22 +10,23 @@ import kotlinx.io.readByteArray
 import kotlinx.io.readString
 
 /**
- * A builder for constructing attachments for prompt messages.
+ * A builder for constructing parts for prompt messages.
+ * All parts are added to a list in declaration order and can be retrieved through the [build] method.
  *
  * Example usage:
  * ```kotlin
- * val attachments = AttachmentBuilder().apply {
+ * val parts = ContentPartsBuilder().apply {
+ *     text("Hello!")
  *     image("screenshot.png")
  *     binaryFile("report.pdf")
  * }.build()
  * ```
  *
- * @see Attachment
- * @see MessageContentBuilder
+ * @see ContentPart
  */
 @PromptDSL
-public class AttachmentBuilder {
-    private val attachments = mutableListOf<Attachment>()
+public class ContentPartsBuilder : TextContentBuilderBase<List<ContentPart>>() {
+    private val parts = mutableListOf<ContentPart>()
 
     private class FileData(val name: String, val extension: String)
 
@@ -65,21 +67,40 @@ public class AttachmentBuilder {
     }
 
     /**
-     * Adds [Attachment] to the list of attachments.
+     * Flushes the text builder and adds its content as a text part if there is any.
      */
-    public fun attachment(attachment: Attachment) {
-        attachments.add(attachment)
+    private fun flushTextBuilder() {
+        if (caret.offset != 0) {
+            parts.add(ContentPart.Text(textBuilder.toString()))
+            textBuilder.clear()
+        }
     }
 
     /**
-     * Adds [Attachment.Image] to the list of attachments.
+     * Adds [ContentPart] to the list of parts.
      */
-    public fun image(image: Attachment.Image) {
-        attachment(image)
+    public fun part(contentPart: ContentPart) {
+        // If there were some text accumulated, flush it to the text part
+        flushTextBuilder()
+        parts.add(contentPart)
     }
 
     /**
-     * Adds [Attachment.Image] with [AttachmentContent.URL] content from the provided URL.
+     * Adds [ContentPart.Text] to the list of parts.
+     */
+    public fun text(part: ContentPart.Text) {
+        part(part)
+    }
+
+    /**
+     * Adds [ContentPart.Image] to the list of parts.
+     */
+    public fun image(image: ContentPart.Image) {
+        part(image)
+    }
+
+    /**
+     * Adds [ContentPart.Image] with [AttachmentContent.URL] content from the provided URL.
      *
      * @param url Image URL
      * @throws IllegalArgumentException if the URL is not valid or no file in the URL was found.
@@ -87,7 +108,7 @@ public class AttachmentBuilder {
     public fun image(url: String) {
         val fileData = url.urlFileData()
         image(
-            Attachment.Image(
+            ContentPart.Image(
                 content = AttachmentContent.URL(url),
                 format = fileData.extension,
                 fileName = fileData.name
@@ -96,7 +117,7 @@ public class AttachmentBuilder {
     }
 
     /**
-     * Adds [Attachment.Image] with [AttachmentContent.Binary.Bytes] content from the provided local file path.
+     * Adds [ContentPart.Image] with [AttachmentContent.Binary.Bytes] content from the provided local file path.
      *
      * @param path Path to local image file
      * @throws IllegalArgumentException if the path is not valid, the file does not exist, or is not a regular file.
@@ -104,7 +125,7 @@ public class AttachmentBuilder {
     public fun image(path: Path) {
         val fileData = path.fileData()
         image(
-            Attachment.Image(
+            ContentPart.Image(
                 content = AttachmentContent.Binary.Bytes(path.readByteArray()),
                 format = fileData.extension,
                 fileName = fileData.name
@@ -113,14 +134,14 @@ public class AttachmentBuilder {
     }
 
     /**
-     * Adds [Attachment.Audio] to the list of attachments.
+     * Adds [ContentPart.Audio] to the list of parts.
      */
-    public fun audio(audio: Attachment.Audio) {
-        attachments.add(audio)
+    public fun audio(audio: ContentPart.Audio) {
+        parts.add(audio)
     }
 
     /**
-     * Adds [Attachment.Audio] with [AttachmentContent.URL] content from the provided URL.
+     * Adds [ContentPart.Audio] with [AttachmentContent.URL] content from the provided URL.
      *
      * @param url Audio URL
      * @throws IllegalArgumentException if the URL is not valid or no file in the URL was found.
@@ -128,7 +149,7 @@ public class AttachmentBuilder {
     public fun audio(url: String) {
         val fileData = url.urlFileData()
         audio(
-            Attachment.Audio(
+            ContentPart.Audio(
                 content = AttachmentContent.URL(url),
                 format = fileData.extension,
                 fileName = fileData.name
@@ -137,7 +158,7 @@ public class AttachmentBuilder {
     }
 
     /**
-     * Adds [Attachment.Audio] with [AttachmentContent.Binary.Bytes] content from the provided local file path.
+     * Adds [ContentPart.Audio] with [AttachmentContent.Binary.Bytes] content from the provided local file path.
      *
      * @param path Path to local audio file
      * @throws IllegalArgumentException if the path is not valid, the file does not exist, or is not a regular file.
@@ -145,7 +166,7 @@ public class AttachmentBuilder {
     public fun audio(path: Path) {
         val fileData = path.fileData()
         audio(
-            Attachment.Audio(
+            ContentPart.Audio(
                 content = AttachmentContent.Binary.Bytes(path.readByteArray()),
                 format = fileData.extension,
                 fileName = fileData.name
@@ -154,14 +175,14 @@ public class AttachmentBuilder {
     }
 
     /**
-     * Adds [Attachment.Video] to the list of attachments.
+     * Adds [ContentPart.Video] to the list of parts.
      */
-    public fun video(video: Attachment.Video) {
-        attachments.add(video)
+    public fun video(video: ContentPart.Video) {
+        parts.add(video)
     }
 
     /**
-     * Adds [Attachment.Video] with [AttachmentContent.URL] content from the provided URL.
+     * Adds [ContentPart.Video] with [AttachmentContent.URL] content from the provided URL.
      *
      * @param url Video URL
      * @throws IllegalArgumentException if the URL is not valid or no file in the URL was found.
@@ -169,7 +190,7 @@ public class AttachmentBuilder {
     public fun video(url: String) {
         val fileData = url.urlFileData()
         video(
-            Attachment.Video(
+            ContentPart.Video(
                 content = AttachmentContent.URL(url),
                 format = fileData.extension,
                 fileName = fileData.name
@@ -178,7 +199,7 @@ public class AttachmentBuilder {
     }
 
     /**
-     * Adds [Attachment.Video] with [AttachmentContent.Binary.Bytes] content from the provided local file path.
+     * Adds [ContentPart.Video] with [AttachmentContent.Binary.Bytes] content from the provided local file path.
      *
      * @param path Path to local video file
      * @throws IllegalArgumentException if the path is not valid, the file does not exist, or is not a regular file.
@@ -186,7 +207,7 @@ public class AttachmentBuilder {
     public fun video(path: Path) {
         val fileData = path.fileData()
         video(
-            Attachment.Video(
+            ContentPart.Video(
                 content = AttachmentContent.Binary.Bytes(path.readByteArray()),
                 format = fileData.extension,
                 fileName = fileData.name
@@ -195,14 +216,14 @@ public class AttachmentBuilder {
     }
 
     /**
-     * Adds [Attachment.File] to the list of attachments.
+     * Adds [ContentPart.File] to the list of parts.
      */
-    public fun file(file: Attachment.File) {
-        attachments.add(file)
+    public fun file(file: ContentPart.File) {
+        parts.add(file)
     }
 
     /**
-     * Adds [Attachment.File] with [AttachmentContent.URL] content from the provided URL.
+     * Adds [ContentPart.File] with [AttachmentContent.URL] content from the provided URL.
      *
      * @param url File URL
      * @param mimeType MIME type of the file (e.g., "application/pdf", "text/plain")
@@ -211,7 +232,7 @@ public class AttachmentBuilder {
     public fun file(url: String, mimeType: String) {
         val fileData = url.urlFileData()
         file(
-            Attachment.File(
+            ContentPart.File(
                 content = AttachmentContent.URL(url),
                 format = fileData.extension,
                 mimeType = mimeType,
@@ -221,7 +242,7 @@ public class AttachmentBuilder {
     }
 
     /**
-     * Adds [Attachment.File] with [AttachmentContent.Binary.Bytes] content from the provided local file path.
+     * Adds [ContentPart.File] with [AttachmentContent.Binary.Bytes] content from the provided local file path.
      *
      * @param path Path to local file
      * @param mimeType MIME type of the file (e.g., "application/pdf", "text/plain")
@@ -230,7 +251,7 @@ public class AttachmentBuilder {
     public fun binaryFile(path: Path, mimeType: String) {
         val fileData = path.fileData()
         file(
-            Attachment.File(
+            ContentPart.File(
                 content = AttachmentContent.Binary.Bytes(path.readByteArray()),
                 format = fileData.extension,
                 mimeType = mimeType,
@@ -240,7 +261,7 @@ public class AttachmentBuilder {
     }
 
     /**
-     * Adds [Attachment.File] with [AttachmentContent.PlainText] content from the provided local file path.
+     * Adds [ContentPart.File] with [AttachmentContent.PlainText] content from the provided local file path.
      *
      * @param path Path to local file
      * @param mimeType MIME type of the file (e.g., "application/pdf", "text/plain")
@@ -249,7 +270,7 @@ public class AttachmentBuilder {
     public fun textFile(path: Path, mimeType: String) {
         val fileData = path.fileData()
         file(
-            Attachment.File(
+            ContentPart.File(
                 content = AttachmentContent.PlainText(path.readText()),
                 format = fileData.extension,
                 mimeType = mimeType,
@@ -259,9 +280,21 @@ public class AttachmentBuilder {
     }
 
     /**
+     * Configures media attachments for this content builder.
+     */
+    @Deprecated("Redundant, attach parts without attachments block")
+    public fun attachments(body: ContentPartsBuilder.() -> Unit) {
+        ContentPartsBuilder().apply(body).build().forEach { part(it) }
+    }
+
+    /**
      * Constructs and returns the accumulated list of attachment items.
      *
      * @return A list containing all the attachment items created through the builder methods
      */
-    public fun build(): List<Attachment> = attachments
+    public override fun build(): List<ContentPart> {
+        // If there were some text accumulated, flush it to the text part
+        flushTextBuilder()
+        return parts
+    }
 }

@@ -173,7 +173,10 @@ class AIAgentIntegrationTest {
                         toolChoice = ToolChoice.Auto,
                     )
                 ) {
-                    system("You are a helpful assistant.")
+                    system {
+                        +"You are a helpful assistant. "
+                        +"JUST CALL THE TOOLS, NO QUESTIONS ASKED."
+                    }
                 },
                 model = model,
                 maxAgentIterations = 10,
@@ -425,7 +428,7 @@ class AIAgentIntegrationTest {
 
                 val agent = AIAgent.invoke(
                     promptExecutor = executor,
-                    systemPrompt = systemPrompt + "You MUST use tools.",
+                    systemPrompt = systemPrompt + "JUST CALL THE TOOLS, NO QUESTIONS ASKED!",
                     strategy = singleRunStrategy(ToolCalls.SEQUENTIAL),
                     llmModel = model,
                     temperature = 1.0,
@@ -575,7 +578,7 @@ class AIAgentIntegrationTest {
     fun integration_AIAgentSingleRunNoParallelToolsTest(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
-        assumeTrue(model.id != OpenAIModels.Audio.GPT4oAudio.id, "See KG-124")
+
         assumeTrue(
             model !in listOf(
                 BedrockModels.AnthropicClaude35Haiku,
@@ -598,8 +601,8 @@ class AIAgentIntegrationTest {
                     "There should be no parallel tool calls in a Sequential single run scenario"
                 )
                 assertTrue(
-                    state.singleToolCalls.isNotEmpty(),
-                    "There should be exactly 2 single tool calls in a Sequential single run scenario"
+                    state.singleToolCalls.size >= 2,
+                    "There should be more or equal than 2 single tool calls in a Sequential single run scenario"
                 )
                 assertEquals(
                     CalculatorTool.name,
@@ -1036,15 +1039,6 @@ class AIAgentIntegrationTest {
     @MethodSource("openAIModels", "anthropicModels", "googleModels", "bedrockModels", "openRouterModels")
     fun integration_AgentWithToolsWithoutParamsTest(model: LLModel) = runTest(timeout = 180.seconds) {
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
-        val flakyModels = listOf(
-            GoogleModels.Gemini2_0Flash.id,
-            GoogleModels.Gemini2_0Flash001.id,
-            GoogleModels.Gemini2_0FlashLite.id,
-            GoogleModels.Gemini2_0FlashLite001.id,
-            OpenAIModels.Chat.GPT5Mini.id,
-            BedrockModels.AmazonNovaLite.id,
-        )
-        assumeTrue(!flakyModels.contains(model.id), "Model $model is flaky and fails to call tools exactly once")
 
         val registry = ToolRegistry {
             tool(CalculatorToolNoArgs)
@@ -1267,7 +1261,11 @@ class AIAgentIntegrationTest {
 
                     assertTrue(
                         state.errors.isEmpty(),
-                        "No errors should occur during agent execution with $strategyName, got: [${state.errors.joinToString("\n")}]"
+                        "No errors should occur during agent execution with $strategyName, got: [${
+                            state.errors.joinToString(
+                                "\n"
+                            )
+                        }]"
                     )
                     assertTrue(
                         result.isNotBlank(),

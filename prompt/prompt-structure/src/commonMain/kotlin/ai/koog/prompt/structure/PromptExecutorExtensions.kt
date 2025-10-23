@@ -62,11 +62,11 @@ public data class StructuredOutputConfig<T>(
             // Don't set schema parameter in prompt and coerce the model manually with user message to provide a structured response.
             is StructuredOutput.Manual -> {
                 prompt(prompt) {
-                    user {
+                    user(
                         markdown {
                             StructuredOutputPrompts.outputInstructionPrompt(this, mode.structure)
                         }
-                    }
+                    )
                 }
             }
 

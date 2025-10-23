@@ -219,4 +219,8 @@ public open class MultiLLMPromptExecutor(
 
         return client.moderate(prompt, model)
     }
+
+    override fun close() {
+        llmClients.forEach { (_, client) -> client.close() }
+    }
 }

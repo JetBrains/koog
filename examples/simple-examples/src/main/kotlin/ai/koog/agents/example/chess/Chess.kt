@@ -13,9 +13,8 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.example.ApiKeyService
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
-import kotlinx.coroutines.runBlocking
 
-fun main() = runBlocking {
+suspend fun main() {
     val game = ChessGame()
 
     val toolRegistry = ToolRegistry {
@@ -37,27 +36,29 @@ fun main() = runBlocking {
         edge(nodeSendToolResult forwardTo nodeExecuteTool onToolCall { true })
     }
 
-    // Create a chat agent with a system prompt and the tool registry
-    val agent = AIAgent(
-        promptExecutor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey),
-        strategy = strategy,
-        llmModel = OpenAIModels.Reasoning.O3Mini,
-        systemPrompt = """
-            You are an agent who plays chess.
-            You should always propose a move in response to the "Your move!" message.
-            
-            DO NOT HALLUCINATE!!!
-            DO NOT PLAY ILLEGAL MOVES!!!
-            YOU CAN SEND A MESSAGE ONLY IF IT IS A RESIGNATION OR A CHECKMATE!!!
-        """.trimMargin(),
-        temperature = 0.0,
-        toolRegistry = toolRegistry,
-        maxIterations = 200,
-    )
+    simpleOpenAIExecutor(ApiKeyService.openAIApiKey).use { executor ->
+        // Create a chat agent with a system prompt and the tool registry
+        val agent = AIAgent(
+            promptExecutor = executor,
+            strategy = strategy,
+            llmModel = OpenAIModels.Reasoning.O3Mini,
+            systemPrompt = """
+                You are an agent who plays chess.
+                You should always propose a move in response to the "Your move!" message.
 
-    println("Chess Game started!")
+                DO NOT HALLUCINATE!!!
+                DO NOT PLAY ILLEGAL MOVES!!!
+                YOU CAN SEND A MESSAGE ONLY IF IT IS A RESIGNATION OR A CHECKMATE!!!
+            """.trimMargin(),
+            temperature = 0.0,
+            toolRegistry = toolRegistry,
+            maxIterations = 200,
+        )
 
-    val initialMessage = "Starting position is ${game.getBoard()}. White to move!"
+        println("Chess Game started!")
 
-    agent.run(initialMessage)
+        val initialMessage = "Starting position is ${game.getBoard()}. White to move!"
+
+        agent.run(initialMessage)
+    }
 }

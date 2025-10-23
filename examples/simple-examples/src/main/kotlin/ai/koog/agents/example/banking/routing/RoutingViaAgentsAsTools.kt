@@ -16,58 +16,57 @@ import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import kotlinx.coroutines.runBlocking
 
 fun main() = runBlocking {
-    val apiKey = ApiKeyService.openAIApiKey // Your OpenAI API key
-    val openAIExecutor = simpleOpenAIExecutor(apiKey)
+    simpleOpenAIExecutor(ApiKeyService.openAIApiKey).use { executor ->
+        val transferAgentService = AIAgentService(
+            promptExecutor = executor,
+            llmModel = OpenAIModels.CostOptimized.GPT4oMini,
+            systemPrompt = bankingAssistantSystemPrompt,
+            temperature = 0.0,
+            toolRegistry = ToolRegistry { tools(MoneyTransferTools().asTools()) }
+        )
 
-    val transferAgentService = AIAgentService(
-        promptExecutor = openAIExecutor,
-        llmModel = OpenAIModels.CostOptimized.GPT4oMini,
-        systemPrompt = bankingAssistantSystemPrompt,
-        temperature = 0.0,
-        toolRegistry = ToolRegistry { tools(MoneyTransferTools().asTools()) }
-    )
+        val analysisAgentService = AIAgentService(
+            promptExecutor = executor,
+            llmModel = OpenAIModels.CostOptimized.GPT4oMini,
+            systemPrompt = bankingAssistantSystemPrompt + transactionAnalysisPrompt,
+            temperature = 0.0,
+            toolRegistry = ToolRegistry { tools(TransactionAnalysisTools().asTools()) }
+        )
 
-    val analysisAgentService = AIAgentService(
-        promptExecutor = openAIExecutor,
-        llmModel = OpenAIModels.CostOptimized.GPT4oMini,
-        systemPrompt = bankingAssistantSystemPrompt + transactionAnalysisPrompt,
-        temperature = 0.0,
-        toolRegistry = ToolRegistry { tools(TransactionAnalysisTools().asTools()) }
-    )
-
-    val classifierAgent = AIAgent(
-        promptExecutor = openAIExecutor,
-        llmModel = OpenAIModels.CostOptimized.GPT4oMini,
-        toolRegistry = ToolRegistry {
-            tool(AskUser)
-            tool(
-                transferAgentService.createAgentTool(
-                    agentName = "transferMoney",
-                    agentDescription = "Transfers money and solves all arising problems",
-                    inputDescription = "Transfer request"
+        val classifierAgent = AIAgent(
+            promptExecutor = executor,
+            llmModel = OpenAIModels.CostOptimized.GPT4oMini,
+            toolRegistry = ToolRegistry {
+                tool(AskUser)
+                tool(
+                    transferAgentService.createAgentTool(
+                        agentName = "transferMoney",
+                        agentDescription = "Transfers money and solves all arising problems",
+                        inputDescription = "Transfer request"
+                    )
                 )
-            )
-            tool(
-                analysisAgentService.createAgentTool(
-                    agentName = "analyzeTransactions",
-                    agentDescription = "Performs analytics for user transactions",
-                    inputDescription = "Transaction analytics request"
+                tool(
+                    analysisAgentService.createAgentTool(
+                        agentName = "analyzeTransactions",
+                        agentDescription = "Performs analytics for user transactions",
+                        inputDescription = "Transaction analytics request"
+                    )
                 )
-            )
-        },
-        systemPrompt = bankingAssistantSystemPrompt + transactionAnalysisPrompt
-    )
+            },
+            systemPrompt = bankingAssistantSystemPrompt + transactionAnalysisPrompt
+        )
 
-    println("Banking Assistant started")
-    val message = "Send 25 euros to Daniel for dinner at the restaurant."
-    // transfer messages
+        println("Banking Assistant started")
+        val message = "Send 25 euros to Daniel for dinner at the restaurant."
+        // transfer messages
 //        "Send 50 euros to Alice for the concert tickets"
 //        "What's my current balance?"
-    // analysis messages
+        // analysis messages
 //        "How much have I spent on restaurants this month?"
 //         "What's my maximum check at a restaurant this month?"
 //         "How much did I spend on groceries in the first week of May?"
 //         "What's my total spending on entertainment in May?"
-    val result = classifierAgent.run(message)
-    println(result)
+        val result = classifierAgent.run(message)
+        println(result)
+    }
 }

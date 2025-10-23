@@ -7,6 +7,18 @@ import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
+import ai.koog.prompt.executor.clients.google.models.GoogleCandidate
+import ai.koog.prompt.executor.clients.google.models.GoogleContent
+import ai.koog.prompt.executor.clients.google.models.GoogleData
+import ai.koog.prompt.executor.clients.google.models.GoogleFunctionCallingConfig
+import ai.koog.prompt.executor.clients.google.models.GoogleFunctionCallingMode
+import ai.koog.prompt.executor.clients.google.models.GoogleFunctionDeclaration
+import ai.koog.prompt.executor.clients.google.models.GoogleGenerationConfig
+import ai.koog.prompt.executor.clients.google.models.GooglePart
+import ai.koog.prompt.executor.clients.google.models.GoogleRequest
+import ai.koog.prompt.executor.clients.google.models.GoogleResponse
+import ai.koog.prompt.executor.clients.google.models.GoogleTool
+import ai.koog.prompt.executor.clients.google.models.GoogleToolConfig
 import ai.koog.prompt.executor.clients.google.structure.GoogleBasicJsonSchemaGenerator
 import ai.koog.prompt.executor.clients.google.structure.GoogleResponseFormat
 import ai.koog.prompt.executor.clients.google.structure.GoogleStandardJsonSchemaGenerator
@@ -14,8 +26,8 @@ import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.message.Attachment
 import ai.koog.prompt.message.AttachmentContent
+import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
@@ -369,7 +381,9 @@ public open class GoogleLLMClient(
             .takeIf { it.isNotEmpty() }
             ?.let { GoogleContent(parts = it) }
 
-        val responseFormat: GoogleResponseFormat? = prompt.params.schema?.let { schema ->
+        val googleParams = prompt.params.toGoogleParams()
+
+        val responseFormat: GoogleResponseFormat? = googleParams.schema?.let { schema ->
             require(schema.capability in model.capabilities) {
                 "Model ${model.id} does not support structured output schema ${schema.name}"
             }
@@ -394,17 +408,16 @@ public open class GoogleLLMClient(
             responseMimeType = responseFormat?.responseMimeType,
             responseSchema = responseFormat?.responseSchema,
             responseJsonSchema = responseFormat?.responseJsonSchema,
-            temperature = if (model.capabilities.contains(LLMCapability.Temperature)) prompt.params.temperature else null,
-            candidateCount = if (model.capabilities.contains(LLMCapability.MultipleChoices)) prompt.params.numberOfChoices else null,
-            maxOutputTokens = prompt.params.maxTokens,
-            thinkingConfig = GoogleThinkingConfig(
-                includeThoughts = prompt.params.includeThoughts.takeIf { it == true },
-                thinkingBudget = prompt.params.thinkingBudget
-            ).takeIf { it.includeThoughts != null || it.thinkingBudget != null },
-            additionalProperties = prompt.params.additionalProperties
+            maxOutputTokens = googleParams.maxTokens,
+            temperature = if (model.capabilities.contains(LLMCapability.Temperature)) googleParams.temperature else null,
+            candidateCount = if (model.capabilities.contains(LLMCapability.MultipleChoices)) googleParams.numberOfChoices else null,
+            topP = googleParams.topP,
+            topK = googleParams.topK,
+            thinkingConfig = googleParams.thinkingConfig,
+            additionalProperties = googleParams.additionalProperties
         )
 
-        val functionCallingConfig = when (val toolChoice = prompt.params.toolChoice) {
+        val functionCallingConfig = when (val toolChoice = googleParams.toolChoice) {
             LLMParams.ToolChoice.Auto -> GoogleFunctionCallingConfig(GoogleFunctionCallingMode.AUTO)
             LLMParams.ToolChoice.None -> GoogleFunctionCallingConfig(GoogleFunctionCallingMode.NONE)
             LLMParams.ToolChoice.Required -> GoogleFunctionCallingConfig(GoogleFunctionCallingMode.ANY)
@@ -429,18 +442,19 @@ public open class GoogleLLMClient(
 
     private fun Message.User.toGoogleContent(model: LLModel): GoogleContent {
         val contentParts = buildList {
-            if (content.isNotEmpty() || attachments.isEmpty()) {
-                add(GooglePart.Text(content))
-            }
-            attachments.forEach { attachment ->
-                when (attachment) {
-                    is Attachment.Image -> {
+            parts.forEach { part ->
+                when (part) {
+                    is ContentPart.Text -> {
+                        add(GooglePart.Text(part.text))
+                    }
+
+                    is ContentPart.Image -> {
                         require(model.capabilities.contains(LLMCapability.Vision.Image)) {
                             "Model ${model.id} does not support images"
                         }
 
-                        val blob: GoogleData.Blob = when (val content = attachment.content) {
-                            is AttachmentContent.Binary -> GoogleData.Blob(attachment.mimeType, content.asBytes())
+                        val blob: GoogleData.Blob = when (val content = part.content) {
+                            is AttachmentContent.Binary -> GoogleData.Blob(part.mimeType, content.asBytes())
                             else -> throw IllegalArgumentException(
                                 "Unsupported image attachment content: ${content::class}"
                             )
@@ -449,13 +463,13 @@ public open class GoogleLLMClient(
                         add(GooglePart.InlineData(blob))
                     }
 
-                    is Attachment.Audio -> {
+                    is ContentPart.Audio -> {
                         require(model.capabilities.contains(LLMCapability.Audio)) {
                             "Model ${model.id} does not support audio"
                         }
 
-                        val blob: GoogleData.Blob = when (val content = attachment.content) {
-                            is AttachmentContent.Binary -> GoogleData.Blob(attachment.mimeType, content.asBytes())
+                        val blob: GoogleData.Blob = when (val content = part.content) {
+                            is AttachmentContent.Binary -> GoogleData.Blob(part.mimeType, content.asBytes())
                             else -> throw IllegalArgumentException(
                                 "Unsupported audio attachment content: ${content::class}"
                             )
@@ -464,13 +478,13 @@ public open class GoogleLLMClient(
                         add(GooglePart.InlineData(blob))
                     }
 
-                    is Attachment.File -> {
+                    is ContentPart.File -> {
                         require(model.capabilities.contains(LLMCapability.Document)) {
                             "Model ${model.id} does not support documents"
                         }
 
-                        val blob: GoogleData.Blob = when (val content = attachment.content) {
-                            is AttachmentContent.Binary -> GoogleData.Blob(attachment.mimeType, content.asBytes())
+                        val blob: GoogleData.Blob = when (val content = part.content) {
+                            is AttachmentContent.Binary -> GoogleData.Blob(part.mimeType, content.asBytes())
                             else -> throw IllegalArgumentException(
                                 "Unsupported file attachment content: ${content::class}"
                             )
@@ -479,13 +493,13 @@ public open class GoogleLLMClient(
                         add(GooglePart.InlineData(blob))
                     }
 
-                    is Attachment.Video -> {
+                    is ContentPart.Video -> {
                         require(model.capabilities.contains(LLMCapability.Vision.Video)) {
                             "Model ${model.id} does not support video"
                         }
 
-                        val blob: GoogleData.Blob = when (val content = attachment.content) {
-                            is AttachmentContent.Binary -> GoogleData.Blob(attachment.mimeType, content.asBytes())
+                        val blob: GoogleData.Blob = when (val content = part.content) {
+                            is AttachmentContent.Binary -> GoogleData.Blob(part.mimeType, content.asBytes())
                             else -> throw IllegalArgumentException(
                                 "Unsupported video attachment content: ${content::class}"
                             )
@@ -649,5 +663,9 @@ public open class GoogleLLMClient(
     public override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
         logger.warn { "Moderation is not supported by Google API" }
         throw UnsupportedOperationException("Moderation is not supported by Google API.")
+    }
+
+    override fun close() {
+        httpClient.close()
     }
 }

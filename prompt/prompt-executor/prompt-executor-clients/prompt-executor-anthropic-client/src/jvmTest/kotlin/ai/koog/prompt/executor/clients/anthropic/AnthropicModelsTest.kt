@@ -1,5 +1,6 @@
 package ai.koog.prompt.executor.clients.anthropic
 
+import ai.koog.prompt.executor.clients.anthropic.models.AnthropicMessageRequest
 import ai.koog.prompt.executor.clients.list
 import ai.koog.prompt.llm.LLMProvider
 import kotlin.test.Test

@@ -1,8 +1,11 @@
 package ai.koog.agents.core.feature.model.events
 
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.feature.model.AIAgentError
+import ai.koog.agents.core.utils.SerializationUtil
 import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
 
 /**
  * Represents an event triggered when the execution of a specific AI agent node starts.
@@ -16,16 +19,37 @@ import kotlinx.serialization.Serializable
  * understanding the flow of agent execution is essential.
  *
  * @property nodeName The name of the node whose execution is starting;
- * @property input The input data being processed by the node during the execution;
+ * @property input The input data provided to the node and serialized into JSON element;
  * @property timestamp The timestamp of the event, in milliseconds since the Unix epoch.
  */
 @Serializable
 public data class NodeExecutionStartingEvent(
     val runId: String,
     val nodeName: String,
-    val input: String,
+    val input: JsonElement?,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
-) : DefinedFeatureEvent()
+) : DefinedFeatureEvent() {
+
+    /**
+     * Creates an instance of [NodeExecutionStartingEvent].
+     *
+     * This constructor is deprecated and should be replaced with the constructor
+     * that accepts an input parameter of type [JsonElement].
+     */
+    @Deprecated("Use constructor with input parameter of type [JsonElement]")
+    public constructor(
+        runId: String,
+        nodeName: String,
+        input: String,
+        timestamp: Long = Clock.System.now().toEpochMilliseconds()
+    ) : this(
+        runId = runId,
+        nodeName = nodeName,
+        input = @OptIn(InternalAgentsApi::class)
+        SerializationUtil.tryParseToJsonElement(input),
+        timestamp = timestamp
+    )
+}
 
 /**
  * Represents an event indicating the completion of a node's execution within an AI agent.
@@ -43,10 +67,34 @@ public data class NodeExecutionStartingEvent(
 public data class NodeExecutionCompletedEvent(
     val runId: String,
     val nodeName: String,
-    val input: String,
-    val output: String,
+    val input: JsonElement?,
+    val output: JsonElement?,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
-) : DefinedFeatureEvent()
+) : DefinedFeatureEvent() {
+
+    /**
+     * Creates an instance of [NodeExecutionCompletedEvent].
+     *
+     * This constructor is deprecated and should be replaced with the constructor
+     * that accepts input and output parameters of type [JsonElement].
+     */
+    @Deprecated("Use constructor with input and output parameters of type [JsonElement]")
+    public constructor(
+        runId: String,
+        nodeName: String,
+        input: String,
+        output: String,
+        timestamp: Long = Clock.System.now().toEpochMilliseconds()
+    ) : this(
+        runId = runId,
+        nodeName = nodeName,
+        input = @OptIn(InternalAgentsApi::class)
+        SerializationUtil.tryParseToJsonElement(input),
+        output = @OptIn(InternalAgentsApi::class)
+        SerializationUtil.tryParseToJsonElement(output),
+        timestamp = timestamp
+    )
+}
 
 /**
  * Represents an event that signifies the occurrence of an error during the execution of a specific node
@@ -62,6 +110,7 @@ public data class NodeExecutionCompletedEvent(
  *
  * @property runId A unique identifier associated with the specific run of the AI agent;
  * @property nodeName The name of the node where the error occurred;
+ * @property input The input data provided to the node;
  * @property error An instance of `AIAgentError` containing the error details, such as a message, stack trace, and optional cause;
  * @property timestamp The timestamp of the event, in milliseconds since the Unix epoch.
  */
@@ -69,9 +118,31 @@ public data class NodeExecutionCompletedEvent(
 public data class NodeExecutionFailedEvent(
     val runId: String,
     val nodeName: String,
+    val input: JsonElement?,
     val error: AIAgentError,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
-) : DefinedFeatureEvent()
+) : DefinedFeatureEvent() {
+
+    /**
+     * Creates an instance of [NodeExecutionFailedEvent].
+     *
+     * This constructor is deprecated and should be replaced with the constructor
+     * that accepts an input parameter of type [JsonElement].
+     */
+    @Deprecated("Use constructor with input parameter of type [JsonElement]")
+    public constructor(
+        runId: String,
+        nodeName: String,
+        error: AIAgentError,
+        timestamp: Long = Clock.System.now().toEpochMilliseconds()
+    ) : this(
+        runId = runId,
+        nodeName = nodeName,
+        input = null,
+        error = error,
+        timestamp = timestamp
+    )
+}
 
 //region Deprecated
 

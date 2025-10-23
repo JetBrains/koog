@@ -1,7 +1,6 @@
 package ai.koog.agents.features.tracing
 
 import ai.koog.prompt.dsl.Prompt
-import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 
 /**
@@ -37,18 +36,4 @@ internal val Prompt.traceString: String
  * summary of the message content and its associated role is required.
  */
 internal val Message.Response.traceString: String
-    get() {
-        return "role: $role, message: $content"
-    }
-
-/**
- * A property that combines the provider ID and the model ID of an `LLModel` instance into a single string.
- *
- * It constructs a formatted identifier in the form of `providerId:modelId`, where:
- * - `providerId` is the unique identifier of the `LLMProvider` associated with the model.
- * - `modelId` is the unique identifier for the specific model instance.
- *
- * This property is typically used to uniquely identify an LLM instance for logging, tracing, or serialization purposes.
- */
-internal val LLModel.eventString: String
-    get() = "${this.provider.id}:${this.id}"
+    get() = "role: $role, message: $content"

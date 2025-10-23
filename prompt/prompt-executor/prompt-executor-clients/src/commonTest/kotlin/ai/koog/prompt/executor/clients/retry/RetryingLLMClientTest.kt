@@ -468,5 +468,9 @@ class RetryingLLMClientTest {
 
             return moderateResponse
         }
+
+        override fun close() {
+            // No resources to close
+        }
     }
 }

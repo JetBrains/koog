@@ -123,4 +123,8 @@ public class PromptExecutorProxy(
         pipeline.onLLMCallCompleted(runId, prompt, model, emptyList(), responses = emptyList(), moderationResponse = result)
         return result
     }
+
+    override fun close() {
+        executor.close()
+    }
 }

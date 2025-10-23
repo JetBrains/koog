@@ -1,5 +1,6 @@
 package ai.koog.agents.features.tracing.writer
 
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeExecuteTool
@@ -22,24 +23,28 @@ import ai.koog.agents.core.feature.model.events.StrategyCompletedEvent
 import ai.koog.agents.core.feature.model.events.ToolCallCompletedEvent
 import ai.koog.agents.core.feature.model.events.ToolCallStartingEvent
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.features.tracing.eventString
+import ai.koog.agents.core.utils.SerializationUtil
 import ai.koog.agents.features.tracing.feature.Tracing
 import ai.koog.agents.features.tracing.mock.MockLLMProvider
 import ai.koog.agents.features.tracing.mock.TestLogger
 import ai.koog.agents.features.tracing.mock.assistantMessage
 import ai.koog.agents.features.tracing.mock.createAgent
+import ai.koog.agents.features.tracing.mock.receivedToolResult
 import ai.koog.agents.features.tracing.mock.systemMessage
 import ai.koog.agents.features.tracing.mock.testClock
 import ai.koog.agents.features.tracing.mock.toolCallMessage
-import ai.koog.agents.features.tracing.mock.toolResult
 import ai.koog.agents.features.tracing.mock.userMessage
 import ai.koog.agents.features.tracing.traceString
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.llm.toModelInfo
+import ai.koog.prompt.message.Message
 import ai.koog.utils.io.use
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.JsonPrimitive
+import kotlin.reflect.typeOf
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
@@ -144,57 +149,69 @@ class TraceFeatureMessageLogWriterTest {
             val expectedLogMessages = listOf(
                 "[INFO] Received feature message [event]: ${AgentStartingEvent::class.simpleName} (agent id: $agentId, run id: $runId)",
                 "[INFO] Received feature message [event]: ${GraphStrategyStartingEvent::class.simpleName} (run id: $runId, strategy: $strategyName)",
-                "[INFO] Received feature message [event]: ${NodeExecutionStartingEvent::class.simpleName} (run id: $runId, node: __start__, input: $userPrompt)",
-                "[INFO] Received feature message [event]: ${NodeExecutionCompletedEvent::class.simpleName} (run id: $runId, node: __start__, input: $userPrompt, output: $userPrompt)",
-                "[INFO] Received feature message [event]: ${NodeExecutionStartingEvent::class.simpleName} (run id: $runId, node: test-llm-call, input: $userPrompt)",
+                "[INFO] Received feature message [event]: ${NodeExecutionStartingEvent::class.simpleName} (run id: $runId, node: __start__, input: \"$userPrompt\")",
+                "[INFO] Received feature message [event]: ${NodeExecutionCompletedEvent::class.simpleName} (run id: $runId, node: __start__, input: \"$userPrompt\", output: \"$userPrompt\")",
+                "[INFO] Received feature message [event]: ${NodeExecutionStartingEvent::class.simpleName} (run id: $runId, node: test-llm-call, input: \"$userPrompt\")",
                 "[INFO] Received feature message [event]: ${LLMCallStartingEvent::class.simpleName} (run id: $runId, prompt: ${
                     expectedPrompt.copy(
                         messages = expectedPrompt.messages + userMessage(
                             content = userPrompt
                         )
                     ).traceString
-                }, model: ${testModel.eventString}, tools: [${dummyTool.name}])",
+                }, model: ${testModel.toModelInfo().modelIdentifierName}, tools: [${dummyTool.name}])",
                 "[INFO] Received feature message [event]: ${LLMCallCompletedEvent::class.simpleName} (run id: $runId, prompt: ${
                     expectedPrompt.copy(
                         messages = expectedPrompt.messages + userMessage(
                             content = userPrompt
                         )
                     ).traceString
-                }, model: ${testModel.eventString}, responses: [{role: Tool, message: {\"dummy\":\"test\"}}])",
-                "[INFO] Received feature message [event]: ${NodeExecutionCompletedEvent::class.simpleName} (run id: $runId, node: test-llm-call, input: $userPrompt, output: ${
-                    toolCallMessage(
-                        dummyTool.name,
-                        content = """{"dummy":"test"}"""
-                    )
-                })",
-                "[INFO] Received feature message [event]: ${NodeExecutionStartingEvent::class.simpleName} (run id: $runId, node: test-tool-call, input: ${
-                    toolCallMessage(
-                        dummyTool.name,
-                        content = """{"dummy":"test"}"""
-                    )
-                })",
+                }, model: ${testModel.toModelInfo().modelIdentifierName}, responses: [{role: Tool, message: {\"dummy\":\"test\"}}])",
+                "[INFO] Received feature message [event]: ${NodeExecutionCompletedEvent::class.simpleName} (run id: $runId, node: test-llm-call, " +
+                    "input: \"$userPrompt\", " +
+                    "output: ${
+                        @OptIn(InternalAgentsApi::class)
+                        SerializationUtil.trySerializeDataToJsonElement(
+                            data = toolCallMessage(
+                                toolName = dummyTool.name,
+                                content = """{"dummy":"test"}"""
+                            ),
+                            dataType = typeOf<Message>()
+                        )}" +
+                    ")",
+                "[INFO] Received feature message [event]: ${NodeExecutionStartingEvent::class.simpleName} (run id: $runId, node: test-tool-call, " +
+                    "input: ${
+                        @OptIn(InternalAgentsApi::class)
+                        SerializationUtil.trySerializeDataToJsonElement(
+                            data = toolCallMessage(
+                                toolName = dummyTool.name,
+                                content = """{"dummy":"test"}"""
+                            ),
+                            dataType = typeOf<Message.Tool.Call>()
+                        )}" +
+                    ")",
                 "[INFO] Received feature message [event]: ${ToolCallStartingEvent::class.simpleName} (run id: $runId, tool: ${dummyTool.name}, tool args: {\"dummy\":\"test\"})",
                 "[INFO] Received feature message [event]: ${ToolCallCompletedEvent::class.simpleName} (run id: $runId, tool: ${dummyTool.name}, tool args: {\"dummy\":\"test\"}, result: ${dummyTool.result})",
-                "[INFO] Received feature message [event]: ${NodeExecutionCompletedEvent::class.simpleName} (run id: $runId, node: test-tool-call, input: ${
-                    toolCallMessage(
-                        dummyTool.name,
-                        content = """{"dummy":"test"}"""
-                    )
-                }, output: ${toolResult("0", dummyTool.name, dummyTool.result, dummyTool.result)})",
-                "[INFO] Received feature message [event]: ${NodeExecutionStartingEvent::class.simpleName} (run id: $runId, node: test-node-llm-send-tool-result, input: ${
-                    toolResult(
-                        "0",
-                        dummyTool.name,
-                        dummyTool.result,
-                        dummyTool.result
-                    )
-                })",
+                "[INFO] Received feature message [event]: ${NodeExecutionCompletedEvent::class.simpleName} (run id: $runId, node: test-tool-call, " +
+                    "input: ${
+                        @OptIn(InternalAgentsApi::class)
+                        SerializationUtil.trySerializeDataToJsonElement(
+                            data = toolCallMessage(
+                                toolName = dummyTool.name,
+                                content = """{"dummy":"test"}"""
+                            ),
+                            dataType = typeOf<Message.Tool.Call>()
+                        )}, " +
+                    "output: ${JsonPrimitive(dummyTool.result)}" +
+                    ")",
+                "[INFO] Received feature message [event]: ${NodeExecutionStartingEvent::class.simpleName} (run id: $runId, node: test-node-llm-send-tool-result, " +
+                    "input: ${JsonPrimitive(dummyTool.result)}" +
+                    ")",
                 "[INFO] Received feature message [event]: ${LLMCallStartingEvent::class.simpleName} (run id: $runId, prompt: ${
                     expectedPrompt.copy(
                         messages = expectedPrompt.messages + listOf(
                             userMessage(content = userPrompt),
                             toolCallMessage(dummyTool.name, content = """{"dummy":"test"}"""),
-                            toolResult(
+                            receivedToolResult(
                                 "0",
                                 dummyTool.name,
                                 dummyTool.result,
@@ -202,13 +219,13 @@ class TraceFeatureMessageLogWriterTest {
                             ).toMessage(clock = testClock)
                         )
                     ).traceString
-                }, model: ${testModel.eventString}, tools: [${dummyTool.name}])",
+                }, model: ${testModel.toModelInfo().modelIdentifierName}, tools: [${dummyTool.name}])",
                 "[INFO] Received feature message [event]: ${LLMCallCompletedEvent::class.simpleName} (run id: $runId, prompt: ${
                     expectedPrompt.copy(
                         messages = expectedPrompt.messages + listOf(
                             userMessage(content = userPrompt),
                             toolCallMessage(dummyTool.name, content = """{"dummy":"test"}"""),
-                            toolResult(
+                            receivedToolResult(
                                 "0",
                                 dummyTool.name,
                                 dummyTool.result,
@@ -216,17 +233,18 @@ class TraceFeatureMessageLogWriterTest {
                             ).toMessage(clock = testClock)
                         )
                     ).traceString
-                }, model: ${testModel.eventString}, responses: [{${expectedResponse.traceString}}])",
-                "[INFO] Received feature message [event]: ${NodeExecutionCompletedEvent::class.simpleName} (run id: $runId, node: test-node-llm-send-tool-result, input: ${
-                    toolResult(
-                        "0",
-                        dummyTool.name,
-                        dummyTool.result,
-                        dummyTool.result
-                    )
-                }, output: $expectedResponse)",
-                "[INFO] Received feature message [event]: ${NodeExecutionStartingEvent::class.simpleName} (run id: $runId, node: __finish__, input: $mockResponse)",
-                "[INFO] Received feature message [event]: ${NodeExecutionCompletedEvent::class.simpleName} (run id: $runId, node: __finish__, input: $mockResponse, output: $mockResponse)",
+                }, model: ${testModel.toModelInfo().modelIdentifierName}, responses: [{${expectedResponse.traceString}}])",
+                "[INFO] Received feature message [event]: ${NodeExecutionCompletedEvent::class.simpleName} (run id: $runId, node: test-node-llm-send-tool-result, " +
+                    "input: ${JsonPrimitive(dummyTool.result)}, " +
+                    "output: ${
+                        @OptIn(InternalAgentsApi::class)
+                        SerializationUtil.trySerializeDataToJsonElement(
+                            data = expectedResponse,
+                            dataType = typeOf<Message>()
+                        )}" +
+                    ")",
+                "[INFO] Received feature message [event]: ${NodeExecutionStartingEvent::class.simpleName} (run id: $runId, node: __finish__, input: \"$mockResponse\")",
+                "[INFO] Received feature message [event]: ${NodeExecutionCompletedEvent::class.simpleName} (run id: $runId, node: __finish__, input: \"$mockResponse\", output: \"$mockResponse\")",
                 "[INFO] Received feature message [event]: ${StrategyCompletedEvent::class.simpleName} (run id: $runId, strategy: $strategyName, result: $mockResponse)",
                 "[INFO] Received feature message [event]: ${AgentCompletedEvent::class.simpleName} (agent id: $agentId, run id: $runId, result: $mockResponse)",
                 "[INFO] Received feature message [event]: ${AgentClosingEvent::class.simpleName} (agent id: $agentId)",
@@ -410,8 +428,12 @@ class TraceFeatureMessageLogWriterTest {
             }
 
             val mockExecutor = getMockExecutor(clock = testClock) {
-                mockLLMToolCall(tool = dummyTool, args = DummyTool.Args("test"), toolCallId = "0") onRequestEquals
-                    userPrompt
+                mockLLMToolCall(
+                    tool = dummyTool,
+                    args = DummyTool.Args("test"),
+                    toolCallId = "0"
+                ) onRequestEquals userPrompt
+
                 mockLLMAnswer(mockResponse) onRequestContains dummyTool.result
             }
 
@@ -448,20 +470,20 @@ class TraceFeatureMessageLogWriterTest {
                             content = userPrompt
                         )
                     ).traceString
-                }, model: ${testModel.eventString}, tools: [${dummyTool.name}])",
+                }, model: ${testModel.toModelInfo().modelIdentifierName}, tools: [${dummyTool.name}])",
                 "[INFO] Received feature message [event]: ${LLMCallCompletedEvent::class.simpleName} (run id: $runId, prompt: ${
                     expectedPrompt.copy(
                         messages = expectedPrompt.messages + userMessage(
                             content = userPrompt
                         )
                     ).traceString
-                }, model: ${testModel.eventString}, responses: [{role: Tool, message: {\"dummy\":\"test\"}}])",
+                }, model: ${testModel.toModelInfo().modelIdentifierName}, responses: [{role: Tool, message: {\"dummy\":\"test\"}}])",
                 "[INFO] Received feature message [event]: ${LLMCallStartingEvent::class.simpleName} (run id: $runId, prompt: ${
                     expectedPrompt.copy(
                         messages = expectedPrompt.messages + listOf(
                             userMessage(content = userPrompt),
                             toolCallMessage(dummyTool.name, content = """{"dummy":"test"}"""),
-                            toolResult(
+                            receivedToolResult(
                                 "0",
                                 dummyTool.name,
                                 dummyTool.result,
@@ -469,13 +491,13 @@ class TraceFeatureMessageLogWriterTest {
                             ).toMessage(clock = testClock)
                         )
                     ).traceString
-                }, model: ${testModel.eventString}, tools: [${dummyTool.name}])",
+                }, model: ${testModel.toModelInfo().modelIdentifierName}, tools: [${dummyTool.name}])",
                 "[INFO] Received feature message [event]: ${LLMCallCompletedEvent::class.simpleName} (run id: $runId, prompt: ${
                     expectedPrompt.copy(
                         messages = expectedPrompt.messages + listOf(
                             userMessage(content = userPrompt),
                             toolCallMessage(dummyTool.name, content = """{"dummy":"test"}"""),
-                            toolResult(
+                            receivedToolResult(
                                 "0",
                                 dummyTool.name,
                                 dummyTool.result,
@@ -483,7 +505,7 @@ class TraceFeatureMessageLogWriterTest {
                             ).toMessage(clock = testClock)
                         )
                     ).traceString
-                }, model: ${testModel.eventString}, responses: [{${expectedResponse.traceString}}])",
+                }, model: ${testModel.toModelInfo().modelIdentifierName}, responses: [{${expectedResponse.traceString}}])",
             )
 
             val actualMessages = targetLogger.messages
