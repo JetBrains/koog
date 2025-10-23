@@ -17,7 +17,7 @@ import kotlin.jvm.JvmOverloads
 @Serializable
 public sealed interface Message {
     /**
-     * The content of the message aggregated from all [ContentPart.Text] parts joined to [String] by line separator.
+     * The textual content of the message aggregated from all [ContentPart.Text] parts joined to [String] separated by newlines.
      */
     public val content: String
         get() = parts.filterIsInstance<ContentPart.Text>().joinToString(separator = "\n") { it.text }

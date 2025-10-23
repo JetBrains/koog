@@ -455,9 +455,7 @@ public class BedrockLLMClient(
                                 }
                             )
                         }
-                        else -> {
-                            logger.debug { "Skipping message part $part" }
-                        }
+                        else -> throw IllegalArgumentException("Unsupported attachment type: $this")
                     }
                 }
             }

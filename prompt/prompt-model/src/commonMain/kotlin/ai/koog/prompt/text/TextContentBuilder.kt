@@ -33,8 +33,8 @@ public fun text(block: TextContentBuilder.() -> Unit): String = TextContentBuild
  * Example:
  * ```kotlin
  * TextContentBuilder().apply {
- *     text { "Some text before markdown." }
- *     text { "Some other text." }
+ *     text { +"Some text before markdown." }
+ *     text { +"Some other text." }
  * }
  * ```
  *
