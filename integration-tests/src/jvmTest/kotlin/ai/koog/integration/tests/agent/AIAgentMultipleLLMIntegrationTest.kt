@@ -24,6 +24,7 @@ import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.RetryUtils.withRetry
 import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
+import ai.koog.integration.tests.utils.annotations.Retry
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
@@ -389,10 +390,10 @@ class AIAgentMultipleLLMIntegrationTest {
                         model = AnthropicModels.Haiku_4_5
                         rewritePrompt {
                             prompt("test", params = LLMParams(toolChoice = LLMParams.ToolChoice.Auto)) {
-                                system(
-                                    "You are a helpful assistant. You need to solve my task. " +
-                                        "JUST CALL TOOLS. NO QUESTIONS ASKED."
-                                )
+                                system {
+                                    +"You are a helpful assistant. You need to solve my task. "
+                                    +"JUST CALL TOOLS. NO QUESTIONS ASKED."
+                                }
                             }
                         }
                     }
@@ -523,6 +524,7 @@ class AIAgentMultipleLLMIntegrationTest {
     }
 
     @Test
+    @Retry(5)
     fun integration_testOpenAIAnthropicAgent() = runTest(timeout = 10.minutes) {
         Models.assumeAvailable(LLMProvider.OpenAI)
         Models.assumeAvailable(LLMProvider.Anthropic)
@@ -545,6 +547,7 @@ class AIAgentMultipleLLMIntegrationTest {
         val result = agent.run(
             "Generate me a project in Ktor that has a GET endpoint that returns the capital of France. Write a test"
         )
+        eventsChannel.close()
 
         assertNotNull(result)
 
