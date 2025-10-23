@@ -62,6 +62,16 @@ class BedrockLLMClientTest {
     }
 
     @Test
+    fun `can create BedrockLLMClient with API key`() {
+        val client = BedrockLLMClient(
+            bearerTokenProvider = StaticBearerTokenProvider(token = "test-token"),
+            settings = BedrockClientSettings(region = BedrockRegions.US_EAST_1.regionCode),
+            clock = Clock.System
+        )
+        assertNotNull(client)
+    }
+
+    @Test
     fun `can create BedrockModel with custom inference prefix`() {
         val originalModel = BedrockModels.AnthropicClaude4Sonnet
 

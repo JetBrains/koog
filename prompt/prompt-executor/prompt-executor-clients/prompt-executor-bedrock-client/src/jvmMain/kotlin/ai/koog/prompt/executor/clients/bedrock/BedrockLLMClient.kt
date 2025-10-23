@@ -40,6 +40,7 @@ import aws.sdk.kotlin.services.bedrockruntime.model.InvokeModelWithResponseStrea
 import aws.sdk.kotlin.services.bedrockruntime.model.InvokeModelWithResponseStreamResponse
 import aws.sdk.kotlin.services.bedrockruntime.model.ResponseStream
 import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
+import aws.smithy.kotlin.runtime.http.auth.BearerTokenProvider
 import aws.smithy.kotlin.runtime.net.url.Url
 import aws.smithy.kotlin.runtime.retries.StandardRetryStrategy
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -119,6 +120,38 @@ public class BedrockLLMClient(
         bedrockClient = BedrockRuntimeClient {
             this.region = settings.region
             this.credentialsProvider = credentialsProvider
+
+            // Configure a custom endpoint if provided
+            settings.endpointUrl?.let { url ->
+                this.endpointUrl = Url.parse(url)
+            }
+
+            // Configure retry policy
+            this.retryStrategy = StandardRetryStrategy {
+                maxAttempts = settings.maxRetries
+            }
+        },
+        moderationGuardrailsSettings = settings.moderationGuardrailsSettings,
+        clock = clock
+    )
+
+    /**
+     * Creates a new Bedrock LLM client configured with a bearer token provider for Bedrock API keys.
+     *
+     * @param bearerTokenProvider Bearer token provider for authentication using Bedrock API keys.
+     * See [AWS documentation](https://docs.aws.amazon.com/bedrock/latest/userguide/api-keys-use.html) for more information.
+     * @param settings Configuration settings for the Bedrock client, such as region and endpoint
+     * @param clock A clock used for time-based operations
+     * @return A configured [LLMClient] instance for Bedrock
+     */
+    public constructor(
+        bearerTokenProvider: BearerTokenProvider,
+        settings: BedrockClientSettings = BedrockClientSettings(),
+        clock: Clock = Clock.System,
+    ) : this(
+        bedrockClient = BedrockRuntimeClient {
+            this.region = settings.region
+            this.bearerTokenProvider = bearerTokenProvider
 
             // Configure a custom endpoint if provided
             settings.endpointUrl?.let { url ->

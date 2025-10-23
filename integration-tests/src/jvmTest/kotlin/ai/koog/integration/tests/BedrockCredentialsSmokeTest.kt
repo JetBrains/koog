@@ -30,4 +30,22 @@ class BedrockCredentialsSmokeTest {
             )
         }
     }
+
+    @Test
+    @EnabledIfEnvironmentVariable(named = "AWS_BEARER_TOKEN_BEDROCK", matches = ".+")
+    @EnabledIfEnvironmentVariable(named = "KOOG_HEAVY_TESTS", matches = "true")
+    fun bedrockApiKeyAuthenticationWorks() = runBlocking {
+        val region = System.getenv("AWS_REGION") ?: "us-east-1"
+
+        BedrockClient {
+            this.region = region
+        }.use { bedrock ->
+            val resp = bedrock.listFoundationModels { }
+            assertEquals(
+                true,
+                resp.modelSummaries?.isNotEmpty(),
+                "Bedrock ListFoundationModels returned no models – API key authentication might have failed"
+            )
+        }
+    }
 }
