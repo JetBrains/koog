@@ -11,5 +11,69 @@ jobs:
         if: |
           github.ref == 'refs/heads/develop'
         run: |
-          echo "This workflow cannot be run on develop branch."
+          echo "This workflow cannot be run on develop branch. If you want to deploy docs, run it on the latest release branch"
           exit 1
+
+  deploy-dokka-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v5
+
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Build Dokka docs
+        run: ./gradlew dokkaGenerate
+
+      - name: Debug listing build folder
+        run: ls -R build
+
+      - name: Push to docs repo
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+
+          cd build/dokka/html
+
+          echo "api.koog.ai" > CNAME
+
+          git init
+          git remote add origin https://x-access-token:${{ secrets.DOCS_DEPLOY_TOKEN }}@github.com/JetBrains/koog-api-docs.git
+          git checkout -b main
+          git add .
+          git commit -m "Update docs"
+          git push --force origin main
+
+  deploy-gh-pages:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Configure Git
+        run: |
+          git config --global core.autocrlf input
+      - uses: actions/checkout@v5
+
+      # Using setup-python on CI to install Python might be faster than with uv (official uv recommendation)
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version-file: "./docs/.python-version"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.8.15"
+          enable-cache: true
+
+      - name: Deploy docs
+        working-directory: ./docs
+        run: |
+          uv sync --frozen --all-extras
+          uv run mkdocs gh-deploy --force
