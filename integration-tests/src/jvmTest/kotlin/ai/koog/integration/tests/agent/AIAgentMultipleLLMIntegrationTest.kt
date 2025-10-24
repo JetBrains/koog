@@ -364,16 +364,15 @@ class AIAgentMultipleLLMIntegrationTest {
         prompt: Prompt = prompt("test") {},
         initialExecutor: MultiLLMPromptExecutor? = null,
     ): AIAgent<String, String> {
-        var executor: MultiLLMPromptExecutor
-        if (initialExecutor == null) {
+        val executor = if (initialExecutor == null) {
             val openAIClient = OpenAILLMClient(openAIApiKey)
             val anthropicClient = AnthropicLLMClient(anthropicApiKey)
-            executor = MultiLLMPromptExecutor(
+            MultiLLMPromptExecutor(
                 LLMProvider.OpenAI to openAIClient,
                 LLMProvider.Anthropic to anthropicClient
             )
         } else {
-            executor = initialExecutor
+            initialExecutor
         }
         val strategy = strategy<String, String>("test") {
             val anthropicSubgraph by subgraph<String, Unit>("anthropic") {
