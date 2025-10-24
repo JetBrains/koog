@@ -124,7 +124,7 @@ suspend fun bedrockEmbed(text: String) {
     val awsSessionToken = System.getenv("AWS_SESSION_TOKEN")
     // Create a BedrockLLMClient instance
     val client = BedrockLLMClient(
-        credentialsProvider = StaticCredentialsProvider {
+        identityProvider = StaticCredentialsProvider {
             this.accessKeyId = awsAccessKeyId
             this.secretAccessKey = awsSecretAccessKey
             awsSessionToken?.let { this.sessionToken = it }

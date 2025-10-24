@@ -335,7 +335,7 @@ class BedrockLLMClientTest {
     @Test
     fun `execute throws IllegalArgumentException for TitanEmbedding models`() = runTest {
         val client = BedrockLLMClient(
-            credentialsProvider = StaticCredentialsProvider {
+            identityProvider = StaticCredentialsProvider {
                 accessKeyId = "test-key"
                 secretAccessKey = "test-secret"
             },
@@ -354,7 +354,7 @@ class BedrockLLMClientTest {
     @Test
     fun `execute throws IllegalArgumentException for Cohere models`() = runTest {
         val client = BedrockLLMClient(
-            credentialsProvider = StaticCredentialsProvider {
+            identityProvider = StaticCredentialsProvider {
                 accessKeyId = "test-key"
                 secretAccessKey = "test-secret"
             },
@@ -373,7 +373,7 @@ class BedrockLLMClientTest {
     @Test
     fun `execute throws IllegalArgumentException for model without Completion capability`() = runTest {
         val client = BedrockLLMClient(
-            credentialsProvider = StaticCredentialsProvider {
+            identityProvider = StaticCredentialsProvider {
                 accessKeyId = "test-key"
                 secretAccessKey = "test-secret"
             },
@@ -397,7 +397,7 @@ class BedrockLLMClientTest {
     @Test
     fun `executeStreaming throws IllegalArgumentException for TitanEmbedding models`() = runTest {
         val client = BedrockLLMClient(
-            credentialsProvider = StaticCredentialsProvider {
+            identityProvider = StaticCredentialsProvider {
                 accessKeyId = "test-key"
                 secretAccessKey = "test-secret"
             },
@@ -416,7 +416,7 @@ class BedrockLLMClientTest {
     @Test
     fun `executeStreaming throws IllegalArgumentException for Cohere models`() = runTest {
         val client = BedrockLLMClient(
-            credentialsProvider = StaticCredentialsProvider {
+            identityProvider = StaticCredentialsProvider {
                 accessKeyId = "test-key"
                 secretAccessKey = "test-secret"
             },
@@ -435,7 +435,7 @@ class BedrockLLMClientTest {
     @Test
     fun `executeStreaming throws IllegalArgumentException for model without Completion capability`() = runTest {
         val client = BedrockLLMClient(
-            credentialsProvider = StaticCredentialsProvider {
+            identityProvider = StaticCredentialsProvider {
                 accessKeyId = "test-key"
                 secretAccessKey = "test-secret"
             },
