@@ -32,7 +32,8 @@ public fun simpleBedrockExecutor(
     )
 
 /**
- * Creates an instance of `SingleLLMPromptExecutor` with a `BedrockLLMClient` using a Bedrock API key.
+ * Creates an instance of `SingleLLMPromptExecutor` with a `BedrockLLMClient`.
+ * Uses the provided Bedrock API key to create a [aws.smithy.kotlin.runtime.http.auth.BearerTokenProvider].
  *
  * See [AWS documentation](https://docs.aws.amazon.com/bedrock/latest/userguide/api-keys-use.html) for more information
  * about Bedrock API keys.
@@ -40,7 +41,7 @@ public fun simpleBedrockExecutor(
  * @param bedrockApiKey Your Bedrock API key (bearer token).
  * @param settings Custom client settings for region and timeouts.
  */
-public fun simpleBedrockExecutorWithApiKey(
+public fun simpleBedrockExecutorWithBearerToken(
     bedrockApiKey: String,
     settings: BedrockClientSettings = BedrockClientSettings()
 ): SingleLLMPromptExecutor =
