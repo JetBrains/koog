@@ -1,48 +1,32 @@
-@file:OptIn(ExperimentalKotlinGradlePluginApi::class)
-
-import org.jetbrains.compose.desktop.application.dsl.TargetFormat
+import org.gradle.kotlin.dsl.withType
 import org.jetbrains.compose.reload.gradle.ComposeHotRun
-import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
-import org.jetbrains.kotlin.gradle.plugin.KotlinSourceSetTree
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 
 plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.compose)
+    alias(libs.plugins.android.kmp.library)
     alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.compose.multiplatform)
+    alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.multiplatform)
-    alias(libs.plugins.hotReload)
 }
 
 kotlin {
     jvmToolchain(libs.versions.jdkVersion.get().toInt())
 
-    androidTarget {
-        // https://www.jetbrains.com/help/kotlin-multiplatform-dev/compose-test.html
-        instrumentedTestVariant.sourceSetTree.set(KotlinSourceSetTree.test)
+    android {
+        namespace = "com.jetbrains.example.koog.share.ui"
+        compileSdk = 36
+        minSdk = 23
+        androidResources.enable = true
     }
 
     jvm()
 
-    listOf(
-        iosArm64(),
-        iosSimulatorArm64()
-    ).forEach {
-        it.binaries.framework {
-            baseName = "ComposeApp"
-            isStatic = true
-        }
-    }
+    iosArm64()
+    iosSimulatorArm64()
 
-    js {
-        browser()
-        binaries.executable()
-    }
-
-    wasmJs {
-        browser()
-        binaries.executable()
-    }
+    js { browser() }
+    wasmJs { browser() }
 
     sourceSets {
         commonMain.dependencies {
@@ -96,63 +80,13 @@ kotlin {
             implementation(libs.ktor.client.js)
         }
     }
-}
 
-android {
-    namespace = "com.jetbrains.example.koog.compose"
-    compileSdk = 36
-
-    buildFeatures {
-        compose = true
-    }
-
-    defaultConfig {
-        applicationId = "com.jetbrains.example.koog.compose"
-        minSdk = 24
-        targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-    }
-
-    buildTypes {
-        release {
-            isMinifyEnabled = false
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
-            )
+    targets
+        .withType<KotlinNativeTarget>()
+        .matching { it.konanTarget.family.isAppleFamily }
+        .configureEach {
+            binaries { framework { baseName = "commonApp" } }
         }
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
-    }
-}
-
-compose.desktop {
-    application {
-        mainClass = "MainKt"
-
-        nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "Koog Demo App"
-            packageVersion = "1.0.0"
-
-            linux {
-                // iconFile.set(project.file("desktopAppIcons/LinuxIcon.png"))
-            }
-            windows {
-                // iconFile.set(project.file("desktopAppIcons/WindowsIcon.ico"))
-            }
-            macOS {
-                // iconFile.set(project.file("desktopAppIcons/MacosIcon.icns"))
-                bundleID = "com.jetbrains.example.koog.compose.desktopApp"
-            }
-        }
-    }
 }
 
 tasks.withType<ComposeHotRun>().configureEach {

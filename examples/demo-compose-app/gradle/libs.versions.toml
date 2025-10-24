@@ -1,20 +1,23 @@
 [versions]
 agp = "8.12.3"
+androidx-activityCompose = "1.11.0"
 androidx-datastore = "1.1.7"
+compose-hot-reload = "1.0.0-rc02"
 compose-multiplatform = "1.9.1"
-hotReload = "1.0.0-rc02"
+javaVersion = "VERSION_17"
 jdkVersion = "17"
 jetbrains-lifecycle = "2.9.5"
 jetbrains-navigation = "2.9.1"
 koin-bom = "4.1.1"
 koog = "0.5.1"
-kotlin = "2.2.20"
+kotlin = "2.2.21"
 kotlinx-coroutines = "1.10.2"
 kotlinx-datetime = "0.7.1-0.6.x-compat"
 kotlinx-serialization = "1.9.0"
 ktor = "3.3.1"
 
 [libraries]
+androidx-activityCompose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activityCompose" }
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "androidx-datastore" }
 jetbrains-lifecycle-viewmodel-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "jetbrains-lifecycle" }
 jetbrains-navigation-compose = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "jetbrains-navigation" }
@@ -36,8 +39,11 @@ ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
-compose = { id = "org.jetbrains.compose", version.ref = "compose-multiplatform" }
+android-kmp-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
-hotReload = { id = "org.jetbrains.compose.hot-reload", version.ref = "hotReload" }
+compose-hot-reload = { id = "org.jetbrains.compose.hot-reload", version.ref = "compose-hot-reload" }
+compose-multiplatform = { id = "org.jetbrains.compose", version.ref = "compose-multiplatform" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }

@@ -23,13 +23,13 @@ jobs:
       fail-fast: false
       matrix:
         gradle-tasks: [
-          "lint :app:assembleDebug :app:assembleRelease",
-          ":app:jvmJar",
-          ":app:composeCompatibilityBrowserDistribution"
+          "lint :androidApp:assembleDebug :androidApp:assembleRelease",
+          ":desktopApp:jar",
+          ":webApp:composeCompatibilityBrowserDistribution"
         ]
         os: [ ubuntu-latest ]
         include:
-          - gradle-tasks: ":app:iosSimulatorArm64Binaries"
+          - gradle-tasks: ":commonApp:iosSimulatorArm64Binaries"
             os: macos-latest-xlarge
 
     steps:
