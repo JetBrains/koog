@@ -2,18 +2,10 @@ package ai.koog.agents.testing.tools
 
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.environment.ReceivedToolResult
-import ai.koog.agents.core.tools.DirectToolCallsEnabler
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.message.Message
-
-/**
- * A mock implementation of [DirectToolCallsEnabler] used for testing purposes.
- * This enables direct tool calls without requiring additional authorization.
- */
-@OptIn(InternalAgentToolsApi::class)
-private object MockToolsEnabler : DirectToolCallsEnabler
 
 /**
  * A mock implementation of [AIAgentEnvironment] used for testing agent behavior.
@@ -98,7 +90,7 @@ public class MockEnvironment(
         val tool = toolRegistry.getTool(functionCall.tool)
 
         val args = tool.decodeArgs(functionCall.contentJson)
-        val result = tool.executeUnsafe(args, MockToolsEnabler)
+        val result = tool.executeUnsafe(args)
 
         return ReceivedToolResult(
             id = functionCall.id,

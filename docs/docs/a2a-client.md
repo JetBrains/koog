@@ -5,6 +5,23 @@ It provides a complete implementation of
 the [A2A protocol specification](https://a2a-protocol.org/latest/specification/), handling agent discovery, message
 exchange, task management, and real-time streaming responses.
 
+## Dependencies
+
+To use the A2A client in your project, add the following dependencies to your `build.gradle.kts`:
+
+```kotlin
+dependencies {
+    // Core A2A client library
+    implementation("ai.koog:a2a-client:$koogVersion")
+
+    // HTTP JSON-RPC transport (most common)
+    implementation("ai.koog:a2a-transport-client-jsonrpc-http:$koogVersion")
+
+    // Ktor client engine (choose one that fits your needs)
+    implementation("io.ktor:ktor-client-cio:$ktorVersion")
+}
+```
+
 ## Overview
 
 The A2A client acts as a bridge between your application and A2A-compliant agents.

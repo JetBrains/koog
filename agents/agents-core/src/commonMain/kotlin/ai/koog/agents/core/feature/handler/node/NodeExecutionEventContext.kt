@@ -65,6 +65,8 @@ public data class NodeExecutionCompletedContext(
 public data class NodeExecutionFailedContext(
     val node: AIAgentNodeBase<*, *>,
     val context: AIAgentContext,
+    val input: Any?,
+    val inputType: KType,
     val throwable: Throwable
 ) : NodeExecutionEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.NodeExecutionFailed

@@ -35,7 +35,7 @@ fun getLLMClientForProvider(provider: LLMProvider): LLMClient {
         )
 
         LLMProvider.Bedrock -> BedrockLLMClient(
-            credentialsProvider = StaticCredentialsProvider {
+            identityProvider = StaticCredentialsProvider {
                 this.accessKeyId = readAwsAccessKeyIdFromEnv()
                 this.secretAccessKey = readAwsSecretAccessKeyFromEnv()
                 readAwsSessionTokenFromEnv()?.let { this.sessionToken = it }

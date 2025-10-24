@@ -24,9 +24,7 @@ import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.koog.prompt.structure.StructureFixingParser
 import kotlinx.coroutines.runBlocking
 
-fun main() = runBlocking {
-    val apiKey = ApiKeyService.openAIApiKey // Your OpenAI API key
-
+suspend fun main() {
     val toolRegistry = ToolRegistry {
         tool(AskUser)
         tools(MoneyTransferTools().asTools())
@@ -117,15 +115,16 @@ fun main() = runBlocking {
         maxAgentIterations = 50
     )
 
-    val agent = AIAgent<String, String>(
-        promptExecutor = simpleOpenAIExecutor(apiKey),
-        strategy = strategy,
-        agentConfig = agentConfig,
-        toolRegistry = toolRegistry,
-    )
+    simpleOpenAIExecutor(ApiKeyService.openAIApiKey).use { executor ->
+        val agent = AIAgent<String, String>(
+            promptExecutor = executor,
+            strategy = strategy,
+            agentConfig = agentConfig,
+            toolRegistry = toolRegistry,
+        )
 
-    println("Banking Assistant started")
-    val message = "Send 25 euros to Daniel for dinner at the restaurant."
+        println("Banking Assistant started")
+        val message = "Send 25 euros to Daniel for dinner at the restaurant."
 //     transfer messages
 //        "Send 50 euros to Alice for the concert tickets"
 //        "What's my current balance?"
@@ -134,6 +133,7 @@ fun main() = runBlocking {
 //         "What's my maximum check at a restaurant this month?"
 //         "How much did I spend on groceries in the first week of May?"
 //         "What's my total spending on entertainment in May?"
-    val result = agent.run(message)
-    println(result)
+        val result = agent.run(message)
+        println(result)
+    }
 }

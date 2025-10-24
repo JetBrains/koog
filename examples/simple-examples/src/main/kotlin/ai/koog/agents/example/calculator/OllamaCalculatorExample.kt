@@ -9,14 +9,11 @@ import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.agents.features.eventHandler.feature.handleEvents
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
-import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.OllamaModels
 import ai.koog.prompt.params.LLMParams
 import kotlinx.coroutines.runBlocking
 
 fun main(): Unit = runBlocking {
-    val executor: PromptExecutor = simpleOllamaAIExecutor()
-
     // Create a tool registry with calculator tools
     val toolRegistry = ToolRegistry {
         // Special tool, required with this type of agent.
@@ -34,30 +31,32 @@ fun main(): Unit = runBlocking {
         maxAgentIterations = 50
     )
 
-    val agent = AIAgent(
-        promptExecutor = executor,
-        strategy = CalculatorStrategy.strategy,
-        agentConfig = agentConfig,
-        toolRegistry = toolRegistry
-    ) {
-        handleEvents {
-            onToolCallStarting { eventContext ->
-                println("Tool called: tool ${eventContext.tool.name}, args ${eventContext.toolArgs}")
-            }
+    simpleOllamaAIExecutor().use { executor ->
+        val agent = AIAgent(
+            promptExecutor = executor,
+            strategy = CalculatorStrategy.strategy,
+            agentConfig = agentConfig,
+            toolRegistry = toolRegistry
+        ) {
+            handleEvents {
+                onToolCallStarting { eventContext ->
+                    println("Tool called: tool ${eventContext.tool.name}, args ${eventContext.toolArgs}")
+                }
 
-            onAgentExecutionFailed { eventContext ->
-                println(
-                    "An error occurred: ${eventContext.throwable.message}\n${eventContext.throwable.stackTraceToString()}"
-                )
-            }
+                onAgentExecutionFailed { eventContext ->
+                    println(
+                        "An error occurred: ${eventContext.throwable.message}\n${eventContext.throwable.stackTraceToString()}"
+                    )
+                }
 
-            onAgentCompleted { eventContext ->
-                println("Result: ${eventContext.result}")
+                onAgentCompleted { eventContext ->
+                    println("Result: ${eventContext.result}")
+                }
             }
         }
-    }
 
-    runBlocking {
-        agent.run("Use provided tools to calculate (10 + 20) * (5 + 5) / (2 - 11). Please call all the tools at once")
+        runBlocking {
+            agent.run("Use provided tools to calculate (10 + 20) * (5 + 5) / (2 - 11). Please call all the tools at once")
+        }
     }
 }

@@ -26,16 +26,16 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
-import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.markdown.markdown
-import ai.koog.prompt.message.Attachment
 import ai.koog.prompt.message.AttachmentContent
+import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.ToolChoice
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.filterTextOnly
@@ -43,6 +43,7 @@ import ai.koog.prompt.structure.executeStructured
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assumptions.assumeFalse
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
 import java.nio.file.Path
@@ -237,9 +238,11 @@ abstract class ExecutorIntegrationTestBase {
             )
 
             val prompt = Prompt.build("test-tools") {
-                system(
-                    "You are a helpful assistant with access to a calculator tool. Don't use optional params if possible. ALWAYS CALL TOOL FIRST."
-                )
+                system {
+                    +"You are a helpful assistant with access to a calculator tool."
+                    +"Don't use optional params if possible."
+                    +"JUST CALL TOOLS. NO QUESTIONS ASKED."
+                }
                 user("What is 123 + 456?")
             }
 
@@ -311,7 +314,10 @@ abstract class ExecutorIntegrationTestBase {
         )
 
         val prompt = Prompt.build("test-tools") {
-            system("You are a helpful assistant with access to calculator tools. Use the best one.")
+            system {
+                +"You are a helpful assistant with access to calculator tools."
+                +"Use the best one."
+            }
             user("What is 123 + 456?")
         }
 
@@ -346,7 +352,10 @@ abstract class ExecutorIntegrationTestBase {
         )
 
         val prompt = Prompt.build("test-tools") {
-            system("You are a helpful assistant with access to a color picker tool. ALWAYS CALL TOOL FIRST.")
+            system {
+                +"You are a helpful assistant with access to a color picker tool. "
+                +"ALWAYS CALL TOOL FIRST."
+            }
             user("Pick me a color!")
         }
 
@@ -375,7 +384,10 @@ abstract class ExecutorIntegrationTestBase {
         )
 
         val prompt = Prompt.build("test-tools") {
-            system("You are a helpful assistant. ALWAYS CALL TOOL FIRST.")
+            system {
+                +"You are a helpful assistant."
+                +"JUST CALL TOOLS. NO QUESTIONS ASKED."
+            }
             user("Pick me lottery winners and losers! 5 of each")
         }
 
@@ -384,6 +396,89 @@ abstract class ExecutorIntegrationTestBase {
         withRetry(times = 3, testName = "integration_testToolsWithNestedListParams[${model.id}]") {
             val response = executor.execute(prompt, model, listOf(lotteryPickerTool))
             assertTrue(response.isNotEmpty(), "Response should not be empty")
+        }
+    }
+
+    open fun integration_testToolsWithNullParams(model: LLModel) = runTest(timeout = 300.seconds) {
+        Models.assumeAvailable(model.provider)
+        assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
+
+        val nullGiverTool = ToolDescriptor(
+            name = "nullGiver",
+            description = "A tool that returns a null value",
+            requiredParameters = listOf(
+                ToolParameterDescriptor(
+                    name = "Null",
+                    description = "A null",
+                    type = ToolParameterType.Null
+                )
+            )
+        )
+
+        val prompt = Prompt.build("test-tools") {
+            system {
+                +"You are a helpful assistant."
+                +"JUST CALL TOOLS. NO QUESTIONS ASKED."
+            }
+            user("Hi. Call a tool.")
+        }
+
+        val executor = getExecutor(model)
+
+        withRetry(times = 3, testName = "integration_testToolsWithNullParams[${model.id}]") {
+            val response = executor.execute(prompt, model, listOf(nullGiverTool))
+            assertTrue(response.isNotEmpty(), "Response should not be empty")
+            assertTrue(
+                response.first { it is Message.Tool.Call }.content.contains("null"),
+                "Tool call response should contain null"
+            )
+        }
+    }
+
+    open fun integration_testToolsWithAnyOfParams(model: LLModel) = runTest(timeout = 300.seconds) {
+        Models.assumeAvailable(model.provider)
+        assumeTrue(model.provider != LLMProvider.Anthropic, "Anthropic does not support anyOf")
+        assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
+
+        val anyOfTool = ToolDescriptor(
+            name = "stringNumberGiver",
+            description = "A tool that returns a string or number value",
+            requiredParameters = listOf(
+                ToolParameterDescriptor(
+                    name = "anyOfParam",
+                    description = "String or number parameter",
+                    type = ToolParameterType.AnyOf(
+                        types = arrayOf(
+                            ToolParameterDescriptor(
+                                name = "String",
+                                description = "String option",
+                                type = ToolParameterType.String
+                            ),
+                            ToolParameterDescriptor(
+                                name = "Number",
+                                description = "Number option",
+                                type = ToolParameterType.Float
+                            )
+                        )
+                    )
+                )
+            )
+        )
+
+        val prompt = Prompt.build("test-tools", LLMParams(toolChoice = ToolChoice.Required)) {
+            system {
+                +"You are a helpful assistant."
+                +"JUST CALL TOOLS. NO QUESTIONS ASKED."
+            }
+            user("Hi. Give me a word and a number.")
+        }
+
+        val executor = getExecutor(model)
+
+        withRetry(testName = "integration_testToolsWithAnyOfParams[${model.id}]") {
+            val response = executor.execute(prompt, model, listOf(anyOfTool))
+            assertTrue(response.isNotEmpty(), "Response should not be empty")
+            assertTrue(response.any { it is Message.Tool.Call }, "Response should contain a tool call")
         }
     }
 
@@ -439,23 +534,21 @@ abstract class ExecutorIntegrationTestBase {
                                 +"Please list all the markdown elements used in it and describe its structure clearly."
                             }
 
-                            attachments {
-                                textFile(KtPath(file.pathString), "text/plain")
-                            }
+                            textFile(KtPath(file.pathString), "text/plain")
                         }
                     }
                 } else {
                     prompt("markdown-test-${scenario.name.lowercase()}") {
                         system("You are a helpful assistant that can analyze markdown files.")
 
-                        user {
+                        user(
                             markdown {
                                 +"I'm sending you a markdown file with different markdown elements. "
                                 +"Please list all the markdown elements used in it and describe its structure clearly."
                                 newline()
                                 +file.readText()
                             }
-                        }
+                        )
                     }
                 }
 
@@ -509,21 +602,19 @@ abstract class ExecutorIntegrationTestBase {
                         +"I'm sending you an image. Please analyze it and identify the image format if possible."
                     }
 
-                    attachments {
-                        when (scenario) {
-                            ImageTestScenario.LARGE_IMAGE, ImageTestScenario.LARGE_IMAGE_ANTHROPIC -> {
-                                image(
-                                    Attachment.Image(
-                                        content = AttachmentContent.Binary.Bytes(imageFile.readBytes()),
-                                        format = "jpg",
-                                        mimeType = "image/jpeg"
-                                    )
+                    when (scenario) {
+                        ImageTestScenario.LARGE_IMAGE, ImageTestScenario.LARGE_IMAGE_ANTHROPIC -> {
+                            image(
+                                ContentPart.Image(
+                                    content = AttachmentContent.Binary.Bytes(imageFile.readBytes()),
+                                    format = "jpg",
+                                    mimeType = "image/jpeg"
                                 )
-                            }
+                            )
+                        }
 
-                            else -> {
-                                image(KtPath(imageFile.pathString))
-                            }
+                        else -> {
+                            image(KtPath(imageFile.pathString))
                         }
                     }
                 }
@@ -598,22 +689,20 @@ abstract class ExecutorIntegrationTestBase {
                                 +"I'm sending you a text file. Please analyze it and summarize its content."
                             }
 
-                            attachments {
-                                textFile(KtPath(file.pathString), "text/plain")
-                            }
+                            textFile(KtPath(file.pathString), "text/plain")
                         }
                     }
                 } else {
                     prompt("text-test-${scenario.name.lowercase()}") {
                         system("You are a helpful assistant that can analyze and process text.")
 
-                        user {
+                        user(
                             markdown {
                                 +"I'm sending you a text file. Please analyze it and summarize its content."
                                 newline()
                                 +file.readText()
                             }
-                        }
+                        )
                     }
                 }
 
@@ -681,11 +770,8 @@ abstract class ExecutorIntegrationTestBase {
                 system("You are a helpful assistant.")
 
                 user {
-                    +"I'm sending you an audio file. Please tell me a couple of words about it."
-
-                    attachments {
-                        audio(KtPath(audioFile.pathString))
-                    }
+                    text("I'm sending you an audio file. Please tell me a couple of words about it.")
+                    audio(KtPath(audioFile.pathString))
                 }
             }
 
@@ -729,12 +815,6 @@ abstract class ExecutorIntegrationTestBase {
             "Model must support vision capability"
         )
 
-        // Skip audio-only models
-        assumeTrue(
-            !model.id.contains("audio", ignoreCase = true),
-            "Audio-only models are not supported for this test"
-        )
-
         val imageFile = MediaTestUtils.getImageFileForScenario(ImageTestScenario.BASIC_PNG, testResourcesDir)
         val imageBytes = imageFile.readBytes()
 
@@ -749,9 +829,7 @@ abstract class ExecutorIntegrationTestBase {
                     +"I'm sending you an image. Please analyze them and tell me about their content."
                 }
 
-                attachments {
-                    image(KtPath(tempImageFile.pathString))
-                }
+                image(KtPath(tempImageFile.pathString))
             }
         }
 
@@ -787,9 +865,7 @@ abstract class ExecutorIntegrationTestBase {
                     +"I'm sending you an image from a URL. Please analyze it and tell me about its content."
                 }
 
-                attachments {
-                    image(imageUrl)
-                }
+                image(imageUrl)
             }
         }
 
@@ -873,9 +949,9 @@ abstract class ExecutorIntegrationTestBase {
     }
 
     open fun integration_testStructuredOutputManualWithFixingParser(model: LLModel) = runTest {
-        assumeTrue(
-            (model !== GoogleModels.Gemini2_0FlashLite) && (model !== GoogleModels.Gemini2_0FlashLite001),
-            "Gemini Flash Lite 2.0 models fail to return manually requested structured output"
+        assumeFalse(
+            (model.id.contains("flash-lite")),
+            "Gemini Flash Lite models fail to return manually requested structured output"
         )
         val executor = getExecutor(model)
 
@@ -898,7 +974,10 @@ abstract class ExecutorIntegrationTestBase {
         }
 
         val prompt = Prompt.build("test-streaming") {
-            system("You are a helpful assistant. You have NO output length limitations.")
+            system {
+                +"You are a helpful assistant."
+                +"You have NO output length limitations."
+            }
             user("Count from 1 to 5.")
         }
 
@@ -960,7 +1039,10 @@ abstract class ExecutorIntegrationTestBase {
         withRetry(times = 3, testName = "integration_testToolChoiceNone[${model.id}]") {
             val response = getLLMClient(model).execute(
                 Prompt.build("test-tools") {
-                    system("You are a helpful assistant. Do not use calculator tool, it's broken!")
+                    system {
+                        +"You are a helpful assistant. "
+                        +"Do not use calculator tool, it's broken!"
+                    }
                     user("What is 123 + 456?")
                 }.withParams(
                     prompt.params.copy(

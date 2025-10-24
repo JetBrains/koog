@@ -7,7 +7,6 @@ import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.tools.DummyTool
-import ai.koog.prompt.dsl.AttachmentBuilder
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.PromptExecutor
@@ -31,15 +30,12 @@ internal val testClock: Clock = object : Clock {
  * the message content.
  *
  * @param content The text content of the user message.
- * @param attachmentsBlock A lambda function used to configure the media attachments
- *                          for the message, using the `AttachmentBuilder` DSL.
  * @return A `Message.User` object containing the message content, metadata,
  *         and any associated media attachments.
  */
-fun userMessage(content: String, attachmentsBlock: AttachmentBuilder.() -> Unit = {}): Message.User = Message.User(
+fun userMessage(content: String): Message.User = Message.User(
     content,
     metaInfo = RequestMetaInfo.create(testClock),
-    attachments = AttachmentBuilder().apply(attachmentsBlock).build()
 )
 
 /**
@@ -76,7 +72,7 @@ fun toolCallMessage(toolName: String, content: String): Message.Tool.Call =
         metaInfo = ResponseMetaInfo.create(testClock)
     )
 
-fun toolResult(toolCallId: String?, toolName: String, content: String, result: String): ReceivedToolResult =
+fun receivedToolResult(toolCallId: String?, toolName: String, content: String, result: String): ReceivedToolResult =
     ReceivedToolResult(
         id = toolCallId,
         tool = toolName,

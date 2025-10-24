@@ -43,4 +43,6 @@ class TestLLMExecutor(val clock: Clock) : PromptExecutor {
     ): ModerationResult {
         throw UnsupportedOperationException("Moderation is not needed here")
     }
+
+    override fun close() {}
 }

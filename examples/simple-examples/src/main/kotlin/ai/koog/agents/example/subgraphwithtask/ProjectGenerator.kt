@@ -67,20 +67,22 @@ fun main() {
         )
         val userRequest = readln()
 
-        val agent = AIAgent(
-            promptExecutor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey),
-            strategy = customWizardStrategy(generateTools, verifyTools, fixTools),
-            agentConfig = AIAgentConfig(
-                prompt = prompt(
-                    "chat",
-                    params = LLMParams()
-                ) {},
-                model = OpenAIModels.Chat.GPT4o,
-                maxAgentIterations = 200
-            ),
-            toolRegistry = toolRegistry,
-        )
+        simpleOpenAIExecutor(ApiKeyService.openAIApiKey).use { executor ->
+            val agent = AIAgent(
+                promptExecutor = executor,
+                strategy = customWizardStrategy(generateTools, verifyTools, fixTools),
+                agentConfig = AIAgentConfig(
+                    prompt = prompt(
+                        "chat",
+                        params = LLMParams()
+                    ) {},
+                    model = OpenAIModels.Chat.GPT4o,
+                    maxAgentIterations = 200
+                ),
+                toolRegistry = toolRegistry,
+            )
 
-        agent.run(userRequest)
+            agent.run(userRequest)
+        }
     }
 }

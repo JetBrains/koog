@@ -11,12 +11,8 @@ import ai.koog.agents.features.eventHandler.feature.handleEvents
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
-import ai.koog.prompt.executor.model.PromptExecutor
-import kotlinx.coroutines.runBlocking
 
-fun main(): Unit = runBlocking {
-    val executor: PromptExecutor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey)
-
+suspend fun main() {
     // Create a tool registry with calculator tools
     val toolRegistry = ToolRegistry {
         // Special tool, required with this type of agent.
@@ -34,31 +30,32 @@ fun main(): Unit = runBlocking {
         maxAgentIterations = 50
     )
 
-    // Create the runner
-    val agent = AIAgent(
-        promptExecutor = executor,
-        strategy = CalculatorStrategy.strategy,
-        agentConfig = agentConfig,
-        toolRegistry = toolRegistry
-    ) {
-        handleEvents {
-            onToolCallStarting { eventContext ->
-                println("Tool called: tool ${eventContext.tool.name}, args ${eventContext.toolArgs}")
-            }
+    simpleOpenAIExecutor(ApiKeyService.openAIApiKey).use { executor ->
+        // Create the runner
+        val agent = AIAgent(
+            promptExecutor = executor,
+            strategy = CalculatorStrategy.strategy,
+            agentConfig = agentConfig,
+            toolRegistry = toolRegistry
+        ) {
+            handleEvents {
+                onToolCallStarting { eventContext ->
+                    println("Tool called: tool ${eventContext.tool.name}, args ${eventContext.toolArgs}")
+                }
 
-            onAgentExecutionFailed { eventContext ->
-                println(
-                    "An error occurred: ${eventContext.throwable.message}\n${eventContext.throwable.stackTraceToString()}"
-                )
-            }
+                onAgentExecutionFailed { eventContext ->
+                    println(
+                        "An error occurred: ${eventContext.throwable.message}\n${eventContext.throwable.stackTraceToString()}"
+                    )
+                }
 
-            onAgentCompleted { eventContext ->
-                println("Result: ${eventContext.result}")
+                onAgentCompleted { eventContext ->
+                    println("Result: ${eventContext.result}")
+                }
             }
         }
-    }
 
-    runBlocking {
-        agent.run("(10 + 20) * (5 + 5) / (2 - 11)")
+        val result = agent.run("(10 + 20) * (5 + 5) / (2 - 11)")
+        println("Agent result: $result")
     }
 }

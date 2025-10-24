@@ -13,8 +13,6 @@ internal fun LLMParams.toDeepSeekParams(): DeepSeekParams {
         schema = schema,
         toolChoice = toolChoice,
         user = user,
-        includeThoughts = includeThoughts,
-        thinkingBudget = thinkingBudget,
         additionalProperties = additionalProperties,
     )
 }
@@ -30,8 +28,6 @@ internal fun LLMParams.toDeepSeekParams(): DeepSeekParams {
  * @property schema JSON Schema to constrain model output (validated when supported).
  * @property toolChoice Controls if/which tool must be called (`none`/`auto`/`required`/specific).
  * @property user not used for DeepSeek
- * @property includeThoughts Request inclusion of model “thoughts”/reasoning traces (model-dependent).
- * @property thinkingBudget Soft cap on tokens spent on internal reasoning (reasoning models).
  * @property additionalProperties Additional properties that can be used to store custom parameters.
  * @property frequencyPenalty Number in [-2.0, 2.0]—penalizes frequent tokens to reduce repetition.
  * @property presencePenalty Number in [-2.0, 2.0]—encourages introduction of new tokens/topics.
@@ -49,8 +45,6 @@ public class DeepSeekParams(
     schema: Schema? = null,
     toolChoice: ToolChoice? = null,
     user: String? = null,
-    includeThoughts: Boolean? = null,
-    thinkingBudget: Int? = null,
     additionalProperties: Map<String, JsonElement>? = null,
     public val frequencyPenalty: Double? = null,
     public val presencePenalty: Double? = null,
@@ -59,9 +53,14 @@ public class DeepSeekParams(
     public val topLogprobs: Int? = null,
     public val topP: Double? = null,
 ) : LLMParams(
-    temperature, maxTokens, numberOfChoices,
-    speculation, schema, toolChoice,
-    user, includeThoughts, thinkingBudget, additionalProperties,
+    temperature,
+    maxTokens,
+    numberOfChoices,
+    speculation,
+    schema,
+    toolChoice,
+    user,
+    additionalProperties,
 ) {
     init {
         require(topP == null || topP in 0.0..1.0) {
@@ -101,8 +100,6 @@ public class DeepSeekParams(
         schema: Schema? = this.schema,
         toolChoice: ToolChoice? = this.toolChoice,
         user: String? = this.user,
-        includeThoughts: Boolean? = this.includeThoughts,
-        thinkingBudget: Int? = this.thinkingBudget,
         additionalProperties: Map<String, JsonElement>? = this.additionalProperties,
         frequencyPenalty: Double? = this.frequencyPenalty,
         presencePenalty: Double? = this.presencePenalty,
@@ -118,8 +115,6 @@ public class DeepSeekParams(
         schema = schema,
         toolChoice = toolChoice,
         user = user,
-        includeThoughts = includeThoughts,
-        thinkingBudget = thinkingBudget,
         additionalProperties = additionalProperties,
         frequencyPenalty = frequencyPenalty,
         presencePenalty = presencePenalty,
@@ -140,8 +135,6 @@ public class DeepSeekParams(
                 schema == other.schema &&
                 toolChoice == other.toolChoice &&
                 user == other.user &&
-                includeThoughts == other.includeThoughts &&
-                thinkingBudget == other.thinkingBudget &&
                 additionalProperties == other.additionalProperties &&
                 frequencyPenalty == other.frequencyPenalty &&
                 presencePenalty == other.presencePenalty &&
@@ -153,8 +146,7 @@ public class DeepSeekParams(
 
     override fun hashCode(): Int = listOf(
         temperature, maxTokens, numberOfChoices,
-        speculation, schema, toolChoice,
-        user, includeThoughts, thinkingBudget,
+        speculation, schema, toolChoice, user,
         additionalProperties, frequencyPenalty, presencePenalty,
         logprobs, stop, topLogprobs, topP,
     ).fold(0) { acc, element ->
@@ -170,8 +162,6 @@ public class DeepSeekParams(
         append(", schema=$schema")
         append(", toolChoice=$toolChoice")
         append(", user=$user")
-        append(", includeThoughts=$includeThoughts")
-        append(", thinkingBudget=$thinkingBudget")
         append(", additionalProperties=$additionalProperties")
         append(", frequencyPenalty=$frequencyPenalty")
         append(", presencePenalty=$presencePenalty")

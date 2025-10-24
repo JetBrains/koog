@@ -1,6 +1,6 @@
 package ai.koog.prompt.dsl
 
-import ai.koog.prompt.message.Attachment
+import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
@@ -83,61 +83,73 @@ public class PromptBuilder internal constructor(
      * Adds a user message to the prompt with optional attachments.
      *
      * User messages represent input from the user to the language model.
-     * This method supports adding text content along with a list of attachments such as images, audio, or documents.
+     * This method supports adding parts of the message such as text content or attachments.
      *
-     * @param content The content of the user message.
-     * @param attachments The list of attachments associated with the user message. Defaults to an empty list if no attachments are provided.
+     * @param parts Parts of the user message
      */
-    public fun user(content: String, attachments: List<Attachment> = emptyList()) {
-        messages.add(Message.User(content, RequestMetaInfo.create(clock), attachments))
+    public fun user(parts: List<ContentPart>) {
+        messages.add(Message.User(parts, RequestMetaInfo.create(clock)))
+    }
+
+    /**
+     * Adds a user message to the prompt.
+     *
+     * User messages represent input from the user to the language model.
+     * This method supports adding text content.
+     *
+     * @param content Content of the user message
+     */
+    public fun user(content: String) {
+        messages.add(Message.User(content, RequestMetaInfo.create(clock)))
+    }
+
+    /**
+     * Adds a user message to the prompt with optional attachments.
+     *
+     * User messages represent input from the user to the language model.
+     * This method supports adding text content.
+     *
+     * @param content Content of the user message
+     * @param block Lambda to configure attachments using [ContentPartsBuilder]
+     */
+    @Deprecated("Use user(block: ContentPartsBuilder.() -> Unit instead.")
+    public fun user(content: String, block: ContentPartsBuilder.() -> Unit) {
+        user(content, ContentPartsBuilder().apply(block).build())
+    }
+
+    /**
+     * Adds a user message to the prompt with optional attachments.
+     *
+     * User messages represent input from the user to the language model.
+     * This method supports adding text content.
+     *
+     * @param content Content of the user message
+     * @param attachments Attachments to be added to the message
+     */
+    @Deprecated("Use user(block: ContentPartsBuilder.() -> Unit instead.")
+    public fun user(content: String, attachments: List<ContentPart> = emptyList()) {
+        user(listOf(ContentPart.Text(content)) + attachments)
     }
 
     /**
      * Adds a user message to the prompt with attachments.
      *
      * User messages represent input from the user to the language model.
-     * This method allows attaching content like images, audio, or documents.
+     * This method allows adding parts of the message such as text content or attachments using a [ContentPartsBuilder].
      *
-     * Example:
-     * ```kotlin
-     * // Simple text message
-     * user("What is the capital of France?")
-     *
-     * // Message with attachments using a lambda
-     * user("Please analyze this image") {
-     *     image("photo.jpg")
-     * }
-     * ```
-     *
-     * @param content The content of the user message
-     * @param block Optional lambda to configure attachments using AttachmentBuilder
-     */
-    public fun user(content: String, block: AttachmentBuilder.() -> Unit) {
-        user(content, AttachmentBuilder().apply(block).build())
-    }
-
-    /**
-     * Adds a user message to the prompt using a ContentBuilderWithAttachment.
-     *
-     * This allows for more complex message construction with both text and attachments.
-     *
-     * Example:
-     * ```kotlin
+     * Example:```
      * user {
-     *          text("I have a question about programming.")
-     *          text("How do I implement a binary search in Kotlin?")
-     *
-     *      attachments {
-     *          image("screenshot.png")
-     *      }
+     *     test("Image 1:")
+     *     image("photo1.jpg")
+     *     test("Image 2:")
+     *     image("photo3.jpg")
      * }
      * ```
      *
-     * @param body The initialization block for the ContentBuilderWithAttachment
+     * @param block Lambda to configure attachments using [ContentPartsBuilder]
      */
-    public fun user(body: MessageContentBuilder.() -> Unit) {
-        val messageContent = MessageContentBuilder().apply(body).build()
-        user(messageContent.content, messageContent.attachments)
+    public fun user(block: ContentPartsBuilder.() -> Unit) {
+        user(ContentPartsBuilder().apply(block).build())
     }
 
     /**

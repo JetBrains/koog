@@ -1,6 +1,5 @@
 package ai.koog.agents.mcp.server
 
-import ai.koog.agents.core.tools.DirectToolCallsEnabler
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
@@ -96,8 +95,6 @@ public fun configureMcpServer(
     tools: ToolRegistry,
     implementation: Implementation = Implementation("MCP Server with Koog-based tools", "dev")
 ): Server {
-    val enabler = object : DirectToolCallsEnabler {}
-
     val server = Server(
         serverInfo = implementation,
         options = ServerOptions(
@@ -108,7 +105,7 @@ public fun configureMcpServer(
     )
 
     tools.tools.forEach { tool ->
-        server.addTool(tool, enabler)
+        server.addTool(tool)
     }
 
     return server
@@ -120,11 +117,10 @@ public fun configureMcpServer(
 @OptIn(InternalAgentToolsApi::class)
 public fun Server.addTool(
     tool: Tool<*, *>,
-    enabler: DirectToolCallsEnabler = object : DirectToolCallsEnabler {},
 ) {
     addTool(tool.descriptor.asSdkTool()) { request ->
         val args = tool.decodeArgs(request.arguments)
-        val result = tool.executeUnsafe(args, enabler)
+        val result = tool.executeUnsafe(args)
 
         CallToolResult(
             content = listOf(TextContent(tool.encodeResultToStringUnsafe(result)))

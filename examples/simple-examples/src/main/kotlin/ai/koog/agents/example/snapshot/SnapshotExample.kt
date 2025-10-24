@@ -11,15 +11,11 @@ import ai.koog.agents.snapshot.feature.Persistence
 import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
-import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.OllamaModels
-import kotlinx.coroutines.runBlocking
 import kotlin.uuid.ExperimentalUuidApi
 
 @OptIn(ExperimentalUuidApi::class)
-fun main() = runBlocking {
-    val executor: PromptExecutor = simpleOllamaAIExecutor()
-
+suspend fun main() {
     // Create tool registry with calculator tools
     val toolRegistry = ToolRegistry {
         // Special tool, required with this type of agent.
@@ -38,19 +34,20 @@ fun main() = runBlocking {
     )
 
     val snapshotProvider = InMemoryPersistenceStorageProvider()
-    val agent = AIAgent(
-        promptExecutor = executor,
-        strategy = SnapshotStrategy.strategy,
-        agentConfig = agentConfig,
-        toolRegistry = toolRegistry
-    ) {
-        install(Persistence) {
-            storage = snapshotProvider
-        }
-    }
 
-    runBlocking {
+    simpleOllamaAIExecutor().use { executor ->
+        val agent = AIAgent(
+            promptExecutor = executor,
+            strategy = SnapshotStrategy.strategy,
+            agentConfig = agentConfig,
+            toolRegistry = toolRegistry
+        ) {
+            install(Persistence) {
+                storage = snapshotProvider
+            }
+        }
+
         agent.run("Input some!!!")
+        println(snapshotProvider)
     }
-    println(snapshotProvider)
 }

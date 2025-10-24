@@ -5,8 +5,8 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.ollama.tools.json.toJSONSchema
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.message.Attachment
 import ai.koog.prompt.message.AttachmentContent
+import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
@@ -59,30 +59,31 @@ internal fun Prompt.toOllamaChatMessages(model: LLModel): List<OllamaChatMessage
 }
 
 private fun Message.User.toOllamaChatMessage(model: LLModel): OllamaChatMessageDTO {
-    val images = mutableListOf<String>()
+    val images = buildList {
+        parts.forEach { part ->
+            when (part) {
+                is ContentPart.Text -> {}
+                is ContentPart.Image -> {
+                    require(LLMCapability.Vision.Image in model.capabilities) {
+                        "Model ${model.id} doesn't support images"
+                    }
 
-    attachments.forEach { attachment ->
-        when (attachment) {
-            is Attachment.Image -> {
-                require(LLMCapability.Vision.Image in model.capabilities) {
-                    "Model ${model.id} doesn't support images"
+                    val image: String = when (val content = part.content) {
+                        is AttachmentContent.Binary -> content.asBase64()
+                        else -> throw IllegalArgumentException("Unsupported image attachment content: ${content::class}")
+                    }
+
+                    add(image)
                 }
 
-                val image: String = when (val content = attachment.content) {
-                    is AttachmentContent.Binary -> content.asBase64()
-                    else -> throw IllegalArgumentException("Unsupported image attachment content: ${content::class}")
-                }
-
-                images += image
+                else -> throw IllegalArgumentException("Unsupported attachment type: $part")
             }
-
-            else -> throw IllegalArgumentException("Unsupported attachment type: $attachment")
         }
     }
 
     return OllamaChatMessageDTO(
         role = "user",
-        content = this.content,
+        content = content,
         images = images.takeIf { it.isNotEmpty() }
     )
 }

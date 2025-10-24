@@ -8,9 +8,12 @@ import ai.koog.agents.core.dsl.builder.ParallelNodeExecutionResult
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
+import ai.koog.agents.core.dsl.extension.nodeExecuteTool
 import ai.koog.agents.core.dsl.extension.nodeLLMCompressHistory
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
+import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
 import ai.koog.agents.core.dsl.extension.onAssistantMessage
+import ai.koog.agents.core.dsl.extension.onToolCall
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.LLMDescription
@@ -23,6 +26,7 @@ import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider
 import ai.koog.agents.snapshot.providers.file.JVMFilePersistenceStorageProvider
 import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.RetryUtils.withRetry
+import ai.koog.integration.tests.utils.TestUtils.CalculatorOperation
 import ai.koog.integration.tests.utils.TestUtils.CalculatorTool
 import ai.koog.integration.tests.utils.TestUtils.DelayTool
 import ai.koog.integration.tests.utils.getLLMClientForProvider
@@ -54,6 +58,7 @@ import java.util.Base64
 import java.util.stream.Stream
 import kotlin.io.path.readBytes
 import kotlin.reflect.typeOf
+import kotlin.test.Ignore
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
@@ -173,13 +178,94 @@ class AIAgentIntegrationTest {
                         toolChoice = ToolChoice.Auto,
                     )
                 ) {
-                    system("You are a helpful assistant.")
+                    system {
+                        +"You are a helpful assistant. "
+                        +"JUST CALL THE TOOLS, NO QUESTIONS ASKED."
+                    }
                 },
                 model = model,
                 maxAgentIterations = 10,
             ),
             toolRegistry = toolRegistry,
             installFeatures = { install(EventHandler.Feature, eventHandlerConfig) },
+        )
+    }
+
+    private fun buildHistoryCompressionWithToolsStrategy(
+        strategy: HistoryCompressionStrategy,
+        compressBeforeToolResult: Boolean,
+    ) = strategy<String, Pair<String, List<Message>>>("history-compression-with-tools-test") {
+        val callLLM by nodeLLMRequest(name = "callLLM", allowToolCalls = true)
+        val executeTool by nodeExecuteTool("execute_tool")
+        val compressResponse by nodeLLMCompressHistory<Message.Response>(
+            name = "compress_history",
+            strategy = strategy
+        )
+        val compressToolResult by nodeLLMCompressHistory<ai.koog.agents.core.environment.ReceivedToolResult>(
+            name = "compress_history",
+            strategy = strategy
+        )
+        val sendToolResult by nodeLLMSendToolResult("send_tool_result")
+
+        edge(nodeStart forwardTo callLLM)
+        edge(
+            callLLM forwardTo executeTool onToolCall { toolCall ->
+                if (toolCall.tool != CalculatorTool.name) {
+                    false
+                } else {
+                    run {
+                        val args = CalculatorTool.decodeArgs(toolCall.contentJson)
+                        args.operation == CalculatorOperation.MULTIPLY && ((args.a == 7 && args.b == 2) || (args.a == 2 && args.b == 7))
+                    }
+                }
+            }
+        )
+        if (compressBeforeToolResult) {
+            edge(executeTool forwardTo compressToolResult)
+            edge(compressToolResult forwardTo sendToolResult)
+            edge(sendToolResult forwardTo executeTool onToolCall (CalculatorTool))
+            edge(sendToolResult forwardTo nodeFinish onAssistantMessage { true } transformed { it to llm.prompt.messages })
+        } else {
+            edge(executeTool forwardTo sendToolResult)
+            edge(sendToolResult forwardTo compressResponse)
+            edge(compressResponse forwardTo executeTool onToolCall (CalculatorTool))
+            edge(compressResponse forwardTo nodeFinish onAssistantMessage { true } transformed { it to llm.prompt.messages })
+        }
+    }
+
+    private fun assertHistoryCompressionWithTools(
+        errors: Collection<Any>,
+        actualToolCalls: Collection<String>,
+        result: String,
+        promptMessages: List<Message>?,
+        strategyName: String,
+    ) {
+        assertTrue(
+            errors.isEmpty(),
+            "No errors should occur during agent execution with $strategyName, got: [${errors.joinToString("\n")}]"
+        )
+        assertTrue(
+            actualToolCalls.contains(CalculatorTool.name),
+            "The ${CalculatorTool.name} tool was not called with $strategyName"
+        )
+        assertTrue(result.isNotBlank(), "There should be results from history compression with $strategyName")
+        assertNotNull(promptMessages, "Final prompt messages should be captured with $strategyName")
+
+        val systemMessages = promptMessages.filterIsInstance<Message.System>()
+        assertTrue(
+            systemMessages.isNotEmpty(),
+            "System messages should be preserved after compression with $strategyName"
+        )
+        val preservedSystemMessage = systemMessages.first().content
+        assertTrue(
+            preservedSystemMessage.isNotBlank(),
+            "System message content should not be empty after compression with $strategyName"
+        )
+
+        val toolResults = promptMessages.filterIsInstance<Message.Tool.Result>()
+        assertTrue(
+            toolResults.any { it.tool == CalculatorTool.name },
+            "Prompt messages should contain the calculator tool name after compression with $strategyName"
         )
     }
 
@@ -425,7 +511,7 @@ class AIAgentIntegrationTest {
 
                 val agent = AIAgent.invoke(
                     promptExecutor = executor,
-                    systemPrompt = systemPrompt + "You MUST use tools.",
+                    systemPrompt = systemPrompt + "JUST CALL THE TOOLS, NO QUESTIONS ASKED!",
                     strategy = singleRunStrategy(ToolCalls.SEQUENTIAL),
                     llmModel = model,
                     temperature = 1.0,
@@ -575,7 +661,7 @@ class AIAgentIntegrationTest {
     fun integration_AIAgentSingleRunNoParallelToolsTest(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
-        assumeTrue(model.id != OpenAIModels.Audio.GPT4oAudio.id, "See KG-124")
+
         assumeTrue(
             model !in listOf(
                 BedrockModels.AnthropicClaude35Haiku,
@@ -598,8 +684,8 @@ class AIAgentIntegrationTest {
                     "There should be no parallel tool calls in a Sequential single run scenario"
                 )
                 assertTrue(
-                    state.singleToolCalls.isNotEmpty(),
-                    "There should be exactly 2 single tool calls in a Sequential single run scenario"
+                    state.singleToolCalls.size >= 2,
+                    "There should be more or equal than 2 single tool calls in a Sequential single run scenario"
                 )
                 assertEquals(
                     CalculatorTool.name,
@@ -920,14 +1006,14 @@ class AIAgentIntegrationTest {
                 sayWorld
             }
 
-            val node3 by node<String, String>(bye) {
+            val nodeBye by node<String, String>(bye) {
                 sayBye
             }
 
             edge(nodeStart forwardTo nodeHello)
             edge(nodeHello forwardTo nodeWorld)
-            edge(nodeWorld forwardTo node3)
-            edge(node3 forwardTo nodeFinish)
+            edge(nodeWorld forwardTo nodeBye)
+            edge(nodeBye forwardTo nodeFinish)
         }
 
         val agent = AIAgent(
@@ -1034,17 +1120,79 @@ class AIAgentIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("openAIModels", "anthropicModels", "googleModels", "bedrockModels", "openRouterModels")
+    @Ignore("KG-499 Infinite loop on an attempt to serialize input for checkpoint creation for nodeSendToolResult")
+    fun integration_AgentCheckpointWithToolCallsTest(model: LLModel) = runTest(timeout = 180.seconds) {
+        assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
+
+        val storageProvider = InMemoryPersistenceStorageProvider()
+        val registry = ToolRegistry {
+            tool(CalculatorTool)
+        }
+
+        withRetry {
+            runWithTracking { eventHandlerConfig, state ->
+                val executor = getExecutor(model)
+
+                val agent = AIAgent(
+                    promptExecutor = executor,
+                    strategy = singleRunStrategy(ToolCalls.SEQUENTIAL),
+                    agentConfig = AIAgentConfig(
+                        prompt = prompt(
+                            id = "calculator-agent-persistence-test",
+                            params = LLMParams(
+                                temperature = 1.0,
+                                toolChoice = ToolChoice.Required,
+                            )
+                        ) {
+                            system {
+                                +systemPrompt
+                                +"Always use the calculator tool once to answer math questions."
+                                +"JUST CALL THE TOOL, NO QUESTIONS ASKED."
+                            }
+                        },
+                        model = model,
+                        maxAgentIterations = 10
+                    ),
+                    toolRegistry = registry,
+                    installFeatures = {
+                        install(EventHandler.Feature, eventHandlerConfig)
+                        install(Persistence) {
+                            storage = storageProvider
+                            enableAutomaticPersistence = true
+                        }
+                    },
+                )
+
+                agent.run("What is 12 + 34?")
+
+                assertEquals(
+                    listOf(CalculatorTool.descriptor.name),
+                    state.actualToolCalls,
+                    "${CalculatorTool.descriptor.name} tool should be called for model $model with persistence"
+                )
+                assertTrue(state.errors.isEmpty(), "There should be no errors")
+
+                val nonTombstoneCheckpoints =
+                    storageProvider.getCheckpoints(agent.id).filter { it.nodeId != "tombstone" }
+                assertTrue(nonTombstoneCheckpoints.isNotEmpty(), "No checkpoints were created with Persistence enabled")
+
+                val toolCallPresentInHistory = nonTombstoneCheckpoints.any { cp ->
+                    cp.messageHistory.any { msg ->
+                        msg is Message.Tool.Call && msg.tool == CalculatorTool.name
+                    }
+                }
+                assertTrue(
+                    toolCallPresentInHistory,
+                    "Checkpoint message history should contain a tool call to '${CalculatorTool.name}'"
+                )
+            }
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("openAIModels", "anthropicModels", "googleModels", "bedrockModels", "openRouterModels")
     fun integration_AgentWithToolsWithoutParamsTest(model: LLModel) = runTest(timeout = 180.seconds) {
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
-        val flakyModels = listOf(
-            GoogleModels.Gemini2_0Flash.id,
-            GoogleModels.Gemini2_0Flash001.id,
-            GoogleModels.Gemini2_0FlashLite.id,
-            GoogleModels.Gemini2_0FlashLite001.id,
-            OpenAIModels.Chat.GPT5Mini.id,
-            BedrockModels.AmazonNovaLite.id,
-        )
-        assumeTrue(!flakyModels.contains(model.id), "Model $model is flaky and fails to call tools exactly once")
 
         val registry = ToolRegistry {
             tool(CalculatorToolNoArgs)
@@ -1267,7 +1415,11 @@ class AIAgentIntegrationTest {
 
                     assertTrue(
                         state.errors.isEmpty(),
-                        "No errors should occur during agent execution with $strategyName, got: [${state.errors.joinToString("\n")}]"
+                        "No errors should occur during agent execution with $strategyName, got: [${
+                            state.errors.joinToString(
+                                "\n"
+                            )
+                        }]"
                     )
                     assertTrue(
                         result.isNotBlank(),
@@ -1297,4 +1449,108 @@ class AIAgentIntegrationTest {
                 }
             }
         }
+
+    @ParameterizedTest
+    @MethodSource("historyCompressionStrategies")
+    @Ignore("KG-495 Tool results aren't preserved in the prompt messages after the history compression")
+    fun integration_AIAgentHistoryCompressionAfterToolCalls(
+        strategy: HistoryCompressionStrategy,
+        strategyName: String
+    ) = runTest(timeout = 180.seconds) {
+        val model = OpenAIModels.Chat.GPT5
+        val systemMessage = "You are a helpful assistant. JUST CALL THE TOOLS, NO QUESTIONS ASKED."
+
+        val historyCompressionStrategy = buildHistoryCompressionWithToolsStrategy(
+            strategy = strategy,
+            compressBeforeToolResult = false,
+        )
+
+        withRetry {
+            runWithTracking { eventHandlerConfig, state ->
+                val agent = AIAgent<String, Pair<String, List<Message>>>(
+                    promptExecutor = getExecutor(model),
+                    strategy = historyCompressionStrategy,
+                    agentConfig = AIAgentConfig(
+                        prompt = prompt(
+                            "history-compression-with-tools-test",
+                            params = LLMParams(toolChoice = ToolChoice.Auto)
+                        ) {
+                            system(systemMessage)
+                            user(
+                                "Please calculate 7 times 2 using the calculator tool. " +
+                                    "Reply concisely after executing the tool."
+                            )
+                        },
+                        model = model,
+                        maxAgentIterations = 10
+                    ),
+                    toolRegistry = twoToolsRegistry,
+                ) {
+                    install(EventHandler, eventHandlerConfig)
+                }
+
+                val (result, promptMessages) = agent.run("Proceed with the task.")
+
+                assertHistoryCompressionWithTools(
+                    errors = state.errors,
+                    actualToolCalls = state.actualToolCalls,
+                    result = result,
+                    promptMessages = promptMessages,
+                    strategyName = strategyName
+                )
+            }
+        }
+    }
+
+    @ParameterizedTest
+    @MethodSource("historyCompressionStrategies")
+    @Ignore("KG-496 IllegalStateException when adding tool results after history compression")
+    fun integration_AIAgentHistoryCompressionBeforeToolResult(
+        strategy: HistoryCompressionStrategy,
+        strategyName: String
+    ) = runTest(timeout = 180.seconds) {
+        val model = OpenAIModels.Chat.GPT5
+        val systemMessage = "You are a helpful assistant. JUST CALL THE TOOLS, NO QUESTIONS ASKED."
+
+        val historyCompressionStrategy = buildHistoryCompressionWithToolsStrategy(
+            strategy = strategy,
+            compressBeforeToolResult = true,
+        )
+
+        withRetry {
+            runWithTracking { eventHandlerConfig, state ->
+                val agent = AIAgent<String, Pair<String, List<Message>>>(
+                    promptExecutor = getExecutor(model),
+                    strategy = historyCompressionStrategy,
+                    agentConfig = AIAgentConfig(
+                        prompt = prompt(
+                            "history-compression-with-tools-test",
+                            params = LLMParams(toolChoice = ToolChoice.Auto)
+                        ) {
+                            system(systemMessage)
+                            user(
+                                "Please calculate 7 times 2 using the calculator tool. " +
+                                    "Reply concisely after executing the tool."
+                            )
+                        },
+                        model = model,
+                        maxAgentIterations = 10
+                    ),
+                    toolRegistry = twoToolsRegistry,
+                ) {
+                    install(EventHandler, eventHandlerConfig)
+                }
+
+                val (result, promptMessages) = agent.run("Proceed with the task.")
+
+                assertHistoryCompressionWithTools(
+                    errors = state.errors,
+                    actualToolCalls = state.actualToolCalls,
+                    result = result,
+                    promptMessages = promptMessages,
+                    strategyName = strategyName
+                )
+            }
+        }
+    }
 }

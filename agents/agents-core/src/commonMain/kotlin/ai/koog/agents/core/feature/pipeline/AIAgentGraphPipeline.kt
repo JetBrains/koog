@@ -61,6 +61,7 @@ public class AIAgentGraphPipeline(clock: Clock = Clock.System) : AIAgentPipeline
      * @param node The node that is about to be executed
      * @param context The agent context in which the node is being executed
      * @param input The input data for the node execution
+     * @param inputType The type of the input data provided to the node
      */
     public suspend fun onNodeExecutionStarting(
         node: AIAgentNodeBase<*, *>,
@@ -78,7 +79,9 @@ public class AIAgentGraphPipeline(clock: Clock = Clock.System) : AIAgentPipeline
      * @param node The node that was executed
      * @param context The agent context in which the node was executed
      * @param input The input data that was provided to the node
+     * @param inputType The type of the input data provided to the node
      * @param output The output data produced by the node execution
+     * @param outputType The type of the output data produced by the node execution
      */
     public suspend fun onNodeExecutionCompleted(
         node: AIAgentNodeBase<*, *>,
@@ -97,14 +100,18 @@ public class AIAgentGraphPipeline(clock: Clock = Clock.System) : AIAgentPipeline
      *
      * @param node The instance of the node where the error occurred.
      * @param context The context associated with the AI agent executing the node.
+     * @param input The input data provided to the node.
+     * @param inputType The type of the input data provided to the node.
      * @param throwable The exception or error that occurred during node execution.
      */
     public suspend fun onNodeExecutionFailed(
         node: AIAgentNodeBase<*, *>,
         context: AIAgentContext,
+        input: Any?,
+        inputType: KType,
         throwable: Throwable
     ) {
-        val eventContext = NodeExecutionFailedContext(node, context, throwable)
+        val eventContext = NodeExecutionFailedContext(node, context, input, inputType, throwable)
         executeNodeHandlers.values.forEach { handler -> handler.nodeExecutionFailedHandler.handle(eventContext) }
     }
 

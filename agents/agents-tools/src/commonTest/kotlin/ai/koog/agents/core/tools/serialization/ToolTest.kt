@@ -1,6 +1,5 @@
 package ai.koog.agents.core.tools.serialization
 
-import ai.koog.agents.core.tools.DirectToolCallsEnabler
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolResult
@@ -20,9 +19,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 @OptIn(InternalAgentToolsApi::class)
-object Enabler : DirectToolCallsEnabler
-
-@OptIn(InternalAgentToolsApi::class)
 class ToolTest {
     // Unstructured tool
 
@@ -38,7 +34,7 @@ class ToolTest {
     @Test
     fun testSimpleUnstructuredToolSerialization() = runTest {
         val args = JsonObject(emptyMap())
-        val result = UnstructuredTool.execute(UnstructuredTool.decodeArgs(args), Enabler)
+        val result = UnstructuredTool.execute(UnstructuredTool.decodeArgs(args))
 
         assertEquals("Simple result", result)
     }
@@ -67,7 +63,7 @@ class ToolTest {
             put("arg1", "argument")
             put("arg2", 15)
         }
-        val result = SampleStructuredTool.execute(SampleStructuredTool.decodeArgs(args), Enabler)
+        val result = SampleStructuredTool.execute(SampleStructuredTool.decodeArgs(args))
 
         assertEquals(
             //language=JSON
@@ -112,7 +108,7 @@ class ToolTest {
     @Test
     fun testCustomFormatToolSerialization() = runTest {
         val args = JsonObject(emptyMap())
-        val result = CustomFormatTool.execute(CustomFormatTool.decodeArgs(args), Enabler)
+        val result = CustomFormatTool.execute(CustomFormatTool.decodeArgs(args))
         assertEquals("Foo: first result | Bar: second result", result.toStringDefault())
     }
 }

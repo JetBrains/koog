@@ -50,4 +50,8 @@ internal class MockOpenAILLMClient @JvmOverloads constructor(
     override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
         throw UnsupportedOperationException("Moderation is not supported by mock client.")
     }
+
+    override fun close() {
+        // No resources to close
+    }
 }

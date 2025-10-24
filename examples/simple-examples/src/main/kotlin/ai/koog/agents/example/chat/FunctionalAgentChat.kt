@@ -9,22 +9,24 @@ import kotlinx.coroutines.runBlocking
 import kotlin.uuid.ExperimentalUuidApi
 
 @OptIn(ExperimentalUuidApi::class)
-fun main(): Unit = runBlocking {
-    val funcAgent = AIAgent<String, Unit>(
-        systemPrompt = "You're a simple chat agent",
-        promptExecutor = simpleOllamaAIExecutor(),
-        strategy = functionalStrategy {
-            var userResponse = it
-            while (userResponse != "/bye") {
-                val responses = requestLLM(userResponse)
-                println(responses.content)
-                userResponse = readln()
-            }
-        },
-        llmModel = OllamaModels.Meta.LLAMA_3_2
-    )
+suspend fun main() {
+    simpleOllamaAIExecutor().use { executor ->
+        val funcAgent = AIAgent<String, Unit>(
+            systemPrompt = "You're a simple chat agent",
+            promptExecutor = executor,
+            strategy = functionalStrategy {
+                var userResponse = it
+                while (userResponse != "/bye") {
+                    val responses = requestLLM(userResponse)
+                    println(responses.content)
+                    userResponse = readln()
+                }
+            },
+            llmModel = OllamaModels.Meta.LLAMA_3_2
+        )
 
-    println("Simple chat agent started\nUse /bye to quit\nEnter your message:")
-    val input = readln()
-    funcAgent.run(input)
+        println("Simple chat agent started\nUse /bye to quit\nEnter your message:")
+        val input = readln()
+        funcAgent.run(input)
+    }
 }

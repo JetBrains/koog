@@ -11,6 +11,18 @@ communication.
 For more information and a detailed specification of the A2A protocol, see the
 official [A2A Protocol website](https://a2a-protocol.org/latest/).
 
+## Getting Started
+
+**Important**: A2A dependencies are **not** included by default in the `koog-agents` meta-dependency. 
+You must explicitly add the A2A modules you need to your project.
+
+To use A2A in your project, add dependencies based on your use case:
+
+
+- **For A2A client**: See [A2A Client documentation](a2a-client.md#dependencies)
+- **For A2A server**: See [A2A Server documentation](a2a-server.md#dependencies)
+- **For Koog integration**: See [A2A Koog Integration documentation](a2a-koog-integration.md#dependencies)
+
 ## Key A2A components
 
 Koog provides full implementation of A2A protocol v0.3.0 for both client and server, as well as integration with the

@@ -71,20 +71,22 @@ fun main() = runBlocking {
         )
     }
 
-    // Create a chat agent with a system prompt for joke generation
-    val agent = AIAgent(
-        promptExecutor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey),
-        llmModel = OpenAIModels.CostOptimized.GPT4oMini,
-        strategy = moderatingStrategy,
-        systemPrompt = """
-            You are professional joke generator. Generate a funny joke based on the user's input.
-        """.trimIndent(),
-        temperature = 0.0
-    )
+    simpleOpenAIExecutor(ApiKeyService.openAIApiKey).use { executor ->
+        // Create a chat agent with a system prompt for joke generation
+        val agent = AIAgent(
+            promptExecutor = executor,
+            llmModel = OpenAIModels.CostOptimized.GPT4oMini,
+            strategy = moderatingStrategy,
+            systemPrompt = """
+                You are professional joke generator. Generate a funny joke based on the user's input.
+            """.trimIndent(),
+            temperature = 0.0
+        )
 
-    println("Type the topic for the joke and press Enter to generate a joke.")
-    val initialMessage = readln()
+        println("Type the topic for the joke and press Enter to generate a joke.")
+        val initialMessage = readln()
 
-    val result = agent.run(initialMessage)
-    println(result)
+        val result = agent.run(initialMessage)
+        println(result)
+    }
 }

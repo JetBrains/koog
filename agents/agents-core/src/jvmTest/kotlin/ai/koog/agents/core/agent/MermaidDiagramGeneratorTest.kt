@@ -54,7 +54,7 @@ class MermaidDiagramGeneratorTest {
 
     @Test
     fun `Should create a diagram for advanced`() {
-        val strategy = strategy(
+        val strategy = strategy<String, String>(
             name = "test-strategy",
         ) {
             val moderateInput by nodeLLMModerateMessage(

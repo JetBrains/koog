@@ -11,4 +11,4 @@ docs/src/main/kotlin/*.kt
 **/.env
 .venv
 .DS_Store
-**/kotlin-js-store
+/.claude/

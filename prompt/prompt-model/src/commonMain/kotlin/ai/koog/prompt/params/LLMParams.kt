@@ -23,13 +23,6 @@ import kotlinx.serialization.json.JsonPrimitive
  * @property schema Defines the structure for the model's structured response format.
  * @property toolChoice Used to switch tool calling behavior of LLM.
  * @property user An optional identifier for the user making the request, which can be used for tracking purposes.
- * @property includeThoughts If `true`, requests the model to add reasoning blocks to the response.
- * Defaults to `null`.
- * When set to `true`, responses may include detailed reasoning steps.
- * When `false` or `null`, responses are typically shorter and faster.
- * @property thinkingBudget Hard cap for reasoning tokens.
- * Ignored by models that don't support budgets.
- * This can be used to limit the amount of tokens used for reasoning when `includeThoughts` is enabled.
  * @property additionalProperties Additional properties that can be used to store custom parameters.
  */
 @Serializable
@@ -42,8 +35,6 @@ public open class LLMParams(
     public val schema: Schema? = null,
     public val toolChoice: ToolChoice? = null,
     public val user: String? = null,
-    public val includeThoughts: Boolean? = null,
-    public val thinkingBudget: Int? = null,
     public val additionalProperties: Map<String, JsonElement>? = null,
 ) {
     init {
@@ -82,8 +73,6 @@ public open class LLMParams(
         schema = schema ?: default.schema,
         toolChoice = toolChoice ?: default.toolChoice,
         user = user ?: default.user,
-        includeThoughts = includeThoughts ?: default.includeThoughts,
-        thinkingBudget = thinkingBudget ?: default.thinkingBudget,
         additionalProperties = additionalProperties ?: default.additionalProperties,
     )
 
@@ -98,8 +87,6 @@ public open class LLMParams(
         schema: Schema? = this.schema,
         toolChoice: ToolChoice? = this.toolChoice,
         user: String? = this.user,
-        includeThoughts: Boolean? = this.includeThoughts,
-        thinkingBudget: Int? = this.thinkingBudget,
         additionalProperties: Map<String, JsonElement>? = this.additionalProperties,
     ): LLMParams = LLMParams(
         temperature = temperature,
@@ -109,8 +96,6 @@ public open class LLMParams(
         schema = schema,
         toolChoice = toolChoice,
         user = user,
-        includeThoughts = includeThoughts,
-        thinkingBudget = thinkingBudget,
         additionalProperties = additionalProperties,
     )
 
@@ -164,20 +149,6 @@ public open class LLMParams(
      */
     public operator fun component7(): String? = user
 
-    /**
-     * Retrieves the eighth component of the data class, typically used for destructuring declarations.
-     *
-     * @return A Boolean value or null representing the state of the eighth component.
-     */
-    public operator fun component8(): Boolean? = includeThoughts
-
-    /**
-     * Provides the ninth component of a destructured object, specifically the thinking budget.
-     *
-     * @return The value of the `thinkingBudget` as an optional integer, or null if not set.
-     */
-    public operator fun component9(): Int? = thinkingBudget
-
     @Suppress("MissingKDocForPublicAPI")
     public operator fun component10(): Map<String, JsonElement>? = additionalProperties
 
@@ -192,15 +163,17 @@ public open class LLMParams(
                 schema == other.schema &&
                 toolChoice == other.toolChoice &&
                 user == other.user &&
-                includeThoughts == other.includeThoughts &&
-                thinkingBudget == other.thinkingBudget &&
                 additionalProperties == other.additionalProperties
     }
 
     override fun hashCode(): Int = listOf(
-        temperature, maxTokens, numberOfChoices,
-        speculation, schema, toolChoice,
-        user, includeThoughts, thinkingBudget
+        temperature,
+        maxTokens,
+        numberOfChoices,
+        speculation,
+        schema,
+        toolChoice,
+        user
     ).fold(0) { acc, element ->
         31 * acc + (element?.hashCode() ?: 0)
     }
@@ -214,8 +187,6 @@ public open class LLMParams(
         append(", schema=$schema")
         append(", toolChoice=$toolChoice")
         append(", user=$user")
-        append(", includeThoughts=$includeThoughts")
-        append(", thinkingBudget=$thinkingBudget")
         append(", additionalProperties=$additionalProperties")
         append(")")
     }

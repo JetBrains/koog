@@ -108,9 +108,9 @@ class ToolDescriptorIntegrationTest {
         fun allModels(): Stream<LLModel> {
             return Stream.of(
                 OpenAIModels.CostOptimized.GPT4_1Mini,
-                AnthropicModels.Sonnet_3_7,
+                AnthropicModels.Sonnet_4_5,
                 GoogleModels.Gemini2_5Flash,
-                BedrockModels.AnthropicClaude35Haiku,
+                BedrockModels.AnthropicClaude4_5Haiku,
                 OpenRouterModels.Mistral7B,
             )
         }

@@ -109,6 +109,18 @@ class SingleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
 
     @ParameterizedTest
     @MethodSource("allModels")
+    override fun integration_testToolsWithNullParams(model: LLModel) {
+        super.integration_testToolsWithNullParams(model)
+    }
+
+    @ParameterizedTest
+    @MethodSource("allModels")
+    override fun integration_testToolsWithAnyOfParams(model: LLModel) {
+        super.integration_testToolsWithAnyOfParams(model)
+    }
+
+    @ParameterizedTest
+    @MethodSource("allModels")
     override fun integration_testRawStringStreaming(model: LLModel) {
         super.integration_testRawStringStreaming(model)
     }

@@ -1,5 +1,6 @@
 package ai.koog.agents.features.tracing.writer
 
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeExecuteTool
@@ -27,15 +28,16 @@ import ai.koog.agents.core.feature.remote.client.config.DefaultClientConnectionC
 import ai.koog.agents.core.feature.remote.server.config.DefaultServerConnectionConfig
 import ai.koog.agents.core.feature.writer.FeatureMessageRemoteWriter
 import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.core.utils.SerializationUtil
 import ai.koog.agents.features.tracing.feature.Tracing
 import ai.koog.agents.features.tracing.mock.MockLLMProvider
 import ai.koog.agents.features.tracing.mock.TestFeatureMessageWriter
 import ai.koog.agents.features.tracing.mock.assistantMessage
 import ai.koog.agents.features.tracing.mock.createAgent
+import ai.koog.agents.features.tracing.mock.receivedToolResult
 import ai.koog.agents.features.tracing.mock.systemMessage
 import ai.koog.agents.features.tracing.mock.testClock
 import ai.koog.agents.features.tracing.mock.toolCallMessage
-import ai.koog.agents.features.tracing.mock.toolResult
 import ai.koog.agents.features.tracing.mock.userMessage
 import ai.koog.agents.testing.network.NetUtil.findAvailablePort
 import ai.koog.agents.testing.tools.DummyTool
@@ -43,6 +45,7 @@ import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.llm.toModelInfo
+import ai.koog.prompt.message.Message
 import ai.koog.utils.io.use
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.plugins.sse.SSEClientException
@@ -58,8 +61,10 @@ import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.serialization.json.JsonPrimitive
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
+import kotlin.reflect.typeOf
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
@@ -194,7 +199,7 @@ class TraceFeatureMessageRemoteWriterTest {
             messages = expectedPrompt.messages + listOf(
                 userMessage(content = userPrompt),
                 toolCallMessage(dummyTool.name, content = """{"dummy":"test"}"""),
-                toolResult("0", dummyTool.name, dummyTool.result, dummyTool.result).toMessage(clock = testClock)
+                receivedToolResult("0", dummyTool.name, dummyTool.result, dummyTool.result).toMessage(clock = testClock)
             )
         )
 
@@ -333,20 +338,36 @@ class TraceFeatureMessageRemoteWriterTest {
                     NodeExecutionStartingEvent(
                         runId = runId,
                         nodeName = "__start__",
-                        input = userPrompt,
+                        input = @OptIn(InternalAgentsApi::class)
+                        SerializationUtil.trySerializeDataToJsonElement(
+                            data = userPrompt,
+                            dataType = typeOf<String>()
+                        ),
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     NodeExecutionCompletedEvent(
                         runId = runId,
                         nodeName = "__start__",
-                        input = userPrompt,
-                        output = userPrompt,
+                        input = @OptIn(InternalAgentsApi::class)
+                        SerializationUtil.trySerializeDataToJsonElement(
+                            data = userPrompt,
+                            dataType = typeOf<String>()
+                        ),
+                        output = @OptIn(InternalAgentsApi::class)
+                        SerializationUtil.trySerializeDataToJsonElement(
+                            data = userPrompt,
+                            dataType = typeOf<String>()
+                        ),
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     NodeExecutionStartingEvent(
                         runId = runId,
                         nodeName = "test-llm-call",
-                        input = userPrompt,
+                        input = @OptIn(InternalAgentsApi::class)
+                        SerializationUtil.trySerializeDataToJsonElement(
+                            data = userPrompt,
+                            dataType = typeOf<String>()
+                        ),
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     LLMCallStartingEvent(
@@ -366,14 +387,23 @@ class TraceFeatureMessageRemoteWriterTest {
                     NodeExecutionCompletedEvent(
                         runId = runId,
                         nodeName = "test-llm-call",
-                        input = userPrompt,
-                        output = toolCallMessage(dummyTool.name, content = """{"dummy":"test"}""").toString(),
+                        // TODO: KG-485. Update to include serialized [ReceivedToolResult] when it became a serializable type.
+                        input = JsonPrimitive(userPrompt),
+                        output = @OptIn(InternalAgentsApi::class)
+                        SerializationUtil.trySerializeDataToJsonElement(
+                            data = toolCallMessage(dummyTool.name, content = """{"dummy":"test"}"""),
+                            dataType = typeOf<Message>()
+                        ),
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     NodeExecutionStartingEvent(
                         runId = runId,
                         nodeName = "test-tool-call",
-                        input = toolCallMessage(dummyTool.name, content = """{"dummy":"test"}""").toString(),
+                        input = @OptIn(InternalAgentsApi::class)
+                        SerializationUtil.trySerializeDataToJsonElement(
+                            data = toolCallMessage(dummyTool.name, content = """{"dummy":"test"}"""),
+                            dataType = typeOf<Message.Tool.Call>()
+                        ),
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     ToolCallStartingEvent(
@@ -394,14 +424,20 @@ class TraceFeatureMessageRemoteWriterTest {
                     NodeExecutionCompletedEvent(
                         runId = runId,
                         nodeName = "test-tool-call",
-                        input = toolCallMessage(dummyTool.name, content = """{"dummy":"test"}""").toString(),
-                        output = toolResult("0", dummyTool.name, dummyTool.result, dummyTool.result).toString(),
-                        timestamp = testClock.now().toEpochMilliseconds()
+                        input = @OptIn(InternalAgentsApi::class)
+                        SerializationUtil.trySerializeDataToJsonElement(
+                            data = toolCallMessage(dummyTool.name, content = """{"dummy":"test"}"""),
+                            dataType = typeOf<Message.Tool.Call>()
+                        ),
+                        timestamp = testClock.now().toEpochMilliseconds(),
+                        // TODO: KG-485. Update to include serialized [ReceivedToolResult] when it became a serializable type.
+                        output = JsonPrimitive(dummyTool.result)
                     ),
                     NodeExecutionStartingEvent(
                         runId = runId,
                         nodeName = "test-node-llm-send-tool-result",
-                        input = toolResult("0", dummyTool.name, dummyTool.result, dummyTool.result).toString(),
+                        // TODO: KG-485. Update to include serialized [ReceivedToolResult] when it became a serializable type.
+                        input = JsonPrimitive(dummyTool.result),
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     LLMCallStartingEvent(
@@ -421,21 +457,38 @@ class TraceFeatureMessageRemoteWriterTest {
                     NodeExecutionCompletedEvent(
                         runId = runId,
                         nodeName = "test-node-llm-send-tool-result",
-                        input = toolResult("0", dummyTool.name, dummyTool.result, dummyTool.result).toString(),
-                        output = assistantMessage(mockResponse).toString(),
+                        // TODO: KG-485. Update to include serialized [ReceivedToolResult] when it became a serializable type.
+                        input = JsonPrimitive(dummyTool.result),
+                        output = @OptIn(InternalAgentsApi::class)
+                        SerializationUtil.trySerializeDataToJsonElement(
+                            data = assistantMessage(mockResponse),
+                            dataType = typeOf<Message>()
+                        ),
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     NodeExecutionStartingEvent(
                         runId = runId,
                         nodeName = "__finish__",
-                        input = mockResponse,
+                        input = @OptIn(InternalAgentsApi::class)
+                        SerializationUtil.trySerializeDataToJsonElement(
+                            data = mockResponse,
+                            dataType = typeOf<String>()
+                        ),
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     NodeExecutionCompletedEvent(
                         runId = runId,
                         nodeName = "__finish__",
-                        input = mockResponse,
-                        output = mockResponse,
+                        input = @OptIn(InternalAgentsApi::class)
+                        SerializationUtil.trySerializeDataToJsonElement(
+                            data = mockResponse,
+                            dataType = typeOf<String>()
+                        ),
+                        output = @OptIn(InternalAgentsApi::class)
+                        SerializationUtil.trySerializeDataToJsonElement(
+                            data = mockResponse,
+                            dataType = typeOf<String>()
+                        ),
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     StrategyCompletedEvent(
@@ -599,7 +652,7 @@ class TraceFeatureMessageRemoteWriterTest {
             messages = expectedPrompt.messages + listOf(
                 userMessage(content = userPrompt),
                 toolCallMessage(dummyTool.name, content = """{"dummy":"test"}"""),
-                toolResult("0", dummyTool.name, dummyTool.result, dummyTool.result).toMessage(clock = testClock)
+                receivedToolResult("0", dummyTool.name, dummyTool.result, dummyTool.result).toMessage(clock = testClock)
             )
         )
 

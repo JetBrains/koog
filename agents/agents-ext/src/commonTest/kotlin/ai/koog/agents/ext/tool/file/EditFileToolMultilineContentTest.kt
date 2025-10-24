@@ -1,6 +1,5 @@
 package ai.koog.agents.ext.tool.file
 
-import ai.koog.agents.core.tools.DirectToolCallsEnabler
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.ext.utils.InMemoryFS
 import ai.koog.rag.base.files.readText
@@ -44,8 +43,7 @@ class EditFileToolMultilineContentTest {
             |    }
         """.trimMargin()
         tool.execute(
-            EditFileTool.Args(path = path, original = original, replacement = replacement),
-            object : DirectToolCallsEnabler {}
+            EditFileTool.Args(path = path, original = original, replacement = replacement)
         )
 
         // Then
@@ -78,7 +76,7 @@ class EditFileToolMultilineContentTest {
 
         // When
         val args = EditFileTool.Args(path = path, original = "const target = 42", replacement = "const target = 43")
-        tool.execute(args, object : DirectToolCallsEnabler {})
+        tool.execute(args)
 
         // Then
         val updated = mockedFS.readText(path)
@@ -94,7 +92,7 @@ class EditFileToolMultilineContentTest {
         mockedFS.writeText(path, "const x = 42\nrest of code")
 
         // When
-        tool.execute(EditFileTool.Args(path = path, original = "const x", replacement = "let x"), object : DirectToolCallsEnabler {})
+        tool.execute(EditFileTool.Args(path = path, original = "const x", replacement = "let x"))
 
         // Then
         val updated = mockedFS.readText(path)
@@ -110,7 +108,7 @@ class EditFileToolMultilineContentTest {
         mockedFS.writeText(path, "code;\nreturn 42")
 
         // When
-        tool.execute(EditFileTool.Args(path = path, original = "return 42", replacement = "return 43"), object : DirectToolCallsEnabler {})
+        tool.execute(EditFileTool.Args(path = path, original = "return 42", replacement = "return 43"))
 
         // Then
         val updated = mockedFS.readText(path)
@@ -127,13 +125,11 @@ class EditFileToolMultilineContentTest {
 
         // When
         tool.execute(
-            EditFileTool.Args(path = path, original = "const x = 42", replacement = "const x = 142"),
-            object : DirectToolCallsEnabler {}
+            EditFileTool.Args(path = path, original = "const x = 42", replacement = "const x = 142")
         )
 
         tool.execute(
-            EditFileTool.Args(path = path, original = "const y = 43", replacement = "const y = 143"),
-            object : DirectToolCallsEnabler {}
+            EditFileTool.Args(path = path, original = "const y = 43", replacement = "const y = 143")
         )
 
         // Then
