@@ -23,7 +23,6 @@ import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.utils.io.SuitableForIO
-import aws.sdk.kotlin.runtime.auth.credentials.StaticCredentialsProvider
 import aws.sdk.kotlin.services.bedrockruntime.BedrockRuntimeClient
 import aws.sdk.kotlin.services.bedrockruntime.applyGuardrail
 import aws.sdk.kotlin.services.bedrockruntime.model.ApplyGuardrailResponse
@@ -40,6 +39,8 @@ import aws.sdk.kotlin.services.bedrockruntime.model.InvokeModelWithResponseStrea
 import aws.sdk.kotlin.services.bedrockruntime.model.InvokeModelWithResponseStreamResponse
 import aws.sdk.kotlin.services.bedrockruntime.model.ResponseStream
 import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
+import aws.smithy.kotlin.runtime.http.auth.BearerTokenProvider
+import aws.smithy.kotlin.runtime.identity.IdentityProvider
 import aws.smithy.kotlin.runtime.net.url.Url
 import aws.smithy.kotlin.runtime.retries.StandardRetryStrategy
 import aws.smithy.kotlin.runtime.util.type
@@ -104,28 +105,30 @@ public class BedrockLLMClient(
     private val logger = KotlinLogging.logger {}
 
     /**
-     * Creates a new Bedrock LLM client configured with the specified AWS credentials and settings.
+     * Creates a new Bedrock LLM client configured with the specified identity provider and settings.
      *
-     * @param credentialsProvider AWS credentials provider for authentication with AWS services,
-     * e.g. [StaticCredentialsProvider] for providing AWS key and token explicitly.
+     * @param identityProvider Supplies authentication to AWS Bedrock, supporting both [CredentialsProvider] for AWS credentials
+     * and [BearerTokenProvider] for API key-based access.
      * @param settings Configuration settings for the Bedrock client, such as region and endpoint
      * @param clock A clock used for time-based operations
      * @return A configured [LLMClient] instance for Bedrock
      */
     public constructor(
-        credentialsProvider: CredentialsProvider,
+        identityProvider: IdentityProvider,
         settings: BedrockClientSettings = BedrockClientSettings(),
         clock: Clock = Clock.System,
     ) : this(
         bedrockClient = BedrockRuntimeClient {
             this.region = settings.region
-            this.credentialsProvider = credentialsProvider
-
+            when (identityProvider) {
+                is CredentialsProvider -> this.credentialsProvider = identityProvider
+                is BearerTokenProvider -> this.bearerTokenProvider = identityProvider
+                else -> throw IllegalArgumentException("identityProvider must be either CredentialsProvider or BearerTokenProvider")
+            }
             // Configure a custom endpoint if provided
             settings.endpointUrl?.let { url ->
                 this.endpointUrl = Url.parse(url)
             }
-
             // Configure retry policy
             this.retryStrategy = StandardRetryStrategy {
                 maxAttempts = settings.maxRetries

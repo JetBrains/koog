@@ -693,7 +693,7 @@ val multiExecutor = MultiLLMPromptExecutor(
     ),
     // The Bedrock client already has a built-in AWS SDK retry 
     LLMProvider.Bedrock to BedrockLLMClient(
-        credentialsProvider = StaticCredentialsProvider {
+        identityProvider = StaticCredentialsProvider {
             accessKeyId = System.getenv("AWS_ACCESS_KEY_ID")
             secretAccessKey = System.getenv("AWS_SECRET_ACCESS_KEY")
             sessionToken = System.getenv("AWS_SESSION_TOKEN")

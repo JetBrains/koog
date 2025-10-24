@@ -53,6 +53,11 @@ object TestUtils {
             ?: error("ERROR: environment variable `AWS_ACCESS_KEY_ID` is not set")
     }
 
+    fun readAwsBearerTokenBedrockFromEnv(): String {
+        return System.getenv("AWS_BEARER_TOKEN_BEDROCK")
+            ?: error("ERROR: environment variable `AWS_BEARER_TOKEN_BEDROCK` is not set")
+    }
+
     fun readAwsSecretAccessKeyFromEnv(): String {
         return System.getenv("AWS_SECRET_ACCESS_KEY")
             ?: error("ERROR: environment variable `AWS_SECRET_ACCESS_KEY` is not set")
