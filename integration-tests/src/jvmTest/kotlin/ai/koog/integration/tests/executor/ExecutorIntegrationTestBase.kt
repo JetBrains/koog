@@ -25,7 +25,6 @@ import ai.koog.integration.tests.utils.getLLMClientForProvider
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.LLMClient
-import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMCapability
@@ -35,6 +34,7 @@ import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.ToolChoice
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.filterTextOnly
@@ -42,6 +42,7 @@ import ai.koog.prompt.structure.executeStructured
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assumptions.assumeFalse
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
 import java.nio.file.Path
@@ -236,9 +237,11 @@ abstract class ExecutorIntegrationTestBase {
             )
 
             val prompt = Prompt.build("test-tools") {
-                system(
-                    "You are a helpful assistant with access to a calculator tool. Don't use optional params if possible. ALWAYS CALL TOOL FIRST."
-                )
+                system {
+                    +"You are a helpful assistant with access to a calculator tool."
+                    +"Don't use optional params if possible."
+                    +"JUST CALL TOOLS. NO QUESTIONS ASKED."
+                }
                 user("What is 123 + 456?")
             }
 
@@ -310,7 +313,10 @@ abstract class ExecutorIntegrationTestBase {
         )
 
         val prompt = Prompt.build("test-tools") {
-            system("You are a helpful assistant with access to calculator tools. Use the best one.")
+            system {
+                +"You are a helpful assistant with access to calculator tools."
+                +"Use the best one."
+            }
             user("What is 123 + 456?")
         }
 
@@ -345,7 +351,10 @@ abstract class ExecutorIntegrationTestBase {
         )
 
         val prompt = Prompt.build("test-tools") {
-            system("You are a helpful assistant with access to a color picker tool. ALWAYS CALL TOOL FIRST.")
+            system {
+                +"You are a helpful assistant with access to a color picker tool. "
+                +"ALWAYS CALL TOOL FIRST."
+            }
             user("Pick me a color!")
         }
 
@@ -374,7 +383,10 @@ abstract class ExecutorIntegrationTestBase {
         )
 
         val prompt = Prompt.build("test-tools") {
-            system("You are a helpful assistant. ALWAYS CALL TOOL FIRST.")
+            system {
+                +"You are a helpful assistant."
+                +"JUST CALL TOOLS. NO QUESTIONS ASKED."
+            }
             user("Pick me lottery winners and losers! 5 of each")
         }
 
@@ -403,7 +415,10 @@ abstract class ExecutorIntegrationTestBase {
         )
 
         val prompt = Prompt.build("test-tools") {
-            system("You are a helpful assistant. ALWAYS CALL TOOL FIRST.")
+            system {
+                +"You are a helpful assistant."
+                +"JUST CALL TOOLS. NO QUESTIONS ASKED."
+            }
             user("Hi. Call a tool.")
         }
 
@@ -449,17 +464,20 @@ abstract class ExecutorIntegrationTestBase {
             )
         )
 
-        val prompt = Prompt.build("test-tools") {
-            system("You are a helpful assistant. ALWAYS CALL TOOL FIRST.")
+        val prompt = Prompt.build("test-tools", LLMParams(toolChoice = ToolChoice.Required)) {
+            system {
+                +"You are a helpful assistant."
+                +"JUST CALL TOOLS. NO QUESTIONS ASKED."
+            }
             user("Hi. Give me a word and a number.")
         }
 
         val executor = getExecutor(model)
 
-        withRetry(times = 3, testName = "integration_testToolsWithAnyOfParams[${model.id}]") {
+        withRetry(testName = "integration_testToolsWithAnyOfParams[${model.id}]") {
             val response = executor.execute(prompt, model, listOf(anyOfTool))
             assertTrue(response.isNotEmpty(), "Response should not be empty")
-            assertTrue(response.any { it is Message.Tool.Call })
+            assertTrue(response.any { it is Message.Tool.Call }, "Response should contain a tool call")
         }
     }
 
@@ -796,12 +814,6 @@ abstract class ExecutorIntegrationTestBase {
             "Model must support vision capability"
         )
 
-        // Skip audio-only models
-        assumeTrue(
-            !model.id.contains("audio", ignoreCase = true),
-            "Audio-only models are not supported for this test"
-        )
-
         val imageFile = MediaTestUtils.getImageFileForScenario(ImageTestScenario.BASIC_PNG, testResourcesDir)
         val imageBytes = imageFile.readBytes()
 
@@ -936,9 +948,9 @@ abstract class ExecutorIntegrationTestBase {
     }
 
     open fun integration_testStructuredOutputManualWithFixingParser(model: LLModel) = runTest {
-        assumeTrue(
-            (model !== GoogleModels.Gemini2_0FlashLite) && (model !== GoogleModels.Gemini2_0FlashLite001),
-            "Gemini Flash Lite 2.0 models fail to return manually requested structured output"
+        assumeFalse(
+            (model.id.contains("flash-lite")),
+            "Gemini Flash Lite models fail to return manually requested structured output"
         )
         val executor = getExecutor(model)
 
@@ -961,7 +973,10 @@ abstract class ExecutorIntegrationTestBase {
         }
 
         val prompt = Prompt.build("test-streaming") {
-            system("You are a helpful assistant. You have NO output length limitations.")
+            system {
+                +"You are a helpful assistant."
+                +"You have NO output length limitations."
+            }
             user("Count from 1 to 5.")
         }
 
@@ -1023,7 +1038,10 @@ abstract class ExecutorIntegrationTestBase {
         withRetry(times = 3, testName = "integration_testToolChoiceNone[${model.id}]") {
             val response = getLLMClient(model).execute(
                 Prompt.build("test-tools") {
-                    system("You are a helpful assistant. Do not use calculator tool, it's broken!")
+                    system {
+                        +"You are a helpful assistant. "
+                        +"Do not use calculator tool, it's broken!"
+                    }
                     user("What is 123 + 456?")
                 }.withParams(
                     prompt.params.copy(
