@@ -4,6 +4,16 @@ on:
   workflow_dispatch:  # Manual trigger
 
 jobs:
+  check-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail if running on blocked branch
+        if: |
+          github.ref == 'refs/heads/develop'
+        run: |
+          echo "This workflow cannot be run on develop branch. If you want to deploy docs, run it on the latest release branch"
+          exit 1
+
   deploy:
     runs-on: ubuntu-latest
     steps:
