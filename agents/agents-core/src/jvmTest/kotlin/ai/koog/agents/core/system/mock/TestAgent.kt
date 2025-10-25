@@ -1,4 +1,4 @@
-package ai.koog.agents.features.debugger.mock
+package ai.koog.agents.core.system.mock
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.GraphAIAgent

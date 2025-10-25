@@ -35,7 +35,7 @@ public object NetUtil {
         try {
             ServerSocket().use { socket ->
                 socket.reuseAddress = true
-                socket.bind(InetSocketAddress(port), 50)
+                socket.bind(InetSocketAddress(port), 0)
             }
             return true
         } catch (t: SocketException) {

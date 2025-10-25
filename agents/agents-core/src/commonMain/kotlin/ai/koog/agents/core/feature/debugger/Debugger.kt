@@ -1,13 +1,14 @@
-package ai.koog.agents.features.debugger.feature
+package ai.koog.agents.core.feature.debugger
 
+import ai.koog.agents.core.agent.context.AIAgentContext
+import ai.koog.agents.core.agent.context.featureOrThrow
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.ReceivedToolResult
+import ai.koog.agents.core.feature.AIAgentFunctionalFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
-import ai.koog.agents.core.feature.debugger.DebuggerConfig
-import ai.koog.agents.core.system.readEnvironmentVariable
-import ai.koog.agents.core.system.readVMOption
+import ai.koog.agents.core.feature.debugger.writer.DebuggerFeatureMessageRemoteWriter
 import ai.koog.agents.core.feature.model.events.AgentClosingEvent
 import ai.koog.agents.core.feature.model.events.AgentCompletedEvent
 import ai.koog.agents.core.feature.model.events.AgentExecutionFailedEvent
@@ -29,11 +30,14 @@ import ai.koog.agents.core.feature.model.events.ToolCallStartingEvent
 import ai.koog.agents.core.feature.model.events.ToolValidationFailedEvent
 import ai.koog.agents.core.feature.model.events.startNodeToGraph
 import ai.koog.agents.core.feature.model.toAgentError
+import ai.koog.agents.core.feature.pipeline.AIAgentFunctionalPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
+import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
 import ai.koog.agents.core.feature.remote.server.config.DefaultServerConnectionConfig
+import ai.koog.agents.core.system.getEnvironmentVariableOrNull
+import ai.koog.agents.core.system.getVMOptionOrNull
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.utils.SerializationUtils
-import ai.koog.agents.core.feature.debugger.writer.DebuggerFeatureMessageRemoteWriter
 import ai.koog.prompt.llm.toModelInfo
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.json.JsonElement
@@ -52,13 +56,18 @@ import kotlin.time.toDuration
  * This feature serves as a debugging tool for analyzing the AI agent's behavior and
  * interactions with its components, providing insights into the execution flow and
  * potential issues.
+ *
+ * @property port The port number on which the debugger server is listening for connections.
+ * @property awaitInitialConnectionTimeout The timeout duration for the debugger server to wait for a connection.
  */
-public class Debugger {
+public class Debugger(public val port: Int, public val awaitInitialConnectionTimeout: Duration? = null) {
 
     /**
      * Companion object implementing agent feature, handling [Debugger] creation and installation.
      */
-    public companion object Feature : AIAgentGraphFeature<DebuggerConfig, Debugger> {
+    public companion object Feature :
+        AIAgentGraphFeature<DebuggerConfig, Debugger>,
+        AIAgentFunctionalFeature<DebuggerConfig, Debugger> {
 
         private val logger = KotlinLogging.logger { }
 
@@ -89,20 +98,45 @@ public class Debugger {
 
         override fun createInitialConfig(): DebuggerConfig = DebuggerConfig()
 
-        override fun install(
-            config: DebuggerConfig,
-            pipeline: AIAgentGraphPipeline,
-        ): Debugger {
+        override fun install(config: DebuggerConfig, pipeline: AIAgentGraphPipeline): Debugger {
             logger.debug { "Debugger Feature. Start installing feature: ${Debugger::class.simpleName}" }
+
+            val writer = configureRemoteWriter(config)
+            installGraphPipeline(pipeline, writer)
+
+            return Debugger(
+                port = writer.server.connectionConfig.port,
+                awaitInitialConnectionTimeout = writer.server.connectionConfig.awaitInitialConnectionTimeout
+            )
+        }
+
+        override fun install(config: DebuggerConfig, pipeline: AIAgentFunctionalPipeline): Debugger {
+            logger.debug { "Debugger Feature. Start installing feature: ${Debugger::class.simpleName}" }
+
+            val writer = configureRemoteWriter(config)
+            installFunctionalPipeline(pipeline, writer)
+
+            return Debugger(
+                port = writer.server.connectionConfig.port,
+                awaitInitialConnectionTimeout = writer.server.connectionConfig.awaitInitialConnectionTimeout
+            )
+        }
+
+        /**
+         * Creates a new [DebuggerFeatureMessageRemoteWriter] instance for the given [AIAgentGraphPipeline]
+         */
+        private fun configureRemoteWriter(config: DebuggerConfig): DebuggerFeatureMessageRemoteWriter {
+            logger.debug { "Debugger Feature. Creating debugger remote writer" }
 
             // Config that will be used to connect to the debugger server where
             // port is taken from environment variables if not set explicitly
 
             val port = config.port ?: readPortValue()
-            logger.debug { "Debugger Feature. Use debugger port: $port" }
-
             val awaitInitialConnectionTimeout = config.awaitInitialConnectionTimeout ?: readWaitConnectionTimeout()
-            logger.debug { "Debugger Feature. Use debugger server wait connection timeout: $awaitInitialConnectionTimeout" }
+            logger.debug {
+                "Debugger Feature. Use debugger with parameters " +
+                    "(port: $port, server wait connection timeout: $awaitInitialConnectionTimeout)"
+            }
 
             val debuggerServerConfig = DefaultServerConnectionConfig(
                 port = port,
@@ -113,8 +147,13 @@ public class Debugger {
             val writer = DebuggerFeatureMessageRemoteWriter(connectionConfig = debuggerServerConfig)
             config.addMessageProcessor(writer)
 
-            val debugger = Debugger()
+            return writer
+        }
 
+        private fun installCommon(
+            pipeline: AIAgentPipeline,
+            writer: DebuggerFeatureMessageRemoteWriter,
+        ) {
             //region Intercept Agent Events
 
             pipeline.interceptAgentStarting(this) intercept@{ eventContext ->
@@ -183,43 +222,6 @@ public class Debugger {
             }
 
             //endregion Intercept Strategy Events
-
-            //region Intercept Node Events
-
-            pipeline.interceptNodeExecutionStarting(this) intercept@{ eventContext ->
-                val event = NodeExecutionStartingEvent(
-                    runId = eventContext.context.runId,
-                    nodeName = eventContext.node.name,
-                    input = getNodeData(eventContext.input, eventContext.inputType),
-                    timestamp = pipeline.clock.now().toEpochMilliseconds()
-                )
-                writer.onMessage(event)
-            }
-
-            pipeline.interceptNodeExecutionCompleted(this) intercept@{ eventContext ->
-
-                val event = NodeExecutionCompletedEvent(
-                    runId = eventContext.context.runId,
-                    nodeName = eventContext.node.name,
-                    input = getNodeData(eventContext.input, eventContext.inputType),
-                    output = getNodeData(eventContext.output, eventContext.outputType),
-                    timestamp = pipeline.clock.now().toEpochMilliseconds()
-                )
-                writer.onMessage(event)
-            }
-
-            pipeline.interceptNodeExecutionFailed(this) intercept@{ eventContext ->
-                val event = NodeExecutionFailedEvent(
-                    runId = eventContext.context.runId,
-                    nodeName = eventContext.node.name,
-                    input = getNodeData(eventContext.input, eventContext.inputType),
-                    error = eventContext.throwable.toAgentError(),
-                    timestamp = pipeline.clock.now().toEpochMilliseconds()
-                )
-                writer.onMessage(event)
-            }
-
-            //endregion Intercept Node Events
 
             //region Intercept LLM Call Events
 
@@ -354,16 +356,65 @@ public class Debugger {
             }
 
             //endregion Intercept Tool Call Events
+        }
 
-            return debugger
+        private fun installGraphPipeline(
+            pipeline: AIAgentGraphPipeline,
+            writer: DebuggerFeatureMessageRemoteWriter,
+        ) {
+            installCommon(pipeline, writer)
+
+            //region Intercept Node Events
+
+            pipeline.interceptNodeExecutionStarting(this) intercept@{ eventContext ->
+                val event = NodeExecutionStartingEvent(
+                    runId = eventContext.context.runId,
+                    nodeName = eventContext.node.name,
+                    input = getNodeData(eventContext.input, eventContext.inputType),
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
+                )
+                writer.onMessage(event)
+            }
+
+            pipeline.interceptNodeExecutionCompleted(this) intercept@{ eventContext ->
+
+                val event = NodeExecutionCompletedEvent(
+                    runId = eventContext.context.runId,
+                    nodeName = eventContext.node.name,
+                    input = getNodeData(eventContext.input, eventContext.inputType),
+                    output = getNodeData(eventContext.output, eventContext.outputType),
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
+                )
+                writer.onMessage(event)
+            }
+
+            pipeline.interceptNodeExecutionFailed(this) intercept@{ eventContext ->
+                val event = NodeExecutionFailedEvent(
+                    runId = eventContext.context.runId,
+                    nodeName = eventContext.node.name,
+                    input = getNodeData(eventContext.input, eventContext.inputType),
+                    error = eventContext.throwable.toAgentError(),
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
+                )
+                writer.onMessage(event)
+            }
+
+            //endregion Intercept Node Events
+        }
+
+        private fun installFunctionalPipeline(
+            pipeline: AIAgentFunctionalPipeline,
+            writer: DebuggerFeatureMessageRemoteWriter,
+        ) {
+            installCommon(pipeline, writer)
         }
 
         //region Private Methods
 
         private fun readPortValue(): Int? {
             val debuggerPortValue =
-                readEnvironmentVariable(name = KOOG_DEBUGGER_PORT_ENV_VAR)
-                    ?: readVMOption(name = KOOG_DEBUGGER_PORT_VM_OPTION)
+                getEnvironmentVariableOrNull(name = KOOG_DEBUGGER_PORT_ENV_VAR)
+                    ?: getVMOptionOrNull(name = KOOG_DEBUGGER_PORT_VM_OPTION)
 
             logger.debug { "Debugger Feature. Reading Koog debugger port value from system variables: $debuggerPortValue" }
             return debuggerPortValue?.toIntOrNull()
@@ -371,8 +422,8 @@ public class Debugger {
 
         private fun readWaitConnectionTimeout(): Duration? {
             val debuggerWaitConnectionTimeoutValue =
-                readEnvironmentVariable(name = KOOG_DEBUGGER_WAIT_CONNECTION_MS_ENV_VAR)
-                    ?: readVMOption(name = KOOG_DEBUGGER_WAIT_CONNECTION_TIMEOUT_MS_VM_OPTION)
+                getEnvironmentVariableOrNull(name = KOOG_DEBUGGER_WAIT_CONNECTION_MS_ENV_VAR)
+                    ?: getVMOptionOrNull(name = KOOG_DEBUGGER_WAIT_CONNECTION_TIMEOUT_MS_VM_OPTION)
 
             logger.debug { "Debugger Feature. Reading Koog debugger wait connection timeout value from system variables: $debuggerWaitConnectionTimeoutValue" }
             return debuggerWaitConnectionTimeoutValue?.toLongOrNull()?.toDuration(DurationUnit.MILLISECONDS)
@@ -399,3 +450,11 @@ public class Debugger {
         //endregion Private Methods
     }
 }
+
+/**
+ * Extension function to access the Debugger feature from an agent context.
+ *
+ * @return The [Debugger] feature instance for this agent
+ * @throws IllegalStateException if the Debugger feature is not installed
+ */
+public fun AIAgentContext.debugger(): Debugger = featureOrThrow(Debugger)

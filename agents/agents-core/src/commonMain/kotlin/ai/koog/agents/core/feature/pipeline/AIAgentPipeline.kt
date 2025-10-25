@@ -10,6 +10,8 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
+import ai.koog.agents.core.feature.config.FeatureSystemVariables
+import ai.koog.agents.core.feature.debugger.Debugger
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventContext
 import ai.koog.agents.core.feature.handler.agent.AgentClosingContext
 import ai.koog.agents.core.feature.handler.agent.AgentClosingHandler
@@ -50,6 +52,8 @@ import ai.koog.agents.core.feature.handler.tool.ToolCallResultHandler
 import ai.koog.agents.core.feature.handler.tool.ToolCallStartingContext
 import ai.koog.agents.core.feature.handler.tool.ToolValidationErrorHandler
 import ai.koog.agents.core.feature.handler.tool.ToolValidationFailedContext
+import ai.koog.agents.core.system.getEnvironmentVariableOrNull
+import ai.koog.agents.core.system.getVMOptionOrNull
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
@@ -74,7 +78,7 @@ import kotlin.reflect.safeCast
  * - Intercept agent creation and environment transformation
  * - Intercept strategy execution before and after it happens
  * - Intercept node execution before and after it happens
- * - Intercept LLM  calls before and after they happen
+ * - Intercept LLM calls before and after they happen
  * - Intercept tool calls before and after they happen
  *
  * This pipeline serves as the central mechanism for extending and customizing agent behavior
@@ -115,6 +119,19 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
     protected val registeredFeatures: MutableMap<AIAgentStorageKey<*>, RegisteredFeature> = mutableMapOf()
 
     /**
+     * A set containing the keys of all registered features.
+     */
+    public val features: Set<AIAgentStorageKey<*>>
+        get() = registeredFeatures.keys
+
+    /**
+     * Set of system features that are always defined by the framework.
+     */
+    private val systemFeatures: Set<AIAgentStorageKey<*>> = setOf(
+        Debugger.key
+    )
+
+    /**
      * Map of agent handlers registered for different features.
      * Keys are feature storage keys, values are agent handlers.
      */
@@ -144,10 +161,15 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
      */
     protected val llmStreamingEventHandlers: MutableMap<AIAgentStorageKey<*>, LLMStreamingEventHandler> = mutableMapOf()
 
+    /**
+     * Prepares features by initializing their respective message processors.
+     */
     internal suspend fun prepareFeatures() {
         withContext(featurePrepareDispatcher) {
+            installFeaturesFromSystemConfig()
+
             registeredFeatures.values.map { it.featureConfig }.forEach { featureConfig ->
-                featureConfig.messageProcessors.map { processor ->
+                featureConfig.messageProcessors.forEach { processor ->
                     launch {
                         logger.debug { "Start preparing processor: ${processor::class.simpleName}" }
                         processor.initialize()
@@ -1178,6 +1200,74 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
     //endregion Deprecated Interceptors
 
     //region Private Methods
+
+    private fun installFeaturesFromSystemConfig() {
+        // Read features from system variables
+        val featuresFromSystemConfig = buildList {
+            getEnvironmentVariableOrNull(FeatureSystemVariables.KOOG_FEATURES_ENV_VAR_NAME)
+                ?.let { featuresString ->
+                    featuresString.split(",").forEach { add(it.trim()) }
+                }
+
+            getVMOptionOrNull(FeatureSystemVariables.KOOG_FEATURES_VM_OPTION_NAME)
+                ?.let { featuresString ->
+                    featuresString.split(",").forEach { add(it.trim()) }
+                }
+        }
+
+        // Check config features exist in the system features list
+        featuresFromSystemConfig.forEach { configFeatureKey ->
+            val systemFeatureKey = systemFeatures.find { systemFeature -> systemFeature.name == configFeatureKey }
+
+            // Check requested feature is in the known system features list
+            if (systemFeatureKey == null) {
+                logger.warn {
+                    "Feature with key '$configFeatureKey' does not exist in the known system features list:\n" +
+                        systemFeatures.joinToString("\n") { " - ${it.name}" }
+                }
+                return@forEach
+            }
+
+            // Ignore system features if installed by a user
+            if (registeredFeatures.keys.any { registerFeatureKey -> registerFeatureKey.name == configFeatureKey }) {
+                logger.debug {
+                    "Feature with key '$configFeatureKey' has already been registered. " +
+                        "Skipping system feature from config registration."
+                }
+                return@forEach
+            }
+
+            // Install the requested system feature from config
+            installSystemFeature(systemFeatureKey)
+        }
+    }
+
+    private fun installSystemFeature(featureKey: AIAgentStorageKey<*>) {
+        logger.debug { "Installing system feature: ${featureKey.name}" }
+        when (featureKey) {
+            Debugger.key -> {
+                when (this) {
+                    is AIAgentGraphPipeline -> {
+                        this.install(Debugger) {
+                            // Use default configuration
+                        }
+                    }
+                    is AIAgentFunctionalPipeline -> {
+                        this.install(Debugger) {
+                            // Use default configuration
+                        }
+                    }
+                }
+            }
+            else -> {
+                error(
+                    "Unsupported system feature key: ${featureKey.name}. " +
+                        "Please make sure all system features are registered in the systemFeatures list.\n" +
+                        "Current system features list:\n${systemFeatures.joinToString("\n") { " - ${it.name}" }}"
+                )
+            }
+        }
+    }
 
     protected inline fun <TContext : AgentLifecycleEventContext> createConditionalHandler(
         feature: AIAgentFeature<*, *>,
