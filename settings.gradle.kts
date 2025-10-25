@@ -12,7 +12,6 @@ pluginManagement {
 include(":agents:agents-core")
 include(":agents:agents-ext")
 
-include(":agents:agents-features:agents-features-debugger")
 include(":agents:agents-features:agents-features-event-handler")
 include(":agents:agents-features:agents-features-memory")
 include(":agents:agents-features:agents-features-opentelemetry")

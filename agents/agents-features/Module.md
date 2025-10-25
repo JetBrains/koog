@@ -6,7 +6,6 @@ A collection of plug-and-play features for Koog AI agents. These features hook i
 
 Each feature lives in its own submodule, you only depend on what you need. Commonly used features include:
 - Tracing: End-to-end spans for agent runs and LLM, or Tool calls. Great for local dev and production observability;
-- Debugger: Step-through style inspection of the agent pipeline;
 - EventHandler: Subscribe to standardized agent events and react (log, metrics, custom side effects);
 - Memory: Pluggable memory interfaces for storing and retrieving agent context;
 - OpenTelemetry: OTel exporters and wiring for spans emitted by the agent pipeline;
@@ -69,7 +68,6 @@ fun testAgentEmitsExpectedEvents() {
 ## Where to learn more
 See each feature’s Module/README in its submodule for concrete examples and advanced setup:
 - Tracing
-- Debugger
 - EventHandler
 - Memory
 - OpenTelemetry
