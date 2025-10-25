@@ -30,7 +30,7 @@ private val logger = KotlinLogging.logger { }
  * @param name The name of the environment variable to retrieve.
  * @return The value of the specified environment variable as a String, or null if the variable is not set or cannot be read.
  */
-public fun readEnvironmentVariable(name: String): String? {
+public fun getEnvironmentVariableOrNull(name: String): String? {
     logger.trace { "Start reading env variable: $name" }
 
     val value = try {
@@ -48,9 +48,9 @@ public fun readEnvironmentVariable(name: String): String? {
  * Reads the value of a specified virtual machine (VM) option.
  *
  * @param name The name of the VM option to retrieve.
- * @return The value of the specified VM option as a String, or null if the option is not set or cannot be read.
+ * @return The value of the specified VM option as a [String], or null if the option is not set or cannot be read.
  */
-public fun readVMOption(name: String): String? {
+public fun getVMOptionOrNull(name: String): String? {
     logger.trace { "Start reading VM option: $name" }
 
     val value = try {

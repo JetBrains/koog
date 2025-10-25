@@ -158,8 +158,8 @@ public interface AIAgent<Input, Output> : Closeable {
          * @param Output The type of the output the AI agent will produce.
          * @param promptExecutor The executor responsible for processing prompts and interacting with the language model.
          * @param agentConfig The configuration for the AI agent, including the prompt, model, and other parameters.
-         * @param toolRegistry The registry of tools available for use by the agent. Defaults to an empty registry.
          * @param strategy The strategy for executing the AI agent's graph logic, including workflows and decision-making.
+         * @param toolRegistry The registry of tools available for use by the agent. Defaults to an empty registry.
          * @param id Unique identifier for the agent. Random UUID will be generated if set to null.
          * @param clock The clock to be used for time-related operations. Defaults to the system clock.
          * @param installFeatures A lambda expression to install additional features in the agent's feature context. Defaults to an empty implementation.
@@ -174,7 +174,7 @@ public interface AIAgent<Input, Output> : Closeable {
             id: String? = null,
             clock: Clock = Clock.System,
             noinline installFeatures: FeatureContext.() -> Unit = {},
-        ): AIAgent<Input, Output> {
+        ): GraphAIAgent<Input, Output> {
             return GraphAIAgent(
                 inputType = typeOf<Input>(),
                 outputType = typeOf<Output>(),
@@ -192,7 +192,6 @@ public interface AIAgent<Input, Output> : Closeable {
          * Operator function to create and invoke an AI agent with the given parameters.
          *
          * @param promptExecutor The executor responsible for running the prompt and generating outputs.
-         * @param prompt The prompt to be processed by the AI agent.
          * @param agentConfig Configuration settings for the AI agent.
          * @param strategy The strategy to be used for the AI agent's execution graph. Defaults to a single-run strategy.
          * @param toolRegistry Registry of tools available for the AI agent to use. Defaults to an empty registry.
@@ -208,7 +207,7 @@ public interface AIAgent<Input, Output> : Closeable {
             toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
             id: String? = null,
             installFeatures: FeatureContext.() -> Unit = {},
-        ): AIAgent<String, String> = GraphAIAgent(
+        ): GraphAIAgent<String, String> = GraphAIAgent(
             inputType = typeOf<String>(),
             outputType = typeOf<String>(),
             promptExecutor = promptExecutor,
@@ -227,9 +226,11 @@ public interface AIAgent<Input, Output> : Closeable {
          * @param Output The type of the output the AI agent will produce.
          * @param promptExecutor The executor responsible for running prompts against the language model.
          * @param agentConfig The configuration for the AI agent, including prompt setup, language model, and iteration limits.
-         * @param toolRegistry The registry containing available tools for the AI agent. Defaults to an empty registry.
          * @param strategy The strategy for executing the agent's logic, including workflows and decision-making.
+         * @param toolRegistry The registry containing available tools for the AI agent. Defaults to an empty registry.
          * @param id Unique identifier for the agent. Random UUID will be generated if set to null.
+         * @param clock The clock instance used for time-related operations. Defaults to the system clock.
+         * @param installFeatures A lambda expression to install additional features in the agent's feature context. Defaults to an empty implementation.
          * @return A `FunctionalAIAgent` instance configured with the provided parameters and execution strategy.
          */
         @OptIn(ExperimentalUuidApi::class)
@@ -332,9 +333,11 @@ public interface AIAgent<Input, Output> : Closeable {
             numberOfChoices: Int = 1,
             maxIterations: Int = 50,
             noinline installFeatures: FeatureContext.() -> Unit = {},
-        ): AIAgent<Input, Output> {
-            return AIAgent(
+        ): GraphAIAgent<Input, Output> {
+            return GraphAIAgent(
                 id = id,
+                inputType = typeOf<Input>(),
+                outputType = typeOf<Output>(),
                 promptExecutor = promptExecutor,
                 strategy = strategy,
                 agentConfig = AIAgentConfig(
@@ -351,6 +354,7 @@ public interface AIAgent<Input, Output> : Closeable {
                     maxAgentIterations = maxIterations,
                 ),
                 toolRegistry = toolRegistry,
+                clock = clock,
                 installFeatures = installFeatures
             )
         }
@@ -359,10 +363,12 @@ public interface AIAgent<Input, Output> : Closeable {
          * Creates an [FunctionalAIAgent] with the specified parameters to execute a strategy with the assistance of a tool registry,
          * configured language model, and associated features.
          *
+         * @param Input The type of input accepted by the agent.
+         * @param Output The type of output produced by the agent.
          * @param promptExecutor The executor used to process prompts for the language model.
          * @param llmModel The language model configuration defining the underlying LLM instance and its behavior.
-         * @param func The operational strategy for the AI agent, which determines how to handle the provided input.
          * @param toolRegistry Registry containing tools available to the agent for use during execution. Default is an empty registry.
+         * @param strategy The strategy to be executed by the agent. Default is a single-run strategy.
          * @param id Unique identifier for the agent. Random UUID will be generated if set to null.
          * @param systemPrompt The system prompt that sets the initial context or instructions for the AI agent.
          * @param temperature The temperature setting for the language model, which adjusts the diversity of output. Default is 1.0.
@@ -382,7 +388,7 @@ public interface AIAgent<Input, Output> : Closeable {
             numberOfChoices: Int = 1,
             maxIterations: Int = 50,
             installFeatures: FunctionalAIAgent.FeatureContext.() -> Unit = {},
-        ): AIAgent<Input, Output> = FunctionalAIAgent(
+        ): FunctionalAIAgent<Input, Output> = FunctionalAIAgent(
             promptExecutor = promptExecutor,
             agentConfig = AIAgentConfig(
                 prompt = prompt(

@@ -31,6 +31,10 @@ import kotlin.test.assertFails
 
 class AIAgentPipelineTest {
 
+    private val testClock: Clock = object : Clock {
+        override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z")
+    }
+
     @Test
     @JsName("testPipelineInterceptorsForNodeEvents")
     fun `test pipeline interceptors for node events`() = runTest {
@@ -350,10 +354,6 @@ class AIAgentPipelineTest {
     }
 
     //region Private Methods
-
-    private val testClock: Clock = object : Clock {
-        override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z")
-    }
 
     private fun createAgent(
         strategy: AIAgentGraphStrategy<String, String>,

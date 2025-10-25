@@ -1,4 +1,4 @@
-package ai.koog.agents.features.debugger.feature
+package ai.koog.agents.core.system.feature
 
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.builder.forwardTo
@@ -9,6 +9,7 @@ import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreamingAndSendResults
 import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
 import ai.koog.agents.core.dsl.extension.onAssistantMessage
 import ai.koog.agents.core.dsl.extension.onToolCall
+import ai.koog.agents.core.feature.debugger.Debugger
 import ai.koog.agents.core.feature.model.AIAgentError
 import ai.koog.agents.core.feature.model.events.AgentCompletedEvent
 import ai.koog.agents.core.feature.model.events.AgentStartingEvent
@@ -31,19 +32,20 @@ import ai.koog.agents.core.feature.remote.client.FeatureMessageRemoteClient
 import ai.koog.agents.core.feature.remote.client.config.DefaultClientConnectionConfig
 import ai.koog.agents.core.feature.remote.server.config.DefaultServerConnectionConfig
 import ai.koog.agents.core.feature.writer.FeatureMessageRemoteWriter
+import ai.koog.agents.core.system.getEnvironmentVariableOrNull
+import ai.koog.agents.core.system.getVMOptionOrNull
+import ai.koog.agents.core.system.mock.ClientEventsCollector
+import ai.koog.agents.core.system.mock.MockLLMProvider
+import ai.koog.agents.core.system.mock.assistantMessage
+import ai.koog.agents.core.system.mock.createAgent
+import ai.koog.agents.core.system.mock.systemMessage
+import ai.koog.agents.core.system.mock.testClock
+import ai.koog.agents.core.system.mock.toolCallMessage
+import ai.koog.agents.core.system.mock.toolResultMessage
+import ai.koog.agents.core.system.mock.userMessage
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.utils.SerializationUtils
-import ai.koog.agents.core.system.SystemVariablesReader
-import ai.koog.agents.features.debugger.mock.ClientEventsCollector
-import ai.koog.agents.features.debugger.mock.MockLLMProvider
-import ai.koog.agents.features.debugger.mock.assistantMessage
-import ai.koog.agents.features.debugger.mock.createAgent
-import ai.koog.agents.features.debugger.mock.systemMessage
-import ai.koog.agents.features.debugger.mock.testClock
-import ai.koog.agents.features.debugger.mock.toolCallMessage
-import ai.koog.agents.features.debugger.mock.toolResultMessage
-import ai.koog.agents.features.debugger.mock.userMessage
 import ai.koog.agents.testing.network.NetUtil
 import ai.koog.agents.testing.network.NetUtil.findAvailablePort
 import ai.koog.agents.testing.tools.DummyTool
@@ -79,6 +81,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
+import org.junit.jupiter.api.parallel.Isolated
 import kotlin.reflect.typeOf
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
@@ -93,6 +96,9 @@ import kotlin.time.DurationUnit
 import kotlin.time.measureTime
 import kotlin.time.toDuration
 
+// System Properties set inside this test class affects other tests
+// Isolate the environment by @Isolated annotation for these tests and make sure they are running without the parallelism.
+@Isolated
 @Execution(ExecutionMode.SAME_THREAD)
 class DebuggerTest {
 
@@ -866,7 +872,7 @@ class DebuggerTest {
     """
     )
     fun `test read port from env variable`() = runBlocking {
-        val portEnvVar = SystemVariablesReader.getEnvironmentVariable(Debugger.KOOG_DEBUGGER_PORT_ENV_VAR)
+        val portEnvVar = getEnvironmentVariableOrNull(Debugger.KOOG_DEBUGGER_PORT_ENV_VAR)
         assertNotNull(portEnvVar, "'${Debugger.KOOG_DEBUGGER_PORT_ENV_VAR}' env variable is not set")
 
         runAgentPortConfigThroughSystemVariablesTest(portEnvVar.toInt())
@@ -878,13 +884,13 @@ class DebuggerTest {
         val port = 56712
         System.setProperty(Debugger.KOOG_DEBUGGER_PORT_VM_OPTION, port.toString())
 
-        val portEnvVar = SystemVariablesReader.getEnvironmentVariable(name = Debugger.KOOG_DEBUGGER_PORT_ENV_VAR)
+        val portEnvVar = getEnvironmentVariableOrNull(name = Debugger.KOOG_DEBUGGER_PORT_ENV_VAR)
         assertNull(
             portEnvVar,
             "Expected '${Debugger.KOOG_DEBUGGER_PORT_ENV_VAR}' env variable is not set, but it is defined with value: <$portEnvVar>"
         )
 
-        val portVMOption = SystemVariablesReader.getVMOption(name = Debugger.KOOG_DEBUGGER_PORT_VM_OPTION)
+        val portVMOption = getVMOptionOrNull(name = Debugger.KOOG_DEBUGGER_PORT_VM_OPTION)
         assertNotNull(
             portVMOption,
             "Expected '${Debugger.KOOG_DEBUGGER_PORT_VM_OPTION}' VM option is not set"
@@ -895,10 +901,10 @@ class DebuggerTest {
 
     @Test
     fun `test read default port when not set by property or env variable or vm option`() = runBlocking {
-        val portEnvVar = SystemVariablesReader.getEnvironmentVariable(Debugger.KOOG_DEBUGGER_PORT_ENV_VAR)
+        val portEnvVar = getEnvironmentVariableOrNull(Debugger.KOOG_DEBUGGER_PORT_ENV_VAR)
         assertNull(portEnvVar, "Expected '${Debugger.KOOG_DEBUGGER_PORT_ENV_VAR}' env variable is not set, but it exists with value: $portEnvVar")
 
-        val portVMOption = SystemVariablesReader.getEnvironmentVariable(Debugger.KOOG_DEBUGGER_PORT_ENV_VAR)
+        val portVMOption = getEnvironmentVariableOrNull(Debugger.KOOG_DEBUGGER_PORT_ENV_VAR)
         assertNull(portVMOption, "Expected '${Debugger.KOOG_DEBUGGER_PORT_VM_OPTION}' VM option is not set, but it exists with value: $portVMOption")
 
         // Check default port available
@@ -976,7 +982,7 @@ class DebuggerTest {
     )
     @Test
     fun `test client connection waiting timeout is set by env variable`() = runBlocking {
-        val connectionWaitTimeoutMsEnvVar = SystemVariablesReader.getEnvironmentVariable(Debugger.KOOG_DEBUGGER_WAIT_CONNECTION_MS_ENV_VAR)
+        val connectionWaitTimeoutMsEnvVar = getEnvironmentVariableOrNull(Debugger.KOOG_DEBUGGER_WAIT_CONNECTION_MS_ENV_VAR)
         assertNotNull(connectionWaitTimeoutMsEnvVar, "'${Debugger.KOOG_DEBUGGER_WAIT_CONNECTION_MS_ENV_VAR}' env variable is not set")
 
         runAgentConnectionWaitConfigThroughSystemVariablesTest(
@@ -994,7 +1000,7 @@ class DebuggerTest {
         )
 
         val connectionWaitTimeoutEnvVar =
-            SystemVariablesReader.getEnvironmentVariable(name = Debugger.KOOG_DEBUGGER_WAIT_CONNECTION_MS_ENV_VAR)
+            getEnvironmentVariableOrNull(name = Debugger.KOOG_DEBUGGER_WAIT_CONNECTION_MS_ENV_VAR)
 
         assertNull(
             connectionWaitTimeoutEnvVar,
@@ -1003,7 +1009,7 @@ class DebuggerTest {
         )
 
         val connectionWaitTimeoutMsVMOption =
-            SystemVariablesReader.getVMOption(name = Debugger.KOOG_DEBUGGER_WAIT_CONNECTION_TIMEOUT_MS_VM_OPTION)
+            getVMOptionOrNull(name = Debugger.KOOG_DEBUGGER_WAIT_CONNECTION_TIMEOUT_MS_VM_OPTION)
 
         assertNotNull(
             connectionWaitTimeoutMsVMOption,
