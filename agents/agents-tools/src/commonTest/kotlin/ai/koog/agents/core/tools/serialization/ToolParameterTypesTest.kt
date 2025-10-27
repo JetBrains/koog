@@ -6,6 +6,7 @@ import ai.koog.agents.core.tools.annotations.LLMDescription
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.addJsonArray
@@ -21,7 +22,29 @@ import kotlin.test.assertTrue
 
 // Complex tool params = objects, lists of enums, nested lists.
 @OptIn(InternalAgentToolsApi::class)
-class ToolComplexParameterTypesTest {
+class ToolParameterTypesTest {
+
+    @Test
+    fun testPrimitiveTypesParameter() = runTest {
+        val args = "Hello"
+        val encodedArgs = PrimitiveTypesTool.encodeArgs(args)
+
+        // Test decoding and encoding for primitive types
+        assertEquals(
+            expected = buildJsonObject { put("value", args) },
+            actual = encodedArgs,
+            message = "Should properly wrap primitive arg type in 'value' object"
+        )
+        assertEquals(
+            expected = args,
+            actual = PrimitiveTypesTool.decodeArgs(encodedArgs),
+            message = "Should properly unwrap primitive arg type from 'value' object"
+        )
+
+        val result = PrimitiveTypesTool.execute(args)
+        val encodedResult = PrimitiveTypesTool.encodeResultToString(result)
+        assertEquals("\"$result\"", encodedResult)
+    }
 
     // Region: Object tool parameter cases
     @Test
@@ -423,6 +446,17 @@ class ToolComplexParameterTypesTest {
         }
     }
     // endregion
+
+    private object PrimitiveTypesTool : Tool<String, String>() {
+        override val argsSerializer = String.serializer()
+        override val resultSerializer = String.serializer()
+
+        override val name = "primitive_types_tool"
+        override val description = "Tool with primitive types parameter"
+
+        override suspend fun execute(args: String): String =
+            "input: $args"
+    }
 
     private object NestedListsTool : Tool<NestedListsTool.Args, NestedListsTool.Result>() {
         @Serializable

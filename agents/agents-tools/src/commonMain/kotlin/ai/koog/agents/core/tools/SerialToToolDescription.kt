@@ -11,8 +11,9 @@ import kotlinx.serialization.descriptors.SerialKind
 import kotlinx.serialization.descriptors.StructureKind
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonDecoder
+import kotlinx.serialization.json.JsonEncoder
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
 
 private fun SerialDescriptor.description(): String =
@@ -153,35 +154,40 @@ public fun SerialDescriptor.asToolDescriptor(
 }
 
 /**
- * Provides a custom deserializer for tools using the `KSerializer` interface.
- * Converts the current serializer into a specialized tool descriptor deserializer
- * if the underlying descriptor has a primitive kind.
- *
- * Serializes and deserializes specific data structures while restricting usage of
- * unsupported operations, such as serialization.
- *
- * This function is a utility to adapt serializers for internal tooling.
- *
- * @return A `KSerializer` that acts as*/
+ * Provides a custom serializer for tools.
+ * Converts the current serializer into a specialized tool descriptor serializer if the underlying descriptor has a primitive kind.
+ */
 @InternalAgentToolsApi
-public fun <T> KSerializer<T>.asToolDescriptorDeserializer(json: Json = Json): KSerializer<T> {
+public fun <T> KSerializer<T>.asToolDescriptorSerializer(): KSerializer<T> {
     val kind = descriptor.kind
 
     return if (kind is PrimitiveKind) {
         object : KSerializer<T> {
             override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("Primitive", kind)
 
+            private val valueKey = "value"
+
             override fun serialize(encoder: Encoder, value: T) {
-                throw UnsupportedOperationException("Serialization is not supported")
+                val jsonEncoder = encoder as? JsonEncoder
+                    ?: throw IllegalStateException("Should be json encoder")
+
+                jsonEncoder.encodeJsonElement(
+                    buildJsonObject {
+                        put(
+                            valueKey,
+                            jsonEncoder.json.encodeToJsonElement(this@asToolDescriptorSerializer, value)
+                        )
+                    }
+                )
             }
 
             override fun deserialize(decoder: Decoder): T {
                 val jsonDecoder = decoder as? JsonDecoder
-                    ?: throw IllegalStateException("`asToolDescriptorDeserializer` for primitive types should be json decoder")
+                    ?: throw IllegalStateException("Should be json decoder")
 
-                return json.decodeFromJsonElement(
-                    this@asToolDescriptorDeserializer,
-                    jsonDecoder.decodeJsonElement().jsonObject.getValue("value")
+                return jsonDecoder.json.decodeFromJsonElement(
+                    this@asToolDescriptorSerializer,
+                    jsonDecoder.decodeJsonElement().jsonObject.getValue(valueKey)
                 )
             }
         }

@@ -11,7 +11,6 @@ import kotlinx.serialization.json.jsonObject
 /**
  * Represents a tool that, when executed, makes changes to the environment.
  */
-@Suppress("unused")
 public abstract class Tool<TArgs, TResult> {
     /**
      * Serializer responsible for encoding and decoding the arguments required for the tool execution.
@@ -22,6 +21,12 @@ public abstract class Tool<TArgs, TResult> {
      * proper serialization and deserialization of the tool arguments.
      */
     public abstract val argsSerializer: KSerializer<TArgs>
+
+    // FIXME just a quickfix, more proper and thorough update is required for Tool
+    @OptIn(InternalAgentToolsApi::class)
+    private val actualArgsSerializer by lazy {
+        argsSerializer.asToolDescriptorSerializer()
+    }
 
     /**
      * Serializer responsible for encoding the result of the tool execution.
@@ -107,7 +112,7 @@ public abstract class Tool<TArgs, TResult> {
      * @param rawArgs the raw JSON object that contains the encoded arguments
      * @return the decoded arguments of type TArgs
      */
-    public fun decodeArgs(rawArgs: JsonObject): TArgs = ToolJson.decodeFromJsonElement(argsSerializer, rawArgs)
+    public fun decodeArgs(rawArgs: JsonObject): TArgs = ToolJson.decodeFromJsonElement(actualArgsSerializer, rawArgs)
 
     /**
      * Encodes the given arguments into a JSON representation.
@@ -115,7 +120,7 @@ public abstract class Tool<TArgs, TResult> {
      * @param args The arguments to be encoded.
      * @return A JsonObject representing the encoded arguments.
      */
-    public fun encodeArgs(args: TArgs): JsonObject = ToolJson.encodeToJsonElement(argsSerializer, args).jsonObject
+    public fun encodeArgs(args: TArgs): JsonObject = ToolJson.encodeToJsonElement(actualArgsSerializer, args).jsonObject
 
     /**
      * Encodes the provided arguments into a JSON string representation using the configured serializer.
@@ -123,7 +128,7 @@ public abstract class Tool<TArgs, TResult> {
      * @param args the arguments to be encoded into a JSON string
      * @return the JSON string representation of the provided arguments
      */
-    public fun encodeArgsToString(args: TArgs): String = ToolJson.encodeToString(argsSerializer, args)
+    public fun encodeArgsToString(args: TArgs): String = ToolJson.encodeToString(actualArgsSerializer, args)
 
     /**
      * Encodes the given result of type TResult to its string representation for the LLM.s
