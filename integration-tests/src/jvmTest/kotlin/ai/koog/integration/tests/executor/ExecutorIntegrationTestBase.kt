@@ -25,6 +25,7 @@ import ai.koog.integration.tests.utils.getLLMClientForProvider
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.LLMClient
+import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMCapability
@@ -1090,5 +1091,16 @@ abstract class ExecutorIntegrationTestBase {
             val toolCall = response.first() as Message.Tool.Call
             assertEquals("nothing", toolCall.tool, "Tool name should be 'nothing'")
         }
+    }
+
+    open fun integration_testEmbed(model: LLModel) = runTest {
+        val client = getLLMClient(model)
+        if (client !is LLMEmbeddingProvider) {
+            return@runTest
+        }
+        val testText = "integration test embedding"
+        val embedding = client.embed(testText, model)
+        assertNotNull(embedding, "Embedding should not be null")
+        assertTrue(embedding.isNotEmpty(), "Embedding should not be empty for model ${model.id}")
     }
 }

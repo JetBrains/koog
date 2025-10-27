@@ -10,24 +10,25 @@ import kotlinx.serialization.Serializable
 /**
  * Represents a Bedrock model with an optional inference profile prefix.
  *
- * This allows users to specify an inference profile prefix that will be prepended
- * to the model ID when making requests to AWS Bedrock.
+ * This allows users to explicitly specify an inference profile prefix that will be prepended
+ * to the model ID when making requests to AWS Bedrock. If the prefix is `null`, no prefix will
+ * be added, and the model ID will be used as-is. If a value is provided, the effective model ID
+ * will be "<prefix>.<modelId>".
  *
- * @param model The base LLModel to use
+ * @param model The base LLModel to use.
  * @param modelId The ID of the used model. Defaults to the ID of the provided model.
- * @param inferenceProfilePrefix Optional prefix to prepend to the model ID
+ * @param inferenceProfilePrefix Optional prefix to prepend to the model ID. If `null`, no prefix is used.
  */
-
 @Serializable
 public data class BedrockModel(
     val model: LLModel,
     val modelId: String = model.id,
-    val inferenceProfilePrefix: String = BedrockInferencePrefixes.US.prefix
+    val inferenceProfilePrefix: String? = BedrockInferencePrefixes.US.prefix
 ) {
     /**
-     * Returns the effective model ID with inference profile prefix if provided.
+     * Returns the effective model ID, only adds inference profile prefix if provided.
      */
-    val effectiveModelId: String = "$inferenceProfilePrefix.$modelId"
+    val effectiveModelId: String = inferenceProfilePrefix?.let { "$it.$modelId" } ?: modelId
 
     /**
      * Returns the LLModel with the effective model ID.
@@ -118,6 +119,10 @@ public object BedrockModels : LLModelDefinitions {
     private val multimodalCapabilities: List<LLMCapability> = listOf(
         LLMCapability.Vision.Image,
         LLMCapability.Document
+    )
+
+    private val embedCapabilities: List<LLMCapability> = listOf(
+        LLMCapability.Embed
     )
 
     // Full capabilities (multimodal + tools)
@@ -651,6 +656,80 @@ public object BedrockModels : LLModelDefinitions {
             contextLength = 128_000,
         ),
     ).effectiveModel
+
+    /**
+     * Embedding models available through the AWS Bedrock API.
+     *
+     * **Note:** Multimodality (image, audio, video) embeddings are currently not supported by the Bedrock client.
+     * Only embedding models that take textual input and return embeddings are included in this object.
+     *
+     * - For up-to-date information on available models, see:
+     *   https://docs.aws.amazon.com/bedrock/latest/userguide/models-supported.html
+     *
+     * If multimodal support is added to the Bedrock client in the future, embedding models with image/audio/video inputs
+     * should be added here and their capabilities extended accordingly.
+     */
+    public object Embeddings {
+        /**
+         * Amazon Titan Embeddings G1 - Text
+         * Input: Text
+         * Output: Embedding
+         */
+        public val AmazonTitanEmbedText: LLModel = BedrockModel(
+            LLModel(
+                provider = LLMProvider.Bedrock,
+                id = "amazon.titan-embed-text-v1",
+                capabilities = embedCapabilities,
+                contextLength = 8_192,
+            ),
+            inferenceProfilePrefix = null
+        ).effectiveModel
+
+        /**
+         * Amazon Titan Text Embeddings V2
+         * Input: Text
+         * Output: Embedding
+         */
+        public val AmazonTitanEmbedTextV2: LLModel = BedrockModel(
+            LLModel(
+                provider = LLMProvider.Bedrock,
+                id = "amazon.titan-embed-text-v2:0",
+                capabilities = embedCapabilities,
+                contextLength = 8_192,
+            ),
+            inferenceProfilePrefix = null
+        ).effectiveModel
+
+        /**
+         * Cohere Embed English v3
+         * Input: Text
+         * Output: Embedding
+         */
+        public val CohereEmbedEnglishV3: LLModel = BedrockModel(
+            LLModel(
+                provider = LLMProvider.Bedrock,
+                id = "cohere.embed-english-v3",
+                capabilities = embedCapabilities,
+                contextLength = 8_192,
+            ),
+            inferenceProfilePrefix = null
+        ).effectiveModel
+
+        /**
+         * Cohere Embed Multilingual v3
+         * Input: Text
+         * Output: Embedding
+         */
+        public val CohereEmbedMultilingualV3: LLModel = BedrockModel(
+            LLModel(
+                provider = LLMProvider.Bedrock,
+                id = "cohere.embed-multilingual-v3",
+                capabilities = embedCapabilities,
+                contextLength = 8_192,
+            ),
+            inferenceProfilePrefix = null
+        ).effectiveModel
+    }
 }
 
 /**
@@ -685,7 +764,6 @@ public fun LLModel.withInferenceProfile(inferencePrefix: String): LLModel {
     require(provider == LLMProvider.Bedrock) {
         "withInferencePrefix() can only be used with Bedrock models, but model provider is $provider"
     }
-
     val baseModelId = if (id.contains('.')) {
         val potentialPrefix = id.substringBefore('.')
         val validPrefixes = BedrockInferencePrefixes.entries.map { it.prefix }
@@ -698,6 +776,5 @@ public fun LLModel.withInferenceProfile(inferencePrefix: String): LLModel {
     } else {
         id
     }
-
     return copy(id = "$inferencePrefix.$baseModelId")
 }

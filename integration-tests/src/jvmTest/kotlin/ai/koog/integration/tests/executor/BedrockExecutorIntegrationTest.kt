@@ -23,6 +23,11 @@ class BedrockExecutorIntegrationTest : ExecutorIntegrationTestBase() {
         }
 
         @JvmStatic
+        fun bedrockEmbeddingModelCombinations(): Stream<Arguments> {
+            return Models.bedrockEmbeddingModels().map { model -> Arguments.of(model) }
+        }
+
+        @JvmStatic
         fun bedrockMarkdownScenarioModelCombinations(): Stream<Arguments> {
             return Models.bedrockModels().flatMap { model ->
                 listOf(
@@ -201,5 +206,11 @@ class BedrockExecutorIntegrationTest : ExecutorIntegrationTestBase() {
     @MethodSource("bedrockTextScenarioModelCombinations")
     fun integration_testTextProcessingBasicBedrock(scenario: TextTestScenario, model: LLModel) {
         integration_testTextProcessingBasic(scenario, model)
+    }
+
+    @ParameterizedTest
+    @MethodSource("bedrockEmbeddingModelCombinations")
+    fun integration_testEmbedBedrock(model: LLModel) {
+        integration_testEmbed(model)
     }
 }

@@ -48,6 +48,13 @@ object Models {
     }
 
     @JvmStatic
+    fun bedrockEmbeddingModels(): Stream<LLModel> {
+        return Stream.of(
+            BedrockModels.Embeddings.AmazonTitanEmbedText
+        )
+    }
+
+    @JvmStatic
     fun openRouterModels(): Stream<LLModel> = Stream.of(
         OpenRouterModels.DeepSeekV30324,
         OpenRouterModels.Qwen2_5,

@@ -104,6 +104,54 @@ suspend fun openAIEmbed(text: String) {
 ```
 <!--- KNIT example-embeddings-02.kt -->
 
+## AWS Bedrock embeddings
+
+To create embeddings using an AWS Bedrock embedding model, use the `embed` method of an `BedrockLLMClient` instance and your chosen model. Example:
+
+<!--- INCLUDE
+import ai.koog.embeddings.local.LLMEmbedder
+import ai.koog.prompt.executor.clients.bedrock.BedrockClientSettings
+import ai.koog.prompt.executor.clients.bedrock.BedrockLLMClient
+import ai.koog.prompt.executor.clients.bedrock.BedrockModels
+import aws.sdk.kotlin.runtime.auth.credentials.StaticCredentialsProvider
+-->
+```kotlin
+suspend fun bedrockEmbed(text: String) {
+    // Get AWS credentials from environment/configuration
+    val awsAccessKeyId = System.getenv("AWS_ACCESS_KEY_ID") ?: error("AWS_ACCESS_KEY_ID not set")
+    val awsSecretAccessKey = System.getenv("AWS_SECRET_ACCESS_KEY") ?: error("AWS_SECRET_ACCESS_KEY not set")
+    // (Optional) AWS_SESSION_TOKEN for temporary credentials
+    val awsSessionToken = System.getenv("AWS_SESSION_TOKEN")
+    // Create a BedrockLLMClient instance
+    val client = BedrockLLMClient(
+        identityProvider = StaticCredentialsProvider {
+            this.accessKeyId = awsAccessKeyId
+            this.secretAccessKey = awsSecretAccessKey
+            awsSessionToken?.let { this.sessionToken = it }
+        },
+        settings = BedrockClientSettings()
+    )
+    // Create an embedder
+    val embedder = LLMEmbedder(client, BedrockModels.Embeddings.AmazonTitanEmbedText)
+    // Create embeddings
+    val embedding = embedder.embed(text)
+    // Print embeddings to the output
+    println(embedding)
+}
+```
+<!--- KNIT example-embeddings-03.kt -->
+
+### Supported AWS Bedrock embedding models
+
+| Provider | Model name                   | Model ID                       | Input | Output    | Dimensions | Context Length | Notes                                                                                                 |
+|----------|------------------------------|--------------------------------|-------|-----------|------------|----------------|-------------------------------------------------------------------------------------------------------|
+| Amazon   | Titan Embeddings G1 - Text   | `amazon.titan-embed-text-v1`   | Text  | Embedding | 1,536      | 8192           | 25+ languages, optimized for retrieval, semantic similarity, clustering; segment long docs for search.|
+| Amazon   | Titan Text Embeddings V2     | `amazon.titan-embed-text-v2:0` | Text  | Embedding | 1,024      | 8192           | High-accuracy, flexible dimensions, multilingual (100+); smaller dims save storage, normalized output.|
+| Cohere   | Cohere Embed English v3      | `cohere.embed-english-v3`      | Text  | Embedding | 1,024      | 8192           | SOTA English text embeddings for search, retrieval, and understanding text nuances.                   |
+| Cohere   | Cohere Embed Multilingual v3 | `cohere.embed-multilingual-v3` | Text  | Embedding | 1,024      | 8192           | Multilingual embeddings, SOTA for search and semantic understanding across languages.                 |
+
+> For the most up-to-date model support, refer to the [AWS Bedrock supported models documentation](https://docs.aws.amazon.com/bedrock/latest/userguide/models-supported.html).
+
 ## Examples
 
 The following examples show how you can use embeddings to compare code with text or other code snippets.
@@ -148,7 +196,7 @@ suspend fun compareCodeToText(embedder: Embedder) { // Embedder type
     }
 }
 ```
-<!--- KNIT example-embeddings-03.kt -->
+<!--- KNIT example-embeddings-04.kt -->
 
 ### Code-to-code comparison
 
@@ -210,7 +258,7 @@ suspend fun compareCodeToCode(embedder: Embedder) { // Embedder type
     }
 }
 ```
-<!--- KNIT example-embeddings-04.kt -->
+<!--- KNIT example-embeddings-05.kt -->
 
 ## API documentation
 

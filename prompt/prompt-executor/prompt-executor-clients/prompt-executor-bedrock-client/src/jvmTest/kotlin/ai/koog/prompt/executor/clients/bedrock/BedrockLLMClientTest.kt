@@ -36,6 +36,7 @@ import aws.sdk.kotlin.services.bedrockruntime.model.ListAsyncInvokesRequest
 import aws.sdk.kotlin.services.bedrockruntime.model.ListAsyncInvokesResponse
 import aws.sdk.kotlin.services.bedrockruntime.model.StartAsyncInvokeRequest
 import aws.sdk.kotlin.services.bedrockruntime.model.StartAsyncInvokeResponse
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
 import kotlin.test.Test
@@ -90,6 +91,31 @@ class BedrockLLMClientTest {
         assertEquals(originalModel.capabilities, euModel.capabilities)
         assertEquals(originalModel.contextLength, euModel.contextLength)
         assertEquals(originalModel.maxOutputTokens, euModel.maxOutputTokens)
+    }
+
+    @Test
+    fun `can apply inference profile prefix to embedding model with default null prefix`() {
+        val originalModel = BedrockModels.Embeddings.CohereEmbedEnglishV3
+        val euModel = originalModel.withInferenceProfile(BedrockInferencePrefixes.EU.prefix)
+        val apModel = originalModel.withInferenceProfile(BedrockInferencePrefixes.AP.prefix)
+
+        // Default should not have any prefix
+        assertFalse(originalModel.id.contains(".cohere.embed-english-v3"))
+        assertFalse(originalModel.id.startsWith(BedrockInferencePrefixes.EU.prefix + "."))
+        assertFalse(originalModel.id.startsWith(BedrockInferencePrefixes.AP.prefix + "."))
+
+        // Overridden should have explicit prefix
+        assertTrue(euModel.id.startsWith(BedrockInferencePrefixes.EU.prefix + "."))
+        assertTrue(apModel.id.startsWith(BedrockInferencePrefixes.AP.prefix + "."))
+
+        // Make sure model ids are as expected
+        assertEquals("${BedrockInferencePrefixes.EU.prefix}.cohere.embed-english-v3", euModel.id)
+        assertEquals("${BedrockInferencePrefixes.AP.prefix}.cohere.embed-english-v3", apModel.id)
+
+        // Capabilities and other properties should remain unchanged
+        assertEquals(originalModel.provider, euModel.provider)
+        assertEquals(originalModel.capabilities, euModel.capabilities)
+        assertEquals(originalModel.contextLength, euModel.contextLength)
     }
 
     @Test
@@ -303,6 +329,130 @@ class BedrockLLMClientTest {
         // Verify that moderate method throws an exception because moderationGuardrailsSettings wasn't provided
         assertFailsWith<IllegalArgumentException> {
             client.moderate(prompt, model)
+        }
+    }
+
+    @Test
+    fun `execute throws IllegalArgumentException for TitanEmbedding models`() = runTest {
+        val client = BedrockLLMClient(
+            identityProvider = StaticCredentialsProvider {
+                accessKeyId = "test-key"
+                secretAccessKey = "test-secret"
+            },
+            settings = BedrockClientSettings(region = BedrockRegions.US_EAST_1.regionCode),
+            clock = Clock.System
+        )
+        val prompt = Prompt.build("test") {
+            user("Get embeddings for this.")
+        }
+        val titanModel = BedrockModels.Embeddings.AmazonTitanEmbedText
+        assertFailsWith<IllegalArgumentException> {
+            client.execute(prompt, titanModel, emptyList())
+        }
+    }
+
+    @Test
+    fun `execute throws IllegalArgumentException for Cohere models`() = runTest {
+        val client = BedrockLLMClient(
+            identityProvider = StaticCredentialsProvider {
+                accessKeyId = "test-key"
+                secretAccessKey = "test-secret"
+            },
+            settings = BedrockClientSettings(region = BedrockRegions.US_EAST_1.regionCode),
+            clock = Clock.System
+        )
+        val prompt = Prompt.build("test") {
+            user("Get Cohere embeddings for this.")
+        }
+        val cohereModel = BedrockModels.Embeddings.CohereEmbedEnglishV3
+        assertFailsWith<IllegalArgumentException> {
+            client.execute(prompt, cohereModel, emptyList())
+        }
+    }
+
+    @Test
+    fun `execute throws IllegalArgumentException for model without Completion capability`() = runTest {
+        val client = BedrockLLMClient(
+            identityProvider = StaticCredentialsProvider {
+                accessKeyId = "test-key"
+                secretAccessKey = "test-secret"
+            },
+            settings = BedrockClientSettings(region = BedrockRegions.US_EAST_1.regionCode),
+            clock = Clock.System
+        )
+        val noCompletionModel = LLModel(
+            provider = LLMProvider.Bedrock,
+            id = "some.bedrock.model-without-completion",
+            capabilities = listOf(LLMCapability.Embed),
+            contextLength = 1024
+        )
+        val prompt = Prompt.build("test") {
+            user("Some input")
+        }
+        assertFailsWith<IllegalArgumentException> {
+            client.execute(prompt, noCompletionModel, emptyList())
+        }
+    }
+
+    @Test
+    fun `executeStreaming throws IllegalArgumentException for TitanEmbedding models`() = runTest {
+        val client = BedrockLLMClient(
+            identityProvider = StaticCredentialsProvider {
+                accessKeyId = "test-key"
+                secretAccessKey = "test-secret"
+            },
+            settings = BedrockClientSettings(region = BedrockRegions.US_EAST_1.regionCode),
+            clock = Clock.System
+        )
+        val prompt = Prompt.build("test") {
+            user("Get embeddings for this.")
+        }
+        val titanModel = BedrockModels.Embeddings.AmazonTitanEmbedText
+        assertFailsWith<IllegalArgumentException> {
+            client.executeStreaming(prompt, titanModel, emptyList()).toList()
+        }
+    }
+
+    @Test
+    fun `executeStreaming throws IllegalArgumentException for Cohere models`() = runTest {
+        val client = BedrockLLMClient(
+            identityProvider = StaticCredentialsProvider {
+                accessKeyId = "test-key"
+                secretAccessKey = "test-secret"
+            },
+            settings = BedrockClientSettings(region = BedrockRegions.US_EAST_1.regionCode),
+            clock = Clock.System
+        )
+        val prompt = Prompt.build("test") {
+            user("Get Cohere embeddings for this.")
+        }
+        val cohereModel = BedrockModels.Embeddings.CohereEmbedEnglishV3
+        assertFailsWith<IllegalArgumentException> {
+            client.executeStreaming(prompt, cohereModel, emptyList()).toList()
+        }
+    }
+
+    @Test
+    fun `executeStreaming throws IllegalArgumentException for model without Completion capability`() = runTest {
+        val client = BedrockLLMClient(
+            identityProvider = StaticCredentialsProvider {
+                accessKeyId = "test-key"
+                secretAccessKey = "test-secret"
+            },
+            settings = BedrockClientSettings(region = BedrockRegions.US_EAST_1.regionCode),
+            clock = Clock.System
+        )
+        val noCompletionModel = LLModel(
+            provider = LLMProvider.Bedrock,
+            id = "some.bedrock.model-without-completion",
+            capabilities = listOf(LLMCapability.Embed),
+            contextLength = 1024
+        )
+        val prompt = Prompt.build("test") {
+            user("Some input")
+        }
+        assertFailsWith<IllegalArgumentException> {
+            client.executeStreaming(prompt, noCompletionModel, emptyList()).toList()
         }
     }
 }

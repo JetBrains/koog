@@ -41,4 +41,16 @@ public sealed class BedrockModelFamilies(
      */
     @Serializable
     public data object Meta : BedrockModelFamilies("bedrock.meta", "AWS Bedrock (Meta Llama)")
+
+    /**
+     * Represents the Amazon Titan sub-provider under AWS Bedrock.
+     */
+    @Serializable
+    public data object TitanEmbedding : BedrockModelFamilies("bedrock.titan", "AWS Bedrock (Amazon Titan Embedding)")
+
+    /**
+     * Represents the Cohere sub-provider under AWS Bedrock.
+     */
+    @Serializable
+    public data object Cohere : BedrockModelFamilies("bedrock.cohere", "AWS Bedrock (Cohere Embeddings)")
 }
