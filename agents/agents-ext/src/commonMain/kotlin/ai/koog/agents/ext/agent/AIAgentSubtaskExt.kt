@@ -30,14 +30,14 @@ import ai.koog.prompt.params.LLMParams
  * @param Input The type of the input provided to the subtask.
  * @param input The input data for the subtask, which will be used to
  * create and execute the task.
- * @param tools An optional list of tools that can be utilized during
+ * @param tools An optional list of tools that can be used during
  * the execution of the subtask.
  * @param llmModel An optional parameter specifying the LLM model to be used for the subtask.
  * @param llmParams Optional configuration parameters for the LLM, such as temperature
  * and token limits.
  * @param runMode The mode in which tools should be executed, either sequentially or in parallel.
  * @param assistantResponseRepeatMax An optional parameter specifying the maximum number of
- * retries for obtaining valid responses from the assistant.
+ * retries for getting valid responses from the assistant.
  * @param defineTask A suspend function that defines the subtask as a string
  * based on the provided input.
  * @return A [CriticResult] object containing the verification status, feedback,
@@ -72,7 +72,7 @@ public suspend inline fun <reified Input> AIAgentFunctionalContext.subtaskWithVe
 
 /**
  * Executes a subtask within the larger context of an AI agent's functional operation. This method allows you to define a specific
- * task to be performed, utilizing the given input, tools, and optional configuration parameters.
+ * task to be performed, using the given input, tools, and optional configuration parameters.
  *
  * @param Input The type of input provided to the subtask.
  * @param Output The type of the output expected from the subtask.
@@ -102,11 +102,11 @@ public suspend inline fun <reified Input, reified Output> AIAgentFunctionalConte
 
 /**
  * Executes a subtask within the AI agent's functional context. This method enables the use of tools to
- * accomplish a specific task based on the input provided. It defines the task using an inline function,
+ * achieve a specific task based on the input provided. It defines the task using an inline function,
  * employs tools iteratively, and attempts to complete the subtask with a designated finishing tool.
  *
  * @param input The input data required to define and execute the subtask.
- * @param tools An optional list of tools that can be utilized to accomplish the task, excluding the finishing tool.
+ * @param tools An optional list of tools that can be used to achieve the task, excluding the finishing tool.
  * @param finishTool A mandatory tool that determines the final result of the subtask by producing and transforming output.
  * @param llmModel An optional specific language learning model (LLM) to use for executing the subtask.
  * @param llmParams Optional parameters for configuring the behavior of the LLM during subtask execution.
@@ -131,7 +131,7 @@ public suspend inline fun <reified Input, reified Output, reified OutputTransfor
     val toolsSubset = tools?.map { it.descriptor } ?: llm.readSession { this.tools.toList() }
 
     val originalTools = llm.readSession { this.tools.toList() }
-    val originalMdel = llm.readSession { this.model }
+    val originalModel = llm.readSession { this.model }
     val originalParams = llm.readSession { this.prompt.params }
 
     // setup:
@@ -171,7 +171,7 @@ public suspend inline fun <reified Input, reified Output, reified OutputTransfor
     // rollback
     llm.writeSession {
         this.tools = originalTools
-        this.model = originalMdel
+        this.model = originalModel
         this.prompt = prompt.withParams(originalParams)
     }
 
@@ -262,7 +262,7 @@ internal suspend inline fun <reified Output, reified OutputTransformed> AIAgentF
     }
 }
 
-@OptIn(InternalAgentToolsApi::class)
+@OptIn(InternalAgentToolsApi::class, InternalAgentsApi::class)
 @PublishedApi
 internal suspend inline fun <reified Output, reified OutputTransformed> AIAgentFunctionalContext.executeMultipleToolsHacked(
     toolCalls: List<Message.Tool.Call>,

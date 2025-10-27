@@ -98,7 +98,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
 
     private val assistantPartialMatches = mutableMapOf<String, List<String>>()
     private val assistantExactMatches = mutableMapOf<String, List<String>>()
-    private val conditionalResponses = mutableMapOf<(String) -> Boolean, String>()
+    private val conditionalResponses = mutableMapOf<(String) -> Boolean, List<String>>()
     private var defaultResponse: String = ""
 
     private val moderationPartialMatches = mutableMapOf<String, ModerationResult>()
@@ -313,6 +313,32 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
     }
 
     /**
+     * Registers conditional matches linking logical conditions to tool calls and corresponding responses.
+     *
+     * @param condition A predicate function that takes a String and returns a Boolean indicating whether the condition is satisfied.
+     * @param toolCalls A list of tool calls represented as pairs where the first element is the tool reference and the second is its arguments.
+     * @param responses A list of response strings to be associated with the condition.
+     */
+    public fun <Args> addLLMAnswerConditionalMatches(
+        condition: (String) -> Boolean,
+        toolCalls: List<Pair<Tool<Args, *>, Args>>,
+        responses: List<String>,
+    ) {
+        toolCallConditionalMatches[condition] = toolCalls.map { (tool, args) ->
+            tool.encodeArgsToString(args).let { toolContent ->
+                Message.Tool.Call(
+                    id = null,
+                    tool = tool.name,
+                    content = toolContent,
+                    metaInfo = ResponseMetaInfo.create(clock, outputTokensCount = tokenizer?.countTokens(toolContent))
+                )
+            }
+        }
+
+        conditionalResponses[condition] = responses
+    }
+
+    /**
      * Adds a specific moderation response for an exact pattern match.
      *
      * @param pattern The exact string pattern that should be matched.
@@ -466,7 +492,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
      * @return The MockLLMBuilder instance for method chaining
      */
     public infix fun String.onCondition(condition: (String) -> Boolean): MockLLMBuilder {
-        conditionalResponses[condition] = this
+        conditionalResponses[condition] = listOf(this)
         return this@MockLLMBuilder
     }
 
@@ -564,6 +590,19 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
             builder.addLLMAnswerPartialPattern(pattern, toolCalls, responses)
 
             return pattern
+        }
+
+        /**
+         * Configures a conditional response or tool call based on a custom condition provided as a lambda.
+         * The condition evaluates user input, and if the condition is satisfied, the associated responses
+         * or tool calls are utilized.
+         *
+         * @param condition A lambda function that takes a user input string and returns a boolean.
+         * If the lambda returns `true`, the predefined responses or tool calls associated with this condition
+         * will be triggered.
+         */
+        public infix fun onCondition(condition: (String) -> Boolean) {
+            builder.addLLMAnswerConditionalMatches(condition, toolCalls, responses)
         }
     }
 
@@ -785,18 +824,19 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
         // Conditional Matches
         val processedAssistantConditionalMatches: Map<(String) -> Boolean, List<Message.Response>> =
             conditionalResponses.takeIf { it.isNotEmpty() }?.mapValues { (_, textResponse) ->
-                listOf(
+                textResponse.map { response ->
                     Message.Assistant(
-                        content = textResponse,
+                        content = response,
                         metaInfo = ResponseMetaInfo.create(clock)
                     )
-                )
+                }
             } ?: emptyMap()
 
         val combinedConditionalMatches = (processedAssistantConditionalMatches.keys + toolCallConditionalMatches.keys).associateWith { key ->
-            val assistantList = processedAssistantConditionalMatches[key] ?: emptyList()
-            val toolCallList = toolCallConditionalMatches[key] ?: emptyList()
-            assistantList + toolCallList
+            buildList {
+                processedAssistantConditionalMatches[key]?.let { addAll(it) }
+                toolCallConditionalMatches[key]?.let { addAll(it) }
+            }
         }
 
         val responseMatcher = ResponseMatcher(
