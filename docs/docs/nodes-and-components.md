@@ -409,7 +409,7 @@ By using the predefined subgraphs, you can implement various popular pipelines. 
 
 ### subgraphWithTask
 
-A subgraph that performs a specific task using provided tools and returns a structured result. This subgraph is designed to handle self-contained tasks within a larger workflow. For details, see [API reference](https://api.koog.ai/agents/agents-ext/ai.koog.agents.ext.agent/subgraph-with-task.html).
+A subgraph that performs a specific task using provided tools and returns a structured result. It supports multi-response LLM interactions (the assistant may produce several responses interleaved with tool calls) and lets you control how tool calls are executed. For details, see [API reference](https://api.koog.ai/agents/agents-ext/ai.koog.agents.ext.agent/subgraph-with-task.html).
 
 You can use this subgraph for the following purposes:
 
@@ -418,7 +418,12 @@ You can use this subgraph for the following purposes:
 - Configure task-specific tools, models, and prompts.
 - Manage conversation history with automatic compression.
 - Develop structured agent workflows and task execution pipelines.
-- Generate structured results from LLM task execution.
+- Generate structured results from LLM task execution, including flows with multiple assistant responses and tool invocations.
+
+The API allows you to fine‑tune execution with optional parameters:
+
+- runMode: controls how tool calls are executed during the task (sequential by default). Use this to switch between different tool execution strategies when supported by the underlying model/executor.
+- assistantResponseRepeatMax: limits how many assistant responses are allowed before concluding the task cannot be completed (defaults to a safe internal limit if not provided).
 
 You can provide a task to the subgraph as text, configure the LLM if needed, and provide the necessary tools, and the subgraph will process and solve the task. Here is an example:
 
@@ -427,6 +432,7 @@ import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.agents.ext.agent.subgraphWithTask
+import ai.koog.agents.core.agent.ToolCalls
 
 val searchTool = SayToUser
 val calculatorTool = SayToUser
@@ -441,6 +447,8 @@ val strategy = strategy<String, String>("strategy_name") {
 val processQuery by subgraphWithTask<String, String>(
     tools = listOf(searchTool, calculatorTool, weatherTool),
     llmModel = OpenAIModels.Chat.GPT4o,
+    runMode = ToolCalls.SEQUENTIAL,
+    assistantResponseRepeatMax = 3,
 ) { userQuery ->
     """
     You are a helpful assistant that can answer questions about various topics.
@@ -462,7 +470,7 @@ You can use this subgraph for the following purposes:
 - Create self-validating components.
 - Generate structured verification results with success/failure status and detailed feedback.
 
-The subgraph ensures that the LLM calls a verification tool at the end of the workflow to check whether the task was successfully completed. It guarantees this verification is performed as the final step and returns a `CriticResult` that indicates whether a task was completed successfully and provides detailed feedback. 
+The subgraph ensures that the LLM calls a verification tool at the end of the workflow to check whether the task was successfully completed. It guarantees this verification is performed as the final step and returns a `CriticResult` that indicates whether a task was completed successfully and provides detailed feedback.
 Here is an example:
 
 <!--- INCLUDE
@@ -470,6 +478,7 @@ import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.agents.ext.agent.subgraphWithVerification
+import ai.koog.agents.core.agent.ToolCalls
 
 val runTestsTool = SayToUser
 val analyzeTool = SayToUser
@@ -483,7 +492,9 @@ val strategy = strategy<String, String>("strategy_name") {
 ```kotlin
 val verifyCode by subgraphWithVerification<String>(
     tools = listOf(runTestsTool, analyzeTool, readFileTool),
-    llmModel = AnthropicModels.Sonnet_3_7
+    llmModel = AnthropicModels.Sonnet_3_7,
+    runMode = ToolCalls.SEQUENTIAL,
+    assistantResponseRepeatMax = 3,
 ) { codeToVerify ->
     """
     You are a code reviewer. Please verify that the following code meets all requirements:

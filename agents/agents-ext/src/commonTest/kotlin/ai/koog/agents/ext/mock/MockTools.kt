@@ -26,12 +26,14 @@ object MockTools {
         }
     }
 
-    class BlankTool : Tool<BlankTool.Args, String>() {
+    class BlankTool(name: String? = null) : Tool<BlankTool.Args, String>() {
 
         @Serializable
         data class Args(
-            @property:LLMDescription("Dummy parameter") val args: String = ""
+            @property:LLMDescription("Blank parameter") val args: String = ""
         )
+
+        override val name: String = name ?: "blank-tool"
 
         override val argsSerializer: KSerializer<Args> = serializer<Args>()
 
@@ -43,4 +45,6 @@ object MockTools {
             return args.args
         }
     }
+
+    class TransferArgumentsTool()
 }
