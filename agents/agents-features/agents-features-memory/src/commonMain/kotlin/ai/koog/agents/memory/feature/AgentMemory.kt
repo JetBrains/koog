@@ -211,6 +211,9 @@ public class AgentMemory(
 
         override fun createInitialConfig(): Config = Config()
 
+        /**
+         * Create a feature implementation using the provided configuration.
+         */
         private fun createFeature(
             config: Config,
             pipeline: AIAgentPipeline,
@@ -478,7 +481,7 @@ public class AgentMemory(
                     }
                     logger.info { "Built message for LLM: $message" }
                     logger.info { "Updating prompt with message" }
-                    updatePrompt { user(message) }
+                    appendPrompt { user(message) }
                     logger.info { "Prompt updated" }
                 }
             }

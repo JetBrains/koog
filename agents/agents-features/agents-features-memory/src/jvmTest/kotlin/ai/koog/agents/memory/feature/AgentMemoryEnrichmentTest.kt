@@ -1,6 +1,5 @@
 package ai.koog.agents.memory.feature
 
-import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.agents.memory.config.MemoryScopesProfile
 import ai.koog.agents.memory.feature.summarization.SummaryProvider
 import ai.koog.agents.memory.feature.summarization.SummaryResult
@@ -27,7 +26,6 @@ class AgentMemoryEnrichmentTest {
 
         val memory = AgentMemory(
             agentMemory = mockk<AgentMemoryProvider>(relaxed = true),
-            llm = mockk<AIAgentLLMContext>(relaxed = true),
             scopesProfile = MemoryScopesProfile(),
             summaryProvider = summaryProvider
         )
@@ -43,7 +41,6 @@ class AgentMemoryEnrichmentTest {
     fun enrichmentNoOpWhenDisabled() = runTest {
         val memory = AgentMemory(
             agentMemory = mockk<AgentMemoryProvider>(relaxed = true),
-            llm = mockk<AIAgentLLMContext>(relaxed = true),
             scopesProfile = MemoryScopesProfile(),
             summaryProvider = null
         )

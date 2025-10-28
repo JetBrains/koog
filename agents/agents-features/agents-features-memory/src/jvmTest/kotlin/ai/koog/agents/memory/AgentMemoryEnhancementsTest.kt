@@ -56,7 +56,7 @@ class AgentMemoryEnhancementsTest {
                 writeSession(
                     match<suspend AIAgentLLMWriteSession.() -> Any?> { block ->
                         val session = mockk<AIAgentLLMWriteSession> {
-                            every { updatePrompt(capture(promptUpdate)) } returns Unit
+                            every { appendPrompt(capture(promptUpdate)) } returns Unit
                         }
                         runBlocking { block.invoke(session) }
                         true
@@ -67,11 +67,11 @@ class AgentMemoryEnhancementsTest {
 
         val memory = AgentMemory(
             agentMemory = memoryProvider,
-            llm = llmContext,
             scopesProfile = testScopesProfile
         )
 
         memory.loadAllFactsToAgent(
+            llm = llmContext,
             scopes = listOf(MemoryScopeType.AGENT),
             subjects = listOf(TestUserSubject),
             budget = TokenBudget(maxTokens = 2, maxFacts = 1)
@@ -112,7 +112,7 @@ class AgentMemoryEnhancementsTest {
                 writeSession(
                     match<suspend AIAgentLLMWriteSession.() -> Any?> { block ->
                         val session = mockk<AIAgentLLMWriteSession> {
-                            every { updatePrompt(capture(promptUpdate)) } returns Unit
+                            every { appendPrompt(capture(promptUpdate)) } returns Unit
                         }
                         runBlocking { block.invoke(session) }
                         true
@@ -123,12 +123,12 @@ class AgentMemoryEnhancementsTest {
 
         val memory = AgentMemory(
             agentMemory = memoryProvider,
-            llm = llmContext,
             scopesProfile = testScopesProfile,
             embeddingProvider = embeddingProvider
         )
 
         memory.loadAllFactsToAgent(
+            llm = llmContext,
             scopes = listOf(MemoryScopeType.AGENT),
             subjects = listOf(TestUserSubject),
             budget = TokenBudget(maxTokens = 10, maxFacts = 1),

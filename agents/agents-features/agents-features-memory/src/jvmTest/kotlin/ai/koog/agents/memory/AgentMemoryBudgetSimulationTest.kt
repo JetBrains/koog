@@ -152,12 +152,12 @@ class AgentMemoryBudgetSimulationTest {
 
         val agentMemory = AgentMemory(
             agentMemory = provider,
-            llm = llmContext,
             scopesProfile = MemoryScopesProfile(MemoryScopeType.PRODUCT to scope.name),
             defaultTokenBudget = defaultBudget
         )
 
         agentMemory.loadFactsToAgent(
+            llm = llmContext,
             concept = concept,
             scopes = listOf(MemoryScopeType.PRODUCT),
             subjects = listOf(TicketSubject),
@@ -166,7 +166,7 @@ class AgentMemoryBudgetSimulationTest {
 
         assertTrue(sessionBlock.isCaptured, "AgentMemory should invoke writeSession")
         val session = mockk<AIAgentLLMWriteSession> {
-            every { updatePrompt(capture(promptSlot)) } returns Unit
+            every { appendPrompt(capture(promptSlot)) } returns Unit
         }
         sessionBlock.captured.invoke(session)
 
