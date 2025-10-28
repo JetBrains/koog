@@ -29,7 +29,6 @@ import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrameFlowBuilder
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -208,14 +207,12 @@ public open class MistralAILLMClient(
         require(prompt.messages.isNotEmpty()) { "Can't moderate an empty prompt" }
 
         val input = prompt.messages
-            .onEach { message ->
-                (message as? Message.WithAttachments)?.let {
-                    require(it.attachments.isEmpty()) {
-                        "Only text input is supported for MistralAI moderation"
-                    }
+            .map { message ->
+                require(!message.hasAttachments()) {
+                    "Only text input is supported for MistralAI moderation"
                 }
+                message.toMessageContent(model)
             }
-            .map { it.toMessageContent(model) }
             .let { contents ->
                 when {
                     contents.all { it is Content.Text } -> {
