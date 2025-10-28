@@ -329,7 +329,8 @@ public open class AnthropicLLMClient(
                         AnthropicMessage.Assistant(
                             content = listOf(
                                 AnthropicContent.Thinking(
-                                    signature = message.encrypted!!,
+                                    signature = message.encrypted
+                                        ?: error("Encrypted signature is required for reasoning messages but was null"),
                                     thinking = message.content
                                 )
                             )

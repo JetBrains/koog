@@ -176,9 +176,16 @@ public sealed interface Message {
     public data class Reasoning(
         public val id: String? = null,
         public val encrypted: String? = null,
-        override val content: String,
+        override val parts: List<ContentPart>,
         override val metaInfo: ResponseMetaInfo
     ) : Response {
+
+        /**
+         * Single content part reasoning message constructor
+         */
+        public constructor(id: String? = null, encrypted: String? = null, content: String, metaInfo: ResponseMetaInfo) :
+            this(id, encrypted, listOf(ContentPart.Text(content)), metaInfo)
+
         override val role: Role = Role.Reasoning
 
         override fun copy(updatedMetaInfo: ResponseMetaInfo): Reasoning = this.copy(metaInfo = updatedMetaInfo)

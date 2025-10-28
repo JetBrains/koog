@@ -284,7 +284,7 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
                 is Message.Reasoning -> {
                     flushPendingCalls()
                     messages += OpenAIMessage.Assistant(
-                        content = Content.Text(message.content),
+                        content = OpenAIContent.Text(message.content),
                         reasoningContent = message.content
                     )
                 }

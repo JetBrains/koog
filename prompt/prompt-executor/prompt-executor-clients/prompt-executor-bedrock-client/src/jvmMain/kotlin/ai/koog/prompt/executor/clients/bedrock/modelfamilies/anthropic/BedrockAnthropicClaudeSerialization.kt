@@ -66,7 +66,8 @@ internal object BedrockAnthropicClaudeSerialization {
                             BedrockAnthropicInvokeModelMessage.Assistant(
                                 content = listOf(
                                     BedrockAnthropicInvokeModelContent.Thinking(
-                                        signature = msg.encrypted!!,
+                                        signature = msg.encrypted
+                                            ?: error("Encrypted signature is required for reasoning messages but was null"),
                                         thinking = msg.content
                                     )
                                 )
