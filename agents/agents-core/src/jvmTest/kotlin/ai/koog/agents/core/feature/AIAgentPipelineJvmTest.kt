@@ -4,6 +4,7 @@ import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.GraphAIAgent.FeatureContext
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
+import ai.koog.agents.core.annotation.ExperimentalAgentsApi
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeDoNothing
@@ -47,11 +48,17 @@ class AIAgentPipelineJvmTest {
 
     @AfterEach
     fun cleanup() {
+        @OptIn(ExperimentalAgentsApi::class)
         System.clearProperty(FeatureSystemVariables.KOOG_FEATURES_VM_OPTION_NAME)
+
+        @OptIn(ExperimentalAgentsApi::class)
         System.clearProperty(Debugger.KOOG_DEBUGGER_PORT_VM_OPTION)
+
+        @OptIn(ExperimentalAgentsApi::class)
         System.clearProperty(Debugger.KOOG_DEBUGGER_WAIT_CONNECTION_TIMEOUT_MS_VM_OPTION)
     }
 
+    @OptIn(ExperimentalAgentsApi::class)
     @EnabledIfEnvironmentVariable(named = FeatureSystemVariables.KOOG_FEATURES_ENV_VAR_NAME, matches = ".+")
     @EnabledIfEnvironmentVariable(named = Debugger.KOOG_DEBUGGER_PORT_ENV_VAR, matches = ".+")
     @EnabledIfEnvironmentVariable(named = Debugger.KOOG_DEBUGGER_WAIT_CONNECTION_MS_ENV_VAR, matches = ".+")
@@ -99,6 +106,7 @@ class AIAgentPipelineJvmTest {
     }
 
     @Test
+    @OptIn(ExperimentalAgentsApi::class)
     fun `test known system feature in config set by vm option`() = runTest(timeout = testTimeout) {
         val expectedPort = NetUtil.findAvailablePort()
         val expectedWaitConnectionTimeout = 1L
@@ -130,6 +138,7 @@ class AIAgentPipelineJvmTest {
     }
 
     @Test
+    @OptIn(ExperimentalAgentsApi::class)
     fun `test known system feature is skipped if already installed in agent`() = runTest(timeout = testTimeout) {
         val expectedSystemPort = NetUtil.findAvailablePort()
         val expectedSystemWaitConnectionTimeout = 2L
@@ -181,7 +190,10 @@ class AIAgentPipelineJvmTest {
 
     @Test
     fun `test unknown system feature name in config is ignored`() = runTest(timeout = testTimeout) {
-        System.setProperty(FeatureSystemVariables.KOOG_FEATURES_VM_OPTION_NAME, "unknown-feature")
+        System.setProperty(
+            @OptIn(ExperimentalAgentsApi::class) FeatureSystemVariables.KOOG_FEATURES_VM_OPTION_NAME,
+            "unknown-feature"
+        )
 
         AIAgentGraphPipeline(clock = testClock).use { pipeline ->
             pipeline.prepareFeatures()
@@ -192,6 +204,7 @@ class AIAgentPipelineJvmTest {
     }
 
     @Test
+    @OptIn(ExperimentalAgentsApi::class)
     fun `test known and unknown system features in config`() = runTest(timeout = testTimeout) {
         // Set System properties for test
         System.setProperty(
@@ -221,6 +234,7 @@ class AIAgentPipelineJvmTest {
     }
 
     @Test
+    @OptIn(ExperimentalAgentsApi::class)
     fun `test duplicate system features provided in config`() = runTest(timeout = testTimeout) {
         // Set System properties for test
         System.setProperty(
