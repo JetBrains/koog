@@ -61,6 +61,7 @@ val included = setOf(
     ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-bedrock-client",
     ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-deepseek-client",
     ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-google-client",
+    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-mistralai-client",
     ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-ollama-client",
     ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client",
     ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client-base",

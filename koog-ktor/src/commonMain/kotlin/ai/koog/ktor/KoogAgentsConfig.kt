@@ -18,6 +18,8 @@ import ai.koog.prompt.executor.clients.deepseek.DeepSeekClientSettings
 import ai.koog.prompt.executor.clients.deepseek.DeepSeekLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleClientSettings
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
+import ai.koog.prompt.executor.clients.mistralai.MistralAIClientSettings
+import ai.koog.prompt.executor.clients.mistralai.MistralAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIClientSettings
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterClientSettings
@@ -158,7 +160,7 @@ public class KoogAgentsConfig(private val scope: CoroutineScope) {
     /**
      * Configuration class for managing various Language Learning Model (LLM) providers and their settings.
      * This class allows integration with different LLM services such as OpenAI,
-     * Anthropic, Google, OpenRouter, DeepSeek, and Ollama.
+     * Anthropic, Google, MistralAI, OpenRouter, DeepSeek, and Ollama.
      * Users can also define fallback configurations and custom LLM clients.
      */
     public inner class LLMConfig {
@@ -191,6 +193,16 @@ public class KoogAgentsConfig(private val scope: CoroutineScope) {
          */
         public fun google(apiKey: String, configure: GoogleConfig.() -> Unit = {}) {
             this@KoogAgentsConfig.google(apiKey, configure)
+        }
+
+        /**
+         * Configures the MistralAI client for the application.
+         *
+         * @param apiKey The API key to authenticate with MistralAI services.
+         * @param configure A lambda to customize the `MistralAIConfig` settings such as base URL, timeouts, or HTTP client configuration.
+         */
+        public fun mistral(apiKey: String, configure: MistralAIConfig.() -> Unit = {}) {
+            this@KoogAgentsConfig.mistral(apiKey, configure)
         }
 
         /**
@@ -383,7 +395,7 @@ public class KoogAgentsConfig(private val scope: CoroutineScope) {
          *
          * @param llmParams The parameters that define the behavior of the language model, such as temperature
          * and tool selection. Defaults to an instance of `LLMParams`.
-         * @param buildPrompt A lambda function that is used to construct the prompt using a `PromptBuilder`.
+         * @param build A lambda function that is used to construct the prompt using a `PromptBuilder`.
          */
         @PromptDSL
         public fun prompt(
@@ -522,10 +534,6 @@ public class KoogAgentsConfig(private val scope: CoroutineScope) {
      * It allows for customization of base API URL, model versions, API version, timeout settings,
      * and the HTTP client used for requests. This class facilitates specifying all necessary
      * parameters and settings required to interact with Anthropic's LLM services.
-     *
-     * @constructor Creates an instance of AnthropicConfig with a mandatory API key.
-     *
-     * @param apiKey The API key used for authenticating requests to the Anthropic API.
      */
     public class AnthropicConfig {
         /**
@@ -606,10 +614,6 @@ public class KoogAgentsConfig(private val scope: CoroutineScope) {
      * integrations with the Google Generative Language API. It allows for
      * specifying an API key, configuring timeouts, and setting the base URL
      * used for API requests.
-     *
-     * @constructor Creates an instance of GoogleConfig with the provided API key.
-     *
-     * @param apiKey The API key required to authenticate requests to the Google Generative Language API.
      */
     public class GoogleConfig {
         /**
@@ -664,11 +668,97 @@ public class KoogAgentsConfig(private val scope: CoroutineScope) {
     }
 
     /**
+     * Configuration class for MistralAI integration, providing options to set
+     * API-specific paths, network timeouts, and base connection settings.
+     */
+    public class MistralAIConfig {
+
+        /**
+         * The base URL for the MistralAI API. This property defines the endpoint that the client
+         * connects to for making API requests. It is used to construct the full URL for various
+         * API operations such as chat completions, embeddings, and moderations.
+         *
+         * The default value is set to "[MistralAIClientSettings.baseUrl]". This can be overridden for
+         * custom API endpoints or testing purposes by changing its value.
+         */
+        public var baseUrl: String? = null
+
+        /**
+         * Represents the API path segment used for MistralAI's chat completions endpoint.
+         *
+         * This variable can be configured to specify a custom endpoint path when interacting
+         * with the MistralAI chat completions API. By default, it is set to [MistralAIClientSettings.chatCompletionsPath].
+         */
+        public var chatCompletionsPath: String? = null
+
+        /**
+         * Specifies the API path for embedding operations in the MistralAI API.
+         *
+         * This variable determines the endpoint to be used when interacting with
+         * embedding-related functionalities provided by the MistralAI service.
+         * By default, it is set to [MistralAIClientSettings.embeddingsPath].
+         *
+         * Can be customized to target a different API path if required.
+         */
+        public var embeddingsPath: String? = null
+
+        /**
+         * Represents the API path for the moderation endpoint used in MistralAI API requests.
+         * This is a constant value and is typically appended to the base URL when making
+         * requests to moderation-related services.
+         *
+         * By default, it is set to [MistralAIClientSettings.moderationPath].
+         */
+        public val moderationPath: String? = null
+
+        /**
+         * A configuration property that defines timeout settings for network interactions with the MistralAI API.
+         * It specifies limits for request execution time, connection establishment time, and socket operation time.
+         * These timeout values are represented in [Duration] and provide control over handling delayed or
+         * unresponsive network operations.
+         *
+         * The default values for these timeouts are derived from the [ConnectionTimeoutConfig] class, but can
+         * be customized through the `timeouts` function in [MistralAIConfig].
+         *
+         * Used primarily when configuring an [MistralAIClientSettings] for making API requests.
+         */
+        public var timeoutConfig: ConnectionTimeoutConfig? = null
+
+        /**
+         * Represents the HTTP client used for making network requests to the MistralAI API.
+         * This client is configurable and can be replaced or customized to meet specific requirements,
+         * such as adjusting timeouts, adding interceptors, or modifying base client behavior.
+         * The default implementation initializes with a standard [HttpClient] instance.
+         */
+        public var httpClient: HttpClient = HttpClient()
+
+        /**
+         * Configures custom timeout settings for the MistralAI API client.
+         *
+         * This method allows users to specify custom timeout values by providing
+         * a lambda using the `TimeoutConfiguration` class. The configured timeouts
+         * will then be used for API requests, including request timeout, connection
+         * timeout, and socket timeout.
+         *
+         * @param configure A lambda with the [TimeoutConfiguration] receiver to define
+         *                  custom timeout values for request, connection, and socket operations.
+         */
+        public fun timeouts(configure: TimeoutConfiguration.() -> Unit) {
+            timeoutConfig = with(TimeoutConfiguration()) {
+                configure()
+                ConnectionTimeoutConfig(
+                    requestTimeout.inWholeMilliseconds,
+                    connectTimeout.inWholeMilliseconds,
+                    socketTimeout.inWholeMilliseconds
+                )
+            }
+        }
+    }
+
+    /**
      * OpenRouterConfig is a configuration class for setting up the OpenRouter client.
      * It manages essential parameters such as API key, base URL, connection timeout settings,
      * and the HTTP client used for requests.
-     *
-     * @property apiKey The API key used for authenticating with the OpenRouter service.
      */
     public class OpenRouterConfig {
         /**
@@ -898,6 +988,32 @@ public class KoogAgentsConfig(private val scope: CoroutineScope) {
             )
         }
         addLLMClient(LLMProvider.Google, client)
+    }
+
+    /**
+     * Configures and initializes an MistralAI LLM client.
+     *
+     * @param apiKey The API key used for authenticating with the MistralAI API.
+     * @param configure A lambda receiver to customize the MistralAI configuration such as base URL, timeout settings, and paths.
+     */
+    internal fun mistral(apiKey: String, configure: MistralAIConfig.() -> Unit) {
+        val client = with(MistralAIConfig()) {
+            configure()
+            val defaults = MistralAIClientSettings()
+
+            MistralAILLMClient(
+                apiKey = apiKey,
+                settings = MistralAIClientSettings(
+                    baseUrl = baseUrl ?: defaults.baseUrl,
+                    chatCompletionsPath = chatCompletionsPath ?: defaults.chatCompletionsPath,
+                    embeddingsPath = embeddingsPath ?: defaults.embeddingsPath,
+                    moderationPath = moderationPath ?: defaults.moderationPath,
+                    timeoutConfig = timeoutConfig ?: defaults.timeoutConfig,
+                ),
+                baseClient = httpClient
+            )
+        }
+        addLLMClient(LLMProvider.MistralAI, client)
     }
 
     /**

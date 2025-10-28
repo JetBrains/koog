@@ -28,4 +28,7 @@ internal object ApiKeyService {
     val brightDataKey: String
         get() = System.getenv("BRIGHT_DATA_KEY")
             ?: throw IllegalArgumentException("BRIGHT_DATA_KEY env is not set")
+
+    val mistralAIApiKey: String
+        get() = System.getenv("MISTRALAI_API_KEY") ?: throw IllegalArgumentException("MISTRALAI_API_KEY env is not set")
 }

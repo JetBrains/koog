@@ -174,6 +174,10 @@ public open class ModerationCategory(
      * Note: Used in AWS Bedrock filters
      */
     public object PromptAttack : ModerationCategory("prompt-attack")
+
+    override fun hashCode(): Int {
+        return name.hashCode()
+    }
 }
 
 /**

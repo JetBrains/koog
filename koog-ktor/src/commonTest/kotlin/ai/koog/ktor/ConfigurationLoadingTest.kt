@@ -55,6 +55,13 @@ class ConfigurationLoadingTest {
     }
 
     @Test
+    fun testMistral() = testApplication {
+        environment { config = buildMistralConfig() }
+        install(Koog)
+        startApplication()
+    }
+
+    @Test
     fun testOpenRouter() = testApplication {
         environment { config = buildOpenAIConfig() }
         install(Koog)
@@ -104,6 +111,9 @@ class ConfigurationLoadingTest {
         // Verify Google configuration
         assertNotNull(koogConfig.llmConnections[LLMProvider.Google])
 
+        // Verify MistralAI configuration
+        assertNotNull(koogConfig.llmConnections[LLMProvider.MistralAI])
+
         // Verify OpenRouter configuration
         assertNotNull(koogConfig.llmConnections[LLMProvider.OpenRouter])
 
@@ -129,6 +139,7 @@ class ConfigurationLoadingTest {
         assertNull(koogConfig.llmConnections[LLMProvider.OpenAI])
         assertNull(koogConfig.llmConnections[LLMProvider.Anthropic])
         assertNull(koogConfig.llmConnections[LLMProvider.Google])
+        assertNull(koogConfig.llmConnections[LLMProvider.MistralAI])
         assertNull(koogConfig.llmConnections[LLMProvider.OpenRouter])
         assertNull(koogConfig.llmConnections[LLMProvider.DeepSeek])
         assertNull(koogConfig.llmConnections[LLMProvider.Ollama])
@@ -161,6 +172,7 @@ class ConfigurationLoadingTest {
         // Verify no other providers
         assertNull(koogConfig.llmConnections[LLMProvider.Anthropic])
         assertNull(koogConfig.llmConnections[LLMProvider.Google])
+        assertNull(koogConfig.llmConnections[LLMProvider.MistralAI])
         assertNull(koogConfig.llmConnections[LLMProvider.OpenRouter])
         assertNull(koogConfig.llmConnections[LLMProvider.DeepSeek])
         assertNull(koogConfig.llmConnections[LLMProvider.Ollama])
@@ -178,6 +190,7 @@ class ConfigurationLoadingTest {
         // Verify no other providers
         assertNull(koogConfig.llmConnections[LLMProvider.OpenAI])
         assertNull(koogConfig.llmConnections[LLMProvider.Google])
+        assertNull(koogConfig.llmConnections[LLMProvider.MistralAI])
         assertNull(koogConfig.llmConnections[LLMProvider.OpenRouter])
         assertNull(koogConfig.llmConnections[LLMProvider.DeepSeek])
         assertNull(koogConfig.llmConnections[LLMProvider.Ollama])
@@ -196,6 +209,25 @@ class ConfigurationLoadingTest {
         assertNull(koogConfig.llmConnections[LLMProvider.OpenAI])
         assertNull(koogConfig.llmConnections[LLMProvider.Anthropic])
         assertNull(koogConfig.llmConnections[LLMProvider.OpenRouter])
+        assertNull(koogConfig.llmConnections[LLMProvider.MistralAI])
+        assertNull(koogConfig.llmConnections[LLMProvider.DeepSeek])
+        assertNull(koogConfig.llmConnections[LLMProvider.Ollama])
+    }
+
+    @Test
+    fun testLoadMistralConfiguration() = runTest {
+        val koogConfig = applicationEnvironment {
+            config = buildMistralConfig()
+        }.loadAgentsConfig(GlobalScope)
+
+        // Verify Google configuration
+        assertNotNull(koogConfig.llmConnections[LLMProvider.MistralAI])
+
+        // Verify no other providers
+        assertNull(koogConfig.llmConnections[LLMProvider.OpenAI])
+        assertNull(koogConfig.llmConnections[LLMProvider.Anthropic])
+        assertNull(koogConfig.llmConnections[LLMProvider.OpenRouter])
+        assertNull(koogConfig.llmConnections[LLMProvider.Google])
         assertNull(koogConfig.llmConnections[LLMProvider.DeepSeek])
         assertNull(koogConfig.llmConnections[LLMProvider.Ollama])
     }
@@ -213,6 +245,7 @@ class ConfigurationLoadingTest {
         assertNull(koogConfig.llmConnections[LLMProvider.OpenAI])
         assertNull(koogConfig.llmConnections[LLMProvider.Anthropic])
         assertNull(koogConfig.llmConnections[LLMProvider.Google])
+        assertNull(koogConfig.llmConnections[LLMProvider.MistralAI])
         assertNull(koogConfig.llmConnections[LLMProvider.DeepSeek])
         assertNull(koogConfig.llmConnections[LLMProvider.Ollama])
     }
@@ -231,6 +264,7 @@ class ConfigurationLoadingTest {
         assertNull(koogConfig.llmConnections[LLMProvider.Anthropic])
         assertNull(koogConfig.llmConnections[LLMProvider.OpenRouter])
         assertNull(koogConfig.llmConnections[LLMProvider.Google])
+        assertNull(koogConfig.llmConnections[LLMProvider.MistralAI])
         assertNull(koogConfig.llmConnections[LLMProvider.Ollama])
     }
 
@@ -247,6 +281,7 @@ class ConfigurationLoadingTest {
         assertNull(koogConfig.llmConnections[LLMProvider.OpenAI])
         assertNull(koogConfig.llmConnections[LLMProvider.Anthropic])
         assertNull(koogConfig.llmConnections[LLMProvider.Google])
+        assertNull(koogConfig.llmConnections[LLMProvider.MistralAI])
         assertNull(koogConfig.llmConnections[LLMProvider.OpenRouter])
         assertNull(koogConfig.llmConnections[LLMProvider.DeepSeek])
     }
@@ -268,6 +303,7 @@ class ConfigurationLoadingTest {
         buildOpenAIConfig()
             .mergeWith(buildAnthropicConfig())
             .mergeWith(buildGoogleConfig())
+            .mergeWith(buildMistralConfig())
             .mergeWith(buildOpenRouterConfig())
             .mergeWith(buildDeepSeekConfig())
             .mergeWith(buildOllamaConfig())
@@ -301,6 +337,14 @@ class ConfigurationLoadingTest {
         "koog.google.timeout.requestTimeoutMillis" to "60000",
         "koog.google.timeout.connectTimeoutMillis" to "30000",
         "koog.google.timeout.socketTimeoutMillis" to "60000"
+    )
+
+    private fun buildMistralConfig() = MapApplicationConfig(
+        "koog.mistral.apikey" to "test-mistralai-api-key",
+        "koog.mistral.baseUrl" to "https://api.mistral.ai",
+        "koog.mistral.timeout.requestTimeoutMillis" to "60000",
+        "koog.mistral.timeout.connectTimeoutMillis" to "30000",
+        "koog.mistral.timeout.socketTimeoutMillis" to "60000"
     )
 
     private fun buildOpenRouterConfig() = MapApplicationConfig(

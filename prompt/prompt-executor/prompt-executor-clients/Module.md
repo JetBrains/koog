@@ -20,9 +20,10 @@ The module consists of:
 1. **prompt-executor-anthropic-client**: Client implementation for Anthropic's Claude models with image and document support
 2. **prompt-executor-openai-client**: Client implementation for OpenAI's GPT models with image and audio capabilities
 3. **prompt-executor-google-client**: Client implementation for Google Gemini models with comprehensive multimodal support
-4. **prompt-executor-openrouter-client**: Client implementation for OpenRouter's API with image, audio, and document support
-5. **prompt-executor-bedrock-client**: Client implementation for AWS Bedrock with support for multiple model providers (JVM only)
-6. **prompt-executor-ollama-client**: Client implementation for local Ollama models
+4. **prompt-executor-mistralai-client**: Client implementation for Mistral AI models with vision, embeddings, and moderation support
+5. **prompt-executor-openrouter-client**: Client implementation for OpenRouter's API with image, audio, and document support
+6. **prompt-executor-bedrock-client**: Client implementation for AWS Bedrock with support for multiple model providers (JVM only)
+7. **prompt-executor-ollama-client**: Client implementation for local Ollama models
 
 Each client handles authentication, request formatting, response parsing, and media content encoding specific to its
 respective API requirements.
@@ -42,8 +43,11 @@ dependencies {
    // For DeepSeek
    implementation("ai.koog.prompt:prompt-executor-deepseek-client:$version")
 
-   // For Google Gemini 
+   // For Google Gemini
    implementation("ai.koog.prompt:prompt-executor-google-client:$version")
+
+   // For MistralAI
+   implementation("ai.koog.prompt:prompt-executor-mistralai-client:$version")
 
    // For Ollama 
    implementation("ai.koog.prompt:prompt-executor-ollama-client:$version")
@@ -90,6 +94,9 @@ val client = when (providerType) {
     )
     ProviderType.GOOGLE -> GoogleLLMClient(
         apiKey = System.getenv("GEMINI_API_KEY"),
+    )
+    ProviderType.MISTRALAI -> MistralAILLMClient(
+        apiKey = System.getenv("MISTRALAI_API_KEY"),
     )
     ProviderType.OPENROUTER -> OpenRouterLLMClient(
         apiKey = System.getenv("OPENROUTER_API_KEY"),
@@ -199,5 +206,6 @@ val response = client.execute(
 | Anthropic Claude | ✅      | ❌     | ❌     | ✅         |
 | OpenAI GPT       | ✅      | ✅     | ❌     | ❌         |
 | Google Gemini    | ✅      | ✅     | ✅     | ✅         |
+| Mistral AI       | ✅      | ❌     | ❌     | ✅         |
 | OpenRouter       | ✅      | ✅     | ❌     | ✅         |
 | Ollama           | ✅      | ❌     | ❌     | ❌         |

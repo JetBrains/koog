@@ -4,6 +4,7 @@ import ai.koog.ktor.utils.getModelFromIdentifier
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.deepseek.DeepSeekModels
 import ai.koog.prompt.executor.clients.google.GoogleModels
+import ai.koog.prompt.executor.clients.mistralai.MistralAIModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterModels
 import ai.koog.prompt.llm.LLMProvider
@@ -232,6 +233,25 @@ class ModelIdentifierParsingTest {
         assertEquals(GoogleModels.Gemini2_5FlashLite, gemini25FlashLite)
     }
 
+    // MistralAI model identifier tests
+    @Test
+    fun testMistralAIModels() = runTest {
+        val mistralMedium31 = getModelFromIdentifier("mistral.chat.mistral_medium_3_1")
+        assertNotNull(mistralMedium31)
+        assertEquals(LLMProvider.MistralAI, mistralMedium31.provider)
+        assertEquals(MistralAIModels.Chat.MistralMedium31, mistralMedium31)
+
+        val codestral = getModelFromIdentifier("mistral.chat.codestral")
+        assertNotNull(codestral)
+        assertEquals(LLMProvider.MistralAI, codestral.provider)
+        assertEquals(MistralAIModels.Chat.Codestral, codestral)
+
+        val devstralMedium = getModelFromIdentifier("mistral.chat.devstral_medium")
+        assertNotNull(devstralMedium)
+        assertEquals(LLMProvider.MistralAI, devstralMedium.provider)
+        assertEquals(MistralAIModels.Chat.DevstralMedium, devstralMedium)
+    }
+
     // OpenRouter model identifier tests
     @Test
     fun testOpenRouterModels() = runTest {
@@ -406,6 +426,10 @@ class ModelIdentifierParsingTest {
         // Test invalid Google model
         val invalidGoogleModel = getModelFromIdentifier("google.invalid")
         assertNull(invalidGoogleModel)
+
+        // Test invalid Mistral AI model
+        val invalidMistralModel = getModelFromIdentifier("mistral.invalid")
+        assertNull(invalidMistralModel)
 
         // Test invalid OpenRouter model
         val invalidOpenRouterModel = getModelFromIdentifier("openrouter.invalid")

@@ -10,11 +10,9 @@ import kotlin.time.Duration.Companion.milliseconds
 /**
  * Loads and configures the environment-specific settings for Koog agents based on the provided
  * application configuration.
- * This includes setup for OpenAI, Anthropic, Google, OpenRouter, DeepSeek,
+ * This includes setup for OpenAI, Anthropic, Google, MistralAI, OpenRouter, DeepSeek,
  * Ollama, as well as default and fallback LLM (Large Language Model) configurations.
  *
- * @param envConfig The application configuration that contains environment-specific properties
- *                  for configuring Koog agents and associated integrations.
  * @return A populated instance of [KoogAgentsConfig] with the environment-specific settings applied.
  */
 internal fun ApplicationEnvironment.loadAgentsConfig(scope: CoroutineScope): KoogAgentsConfig {
@@ -22,6 +20,7 @@ internal fun ApplicationEnvironment.loadAgentsConfig(scope: CoroutineScope): Koo
         .openAI(config)
         .anthropic(config)
         .google(config)
+        .mistral(config)
         .openrouter(config)
         .deepSeek(config)
 
@@ -37,6 +36,7 @@ internal fun ApplicationEnvironment.loadAgentsConfig(scope: CoroutineScope): Koo
             "openai" -> LLMProvider.OpenAI
             "anthropic" -> LLMProvider.Anthropic
             "google" -> LLMProvider.Google
+            "mistral" -> LLMProvider.MistralAI
             "openrouter" -> LLMProvider.OpenRouter
             "ollama" -> LLMProvider.Ollama
             "deepseek" -> LLMProvider.DeepSeek
@@ -105,6 +105,14 @@ private fun KoogAgentsConfig.google(envConfig: ApplicationConfig) =
         google(apiKey) {
             baseUrlOrNull?.let { baseUrl = it }
             timeouts { configure("koog.google.timeout", envConfig) }
+        }
+    }
+
+private fun KoogAgentsConfig.mistral(envConfig: ApplicationConfig) =
+    config(envConfig, "koog.mistral") { apiKey, baseUrlOrNull ->
+        mistral(apiKey) {
+            baseUrlOrNull?.let { baseUrl = it }
+            timeouts { configure("koog.mistral.timeout", envConfig) }
         }
     }
 

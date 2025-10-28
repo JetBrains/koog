@@ -6,6 +6,7 @@ import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.deepseek.DeepSeekLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleClientSettings
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
+import ai.koog.prompt.executor.clients.mistralai.MistralAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.base.AbstractOpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.base.OpenAIBasedSettings
@@ -17,6 +18,7 @@ import ai.koog.prompt.executor.ollama.client.OllamaClient
 import ai.koog.spring.prompt.executor.clients.anthropic.AnthropicLLMAutoConfiguration
 import ai.koog.spring.prompt.executor.clients.deepseek.DeepSeekLLMAutoConfiguration
 import ai.koog.spring.prompt.executor.clients.google.GoogleLLMAutoConfiguration
+import ai.koog.spring.prompt.executor.clients.mistralai.MistralAILLMAutoConfiguration
 import ai.koog.spring.prompt.executor.clients.ollama.OllamaLLMAutoConfiguration
 import ai.koog.spring.prompt.executor.clients.openai.OpenAILLMAutoConfiguration
 import ai.koog.spring.prompt.executor.clients.openrouter.OpenRouterLLMAutoConfiguration
@@ -38,6 +40,7 @@ import kotlin.time.Duration.Companion.seconds
 private const val PROVIDERS = """
     openai, ai.koog.prompt.executor.clients.openai.OpenAILLMClient,
     google, ai.koog.prompt.executor.clients.google.GoogleLLMClient,
+    mistral, ai.koog.prompt.executor.clients.mistralai.MistralAILLMClient,
     openrouter, ai.koog.prompt.executor.clients.openrouter.OpenRouterLLMClient,
     deepseek, ai.koog.prompt.executor.clients.deepseek.DeepSeekLLMClient,
     ollama, ai.koog.prompt.executor.ollama.client.OllamaClient,
@@ -52,6 +55,7 @@ class KoogAutoConfigurationTest {
             AutoConfigurations.of(
                 AnthropicLLMAutoConfiguration::class.java,
                 GoogleLLMAutoConfiguration::class.java,
+                MistralAILLMAutoConfiguration::class.java,
                 DeepSeekLLMAutoConfiguration::class.java,
                 OllamaLLMAutoConfiguration::class.java,
                 OpenAILLMAutoConfiguration::class.java,
@@ -488,6 +492,66 @@ class KoogAutoConfigurationTest {
     }
 
     @Test
+    fun `should supply MistralAI executor bean with provided apiKey and default baseUrl`() {
+        val configApiKey = "some_api_key"
+        createApplicationContextRunner()
+            .withPropertyValues(
+                "ai.koog.mistral.api-key=$configApiKey"
+            )
+            .run { context ->
+                val executor = context.getBean<SingleLLMPromptExecutor>()
+                val llmClient = getPrivateFieldValue(executor, "llmClient")
+                assertInstanceOf<MistralAILLMClient>(llmClient)
+
+                val apiKey = getPrivateFieldValue(llmClient as AbstractOpenAILLMClient<*, *>, "apiKey")
+                assertEquals(configApiKey, apiKey)
+
+                val settings = getPrivateFieldValue(llmClient, "settings") as OpenAIBasedSettings
+                val baseUrl = getPrivateFieldValue(settings, "baseUrl")
+
+                assertEquals("https://api.mistral.ai", baseUrl)
+            }
+    }
+
+    @Test
+    fun `should supply MistralAI executor bean with provided baseUrl`() {
+        val configBaseUrl = "https://some-url.com"
+        createApplicationContextRunner().withPropertyValues(
+            "ai.koog.mistral.api-key=some_api_key",
+            "ai.koog.mistral.base-url=$configBaseUrl",
+        )
+            .run { context ->
+                val executor = context.getBean<SingleLLMPromptExecutor>()
+                val llmClient = getPrivateFieldValue(executor, "llmClient") as MistralAILLMClient
+
+                val settings = getPrivateFieldValue(llmClient, "settings") as OpenAIBasedSettings
+                val baseUrl = getPrivateFieldValue(settings, "baseUrl")
+
+                assertEquals(configBaseUrl, baseUrl)
+            }
+    }
+
+    @Test
+    fun `should supply MistralAI executor bean with retry client and default config`() {
+        createApplicationContextRunner()
+            .withPropertyValues(
+                "ai.koog.mistral.api-key=some_api_key",
+                "ai.koog.mistral.retry.enabled=true"
+            )
+            .run { context ->
+                val executor = context.getBean<SingleLLMPromptExecutor>()
+                val retryingClient = getPrivateFieldValue(executor, "llmClient")
+                assertInstanceOf<RetryingLLMClient>(retryingClient)
+
+                val config = getPrivateFieldValue(retryingClient, "config")
+                assertInstanceOf<RetryConfig>(config)
+
+                val llmClient = getPrivateFieldValue(retryingClient, "delegate")
+                assertInstanceOf<MistralAILLMClient>(llmClient)
+            }
+    }
+
+    @Test
     fun `should supply Ollama executor bean with provided baseUrl`() {
         val configBaseUrl = "https://some-url.com"
         createApplicationContextRunner().withPropertyValues(
@@ -534,15 +598,17 @@ class KoogAutoConfigurationTest {
                 "ai.koog.openai.api-key=some_api_key",
                 "ai.koog.anthropic.api-key=some_api_key",
                 "ai.koog.google.api-key=some_api_key",
+                "ai.koog.mistral.api-key=some_api_key",
                 "ai.koog.deepseek.api-key=some_api_key",
                 "ai.koog.ollama.enabled=true",
             )
             .run { context ->
                 val beanNames = context.getBeanNamesForType<SingleLLMPromptExecutor>()
-                assertEquals(5, beanNames.size)
+                assertEquals(6, beanNames.size)
                 assertTrue("openAIExecutor" in beanNames)
                 assertTrue("anthropicExecutor" in beanNames)
                 assertTrue("googleExecutor" in beanNames)
+                assertTrue("mistralAIExecutor" in beanNames)
                 assertTrue("deepSeekExecutor" in beanNames)
                 assertTrue("ollamaExecutor" in beanNames)
             }

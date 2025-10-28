@@ -123,4 +123,18 @@ public abstract class LLMProvider(public val id: String, public val display: Str
      */
     @Serializable
     public data object DeepSeek : LLMProvider("deepseek", "DeepSeek")
+
+    /**
+     * Represents the Mistral AI provider within the available set of large language model providers.
+     *
+     * MistralAI is identified by its unique ID ("mistralai") and display name ("MistralAI").
+     * It extends the `LLMProvider` sealed class,
+     * which serves as a base class for all supported language model providers.
+     *
+     * This data object adheres to the structure and serialization requirements defined by the parent class.
+     * It is part of the available LLM provider hierarchy, which is used to configure and identify specific
+     * providers for large language model functionalities and capabilities.
+     */
+    @Serializable
+    public data object MistralAI : LLMProvider("mistralai", "MistralAI")
 }
