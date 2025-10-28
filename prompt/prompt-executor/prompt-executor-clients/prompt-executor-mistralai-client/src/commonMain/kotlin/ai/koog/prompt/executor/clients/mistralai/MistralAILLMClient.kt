@@ -207,10 +207,12 @@ public open class MistralAILLMClient(
         require(prompt.messages.isNotEmpty()) { "Can't moderate an empty prompt" }
 
         val input = prompt.messages
-            .onEach { message ->
-                require(!message.hasAttachments())
+            .map { message ->
+                require(!message.hasAttachments()) {
+                    "Only text input is supported for MistralAI moderation"
+                }
+                message.toMessageContent(model)
             }
-            .map { it.toMessageContent(model) }
             .let { contents ->
                 when {
                     contents.all { it is Content.Text } -> {
