@@ -425,7 +425,7 @@ public class AgentMemory(
                     }
                     logger.info { "Built message for LLM: $message" }
                     logger.info { "Updating prompt with message" }
-                    updatePrompt { user(message) }
+                    appendPrompt { user(message) }
                     logger.info { "Prompt updated" }
                 }
             }

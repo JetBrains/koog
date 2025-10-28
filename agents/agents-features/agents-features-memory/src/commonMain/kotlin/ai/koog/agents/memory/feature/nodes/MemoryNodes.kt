@@ -169,7 +169,7 @@ public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeSaveToMemoryA
         if (retrievalModel != null) {
             model = retrievalModel
         }
-        updatePrompt {
+        appendPrompt {
             val prompt = MemoryPrompts.autoDetectFacts(subjects)
             user(prompt)
         }

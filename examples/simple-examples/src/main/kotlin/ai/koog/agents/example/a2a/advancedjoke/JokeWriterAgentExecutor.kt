@@ -113,9 +113,9 @@ private fun jokeWriterStrategy() = strategy<A2AMessage, Unit>("joke-writer") {
             context.messageStorage.getAll()
         }
 
-        // Update the prompt with the current context messages
+        // Append the current context messages to prompt
         llm.writeSession {
-            updatePrompt {
+            appendPrompt {
                 messages(contextMessages.map { it.toKoogMessage() })
             }
         }
@@ -138,7 +138,7 @@ private fun jokeWriterStrategy() = strategy<A2AMessage, Unit>("joke-writer") {
                 .map { it.toKoogMessage() }
 
             llm.writeSession {
-                updatePrompt {
+                appendPrompt {
                     user {
                         +"There's an ongoing task, the next messages contain conversation history for this task"
                     }
@@ -223,7 +223,7 @@ private fun jokeWriterStrategy() = strategy<A2AMessage, Unit>("joke-writer") {
     // Node: Generate the actual joke based on classified parameters
     val generateJoke by node<JokeRequestClassification.Ready, Message.Assistant> { request ->
         llm.writeSession {
-            updatePrompt {
+            appendPrompt {
                 user {
                     +"Generate a joke based on the following user request:"
                     xml {

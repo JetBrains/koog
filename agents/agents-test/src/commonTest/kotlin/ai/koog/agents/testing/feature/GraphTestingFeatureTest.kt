@@ -36,7 +36,7 @@ class GraphTestingFeatureTest {
                 val sendToolResult by nodeLLMSendToolResult()
                 val giveFeedback by node<String, String> { input ->
                     llm.writeSession {
-                        updatePrompt {
+                        appendPrompt {
                             user("Call tools! Don't chat!")
                         }
                     }

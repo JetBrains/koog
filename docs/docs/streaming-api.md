@@ -51,7 +51,7 @@ val strategy = strategy<String, String>("strategy_name") {
 -->
 ```kotlin
 llm.writeSession {
-    updatePrompt { user("Tell me a joke, then call a tool with JSON args.") }
+    appendPrompt { user("Tell me a joke, then call a tool with JSON args.") }
 
     val stream = requestLLMStreaming() // Flow<StreamFrame>
 
@@ -346,7 +346,7 @@ val agentStrategy = strategy<String, List<Book>>("library-assistant") {
       val mdDefinition = markdownBookDefinition()
 
       llm.writeSession {
-         updatePrompt { user(booksDescription) }
+         appendPrompt { user(booksDescription) }
          // Initiate the response stream in the form of the definition `mdDefinition`
          val markdownStream = requestLLMStreaming(mdDefinition)
          // Call the parser with the result of the response stream and perform actions with the result
@@ -422,7 +422,7 @@ val agentStrategy = strategy<String, Unit>("library-assistant") {
       val mdDefinition = markdownBookDefinition()
 
       llm.writeSession {
-         updatePrompt { user(input) }
+         appendPrompt { user(input) }
          val markdownStream = requestLLMStreaming(mdDefinition)
 
          parseMarkdownStreamToBooks(markdownStream).collect { book ->

@@ -87,7 +87,7 @@ class FunctionalAIAgentTest {
             promptExecutor = mockLLMApi,
             strategy = functionalStrategy { inputParam ->
                 val resp = llm.writeSession {
-                    updatePrompt { user(inputParam) }
+                    appendPrompt { user(inputParam) }
                     requestLLM()
                 }
                 resp.content

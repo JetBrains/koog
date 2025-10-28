@@ -99,7 +99,7 @@ class PostgresPersistenceAgentRunTest {
         output: String,
     ): AIAgentNodeDelegate<String, String> = node(name) {
         llm.writeSession {
-            updatePrompt { user { text(output) } }
+            appendPrompt { user { text(output) } }
         }
         return@node it + "\n" + output
     }

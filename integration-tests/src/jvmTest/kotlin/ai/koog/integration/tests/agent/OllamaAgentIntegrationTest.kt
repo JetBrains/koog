@@ -89,26 +89,24 @@ class OllamaAgentIntegrationTest {
             val definePrompt by node<Unit, Unit> {
                 llm.writeSession {
                     model = OllamaModels.Meta.LLAMA_3_2
-                    updatePrompt {
-                        prompt("test-ollama") {
-                            system(
-                                """"
-                                        You are a top-tier assistant.
-                                        ALWAYS communicate to user via tools!!!
-                                        ALWAYS use tools you've been provided.
-                                        ALWAYS generate valid JSON responses.
-                                        ALWAYS call tool correctly, with valid arguments.
-                                        NEVER provide tool call in result body.
-                                      
-                                        Example tool call:
-                                        {
-                                            "id":"ollama_tool_call_3743609160"
-                                            "tool":"answer_verification_tool"
-                                            "content":{"answer":"Paris"}
-                                        }.
-                                """.trimIndent()
-                            )
-                        }
+                    appendPrompt {
+                        system(
+                            """"
+                                    You are a top-tier assistant.
+                                    ALWAYS communicate to user via tools!!!
+                                    ALWAYS use tools you've been provided.
+                                    ALWAYS generate valid JSON responses.
+                                    ALWAYS call tool correctly, with valid arguments.
+                                    NEVER provide tool call in result body.
+                                  
+                                    Example tool call:
+                                    {
+                                        "id":"ollama_tool_call_3743609160"
+                                        "tool":"answer_verification_tool"
+                                        "content":{"answer":"Paris"}
+                                    }.
+                            """.trimIndent()
+                        )
                     }
                 }
             }

@@ -186,7 +186,7 @@ class CheckpointsTests {
                 val args = WriteArgs(userName, userData)
                 val result = callTool(WriteKVTool, args).asSuccessful().result
                 val callID = Random.nextInt().absoluteValue
-                updatePrompt {
+                appendPrompt {
                     tool {
                         call(id = "$callID", tool = WriteKVTool.name, content = WriteKVTool.encodeArgsToString(args))
                         result(
@@ -218,7 +218,7 @@ class CheckpointsTests {
                         checkpointId = checkpointId,
                         version = 0
                     )
-                    llm.writeSession { updatePrompt { user { text("Checkpoint created with ID: $checkpointId") } } }
+                    llm.writeSession { appendPrompt { user { text("Checkpoint created with ID: $checkpointId") } } }
                 }
             }
 

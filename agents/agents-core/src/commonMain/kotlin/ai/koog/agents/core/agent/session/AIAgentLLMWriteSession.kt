@@ -314,6 +314,18 @@ public class AIAgentLLMWriteSession internal constructor(
     }
 
     /**
+     * Appends messages to the current prompt by applying modifications defined in the provided block.
+     * The modifications are applied using a `PromptBuilder` instance, allowing for
+     * customization of the prompt's content, structure, and associated messages.
+     *
+     * @param body A lambda with a receiver of type `PromptBuilder` that defines
+     *             the modifications to be applied to the current prompt.
+     */
+    public fun appendPrompt(body: PromptBuilder.() -> Unit) {
+        prompt = prompt(prompt, clock, body)
+    }
+
+    /**
      * Updates the current prompt by applying modifications defined in the provided block.
      * The modifications are applied using a `PromptBuilder` instance, allowing for
      * customization of the prompt's content, structure, and associated messages.
@@ -321,8 +333,9 @@ public class AIAgentLLMWriteSession internal constructor(
      * @param body A lambda with a receiver of type `PromptBuilder` that defines
      *             the modifications to be applied to the current prompt.
      */
+    @Deprecated("Use `appendPrompt` instead", ReplaceWith("appendPrompt(body)"))
     public fun updatePrompt(body: PromptBuilder.() -> Unit) {
-        prompt = prompt(prompt, clock, body)
+        appendPrompt(body)
     }
 
     /**
@@ -361,7 +374,7 @@ public class AIAgentLLMWriteSession internal constructor(
      * @return the response from the LLM after processing the request, as a [Message.Response].
      */
     override suspend fun requestLLMWithoutTools(): Message.Response {
-        return super.requestLLMWithoutTools().also { response -> updatePrompt { message(response) } }
+        return super.requestLLMWithoutTools().also { response -> appendPrompt { message(response) } }
     }
 
     /**
@@ -371,7 +384,7 @@ public class AIAgentLLMWriteSession internal constructor(
      * @return The response received from the Language Learning Model (LLM).
      */
     override suspend fun requestLLMOnlyCallingTools(): Message.Response {
-        return super.requestLLMOnlyCallingTools().also { response -> updatePrompt { message(response) } }
+        return super.requestLLMOnlyCallingTools().also { response -> appendPrompt { message(response) } }
     }
 
     /**
@@ -381,7 +394,7 @@ public class AIAgentLLMWriteSession internal constructor(
      * @return A response message received from the LLM after executing the enforced tool request.
      */
     override suspend fun requestLLMForceOneTool(tool: ToolDescriptor): Message.Response {
-        return super.requestLLMForceOneTool(tool).also { response -> updatePrompt { message(response) } }
+        return super.requestLLMForceOneTool(tool).also { response -> appendPrompt { message(response) } }
     }
 
     /**
@@ -392,7 +405,7 @@ public class AIAgentLLMWriteSession internal constructor(
      * @return The response generated after executing the provided tool.
      */
     override suspend fun requestLLMForceOneTool(tool: Tool<*, *>): Message.Response {
-        return super.requestLLMForceOneTool(tool).also { response -> updatePrompt { message(response) } }
+        return super.requestLLMForceOneTool(tool).also { response -> appendPrompt { message(response) } }
     }
 
     /**
@@ -403,7 +416,7 @@ public class AIAgentLLMWriteSession internal constructor(
      */
     override suspend fun requestLLM(): Message.Response {
         return super.requestLLM().also { response ->
-            updatePrompt { message(response) }
+            appendPrompt { message(response) }
         }
     }
 
@@ -418,7 +431,7 @@ public class AIAgentLLMWriteSession internal constructor(
      */
     override suspend fun requestLLMMultiple(): List<Message.Response> {
         return super.requestLLMMultiple().also { responses ->
-            updatePrompt {
+            appendPrompt {
                 responses.forEach { message(it) }
             }
         }
@@ -436,7 +449,7 @@ public class AIAgentLLMWriteSession internal constructor(
     ): Result<StructuredResponse<T>> {
         return super.requestLLMStructured(config).also {
             it.onSuccess { response ->
-                updatePrompt {
+                appendPrompt {
                     message(response.message)
                 }
             }
@@ -464,7 +477,7 @@ public class AIAgentLLMWriteSession internal constructor(
     ): Result<StructuredResponse<T>> {
         return super.requestLLMStructured(serializer, examples, fixingParser).also {
             it.onSuccess { response ->
-                updatePrompt {
+                appendPrompt {
                     message(response.message)
                 }
             }

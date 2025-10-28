@@ -176,7 +176,7 @@ val nodeBestJoke by parallel<String, String>(
       // Use another LLM to determine the best joke
       llm.writeSession {
          model = OpenAIModels.Chat.GPT4o
-         updatePrompt {
+         appendPrompt {
             system("You are a comedy critic. Select the best joke.")
             user("Here are three jokes: ${jokes.joinToString("\n\n")}")
          }
@@ -242,7 +242,7 @@ val strategy = strategy("best-joke") {
    val nodeOpenAI by node<String, String> { topic ->
       llm.writeSession {
          model = OpenAIModels.Chat.GPT4o
-         updatePrompt {
+         appendPrompt {
             system("You are a comedian. Generate a funny joke about the given topic.")
             user("Tell me a joke about $topic.")
          }
@@ -254,7 +254,7 @@ val strategy = strategy("best-joke") {
    val nodeAnthropicSonnet by node<String, String> { topic ->
       llm.writeSession {
          model = AnthropicModels.Sonnet_3_5
-         updatePrompt {
+         appendPrompt {
             system("You are a comedian. Generate a funny joke about the given topic.")
             user("Tell me a joke about $topic.")
          }
@@ -266,7 +266,7 @@ val strategy = strategy("best-joke") {
    val nodeAnthropicOpus by node<String, String> { topic ->
       llm.writeSession {
          model = AnthropicModels.Opus_3
-         updatePrompt {
+         appendPrompt {
             system("You are a comedian. Generate a funny joke about the given topic.")
             user("Tell me a joke about $topic.")
          }
@@ -283,7 +283,7 @@ val strategy = strategy("best-joke") {
          // Another LLM (e.g., GPT4o) would find the funniest joke:
          llm.writeSession {
             model = OpenAIModels.Chat.GPT4o
-            updatePrompt {
+            appendPrompt {
                prompt("best-joke-selector") {
                   system("You are a comedy critic. Give a critique for the given joke.")
                   user(

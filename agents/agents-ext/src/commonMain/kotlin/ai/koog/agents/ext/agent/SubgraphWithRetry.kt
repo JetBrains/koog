@@ -105,7 +105,7 @@ public inline fun <reified Input : Any, reified Output> AIAgentSubgraphBuilderBa
 
                 if (conditionDescription != null) {
                     llm.writeSession {
-                        updatePrompt {
+                        appendPrompt {
                             user(conditionDescription)
                         }
                     }
@@ -139,7 +139,7 @@ public inline fun <reified Input : Any, reified Output> AIAgentSubgraphBuilderBa
             if (conditionResult is ConditionResult.Reject && conditionResult.feedback != null) {
                 // Update the prompt if feedback is provided
                 storage.getValue(initialContextKey).llm.writeSession {
-                    updatePrompt {
+                    appendPrompt {
                         user(conditionResult.feedback)
                     }
                 }

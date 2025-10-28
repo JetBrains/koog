@@ -36,7 +36,7 @@ public fun chatAgentStrategy(): AIAgentGraphStrategy<String, String> = strategy(
 
     val giveFeedbackToCallTools by node<String, Message.Response> { input ->
         llm.writeSession {
-            updatePrompt {
+            appendPrompt {
                 user(
                     "Don't chat with plain text! Call one of the available tools, instead: ${tools.joinToString(", ") {
                         it.name
@@ -137,7 +137,7 @@ public fun reActStrategy(
     val reasoningPrompt = "Please give your thoughts about the task and plan the next steps."
     val nodeCallLLMReasonInput by node<String, Unit> { stageInput ->
         llm.writeSession {
-            updatePrompt {
+            appendPrompt {
                 user(stageInput)
                 user(reasoningPrompt)
             }
@@ -148,14 +148,14 @@ public fun reActStrategy(
     val nodeCallLLMReason by node<ReceivedToolResult, Unit> { result ->
         val reasoningStep = storage.getValue(reasoningStepKey)
         llm.writeSession {
-            updatePrompt {
+            appendPrompt {
                 tool {
                     result(result)
                 }
             }
 
             if (reasoningStep % reasoningInterval == 0) {
-                updatePrompt {
+                appendPrompt {
                     user(reasoningPrompt)
                 }
                 requestLLMWithoutTools()

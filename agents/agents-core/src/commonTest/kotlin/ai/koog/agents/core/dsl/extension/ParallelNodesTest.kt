@@ -72,7 +72,7 @@ class ParallelNodesTest {
 
             val node2 by node<Unit, String>(NODE_2) {
                 llm.writeSession {
-                    updatePrompt { user(additionalText) }
+                    appendPrompt { user(additionalText) }
                 }
                 storage.set(testKey2, val2)
                 "Result from $NODE_2"
