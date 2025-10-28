@@ -28,10 +28,10 @@ import org.junit.jupiter.api.parallel.ExecutionMode
 import org.junit.jupiter.api.parallel.Isolated
 import kotlin.reflect.typeOf
 import kotlin.test.Test
-import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
@@ -85,16 +85,8 @@ class AIAgentPipelineJvmTest {
         )
 
         // Run prepare features logic
-        AIAgentGraphPipeline(clock = testClock).use { pipeline ->
+        AIAgentGraphPipeline().use { pipeline ->
             pipeline.prepareFeatures()
-
-            val actualFeatures = pipeline.features.toList()
-            val expectedFeatures = listOf(
-                Debugger.key
-            )
-
-            assertEquals(expectedFeatures.size, actualFeatures.size)
-            assertContentEquals(expectedFeatures, actualFeatures)
 
             // Check Debugger feature parameters
             val actualFeature = pipeline.feature(Debugger::class, Debugger)
@@ -117,16 +109,8 @@ class AIAgentPipelineJvmTest {
         System.setProperty(Debugger.KOOG_DEBUGGER_WAIT_CONNECTION_TIMEOUT_MS_VM_OPTION, "$expectedWaitConnectionTimeout")
 
         // Run prepare features logic
-        AIAgentGraphPipeline(clock = testClock).use { pipeline ->
+        AIAgentGraphPipeline().use { pipeline ->
             pipeline.prepareFeatures()
-
-            val actualFeatures = pipeline.features.toList()
-            val expectedFeatures = listOf(
-                Debugger.key
-            )
-
-            assertEquals(expectedFeatures.size, actualFeatures.size)
-            assertContentEquals(expectedFeatures, actualFeatures)
 
             // Check Debugger feature parameters
             val actualFeature = pipeline.feature(Debugger::class, Debugger)
@@ -172,14 +156,6 @@ class AIAgentPipelineJvmTest {
         // Assert pipeline features
         val actualPipeline = assertNotNull(agentPipeline, "Agent pipeline is not set")
 
-        val actualFeatures = actualPipeline.features.toList()
-        val expectedFeatures = listOf(
-            Debugger.key
-        )
-
-        assertEquals(expectedFeatures.size, actualFeatures.size)
-        assertContentEquals(expectedFeatures, actualFeatures)
-
         // Assert Debugger feature parameters
         val actualFeature = actualPipeline.feature(Debugger::class, Debugger)
 
@@ -189,17 +165,18 @@ class AIAgentPipelineJvmTest {
     }
 
     @Test
+    @OptIn(ExperimentalAgentsApi::class)
     fun `test unknown system feature name in config is ignored`() = runTest(timeout = testTimeout) {
         System.setProperty(
-            @OptIn(ExperimentalAgentsApi::class) FeatureSystemVariables.KOOG_FEATURES_VM_OPTION_NAME,
+            FeatureSystemVariables.KOOG_FEATURES_VM_OPTION_NAME,
             "unknown-feature"
         )
 
-        AIAgentGraphPipeline(clock = testClock).use { pipeline ->
+        AIAgentGraphPipeline().use { pipeline ->
             pipeline.prepareFeatures()
 
-            val actualFeatures = pipeline.features.toList()
-            assertEquals(0, actualFeatures.size)
+            val debuggerFeature = pipeline.feature(Debugger::class, Debugger)
+            assertNull(debuggerFeature, "Debugger feature is not null")
         }
     }
 
@@ -216,16 +193,8 @@ class AIAgentPipelineJvmTest {
         System.setProperty(Debugger.KOOG_DEBUGGER_WAIT_CONNECTION_TIMEOUT_MS_VM_OPTION, "1")
 
         // Run prepare features logic
-        AIAgentGraphPipeline(clock = testClock).use { pipeline ->
+        AIAgentGraphPipeline().use { pipeline ->
             pipeline.prepareFeatures()
-
-            val actualFeatures = pipeline.features.toList()
-            val expectedFeatures = listOf(
-                Debugger.key
-            )
-
-            assertEquals(expectedFeatures.size, actualFeatures.size)
-            assertContentEquals(expectedFeatures, actualFeatures)
 
             // Check Debugger feature is installed
             val actualFeature = pipeline.feature(Debugger::class, Debugger)
@@ -246,16 +215,8 @@ class AIAgentPipelineJvmTest {
         System.setProperty(Debugger.KOOG_DEBUGGER_WAIT_CONNECTION_TIMEOUT_MS_VM_OPTION, "1")
 
         // Run prepare features logic
-        AIAgentGraphPipeline(clock = testClock).use { pipeline ->
+        AIAgentGraphPipeline().use { pipeline ->
             pipeline.prepareFeatures()
-
-            val actualFeatures = pipeline.features.toList()
-            val expectedFeatures = listOf(
-                Debugger.key
-            )
-
-            assertEquals(expectedFeatures.size, actualFeatures.size)
-            assertContentEquals(expectedFeatures, actualFeatures)
 
             // Check Debugger feature is installed
             val actualFeature = pipeline.feature(Debugger::class, Debugger)
@@ -335,7 +296,7 @@ class AIAgentPipelineJvmTest {
 /**
  * Closable extension for [AIAgentPipeline] to finalize feature stream providers from tests.
  */
-private suspend fun AIAgentPipeline.use(block: suspend (AIAgentPipeline) -> Unit) {
+private suspend inline fun AIAgentPipeline.use(block: suspend (AIAgentPipeline) -> Unit) {
     try {
         block(this)
     } finally {

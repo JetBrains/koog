@@ -120,12 +120,6 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
     protected val registeredFeatures: MutableMap<AIAgentStorageKey<*>, RegisteredFeature> = mutableMapOf()
 
     /**
-     * A set containing the keys of all registered features.
-     */
-    public val features: Set<AIAgentStorageKey<*>>
-        get() = registeredFeatures.keys
-
-    /**
      * Set of system features that are always defined by the framework.
      */
     @OptIn(ExperimentalAgentsApi::class)
