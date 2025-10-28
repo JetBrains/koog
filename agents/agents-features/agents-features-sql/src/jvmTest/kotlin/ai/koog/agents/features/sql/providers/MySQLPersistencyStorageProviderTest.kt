@@ -16,6 +16,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.TestInstance.Lifecycle
 import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
 import org.testcontainers.containers.MySQLContainer
 import org.testcontainers.utility.DockerImageName
 import kotlin.test.assertEquals
@@ -24,6 +26,7 @@ import kotlin.test.assertNull
 
 @TestInstance(Lifecycle.PER_CLASS)
 @ExtendWith(DockerAvailableCondition::class)
+@Execution(ExecutionMode.SAME_THREAD)
 class MySQLPersistenceStorageProviderTest {
 
     private val agentId = "mysql-agent"
@@ -68,7 +71,7 @@ class MySQLPersistenceStorageProviderTest {
         assertEquals(0, p.getCheckpointCount(agentId))
 
         // save
-        val cp1 = createTestCheckpoint("cp-1")
+        val cp1 = createTestCheckpoint("cp-1", 0L)
         p.saveCheckpoint(agentId, cp1)
 
         // read
@@ -83,7 +86,7 @@ class MySQLPersistenceStorageProviderTest {
         assertEquals(1, p.getCheckpoints(agentId).size)
 
         // insert second
-        val cp2 = createTestCheckpoint("cp-2")
+        val cp2 = createTestCheckpoint("cp-2", cp1.version.plus(1))
         p.saveCheckpoint(agentId, cp2)
         val all = p.getCheckpoints(agentId)
         assertEquals(listOf("cp-1", "cp-2"), all.map { it.checkpointId })
@@ -103,7 +106,7 @@ class MySQLPersistenceStorageProviderTest {
         val p = provider(ttlSeconds = 1)
         p.migrate()
 
-        p.saveCheckpoint(agentId, createTestCheckpoint("will-expire"))
+        p.saveCheckpoint(agentId, createTestCheckpoint("will-expire", 0L))
         assertEquals(1, p.getCheckpointCount(agentId))
 
         // Sleep slightly over 1s to ensure ttl passes
@@ -115,7 +118,7 @@ class MySQLPersistenceStorageProviderTest {
         assertNull(p.getLatestCheckpoint(agentId))
     }
 
-    private fun createTestCheckpoint(id: String): AgentCheckpointData {
+    private fun createTestCheckpoint(id: String, version: Long): AgentCheckpointData {
         return AgentCheckpointData(
             checkpointId = id,
             createdAt = Clock.System.now(),
@@ -125,7 +128,8 @@ class MySQLPersistenceStorageProviderTest {
                 Message.System("You are a test assistant", RequestMetaInfo.create(Clock.System)),
                 Message.User("Hello", RequestMetaInfo.create(Clock.System)),
                 Message.Assistant("Hi there!", ResponseMetaInfo.create(Clock.System))
-            )
+            ),
+            version = version
         )
     }
 }

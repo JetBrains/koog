@@ -20,6 +20,7 @@ kotlin {
         commonTest {
             dependencies {
                 implementation(project(":test-utils"))
+                implementation(libs.kotest.assertions.json)
             }
         }
 

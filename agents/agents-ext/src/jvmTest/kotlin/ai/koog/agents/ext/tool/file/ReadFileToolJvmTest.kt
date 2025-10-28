@@ -1,6 +1,5 @@
 package ai.koog.agents.ext.tool.file
 
-import ai.koog.agents.core.tools.DirectToolCallsEnabler
 import ai.koog.agents.core.tools.ToolException
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.ext.tool.file.render.norm
@@ -21,7 +20,6 @@ import kotlin.test.assertEquals
 class ReadFileToolJvmTest {
 
     private val fs = JVMFileSystemProvider.ReadOnly
-    private val enabler = object : DirectToolCallsEnabler {}
     private val tool = ReadFileTool(fs)
 
     @TempDir
@@ -31,7 +29,7 @@ class ReadFileToolJvmTest {
         tempDir.resolve(name).createFile().apply { writeText(content) }
 
     private suspend fun readFile(path: Path, startLine: Int = 0, endLine: Int = -1): ReadFileTool.Result =
-        tool.execute(ReadFileTool.Args(path.toString(), startLine, endLine), enabler)
+        tool.execute(ReadFileTool.Args(path.toString(), startLine, endLine))
 
     @Test
     fun `Args uses correct defaults`() {

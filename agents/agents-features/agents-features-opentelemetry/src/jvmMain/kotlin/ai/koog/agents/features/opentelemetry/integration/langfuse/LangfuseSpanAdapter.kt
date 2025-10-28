@@ -28,13 +28,18 @@ import java.util.concurrent.atomic.AtomicInteger
  * their data into custom attributes. Additionally, it ensures that the converted events
  * are removed from the span's event list after conversion.
  */
-internal class LangfuseSpanAdapter(private val traceAttributes: List<CustomAttribute>, private val openTelemetryConfig: OpenTelemetryConfig) : SpanAdapter() {
+internal class LangfuseSpanAdapter(
+    private val traceAttributes: List<CustomAttribute>,
+    private val openTelemetryConfig: OpenTelemetryConfig
+) : SpanAdapter() {
 
     private val stepKey = AtomicInteger(0)
 
     override fun onBeforeSpanStarted(span: GenAIAgentSpan) {
         when (span) {
             is InvokeAgentSpan -> {
+                span.addAttribute(CustomAttribute("langfuse.session.id", span.runId))
+
                 traceAttributes.forEach { attribute ->
                     span.addAttribute(attribute)
                 }
@@ -50,7 +55,6 @@ internal class LangfuseSpanAdapter(private val traceAttributes: List<CustomAttri
                         is UserMessageEvent,
                         is AssistantMessageEvent,
                         is ToolMessageEvent -> event.convertToPrompt(span, index)
-
                         is ChoiceEvent -> event.convertToPrompt(span, index)
                     }
                 }

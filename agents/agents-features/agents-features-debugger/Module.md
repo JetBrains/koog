@@ -32,7 +32,7 @@ val agent = createAgent(
 
 #### Custom Configuration
 
-You can customize the Debugger by specifying a port for the debugging server:
+You can customize the Debugger by specifying a port and connection timeout for the debugging server:
 
 ```kotlin
 val agent = createAgent(
@@ -41,6 +41,10 @@ val agent = createAgent(
     install(Debugger) {
         // Set a specific port for the debugging server
         setPort(8080)
+
+        // Set a timeout for waiting for the first connection (optional)
+        // If not set, the server will wait indefinitely or use system variables
+        setConnectionWaitingTimeout(5.seconds)
     }
 }
 ```
@@ -50,7 +54,38 @@ val agent = createAgent(
 The Debugger feature determines the port to use in the following order:
 1. Explicitly set port in the configuration (using `setPort()`)
 2. Environment variable `KOOG_DEBUGGER_PORT`
-3. Default Koog remote server port (50881)
+3. JVM option `-Dkoog.debugger.port=<port>`
+4. Default Koog remote server port (50881)
+
+#### Connection Timeout Configuration Priority
+
+The Debugger feature determines the connection waiting timeout in the following order:
+1. Explicitly set timeout in the configuration (using `setConnectionWaitingTimeout()`)
+2. Environment variable `KOOG_DEBUGGER_WAIT_CONNECTION_MS` (value in milliseconds)
+3. JVM option `-Dkoog.debugger.wait.connection.ms=<milliseconds>`
+4. Default behavior: wait indefinitely for the first connection
+
+#### System Variables Configuration
+
+You can configure the Debugger using system variables:
+
+**Environment Variables:**
+- `KOOG_DEBUGGER_PORT` - Sets the port number for the debugging server
+- `KOOG_DEBUGGER_WAIT_CONNECTION_MS` - Sets the timeout in milliseconds for waiting for the first connection
+
+**JVM Options (for JVM-based platforms):**
+- `-Dkoog.debugger.port=<port>` - Sets the port number for the debugging server
+- `-Dkoog.debugger.wait.connection.ms=<milliseconds>` - Sets the timeout in milliseconds for waiting for the first connection
+
+Example:
+```bash
+# Using environment variables
+export KOOG_DEBUGGER_PORT=8080
+export KOOG_DEBUGGER_WAIT_CONNECTION_MS=5000
+
+# Using JVM options
+java -Dkoog.debugger.port=8080 -Dkoog.debugger.wait.connection.ms=5000 -jar myapp.jar
+```
 
 ### Using in unit tests
 

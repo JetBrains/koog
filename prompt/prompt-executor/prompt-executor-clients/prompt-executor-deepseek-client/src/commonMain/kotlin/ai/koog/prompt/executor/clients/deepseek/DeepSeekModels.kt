@@ -35,6 +35,7 @@ public object DeepSeekModels : LLModelDefinitions {
             LLMCapability.ToolChoice,
             LLMCapability.Schema.JSON.Basic,
             LLMCapability.Schema.JSON.Standard,
+            LLMCapability.MultipleChoices,
         ),
         contextLength = 64_000,
         maxOutputTokens = 8_000
@@ -55,6 +56,7 @@ public object DeepSeekModels : LLModelDefinitions {
             LLMCapability.ToolChoice,
             LLMCapability.Schema.JSON.Basic,
             LLMCapability.Schema.JSON.Standard,
+            LLMCapability.MultipleChoices,
         ),
         contextLength = 64_000,
         maxOutputTokens = 64_000

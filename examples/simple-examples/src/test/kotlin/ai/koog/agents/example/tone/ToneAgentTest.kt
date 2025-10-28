@@ -12,7 +12,7 @@ import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
 import ai.koog.agents.testing.feature.withTesting
 import ai.koog.agents.testing.tools.getMockExecutor
-import ai.koog.agents.testing.tools.mockLLMAnswer
+
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.llm.LLModel
 import io.mockk.mockk

@@ -1,9 +1,14 @@
 package ai.koog.agents.core.agent
 
+import ai.koog.agents.core.dsl.extension.asAssistantMessage
+import ai.koog.agents.core.dsl.extension.containsToolCalls
+import ai.koog.agents.core.dsl.extension.executeMultipleTools
+import ai.koog.agents.core.dsl.extension.extractToolCalls
+import ai.koog.agents.core.dsl.extension.requestLLMMultiple
+import ai.koog.agents.core.dsl.extension.sendMultipleToolResults
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.testing.tools.getMockExecutor
-import ai.koog.agents.testing.tools.mockLLMAnswer
 import ai.koog.prompt.llm.OllamaModels
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
@@ -82,7 +87,7 @@ class FunctionalAIAgentTest {
             promptExecutor = mockLLMApi,
             strategy = functionalStrategy { inputParam ->
                 val resp = llm.writeSession {
-                    updatePrompt { user(inputParam) }
+                    appendPrompt { user(inputParam) }
                     requestLLM()
                 }
                 resp.content

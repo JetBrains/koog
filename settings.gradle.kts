@@ -1,8 +1,11 @@
 rootProject.name = "koog"
 
 pluginManagement {
+    includeBuild("convention-plugin-ai")
     repositories {
+        google()
         gradlePluginPortal()
+        maven(url = "https://packages.jetbrains.team/maven/p/jcs/maven")
     }
 }
 
@@ -42,6 +45,7 @@ include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-anthrop
 include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-bedrock-client")
 include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-deepseek-client")
 include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-google-client")
+include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-mistralai-client")
 include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-ollama-client")
 include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client")
 include(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client-base")
@@ -73,6 +77,12 @@ include(":a2a:a2a-transport:a2a-transport-core-jsonrpc")
 include(":a2a:a2a-transport:a2a-transport-server-jsonrpc-http")
 include(":a2a:a2a-transport:a2a-transport-client-jsonrpc-http")
 include(":a2a:test-tck:a2a-test-server-tck")
+
+include(":http-client:http-client-core")
+include(":http-client:http-client-test")
+include(":http-client:http-client-ktor")
+include(":http-client:http-client-okhttp")
+include(":http-client:http-client-java")
 
 include(":koog-spring-boot-starter")
 

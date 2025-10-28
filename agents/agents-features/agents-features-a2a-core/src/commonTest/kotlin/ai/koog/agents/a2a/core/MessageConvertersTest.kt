@@ -6,8 +6,8 @@ import ai.koog.a2a.model.FileWithBytes
 import ai.koog.a2a.model.FileWithUri
 import ai.koog.a2a.model.Role
 import ai.koog.a2a.model.TextPart
-import ai.koog.prompt.message.Attachment
 import ai.koog.prompt.message.AttachmentContent
+import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
@@ -52,15 +52,16 @@ class MessageConvertersTest {
 
         val actual: Message = a2a.toKoogMessage(clock = fixedClock)
 
-        val expectedContent = "Hello\n" + prettyJson.encodeToString(json)
-        val expectedAttachments = listOf(
-            Attachment.File(
+        val expectedParts = listOf(
+            ContentPart.Text("Hello"),
+            ContentPart.Text(prettyJson.encodeToString(json)),
+            ContentPart.File(
                 format = "",
                 mimeType = "application/octet-stream",
                 fileName = "file.bin",
                 content = AttachmentContent.Binary.Base64(bytesBase64)
             ),
-            Attachment.File(
+            ContentPart.File(
                 format = "",
                 mimeType = "text/plain",
                 fileName = "doc.txt",
@@ -82,9 +83,8 @@ class MessageConvertersTest {
             )
         )
         val expected: Message = Message.User(
-            content = expectedContent,
+            parts = expectedParts,
             metaInfo = RequestMetaInfo(timestamp = fixedInstant, metadata = expectedMetadata),
-            attachments = expectedAttachments
         )
 
         assertEquals(expected, actual)
@@ -117,7 +117,6 @@ class MessageConvertersTest {
         val expected = Message.Assistant(
             content = "Agent says hi",
             metaInfo = ResponseMetaInfo(timestamp = fixedInstant, metadata = expectedMetadata),
-            attachments = emptyList()
         )
 
         assertEquals(expected, actual)
@@ -125,20 +124,21 @@ class MessageConvertersTest {
 
     @Test
     fun testKoogToA2A_User_withPlainTextBinaryAndUrlAttachments() {
-        val plain = Attachment.File(
+        val text = ContentPart.Text("Hi")
+        val plain = ContentPart.File(
             content = AttachmentContent.PlainText("abc"),
             format = "txt",
             mimeType = "text/plain",
             fileName = "note.txt",
         )
         val bytes = byteArrayOf(1, 2, 3)
-        val bin = Attachment.File(
+        val bin = ContentPart.File(
             content = AttachmentContent.Binary.Bytes(bytes),
             format = "bin",
             mimeType = "application/octet-stream",
             fileName = "bytes.bin",
         )
-        val url = Attachment.File(
+        val url = ContentPart.File(
             content = AttachmentContent.URL("https://example.com/a.png"),
             format = "png",
             mimeType = "image/png",
@@ -146,9 +146,8 @@ class MessageConvertersTest {
         )
 
         val koog: Message = Message.User(
-            content = "Hi",
+            parts = listOf(text, plain, bin, url),
             metaInfo = RequestMetaInfo(timestamp = fixedInstant),
-            attachments = listOf(plain, bin, url)
         )
 
         val actual = koog.toA2AMessage(

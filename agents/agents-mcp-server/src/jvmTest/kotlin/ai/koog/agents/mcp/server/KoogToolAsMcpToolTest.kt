@@ -1,6 +1,5 @@
 package ai.koog.agents.mcp.server
 
-import ai.koog.agents.core.tools.DirectToolCallsEnabler
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
@@ -38,7 +37,7 @@ class KoogToolAsMcpToolTest {
 
         val result = withContext(Dispatchers.Default.limitedParallelism(1)) {
             withTimeout(20.seconds) {
-                mcpTool.execute(args, object : DirectToolCallsEnabler {})
+                mcpTool.execute(args)
             }
         }
 
@@ -55,7 +54,7 @@ class KoogToolAsMcpToolTest {
 
         val result = withContext(Dispatchers.Default.limitedParallelism(1)) {
             withTimeout(20.seconds) {
-                mcpTool.execute(args, object : DirectToolCallsEnabler {})
+                mcpTool.execute(args)
             }
         }
 
@@ -73,7 +72,7 @@ class KoogToolAsMcpToolTest {
 
             withContext(Dispatchers.Default.limitedParallelism(1)) {
                 withTimeout(20.seconds) {
-                    mcpTool.execute(args, object : DirectToolCallsEnabler {})
+                    mcpTool.execute(args)
                 }
             }
         }
@@ -85,7 +84,7 @@ class KoogToolAsMcpToolTest {
 
             val result = withContext(Dispatchers.Default.limitedParallelism(1)) {
                 withTimeout(20.seconds) {
-                    mcpTool.execute(args, object : DirectToolCallsEnabler {})
+                    mcpTool.execute(args)
                 }
             }
 
@@ -109,7 +108,7 @@ class KoogToolAsMcpToolTest {
 
                 withContext(Dispatchers.Default.limitedParallelism(1)) {
                     withTimeout(20.seconds) {
-                        mcpTool.execute(args, object : DirectToolCallsEnabler {})
+                        mcpTool.execute(args)
                     }
                 }
 
@@ -126,7 +125,7 @@ class KoogToolAsMcpToolTest {
 
                 val result = withContext(Dispatchers.Default.limitedParallelism(1)) {
                     withTimeout(20.seconds) {
-                        mcpTool.execute(args, object : DirectToolCallsEnabler {})
+                        mcpTool.execute(args)
                     }
                 }
 

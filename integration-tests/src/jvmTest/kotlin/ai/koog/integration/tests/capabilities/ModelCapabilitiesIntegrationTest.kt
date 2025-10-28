@@ -26,8 +26,8 @@ import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.markdown.markdown
-import ai.koog.prompt.message.Attachment
 import ai.koog.prompt.message.AttachmentContent
+import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.ToolChoice
@@ -35,6 +35,8 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.TestInstance
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
@@ -55,6 +57,7 @@ import kotlinx.io.files.Path as KtPath
 private const val EXPECTED_ERROR = "does not support"
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@Execution(ExecutionMode.CONCURRENT)
 class ModelCapabilitiesIntegrationTest {
     private lateinit var openAIClient: OpenAILLMClient
     private lateinit var anthropicClient: AnthropicLLMClient
@@ -159,15 +162,13 @@ class ModelCapabilitiesIntegrationTest {
                         system("You are a helpful assistant that can describe images.")
                         user {
                             markdown { +"Describe the image in 5-10 words." }
-                            attachments {
-                                image(
-                                    Attachment.Image(
-                                        content = AttachmentContent.Binary.Base64(base64),
-                                        format = "png",
-                                        mimeType = "image/png"
-                                    )
+                            image(
+                                ContentPart.Image(
+                                    content = AttachmentContent.Binary.Base64(base64),
+                                    format = "png",
+                                    mimeType = "image/png"
                                 )
-                            }
+                            )
                         }
                     }
                     withRetry {
@@ -185,14 +186,12 @@ class ModelCapabilitiesIntegrationTest {
                         system("You are a helpful assistant that can transcribe audio.")
                         user {
                             markdown { +"Transcribe the attached audio in 5-10 words." }
-                            attachments {
-                                audio(
-                                    Attachment.Audio(
-                                        AttachmentContent.Binary.Base64(base64),
-                                        format = "mp3"
-                                    )
+                            audio(
+                                ContentPart.Audio(
+                                    AttachmentContent.Binary.Base64(base64),
+                                    format = "mp3"
                                 )
-                            }
+                            )
                         }
                     }
                     withRetry {
@@ -209,7 +208,7 @@ class ModelCapabilitiesIntegrationTest {
                         system("You are a helpful assistant that can read attached documents.")
                         user {
                             markdown { +"Summarize the attached text file in 5-10 words." }
-                            attachments { textFile(KtPath(file.pathString), "text/plain") }
+                            textFile(KtPath(file.pathString), "text/plain")
                         }
                     }
                     withRetry {
@@ -255,15 +254,13 @@ class ModelCapabilitiesIntegrationTest {
                         system("You are a helpful assistant that can analyze short videos.")
                         user {
                             markdown { +"Describe in 5-10 words what you can infer from the attached video." }
-                            attachments {
-                                video(
-                                    Attachment.Video(
-                                        content = AttachmentContent.Binary.Base64(base64),
-                                        format = "mp4",
-                                        mimeType = "video/mp4",
-                                    )
+                            video(
+                                ContentPart.Video(
+                                    content = AttachmentContent.Binary.Base64(base64),
+                                    format = "mp4",
+                                    mimeType = "video/mp4",
                                 )
-                            }
+                            )
                         }
                     }
                     withRetry {
@@ -369,7 +366,7 @@ class ModelCapabilitiesIntegrationTest {
                         val ex = assertFails(prompt, model)
                         assertExceptionMessageContains(
                             ex,
-                            "EXPECTED_ERROR chat completions",
+                            "$EXPECTED_ERROR chat completions",
                             "not a chat completion"
                         )
                     }
@@ -402,15 +399,13 @@ class ModelCapabilitiesIntegrationTest {
                         system("You are a helpful assistant that can describe images.")
                         user {
                             markdown { +"Describe the image in 5-10 words." }
-                            attachments {
-                                image(
-                                    Attachment.Image(
-                                        content = AttachmentContent.Binary.Base64(base64),
-                                        format = "png",
-                                        mimeType = "image/png"
-                                    )
+                            image(
+                                ContentPart.Image(
+                                    content = AttachmentContent.Binary.Base64(base64),
+                                    format = "png",
+                                    mimeType = "image/png"
                                 )
-                            }
+                            )
                         }
                     }
                     withRetry {
@@ -433,14 +428,12 @@ class ModelCapabilitiesIntegrationTest {
                         system("You are a helpful assistant that can transcribe audio.")
                         user {
                             markdown { +"Transcribe the attached audio in 5-10 words." }
-                            attachments {
-                                audio(
-                                    Attachment.Audio(
-                                        AttachmentContent.Binary.Base64(base64),
-                                        format = "mp3"
-                                    )
+                            audio(
+                                ContentPart.Audio(
+                                    AttachmentContent.Binary.Base64(base64),
+                                    format = "mp3"
                                 )
-                            }
+                            )
                         }
                     }
                     withRetry {
@@ -462,7 +455,7 @@ class ModelCapabilitiesIntegrationTest {
                         system("You are a helpful assistant that can read attached documents.")
                         user {
                             markdown { +"Summarize the attached text file in 5-10 words." }
-                            attachments { textFile(KtPath(file.pathString), "text/plain") }
+                            textFile(KtPath(file.pathString), "text/plain")
                         }
                     }
                     withRetry {
@@ -507,6 +500,7 @@ class ModelCapabilitiesIntegrationTest {
                         assertExceptionMessageContains(
                             ex,
                             "$EXPECTED_ERROR multiple choices",
+                            "$EXPECTED_ERROR ${LLMCapability.MultipleChoices.id}",
                             "Not implemented for this client"
                         )
                     }
@@ -519,15 +513,13 @@ class ModelCapabilitiesIntegrationTest {
                         system("You are a helpful assistant that can analyze short videos.")
                         user {
                             markdown { +"Describe in 5-10 words what you can infer from the attached video." }
-                            attachments {
-                                video(
-                                    Attachment.Video(
-                                        content = AttachmentContent.Binary.Base64(base64),
-                                        format = "mp4",
-                                        mimeType = "video/mp4",
-                                    )
+                            video(
+                                ContentPart.Video(
+                                    content = AttachmentContent.Binary.Base64(base64),
+                                    format = "mp4",
+                                    mimeType = "video/mp4",
                                 )
-                            }
+                            )
                         }
                     }
                     withRetry {
@@ -607,10 +599,7 @@ class ModelCapabilitiesIntegrationTest {
                         val ex = assertFails(prompt, model)
                         assertExceptionMessageContains(
                             ex,
-                            EXPECTED_ERROR,
-                            "Unsupported OpenAI API endpoint",
-                            "not a chat completion",
-                            "Unsupported"
+                            "$EXPECTED_ERROR ${LLMCapability.OpenAIEndpoint.Completions.id}",
                         )
                     }
                 }
@@ -625,9 +614,7 @@ class ModelCapabilitiesIntegrationTest {
                         val ex = assertFails(prompt, model)
                         assertExceptionMessageContains(
                             ex,
-                            EXPECTED_ERROR,
-                            "Unsupported OpenAI API endpoint",
-                            "Unsupported"
+                            "$EXPECTED_ERROR ${LLMCapability.OpenAIEndpoint.Responses.id}",
                         )
                     }
                 }

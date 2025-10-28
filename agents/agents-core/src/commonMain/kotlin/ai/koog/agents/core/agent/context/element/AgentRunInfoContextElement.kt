@@ -40,9 +40,17 @@ public data class AgentRunInfoContextElement(
  *
  * @return The `AgentRunInfoContextElement` if it exists in the current coroutine context, or `null` if not found.
  */
-public suspend fun CoroutineContext.getAgentRunInfoElementOrThrow(): AgentRunInfoContextElement =
-    currentCoroutineContext()[AgentRunInfoContextElement.Key]
+public suspend fun getAgentRunInfoElementOrThrow(): AgentRunInfoContextElement =
+    getAgentRunInfoElement()
         ?: error(
             "Unable to retrieve AgentRunInfoContextElement from CoroutineContext. " +
                 "Please make sure the AgentRunInfoContextElement is added to the current CoroutineContext."
         )
+
+/**
+ * Retrieves the `AgentRunInfoContextElement` from the current coroutine context, if present.
+ *
+ * @return The `AgentRunInfoContextElement` if it exists in the current coroutine context, or `null` if not found.
+ */
+public suspend fun getAgentRunInfoElement(): AgentRunInfoContextElement? =
+    currentCoroutineContext()[AgentRunInfoContextElement.Key]

@@ -273,12 +273,12 @@ class DefaultMcpToolDescriptorParserTest {
                         listOf(
                             ToolParameterDescriptor(
                                 name = "nestedString",
-                                description = "Object parameter",
+                                description = "Nested string parameter",
                                 type = ToolParameterType.String
                             ),
                             ToolParameterDescriptor(
                                 name = "nestedInteger",
-                                description = "Object parameter",
+                                description = "Nested integer parameter",
                                 type = ToolParameterType.Integer
                             )
                         )
@@ -454,12 +454,12 @@ class DefaultMcpToolDescriptorParserTest {
                         properties = listOf(
                             ToolParameterDescriptor(
                                 name = "name",
-                                description = "Object parameter",
+                                description = "Name property",
                                 type = ToolParameterType.String
                             ),
                             ToolParameterDescriptor(
                                 name = "age",
-                                description = "Object parameter",
+                                description = "Age property",
                                 type = ToolParameterType.Integer
                             )
                         ),
@@ -551,6 +551,214 @@ class DefaultMcpToolDescriptorParserTest {
         assertFailsWith<IllegalArgumentException>("Should fail when parameter type is unsupported") {
             parser.parse(unsupportedTypeToolSdk)
         }
+    }
+
+    @Test
+    fun `test parsing null parameter type`() {
+        // Create an SDK Tool with a null parameter
+        val sdkTool = createSdkTool(
+            name = "test-tool",
+            description = "A test tool with null parameter",
+            properties = buildJsonObject {
+                putJsonObject("nullParam") {
+                    put("type", "null")
+                    put("description", "Null parameter")
+                }
+            },
+            required = emptyList()
+        )
+
+        // Parse the tool
+        val toolDescriptor = parser.parse(sdkTool)
+
+        // Verify the result
+        val expectedToolDescriptor = ToolDescriptor(
+            name = "test-tool",
+            description = "A test tool with null parameter",
+            requiredParameters = emptyList(),
+            optionalParameters = listOf(
+                ToolParameterDescriptor(
+                    name = "nullParam",
+                    description = "Null parameter",
+                    type = ToolParameterType.Null
+                )
+            )
+        )
+        assertEquals(expectedToolDescriptor, toolDescriptor)
+    }
+
+    @Test
+    fun `test parsing simple anyOf parameter type`() {
+        // Create an SDK Tool with a simple anyOf parameter (string or number)
+        val sdkTool = createSdkTool(
+            name = "test-tool",
+            description = "A test tool with anyOf parameter",
+            properties = buildJsonObject {
+                putJsonObject("anyOfParam") {
+                    put("description", "String or number parameter")
+                    putJsonArray("anyOf") {
+                        addJsonObject {
+                            put("type", "string")
+                            put("description", "String option")
+                        }
+                        addJsonObject {
+                            put("type", "number")
+                            put("description", "Number option")
+                        }
+                    }
+                }
+            },
+            required = emptyList()
+        )
+
+        // Parse the tool
+        val toolDescriptor = parser.parse(sdkTool)
+
+        // Verify the result
+        val expectedToolDescriptor = ToolDescriptor(
+            name = "test-tool",
+            description = "A test tool with anyOf parameter",
+            requiredParameters = emptyList(),
+            optionalParameters = listOf(
+                ToolParameterDescriptor(
+                    name = "anyOfParam",
+                    description = "String or number parameter",
+                    type = ToolParameterType.AnyOf(
+                        types = arrayOf(
+                            ToolParameterDescriptor(name = "", description = "String option", type = ToolParameterType.String),
+                            ToolParameterDescriptor(name = "", description = "Number option", type = ToolParameterType.Float)
+                        )
+                    )
+                )
+            )
+        )
+        assertEquals(expectedToolDescriptor, toolDescriptor)
+    }
+
+    @Test
+    fun `test basic tool parsing with anyOf`() {
+        // Create a tool with complex anyOf structure including nested arrays
+        val sdkTool = createSdkTool(
+            name = "test-tool",
+            description = "A test tool",
+            properties = buildJsonObject {
+                putJsonObject("filters") {
+                    put("description", "A list of filters to apply")
+                    put("type", "array")
+                    putJsonObject("items") {
+                        put("type", "object")
+                        putJsonObject("properties") {
+                            putJsonObject("dimension") {
+                                put("type", "string")
+                                put("description", "The dimension to filter on")
+                            }
+                            putJsonObject("operator") {
+                                put("type", "string")
+                                put("description", "The operator to use for the filter. Supported operators: '==', 'IN'")
+                            }
+                            putJsonObject("value") {
+                                put("description", "The value(s) to filter by")
+                                putJsonArray("anyOf") {
+                                    addJsonObject {
+                                        put("type", "boolean")
+                                    }
+                                    addJsonObject {
+                                        put("type", "number")
+                                    }
+                                    addJsonObject {
+                                        put("type", "array")
+                                        putJsonObject("items") {
+                                            putJsonArray("anyOf") {
+                                                addJsonObject {
+                                                    put("type", "string")
+                                                }
+                                                addJsonObject {
+                                                    put("type", "number")
+                                                }
+                                                addJsonObject {
+                                                    put("type", "boolean")
+                                                }
+                                                addJsonObject {
+                                                    put("type", "null")
+                                                }
+                                            }
+                                        }
+                                    }
+                                    addJsonObject {
+                                        put("type", "string")
+                                    }
+                                }
+                            }
+                        }
+                        putJsonArray("required") {
+                            add("dimension")
+                            add("operator")
+                            add("value")
+                        }
+                    }
+                }
+            },
+            required = emptyList()
+        )
+
+        // Parse the tool
+        val toolDescriptor = parser.parse(sdkTool)
+
+        // Verify the result
+        val expectedToolDescriptor = ToolDescriptor(
+            name = "test-tool",
+            description = "A test tool",
+            requiredParameters = emptyList(),
+            optionalParameters = listOf(
+                ToolParameterDescriptor(
+                    name = "filters",
+                    description = "A list of filters to apply",
+                    type = ToolParameterType.List(
+                        ToolParameterType.Object(
+                            properties = listOf(
+                                ToolParameterDescriptor(
+                                    name = "dimension",
+                                    description = "The dimension to filter on",
+                                    type = ToolParameterType.String
+                                ),
+                                ToolParameterDescriptor(
+                                    name = "operator",
+                                    description = "The operator to use for the filter. Supported operators: '==', 'IN'",
+                                    type = ToolParameterType.String
+                                ),
+                                ToolParameterDescriptor(
+                                    name = "value",
+                                    description = "The value(s) to filter by",
+                                    type = ToolParameterType.AnyOf(
+                                        types = listOf(
+                                            ToolParameterDescriptor(name = "", description = "", type = ToolParameterType.Boolean),
+                                            ToolParameterDescriptor(name = "", description = "", type = ToolParameterType.Float),
+                                            ToolParameterDescriptor(
+                                                name = "",
+                                                description = "",
+                                                type = ToolParameterType.List(
+                                                    itemsType = ToolParameterType.AnyOf(
+                                                        types = listOf(
+                                                            ToolParameterDescriptor(name = "", description = "", type = ToolParameterType.String),
+                                                            ToolParameterDescriptor(name = "", description = "", type = ToolParameterType.Float),
+                                                            ToolParameterDescriptor(name = "", description = "", type = ToolParameterType.Boolean),
+                                                            ToolParameterDescriptor(name = "", description = "", type = ToolParameterType.Null)
+                                                        ).toTypedArray()
+                                                    )
+                                                )
+                                            ),
+                                            ToolParameterDescriptor(name = "", description = "", type = ToolParameterType.String),
+                                        ).toTypedArray()
+                                    )
+                                )
+                            ),
+                            requiredProperties = listOf("dimension", "operator", "value")
+                        )
+                    )
+                )
+            )
+        )
+        assertEquals(expectedToolDescriptor, toolDescriptor)
     }
 
     // Helper function to create an SDK Tool for testing

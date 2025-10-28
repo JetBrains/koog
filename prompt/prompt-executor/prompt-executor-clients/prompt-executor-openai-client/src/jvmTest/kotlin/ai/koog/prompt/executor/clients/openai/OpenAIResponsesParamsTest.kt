@@ -2,6 +2,7 @@ package ai.koog.prompt.executor.clients.openai
 
 import ai.koog.prompt.executor.clients.openai.base.models.ReasoningEffort
 import ai.koog.prompt.executor.clients.openai.base.models.ServiceTier
+import ai.koog.prompt.executor.clients.openai.models.OpenAIInclude
 import ai.koog.prompt.executor.clients.openai.models.ReasoningConfig
 import ai.koog.prompt.executor.clients.openai.models.ReasoningSummary
 import ai.koog.prompt.executor.clients.openai.models.Truncation
@@ -71,7 +72,6 @@ class OpenAIResponsesParamsTest {
             numberOfChoices = 2,
             speculation = "spec",
             user = "user-id",
-            includeThoughts = true,
         )
 
         val resp = base.toOpenAIResponsesParams()
@@ -81,7 +81,6 @@ class OpenAIResponsesParamsTest {
         assertEquals(base.numberOfChoices, resp.numberOfChoices)
         assertEquals(base.speculation, resp.speculation)
         assertEquals(base.user, resp.user)
-        assertEquals(base.includeThoughts, resp.includeThoughts)
         assertEquals(base.additionalProperties, resp.additionalProperties)
     }
 
@@ -117,17 +116,11 @@ class OpenAIResponsesParamsTest {
                 include = emptyList()
             )
         }
-        assertThrows<IllegalArgumentException>("Responses: include entries must be non-blank") {
-            OpenAIResponsesParams(
-                include = listOf("")
-            )
-        }
         assertThrows<IllegalArgumentException>("Responses: maxToolCalls must be >= 0") {
             OpenAIResponsesParams(
                 maxToolCalls = -1
             )
         }
-        OpenAIResponsesParams(include = listOf("output_text"), maxToolCalls = 0)
     }
 
     @Test
@@ -140,11 +133,9 @@ class OpenAIResponsesParamsTest {
             schema = LLMParams.Schema.JSON.Basic("test", JsonObject(mapOf())),
             toolChoice = LLMParams.ToolChoice.Required,
             user = "user-id",
-            includeThoughts = true,
-            thinkingBudget = 123,
             additionalProperties = mapOf("foo" to JsonPrimitive("bar")),
             background = true,
-            include = listOf("a", "b", "c"),
+            include = listOf(OpenAIInclude.REASONING_ENCRYPTED_CONTENT, OpenAIInclude.OUTPUT_TEXT_LOGPROBS),
             maxToolCalls = 10,
             parallelToolCalls = true,
             reasoning = ReasoningConfig(effort = ReasoningEffort.HIGH, summary = ReasoningSummary.DETAILED),

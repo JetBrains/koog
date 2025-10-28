@@ -7,7 +7,6 @@ import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreaming
 import ai.koog.agents.testing.tools.MockLLMBuilder
 import ai.koog.agents.testing.tools.getMockExecutor
-import ai.koog.agents.testing.tools.mockLLMAnswer
 import ai.koog.prompt.streaming.collectText
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test

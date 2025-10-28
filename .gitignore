@@ -1,6 +1,6 @@
 .gradle
 **/.kotlin
-/.idea
+.idea
 build
 **/.claude/settings.local.json
 env.properties
@@ -11,4 +11,4 @@ docs/src/main/kotlin/*.kt
 **/.env
 .venv
 .DS_Store
-**/kotlin-js-store
+/.claude/

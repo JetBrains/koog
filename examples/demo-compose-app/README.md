@@ -26,12 +26,12 @@ To run the application on android device/emulator:
 - open project in Android Studio and run imported android run configuration
 
 To build the application bundle:
-- run `./gradlew :app:assembleDebug`
-- find `.apk` file in `app/build/outputs/apk/debug/app-debug.apk`
+- run `./gradlew :androidApp:assembleDebug :androidApp:assembleRelease`
+- find `.apk` file in `androidApp/build/outputs/apk/debug/app-debug.apk`
 
 ### Desktop
-Run the desktop application: `./gradlew :app:run`  
-Run the desktop **hot reload** application: `./gradlew :app:hotRunJvm`
+Run the desktop application: `./gradlew :desktopApp:run`  
+Run the desktop **hot reload** application: `./gradlew :desktopApp:hotRun`
 
 ### iOS
 To run the application on iPhone device/simulator:
@@ -39,11 +39,11 @@ To run the application on iPhone device/simulator:
 - Or use [Kotlin Multiplatform Mobile plugin](https://plugins.jetbrains.com/plugin/14936-kotlin-multiplatform-mobile) for Android Studio
 
 ### Web Distribution
-Build web distribution: `./gradlew :app:composeCompatibilityBrowserDistribution`  
-Deploy a dir `app/build/dist/composeWebCompatibility/productionExecutable` to a web server
+Build web distribution: `./gradlew :webApp:composeCompatibilityBrowserDistribution`  
+Deploy a dir `webApp/build/dist/composeWebCompatibility/productionExecutable` to a web server
 
 ### JS Browser
-Run the browser application: `./gradlew :app:jsBrowserDevelopmentRun --continue`
+Run the browser application: `./gradlew :webApp:jsBrowserDevelopmentRun --continue`
 
 ### Wasm Browser
-Run the browser application: `./gradlew :app:wasmJsBrowserDevelopmentRun --continue`
+Run the browser application: `./gradlew :webApp:wasmJsBrowserDevelopmentRun --continue`

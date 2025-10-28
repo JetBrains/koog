@@ -14,7 +14,7 @@ fun AIAgentSubgraphBuilderBase<*, *>.simpleNode(
     output: String,
 ): AIAgentNodeDelegate<String, String> = node(name) {
     llm.writeSession {
-        updatePrompt { user { text(output) } }
+        appendPrompt { user { text(output) } }
     }
     return@node it + "\n" + output
 }
@@ -23,7 +23,7 @@ fun AIAgentSubgraphBuilderBase<*, *>.inputLogNode(
     name: String? = null,
 ): AIAgentNodeDelegate<String, String> = node(name) {
     llm.writeSession {
-        updatePrompt { user { text(it) } }
+        appendPrompt { user { text(it) } }
     }
     return@node it
 }
@@ -132,9 +132,9 @@ private fun AIAgentSubgraphBuilderBase<*, *>.createCheckpointNode(name: String? 
     node<String, String>(name) {
         val input = it
         withPersistence { ctx ->
-            createCheckpoint(ctx, name!!, input, typeOf<String>(), checkpointId)
+            createCheckpoint(ctx, name!!, input, typeOf<String>(), 0L, checkpointId)
             llm.writeSession {
-                updatePrompt {
+                appendPrompt {
                     user {
                         text("Checkpoint created with ID: $checkpointId")
                     }
@@ -152,7 +152,7 @@ private fun AIAgentSubgraphBuilderBase<*, *>.nodeRollbackToCheckpoint(
     node<String, String>(name) {
         if (teleportState.teleported) {
             llm.writeSession {
-                updatePrompt { user { text("Skipped rollback because it was already performed") } }
+                appendPrompt { user { text("Skipped rollback because it was already performed") } }
             }
             return@node "Skipping rollback"
         }
@@ -161,7 +161,7 @@ private fun AIAgentSubgraphBuilderBase<*, *>.nodeRollbackToCheckpoint(
             val checkpoint = rollbackToCheckpoint(checkpointId, it)!!
             teleportState.teleported = true
             llm.writeSession {
-                updatePrompt { user { text("Rolling back to node ${checkpoint.nodeId}") } }
+                appendPrompt { user { text("Rolling back to node ${checkpoint.nodeId}") } }
             }
         }
         return@node "$it\nrolled back"
@@ -180,7 +180,7 @@ private fun AIAgentSubgraphBuilderBase<*, *>.nodeCreateCheckpoint(
             currentNodeId ?: error("currentNodeId not set"),
             input,
             typeOf<String>(),
-            "snapshot-id"
+            0L
         )
 
         saveCheckpoint(ctx.agentId, checkpoint ?: error("Checkpoint creation failed"))
@@ -287,27 +287,9 @@ internal fun loggingGraphStrategy(collector: TestAgentLogsCollector) = strategy(
     edge(node2 forwardTo nodeFinish)
 }
 
-internal fun loggingGraphWithHistoryCollectionStrategy(collector: TestAgentLogsCollector) = strategy("logging-test") {
-    val node1 by loggingNode(
-        "Node1",
-        message = "First Step",
-        collector = collector
-    )
-
-    val node2 by loggingNode(
-        "Node2",
-        message = "Second Step",
-        collector = collector
-    )
-    val historyNode by collectHistoryNode("History Node")
-
-    edge(nodeStart forwardTo node1)
-    edge(node1 forwardTo node2)
-    edge(node2 forwardTo historyNode)
-    edge(historyNode forwardTo nodeFinish)
-}
-
 internal fun loggingGraphForRunFromSecondTry(collector: TestAgentLogsCollector) = strategy("logging-test") {
+    val teleportState = TeleportState()
+
     val node1 by loggingNode(
         "Node1",
         message = "First Step",
@@ -322,8 +304,8 @@ internal fun loggingGraphForRunFromSecondTry(collector: TestAgentLogsCollector) 
 
     val nodeForSecondTry by nodeForSecondTry(
         "NodeForSecondTry",
+        teleportState = teleportState,
         collector = collector,
-        teleportState = TeleportState(),
     )
 
     edge(nodeStart forwardTo node1)

@@ -1,15 +1,13 @@
 package ai.koog.agents.core.agent.context
 
-import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
-import ai.koog.agents.core.feature.AIAgentFeature
-import ai.koog.agents.core.feature.AIAgentGraphPipeline
-import ai.koog.agents.core.feature.AIAgentPipeline
+import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
+import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.utils.RWLock
 import ai.koog.prompt.message.Message
@@ -31,23 +29,12 @@ import kotlin.reflect.KType
  * and handling complex dependencies between graph nodes.
  */
 public interface AIAgentGraphContextBase : AIAgentContext {
-    /**
-     * Represents the execution pipeline associated with the AI agent operating
-     * in a graph-based context.
-     *
-     * This pipeline defines the sequence of steps, transformations, or processes
-     * that the agent follows to perform its tasks. It enables structured execution
-     * by managing dependencies, node traversal, and other graph-specific operations
-     * essential for the agent's workflow.
-     */
-    public val pipeline: AIAgentGraphPipeline
+    override val pipeline: AIAgentGraphPipeline
 
     /**
      * [KType] representing the type of the [agentInput]
      */
     public val agentInputType: KType
-
-    override val agent: GraphAIAgent<*, *>
 
     /**
      * Creates a copy of the current [AIAgentGraphContext], allowing for selective overriding of its properties.
@@ -63,6 +50,7 @@ public interface AIAgentGraphContextBase : AIAgentContext {
      */
     public fun copy(
         environment: AIAgentEnvironment = this.environment,
+        agentId: String = this.agentId,
         agentInput: Any? = this.agentInput,
         agentInputType: KType = this.agentInputType,
         config: AIAgentConfig = this.config,
@@ -75,6 +63,7 @@ public interface AIAgentGraphContextBase : AIAgentContext {
     ): AIAgentGraphContextBase {
         val clone = AIAgentGraphContext(
             environment = environment,
+            agentId = agentId,
             agentInput = agentInput,
             agentInputType = agentInputType,
             config = config,
@@ -84,7 +73,6 @@ public interface AIAgentGraphContextBase : AIAgentContext {
             runId = runId,
             strategyName = strategyName,
             pipeline = pipeline,
-            agent = this.agent,
             parentContext = this
         )
 
@@ -128,6 +116,7 @@ public interface AIAgentGraphContextBase : AIAgentContext {
 @OptIn(InternalAgentsApi::class)
 public class AIAgentGraphContext(
     override val environment: AIAgentEnvironment,
+    override val agentId: String,
     override val agentInputType: KType,
     override val agentInput: Any?,
     override val config: AIAgentConfig,
@@ -137,9 +126,18 @@ public class AIAgentGraphContext(
     override val runId: String,
     override val strategyName: String,
     override val pipeline: AIAgentGraphPipeline,
-    override val agent: GraphAIAgent<*, *>,
     override val parentContext: AIAgentGraphContextBase? = null
 ) : AIAgentGraphContextBase {
+    private val mutableAIAgentContext = MutableAIAgentContext(llm, stateManager, storage)
+
+    override val llm: AIAgentLLMContext
+        get() = mutableAIAgentContext.llm
+
+    override val storage: AIAgentStorage
+        get() = mutableAIAgentContext.storage
+
+    override val stateManager: AIAgentStateManager
+        get() = mutableAIAgentContext.stateManager
 
     /**
      * Mutable wrapper for AI agent context properties.
@@ -162,7 +160,7 @@ public class AIAgentGraphContext(
         }
 
         /**
-         * Replaces the current context with the provided context.
+         * Replaces the current contxt with the provided context.
          * @param llm The LLM context to replace the current context with.
          * @param stateManager The state manager to replace the current context with.
          * @param storage The storage to replace the current context with.
@@ -175,17 +173,6 @@ public class AIAgentGraphContext(
             }
         }
     }
-
-    private val mutableAIAgentContext = MutableAIAgentContext(llm, stateManager, storage)
-
-    override val llm: AIAgentLLMContext
-        get() = mutableAIAgentContext.llm
-
-    override val storage: AIAgentStorage
-        get() = mutableAIAgentContext.storage
-
-    override val stateManager: AIAgentStateManager
-        get() = mutableAIAgentContext.stateManager
 
     private val storeMap: MutableMap<AIAgentStorageKey<*>, Any> = mutableMapOf()
 
@@ -201,15 +188,6 @@ public class AIAgentGraphContext(
     override fun remove(key: AIAgentStorageKey<*>): Boolean {
         return storeMap.remove(key) != null
     }
-
-    /**
-     * Retrieves an instance of the specified feature from the current context.
-     *
-     * @param feature The feature representation, including its key and configuration details,
-     *                for identifying and accessing the associated implementation.
-     * @return The feature implementation of the specified type if available, or null if it is not present.
-     */
-    override fun <Feature : Any> feature(feature: AIAgentFeature<*, Feature>): Feature? = feature(feature.key)
 
     override suspend fun getHistory(): List<Message> {
         return llm.readSession {

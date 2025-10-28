@@ -26,7 +26,6 @@ import ai.koog.prompt.structure.StructuredOutputConfig
 import ai.koog.prompt.structure.json.JsonStructuredData
 import ai.koog.prompt.structure.json.generator.BasicJsonSchemaGenerator
 import ai.koog.prompt.text.text
-import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -123,7 +122,7 @@ private val json = Json {
     prettyPrint = true
 }
 
-fun main(): Unit = runBlocking {
+suspend fun main() {
     val exampleForecasts = listOf(
         SimpleWeatherForecast(
             temperature = 18,
@@ -165,9 +164,9 @@ fun main(): Unit = runBlocking {
         )
     )
     /*
-     This structure has a generic schema that is suitable for manual structured output mode.
-     But to use native structured output support in different LLM providers you might need to use custom JSON schema generators
-     that would produce the schema these providers expect.
+ This structure has a generic schema that is suitable for manual structured output mode.
+ But to use native structured output support in different LLM providers you might need to use custom JSON schema generators
+ that would produce the schema these providers expect.
      */
     val genericWeatherStructure = JsonStructuredData.createJsonStructure<SimpleWeatherForecast>(
         // Some models might not work well with json schema, so you may try simple, but it has more limitations (no polymorphism!)
@@ -176,8 +175,8 @@ fun main(): Unit = runBlocking {
     )
 
     /*
-     These are specific structure definitions with schemas in format that particular LLM providers understand in their native
-     structured output.
+ These are specific structure definitions with schemas in format that particular LLM providers understand in their native
+ structured output.
      */
 
     val openAiWeatherStructure = JsonStructuredData.createJsonStructure<SimpleWeatherForecast>(
@@ -190,40 +189,41 @@ fun main(): Unit = runBlocking {
         examples = exampleForecasts,
     )
 
-    val agentStrategy = strategy<SimpleWeatherForecastRequest, SimpleWeatherForecast>("advanced-simple-weather-forecast") {
-        val prepareRequest by node<SimpleWeatherForecastRequest, String> { request ->
-            text {
-                +"Requesting forecast for"
-                +"City: ${request.city}"
-                +"Country: ${request.country}"
+    val agentStrategy =
+        strategy<SimpleWeatherForecastRequest, SimpleWeatherForecast>("advanced-simple-weather-forecast") {
+            val prepareRequest by node<SimpleWeatherForecastRequest, String> { request ->
+                text {
+                    +"Requesting forecast for"
+                    +"City: ${request.city}"
+                    +"Country: ${request.country}"
+                }
             }
-        }
 
-        @Suppress("DuplicatedCode")
-        val getStructuredForecast by nodeLLMRequestStructured(
-            config = StructuredOutputConfig(
-                byProvider = mapOf(
-                    // Native modes leveraging native structured output support in models, with custom definitions for LLM providers that might have different format.
-                    LLMProvider.OpenAI to StructuredOutput.Native(openAiWeatherStructure),
-                    LLMProvider.Google to StructuredOutput.Native(googleWeatherStructure),
-                    // Anthropic does not support native structured output yet.
-                    LLMProvider.Anthropic to StructuredOutput.Manual(genericWeatherStructure),
-                ),
+            @Suppress("DuplicatedCode")
+            val getStructuredForecast by nodeLLMRequestStructured(
+                config = StructuredOutputConfig(
+                    byProvider = mapOf(
+                        // Native modes leveraging native structured output support in models, with custom definitions for LLM providers that might have different format.
+                        LLMProvider.OpenAI to StructuredOutput.Native(openAiWeatherStructure),
+                        LLMProvider.Google to StructuredOutput.Native(googleWeatherStructure),
+                        // Anthropic does not support native structured output yet.
+                        LLMProvider.Anthropic to StructuredOutput.Manual(genericWeatherStructure),
+                    ),
 
-                // Fallback manual structured output mode, via explicit prompting with additional message, not native model support
-                default = StructuredOutput.Manual(genericWeatherStructure),
+                    // Fallback manual structured output mode, via explicit prompting with additional message, not native model support
+                    default = StructuredOutput.Manual(genericWeatherStructure),
 
-                // Helper parser to attempt a fix if a malformed output is produced.
-                fixingParser = StructureFixingParser(
-                    fixingModel = AnthropicModels.Haiku_3_5,
-                    retries = 2,
-                ),
+                    // Helper parser to attempt a fix if a malformed output is produced.
+                    fixingParser = StructureFixingParser(
+                        fixingModel = AnthropicModels.Haiku_3_5,
+                        retries = 2,
+                    ),
+                )
             )
-        )
 
-        nodeStart then prepareRequest then getStructuredForecast
-        edge(getStructuredForecast forwardTo nodeFinish transformed { it.getOrThrow().structure })
-    }
+            nodeStart then prepareRequest then getStructuredForecast
+            edge(getStructuredForecast forwardTo nodeFinish transformed { it.getOrThrow().structure })
+        }
 
     val agentConfig = AIAgentConfig(
         prompt = prompt("weather-forecast") {
@@ -238,30 +238,34 @@ fun main(): Unit = runBlocking {
         maxAgentIterations = 5
     )
 
-    val agent = AIAgent<SimpleWeatherForecastRequest, SimpleWeatherForecast>(
-        promptExecutor = MultiLLMPromptExecutor(
-            LLMProvider.OpenAI to OpenAILLMClient(ApiKeyService.openAIApiKey),
-            LLMProvider.Anthropic to AnthropicLLMClient(ApiKeyService.anthropicApiKey),
-            LLMProvider.Google to GoogleLLMClient(ApiKeyService.googleApiKey),
-        ),
-        strategy = agentStrategy, // no tools needed for this example
-        agentConfig = agentConfig
-    ) {
-        handleEvents {
-            onAgentExecutionFailed { ctx ->
-                println("An error occurred: ${ctx.throwable.message}\n${ctx.throwable.stackTraceToString()}")
-            }
-        }
-    }
-
-    println(
-        """
-        === Simple Weather Forecast Example ===
-        This example demonstrates how to use structured output with simple schema support
-        to get properly structured output from the LLM.
-        """.trimIndent()
+    val promptExecutor = MultiLLMPromptExecutor(
+        LLMProvider.OpenAI to OpenAILLMClient(ApiKeyService.openAIApiKey),
+        LLMProvider.Anthropic to AnthropicLLMClient(ApiKeyService.anthropicApiKey),
+        LLMProvider.Google to GoogleLLMClient(ApiKeyService.googleApiKey),
     )
 
-    val result: SimpleWeatherForecast = agent.run(SimpleWeatherForecastRequest(city = "New York", country = "USA"))
-    println("Agent run result: $result")
+    promptExecutor.use { executor ->
+        val agent = AIAgent<SimpleWeatherForecastRequest, SimpleWeatherForecast>(
+            promptExecutor = executor,
+            strategy = agentStrategy, // no tools needed for this example
+            agentConfig = agentConfig
+        ) {
+            handleEvents {
+                onAgentExecutionFailed { ctx ->
+                    println("An error occurred: ${ctx.throwable.message}\n${ctx.throwable.stackTraceToString()}")
+                }
+            }
+        }
+
+        println(
+            """
+            === Simple Weather Forecast Example ===
+            This example demonstrates how to use structured output with simple schema support
+            to get properly structured output from the LLM.
+            """.trimIndent()
+        )
+
+        val result: SimpleWeatherForecast = agent.run(SimpleWeatherForecastRequest(city = "New York", country = "USA"))
+        println("Agent run result: $result")
+    }
 }

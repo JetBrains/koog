@@ -324,8 +324,8 @@ API key is required but not provided
 
 ## Next Steps
 
-- Learn about [Single Run Agents](single-run-agents.md) to build basic AI workflows
-- Explore [Complex Workflow Agents](complex-workflow-agents.md) for advanced use cases
-- See [Tools Overview](tools-overview.md) to extend your agents' capabilities
-- Check out [Examples](examples.md) for real-world implementations
-- Read [Key Concepts](key-concepts.md) to understand the framework better
+- Learn about the [basic agents](basic-agents.md) to build minimal AI workflows
+- Explore [complex workflow agents](complex-workflow-agents.md) for advanced use cases
+- See the [tools overview](tools-overview.md) to extend your agents' capabilities
+- Check out [examples](examples.md) for real-world implementations
+- Read the [glossary](glossary.md) to understand the framework better

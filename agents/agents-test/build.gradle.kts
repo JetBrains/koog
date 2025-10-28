@@ -30,15 +30,13 @@ kotlin {
 
         commonTest {
             dependencies {
-                implementation(libs.kotlinx.coroutines.test)
+                implementation(project(":test-utils"))
             }
         }
 
         jvmTest {
             dependencies {
                 implementation(project(":agents:agents-features:agents-features-event-handler"))
-                implementation(kotlin("test-junit5"))
-                implementation(libs.junit.jupiter.params)
                 implementation(libs.ktor.client.cio)
             }
         }

@@ -10,7 +10,6 @@ import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
-import ai.koog.agents.testing.tools.mockLLMAnswer
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.llm.OllamaModels
 import io.ktor.util.reflect.instanceOf
@@ -73,7 +72,7 @@ class ParallelNodesTest {
 
             val node2 by node<Unit, String>(NODE_2) {
                 llm.writeSession {
-                    updatePrompt { user(additionalText) }
+                    appendPrompt { user(additionalText) }
                 }
                 storage.set(testKey2, val2)
                 "Result from $NODE_2"

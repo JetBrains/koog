@@ -17,19 +17,16 @@ import ai.koog.agents.core.dsl.extension.setToolChoiceRequired
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.environment.executeTool
 import ai.koog.agents.core.environment.toSafeResult
-import ai.koog.agents.core.tools.DirectToolCallsEnabler
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.core.tools.asToolDescriptor
-import ai.koog.agents.core.tools.asToolDescriptorDeserializer
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
 
 /**
@@ -396,20 +393,16 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
     val callToolHacked by node<Message.Tool.Call, ReceivedToolResult> { toolCall ->
         if (toolCall.tool == finishTool.name) {
             // Execute Finish tool directly and get a result
-            val toolArgs = Json.decodeFromString(
-                deserializer = serializer<Output>().asToolDescriptorDeserializer(),
-                string = toolCall.content
-            )
+            val toolArgs = finishTool.decodeArgs(toolCall.contentJson)
 
             val toolResult = finishTool.execute(
-                args = toolArgs,
-                enabler = object : DirectToolCallsEnabler {}
+                args = toolArgs
             )
 
             // Append a final tool call result to the prompt for further LLM calls
             // to see it (otherwise they would fail)
             llm.writeSession {
-                updatePrompt {
+                appendPrompt {
                     tool {
                         result(toolCall.id, toolCall.tool, toolCall.content)
                     }
@@ -451,7 +444,7 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
 
         llm.writeSession {
             // append a new message to the history with feedback:
-            updatePrompt {
+            appendPrompt {
                 user {
                     markdown {
                         h1("DO NOT CHAT WITH ME DIRECTLY! CALL TOOLS, INSTEAD.")

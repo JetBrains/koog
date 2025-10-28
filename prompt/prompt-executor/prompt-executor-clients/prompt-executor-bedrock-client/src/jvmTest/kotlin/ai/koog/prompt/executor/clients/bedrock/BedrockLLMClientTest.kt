@@ -36,6 +36,7 @@ import aws.sdk.kotlin.services.bedrockruntime.model.ListAsyncInvokesRequest
 import aws.sdk.kotlin.services.bedrockruntime.model.ListAsyncInvokesResponse
 import aws.sdk.kotlin.services.bedrockruntime.model.StartAsyncInvokeRequest
 import aws.sdk.kotlin.services.bedrockruntime.model.StartAsyncInvokeResponse
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
 import kotlin.test.Test
@@ -50,7 +51,7 @@ class BedrockLLMClientTest {
     @Test
     fun `can create BedrockLLMClient`() {
         val client = BedrockLLMClient(
-            credentialsProvider = StaticCredentialsProvider {
+            identityProvider = StaticCredentialsProvider {
                 accessKeyId = "test-key"
                 secretAccessKey = "test-secret"
             },
@@ -58,6 +59,16 @@ class BedrockLLMClientTest {
             clock = Clock.System
         )
 
+        assertNotNull(client)
+    }
+
+    @Test
+    fun `can create BedrockLLMClient with API key`() {
+        val client = BedrockLLMClient(
+            identityProvider = StaticBearerTokenProvider(token = "test-token"),
+            settings = BedrockClientSettings(region = BedrockRegions.US_EAST_1.regionCode),
+            clock = Clock.System
+        )
         assertNotNull(client)
     }
 
@@ -83,6 +94,31 @@ class BedrockLLMClientTest {
     }
 
     @Test
+    fun `can apply inference profile prefix to embedding model with default null prefix`() {
+        val originalModel = BedrockModels.Embeddings.CohereEmbedEnglishV3
+        val euModel = originalModel.withInferenceProfile(BedrockInferencePrefixes.EU.prefix)
+        val apModel = originalModel.withInferenceProfile(BedrockInferencePrefixes.AP.prefix)
+
+        // Default should not have any prefix
+        assertFalse(originalModel.id.contains(".cohere.embed-english-v3"))
+        assertFalse(originalModel.id.startsWith(BedrockInferencePrefixes.EU.prefix + "."))
+        assertFalse(originalModel.id.startsWith(BedrockInferencePrefixes.AP.prefix + "."))
+
+        // Overridden should have explicit prefix
+        assertTrue(euModel.id.startsWith(BedrockInferencePrefixes.EU.prefix + "."))
+        assertTrue(apModel.id.startsWith(BedrockInferencePrefixes.AP.prefix + "."))
+
+        // Make sure model ids are as expected
+        assertEquals("${BedrockInferencePrefixes.EU.prefix}.cohere.embed-english-v3", euModel.id)
+        assertEquals("${BedrockInferencePrefixes.AP.prefix}.cohere.embed-english-v3", apModel.id)
+
+        // Capabilities and other properties should remain unchanged
+        assertEquals(originalModel.provider, euModel.provider)
+        assertEquals(originalModel.capabilities, euModel.capabilities)
+        assertEquals(originalModel.contextLength, euModel.contextLength)
+    }
+
+    @Test
     fun `withInferencePrefix throws exception for non-Bedrock models`() {
         val nonBedrockModel = LLModel(
             provider = LLMProvider.Anthropic,
@@ -101,111 +137,6 @@ class BedrockLLMClientTest {
     }
 
     @Test
-    fun `verify all BedrockModels are properly configured`() {
-        // Test Claude 3 models with full capabilities
-        val claude3Models = listOf(
-            BedrockModels.AnthropicClaude3Opus,
-            BedrockModels.AnthropicClaude3Sonnet,
-            BedrockModels.AnthropicClaude3Haiku
-        )
-
-        claude3Models.forEach { model ->
-            assertTrue(model.provider is LLMProvider.Bedrock)
-            assertTrue(model.capabilities.contains(LLMCapability.Completion))
-            assertTrue(model.capabilities.contains(LLMCapability.Temperature))
-            assertTrue(model.capabilities.contains(LLMCapability.Tools))
-            assertTrue(model.capabilities.contains(LLMCapability.ToolChoice))
-            assertTrue(model.capabilities.contains(LLMCapability.Vision.Image))
-        }
-
-        // Test Claude 3.5 models with full capabilities
-        val claude35Models = listOf(
-            BedrockModels.AnthropicClaude35SonnetV2,
-            BedrockModels.AnthropicClaude35Haiku
-        )
-
-        claude35Models.forEach { model ->
-            assertTrue(model.provider is LLMProvider.Bedrock)
-            assertTrue(model.capabilities.contains(LLMCapability.Completion))
-            assertTrue(model.capabilities.contains(LLMCapability.Temperature))
-            assertTrue(model.capabilities.contains(LLMCapability.Tools))
-            assertTrue(model.capabilities.contains(LLMCapability.ToolChoice))
-            assertTrue(model.capabilities.contains(LLMCapability.Vision.Image))
-        }
-
-        // Test Claude 4 models with full capabilities
-        val claude4Models = listOf(
-            BedrockModels.AnthropicClaude4Opus,
-            BedrockModels.AnthropicClaude41Opus,
-            BedrockModels.AnthropicClaude4Sonnet,
-            BedrockModels.AnthropicClaude4_5Sonnet,
-        )
-
-        claude4Models.forEach { model ->
-            assertTrue(model.provider is LLMProvider.Bedrock)
-            assertTrue(model.capabilities.contains(LLMCapability.Completion))
-            assertTrue(model.capabilities.contains(LLMCapability.Temperature))
-            assertTrue(model.capabilities.contains(LLMCapability.Tools))
-            assertTrue(model.capabilities.contains(LLMCapability.ToolChoice))
-            assertTrue(model.capabilities.contains(LLMCapability.Vision.Image))
-        }
-
-        // Test older Claude models with standard capabilities
-        val olderClaudeModels = listOf(
-            BedrockModels.AnthropicClaude21,
-            BedrockModels.AnthropicClaudeInstant
-        )
-
-        olderClaudeModels.forEach { model ->
-            assertTrue(model.provider is LLMProvider.Bedrock)
-            assertTrue(model.id.contains("anthropic.claude"))
-            assertTrue(model.capabilities.contains(LLMCapability.Completion))
-            assertTrue(model.capabilities.contains(LLMCapability.Temperature))
-        }
-
-        // Test Amazon Nova models
-        val novaModels = listOf(
-            BedrockModels.AmazonNovaMicro,
-            BedrockModels.AmazonNovaLite,
-            BedrockModels.AmazonNovaPro,
-            BedrockModels.AmazonNovaPremier
-        )
-
-        novaModels.forEach { model ->
-            assertTrue(model.provider is LLMProvider.Bedrock)
-            assertTrue(model.id.contains("amazon.nova"))
-            assertTrue(model.capabilities.contains(LLMCapability.Completion))
-            assertTrue(model.capabilities.contains(LLMCapability.Temperature))
-        }
-
-        // Test AI21 models
-        val ai21Models = listOf(
-            BedrockModels.AI21JambaLarge,
-            BedrockModels.AI21JambaMini
-        )
-
-        ai21Models.forEach { model ->
-            assertTrue(model.provider is LLMProvider.Bedrock)
-            assertTrue(model.id.contains("ai21.jamba"))
-            assertTrue(model.capabilities.contains(LLMCapability.Completion))
-            assertTrue(model.capabilities.contains(LLMCapability.Temperature))
-        }
-
-        // Test Meta models
-        val metaModels = listOf(
-            BedrockModels.MetaLlama3_0_8BInstruct,
-            BedrockModels.MetaLlama3_0_70BInstruct
-        )
-
-        metaModels.forEach { model ->
-            assertTrue(model.provider is LLMProvider.Bedrock)
-            assertTrue(model.id.contains("meta.llama"))
-            assertTrue(model.capabilities.contains(LLMCapability.Completion))
-            assertTrue(model.capabilities.contains(LLMCapability.Temperature))
-        }
-    }
-
-    @Test
     fun `client configuration options work correctly`() {
         val customSettings = BedrockClientSettings(
             region = BedrockRegions.EU_WEST_1.regionCode,
@@ -220,7 +151,7 @@ class BedrockLLMClientTest {
         )
 
         val client = BedrockLLMClient(
-            credentialsProvider = StaticCredentialsProvider {
+            identityProvider = StaticCredentialsProvider {
                 accessKeyId = "test-key"
                 secretAccessKey = "test-secret"
             },
@@ -233,36 +164,6 @@ class BedrockLLMClientTest {
         assertEquals("https://custom.endpoint.com", customSettings.endpointUrl)
         assertEquals(5, customSettings.maxRetries)
         assertEquals(true, customSettings.enableLogging)
-    }
-
-    @Test
-    fun `model IDs follow expected patterns`() {
-        // Verify Anthropic model IDs
-        assertTrue(BedrockModels.AnthropicClaude4Opus.id.contains("anthropic.claude-opus-4-20250514-v1:0"))
-        assertTrue(BedrockModels.AnthropicClaude41Opus.id.contains("anthropic.claude-opus-4-1-20250805-v1:0"))
-        assertTrue(BedrockModels.AnthropicClaude4Sonnet.id.contains("anthropic.claude-sonnet-4-20250514-v1:0"))
-        assertTrue(BedrockModels.AnthropicClaude4_5Sonnet.id.contains("anthropic.claude-sonnet-4-5-20250929-v1:0"))
-        assertTrue(BedrockModels.AnthropicClaude35SonnetV2.id.contains("anthropic.claude-3-5-sonnet-20241022-v2:0"))
-        assertTrue(BedrockModels.AnthropicClaude35Haiku.id.contains("anthropic.claude-3-5-haiku-20241022-v1:0"))
-        assertTrue(BedrockModels.AnthropicClaude3Opus.id.contains("anthropic.claude-3-opus"))
-        assertTrue(BedrockModels.AnthropicClaude3Sonnet.id.contains("anthropic.claude-3-sonnet"))
-        assertTrue(BedrockModels.AnthropicClaude3Haiku.id.contains("anthropic.claude-3-haiku"))
-        assertTrue(BedrockModels.AnthropicClaude21.id.contains("anthropic.claude-v2:1"))
-        assertTrue(BedrockModels.AnthropicClaudeInstant.id.contains("anthropic.claude-instant-v1"))
-
-        // Verify Amazon Nova model IDs
-        assertTrue(BedrockModels.AmazonNovaMicro.id.contains("amazon.nova"))
-        assertTrue(BedrockModels.AmazonNovaLite.id.contains("amazon.nova"))
-        assertTrue(BedrockModels.AmazonNovaPro.id.contains("amazon.nova"))
-        assertTrue(BedrockModels.AmazonNovaPremier.id.contains("amazon.nova"))
-
-        // Verify AI21 model IDs
-        assertTrue(BedrockModels.AI21JambaLarge.id.contains("ai21.jamba-1-5-large-v1:0"))
-        assertTrue(BedrockModels.AI21JambaMini.id.contains("ai21.jamba-1-5-mini-v1:0"))
-
-        // Verify Meta Llama model IDs
-        assertTrue(BedrockModels.MetaLlama3_0_8BInstruct.id.contains("meta.llama3-8b-instruct-v1:0"))
-        assertTrue(BedrockModels.MetaLlama3_0_70BInstruct.id.contains("meta.llama3-70b-instruct-v1:0"))
     }
 
     @Test
@@ -284,35 +185,9 @@ class BedrockLLMClientTest {
             user("What's the weather in Paris?")
         }
 
-        // Test that Claude 3 models support tools
-        val claudeModel = BedrockModels.AnthropicClaude3Sonnet
-        assertTrue(claudeModel.capabilities.contains(LLMCapability.Tools))
-
-        // Test that Claude 3.5 models support tools (with advanced capabilities)
-        val claude35Sonnet = BedrockModels.AnthropicClaude35SonnetV2
-        val claude35Haiku = BedrockModels.AnthropicClaude35Haiku
-        assertTrue(claude35Sonnet.capabilities.contains(LLMCapability.Tools))
-        assertTrue(claude35Sonnet.capabilities.contains(LLMCapability.ToolChoice))
-        assertTrue(claude35Haiku.capabilities.contains(LLMCapability.Tools))
-        assertTrue(claude35Haiku.capabilities.contains(LLMCapability.ToolChoice))
-
-        // Test that Claude 4 models support tools (with advanced capabilities)
-        val claude4Opus = BedrockModels.AnthropicClaude4Opus
-        val claude41Opus = BedrockModels.AnthropicClaude41Opus
-        val claude4Sonnet = BedrockModels.AnthropicClaude4Sonnet
-        val claude45Sonnet = BedrockModels.AnthropicClaude4_5Sonnet
-        assertTrue(claude4Opus.capabilities.contains(LLMCapability.Tools))
-        assertTrue(claude4Opus.capabilities.contains(LLMCapability.ToolChoice))
-        assertTrue(claude41Opus.capabilities.contains(LLMCapability.Tools))
-        assertTrue(claude41Opus.capabilities.contains(LLMCapability.ToolChoice))
-        assertTrue(claude4Sonnet.capabilities.contains(LLMCapability.Tools))
-        assertTrue(claude4Sonnet.capabilities.contains(LLMCapability.ToolChoice))
-        assertTrue(claude45Sonnet.capabilities.contains(LLMCapability.Tools))
-        assertTrue(claude45Sonnet.capabilities.contains(LLMCapability.ToolChoice))
-
         // Mock client for testing tool call request generation
         val client = BedrockLLMClient(
-            credentialsProvider = StaticCredentialsProvider {
+            identityProvider = StaticCredentialsProvider {
                 accessKeyId = "test-key"
                 secretAccessKey = "test-secret"
             },
@@ -325,39 +200,6 @@ class BedrockLLMClientTest {
         assertFails {
             client.execute(prompt, olderClaudeModel, tools)
         }
-    }
-
-    @Test
-    fun testModelToolCapabilities() {
-        // Verify Claude 4 models have the most advanced capabilities
-        val claude4Opus = BedrockModels.AnthropicClaude4Opus
-        val claude41Opus = BedrockModels.AnthropicClaude41Opus
-        val claude4Sonnet = BedrockModels.AnthropicClaude4Sonnet
-        val claude45Sonnet = BedrockModels.AnthropicClaude4_5Sonnet
-        assertTrue(claude4Opus.capabilities.contains(LLMCapability.Tools))
-        assertTrue(claude4Opus.capabilities.contains(LLMCapability.ToolChoice))
-        assertTrue(claude4Opus.capabilities.contains(LLMCapability.Vision.Image))
-        assertTrue(claude41Opus.capabilities.contains(LLMCapability.Tools))
-        assertTrue(claude41Opus.capabilities.contains(LLMCapability.ToolChoice))
-        assertTrue(claude41Opus.capabilities.contains(LLMCapability.Vision.Image))
-        assertTrue(claude4Sonnet.capabilities.contains(LLMCapability.Tools))
-        assertTrue(claude4Sonnet.capabilities.contains(LLMCapability.ToolChoice))
-        assertTrue(claude4Sonnet.capabilities.contains(LLMCapability.Vision.Image))
-        assertTrue(claude45Sonnet.capabilities.contains(LLMCapability.Tools))
-        assertTrue(claude45Sonnet.capabilities.contains(LLMCapability.ToolChoice))
-        assertTrue(claude45Sonnet.capabilities.contains(LLMCapability.Vision.Image))
-
-        // Verify Claude 3.5 models have comprehensive tool support
-        val claude35Sonnet = BedrockModels.AnthropicClaude35SonnetV2
-        val claude35Haiku = BedrockModels.AnthropicClaude35Haiku
-        assertTrue(claude35Sonnet.capabilities.contains(LLMCapability.Tools))
-        assertTrue(claude35Sonnet.capabilities.contains(LLMCapability.ToolChoice))
-        assertTrue(claude35Haiku.capabilities.contains(LLMCapability.Tools))
-        assertTrue(claude35Haiku.capabilities.contains(LLMCapability.ToolChoice))
-
-        // Verify Nova models don't support tools
-        val novaMicro = BedrockModels.AmazonNovaMicro
-        assertTrue(novaMicro.capabilities.contains(LLMCapability.Tools))
     }
 
     @Test
@@ -471,7 +313,7 @@ class BedrockLLMClientTest {
     fun `moderate method throws exception when moderation guardrails settings are not provided`() = runTest {
         // Create client without moderation guardrails settings
         val client = BedrockLLMClient(
-            credentialsProvider = StaticCredentialsProvider {
+            identityProvider = StaticCredentialsProvider {
                 accessKeyId = "test-key"
                 secretAccessKey = "test-secret"
             },
@@ -487,6 +329,130 @@ class BedrockLLMClientTest {
         // Verify that moderate method throws an exception because moderationGuardrailsSettings wasn't provided
         assertFailsWith<IllegalArgumentException> {
             client.moderate(prompt, model)
+        }
+    }
+
+    @Test
+    fun `execute throws IllegalArgumentException for TitanEmbedding models`() = runTest {
+        val client = BedrockLLMClient(
+            identityProvider = StaticCredentialsProvider {
+                accessKeyId = "test-key"
+                secretAccessKey = "test-secret"
+            },
+            settings = BedrockClientSettings(region = BedrockRegions.US_EAST_1.regionCode),
+            clock = Clock.System
+        )
+        val prompt = Prompt.build("test") {
+            user("Get embeddings for this.")
+        }
+        val titanModel = BedrockModels.Embeddings.AmazonTitanEmbedText
+        assertFailsWith<IllegalArgumentException> {
+            client.execute(prompt, titanModel, emptyList())
+        }
+    }
+
+    @Test
+    fun `execute throws IllegalArgumentException for Cohere models`() = runTest {
+        val client = BedrockLLMClient(
+            identityProvider = StaticCredentialsProvider {
+                accessKeyId = "test-key"
+                secretAccessKey = "test-secret"
+            },
+            settings = BedrockClientSettings(region = BedrockRegions.US_EAST_1.regionCode),
+            clock = Clock.System
+        )
+        val prompt = Prompt.build("test") {
+            user("Get Cohere embeddings for this.")
+        }
+        val cohereModel = BedrockModels.Embeddings.CohereEmbedEnglishV3
+        assertFailsWith<IllegalArgumentException> {
+            client.execute(prompt, cohereModel, emptyList())
+        }
+    }
+
+    @Test
+    fun `execute throws IllegalArgumentException for model without Completion capability`() = runTest {
+        val client = BedrockLLMClient(
+            identityProvider = StaticCredentialsProvider {
+                accessKeyId = "test-key"
+                secretAccessKey = "test-secret"
+            },
+            settings = BedrockClientSettings(region = BedrockRegions.US_EAST_1.regionCode),
+            clock = Clock.System
+        )
+        val noCompletionModel = LLModel(
+            provider = LLMProvider.Bedrock,
+            id = "some.bedrock.model-without-completion",
+            capabilities = listOf(LLMCapability.Embed),
+            contextLength = 1024
+        )
+        val prompt = Prompt.build("test") {
+            user("Some input")
+        }
+        assertFailsWith<IllegalArgumentException> {
+            client.execute(prompt, noCompletionModel, emptyList())
+        }
+    }
+
+    @Test
+    fun `executeStreaming throws IllegalArgumentException for TitanEmbedding models`() = runTest {
+        val client = BedrockLLMClient(
+            identityProvider = StaticCredentialsProvider {
+                accessKeyId = "test-key"
+                secretAccessKey = "test-secret"
+            },
+            settings = BedrockClientSettings(region = BedrockRegions.US_EAST_1.regionCode),
+            clock = Clock.System
+        )
+        val prompt = Prompt.build("test") {
+            user("Get embeddings for this.")
+        }
+        val titanModel = BedrockModels.Embeddings.AmazonTitanEmbedText
+        assertFailsWith<IllegalArgumentException> {
+            client.executeStreaming(prompt, titanModel, emptyList()).toList()
+        }
+    }
+
+    @Test
+    fun `executeStreaming throws IllegalArgumentException for Cohere models`() = runTest {
+        val client = BedrockLLMClient(
+            identityProvider = StaticCredentialsProvider {
+                accessKeyId = "test-key"
+                secretAccessKey = "test-secret"
+            },
+            settings = BedrockClientSettings(region = BedrockRegions.US_EAST_1.regionCode),
+            clock = Clock.System
+        )
+        val prompt = Prompt.build("test") {
+            user("Get Cohere embeddings for this.")
+        }
+        val cohereModel = BedrockModels.Embeddings.CohereEmbedEnglishV3
+        assertFailsWith<IllegalArgumentException> {
+            client.executeStreaming(prompt, cohereModel, emptyList()).toList()
+        }
+    }
+
+    @Test
+    fun `executeStreaming throws IllegalArgumentException for model without Completion capability`() = runTest {
+        val client = BedrockLLMClient(
+            identityProvider = StaticCredentialsProvider {
+                accessKeyId = "test-key"
+                secretAccessKey = "test-secret"
+            },
+            settings = BedrockClientSettings(region = BedrockRegions.US_EAST_1.regionCode),
+            clock = Clock.System
+        )
+        val noCompletionModel = LLModel(
+            provider = LLMProvider.Bedrock,
+            id = "some.bedrock.model-without-completion",
+            capabilities = listOf(LLMCapability.Embed),
+            contextLength = 1024
+        )
+        val prompt = Prompt.build("test") {
+            user("Some input")
+        }
+        assertFailsWith<IllegalArgumentException> {
+            client.executeStreaming(prompt, noCompletionModel, emptyList()).toList()
         }
     }
 }

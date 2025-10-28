@@ -112,7 +112,7 @@ suspend fun planWork(
     val planner = strategy<String, String>("planner") {
         suspend fun AIAgentContext.defineTask(inputTask: String, prompt: String): Message.Response {
             return llm.writeSession {
-                updatePrompt {
+                appendPrompt {
                     system(prompt)
                     system("Available sub-agents: ${subAgents.joinToString { it.description }}")
                     user(inputTask)

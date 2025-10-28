@@ -41,7 +41,7 @@ public abstract class HistoryCompressionStrategy {
         return with(llmSession) {
             // If there are any tool calls left in a history, we are not allowed to send a user message back
             dropTrailingToolCalls()
-            updatePrompt {
+            appendPrompt {
                 user {
                     summarizeInTLDR()
                 }

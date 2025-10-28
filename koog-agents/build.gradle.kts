@@ -31,6 +31,10 @@ val excluded = setOf(
     ":agents:agents-features:agents-features-a2a-server",
     ":agents:agents-features:agents-features-a2a-client",
 
+    ":http-client:http-client-test",
+    ":http-client:http-client-okhttp",
+    ":http-client:http-client-java",
+
     project.path, // the current project should not depend on itself
 )
 
@@ -57,6 +61,7 @@ val included = setOf(
     ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-bedrock-client",
     ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-deepseek-client",
     ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-google-client",
+    ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-mistralai-client",
     ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-ollama-client",
     ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client",
     ":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client-base",
@@ -73,6 +78,8 @@ val included = setOf(
     ":prompt:prompt-xml",
     ":rag:rag-base",
     ":rag:vector-storage",
+    ":http-client:http-client-core",
+    ":http-client:http-client-ktor",
     ":utils",
 )
 
@@ -117,6 +124,26 @@ kotlin {
                     api(project(it.path))
                 }
             }
+        }
+
+        androidMain.dependencies {
+            api(libs.ktor.client.okhttp)
+        }
+
+        jvmMain.dependencies {
+            api(libs.ktor.client.apache5)
+        }
+
+        appleMain.dependencies {
+            api(libs.ktor.client.darwin)
+        }
+
+        jsMain.dependencies {
+            api(libs.ktor.client.js)
+        }
+
+        wasmJsMain.dependencies {
+            api(libs.ktor.client.js)
         }
     }
 }

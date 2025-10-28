@@ -50,8 +50,8 @@ public abstract class TextContentBuilderBase<TContent> {
      * This is typically used to enhance the behavior or further abstract operations
      * on String objects in a concise and intuitive manner.
      */
-    public operator fun String.not() {
-        text(this)
+    public open operator fun String.not() {
+        append(this)
     }
 
     /**
@@ -70,11 +70,18 @@ public abstract class TextContentBuilderBase<TContent> {
 
     /**
      * Appends the given text to the current content.
+     */
+    private fun append(text: String) {
+        textBuilder.append(text)
+    }
+
+    /**
+     * Appends the given text to the current content.
      *
      * @param text The string to be appended to the content.
      */
-    public fun text(text: String) {
-        textBuilder.append(text)
+    public open fun text(text: String) {
+        append(text)
     }
 
     /**
@@ -85,7 +92,7 @@ public abstract class TextContentBuilderBase<TContent> {
      */
     public fun textWithNewLine(text: String) {
         if (caret.offset > 0) newline()
-        text(text)
+        append(text)
     }
 
     /**
@@ -108,7 +115,7 @@ public abstract class TextContentBuilderBase<TContent> {
      * and separation of text content in the [TextContentBuilder] class.
      */
     public fun newline() {
-        textBuilder.append("\n")
+        append("\n")
     }
 
     /**

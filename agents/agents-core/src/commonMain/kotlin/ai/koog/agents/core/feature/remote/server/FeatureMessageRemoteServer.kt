@@ -29,8 +29,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.serialization.serializer
 import kotlin.properties.Delegates
+import kotlin.time.Duration
+import kotlin.time.measureTime
 
 /**
  * A server for managing remote feature message communication via server-sent events (SSE) and HTTP endpoints.
@@ -150,10 +153,8 @@ public class FeatureMessageRemoteServer(
 
         logger.info { "Feature Message Remote Server. Server has been successfully started on port ${connectionConfig.port}" }
 
-        if (connectionConfig.waitConnection) {
-            // Suspend until the first connection to a server
-            logger.info { "Feature Message Remote Server. Start waiting for the first connection on port ${connectionConfig.port}" }
-            isClientConnected.first { it }
+        if (connectionConfig.awaitInitialConnection) {
+            awaitFirstConnection(port = connectionConfig.port, timeout = connectionConfig.awaitInitialConnectionTimeout)
         }
     }
 
@@ -246,6 +247,29 @@ public class FeatureMessageRemoteServer(
         logger.info { "Feature Message Remote Server. The server on port ${connectionConfig.port} has been stopped" }
     }
 
+    /**
+     * Suspend until the first connection to a server.
+     * Wait for a specified timeout duration or indefinitely if the timeout is null.
+     *
+     * @param port The port to listen on
+     * @param timeout The timeout duration for waiting for the first connection
+     */
+    private suspend fun awaitFirstConnection(port: Int, timeout: Duration) {
+        logger.info { "Feature Message Remote Server. Start waiting for the first connection on port: $port" }
+
+        val connectionTime = measureTime {
+            withTimeoutOrNull(timeout) {
+                isClientConnected.first { it }
+            }
+        }
+
+        if (isClientConnected.value) {
+            logger.debug { "Feature Message Remote Server. First connection has been established on port <$port> after: $connectionTime" }
+        } else {
+            logger.debug { "Feature Message Remote Server. Connection has not been established on port <$port> after: $connectionTime. Continue." }
+        }
+    }
+
     //region Routing
 
     private fun Route.routingSse() {
@@ -262,7 +286,7 @@ public class FeatureMessageRemoteServer(
                         data = serverEventData,
                     )
 
-                    logger.debug { "Feature Message Remote Server. Sending SSE server event: $serverEvent" }
+                    logger.trace { "Feature Message Remote Server. Sending SSE server event: $serverEvent" }
                     send(serverEvent)
                 } catch (t: CancellationException) {
                     logger.info {

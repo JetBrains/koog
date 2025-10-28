@@ -1,6 +1,5 @@
 package ai.koog.agents.mcp
 
-import ai.koog.agents.core.tools.DirectToolCallsEnabler
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
@@ -18,9 +17,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
-
-@OptIn(InternalAgentToolsApi::class)
-object TestToolEnabler : DirectToolCallsEnabler
 
 class McpToolTest {
     private val testPort = 3001
@@ -82,7 +78,7 @@ class McpToolTest {
 
         val result = withContext(Dispatchers.Default.limitedParallelism(1)) {
             withTimeout(1.minutes) {
-                greetingTool.execute(args, TestToolEnabler)
+                greetingTool.execute(args)
             }
         }
 
@@ -97,7 +93,7 @@ class McpToolTest {
         )
         val resultWithTitle = withContext(Dispatchers.Default.limitedParallelism(1)) {
             withTimeout(1.minutes) {
-                greetingTool.execute(argsWithTitle, TestToolEnabler)
+                greetingTool.execute(argsWithTitle)
             }
         }
 

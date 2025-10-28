@@ -90,6 +90,8 @@ class ChoiceSelectionStrategyTest {
             ): ModerationResult {
                 throw UnsupportedOperationException("Moderation is not needed here")
             }
+
+            override fun close() {}
         }
 
         val mockStrategy = object : ChoiceSelectionStrategy {

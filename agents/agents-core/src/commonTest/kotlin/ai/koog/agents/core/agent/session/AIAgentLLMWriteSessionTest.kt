@@ -4,7 +4,6 @@ import ai.koog.agents.core.CalculatorChatExecutor.testClock
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.environment.ReceivedToolResult
-import ai.koog.agents.core.tools.DirectToolCallsEnabler
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
@@ -14,7 +13,6 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.testing.tools.getMockExecutor
-import ai.koog.agents.testing.tools.mockLLMAnswer
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
@@ -38,15 +36,13 @@ class AIAgentLLMWriteSessionTest {
     private fun userMessage(content: String) = Message.User(content, RequestMetaInfo.create(testClock))
     private fun assistantMessage(content: String) = Message.Assistant(content, ResponseMetaInfo.create(testClock))
 
-    private object TestToolsEnabler : DirectToolCallsEnabler
-
     private class TestEnvironment(private val toolRegistry: ToolRegistry) : AIAgentEnvironment {
         @OptIn(InternalAgentToolsApi::class)
         override suspend fun executeTools(toolCalls: List<Message.Tool.Call>): List<ReceivedToolResult> {
             return toolCalls.map { toolCall ->
                 val tool = toolRegistry.getTool(toolCall.tool)
                 val args = tool.decodeArgs(toolCall.contentJson)
-                val result = tool.executeUnsafe(args, TestToolsEnabler)
+                val result = tool.executeUnsafe(args)
 
                 ReceivedToolResult(
                     id = toolCall.id,
@@ -281,7 +277,7 @@ class AIAgentLLMWriteSessionTest {
     }
 
     @Test
-    fun testUpdatePrompt() = runTest {
+    fun testAppendPrompt() = runTest {
         val mockExecutor = getMockExecutor {
             mockLLMAnswer("Updated prompt response").asDefaultResponse
         }
@@ -293,7 +289,7 @@ class AIAgentLLMWriteSessionTest {
 
         val session = createSession(mockExecutor, prompt = initialPrompt)
 
-        session.updatePrompt {
+        session.appendPrompt {
             user("Additional user message")
         }
 

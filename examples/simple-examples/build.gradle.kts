@@ -34,9 +34,11 @@ dependencies {
     implementation(libs.logback.classic)
 
     implementation(platform(libs.opentelemetry.bom))
+    implementation(platform(libs.ktor.bom))
     implementation(libs.opentelemetry.exporter.logging)
     implementation(libs.opentelemetry.exporter.otlp)
 
+    implementation(libs.ktor.client.cio)
     implementation(libs.ktor.server.cio)
 
     testImplementation(kotlin("test"))

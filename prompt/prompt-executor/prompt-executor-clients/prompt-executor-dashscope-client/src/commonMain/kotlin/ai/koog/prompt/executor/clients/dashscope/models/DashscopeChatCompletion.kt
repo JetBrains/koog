@@ -65,7 +65,7 @@ public class DashscopeChatCompletionResponse(
     override val created: Long,
     override val id: String,
     override val model: String,
-    public val systemFingerprint: String = "",
+    public val systemFingerprint: String? = null,
     @SerialName("object")
     public val objectType: String = "chat.completion",
     public val usage: OpenAIUsage? = null,
@@ -80,7 +80,7 @@ public class DashscopeChatCompletionStreamResponse(
     override val created: Long,
     override val id: String,
     override val model: String,
-    public val systemFingerprint: String = "",
+    public val systemFingerprint: String? = null,
     @SerialName("object")
     public val objectType: String = "chat.completion.chunk",
     public val usage: OpenAIUsage? = null,

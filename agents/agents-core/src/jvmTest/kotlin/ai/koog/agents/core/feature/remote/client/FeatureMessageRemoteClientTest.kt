@@ -7,7 +7,7 @@ import ai.koog.agents.core.feature.remote.server.FeatureMessageRemoteServer
 import ai.koog.agents.core.feature.remote.server.config.DefaultServerConnectionConfig
 import ai.koog.agents.core.feature.writer.TestFeatureEventMessage
 import ai.koog.agents.testing.network.NetUtil.findAvailablePort
-import ai.koog.agents.utils.use
+import ai.koog.utils.io.use
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.http.URLProtocol
 import kotlinx.coroutines.CompletableDeferred
@@ -210,7 +210,7 @@ class FeatureMessageRemoteClientTest {
     @Test
     fun `test server is started with wait connection flag client connected`() = runBlocking {
         val port = findAvailablePort()
-        val serverConfig = DefaultServerConnectionConfig(port = port, waitConnection = true)
+        val serverConfig = DefaultServerConnectionConfig(port = port, awaitInitialConnection = true)
         val clientConfig = DefaultClientConnectionConfig(host = "127.0.0.1", port = port, protocol = URLProtocol.HTTP)
 
         FeatureMessageRemoteServer(connectionConfig = serverConfig).use { server ->

@@ -21,7 +21,14 @@ internal object ApiKeyService {
         get() = System.getenv("AWS_SECRET_ACCESS_KEY")
             ?: throw IllegalArgumentException("AWS_SECRET_ACCESS_KEY env is not set")
 
+    val awsBearerTokenBedrock: String
+        get() = System.getenv("AWS_BEARER_TOKEN_BEDROCK")
+            ?: throw IllegalArgumentException("AWS_BEARER_TOKEN_BEDROCK env is not set")
+
     val brightDataKey: String
         get() = System.getenv("BRIGHT_DATA_KEY")
             ?: throw IllegalArgumentException("BRIGHT_DATA_KEY env is not set")
+
+    val mistralAIApiKey: String
+        get() = System.getenv("MISTRALAI_API_KEY") ?: throw IllegalArgumentException("MISTRALAI_API_KEY env is not set")
 }

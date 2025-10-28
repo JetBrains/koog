@@ -16,11 +16,10 @@ import ai.koog.agents.core.feature.handler.AgentLifecycleEventType
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
-import ai.koog.agents.testing.tools.mockLLMAnswer
-import ai.koog.agents.utils.use
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.OllamaModels
+import ai.koog.utils.io.use
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
@@ -246,34 +245,6 @@ class AIAgentPipelineTest {
         val actualEvents = interceptedEvents.filter { it.startsWith("Agent: strategy started") }
         val expectedEvents = listOf(
             "Agent: strategy started (strategy name: test-interceptors-strategy)",
-        )
-
-        assertEquals(
-            expectedEvents.size,
-            actualEvents.size,
-            "Miss intercepted events. Expected ${expectedEvents.size}, but received: ${actualEvents.size}"
-        )
-        assertContentEquals(expectedEvents, actualEvents)
-    }
-
-    @Test
-    @JsName("testPipelineInterceptorsForStageContextEvents")
-    fun `test pipeline interceptors for stage context events`() = runTest {
-        val interceptedEvents = mutableListOf<String>()
-        val strategy = strategy<String, String>("test-interceptors-strategy") {
-            edge(nodeStart forwardTo nodeFinish transformed { "Done" })
-        }
-
-        val agentInput = "Hello World!"
-        createAgent(strategy = strategy) {
-            install(TestFeature) { events = interceptedEvents }
-        }.use { agent ->
-            agent.run(agentInput)
-        }
-
-        val actualEvents = interceptedEvents.filter { it.startsWith("Agent Context: ") }
-        val expectedEvents = listOf(
-            "Agent Context: request features from agent context"
         )
 
         assertEquals(

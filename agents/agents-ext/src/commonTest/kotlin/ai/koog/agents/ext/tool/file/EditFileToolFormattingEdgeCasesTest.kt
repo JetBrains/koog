@@ -1,6 +1,5 @@
 package ai.koog.agents.ext.tool.file
 
-import ai.koog.agents.core.tools.DirectToolCallsEnabler
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.ext.utils.InMemoryFS
 import ai.koog.rag.base.files.readText
@@ -35,7 +34,7 @@ class EditFileToolFormattingEdgeCasesTest {
             original = "        return 42",
             replacement = "\t    return 43"
         )
-        tool.execute(args, object : DirectToolCallsEnabler {})
+        tool.execute(args)
 
         // Then
         val updated = mockedFS.readText(path)
@@ -66,7 +65,7 @@ class EditFileToolFormattingEdgeCasesTest {
             original = "line2\nline3",
             replacement = "newline\nline3"
         )
-        tool.execute(args, object : DirectToolCallsEnabler {})
+        tool.execute(args)
 
         // Then
         val updated = mockedFS.readText(path)

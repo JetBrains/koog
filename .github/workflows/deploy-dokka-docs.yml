@@ -1,0 +1,49 @@
+name: Deploy Dokka Docs
+
+on:
+  workflow_dispatch:  # Manual trigger
+
+jobs:
+  check-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail if running on blocked branch
+        if: |
+          github.ref == 'refs/heads/develop'
+        run: |
+          echo "This workflow cannot be run on develop branch. If you want to deploy docs, run it on the latest release branch"
+          exit 1
+
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v5
+
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Build Dokka docs
+        run: ./gradlew dokkaGenerate
+
+      - name: Debug listing build folder
+        run: ls -R build
+
+      - name: Push to docs repo
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+          
+          cd build/dokka/html
+          
+          echo "api.koog.ai" > CNAME
+          
+          git init
+          git remote add origin https://x-access-token:${{ secrets.DOCS_DEPLOY_TOKEN }}@github.com/JetBrains/koog-api-docs.git
+          git checkout -b main
+          git add .
+          git commit -m "Update docs"
+          git push --force origin main

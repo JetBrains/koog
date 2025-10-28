@@ -91,16 +91,27 @@ internal class SpanProcessor(
         }
     }
 
-    inline fun <reified T> getSpan(spanId: String): T? where T : GenAIAgentSpan {
+    inline fun <reified T : GenAIAgentSpan> getSpan(spanId: String): T? {
         return _spans[spanId] as? T
     }
 
-    inline fun <reified T> getSpanOrThrow(spanId: String): T where T : GenAIAgentSpan {
+    inline fun <reified T : GenAIAgentSpan> getSpanOrThrow(spanId: String): T {
         val span = _spans[spanId] ?: error("Span with id: $spanId not found")
         return span as? T
             ?: error(
                 "Span with id <$spanId> is not of expected type. Expected: <${T::class.simpleName}>, actual: <${span::class.simpleName}>"
             )
+    }
+
+    inline fun <reified T : GenAIAgentSpan> getSpanCatching(spanId: String): T? {
+        val getSpanResult = runCatching { getSpanOrThrow<T>(spanId) }
+        if (getSpanResult.isSuccess) {
+            return getSpanResult.getOrNull()
+        }
+
+        val throwable = getSpanResult.exceptionOrNull()
+        logger.error(throwable) { "Unable to get a span with id: $spanId. Error: ${throwable?.message}" }
+        return null
     }
 
     fun endUnfinishedSpans(filter: (GenAIAgentSpan) -> Boolean = { true }) {

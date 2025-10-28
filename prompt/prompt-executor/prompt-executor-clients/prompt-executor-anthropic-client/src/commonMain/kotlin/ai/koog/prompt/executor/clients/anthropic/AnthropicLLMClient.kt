@@ -2,21 +2,35 @@ package ai.koog.prompt.executor.clients.anthropic
 
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
-import ai.koog.agents.utils.SuitableForIO
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
+import ai.koog.prompt.executor.clients.anthropic.models.AnthropicContent
+import ai.koog.prompt.executor.clients.anthropic.models.AnthropicMessage
+import ai.koog.prompt.executor.clients.anthropic.models.AnthropicMessageRequest
+import ai.koog.prompt.executor.clients.anthropic.models.AnthropicMessageRequestSerializer
+import ai.koog.prompt.executor.clients.anthropic.models.AnthropicResponse
+import ai.koog.prompt.executor.clients.anthropic.models.AnthropicResponseContent
+import ai.koog.prompt.executor.clients.anthropic.models.AnthropicStreamResponse
+import ai.koog.prompt.executor.clients.anthropic.models.AnthropicTool
+import ai.koog.prompt.executor.clients.anthropic.models.AnthropicToolChoice
+import ai.koog.prompt.executor.clients.anthropic.models.AnthropicToolSchema
+import ai.koog.prompt.executor.clients.anthropic.models.AnthropicUsage
+import ai.koog.prompt.executor.clients.anthropic.models.DocumentSource
+import ai.koog.prompt.executor.clients.anthropic.models.ImageSource
+import ai.koog.prompt.executor.clients.anthropic.models.SystemAnthropicMessage
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
-import ai.koog.prompt.message.Attachment
 import ai.koog.prompt.message.AttachmentContent
+import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.buildStreamFrameFlow
+import ai.koog.utils.io.SuitableForIO
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -282,7 +296,7 @@ public open class AnthropicLLMClient(
     }
 
     @OptIn(ExperimentalUuidApi::class)
-    private fun createAnthropicRequest(
+    internal fun createAnthropicRequest(
         prompt: Prompt,
         tools: List<ToolDescriptor>,
         model: LLModel,
@@ -365,7 +379,20 @@ public open class AnthropicLLMClient(
             )
         }
 
-        val toolChoice = when (val toolChoice = prompt.params.toolChoice) {
+        return serializeAnthropicMessageRequest(messages, systemMessage, model, anthropicTools, prompt.params, stream)
+    }
+
+    private fun serializeAnthropicMessageRequest(
+        messages: List<AnthropicMessage>,
+        systemMessages: List<SystemAnthropicMessage>,
+        model: LLModel,
+        tools: List<AnthropicTool>,
+        params: LLMParams,
+        stream: Boolean
+    ): String {
+        val anthropicParams = params.toAnthropicParams()
+
+        val toolChoice = when (val toolChoice = anthropicParams.toolChoice) {
             LLMParams.ToolChoice.Auto -> AnthropicToolChoice.Auto
             LLMParams.ToolChoice.None -> AnthropicToolChoice.None
             LLMParams.ToolChoice.Required -> AnthropicToolChoice.Any
@@ -373,42 +400,46 @@ public open class AnthropicLLMClient(
             null -> null
         }
 
-        require(prompt.params.schema == null) {
+        require(anthropicParams.schema == null) {
             "Anthropic does not currently support native structured output."
         }
 
         // Always include max_tokens as it's required by the API
         val request = AnthropicMessageRequest(
-            model = settings.modelVersionsMap[model]
-                ?: throw IllegalArgumentException("Unsupported model: $model"),
+            model = settings.modelVersionsMap[model] ?: throw IllegalArgumentException("Unsupported model: $model"),
             messages = messages,
-            maxTokens = prompt.params.maxTokens ?: AnthropicMessageRequest.MAX_TOKENS_DEFAULT,
-            temperature = prompt.params.temperature,
-            system = systemMessage,
-            tools = if (tools.isNotEmpty()) anthropicTools else emptyList(), // Always provide a list for tools
+            maxTokens = anthropicParams.maxTokens ?: AnthropicMessageRequest.MAX_TOKENS_DEFAULT,
+            container = anthropicParams.container,
+            mcpServers = anthropicParams.mcpServers,
+            serviceTier = anthropicParams.serviceTier,
+            stopSequence = anthropicParams.stopSequences,
             stream = stream,
+            system = systemMessages,
+            temperature = anthropicParams.temperature,
             toolChoice = toolChoice,
-            additionalProperties = prompt.params.additionalProperties
+            tools = tools, // Always provide a list for tools
+            topK = anthropicParams.topK,
+            topP = anthropicParams.topP,
+            additionalProperties = anthropicParams.additionalProperties
         )
+
         return json.encodeToString(AnthropicMessageRequestSerializer, request)
     }
 
     private fun Message.User.toAnthropicUserMessage(model: LLModel): AnthropicMessage {
         val listOfContent = buildList {
-            if (content.isNotEmpty() || attachments.isEmpty()) {
-                add(AnthropicContent.Text(content))
-            }
+            parts.forEach { part ->
+                when (part) {
+                    is ContentPart.Text -> add(AnthropicContent.Text(part.text))
 
-            attachments.forEach { attachment ->
-                when (attachment) {
-                    is Attachment.Image -> {
+                    is ContentPart.Image -> {
                         require(model.capabilities.contains(LLMCapability.Vision.Image)) {
                             "Model ${model.id} does not support images"
                         }
 
-                        val imageSource: ImageSource = when (val content = attachment.content) {
+                        val imageSource: ImageSource = when (val content = part.content) {
                             is AttachmentContent.URL -> ImageSource.Url(content.url)
-                            is AttachmentContent.Binary -> ImageSource.Base64(content.asBase64(), attachment.mimeType)
+                            is AttachmentContent.Binary -> ImageSource.Base64(content.asBase64(), part.mimeType)
                             else -> throw IllegalArgumentException(
                                 "Unsupported image attachment content: ${content::class}"
                             )
@@ -417,24 +448,28 @@ public open class AnthropicLLMClient(
                         add(AnthropicContent.Image(imageSource))
                     }
 
-                    is Attachment.File -> {
+                    is ContentPart.File -> {
                         require(model.capabilities.contains(LLMCapability.Document)) {
                             "Model ${model.id} does not support files"
                         }
 
-                        val documentSource: DocumentSource = when (val content = attachment.content) {
+                        val documentSource: DocumentSource = when (val content = part.content) {
                             is AttachmentContent.URL -> DocumentSource.Url(content.url)
-                            is AttachmentContent.Binary -> DocumentSource.Base64(content.asBase64(), attachment.mimeType)
+                            is AttachmentContent.Binary -> DocumentSource.Base64(
+                                content.asBase64(),
+                                part.mimeType
+                            )
+
                             is AttachmentContent.PlainText -> DocumentSource.PlainText(
                                 content.text,
-                                attachment.mimeType
+                                part.mimeType
                             )
                         }
 
                         add(AnthropicContent.Document(documentSource))
                     }
 
-                    else -> throw IllegalArgumentException("Unsupported attachment type: $attachment")
+                    else -> throw IllegalArgumentException("Unsupported attachment type: $part")
                 }
             }
         }
@@ -509,6 +544,7 @@ public open class AnthropicLLMClient(
             ToolParameterType.Float -> JsonObject(mapOf("type" to JsonPrimitive("number")))
             ToolParameterType.Integer -> JsonObject(mapOf("type" to JsonPrimitive("integer")))
             ToolParameterType.String -> JsonObject(mapOf("type" to JsonPrimitive("string")))
+            ToolParameterType.Null -> JsonObject(mapOf("type" to JsonPrimitive("null")))
             is ToolParameterType.Enum -> JsonObject(
                 mapOf(
                     "type" to JsonPrimitive("string"),
@@ -557,6 +593,8 @@ public open class AnthropicLLMClient(
 
                 JsonObject(objectMap)
             }
+
+            is ToolParameterType.AnyOf -> throw IllegalArgumentException("AnyOf type is not supported")
         }
     }
 
@@ -572,5 +610,9 @@ public open class AnthropicLLMClient(
     public override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
         logger.warn { "Moderation is not supported by Anthropic API" }
         throw UnsupportedOperationException("Moderation is not supported by Anthropic API.")
+    }
+
+    override fun close() {
+        httpClient.close()
     }
 }

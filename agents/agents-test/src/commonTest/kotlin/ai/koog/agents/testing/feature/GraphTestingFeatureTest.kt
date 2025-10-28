@@ -12,7 +12,6 @@ import ai.koog.agents.core.dsl.extension.onToolCall
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.tools.getMockExecutor
-import ai.koog.agents.testing.tools.mockLLMAnswer
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.message.Message
@@ -37,7 +36,7 @@ class GraphTestingFeatureTest {
                 val sendToolResult by nodeLLMSendToolResult()
                 val giveFeedback by node<String, String> { input ->
                     llm.writeSession {
-                        updatePrompt {
+                        appendPrompt {
                             user("Call tools! Don't chat!")
                         }
                     }

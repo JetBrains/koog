@@ -4,7 +4,7 @@ import ai.koog.agents.core.feature.message.FeatureEvent
 import ai.koog.agents.core.feature.message.FeatureMessage
 import ai.koog.agents.core.feature.model.FeatureStringMessage
 import ai.koog.agents.core.feature.writer.FeatureMessageLogWriter.LogLevel
-import ai.koog.agents.utils.use
+import ai.koog.utils.io.use
 import io.github.oshai.kotlinlogging.KLogger
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

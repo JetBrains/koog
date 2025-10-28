@@ -15,6 +15,8 @@ import kotlin.test.assertTrue
 
 class GenAIAgentSpanTest {
 
+    //region Constructor
+
     @Test
     fun `constructor should initialize with parent`() {
         val parentSpan = MockGenAIAgentSpan("parent.span")
@@ -29,6 +31,10 @@ class GenAIAgentSpanTest {
 
         assertNull(span.parent)
     }
+
+    //endregion Constructor
+
+    //region Properties
 
     @Test
     fun `name should return correct name without parent`() {
@@ -96,8 +102,12 @@ class GenAIAgentSpanTest {
         assertEquals(mockSpan, span.span)
     }
 
+    //endregion Properties
+
+    //region Add Events
+
     @Test
-    fun `addEvents should add events to span`() {
+    fun `add valid events to span`() {
         val span = MockGenAIAgentSpan("test.span")
         val mockSpan = MockSpan()
         span.span = mockSpan
@@ -121,7 +131,7 @@ class GenAIAgentSpanTest {
     }
 
     @Test
-    fun `addEvents should handle duplicate events`() {
+    fun `add duplicate event should append`() {
         val span = MockGenAIAgentSpan("test.span")
         val mockSpan = MockSpan()
         span.span = mockSpan
@@ -134,13 +144,13 @@ class GenAIAgentSpanTest {
         span.addEvent(event)
         span.addEvent(event)
 
-        // Verify that both event were added
+        // Verify that both events were added
         assertEquals(2, span.events.size)
         assertTrue(span.events.contains(event))
     }
 
     @Test
-    fun `addEvents should handle events with body fields`() {
+    fun `add events with body fields`() {
         val span = MockGenAIAgentSpan("test.span")
         val mockSpan = MockSpan()
         span.span = mockSpan
@@ -158,7 +168,28 @@ class GenAIAgentSpanTest {
     }
 
     @Test
-    fun `addAttributes(list) should add multiple attributes to span`() {
+    fun `add multiple events to span`() {
+        val span = MockGenAIAgentSpan("test.span")
+        val mockSpan = MockSpan()
+        span.span = mockSpan
+
+        val events = listOf(
+            MockGenAIAgentEvent(name = "event1").apply { addAttribute(MockAttribute("stringKey", "stringValue")) },
+            MockGenAIAgentEvent(name = "event2").apply { addAttribute(MockAttribute("numberKey", 2)) },
+        )
+
+        span.addEvents(events)
+
+        assertEquals(2, span.events.size)
+        assertTrue(span.events.containsAll(events))
+    }
+
+    //endregion Add Events
+
+    //region Add Attributes
+
+    @Test
+    fun `add multiple attributes to span`() {
         val span = MockGenAIAgentSpan("test.span")
         val mockSpan = MockSpan()
         span.span = mockSpan
@@ -176,19 +207,19 @@ class GenAIAgentSpanTest {
     }
 
     @Test
-    fun `addEvents(list) should add multiple events to span`() {
+    fun `add duplicate attribute should override value`() {
         val span = MockGenAIAgentSpan("test.span")
         val mockSpan = MockSpan()
         span.span = mockSpan
 
-        val events = listOf(
-            MockGenAIAgentEvent(name = "event1").apply { addAttribute(MockAttribute("stringKey", "stringValue")) },
-            MockGenAIAgentEvent(name = "event2").apply { addAttribute(MockAttribute("numberKey", 2)) },
-        )
+        val attribute1 = MockAttribute("key", "value1")
+        val attribute2 = MockAttribute("key", "value2")
+        span.addAttribute(attribute1)
+        span.addAttribute(attribute2)
 
-        span.addEvents(events)
-
-        assertEquals(2, span.events.size)
-        assertTrue(span.events.containsAll(events))
+        assertEquals(1, span.attributes.size)
+        assertEquals(attribute2, span.attributes.single())
     }
+
+    //endregion Add Attributes
 }

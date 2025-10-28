@@ -207,6 +207,10 @@ class RetryAfterExtractorTest {
         assertEquals(10.seconds, extractor.extract("retry-after: 10"))
         assertEquals(30.seconds, extractor.extract("Please retry after 30 seconds"))
         assertEquals(60.seconds, extractor.extract("Wait 60 seconds"))
+        assertEquals(7.seconds, extractor.extract("try again in 7.934s"))
+        assertEquals(7.seconds, extractor.extract("try again in 7.93s"))
+        assertEquals(7.seconds, extractor.extract("try again in 7.9s"))
+        assertEquals(7.seconds, extractor.extract("try again in 7s"))
     }
 
     @Test

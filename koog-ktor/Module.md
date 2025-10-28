@@ -8,7 +8,7 @@ The `koog-ktor` module provides seamless integration between the Koog AI agents 
 It includes:
 
 - A Ktor plugin for easy installation and configuration
-- Support for multiple LLM providers (OpenAI, Anthropic, Google, OpenRouter, DeepSeek, Ollama)
+- Support for multiple LLM providers (OpenAI, Anthropic, Google, MistralAI, OpenRouter, DeepSeek, Ollama)
 - Agent configuration with tools, features, and prompt customization
 - Extension functions for routes to interact with LLMs and agents
 - JVM-specific support for Model Context Protocol (MCP) integration
@@ -33,6 +33,7 @@ koog:
   openai.apikey: "$OPENAI_API_KEY:your-openai-api-key"
   anthropic.apikey: "$ANTHROPIC_API_KEY:your-anthropic-api-key"
   google.apikey: "$GOOGLE_API_KEY:your-google-api-key"
+  mistral.apikey: "$MISTRALAI_API_KEY:your-mistralai-api-key"
   openrouter.apikey: "$OPENROUTER_API_KEY:your-openrouter-api-key"
   deepseek.apikey: "$DEEPSEEK_API_KEY:your-deepseek-api-key"
   ollama.enabled: "$DEBUG:false"
@@ -51,6 +52,7 @@ fun Application.module() {
             anthropic(apiKey = "your-anthropic-api-key")
             ollama { baseUrl = "http://localhost:11434" }
             google(apiKey = "your-google-api-key")
+            mistral(apiKey = "your-mistral-api-key")
             openRouter(apiKey = "your-openrouter-api-key")
             deepSeek(apiKey = "your-deepseek-api-key")
         }
@@ -172,6 +174,10 @@ koog:
   google:
     apikey: "your-google-api-key"
     baseUrl: "https://generativelanguage.googleapis.com"
+
+  mistral:
+    apikey: "your-mistral-api-key"
+    baseUrl: "https://api.mistral.ai"
 
   openrouter:
     apikey: "your-openrouter-api-key"

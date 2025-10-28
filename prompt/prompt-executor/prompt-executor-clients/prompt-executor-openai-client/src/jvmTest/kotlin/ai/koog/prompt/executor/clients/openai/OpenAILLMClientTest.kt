@@ -31,7 +31,7 @@ class OpenAILLMClientTest {
                 OpenAIResponsesParams::class,
             ),
             Arguments.of(
-                OpenAIResponsesParams(),
+                OpenAIChatParams(),
                 OpenAIModels.Audio.GPT4oMiniAudio,
                 OpenAIChatParams::class,
             )

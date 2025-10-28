@@ -174,6 +174,10 @@ public class RetryingLLMClient(
 
         return finalMs.milliseconds
     }
+
+    override fun close() {
+        delegate.close()
+    }
 }
 
 /**

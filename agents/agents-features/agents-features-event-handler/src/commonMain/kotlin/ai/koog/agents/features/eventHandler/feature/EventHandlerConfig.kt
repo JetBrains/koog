@@ -63,7 +63,7 @@ public class EventHandlerConfig : FeatureConfig() {
 
     //region Private Agent Handlers
 
-    private var _onAgentStarting: suspend (eventHandler: AgentStartingContext<EventHandler>) -> Unit = { _ -> }
+    private var _onAgentStarting: suspend (eventHandler: AgentStartingContext) -> Unit = { _ -> }
 
     private var _onAgentCompleted: suspend (eventHandler: AgentCompletedContext) -> Unit = { _ -> }
 
@@ -75,9 +75,9 @@ public class EventHandlerConfig : FeatureConfig() {
 
     //region Private Strategy Handlers
 
-    private var _onStrategyStarting: suspend (eventHandler: StrategyStartingContext<EventHandler>) -> Unit = { _ -> }
+    private var _onStrategyStarting: suspend (eventHandler: StrategyStartingContext) -> Unit = { _ -> }
 
-    private var _onStrategyCompleted: suspend (eventHandler: StrategyCompletedContext<EventHandler>) -> Unit = { _ -> }
+    private var _onStrategyCompleted: suspend (eventHandler: StrategyCompletedContext) -> Unit = { _ -> }
 
     //endregion Private Strategy Handlers
 
@@ -128,7 +128,7 @@ public class EventHandlerConfig : FeatureConfig() {
     /**
      * Append handler called when an agent is started.
      */
-    public fun onAgentStarting(handler: suspend (eventContext: AgentStartingContext<*>) -> Unit) {
+    public fun onAgentStarting(handler: suspend (eventContext: AgentStartingContext) -> Unit) {
         val originalHandler = this._onAgentStarting
         this._onAgentStarting = { eventContext ->
             originalHandler(eventContext)
@@ -177,7 +177,7 @@ public class EventHandlerConfig : FeatureConfig() {
     /**
      * Append handler called when a strategy starts execution.
      */
-    public fun onStrategyStarting(handler: suspend (eventContext: StrategyStartingContext<EventHandler>) -> Unit) {
+    public fun onStrategyStarting(handler: suspend (eventContext: StrategyStartingContext) -> Unit) {
         val originalHandler = this._onStrategyStarting
         this._onStrategyStarting = { eventContext ->
             originalHandler(eventContext)
@@ -188,7 +188,7 @@ public class EventHandlerConfig : FeatureConfig() {
     /**
      * Append handler called when a strategy finishes execution.
      */
-    public fun onStrategyCompleted(handler: suspend (eventContext: StrategyCompletedContext<EventHandler>) -> Unit) {
+    public fun onStrategyCompleted(handler: suspend (eventContext: StrategyCompletedContext) -> Unit) {
         val originalHandler = this._onStrategyCompleted
         this._onStrategyCompleted = { eventContext ->
             originalHandler(eventContext)
@@ -423,7 +423,7 @@ public class EventHandlerConfig : FeatureConfig() {
         message = "Use onAgentStarting instead",
         ReplaceWith("onAgentStarting(handler)", "ai.koog.agents.core.feature.handler.AgentStartingContext")
     )
-    public fun onBeforeAgentStarted(handler: suspend (eventContext: AgentStartContext<*>) -> Unit) {
+    public fun onBeforeAgentStarted(handler: suspend (eventContext: AgentStartContext) -> Unit) {
         onAgentStarting(handler)
     }
 
@@ -468,7 +468,7 @@ public class EventHandlerConfig : FeatureConfig() {
         message = "Use onStrategyStarting instead",
         ReplaceWith("onStrategyStarting(handler)", "ai.koog.agents.core.feature.handler.StrategyStartingContext")
     )
-    public fun onStrategyStarted(handler: suspend (eventContext: StrategyStartContext<EventHandler>) -> Unit) {
+    public fun onStrategyStarted(handler: suspend (eventContext: StrategyStartContext) -> Unit) {
         onStrategyStarting(handler)
     }
 
@@ -479,7 +479,7 @@ public class EventHandlerConfig : FeatureConfig() {
         message = "Use onStrategyCompleted instead",
         ReplaceWith("onStrategyCompleted(handler)", "ai.koog.agents.core.feature.handler.StrategyCompletedContext")
     )
-    public fun onStrategyFinished(handler: suspend (eventContext: StrategyFinishedContext<EventHandler>) -> Unit) {
+    public fun onStrategyFinished(handler: suspend (eventContext: StrategyFinishedContext) -> Unit) {
         onStrategyCompleted(handler)
     }
 
@@ -510,7 +510,7 @@ public class EventHandlerConfig : FeatureConfig() {
      */
     @Deprecated(
         message = "Use onNodeExecutionError instead",
-        ReplaceWith("onNodeExecutionError(handler)", "ai.koog.agents.core.feature.handler.NodeExecutionFailedContext")
+        ReplaceWith("onNodeExecutionFailed(handler)", "ai.koog.agents.core.feature.handler.NodeExecutionFailedContext")
     )
     public fun onNodeExecutionError(handler: suspend (eventContext: NodeExecutionErrorContext) -> Unit) {
         onNodeExecutionFailed(handler)
@@ -589,7 +589,7 @@ public class EventHandlerConfig : FeatureConfig() {
     /**
      * Invoke handlers for an event when an agent is started.
      */
-    internal suspend fun invokeOnAgentStarting(eventContext: AgentStartingContext<EventHandler>) {
+    internal suspend fun invokeOnAgentStarting(eventContext: AgentStartingContext) {
         _onAgentStarting.invoke(eventContext)
     }
 
@@ -621,14 +621,14 @@ public class EventHandlerConfig : FeatureConfig() {
     /**
      * Invoke handlers for an event when strategy starts execution.
      */
-    internal suspend fun invokeOnStrategyStarting(eventContext: StrategyStartingContext<EventHandler>) {
+    internal suspend fun invokeOnStrategyStarting(eventContext: StrategyStartingContext) {
         _onStrategyStarting.invoke(eventContext)
     }
 
     /**
      * Invoke handlers for an event when a strategy finishes execution.
      */
-    internal suspend fun invokeOnStrategyCompleted(eventContext: StrategyCompletedContext<EventHandler>) {
+    internal suspend fun invokeOnStrategyCompleted(eventContext: StrategyCompletedContext) {
         _onStrategyCompleted.invoke(eventContext)
     }
 

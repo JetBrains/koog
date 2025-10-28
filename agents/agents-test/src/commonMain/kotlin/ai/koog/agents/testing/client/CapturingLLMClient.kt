@@ -118,4 +118,8 @@ public class CapturingLLMClient(
         lastModerationModel = model
         return moderationResult
     }
+
+    override fun close() {
+        // No resources to close
+    }
 }

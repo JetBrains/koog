@@ -29,6 +29,7 @@ class PersistenceRestoreStrategyTests {
             nodeId = "Node2",
             lastInput = JsonPrimitive("input-for-node2"),
             messageHistory = listOf(Message.Assistant("History Before", ResponseMetaInfo(Clock.System.now()))),
+            version = 0L
         )
 
         provider.saveCheckpoint(agentId, checkpoint)

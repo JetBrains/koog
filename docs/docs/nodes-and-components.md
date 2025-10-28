@@ -42,7 +42,7 @@ edge(passthrough forwardTo nodeFinish)
 
 ## LLM nodes
 
-### nodeUpdatePrompt
+### nodeAppendPrompt
 
 A node that adds messages to the LLM prompt using the provided prompt builder.
 This is useful for modifying the conversation context before making an actual LLM request. For details, see [API reference](https://api.koog.ai/agents/agents-core/ai.koog.agents.core.dsl.extension/node-update-prompt.html).
@@ -58,7 +58,7 @@ Here is an example:
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.nodeUpdatePrompt
+import ai.koog.agents.core.dsl.extension.nodeAppendPrompt
 
 typealias Input = Unit
 typealias Output = Unit
@@ -78,7 +78,7 @@ val secondNode by node<Output, Output> {
 }
 
 // Node will get the value of type Output as input from the previous node and path through it to the next node
-val setupContext by nodeUpdatePrompt<Output>("setupContext") {
+val setupContext by nodeAppendPrompt<Output>("setupContext") {
     system("You are a helpful assistant specialized in Kotlin programming.")
     user("I need help with Kotlin coroutines.")
 }
@@ -610,8 +610,8 @@ val agentStrategy = strategy<String, List<Book>>("library-assistant") {
         val books = mutableListOf<Book>()
         val mdDefinition = markdownBookDefinition()
 
-        llm.writeSession {
-            updatePrompt { user(booksDescription) }
+        llm.writeSession { 
+            appendPrompt { user(booksDescription) }
             // Initiate the response stream in the form of the definition `mdDefinition`
             val markdownStream = requestLLMStreaming(mdDefinition)
             // Call the parser with the result of the response stream and perform actions with the result

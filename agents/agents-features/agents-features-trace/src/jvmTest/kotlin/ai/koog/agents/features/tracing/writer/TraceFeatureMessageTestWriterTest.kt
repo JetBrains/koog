@@ -1,11 +1,12 @@
 package ai.koog.agents.features.tracing.writer
 
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.core.dsl.extension.nodeAppendPrompt
 import ai.koog.agents.core.dsl.extension.nodeExecuteTool
 import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreamingAndSendResults
-import ai.koog.agents.core.dsl.extension.nodeUpdatePrompt
 import ai.koog.agents.core.feature.model.AIAgentError
 import ai.koog.agents.core.feature.model.events.LLMCallStartingEvent
 import ai.koog.agents.core.feature.model.events.LLMStreamingCompletedEvent
@@ -16,7 +17,7 @@ import ai.koog.agents.core.feature.model.events.NodeExecutionFailedEvent
 import ai.koog.agents.core.feature.model.events.ToolCallCompletedEvent
 import ai.koog.agents.core.feature.model.events.ToolCallStartingEvent
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.features.tracing.eventString
+import ai.koog.agents.core.utils.SerializationUtils
 import ai.koog.agents.features.tracing.feature.Tracing
 import ai.koog.agents.features.tracing.mock.RecursiveTool
 import ai.koog.agents.features.tracing.mock.TestFeatureMessageWriter
@@ -28,19 +29,20 @@ import ai.koog.agents.features.tracing.mock.testClock
 import ai.koog.agents.features.tracing.mock.userMessage
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
-import ai.koog.agents.testing.tools.mockLLMAnswer
-import ai.koog.agents.utils.use
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.llm.toModelInfo
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.utils.io.use
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Instant
 import org.junit.jupiter.api.Assertions.assertEquals
+import kotlin.reflect.typeOf
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
@@ -58,12 +60,12 @@ class TraceFeatureMessageTestWriterTest {
     @Test
     fun `test subsequent LLM calls`() = runBlocking {
         val strategy = strategy("tracing-test-strategy") {
-            val setPrompt by nodeUpdatePrompt<String>("Set prompt") {
+            val setPrompt by nodeAppendPrompt<String>("Set prompt") {
                 system("System 1")
                 user("User 1")
             }
 
-            val updatePrompt by nodeUpdatePrompt<String>("Update prompt") {
+            val appendPrompt by nodeAppendPrompt<String>("Update prompt") {
                 system("System 2")
                 user("User 2")
             }
@@ -74,8 +76,8 @@ class TraceFeatureMessageTestWriterTest {
 
             edge(nodeStart forwardTo setPrompt)
             edge(setPrompt forwardTo llmRequest0)
-            edge(llmRequest0 forwardTo updatePrompt transformed { _ -> "" })
-            edge(updatePrompt forwardTo llmRequest1 transformed { _ -> "" })
+            edge(llmRequest0 forwardTo appendPrompt transformed { _ -> "" })
+            edge(appendPrompt forwardTo llmRequest1 transformed { _ -> "" })
             edge(llmRequest1 forwardTo nodeFinish transformed { input -> input.content })
         }
 
@@ -300,6 +302,11 @@ class TraceFeatureMessageTestWriterTest {
                     NodeExecutionFailedEvent(
                         runId = writer.runId,
                         nodeName = nodeWithErrorName,
+                        input = @OptIn(InternalAgentsApi::class)
+                        SerializationUtils.encodeDataToJsonElementOrNull(
+                            data = "",
+                            dataType = typeOf<String>()
+                        ),
                         error = AIAgentError(testErrorMessage, expectedStackTrace, null),
                         timestamp = testClock.now().toEpochMilliseconds()
                     )
@@ -373,7 +380,7 @@ class TraceFeatureMessageTestWriterTest {
                     LLMStreamingStartingEvent(
                         runId = writer.runId,
                         prompt = expectedPrompt,
-                        model = model.eventString,
+                        model = model.toModelInfo().modelIdentifierName,
                         tools = toolRegistry.tools.map { it.name },
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),
@@ -385,7 +392,7 @@ class TraceFeatureMessageTestWriterTest {
                     LLMStreamingCompletedEvent(
                         runId = writer.runId,
                         prompt = expectedPrompt,
-                        model = model.eventString,
+                        model = model.toModelInfo().modelIdentifierName,
                         tools = toolRegistry.tools.map { it.name },
                         timestamp = testClock.now().toEpochMilliseconds()
                     )
@@ -440,6 +447,8 @@ class TraceFeatureMessageTestWriterTest {
             ): ai.koog.prompt.dsl.ModerationResult {
                 throw UnsupportedOperationException("Not used in test")
             }
+
+            override fun close() {}
         }
 
         TestFeatureMessageWriter().use { writer ->
@@ -484,7 +493,7 @@ class TraceFeatureMessageTestWriterTest {
                     LLMStreamingStartingEvent(
                         runId = writer.runId,
                         prompt = expectedPrompt,
-                        model = model.eventString,
+                        model = model.toModelInfo().modelIdentifierName,
                         tools = toolRegistry.tools.map { it.name },
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),
@@ -496,7 +505,7 @@ class TraceFeatureMessageTestWriterTest {
                     LLMStreamingCompletedEvent(
                         runId = writer.runId,
                         prompt = expectedPrompt,
-                        model = model.eventString,
+                        model = model.toModelInfo().modelIdentifierName,
                         tools = toolRegistry.tools.map { it.name },
                         timestamp = testClock.now().toEpochMilliseconds()
                     )

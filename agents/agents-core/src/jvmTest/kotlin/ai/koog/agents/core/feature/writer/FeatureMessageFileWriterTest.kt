@@ -2,7 +2,7 @@ package ai.koog.agents.core.feature.writer
 
 import ai.koog.agents.core.feature.message.FeatureMessage
 import ai.koog.agents.core.feature.model.FeatureStringMessage
-import ai.koog.agents.utils.use
+import ai.koog.utils.io.use
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch

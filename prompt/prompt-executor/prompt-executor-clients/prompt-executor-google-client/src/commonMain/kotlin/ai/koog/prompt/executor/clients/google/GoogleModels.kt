@@ -32,8 +32,6 @@ public object GoogleModels : LLModelDefinitions {
      */
     private val standardCapabilities: List<LLMCapability> = listOf(
         LLMCapability.Temperature,
-        LLMCapability.Schema.JSON.Basic,
-        LLMCapability.Schema.JSON.Standard,
         LLMCapability.Completion,
         LLMCapability.MultipleChoices,
     )
@@ -41,7 +39,7 @@ public object GoogleModels : LLModelDefinitions {
     /**
      * Capabilities for models that support tools/function calling
      */
-    private val toolCapabilities: List<LLMCapability> = standardCapabilities + listOf(
+    private val toolCapabilities: List<LLMCapability> = listOf(
         LLMCapability.Tools,
         LLMCapability.ToolChoice,
     )
@@ -50,12 +48,21 @@ public object GoogleModels : LLModelDefinitions {
      * Multimodal capabilities including vision (without tools)
      */
     private val multimodalCapabilities: List<LLMCapability> =
-        standardCapabilities + listOf(LLMCapability.Vision.Image, LLMCapability.Vision.Video, LLMCapability.Audio)
+        listOf(LLMCapability.Vision.Image, LLMCapability.Vision.Video, LLMCapability.Audio)
 
     /**
-     * Full capabilities including multimodal and tools
+     * Native structured output capabilities
      */
-    private val fullCapabilities: List<LLMCapability> = multimodalCapabilities + toolCapabilities
+    private val structuredOutputCapabilities: List<LLMCapability.Schema.JSON> = listOf(
+        LLMCapability.Schema.JSON.Basic,
+        LLMCapability.Schema.JSON.Standard,
+    )
+
+    /**
+     * Full capabilities including standard, multimodal, tools and native structured output
+     */
+    private val fullCapabilities: List<LLMCapability> =
+        standardCapabilities + multimodalCapabilities + toolCapabilities + structuredOutputCapabilities
 
     /**
      * Gemini 2.0 Flash is a fast, efficient model for a wide range of tasks.
@@ -69,7 +76,7 @@ public object GoogleModels : LLModelDefinitions {
     public val Gemini2_0Flash: LLModel = LLModel(
         provider = LLMProvider.Google,
         id = "gemini-2.0-flash",
-        capabilities = fullCapabilities,
+        capabilities = standardCapabilities + toolCapabilities + multimodalCapabilities,
         contextLength = 1_048_576,
         maxOutputTokens = 8_192,
     )
@@ -93,7 +100,7 @@ public object GoogleModels : LLModelDefinitions {
     public val Gemini2_0FlashLite: LLModel = LLModel(
         provider = LLMProvider.Google,
         id = "gemini-2.0-flash-lite",
-        capabilities = fullCapabilities, // Flash Lite has robust tool support
+        capabilities = standardCapabilities + toolCapabilities + multimodalCapabilities,
         contextLength = 1_048_576,
         maxOutputTokens = 8_192,
     )

@@ -26,25 +26,27 @@ import kotlinx.coroutines.runBlocking
  * @see <a href="https://weave-docs.wandb.ai/guides/tracking/otel/">Weave OpenTelemetry Docs</a>
  */
 fun main() = runBlocking {
-    val entity = System.getenv()["WEAVE_ENTITY"] ?: throw IllegalArgumentException("WEAVE_ENTITY is not set")
-    val projectName = System.getenv()["WEAVE_PROJECT_NAME"] ?: "koog-tracing"
+    simpleOpenAIExecutor(ApiKeyService.openAIApiKey).use { executor ->
+        val entity = System.getenv()["WEAVE_ENTITY"] ?: throw IllegalArgumentException("WEAVE_ENTITY is not set")
+        val projectName = System.getenv()["WEAVE_PROJECT_NAME"] ?: "koog-tracing"
 
-    val agent = AIAgent(
-        promptExecutor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey),
-        llmModel = OpenAIModels.Reasoning.O4Mini,
-        systemPrompt = "You are a code assistant. Provide concise code examples."
-    ) {
-        install(OpenTelemetry) {
-            addWeaveExporter(
-                weaveEntity = entity,
-                weaveProjectName = projectName
-            )
+        val agent = AIAgent(
+            promptExecutor = executor,
+            llmModel = OpenAIModels.Reasoning.O4Mini,
+            systemPrompt = "You are a code assistant. Provide concise code examples."
+        ) {
+            install(OpenTelemetry) {
+                addWeaveExporter(
+                    weaveEntity = entity,
+                    weaveProjectName = projectName
+                )
+            }
         }
+
+        println("Running agent with Weave tracing")
+
+        val result = agent.run("Tell me a joke about programming")
+
+        println("Result: $result\nSee traces on https://wandb.ai/$entity/$projectName/weave/traces")
     }
-
-    println("Running agent with Weave tracing")
-
-    val result = agent.run("Tell me a joke about programming")
-
-    println("Result: $result\nSee traces on https://wandb.ai/$entity/$projectName/weave/traces")
 }

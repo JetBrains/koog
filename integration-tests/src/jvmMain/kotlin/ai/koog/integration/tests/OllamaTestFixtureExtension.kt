@@ -29,12 +29,12 @@ class OllamaTestFixtureExtension : BeforeAllCallback, AfterAllCallback {
                 val fixture = OllamaTestFixture()
 
                 try {
-                    fixture.setUp()
+                    fixture.setup()
                     field.set(null, fixture)
                     fixtures.add(fixture)
                 } catch (e: Exception) {
                     println("Failed to setup fixture for field ${field.name}: ${e.message}")
-                    fixtures.forEach { it.tearDown() }
+                    fixtures.forEach { it.teardown() }
                     throw e
                 }
             }
@@ -55,7 +55,7 @@ class OllamaTestFixtureExtension : BeforeAllCallback, AfterAllCallback {
 
         fixtures.forEach { fixture ->
             try {
-                fixture.tearDown()
+                fixture.teardown()
             } catch (e: Exception) {
                 println("Failed to teardown fixture: ${e.message}")
                 e.printStackTrace()

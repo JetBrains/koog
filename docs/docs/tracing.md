@@ -376,7 +376,7 @@ import ai.koog.agents.core.feature.model.events.AgentCompletedEvent
 import ai.koog.agents.core.feature.model.events.DefinedFeatureEvent
 import ai.koog.agents.core.feature.remote.client.config.DefaultClientConnectionConfig
 import ai.koog.agents.core.feature.remote.client.FeatureMessageRemoteClient
-import ai.koog.agents.utils.use
+import ai.koog.utils.io.use
 import io.ktor.http.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.consumeAsFlow

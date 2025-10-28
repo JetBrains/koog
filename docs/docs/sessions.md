@@ -127,7 +127,7 @@ val strategy = strategy<Unit, Unit>("strategy-name") {
 ```kotlin
 llm.writeSession {
     // Modify the prompt
-    updatePrompt {
+    appendPrompt {
         user("New user message")
     }
 
@@ -268,7 +268,7 @@ llm.writeSession {
 
 ### Updating the prompt
 
-In a write session, you can update the prompt (conversation history) using the `updatePrompt` method:
+In a write session, you can add messages to the prompt (conversation history) using the `appendPrompt` method:
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
@@ -292,7 +292,7 @@ val strategy = strategy<Unit, Unit>("strategy-name") {
 -->
 ```kotlin
 llm.writeSession {
-    updatePrompt {
+    appendPrompt {
         // Add a system message
         system("You are a helpful assistant.")
 
@@ -354,7 +354,7 @@ val strategy = strategy<Unit, Unit>("strategy-name") {
 ```kotlin
 llm.writeSession {
     // Add a user message
-    updatePrompt {
+    appendPrompt {
         user("What's the capital of France?")
     }
 

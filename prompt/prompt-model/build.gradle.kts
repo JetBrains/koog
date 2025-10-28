@@ -24,6 +24,7 @@ kotlin {
         commonTest {
             dependencies {
                 implementation(project(":test-utils"))
+                api(project(":prompt:prompt-markdown"))
             }
         }
 
@@ -35,6 +36,10 @@ kotlin {
     }
 
     explicitApi()
+}
+
+dependencies {
+    testImplementation(project(":prompt:prompt-markdown"))
 }
 
 publishToMaven()

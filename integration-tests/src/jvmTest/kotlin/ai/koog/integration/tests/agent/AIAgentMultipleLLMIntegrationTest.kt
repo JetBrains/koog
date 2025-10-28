@@ -1,9 +1,9 @@
 package ai.koog.integration.tests.agent
 
 import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.agent.AIAgentException
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.context.agentInput
+import ai.koog.agents.core.agent.exception.AIAgentException
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeExecuteTool
@@ -24,6 +24,7 @@ import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.RetryUtils.withRetry
 import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
+import ai.koog.integration.tests.utils.annotations.Retry
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
@@ -48,15 +49,12 @@ import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.parallel.Execution
-import org.junit.jupiter.api.parallel.ExecutionMode
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
@@ -70,7 +68,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.test.fail
-import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Duration.Companion.minutes
 
 internal class ReportingLLMLLMClient(
     private val eventsChannel: Channel<Event>,
@@ -135,13 +133,17 @@ internal class ReportingLLMLLMClient(
     ): ModerationResult {
         throw NotImplementedError("Moderation not needed for this test")
     }
+
+    override fun close() {
+        underlyingClient.close()
+        eventsChannel.close()
+    }
 }
 
 internal fun LLMClient.reportingTo(
     eventsChannel: Channel<Event>
 ) = ReportingLLMLLMClient(eventsChannel, this)
 
-@Execution(ExecutionMode.SAME_THREAD)
 class AIAgentMultipleLLMIntegrationTest {
 
     companion object {
@@ -149,8 +151,8 @@ class AIAgentMultipleLLMIntegrationTest {
 
         @JvmStatic
         fun getModels(): Stream<LLModel> = Stream.of(
-            AnthropicModels.Sonnet_3_7,
-            OpenAIModels.Chat.GPT4o,
+            AnthropicModels.Sonnet_4_5,
+            OpenAIModels.Chat.GPT5,
         )
 
         @JvmStatic
@@ -360,37 +362,29 @@ class AIAgentMultipleLLMIntegrationTest {
         eventHandlerConfig: EventHandlerConfig.() -> Unit,
         maxAgentIterations: Int,
         prompt: Prompt = prompt("test") {},
-        eventsChannel: Channel<Event>? = null,
+        initialExecutor: MultiLLMPromptExecutor? = null,
     ): AIAgent<String, String> {
-        val openAIClient = if (eventsChannel != null) {
-            OpenAILLMClient(openAIApiKey).reportingTo(eventsChannel)
+        val executor = if (initialExecutor == null) {
+            val openAIClient = OpenAILLMClient(openAIApiKey)
+            val anthropicClient = AnthropicLLMClient(anthropicApiKey)
+            MultiLLMPromptExecutor(
+                LLMProvider.OpenAI to openAIClient,
+                LLMProvider.Anthropic to anthropicClient
+            )
         } else {
-            OpenAILLMClient(openAIApiKey)
+            initialExecutor
         }
-
-        val anthropicClient = if (eventsChannel != null) {
-            AnthropicLLMClient(anthropicApiKey).reportingTo(eventsChannel)
-        } else {
-            AnthropicLLMClient(anthropicApiKey)
-        }
-
-        val executor = MultiLLMPromptExecutor(
-            LLMProvider.OpenAI to openAIClient,
-            LLMProvider.Anthropic to anthropicClient
-        )
-
         val strategy = strategy<String, String>("test") {
             val anthropicSubgraph by subgraph<String, Unit>("anthropic") {
                 val definePromptAnthropic by node<Unit, Unit> {
                     llm.writeSession {
-                        model = AnthropicModels.Sonnet_3_7
+                        model = AnthropicModels.Haiku_4_5
                         rewritePrompt {
                             prompt("test", params = LLMParams(toolChoice = LLMParams.ToolChoice.Auto)) {
-                                system(
-                                    "You are a helpful assistant. You need to solve my task. " +
-                                        "CALL TOOLS!!! DO NOT SEND MESSAGES!!!!! ONLY SEND THE FINAL MESSAGE " +
-                                        "WHEN YOU ARE FINISHED AND EVERYTHING IS DONE AFTER CALLING THE TOOLS!"
-                                )
+                                system {
+                                    +"You are a helpful assistant. You need to solve my task. "
+                                    +"JUST CALL TOOLS. NO QUESTIONS ASKED."
+                                }
                             }
                         }
                     }
@@ -412,7 +406,7 @@ class AIAgentMultipleLLMIntegrationTest {
             val openaiSubgraph by subgraph("openai") {
                 val definePromptOpenAI by node<Unit, Unit> {
                     llm.writeSession {
-                        model = OpenAIModels.Chat.GPT4o
+                        model = OpenAIModels.Chat.GPT5
                         rewritePrompt {
                             prompt("test", params = LLMParams(toolChoice = LLMParams.ToolChoice.Auto)) {
                                 system(
@@ -420,9 +414,7 @@ class AIAgentMultipleLLMIntegrationTest {
                                     You are a helpful assistant. You need to verify that the task is solved correctly.
                                     Please analyze the whole produced solution, and check that it is valid.
                                     Write concise verification result.
-                                    CALL TOOLS!!! DO NOT SEND MESSAGES!!!!!
-                                    ONLY SEND THE FINAL MESSAGE WHEN YOU ARE FINISHED AND EVERYTHING IS DONE
-                                    AFTER CALLING THE TOOLS! 
+                                    JUST CALL TOOLS. NO QUESTIONS ASKED.
                                     """.trimIndent()
                                 )
                             }
@@ -458,7 +450,7 @@ class AIAgentMultipleLLMIntegrationTest {
         return AIAgent(
             promptExecutor = executor,
             strategy = strategy,
-            agentConfig = AIAgentConfig(prompt, OpenAIModels.Chat.GPT4o, maxAgentIterations),
+            agentConfig = AIAgentConfig(prompt, OpenAIModels.Chat.GPT5, maxAgentIterations),
             toolRegistry = tools,
         ) {
             install(EventHandler, eventHandlerConfig)
@@ -523,7 +515,8 @@ class AIAgentMultipleLLMIntegrationTest {
     }
 
     @Test
-    fun integration_testOpenAIAnthropicAgent() = runTest(timeout = 600.seconds) {
+    @Retry(5)
+    fun integration_testOpenAIAnthropicAgent() = runTest(timeout = 10.minutes) {
         Models.assumeAvailable(LLMProvider.OpenAI)
         Models.assumeAvailable(LLMProvider.Anthropic)
 
@@ -535,16 +528,24 @@ class AIAgentMultipleLLMIntegrationTest {
             }
         }
 
+        val openAIClient = OpenAILLMClient(openAIApiKey).reportingTo(eventsChannel)
+        val anthropicClient = AnthropicLLMClient(anthropicApiKey).reportingTo(eventsChannel)
+        val reportingExecutor = MultiLLMPromptExecutor(
+            LLMProvider.OpenAI to openAIClient,
+            LLMProvider.Anthropic to anthropicClient
+        )
+
         val agent = createTestMultiLLMAgent(
             fs,
             eventHandlerConfig,
-            maxAgentIterations = 42,
-            eventsChannel = eventsChannel,
+            maxAgentIterations = 50,
+            initialExecutor = reportingExecutor,
         )
 
         val result = agent.run(
             "Generate me a project in Ktor that has a GET endpoint that returns the capital of France. Write a test"
         )
+        eventsChannel.close()
 
         assertNotNull(result)
 
@@ -590,7 +591,7 @@ class AIAgentMultipleLLMIntegrationTest {
     @ParameterizedTest
     @MethodSource("getModels")
     fun `integration_test agent with not registered subgraph tool result fails`(model: LLModel) =
-        runTest(timeout = 600.seconds) {
+        runTest(timeout = 10.minutes) {
             Models.assumeAvailable(LLMProvider.OpenAI)
             Models.assumeAvailable(LLMProvider.Anthropic)
 
@@ -610,7 +611,7 @@ class AIAgentMultipleLLMIntegrationTest {
     @ParameterizedTest
     @MethodSource("getModels")
     fun `integration_test agent with registered subgraph tool result runs`(model: LLModel) =
-        runTest(timeout = 600.seconds) {
+        runTest(timeout = 10.minutes) {
             Models.assumeAvailable(LLMProvider.OpenAI)
             Models.assumeAvailable(LLMProvider.Anthropic)
 
@@ -656,7 +657,7 @@ class AIAgentMultipleLLMIntegrationTest {
         }
 
     @Test
-    fun integration_testTerminationOnIterationsLimitExhaustion() = runTest(timeout = 600.seconds) {
+    fun integration_testTerminationOnIterationsLimitExhaustion() = runTest(timeout = 10.minutes) {
         Models.assumeAvailable(LLMProvider.OpenAI)
         Models.assumeAvailable(LLMProvider.Anthropic)
 
@@ -687,8 +688,8 @@ class AIAgentMultipleLLMIntegrationTest {
 
     @Test
     fun integration_testAnthropicAgentEnumSerialization() {
-        runBlocking {
-            val llmModel = AnthropicModels.Sonnet_3_7
+        runTest(timeout = 10.minutes) {
+            val llmModel = AnthropicModels.Sonnet_4_5
             Models.assumeAvailable(llmModel.provider)
             val agent = AIAgent(
                 promptExecutor = simpleAnthropicExecutor(anthropicApiKey),
@@ -724,18 +725,9 @@ class AIAgentMultipleLLMIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("modelsWithVisionCapability")
-    fun integration_testAgentWithImageCapability(model: LLModel) = runTest(timeout = 120.seconds) {
+    fun integration_testAgentWithImageCapability(model: LLModel) = runTest(timeout = 2.minutes) {
         Models.assumeAvailable(model.provider)
         val fs = MockFileSystem()
-        val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
-            onToolCallStarting { eventContext ->
-                println(
-                    "Calling tool ${eventContext.tool.name} with arguments ${
-                        eventContext.toolArgs.toString().lines().first().take(100)
-                    }"
-                )
-            }
-        }
 
         val imageFile = File(testResourcesDir, "test.png")
         assertTrue(imageFile.exists(), "Image test file should exist")
@@ -746,7 +738,7 @@ class AIAgentMultipleLLMIntegrationTest {
         withRetry {
             val agent = createTestMultiLLMAgent(
                 fs,
-                eventHandlerConfig,
+                { },
                 maxAgentIterations = 20,
             )
 
@@ -782,7 +774,7 @@ class AIAgentMultipleLLMIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("modelsWithVisionCapability")
-    fun integration_testAgentWithImageCapabilityUrl(model: LLModel) = runTest(timeout = 120.seconds) {
+    fun integration_testAgentWithImageCapabilityUrl(model: LLModel) = runTest(timeout = 10.minutes) {
         Models.assumeAvailable(model.provider)
 
         val fs = MockFileSystem()
@@ -808,21 +800,18 @@ class AIAgentMultipleLLMIntegrationTest {
                     br()
                     +"Please analyze this image and identify the image format if possible."
                 }
-
-                attachments {
-                    image("https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg")
-                }
+                image("https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg")
             }
         }
 
-        val agent = createTestMultiLLMAgent(
-            fs,
-            eventHandlerConfig,
-            maxAgentIterations = 20,
-            prompt = prompt,
-        )
+        withRetry(3) {
+            val agent = createTestMultiLLMAgent(
+                fs,
+                eventHandlerConfig,
+                maxAgentIterations = 50,
+                prompt = prompt,
+            )
 
-        withRetry(5) {
             val result = agent.run("Hi! Please analyse my image.")
             assertNotNull(result, "Result should not be null")
             assertTrue(result.isNotBlank(), "Result should not be empty or blank")

@@ -5,7 +5,7 @@ Instead, the agent logic is implemented as a lambda function that handles user i
 optionally calls tools, and produces a final output. It can perform a single LLM call, process multiple LLM calls in sequence, or loop based on user input, as well as LLM and tool outputs.
 
 !!! tip
-    - If you already have a simple [single-run agent](single-run-agents.md) as your first MVP, but run into task-specific limitations, use a functional agent to prototype custom logic. You can implement custom control flows in plain Kotlin while still using most Koog features, including history compression and automatic state management.
+    - If you already have a [basic agent](basic-agents.md) as your first MVP, but run into task-specific limitations, use a functional agent to prototype custom logic. You can implement custom control flows in plain Kotlin while still using most Koog features, including history compression and automatic state management.
     - For production-grade needs, refactor your functional agent into a [complex workflow agent](complex-workflow-agents.md) with strategy graphs. This provides persistence with controllable rollbacks for fault-tolerance and advanced OpenTelemetry tracing with nested graph events.
 
 This page guides you through the steps necessary to create a minimal functional agent and extend it with tools.
@@ -14,9 +14,9 @@ This page guides you through the steps necessary to create a minimal functional 
 
 Before you start, make sure that you have the following:
 
-- A working Kotlin/JVM project with Gradle.
+- A working Kotlin/JVM project.
 - Java 17+ installed.
-- A valid API key from the LLM provider used to implement an AI agent. For a list of all available providers, refer to [Overview](index.md).
+- A valid API key from the LLM provider used to implement an AI agent. For a list of all available providers, refer to [LLM providers](llm-providers.md).
 - (Optional) Ollama installed and running locally if you use this provider.
 
 !!! tip
@@ -33,7 +33,7 @@ dependencies {
     implementation("ai.koog:koog-agents:VERSION")
 }
 ```
-For all available installation methods, see [Installation](index.md#installation).
+For all available installation methods, see [Install Koog](getting-started.md#install-koog).
 
 ## Create a minimal functional agent
 
@@ -49,8 +49,8 @@ Here is an example of a minimal functional agent that sends user text to a speci
 <!--- INCLUDE
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.functionalStrategy
-import ai.koog.agents.core.agent.asAssistantMessage
-import ai.koog.agents.core.agent.requestLLM
+import ai.koog.agents.core.dsl.extension.asAssistantMessage
+import ai.koog.agents.core.dsl.extension.requestLLM
 import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
 import ai.koog.prompt.llm.OllamaModels
 import kotlinx.coroutines.runBlocking
@@ -94,8 +94,8 @@ You can extend the agent logic to handle multiple sequential LLM calls. For exam
 <!--- INCLUDE
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.functionalStrategy
-import ai.koog.agents.core.agent.asAssistantMessage
-import ai.koog.agents.core.agent.requestLLM
+import ai.koog.agents.core.dsl.extension.asAssistantMessage
+import ai.koog.agents.core.dsl.extension.requestLLM
 import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
 import ai.koog.prompt.llm.OllamaModels
 import kotlinx.coroutines.runBlocking
@@ -209,12 +209,12 @@ import ai.koog.agents.core.tools.reflect.tools
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.functionalStrategy
-import ai.koog.agents.core.agent.asAssistantMessage
-import ai.koog.agents.core.agent.containsToolCalls
-import ai.koog.agents.core.agent.executeMultipleTools
-import ai.koog.agents.core.agent.extractToolCalls
-import ai.koog.agents.core.agent.requestLLMMultiple
-import ai.koog.agents.core.agent.sendMultipleToolResults
+import ai.koog.agents.core.dsl.extension.asAssistantMessage
+import ai.koog.agents.core.dsl.extension.containsToolCalls
+import ai.koog.agents.core.dsl.extension.executeMultipleTools
+import ai.koog.agents.core.dsl.extension.extractToolCalls
+import ai.koog.agents.core.dsl.extension.requestLLMMultiple
+import ai.koog.agents.core.dsl.extension.sendMultipleToolResults
 import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
 import ai.koog.prompt.llm.OllamaModels
 import kotlinx.coroutines.runBlocking
@@ -238,7 +238,7 @@ val mathWithTools = AIAgent<String, String>(
     strategy = functionalStrategy { input -> // Define the agent logic extended with tool calls
         // Send the user input to the LLM
         var responses = requestLLMMultiple(input)
-        
+
         // Only loop while the LLM requests tools
         while (responses.containsToolCalls()) {
             // Extract tool calls from the response

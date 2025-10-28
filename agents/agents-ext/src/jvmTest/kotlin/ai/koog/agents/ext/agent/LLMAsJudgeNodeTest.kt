@@ -9,7 +9,7 @@ import ai.koog.agents.core.agent.entity.StartNode
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.environment.AIAgentEnvironment
-import ai.koog.agents.core.feature.AIAgentGraphPipeline
+import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
@@ -30,8 +30,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 
 class LLMAsJudgeNodeTest {
-    private val defaultName = "re_act"
-
     private val testClock: Clock = object : Clock {
         override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z")
     }
@@ -75,6 +73,7 @@ class LLMAsJudgeNodeTest {
 
         val context = AIAgentGraphContext(
             environment = mockEnv,
+            agentId = "test-agent",
             agentInputType = typeOf<String>(),
             agentInput = "Hello",
             config = mockk(),
@@ -84,7 +83,6 @@ class LLMAsJudgeNodeTest {
             runId = "run-1",
             strategyName = "test-strategy",
             pipeline = AIAgentGraphPipeline(),
-            agent = mockk()
         )
 
         val subgraphContext = object : AIAgentSubgraphBuilderBase<String, String>() {
@@ -113,9 +111,9 @@ class LLMAsJudgeNodeTest {
 
         val expectedXMLHistory = """
             <previous_conversation>
-            <user>
+            <system>
             System message
-            </user>
+            </system>
             <user>
             User question
             </user>

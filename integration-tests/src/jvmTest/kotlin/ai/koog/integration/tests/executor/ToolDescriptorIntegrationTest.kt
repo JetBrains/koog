@@ -3,18 +3,14 @@ package ai.koog.integration.tests.executor
 import ai.koog.agents.core.tools.Tool
 import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.RetryUtils.withRetry
-import ai.koog.integration.tests.utils.TestUtils
+import ai.koog.integration.tests.utils.getLLMClientForProvider
 import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.bedrock.BedrockModels
-import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleModels
-import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterModels
 import ai.koog.prompt.llm.LLMCapability
-import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
@@ -112,9 +108,9 @@ class ToolDescriptorIntegrationTest {
         fun allModels(): Stream<LLModel> {
             return Stream.of(
                 OpenAIModels.CostOptimized.GPT4_1Mini,
-                AnthropicModels.Sonnet_3_7,
+                AnthropicModels.Sonnet_4_5,
                 GoogleModels.Gemini2_5Flash,
-                BedrockModels.AnthropicClaude35Haiku,
+                BedrockModels.AnthropicClaude4_5Haiku,
                 OpenRouterModels.Mistral7B,
             )
         }
@@ -322,13 +318,12 @@ class ToolDescriptorIntegrationTest {
     @MethodSource("primitiveToolAndModelCombinations")
     fun integration_testPrimitiveTools(tool: Tool<*, *>, model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
-        assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
+        assumeTrue(
+            model.capabilities.containsAll(listOf(LLMCapability.Tools, LLMCapability.ToolChoice)),
+            "Model $model does not support tools and tool choice"
+        )
 
-        val client = when (model.provider) {
-            is LLMProvider.Anthropic -> AnthropicLLMClient(TestUtils.readTestAnthropicKeyFromEnv())
-            is LLMProvider.Google -> GoogleLLMClient(TestUtils.readTestGoogleAIKeyFromEnv())
-            else -> OpenAILLMClient(TestUtils.readTestOpenAIKeyFromEnv())
-        }
+        val client = getLLMClientForProvider(model.provider)
 
         val testTool = tool as TestTool<*, *>
         val prompt = prompt(testTool.toolName.value, params = LLMParams(toolChoice = ToolChoice.Required)) {

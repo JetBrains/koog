@@ -21,14 +21,11 @@ public interface AgentEventContext : AgentLifecycleEventContext
 /**
  * Represents the context available during the start of an AI agent.
  *
- * @param TFeature The type of the feature object associated with this context.
  * @property agent The AI agent associated with this context.
- * @property feature The feature-specific data associated with this context.
  */
-public data class AgentStartingContext<TFeature>(
+public data class AgentStartingContext(
     public val agent: AIAgent<*, *>,
     public val runId: String,
-    public val feature: TFeature,
     public val context: AIAgentContext,
 ) : AgentEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.AgentStarting
@@ -78,15 +75,12 @@ public data class AgentClosingContext(
 /**
  * Provides a context for executing transformations and operations within an AI agent's environment.
  *
- * @param TFeature The type of the feature associated with the context.
  * @property strategy The AI agent strategy that defines the workflow and execution logic for the AI agent.
  * @property agent The AI agent being managed or operated upon in the context.
- * @property feature An additional feature or configuration associated with the context.
  */
-public class AgentEnvironmentTransformingContext<TFeature>(
+public class AgentEnvironmentTransformingContext(
     public val strategy: AIAgentStrategy<*, *, AIAgentGraphContextBase>,
     public val agent: GraphAIAgent<*, *>,
-    public val feature: TFeature
 ) : AgentEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.AgentEnvironmentTransforming
 }

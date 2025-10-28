@@ -1,5 +1,6 @@
 package ai.koog.agents.core.feature
 
+import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
@@ -20,7 +21,7 @@ import kotlinx.coroutines.flow.onStart
  * to catch and log events related to LLM calls.
  *
  * @property executor The [ai.koog.prompt.executor.model.PromptExecutor] to wrap.
- * @property pipeline The [AIAgentPipeline] associated with the executor.
+ * @property pipeline The [ai.koog.agents.core.feature.pipeline.AIAgentPipeline] associated with the executor.
  */
 public class PromptExecutorProxy(
     private val executor: PromptExecutor,
@@ -121,5 +122,9 @@ public class PromptExecutorProxy(
 
         pipeline.onLLMCallCompleted(runId, prompt, model, emptyList(), responses = emptyList(), moderationResponse = result)
         return result
+    }
+
+    override fun close() {
+        executor.close()
     }
 }

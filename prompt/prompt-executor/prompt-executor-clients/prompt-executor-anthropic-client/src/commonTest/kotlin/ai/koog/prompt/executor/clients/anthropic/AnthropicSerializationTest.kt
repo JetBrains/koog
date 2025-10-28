@@ -1,5 +1,9 @@
 package ai.koog.prompt.executor.clients.anthropic
 
+import ai.koog.prompt.executor.clients.anthropic.models.AnthropicContent
+import ai.koog.prompt.executor.clients.anthropic.models.AnthropicMessage
+import ai.koog.prompt.executor.clients.anthropic.models.AnthropicMessageRequest
+import ai.koog.prompt.executor.clients.anthropic.models.AnthropicMessageRequestSerializer
 import ai.koog.test.utils.verifyDeserialization
 import io.kotest.assertions.json.shouldEqualJson
 import kotlinx.serialization.json.Json

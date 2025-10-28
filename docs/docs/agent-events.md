@@ -108,22 +108,22 @@ Represents the end of a strategy run. Includes the following fields:
 
 Represents the start of a node run. Includes the following fields:
 
-| Name       | Data type | Required | Default | Description                                      |
-|------------|-----------|----------|---------|--------------------------------------------------|
-| `runId`    | String    | Yes      |         | The unique identifier of the strategy run.       |
-| `nodeName` | String    | Yes      |         | The name of the node whose run started.          |
-| `input`    | String    | Yes      |         | The input value for the node.                    |
+| Name       | Data type   | Required | Default | Description                                      |
+|------------|-------------|----------|---------|--------------------------------------------------|
+| `runId`    | String      | Yes      |         | The unique identifier of the strategy run.       |
+| `nodeName` | String      | Yes      |         | The name of the node whose run started.          |
+| `input`    | JsonElement | No       | null    | The input value for the node.                    |
 
 #### NodeExecutionCompletedEvent
 
 Represents the end of a node run. Includes the following fields:
 
-| Name       | Data type | Required | Default | Description                                      |
-|------------|-----------|----------|---------|--------------------------------------------------|
-| `runId`    | String    | Yes      |         | The unique identifier of the strategy run.       |
-| `nodeName` | String    | Yes      |         | The name of the node whose run ended.            |
-| `input`    | String    | Yes      |         | The input value for the node.                    |
-| `output`   | String    | Yes      |         | The output value produced by the node.           |
+| Name       | Data type   | Required | Default | Description                                      |
+|------------|-------------|----------|---------|--------------------------------------------------|
+| `runId`    | String      | Yes      |         | The unique identifier of the strategy run.       |
+| `nodeName` | String      | Yes      |         | The name of the node whose run ended.            |
+| `input`    | JsonElement | No       | null    | The input value for the node.                    |
+| `output`   | JsonElement | No       | null    | The output value produced by the node.           |
 
 #### NodeExecutionFailedEvent
 
@@ -133,6 +133,7 @@ Represents an error that occurred during a node run. Includes the following fiel
 |------------|--------------|----------|---------|-----------------------------------------------------------------------------------------------------------------|
 | `runId`    | String       | Yes      |         | The unique identifier of the strategy run.                                                                      |
 | `nodeName` | String       | Yes      |         | The name of the node where the error occurred.                                                                  |
+| `input`    | JsonElement  | No       | null    | The input data provided to the node.                                                                            |
 | `error`    | AIAgentError | Yes      |         | The specific error that occurred during the node run. For more information, see [AIAgentError](#aiagenterror). |
 
 ### LLM call events
@@ -316,7 +317,7 @@ install(Tracing) {
     }
 }
 ```
-<!--- KNIT example-tracing-01.kt -->
+<!--- KNIT example-events-01.kt -->
 
 ### Can I use multiple message processors?
 
@@ -363,7 +364,7 @@ install(Tracing) {
     addMessageProcessor(TraceFeatureMessageRemoteWriter(connectionConfig))
 }
 ```
-<!--- KNIT example-tracing-02.kt -->
+<!--- KNIT example-events-02.kt -->
 
 ### How can I create a custom message processor?
 
@@ -429,6 +430,6 @@ install(Tracing) {
     addMessageProcessor(CustomTraceProcessor())
 }
 ```
-<!--- KNIT example-tracing-03.kt -->
+<!--- KNIT example-events-03.kt -->
 
 For more information about existing event types that can be handled by message processors, see [Predefined event types](#predefined-event-types).

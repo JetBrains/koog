@@ -21,7 +21,7 @@ public typealias AgentEventHandlerContext = ai.koog.agents.core.feature.handler.
     message = "Use AgentEnvironmentTransformingContext instead",
     replaceWith = ReplaceWith("AgentEnvironmentTransformingContext", "ai.koog.agents.core.feature.handler.agent.AgentEnvironmentTransformingContext")
 )
-public typealias AgentTransformEnvironmentContext<TFeature> = ai.koog.agents.core.feature.handler.agent.AgentEnvironmentTransformingContext<TFeature>
+public typealias AgentTransformEnvironmentContext = ai.koog.agents.core.feature.handler.agent.AgentEnvironmentTransformingContext
 
 /**
  * Represents the context available during the start of an AI agent.
@@ -30,7 +30,7 @@ public typealias AgentTransformEnvironmentContext<TFeature> = ai.koog.agents.cor
     message = "Use AgentStartingContext instead",
     replaceWith = ReplaceWith("AgentStartingContext", "ai.koog.agents.core.feature.handler.agent.AgentStartingContext")
 )
-public typealias AgentStartContext<TFeature> = ai.koog.agents.core.feature.handler.agent.AgentStartingContext<TFeature>
+public typealias AgentStartContext = ai.koog.agents.core.feature.handler.agent.AgentStartingContext
 
 /**
  * Represents the context for handling the completion of an agent's execution.

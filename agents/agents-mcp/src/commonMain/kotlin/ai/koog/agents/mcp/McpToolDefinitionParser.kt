@@ -68,27 +68,50 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
         val typeStr = element["type"]?.jsonPrimitive?.content
 
         if (typeStr == null) {
-            /**
-             * Special case for nullable types.
-             * Schema example:
-             * {
-             *   "nullableParam": {
-             *     "anyOf": [
-             *       { "type": "string" },
-             *       { "type": "null" }
-             *     ],
-             *     "title": "Nullable string parameter"
-             *   }
-             * }
-             */
             val anyOf = element["anyOf"]?.jsonArray
-            if (anyOf != null && anyOf.size == 2) {
+            if (anyOf != null) {
                 val types = anyOf.map { it.jsonObject["type"]?.jsonPrimitive?.content }
-                if (types.contains("null")) {
+                /**
+                 * Special case for nullable types.
+                 * Schema example:
+                 * {
+                 *   "nullableParam": {
+                 *     "anyOf": [
+                 *       { "type": "string" },
+                 *       { "type": "null" }
+                 *     ],
+                 *     "title": "Nullable string parameter"
+                 *   }
+                 * }
+                 */
+                if (anyOf.size == 2 && types.contains("null")) {
                     val nonNullType = anyOf.first {
                         it.jsonObject["type"]?.jsonPrimitive?.content != "null"
                     }.jsonObject
                     return parseParameterType(nonNullType, depth + 1)
+                } else {
+                    /**
+                     * anyOf with multiple types.
+                     * Schema example:
+                     * {
+                     *   "anyOfParam": {
+                     *     "anyOf": [
+                     *       { "type": "string" },
+                     *       { "type": "number" }
+                     *     ],
+                     *     "title": "string or number parameter"
+                     *   }
+                     * }
+                     */
+                    return ToolParameterType.AnyOf(
+                        types = anyOf.map { it.jsonObject }.map {
+                            ToolParameterDescriptor(
+                                name = "",
+                                description = it["description"]?.jsonPrimitive?.content.orEmpty(),
+                                type = parseParameterType(it.jsonObject)
+                            )
+                        }.toTypedArray()
+                    )
                 }
             }
 
@@ -142,7 +165,7 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
                     val rawProperties = properties.jsonObject
                     rawProperties.map { (name, property) ->
                         // Description is optional
-                        val description = element["description"]?.jsonPrimitive?.content.orEmpty()
+                        val description = property.jsonObject["description"]?.jsonPrimitive?.content.orEmpty()
                         ToolParameterDescriptor(name, description, parseParameterType(property.jsonObject, depth + 1))
                     }
                 } ?: emptyList()
@@ -178,6 +201,8 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
                     additionalProperties = additionalProperties
                 )
             }
+
+            "null" -> ToolParameterType.Null
 
             // Unsupported type
             else -> throw IllegalArgumentException("Unsupported parameter type: $typeStr")

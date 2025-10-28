@@ -88,12 +88,18 @@ internal abstract class GenAIAgentSpan(
 
     fun addAttribute(attribute: Attribute) {
         logger.debug { "Adding attribute to span (name: $name, id: $spanId): ${attribute.key}" }
+
+        val existingAttribute = attributes.find { it.key == attribute.key }
+        if (existingAttribute != null) {
+            logger.debug { "Attribute with key '${attribute.key}' already exists. Overwriting existing attribute value." }
+            removeAttribute(existingAttribute)
+        }
         _attributes.add(attribute)
     }
 
     fun addAttributes(attributes: List<Attribute>) {
         logger.debug { "Adding ${attributes.size} attributes to span (name: $name, id: $spanId):\n${attributes.joinToString("\n") { "- ${it.key}" }}" }
-        _attributes.addAll(attributes)
+        attributes.forEach { addAttribute(it) }
     }
 
     fun removeAttribute(attribute: Attribute): Boolean {

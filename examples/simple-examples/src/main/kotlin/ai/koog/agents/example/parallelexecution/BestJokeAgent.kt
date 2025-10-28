@@ -18,7 +18,6 @@ import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import io.opentelemetry.exporter.logging.LoggingSpanExporter
-import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -34,7 +33,10 @@ const val jokeSystemPrompt =
     "You are a comedian. Generate a funny joke about the given topic. Be creative and make it hilarious."
 const val jokeCritiqueSystemPrompt = "You are a comedy critic. Give a critique for the given joke."
 
-fun main() = runBlocking {
+suspend fun main() {
+    val openAIClient = OpenAILLMClient(ApiKeyService.openAIApiKey)
+    val anthropicClient = AnthropicLLMClient(ApiKeyService.anthropicApiKey)
+
     // Create agent config
     val agentConfig = AIAgentConfig(
         prompt = prompt("best-joke-agent") {
@@ -44,28 +46,31 @@ fun main() = runBlocking {
         maxAgentIterations = 10
     )
 
-    // Create the agent
-    val agent = AIAgent(
-        promptExecutor = MultiLLMPromptExecutor(
-            LLMProvider.OpenAI to OpenAILLMClient(ApiKeyService.openAIApiKey),
-            LLMProvider.Anthropic to AnthropicLLMClient(ApiKeyService.anthropicApiKey),
-        ),
-        strategy = bestJokeStrategy(),
-        agentConfig = agentConfig,
-        toolRegistry = ToolRegistry.EMPTY
-    ) {
-        install(OpenTelemetry) {
-            // Add a console logger for local debugging
-            addSpanExporter(LoggingSpanExporter.create())
+    MultiLLMPromptExecutor(
+        LLMProvider.OpenAI to openAIClient,
+        LLMProvider.Anthropic to anthropicClient,
+    ).use { executor ->
+
+        // Create the agent
+        val agent = AIAgent(
+            promptExecutor = executor,
+            strategy = bestJokeStrategy(),
+            agentConfig = agentConfig,
+            toolRegistry = ToolRegistry.EMPTY
+        ) {
+            install(OpenTelemetry) {
+                // Add a console logger for local debugging
+                addSpanExporter(LoggingSpanExporter.create())
+            }
         }
+
+        val topic = "programming"
+        println("Generating jokes about: $topic")
+
+        // Run the agent
+        val result = agent.run(topic)
+        println("Final result: $result")
     }
-
-    val topic = "programming"
-    println("Generating jokes about: $topic")
-
-    // Run the agent
-    val result = agent.run(topic)
-    println("Final result: $result")
 }
 
 fun bestJokeStrategy(): AIAgentGraphStrategy<String, String> = strategy("best-joke") {

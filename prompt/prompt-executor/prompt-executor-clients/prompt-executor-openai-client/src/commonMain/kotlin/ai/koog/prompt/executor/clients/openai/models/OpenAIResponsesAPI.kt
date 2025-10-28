@@ -119,7 +119,7 @@ import kotlin.jvm.JvmInline
 @Serializable
 internal class OpenAIResponsesAPIRequest(
     val background: Boolean? = null,
-    val include: List<String>? = null,
+    val include: List<OpenAIInclude>? = null,
     val input: List<Item>? = null,
     val instructions: String? = null,
     val maxOutputTokens: Int? = null,
@@ -147,6 +147,41 @@ internal class OpenAIResponsesAPIRequest(
     val user: String? = null,
     val additionalProperties: Map<String, JsonElement>? = null,
 ) : OpenAIBaseLLMRequest
+
+/**
+ * Specify additional output data to include in the model response. Currently supported values are:
+ *
+ * web_search_call.action.sources: Include the sources of the web search tool call.
+ * code_interpreter_call.outputs: Includes the outputs of python code execution in code interpreter tool call items.
+ * computer_call_output.output.image_url: Include image urls from the computer call output.
+ * file_search_call.results: Include the search results of the file search tool call.
+ * message.input_image.image_url: Include image urls from the input message.
+ * message.output_text.logprobs: Include logprobs with assistant messages.
+ * reasoning.encrypted_content: Includes an encrypted version of reasoning tokens in reasoning item outputs. This enables reasoning items to be used in multi-turn conversations when using the Responses API statelessly (like when the store parameter is set to false, or when an organization is enrolled in the zero data retention program).
+ */
+@Serializable
+public enum class OpenAIInclude {
+    @SerialName("web_search_call.action.sources")
+    WEB_SEARCH_CALL_ACTION_SOURCES,
+
+    @SerialName("code_interpreter_call.outputs")
+    CODE_INTERPRETER_CALL_OUTPUTS,
+
+    @SerialName("computer_call_output.output.image_url")
+    COMPUTER_CALL_OUTPUT_IMAGE_URL,
+
+    @SerialName("file_search_call.results")
+    FILE_SEARCH_CALL_RESULTS,
+
+    @SerialName("message.input_image.image_url")
+    INPUT_IMAGE_URL,
+
+    @SerialName("message.output_text.logprobs")
+    OUTPUT_TEXT_LOGPROBS,
+
+    @SerialName("reasoning.encrypted_content")
+    REASONING_ENCRYPTED_CONTENT,
+}
 
 @Serializable(with = ItemPolymorphicSerializer::class)
 internal sealed interface Item {

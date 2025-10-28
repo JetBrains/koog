@@ -236,4 +236,6 @@ internal class MockLLMExecutor(
             }
         }
     }
+
+    override fun close() {}
 }

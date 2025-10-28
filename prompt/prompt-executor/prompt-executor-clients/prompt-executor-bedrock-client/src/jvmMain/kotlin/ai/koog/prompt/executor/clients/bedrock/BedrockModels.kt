@@ -10,24 +10,25 @@ import kotlinx.serialization.Serializable
 /**
  * Represents a Bedrock model with an optional inference profile prefix.
  *
- * This allows users to specify an inference profile prefix that will be prepended
- * to the model ID when making requests to AWS Bedrock.
+ * This allows users to explicitly specify an inference profile prefix that will be prepended
+ * to the model ID when making requests to AWS Bedrock. If the prefix is `null`, no prefix will
+ * be added, and the model ID will be used as-is. If a value is provided, the effective model ID
+ * will be "<prefix>.<modelId>".
  *
- * @param model The base LLModel to use
+ * @param model The base LLModel to use.
  * @param modelId The ID of the used model. Defaults to the ID of the provided model.
- * @param inferenceProfilePrefix Optional prefix to prepend to the model ID
+ * @param inferenceProfilePrefix Optional prefix to prepend to the model ID. If `null`, no prefix is used.
  */
-
 @Serializable
 public data class BedrockModel(
     val model: LLModel,
     val modelId: String = model.id,
-    val inferenceProfilePrefix: String = BedrockInferencePrefixes.US.prefix
+    val inferenceProfilePrefix: String? = BedrockInferencePrefixes.US.prefix
 ) {
     /**
-     * Returns the effective model ID with inference profile prefix if provided.
+     * Returns the effective model ID, only adds inference profile prefix if provided.
      */
-    val effectiveModelId: String = "$inferenceProfilePrefix.$modelId"
+    val effectiveModelId: String = inferenceProfilePrefix?.let { "$it.$modelId" } ?: modelId
 
     /**
      * Returns the LLModel with the effective model ID.
@@ -108,25 +109,29 @@ public object BedrockModels : LLModelDefinitions {
         LLMCapability.Completion
     )
 
-    // Capabilities for models that support tools/functions
-    private val toolCapabilities: List<LLMCapability> = standardCapabilities + listOf(
+    // Tool calling capabilities
+    private val toolCapabilities: List<LLMCapability> = listOf(
         LLMCapability.Tools,
         LLMCapability.ToolChoice,
-        LLMCapability.Schema.JSON.Standard
     )
+
+    // Multimodal capabilities (text and images)
+    private val multimodalCapabilities: List<LLMCapability> = listOf(
+        LLMCapability.Vision.Image,
+        LLMCapability.Document
+    )
+
+    private val embedCapabilities: List<LLMCapability> = listOf(
+        LLMCapability.Embed
+    )
+
+    // Full capabilities (multimodal + tools)
+    private val fullCapabilities: List<LLMCapability> =
+        standardCapabilities + toolCapabilities + multimodalCapabilities
 
     // Capabilities of the nova models
     private val novaCapabilities: List<LLMCapability> = standardCapabilities + listOf(
         LLMCapability.Tools,
-    )
-
-    // Full capabilities (multimodal + tools)
-    private val fullCapabilities: List<LLMCapability> = standardCapabilities + listOf(
-        LLMCapability.Tools,
-        LLMCapability.ToolChoice,
-        LLMCapability.Schema.JSON.Standard,
-        LLMCapability.Vision.Image,
-        LLMCapability.Document,
     )
 
     /**
@@ -140,7 +145,7 @@ public object BedrockModels : LLModelDefinitions {
      * - Tool/function calling
      */
     public val AnthropicClaude3Opus: LLModel = BedrockModel(
-        AnthropicModels.Opus_3,
+        AnthropicModels.Opus_3.withoutMultimodalCapabilities(),
         "anthropic.claude-3-opus-20240229-v1:0",
     ).effectiveModel
 
@@ -157,7 +162,7 @@ public object BedrockModels : LLModelDefinitions {
      * - Memory capabilities for maintaining continuity
      */
     public val AnthropicClaude4Opus: LLModel = BedrockModel(
-        AnthropicModels.Opus_4,
+        AnthropicModels.Opus_4.withoutMultimodalCapabilities(),
         "anthropic.claude-opus-4-20250514-v1:0",
     ).effectiveModel
 
@@ -174,7 +179,7 @@ public object BedrockModels : LLModelDefinitions {
      * - Memory capabilities for maintaining continuity
      */
     public val AnthropicClaude41Opus: LLModel = BedrockModel(
-        AnthropicModels.Opus_4_1,
+        AnthropicModels.Opus_4_1.withoutMultimodalCapabilities(),
         "anthropic.claude-opus-4-1-20250805-v1:0",
     ).effectiveModel
 
@@ -191,12 +196,12 @@ public object BedrockModels : LLModelDefinitions {
      * - Precise instruction following
      */
     public val AnthropicClaude4Sonnet: LLModel = BedrockModel(
-        AnthropicModels.Sonnet_4,
+        AnthropicModels.Sonnet_4.withoutMultimodalCapabilities(),
         "anthropic.claude-sonnet-4-20250514-v1:0",
     ).effectiveModel
 
     /**
-     * Claude 4.5 Sonnet - Latest high-performance model with enhanced capabilities
+     * Claude 4.5 Sonnet - High-performance model with enhanced capabilities
      *
      * This model offers:
      * - Superior coding and agentic capabilities
@@ -207,8 +212,21 @@ public object BedrockModels : LLModelDefinitions {
      * - Optimized for both quality and efficiency
      */
     public val AnthropicClaude4_5Sonnet: LLModel = BedrockModel(
-        AnthropicModels.Sonnet_4_5,
+        AnthropicModels.Sonnet_4_5.withoutMultimodalCapabilities(),
         "anthropic.claude-sonnet-4-5-20250929-v1:0",
+    ).effectiveModel
+
+    /**
+     * Claude Haiku 4.5 - Anthropic's most powerful model for powering real-world agents,
+     * with industry-leading capabilities around coding, and computer use.
+     *
+     * It delivers near-frontier performance for a wide range of use cases, and stands out as
+     * one of the best coding and agent models – with the right speed and cost to power free products
+     * and high-volume user experiences.
+     */
+    public val AnthropicClaude4_5Haiku: LLModel = BedrockModel(
+        AnthropicModels.Haiku_4_5.withoutMultimodalCapabilities(),
+        "anthropic.claude-haiku-4-5-20251001-v1:0",
     ).effectiveModel
 
     /**
@@ -243,7 +261,7 @@ public object BedrockModels : LLModelDefinitions {
      * - Multimodal understanding with vision
      */
     public val AnthropicClaude35SonnetV2: LLModel = BedrockModel(
-        AnthropicModels.Sonnet_3_5,
+        AnthropicModels.Sonnet_3_5.withoutMultimodalCapabilities(),
         "anthropic.claude-3-5-sonnet-20241022-v2:0",
     ).effectiveModel
 
@@ -260,7 +278,7 @@ public object BedrockModels : LLModelDefinitions {
      * - Processing large volumes of data
      */
     public val AnthropicClaude35Haiku: LLModel = BedrockModel(
-        AnthropicModels.Haiku_3_5,
+        AnthropicModels.Haiku_3_5.withoutMultimodalCapabilities(),
         "anthropic.claude-3-5-haiku-20241022-v1:0",
     ).effectiveModel
 
@@ -275,7 +293,7 @@ public object BedrockModels : LLModelDefinitions {
      * - Tool/function calling
      */
     public val AnthropicClaude3Haiku: LLModel = BedrockModel(
-        AnthropicModels.Haiku_3,
+        AnthropicModels.Haiku_3.withoutMultimodalCapabilities(),
         "anthropic.claude-3-haiku-20240307-v1:0",
     ).effectiveModel
 
@@ -413,7 +431,7 @@ public object BedrockModels : LLModelDefinitions {
         LLModel(
             provider = LLMProvider.Bedrock,
             id = "ai21.jamba-1-5-large-v1:0",
-            capabilities = toolCapabilities,
+            capabilities = standardCapabilities + toolCapabilities,
             contextLength = 256_000,
         ),
     ).effectiveModel
@@ -434,7 +452,7 @@ public object BedrockModels : LLModelDefinitions {
         LLModel(
             provider = LLMProvider.Bedrock,
             id = "ai21.jamba-1-5-mini-v1:0",
-            capabilities = toolCapabilities,
+            capabilities = standardCapabilities + toolCapabilities,
             contextLength = 256_000,
         ),
     ).effectiveModel
@@ -638,6 +656,94 @@ public object BedrockModels : LLModelDefinitions {
             contextLength = 128_000,
         ),
     ).effectiveModel
+
+    /**
+     * Embedding models available through the AWS Bedrock API.
+     *
+     * **Note:** Multimodality (image, audio, video) embeddings are currently not supported by the Bedrock client.
+     * Only embedding models that take textual input and return embeddings are included in this object.
+     *
+     * - For up-to-date information on available models, see:
+     *   https://docs.aws.amazon.com/bedrock/latest/userguide/models-supported.html
+     *
+     * If multimodal support is added to the Bedrock client in the future, embedding models with image/audio/video inputs
+     * should be added here and their capabilities extended accordingly.
+     */
+    public object Embeddings {
+        /**
+         * Amazon Titan Embeddings G1 - Text
+         * Input: Text
+         * Output: Embedding
+         */
+        public val AmazonTitanEmbedText: LLModel = BedrockModel(
+            LLModel(
+                provider = LLMProvider.Bedrock,
+                id = "amazon.titan-embed-text-v1",
+                capabilities = embedCapabilities,
+                contextLength = 8_192,
+            ),
+            inferenceProfilePrefix = null
+        ).effectiveModel
+
+        /**
+         * Amazon Titan Text Embeddings V2
+         * Input: Text
+         * Output: Embedding
+         */
+        public val AmazonTitanEmbedTextV2: LLModel = BedrockModel(
+            LLModel(
+                provider = LLMProvider.Bedrock,
+                id = "amazon.titan-embed-text-v2:0",
+                capabilities = embedCapabilities,
+                contextLength = 8_192,
+            ),
+            inferenceProfilePrefix = null
+        ).effectiveModel
+
+        /**
+         * Cohere Embed English v3
+         * Input: Text
+         * Output: Embedding
+         */
+        public val CohereEmbedEnglishV3: LLModel = BedrockModel(
+            LLModel(
+                provider = LLMProvider.Bedrock,
+                id = "cohere.embed-english-v3",
+                capabilities = embedCapabilities,
+                contextLength = 8_192,
+            ),
+            inferenceProfilePrefix = null
+        ).effectiveModel
+
+        /**
+         * Cohere Embed Multilingual v3
+         * Input: Text
+         * Output: Embedding
+         */
+        public val CohereEmbedMultilingualV3: LLModel = BedrockModel(
+            LLModel(
+                provider = LLMProvider.Bedrock,
+                id = "cohere.embed-multilingual-v3",
+                capabilities = embedCapabilities,
+                contextLength = 8_192,
+            ),
+            inferenceProfilePrefix = null
+        ).effectiveModel
+    }
+}
+
+/**
+ * Multimodality is currently not supported by Bedrock client.
+ * This is a helper function to copy existing model definitions while removing multimodal capabilities.
+ */
+private fun LLModel.withoutMultimodalCapabilities(): LLModel {
+    return copy(
+        capabilities = capabilities.filter {
+            it !is LLMCapability.Vision &&
+                it !is LLMCapability.Audio &&
+                it !is LLMCapability.Document
+        }
+    )
 }
 
 /**
@@ -658,7 +764,6 @@ public fun LLModel.withInferenceProfile(inferencePrefix: String): LLModel {
     require(provider == LLMProvider.Bedrock) {
         "withInferencePrefix() can only be used with Bedrock models, but model provider is $provider"
     }
-
     val baseModelId = if (id.contains('.')) {
         val potentialPrefix = id.substringBefore('.')
         val validPrefixes = BedrockInferencePrefixes.entries.map { it.prefix }
@@ -671,6 +776,5 @@ public fun LLModel.withInferenceProfile(inferencePrefix: String): LLModel {
     } else {
         id
     }
-
     return copy(id = "$inferencePrefix.$baseModelId")
 }
