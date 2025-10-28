@@ -1,5 +1,7 @@
 package ai.koog.agents.core.feature.config
 
+import ai.koog.agents.core.annotation.ExperimentalAgentsApi
+
 /**
  * A utility object that provides constants representing system variables
  * related to the configuration of features in the system.
@@ -7,6 +9,7 @@ package ai.koog.agents.core.feature.config
  * These system variables enable external configuration of features via
  * environment variables or JVM options.
  */
+@ExperimentalAgentsApi
 public object FeatureSystemVariables {
 
     /**

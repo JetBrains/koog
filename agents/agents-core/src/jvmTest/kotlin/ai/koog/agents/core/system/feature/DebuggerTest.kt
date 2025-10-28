@@ -1,5 +1,6 @@
 package ai.koog.agents.core.system.feature
 
+import ai.koog.agents.core.annotation.ExperimentalAgentsApi
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
@@ -135,7 +136,9 @@ class DebuggerTest {
     @AfterEach
     fun cleanup() {
         // Clean up system properties user in tests to not affect other test runs
+        @OptIn(ExperimentalAgentsApi::class)
         System.clearProperty(Debugger.KOOG_DEBUGGER_PORT_VM_OPTION)
+        @OptIn(ExperimentalAgentsApi::class)
         System.clearProperty(Debugger.KOOG_DEBUGGER_WAIT_CONNECTION_TIMEOUT_MS_VM_OPTION)
     }
 
@@ -244,6 +247,7 @@ class DebuggerTest {
                 promptExecutor = mockExecutor,
                 model = testModel,
             ) {
+                @OptIn(ExperimentalAgentsApi::class)
                 install(Debugger) {
                     setPort(port)
 
@@ -595,6 +599,7 @@ class DebuggerTest {
                 promptExecutor = mockExecutor,
                 model = testModel,
             ) {
+                @OptIn(ExperimentalAgentsApi::class)
                 install(Debugger) {
                     setPort(port)
 
@@ -774,6 +779,7 @@ class DebuggerTest {
                 promptExecutor = testStreamingExecutor,
                 model = testModel,
             ) {
+                @OptIn(ExperimentalAgentsApi::class)
                 install(Debugger) {
                     setPort(port)
 
@@ -864,7 +870,7 @@ class DebuggerTest {
     @Test
     @Disabled(
         """
-        '${Debugger.KOOG_DEBUGGER_PORT_ENV_VAR}' environment variable need to be set for a particular test via test framework.
+        '${@OptIn(ExperimentalAgentsApi::class) Debugger.KOOG_DEBUGGER_PORT_ENV_VAR}' environment variable need to be set for a particular test via test framework.
         Currently, test framework that is used for Koog tests does not have ability to set env variables.
         Setting env variable in Gradle task does not work either, because there are tests that verify both
         cases when env variable is set and when it is not set.
@@ -872,7 +878,10 @@ class DebuggerTest {
     """
     )
     fun `test read port from env variable`() = runBlocking {
+        @OptIn(ExperimentalAgentsApi::class)
         val portEnvVar = getEnvironmentVariableOrNull(Debugger.KOOG_DEBUGGER_PORT_ENV_VAR)
+
+        @OptIn(ExperimentalAgentsApi::class)
         assertNotNull(portEnvVar, "'${Debugger.KOOG_DEBUGGER_PORT_ENV_VAR}' env variable is not set")
 
         runAgentPortConfigThroughSystemVariablesTest(portEnvVar.toInt())
@@ -882,18 +891,20 @@ class DebuggerTest {
     fun `test read port from vm option`() = runBlocking {
         // Set VM option
         val port = 56712
-        System.setProperty(Debugger.KOOG_DEBUGGER_PORT_VM_OPTION, port.toString())
+        val portVmOptionName = @OptIn(ExperimentalAgentsApi::class) Debugger.KOOG_DEBUGGER_PORT_VM_OPTION
+        val portEnvVarName = @OptIn(ExperimentalAgentsApi::class) Debugger.KOOG_DEBUGGER_PORT_ENV_VAR
+        System.setProperty(portVmOptionName, port.toString())
 
-        val portEnvVar = getEnvironmentVariableOrNull(name = Debugger.KOOG_DEBUGGER_PORT_ENV_VAR)
+        val portEnvVar = getEnvironmentVariableOrNull(name = portEnvVarName)
         assertNull(
             portEnvVar,
-            "Expected '${Debugger.KOOG_DEBUGGER_PORT_ENV_VAR}' env variable is not set, but it is defined with value: <$portEnvVar>"
+            "Expected '$portEnvVarName' env variable is not set, but it is defined with value: <$portEnvVar>"
         )
 
-        val portVMOption = getVMOptionOrNull(name = Debugger.KOOG_DEBUGGER_PORT_VM_OPTION)
+        val portVMOption = getVMOptionOrNull(name = portVmOptionName)
         assertNotNull(
             portVMOption,
-            "Expected '${Debugger.KOOG_DEBUGGER_PORT_VM_OPTION}' VM option is not set"
+            "Expected '$portVmOptionName' VM option is not set"
         )
 
         runAgentPortConfigThroughSystemVariablesTest(port = portVMOption.toInt())
@@ -901,11 +912,14 @@ class DebuggerTest {
 
     @Test
     fun `test read default port when not set by property or env variable or vm option`() = runBlocking {
-        val portEnvVar = getEnvironmentVariableOrNull(Debugger.KOOG_DEBUGGER_PORT_ENV_VAR)
-        assertNull(portEnvVar, "Expected '${Debugger.KOOG_DEBUGGER_PORT_ENV_VAR}' env variable is not set, but it exists with value: $portEnvVar")
+        val portVmOptionName = @OptIn(ExperimentalAgentsApi::class) Debugger.KOOG_DEBUGGER_PORT_VM_OPTION
+        val portEnvVarName = @OptIn(ExperimentalAgentsApi::class) Debugger.KOOG_DEBUGGER_PORT_ENV_VAR
 
-        val portVMOption = getEnvironmentVariableOrNull(Debugger.KOOG_DEBUGGER_PORT_ENV_VAR)
-        assertNull(portVMOption, "Expected '${Debugger.KOOG_DEBUGGER_PORT_VM_OPTION}' VM option is not set, but it exists with value: $portVMOption")
+        val portEnvVar = getEnvironmentVariableOrNull(portEnvVarName)
+        assertNull(portEnvVar, "Expected '$portEnvVarName' env variable is not set, but it exists with value: $portEnvVar")
+
+        val portVMOption = getEnvironmentVariableOrNull(portEnvVarName)
+        assertNull(portVMOption, "Expected '$portVmOptionName' VM option is not set, but it exists with value: $portVMOption")
 
         // Check default port available
         val isDefaultPortAvailable = NetUtil.isPortAvailable(DefaultServerConnectionConfig.DEFAULT_PORT)
@@ -945,6 +959,7 @@ class DebuggerTest {
                 strategy = strategy,
                 userPrompt = userPrompt,
             ) {
+                @OptIn(ExperimentalAgentsApi::class)
                 install(Debugger) {
                     setPort(port)
                     // Set connection awaiting timeout
@@ -973,7 +988,7 @@ class DebuggerTest {
 
     @Disabled(
         """
-        '${Debugger.KOOG_DEBUGGER_WAIT_CONNECTION_MS_ENV_VAR}' environment variable need to be set for a particular test via test framework.
+        '${@OptIn(ExperimentalAgentsApi::class) Debugger.KOOG_DEBUGGER_WAIT_CONNECTION_MS_ENV_VAR}' environment variable need to be set for a particular test via test framework.
         Currently, test framework that is used for Koog tests does not have ability to set env variables.
         Setting env variable in Gradle task does not work either, because there are tests that verify both 
         cases when env variable is set and when it is not set.
@@ -982,8 +997,10 @@ class DebuggerTest {
     )
     @Test
     fun `test client connection waiting timeout is set by env variable`() = runBlocking {
-        val connectionWaitTimeoutMsEnvVar = getEnvironmentVariableOrNull(Debugger.KOOG_DEBUGGER_WAIT_CONNECTION_MS_ENV_VAR)
-        assertNotNull(connectionWaitTimeoutMsEnvVar, "'${Debugger.KOOG_DEBUGGER_WAIT_CONNECTION_MS_ENV_VAR}' env variable is not set")
+        val portWaitConnectionMsEnvVarName = @OptIn(ExperimentalAgentsApi::class) Debugger.KOOG_DEBUGGER_WAIT_CONNECTION_MS_ENV_VAR
+
+        val connectionWaitTimeoutMsEnvVar = getEnvironmentVariableOrNull(portWaitConnectionMsEnvVarName)
+        assertNotNull(connectionWaitTimeoutMsEnvVar, "'$portWaitConnectionMsEnvVarName' env variable is not set")
 
         runAgentConnectionWaitConfigThroughSystemVariablesTest(
             timeout = connectionWaitTimeoutMsEnvVar.toLong().toDuration(DurationUnit.MILLISECONDS)
@@ -992,28 +1009,26 @@ class DebuggerTest {
 
     @Test
     fun `test client connection waiting timeout is set by vm option`() = runBlocking {
+        val portWaitConnectionMsVmOptionName = @OptIn(ExperimentalAgentsApi::class) Debugger.KOOG_DEBUGGER_WAIT_CONNECTION_TIMEOUT_MS_VM_OPTION
+        val portWaitConnectionMsEnvVarName = @OptIn(ExperimentalAgentsApi::class) Debugger.KOOG_DEBUGGER_WAIT_CONNECTION_MS_ENV_VAR
+
         // Set VM option
         val timeout = 1.seconds
-        System.setProperty(
-            Debugger.KOOG_DEBUGGER_WAIT_CONNECTION_TIMEOUT_MS_VM_OPTION,
-            timeout.inWholeMilliseconds.toString()
-        )
+        System.setProperty(portWaitConnectionMsVmOptionName, timeout.inWholeMilliseconds.toString())
 
-        val connectionWaitTimeoutEnvVar =
-            getEnvironmentVariableOrNull(name = Debugger.KOOG_DEBUGGER_WAIT_CONNECTION_MS_ENV_VAR)
+        val connectionWaitTimeoutEnvVar = getEnvironmentVariableOrNull(name = portWaitConnectionMsEnvVarName)
 
         assertNull(
             connectionWaitTimeoutEnvVar,
-            "Expected '${Debugger.KOOG_DEBUGGER_WAIT_CONNECTION_MS_ENV_VAR}' env variable is not set, " +
+            "Expected '$portWaitConnectionMsEnvVarName' env variable is not set, " +
                 "but it is defined with value: <$connectionWaitTimeoutEnvVar>"
         )
 
-        val connectionWaitTimeoutMsVMOption =
-            getVMOptionOrNull(name = Debugger.KOOG_DEBUGGER_WAIT_CONNECTION_TIMEOUT_MS_VM_OPTION)
+        val connectionWaitTimeoutMsVMOption = getVMOptionOrNull(name = portWaitConnectionMsVmOptionName)
 
         assertNotNull(
             connectionWaitTimeoutMsVMOption,
-            "Expected '${Debugger.KOOG_DEBUGGER_WAIT_CONNECTION_TIMEOUT_MS_VM_OPTION}' VM option is not set"
+            "Expected '$portWaitConnectionMsVmOptionName' VM option is not set"
         )
 
         runAgentConnectionWaitConfigThroughSystemVariablesTest(
@@ -1051,6 +1066,7 @@ class DebuggerTest {
                 strategy = strategy,
                 userPrompt = userPrompt,
             ) {
+                @OptIn(ExperimentalAgentsApi::class)
                 install(Debugger) {
                     // Do not set the port value explicitly through parameter.
                     // Use System env var 'KOOG_DEBUGGER_PORT' or VM option 'koog.debugger.port'
@@ -1203,6 +1219,7 @@ class DebuggerTest {
                 strategy = strategy,
                 userPrompt = userPrompt,
             ) {
+                @OptIn(ExperimentalAgentsApi::class)
                 install(Debugger) {
                     setPort(port)
                     // Do not set the connection awaiting timeout explicitly through parameter.

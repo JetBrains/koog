@@ -6,6 +6,7 @@ import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
+import ai.koog.agents.core.annotation.ExperimentalAgentsApi
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.AIAgentFeature
@@ -127,6 +128,7 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
     /**
      * Set of system features that are always defined by the framework.
      */
+    @OptIn(ExperimentalAgentsApi::class)
     private val systemFeatures: Set<AIAgentStorageKey<*>> = setOf(
         Debugger.key
     )
@@ -1204,11 +1206,13 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
     private fun installFeaturesFromSystemConfig() {
         // Read features from system variables
         val featuresFromSystemConfig = buildList {
+            @OptIn(ExperimentalAgentsApi::class)
             getEnvironmentVariableOrNull(FeatureSystemVariables.KOOG_FEATURES_ENV_VAR_NAME)
                 ?.let { featuresString ->
                     featuresString.split(",").forEach { add(it.trim()) }
                 }
 
+            @OptIn(ExperimentalAgentsApi::class)
             getVMOptionOrNull(FeatureSystemVariables.KOOG_FEATURES_VM_OPTION_NAME)
                 ?.let { featuresString ->
                     featuresString.split(",").forEach { add(it.trim()) }
@@ -1242,6 +1246,7 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
         }
     }
 
+    @OptIn(ExperimentalAgentsApi::class)
     private fun installSystemFeature(featureKey: AIAgentStorageKey<*>) {
         logger.debug { "Installing system feature: ${featureKey.name}" }
         when (featureKey) {

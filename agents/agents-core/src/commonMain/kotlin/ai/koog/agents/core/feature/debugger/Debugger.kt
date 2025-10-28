@@ -4,6 +4,7 @@ import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.featureOrThrow
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
+import ai.koog.agents.core.annotation.ExperimentalAgentsApi
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.feature.AIAgentFunctionalFeature
@@ -60,6 +61,7 @@ import kotlin.time.toDuration
  * @property port The port number on which the debugger server is listening for connections.
  * @property awaitInitialConnectionTimeout The timeout duration for the debugger server to wait for a connection.
  */
+@ExperimentalAgentsApi
 public class Debugger(public val port: Int, public val awaitInitialConnectionTimeout: Duration? = null) {
 
     /**
@@ -457,4 +459,5 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
  * @return The [Debugger] feature instance for this agent
  * @throws IllegalStateException if the Debugger feature is not installed
  */
+@OptIn(ExperimentalAgentsApi::class)
 public fun AIAgentContext.debugger(): Debugger = featureOrThrow(Debugger)
