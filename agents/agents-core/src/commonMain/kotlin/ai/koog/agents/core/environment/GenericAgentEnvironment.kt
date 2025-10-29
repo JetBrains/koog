@@ -90,7 +90,17 @@ internal class GenericAgentEnvironment(
         content: AgentToolCallToEnvironmentContent
     ): EnvironmentToolResultToAgentContent {
         logger.debug { "Handling tool call sent by server..." }
-        val tool = toolRegistry.getTool(content.toolName)
+        val tool = toolRegistry.getToolOrNull(content.toolName)
+            ?: run {
+                logger.error { "Tool \"${content.toolName}\" not found." }
+                return toolResult(
+                    message = "Tool \"${content.toolName}\" not found. Use one of the available tools.",
+                    toolCallId = content.toolCallId,
+                    toolName = content.toolName,
+                    agentId = agentId,
+                    result = null
+                )
+            }
         val toolArgs = try {
             tool.decodeArgs(content.toolArgs)
         } catch (e: Exception) {

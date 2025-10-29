@@ -40,6 +40,19 @@ public class ToolRegistry private constructor(tools: List<Tool<*, *>> = emptyLis
         get() = _tools.toList()
 
     /**
+     * Retrieves a tool by its name from the registry, or null if not found.
+     *
+     * This method searches for a tool with the specified name and returns null
+     * if no matching tool is found.
+     *
+     * @param toolName The name of the tool to retrieve
+     * @return The tool with the specified name, or null if not found
+     */
+    public fun getToolOrNull(toolName: String): Tool<*, *>? {
+        return _tools.firstOrNull { it.name == toolName }
+    }
+
+    /**
      * Retrieves a tool by its name from the registry.
      *
      * This method searches for a tool with the specified name.
@@ -49,8 +62,7 @@ public class ToolRegistry private constructor(tools: List<Tool<*, *>> = emptyLis
      * @throws IllegalArgumentException if no tool with the specified name is found
      */
     public fun getTool(toolName: String): Tool<*, *> {
-        return tools
-            .firstOrNull { it.name == toolName }
+        return getToolOrNull(toolName)
             ?: throw IllegalArgumentException("Tool \"$toolName\" is not defined")
     }
 

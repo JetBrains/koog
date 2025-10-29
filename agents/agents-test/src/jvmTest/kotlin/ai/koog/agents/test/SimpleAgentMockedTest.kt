@@ -11,6 +11,7 @@ import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.message.Message
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
@@ -91,11 +92,19 @@ class SimpleAgentMockedTest {
         onAgentCompleted { eventContext ->
             results.add(eventContext.result)
         }
+
+        onLLMCallCompleted { eventContext ->
+            // Capture which tools the LLM requested (whether they exist or not)
+            eventContext.responses.filterIsInstance<Message.Tool.Call>().forEach { toolCall ->
+                llmRequestedTools.add(toolCall.tool)
+            }
+        }
     }
 
     val actualToolCalls = mutableListOf<String>()
     val errors = mutableListOf<Throwable>()
     val results = mutableListOf<Any?>()
+    val llmRequestedTools = mutableListOf<String>()
     var iterationCount = 0
 
     @AfterTest
@@ -103,6 +112,7 @@ class SimpleAgentMockedTest {
         actualToolCalls.clear()
         errors.clear()
         results.clear()
+        llmRequestedTools.clear()
         iterationCount = 0
     }
 
@@ -205,14 +215,29 @@ class SimpleAgentMockedTest {
             installFeatures = { install(EventHandler, eventHandlerConfig) }
         )
 
-        try {
-            agent.run(errorTrigger)
-        } catch (e: Throwable) {
-            assertTrue(e is IllegalArgumentException, "Expected IllegalArgumentException")
-            assertTrue(e.message?.contains("is not defined") == true, "Expected 'not defined' error message")
-        }
+        // Calling a non-existent tool returns an observation with an error
+        // instead of throwing an exception, allowing the agent to handle it gracefully
+        agent.run(errorTrigger)
 
-        assertTrue(errors.isNotEmpty(), "Expected errors to be recorded")
+        assertTrue(
+            llmRequestedTools.contains(ErrorTool.name),
+            "LLM should have requested ${ErrorTool.name}, but requested: $llmRequestedTools"
+        )
+
+        // Verify the tool was NOT actually executed (tool not found in registry)
+        assertTrue(
+            actualToolCalls.isEmpty(),
+            "No tools should be executed when tool is not found, but found: $actualToolCalls"
+        )
+
+        // Verify agent completed successfully without exceptions
+        assertTrue(results.isNotEmpty(), "Agent should complete and produce a result")
+
+        // Verify no exceptions were thrown (graceful error handling)
+        assertTrue(
+            errors.isEmpty(),
+            "No errors should be recorded with graceful error handling: ${errors.joinToString("\n") { it.message ?: "" }}"
+        )
     }
 
     @Test
