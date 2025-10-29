@@ -160,8 +160,7 @@ class AgentMemoryBudgetSimulationTest {
 
         val agentMemory = AgentMemory(
             agentMemory = smartProvider,
-            scopesProfile = MemoryScopesProfile(MemoryScopeType.PRODUCT to scope.name),
-            defaultTokenBudget = defaultBudget
+            scopesProfile = MemoryScopesProfile(MemoryScopeType.PRODUCT to scope.name)
         )
 
         agentMemory.loadFactsToAgent(

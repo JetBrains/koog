@@ -39,8 +39,6 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.structure.StructuredOutput
 import ai.koog.prompt.structure.StructuredOutputConfig
 import ai.koog.prompt.structure.json.JsonStructuredData
-import ai.koog.prompt.tokenizer.SimpleRegexBasedTokenizer
-import ai.koog.prompt.tokenizer.Tokenizer
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
@@ -110,11 +108,7 @@ public class AgentMemory(
     @property:InternalAgentsApi
     public val agentMemory: AgentMemoryProvider,
     @property:InternalAgentsApi
-    public val scopesProfile: MemoryScopesProfile,
-    @property:InternalAgentsApi
-    public val summaryProvider: SummaryProvider? = null,
-    @property:InternalAgentsApi
-    public val defaultTokenBudget: TokenBudget? = null
+    public val scopesProfile: MemoryScopesProfile
 ) {
     private val logger = KotlinLogging.logger { }
 
@@ -182,17 +176,20 @@ public class AgentMemory(
             }
 
         /**
-         * Optional default token budget applied when loading facts (null keeps existing behaviour).
+         * Optional default token budget applied by smart providers when loading facts.
+         * Plain providers may ignore this value.
          */
         public var defaultTokenBudget: TokenBudget? = null
 
         /**
-         * Optional provider for generating concise fact summaries.
+         * Optional provider for generating concise fact summaries when enrichment is enabled.
+         * Plain providers may ignore this value.
          */
         public var summaryProvider: SummaryProvider? = null
 
         /**
          * Optional provider for similarity-based ranking when loading facts.
+         * Plain providers may ignore this value.
          */
         public var embedder: Embedder? = null
 
@@ -228,9 +225,7 @@ public class AgentMemory(
 
             val memory = AgentMemory(
                 smartProvider,
-                config.scopesProfile,
-                config.summaryProvider,
-                config.defaultTokenBudget
+                config.scopesProfile
             )
 
             pipeline.interceptStrategyStarting(this) { ctx ->
@@ -340,7 +335,7 @@ public class AgentMemory(
         concept: Concept,
         scopes: List<MemoryScopeType> = MemoryScopeType.entries,
         subjects: List<MemorySubject> = MemorySubject.registeredSubjects,
-        budget: TokenBudget? = defaultTokenBudget,
+        budget: TokenBudget? = null,
         query: String? = null,
     ): Unit = loadFactsToAgentImpl(llm, scopes, subjects, budget, query) { subject, scope, options ->
         agentMemory.load(concept, subject, scope, options)
@@ -372,7 +367,7 @@ public class AgentMemory(
         llm: AIAgentLLMContext,
         scopes: List<MemoryScopeType> = MemoryScopeType.entries,
         subjects: List<MemorySubject> = MemorySubject.registeredSubjects,
-        budget: TokenBudget? = defaultTokenBudget,
+        budget: TokenBudget? = null,
         query: String? = null,
     ): Unit = loadFactsToAgentImpl(llm, scopes, subjects, budget, query) { subject, scope, options ->
         agentMemory.loadAll(subject, scope, options)
@@ -413,10 +408,7 @@ public class AgentMemory(
         // Get all possible scopes based on the profile
         logger.info { "Using scopes: $scopes" }
 
-        val options = MemoryRequestOptions(
-            budget = budget ?: defaultTokenBudget,
-            query = query
-        )
+        val options = MemoryRequestOptions(budget = budget, query = query)
 
         for (scope in scopes) {
             val memoryScope = scopesProfile.getScope(scope) ?: continue
@@ -456,12 +448,13 @@ public class AgentMemory(
 
         val processedFacts = (agentMemory as? MemoryPostProcessor)
             ?.processFacts(collectedFacts, options)
-            ?: fallbackProcessFacts(collectedFacts, options)
+            ?: collectedFacts
         val factsByConcept = processedFacts.groupBy { it.concept }
 
+        val budgetInfo = budget?.let { "${it.maxTokens}/${it.maxFacts}" } ?: "∞/∞"
         logger.info {
             "Found ${processedFacts.size} facts for ${factsByConcept.size} concepts " +
-                "(query='${query ?: "n/a"}', budget=${(budget ?: defaultTokenBudget)?.maxTokens ?: "∞"}/${(budget ?: defaultTokenBudget)?.maxFacts ?: "∞"})"
+                "(query='${query ?: "n/a"}', budget=$budgetInfo)"
         }
 
         // Add facts to LLM chat history
@@ -502,51 +495,6 @@ public class AgentMemory(
         }
     }
 }
-
-private val fallbackTokenizer: Tokenizer = SimpleRegexBasedTokenizer()
-
-private fun fallbackProcessFacts(
-    facts: List<Fact>,
-    options: MemoryRequestOptions
-): List<Fact> {
-    val budget = options.budget
-    val effectiveBudget = budget ?: return facts
-    return applyTokenBudget(facts, effectiveBudget)
-}
-
-private fun applyTokenBudget(facts: List<Fact>, budget: TokenBudget): List<Fact> {
-    if (budget.maxFacts <= 0 || budget.maxTokens <= 0) return emptyList()
-
-    var tokens = 0
-    val result = mutableListOf<Fact>()
-    for (fact in facts) {
-        if (result.size >= budget.maxFacts) break
-        val estimate = estimateTokensForFact(fact)
-        if (tokens + estimate > budget.maxTokens) continue
-        result.add(fact)
-        tokens += estimate
-    }
-
-    if (result.isEmpty() && facts.isNotEmpty()) {
-        result.add(facts.first())
-    }
-
-    return result
-}
-
-private fun estimateTokensForFact(fact: Fact): Int = when (fact) {
-    is SingleFact -> estimateTokens(fact.summary ?: fact.value)
-    is MultipleFacts -> {
-        val summary = fact.summary
-        if (summary != null) {
-            estimateTokens(summary)
-        } else {
-            fact.values.sumOf { estimateTokens(it) } + 1
-        }
-    }
-}
-
-private fun estimateTokens(text: String): Int = fallbackTokenizer.countTokens(text).coerceAtLeast(1)
 
 /**
  * Extracts facts about a specific concept from the LLM chat history.
