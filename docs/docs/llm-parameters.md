@@ -16,8 +16,8 @@ In Koog, the `LLMParams` class incorporates LLM parameters and provides a consis
     -->
     ```kotlin
     val prompt = prompt(
-        "dev-assistant",
-        LLMParams(
+        id = "dev-assistant",
+        params = LLMParams(
             temperature = 0.7,
             maxTokens = 500
         )
@@ -98,18 +98,25 @@ In Koog, the `LLMParams` class incorporates LLM parameters and provides a consis
 The following table provides a reference of LLM parameters included in the `LLMParams` class and supported by all LLM providers that are available in Koog out of the box. 
 For a list of parameters that are specific to some providers, see [Provider-specific parameters](#provider-specific-parameters).
 
-| Parameter              | Type                           | Description                                                                                                                                                                                                                                                                      |
-|------------------------|--------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `temperature`          | Double                         | Controls randomness in the output. Higher values, such as 0.7–1.0, produce more diverse and creative responses, while lower values produce more deterministic and focused responses. Takes a value in the range of 0.0–2.0.                                                      |
-| `maxTokens`            | Integer                        | Maximum number of tokens to generate in the response. Useful for controlling response length.                                                                                                                                                                                    |
-| `numberOfChoices`      | Integer                        | Number of alternative responses to generate. Must be greater than 0.                                                                                                                                                                                                             |
-| `speculation`          | String                         | A speculative configuration string that influences model behavior, designed to enhance result speed and accuracy. Supported only by certain models, but may greatly improve speed and accuracy.                                                                                  |
-| `includeThoughts`      | Boolean                        | If `true`, requests the model to add reasoning blocks to the response. Responses may include detailed reasoning steps. When `false` or `null`, responses are typically shorter and faster.                                                                                       |
-| `thinkingBudget`       | Integer                        | The top limit for the use of reasoning tokens. Can be used to limit the amount of tokens used for reasoning when `includeThoughts` is set to `true`.                                                                                                                             |
-| `schema`               | Schema                         | Defines the structure for the model's response format, enabling structured outputs like JSON. For more information, see [Schema](#schema).                                                                                                                                       |
-| `toolChoice`           | ToolChoice                     | Controls tool calling behavior of the language model. For more information, see [Tool choice](#tool-choice).                                                                                                                                                                     |
-| `user`                 | String                         | Identifier for the user making the request, which can be used for tracking purposes.                                                                                                                                                                                             |
-| `additionalProperties` | Map&lt;String, JsonElement&gt; | Additional properties that can be used to store custom parameters specific to certain model providers.                                                                                                                                                                           |
+| Parameter              | Type                           | Description                                                                                                                                                                                     |
+|------------------------|--------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `temperature`          | Double                         | Controls randomness in the output. Higher values, such as 0.7–1.0, produce more diverse and creative responses, while lower values produce more deterministic and focused responses.            |
+| `maxTokens`            | Integer                        | Maximum number of tokens to generate in the response. Useful for controlling response length.                                                                                                   |
+| `numberOfChoices`      | Integer                        | Number of alternative responses to generate. Must be greater than 0.                                                                                                                            |
+| `speculation`          | String                         | A speculative configuration string that influences model behavior, designed to enhance result speed and accuracy. Supported only by certain models, but may greatly improve speed and accuracy. |
+| `includeThoughts`      | Boolean                        | If `true`, requests the model to add reasoning blocks to the response. Responses may include detailed reasoning steps. When `false` or `null`, responses are typically shorter and faster.      |
+| `thinkingBudget`       | Integer                        | The top limit for the use of reasoning tokens. Can be used to limit the amount of tokens used for reasoning when `includeThoughts` is set to `true`.                                            |
+| `schema`               | Schema                         | Defines the structure for the model's response format, enabling structured outputs like JSON. For more information, see [Schema](#schema).                                                      |
+| `toolChoice`           | ToolChoice                     | Controls tool calling behavior of the language model. For more information, see [Tool choice](#tool-choice).                                                                                    |
+| `user`                 | String                         | Identifier for the user making the request, which can be used for tracking purposes.                                                                                                            |
+| `additionalProperties` | Map&lt;String, JsonElement&gt; | Additional properties that can be used to store custom parameters specific to certain model providers.                                                                                          |
+
+For a list of default values for each parameter, see the corresponding LLM provider documentation:
+
+- [OpenAI Chat](https://platform.openai.com/docs/api-reference/chat/create)
+- [OpenAI Responses](https://platform.openai.com/docs/api-reference/responses/create)
+- [DeepSeek](https://api-docs.deepseek.com/api/create-chat-completion#request)
+- [OpenRouter](https://openrouter.ai/docs/api-reference/parameters)
 
 ## Schema
 
@@ -199,48 +206,36 @@ JSON schemas let you request structured JSON data from language models. Koog sup
 
 The `ToolChoice` class controls how the language model uses tools. It provides the following options:
 
-1. **Named** (`LLMParams.ToolChoice.Named`): the language model calls the specified tool.
-2. **None** (`LLMParams.ToolChoice.None`): the language model does not call tools and only generates text.
-3. **Auto** (`LLMParams.ToolChoice.Auto`): the language model automatically decides whether to call tools and which tool to call.
-4. **Required** (`LLMParams.ToolChoice.Required`): the language model calls at least one tool.
+* `LLMParams.ToolChoice.Named`: the language model calls the specified tool. Takes the `name` string argument that
+represents the name of the tool to call.
+* `LLMParams.ToolChoice.All`: the language model calls all tools.
+* `LLMParams.ToolChoice.None`: the language model does not call tools and only generates text.
+* `LLMParams.ToolChoice.Auto`: the language model automatically decides whether to call tools and which tool to call.
+* `LLMParams.ToolChoice.Required`: the language model calls at least one tool.
+
+Here is an example of using the `LLMParams.ToolChoice.Named` class to call a specific tool:
+
 
 
 <!--- INCLUDE
 import ai.koog.prompt.params.LLMParams
 -->
 ```kotlin
-// Use a specific tool
 val specificToolParams = LLMParams(
-    toolChoice = LLMParams.ToolChoice.Named("calculator")
-)
-
-// Not use any tools
-val noToolsParams = LLMParams(
-    toolChoice = LLMParams.ToolChoice.None
-)
-
-// Automatically decide whether to use tools
-val autoToolParams = LLMParams(
-    toolChoice = LLMParams.ToolChoice.Auto
-)
-
-// Use at least one tool
-val requiredToolParams = LLMParams(
-    toolChoice = LLMParams.ToolChoice.Required
+    toolChoice = LLMParams.ToolChoice.Named(name = "calculator")
 )
 ```
-<!--- KNIT example-llm-parameters-06.kt -->
+<!--- KNIT example-llm-parameters-01.kt -->
 
 ## Provider-specific parameters
 
 Koog supports provider-specific parameters for some LLM providers. These parameters extend the base `LLMParams` class
 and add provider-specific functionality. The following classes include parameters that are specific per provider:
 
-- DeepSeek: `DeepSeekParams`
-- OpenRouter: `OpenRouterParams`
-- The supported parameters for OpenAI may differ between the underlying OpenAI APIs:
-    - OpenAI Chat: `OpenAIChatParams`. Parameters specific to the OpenAI Chat Completions API.
-    - OpenAI Responses: `OpenAIResponsesParams`. Parameters specific to the OpenAI Responses API.
+- `DeepSeekParams`: Parameters specific to DeepSeek models.
+- `OpenRouterParams`: Parameters specific to OpenRouter models.
+- `OpenAIChatParams`: Parameters specific to the OpenAI Chat Completions API.
+- `OpenAIResponsesParams`: Parameters specific to the OpenAI Responses API.
 
 Here is the complete reference of provider-specific parameters in Koog:
 
@@ -251,7 +246,7 @@ Here is the complete reference of provider-specific parameters in Koog:
 | `topLogprobs`       | OpenAI Chat, OpenAI Responses, DeepSeek, OpenRouter | Integer                | Number of top most likely tokens per position. Takes a value in the range of 0–20. Requires the `logprobs` parameter to be set to `true`.                                                                                                                                                                                                                                                                                          |
 | `frequencyPenalty`  | OpenAI Chat, DeepSeek, OpenRouter                   | Double                 | Penalizes frequent tokens to reduce repetition. Higher `frequencyPenalty` values result in larger variations of phrasing and reduced repetition. Takes a value in the range of -2.0 to 2.0.                                                                                                                                                                                                                                        |
 | `presencePenalty`   | OpenAI Chat, DeepSeek, OpenRouter                   | Double                 | Prevents the model from reusing tokens that have already been included in the output. Higher values encourage the introduction of new tokens and topics. Takes a value in the range of -2.0 to 2.0.                                                                                                                                                                                                                                |
-| `stop`              | OpenAI Chat, DeepSeek, OpenRouter                   | List&lt;String&gt;     | Stop sequences. The model stops generating content when it encounters any of the sequences in the list. A list of strings containing maximum 4 items.                                                                                                                                                                                                                                                                              |
+| `stop`              | OpenAI Chat, DeepSeek, OpenRouter                   | List&lt;String&gt;     | Strings that signal to the model that it should stop generating content when it encounters any of them. For example, to make the model stop generating content when it produces two newlines, specify the stop sequence as `stop = listOf("/n/n")`.                                                                                                                                                                                |
 | `parallelToolCalls` | OpenAI Chat, OpenAI Responses                       | Boolean                | If `true`, multiple tool calls can run in parallel.                                                                                                                                                                                                                                                                                                                                                                                |
 | `promptCacheKey`    | OpenAI Chat, OpenAI Responses                       | String                 | Stable cache key for prompt caching. OpenAI uses it to cache responses for similar requests.                                                                                                                                                                                                                                                                                                                                       |
 | `safetyIdentifier`  | OpenAI Chat, OpenAI Responses                       | String                 | A stable and unique user identifier that may be used to detect users who violate OpenAI policies.                                                                                                                                                                                                                                                                                                                                  |
@@ -269,7 +264,7 @@ Here is the complete reference of provider-specific parameters in Koog:
 | `repetitionPenalty` | OpenRouter                                          | Double                 | Penalizes token repetition. Next-token probabilities for tokens that already appeared in the output are divided by the value of `repetitionPenalty`, which makes them less likely to appear again if `repetitionPenalty > 1`. Takes a value greater than 0.0 and lower than or equal to 2.0.                                                                                                                                       |
 | `minP`              | OpenRouter                                          | Double                 | Filters out tokens whose relative probability to the most likely token is below the defined `minP` value. Takes a value in the range of 0.0–0.1.                                                                                                                                                                                                                                                                                   |
 | `topA`              | OpenRouter                                          | Double                 | Dynamically adjusts the sampling window based on model confidence. If the model is confident (there are dominant high-probability next tokens), it keeps the sampling window limited to a few top tokens. If the confidence is low (there are many tokens with similar probabilities), keeps more tokens in the sampling window. Takes a value in the range of 0.0–0.1 (inclusive). Higher value means greater dynamic adaptation. |
-| `transforms`        | OpenRouter                                          | List&lt;String&gt;     | List of context transforms. Defines how context is transformed when it exceeds the model's token limit. The default transformation is `middle-out` which truncates from the middle of the prompt. Use empty list for no transformations.                                                                                                                                                                                           |
+| `transforms`        | OpenRouter                                          | List&lt;String&gt;     | List of context transforms. Defines how context is transformed when it exceeds the model's token limit. The default transformation is `middle-out` which truncates from the middle of the prompt. Use empty list for no transformations. For more information, see [Message Transforms](https://openrouter.ai/docs/features/message-transforms) in OpenRouter documentation.                                                       |
 | `models`            | OpenRouter                                          | List&lt;String&gt;     | List of allowed models for the request.                                                                                                                                                                                                                                                                                                                                                                                            |
 | `route`             | OpenRouter                                          | String                 | Request routing identifier.                                                                                                                                                                                                                                                                                                                                                                                                        |
 | `provider`          | OpenRouter                                          | ProviderPreferences    | Model provider preferences. For more information, see the API documentation on [ProviderPreferences](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/prompt-executor-openrouter-client/ai.koog.prompt.executor.clients.openrouter.models/-provider-preferences/index.html).                                                                                                                                     |
@@ -292,7 +287,7 @@ val openRouterParams = OpenRouterParams(
     transforms = listOf("middle-out")
 )
 ```
-<!--- KNIT example-llm-parameters-07.kt -->
+<!--- KNIT example-llm-parameters-02.kt -->
 
 ## Usage examples
 
@@ -309,7 +304,7 @@ val basicParams = LLMParams(
     toolChoice = LLMParams.ToolChoice.Auto
 )
 ```
-<!--- KNIT example-llm-parameters-08.kt -->
+<!--- KNIT example-llm-parameters-03.kt -->
 
 ### Reasoning control
 
@@ -328,7 +323,7 @@ val budgetedReasoningParams = LLMParams(
     thinkingBudget = 500
 )
 ```
-<!--- KNIT example-llm-parameters-09.kt -->
+<!--- KNIT example-llm-parameters-04.kt -->
 
 For OpenAI, there are provider-specific parameters that you can use to control model reasoning. 
 When using the OpenAI Chat API and models that support reasoning, use the `reasoningEffort` parameter 
@@ -343,7 +338,7 @@ val openAIReasoningEffortParams = OpenAIChatParams(
     reasoningEffort = ReasoningEffort.MEDIUM
 )
 ```
-<!--- KNIT example-llm-parameters-10.kt -->
+<!--- KNIT example-llm-parameters-05.kt -->
 
 In addition, when using the OpenAI Responses API in a stateless mode, you keep an encrypted history of reasoning items and send it to the model in every conversation turn. The encryption is done on the OpenAI side, and you need to request encrypted reasoning tokens by setting the `include` parameter in your requests to `reasoning.encrypted_content`. 
 You can then pass the encrypted reasoning tokens back to the model in the next conversation turns.
@@ -356,7 +351,7 @@ val openAIStatelessReasoningParams = OpenAIResponsesParams(
     include = listOf("reasoning.encrypted_content")
 )
 ```
-<!--- KNIT example-llm-parameters-11.kt -->
+<!--- KNIT example-llm-parameters-06.kt -->
 
 ### Custom parameters
 
@@ -376,12 +371,13 @@ val customParams = LLMParams(
     )
 )
 ```
-<!--- KNIT example-llm-parameters-12.kt -->
+<!--- KNIT example-llm-parameters-07.kt -->
 
-### Setting and overriding default parameters
+### Setting and overriding parameters
 
-The code sample below shows how you can create a set of default LLM parameters and then create another parameter 
-set that partially overrides values from the default set and adds new parameters.
+The code sample below shows how you can define a set of LLM parameters that you may want to use primarily,
+then create another set by partially overriding values from the original set and adding new values to it. 
+This lets you define parameters that are common to most requests but also add more specific parameter combinations without having to repeat the common parameters. 
 
 <!--- INCLUDE
 import ai.koog.prompt.params.LLMParams
@@ -400,7 +396,7 @@ val overrideParams = LLMParams(
     includeThoughts = true
 ).default(defaultParams)
 ```
-<!--- KNIT example-llm-parameters-13.kt -->
+<!--- KNIT example-llm-parameters-08.kt -->
 
 The values in the resulting `overrideParams` set are equivalent to the following:
 
@@ -415,4 +411,4 @@ val overrideParams = LLMParams(
     includeThoughts = true
 )
 ```
-<!--- KNIT example-llm-parameters-14.kt -->
+<!--- KNIT example-llm-parameters-09.kt -->
