@@ -135,13 +135,15 @@ class TraceFeatureMessageTestWriterTest {
             }
         }
 
-        val throwable = assertFails {
-            agent.run("")
-            agent.close()
-        }
+        // Calling a non-existent tool returns an observation with an error
+        // instead of throwing an exception, allowing the agent to handle it gracefully
+        val result = agent.run("")
+        agent.close()
+
+        // Verify the result contains the error message about the tool not being found
         assertEquals(
-            "Tool \"there is no tool with this name\" is not defined",
-            throwable.message
+            "Tool \"there is no tool with this name\" not found. Use one of the available tools.",
+            result
         )
     }
 
