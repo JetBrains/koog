@@ -13,7 +13,15 @@ import ai.koog.agents.memory.model.TokenBudget
 import ai.koog.embeddings.base.Embedder
 import ai.koog.prompt.tokenizer.SimpleRegexBasedTokenizer
 import ai.koog.prompt.tokenizer.Tokenizer
+import ai.koog.rag.base.DocumentWithPayload
+import ai.koog.rag.base.RankedDocument
+import ai.koog.rag.base.RankedDocumentStorage
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.toList
 
 /**
  * Decorator that enriches, ranks, and budgets delegate memory operations without modifying the
@@ -110,14 +118,11 @@ internal class SmartAgentMemoryProvider(
         val sanitizedQuery = query?.takeIf { it.isNotBlank() } ?: return facts
 
         return try {
-            val queryEmbedding = activeEmbedder.embed(sanitizedQuery)
-            val scored = facts.map { fact ->
-                val text = fact.displayText()
-                val embedding = activeEmbedder.embed(text)
-                val diff = activeEmbedder.diff(queryEmbedding, embedding)
-                fact to diff
-            }
-            scored.sortedBy { it.second }.map { it.first }
+            val storage = EphemeralRankedFactStorage(facts, activeEmbedder)
+            storage.rankDocuments(sanitizedQuery)
+                .toList()
+                .sortedByDescending { it.similarity }
+                .map { it.document }
         } catch (throwable: Throwable) {
             logger.warn(throwable) { "Failed to rank facts by similarity – returning original order" }
             facts
@@ -178,6 +183,48 @@ internal class SmartAgentMemoryProvider(
             } else {
                 copy(summary = newSummary, keywords = newKeywords)
             }
+        }
+    }
+
+    private fun Fact.displayText(): String = when (this) {
+        is SingleFact -> summary ?: value
+        is MultipleFacts -> summary ?: values.joinToString(separator = " ")
+    }
+}
+
+private class EphemeralRankedFactStorage(
+    private val facts: List<Fact>,
+    private val embedder: Embedder
+) : RankedDocumentStorage<Fact> {
+    override suspend fun store(document: Fact, data: Unit): String {
+        throw UnsupportedOperationException("Ephemeral storage does not support persistence operations")
+    }
+
+    override suspend fun delete(documentId: String): Boolean {
+        throw UnsupportedOperationException("Ephemeral storage does not support persistence operations")
+    }
+
+    override suspend fun read(documentId: String): Fact? {
+        throw UnsupportedOperationException("Ephemeral storage does not support persistence operations")
+    }
+
+    override suspend fun getPayload(documentId: String): Unit = Unit
+
+    override suspend fun readWithPayload(documentId: String): DocumentWithPayload<Fact, Unit>? = null
+
+    override fun allDocuments(): Flow<Fact> = facts.asFlow()
+
+    override fun allDocumentsWithPayload(): Flow<DocumentWithPayload<Fact, Unit>> =
+        facts.map { DocumentWithPayload(it, Unit) }.asFlow()
+
+    override fun rankDocuments(query: String): Flow<RankedDocument<Fact>> = flow {
+        val queryEmbedding = embedder.embed(query)
+        for (fact in facts) {
+            val text = fact.displayText()
+            val factEmbedding = embedder.embed(text)
+            val distance = embedder.diff(queryEmbedding, factEmbedding)
+            val similarity = 1.0 / (1.0 + distance)
+            emit(RankedDocument(fact, similarity))
         }
     }
 
