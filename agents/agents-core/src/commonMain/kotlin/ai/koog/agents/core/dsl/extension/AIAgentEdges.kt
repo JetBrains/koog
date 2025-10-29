@@ -208,11 +208,8 @@ public infix fun <IncomingOutput, OutgoingInput> AIAgentEdgeBuilderIntermediate<
     block: suspend (List<Message.Assistant>) -> Boolean
 ): AIAgentEdgeBuilderIntermediate<IncomingOutput, List<Message.Assistant>, OutgoingInput> {
     return onIsInstance(List::class)
-        .transformed { it to it.filterIsInstance<Message.Assistant>() }
-        .onCondition { (original, filtered) -> original == filtered }
-        .transformed { (_, filtered) -> filtered }
+        .transformed { it.filterIsInstance<Message.Assistant>() }
         .onCondition { toolResults -> block(toolResults) }
-        .transformed { it }
 }
 
 /**
