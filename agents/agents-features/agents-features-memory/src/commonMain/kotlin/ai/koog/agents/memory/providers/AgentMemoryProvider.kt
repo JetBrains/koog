@@ -62,6 +62,20 @@ public interface AgentMemoryProvider {
     public suspend fun save(fact: Fact, subject: MemorySubject, scope: MemoryScope)
 
     /**
+     * Extended variant of [save] that accepts operation options.
+     *
+     * Default implementation delegates to the legacy signature so existing providers remain compatible.
+     */
+    public suspend fun save(
+        fact: Fact,
+        subject: MemorySubject,
+        scope: MemoryScope,
+        options: MemoryRequestOptions
+    ) {
+        save(fact, subject, scope)
+    }
+
+    /**
      * Retrieves facts associated with a specific concept.
      * This operation provides:
      * - Direct concept-based knowledge retrieval
@@ -76,6 +90,18 @@ public interface AgentMemoryProvider {
     public suspend fun load(concept: Concept, subject: MemorySubject, scope: MemoryScope): List<Fact>
 
     /**
+     * Extended variant of [load] that accepts operation options.
+     *
+     * Default implementation delegates to the legacy signature so existing providers remain compatible.
+     */
+    public suspend fun load(
+        concept: Concept,
+        subject: MemorySubject,
+        scope: MemoryScope,
+        options: MemoryRequestOptions
+    ): List<Fact> = load(concept, subject, scope)
+
+    /**
      * Retrieves all facts within a specific context.
      * This operation is useful for:
      * - Building comprehensive context understanding
@@ -87,6 +113,17 @@ public interface AgentMemoryProvider {
      * @return All available facts in the context
      */
     public suspend fun loadAll(subject: MemorySubject, scope: MemoryScope): List<Fact>
+
+    /**
+     * Extended variant of [loadAll] that accepts operation options.
+     *
+     * Default implementation delegates to the legacy signature so existing providers remain compatible.
+     */
+    public suspend fun loadAll(
+        subject: MemorySubject,
+        scope: MemoryScope,
+        options: MemoryRequestOptions
+    ): List<Fact> = loadAll(subject, scope)
 
     /**
      * Performs semantic search across stored facts.
@@ -106,6 +143,18 @@ public interface AgentMemoryProvider {
      * @return Facts matching the semantic query
      */
     public suspend fun loadByDescription(description: String, subject: MemorySubject, scope: MemoryScope): List<Fact>
+
+    /**
+     * Extended variant of [loadByDescription] that accepts operation options.
+     *
+     * Default implementation delegates to the legacy signature so existing providers remain compatible.
+     */
+    public suspend fun loadByDescription(
+        description: String,
+        subject: MemorySubject,
+        scope: MemoryScope,
+        options: MemoryRequestOptions
+    ): List<Fact> = loadByDescription(description, subject, scope)
 }
 
 /**

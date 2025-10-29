@@ -1,18 +1,44 @@
 package ai.koog.agents.memory.feature
 
-import ai.koog.agents.memory.config.MemoryScopesProfile
 import ai.koog.agents.memory.feature.summarization.SummaryProvider
 import ai.koog.agents.memory.feature.summarization.SummaryResult
 import ai.koog.agents.memory.model.Concept
 import ai.koog.agents.memory.model.Fact
 import ai.koog.agents.memory.model.FactType
+import ai.koog.agents.memory.model.MemoryScope
+import ai.koog.agents.memory.model.MemorySubject
 import ai.koog.agents.memory.model.SingleFact
 import ai.koog.agents.memory.providers.AgentMemoryProvider
-import io.mockk.mockk
+import ai.koog.agents.memory.providers.MemoryRequestOptions
+import ai.koog.agents.memory.providers.SmartAgentMemoryProvider
 import kotlinx.coroutines.test.runTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertSame
+import kotlin.test.assertNull
+
+private object TestSubject : MemorySubject() {
+    override val name: String = "test"
+    override val promptDescription: String = "test subject"
+    override val priorityLevel: Int = 0
+}
+
+private class CapturingProvider : AgentMemoryProvider {
+    val savedFacts = mutableListOf<Fact>()
+
+    override suspend fun save(fact: Fact, subject: MemorySubject, scope: MemoryScope) {
+        savedFacts += fact
+    }
+
+    override suspend fun load(concept: Concept, subject: MemorySubject, scope: MemoryScope): List<Fact> = emptyList()
+
+    override suspend fun loadAll(subject: MemorySubject, scope: MemoryScope): List<Fact> = emptyList()
+
+    override suspend fun loadByDescription(
+        description: String,
+        subject: MemorySubject,
+        scope: MemoryScope
+    ): List<Fact> = emptyList()
+}
 
 class AgentMemoryEnrichmentTest {
     private val concept = Concept("concept", "description", FactType.SINGLE)
@@ -24,30 +50,40 @@ class AgentMemoryEnrichmentTest {
                 SummaryResult(summary = "compressed", keywords = listOf("tag"))
         }
 
-        val memory = AgentMemory(
-            agentMemory = mockk<AgentMemoryProvider>(relaxed = true),
-            scopesProfile = MemoryScopesProfile(),
-            summaryProvider = summaryProvider
+        val delegate = CapturingProvider()
+        val provider = SmartAgentMemoryProvider(
+            delegate = delegate,
+            summaryProvider = summaryProvider,
+            embedder = null,
+            defaultBudget = null
         )
 
         val originalFact = SingleFact(concept = concept, timestamp = 1L, value = "original")
-        val enriched = memory.enrichFactIfNeeded(originalFact, enrich = true) as SingleFact
+        provider.save(originalFact, TestSubject, MemoryScope.Agent("test"), MemoryRequestOptions(enrich = true))
 
-        assertEquals("compressed", enriched.summary)
-        assertEquals(listOf("tag"), enriched.keywords)
+        val saved = delegate.savedFacts.single() as SingleFact
+        assertEquals("compressed", saved.summary)
+        assertEquals(listOf("tag"), saved.keywords)
     }
 
     @Test
     fun enrichmentNoOpWhenDisabled() = runTest {
-        val memory = AgentMemory(
-            agentMemory = mockk<AgentMemoryProvider>(relaxed = true),
-            scopesProfile = MemoryScopesProfile(),
-            summaryProvider = null
+        val delegate = CapturingProvider()
+        val provider = SmartAgentMemoryProvider(
+            delegate = delegate,
+            summaryProvider = object : SummaryProvider {
+                override suspend fun summarize(fact: Fact): SummaryResult =
+                    SummaryResult(summary = "compressed", keywords = listOf("tag"))
+            },
+            embedder = null,
+            defaultBudget = null
         )
 
         val originalFact = SingleFact(concept = concept, timestamp = 1L, value = "original")
-        val enriched = memory.enrichFactIfNeeded(originalFact, enrich = false)
+        provider.save(originalFact, TestSubject, MemoryScope.Agent("test"), MemoryRequestOptions(enrich = false))
 
-        assertSame(originalFact, enriched, "Fact should remain unchanged when enrichment disabled or unavailable")
+        val saved = delegate.savedFacts.single() as SingleFact
+        assertNull(saved.summary, "When enrichment disabled via context the provider should skip summarization")
+        assertEquals(emptyList<String>(), saved.keywords)
     }
 }

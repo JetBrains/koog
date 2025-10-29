@@ -14,6 +14,7 @@ import ai.koog.agents.memory.model.MemorySubject
 import ai.koog.agents.memory.model.MultipleFacts
 import ai.koog.agents.memory.model.TokenBudget
 import ai.koog.agents.memory.providers.AgentMemoryProvider
+import ai.koog.agents.memory.providers.SmartAgentMemoryProvider
 import ai.koog.prompt.dsl.PromptBuilder
 import io.mockk.coEvery
 import io.mockk.every
@@ -150,8 +151,15 @@ class AgentMemoryBudgetSimulationTest {
         val llmContext = mockk<AIAgentLLMContext>()
         coEvery { llmContext.writeSession(capture(sessionBlock)) } returns Unit
 
+        val smartProvider = SmartAgentMemoryProvider(
+            delegate = provider,
+            summaryProvider = null,
+            embedder = null,
+            defaultBudget = defaultBudget
+        )
+
         val agentMemory = AgentMemory(
-            agentMemory = provider,
+            agentMemory = smartProvider,
             scopesProfile = MemoryScopesProfile(MemoryScopeType.PRODUCT to scope.name),
             defaultTokenBudget = defaultBudget
         )

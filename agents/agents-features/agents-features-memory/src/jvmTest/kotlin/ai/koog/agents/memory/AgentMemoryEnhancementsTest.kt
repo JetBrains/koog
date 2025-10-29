@@ -5,7 +5,6 @@ import ai.koog.agents.core.agent.session.AIAgentLLMWriteSession
 import ai.koog.agents.memory.config.MemoryScopeType
 import ai.koog.agents.memory.config.MemoryScopesProfile
 import ai.koog.agents.memory.feature.AgentMemory
-import ai.koog.agents.memory.feature.similarity.EmbeddingProvider
 import ai.koog.agents.memory.model.Concept
 import ai.koog.agents.memory.model.FactType
 import ai.koog.agents.memory.model.MemoryScope
@@ -14,6 +13,9 @@ import ai.koog.agents.memory.model.MultipleFacts
 import ai.koog.agents.memory.model.SingleFact
 import ai.koog.agents.memory.model.TokenBudget
 import ai.koog.agents.memory.providers.AgentMemoryProvider
+import ai.koog.agents.memory.providers.SmartAgentMemoryProvider
+import ai.koog.embeddings.base.Embedder
+import ai.koog.embeddings.base.Vector
 import ai.koog.prompt.dsl.PromptBuilder
 import io.mockk.coEvery
 import io.mockk.every
@@ -45,7 +47,7 @@ class AgentMemoryEnhancementsTest {
 
         val memoryProvider = mockk<AgentMemoryProvider> {
             coEvery {
-                loadAll(TestUserSubject, MemoryScope.Agent("agent-test"))
+                loadAll(TestUserSubject, MemoryScope.Agent("agent-test"), any())
             } returns listOf(factA, factB)
         }
 
@@ -65,8 +67,15 @@ class AgentMemoryEnhancementsTest {
             } returns Unit
         }
 
+        val smartProvider = SmartAgentMemoryProvider(
+            delegate = memoryProvider,
+            summaryProvider = null,
+            embedder = null,
+            defaultBudget = null
+        )
+
         val memory = AgentMemory(
-            agentMemory = memoryProvider,
+            agentMemory = smartProvider,
             scopesProfile = testScopesProfile
         )
 
@@ -96,13 +105,24 @@ class AgentMemoryEnhancementsTest {
 
         val memoryProvider = mockk<AgentMemoryProvider> {
             coEvery {
-                loadAll(TestUserSubject, MemoryScope.Agent("agent-test"))
+                loadAll(TestUserSubject, MemoryScope.Agent("agent-test"), any())
             } returns listOf(factLow, factHigh)
         }
 
-        val embeddingProvider = object : EmbeddingProvider {
-            override suspend fun embed(text: String): FloatArray =
-                if (text.contains("priority", ignoreCase = true)) floatArrayOf(1f) else floatArrayOf(0f)
+        val embeddingProvider = object : Embedder {
+            override suspend fun embed(text: String): Vector {
+                return if (text.contains("priority", ignoreCase = true)) {
+                    Vector(listOf(1.0))
+                } else {
+                    Vector(listOf(0.0))
+                }
+            }
+
+            override fun diff(embedding1: Vector, embedding2: Vector): Double {
+                val lhs = embedding1.values.firstOrNull() ?: 0.0
+                val rhs = embedding2.values.firstOrNull() ?: 0.0
+                return kotlin.math.abs(lhs - rhs)
+            }
         }
 
         val promptUpdate = slot<PromptBuilder.() -> Unit>()
@@ -121,10 +141,16 @@ class AgentMemoryEnhancementsTest {
             } returns Unit
         }
 
+        val smartProvider = SmartAgentMemoryProvider(
+            delegate = memoryProvider,
+            summaryProvider = null,
+            embedder = embeddingProvider,
+            defaultBudget = null
+        )
+
         val memory = AgentMemory(
-            agentMemory = memoryProvider,
-            scopesProfile = testScopesProfile,
-            embeddingProvider = embeddingProvider
+            agentMemory = smartProvider,
+            scopesProfile = testScopesProfile
         )
 
         memory.loadAllFactsToAgent(

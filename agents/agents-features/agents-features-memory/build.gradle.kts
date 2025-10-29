@@ -15,10 +15,13 @@ kotlin {
                 api(project(":agents:agents-core"))
                 api(project(":prompt:prompt-markdown"))
                 api(project(":rag:rag-base"))
+                api(project(":embeddings:embeddings-base"))
 
                 api(libs.kotlinx.serialization.json)
                 api(libs.ktor.client.content.negotiation)
                 api(libs.ktor.serialization.kotlinx.json)
+
+                implementation(project(":prompt:prompt-tokenizer"))
             }
         }
 

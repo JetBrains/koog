@@ -97,7 +97,7 @@ class AIAgentMemoryTest {
         } returns listOf(response)
 
         coEvery {
-            memoryProvider.save(any(), any(), any())
+            memoryProvider.save(any(), any(), any(), any())
         } returns Unit
 
         val llm = AIAgentLLMContext(
@@ -131,7 +131,8 @@ class AIAgentMemoryTest {
                         it.timestamp > 0 // Verify timestamp is set
                 },
                 MemorySubjects.User,
-                MemoryScope.Agent("test")
+                MemoryScope.Agent("test"),
+                any()
             )
         }
     }
@@ -149,24 +150,24 @@ class AIAgentMemoryTest {
 
         // Mock responses for User subject with specific scopes
         coEvery {
-            memoryProvider.load(concept, MemorySubjects.User, MemoryScope.Agent("test-agent"))
+            memoryProvider.load(concept, MemorySubjects.User, MemoryScope.Agent("test-agent"), any())
         } returns listOf(agentFact)
 
         coEvery {
-            memoryProvider.load(concept, MemorySubjects.User, MemoryScope.Feature("test-feature"))
+            memoryProvider.load(concept, MemorySubjects.User, MemoryScope.Feature("test-feature"), any())
         } returns listOf(featureFact)
 
         coEvery {
-            memoryProvider.load(concept, MemorySubjects.User, MemoryScope.Product("test-product"))
+            memoryProvider.load(concept, MemorySubjects.User, MemoryScope.Product("test-product"), any())
         } returns listOf(productFact)
 
         coEvery {
-            memoryProvider.load(concept, MemorySubjects.User, MemoryScope.CrossProduct)
+            memoryProvider.load(concept, MemorySubjects.User, MemoryScope.CrossProduct, any())
         } returns emptyList()
 
         // All other requests
         coEvery {
-            memoryProvider.load(any(), any(), any())
+            memoryProvider.load(any(), any(), any(), any())
         } returns emptyList()
 
         val response = mockk<Message.Response>()
@@ -199,18 +200,20 @@ class AIAgentMemoryTest {
         memory.loadFactsToAgent(llm = llm, concept = concept, subjects = listOf(MemorySubjects.User))
 
         coVerify {
-            memoryProvider.load(concept, MemorySubjects.User, MemoryScope.Agent("test-agent"))
+            memoryProvider.load(concept, MemorySubjects.User, MemoryScope.Agent("test-agent"), any())
             memoryProvider.load(
                 concept,
                 MemorySubjects.User,
-                MemoryScope.Feature("test-feature")
+                MemoryScope.Feature("test-feature"),
+                any()
             )
             memoryProvider.load(
                 concept,
                 MemorySubjects.User,
-                MemoryScope.Product("test-product")
+                MemoryScope.Product("test-product"),
+                any()
             )
-            memoryProvider.load(concept, MemorySubjects.User, MemoryScope.CrossProduct)
+            memoryProvider.load(concept, MemorySubjects.User, MemoryScope.CrossProduct, any())
         }
     }
 
@@ -222,7 +225,7 @@ class AIAgentMemoryTest {
 
         // Mock memory feature to return only machine fact
         coEvery {
-            memoryProvider.load(any(), any(), any())
+            memoryProvider.load(any(), any(), any(), any())
         } answers {
             println(
                 "[DEBUG_LOG] Loading facts for subject: ${secondArg<MemorySubject>()}, scope: ${thirdArg<MemoryScope>()}"
@@ -288,7 +291,7 @@ class AIAgentMemoryTest {
 
         // Mock memory feature to capture saved facts
         coEvery {
-            memoryProvider.save(capture(savedFacts), any(), any())
+            memoryProvider.save(capture(savedFacts), any(), any(), any())
         } returns Unit
 
         val llm = AIAgentLLMContext(
@@ -367,7 +370,7 @@ class AIAgentMemoryTest {
         } returns listOf(response)
 
         coEvery {
-            memoryProvider.save(capture(savedFacts), capture(savedSubjects), capture(savedScopes))
+            memoryProvider.save(capture(savedFacts), capture(savedSubjects), capture(savedScopes), any())
         } returns Unit
 
         val llm = AIAgentLLMContext(
@@ -418,7 +421,7 @@ class AIAgentMemoryTest {
         assertEquals(testScope, savedScopes.first(), "Scope should match input")
 
         coVerify(exactly = 1) {
-            memoryProvider.save(any(), testSubject, testScope)
+            memoryProvider.save(any(), testSubject, testScope, any())
         }
 
         coVerify(exactly = 1) {
@@ -454,7 +457,7 @@ class AIAgentMemoryTest {
         } returns listOf(response)
 
         coEvery {
-            memoryProvider.save(capture(savedFacts), any(), any())
+            memoryProvider.save(capture(savedFacts), any(), any(), any())
         } returns Unit
 
         val llm = AIAgentLLMContext(
@@ -517,7 +520,8 @@ class AIAgentMemoryTest {
                         expectedFacts.all { expected -> it.values.contains(expected) }
                 },
                 MemorySubjects.User,
-                MemoryScope.Agent(testScopeName)
+                MemoryScope.Agent(testScopeName),
+                any()
             )
         }
     }
@@ -529,7 +533,7 @@ class AIAgentMemoryTest {
         val concept = Concept("test", "test description", FactType.SINGLE)
 
         coEvery {
-            memoryProvider.load(any(), any(), any())
+            memoryProvider.load(any(), any(), any(), any())
         } returns listOf(SingleFact(concept = concept, value = "test fact", timestamp = 1234567890L))
 
         val response = mockk<Message.Response>()
@@ -564,7 +568,7 @@ class AIAgentMemoryTest {
         )
 
         coVerify {
-            memoryProvider.load(concept, any(), any())
+            memoryProvider.load(concept, any(), any(), any())
         }
     }
 }

@@ -5,7 +5,6 @@ import ai.koog.agents.core.dsl.builder.AIAgentBuilderDslMarker
 import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.memory.config.MemoryScopeType
-import ai.koog.agents.memory.feature.enrichFactIfNeeded
 import ai.koog.agents.memory.feature.withMemory
 import ai.koog.agents.memory.model.Concept
 import ai.koog.agents.memory.model.Fact
@@ -15,6 +14,7 @@ import ai.koog.agents.memory.model.MultipleFacts
 import ai.koog.agents.memory.model.SingleFact
 import ai.koog.agents.memory.model.TokenBudget
 import ai.koog.agents.memory.prompts.MemoryPrompts
+import ai.koog.agents.memory.providers.MemoryRequestOptions
 import ai.koog.prompt.llm.LLModel
 import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
@@ -194,8 +194,7 @@ public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeSaveToMemoryA
             scopes.mapNotNull(scopesProfile::getScope).forEach { scope ->
                 val facts = parseFactsFromResponse(response.content)
                 facts.forEach { (subject, fact) ->
-                    val factToSave = enrichFactIfNeeded(fact, enrich)
-                    agentMemory.save(factToSave, subject, scope)
+                    agentMemory.save(fact, subject, scope, MemoryRequestOptions(enrich = enrich))
                 }
             }
         }
@@ -211,7 +210,7 @@ public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeSaveToMemoryA
 
 @Serializable
 internal data class SubjectWithFact(
-    val subject: MemorySubject,
+    val subject: String,
     val keyword: String,
     val description: String,
     val value: String
@@ -226,13 +225,17 @@ public fun parseFactsFromResponse(
     clock: Clock = Clock.System,
 ): List<Pair<MemorySubject, Fact>> {
     val parsedFacts = Json.decodeFromString<List<SubjectWithFact>>(content)
-    val groupedFacts = parsedFacts.groupBy { it.subject to it.keyword }
+    val groupedFacts: Map<Pair<String, String>, List<SubjectWithFact>> =
+        parsedFacts.groupBy { Pair(it.subject, it.keyword) }
 
-    return groupedFacts.map { (subjectWithKeyword, facts) ->
+    return groupedFacts.mapNotNull { (subjectWithKeyword, facts) ->
+        val (subjectName, keyword) = subjectWithKeyword
+        val subject = MemorySubject.registeredSubjects.firstOrNull { it.name == subjectName }
+            ?: return@mapNotNull null
         when (facts.size) {
             1 -> {
                 val singleFact = facts.single()
-                subjectWithKeyword.first to SingleFact(
+                subject to SingleFact(
                     concept = Concept(
                         keyword = singleFact.keyword,
                         description = singleFact.description,
@@ -244,9 +247,9 @@ public fun parseFactsFromResponse(
             }
 
             else -> {
-                subjectWithKeyword.first to MultipleFacts(
+                subject to MultipleFacts(
                     concept = Concept(
-                        keyword = subjectWithKeyword.second,
+                        keyword = keyword,
                         description = facts.first().description,
                         factType = FactType.MULTIPLE
                     ),
