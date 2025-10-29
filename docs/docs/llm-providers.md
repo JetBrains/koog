@@ -8,6 +8,7 @@ Koog integrates with major LLM providers and supports local models through integ
 - DeepSeek
 - OpenRouter
 - Bedrock
+- Mistral
 - Ollama
 
 !!! note
