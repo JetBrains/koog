@@ -8,6 +8,7 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.bedrock.BedrockModels
 import ai.koog.prompt.executor.clients.google.GoogleModels
+import ai.koog.prompt.executor.clients.mistralai.MistralAIModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterModels
 import ai.koog.prompt.llm.LLMCapability
@@ -112,6 +113,7 @@ class ToolDescriptorIntegrationTest {
                 GoogleModels.Gemini2_5Flash,
                 BedrockModels.AnthropicClaude4_5Haiku,
                 OpenRouterModels.Mistral7B,
+                MistralAIModels.Chat.MistralLarge21,
             )
         }
 
