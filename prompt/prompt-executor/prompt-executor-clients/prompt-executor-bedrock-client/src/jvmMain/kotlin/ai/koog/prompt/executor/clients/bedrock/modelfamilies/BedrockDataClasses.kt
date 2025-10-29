@@ -122,9 +122,7 @@ public sealed interface BedrockAnthropicInvokeModelContent {
      */
     @Serializable
     @SerialName("thinking")
-    public data class Thinking(val signature: String, val thinking: String) :
-        BedrockAnthropicInvokeModelContent,
-        ai.koog.prompt.message.Thinking
+    public data class Thinking(val signature: String, val thinking: String) : BedrockAnthropicInvokeModelContent
 
     /**
      * Represents the result of a tool invocation in the context of Bedrock's Anthropic API.

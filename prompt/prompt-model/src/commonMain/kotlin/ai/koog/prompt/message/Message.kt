@@ -176,7 +176,7 @@ public sealed interface Message {
     public data class Reasoning(
         public val id: String? = null,
         public val encrypted: String? = null,
-        override val parts: List<ContentPart>,
+        override val parts: List<ContentPart.Text>,
         override val metaInfo: ResponseMetaInfo
     ) : Response {
 
@@ -304,15 +304,6 @@ public sealed interface Message {
             this(ContentPart.Text(content), metaInfo)
     }
 }
-
-/**
- * Represents a contract for implementing entities that encapsulate reasoning or thought processes.
- *
- * Classes that implement this interface may define specific mechanisms
- * or structures for capturing and handling the concept of "thinking"
- * during a particular computational or logical operation.
- */
-public interface Thinking
 
 /**
  * Meta-information associated with a message in a chat system.

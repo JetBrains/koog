@@ -161,8 +161,7 @@ public sealed interface AnthropicContent {
      */
     @Serializable
     @SerialName("thinking")
-    public data class Thinking(val signature: String, val thinking: String) :
-        AnthropicContent, ai.koog.prompt.message.Thinking
+    public data class Thinking(val signature: String, val thinking: String) : AnthropicContent
 
     /**
      * Represents an image content type within the AnthropicContent hierarchy.

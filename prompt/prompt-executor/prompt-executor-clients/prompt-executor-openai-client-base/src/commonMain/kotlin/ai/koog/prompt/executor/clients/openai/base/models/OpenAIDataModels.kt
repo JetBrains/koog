@@ -1,6 +1,5 @@
 package ai.koog.prompt.executor.clients.openai.base.models
 
-import ai.koog.prompt.message.Thinking
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
@@ -136,7 +135,7 @@ public sealed interface OpenAIMessage {
         public val refusal: String? = null,
         public val toolCalls: List<OpenAIToolCall>? = null,
         public val annotations: List<OpenAIWebUrlCitation>? = null,
-    ) : OpenAIMessage, Thinking
+    ) : OpenAIMessage
 
     /**
      * @property content The contents of the tool message. For tool messages, only type text is supported.

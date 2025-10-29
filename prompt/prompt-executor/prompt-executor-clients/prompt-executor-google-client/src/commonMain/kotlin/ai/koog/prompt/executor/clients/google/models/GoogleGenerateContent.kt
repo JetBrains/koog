@@ -1,7 +1,6 @@
 package ai.koog.prompt.executor.clients.google.models
 
 import ai.koog.prompt.executor.clients.serialization.AdditionalPropertiesFlatteningSerializer
-import ai.koog.prompt.message.Thinking
 import ai.koog.utils.serializers.ByteArrayAsBase64Serializer
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.SerialName
@@ -79,7 +78,7 @@ internal sealed interface GooglePart {
         val text: String,
         override val thought: Boolean? = null,
         val thoughtSignature: String? = null
-    ) : GooglePart, Thinking
+    ) : GooglePart
 
     /**
      * Represents inline binary data as part of the Google-specific data context.
