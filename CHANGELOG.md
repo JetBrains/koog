@@ -7,9 +7,10 @@
 
 ## Improvements
 - Replace string content and attachments list in messages with a unified content parts list to make the API more flexible and preserve text/attachment parts order (#1004)
-- Add input and output attributes to the NodeExecuteSpan span in OpenTelemetry to improve observability [(KG-501)](https://youtrack.jetbrains.com/issue/KG-501/NodeExecuteSpan-span-should-include-input-output-attributes)
+- Add input and output attributes to the NodeExecuteSpan span in OpenTelemetry to improve observability [(KG-501)](https://youtrack.jetbrains.com/issue/KG-501)
 - Set the JVM target to 11 to support older JVM versions and explicitly specify the JVM target. (#1015)
-- Support multi-responses from LLM in the subgraphWithTask API [(KG-507)](https://youtrack.jetbrains.com/issue/KG-507/Support-multi-response-from-LLM-in-subgraphWithTask-API)
+- Support multi-responses from LLM in the subgraphWithTask API [(KG-507)](https://youtrack.jetbrains.com/issue/KG-507)
+- Add error handling for missing tools in GenericAgentEnvironment by passing the error message to the agent instead of failing with exception [(KG-509)](https://youtrack.jetbrains.com/issue/KG-509)
 
 # 0.5.1
 > Published 15 Oct 2025
