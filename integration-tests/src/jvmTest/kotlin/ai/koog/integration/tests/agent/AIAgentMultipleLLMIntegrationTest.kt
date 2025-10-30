@@ -389,7 +389,7 @@ class AIAgentMultipleLLMIntegrationTest {
                     llm.writeSession {
                         model = AnthropicModels.Haiku_4_5
                         rewritePrompt {
-                            prompt("test", params = LLMParams(toolChoice = LLMParams.ToolChoice.Auto)) {
+                            prompt("test") {
                                 system {
                                     +"You are a helpful assistant. You need to solve my task. "
                                     +"JUST CALL TOOLS. NO QUESTIONS ASKED."
@@ -417,7 +417,7 @@ class AIAgentMultipleLLMIntegrationTest {
                     llm.writeSession {
                         model = OpenAIModels.Chat.GPT5
                         rewritePrompt {
-                            prompt("test", params = LLMParams(toolChoice = LLMParams.ToolChoice.Auto)) {
+                            prompt("test") {
                                 system(
                                     """
                                     You are a helpful assistant. You need to verify that the task is solved correctly.
@@ -552,7 +552,7 @@ class AIAgentMultipleLLMIntegrationTest {
         )
 
         val result = agent.run(
-            "Generate me a project in Ktor that has a GET endpoint that returns the capital of France. Write a test"
+            "Generate me a simple kotlin method. Write a test"
         )
         eventsChannel.close()
 
