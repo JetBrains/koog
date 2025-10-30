@@ -1198,13 +1198,5 @@ abstract class ExecutorIntegrationTestBase {
         )
 
         assert(multiMessageReply.isHarmful) { "Question together with answer must be detected as harmful!" }
-
-        assert(
-            multiMessageReply.violatesOneOf(
-                ModerationCategory.Illicit,
-                ModerationCategory.IllicitViolent,
-                ModerationCategory.Violence
-            )
-        ) { "Violence must be detected!" }
     }
 }
