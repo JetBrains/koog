@@ -104,8 +104,6 @@ For a list of parameters that are specific to some providers, see [Provider-spec
 | `maxTokens`            | Integer                        | Maximum number of tokens to generate in the response. Useful for controlling response length.                                                                                                   |
 | `numberOfChoices`      | Integer                        | Number of alternative responses to generate. Must be greater than 0.                                                                                                                            |
 | `speculation`          | String                         | A speculative configuration string that influences model behavior, designed to enhance result speed and accuracy. Supported only by certain models, but may greatly improve speed and accuracy. |
-| `includeThoughts`      | Boolean                        | If `true`, requests the model to add reasoning blocks to the response. Responses may include detailed reasoning steps. When `false` or `null`, responses are typically shorter and faster.      |
-| `thinkingBudget`       | Integer                        | The top limit for the use of reasoning tokens. Can be used to limit the amount of tokens used for reasoning when `includeThoughts` is set to `true`.                                            |
 | `schema`               | Schema                         | Defines the structure for the model's response format, enabling structured outputs like JSON. For more information, see [Schema](#schema).                                                      |
 | `toolChoice`           | ToolChoice                     | Controls tool calling behavior of the language model. For more information, see [Tool choice](#tool-choice).                                                                                    |
 | `user`                 | String                         | Identifier for the user making the request, which can be used for tracking purposes.                                                                                                            |
@@ -308,24 +306,7 @@ val basicParams = LLMParams(
 
 ### Reasoning control
 
-<!--- INCLUDE
-import ai.koog.prompt.params.LLMParams
--->
-```kotlin
-// Configure the model to include detailed reasoning
-val reasoningParams = LLMParams(
-    includeThoughts = true
-)
-
-// Configure the model to include reasoning with a token budget
-val budgetedReasoningParams = LLMParams(
-    includeThoughts = true,
-    thinkingBudget = 500
-)
-```
-<!--- KNIT example-llm-parameters-04.kt -->
-
-For OpenAI, there are provider-specific parameters that you can use to control model reasoning. 
+You implement reasoning control through provider-specific parameters that control model reasoning. 
 When using the OpenAI Chat API and models that support reasoning, use the `reasoningEffort` parameter 
 to control how many reasoning tokens the model generates before providing a response:
 
@@ -338,20 +319,21 @@ val openAIReasoningEffortParams = OpenAIChatParams(
     reasoningEffort = ReasoningEffort.MEDIUM
 )
 ```
-<!--- KNIT example-llm-parameters-05.kt -->
+<!--- KNIT example-llm-parameters-04.kt -->
 
 In addition, when using the OpenAI Responses API in a stateless mode, you keep an encrypted history of reasoning items and send it to the model in every conversation turn. The encryption is done on the OpenAI side, and you need to request encrypted reasoning tokens by setting the `include` parameter in your requests to `reasoning.encrypted_content`. 
 You can then pass the encrypted reasoning tokens back to the model in the next conversation turns.
 
 <!--- INCLUDE
 import ai.koog.prompt.executor.clients.openai.OpenAIResponsesParams
+import ai.koog.prompt.executor.clients.openai.models.OpenAIInclude
 -->
 ```kotlin
 val openAIStatelessReasoningParams = OpenAIResponsesParams(
-    include = listOf("reasoning.encrypted_content")
+    include = listOf(OpenAIInclude.REASONING_ENCRYPTED_CONTENT)
 )
 ```
-<!--- KNIT example-llm-parameters-06.kt -->
+<!--- KNIT example-llm-parameters-05.kt -->
 
 ### Custom parameters
 
@@ -371,7 +353,7 @@ val customParams = LLMParams(
     )
 )
 ```
-<!--- KNIT example-llm-parameters-07.kt -->
+<!--- KNIT example-llm-parameters-06.kt -->
 
 ### Setting and overriding parameters
 
@@ -393,10 +375,10 @@ val defaultParams = LLMParams(
 // Create parameters with some overrides, using defaults for the rest
 val overrideParams = LLMParams(
     temperature = 0.2,
-    includeThoughts = true
+    numberOfChoices = 3
 ).default(defaultParams)
 ```
-<!--- KNIT example-llm-parameters-08.kt -->
+<!--- KNIT example-llm-parameters-07.kt -->
 
 The values in the resulting `overrideParams` set are equivalent to the following:
 
@@ -408,7 +390,7 @@ val overrideParams = LLMParams(
     temperature = 0.2,
     maxTokens = 150,
     toolChoice = LLMParams.ToolChoice.Auto,
-    includeThoughts = true
+    numberOfChoices = 3
 )
 ```
-<!--- KNIT example-llm-parameters-09.kt -->
+<!--- KNIT example-llm-parameters-08.kt -->
