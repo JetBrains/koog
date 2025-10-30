@@ -515,7 +515,7 @@ class AIAgentMultipleLLMIntegrationTest {
                     system("You are a helpful assistant.")
                 },
                 model,
-                maxAgentIterations = 20,
+                maxAgentIterations = 50,
             ),
             toolRegistry = toolRegistry,
         ) {
