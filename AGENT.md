@@ -168,10 +168,11 @@ For comprehensive testing examples, see `agents/agents-test/TESTING.md`.
 - Store test API keys in a local environment only
 - Required environment variables for integration tests:
   - `ANTHROPIC_API_TEST_KEY`
-  - `OPEN_AI_API_TEST_KEY`
   - `GEMINI_API_TEST_KEY` 
-  - `OPEN_ROUTER_API_TEST_KEY`
+  - `MISTRAL_AI_API_TEST_KEY`
   - `OLLAMA_IMAGE_URL`
+  - `OPEN_AI_API_TEST_KEY`
+  - `OPEN_ROUTER_API_TEST_KEY`
 
 ### Tool Execution Safety
 - Tools execute within controlled `AIAgentEnvironment` contexts
@@ -192,10 +193,12 @@ Set environment variables for integration testing (never commit API keys):
 ```bash
 # Export in your shell or IDE run configuration
 export ANTHROPIC_API_TEST_KEY=your_key_here
-export OPEN_AI_API_TEST_KEY=your_key_here
+export DEEPSEEK_API_TEST_KEY=your_key_here
 export GEMINI_API_TEST_KEY=your_key_here
-export OPEN_ROUTER_API_TEST_KEY=your_key_here
+export MISTRAL_AI_API_TEST_KEY=your_key_here
 export OLLAMA_IMAGE_URL=http://localhost:11434
+export OPEN_AI_API_TEST_KEY=your_key_here
+export OPEN_ROUTER_API_TEST_KEY=your_key_here
 
 # Or add to ~/.bashrc, ~/.zshrc, or IDE environment variables
 ```

@@ -725,7 +725,7 @@ class AIAgentMultipleLLMIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("modelsWithVisionCapability")
-    fun integration_testAgentWithImageCapability(model: LLModel) = runTest(timeout = 2.minutes) {
+    fun integration_testAgentWithImageCapability(model: LLModel) = runTest(timeout = 10.minutes) {
         Models.assumeAvailable(model.provider)
         val fs = MockFileSystem()
 

@@ -117,6 +117,7 @@ jobs:
           ANTHROPIC_API_TEST_KEY: ${{ secrets.ANTHROPIC_API_TEST_KEY }}
           DEEPSEEK_API_TEST_KEY: ${{ secrets.DEEPSEEK_API_TEST_KEY }}
           GEMINI_API_TEST_KEY: ${{ secrets.GEMINI_API_TEST_KEY }}
+          MISTRAL_AI_API_TEST_KEY: ${{ secrets.MISTRAL_AI_API_TEST_KEY }}
           OPEN_AI_API_TEST_KEY: ${{ secrets.OPEN_AI_API_TEST_KEY }}
           OPEN_ROUTER_API_TEST_KEY: ${{ secrets.OPEN_ROUTER_API_TEST_KEY }}
         run: ./gradlew jvmIntegrationTest --tests "${{ matrix.test-group }}" --continue

@@ -59,7 +59,7 @@ class ToolSchemaExecutorIntegrationTest {
 
         @JvmStatic
         fun mistralModels(): Stream<LLModel> {
-            return Models.bedrockModels()
+            return Models.mistralModels()
         }
 
         @JvmStatic
