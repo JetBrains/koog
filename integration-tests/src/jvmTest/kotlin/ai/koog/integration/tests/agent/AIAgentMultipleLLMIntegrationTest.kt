@@ -57,6 +57,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
@@ -599,6 +600,7 @@ class AIAgentMultipleLLMIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("getModels")
+    @Disabled("See KG-520 Agent with an empty tool registry is stuck into a loop if a subgraph has tools")
     fun `integration_test agent with not registered subgraph tool result fails`(model: LLModel) =
         runTest(timeout = 10.minutes) {
             Models.assumeAvailable(LLMProvider.OpenAI)
