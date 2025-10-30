@@ -78,14 +78,14 @@ object Models {
 
     @JvmStatic
     fun allCompletionModels(): Stream<LLModel> {
-    return Stream.of(
-        openAIModels(),
-        anthropicModels(),
-        googleModels(),
-        openRouterModels(),
-        bedrockModels(),
-        mistralModels(),
-    ).flatMap { it }
+        return Stream.of(
+            openAIModels(),
+            anthropicModels(),
+            googleModels(),
+            openRouterModels(),
+            bedrockModels(),
+            mistralModels(),
+        ).flatMap { it }
     }
 
     @JvmStatic
