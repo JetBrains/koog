@@ -1,3 +1,38 @@
+# 0.5.2
+> Published 29 Oct 2025
+
+## New Features
+- Add `subtask` extension for non-graph agents similar to `subgraphWithTask` (#982)
+- Add MistralAI LLM Client (#622)
+
+## Improvements
+- Replace string content and attachments list in messages with a unified content parts list to make the API more flexible and preserve text/attachment parts order (#1004)
+- Add input and output attributes to the NodeExecuteSpan span in OpenTelemetry to improve observability [(KG-501)](https://youtrack.jetbrains.com/issue/KG-501)
+- Set the JVM target to 11 to support older JVM versions and explicitly specify the JVM target. (#1015)
+- Support multi-responses from LLM in the subgraphWithTask API [(KG-507)](https://youtrack.jetbrains.com/issue/KG-507)
+- Add error handling for missing tools in GenericAgentEnvironment by passing the error message to the agent instead of failing with exception [(KG-509)](https://youtrack.jetbrains.com/issue/KG-509)
+
+# 0.5.1
+> Published 15 Oct 2025
+
+## Improvements
+- **Add error handling in LocalFileMemoryProvider** (#905)
+- **Add GPT-5 Codex** model support (#888)
+- **Added support for filters** in PersistenceProvider (#936)
+- **Added** **DashScope (Qwen)** LLM client support (#687)
+- Excluded **Ktor** engine dependencies ([KG-315](https://youtrack.jetbrains.com/issue/KG-315))
+- Support additional **Bedrock auth options** (#923)
+- `requestLLMStreaming` now respect `AgentConfig.missingToolsConversionStrategy` (#944)
+
+## Bug Fixes
+- Make subgraphWithTask work with models without ToolChoice support ([KG-440](https://youtrack.jetbrains.com/issue/KG-440))
+- Fix for [KTOR-8881](https://youtrack.jetbrains.com/issue/KTOR-8881) - Ktor/Koog configuration in `application.yaml` gives error
+- Fixed the ordering issue for **Persistence** checkpoints (#964)
+- Fixed issue with the tool name in `@Tool` annotation - now we take it into account (#930)
+
+## Examples
+- Supported Multi-LLM Prompt Executor Spring Bean by adding llmProvider method to LLM clients (#842)
+
 # 0.5.0
 
 > Published 2 Oct 2025
@@ -22,8 +57,8 @@
 - **`AIAgentService` Introduced**: Make `AIAgent` state-manageable and single-run explicitly, introduce `AIAgentService`
   to manage multiple uniform running agents.
 - **New components**:
-  - Add LLM as a Judge component (#866)
-  - Tool Calling loop with Structured Output strategy (#829)
+    - Add LLM as a Judge component (#866)
+    - Tool Calling loop with Structured Output strategy (#829)
 
 ## Improvements
 
