@@ -576,6 +576,7 @@ internal suspend inline fun <reified Output, reified OutputTransformed> AIAgentC
     val args = finishTool.decodeArgs(toolCall.contentJson)
     val toolResult = finishTool.execute(args = args)
 
+    val encodedResult = finishTool.encodeResult(toolResult)
     // Append a final tool call result to the prompt for further LLM calls
     // to see it (otherwise they would fail)
     llm.writeSession {
@@ -590,6 +591,6 @@ internal suspend inline fun <reified Output, reified OutputTransformed> AIAgentC
         id = toolCall.id,
         tool = finishTool.name,
         content = toolCall.content,
-        result = toolResult
+        result = encodedResult
     )
 }
