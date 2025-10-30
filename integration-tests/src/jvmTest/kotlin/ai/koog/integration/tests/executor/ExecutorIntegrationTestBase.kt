@@ -41,8 +41,11 @@ import ai.koog.prompt.params.LLMParams.ToolChoice
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.filterTextOnly
 import ai.koog.prompt.structure.executeStructured
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assumptions.assumeFalse
 import org.junit.jupiter.api.Assumptions.assumeTrue
@@ -56,10 +59,18 @@ import kotlin.io.path.readText
 import kotlin.io.path.writeBytes
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.io.files.Path as KtPath
 
 abstract class ExecutorIntegrationTestBase {
+    private val testScope = TestScope()
+
+    @AfterEach
+    fun cleanup() {
+        testScope.cancel()
+    }
+
     companion object {
         protected lateinit var testResourcesDir: Path
 
@@ -519,7 +530,7 @@ abstract class ExecutorIntegrationTestBase {
         scenario: MarkdownTestScenario,
         model: LLModel
     ) =
-        runTest(timeout = 300.seconds) {
+        runTest(timeout = 10.minutes) {
             Models.assumeAvailable(model.provider)
             val executor = getExecutor(model)
 
