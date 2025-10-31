@@ -835,7 +835,7 @@ class DebuggerTest {
                 collectEventsJob.join()
 
                 val callIds = clientEventsCollector.collectedEvents.filterIsInstance<LLMStreamingStartingEvent>().map { it.callId }
-                require(callIds.size == 2) { "Expected 2 LLMCallStartingEvent, got ${callIds.size}" }
+                require(callIds.size == 1) { "Expected 1 LLMCallStartingEvent, got ${callIds.size}" }
 
                 // Correct run id will be set after the 'collect events job' is finished.
                 val expectedEvents = listOf(
