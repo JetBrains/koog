@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 import org.jetbrains.annotations.ApiStatus.Experimental
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.jvm.JvmOverloads
 import kotlin.reflect.KClass
 
@@ -138,9 +139,11 @@ public class KtorKoogHttpClient internal constructor(
                 logger.error(e) { errorMessage }
                 error(errorMessage)
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
-            logger.error { "Exception during streaming from $clientName: $e" }
-            error(e.message ?: "Unknown error during streaming from $clientName: $e")
+            logger.error(e) { "Exception during streaming from $clientName" }
+            throw e
         }
     }
 }

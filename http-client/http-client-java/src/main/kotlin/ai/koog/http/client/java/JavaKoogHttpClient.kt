@@ -135,9 +135,8 @@ public class JavaKoogHttpClient internal constructor(
             logger.debug { "SSE connection closed for $clientName" }
             close()
         } catch (e: Exception) {
-            val errorMessage = "Exception during streaming from $clientName: ${e.message}"
-            logger.error(e) { errorMessage }
-            close(IllegalStateException(errorMessage, e))
+            logger.error(e) { "Exception during streaming from $clientName" }
+            close(e)
         }
 
         awaitClose {
