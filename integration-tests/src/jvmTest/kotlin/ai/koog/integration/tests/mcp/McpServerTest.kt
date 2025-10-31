@@ -8,9 +8,9 @@ import ai.koog.agents.mcp.server.startSseMcpServer
 import ai.koog.agents.testing.network.NetUtil.isPortAvailable
 import ai.koog.agents.testing.tools.RandomNumberTool
 import ai.koog.integration.tests.utils.RetryUtils
-import ai.koog.integration.tests.utils.TestUtils
+import ai.koog.integration.tests.utils.getLLMClientForProvider
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.server.netty.Netty
 import kotlinx.coroutines.Dispatchers
@@ -32,8 +32,6 @@ class McpServerTest {
 
     @Test
     fun integration_testMcpServerWithSSETransport() = runTest(timeout = 1.minutes) {
-        val openAIApiToken = TestUtils.readTestOpenAIKeyFromEnv()
-
         val randomNumberTool = RandomNumberTool()
         assertIsNot<McpTool>(randomNumberTool)
 
@@ -61,11 +59,12 @@ class McpServerTest {
                 toolRegistry.tools.map { it.descriptor },
             )
 
+            val model = OpenAIModels.Chat.GPT4o
             val result = withContext(Dispatchers.Default.limitedParallelism(1)) {
                 withTimeout(40.seconds) {
                     AIAgent(
-                        promptExecutor = simpleOpenAIExecutor(openAIApiToken),
-                        llmModel = OpenAIModels.Chat.GPT4o,
+                        promptExecutor = SingleLLMPromptExecutor(getLLMClientForProvider(model.provider)),
+                        llmModel = model,
                         toolRegistry = toolRegistry,
                     ).run("Provide random number using ${randomNumberTool.name}")
                 }

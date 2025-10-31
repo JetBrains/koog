@@ -3,6 +3,7 @@ package ai.koog.integration.tests.utils
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.clients.bedrock.BedrockModels
 import ai.koog.prompt.executor.clients.google.GoogleModels
+import ai.koog.prompt.executor.clients.mistralai.MistralAIModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterModels
 import ai.koog.prompt.llm.LLMCapability
@@ -40,6 +41,17 @@ object Models {
     }
 
     @JvmStatic
+    fun openRouterModels(): Stream<LLModel> = Stream.of(
+        OpenRouterModels.DeepSeekV30324,
+        OpenRouterModels.Qwen2_5,
+    )
+
+    @JvmStatic
+    fun mistralModels(): Stream<LLModel> = Stream.of(
+        MistralAIModels.Chat.MistralMedium31,
+    )
+
+    @JvmStatic
     fun bedrockModels(): Stream<LLModel> {
         return Stream.of(
             BedrockModels.MetaLlama3_1_70BInstruct,
@@ -48,17 +60,33 @@ object Models {
     }
 
     @JvmStatic
-    fun bedrockEmbeddingModels(): Stream<LLModel> {
+    fun embeddingModels(): Stream<LLModel> {
         return Stream.of(
-            BedrockModels.Embeddings.AmazonTitanEmbedText
+            BedrockModels.Embeddings.AmazonTitanEmbedText,
+            OpenAIModels.Embeddings.TextEmbedding3Large,
+            MistralAIModels.Embeddings.MistralEmbed,
         )
     }
 
     @JvmStatic
-    fun openRouterModels(): Stream<LLModel> = Stream.of(
-        OpenRouterModels.DeepSeekV30324,
-        OpenRouterModels.Qwen2_5,
-    )
+    fun moderationModels(): Stream<LLModel> {
+        return Stream.of(
+            OpenAIModels.Moderation.Omni,
+            MistralAIModels.Moderation.MistralModeration,
+        )
+    }
+
+    @JvmStatic
+    fun allCompletionModels(): Stream<LLModel> {
+        return Stream.of(
+            openAIModels(),
+            anthropicModels(),
+            googleModels(),
+            openRouterModels(),
+            bedrockModels(),
+            mistralModels(),
+        ).flatMap { it }
+    }
 
     @JvmStatic
     fun modelsWithVisionCapability(): Stream<Arguments> {

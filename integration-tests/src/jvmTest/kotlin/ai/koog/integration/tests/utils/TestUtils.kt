@@ -48,14 +48,14 @@ object TestUtils {
             ?: error("ERROR: environment variable `OPEN_ROUTER_API_TEST_KEY` is not set")
     }
 
+    fun readTestMistralAiKeyFromEnv(): String {
+        return System.getenv("MISTRAL_AI_API_TEST_KEY")
+            ?: error("ERROR: environment variable `MISTRAL_AI_API_TEST_KEY` is not set")
+    }
+
     fun readAwsAccessKeyIdFromEnv(): String {
         return System.getenv("AWS_ACCESS_KEY_ID")
             ?: error("ERROR: environment variable `AWS_ACCESS_KEY_ID` is not set")
-    }
-
-    fun readAwsBearerTokenBedrockFromEnv(): String {
-        return System.getenv("AWS_BEARER_TOKEN_BEDROCK")
-            ?: error("ERROR: environment variable `AWS_BEARER_TOKEN_BEDROCK` is not set")
     }
 
     fun readAwsSecretAccessKeyFromEnv(): String {

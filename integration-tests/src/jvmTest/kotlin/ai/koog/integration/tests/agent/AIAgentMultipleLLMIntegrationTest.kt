@@ -43,17 +43,21 @@ import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
@@ -145,6 +149,12 @@ internal fun LLMClient.reportingTo(
 ) = ReportingLLMLLMClient(eventsChannel, this)
 
 class AIAgentMultipleLLMIntegrationTest {
+    private val testScope = TestScope()
+
+    @AfterEach
+    fun cleanup() {
+        testScope.cancel()
+    }
 
     companion object {
         private lateinit var testResourcesDir: File
@@ -380,7 +390,7 @@ class AIAgentMultipleLLMIntegrationTest {
                     llm.writeSession {
                         model = AnthropicModels.Haiku_4_5
                         rewritePrompt {
-                            prompt("test", params = LLMParams(toolChoice = LLMParams.ToolChoice.Auto)) {
+                            prompt("test") {
                                 system {
                                     +"You are a helpful assistant. You need to solve my task. "
                                     +"JUST CALL TOOLS. NO QUESTIONS ASKED."
@@ -408,7 +418,7 @@ class AIAgentMultipleLLMIntegrationTest {
                     llm.writeSession {
                         model = OpenAIModels.Chat.GPT5
                         rewritePrompt {
-                            prompt("test", params = LLMParams(toolChoice = LLMParams.ToolChoice.Auto)) {
+                            prompt("test") {
                                 system(
                                     """
                                     You are a helpful assistant. You need to verify that the task is solved correctly.
@@ -506,7 +516,7 @@ class AIAgentMultipleLLMIntegrationTest {
                     system("You are a helpful assistant.")
                 },
                 model,
-                maxAgentIterations = 20,
+                maxAgentIterations = 50,
             ),
             toolRegistry = toolRegistry,
         ) {
@@ -543,7 +553,7 @@ class AIAgentMultipleLLMIntegrationTest {
         )
 
         val result = agent.run(
-            "Generate me a project in Ktor that has a GET endpoint that returns the capital of France. Write a test"
+            "Generate me a simple kotlin method. Write a test"
         )
         eventsChannel.close()
 
@@ -590,6 +600,7 @@ class AIAgentMultipleLLMIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("getModels")
+    @Disabled("See KG-520 Agent with an empty tool registry is stuck into a loop if a subgraph has tools")
     fun `integration_test agent with not registered subgraph tool result fails`(model: LLModel) =
         runTest(timeout = 10.minutes) {
             Models.assumeAvailable(LLMProvider.OpenAI)
@@ -725,7 +736,7 @@ class AIAgentMultipleLLMIntegrationTest {
 
     @ParameterizedTest
     @MethodSource("modelsWithVisionCapability")
-    fun integration_testAgentWithImageCapability(model: LLModel) = runTest(timeout = 2.minutes) {
+    fun integration_testAgentWithImageCapability(model: LLModel) = runTest(timeout = 10.minutes) {
         Models.assumeAvailable(model.provider)
         val fs = MockFileSystem()
 

@@ -9,14 +9,10 @@ import ai.koog.agents.core.tools.reflect.ToolSet
 import ai.koog.agents.core.tools.reflect.asTools
 import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.RetryUtils.withRetry
-import ai.koog.integration.tests.utils.TestUtils
+import ai.koog.integration.tests.utils.getLLMClientForProvider
 import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
-import ai.koog.prompt.executor.clients.google.GoogleLLMClient
-import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.llm.LLMCapability
-import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.ToolChoice
@@ -49,6 +45,21 @@ class ToolSchemaExecutorIntegrationTest {
         @JvmStatic
         fun googleModels(): Stream<LLModel> {
             return Models.googleModels()
+        }
+
+        @JvmStatic
+        fun openRouterModels(): Stream<LLModel> {
+            return Models.openRouterModels()
+        }
+
+        @JvmStatic
+        fun bedrockModels(): Stream<LLModel> {
+            return Models.bedrockModels()
+        }
+
+        @JvmStatic
+        fun mistralModels(): Stream<LLModel> {
+            return Models.mistralModels()
         }
 
         @JvmStatic
@@ -89,9 +100,6 @@ class ToolSchemaExecutorIntegrationTest {
         }
     }
 
-    val model = OpenAIModels.Chat.GPT4o
-    val client = OpenAILLMClient(TestUtils.readTestOpenAIKeyFromEnv())
-
     class FileTools : ToolSet {
 
         @Tool
@@ -115,16 +123,19 @@ class ToolSchemaExecutorIntegrationTest {
     )
 
     @ParameterizedTest
-    @MethodSource("anthropicModels", "googleModels", "openAIModels")
+    @MethodSource(
+        "anthropicModels",
+        "googleModels",
+        "openAIModels",
+        "openRouterModels",
+        "bedrockModels",
+        "mistralModels"
+    )
     fun integration_testToolSchemaExecutor(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
-        val client = when (model.provider) {
-            is LLMProvider.Anthropic -> AnthropicLLMClient(TestUtils.readTestAnthropicKeyFromEnv())
-            is LLMProvider.Google -> GoogleLLMClient(TestUtils.readTestGoogleAIKeyFromEnv())
-            else -> OpenAILLMClient(TestUtils.readTestOpenAIKeyFromEnv())
-        }
+        val client = getLLMClientForProvider(model.provider)
 
         val fileTools = FileTools()
 
@@ -159,6 +170,8 @@ class ToolSchemaExecutorIntegrationTest {
                 system("You are a helpful assistant with access to tools.")
                 user("Hi.")
             }
+            val model = OpenAIModels.Chat.GPT4o
+            val client = getLLMClientForProvider(model.provider)
 
             val exception = assertFailsWith<Exception> {
                 client.execute(prompt, model, listOf(invalidToolDescriptor))

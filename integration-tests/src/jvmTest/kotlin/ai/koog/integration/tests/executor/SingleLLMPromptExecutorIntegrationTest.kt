@@ -18,20 +18,40 @@ import java.util.stream.Stream
 class SingleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
     companion object {
         @JvmStatic
-        fun allModels(): Stream<Arguments> {
-            return Stream.concat(
-                Stream.concat(
-                    Models.openAIModels().map { model -> Arguments.of(model) },
-                    Models.anthropicModels().map { model -> Arguments.of(model) }
-                ),
-                Stream.concat(
-                    Stream.concat(
-                        Models.googleModels().map { model -> Arguments.of(model) },
-                        Models.openRouterModels().map { model -> Arguments.of(model) }
-                    ),
-                    Models.bedrockModels().map { model -> Arguments.of(model) }
-                )
-            )
+        fun allCompletionModels(): Stream<Arguments> {
+            return Models.allCompletionModels().map { model -> Arguments.of(model) }
+        }
+
+        @JvmStatic
+        fun moderationModels(): Stream<Arguments> {
+            return Models.moderationModels().map { model -> Arguments.of(model) }
+        }
+
+        @JvmStatic
+        fun embeddingModels(): Stream<Arguments> {
+            return Models.embeddingModels().map { model -> Arguments.of(model) }
+        }
+
+        @JvmStatic
+        fun bedrockMarkdownScenarioModelCombinations(): Stream<Arguments> {
+            return Models.bedrockModels().flatMap { model ->
+                listOf(
+                    MarkdownTestScenario.BASIC_MARKDOWN,
+                    MarkdownTestScenario.HEADERS,
+                    MarkdownTestScenario.TABLES,
+                    MarkdownTestScenario.CODE_BLOCKS
+                ).map { scenario -> Arguments.of(scenario, model) }.stream()
+            }
+        }
+
+        @JvmStatic
+        fun bedrockTextScenarioModelCombinations(): Stream<Arguments> {
+            return Models.bedrockModels().flatMap { model ->
+                listOf(
+                    TextTestScenario.BASIC_TEXT,
+                    TextTestScenario.LONG_TEXT_5_MB
+                ).map { scenario -> Arguments.of(scenario, model) }.stream()
+            }
         }
 
         @JvmStatic
@@ -60,91 +80,91 @@ class SingleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("allCompletionModels")
     override fun integration_testExecute(model: LLModel) {
         super.integration_testExecute(model)
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("allCompletionModels")
     override fun integration_testExecuteStreaming(model: LLModel) {
         super.integration_testExecuteStreaming(model)
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("allCompletionModels")
     override fun integration_testToolsWithRequiredParams(model: LLModel) {
         super.integration_testToolsWithRequiredParams(model)
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("allCompletionModels")
     override fun integration_testToolsWithRequiredOptionalParams(model: LLModel) {
         super.integration_testToolsWithRequiredOptionalParams(model)
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("allCompletionModels")
     override fun integration_testToolsWithOptionalParams(model: LLModel) {
         super.integration_testToolsWithOptionalParams(model)
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("allCompletionModels")
     override fun integration_testToolsWithNoParams(model: LLModel) {
         super.integration_testToolsWithNoParams(model)
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("allCompletionModels")
     override fun integration_testToolsWithListEnumParams(model: LLModel) {
         super.integration_testToolsWithListEnumParams(model)
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("allCompletionModels")
     override fun integration_testToolsWithNestedListParams(model: LLModel) {
         super.integration_testToolsWithNestedListParams(model)
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("allCompletionModels")
     override fun integration_testToolsWithNullParams(model: LLModel) {
         super.integration_testToolsWithNullParams(model)
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("allCompletionModels")
     override fun integration_testToolsWithAnyOfParams(model: LLModel) {
         super.integration_testToolsWithAnyOfParams(model)
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("allCompletionModels")
     override fun integration_testRawStringStreaming(model: LLModel) {
         super.integration_testRawStringStreaming(model)
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("allCompletionModels")
     override fun integration_testStructuredDataStreaming(model: LLModel) {
         super.integration_testStructuredDataStreaming(model)
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("allCompletionModels")
     override fun integration_testToolChoiceRequired(model: LLModel) {
         super.integration_testToolChoiceRequired(model)
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("allCompletionModels")
     override fun integration_testToolChoiceNone(model: LLModel) {
         super.integration_testToolChoiceNone(model)
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("allCompletionModels")
     override fun integration_testToolChoiceNamed(model: LLModel) {
         super.integration_testToolChoiceNamed(model)
     }
@@ -157,7 +177,7 @@ class SingleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
      * to decrease the number of possible combinations and to avoid redundant checks.*/
 
     @ParameterizedTest
-    @MethodSource("markdownScenarioModelCombinations")
+    @MethodSource("markdownScenarioModelCombinations", "bedrockMarkdownScenarioModelCombinations")
     override fun integration_testMarkdownProcessingBasic(
         scenario: MarkdownTestScenario,
         model: LLModel
@@ -172,7 +192,7 @@ class SingleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
     }
 
     @ParameterizedTest
-    @MethodSource("textScenarioModelCombinations")
+    @MethodSource("textScenarioModelCombinations", "bedrockTextScenarioModelCombinations")
     override fun integration_testTextProcessingBasic(scenario: TextTestScenario, model: LLModel) {
         super.integration_testTextProcessingBasic(scenario, model)
     }
@@ -187,7 +207,7 @@ class SingleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
      * Checking just images to make sure the file is uploaded in base64 format
      * */
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("allCompletionModels")
     override fun integration_testBase64EncodedAttachment(model: LLModel) {
         super.integration_testBase64EncodedAttachment(model)
     }
@@ -196,7 +216,7 @@ class SingleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
      * Checking just images to make sure the file is uploaded by URL
      * */
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("allCompletionModels")
     override fun integration_testUrlBasedAttachment(model: LLModel) {
         super.integration_testUrlBasedAttachment(model)
     }
@@ -206,26 +226,50 @@ class SingleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
      * */
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("allCompletionModels")
     override fun integration_testStructuredOutputNative(model: LLModel) {
         super.integration_testStructuredOutputNative(model)
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("allCompletionModels")
     override fun integration_testStructuredOutputNativeWithFixingParser(model: LLModel) {
         super.integration_testStructuredOutputNativeWithFixingParser(model)
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("allCompletionModels")
     override fun integration_testStructuredOutputManual(model: LLModel) {
         super.integration_testStructuredOutputManual(model)
     }
 
     @ParameterizedTest
-    @MethodSource("allModels")
+    @MethodSource("allCompletionModels")
     override fun integration_testStructuredOutputManualWithFixingParser(model: LLModel) {
         super.integration_testStructuredOutputManualWithFixingParser(model)
+    }
+
+    @ParameterizedTest
+    @MethodSource("allCompletionModels")
+    override fun integration_testMultipleSystemMessages(model: LLModel) {
+        super.integration_testMultipleSystemMessages(model)
+    }
+
+    @ParameterizedTest
+    @MethodSource("embeddingModels")
+    override fun integration_testEmbed(model: LLModel) {
+        super.integration_testEmbed(model)
+    }
+
+    @ParameterizedTest
+    @MethodSource("moderationModels")
+    override fun integration_testSingleMessageModeration(model: LLModel) {
+        super.integration_testSingleMessageModeration(model)
+    }
+
+    @ParameterizedTest
+    @MethodSource("moderationModels")
+    override fun integration_testMultipleMessagesModeration(model: LLModel) {
+        super.integration_testMultipleMessagesModeration(model)
     }
 }

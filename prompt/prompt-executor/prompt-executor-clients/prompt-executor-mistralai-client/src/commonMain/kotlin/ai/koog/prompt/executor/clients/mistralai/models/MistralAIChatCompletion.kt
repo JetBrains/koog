@@ -124,7 +124,7 @@ public class MistralAIChatCompletionStreamResponse(
     override val created: Long,
     override val id: String,
     override val model: String,
-    public val systemFingerprint: String,
+    public val systemFingerprint: String? = null,
     @SerialName("object")
     public val objectType: String,
     public val usage: MistralAIUsage? = null,
