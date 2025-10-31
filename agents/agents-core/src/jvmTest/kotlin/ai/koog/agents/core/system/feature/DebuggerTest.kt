@@ -14,6 +14,7 @@ import ai.koog.agents.core.feature.debugger.Debugger
 import ai.koog.agents.core.feature.model.AIAgentError
 import ai.koog.agents.core.feature.model.events.AgentCompletedEvent
 import ai.koog.agents.core.feature.model.events.AgentStartingEvent
+import ai.koog.agents.core.feature.model.events.DefinedFeatureEvent
 import ai.koog.agents.core.feature.model.events.GraphStrategyStartingEvent
 import ai.koog.agents.core.feature.model.events.LLMCallCompletedEvent
 import ai.koog.agents.core.feature.model.events.LLMCallStartingEvent
@@ -292,6 +293,9 @@ class DebuggerTest {
                 val startGraphNode = StrategyEventGraphNode(id = "__start__", name = "__start__")
                 val finishGraphNode = StrategyEventGraphNode(id = "__finish__", name = "__finish__")
 
+                val callIds = clientEventsCollector.collectedEvents.filterIsInstance<LLMCallStartingEvent>().map { it.callId }
+                require(callIds.size == 2) { "Expected 2 LLMCallStartingEvent, got ${callIds.size}" }
+
                 val expectedEvents = listOf(
                     AgentStartingEvent(
                         agentId = agentId,
@@ -369,6 +373,7 @@ class DebuggerTest {
                     ),
                     LLMCallStartingEvent(
                         runId = clientEventsCollector.runId,
+                        callId = callIds[0],
                         prompt = expectedLLMCallPrompt,
                         model = testModel.toModelInfo(),
                         tools = listOf(dummyTool.name),
@@ -376,6 +381,7 @@ class DebuggerTest {
                     ),
                     LLMCallCompletedEvent(
                         runId = clientEventsCollector.runId,
+                        callId = callIds[0],
                         prompt = expectedLLMCallPrompt,
                         model = testModel.toModelInfo(),
                         responses = listOf(toolCallMessage(dummyTool.name, content = """{"dummy":"$requestedDummyToolArgs"}""")),
@@ -442,6 +448,7 @@ class DebuggerTest {
                     ),
                     LLMCallStartingEvent(
                         runId = clientEventsCollector.runId,
+                        callId = callIds[1],
                         prompt = expectedLLMCallWithToolsPrompt,
                         model = testModel.toModelInfo(),
                         tools = listOf(dummyTool.name),
@@ -449,6 +456,7 @@ class DebuggerTest {
                     ),
                     LLMCallCompletedEvent(
                         runId = clientEventsCollector.runId,
+                        callId = callIds[1],
                         prompt = expectedLLMCallWithToolsPrompt,
                         model = testModel.toModelInfo(),
                         responses = listOf(assistantMessage(mockResponse)),
@@ -635,10 +643,14 @@ class DebuggerTest {
                 client.connectWithRetry(defaultClientServerTimeout)
                 collectEventsJob.join()
 
+                val callIds = clientEventsCollector.collectedEvents.filterIsInstance<LLMStreamingStartingEvent>().map { it.callId }
+                require(callIds.size == 1) { "Expected 1 LLMCallStartingEvent, got ${callIds.size}" }
+
                 // Correct run id will be set after the 'collect events job' is finished.
                 val expectedEvents = listOf(
                     LLMStreamingStartingEvent(
                         runId = clientEventsCollector.runId,
+                        callId = callIds[0],
                         prompt = expectedLLMCallPrompt,
                         model = testModel.toModelInfo().modelIdentifierName,
                         tools = listOf(dummyTool.name),
@@ -646,11 +658,13 @@ class DebuggerTest {
                     ),
                     LLMStreamingFrameReceivedEvent(
                         runId = clientEventsCollector.runId,
+                        callId = callIds[0],
                         frame = StreamFrame.Append(testLLMResponse),
                         timestamp = testClock.now().toEpochMilliseconds(),
                     ),
                     LLMStreamingCompletedEvent(
                         runId = clientEventsCollector.runId,
+                        callId = callIds[0],
                         prompt = expectedLLMCallPrompt,
                         model = testModel.toModelInfo().modelIdentifierName,
                         tools = listOf(dummyTool.name),
@@ -821,10 +835,14 @@ class DebuggerTest {
                 client.connectWithRetry(defaultClientServerTimeout)
                 collectEventsJob.join()
 
+                val callIds = clientEventsCollector.collectedEvents.filterIsInstance<LLMStreamingStartingEvent>().map { it.callId }
+                require(callIds.size == 2) { "Expected 2 LLMCallStartingEvent, got ${callIds.size}" }
+
                 // Correct run id will be set after the 'collect events job' is finished.
                 val expectedEvents = listOf(
                     LLMStreamingStartingEvent(
                         runId = clientEventsCollector.runId,
+                        callId = callIds[0],
                         prompt = expectedLLMCallPrompt,
                         model = testModel.toModelInfo().modelIdentifierName,
                         tools = listOf(dummyTool.name),
@@ -832,11 +850,13 @@ class DebuggerTest {
                     ),
                     LLMStreamingFailedEvent(
                         runId = clientEventsCollector.runId,
+                        callId = callIds[0],
                         error = AIAgentError(testStreamingErrorMessage, testStreamingStackTrace),
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     LLMStreamingCompletedEvent(
                         runId = clientEventsCollector.runId,
+                        callId = callIds[0],
                         prompt = expectedLLMCallPrompt,
                         model = testModel.toModelInfo().modelIdentifierName,
                         tools = listOf(dummyTool.name),

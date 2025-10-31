@@ -142,12 +142,13 @@ Represents an error that occurred during a node run. Includes the following fiel
 
 Represents the start of an LLM call. Includes the following fields:
 
-| Name     | Data type          | Required | Default | Description                                                                        |
-|----------|--------------------|----------|---------|------------------------------------------------------------------------------------|
-| `runId`  | String             | Yes      |         | The unique identifier of the LLM run.                                              |
-| `prompt` | Prompt             | Yes      |         | The prompt that is sent to the model. For more information, see [Prompt](#prompt). |
-| `model`  | String             | Yes      |         | The model identifier in the format `llm_provider:model_id`.                        |
-| `tools`  | List<String>       | Yes      |         | The list of tools that the model can call.                                         |
+| Name     | Data type    | Required | Default | Description                                                                        |
+|----------|--------------|----------|---------|------------------------------------------------------------------------------------|
+| `runId`  | String       | Yes      |         | The unique identifier of the LLM run.                                              |
+| `callId` | String       | Yes      |         | The unique identifier of the LLM Call, correlating the related events.             |
+| `prompt` | Prompt       | Yes      |         | The prompt that is sent to the model. For more information, see [Prompt](#prompt). |
+| `model`  | String       | Yes      |         | The model identifier in the format `llm_provider:model_id`.                        |
+| `tools`  | List<String> | Yes      |         | The list of tools that the model can call.                                         |
 
 <a id="prompt"></a>
 The `Prompt` class represents a data structure for a prompt, consisting of a list of messages, a unique identifier, and
@@ -163,13 +164,14 @@ optional parameters for language model settings. Includes the following fields:
 
 Represents the end of an LLM call. Includes the following fields:
 
-| Name                 | Data type                      | Required | Default | Description                                               |
-|----------------------|--------------------------------|----------|---------|-----------------------------------------------------------|
-| `runId`              | String                         | Yes      |         | The unique identifier of the LLM run.                     |
-| `prompt`             | Prompt                         | Yes      |         | The prompt used in the call.                              |
-| `model`              | String                         | Yes      |         | The model identifier in the format `llm_provider:model_id`.|
-| `responses`          | List<Message.Response>         | Yes      |         | One or more responses returned by the model.              |
-| `moderationResponse` | ModerationResult               | No       | null    | The moderation response, if any.                          |
+| Name                 | Data type              | Required | Default | Description                                                            |
+|----------------------|------------------------|----------|---------|------------------------------------------------------------------------|
+| `runId`              | String                 | Yes      |         | The unique identifier of the LLM run.                                  |
+| `callId`             | String                 | Yes      |         | The unique identifier of the LLM Call, correlating the related events. |
+| `prompt`             | Prompt                 | Yes      |         | The prompt used in the call.                                           |
+| `model`              | String                 | Yes      |         | The model identifier in the format `llm_provider:model_id`.            |
+| `responses`          | List<Message.Response> | Yes      |         | One or more responses returned by the model.                           |
+| `moderationResponse` | ModerationResult       | No       | null    | The moderation response, if any.                                       |
 
 ### LLM streaming events
 
@@ -177,41 +179,45 @@ Represents the end of an LLM call. Includes the following fields:
 
 Represents the start of an LLM streaming call. Includes the following fields:
 
-| Name     | Data type    | Required | Default | Description                                                 |
-|----------|--------------|----------|---------|-------------------------------------------------------------|
-| `runId`  | String       | Yes      |         | The unique identifier of the LLM run.                       |
-| `prompt` | Prompt       | Yes      |         | The prompt that is sent to the model.                       |
-| `model`  | String       | Yes      |         | The model identifier in the format `llm_provider:model_id`. |
-| `tools`  | List<String> | Yes      |         | The list of tools that the model can call.                  |
+| Name     | Data type    | Required | Default | Description                                                            |
+|----------|--------------|----------|---------|------------------------------------------------------------------------|
+| `runId`  | String       | Yes      |         | The unique identifier of the LLM run.                                  |
+| `callId` | String       | Yes      |         | The unique identifier of the LLM Call, correlating the related events. |
+| `prompt` | Prompt       | Yes      |         | The prompt that is sent to the model.                                  |
+| `model`  | String       | Yes      |         | The model identifier in the format `llm_provider:model_id`.            |
+| `tools`  | List<String> | Yes      |         | The list of tools that the model can call.                             |
 
 #### LLMStreamingFrameReceivedEvent
 
 Represents a streaming frame received from the LLM. Includes the following fields:
 
-| Name     | Data type   | Required | Default | Description                                      |
-|----------|-------------|----------|---------|--------------------------------------------------|
-| `runId`  | String      | Yes      |         | The unique identifier of the LLM run.            |
-| `frame`  | StreamFrame | Yes      |         | The frame received from the stream.               |
+| Name    | Data type   | Required | Default | Description                                                             |
+|---------|-------------|----------|---------|-------------------------------------------------------------------------|
+| `runId` | String      | Yes      |         | The unique identifier of the LLM run.                                   |
+| `callId`| String      | Yes      |         | The unique identifier of the LLM Call, correlating the related events.  |
+| `frame` | StreamFrame | Yes      |         | The frame received from the stream.                                     |
 
 #### LLMStreamingFailedEvent
 
 Represents the occurrence of an error during an LLM streaming call. Includes the following fields:
 
-| Name    | Data type    | Required | Default | Description                                                                                                     |
-|---------|--------------|----------|---------|-----------------------------------------------------------------------------------------------------------------|
-| `runId` | String       | Yes      |         | The unique identifier of the LLM run.                                                                          |
-| `error` | AIAgentError | Yes      |         | The specific error that occurred during streaming. For more information, see [AIAgentError](#aiagenterror).     |
+| Name    | Data type    | Required | Default | Description                                                                                                 |
+|---------|--------------|----------|---------|-------------------------------------------------------------------------------------------------------------|
+| `runId` | String       | Yes      |         | The unique identifier of the LLM run.                                                                       |
+| `callId`| String       | Yes      |         | The unique identifier of the LLM Call, correlating the related events.                                      |
+| `error` | AIAgentError | Yes      |         | The specific error that occurred during streaming. For more information, see [AIAgentError](#aiagenterror). |
 
 #### LLMStreamingCompletedEvent
 
 Represents the end of an LLM streaming call. Includes the following fields:
 
-| Name     | Data type    | Required | Default | Description                                                 |
-|----------|--------------|----------|---------|-------------------------------------------------------------|
-| `runId`  | String       | Yes      |         | The unique identifier of the LLM run.                       |
-| `prompt` | Prompt       | Yes      |         | The prompt that is sent to the model.                       |
-| `model`  | String       | Yes      |         | The model identifier in the format `llm_provider:model_id`. |
-| `tools`  | List<String> | Yes      |         | The list of tools that the model can call.                  |
+| Name     | Data type    | Required | Default | Description                                                             |
+|----------|--------------|----------|---------|-------------------------------------------------------------------------|
+| `runId`  | String       | Yes      |         | The unique identifier of the LLM run.                                   |
+| `callId` | String       | Yes      |         | The unique identifier of the LLM Call, correlating the related events.  |
+| `prompt` | Prompt       | Yes      |         | The prompt that is sent to the model.                                   |
+| `model`  | String       | Yes      |         | The model identifier in the format `llm_provider:model_id`.             |
+| `tools`  | List<String> | Yes      |         | The list of tools that the model can call.                              |
 
 ### Tool execution events
 

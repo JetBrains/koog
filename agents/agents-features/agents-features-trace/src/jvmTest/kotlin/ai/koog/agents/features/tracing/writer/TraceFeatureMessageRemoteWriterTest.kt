@@ -297,6 +297,9 @@ class TraceFeatureMessageRemoteWriterTest {
                 val startGraphNode = StrategyEventGraphNode(id = "__start__", name = "__start__")
                 val finishGraphNode = StrategyEventGraphNode(id = "__finish__", name = "__finish__")
 
+                val callIds = actualEvents.filterIsInstance<LLMCallStartingEvent>().map { it.callId }
+                require(callIds.size == 2) { "Expected 2 LLMCallStartingEvent, got ${callIds.size}" }
+
                 // Correct run id will be set after the 'collect events job' is finished.
                 val expectedEvents = listOf(
                     AgentStartingEvent(
@@ -372,6 +375,7 @@ class TraceFeatureMessageRemoteWriterTest {
                     ),
                     LLMCallStartingEvent(
                         runId = runId,
+                        callId = callIds[0],
                         prompt = expectedLLMCallPrompt,
                         model = testModel.toModelInfo(),
                         tools = listOf(dummyTool.name),
@@ -379,6 +383,7 @@ class TraceFeatureMessageRemoteWriterTest {
                     ),
                     LLMCallCompletedEvent(
                         runId = runId,
+                        callId = callIds[0],
                         prompt = expectedLLMCallPrompt,
                         model = testModel.toModelInfo(),
                         responses = listOf(toolCallMessage(dummyTool.name, content = """{"dummy":"test"}""")),
@@ -442,6 +447,7 @@ class TraceFeatureMessageRemoteWriterTest {
                     ),
                     LLMCallStartingEvent(
                         runId = runId,
+                        callId = callIds[1],
                         prompt = expectedLLMCallWithToolsPrompt,
                         model = testModel.toModelInfo(),
                         tools = listOf(dummyTool.name),
@@ -449,6 +455,7 @@ class TraceFeatureMessageRemoteWriterTest {
                     ),
                     LLMCallCompletedEvent(
                         runId = runId,
+                        callId = callIds[1],
                         prompt = expectedLLMCallWithToolsPrompt,
                         model = testModel.toModelInfo(),
                         responses = listOf(assistantMessage(mockResponse)),
@@ -666,6 +673,7 @@ class TraceFeatureMessageRemoteWriterTest {
         val isClientFinished = CompletableDeferred<Boolean>()
         val isServerStarted = CompletableDeferred<Boolean>()
 
+
         // Server
         val serverJob = launch {
             TraceFeatureMessageRemoteWriter(connectionConfig = serverConfig).use { writer ->
@@ -746,10 +754,14 @@ class TraceFeatureMessageRemoteWriterTest {
                 client.connect()
                 collectEventsJob.join()
 
+                val callIds = actualEvents.filterIsInstance<LLMCallStartingEvent>().map { it.callId }
+                require(callIds.size == 2) { "Expected 2 LLMCallStartingEvent, got ${callIds.size}" }
+
                 // Correct run id will be set after the 'collect events job' is finished.
                 val expectedEvents = listOf(
                     LLMCallStartingEvent(
                         runId = runId,
+                        callId = callIds[0],
                         prompt = expectedLLMCallPrompt,
                         model = testModel.toModelInfo(),
                         tools = listOf(dummyTool.name),
@@ -757,6 +769,7 @@ class TraceFeatureMessageRemoteWriterTest {
                     ),
                     LLMCallCompletedEvent(
                         runId = runId,
+                        callId = callIds[0],
                         prompt = expectedLLMCallPrompt,
                         model = testModel.toModelInfo(),
                         responses = listOf(toolCallMessage(dummyTool.name, content = """{"dummy":"test"}""")),
@@ -764,6 +777,7 @@ class TraceFeatureMessageRemoteWriterTest {
                     ),
                     LLMCallStartingEvent(
                         runId = runId,
+                        callId = callIds[1],
                         prompt = expectedLLMCallWithToolsPrompt,
                         model = testModel.toModelInfo(),
                         tools = listOf(dummyTool.name),
@@ -771,6 +785,7 @@ class TraceFeatureMessageRemoteWriterTest {
                     ),
                     LLMCallCompletedEvent(
                         runId = runId,
+                        callId = callIds[1],
                         prompt = expectedLLMCallWithToolsPrompt,
                         model = testModel.toModelInfo(),
                         responses = listOf(assistantMessage(mockResponse)),

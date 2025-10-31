@@ -17,12 +17,14 @@ public interface LLMStreamingEventContext : AgentLifecycleEventContext
  * This context is provided when streaming is about to begin.
  *
  * @property runId The unique identifier for this streaming session.
+ * @property callId The unique identifier for the streaming call.
  * @property prompt The prompt that will be sent to the language model for streaming.
  * @property model The language model instance being used for streaming.
  * @property tools The list of tool descriptors available for the streaming call.
  */
 public data class LLMStreamingStartingContext(
     val runId: String,
+    val callId: String,
     val prompt: Prompt,
     val model: LLModel,
     val tools: List<ToolDescriptor>,
@@ -35,10 +37,12 @@ public data class LLMStreamingStartingContext(
  * This context is provided when stream frames are sent out during the streaming process.
  *
  * @property runId The unique identifier for this streaming session.
+ * @property callId The unique identifier for the streaming call.
  * @property streamFrame The individual stream frame containing partial response data from the LLM.
  */
 public data class LLMStreamingFrameReceivedContext(
     val runId: String,
+    val callId: String,
     val streamFrame: StreamFrame,
 ) : LLMStreamingEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.LLMStreamingFrameReceived
@@ -49,10 +53,12 @@ public data class LLMStreamingFrameReceivedContext(
  * This context is provided when an error occurs during streaming.
  *
  * @property runId The unique identifier for this streaming session.
+ * @property callId The unique identifier for the streaming call.
  * @property error The exception or error that occurred during streaming.
  */
 public data class LLMStreamingFailedContext(
     val runId: String,
+    val callId: String,
     val error: Throwable
 ) : LLMStreamingEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.LLMStreamingFailed
@@ -63,12 +69,14 @@ public data class LLMStreamingFailedContext(
  * This context is provided when streaming is complete.
  *
  * @property runId The unique identifier for this streaming session.
+ * @property callId The unique identifier for the streaming call.
  * @property prompt The prompt that was sent to the language model for streaming.
  * @property model The language model instance that was used for streaming.
  * @property tools The list of tool descriptors that were available for the streaming call.
  */
 public data class LLMStreamingCompletedContext(
     val runId: String,
+    val callId: String,
     val prompt: Prompt,
     val model: LLModel,
     val tools: List<ToolDescriptor>

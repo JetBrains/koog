@@ -361,12 +361,13 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
     /**
      * Notifies all registered LLM handlers before a language model call is made.
      *
+     * @param callId The unique identifier for the LLM call
      * @param prompt The prompt that will be sent to the language model
      * @param tools The list of tool descriptors available for the LLM call
      * @param model The language model instance that will process the request
      */
-    public suspend fun onLLMCallStarting(runId: String, prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>) {
-        val eventContext = LLMCallStartingContext(runId, prompt, model, tools)
+    public suspend fun onLLMCallStarting(runId: String, callId: String, prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>) {
+        val eventContext = LLMCallStartingContext(runId, callId, prompt, model, tools)
         llmCallEventHandlers.values.forEach { handler -> handler.llmCallStartingHandler.handle(eventContext) }
     }
 
@@ -374,6 +375,7 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
      * Notifies all registered LLM handlers after a language model call has completed.
      *
      * @param runId Identifier for the current run.
+     * @param callId Identifier for the current LLM call.
      * @param prompt The prompt that was sent to the language model
      * @param tools The list of tool descriptors that were available for the LLM call
      * @param model The language model instance that processed the request
@@ -381,13 +383,14 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
      */
     public suspend fun onLLMCallCompleted(
         runId: String,
+        callId: String,
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>,
         responses: List<Message.Response>,
         moderationResponse: ModerationResult? = null,
     ) {
-        val eventContext = LLMCallCompletedContext(runId, prompt, model, tools, responses, moderationResponse)
+        val eventContext = LLMCallCompletedContext(runId, callId, prompt, model, tools, responses, moderationResponse)
         llmCallEventHandlers.values.forEach { handler -> handler.llmCallCompletedHandler.handle(eventContext) }
     }
 
@@ -476,17 +479,19 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
      * allowing them to perform preprocessing or logging operations.
      *
      * @param runId The unique identifier for this streaming session
+     * @param callId The unique identifier for this LLM call
      * @param prompt The prompt being sent to the language model
      * @param model The language model being used for streaming
      * @param tools The list of available tool descriptors for this streaming session
      */
     public suspend fun onLLMStreamingStarting(
         runId: String,
+        callId: String,
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
     ) {
-        val eventContext = LLMStreamingStartingContext(runId, prompt, model, tools)
+        val eventContext = LLMStreamingStartingContext(runId, callId, prompt, model, tools)
         llmStreamingEventHandlers.values.forEach { handler -> handler.llmStreamingStartingHandler.handle(eventContext) }
     }
 
@@ -497,10 +502,11 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
      * allowing them to process, transform, or aggregate the streaming content in real-time.
      *
      * @param runId The unique identifier for this streaming session
+     * @param callId The unique identifier for this LLM call
      * @param streamFrame The individual stream frame containing partial response data
      */
-    public suspend fun onLLMStreamingFrameReceived(runId: String, streamFrame: StreamFrame) {
-        val eventContext = LLMStreamingFrameReceivedContext(runId, streamFrame)
+    public suspend fun onLLMStreamingFrameReceived(runId: String, callId: String, streamFrame: StreamFrame) {
+        val eventContext = LLMStreamingFrameReceivedContext(runId, callId, streamFrame)
         llmStreamingEventHandlers.values.forEach { handler ->
             handler.llmStreamingFrameReceivedHandler.handle(
                 eventContext
@@ -515,10 +521,11 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
      * allowing them to handle or log the error.
      *
      * @param runId The unique identifier for this streaming session
+     * @param callId The unique identifier for this LLM call
      * @param throwable The exception that occurred during streaming, if applicable
      */
-    public suspend fun onLLMStreamingFailed(runId: String, throwable: Throwable) {
-        val eventContext = LLMStreamingFailedContext(runId, throwable)
+    public suspend fun onLLMStreamingFailed(runId: String, callId: String, throwable: Throwable) {
+        val eventContext = LLMStreamingFailedContext(runId, callId, throwable)
         llmStreamingEventHandlers.values.forEach { handler -> handler.llmStreamingFailedHandler.handle(eventContext) }
     }
 
@@ -529,17 +536,19 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
      * allowing them to perform post-processing, cleanup, or final logging operations.
      *
      * @param runId The unique identifier for this streaming session
+     * @param callId The unique identifier for this LLM call
      * @param prompt The prompt that was sent to the language model
      * @param model The language model that was used for streaming
      * @param tools The list of tool descriptors that were available for this streaming session
      */
     public suspend fun onLLMStreamingCompleted(
         runId: String,
+        callId: String,
         prompt: Prompt,
         model: LLModel,
         tools: List<ToolDescriptor>
     ) {
-        val eventContext = LLMStreamingCompletedContext(runId, prompt, model, tools)
+        val eventContext = LLMStreamingCompletedContext(runId, callId, prompt, model, tools)
         llmStreamingEventHandlers.values.forEach { handler -> handler.llmStreamingCompletedHandler.handle(eventContext) }
     }
 

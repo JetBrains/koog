@@ -227,6 +227,7 @@ public class Tracing {
             pipeline.interceptLLMCallStarting(this) intercept@{ eventContext ->
                 val event = LLMCallStartingEvent(
                     runId = eventContext.runId,
+                    callId = eventContext.callId,
                     prompt = eventContext.prompt,
                     model = eventContext.model.toModelInfo(),
                     tools = eventContext.tools.map { it.name },
@@ -238,6 +239,7 @@ public class Tracing {
             pipeline.interceptLLMCallCompleted(this) intercept@{ eventContext ->
                 val event = LLMCallCompletedEvent(
                     runId = eventContext.runId,
+                    callId = eventContext.callId,
                     prompt = eventContext.prompt,
                     model = eventContext.model.toModelInfo(),
                     responses = eventContext.responses,
@@ -254,6 +256,7 @@ public class Tracing {
             pipeline.interceptLLMStreamingStarting(this) intercept@{ eventContext ->
                 val event = LLMStreamingStartingEvent(
                     runId = eventContext.runId,
+                    callId = eventContext.callId,
                     prompt = eventContext.prompt,
                     model = eventContext.model.toModelInfo().modelIdentifierName,
                     tools = eventContext.tools.map { it.name },
@@ -265,6 +268,7 @@ public class Tracing {
             pipeline.interceptLLMStreamingCompleted(this) intercept@{ eventContext ->
                 val event = LLMStreamingCompletedEvent(
                     runId = eventContext.runId,
+                    callId = eventContext.callId,
                     prompt = eventContext.prompt,
                     model = eventContext.model.toModelInfo().modelIdentifierName,
                     tools = eventContext.tools.map { it.name },
@@ -276,6 +280,7 @@ public class Tracing {
             pipeline.interceptLLMStreamingFrameReceived(this) intercept@{ eventContext ->
                 val event = LLMStreamingFrameReceivedEvent(
                     runId = eventContext.runId,
+                    callId = eventContext.callId,
                     frame = eventContext.streamFrame,
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
@@ -285,6 +290,7 @@ public class Tracing {
             pipeline.interceptLLMStreamingFailed(this) intercept@{ eventContext ->
                 val event = LLMStreamingFailedEvent(
                     runId = eventContext.runId,
+                    callId = eventContext.callId,
                     error = eventContext.error.toAgentError(),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )

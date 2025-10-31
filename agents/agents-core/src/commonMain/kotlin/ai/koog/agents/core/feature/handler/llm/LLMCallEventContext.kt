@@ -22,6 +22,7 @@ public interface LLMCallEventContext : AgentLifecycleEventContext
  */
 public data class LLMCallStartingContext(
     val runId: String,
+    val callId: String,
     val prompt: Prompt,
     val model: LLModel,
     val tools: List<ToolDescriptor>,
@@ -39,6 +40,7 @@ public data class LLMCallStartingContext(
  */
 public data class LLMCallCompletedContext(
     val runId: String,
+    val callId: String,
     val prompt: Prompt,
     val model: LLModel,
     val tools: List<ToolDescriptor>,
