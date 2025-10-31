@@ -3,6 +3,7 @@ package ai.koog.prompt.executor.clients.openrouter.models
 import ai.koog.prompt.executor.clients.openai.base.models.Content
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIFunction
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIMessage
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIStaticContent
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAITool
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolCall
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolChoice
@@ -323,7 +324,8 @@ class OpenRouterSerializationTest {
             )
         }
 
-        val response = responseJson.decodeFromJsonElement(OpenRouterChatCompletionStreamResponse.serializer(), jsonInput)
+        val response =
+            responseJson.decodeFromJsonElement(OpenRouterChatCompletionStreamResponse.serializer(), jsonInput)
 
         assertEquals("gen-stream-test", response.id)
         assertEquals("chat.completion.chunk", response.objectType)
@@ -472,7 +474,8 @@ class OpenRouterSerializationTest {
             )
         }
 
-        val response = responseJson.decodeFromJsonElement(OpenRouterChatCompletionStreamResponse.serializer(), jsonInput)
+        val response =
+            responseJson.decodeFromJsonElement(OpenRouterChatCompletionStreamResponse.serializer(), jsonInput)
 
         assertEquals("gen-stream-tool-test", response.id)
         assertEquals("chat.completion.chunk", response.objectType)
@@ -591,5 +594,240 @@ class OpenRouterSerializationTest {
         assertEquals("tool", toolMessage["role"]?.jsonPrimitive?.contentOrNull)
         assertEquals("The weather in Boston is 72°F and sunny", toolMessage["content"]?.jsonPrimitive?.contentOrNull)
         assertEquals("call_abc123", toolMessage["tool_call_id"]?.jsonPrimitive?.contentOrNull)
+    }
+
+    @Test
+    fun `test all fields serialization`() {
+        val request = OpenRouterChatCompletionRequest(
+            model = "openai/gpt-4",
+            messages = listOf(OpenAIMessage.User(content = Content.Text("Hi"))),
+            temperature = 0.4,
+            topP = 0.9,
+            topLogprobs = 3,
+            maxTokens = 128,
+            frequencyPenalty = 0.1,
+            presencePenalty = -0.2,
+            stop = listOf("END", "STOP"),
+            logprobs = true,
+            topK = 5,
+            repetitionPenalty = 1.1,
+            minP = 0.05,
+            topA = 0.2,
+            prediction = OpenAIStaticContent(Content.Text("draft")),
+            transforms = listOf("middle-out"),
+            models = listOf("openai/gpt-4", "anthropic/claude-3-sonnet"),
+            route = "my-route",
+            provider = ProviderPreferences(
+                order = listOf("openai", "anthropic"),
+                allowFallbacks = true,
+                requireParameters = true,
+                dataCollection = "allow",
+                only = listOf("openai"),
+                ignore = listOf("google"),
+                quantizations = listOf("int4"),
+                sort = "price",
+                maxPrice = mapOf("prompt" to "0.002", "completion" to "0.006")
+            ),
+            user = "user-123",
+            additionalProperties = mapOf<String, JsonElement>(
+                "x-extra" to JsonPrimitive("ok")
+            )
+        )
+
+        val json = requestJson.encodeToJsonElement(OpenRouterChatCompletionRequestSerializer, request).jsonObject
+
+        // base + sampling
+        assertEquals("openai/gpt-4", json["model"]?.jsonPrimitive?.content)
+        assertEquals(0.4, json["temperature"]?.jsonPrimitive?.doubleOrNull)
+        assertEquals(0.9, json["topP"]?.jsonPrimitive?.doubleOrNull)
+        assertEquals(3, json["topLogprobs"]?.jsonPrimitive?.intOrNull)
+        assertEquals(128, json["maxTokens"]?.jsonPrimitive?.intOrNull)
+
+        // penalties and knobs
+        assertEquals(0.1, json["frequencyPenalty"]?.jsonPrimitive?.doubleOrNull)
+        assertEquals(-0.2, json["presencePenalty"]?.jsonPrimitive?.doubleOrNull)
+        assertEquals(true, json["logprobs"]?.jsonPrimitive?.booleanOrNull)
+        assertEquals(5, json["topK"]?.jsonPrimitive?.intOrNull)
+        assertEquals(1.1, json["repetitionPenalty"]?.jsonPrimitive?.doubleOrNull)
+        assertEquals(0.05, json["minP"]?.jsonPrimitive?.doubleOrNull)
+        assertEquals(0.2, json["topA"]?.jsonPrimitive?.doubleOrNull)
+
+        // arrays and structured
+        val stop = json["stop"]!!.jsonArray
+        assertEquals(listOf("END", "STOP"), stop.map { it.jsonPrimitive.content })
+
+        val prediction = json["prediction"]!!.jsonObject
+        // assertEquals("content", prediction["type"]?.jsonPrimitive?.content) // ToDo KG-525 OpenRouterChatCompletionRequestSerializer sets prediction["type"] as null
+        assertEquals("draft", prediction["content"]?.jsonPrimitive?.content)
+
+        val transforms = json["transforms"]!!.jsonArray
+        assertEquals(listOf("middle-out"), transforms.map { it.jsonPrimitive.content })
+
+        val models = json["models"]!!.jsonArray
+        assertEquals(listOf("openai/gpt-4", "anthropic/claude-3-sonnet"), models.map { it.jsonPrimitive.content })
+
+        assertEquals("my-route", json["route"]?.jsonPrimitive?.content)
+        assertEquals("user-123", json["user"]?.jsonPrimitive?.content)
+
+        val provider = json["provider"]!!.jsonObject
+        assertEquals(listOf("openai", "anthropic"), provider["order"]!!.jsonArray.map { it.jsonPrimitive.content })
+        assertEquals(true, provider["allowFallbacks"]?.jsonPrimitive?.booleanOrNull)
+        assertEquals(true, provider["requireParameters"]?.jsonPrimitive?.booleanOrNull)
+        assertEquals("allow", provider["dataCollection"]?.jsonPrimitive?.content)
+        assertEquals(listOf("openai"), provider["only"]!!.jsonArray.map { it.jsonPrimitive.content })
+        assertEquals(listOf("google"), provider["ignore"]!!.jsonArray.map { it.jsonPrimitive.content })
+        assertEquals(listOf("int4"), provider["quantizations"]!!.jsonArray.map { it.jsonPrimitive.content })
+        assertEquals("price", provider["sort"]?.jsonPrimitive?.content)
+        val maxPrice = provider["maxPrice"]!!.jsonObject
+        assertEquals("0.002", maxPrice["prompt"]?.jsonPrimitive?.content)
+        assertEquals("0.006", maxPrice["completion"]?.jsonPrimitive?.content)
+
+        // additionalProperties are flattened
+        assertEquals("ok", json["x-extra"]?.jsonPrimitive?.content)
+    }
+
+    @Test
+    fun `test all fields deserialization`() {
+        val jsonInput = buildJsonObject {
+            put("model", JsonPrimitive("openai/gpt-4"))
+            put(
+                "messages",
+                buildJsonArray {
+                    add(
+                        buildJsonObject {
+                            put("role", JsonPrimitive("user"))
+                            put(
+                                "content",
+                                JsonPrimitive("Hi")
+                            )
+                        }
+                    )
+                }
+            )
+            put("temperature", JsonPrimitive(0.4))
+            put("topP", JsonPrimitive(0.9))
+            put("topLogprobs", JsonPrimitive(3))
+            put("maxTokens", JsonPrimitive(128))
+            put("frequencyPenalty", JsonPrimitive(0.1))
+            put("presencePenalty", JsonPrimitive(-0.2))
+            put(
+                "stop",
+                buildJsonArray {
+                    add(JsonPrimitive("END"))
+                    add(JsonPrimitive("STOP"))
+                }
+            )
+            put("logprobs", JsonPrimitive(true))
+            put("topK", JsonPrimitive(5))
+            put("repetitionPenalty", JsonPrimitive(1.1))
+            put("minP", JsonPrimitive(0.05))
+            put("topA", JsonPrimitive(0.2))
+            put(
+                "prediction",
+                buildJsonObject {
+                    put(
+                        "type",
+                        JsonPrimitive("content")
+                    )
+                    put(
+                        "content",
+                        JsonPrimitive("draft")
+                    )
+                }
+            )
+            put(
+                "transforms",
+                buildJsonArray {
+                    add(JsonPrimitive("middle-out"))
+                }
+            )
+            put(
+                "models",
+                buildJsonArray {
+                    add(JsonPrimitive("openai/gpt-4"))
+                    add(JsonPrimitive("anthropic/claude-3-sonnet"))
+                }
+            )
+            put("route", JsonPrimitive("my-route"))
+            put(
+                "provider",
+                buildJsonObject {
+                    put(
+                        "order",
+                        buildJsonArray {
+                            add(JsonPrimitive("openai"))
+                            add(JsonPrimitive("anthropic"))
+                        }
+                    )
+                    put("allowFallbacks", JsonPrimitive(true))
+                    put("requireParameters", JsonPrimitive(true))
+                    put("dataCollection", JsonPrimitive("allow"))
+                    put(
+                        "only",
+                        buildJsonArray {
+                            add(JsonPrimitive("openai"))
+                        }
+                    )
+                    put(
+                        "ignore",
+                        buildJsonArray {
+                            add(JsonPrimitive("google"))
+                        }
+                    )
+                    put(
+                        "quantizations",
+                        buildJsonArray {
+                            add(JsonPrimitive("int4"))
+                        }
+                    )
+                    put("sort", JsonPrimitive("price"))
+                    put(
+                        "maxPrice",
+                        buildJsonObject {
+                            put("prompt", JsonPrimitive("0.002"))
+                            put("completion", JsonPrimitive("0.006"))
+                        }
+                    )
+                }
+            )
+            put("user", JsonPrimitive("user-123"))
+            put("x-extra", JsonPrimitive("ok"))
+        }
+
+        val req = requestJson.decodeFromJsonElement(OpenRouterChatCompletionRequestSerializer, jsonInput)
+
+        assertEquals("openai/gpt-4", req.model)
+        assertEquals(0.4, req.temperature)
+        assertEquals(0.9, req.topP)
+        assertEquals(3, req.topLogprobs)
+        assertEquals(128, req.maxTokens)
+        assertEquals(0.1, req.frequencyPenalty)
+        assertEquals(-0.2, req.presencePenalty)
+        assertEquals(true, req.logprobs)
+        assertEquals(5, req.topK)
+        assertEquals(1.1, req.repetitionPenalty)
+        assertEquals(0.05, req.minP)
+        assertEquals(0.2, req.topA)
+        assertEquals(listOf("END", "STOP"), req.stop)
+        assertNotNull(req.prediction)
+        assertEquals("draft", req.prediction.content.text())
+        assertEquals(listOf("middle-out"), req.transforms)
+        assertEquals(listOf("openai/gpt-4", "anthropic/claude-3-sonnet"), req.models)
+        assertEquals("my-route", req.route)
+        assertEquals("user-123", req.user)
+        assertNotNull(req.provider)
+        assertEquals(listOf("openai", "anthropic"), req.provider.order)
+        assertEquals(true, req.provider.allowFallbacks)
+        assertEquals(true, req.provider.requireParameters)
+        assertEquals("allow", req.provider.dataCollection)
+        assertEquals(listOf("openai"), req.provider.only)
+        assertEquals(listOf("google"), req.provider.ignore)
+        assertEquals(listOf("int4"), req.provider.quantizations)
+        assertEquals("price", req.provider.sort)
+        assertEquals(mapOf("prompt" to "0.002", "completion" to "0.006"), req.provider.maxPrice)
+
+        // additionalProperties captured
+        assertNotNull(req.additionalProperties)
+        assertEquals("ok", req.additionalProperties["x-extra"]?.jsonPrimitive?.content)
     }
 }

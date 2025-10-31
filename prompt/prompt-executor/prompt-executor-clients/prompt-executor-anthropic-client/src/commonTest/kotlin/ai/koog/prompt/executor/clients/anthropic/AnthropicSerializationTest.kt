@@ -409,5 +409,4 @@ class AnthropicSerializationTest {
         assertEquals(null, s0.authorizationToken)
         assertEquals(false, s0.toolConfiguration?.enabled)
     }
-
 }
