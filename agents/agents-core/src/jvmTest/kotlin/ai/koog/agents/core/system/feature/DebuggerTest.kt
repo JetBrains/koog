@@ -14,7 +14,6 @@ import ai.koog.agents.core.feature.debugger.Debugger
 import ai.koog.agents.core.feature.model.AIAgentError
 import ai.koog.agents.core.feature.model.events.AgentCompletedEvent
 import ai.koog.agents.core.feature.model.events.AgentStartingEvent
-import ai.koog.agents.core.feature.model.events.DefinedFeatureEvent
 import ai.koog.agents.core.feature.model.events.GraphStrategyStartingEvent
 import ai.koog.agents.core.feature.model.events.LLMCallCompletedEvent
 import ai.koog.agents.core.feature.model.events.LLMCallStartingEvent
