@@ -16,7 +16,7 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
-import org.junit.jupiter.api.Test
+import kotlin.test.Test
 
 class DeepSeekSerializationTest {
 

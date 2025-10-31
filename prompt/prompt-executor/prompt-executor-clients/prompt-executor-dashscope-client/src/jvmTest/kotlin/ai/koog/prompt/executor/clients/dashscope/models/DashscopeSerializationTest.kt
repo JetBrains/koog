@@ -10,10 +10,12 @@ import ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolFunction
 import io.kotest.assertions.json.shouldEqualJson
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
 import org.junit.jupiter.api.Test
+import kotlin.test.assertNull
 
 class DashscopeSerializationTest {
 
@@ -301,7 +303,7 @@ class DashscopeSerializationTest {
         element["customBoolean"]!!.toString() shouldBe "true"
 
         // the additionalProperties name itself should not be present in serialized JSON
-        kotlin.test.assertNull(element["additionalProperties"])
+        assertNull(element["additionalProperties"])
     }
 
     @Test
@@ -394,12 +396,12 @@ class DashscopeSerializationTest {
         obj["topP"].toString() shouldBe "0.8"
         obj["frequencyPenalty"].toString() shouldBe "0.1"
         obj["presencePenalty"].toString() shouldBe "0.2"
-        (obj["stop"] as kotlinx.serialization.json.JsonArray).size shouldBe 1
+        (obj["stop"] as JsonArray).size shouldBe 1
         obj["enableSearch"].toString() shouldBe "true"
         obj["parallelToolCalls"].toString() shouldBe "true"
         obj["enableThinking"].toString() shouldBe "false"
 
-        val toolsArr = obj["tools"] as kotlinx.serialization.json.JsonArray
+        val toolsArr = obj["tools"] as JsonArray
         toolsArr.size shouldBe 1
         val t0 = toolsArr[0].jsonObject
         val fn = t0["function"]!!.jsonObject

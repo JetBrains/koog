@@ -28,6 +28,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class AnthropicSerializationTest {
 
@@ -320,7 +321,7 @@ class AnthropicSerializationTest {
     }
 
     @Test
-    fun `test round trip deserialization of extended parameters`() {
+    fun `test deserialization serialization of extended parameters`() {
         val original = AnthropicMessageRequest(
             model = "claude-3",
             messages = listOf(
@@ -383,10 +384,10 @@ class AnthropicSerializationTest {
         assertEquals(original.topP, deserialized.topP)
 
         // thinking
-        kotlin.test.assertTrue(deserialized.thinking is AnthropicThinking.Disabled)
+        assertTrue(deserialized.thinking is AnthropicThinking.Disabled)
 
         // tool choice
-        kotlin.test.assertTrue(deserialized.toolChoice is AnthropicToolChoice.Auto)
+        assertTrue(deserialized.toolChoice is AnthropicToolChoice.Auto)
 
         // system
         assertEquals(1, deserialized.system?.size)
