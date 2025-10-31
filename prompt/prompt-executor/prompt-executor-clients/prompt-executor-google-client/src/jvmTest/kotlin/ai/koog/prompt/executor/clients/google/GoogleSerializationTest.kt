@@ -191,4 +191,28 @@ class GoogleSerializationTest {
             deserializedAdditionalProps["customNumber"]?.jsonPrimitive?.intOrNull
         )
     }
+
+    @Test
+    fun `thinkingConfig should be serialized and deserialized`() {
+        val payload =
+            """
+            {
+              "responseMimeType": "application/json",
+              "maxOutputTokens": 256,
+              "temperature": 0.2,
+              "thinkingConfig": {"includeThoughts": true, "thinkingBudget": 1000}
+            }
+            """.trimIndent()
+
+        val decoded = json.decodeFromString<GoogleGenerationConfig>(payload)
+        assertEquals(true, decoded.thinkingConfig?.includeThoughts)
+        assertEquals(1000, decoded.thinkingConfig?.thinkingBudget)
+
+        val reSerialized = json.encodeToJsonElement(decoded).jsonObject
+        assertEquals(
+            true,
+            reSerialized["thinkingConfig"]?.jsonObject?.get("includeThoughts")?.jsonPrimitive?.booleanOrNull
+        )
+        assertEquals(1000, reSerialized["thinkingConfig"]?.jsonObject?.get("thinkingBudget")?.jsonPrimitive?.intOrNull)
+    }
 }

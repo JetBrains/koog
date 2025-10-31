@@ -4,8 +4,11 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.executor.clients.google.models.GoogleFunctionCallingMode
+import ai.koog.prompt.executor.clients.google.models.GoogleThinkingConfig
 import ai.koog.prompt.params.LLMParams
-import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -15,8 +18,6 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 class GoogleLLMClientTest {
-
-    private val json = Json { prettyPrint = true }
 
     @Test
     fun `createGoogleRequest should use null maxTokens if unspecified`() {
@@ -76,7 +77,7 @@ class GoogleLLMClientTest {
         )
 
         assertNotNull(request.tools)
-        val tools = request.tools!!
+        val tools = request.tools
         assertEquals(1, tools.size)
         val functionDeclarations = tools.first().functionDeclarations!!
         val functionDeclaration = functionDeclarations.first()
@@ -106,8 +107,16 @@ class GoogleLLMClientTest {
                     description = "A value that can be string or number",
                     type = ToolParameterType.AnyOf(
                         types = arrayOf(
-                            ToolParameterDescriptor(name = "", description = "String option", type = ToolParameterType.String),
-                            ToolParameterDescriptor(name = "", description = "Number option", type = ToolParameterType.Float)
+                            ToolParameterDescriptor(
+                                name = "",
+                                description = "String option",
+                                type = ToolParameterType.String
+                            ),
+                            ToolParameterDescriptor(
+                                name = "",
+                                description = "Number option",
+                                type = ToolParameterType.Float
+                            )
                         )
                     )
                 )
@@ -124,7 +133,7 @@ class GoogleLLMClientTest {
         )
 
         assertNotNull(request.tools)
-        val tools = request.tools!!
+        val tools = request.tools
         assertEquals(1, tools.size)
         val functionDeclarations = tools.first().functionDeclarations!!
         val functionDeclaration = functionDeclarations.first()
@@ -186,7 +195,7 @@ class GoogleLLMClientTest {
         )
 
         assertNotNull(request.tools)
-        val tools = request.tools!!
+        val tools = request.tools
         val functionDeclarations = tools.first().functionDeclarations!!
         val parameters = functionDeclarations.first().parameters!!
         val properties = parameters["properties"]?.jsonObject!!
@@ -203,5 +212,132 @@ class GoogleLLMClientTest {
         assertTrue(types.contains("string"), "Should contain string type")
         assertTrue(types.contains("number"), "Should contain number type")
         assertTrue(types.contains("null"), "Should contain null type")
+    }
+
+    @Test
+    fun `createGoogleRequest should map GoogleParams to generationConfig`() {
+        val client = GoogleLLMClient(apiKey = "apiKey")
+        val model = GoogleModels.Gemini2_5Pro
+
+        val params = GoogleParams(
+            temperature = 0.4,
+            maxTokens = 1024,
+            numberOfChoices = 2,
+            topP = 0.8,
+            topK = 10,
+            thinkingConfig = GoogleThinkingConfig(
+                includeThoughts = true,
+                thinkingBudget = 99
+            ),
+            additionalProperties = mapOf("custom" to JsonPrimitive("v"))
+        )
+
+        val request = client.createGoogleRequest(
+            prompt = Prompt(messages = emptyList(), id = "id", params = params),
+            model = model,
+            tools = emptyList()
+        )
+
+        val gen = request.generationConfig!!
+        assertEquals(1024, gen.maxOutputTokens)
+        assertEquals(0.4, gen.temperature)
+        assertEquals(2, gen.candidateCount)
+        assertEquals(0.8, gen.topP)
+        assertEquals(10, gen.topK)
+        assertEquals(true, gen.thinkingConfig?.includeThoughts)
+        assertEquals(99, gen.thinkingConfig?.thinkingBudget)
+        assertNotNull(gen.additionalProperties)
+        assertEquals("v", gen.additionalProperties["custom"]?.jsonPrimitive?.content)
+    }
+
+    @Test
+    fun `createGoogleRequest should map JSON Basic schema to responseSchema`() {
+        val client = GoogleLLMClient(apiKey = "apiKey")
+        val model = GoogleModels.Gemini2_5Pro
+
+        val schema = LLMParams.Schema.JSON.Basic(
+            name = "out",
+            schema = JsonObject(mapOf("type" to JsonPrimitive("object")))
+        )
+
+        val request = client.createGoogleRequest(
+            prompt = Prompt(messages = emptyList(), id = "id", params = GoogleParams(schema = schema)),
+            model = model,
+            tools = emptyList()
+        )
+
+        val gen = request.generationConfig!!
+        assertEquals("application/json", gen.responseMimeType)
+        assertNotNull(gen.responseSchema)
+        assertEquals(null, gen.responseJsonSchema)
+    }
+
+    @Test
+    fun `createGoogleRequest should map JSON Standard schema to responseJsonSchema`() {
+        val client = GoogleLLMClient(apiKey = "apiKey")
+        val model = GoogleModels.Gemini2_5Pro
+
+        val schema = LLMParams.Schema.JSON.Standard(
+            name = "out",
+            schema = JsonObject(mapOf("type" to JsonPrimitive("object")))
+        )
+
+        val request = client.createGoogleRequest(
+            prompt = Prompt(messages = emptyList(), id = "id", params = GoogleParams(schema = schema)),
+            model = model,
+            tools = emptyList()
+        )
+
+        val gen = request.generationConfig!!
+        assertEquals("application/json", gen.responseMimeType)
+        assertNotNull(gen.responseJsonSchema)
+        assertEquals(null, gen.responseSchema)
+    }
+
+    @Test
+    fun `toolChoice Auto None Required should map to Google function calling modes`() {
+        val client = GoogleLLMClient(apiKey = "apiKey")
+        val model = GoogleModels.Gemini2_5Pro
+
+        fun getMode(tc: LLMParams.ToolChoice): GoogleFunctionCallingMode? {
+            val req = client.createGoogleRequest(
+                prompt = Prompt(messages = emptyList(), id = "id", params = GoogleParams(toolChoice = tc)),
+                model = model,
+                tools = emptyList()
+            )
+            return req.toolConfig?.functionCallingConfig?.mode
+        }
+
+        assertEquals(
+            GoogleFunctionCallingMode.AUTO,
+            getMode(LLMParams.ToolChoice.Auto)
+        )
+        assertEquals(
+            GoogleFunctionCallingMode.NONE,
+            getMode(LLMParams.ToolChoice.None)
+        )
+        assertEquals(
+            GoogleFunctionCallingMode.ANY,
+            getMode(LLMParams.ToolChoice.Required)
+        )
+    }
+
+    @Test
+    fun `toolChoice Named should set ANY with allowedFunctionNames`() {
+        val client = GoogleLLMClient(apiKey = "apiKey")
+        val model = GoogleModels.Gemini2_5Pro
+        val req = client.createGoogleRequest(
+            prompt = Prompt(
+                messages = emptyList(),
+                id = "id",
+                params = GoogleParams(toolChoice = LLMParams.ToolChoice.Named("weather"))
+            ),
+            model = model,
+            tools = emptyList()
+        )
+        val fc = req.toolConfig?.functionCallingConfig
+        assertNotNull(fc)
+        assertEquals(GoogleFunctionCallingMode.ANY, fc.mode)
+        assertEquals(listOf("weather"), fc.allowedFunctionNames)
     }
 }
