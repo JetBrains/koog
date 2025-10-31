@@ -2,9 +2,17 @@ package ai.koog.prompt.executor.clients.dashscope.models
 
 import ai.koog.prompt.executor.clients.openai.base.models.Content
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIMessage
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIResponseFormat
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIStreamOptions
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAITool
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolChoice
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolFunction
 import io.kotest.assertions.json.shouldEqualJson
 import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonObject
 import org.junit.jupiter.api.Test
 
 class DashscopeSerializationTest {
@@ -265,5 +273,149 @@ class DashscopeSerializationTest {
         val response = json.decodeFromString(DashscopeChatCompletionStreamResponse.serializer(), jsonInput)
 
         response.systemFingerprint shouldBe null
+    }
+
+    @Test
+    fun `test serialization with additionalProperties`() {
+        val request = DashscopeChatCompletionRequest(
+            model = "qwen-plus",
+            messages = listOf(OpenAIMessage.User(content = Content.Text("Hello"))),
+            temperature = 0.7,
+            additionalProperties = mapOf(
+                "customString" to JsonPrimitive("value"),
+                "customNumber" to JsonPrimitive(100),
+                "customBoolean" to JsonPrimitive(true)
+            )
+        )
+
+        val element = json.encodeToJsonElement(DashscopeChatCompletionRequestSerializer, request)
+            .jsonObject
+
+        // Standard properties should be present
+        element["model"]!!.toString() shouldBe "\"qwen-plus\""
+        element["temperature"]!!.toString() shouldBe "0.7"
+
+        // Additional properties should be flattened to the root level
+        element["customString"]!!.toString() shouldBe "\"value\""
+        element["customNumber"]!!.toString() shouldBe "100"
+        element["customBoolean"]!!.toString() shouldBe "true"
+
+        // the additionalProperties name itself should not be present in serialized JSON
+        kotlin.test.assertNull(element["additionalProperties"])
+    }
+
+    @Test
+    fun `test deserialization with additionalProperties`() {
+        val jsonInput =
+            """
+            {
+                "model": "qwen-plus",
+                "messages": [ { "role": "user", "content": "Hello" } ],
+                "temperature": 0.7,
+                "customString": "value",
+                "customNumber": 100,
+                "customBoolean": true
+            }
+            """.trimIndent()
+
+        val request = json.decodeFromString(DashscopeChatCompletionRequestSerializer, jsonInput)
+        val props = request.additionalProperties
+        kotlin.test.assertNotNull(props)
+        props["customString"].toString() shouldBe "\"value\""
+        props["customNumber"].toString() shouldBe "100"
+        props["customBoolean"].toString() shouldBe "true"
+    }
+
+    @Test
+    fun `test serialization deserialization with additionalProperties`() {
+        val original = DashscopeChatCompletionRequest(
+            model = "qwen-plus",
+            messages = listOf(OpenAIMessage.User(content = Content.Text("Hello"))),
+            additionalProperties = mapOf(
+                "x" to JsonPrimitive("y"),
+                "n" to JsonPrimitive(7)
+            )
+        )
+
+        val jsonStr = json.encodeToString(DashscopeChatCompletionRequestSerializer, original)
+        val decoded = json.decodeFromString(DashscopeChatCompletionRequestSerializer, jsonStr)
+
+        decoded.model shouldBe original.model
+        kotlin.test.assertNotNull(decoded.additionalProperties)
+        decoded.additionalProperties.size shouldBe 2
+        decoded.additionalProperties["x"].toString() shouldBe "\"y\""
+        decoded.additionalProperties["n"].toString() shouldBe "7"
+    }
+
+    @Test
+    fun `test serialization of extended parameters`() {
+        val tool = OpenAITool(
+            OpenAIToolFunction(
+                name = "weather",
+                description = "Get weather",
+                parameters = JsonObject(
+                    mapOf(
+                        "type" to JsonPrimitive("object"),
+                        "properties" to JsonObject(emptyMap())
+                    )
+                ),
+                strict = true
+            )
+        )
+
+        val request = DashscopeChatCompletionRequest(
+            model = "qwen-plus",
+            messages = listOf(OpenAIMessage.User(content = Content.Text("Hello"))),
+            temperature = 0.4,
+            maxTokens = 1024,
+            stream = true,
+            tools = listOf(tool),
+            toolChoice = OpenAIToolChoice.function("weather"),
+            responseFormat = OpenAIResponseFormat.JsonObject(),
+            streamOptions = OpenAIStreamOptions(includeUsage = true),
+            logprobs = true,
+            topLogprobs = 10,
+            topP = 0.8,
+            frequencyPenalty = 0.1,
+            presencePenalty = 0.2,
+            stop = listOf("END"),
+            enableSearch = true,
+            parallelToolCalls = true,
+            enableThinking = false,
+        )
+
+        val obj = json.encodeToJsonElement(DashscopeChatCompletionRequest.serializer(), request).jsonObject
+
+        obj["model"]!!.toString() shouldBe "\"qwen-plus\""
+        obj["temperature"]!!.toString() shouldBe "0.4"
+        obj["maxTokens"]!!.toString() shouldBe "1024"
+        obj["stream"].toString() shouldBe "true"
+        obj["topLogprobs"].toString() shouldBe "10"
+        obj["topP"].toString() shouldBe "0.8"
+        obj["frequencyPenalty"].toString() shouldBe "0.1"
+        obj["presencePenalty"].toString() shouldBe "0.2"
+        (obj["stop"] as kotlinx.serialization.json.JsonArray).size shouldBe 1
+        obj["enableSearch"].toString() shouldBe "true"
+        obj["parallelToolCalls"].toString() shouldBe "true"
+        obj["enableThinking"].toString() shouldBe "false"
+
+        val toolsArr = obj["tools"] as kotlinx.serialization.json.JsonArray
+        toolsArr.size shouldBe 1
+        val t0 = toolsArr[0].jsonObject
+        val fn = t0["function"]!!.jsonObject
+        fn["name"]!!.toString() shouldBe "\"weather\""
+        fn["description"]!!.toString() shouldBe "\"Get weather\""
+
+        fn["parameters"]!!.jsonObject["type"]!!.toString() shouldBe "\"object\""
+        fn["strict"]!!.toString() shouldBe "true"
+
+        val tc = obj["toolChoice"]!!.jsonObject
+        tc["function"]!!.jsonObject["name"]!!.toString() shouldBe "\"weather\""
+
+        val rf = obj["responseFormat"]!!.jsonObject
+        rf["type"]!!.toString() shouldBe "\"json_object\""
+
+        val so = obj["streamOptions"]!!.jsonObject
+        so["includeUsage"].toString() shouldBe "true"
     }
 }
