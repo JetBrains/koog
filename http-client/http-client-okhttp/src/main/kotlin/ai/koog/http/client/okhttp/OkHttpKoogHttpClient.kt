@@ -128,8 +128,7 @@ public class OkHttpKoogHttpClient internal constructor(
                 }
 
                 logger.error(t) { errorMessage }
-
-                close(IllegalStateException(errorMessage, t))
+                close(t)
             }
         }
 
