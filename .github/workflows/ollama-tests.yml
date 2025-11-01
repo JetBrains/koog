@@ -12,6 +12,9 @@ on:
   push:
     branches: [ "main", "develop" ]
 
+env:
+  OLLAMA_VERSION: "0.12.6"
+
 jobs:
   integration-tests:
     name: ${{ matrix.job-name }}
@@ -100,7 +103,7 @@ jobs:
       - name: Install and start Ollama
         run: |
           echo "=== Installing Ollama ==="
-          curl -fsSL https://ollama.com/install.sh | OLLAMA_VERSION=0.12.6 sh
+          curl -fsSL https://ollama.com/install.sh | sh
 
           echo "=== Starting Ollama in background ==="
           nohup ollama serve > /tmp/ollama.log 2>&1 &
