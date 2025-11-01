@@ -105,7 +105,7 @@ jobs:
 
       - name: Upload TCK reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: a2a-tck-reports
           path: a2a/test-tck/a2a-tck/reports/*.html
