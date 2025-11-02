@@ -298,7 +298,11 @@ class TraceFeatureMessageRemoteWriterTest {
                 val finishGraphNode = StrategyEventGraphNode(id = "__finish__", name = "__finish__")
 
                 val callIds = actualEvents.filterIsInstance<LLMCallStartingEvent>().map { it.callId }
-                require(callIds.size == 2) { "Expected 2 LLMCallStartingEvent, got ${callIds.size}" }
+                assertEquals(
+                    2,
+                    callIds.size,
+                    "Expected 2 LLMCallStartingEvent, got ${callIds.size}"
+                )
 
                 // Correct run id will be set after the 'collect events job' is finished.
                 val expectedEvents = listOf(
@@ -754,7 +758,11 @@ class TraceFeatureMessageRemoteWriterTest {
                 collectEventsJob.join()
 
                 val callIds = actualEvents.filterIsInstance<LLMCallStartingEvent>().map { it.callId }
-                require(callIds.size == 2) { "Expected 2 LLMCallStartingEvent, got ${callIds.size}" }
+                assertEquals(
+                    2,
+                    callIds.size,
+                    "Expected 2 LLMCallStartingEvent, got ${callIds.size}"
+                )
 
                 // Correct run id will be set after the 'collect events job' is finished.
                 val expectedEvents = listOf(

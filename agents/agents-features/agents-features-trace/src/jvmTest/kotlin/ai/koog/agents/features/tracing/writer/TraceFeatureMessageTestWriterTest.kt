@@ -379,7 +379,11 @@ class TraceFeatureMessageTestWriterTest {
                 )
 
                 val callIds = actualEvents.filterIsInstance<LLMStreamingStartingEvent>().map { it.callId }
-                require(callIds.size == 1) { "Expected 2 LLMCallStartingEvent, got ${callIds.size}" }
+                assertEquals(
+                    1,
+                    callIds.size,
+                    "Expected 2 LLMCallStartingEvent, got ${callIds.size}"
+                )
 
                 val expectedEvents = listOf(
                     LLMStreamingStartingEvent(
@@ -498,7 +502,11 @@ class TraceFeatureMessageTestWriterTest {
                 }
 
                 val callIds = actualEvents.filterIsInstance<LLMStreamingStartingEvent>().map { it.callId }
-                require(callIds.size == 1) { "Expected 2 LLMCallStartingEvent, got ${callIds.size}" }
+                assertEquals(
+                    1,
+                    callIds.size,
+                    "Expected 2 LLMCallStartingEvent, got ${callIds.size}"
+                )
 
                 val expectedEvents = listOf(
                     LLMStreamingStartingEvent(
