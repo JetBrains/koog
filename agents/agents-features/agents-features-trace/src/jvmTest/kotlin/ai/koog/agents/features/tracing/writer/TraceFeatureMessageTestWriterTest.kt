@@ -287,7 +287,6 @@ class TraceFeatureMessageTestWriterTest {
         }
 
         TestFeatureMessageWriter().use { writer ->
-
             createAgent(
                 agentId = agentId,
                 strategy = strategy
