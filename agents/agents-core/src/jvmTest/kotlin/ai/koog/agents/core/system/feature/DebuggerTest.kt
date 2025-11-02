@@ -293,7 +293,7 @@ class DebuggerTest {
                 val finishGraphNode = StrategyEventGraphNode(id = "__finish__", name = "__finish__")
 
                 val callIds = clientEventsCollector.collectedEvents.filterIsInstance<LLMCallStartingEvent>().map { it.callId }
-                require(callIds.size == 2) { "Expected 2 LLMCallStartingEvent, got ${callIds.size}" }
+                assertEquals(callIds.size == 2) { "Expected 2 LLMCallStartingEvent, got ${callIds.size}" }
 
                 val expectedEvents = listOf(
                     AgentStartingEvent(
@@ -643,7 +643,7 @@ class DebuggerTest {
                 collectEventsJob.join()
 
                 val callIds = clientEventsCollector.collectedEvents.filterIsInstance<LLMStreamingStartingEvent>().map { it.callId }
-                require(callIds.size == 1) { "Expected 1 LLMCallStartingEvent, got ${callIds.size}" }
+                assertEquals(callIds.size == 1) { "Expected 1 LLMCallStartingEvent, got ${callIds.size}" }
 
                 // Correct run id will be set after the 'collect events job' is finished.
                 val expectedEvents = listOf(
@@ -835,7 +835,7 @@ class DebuggerTest {
                 collectEventsJob.join()
 
                 val callIds = clientEventsCollector.collectedEvents.filterIsInstance<LLMStreamingStartingEvent>().map { it.callId }
-                require(callIds.size == 1) { "Expected 1 LLMCallStartingEvent, got ${callIds.size}" }
+                assertEquals(callIds.size == 1) { "Expected 1 LLMCallStartingEvent, got ${callIds.size}" }
 
                 // Correct run id will be set after the 'collect events job' is finished.
                 val expectedEvents = listOf(
