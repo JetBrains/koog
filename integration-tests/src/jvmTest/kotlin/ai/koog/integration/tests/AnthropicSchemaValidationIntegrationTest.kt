@@ -1,16 +1,14 @@
 package ai.koog.integration.tests
 
 import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.features.eventHandler.feature.EventHandler
+import ai.koog.integration.tests.utils.TestUtils.ComplexNestedTool
 import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
 import ai.koog.integration.tests.utils.annotations.Retry
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.llms.all.simpleAnthropicExecutor
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
@@ -27,14 +25,13 @@ import kotlin.test.assertTrue
  * The problem was that when processing ToolParameterType.Object, the function created invalid nested structures
  * by placing type information under a "type" key, resulting in invalid schema structures like:
  * {
- *   "type": {"type": "string"}  // Invalid nesting
+ *   "type": {"type": "string"} // Invalid nesting
  * }
  *
  * This test verifies that the fix works by creating an agent with the Anthropic API and a tool
- * with complex nested structures, and then running it with a sample input.
+ * with complex nested structures and then running it with a sample input.
  */
 class AnthropicSchemaValidationIntegrationTest {
-
     companion object {
         private var anthropicApiKey: String? = null
         private var apiKeyAvailable = false
@@ -55,84 +52,6 @@ class AnthropicSchemaValidationIntegrationTest {
                 println("Tests requiring Anthropic API will be skipped")
                 apiKeyAvailable = false
             }
-        }
-    }
-
-    /**
-     * Address type enum.
-     */
-    @Serializable
-    enum class AddressType {
-        HOME,
-        WORK,
-        OTHER
-    }
-
-    /**
-     * An address with multiple fields.
-     */
-    @Serializable
-    data class Address(
-        @property:LLMDescription("The type of address (HOME, WORK, or OTHER)")
-        val type: AddressType,
-        @property:LLMDescription("The street address")
-        val street: String,
-        @property:LLMDescription("The city")
-        val city: String,
-        @property:LLMDescription("The state or province")
-        val state: String,
-        @property:LLMDescription("The ZIP or postal code")
-        val zipCode: String
-    )
-
-    /**
-     * A user profile with nested structures.
-     */
-    @Serializable
-    data class UserProfile(
-        @property:LLMDescription("The user's full name")
-        val name: String,
-        @property:LLMDescription("The user's email address")
-        val email: String,
-        @property:LLMDescription("The user's addresses")
-        val addresses: List<Address>
-    )
-
-    /**
-     * Arguments for the complex nested tool.
-     */
-    @Serializable
-    data class ComplexNestedToolArgs(
-        @property:LLMDescription("The user profile to process")
-        val profile: UserProfile
-    )
-
-    /**
-     * A complex nested tool that demonstrates the JSON schema validation error.
-     * This tool has parameters with complex nested structures that would trigger
-     * the error in the Anthropic API before the fix.
-     */
-    object ComplexNestedTool : SimpleTool<ComplexNestedToolArgs>() {
-        override val argsSerializer = ComplexNestedToolArgs.serializer()
-
-        override val name = "complex_nested_tool"
-
-        override val description = "A tool that processes user profiles with complex nested structures."
-
-        override suspend fun doExecute(args: ComplexNestedToolArgs): String {
-            // Process the user profile
-            val profile = args.profile
-            val addressesInfo = profile.addresses.joinToString("\n") { address ->
-                "- ${address.type} Address: ${address.street}, ${address.city}, ${address.state} ${address.zipCode}"
-            }
-
-            return """
-                Successfully processed user profile:
-                Name: ${profile.name}
-                Email: ${profile.email}
-                Addresses:
-                $addressesInfo
-            """.trimIndent()
         }
     }
 
