@@ -26,7 +26,6 @@ import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider
 import ai.koog.agents.snapshot.providers.file.JVMFilePersistenceStorageProvider
 import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.RetryUtils.withRetry
-import ai.koog.integration.tests.utils.TestUtils.CalculatorOperation
 import ai.koog.integration.tests.utils.TestUtils.CalculatorTool
 import ai.koog.integration.tests.utils.TestUtils.DelayTool
 import ai.koog.integration.tests.utils.getLLMClientForProvider
@@ -93,17 +92,16 @@ class AIAgentIntegrationTest {
         @JvmStatic
         fun historyCompressionStrategies(): Stream<Arguments> {
             return Stream.of(
-//                Arguments.of(HistoryCompressionStrategy.WholeHistory, "WholeHistory"),
-//                Arguments.of(
-//                    HistoryCompressionStrategy.WholeHistoryMultipleSystemMessages,
-//                    "WholeHistoryMultipleSystemMessages"
-//                ),
-//                Arguments.of(HistoryCompressionStrategy.FromLastNMessages(1), "FromLastNMessages(1)"),
-//                Arguments.of(
-//                    HistoryCompressionStrategy.FromTimestamp(Clock.System.now().minus(1.seconds)),
-//                    "FromTimestamp"
-//                ),
-                // ToDo uncomment when KG-311 is fully fixed
+                Arguments.of(HistoryCompressionStrategy.WholeHistory, "WholeHistory"),
+                Arguments.of(
+                    HistoryCompressionStrategy.WholeHistoryMultipleSystemMessages,
+                    "WholeHistoryMultipleSystemMessages"
+                ),
+                Arguments.of(HistoryCompressionStrategy.FromLastNMessages(1), "FromLastNMessages(1)"),
+                Arguments.of(
+                    HistoryCompressionStrategy.FromTimestamp(Clock.System.now().minus(1.seconds)),
+                    "FromTimestamp"
+                ),
                 Arguments.of(HistoryCompressionStrategy.Chunked(2), "Chunked(2)")
             )
         }
