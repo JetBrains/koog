@@ -67,7 +67,7 @@ public open class GraphAIAgent<Input, Output>(
         private val logger = KotlinLogging.logger {}
     }
 
-    override val pipeline: AIAgentGraphPipeline = AIAgentGraphPipeline(clock)
+    override val pipeline: AIAgentGraphPipeline = AIAgentGraphPipeline(agentConfig, clock)
 
     /**
      * The context for adding and configuring features in a Kotlin AI Agent instance.

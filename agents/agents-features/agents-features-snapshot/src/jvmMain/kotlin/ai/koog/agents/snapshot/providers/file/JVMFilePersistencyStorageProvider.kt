@@ -28,7 +28,7 @@ public typealias JVMFilePersistencyStorageProvider = JVMFilePersistenceStoragePr
  * @constructor Initializes the [JVMFilePersistenceStorageProvider] with a specified root directory [root].
  * @param root The root directory where all agent checkpoints will be stored.
  */
-public class JVMFilePersistenceStorageProvider(
+public class JVMFilePersistenceStorageProvider @JvmOverloads constructor(
     root: Path,
     json: Json = PersistenceUtils.defaultCheckpointJson
 ) : FilePersistenceStorageProvider<Path>(

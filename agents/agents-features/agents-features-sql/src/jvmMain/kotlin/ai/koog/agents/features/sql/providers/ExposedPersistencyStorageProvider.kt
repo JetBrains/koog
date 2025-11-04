@@ -53,7 +53,7 @@ import org.jetbrains.exposed.sql.upsert
  * @param tableName Name of the table to store checkpoints (default: "agent_checkpoints")
  * @param ttlSeconds Optional TTL for checkpoint entries in seconds (null = no expiration)
  */
-public abstract class ExposedPersistenceStorageProvider(
+public abstract class ExposedPersistenceStorageProvider @JvmOverloads constructor(
     protected val database: Database,
     tableName: String = "agent_checkpoints",
     ttlSeconds: Long? = null,
@@ -82,6 +82,7 @@ public abstract class ExposedPersistenceStorageProvider(
      * 2. TTL is configured (ttlSeconds is not null)
      * 3. Enough time has passed since last cleanup
      */
+    @JvmOverloads
     public suspend fun conditionalCleanup(cleanupConfig: CleanupConfig = CleanupConfig.default()) {
         // Skip cleanup entirely if disabled or no TTL configured
         if (!cleanupConfig.enabled || ttlSeconds == null) {
@@ -116,6 +117,7 @@ public abstract class ExposedPersistenceStorageProvider(
         }
     }
 
+    @JvmOverloads
     override suspend fun getCheckpoints(agentId: String, filter: ExposedPersistenceFilter?): List<AgentCheckpointData> {
         if (filter == null) {
             val now = Clock.System.now().toEpochMilliseconds()

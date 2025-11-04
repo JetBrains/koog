@@ -4,6 +4,8 @@ import ai.koog.prompt.executor.clients.LLModelDefinitions
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import kotlin.jvm.JvmField
+import kotlin.jvm.JvmStatic
 
 /**
  * Object containing a collection of predefined Mistral AI model configurations.
@@ -31,6 +33,7 @@ public object MistralAIModels : LLModelDefinitions {
          *
          * @see <a href="https://docs.mistral.ai/models/">Mistral AI Models</a>
          */
+        @JvmField
         public val MistralMedium31: LLModel = LLModel(
             provider = LLMProvider.MistralAI,
             id = "mistral-medium-latest",
@@ -57,6 +60,7 @@ public object MistralAIModels : LLModelDefinitions {
          *
          * @see <a href="https://docs.mistral.ai/models/">Mistral AI Models</a>
          */
+        @JvmField
         public val MistralLarge21: LLModel = LLModel(
             provider = LLMProvider.MistralAI,
             id = "mistral-large-latest",
@@ -81,6 +85,7 @@ public object MistralAIModels : LLModelDefinitions {
          *
          * @see <a href="https://docs.mistral.ai/models/">Mistral AI Models</a>
          */
+        @JvmField
         public val MistralSmall2: LLModel = LLModel(
             provider = LLMProvider.MistralAI,
             id = "mistral-small-latest",
@@ -104,6 +109,7 @@ public object MistralAIModels : LLModelDefinitions {
          *
          * @see <a href="https://docs.mistral.ai/models/">Mistral AI Models</a>
          */
+        @JvmField
         public val MagistralMedium12: LLModel = LLModel(
             provider = LLMProvider.MistralAI,
             id = "magistral-medium-latest",
@@ -132,6 +138,7 @@ public object MistralAIModels : LLModelDefinitions {
          *
          * @see <a href="https://docs.mistral.ai/models/">Mistral AI Models</a>
          */
+        @JvmField
         public val Codestral: LLModel = LLModel(
             provider = LLMProvider.MistralAI,
             id = "codestral-latest",
@@ -155,6 +162,7 @@ public object MistralAIModels : LLModelDefinitions {
          *
          * @see <a href="https://docs.mistral.ai/models/">Mistral AI Models</a>
          */
+        @JvmField
         public val DevstralMedium: LLModel = LLModel(
             provider = LLMProvider.MistralAI,
             id = "devstral-medium-latest",
@@ -184,6 +192,7 @@ public object MistralAIModels : LLModelDefinitions {
          *
          * @see <a href="https://docs.mistral.ai/models/">Mistral AI Models</a>
          */
+        @JvmField
         public val MistralEmbed: LLModel = LLModel(
             provider = LLMProvider.MistralAI,
             id = "mistral-embed",
@@ -202,6 +211,7 @@ public object MistralAIModels : LLModelDefinitions {
          *
          * @see <a href="https://docs.mistral.ai/models/">Mistral AI Models</a>
          */
+        @JvmField
         public val CodestralEmbed: LLModel = LLModel(
             provider = LLMProvider.MistralAI,
             id = "codestral-embed",
@@ -226,6 +236,7 @@ public object MistralAIModels : LLModelDefinitions {
          *
          * @see <a href="https://docs.mistral.ai/models/">Mistral AI Models</a>
          */
+        @JvmField
         public val MistralModeration: LLModel = LLModel(
             provider = LLMProvider.MistralAI,
             id = "mistral-moderation-2411",

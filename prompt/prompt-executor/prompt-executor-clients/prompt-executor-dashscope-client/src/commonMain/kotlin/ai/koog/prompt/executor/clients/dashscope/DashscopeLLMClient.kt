@@ -21,6 +21,7 @@ import ai.koog.prompt.streaming.StreamFrameFlowBuilder
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import kotlinx.datetime.Clock
+import kotlin.jvm.JvmOverloads
 
 /**
  * Configuration settings for connecting to the DashScope API using OpenAI-compatible endpoints.
@@ -46,7 +47,7 @@ public class DashscopeClientSettings(
  * @param baseClient HTTP client for making requests
  * @param clock Clock instance used for tracking response metadata timestamps
  */
-public class DashscopeLLMClient(
+public class DashscopeLLMClient @JvmOverloads constructor(
     apiKey: String,
     private val settings: DashscopeClientSettings = DashscopeClientSettings(),
     baseClient: HttpClient = HttpClient(),

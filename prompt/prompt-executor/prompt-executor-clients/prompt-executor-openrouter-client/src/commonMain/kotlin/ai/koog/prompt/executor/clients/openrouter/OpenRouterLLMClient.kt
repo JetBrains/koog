@@ -26,6 +26,7 @@ import ai.koog.prompt.streaming.StreamFrameFlowBuilder
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import kotlinx.datetime.Clock
+import kotlin.jvm.JvmOverloads
 
 /**
  * Configuration settings for connecting to the OpenRouter API.
@@ -50,7 +51,7 @@ public class OpenRouterClientSettings(
  * @param settings The base URL and timeouts for the OpenRouter API, defaults to "https://openrouter.ai" and 900s
  * @param clock Clock instance used for tracking response metadata timestamps.
  */
-public class OpenRouterLLMClient(
+public class OpenRouterLLMClient @JvmOverloads constructor(
     apiKey: String,
     private val settings: OpenRouterClientSettings = OpenRouterClientSettings(),
     baseClient: HttpClient = HttpClient(),

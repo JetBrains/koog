@@ -9,6 +9,7 @@ import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
 import kotlinx.coroutines.flow.Flow
+import kotlin.jvm.JvmOverloads
 
 /**
  * Common interface for direct communication with LLM providers.
@@ -22,14 +23,38 @@ public interface LLMClient : AutoCloseable {
      *
      * @param prompt The prompt to execute
      * @param model The LLM model to use
+     * @return List of response messages
+     */
+    public suspend fun execute(
+        prompt: Prompt,
+        model: LLModel,
+    ): List<Message.Response> = execute(prompt, model, emptyList())
+
+    /**
+     * Executes a prompt and returns a list of response messages.
+     *
+     * @param prompt The prompt to execute
+     * @param model The LLM model to use
      * @param tools Optional list of tools that can be used by the LLM
      * @return List of response messages
      */
     public suspend fun execute(
         prompt: Prompt,
         model: LLModel,
-        tools: List<ToolDescriptor> = emptyList()
+        tools: List<ToolDescriptor>
     ): List<Message.Response>
+
+    /**
+     * Executes a prompt and returns a streaming flow of response chunks.
+     *
+     * @param prompt The prompt to execute
+     * @param model The LLM model to use
+     * @return Flow of response chunks
+     */
+    public fun executeStreaming(
+        prompt: Prompt,
+        model: LLModel,
+    ): Flow<StreamFrame> = executeStreaming(prompt, model, emptyList())
 
     /**
      * Executes a prompt and returns a streaming flow of response chunks.
@@ -42,7 +67,7 @@ public interface LLMClient : AutoCloseable {
     public fun executeStreaming(
         prompt: Prompt,
         model: LLModel,
-        tools: List<ToolDescriptor> = emptyList()
+        tools: List<ToolDescriptor>
     ): Flow<StreamFrame> = error("Not implemented for this client")
 
     /**

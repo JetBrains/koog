@@ -67,6 +67,7 @@ import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
+import kotlin.jvm.JvmOverloads
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -96,7 +97,7 @@ public class GoogleClientSettings(
  * @param baseClient Optional custom HTTP client
  * @param clock Clock instance used for tracking response metadata timestamps.
  */
-public open class GoogleLLMClient(
+public open class GoogleLLMClient @JvmOverloads constructor(
     private val apiKey: String,
     private val settings: GoogleClientSettings = GoogleClientSettings(),
     baseClient: HttpClient = HttpClient(),

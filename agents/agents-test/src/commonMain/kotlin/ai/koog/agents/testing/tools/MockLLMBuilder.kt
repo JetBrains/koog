@@ -1,5 +1,6 @@
 package ai.koog.agents.testing.tools
 
+import ai.koog.agents.annotations.JavaAPI
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.ToolResult
@@ -10,6 +11,7 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.tokenizer.Tokenizer
 import kotlinx.datetime.Clock
 import kotlin.jvm.JvmName
+import kotlin.jvm.JvmStatic
 
 /**
  * Represents a condition for a tool call and its corresponding result.
@@ -940,7 +942,7 @@ public class MockLLMBuilder(private val clock: Clock, private val tokenizer: Tok
  *
  * @property response The text response to return
  */
-public class DefaultResponseReceiver(
+public open class DefaultResponseReceiver(
     internal val response: String,
     internal val builder: MockLLMBuilder,
 ) {

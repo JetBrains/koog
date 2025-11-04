@@ -1,40 +1,22 @@
-@file:OptIn(DetachedPromptExecutorAPI::class)
+@file:OptIn(DetachedPromptExecutorAPI::class, InternalAgentsApi::class)
+@file:Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
 
 package ai.koog.agents.core.agent.context
 
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.session.AIAgentLLMReadSession
 import ai.koog.agents.core.agent.session.AIAgentLLMWriteSession
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.core.utils.RWLock
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.processor.ResponseProcessor
 import kotlinx.datetime.Clock
+import kotlin.jvm.JvmName
 
-/**
- * Annotation for marking APIs as detached prompt executors within the `AIAgentLLMContext`.
- *
- * Using APIs annotated with this requires opting in, as calls to `PromptExecutor` will be disconnected
- * from the agent logic. This means these calls will not affect the agent's state or adhere to the
- * `ToolsConversionStrategy`.
- *
- * This API should be used with caution, as it provides functionality that operates outside the
- * standard agent lifecycle and processing logic.
- */
-@MustBeDocumented
-@Retention(AnnotationRetention.BINARY)
-@RequiresOptIn(
-    level = RequiresOptIn.Level.ERROR,
-    message = "Calls to PromptExecutor used from `AIAgentLLMContext` will not be connected to the agent logic, " +
-        "and will not impact the agent's state. " +
-        "Other than that, `ToolsConversionStrategy` will not be applied. " +
-        "Please be cautious when using this API."
-)
-public annotation class DetachedPromptExecutorAPI
 
 /**
  * Represents the context for an AI agent LLM, managing tools, prompt handling, and interaction with the
@@ -50,38 +32,64 @@ public annotation class DetachedPromptExecutorAPI
  * @property environment The environment that manages tool execution and interaction with external dependencies.
  * @property clock The clock used for timestamps of messages
  */
-public class AIAgentLLMContext(
+public expect class AIAgentLLMContext constructor(
     tools: List<ToolDescriptor>,
-    public val toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
+    toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     prompt: Prompt,
     model: LLModel,
     responseProcessor: ResponseProcessor?,
+    promptExecutor: PromptExecutor,
+    environment: AIAgentEnvironment,
+    config: AIAgentConfig,
+    clock: Clock,
+    delegate: AIAgentLLMContextImpl = AIAgentLLMContextImpl(
+        tools, toolRegistry, prompt, model, promptExecutor, environment, config, clock
+    )
+) : AIAgentLLMContextAPI {
+    internal val delegate: AIAgentLLMContextImpl
+
+    @get:JvmName("toolRegistry")
+    override val toolRegistry: ToolRegistry
+
     @property:DetachedPromptExecutorAPI
-    public val promptExecutor: PromptExecutor,
-    private val environment: AIAgentEnvironment,
-    private val config: AIAgentConfig,
-    private val clock: Clock
-) {
+    @get:JvmName("promptExecutor")
+    override val promptExecutor: PromptExecutor
+
+    @get:JvmName("environment")
+    @InternalAgentsApi
+    override val environment: AIAgentEnvironment
+
+    @get:JvmName("config")
+    @InternalAgentsApi
+    override val config: AIAgentConfig
+
+    @get:JvmName("clock")
+    @InternalAgentsApi
+    override val clock: Clock
+
     /**
      * List of current tools associated with this agent context.
      */
     @DetachedPromptExecutorAPI
-    public var tools: List<ToolDescriptor> = tools
-        private set
+    @get:JvmName("tools")
+    override var tools: List<ToolDescriptor>
+        @InternalAgentsApi set
 
     /**
      * LLM currently associated with this context.
      */
     @DetachedPromptExecutorAPI
-    public var model: LLModel = model
-        private set
+    @get:JvmName("model")
+    override var model: LLModel
+        @InternalAgentsApi set
 
     /**
      * Response processor currently associated with this context.
      */
     @DetachedPromptExecutorAPI
+    @get:JvmName("responseProcessor")
     public var responseProcessor: ResponseProcessor? = responseProcessor
-        private set
+        @InternalAgentsApi set
 
     /**
      * The current prompt used within the `AIAgentLLMContext`.
@@ -92,26 +100,22 @@ public class AIAgentLLMContext(
      *
      * This variable can only be modified internally via specific methods, maintaining control over state changes.
      */
-    public var prompt: Prompt = prompt
-        private set
+    @get:JvmName("prompt")
+    override var prompt: Prompt
 
     /**
      * Updates the current `AIAgentLLMContext` with a new prompt and ensures thread-safe access using a read lock.
      *
      * @param prompt The new [Prompt] to be set for the context.
-     * @return The current instance of [AIAgentLLMContext] with the updated prompt.
      */
-    public suspend fun withPrompt(block: Prompt.() -> Prompt): AIAgentLLMContext = rwLock.withReadLock {
-        this.prompt = prompt.block()
-        this
-    }
+    public override suspend fun withPrompt(block: Prompt.() -> Prompt)
 
     /**
      * Creates a deep copy of this LLM context.
      *
      * @return A new instance of [AIAgentLLMContext] with deep copies of mutable properties.
      */
-    public suspend fun copy(
+    public override suspend fun copy(
         tools: List<ToolDescriptor> = this.tools,
         toolRegistry: ToolRegistry = this.toolRegistry,
         prompt: Prompt = this.prompt,
@@ -121,61 +125,27 @@ public class AIAgentLLMContext(
         environment: AIAgentEnvironment = this.environment,
         config: AIAgentConfig = this.config,
         clock: Clock = this.clock,
-    ): AIAgentLLMContext = rwLock.withReadLock {
-        AIAgentLLMContext(
-            tools = tools,
-            toolRegistry = toolRegistry,
-            prompt = prompt,
-            model = model,
-            responseProcessor = responseProcessor,
-            promptExecutor = promptExecutor,
-            environment = environment,
-            config = config,
-            clock = clock
-        )
-    }
-
-    private val rwLock = RWLock()
-
+    ): AIAgentLLMContext
     /**
      * Executes a write session on the [AIAgentLLMContext], ensuring that all active write and read sessions
      * are completed before initiating the write session.
      */
     @OptIn(ExperimentalStdlibApi::class)
-    public suspend fun <T> writeSession(block: suspend AIAgentLLMWriteSession.() -> T): T = rwLock.withWriteLock {
-        val session =
-            AIAgentLLMWriteSession(environment, promptExecutor, tools, toolRegistry, prompt, model, responseProcessor, config, clock)
-
-        session.use {
-            val result = it.block()
-
-            // update tools and prompt after session execution
-            this.prompt = it.prompt
-            this.tools = it.tools
-            this.model = it.model
-            this.responseProcessor = it.responseProcessor
-
-            result
-        }
-    }
+    public override suspend fun <T> writeSession(block: suspend AIAgentLLMWriteSession.() -> T): T
 
     /**
      * Executes a read session within the [AIAgentLLMContext], ensuring concurrent safety
      * with active write session and other read sessions.
      */
     @OptIn(ExperimentalStdlibApi::class)
-    public suspend fun <T> readSession(block: suspend AIAgentLLMReadSession.() -> T): T = rwLock.withReadLock {
-        val session = AIAgentLLMReadSession(tools, promptExecutor, prompt, model, responseProcessor, config)
-
-        session.use { block(it) }
-    }
+    public override suspend fun <T> readSession(block: suspend AIAgentLLMReadSession.() -> T): T
 
     /**
      * Returns the current prompt used in the LLM context.
      *
      * @return The current [Prompt] instance.
      */
-    public fun copy(
+    public override fun copy(
         tools: List<ToolDescriptor> = this.tools,
         prompt: Prompt = this.prompt,
         model: LLModel = this.model,
@@ -184,7 +154,5 @@ public class AIAgentLLMContext(
         environment: AIAgentEnvironment = this.environment,
         config: AIAgentConfig = this.config,
         clock: Clock = this.clock
-    ): AIAgentLLMContext {
-        return AIAgentLLMContext(tools, toolRegistry, prompt, model, responseProcessor, promptExecutor, environment, config, clock)
-    }
+    ): AIAgentLLMContext
 }

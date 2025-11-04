@@ -54,6 +54,7 @@ import kotlinx.serialization.json.JsonNamingStrategy
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
+import kotlin.jvm.JvmOverloads
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 
@@ -86,7 +87,7 @@ public class AnthropicClientSettings(
  * @param baseClient An optional custom configuration for the underlying HTTP client, defaulting to a Ktor client.
  * @param clock Clock instance used for tracking response metadata timestamps.
  */
-public open class AnthropicLLMClient(
+public open class AnthropicLLMClient @JvmOverloads constructor(
     private val apiKey: String,
     private val settings: AnthropicClientSettings = AnthropicClientSettings(),
     baseClient: HttpClient = HttpClient(),

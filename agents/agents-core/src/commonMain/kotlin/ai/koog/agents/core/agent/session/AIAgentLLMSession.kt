@@ -1,12 +1,14 @@
+@file:Suppress("EXPECT_ACTUAL_CLASSIFIERS_ARE_IN_BETA_WARNING")
+
 package ai.koog.agents.core.agent.session
 
 import ai.koog.agents.core.agent.config.AIAgentConfig
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.utils.ActiveProperty
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
-import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
@@ -18,7 +20,6 @@ import ai.koog.prompt.structure.StructureFixingParser
 import ai.koog.prompt.structure.StructuredRequestConfig
 import ai.koog.prompt.structure.StructuredResponse
 import ai.koog.prompt.structure.executeStructured
-import ai.koog.prompt.structure.parseResponseToStructuredResponse
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.serializer
@@ -33,15 +34,17 @@ import kotlinx.serialization.serializer
  * @property executor The executor responsible for executing prompts and handling LLM interactions.
  * @constructor Creates an instance of an [AIAgentLLMSession] with an executor, a list of tools, and a prompt.
  */
-@OptIn(ExperimentalStdlibApi::class)
-public sealed class AIAgentLLMSession(
-    private val executor: PromptExecutor,
-    tools: List<ToolDescriptor>,
-    prompt: Prompt,
-    model: LLModel,
-    responseProcessor: ResponseProcessor?,
-    protected val config: AIAgentConfig,
-) : AutoCloseable {
+public interface AIAgentLLMSession : AutoCloseable {
+    /**
+     * Represents the configuration settings for an AI agent.
+     *
+     * This variable holds an instance of [AIAgentConfig], which encapsulates
+     * various parameters and options used to customize the behavior and
+     * functionality of the AI agent.
+     */
+
+    public val config: AIAgentConfig
+
     /**
      * Represents the current prompt associated with the LLM session.
      * The prompt contains the input messages, model configuration, and parameters.
@@ -51,24 +54,24 @@ public sealed class AIAgentLLMSession(
      * - [requestLLM]
      * - etc.
      */
-    public open val prompt: Prompt by ActiveProperty(prompt) { isActive }
+    public val prompt: Prompt
 
     /**
      * Provides a list of tools based on the current active state.
      * This property holds a collection of [ToolDescriptor] instances, which describe the tools available for use.
      */
-    public open val tools: List<ToolDescriptor> by ActiveProperty(tools) { isActive }
+    public val tools: List<ToolDescriptor>
 
     /**
      * Represents the active language model used within the session.
      */
-    public open val model: LLModel by ActiveProperty(model) { isActive }
+    public val model: LLModel
 
     /**
      * Represents the active response processor within the session.
      * The processor defines the post-processing of messages returned from the LLM.
      */
-    public open val responseProcessor: ResponseProcessor? by ActiveProperty(responseProcessor) { isActive }
+    public val responseProcessor: ResponseProcessor? by ActiveProperty(responseProcessor) { isActive }
 
     /**
      * A flag indicating whether the session is currently active.
@@ -76,48 +79,63 @@ public sealed class AIAgentLLMSession(
      * This variable is used to ensure that the session operations are only performed when the session is active.
      * Once the session is closed, this flag is set to `false` to prevent further usage.
      */
-    protected var isActive: Boolean = true
+    @InternalAgentsApi
+    public var isActive: Boolean
 
     /**
      * Ensures that the session is active before allowing further operations.
      *
      * @throws IllegalStateException if the session is not active.
      */
-    protected fun validateSession() {
-        check(isActive) { "Cannot use session after it was closed" }
-    }
+    @InternalAgentsApi
+    public fun validateSession()
 
-    protected fun preparePrompt(prompt: Prompt, tools: List<ToolDescriptor>): Prompt {
-        return config.missingToolsConversionStrategy.convertPrompt(prompt, tools)
-    }
+    /**
+     * Prepares a prompt by incorporating the provided tools into it.
+     *
+     * @param prompt The initial prompt that needs to be updated or modified.
+     * @param tools A list of tool descriptors that may be used to enhance or adapt the prompt.
+     * @return The updated prompt after incorporating the provided tools.
+     */
+    @InternalAgentsApi
+    public fun preparePrompt(prompt: Prompt, tools: List<ToolDescriptor>): Prompt
 
-    protected fun executeStreaming(prompt: Prompt, tools: List<ToolDescriptor>): Flow<StreamFrame> {
-        val preparedPrompt = preparePrompt(prompt, tools)
-        return executor.executeStreaming(preparedPrompt, model, tools)
-    }
+    /**
+     * Executes a streaming process based on the provided prompt and tools.
+     *
+     * @param prompt the input prompt containing the initial data or request for the streaming process.
+     * @param tools a list of tool descriptors that provide functionality to assist during streaming execution.
+     * @return a flow of StreamFrame objects representing the streamed output.
+     */
+    @InternalAgentsApi
+    public fun executeStreaming(prompt: Prompt, tools: List<ToolDescriptor>): Flow<StreamFrame>
 
-    protected suspend fun executeMultiple(prompt: Prompt, tools: List<ToolDescriptor>): List<Message.Response> {
-        val preparedPrompt = preparePrompt(prompt, tools)
-        return executor.executeProcessed(preparedPrompt, model, tools, responseProcessor)
-    }
+    /**
+     * Executes multiple tools using the given prompt and returns their responses.
+     *
+     * @param prompt The input prompt that guides the execution of the tools.
+     * @param tools The list of tool descriptors to be executed.
+     * @return A list of responses generated by executing the tools.
+     */
+    @InternalAgentsApi
+    public suspend fun executeMultiple(prompt: Prompt, tools: List<ToolDescriptor>): List<Message.Response>
 
-    protected suspend fun executeSingle(prompt: Prompt, tools: List<ToolDescriptor>): Message.Response =
-        executeMultiple(prompt, tools).first()
+    /**
+     * Executes a single operation based on the provided prompt and tools.
+     *
+     * @param prompt The input prompt containing the necessary information for the operation.
+     * @param tools A list of tool descriptors that can be utilized during the execution.
+     * @return The response message resulting from the execution.
+     */
+    @InternalAgentsApi
+    public suspend fun executeSingle(prompt: Prompt, tools: List<ToolDescriptor>): Message.Response
 
     /**
      * Sends a request to the language model without utilizing any tools and returns multiple responses.
      *
      * @return A list of response messages from the language model.
      */
-    public open suspend fun requestLLMMultipleWithoutTools(): List<Message.Response> {
-        validateSession()
-
-        val promptWithDisabledTools = prompt
-            .withUpdatedParams { toolChoice = null }
-            .let { preparePrompt(it, emptyList()) }
-
-        return executeMultiple(promptWithDisabledTools, emptyList())
-    }
+    public suspend fun requestLLMMultipleWithoutTools(): List<Message.Response>
 
     /**
      * Sends a request to the language model without utilizing any tools and returns the response.
@@ -130,18 +148,7 @@ public sealed class AIAgentLLMSession(
      * @return The response message from the language model after executing the request, represented
      *         as a [Message.Response] instance.
      */
-    public open suspend fun requestLLMWithoutTools(): Message.Response {
-        validateSession()
-        /*
-            Not all LLM providers support tool list when tool choice is set to "none", so we are rewriting all tool messages to regular messages,
-            for all requests without tools.
-         */
-        val promptWithDisabledTools = prompt
-            .withUpdatedParams { toolChoice = null }
-            .let { preparePrompt(it, emptyList()) }
-
-        return executeMultiple(promptWithDisabledTools, emptyList()).first { it !is Message.Reasoning }
-    }
+    public suspend fun requestLLMWithoutTools(): Message.Response
 
     /**
      * Sends a request to the language model that enforces the usage of tools and retrieves the response.
@@ -156,14 +163,7 @@ public sealed class AIAgentLLMSession(
      *
      * @return The tool call response from the language model.
      */
-    public open suspend fun requestLLMOnlyCallingTools(): Message.Response {
-        validateSession()
-        // We use the multiple-response method to ensure we capture all context (e.g. thinking)
-        // even though we only return the specific tool call.
-        val responses = requestLLMMultipleOnlyCallingTools()
-        return responses.firstOrNull { it is Message.Tool.Call }
-            ?: error("requestLLMOnlyCallingTools expected at least one Tool.Call but received: ${responses.map { it::class.simpleName }}")
-    }
+    public suspend fun requestLLMOnlyCallingTools(): Message.Response
 
     /**
      * Sends a request to the language model that enforces the usage of tools and retrieves all responses.
@@ -177,13 +177,7 @@ public sealed class AIAgentLLMSession(
      *
      * @return A list of responses from the language model.
      */
-    public open suspend fun requestLLMMultipleOnlyCallingTools(): List<Message.Response> {
-        validateSession()
-        val promptWithOnlyCallingTools = prompt.withUpdatedParams {
-            toolChoice = LLMParams.ToolChoice.Required
-        }
-        return executeMultiple(promptWithOnlyCallingTools, tools)
-    }
+    public open suspend fun requestLLMMultipleOnlyCallingTools(): List<Message.Response>
 
     /**
      * Sends a request to the language model while enforcing the use of a specific tool,
@@ -199,14 +193,7 @@ public sealed class AIAgentLLMSession(
      * @return The response from the language model as a [Message.Response] instance after
      *         processing the request with the enforced tool.
      */
-    public open suspend fun requestLLMForceOneTool(tool: ToolDescriptor): Message.Response {
-        validateSession()
-        check(tools.contains(tool)) { "Unable to force call to tool `${tool.name}` because it is not defined" }
-        val promptWithForcingOneTool = prompt.withUpdatedParams {
-            toolChoice = LLMParams.ToolChoice.Named(tool.name)
-        }
-        return executeSingle(promptWithForcingOneTool, tools)
-    }
+    public suspend fun requestLLMForceOneTool(tool: ToolDescriptor): Message.Response
 
     /**
      * Sends a request to the language model while enforcing the use of a specific tool, and returns the response.
@@ -220,9 +207,7 @@ public sealed class AIAgentLLMSession(
      * @return The response from the language model as a [Message.Response] instance after processing the request with the
      *         enforced tool.
      */
-    public open suspend fun requestLLMForceOneTool(tool: Tool<*, *>): Message.Response {
-        return requestLLMForceOneTool(tool.descriptor)
-    }
+    public suspend fun requestLLMForceOneTool(tool: Tool<*, *>): Message.Response
 
     /**
      * Sends a request to the underlying LLM and returns the first response.
@@ -230,10 +215,7 @@ public sealed class AIAgentLLMSession(
      *
      * @return The first response message from the LLM after executing the request.
      */
-    public open suspend fun requestLLM(): Message.Response {
-        validateSession()
-        return executeMultiple(prompt, tools).first { it !is Message.Reasoning }
-    }
+    public suspend fun requestLLM(): Message.Response
 
     /**
      * Sends a streaming request to the underlying LLM and returns the streamed response.
@@ -241,10 +223,7 @@ public sealed class AIAgentLLMSession(
      *
      * @return A flow emitting `StreamFrame` objects that represent the streaming output of the language model.
      */
-    public open fun requestLLMStreaming(): Flow<StreamFrame> {
-        validateSession()
-        return executeStreaming(prompt, tools)
-    }
+    public suspend fun requestLLMStreaming(): Flow<StreamFrame>
 
     /**
      * Sends a moderation request to the specified or default large language model (LLM) for content moderation.
@@ -258,11 +237,7 @@ public sealed class AIAgentLLMSession(
      * @return A [ModerationResult] instance containing the details of the moderation analysis, including
      *         content classification and flagged categories.
      */
-    public open suspend fun requestModeration(moderatingModel: LLModel? = null): ModerationResult {
-        validateSession()
-        val preparedPrompt = preparePrompt(prompt, emptyList())
-        return executor.moderate(preparedPrompt, moderatingModel ?: model)
-    }
+    public suspend fun requestModeration(moderatingModel: LLModel? = null): ModerationResult
 
     /**
      * Sends a request to the language model, potentially utilizing multiple tools,
@@ -273,10 +248,7 @@ public sealed class AIAgentLLMSession(
      *
      * @return a list of responses from the language model
      */
-    public open suspend fun requestLLMMultiple(): List<Message.Response> {
-        validateSession()
-        return executeMultiple(prompt, tools)
-    }
+    public suspend fun requestLLMMultiple(): List<Message.Response>
 
     /**
      * Sends a request to LLM and gets a structured response.
@@ -285,19 +257,9 @@ public sealed class AIAgentLLMSession(
      *
      * @see [executeStructured]
      */
-    public open suspend fun <T> requestLLMStructured(
+    public suspend fun <T> requestLLMStructured(
         config: StructuredRequestConfig<T>,
-    ): Result<StructuredResponse<T>> {
-        validateSession()
-
-        val preparedPrompt = preparePrompt(prompt, tools = emptyList())
-
-        return executor.executeStructured(
-            prompt = preparedPrompt,
-            model = model,
-            config = config,
-        )
-    }
+    ): Result<StructuredResponse<T>>
 
     /**
      * Sends a request to LLM and gets a structured response.
@@ -313,46 +275,11 @@ public sealed class AIAgentLLMSession(
      * intelligently fix parsing errors. When specified, parsing errors trigger additional
      * LLM calls with error context to attempt correction of the structure format.
      */
-    public open suspend fun <T> requestLLMStructured(
+    public suspend fun <T> requestLLMStructured(
         serializer: KSerializer<T>,
         examples: List<T> = emptyList(),
         fixingParser: StructureFixingParser? = null
-    ): Result<StructuredResponse<T>> {
-        validateSession()
-
-        val preparedPrompt = preparePrompt(prompt, tools = emptyList())
-
-        return executor.executeStructured(
-            prompt = preparedPrompt,
-            model = model,
-            serializer = serializer,
-            examples = examples,
-            fixingParser = fixingParser,
-        )
-    }
-
-    /**
-     * Sends a request to LLM and gets a structured response.
-     *
-     * This is a simple version of the full `requestLLMStructured`. Unlike the full version, it does not require specifying
-     * struct definitions and structured output modes manually. It attempts to find the best approach to provide a structured
-     * output based on the defined [model] capabilities.
-     *
-     * @param T The structure to request.
-     * @param examples Optional list of examples in case manual mode will be used. These examples might help the model to
-     * understand the format better.
-     * @param fixingParser Optional parser that handles malformed responses by using an auxiliary LLM to
-     * intelligently fix parsing errors. When specified, parsing errors trigger additional
-     * LLM calls with error context to attempt correction of the structure format.
-     */
-    public suspend inline fun <reified T> requestLLMStructured(
-        examples: List<T> = emptyList(),
-        fixingParser: StructureFixingParser? = null
-    ): Result<StructuredResponse<T>> = requestLLMStructured(
-        serializer = serializer<T>(),
-        examples = examples,
-        fixingParser = fixingParser,
-    )
+    ): Result<StructuredResponse<T>>
 
     /**
      * Parses a structured response from the language model using the specified configuration.
@@ -370,7 +297,7 @@ public sealed class AIAgentLLMSession(
     public suspend fun <T> parseResponseToStructuredResponse(
         response: Message.Assistant,
         config: StructuredRequestConfig<T>
-    ): StructuredResponse<T> = executor.parseResponseToStructuredResponse(response, config, model)
+    ): StructuredResponse<T>
 
     /**
      * Sends a request to the language model, potentially receiving multiple choices,
@@ -381,13 +308,30 @@ public sealed class AIAgentLLMSession(
      *
      * @return a list of choices from the model
      */
-    public open suspend fun requestLLMMultipleChoices(): List<LLMChoice> {
-        validateSession()
-        val preparedPrompt = preparePrompt(prompt, tools)
-        return executor.executeMultipleChoices(preparedPrompt, model, tools)
-    }
+    public suspend fun requestLLMMultipleChoices(): List<LLMChoice>
 
-    final override fun close() {
-        isActive = false
-    }
+    override fun close()
 }
+
+/**
+ * Sends a request to LLM and gets a structured response.
+ *
+ * This is a simple version of the full `requestLLMStructured`. Unlike the full version, it does not require specifying
+ * struct definitions and structured output modes manually. It attempts to find the best approach to provide a structured
+ * output based on the defined [model] capabilities.
+ *
+ * @param T The structure to request.
+ * @param examples Optional list of examples in case manual mode will be used. These examples might help the model to
+ * understand the format better.
+ * @param fixingParser Optional parser that handles malformed responses by using an auxiliary LLM to
+ * intelligently fix parsing errors. When specified, parsing errors trigger additional
+ * LLM calls with error context to attempt correction of the structure format.
+ */
+public suspend inline fun <reified T> AIAgentLLMSession.requestLLMStructured(
+    examples: List<T> = emptyList(),
+    fixingParser: StructureFixingParser? = null
+): Result<StructuredResponse<T>> = requestLLMStructured(
+    serializer = serializer<T>(),
+    examples = examples,
+    fixingParser = fixingParser,
+)

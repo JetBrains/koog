@@ -1,7 +1,7 @@
 package ai.koog.spring.sandwich.agents
 
 import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.agent.AIAgent.Companion.State
+import ai.koog.agents.core.agent.AIAgentState
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.reflect.tools
 import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
@@ -32,7 +32,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class KoogAgentService(
-    private val promptExecutor: MultiLLMPromptExecutor,
+    private val promptExecutor: PromptExecutor,
     private val spanExporters: List<SpanExporter>,
     private val buildProps: BuildProperties,
 ) {

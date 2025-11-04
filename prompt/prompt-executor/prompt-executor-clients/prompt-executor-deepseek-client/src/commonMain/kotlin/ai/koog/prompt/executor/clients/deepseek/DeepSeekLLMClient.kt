@@ -24,6 +24,7 @@ import ai.koog.prompt.streaming.StreamFrameFlowBuilder
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import kotlinx.datetime.Clock
+import kotlin.jvm.JvmOverloads
 
 /**
  * Configuration settings for connecting to the DeepSeek API.
@@ -48,7 +49,7 @@ public class DeepSeekClientSettings(
  * defaults to "https://api.deepseek.com" and 900s
  * @param clock Clock instance used for tracking response metadata timestamps.
  */
-public class DeepSeekLLMClient(
+public class DeepSeekLLMClient @JvmOverloads constructor(
     apiKey: String,
     private val settings: DeepSeekClientSettings = DeepSeekClientSettings(),
     baseClient: HttpClient = HttpClient(),

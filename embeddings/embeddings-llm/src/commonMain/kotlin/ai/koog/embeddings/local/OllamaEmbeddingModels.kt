@@ -3,6 +3,8 @@ package ai.koog.embeddings.local
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
+import kotlin.jvm.JvmField
+import kotlin.jvm.JvmStatic
 
 /**
  * Ollama embedding models.
@@ -21,6 +23,7 @@ public object OllamaEmbeddingModels {
      * Performance: High-quality embeddings for semantic search and text similarity tasks
      * Tradeoffs: Balanced between quality and efficiency
      */
+    @JvmField
     public val NOMIC_EMBED_TEXT: LLModel = LLModel(
         provider = LLMProvider.Ollama,
         id = "nomic-embed-text",
@@ -37,6 +40,7 @@ public object OllamaEmbeddingModels {
      * Performance: Fast inference with good quality for general text embeddings
      * Tradeoffs: Smaller model size with reduced context length, but very efficient
      */
+    @JvmField
     public val ALL_MINI_LM: LLModel = LLModel(
         provider = LLMProvider.Ollama,
         id = "all-minilm",
@@ -53,6 +57,7 @@ public object OllamaEmbeddingModels {
      * Performance: Strong performance across 100+ languages
      * Tradeoffs: Larger model size but provides excellent multilingual capabilities
      */
+    @JvmField
     public val MULTILINGUAL_E5: LLModel = LLModel(
         provider = LLMProvider.Ollama,
         id = "zylonai/multilingual-e5-large",
@@ -69,6 +74,7 @@ public object OllamaEmbeddingModels {
      * Performance: Excellent for English text retrieval and semantic search
      * Tradeoffs: Larger model size but provides high-quality embeddings
      */
+    @JvmField
     public val BGE_LARGE: LLModel = LLModel(
         provider = LLMProvider.Ollama,
         id = "bge-large",
@@ -86,6 +92,7 @@ public object OllamaEmbeddingModels {
      * It can be used in components that require referencing or interacting
      * with this specific model configuration.
      */
+    @JvmField
     public val MXBAI_EMBED_LARGE: LLModel = LLModel(
         provider = LLMProvider.Ollama,
         id = "mxbai-embed-large",

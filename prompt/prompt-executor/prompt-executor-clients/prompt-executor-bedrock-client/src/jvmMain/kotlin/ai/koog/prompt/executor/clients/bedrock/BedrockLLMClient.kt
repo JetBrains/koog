@@ -104,7 +104,7 @@ public class BedrockGuardrailsSettings(
  * @param clock A clock used for time-based operations
  * @return A configured [LLMClient] instance for Bedrock
  */
-public class BedrockLLMClient(
+public class BedrockLLMClient @JvmOverloads constructor(
     internal val bedrockClient: BedrockRuntimeClient,
     private val moderationGuardrailsSettings: BedrockGuardrailsSettings? = null,
     private val fallbackModelFamily: BedrockModelFamilies? = null,

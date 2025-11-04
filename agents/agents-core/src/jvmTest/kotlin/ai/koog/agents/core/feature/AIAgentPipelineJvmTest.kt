@@ -1,3 +1,5 @@
+@file:OptIn(InternalAgentsApi::class)
+
 package ai.koog.agents.core.feature
 
 import ai.koog.agents.core.agent.GraphAIAgent
@@ -5,6 +7,7 @@ import ai.koog.agents.core.agent.GraphAIAgent.FeatureContext
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.annotation.ExperimentalAgentsApi
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.dsl.extension.nodeDoNothing
@@ -16,6 +19,7 @@ import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.network.NetUtil
 import ai.koog.agents.testing.tools.getMockExecutor
+import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.model.PromptExecutor
@@ -47,6 +51,12 @@ class AIAgentPipelineJvmTest {
     companion object {
         private val testTimeout = 10.seconds
     }
+
+    val agentConfig = AIAgentConfig(
+        Prompt.Empty,
+        OpenAIModels.Chat.GPT4o,
+        10
+    )
 
     @AfterEach
     fun cleanup() {
@@ -87,7 +97,7 @@ class AIAgentPipelineJvmTest {
         )
 
         // Run prepare features logic
-        AIAgentGraphPipeline().use { pipeline ->
+        AIAgentGraphPipeline(agentConfig).use { pipeline ->
             pipeline.prepareFeatures()
 
             // Check Debugger feature parameters
@@ -111,7 +121,7 @@ class AIAgentPipelineJvmTest {
         System.setProperty(Debugger.KOOG_DEBUGGER_WAIT_CONNECTION_TIMEOUT_MS_VM_OPTION, "$expectedWaitConnectionTimeout")
 
         // Run prepare features logic
-        AIAgentGraphPipeline().use { pipeline ->
+        AIAgentGraphPipeline(agentConfig).use { pipeline ->
             pipeline.prepareFeatures()
 
             // Check Debugger feature parameters
@@ -174,7 +184,7 @@ class AIAgentPipelineJvmTest {
             "unknown-feature"
         )
 
-        AIAgentGraphPipeline().use { pipeline ->
+        AIAgentGraphPipeline(agentConfig).use { pipeline ->
             pipeline.prepareFeatures()
 
             val debuggerFeature = pipeline.feature(Debugger::class, Debugger)
@@ -195,7 +205,7 @@ class AIAgentPipelineJvmTest {
         System.setProperty(Debugger.KOOG_DEBUGGER_WAIT_CONNECTION_TIMEOUT_MS_VM_OPTION, "1")
 
         // Run prepare features logic
-        AIAgentGraphPipeline().use { pipeline ->
+        AIAgentGraphPipeline(agentConfig).use { pipeline ->
             pipeline.prepareFeatures()
 
             // Check Debugger feature is installed
@@ -217,7 +227,7 @@ class AIAgentPipelineJvmTest {
         System.setProperty(Debugger.KOOG_DEBUGGER_WAIT_CONNECTION_TIMEOUT_MS_VM_OPTION, "1")
 
         // Run prepare features logic
-        AIAgentGraphPipeline().use { pipeline ->
+        AIAgentGraphPipeline(agentConfig).use { pipeline ->
             pipeline.prepareFeatures()
 
             // Check Debugger feature is installed

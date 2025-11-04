@@ -9,6 +9,7 @@ import ai.koog.rag.base.files.createDirectory
 import ai.koog.rag.base.files.readText
 import ai.koog.rag.base.files.writeText
 import kotlinx.serialization.json.Json
+import kotlin.jvm.JvmOverloads
 
 @Deprecated(
     "`FilePersistencyStorageProvider` has been renamed to `FilePersistenceStorageProvider`",
@@ -29,7 +30,7 @@ public typealias FilePersistencyStorageProvider<Path> = FilePersistenceStoragePr
  * @param fs A file system provider enabling read and write operations for file storage.
  * @param root Root file path where the checkpoint storage will organize data.
  */
-public open class FilePersistenceStorageProvider<Path>(
+public open class FilePersistenceStorageProvider<Path> @JvmOverloads constructor(
     private val fs: FileSystemProvider.ReadWrite<Path>,
     private val root: Path,
     private val json: Json = PersistenceUtils.defaultCheckpointJson

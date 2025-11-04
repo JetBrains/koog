@@ -3,18 +3,6 @@ package ai.koog.agents.snapshot.feature
 import ai.koog.agents.core.tools.reflect.asTool
 import kotlin.reflect.KFunction
 
-/**
- * Registers a relationship between a tool and its corresponding rollback tool using the specified functions.
- *
- * @param toolFunction The function representing the primary tool to register.
- * @param rollbackToolFunction The function representing the rollback counterpart to the primary tool.
- */
-public fun RollbackToolRegistry.Builder.registerRollback(
-    toolFunction: KFunction<*>,
-    rollbackToolFunction: KFunction<*>
-) {
-    this.registerRollback(toolFunction.asTool(), rollbackToolFunction.asTool())
-}
 
 /**
  * Adds a tool and its corresponding rollback tool to the registry.

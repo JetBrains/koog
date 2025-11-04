@@ -88,7 +88,7 @@ class LLMAsJudgeNodeTest {
             storage = mockk(),
             runId = "run-1",
             strategyName = "test-strategy",
-            pipeline = AIAgentGraphPipeline(),
+            pipeline = AIAgentGraphPipeline(agentConfig),
             executionInfo = executionInfo,
             parentContext = null
         )

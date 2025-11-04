@@ -2,6 +2,7 @@ package ai.koog.a2a.model
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
+import kotlin.jvm.JvmOverloads
 
 /**
  * Defines the parameters for a request to send a message to an agent. This can be used
@@ -12,7 +13,7 @@ import kotlinx.serialization.json.JsonObject
  * @property metadata Optional metadata for extensions.
  */
 @Serializable
-public data class MessageSendParams(
+public data class MessageSendParams @JvmOverloads constructor(
     public val message: Message,
     public val configuration: MessageSendConfiguration? = null,
     public val metadata: JsonObject? = null,
@@ -27,7 +28,7 @@ public data class MessageSendParams(
  * @property blocking If true, the client will wait for the task to complete. The server may reject this if the task is long-running.
  */
 @Serializable
-public data class MessageSendConfiguration(
+public data class MessageSendConfiguration @JvmOverloads constructor(
     public val blocking: Boolean? = null,
     public val acceptedOutputModes: List<String>? = null,
     public val historyLength: Int? = null,
