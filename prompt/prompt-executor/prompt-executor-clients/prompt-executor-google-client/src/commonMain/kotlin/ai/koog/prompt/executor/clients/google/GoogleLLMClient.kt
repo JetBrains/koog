@@ -637,14 +637,17 @@ public open class GoogleLLMClient(
                         }
                     }
 
-                is GooglePart.FunctionCall -> Message.Tool.Call(
-                    id = Uuid.random().toString(),
-                    tool = part.functionCall.name,
-                    content = part.functionCall.args.toString(),
-                    metaInfo = metaInfo
-                )
+                    is GooglePart.FunctionCall -> add(
+                        Message.Tool.Call(
+                            id = Uuid.random().toString(),
+                            tool = part.functionCall.name,
+                            content = part.functionCall.args.toString(),
+                            metaInfo = metaInfo
+                        )
+                    )
 
-                else -> error("Not supported part type: $part")
+                    else -> error("Not supported part type: $part")
+                }
             }
         }
 
