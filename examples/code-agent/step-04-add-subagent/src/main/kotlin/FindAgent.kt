@@ -8,6 +8,7 @@ import ai.koog.agents.ext.tool.file.ReadFileTool
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.koog.rag.base.files.JVMFileSystemProvider
+import ai.koog.agents.ext.tool.search.RegexSearchTool
 
 val findAgent = AIAgent(
     promptExecutor = simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")),
@@ -32,6 +33,7 @@ val findAgent = AIAgent(
     toolRegistry = ToolRegistry {
         tool(ListDirectoryTool(JVMFileSystemProvider.ReadOnly))
         tool(ReadFileTool(JVMFileSystemProvider.ReadOnly))
+        tool(RegexSearchTool(JVMFileSystemProvider.ReadOnly))
     },
     maxIterations = 400
 ) {
