@@ -14,6 +14,22 @@ import kotlin.reflect.KClass
 public interface KoogHttpClient {
 
     /**
+     * Sends an HTTP GET request to the specified `path` with the provided `request` payload.
+     * The type of the request body and the expected response must be explicitly specified
+     * using `requestBodyType` and `responseType`, respectively.
+     *
+     * @param path The endpoint path to which the HTTP POST request is sent.
+     * @param responseType The Kotlin class reference representing the expected type of the response.
+     *
+     * @return The response payload, deserialized into the specified type.
+     * @throws Exception if the request fails or the response cannot be deserialized.
+     */
+    public suspend fun <R : Any> get(
+        path: String,
+        responseType: KClass<R>,
+    ): R
+
+    /**
      * Sends an HTTP POST request to the specified `path` with the provided `request` payload.
      * The type of the request body and the expected response must be explicitly specified
      * using `requestBodyType` and `responseType`, respectively.
@@ -79,6 +95,17 @@ public suspend inline fun <reified T : Any, reified R : Any> KoogHttpClient.post
     path: String,
     request: T
 ): R = post(path, request, T::class, R::class)
+
+/**
+ * Sends an HTTP GET request to the specified `path` with the provided parameters.
+ *
+ * @param path The endpoint path to which the HTTP GET request is sent.
+ * @return The response payload, deserialized into the specified type.
+ * @throws Exception if the request fails or the response cannot be deserialized.
+ */
+public suspend inline fun <reified R : Any> KoogHttpClient.get(
+    path: String,
+): R = get(path, R::class)
 
 /**
  * Initiates a Server-Sent Events (SSE) streaming operation over an HTTP POST request.

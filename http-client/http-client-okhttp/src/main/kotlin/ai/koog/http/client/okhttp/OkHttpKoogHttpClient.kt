@@ -24,7 +24,7 @@ import kotlin.reflect.KClass
 
 /**
  * OkHttpKoogHttpClient is an implementation of the KoogHttpClient interface, utilizing OkHttp's client
- * to perform HTTP operations, including POST requests and Server-Sent Events (SSE) streaming.
+ * to perform HTTP operations, including GET, POST requests and Server-Sent Events (SSE) streaming.
  *
  * This client provides enhanced logging, flexible request and response handling, and supports
  * configurability for underlying OkHttp client instances.
@@ -40,6 +40,40 @@ public class OkHttpKoogHttpClient internal constructor(
     private val okHttpClient: OkHttpClient,
     private val json: Json
 ) : KoogHttpClient {
+
+    private fun <R : Any> processResponse(response: Response, responseType: KClass<R>): R {
+        if (response.isSuccessful) {
+            val responseBody = response.body.string()
+            if (responseType == String::class) {
+                @Suppress("UNCHECKED_CAST")
+                return responseBody as R
+            } else {
+                val serializer = serializer(responseType.java)
+                @Suppress("UNCHECKED_CAST")
+                return json.decodeFromString(serializer, responseBody) as R
+            }
+        }
+        val errorBody = response.body.string()
+        val errorMessage = "Error from $clientName API: ${response.code}\nBody:\n$errorBody"
+
+        logger.error { errorMessage }
+        error(errorMessage)
+    }
+
+    override suspend fun <R : Any> get(
+        path: String,
+        responseType: KClass<R>
+    ): R = withContext(Dispatchers.SuitableForIO) {
+        val httpRequest = Request.Builder()
+            .url(path)
+            .get()
+            .build()
+
+        val response: Response = okHttpClient.newCall(httpRequest).execute()
+        response.use {
+            processResponse(response, responseType)
+        }
+    }
 
     override suspend fun <T : Any, R : Any> post(
         path: String,
@@ -57,23 +91,7 @@ public class OkHttpKoogHttpClient internal constructor(
         val response: Response = okHttpClient.newCall(httpRequest).execute()
 
         response.use {
-            if (response.isSuccessful) {
-                val responseBody = response.body.string()
-                if (responseType == String::class) {
-                    @Suppress("UNCHECKED_CAST")
-                    responseBody as R
-                } else {
-                    val serializer = serializer(responseType.java)
-                    @Suppress("UNCHECKED_CAST")
-                    json.decodeFromString(serializer, responseBody) as R
-                }
-            } else {
-                val errorBody = response.body.string()
-                val errorMessage = "Error from $clientName API: ${response.code}\nBody:\n$errorBody"
-
-                logger.error { errorMessage }
-                error(errorMessage)
-            }
+            processResponse(response, responseType)
         }
     }
 

@@ -12,6 +12,7 @@ import io.ktor.server.request.receiveText
 import io.ktor.server.response.header
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
+import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
 import io.ktor.server.sse.SSE
@@ -32,9 +33,19 @@ class MockWebServer {
     private val portNumber = AtomicInt(0)
 
     /**
-     * Configuration for a mock endpoint
+     * Configuration for a mock get endpoint
      */
-    data class EndpointConfig(
+    data class GetEndpointConfig(
+        val path: String,
+        val responseBody: String,
+        val statusCode: HttpStatusCode = HttpStatusCode.OK,
+        val contentType: ContentType = ContentType.Text.Plain
+    )
+
+    /**
+     * Configuration for a mock post endpoint
+     */
+    data class PostEndpointConfig(
         val path: String,
         val responseBody: String,
         val statusCode: HttpStatusCode = HttpStatusCode.OK,
@@ -53,12 +64,13 @@ class MockWebServer {
      * Starts the server with the specified endpoint configurations
      */
     fun start(
-        endpoints: List<EndpointConfig> = emptyList(),
+        getEndpoints: List<GetEndpointConfig> = emptyList(),
+        postEndpoints: List<PostEndpointConfig> = emptyList(),
         sseEndpoints: List<SSEEndpointConfig> = emptyList(),
         port: Int = 0
     ) {
         require(
-            !(endpoints.isNotEmpty() && sseEndpoints.isNotEmpty())
+            !(postEndpoints.isNotEmpty() && sseEndpoints.isNotEmpty())
         ) { "Cannot specify both regular and SSE endpoints" }
 
         server = embeddedServer(CIO, port = port) {
@@ -67,8 +79,21 @@ class MockWebServer {
             }
 
             routing {
+                // Configure regular GET endpoints
+                getEndpoints.forEach { config ->
+                    get(config.path) {
+                        call.request.queryParameters
+
+                        call.respondText(
+                            text = config.responseBody,
+                            contentType = config.contentType,
+                            status = config.statusCode
+                        )
+                    }
+                }
+
                 // Configure regular POST endpoints
-                endpoints.forEach { config ->
+                postEndpoints.forEach { config ->
                     post(config.path) {
                         call.receiveText()
 

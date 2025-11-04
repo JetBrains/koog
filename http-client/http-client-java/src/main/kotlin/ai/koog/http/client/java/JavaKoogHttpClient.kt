@@ -19,7 +19,7 @@ import kotlin.reflect.KClass
 
 /**
  * JavaKoogHttpClient is an implementation of the KoogHttpClient interface, utilizing Java 11's standard HttpClient
- * to perform HTTP operations, including POST requests and Server-Sent Events (SSE) streaming.
+ * to perform HTTP operations, including GET, POST requests and Server-Sent Events (SSE) streaming.
  *
  * This client provides enhanced logging, flexible request and response handling, and supports
  * configurability for underlying Java HttpClient instances.
@@ -35,11 +35,43 @@ public class JavaKoogHttpClient internal constructor(
     private val httpClient: HttpClient,
     private val json: Json
 ) : KoogHttpClient {
-
     private data class RequestBody(
         val body: String,
         val contentType: String
     )
+
+    private fun <R : Any> processResponse(response: HttpResponse<String>, responseType: KClass<R>): R {
+        if (response.statusCode() in 200..299) {
+            val responseBody = response.body()
+            if (responseType == String::class) {
+                @Suppress("UNCHECKED_CAST")
+                return responseBody as R
+            } else {
+                val serializer = serializer(responseType.java)
+                @Suppress("UNCHECKED_CAST")
+                return json.decodeFromString(serializer, responseBody) as R
+            }
+        }
+        val errorBody = response.body()
+        val errorMessage = "Error from $clientName API: ${response.statusCode()}\nBody:\n$errorBody"
+
+        logger.error { errorMessage }
+        error(errorMessage)
+    }
+
+    override suspend fun <R : Any> get(
+        path: String,
+        responseType: KClass<R>
+    ): R = withContext(Dispatchers.SuitableForIO) {
+        val httpRequest = HttpRequest.newBuilder()
+            .uri(URI.create(path))
+            .GET()
+            .build()
+
+        val response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString())
+
+        processResponse(response, responseType)
+    }
 
     override suspend fun <T : Any, R : Any> post(
         path: String,
@@ -57,23 +89,7 @@ public class JavaKoogHttpClient internal constructor(
 
         val response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofString())
 
-        if (response.statusCode() in 200..299) {
-            val responseBody = response.body()
-            if (responseType == String::class) {
-                @Suppress("UNCHECKED_CAST")
-                responseBody as R
-            } else {
-                val serializer = serializer(responseType.java)
-                @Suppress("UNCHECKED_CAST")
-                json.decodeFromString(serializer, responseBody) as R
-            }
-        } else {
-            val errorBody = response.body()
-            val errorMessage = "Error from $clientName API: ${response.statusCode()}\nBody:\n$errorBody"
-
-            logger.error { errorMessage }
-            error(errorMessage)
-        }
+        processResponse(response, responseType)
     }
 
     override fun <T : Any, R : Any, O : Any> sse(
