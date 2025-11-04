@@ -1,6 +1,7 @@
 package ai.koog.http.client.test
 
 import ai.koog.http.client.KoogHttpClient
+import ai.koog.http.client.get
 import ai.koog.http.client.post
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
@@ -32,13 +33,13 @@ abstract class BaseKoogHttpClientTest {
     protected abstract fun createClient(): KoogHttpClient
 
     @Suppress("FunctionName")
-    open fun `test return success string response`(): Unit = runTest {
+    open fun `test return success string response on post`(): Unit = runTest {
         val responseBody = "RESPONSE_OK"
 
         val mockServer = MockWebServer()
         mockServer.start(
-            endpoints = listOf(
-                MockWebServer.EndpointConfig(
+            postEndpoints = listOf(
+                MockWebServer.PostEndpointConfig(
                     path = "/echo",
                     responseBody = responseBody,
                     statusCode = HttpStatusCode.OK,
@@ -60,13 +61,40 @@ abstract class BaseKoogHttpClientTest {
     }
 
     @Suppress("FunctionName")
+    open fun `test return success string response on get`(): Unit = runTest {
+        val responseBody = "RESPONSE_OK"
+
+        val mockServer = MockWebServer()
+        mockServer.start(
+            getEndpoints = listOf(
+                MockWebServer.GetEndpointConfig(
+                    path = "/echo",
+                    responseBody = responseBody,
+                    statusCode = HttpStatusCode.OK,
+                    contentType = ContentType.Text.Plain
+                )
+            )
+        )
+
+        val client = createClient()
+
+        val result: String = client.get(
+            path = mockServer.url("/echo")
+        )
+
+        assertEquals(responseBody, result)
+
+        mockServer.stop()
+    }
+
+    @Suppress("FunctionName")
     open fun `test post JSON request and get JSON response`(): Unit = runTest {
         val responseBody = """{"response":"Okay"}"""
 
         val mockServer = MockWebServer()
         mockServer.start(
-            endpoints = listOf(
-                MockWebServer.EndpointConfig(
+            postEndpoints = listOf(
+                MockWebServer.PostEndpointConfig(
                     path = "/echo",
                     responseBody = responseBody,
                     statusCode = HttpStatusCode.OK,
@@ -93,8 +121,8 @@ abstract class BaseKoogHttpClientTest {
     open fun `test handle on non-success status`(): Unit = runTest {
         val mockServer = MockWebServer()
         mockServer.start(
-            endpoints = listOf(
-                MockWebServer.EndpointConfig(
+            postEndpoints = listOf(
+                MockWebServer.PostEndpointConfig(
                     path = "/fail",
                     responseBody = "Bad things",
                     statusCode = HttpStatusCode.BadRequest,

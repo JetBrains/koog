@@ -10,9 +10,11 @@ import io.ktor.client.engine.HttpClientEngineConfig
 import io.ktor.client.plugins.sse.SSEClientException
 import io.ktor.client.plugins.sse.sse
 import io.ktor.client.request.accept
+import io.ktor.client.request.get
 import io.ktor.client.request.headers
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
 import io.ktor.client.statement.readRawBytes
 import io.ktor.http.ContentType
@@ -31,7 +33,7 @@ import kotlin.reflect.KClass
 
 /**
  * KtorHttpClient is an implementation of the KoogHttpClient interface, utilizing Ktor's HttpClient
- * to perform HTTP operations, including POST requests and Server-Sent Events (SSE) streaming.
+ * to perform HTTP operations, including GET, POST requests and Server-Sent Events (SSE) streaming.
  *
  * This client provides enhanced logging, flexible request and response handling, and supports
  * configurability for underlying Ktor HttpClient instances.
@@ -64,6 +66,30 @@ public class KtorKoogHttpClient internal constructor(
      */
     public val ktorClient: HttpClient = baseClient.config(configurer)
 
+    private suspend fun <R : Any> processResponse(response: HttpResponse, responseType: KClass<R>): R {
+        if (response.status.isSuccess()) {
+            if (responseType == String::class) {
+                @Suppress("UNCHECKED_CAST")
+                return response.bodyAsText() as R
+            } else {
+                return response.body(TypeInfo(responseType))
+            }
+        }
+        val errorBody = response.bodyAsText()
+        val errorMessage = "Error from $clientName API: ${response.status}\nBody:\n$errorBody"
+
+        logger.error { errorMessage }
+        error(errorMessage)
+    }
+
+    override suspend fun <R : Any> get(
+        path: String,
+        responseType: KClass<R>,
+    ): R = withContext(Dispatchers.SuitableForIO) {
+        val response = ktorClient.get(path)
+        processResponse(response, responseType)
+    }
+
     override suspend fun <T : Any, R : Any> post(
         path: String,
         request: T,
@@ -79,20 +105,7 @@ public class KtorKoogHttpClient internal constructor(
             }
         }
 
-        if (response.status.isSuccess()) {
-            if (responseType == String::class) {
-                @Suppress("UNCHECKED_CAST")
-                response.bodyAsText() as R
-            } else {
-                response.body(TypeInfo(responseType))
-            }
-        } else {
-            val errorBody = response.bodyAsText()
-            val errorMessage = "Error from $clientName API: ${response.status}\nBody:\n$errorBody"
-
-            logger.error { errorMessage }
-            error(errorMessage)
-        }
+        processResponse(response, responseType)
     }
 
     override fun <T : Any, R : Any, O : Any> sse(

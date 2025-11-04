@@ -22,8 +22,12 @@ class OkHttpKoogHttpClientTest : BaseKoogHttpClientTest() {
     }
 
     @Test
-    override fun `test return success string response`() =
-        super.`test return success string response`()
+    override fun `test return success string response on post`() =
+        super.`test return success string response on post`()
+
+    @Test
+    override fun `test return success string response on get`() =
+        super.`test return success string response on get`()
 
     @Test
     override fun `test post JSON request and get JSON response`() =
