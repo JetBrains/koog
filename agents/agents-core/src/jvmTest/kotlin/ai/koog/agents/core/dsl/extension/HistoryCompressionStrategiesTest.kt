@@ -165,7 +165,8 @@ class HistoryCompressionStrategiesTest {
                 listOf(
                     Message.System("System message", metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
                     Message.User("User message", metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
-                    Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(2.minutes)))
+                    Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(2.minutes))),
+                    Message.Tool.Call("ID", "DummyTool", "Args", metaInfo = ResponseMetaInfo.create(testClock(3.minutes)))
                 )
             ),
             Arguments.of(
@@ -221,7 +222,8 @@ class HistoryCompressionStrategiesTest {
                 listOf(
                     Message.System("System message", metaInfo = RequestMetaInfo.create(testClock(0.minutes))),
                     Message.User("User message", metaInfo = RequestMetaInfo.create(testClock(1.minutes))),
-                    Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(2.minutes)))
+                    Message.Assistant("TLDR", metaInfo = ResponseMetaInfo.create(testClock(2.minutes))),
+                    Message.Tool.Call("ID", "DummyTool", "Args", metaInfo = ResponseMetaInfo.create(testClock(3.minutes)))
                 )
             ),
             Arguments.of(

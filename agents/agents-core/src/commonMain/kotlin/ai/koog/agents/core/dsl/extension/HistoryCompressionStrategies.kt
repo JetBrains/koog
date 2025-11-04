@@ -84,6 +84,9 @@ public abstract class HistoryCompressionStrategy {
         // Add the tldr messages
         messages.addAll(tldrMessages)
 
+        val trailingToolCalls = originalMessages.takeLastWhile { it is Message.Tool.Call }
+        messages.addAll(trailingToolCalls)
+
         return messages
     }
 
