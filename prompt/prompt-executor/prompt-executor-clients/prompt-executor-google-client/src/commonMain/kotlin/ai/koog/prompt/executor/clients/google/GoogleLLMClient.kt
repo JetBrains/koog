@@ -603,23 +603,39 @@ public open class GoogleLLMClient(
     @OptIn(ExperimentalUuidApi::class)
     private fun processGoogleCandidate(candidate: GoogleCandidate, metaInfo: ResponseMetaInfo): List<Message.Response> {
         val parts = candidate.content?.parts.orEmpty()
-        val responses = parts.map { part ->
-            when (part) {
-                is GooglePart.Text -> {
-                    if (part.thought ?: false) {
+        val responses = mutableListOf<Message.Response>()
+        with(responses) {
+            parts.forEach { part ->
+                if (part.thoughtSignature != null && part.thought == false) {
+                    add(
                         Message.Reasoning(
                             encrypted = part.thoughtSignature,
-                            content = part.text,
+                            content = "",
                             metaInfo = metaInfo
                         )
-                    } else {
-                        Message.Assistant(
-                            content = part.text,
-                            finishReason = candidate.finishReason,
-                            metaInfo = metaInfo
-                        )
-                    }
+                    )
                 }
+
+                when (part) {
+                    is GooglePart.Text -> {
+                        if (part.thought ?: false) {
+                            add(
+                                Message.Reasoning(
+                                    encrypted = part.thoughtSignature,
+                                    content = part.text,
+                                    metaInfo = metaInfo
+                                )
+                            )
+                        } else {
+                            add(
+                                Message.Assistant(
+                                    content = part.text,
+                                    finishReason = candidate.finishReason,
+                                    metaInfo = metaInfo
+                                )
+                            )
+                        }
+                    }
 
                 is GooglePart.FunctionCall -> Message.Tool.Call(
                     id = Uuid.random().toString(),

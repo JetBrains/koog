@@ -58,6 +58,7 @@ internal class GoogleContent(
 @Serializable(with = GooglePartSerializer::class)
 internal sealed interface GooglePart {
     val thought: Boolean?
+    val thoughtSignature: String?
 
     /**
      * Represents a text element in a Google-specific data context.
@@ -77,7 +78,7 @@ internal sealed interface GooglePart {
     data class Text(
         val text: String,
         override val thought: Boolean? = null,
-        val thoughtSignature: String? = null
+        override val thoughtSignature: String? = null,
     ) : GooglePart
 
     /**
@@ -96,6 +97,7 @@ internal sealed interface GooglePart {
     data class InlineData(
         val inlineData: GoogleData.Blob,
         override val thought: Boolean? = null,
+        override val thoughtSignature: String? = null,
     ) : GooglePart
 
     /**
@@ -115,6 +117,7 @@ internal sealed interface GooglePart {
     data class FileData(
         val fileData: GoogleData.FileData,
         override val thought: Boolean? = null,
+        override val thoughtSignature: String? = null,
     ) : GooglePart
 
     /**
@@ -130,6 +133,7 @@ internal sealed interface GooglePart {
     data class FunctionCall(
         val functionCall: GoogleData.FunctionCall,
         override val thought: Boolean? = null,
+        override val thoughtSignature: String? = null,
     ) : GooglePart
 
     /**
@@ -148,6 +152,7 @@ internal sealed interface GooglePart {
     data class FunctionResponse(
         val functionResponse: GoogleData.FunctionResponse,
         override val thought: Boolean? = null,
+        override val thoughtSignature: String? = null,
     ) : GooglePart
 }
 
