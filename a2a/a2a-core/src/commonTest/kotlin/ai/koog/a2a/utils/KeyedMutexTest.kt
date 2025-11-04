@@ -3,7 +3,6 @@ package ai.koog.a2a.utils
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.yield
 import kotlin.test.Test

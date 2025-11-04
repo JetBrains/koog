@@ -7,15 +7,15 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.google.models.GoogleFunctionCallingMode
 import ai.koog.prompt.executor.clients.google.models.GoogleThinkingConfig
 import ai.koog.prompt.params.LLMParams
+import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 
 class GoogleLLMClientTest {
 
@@ -31,7 +31,7 @@ class GoogleLLMClientTest {
             model = model,
             tools = emptyList()
         )
-        assertEquals(null, request.generationConfig!!.maxOutputTokens)
+        request.generationConfig!!.maxOutputTokens shouldBe null
     }
 
     @Test
@@ -47,7 +47,7 @@ class GoogleLLMClientTest {
             model = model,
             tools = emptyList()
         )
-        assertEquals(100, request.generationConfig!!.maxOutputTokens)
+        request.generationConfig!!.maxOutputTokens shouldBe 100
     }
 
     @Test
@@ -76,21 +76,19 @@ class GoogleLLMClientTest {
             tools = listOf(tool)
         )
 
-        assertNotNull(request.tools)
+        request.tools.shouldNotBeNull()
         val tools = request.tools
-        assertEquals(1, tools.size)
+        tools.size shouldBe 1
         val functionDeclarations = tools.first().functionDeclarations!!
         val functionDeclaration = functionDeclarations.first()
-        assertEquals("test_tool", functionDeclaration.name)
+        functionDeclaration.name shouldBe "test_tool"
 
         val parameters = functionDeclaration.parameters!!
         val properties = parameters["properties"]?.jsonObject!!
-        assertNotNull(properties)
 
         val nullParam = properties["nullParam"]?.jsonObject!!
-        assertNotNull(nullParam)
-        assertEquals("null", nullParam["type"]?.jsonPrimitive?.content)
-        assertEquals("A null parameter", nullParam["description"]?.jsonPrimitive?.content)
+        nullParam["type"]?.jsonPrimitive?.content shouldBe "null"
+        nullParam["description"]?.jsonPrimitive?.content shouldBe "A null parameter"
     }
 
     @Test
@@ -132,34 +130,32 @@ class GoogleLLMClientTest {
             tools = listOf(tool)
         )
 
-        assertNotNull(request.tools)
+        request.tools.shouldNotBeNull()
         val tools = request.tools
-        assertEquals(1, tools.size)
+        tools.size shouldBe 1
         val functionDeclarations = tools.first().functionDeclarations!!
         val functionDeclaration = functionDeclarations.first()
-        assertEquals("test_tool", functionDeclaration.name)
+        functionDeclaration.name shouldBe "test_tool"
 
         val parameters = functionDeclaration.parameters!!
         val properties = parameters["properties"]?.jsonObject!!
-        assertNotNull(properties)
 
         val valueParam = properties["value"]?.jsonObject!!
-        assertNotNull(valueParam)
-        assertEquals("A value that can be string or number", valueParam["description"]?.jsonPrimitive?.content)
+        valueParam["description"]?.jsonPrimitive?.content shouldBe "A value that can be string or number"
 
         val anyOf = valueParam["anyOf"]?.jsonArray
-        assertNotNull(anyOf, "anyOf array should exist")
-        assertEquals(2, anyOf.size, "anyOf should have 2 options")
+        anyOf.shouldNotBeNull()
+        anyOf.size shouldBe 2
 
-        // Verify first option (String)
+        // Verify the first option (String)
         val stringOption = anyOf[0].jsonObject
-        assertEquals("string", stringOption["type"]?.jsonPrimitive?.content)
-        assertEquals("String option", stringOption["description"]?.jsonPrimitive?.content)
+        stringOption["type"]?.jsonPrimitive?.content shouldBe "string"
+        stringOption["description"]?.jsonPrimitive?.content shouldBe "String option"
 
-        // Verify second option (Number)
+        // Verify the second option (Number)
         val numberOption = anyOf[1].jsonObject
-        assertEquals("number", numberOption["type"]?.jsonPrimitive?.content)
-        assertEquals("Number option", numberOption["description"]?.jsonPrimitive?.content)
+        numberOption["type"]?.jsonPrimitive?.content shouldBe "number"
+        numberOption["description"]?.jsonPrimitive?.content shouldBe "Number option"
     }
 
     @Test
@@ -194,24 +190,22 @@ class GoogleLLMClientTest {
             tools = listOf(tool)
         )
 
-        assertNotNull(request.tools)
+        request.tools.shouldNotBeNull()
         val tools = request.tools
         val functionDeclarations = tools.first().functionDeclarations!!
         val parameters = functionDeclarations.first().parameters!!
         val properties = parameters["properties"]?.jsonObject!!
-        assertNotNull(properties)
         val complexValue = properties["complexValue"]?.jsonObject!!
-        assertNotNull(complexValue)
 
         val anyOf = complexValue["anyOf"]?.jsonArray
-        assertNotNull(anyOf)
-        assertEquals(3, anyOf.size, "anyOf should have 3 options")
+        anyOf.shouldNotBeNull()
+        anyOf.size shouldBe 3
 
         // Verify the types
         val types = anyOf.map { it.jsonObject["type"]?.jsonPrimitive?.content }
-        assertTrue(types.contains("string"), "Should contain string type")
-        assertTrue(types.contains("number"), "Should contain number type")
-        assertTrue(types.contains("null"), "Should contain null type")
+        types shouldContain "string"
+        types shouldContain "number"
+        types shouldContain "null"
     }
 
     @Test
@@ -239,15 +233,15 @@ class GoogleLLMClientTest {
         )
 
         val gen = request.generationConfig!!
-        assertEquals(1024, gen.maxOutputTokens)
-        assertEquals(0.4, gen.temperature)
-        assertEquals(2, gen.candidateCount)
-        assertEquals(0.8, gen.topP)
-        assertEquals(10, gen.topK)
-        assertEquals(true, gen.thinkingConfig?.includeThoughts)
-        assertEquals(99, gen.thinkingConfig?.thinkingBudget)
-        assertNotNull(gen.additionalProperties)
-        assertEquals("v", gen.additionalProperties["custom"]?.jsonPrimitive?.content)
+        gen.maxOutputTokens shouldBe 1024
+        gen.temperature shouldBe 0.4
+        gen.candidateCount shouldBe 2
+        gen.topP shouldBe 0.8
+        gen.topK shouldBe 10
+        gen.thinkingConfig?.includeThoughts shouldBe true
+        gen.thinkingConfig?.thinkingBudget shouldBe 99
+        gen.additionalProperties.shouldNotBeNull()
+        gen.additionalProperties["custom"]?.jsonPrimitive?.content shouldBe "v"
     }
 
     @Test
@@ -267,9 +261,9 @@ class GoogleLLMClientTest {
         )
 
         val gen = request.generationConfig!!
-        assertEquals("application/json", gen.responseMimeType)
-        assertNotNull(gen.responseSchema)
-        assertEquals(null, gen.responseJsonSchema)
+        gen.responseMimeType shouldBe "application/json"
+        gen.responseSchema.shouldNotBeNull()
+        gen.responseJsonSchema shouldBe null
     }
 
     @Test
@@ -289,9 +283,9 @@ class GoogleLLMClientTest {
         )
 
         val gen = request.generationConfig!!
-        assertEquals("application/json", gen.responseMimeType)
-        assertNotNull(gen.responseJsonSchema)
-        assertEquals(null, gen.responseSchema)
+        gen.responseMimeType shouldBe "application/json"
+        gen.responseJsonSchema.shouldNotBeNull()
+        gen.responseSchema shouldBe null
     }
 
     @Test
@@ -308,18 +302,9 @@ class GoogleLLMClientTest {
             return req.toolConfig?.functionCallingConfig?.mode
         }
 
-        assertEquals(
-            GoogleFunctionCallingMode.AUTO,
-            getMode(LLMParams.ToolChoice.Auto)
-        )
-        assertEquals(
-            GoogleFunctionCallingMode.NONE,
-            getMode(LLMParams.ToolChoice.None)
-        )
-        assertEquals(
-            GoogleFunctionCallingMode.ANY,
-            getMode(LLMParams.ToolChoice.Required)
-        )
+        getMode(LLMParams.ToolChoice.Auto) shouldBe GoogleFunctionCallingMode.AUTO
+        getMode(LLMParams.ToolChoice.None) shouldBe GoogleFunctionCallingMode.NONE
+        getMode(LLMParams.ToolChoice.Required) shouldBe GoogleFunctionCallingMode.ANY
     }
 
     @Test
@@ -336,8 +321,8 @@ class GoogleLLMClientTest {
             tools = emptyList()
         )
         val fc = req.toolConfig?.functionCallingConfig
-        assertNotNull(fc)
-        assertEquals(GoogleFunctionCallingMode.ANY, fc.mode)
-        assertEquals(listOf("weather"), fc.allowedFunctionNames)
+        fc.shouldNotBeNull()
+        fc.mode shouldBe GoogleFunctionCallingMode.ANY
+        fc.allowedFunctionNames shouldBe listOf("weather")
     }
 }
