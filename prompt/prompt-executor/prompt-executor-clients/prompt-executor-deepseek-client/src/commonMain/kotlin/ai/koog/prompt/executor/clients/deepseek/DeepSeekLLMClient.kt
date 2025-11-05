@@ -10,7 +10,7 @@ import ai.koog.prompt.executor.clients.deepseek.models.DeepSeekChatCompletionRes
 import ai.koog.prompt.executor.clients.deepseek.models.DeepSeekChatCompletionStreamResponse
 import ai.koog.prompt.executor.clients.deepseek.models.DeepSeekModelsResponse
 import ai.koog.prompt.executor.clients.openai.base.AbstractOpenAILLMClient
-import ai.koog.prompt.executor.clients.openai.base.OpenAIBasedSettings
+import ai.koog.prompt.executor.clients.openai.base.OpenAIBaseSettings
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIMessage
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAITool
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolChoice
@@ -36,7 +36,7 @@ public class DeepSeekClientSettings(
     chatCompletionsPath: String = "chat/completions",
     public val modelsPath: String = "models",
     timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig()
-) : OpenAIBasedSettings(baseUrl, chatCompletionsPath, timeoutConfig)
+) : OpenAIBaseSettings(baseUrl, chatCompletionsPath, timeoutConfig)
 
 /**
  * Implementation of [LLMClient] for DeepSeek API.

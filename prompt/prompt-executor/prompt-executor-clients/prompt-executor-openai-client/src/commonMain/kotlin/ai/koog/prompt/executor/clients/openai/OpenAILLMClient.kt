@@ -9,7 +9,7 @@ import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import ai.koog.prompt.executor.clients.openai.base.AbstractOpenAILLMClient
-import ai.koog.prompt.executor.clients.openai.base.OpenAIBasedSettings
+import ai.koog.prompt.executor.clients.openai.base.OpenAIBaseSettings
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIAudioConfig
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIAudioFormat
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIAudioVoice
@@ -79,7 +79,7 @@ public class OpenAIClientSettings(
     public val embeddingsPath: String = "v1/embeddings",
     public val moderationsPath: String = "v1/moderations",
     public val modelsPath: String = "v1/models",
-) : OpenAIBasedSettings(baseUrl, chatCompletionsPath, timeoutConfig)
+) : OpenAIBaseSettings(baseUrl, chatCompletionsPath, timeoutConfig)
 
 /**
  * Implementation of [LLMClient] for OpenAI API.

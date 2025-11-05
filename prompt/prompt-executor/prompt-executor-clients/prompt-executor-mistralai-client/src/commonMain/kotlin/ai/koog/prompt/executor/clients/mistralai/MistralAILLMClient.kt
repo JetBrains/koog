@@ -18,7 +18,7 @@ import ai.koog.prompt.executor.clients.mistralai.models.MistralAIModerationRespo
 import ai.koog.prompt.executor.clients.mistralai.models.MistralAIModerationResult
 import ai.koog.prompt.executor.clients.mistralai.models.MistralModelsResponse
 import ai.koog.prompt.executor.clients.openai.base.AbstractOpenAILLMClient
-import ai.koog.prompt.executor.clients.openai.base.OpenAIBasedSettings
+import ai.koog.prompt.executor.clients.openai.base.OpenAIBaseSettings
 import ai.koog.prompt.executor.clients.openai.base.models.Content
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIContentPart
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIMessage
@@ -51,7 +51,7 @@ public class MistralAIClientSettings(
     public val moderationPath: String = "v1/moderations",
     public val modelsPath: String = "v1/models",
     timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig()
-) : OpenAIBasedSettings(baseUrl, chatCompletionsPath, timeoutConfig)
+) : OpenAIBaseSettings(baseUrl, chatCompletionsPath, timeoutConfig)
 
 /**
  * Implementation of [LLMClient] for Mistral AI.

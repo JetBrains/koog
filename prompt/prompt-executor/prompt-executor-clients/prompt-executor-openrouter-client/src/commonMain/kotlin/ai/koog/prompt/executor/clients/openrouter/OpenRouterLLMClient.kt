@@ -5,7 +5,7 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.openai.base.AbstractOpenAILLMClient
-import ai.koog.prompt.executor.clients.openai.base.OpenAIBasedSettings
+import ai.koog.prompt.executor.clients.openai.base.OpenAIBaseSettings
 import ai.koog.prompt.executor.clients.openai.base.models.Content
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIMessage
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIStaticContent
@@ -38,7 +38,7 @@ public class OpenRouterClientSettings(
     chatCompletionsPath: String = "api/v1/chat/completions",
     public val modelsPath: String = "api/v1/models",
     timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig(),
-) : OpenAIBasedSettings(baseUrl, chatCompletionsPath, timeoutConfig)
+) : OpenAIBaseSettings(baseUrl, chatCompletionsPath, timeoutConfig)
 
 /**
  * Implementation of [LLMClient] for OpenRouter API.

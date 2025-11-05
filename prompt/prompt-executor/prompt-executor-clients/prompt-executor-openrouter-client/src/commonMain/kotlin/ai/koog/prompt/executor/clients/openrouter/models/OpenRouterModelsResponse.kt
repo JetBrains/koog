@@ -5,11 +5,11 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 internal data class OpenRouterModelsResponse(
-    val data: List<OpenRouteModel>,
+    val data: List<OpenRouterModel>,
 )
 
 @Serializable
-internal data class OpenRouteModelPricing(
+internal data class OpenRouterModelPricing(
     val prompt: String,
     val completion: String,
     val request: String? = null,
@@ -31,7 +31,7 @@ internal data class OpenRouteModelPricing(
 )
 
 @Serializable
-internal data class OpenRouteModelArchitecture(
+internal data class OpenRouterModelArchitecture(
     val tokenizer: String,
     @SerialName("instruct_type")
     val instructType: String? = null,
@@ -43,7 +43,7 @@ internal data class OpenRouteModelArchitecture(
 )
 
 @Serializable
-internal data class OpenRouteModelTopProvider(
+internal data class OpenRouterModelTopProvider(
     @SerialName("context_length")
     val contextLength: Long? = null,
     @SerialName("max_completion_tokens")
@@ -53,7 +53,7 @@ internal data class OpenRouteModelTopProvider(
 )
 
 @Serializable
-internal data class OpenRouteModelPerRequestLimits(
+internal data class OpenRouterModelPerRequestLimits(
     @SerialName("prompt_tokens")
     val promptTokens: Long,
     @SerialName("completion_tokens")
@@ -61,7 +61,7 @@ internal data class OpenRouteModelPerRequestLimits(
 )
 
 @Serializable
-internal data class OpenRouteModelDefaultParameters(
+internal data class OpenRouterModelDefaultParameters(
     val temperature: Double? = null,
     @SerialName("top_p")
     val topP: Double? = null,
@@ -70,7 +70,7 @@ internal data class OpenRouteModelDefaultParameters(
 )
 
 @Serializable
-internal data class OpenRouteModel(
+internal data class OpenRouterModel(
     val id: String,
     @SerialName("canonical_slug")
     val canonicalSlug: String,
@@ -79,16 +79,16 @@ internal data class OpenRouteModel(
     val name: String,
     val created: Long,
     val description: String,
-    val pricing: OpenRouteModelPricing,
+    val pricing: OpenRouterModelPricing,
     @SerialName("context_length")
     val contextLength: Long? = null,
-    val architecture: OpenRouteModelArchitecture,
+    val architecture: OpenRouterModelArchitecture,
     @SerialName("top_provider")
-    val topProvider: OpenRouteModelTopProvider,
+    val topProvider: OpenRouterModelTopProvider,
     @SerialName("per_request_limits")
-    val perRequestLimits: OpenRouteModelPerRequestLimits? = null,
+    val perRequestLimits: OpenRouterModelPerRequestLimits? = null,
     @SerialName("supported_parameters")
     val supportedParameters: List<String>? = null,
     @SerialName("default_parameters")
-    val defaultParameters: OpenRouteModelDefaultParameters? = null,
+    val defaultParameters: OpenRouterModelDefaultParameters? = null,
 )
