@@ -13,15 +13,30 @@ import ai.koog.agents.features.opentelemetry.integration.langfuse.addLangfuseExp
 fun GraphAIAgent.FeatureContext.setupObservability(agentName: String) {
     install(OpenTelemetry) {
         setVerbose(true) // Enable verbose mode to send full strings instead of HIDDEN placeholders
-        addLangfuseExporter(
-            langfuseUrl = System.getenv("LANGFUSE_HOST") ?: "https://cloud.langfuse.com",
-            langfusePublicKey = System.getenv("LANGFUSE_PUBLIC_KEY"),
-            langfuseSecretKey = System.getenv("LANGFUSE_SECRET_KEY"),
-            traceAttributes = listOf(
-                CustomAttribute("langfuse.session.id", System.getenv("LANGFUSE_SESSION_ID") ?: ""),
-                CustomAttribute("agent.name", agentName),
+
+        val publicKey = System.getenv("LANGFUSE_PUBLIC_KEY")
+        val secretKey = System.getenv("LANGFUSE_SECRET_KEY")
+        val host = System.getenv("LANGFUSE_HOST")
+        val sessionId = System.getenv("LANGFUSE_SESSION_ID")
+        val missing = buildList {
+            if (publicKey.isNullOrBlank()) add("LANGFUSE_PUBLIC_KEY")
+            if (secretKey.isNullOrBlank()) add("LANGFUSE_SECRET_KEY")
+            if (host.isNullOrBlank()) add("LANGFUSE_HOST")
+            if (sessionId.isNullOrBlank()) add("LANGFUSE_SESSION_ID")
+        }
+        if (missing.isEmpty()) {
+            addLangfuseExporter(
+                langfuseUrl = host!!,
+                langfusePublicKey = publicKey!!,
+                langfuseSecretKey = secretKey!!,
+                traceAttributes = listOf(
+                    CustomAttribute("langfuse.session.id", sessionId!!),
+                    CustomAttribute("agent.name", agentName),
+                )
             )
-        )
+        } else {
+            println("Observability: Langfuse disabled — missing env var(s): ${missing.joinToString(", ")}.")
+        }
     }
     handleEvents {
         onToolCallStarting { ctx ->
