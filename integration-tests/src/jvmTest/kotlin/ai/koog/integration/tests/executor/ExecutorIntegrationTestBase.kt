@@ -43,6 +43,7 @@ import ai.koog.prompt.streaming.filterTextOnly
 import ai.koog.prompt.structure.executeStructured
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
@@ -1209,5 +1210,11 @@ abstract class ExecutorIntegrationTestBase {
         )
 
         assert(multiMessageReply.isHarmful) { "Question together with answer must be detected as harmful!" }
+    }
+
+    open fun integration_testGetModels(provider: LLMProvider): Unit = runBlocking {
+        val client = getLLMClientForProvider(provider)
+        val models = client.models()
+        assertTrue(models.isNotEmpty(), "Models list should not be empty")
     }
 }
