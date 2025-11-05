@@ -25,12 +25,11 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.OllamaModels
 import ai.koog.prompt.params.LLMParams
+import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotBeBlank
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import kotlin.test.Test
-import kotlin.test.assertContains
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
 @ExtendWith(OllamaTestFixtureExtension::class)
@@ -175,8 +174,7 @@ class OllamaAgentIntegrationTest : AIAgentTestBase() {
 
         val result = agent.run("What is the capital of France?")
 
-        assertNotNull(result, "Result should not be empty")
-        assertTrue(result.isNotEmpty(), "Result should not be empty")
-        assertContains(result, "Paris", ignoreCase = true, "Result should contain the answer 'Paris'")
+        result.shouldNotBeBlank()
+        result.shouldContain("Paris")
     }
 }

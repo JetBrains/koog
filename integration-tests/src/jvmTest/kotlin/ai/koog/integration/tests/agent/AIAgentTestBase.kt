@@ -41,6 +41,7 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
+import io.kotest.matchers.paths.shouldExist
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.cancel
@@ -73,6 +74,7 @@ open class AIAgentTestBase {
         @BeforeAll
         fun setup() {
             testResourcesDir = Paths.get(AIAgentTestBase::class.java.getResource("/media")!!.toURI())
+            testResourcesDir.shouldExist()
         }
 
         @JvmStatic

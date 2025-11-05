@@ -36,10 +36,24 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.ToolChoice
+import io.kotest.assertions.withClue
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.collections.shouldNotBeEmpty
+import io.kotest.matchers.comparables.shouldBeLessThan
+import io.kotest.matchers.ints.shouldBeGreaterThan
+import io.kotest.matchers.ints.shouldBeGreaterThanOrEqual
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotBeBlank
+import io.kotest.matchers.string.shouldNotContain
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.io.TempDir
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
@@ -49,11 +63,6 @@ import java.util.Base64
 import java.util.stream.Stream
 import kotlin.io.path.readBytes
 import kotlin.reflect.typeOf
-import kotlin.test.Ignore
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
@@ -183,27 +192,23 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
         promptMessages: List<Message>?,
         strategyName: String,
     ) {
-        assertTrue(
-            errors.isEmpty(),
-            "No errors should occur during agent execution with $strategyName, got: [${errors.joinToString("\n")}]"
-        )
-        assertTrue(
-            actualToolCalls.contains(SimpleCalculatorTool.name),
-            "The ${SimpleCalculatorTool.name} tool was not called with $strategyName"
-        )
-        assertTrue(result.isNotBlank(), "There should be results from history compression with $strategyName")
-        assertNotNull(promptMessages, "Final prompt messages should be captured with $strategyName")
+        withClue("No errors should occur during agent execution with $strategyName, got: [${errors.joinToString("\n")}]") {
+            errors.shouldBeEmpty()
+        }
+        withClue("The ${SimpleCalculatorTool.name} tool was not called with $strategyName") {
+            actualToolCalls shouldContain SimpleCalculatorTool.name
+        }
+        result.shouldNotBeBlank()
+        promptMessages.shouldNotBeNull()
 
         val systemMessages = promptMessages.filterIsInstance<Message.System>()
-        assertTrue(
-            systemMessages.isNotEmpty(),
-            "System messages should be preserved after compression with $strategyName"
-        )
+        withClue("System messages should be preserved after compression with $strategyName") {
+            systemMessages.shouldNotBeEmpty()
+        }
         val preservedSystemMessage = systemMessages.first().content
-        assertTrue(
-            preservedSystemMessage.isNotBlank(),
-            "System message content should not be empty after compression with $strategyName"
-        )
+        withClue("System message content should not be empty after compression with $strategyName") {
+            preservedSystemMessage.shouldNotBeBlank()
+        }
     }
 
     private fun runMultipleToolsTest(model: LLModel, runMode: ToolCalls) = runTest(timeout = 300.seconds) {
@@ -220,34 +225,34 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                     getSingleRunAgentWithRunMode(model, runMode, eventHandlerConfig = eventHandlerConfig)
                 multiToolAgent.run(twoToolsPrompt)
 
-                assertTrue(
-                    state.parallelToolCalls.size >= 2,
-                    "There should be at least 2 tool calls in a Multiple tool calls scenario"
-                )
-                assertTrue(
-                    state.singleToolCalls.isEmpty(),
-                    "There should be no single tool calls in a Multiple tool calls scenario"
-                )
+                withClue("There should be at least 2 tool calls in a Multiple tool calls scenario") {
+                    state.parallelToolCalls.size shouldBeGreaterThanOrEqual 2
+                }
+
+                withClue("There should be no single tool calls in a Multiple tool calls scenario") {
+                    state.singleToolCalls.shouldBeEmpty()
+                }
 
                 val firstCall = state.parallelToolCalls.first()
                 val secondCall = state.parallelToolCalls.last()
 
                 if (runMode == ToolCalls.PARALLEL) {
-                    assertTrue(
-                        firstCall.metaInfo.timestamp == secondCall.metaInfo.timestamp ||
-                            firstCall.metaInfo.totalTokensCount == secondCall.metaInfo.totalTokensCount ||
-                            firstCall.metaInfo.inputTokensCount == secondCall.metaInfo.inputTokensCount ||
-                            firstCall.metaInfo.outputTokensCount == secondCall.metaInfo.outputTokensCount,
-                        "At least one of the metadata should be equal for parallel tool calls"
-                    )
+                    withClue("At least one of the metadata should be equal for parallel tool calls") {
+                        (
+                            firstCall.metaInfo.timestamp == secondCall.metaInfo.timestamp ||
+                                firstCall.metaInfo.totalTokensCount == secondCall.metaInfo.totalTokensCount ||
+                                firstCall.metaInfo.inputTokensCount == secondCall.metaInfo.inputTokensCount ||
+                                firstCall.metaInfo.outputTokensCount == secondCall.metaInfo.outputTokensCount
+                            ).shouldBeTrue()
+                    }
                 }
 
-                assertEquals(
-                    SimpleCalculatorTool.name,
-                    firstCall.tool,
-                    "First tool call should be ${SimpleCalculatorTool.name}"
-                )
-                assertEquals(DelayTool.name, secondCall.tool, "Second tool call should be ${DelayTool.name}")
+                withClue("First tool call should be ${SimpleCalculatorTool.name}") {
+                    firstCall.tool shouldBe SimpleCalculatorTool.name
+                }
+                withClue("Second tool call should be ${DelayTool.name}") {
+                    secondCall.tool shouldBe DelayTool.name
+                }
             }
         }
     }
@@ -270,7 +275,9 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                 )
                 agent.run("Repeat what I say: hello, I'm good.")
                 // by default, AIAgent has no tools underneath
-                assertTrue(state.actualToolCalls.isEmpty(), "No tools should be called for model $model")
+                withClue("No tools should be called for model $model") {
+                    state.actualToolCalls.shouldBeEmpty()
+                }
             }
         }
     }
@@ -291,10 +298,9 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                     installFeatures = { install(EventHandler.Feature, eventHandlerConfig) },
                 )
                 agent.run("Repeat what I say: hello, I'm good.")
-                assertTrue(
-                    state.errors.isEmpty(),
-                    "No errors were expected during the run, got:\n[${state.errors.joinToString("\n")}]"
-                )
+                withClue("No errors were expected during the run, got:\\n[${state.errors.joinToString("\n")}]") {
+                    state.errors.shouldBeEmpty()
+                }
             }
         }
     }
@@ -325,11 +331,11 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                 )
 
                 agent.run("How much is 3 times 5?")
-                assertTrue(state.actualToolCalls.isNotEmpty(), "No tools were called for model $model")
-                assertTrue(
-                    state.actualToolCalls.contains(SimpleCalculatorTool.name),
-                    "The ${SimpleCalculatorTool.name} tool was not called for model $model"
-                )
+                withClue("No tools were called for model $model") { state.actualToolCalls.shouldNotBeEmpty() }
+
+                withClue("The ${SimpleCalculatorTool.name} tool was not called for model $model") {
+                    state.actualToolCalls shouldContain SimpleCalculatorTool.name
+                }
             }
         }
     }
@@ -368,24 +374,17 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
                 agent.run(promptWithImage)
 
-                assertTrue(state.errors.isEmpty(), "There should be no errors")
-                assertTrue(state.results.isNotEmpty(), "There should be results")
+                state.errors.shouldBeEmpty()
+                state.results.shouldNotBeEmpty()
 
                 val result = state.results.first() as String
-                assertNotNull(result, "Result should not be null")
-                assertTrue(result.isNotBlank(), "Result should not be empty or blank")
-                assertTrue(result.length > 20, "Result should contain more than 20 characters")
+                result.shouldNotBeBlank()
+                result.length shouldBeGreaterThan 20
 
                 val resultLowerCase = result.lowercase()
-                assertFalse(resultLowerCase.contains("error processing"), "Result should not contain error messages")
-                assertFalse(
-                    resultLowerCase.contains("unable to process"),
-                    "Result should not indicate inability to process"
-                )
-                assertFalse(
-                    resultLowerCase.contains("cannot process"),
-                    "Result should not indicate inability to process"
-                )
+                resultLowerCase.shouldNotContain("error processing")
+                resultLowerCase.shouldNotContain("unable to process")
+                resultLowerCase.shouldNotContain("cannot process")
             }
         }
     }
@@ -424,14 +423,10 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
                 val result = agent.run("What is 123 + 456?")
 
-                assertNotNull(result, "Result should not be null")
-                assertTrue(result.isNotEmpty(), "Result should not be empty")
-                assertTrue(state.actualToolCalls.isEmpty(), "No tools should be called for model $model")
+                result.shouldNotBeBlank()
+                state.actualToolCalls.shouldBeEmpty()
 
-                assertTrue(
-                    result.contains("579"),
-                    "Result should contain the correct answer (579)"
-                )
+                result shouldContain "579"
             }
         }
     }
@@ -469,20 +464,15 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                     eventHandlerConfig = eventHandlerConfig,
                 )
                 sequentialAgent.run(twoToolsPrompt)
-
-                assertTrue(
-                    state.parallelToolCalls.isEmpty(),
-                    "There should be no parallel tool calls in a Sequential single run scenario"
-                )
-                assertTrue(
-                    state.singleToolCalls.size >= 2,
-                    "There should be more or equal than 2 single tool calls in a Sequential single run scenario"
-                )
-                assertEquals(
-                    SimpleCalculatorTool.name,
-                    state.singleToolCalls.first().tool,
-                    "First tool call should be ${SimpleCalculatorTool.name}"
-                )
+                withClue("There should be no parallel tool calls in a Sequential single run scenario") {
+                    state.parallelToolCalls.shouldBeEmpty()
+                }
+                withClue("There should be more or equal than 2 single tool calls in a Sequential single run scenario") {
+                    state.singleToolCalls.size shouldBeGreaterThanOrEqual 2
+                }
+                withClue("First tool call should be ${SimpleCalculatorTool.name}") {
+                    state.singleToolCalls.first().tool shouldBe SimpleCalculatorTool.name
+                }
             }
         }
     }
@@ -515,28 +505,24 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
                 agent.run("How much did I spend last month?")
 
-                assertTrue(state.errors.isEmpty(), "There should be no errors")
-                assertTrue(state.results.isNotEmpty(), "There should be results")
-                assertTrue(
-                    state.actualToolCalls.contains(GetTransactionsTool.descriptor.name),
-                    "The ${GetTransactionsTool.descriptor.name} tool should be called"
-                )
-                assertTrue(
-                    state.actualToolCalls.contains(CalculateSumTool.descriptor.name),
-                    "The ${CalculateSumTool.descriptor.name} tool should be called"
-                )
+                state.errors.shouldBeEmpty()
+                state.results.shouldNotBeEmpty()
+                withClue("The ${GetTransactionsTool.descriptor.name} tool should be called") {
+                    state.actualToolCalls shouldContain GetTransactionsTool.descriptor.name
+                }
+                withClue("The ${CalculateSumTool.descriptor.name} tool should be called") {
+                    state.actualToolCalls shouldContain CalculateSumTool.descriptor.name
+                }
 
                 val getTransactionsIndex = state.actualToolCalls.indexOf(GetTransactionsTool.descriptor.name)
                 val calculateSumIndex = state.actualToolCalls.indexOf(CalculateSumTool.descriptor.name)
-                assertTrue(
-                    getTransactionsIndex < calculateSumIndex,
-                    "The ${GetTransactionsTool.descriptor.name} tool should be called before the ${CalculateSumTool.descriptor.name} tool"
-                )
+                withClue("The ${GetTransactionsTool.descriptor.name} tool should be called before the ${CalculateSumTool.descriptor.name} tool") {
+                    getTransactionsIndex shouldBeLessThan calculateSumIndex
+                }
 
-                assertTrue(
-                    state.reasoningCallsCount > 0,
-                    "Should have at least one reasoning call for the ReAct strategy."
-                )
+                withClue("Should have at least one reasoning call for the ReAct strategy.") {
+                    state.reasoningCallsCount shouldBeGreaterThan 0
+                }
 
                 // Count how many times the reasoning step would trigger based on the interval
                 var expectedReasoningCalls = 1 // Start with 1 for the initial reasoning
@@ -546,12 +532,12 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                     }
                 }
 
-                assertEquals(
-                    expectedReasoningCalls,
-                    state.reasoningCallsCount,
+                withClue(
                     "With reasoningInterval=$interval and ${state.toolExecutionCounter.size} tool calls, " +
                         "expected $expectedReasoningCalls reasoning calls but got ${state.reasoningCallsCount}"
-                )
+                ) {
+                    state.reasoningCallsCount shouldBe expectedReasoningCalls
+                }
             }
         }
     }
@@ -618,8 +604,8 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
         agent.run("Start the test")
 
         val checkpoints = checkpointStorageProvider.getCheckpoints(agent.id)
-        assertTrue(checkpoints.isNotEmpty(), "No checkpoints were created")
-        assertEquals(save, checkpoints.first().nodeId, "Checkpoint has incorrect node ID")
+        checkpoints.shouldNotBeEmpty()
+        checkpoints.first().nodeId shouldBe save
 
         val restoredAgent = AIAgent(
             promptExecutor = getExecutor(model),
@@ -643,7 +629,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
         val restoredResult = restoredAgent.run("Continue the test")
 
         // Verify that the agent continued from the checkpoint
-        assertTrue(restoredResult.contains(sayBye), "Agent did not continue from the checkpoint")
+        restoredResult shouldContain sayBye
     }
 
     @ParameterizedTest
@@ -744,23 +730,19 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
         val result = agent.run("Start the test")
 
         val executionLogStr = executionLog.toString()
-        assertTrue(executionLogStr.contains(sayHelloLog.trim()), "$hello was not executed")
-        assertTrue(executionLogStr.contains(saySaveLog.trim()), "$save was not executed")
-        assertTrue(executionLogStr.contains(sayByeLog.trim()), "$bye was not executed")
-        assertTrue(
-            executionLogStr.contains(rollbackPerformingLog.trim()),
-            "Rollback was not performed"
-        )
+        executionLogStr shouldContain sayHelloLog.trim()
+        executionLogStr shouldContain saySaveLog.trim()
+        executionLogStr shouldContain sayByeLog.trim()
+        executionLogStr shouldContain rollbackPerformingLog.trim()
 
         val savesCount = saySaveLog.trim().toRegex().findAll(executionLogStr).count()
         val byesCount = sayByeLog.trim().toRegex().findAll(executionLogStr).count()
-        assertEquals(2, savesCount, "$save should be executed twice (before and after rollback)")
-        assertEquals(2, byesCount, "$bye should be executed twice (before and after rollback)")
+        savesCount shouldBe 2
+        byesCount shouldBe 2
 
-        assertTrue(
-            result.contains(alreadyRolledBackMessage),
-            "Final result should contain output from the second execution of $rollback"
-        )
+        withClue("Final result should contain output from the second execution of $rollback") {
+            result shouldContain alreadyRolledBackMessage
+        }
     }
 
     @ParameterizedTest
@@ -782,11 +764,6 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
         val promptName = "continuous-persistence-test"
         val systemMessage = "You are a helpful assistant."
         val testInput = "Start the test"
-
-        val notEnoughCheckpointsError = "Not enough checkpoints were created"
-        val noCheckpointHelloError = "No checkpoint for Node Hello"
-        val noCheckpointSaveError = "No checkpoint for Node Save"
-        val noCheckpointByeError = "No checkpoint for Node Bye"
 
         val simpleStrategy = strategy(strategyName) {
             val nodeHello by node<String, String>(hello) {
@@ -829,12 +806,12 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
         agent.run(testInput)
 
         val checkpoints = checkpointStorageProvider.getCheckpoints(agent.id)
-        assertTrue(checkpoints.size >= 3, notEnoughCheckpointsError)
+        checkpoints.size shouldBeGreaterThanOrEqual 3
 
         val nodeIds = checkpoints.map { it.nodeId }.toSet()
-        assertTrue(nodeIds.contains(hello), noCheckpointHelloError)
-        assertTrue(nodeIds.contains(world), noCheckpointSaveError)
-        assertTrue(nodeIds.contains(bye), noCheckpointByeError)
+        nodeIds shouldContain hello
+        nodeIds shouldContain world
+        nodeIds shouldContain bye
     }
 
     @ParameterizedTest
@@ -905,13 +882,17 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
         agent.run(testInput)
 
         val checkpoints = fileStorageProvider.getCheckpoints(agent.id).filter { it.nodeId != "tombstone" }
-        assertTrue(checkpoints.isNotEmpty(), noCheckpointsError)
-        assertEquals(bye, checkpoints.first().nodeId, incorrectNodeIdError)
+        withClue(noCheckpointsError) {
+            checkpoints.isNotEmpty() shouldBe true
+        }
+        withClue(incorrectNodeIdError) {
+            checkpoints.first().nodeId shouldBe bye
+        }
     }
 
     @ParameterizedTest
     @MethodSource("allModels")
-    @Ignore("KG-499 Infinite loop on an attempt to serialize input for checkpoint creation for nodeSendToolResult")
+    @Disabled("KG-499 Infinite loop on an attempt to serialize input for checkpoint creation for nodeSendToolResult")
     fun integration_AgentCheckpointWithToolCallsTest(model: LLModel) = runTest(timeout = 180.seconds) {
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
@@ -956,26 +937,23 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
                 agent.run("What is 12 + 34?")
 
-                assertEquals(
-                    listOf(SimpleCalculatorTool.descriptor.name),
-                    state.actualToolCalls,
-                    "${SimpleCalculatorTool.descriptor.name} tool should be called for model $model with persistence"
-                )
-                assertTrue(state.errors.isEmpty(), "There should be no errors")
+                state.actualToolCalls shouldBe listOf(SimpleCalculatorTool.descriptor.name)
+                withClue("${SimpleCalculatorTool.descriptor.name} tool should be called for model $model with persistence") {
+                    state.errors.shouldBeEmpty()
+                }
 
                 val nonTombstoneCheckpoints =
                     storageProvider.getCheckpoints(agent.id).filter { it.nodeId != "tombstone" }
-                assertTrue(nonTombstoneCheckpoints.isNotEmpty(), "No checkpoints were created with Persistence enabled")
+                nonTombstoneCheckpoints.shouldNotBeEmpty()
 
                 val toolCallPresentInHistory = nonTombstoneCheckpoints.any { cp ->
                     cp.messageHistory.any { msg ->
                         msg is Message.Tool.Call && msg.tool == SimpleCalculatorTool.name
                     }
                 }
-                assertTrue(
-                    toolCallPresentInHistory,
-                    "Checkpoint message history should contain a tool call to '${SimpleCalculatorTool.name}'"
-                )
+                withClue("Checkpoint message history should contain a tool call to '${SimpleCalculatorTool.name}'") {
+                    toolCallPresentInHistory.shouldBeTrue()
+                }
             }
         }
     }
@@ -1018,13 +996,11 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                 )
                 agent.run("What is 123 + 456?")
 
-                assertEquals(
-                    listOf(CalculatorToolNoArgs.descriptor.name),
-                    state.actualToolCalls,
-                    "${CalculatorToolNoArgs.descriptor.name} tool should be called for model $model"
-                )
+                withClue("${CalculatorToolNoArgs.descriptor.name} tool should be called for model $model") {
+                    state.actualToolCalls shouldBe listOf(CalculatorToolNoArgs.descriptor.name)
+                }
 
-                assertTrue(state.errors.isEmpty(), "There should be no errors")
+                state.errors.shouldBeEmpty()
             }
         }
     }
@@ -1082,26 +1058,14 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
                 agent.run("Hi")
 
-                assertTrue(state.errors.isEmpty(), "There should be no errors during parallel execution")
-                assertTrue(state.results.isNotEmpty(), "There should be results from parallel execution")
+                state.errors.shouldBeEmpty() // There should be no errors during parallel execution
+                state.results.shouldNotBeEmpty() // There should be results from parallel execution
 
                 val finalResult = state.results.first() as String
-                assertTrue(
-                    finalResult.contains("Math result: 56"),
-                    "Result should contain math computation (7*8=56)"
-                )
-                assertTrue(
-                    finalResult.contains("Text result: Hello World"),
-                    "Result should contain text processing result"
-                )
-                assertTrue(
-                    finalResult.contains("Count result: 15"),
-                    "Result should contain count computation (1+2+3+4+5=15)"
-                )
-                assertTrue(
-                    finalResult.contains("Combined:"),
-                    "Result should show that parallel results were combined"
-                )
+                finalResult shouldContain "Math result: 56"
+                finalResult shouldContain "Text result: Hello World"
+                finalResult shouldContain "Count result: 15"
+                finalResult shouldContain "Combined:"
             }
         }
     }
@@ -1148,15 +1112,12 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
                 agent.run("Find the maximum value")
 
-                assertTrue(state.errors.isEmpty(), "There should be no errors during parallel selection")
-                assertTrue(state.results.isNotEmpty(), "There should be results from parallel selection")
+                state.errors.shouldBeEmpty()
+                state.results.shouldNotBeEmpty()
 
                 val finalResult = state.results.first() as String
 
-                assertTrue(
-                    finalResult.contains("Maximum value: 100"),
-                    "Result should contain the maximum value (100) from parallel execution"
-                )
+                finalResult shouldContain "Maximum value: 100"
             }
         }
     }
@@ -1204,39 +1165,24 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
                     val (result, promptMessages) = agent.run("So, who am I?")
 
-                    assertTrue(
-                        state.errors.isEmpty(),
+                    withClue(
                         "No errors should occur during agent execution with $strategyName, got: [${
                             state.errors.joinToString(
                                 "\n"
                             )
                         }]"
-                    )
-                    assertTrue(
-                        result.isNotBlank(),
-                        "There should be results from history compression with $strategyName"
-                    )
-                    assertNotNull(promptMessages, "Final prompt messages should be captured with $strategyName")
+                    ) {
+                        state.errors.shouldBeEmpty()
+                    }
+                    result.shouldNotBeBlank()
+                    promptMessages.shouldNotBeNull()
                     val systemMessages = promptMessages.filterIsInstance<Message.System>()
-                    assertTrue(
-                        systemMessages.isNotEmpty(),
-                        "System messages should be preserved after compression with $strategyName"
-                    )
+                    systemMessages.shouldNotBeEmpty()
 
                     val preservedSystemMessage = systemMessages.first().content
-                    assertTrue(
-                        preservedSystemMessage.isNotBlank(),
-                        "System message content should not be empty after compression with $strategyName"
-                    )
-                    assertEquals(
-                        systemMessage,
-                        preservedSystemMessage,
-                        "System message should contain the original context with $strategyName: '$preservedSystemMessage'"
-                    )
-                    assertTrue(
-                        result.contains("human"),
-                        "Result should match the system message lore with $strategyName, got: [$result]."
-                    )
+                    preservedSystemMessage.shouldNotBeBlank()
+                    preservedSystemMessage shouldBe systemMessage
+                    result shouldContain "human"
                 }
             }
         }

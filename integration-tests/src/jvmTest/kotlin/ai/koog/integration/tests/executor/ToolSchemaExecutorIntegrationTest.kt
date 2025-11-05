@@ -16,6 +16,11 @@ import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.ToolChoice
+import io.kotest.assertions.withClue
+import io.kotest.matchers.collections.shouldNotBeEmpty
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -24,10 +29,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
-import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
 class ToolSchemaExecutorIntegrationTest {
@@ -155,10 +157,10 @@ class ToolSchemaExecutorIntegrationTest {
             val responseText = response.joinToString("\n") { it.content }
             val fileOperation = Json.decodeFromString<FileOperation>(responseText)
 
-            assertNotNull(response)
-            assertTrue(response.isNotEmpty())
-            assertEquals("hello.txt", fileOperation.filePath)
-            assertEquals("Hello, World!", fileOperation.content)
+            response shouldNotBe null
+            response.shouldNotBeEmpty()
+            fileOperation.filePath shouldBe "hello.txt"
+            fileOperation.content shouldBe "Hello, World!"
         }
     }
 
@@ -177,9 +179,10 @@ class ToolSchemaExecutorIntegrationTest {
                 client.execute(prompt, model, listOf(invalidToolDescriptor))
             }
 
-            assumeTrue(
-                exception.message?.contains(message) == true,
-                "Expected exception message to contain '$message', but got '${exception.message}'"
-            )
+            withClue("Expected exception message to contain '$message', but got '${exception.message}'") {
+                exception.message?.shouldContain(
+                    message
+                )
+            }
         }
 }

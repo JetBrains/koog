@@ -8,12 +8,12 @@ import ai.koog.integration.tests.utils.annotations.Retry
 import ai.koog.integration.tests.utils.tools.ComplexNestedTool
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.llms.all.simpleAnthropicExecutor
+import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotBeBlank
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 
 /**
  * Integration test for verifying the fix for the Anthropic API JSON schema validation error
@@ -113,15 +113,13 @@ class AnthropicSchemaValidationIntegrationTest {
             )
 
             // Verify the result
-            println("\nResult: $result")
-            assertNotNull(result, "Result should not be null")
-            assertTrue(result.isNotBlank(), "Result should not be empty or blank")
+            result.shouldNotBeBlank()
 
             // Check that the result contains expected information
-            assertTrue(result.lowercase().contains("john doe"), "Result should contain the user's name")
-            assertTrue(result.lowercase().contains("john.doe@example.com"), "Result should contain the user's email")
-            assertTrue(result.lowercase().contains("main st"), "Result should contain the home address street")
-            assertTrue(result.lowercase().contains("business ave"), "Result should contain the work address street")
+            result.lowercase().shouldContain("john doe")
+            result.lowercase().shouldContain("john.doe@example.com")
+            result.lowercase().shouldContain("main st")
+            result.lowercase().shouldContain("business ave")
         }
     }
 }

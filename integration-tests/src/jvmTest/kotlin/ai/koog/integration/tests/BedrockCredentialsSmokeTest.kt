@@ -2,10 +2,10 @@ package ai.koog.integration.tests
 
 import aws.sdk.kotlin.services.bedrock.BedrockClient
 import aws.sdk.kotlin.services.bedrock.listFoundationModels
+import io.kotest.matchers.collections.shouldNotBeEmpty
 import kotlinx.coroutines.runBlocking
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable
-import kotlin.test.Test
-import kotlin.test.assertEquals
 
 /**
  * Verifies that the credentials provided to the build can access the Bedrock control-plane
@@ -23,11 +23,7 @@ class BedrockCredentialsSmokeTest {
 
         BedrockClient { this.region = region }.use { bedrock ->
             val resp = bedrock.listFoundationModels { }
-            assertEquals(
-                true,
-                resp.modelSummaries?.isNotEmpty(),
-                "Bedrock ListFoundationModels returned no models – credentials/region might be wrong"
-            )
+            (resp.modelSummaries?.shouldNotBeEmpty())
         }
     }
 
@@ -41,11 +37,7 @@ class BedrockCredentialsSmokeTest {
             this.region = region
         }.use { bedrock ->
             val resp = bedrock.listFoundationModels { }
-            assertEquals(
-                true,
-                resp.modelSummaries?.isNotEmpty(),
-                "Bedrock ListFoundationModels returned no models – API key authentication might have failed"
-            )
+            (resp.modelSummaries?.shouldNotBeEmpty())
         }
     }
 }

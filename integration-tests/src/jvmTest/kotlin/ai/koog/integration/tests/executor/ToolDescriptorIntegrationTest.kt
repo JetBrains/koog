@@ -16,6 +16,8 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.ToolChoice
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.collections.shouldNotBeEmpty
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.serializer
@@ -24,7 +26,6 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
-import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
 class ToolDescriptorIntegrationTest {
@@ -335,14 +336,11 @@ class ToolDescriptorIntegrationTest {
 
         withRetry {
             val response = client.execute(prompt, model, listOf(tool.descriptor))
-            assertTrue(response.isNotEmpty(), "Response should not be empty for tool ${tool.name} with model $model")
+            response.shouldNotBeEmpty()
             val hasToolCall = response.any { message ->
                 message is Message.Tool.Call && message.tool == tool.name
             }
-            assertTrue(
-                hasToolCall,
-                "Response should contain a Tool.Call message for tool '${tool.name}' with model $model."
-            )
+            hasToolCall.shouldBeTrue()
         }
     }
 }

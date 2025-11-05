@@ -31,6 +31,13 @@ import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.ToolChoice
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.collections.shouldNotBeEmpty
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotBeBlank
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
@@ -46,11 +53,7 @@ import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.io.path.pathString
 import kotlin.io.path.readBytes
-import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.io.files.Path as KtPath
 
@@ -147,8 +150,8 @@ class ModelCapabilitiesIntegrationTest {
                     }
                     withRetry {
                         val responses = executor.execute(prompt, model, listOf(tools))
-                        assertTrue(responses.isNotEmpty())
-                        assertTrue(responses.any { it is Message.Tool.Call })
+                        responses.shouldNotBeEmpty()
+                        (responses.any { it is Message.Tool.Call }).shouldBeTrue()
                     }
                 }
 
@@ -222,8 +225,8 @@ class ModelCapabilitiesIntegrationTest {
                     }
                     withRetry {
                         val result = executor.moderate(prompt, model)
-                        assertNotNull(result)
-                        assertFalse(result.isHarmful)
+                        result.shouldNotBeNull()
+                        (result.isHarmful).shouldBeFalse()
                     }
                 }
 
@@ -237,12 +240,12 @@ class ModelCapabilitiesIntegrationTest {
                     }
                     withRetry {
                         val choices = executor.executeMultipleChoices(prompt, model, emptyList())
-                        assertEquals(2, choices.size, "Expected at least 2 choices, got ${'$'}{choices.size}")
+                        choices.size shouldBe 2
                         choices.forEach { choice ->
-                            assertTrue(choice.isNotEmpty(), "Each choice should contain at least one response")
+                            choice.shouldNotBeEmpty() // Each choice should contain at least one response
                             val assistant = choice.firstOrNull { it is Message.Assistant }
-                            assertNotNull(assistant, "Each choice should contain an assistant message")
-                            assertTrue(assistant.content.isNotBlank(), "Assistant content should not be blank")
+                            assistant.shouldNotBeNull()
+                            (assistant as Message.Assistant).content.shouldNotBeBlank()
                         }
                     }
                 }
@@ -271,8 +274,8 @@ class ModelCapabilitiesIntegrationTest {
                 LLMCapability.Embed -> {
                     withRetry {
                         val vector = openAIClient.embed("Provide an embedding for this sentence.", model)
-                        assertTrue(vector.isNotEmpty(), "Embedding vector should not be empty")
-                        assertTrue(vector.any { it != 0.0 }, "Embedding vector should contain non-zero values")
+                        vector.shouldNotBeEmpty()
+                        (vector.any { it != 0.0 }).shouldBeTrue()
                     }
                 }
 
@@ -288,9 +291,9 @@ class ModelCapabilitiesIntegrationTest {
                     withRetry {
                         val responses = executor.execute(prompt, model)
                         val text = responses.filterIsInstance<Message.Assistant>().joinToString("\n") { it.content }
-                        assertTrue(text.isNotBlank())
-                        assertTrue(isValidJson(text), "Response should be valid JSON")
-                        assertTrue(text.contains("\"x\""), "Response should contain key \"x\"")
+                        text.shouldNotBeBlank()
+                        isValidJson(text).shouldBeTrue()
+                        text shouldContain "\"x\""
                     }
                 }
 
@@ -306,9 +309,9 @@ class ModelCapabilitiesIntegrationTest {
                     withRetry {
                         val responses = executor.execute(prompt, model)
                         val text = responses.filterIsInstance<Message.Assistant>().joinToString("\n") { it.content }
-                        assertTrue(text.isNotBlank())
-                        assertTrue(isValidJson(text), "Response should be valid JSON")
-                        assertTrue(text.contains("\"y\""), "Response should contain key \"y\"")
+                        text.shouldNotBeBlank()
+                        isValidJson(text).shouldBeTrue()
+                        text shouldContain ("\"y\"")
                     }
                 }
 
@@ -631,7 +634,6 @@ class ModelCapabilitiesIntegrationTest {
 
     private suspend fun checkAssistantResponse(prompt: Prompt, model: LLModel) {
         val responses = executor.execute(prompt, model)
-        val text = responses.filterIsInstance<Message.Assistant>().joinToString("\n") { it.content }
-        assertTrue(text.isNotBlank())
+        responses.filterIsInstance<Message.Assistant>().joinToString("\n") { it.content }.shouldNotBeBlank()
     }
 }

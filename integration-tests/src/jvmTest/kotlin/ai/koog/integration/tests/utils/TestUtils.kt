@@ -27,8 +27,7 @@ object TestUtils {
 
     fun assertExceptionMessageContains(ex: Throwable, vararg substrings: String) {
         val msg = ex.message ?: ""
-        val matches = substrings.any { needle -> msg.contains(needle, ignoreCase = true) }
-        assertTrue(matches, "Exception message doesn't contain expected error: ${ex.message}")
+        substrings.any { needle -> msg.contains(needle, ignoreCase = true) }.shouldBeTrue()
     }
 
     fun assertResponseContainsToolCall(response: List<Message>, toolName: String) {
