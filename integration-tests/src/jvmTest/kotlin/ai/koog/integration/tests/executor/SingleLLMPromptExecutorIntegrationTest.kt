@@ -77,7 +77,11 @@ class SingleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
 
         @JvmStatic
         fun providersWithModelsRequestSupport(): Stream<Arguments> {
-            return Stream.of(LLMProvider.OpenAI).map { provider -> Arguments.of(provider) }
+            return Stream.of(
+                LLMProvider.OpenAI,
+                LLMProvider.MistralAI,
+                LLMProvider.OpenRouter
+            ).map { provider -> Arguments.of(provider) }
         }
     }
 
