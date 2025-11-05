@@ -23,7 +23,7 @@ import kotlinx.coroutines.flow.flowOf
  * @property streamingChunks The sequence of chunks to emit from [executeStreaming].
  * @property choices The list of [LLMChoice] to return from [executeMultipleChoices].
  * @property moderationResult The [ModerationResult] to return from [moderate].
- * @property llmProvider [LLMPrivider] associated with the client or [LLMProvider.OpenAI], if not defined
+ * @property llmProvider [LLMProvider] associated with the client or [LLMProvider.OpenAI], if not defined
  */
 public class CapturingLLMClient(
     private val executeResponses: List<Message.Response> = emptyList(),

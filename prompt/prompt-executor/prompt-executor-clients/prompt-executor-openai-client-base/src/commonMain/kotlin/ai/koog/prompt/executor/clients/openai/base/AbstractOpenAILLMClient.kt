@@ -71,7 +71,7 @@ import ai.koog.prompt.executor.clients.openai.base.models.Content as OpenAIConte
  * @property chatCompletionsPath The path for chat completions API endpoints.
  * @property timeoutConfig Configuration for connection timeouts, including request, connect, and socket timeouts.
  */
-public abstract class OpenAIBasedSettings(
+public abstract class OpenAIBaseSettings(
     public val baseUrl: String,
     public val chatCompletionsPath: String,
     public val timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig()
@@ -88,7 +88,7 @@ public abstract class OpenAIBasedSettings(
  */
 public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse, TStreamResponse : OpenAIBaseLLMStreamResponse>(
     private val apiKey: String,
-    settings: OpenAIBasedSettings,
+    settings: OpenAIBaseSettings,
     private val baseClient: HttpClient = HttpClient(),
     protected val clock: Clock = Clock.System,
     protected val logger: KLogger

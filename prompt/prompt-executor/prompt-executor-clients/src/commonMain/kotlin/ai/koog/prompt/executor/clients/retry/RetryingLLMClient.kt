@@ -114,6 +114,10 @@ public class RetryingLLMClient(
         delegate.moderate(prompt, model)
     }
 
+    override suspend fun models(): List<String> = withRetry("models") {
+        delegate.models()
+    }
+
     private suspend fun <T> withRetry(
         operation: String,
         block: suspend () -> T

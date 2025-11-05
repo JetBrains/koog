@@ -56,7 +56,7 @@ public interface LLMClient : AutoCloseable {
     public suspend fun executeMultipleChoices(
         prompt: Prompt,
         model: LLModel,
-        tools: List<ToolDescriptor>
+        tools: List<ToolDescriptor> = emptyList()
     ): List<LLMChoice> =
         throw UnsupportedOperationException("Not implemented for this client")
 
@@ -68,6 +68,15 @@ public interface LLMClient : AutoCloseable {
      * @return The result of the moderation analysis, encapsulated in a ModerationResult object.
      */
     public suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult
+
+    /**
+     * Retrieves a list of ids of available Large Language Models (LLMs) supported by the client.
+     *
+     * @return A list of model ids instances representing the available LLMs.
+     */
+    public suspend fun models(): List<String> {
+        throw UnsupportedOperationException("Not implemented for this client")
+    }
 
     /**
      * Retrieves the LLMProvider instance associated with this client.

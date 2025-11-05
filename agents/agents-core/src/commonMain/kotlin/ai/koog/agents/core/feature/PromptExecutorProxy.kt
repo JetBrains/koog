@@ -131,6 +131,10 @@ public class PromptExecutorProxy(
         return result
     }
 
+    override suspend fun models(): List<String> {
+        return executor.models()
+    }
+
     override fun close() {
         executor.close()
     }

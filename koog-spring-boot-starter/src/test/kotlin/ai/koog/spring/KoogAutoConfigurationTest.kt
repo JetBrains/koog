@@ -9,7 +9,7 @@ import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.clients.mistralai.MistralAILLMClient
 import ai.koog.prompt.executor.clients.openai.OpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.base.AbstractOpenAILLMClient
-import ai.koog.prompt.executor.clients.openai.base.OpenAIBasedSettings
+import ai.koog.prompt.executor.clients.openai.base.OpenAIBaseSettings
 import ai.koog.prompt.executor.clients.openrouter.OpenRouterLLMClient
 import ai.koog.prompt.executor.clients.retry.RetryConfig
 import ai.koog.prompt.executor.clients.retry.RetryingLLMClient
@@ -86,7 +86,7 @@ class KoogAutoConfigurationTest {
                 val apiKey = getPrivateFieldValue(llmClient as AbstractOpenAILLMClient<*, *>, "apiKey")
                 assertEquals(configApiKey, apiKey)
 
-                val settings = getPrivateFieldValue(llmClient, "settings") as OpenAIBasedSettings
+                val settings = getPrivateFieldValue(llmClient, "settings") as OpenAIBaseSettings
                 val baseUrl = getPrivateFieldValue(settings, "baseUrl")
 
                 assertEquals("https://api.openai.com", baseUrl)
@@ -105,7 +105,7 @@ class KoogAutoConfigurationTest {
                 val executor = context.getBean<SingleLLMPromptExecutor>()
                 val llmClient = getPrivateFieldValue(executor, "llmClient") as OpenAILLMClient
 
-                val settings = getPrivateFieldValue(llmClient, "settings") as OpenAIBasedSettings
+                val settings = getPrivateFieldValue(llmClient, "settings") as OpenAIBaseSettings
                 val baseUrl = getPrivateFieldValue(settings, "baseUrl")
 
                 assertEquals(configBaseUrl, baseUrl)
@@ -383,7 +383,7 @@ class KoogAutoConfigurationTest {
                 val apiKey = getPrivateFieldValue(llmClient as AbstractOpenAILLMClient<*, *>, "apiKey")
                 assertEquals(configApiKey, apiKey)
 
-                val settings = getPrivateFieldValue(llmClient, "settings") as OpenAIBasedSettings
+                val settings = getPrivateFieldValue(llmClient, "settings") as OpenAIBaseSettings
                 val baseUrl = getPrivateFieldValue(settings, "baseUrl")
 
                 assertEquals("https://openrouter.ai", baseUrl)
@@ -403,7 +403,7 @@ class KoogAutoConfigurationTest {
                 val executor = context.getBean<SingleLLMPromptExecutor>()
                 val llmClient = getPrivateFieldValue(executor, "llmClient") as OpenRouterLLMClient
 
-                val settings = getPrivateFieldValue(llmClient, "settings") as OpenAIBasedSettings
+                val settings = getPrivateFieldValue(llmClient, "settings") as OpenAIBaseSettings
                 val baseUrl = getPrivateFieldValue(settings, "baseUrl")
 
                 assertEquals(configBaseUrl, baseUrl)
@@ -446,7 +446,7 @@ class KoogAutoConfigurationTest {
                 val apiKey = getPrivateFieldValue(llmClient as AbstractOpenAILLMClient<*, *>, "apiKey")
                 assertEquals(configApiKey, apiKey)
 
-                val settings = getPrivateFieldValue(llmClient, "settings") as OpenAIBasedSettings
+                val settings = getPrivateFieldValue(llmClient, "settings") as OpenAIBaseSettings
                 val baseUrl = getPrivateFieldValue(settings, "baseUrl")
 
                 assertEquals("https://api.deepseek.com", baseUrl)
@@ -464,7 +464,7 @@ class KoogAutoConfigurationTest {
                 val executor = context.getBean<SingleLLMPromptExecutor>()
                 val llmClient = getPrivateFieldValue(executor, "llmClient") as DeepSeekLLMClient
 
-                val settings = getPrivateFieldValue(llmClient, "settings") as OpenAIBasedSettings
+                val settings = getPrivateFieldValue(llmClient, "settings") as OpenAIBaseSettings
                 val baseUrl = getPrivateFieldValue(settings, "baseUrl")
 
                 assertEquals(configBaseUrl, baseUrl)
@@ -506,7 +506,7 @@ class KoogAutoConfigurationTest {
                 val apiKey = getPrivateFieldValue(llmClient as AbstractOpenAILLMClient<*, *>, "apiKey")
                 assertEquals(configApiKey, apiKey)
 
-                val settings = getPrivateFieldValue(llmClient, "settings") as OpenAIBasedSettings
+                val settings = getPrivateFieldValue(llmClient, "settings") as OpenAIBaseSettings
                 val baseUrl = getPrivateFieldValue(settings, "baseUrl")
 
                 assertEquals("https://api.mistral.ai", baseUrl)
@@ -524,7 +524,7 @@ class KoogAutoConfigurationTest {
                 val executor = context.getBean<SingleLLMPromptExecutor>()
                 val llmClient = getPrivateFieldValue(executor, "llmClient") as MistralAILLMClient
 
-                val settings = getPrivateFieldValue(llmClient, "settings") as OpenAIBasedSettings
+                val settings = getPrivateFieldValue(llmClient, "settings") as OpenAIBaseSettings
                 val baseUrl = getPrivateFieldValue(settings, "baseUrl")
 
                 assertEquals(configBaseUrl, baseUrl)

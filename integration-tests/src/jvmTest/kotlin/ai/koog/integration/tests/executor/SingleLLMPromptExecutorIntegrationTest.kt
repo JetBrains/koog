@@ -9,6 +9,7 @@ import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.getLLMClientForProvider
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 import ai.koog.prompt.executor.model.PromptExecutor
+import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
@@ -72,6 +73,15 @@ class SingleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
         @JvmStatic
         fun audioScenarioModelCombinations(): Stream<Arguments> {
             return MediaTestScenarios.audioScenarioModelCombinations()
+        }
+
+        @JvmStatic
+        fun providersWithModelsRequestSupport(): Stream<Arguments> {
+            return Stream.of(
+                LLMProvider.OpenAI,
+                LLMProvider.MistralAI,
+                LLMProvider.OpenRouter
+            ).map { provider -> Arguments.of(provider) }
         }
     }
 
@@ -271,5 +281,11 @@ class SingleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
     @MethodSource("moderationModels")
     override fun integration_testMultipleMessagesModeration(model: LLModel) {
         super.integration_testMultipleMessagesModeration(model)
+    }
+
+    @ParameterizedTest
+    @MethodSource("providersWithModelsRequestSupport")
+    override fun integration_testGetModels(provider: LLMProvider) {
+        super.integration_testGetModels(provider)
     }
 }

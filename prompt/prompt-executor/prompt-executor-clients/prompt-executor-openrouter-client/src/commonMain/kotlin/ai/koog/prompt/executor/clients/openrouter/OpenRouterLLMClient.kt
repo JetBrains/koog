@@ -5,7 +5,7 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.openai.base.AbstractOpenAILLMClient
-import ai.koog.prompt.executor.clients.openai.base.OpenAIBasedSettings
+import ai.koog.prompt.executor.clients.openai.base.OpenAIBaseSettings
 import ai.koog.prompt.executor.clients.openai.base.models.Content
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIMessage
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIStaticContent
@@ -15,6 +15,7 @@ import ai.koog.prompt.executor.clients.openrouter.models.OpenRouterChatCompletio
 import ai.koog.prompt.executor.clients.openrouter.models.OpenRouterChatCompletionRequestSerializer
 import ai.koog.prompt.executor.clients.openrouter.models.OpenRouterChatCompletionResponse
 import ai.koog.prompt.executor.clients.openrouter.models.OpenRouterChatCompletionStreamResponse
+import ai.koog.prompt.executor.clients.openrouter.models.OpenRouterModelsResponse
 import ai.koog.prompt.executor.model.LLMChoice
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -28,13 +29,16 @@ import kotlinx.datetime.Clock
  * Configuration settings for connecting to the OpenRouter API.
  *
  * @property baseUrl The base URL of the OpenRouter API. Default is "https://openrouter.ai/api/v1".
+ * @property chatCompletionsPath The path of the OpenRouter Chat Completions API. Default is "api/v1/chat/completions".
+ * @property modelsPath The path of the OpenRouter Models API. Default is "api/v1/models".
  * @property timeoutConfig Configuration for connection timeouts including request, connection, and socket timeouts.
  */
 public class OpenRouterClientSettings(
     baseUrl: String = "https://openrouter.ai",
     chatCompletionsPath: String = "api/v1/chat/completions",
-    timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig()
-) : OpenAIBasedSettings(baseUrl, chatCompletionsPath, timeoutConfig)
+    public val modelsPath: String = "api/v1/models",
+    timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig(),
+) : OpenAIBaseSettings(baseUrl, chatCompletionsPath, timeoutConfig)
 
 /**
  * Implementation of [LLMClient] for OpenRouter API.
@@ -150,5 +154,20 @@ public class OpenRouterLLMClient(
     public override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
         logger.warn { "Moderation is not supported by OpenRouter API" }
         throw UnsupportedOperationException("Moderation is not supported by OpenRouter API.")
+    }
+
+    /**
+     * Fetches the list of available models from the OpenRouter service.
+     * https://openrouter.ai/docs/api-reference/models/get-models
+     *
+     * @return A list of model IDs available from OpenRouter.
+     */
+    override suspend fun models(): List<String> {
+        logger.debug { "Fetching available models from OpenRouter" }
+        val response = httpClient.get(
+            path = settings.modelsPath,
+            responseType = OpenRouterModelsResponse::class
+        )
+        return response.data.map { it.id }
     }
 }

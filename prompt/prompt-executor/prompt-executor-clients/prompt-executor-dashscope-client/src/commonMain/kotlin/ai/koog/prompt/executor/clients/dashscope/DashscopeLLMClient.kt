@@ -8,7 +8,7 @@ import ai.koog.prompt.executor.clients.dashscope.models.DashscopeChatCompletionR
 import ai.koog.prompt.executor.clients.dashscope.models.DashscopeChatCompletionResponse
 import ai.koog.prompt.executor.clients.dashscope.models.DashscopeChatCompletionStreamResponse
 import ai.koog.prompt.executor.clients.openai.base.AbstractOpenAILLMClient
-import ai.koog.prompt.executor.clients.openai.base.OpenAIBasedSettings
+import ai.koog.prompt.executor.clients.openai.base.OpenAIBaseSettings
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIMessage
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAITool
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolChoice
@@ -34,7 +34,7 @@ public class DashscopeClientSettings(
     baseUrl: String = "https://dashscope-intl.aliyuncs.com/",
     chatCompletionsPath: String = "compatible-mode/v1/chat/completions",
     timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig()
-) : OpenAIBasedSettings(baseUrl, chatCompletionsPath, timeoutConfig)
+) : OpenAIBaseSettings(baseUrl, chatCompletionsPath, timeoutConfig)
 
 /**
  * Implementation of [AbstractOpenAILLMClient] for DashScope API using OpenAI-compatible endpoints.

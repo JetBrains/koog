@@ -16,8 +16,9 @@ import ai.koog.prompt.executor.clients.mistralai.models.MistralAIEmbeddingRespon
 import ai.koog.prompt.executor.clients.mistralai.models.MistralAIModerationRequest
 import ai.koog.prompt.executor.clients.mistralai.models.MistralAIModerationResponse
 import ai.koog.prompt.executor.clients.mistralai.models.MistralAIModerationResult
+import ai.koog.prompt.executor.clients.mistralai.models.MistralModelsResponse
 import ai.koog.prompt.executor.clients.openai.base.AbstractOpenAILLMClient
-import ai.koog.prompt.executor.clients.openai.base.OpenAIBasedSettings
+import ai.koog.prompt.executor.clients.openai.base.OpenAIBaseSettings
 import ai.koog.prompt.executor.clients.openai.base.models.Content
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIContentPart
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIMessage
@@ -41,14 +42,16 @@ import kotlinx.datetime.Clock
  * @property baseUrl The base URL of the Mistral AI API. Defaults to "https://api.mistral.ai".
  * @property chatCompletionsPath The path of the Mistral AI Chat Completions API. Defaults to "v1/chat/completions".
  * @property timeoutConfig Configuration for connection timeouts, including request, connect, and socket timeouts.
+ * @property modelsPath The path of the Mistral AI Models API. Defaults to "v1/models".
  */
 public class MistralAIClientSettings(
     baseUrl: String = "https://api.mistral.ai",
     chatCompletionsPath: String = "v1/chat/completions",
     public val embeddingsPath: String = "v1/embeddings",
     public val moderationPath: String = "v1/moderations",
+    public val modelsPath: String = "v1/models",
     timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig()
-) : OpenAIBasedSettings(baseUrl, chatCompletionsPath, timeoutConfig)
+) : OpenAIBaseSettings(baseUrl, chatCompletionsPath, timeoutConfig)
 
 /**
  * Implementation of [LLMClient] for Mistral AI.
@@ -247,6 +250,21 @@ public open class MistralAILLMClient(
         }
 
         return result.toModerationResult()
+    }
+
+    /**
+     * Fetches the list of available model IDs from the MistralAI service.
+     * https://docs.mistral.ai/api/endpoint/models
+     *
+     * @return A list of model IDs as strings.
+     * @throws Exception if the HTTP request fails or the response cannot be processed.
+     */
+    override suspend fun models(): List<String> {
+        val response = httpClient.get(
+            path = settings.modelsPath,
+            responseType = MistralModelsResponse::class
+        )
+        return response.data.map { it.id }
     }
 
     private fun MistralAIModerationResult.toModerationResult(): ModerationResult {

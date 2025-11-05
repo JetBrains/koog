@@ -9,7 +9,7 @@ import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import ai.koog.prompt.executor.clients.openai.base.AbstractOpenAILLMClient
-import ai.koog.prompt.executor.clients.openai.base.OpenAIBasedSettings
+import ai.koog.prompt.executor.clients.openai.base.OpenAIBaseSettings
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIAudioConfig
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIAudioFormat
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIAudioVoice
@@ -27,6 +27,7 @@ import ai.koog.prompt.executor.clients.openai.models.OpenAIChatCompletionRespons
 import ai.koog.prompt.executor.clients.openai.models.OpenAIChatCompletionStreamResponse
 import ai.koog.prompt.executor.clients.openai.models.OpenAIEmbeddingRequest
 import ai.koog.prompt.executor.clients.openai.models.OpenAIEmbeddingResponse
+import ai.koog.prompt.executor.clients.openai.models.OpenAIModelsResponse
 import ai.koog.prompt.executor.clients.openai.models.OpenAIOutputFormat
 import ai.koog.prompt.executor.clients.openai.models.OpenAIResponsesAPIRequest
 import ai.koog.prompt.executor.clients.openai.models.OpenAIResponsesAPIRequestSerializer
@@ -47,10 +48,13 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.StreamFrameFlowBuilder
+import ai.koog.utils.io.SuitableForIO
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.uuid.ExperimentalUuidApi
@@ -65,6 +69,7 @@ import ai.koog.prompt.executor.clients.openai.base.models.Content as OpenAIConte
  * @property chatCompletionsPath The path of the OpenAI Chat Completions API. Defaults to "v1/chat/completions".
  * @property embeddingsPath The path of the OpenAI Embeddings API. Defaults to "v1/embeddings".
  * @property moderationsPath The path of the OpenAI Moderations API. Defaults to "v1/moderations".
+ * @property modelsPath The path of the OpenAI Models API. Defaults to "v1/models".
  */
 public class OpenAIClientSettings(
     baseUrl: String = "https://api.openai.com",
@@ -73,7 +78,8 @@ public class OpenAIClientSettings(
     public val responsesAPIPath: String = "v1/responses",
     public val embeddingsPath: String = "v1/embeddings",
     public val moderationsPath: String = "v1/moderations",
-) : OpenAIBasedSettings(baseUrl, chatCompletionsPath, timeoutConfig)
+    public val modelsPath: String = "v1/models",
+) : OpenAIBaseSettings(baseUrl, chatCompletionsPath, timeoutConfig)
 
 /**
  * Implementation of [LLMClient] for OpenAI API.
@@ -422,12 +428,14 @@ public open class OpenAILLMClient(
             model = model.id
         )
 
-        val openAIResponse = httpClient.post(
-            path = settings.moderationsPath,
-            request = request,
-            requestBodyType = OpenAIModerationRequest::class,
-            responseType = OpenAIModerationResponse::class
-        )
+        val openAIResponse = withContext(Dispatchers.SuitableForIO) {
+            httpClient.post(
+                path = settings.moderationsPath,
+                request = request,
+                requestBodyType = OpenAIModerationRequest::class,
+                responseType = OpenAIModerationResponse::class
+            )
+        }
 
         if (openAIResponse.results.isEmpty()) {
             logger.error { "Empty results in OpenAI moderation response" }
@@ -437,6 +445,17 @@ public open class OpenAILLMClient(
 
         // Convert OpenAI categories to a map
         return convertModerationResult(result)
+    }
+
+    override suspend fun models(): List<String> {
+        logger.debug { "Fetching available models from OpenAI" }
+
+        val openAIResponse = httpClient.get(
+            path = settings.modelsPath,
+            responseType = OpenAIModelsResponse::class
+        )
+
+        return openAIResponse.data.map { it.id }
     }
 
     private fun convertModerationResult(result: OpenAIModerationResult): ModerationResult {
@@ -718,6 +737,7 @@ public open class OpenAILLMClient(
             )
             params
         }
+
         params is OpenAIChatParams -> {
             model.requireCapability(
                 LLMCapability.OpenAIEndpoint.Completions,
@@ -725,6 +745,7 @@ public open class OpenAILLMClient(
             )
             params
         }
+
         model.supports(LLMCapability.OpenAIEndpoint.Completions) -> params.toOpenAIChatParams()
         model.supports(LLMCapability.OpenAIEndpoint.Responses) -> params.toOpenAIResponsesParams()
         else -> error("Cannot determine proper LLM params for OpenAI model: ${model.id}")
