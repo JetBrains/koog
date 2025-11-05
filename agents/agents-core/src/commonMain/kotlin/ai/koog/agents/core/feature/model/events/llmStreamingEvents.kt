@@ -21,6 +21,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 public data class LLMStreamingStartingEvent(
     val runId: String,
+    val callId: String,
     val prompt: Prompt,
     val model: String,
     val tools: List<String>,
@@ -42,6 +43,7 @@ public data class LLMStreamingStartingEvent(
 @Serializable
 public data class LLMStreamingFrameReceivedEvent(
     val runId: String,
+    val callId: String,
     val frame: StreamFrame,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent()
@@ -61,6 +63,7 @@ public data class LLMStreamingFrameReceivedEvent(
 @Serializable
 public data class LLMStreamingFailedEvent(
     val runId: String,
+    val callId: String,
     val error: AIAgentError,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
 ) : DefinedFeatureEvent()
@@ -77,6 +80,7 @@ public data class LLMStreamingFailedEvent(
 @Serializable
 public data class LLMStreamingCompletedEvent(
     val runId: String,
+    val callId: String,
     val prompt: Prompt,
     val model: String,
     val tools: List<String>,

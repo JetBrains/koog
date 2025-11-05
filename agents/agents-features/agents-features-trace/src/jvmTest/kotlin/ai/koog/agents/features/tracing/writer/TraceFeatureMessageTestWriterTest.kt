@@ -98,6 +98,7 @@ class TraceFeatureMessageTestWriterTest {
 
         val llmStartEvents = messageProcessor.messages.filterIsInstance<LLMCallStartingEvent>().toList()
         assertEquals(2, llmStartEvents.size)
+
         assertEquals(
             listOf("User 0", "User 1", ""),
             llmStartEvents[0].prompt.messages.filter { it.role == Message.Role.User }.map { it.content }
@@ -286,7 +287,6 @@ class TraceFeatureMessageTestWriterTest {
         }
 
         TestFeatureMessageWriter().use { writer ->
-
             createAgent(
                 agentId = agentId,
                 strategy = strategy
@@ -378,9 +378,17 @@ class TraceFeatureMessageTestWriterTest {
                     id = promptId
                 )
 
+                val callIds = actualEvents.filterIsInstance<LLMStreamingStartingEvent>().map { it.callId }
+                assertEquals(
+                    1,
+                    callIds.size,
+                    "Expected 2 LLMCallStartingEvent, got ${callIds.size}"
+                )
+
                 val expectedEvents = listOf(
                     LLMStreamingStartingEvent(
                         runId = writer.runId,
+                        callId = callIds[0],
                         prompt = expectedPrompt,
                         model = model.toModelInfo().modelIdentifierName,
                         tools = toolRegistry.tools.map { it.name },
@@ -388,11 +396,13 @@ class TraceFeatureMessageTestWriterTest {
                     ),
                     LLMStreamingFrameReceivedEvent(
                         runId = writer.runId,
+                        callId = callIds[0],
                         frame = StreamFrame.Append(testLLMResponse),
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     LLMStreamingCompletedEvent(
                         runId = writer.runId,
+                        callId = callIds[0],
                         prompt = expectedPrompt,
                         model = model.toModelInfo().modelIdentifierName,
                         tools = toolRegistry.tools.map { it.name },
@@ -491,9 +501,17 @@ class TraceFeatureMessageTestWriterTest {
                         event is LLMStreamingCompletedEvent
                 }
 
+                val callIds = actualEvents.filterIsInstance<LLMStreamingStartingEvent>().map { it.callId }
+                assertEquals(
+                    1,
+                    callIds.size,
+                    "Expected 2 LLMCallStartingEvent, got ${callIds.size}"
+                )
+
                 val expectedEvents = listOf(
                     LLMStreamingStartingEvent(
                         runId = writer.runId,
+                        callId = callIds[0],
                         prompt = expectedPrompt,
                         model = model.toModelInfo().modelIdentifierName,
                         tools = toolRegistry.tools.map { it.name },
@@ -501,11 +519,13 @@ class TraceFeatureMessageTestWriterTest {
                     ),
                     LLMStreamingFailedEvent(
                         runId = writer.runId,
+                        callId = callIds[0],
                         error = AIAgentError(testStreamingErrorMessage, testStreamingStackTrace),
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     LLMStreamingCompletedEvent(
                         runId = writer.runId,
+                        callId = callIds[0],
                         prompt = expectedPrompt,
                         model = model.toModelInfo().modelIdentifierName,
                         tools = toolRegistry.tools.map { it.name },

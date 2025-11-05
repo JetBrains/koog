@@ -15,6 +15,7 @@ import kotlinx.serialization.Serializable
  * and serves as a specific type of event in a feature-driven framework.
  *
  * @property runId A unique identifier associated with the specific run of the LLM call.
+ * @property callId A unique identifier associated with the specific LLM call grouping.
  * @property prompt The input prompt encapsulated as a [Prompt] object. This represents the structured set of
  *                  messages and configuration parameters sent to the LLM.
  * @property model The model information including provider, model, and context details.
@@ -25,6 +26,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 public data class LLMCallStartingEvent(
     val runId: String,
+    val callId: String,
     val prompt: Prompt,
     val model: ModelInfo,
     val tools: List<String>,
@@ -36,17 +38,18 @@ public data class LLMCallStartingEvent(
      *             LLMCallStartingEvent(runId, prompt, model, tools, timestamp)
      */
     @Deprecated(
-        message = "Please use constructor with model parameter of type [ModelInfo]: LLMCallStartingEvent(runId, prompt, model, tools, timestamp)",
-        replaceWith = ReplaceWith("LLMCallStartingEvent(runId, prompt, model, tools, timestamp)")
+        message = "Please use constructor with model parameter of type [ModelInfo]: LLMCallStartingEvent(runId, callId, prompt, model, tools, timestamp)",
+        replaceWith = ReplaceWith("LLMCallStartingEvent(runId, callId, prompt, model, tools, timestamp)")
     )
     public constructor(
         runId: String,
+        callId: String,
         prompt: Prompt,
         model: String,
         tools: List<String>,
         eventId: String = LLMCallStartingEvent::class.simpleName!!,
         timestamp: Long = Clock.System.now().toEpochMilliseconds()
-    ) : this(runId, prompt, ModelInfo.fromString(model), tools, timestamp)
+    ) : this(runId, callId, prompt, ModelInfo.fromString(model), tools, timestamp)
 
     /**
      * @deprecated Use model.eventString instead
@@ -64,6 +67,7 @@ public data class LLMCallStartingEvent(
  * and logging of LLM-related interactions.
  *
  * @property runId The unique identifier of the LLM run.
+ * @property callId The unique identifier of the LLM call grouping.
  * @property prompt The input prompt encapsulated as a [Prompt] object. This represents the structured set of
  *                  messages and configuration parameters sent to the LLM.
  * @property model The model information including provider, model, and context details.
@@ -76,6 +80,7 @@ public data class LLMCallStartingEvent(
 @Serializable
 public data class LLMCallCompletedEvent(
     val runId: String,
+    val callId: String,
     val prompt: Prompt,
     val model: ModelInfo,
     val responses: List<Message.Response>,
@@ -88,18 +93,19 @@ public data class LLMCallCompletedEvent(
      *             LLMCallCompletedEvent(runId, prompt, model, responses, moderationResponse, timestamp)
      */
     @Deprecated(
-        message = "Please use constructor with model parameter of type [ModelInfo]: LLMCallCompletedEvent(runId, prompt, model, responses, moderationResponse, timestamp)",
-        replaceWith = ReplaceWith("LLMCallCompletedEvent(runId, prompt, model, responses, moderationResponse, timestamp)")
+        message = "Please use constructor with model parameter of type [ModelInfo]: LLMCallCompletedEvent(runId, callId, prompt, model, responses, moderationResponse, timestamp)",
+        replaceWith = ReplaceWith("LLMCallCompletedEvent(runId, callId, prompt, model, responses, moderationResponse, timestamp)")
     )
     public constructor(
         runId: String,
+        callId: String,
         prompt: Prompt,
         model: String,
         responses: List<Message.Response>,
         moderationResponse: ModerationResult? = null,
         eventId: String = LLMCallCompletedEvent::class.simpleName!!,
         timestamp: Long = Clock.System.now().toEpochMilliseconds()
-    ) : this(runId, prompt, ModelInfo.fromString(model), responses, moderationResponse, timestamp)
+    ) : this(runId, callId, prompt, ModelInfo.fromString(model), responses, moderationResponse, timestamp)
 
     /**
      * @deprecated Use model.eventString instead
