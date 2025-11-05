@@ -1,6 +1,7 @@
 package ai.koog.integration.tests.utils
 
 import ai.koog.agents.core.tools.SimpleTool
+import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.LLMProvider
@@ -17,8 +18,10 @@ import ai.koog.prompt.structure.json.JsonStructuredData
 import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
@@ -106,7 +109,7 @@ object TestUtils {
     }
 
     @Serializable
-    data class CalculatorArgs(
+    data class SimpleCalculatorArgs(
         @property:LLMDescription("The operation to perform.")
         val operation: CalculatorOperation,
         @property:LLMDescription("The first argument (number)")
@@ -115,14 +118,14 @@ object TestUtils {
         val b: Int
     )
 
-    object CalculatorTool : SimpleTool<CalculatorArgs>() {
-        override val argsSerializer = CalculatorArgs.serializer()
+    object SimpleCalculatorTool : SimpleTool<SimpleCalculatorArgs>() {
+        override val argsSerializer = SimpleCalculatorArgs.serializer()
 
         override val name: String = "calculator"
         override val description: String =
             "A simple calculator that can add, subtract, multiply, and divide two numbers."
 
-        override suspend fun doExecute(args: CalculatorArgs): String {
+        override suspend fun doExecute(args: SimpleCalculatorArgs): String {
             return when (args.operation) {
                 CalculatorOperation.ADD -> (args.a + args.b).toString()
                 CalculatorOperation.SUBTRACT -> (args.a - args.b).toString()
@@ -135,6 +138,317 @@ object TestUtils {
                     }
                 }
             }
+        }
+    }
+
+    @Serializable
+    object CalculatorToolNoArgs : SimpleTool<Unit>() {
+        override val argsSerializer = Unit.serializer()
+
+        override val name: String = "calculator"
+        override val description: String =
+            "A simple calculator that performs basic calculations. No parameters needed."
+
+        override suspend fun doExecute(args: Unit): String {
+            return "The result of 123 + 456 is 579"
+        }
+    }
+
+    object CalculatorTool : Tool<CalculatorTool.Args, Int>() {
+        @Serializable
+        data class Args(
+            @property:LLMDescription("The operation to perform.")
+            val operation: CalculatorOperation,
+            @property:LLMDescription("The first argument (number)")
+            val a: Int,
+            @property:LLMDescription("The second argument (number)")
+            val b: Int
+        )
+
+        override val argsSerializer = Args.serializer()
+        override val resultSerializer: KSerializer<Int> = Int.serializer()
+
+        override val name: String = "calculator"
+        override val description: String =
+            "A simple calculator that can add, subtract, multiply, and divide two numbers."
+
+        override suspend fun execute(args: Args): Int = when (args.operation) {
+            CalculatorOperation.ADD -> args.a + args.b
+            CalculatorOperation.SUBTRACT -> args.a - args.b
+            CalculatorOperation.MULTIPLY -> args.a * args.b
+            CalculatorOperation.DIVIDE -> args.a / args.b
+        }
+    }
+
+    sealed interface OperationResult<T> {
+        class Success<T>(val result: T) : OperationResult<T>
+        class Failure<T>(val error: String) : OperationResult<T>
+    }
+
+    class MockFileSystem {
+        private val fileContents: MutableMap<String, String> = mutableMapOf()
+
+        fun create(path: String, content: String): OperationResult<Unit> {
+            if (path in fileContents) return OperationResult.Failure("File already exists")
+            fileContents[path] = content
+            return OperationResult.Success(Unit)
+        }
+
+        fun delete(path: String): OperationResult<Unit> {
+            if (path !in fileContents) return OperationResult.Failure("File does not exist")
+            fileContents.remove(path)
+            return OperationResult.Success(Unit)
+        }
+
+        fun read(path: String): OperationResult<String> {
+            if (path !in fileContents) return OperationResult.Failure("File does not exist")
+            return OperationResult.Success(fileContents[path]!!)
+        }
+
+        fun ls(path: String): OperationResult<List<String>> {
+            if (path in fileContents) {
+                return OperationResult.Failure("Path $path points to a file, but not a directory!")
+            }
+            val matchingFiles = fileContents
+                .filter { (filePath, _) -> filePath.startsWith(path) }
+                .map { (filePath, _) -> filePath }
+
+            if (matchingFiles.isEmpty()) {
+                return OperationResult.Failure("No files in the directory. Directory doesn't exist or is empty.")
+            }
+            return OperationResult.Success(matchingFiles)
+        }
+
+        fun fileCount(): Int = fileContents.size
+    }
+
+    class CreateFile(private val fs: MockFileSystem) : Tool<CreateFile.Args, CreateFile.Result>() {
+        @Serializable
+        data class Args(
+            @property:LLMDescription("The path to create the file")
+            val path: String,
+            @property:LLMDescription("The content to create the file")
+            val content: String
+        )
+
+        @Serializable
+        data class Result(val successful: Boolean, val message: String? = null)
+
+        override val argsSerializer = Args.serializer()
+        override val resultSerializer: KSerializer<Result> = Result.serializer()
+
+        override val name: String = "create_file"
+        override val description: String =
+            "Create a file and writes the given text content to it"
+
+        override suspend fun execute(args: Args): Result {
+            return when (val res = fs.create(args.path, args.content)) {
+                is OperationResult.Success -> Result(successful = true)
+                is OperationResult.Failure -> Result(successful = false, message = res.error)
+            }
+        }
+    }
+
+    class DeleteFile(private val fs: MockFileSystem) : Tool<DeleteFile.Args, DeleteFile.Result>() {
+        @Serializable
+        data class Args(
+            @property:LLMDescription("The path of the file to be deleted")
+            val path: String
+        )
+
+        @Serializable
+        data class Result(val successful: Boolean, val message: String? = null)
+
+        override val argsSerializer = Args.serializer()
+        override val resultSerializer: KSerializer<Result> = Result.serializer()
+
+        override val name: String = "delete_file"
+        override val description: String = "Deletes a file"
+
+        override suspend fun execute(args: Args): Result {
+            return when (val res = fs.delete(args.path)) {
+                is OperationResult.Success -> Result(successful = true)
+                is OperationResult.Failure -> Result(successful = false, message = res.error)
+            }
+        }
+    }
+
+    class ReadFile(private val fs: MockFileSystem) : Tool<ReadFile.Args, ReadFile.Result>() {
+        @Serializable
+        data class Args(
+            @property:LLMDescription("The path of the file to read")
+            val path: String
+        )
+
+        @Serializable
+        data class Result(
+            val successful: Boolean,
+            val message: String? = null,
+            val content: String? = null
+        )
+
+        override val argsSerializer = Args.serializer()
+        override val resultSerializer: KSerializer<Result> = Result.serializer()
+
+        override val name: String = "read_file"
+        override val description: String = "Reads a file"
+
+        override suspend fun execute(args: Args): Result {
+            return when (val res = fs.read(args.path)) {
+                is OperationResult.Success<String> -> Result(successful = true, content = res.result)
+                is OperationResult.Failure -> Result(successful = false, message = res.error)
+            }
+        }
+    }
+
+    class ListFiles(private val fs: MockFileSystem) : Tool<ListFiles.Args, ListFiles.Result>() {
+        @Serializable
+        data class Args(
+            @property:LLMDescription("The path of the directory")
+            val path: String
+        )
+
+        @Serializable
+        data class Result(
+            val successful: Boolean,
+            val message: String? = null,
+            val children: List<String>? = null
+        )
+
+        override val argsSerializer = Args.serializer()
+        override val resultSerializer: KSerializer<Result> = Result.serializer()
+
+        override val name: String = "list_files"
+        override val description: String = "List all files inside the given path of the directory"
+
+        override suspend fun execute(args: Args): Result {
+            return when (val res = fs.ls(args.path)) {
+                is OperationResult.Success<List<String>> -> Result(successful = true, children = res.result)
+                is OperationResult.Failure -> Result(successful = false, message = res.error)
+            }
+        }
+    }
+
+    @Serializable
+    data class GetTransactionsArgs(
+        @property:LLMDescription("Start date in format YYYY-MM-DD")
+        val startDate: String,
+        @property:LLMDescription("End date in format YYYY-MM-DD")
+        val endDate: String
+    )
+
+    object GetTransactionsTool : SimpleTool<GetTransactionsArgs>() {
+        override val argsSerializer = GetTransactionsArgs.serializer()
+
+        override val name: String = "get_transactions"
+        override val description: String = "Get all transactions between two dates"
+
+        override suspend fun doExecute(args: GetTransactionsArgs): String {
+            // Simulate returning transactions
+            return """
+            [
+              {date: "${args.startDate}", amount: -100.00, description: "Grocery Store"},
+              {date: "${args.startDate}", amount: +1000.00, description: "Salary Deposit"},
+              {date: "${args.endDate}", amount: -500.00, description: "Rent Payment"},
+              {date: "${args.endDate}", amount: -200.00, description: "Utilities"}
+            ]
+            """.trimIndent()
+        }
+    }
+
+    @Serializable
+    data class CalculateSumArgs(
+        @property:LLMDescription("List of amounts to sum")
+        val amounts: List<Double>
+    )
+
+    object CalculateSumTool : SimpleTool<CalculateSumArgs>() {
+        override val argsSerializer = CalculateSumArgs.serializer()
+
+        override val name: String = "calculate_sum"
+        override val description: String = "Calculate the sum of a list of amounts"
+
+        override suspend fun doExecute(args: CalculateSumArgs): String {
+            val sum = args.amounts.sum()
+            return sum.toString()
+        }
+    }
+
+    /**
+     * Address type enum.
+     */
+    @Serializable
+    enum class AddressType {
+        HOME,
+        WORK,
+        OTHER
+    }
+
+    /**
+     * An address with multiple fields.
+     */
+    @Serializable
+    data class Address(
+        @property:LLMDescription("The type of address (HOME, WORK, or OTHER)")
+        val type: AddressType,
+        @property:LLMDescription("The street address")
+        val street: String,
+        @property:LLMDescription("The city")
+        val city: String,
+        @property:LLMDescription("The state or province")
+        val state: String,
+        @property:LLMDescription("The ZIP or postal code")
+        val zipCode: String
+    )
+
+    /**
+     * A user profile with nested structures.
+     */
+    @Serializable
+    data class UserProfile(
+        @property:LLMDescription("The user's full name")
+        val name: String,
+        @property:LLMDescription("The user's email address")
+        val email: String,
+        @property:LLMDescription("The user's addresses")
+        val addresses: List<Address>
+    )
+
+    /**
+     * Arguments for the complex nested tool.
+     */
+    @Serializable
+    data class ComplexNestedToolArgs(
+        @property:LLMDescription("The user profile to process")
+        val profile: UserProfile
+    )
+
+    /**
+     * A complex nested tool that demonstrates the JSON schema validation error.
+     * This tool has parameters with complex nested structures that would trigger
+     * the error in the Anthropic API before the fix.
+     */
+    object ComplexNestedTool : SimpleTool<ComplexNestedToolArgs>() {
+        override val argsSerializer = ComplexNestedToolArgs.serializer()
+
+        override val name = "complex_nested_tool"
+
+        override val description = "A tool that processes user profiles with complex nested structures."
+
+        override suspend fun doExecute(args: ComplexNestedToolArgs): String {
+            // Process the user profile
+            val profile = args.profile
+            val addressesInfo = profile.addresses.joinToString("\n") { address ->
+                "- ${address.type} Address: ${address.street}, ${address.city}, ${address.state} ${address.zipCode}"
+            }
+
+            return """
+                Successfully processed user profile:
+                Name: ${profile.name}
+                Email: ${profile.email}
+                Addresses:
+                $addressesInfo
+            """.trimIndent()
         }
     }
 
@@ -185,7 +499,7 @@ object TestUtils {
         private var bulletHandler: ((String) -> Unit)? = null
         private var finishHandler: (() -> Unit)? = null
 
-        fun onHeader(level: Int, handler: (String) -> Unit) {
+        fun onHeader(handler: (String) -> Unit) {
             headerHandler = handler
         }
 
@@ -266,7 +580,7 @@ object TestUtils {
             val bulletPoints = mutableListOf<String>()
 
             val parser = markdownStreamingParser {
-                onHeader(1) { headerText ->
+                onHeader { headerText ->
                     if (currentCountryName.isNotEmpty() && bulletPoints.size >= 3) {
                         val capital = bulletPoints.getOrNull(0)?.substringAfter("Capital: ")?.trim() ?: ""
                         val population = bulletPoints.getOrNull(1)?.substringAfter("Population: ")?.trim() ?: ""

@@ -35,7 +35,7 @@ import kotlin.time.Duration.Companion.seconds
 
 @ExtendWith(OllamaTestFixtureExtension::class)
 @ExtendWith(RetryExtension::class)
-class OllamaAgentIntegrationTest {
+class OllamaAgentIntegrationTest : AIAgentTestBase() {
     companion object {
         @field:InjectOllamaTestFixture
         private lateinit var fixture: OllamaTestFixture

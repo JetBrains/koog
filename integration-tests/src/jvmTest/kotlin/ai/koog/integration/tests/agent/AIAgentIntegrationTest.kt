@@ -14,9 +14,7 @@ import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
 import ai.koog.agents.core.dsl.extension.onAssistantMessage
 import ai.koog.agents.core.dsl.extension.onToolCall
-import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.ext.agent.reActStrategy
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
@@ -26,22 +24,20 @@ import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider
 import ai.koog.agents.snapshot.providers.file.JVMFilePersistenceStorageProvider
 import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.RetryUtils.withRetry
-import ai.koog.integration.tests.utils.TestUtils.CalculatorTool
+import ai.koog.integration.tests.utils.TestUtils.CalculateSumTool
+import ai.koog.integration.tests.utils.TestUtils.CalculatorToolNoArgs
 import ai.koog.integration.tests.utils.TestUtils.DelayTool
-import ai.koog.integration.tests.utils.getLLMClientForProvider
+import ai.koog.integration.tests.utils.TestUtils.GetTransactionsTool
+import ai.koog.integration.tests.utils.TestUtils.SimpleCalculatorTool
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
-import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.ToolChoice
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.builtins.serializer
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.io.TempDir
@@ -49,7 +45,6 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import java.nio.file.Path
-import java.nio.file.Paths
 import java.util.Base64
 import java.util.stream.Stream
 import kotlin.io.path.readBytes
@@ -62,7 +57,7 @@ import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
-class AIAgentIntegrationTest {
+class AIAgentIntegrationTest : AIAgentTestBase() {
 
     companion object {
         private lateinit var testResourcesDir: Path
@@ -70,23 +65,19 @@ class AIAgentIntegrationTest {
         @JvmStatic
         @BeforeAll
         fun setup() {
-            testResourcesDir =
-                Paths.get(AIAgentIntegrationTest::class.java.getResource("/media")!!.toURI())
+            AIAgentTestBase.setup()
+            testResourcesDir = AIAgentTestBase.testResourcesDir
         }
+
+        @JvmStatic
+        fun allModels(): Stream<LLModel> = AIAgentTestBase.allModels()
+
+        @JvmStatic
+        fun modelsWithVisionCapability(): Stream<Arguments> = AIAgentTestBase.modelsWithVisionCapability()
 
         @JvmStatic
         fun reasoningIntervals(): Stream<Int> {
             return listOf(1, 2, 3).stream()
-        }
-
-        @JvmStatic
-        fun allModels(): Stream<LLModel> {
-            return Models.allCompletionModels()
-        }
-
-        @JvmStatic
-        fun modelsWithVisionCapability(): Stream<Arguments> {
-            return Models.modelsWithVisionCapability()
         }
 
         @JvmStatic
@@ -105,56 +96,55 @@ class AIAgentIntegrationTest {
                 Arguments.of(HistoryCompressionStrategy.Chunked(2), "Chunked(2)")
             )
         }
+    }
 
-        val twoToolsRegistry = ToolRegistry {
-            tool(CalculatorTool)
-            tool(DelayTool)
-        }
+    val twoToolsRegistry = ToolRegistry {
+        tool(SimpleCalculatorTool)
+        tool(DelayTool)
+    }
 
-        val bankingToolsRegistry = ToolRegistry {
-            tool(GetTransactionsTool)
-            tool(CalculateSumTool)
-        }
+    val bankingToolsRegistry = ToolRegistry {
+        tool(GetTransactionsTool)
+        tool(CalculateSumTool)
+    }
 
-        val twoToolsPrompt = """
+    val twoToolsPrompt = """
         I need you to perform two operations:
         1. Calculate 7 times 2
         2. Wait for 500 milliseconds
 
         Respond briefly after completing both tasks. DO NOT EXCEED THE LIMIT OF 20 WORDS.
-        """.trimIndent()
+    """.trimIndent()
 
-        fun getExecutor(model: LLModel): SingleLLMPromptExecutor =
-            SingleLLMPromptExecutor(getLLMClientForProvider(model.provider))
-
-        fun getSingleRunAgentWithRunMode(
-            model: LLModel,
-            runMode: ToolCalls,
-            toolRegistry: ToolRegistry = twoToolsRegistry,
-            eventHandlerConfig: EventHandlerConfig.() -> Unit,
-        ) = AIAgent(
-            promptExecutor = getExecutor(model),
-            strategy = singleRunStrategy(runMode),
-            agentConfig = AIAgentConfig(
-                prompt = prompt(
-                    id = "multiple-tool-calls-agent",
-                    params = LLMParams(
-                        temperature = 1.0,
-                        toolChoice = ToolChoice.Auto,
-                    )
-                ) {
-                    system {
-                        +"You are a helpful assistant. "
-                        +"JUST CALL THE TOOLS, NO QUESTIONS ASKED."
-                    }
-                },
-                model = model,
-                maxAgentIterations = 10,
-            ),
-            toolRegistry = toolRegistry,
-            installFeatures = { install(EventHandler.Feature, eventHandlerConfig) },
-        )
-    }
+    private fun getSingleRunAgentWithRunMode(
+        model: LLModel,
+        runMode: ToolCalls,
+        toolRegistry: ToolRegistry = twoToolsRegistry,
+        eventHandlerConfig: EventHandlerConfig.() -> Unit,
+    ) = AIAgent(
+        promptExecutor = getExecutor(model),
+        strategy = singleRunStrategy(runMode),
+        agentConfig = AIAgentConfig(
+            prompt = prompt(
+                id = "single-run-agent",
+                params = LLMParams(
+                    temperature = 1.0,
+                    toolChoice = ToolChoice.Auto,
+                )
+            ) {
+                system {
+                    +"You are a helpful assistant. "
+                    +"JUST CALL THE TOOLS, NO QUESTIONS ASKED."
+                }
+            },
+            model = model,
+            maxAgentIterations = 10,
+        ),
+        toolRegistry = toolRegistry,
+        installFeatures = {
+            install(EventHandler.Feature, eventHandlerConfig)
+        },
+    )
 
     private fun buildHistoryCompressionWithToolsStrategy(
         strategy: HistoryCompressionStrategy,
@@ -176,11 +166,11 @@ class AIAgentIntegrationTest {
         if (compressBeforeToolResult) {
             edge(callLLM forwardTo executeTool onToolCall { true })
             executeTool then compressToolResult then sendToolResult
-            edge(sendToolResult forwardTo executeTool onToolCall (CalculatorTool))
+            edge(sendToolResult forwardTo executeTool onToolCall (SimpleCalculatorTool))
             edge(sendToolResult forwardTo nodeFinish onAssistantMessage { true } transformed { it to llm.prompt.messages })
         } else {
             callLLM then compressResponse
-            edge(compressResponse forwardTo executeTool onToolCall (CalculatorTool))
+            edge(compressResponse forwardTo executeTool onToolCall (SimpleCalculatorTool))
             edge(compressResponse forwardTo nodeFinish onAssistantMessage { true } transformed { it to llm.prompt.messages })
             executeTool then sendToolResult then compressResponse
         }
@@ -198,8 +188,8 @@ class AIAgentIntegrationTest {
             "No errors should occur during agent execution with $strategyName, got: [${errors.joinToString("\n")}]"
         )
         assertTrue(
-            actualToolCalls.contains(CalculatorTool.name),
-            "The ${CalculatorTool.name} tool was not called with $strategyName"
+            actualToolCalls.contains(SimpleCalculatorTool.name),
+            "The ${SimpleCalculatorTool.name} tool was not called with $strategyName"
         )
         assertTrue(result.isNotBlank(), "There should be results from history compression with $strategyName")
         assertNotNull(promptMessages, "Final prompt messages should be captured with $strategyName")
@@ -215,143 +205,6 @@ class AIAgentIntegrationTest {
             "System message content should not be empty after compression with $strategyName"
         )
     }
-
-    @Serializable
-    private object CalculatorToolNoArgs : SimpleTool<Unit>() {
-        override val argsSerializer = Unit.serializer()
-
-        override val name: String = "calculator"
-        override val description: String =
-            "A simple calculator that performs basic calculations. No parameters needed."
-
-        override suspend fun doExecute(args: Unit): String {
-            return "The result of 123 + 456 is 579"
-        }
-    }
-
-    @Serializable
-    data class GetTransactionsArgs(
-        @property:LLMDescription("Start date in format YYYY-MM-DD")
-        val startDate: String,
-        @property:LLMDescription("End date in format YYYY-MM-DD")
-        val endDate: String
-    )
-
-    object GetTransactionsTool : SimpleTool<GetTransactionsArgs>() {
-        override val argsSerializer = GetTransactionsArgs.serializer()
-
-        override val name: String = "get_transactions"
-        override val description: String = "Get all transactions between two dates"
-
-        override suspend fun doExecute(args: GetTransactionsArgs): String {
-            // Simulate returning transactions
-            return """
-            [
-              {date: "${args.startDate}", amount: -100.00, description: "Grocery Store"},
-              {date: "${args.startDate}", amount: +1000.00, description: "Salary Deposit"},
-              {date: "${args.endDate}", amount: -500.00, description: "Rent Payment"},
-              {date: "${args.endDate}", amount: -200.00, description: "Utilities"}
-            ]
-            """.trimIndent()
-        }
-    }
-
-    @Serializable
-    data class CalculateSumArgs(
-        @property:LLMDescription("List of amounts to sum")
-        val amounts: List<Double>
-    )
-
-    object CalculateSumTool : SimpleTool<CalculateSumArgs>() {
-        override val argsSerializer = CalculateSumArgs.serializer()
-
-        override val name: String = "calculate_sum"
-        override val description: String = "Calculate the sum of a list of amounts"
-
-        override suspend fun doExecute(args: CalculateSumArgs): String {
-            val sum = args.amounts.sum()
-            return sum.toString()
-        }
-    }
-
-    val systemPrompt = "You are a helpful assistant."
-
-    private class State(
-        var reasoningCallsCount: Int = 0,
-        val actualToolCalls: MutableList<String> = mutableListOf(),
-        val errors: MutableList<Throwable> = mutableListOf(),
-        val results: MutableList<Any?> = mutableListOf(),
-        val toolExecutionCounter: MutableList<String> = mutableListOf(),
-        val parallelToolCalls: MutableList<ToolCallInfo> = mutableListOf(),
-        val singleToolCalls: MutableList<ToolCallInfo> = mutableListOf(),
-    )
-
-    private suspend fun runWithTracking(
-        action: suspend (
-            eventHandlerConfig: EventHandlerConfig.() -> Unit,
-            state: State,
-        ) -> Unit,
-    ) {
-        val state = State()
-
-        val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
-            onAgentCompleted { eventContext ->
-                state.results.add(eventContext.result)
-            }
-
-            onAgentExecutionFailed { eventContext ->
-                state.errors.add(eventContext.throwable)
-            }
-
-            onLLMCallStarting { eventContext ->
-                if (eventContext.tools.isEmpty() &&
-                    eventContext.prompt.params.toolChoice == null
-                ) {
-                    state.reasoningCallsCount++
-                }
-            }
-
-            onNodeExecutionStarting { eventContext ->
-                val input = eventContext.input
-
-                if (input is List<*>) {
-                    input.filterIsInstance<Message.Tool.Call>().forEach { call ->
-                        state.parallelToolCalls.add(
-                            ToolCallInfo(
-                                id = call.id,
-                                tool = call.tool,
-                                content = call.content,
-                                metaInfo = call.metaInfo,
-                            )
-                        )
-                    }
-                } else if (input is Message.Tool.Call) {
-                    state.singleToolCalls.add(
-                        ToolCallInfo(
-                            id = input.id,
-                            tool = input.tool,
-                            content = input.content,
-                            metaInfo = input.metaInfo,
-                        )
-                    )
-                }
-            }
-
-            onToolCallStarting { eventContext ->
-                state.actualToolCalls.add(eventContext.tool.name)
-                state.toolExecutionCounter.add(eventContext.tool.name)
-            }
-        }
-
-        action(eventHandlerConfig, state)
-    }
-
-    data class ToolCallInfo(
-        val id: String?,
-        val tool: String,
-        val content: String,
-        val metaInfo: ResponseMetaInfo,
-    )
 
     private fun runMultipleToolsTest(model: LLModel, runMode: ToolCalls) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
@@ -389,7 +242,11 @@ class AIAgentIntegrationTest {
                     )
                 }
 
-                assertEquals(CalculatorTool.name, firstCall.tool, "First tool call should be ${CalculatorTool.name}")
+                assertEquals(
+                    SimpleCalculatorTool.name,
+                    firstCall.tool,
+                    "First tool call should be ${SimpleCalculatorTool.name}"
+                )
                 assertEquals(DelayTool.name, secondCall.tool, "Second tool call should be ${DelayTool.name}")
             }
         }
@@ -449,7 +306,7 @@ class AIAgentIntegrationTest {
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
         val toolRegistry = ToolRegistry {
-            tool(CalculatorTool)
+            tool(SimpleCalculatorTool)
         }
 
         withRetry {
@@ -470,8 +327,8 @@ class AIAgentIntegrationTest {
                 agent.run("How much is 3 times 5?")
                 assertTrue(state.actualToolCalls.isNotEmpty(), "No tools were called for model $model")
                 assertTrue(
-                    state.actualToolCalls.contains(CalculatorTool.name),
-                    "The ${CalculatorTool.name} tool was not called for model $model"
+                    state.actualToolCalls.contains(SimpleCalculatorTool.name),
+                    "The ${SimpleCalculatorTool.name} tool was not called for model $model"
                 )
             }
         }
@@ -542,7 +399,7 @@ class AIAgentIntegrationTest {
         val executor = getExecutor(model)
 
         val toolRegistry = ToolRegistry {
-            tool(CalculatorTool)
+            tool(SimpleCalculatorTool)
         }
 
         val customStrategy = strategy("test-without-tools") {
@@ -622,9 +479,9 @@ class AIAgentIntegrationTest {
                     "There should be more or equal than 2 single tool calls in a Sequential single run scenario"
                 )
                 assertEquals(
-                    CalculatorTool.name,
+                    SimpleCalculatorTool.name,
                     state.singleToolCalls.first().tool,
-                    "First tool call should be ${CalculatorTool.name}"
+                    "First tool call should be ${SimpleCalculatorTool.name}"
                 )
             }
         }
@@ -1060,7 +917,7 @@ class AIAgentIntegrationTest {
 
         val storageProvider = InMemoryPersistenceStorageProvider()
         val registry = ToolRegistry {
-            tool(CalculatorTool)
+            tool(SimpleCalculatorTool)
         }
 
         withRetry {
@@ -1100,9 +957,9 @@ class AIAgentIntegrationTest {
                 agent.run("What is 12 + 34?")
 
                 assertEquals(
-                    listOf(CalculatorTool.descriptor.name),
+                    listOf(SimpleCalculatorTool.descriptor.name),
                     state.actualToolCalls,
-                    "${CalculatorTool.descriptor.name} tool should be called for model $model with persistence"
+                    "${SimpleCalculatorTool.descriptor.name} tool should be called for model $model with persistence"
                 )
                 assertTrue(state.errors.isEmpty(), "There should be no errors")
 
@@ -1112,12 +969,12 @@ class AIAgentIntegrationTest {
 
                 val toolCallPresentInHistory = nonTombstoneCheckpoints.any { cp ->
                     cp.messageHistory.any { msg ->
-                        msg is Message.Tool.Call && msg.tool == CalculatorTool.name
+                        msg is Message.Tool.Call && msg.tool == SimpleCalculatorTool.name
                     }
                 }
                 assertTrue(
                     toolCallPresentInHistory,
-                    "Checkpoint message history should contain a tool call to '${CalculatorTool.name}'"
+                    "Checkpoint message history should contain a tool call to '${SimpleCalculatorTool.name}'"
                 )
             }
         }
