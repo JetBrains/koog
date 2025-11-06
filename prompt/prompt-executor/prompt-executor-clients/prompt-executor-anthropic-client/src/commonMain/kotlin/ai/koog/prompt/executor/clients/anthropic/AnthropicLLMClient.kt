@@ -11,7 +11,6 @@ import ai.koog.prompt.executor.clients.anthropic.models.AnthropicMessage
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicMessageRequest
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicMessageRequestSerializer
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicResponse
-import ai.koog.prompt.executor.clients.anthropic.models.AnthropicResponseContent
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicStreamResponse
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicTool
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicToolChoice
@@ -319,17 +318,29 @@ public open class AnthropicLLMClient(
 
                 is Message.Assistant -> {
                     messages.add(
-                        AnthropicMessage(
-                            role = "assistant",
+                        AnthropicMessage.Assistant(
                             content = listOf(AnthropicContent.Text(message.content))
+                        )
+                    )
+                }
+
+                is Message.Reasoning -> {
+                    messages.add(
+                        AnthropicMessage.Assistant(
+                            content = listOf(
+                                AnthropicContent.Thinking(
+                                    signature = message.encrypted
+                                        ?: error("Encrypted signature is required for reasoning messages but was null"),
+                                    thinking = message.content
+                                )
+                            )
                         )
                     )
                 }
 
                 is Message.Tool.Result -> {
                     messages.add(
-                        AnthropicMessage(
-                            role = "user",
+                        AnthropicMessage.User(
                             content = listOf(
                                 AnthropicContent.ToolResult(
                                     toolUseId = message.id ?: "",
@@ -343,8 +354,7 @@ public open class AnthropicLLMClient(
                 is Message.Tool.Call -> {
                     // Create a new assistant message with the tool call
                     messages.add(
-                        AnthropicMessage(
-                            role = "assistant",
+                        AnthropicMessage.Assistant(
                             content = listOf(
                                 AnthropicContent.ToolUse(
                                     id = message.id ?: Uuid.random().toString(),
@@ -474,7 +484,7 @@ public open class AnthropicLLMClient(
             }
         }
 
-        return AnthropicMessage(role = "user", content = listOfContent)
+        return AnthropicMessage.User(content = listOfContent)
     }
 
     private fun processAnthropicResponse(response: AnthropicResponse): List<Message.Response> {
@@ -482,35 +492,33 @@ public open class AnthropicLLMClient(
         val inputTokensCount = response.usage?.inputTokens
         val outputTokensCount = response.usage?.outputTokens
         val totalTokensCount = response.usage?.let { it.inputTokens?.plus(it.outputTokens ?: 0) ?: it.outputTokens }
+        val metaInfo = ResponseMetaInfo.create(
+            clock,
+            totalTokensCount = totalTokensCount,
+            inputTokensCount = inputTokensCount,
+            outputTokensCount = outputTokensCount,
+        )
 
         val responses = response.content.map { content ->
             when (content) {
-                is AnthropicResponseContent.Text -> {
-                    Message.Assistant(
-                        content = content.text,
-                        finishReason = response.stopReason,
-                        metaInfo = ResponseMetaInfo.create(
-                            clock,
-                            totalTokensCount = totalTokensCount,
-                            inputTokensCount = inputTokensCount,
-                            outputTokensCount = outputTokensCount,
-                        )
-                    )
+                is AnthropicContent.Text -> {
+                    Message.Assistant(content = content.text, finishReason = response.stopReason, metaInfo = metaInfo)
                 }
 
-                is AnthropicResponseContent.ToolUse -> {
+                is AnthropicContent.Thinking -> {
+                    Message.Reasoning(encrypted = content.signature, content = content.thinking, metaInfo = metaInfo)
+                }
+
+                is AnthropicContent.ToolUse -> {
                     Message.Tool.Call(
                         id = content.id,
                         tool = content.name,
                         content = content.input.toString(),
-                        metaInfo = ResponseMetaInfo.create(
-                            clock,
-                            totalTokensCount = totalTokensCount,
-                            inputTokensCount = inputTokensCount,
-                            outputTokensCount = outputTokensCount,
-                        )
+                        metaInfo = metaInfo
                     )
                 }
+
+                else -> throw IllegalArgumentException("Unhandled AnthropicContent type. Content: $content")
             }
         }
 

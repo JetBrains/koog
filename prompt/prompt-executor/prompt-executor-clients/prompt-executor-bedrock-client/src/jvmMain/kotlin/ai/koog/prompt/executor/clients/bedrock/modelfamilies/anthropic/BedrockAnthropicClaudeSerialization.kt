@@ -2,7 +2,7 @@ package ai.koog.prompt.executor.clients.bedrock.modelfamilies.anthropic
 
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.Prompt
-import ai.koog.prompt.executor.clients.anthropic.models.AnthropicResponseContent
+import ai.koog.prompt.executor.clients.anthropic.models.AnthropicContent
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicStreamResponse
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicInvokeModel
 import ai.koog.prompt.executor.clients.bedrock.modelfamilies.BedrockAnthropicInvokeModelContent
@@ -22,7 +22,6 @@ import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.put
-import kotlin.uuid.ExperimentalUuidApi
 
 internal object BedrockAnthropicClaudeSerialization {
 
@@ -44,8 +43,7 @@ internal object BedrockAnthropicClaudeSerialization {
                     }
                     if (msg.content.isNotEmpty()) {
                         messages.add(
-                            BedrockAnthropicInvokeModelMessage(
-                                role = "user",
+                            BedrockAnthropicInvokeModelMessage.User(
                                 content = listOf(BedrockAnthropicInvokeModelContent.Text(text = msg.content))
                             )
                         )
@@ -55,9 +53,24 @@ internal object BedrockAnthropicClaudeSerialization {
                 is Message.Assistant -> {
                     if (msg.content.isNotEmpty()) {
                         messages.add(
-                            BedrockAnthropicInvokeModelMessage(
-                                role = "assistant",
+                            BedrockAnthropicInvokeModelMessage.Assistant(
                                 content = listOf(BedrockAnthropicInvokeModelContent.Text(text = msg.content))
+                            )
+                        )
+                    }
+                }
+
+                is Message.Reasoning -> {
+                    if (msg.content.isNotEmpty()) {
+                        messages.add(
+                            BedrockAnthropicInvokeModelMessage.Assistant(
+                                content = listOf(
+                                    BedrockAnthropicInvokeModelContent.Thinking(
+                                        signature = msg.encrypted
+                                            ?: error("Encrypted signature is required for reasoning messages but was null"),
+                                        thinking = msg.content
+                                    )
+                                )
                             )
                         )
                     }
@@ -66,8 +79,7 @@ internal object BedrockAnthropicClaudeSerialization {
                 is Message.Tool.Result -> {
                     if (msg.content.isNotEmpty()) {
                         messages.add(
-                            BedrockAnthropicInvokeModelMessage(
-                                role = "user",
+                            BedrockAnthropicInvokeModelMessage.User(
                                 content = listOf(
                                     BedrockAnthropicInvokeModelContent.ToolResult(
                                         toolUseId = msg.id!!,
@@ -82,8 +94,7 @@ internal object BedrockAnthropicClaudeSerialization {
                 is Message.Tool.Call -> {
                     if (msg.content.isNotEmpty()) {
                         messages.add(
-                            BedrockAnthropicInvokeModelMessage(
-                                role = "assistant",
+                            BedrockAnthropicInvokeModelMessage.Assistant(
                                 content = listOf(
                                     BedrockAnthropicInvokeModelContent.ToolCall(
                                         msg.id!!,
@@ -167,38 +178,41 @@ internal object BedrockAnthropicClaudeSerialization {
         )
     }
 
-    @OptIn(ExperimentalUuidApi::class)
     internal fun parseAnthropicResponse(responseBody: String, clock: Clock = Clock.System): List<Message.Response> {
         val response = json.decodeFromString<BedrockAnthropicResponse>(responseBody)
 
         val inputTokens = response.usage?.inputTokens
         val outputTokens = response.usage?.outputTokens
         val totalTokens = inputTokens?.let { input -> outputTokens?.let { output -> input + output } }
+        val metaInfo = ResponseMetaInfo.create(
+            clock,
+            totalTokensCount = totalTokens,
+            inputTokensCount = inputTokens,
+            outputTokensCount = outputTokens
+        )
 
         return response.content.map { content ->
             when (content) {
-                is AnthropicResponseContent.Text -> Message.Assistant(
+                is AnthropicContent.Text -> Message.Assistant(
                     content = content.text,
                     finishReason = response.stopReason,
-                    metaInfo = ResponseMetaInfo.create(
-                        clock,
-                        totalTokensCount = totalTokens,
-                        inputTokensCount = inputTokens,
-                        outputTokensCount = outputTokens
-                    )
+                    metaInfo = metaInfo
                 )
 
-                is AnthropicResponseContent.ToolUse -> Message.Tool.Call(
+                is AnthropicContent.Thinking -> Message.Reasoning(
+                    encrypted = content.signature,
+                    content = content.thinking,
+                    metaInfo = metaInfo
+                )
+
+                is AnthropicContent.ToolUse -> Message.Tool.Call(
                     id = content.id,
                     tool = content.name,
                     content = content.input.toString(),
-                    metaInfo = ResponseMetaInfo.create(
-                        clock,
-                        totalTokensCount = totalTokens,
-                        inputTokensCount = inputTokens,
-                        outputTokensCount = outputTokens
-                    )
+                    metaInfo = metaInfo
                 )
+
+                else -> throw IllegalArgumentException("Unhandled AnthropicContent type. Content: $content")
             }
         }
     }
@@ -225,15 +239,22 @@ internal object BedrockAnthropicClaudeSerialization {
             "message_delta" -> {
                 streamResponse.message?.content?.map { content ->
                     when (content) {
-                        is AnthropicResponseContent.Text ->
+                        is AnthropicContent.Text ->
                             StreamFrame.Append(content.text)
 
-                        is AnthropicResponseContent.ToolUse ->
+                        is AnthropicContent.Thinking ->
+                            StreamFrame.Append(content.thinking)
+
+                        is AnthropicContent.ToolUse ->
                             StreamFrame.ToolCall(
                                 id = content.id,
                                 name = content.name,
                                 content = content.input.toString()
                             )
+
+                        else -> throw IllegalArgumentException(
+                            "Unsupported AnthropicContent type in message_delta. Content: $content"
+                        )
                     }
                 } ?: emptyList()
             }

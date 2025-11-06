@@ -36,6 +36,10 @@ internal class ChoiceEvent(
                 arguments?.let { addBodyField(EventBodyFields.Arguments(it)) }
             }
 
+            is Message.Reasoning -> {
+                addBodyField(EventBodyFields.Message(message.role, message.content))
+            }
+
             is Message.Tool.Call -> {
                 addBodyField(EventBodyFields.Role(role = message.role))
                 addBodyField(EventBodyFields.ToolCalls(tools = listOf(message)))

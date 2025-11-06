@@ -303,7 +303,7 @@ public class OpenTelemetry {
                             UserMessageEvent(provider, message)
                         }
 
-                        is Message.Assistant -> {
+                        is Message.Assistant, is Message.Reasoning -> {
                             AssistantMessageEvent(provider, message)
                         }
 
@@ -371,7 +371,7 @@ public class OpenTelemetry {
                 val eventsToAdd = buildList {
                     eventContext.responses.mapIndexed { index, message ->
                         when (message) {
-                            is Message.Assistant -> {
+                            is Message.Assistant, is Message.Reasoning -> {
                                 add(AssistantMessageEvent(provider, message))
                             }
 
@@ -393,7 +393,7 @@ public class OpenTelemetry {
                 // Finish Reasons Attribute
                 eventContext.responses.lastOrNull()?.let { message ->
                     val finishReasonsAttribute = when (message) {
-                        is Message.Assistant -> {
+                        is Message.Assistant, is Message.Reasoning -> {
                             SpanAttributes.Response.FinishReasons(reasons = listOf(SpanAttributes.Response.FinishReasonType.Stop))
                         }
 

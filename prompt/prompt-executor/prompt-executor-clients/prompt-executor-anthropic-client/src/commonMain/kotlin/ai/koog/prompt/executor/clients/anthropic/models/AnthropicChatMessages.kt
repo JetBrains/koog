@@ -81,7 +81,6 @@ public data class AnthropicMessageRequest(
  * Represents a message within the Anthropic LLM system. This data class encapsulates
  * the role of the message and its associated content.
  *
- * @property role The role of the sender of the message, such as "user", "assistant", or "system".
  * @property content A list of content elements that form the message, where each content
  * can be of varying types like text, image, document, tool usage, or tool result.
  *
@@ -90,10 +89,28 @@ public data class AnthropicMessageRequest(
  */
 @InternalLLMClientApi
 @Serializable
-public data class AnthropicMessage(
-    val role: String,
-    val content: List<AnthropicContent>
-)
+@JsonClassDiscriminator("role")
+public sealed interface AnthropicMessage {
+    /**
+     * A list of content elements that form the message, where each content
+     * can be of varying types like text, image, document, tool usage, or tool result.
+     */
+    public val content: List<AnthropicContent>
+
+    /**
+     * User Anthropic message.
+     */
+    @Serializable
+    @SerialName("user")
+    public data class User(override val content: List<AnthropicContent>) : AnthropicMessage
+
+    /**
+     * Assistant Anthropic message.
+     */
+    @Serializable
+    @SerialName("assistant")
+    public data class Assistant(override val content: List<AnthropicContent>) : AnthropicMessage
+}
 
 /**
  * Represents a system message with designated text and type properties
@@ -119,7 +136,8 @@ public data class SystemAnthropicMessage(
  */
 @InternalLLMClientApi
 @Serializable
-public sealed class AnthropicContent {
+public sealed interface AnthropicContent {
+
     /**
      * Represents a text-based content within the AnthropicContent hierarchy.
      *
@@ -130,7 +148,20 @@ public sealed class AnthropicContent {
      */
     @Serializable
     @SerialName("text")
-    public data class Text(val text: String) : AnthropicContent()
+    public data class Text(val text: String) : AnthropicContent
+
+    /**
+     * Represents a thinking process.
+     *
+     * This class captures the model's reasoning and thought process during its operation.
+     * It is serialized with the discriminator "thinking" for polymorphic serialization.
+     *
+     * @property signature An identifier or signature associated with this thought process.
+     * @property thinking The actual content of the model's internal reasoning or thought process.
+     */
+    @Serializable
+    @SerialName("thinking")
+    public data class Thinking(val signature: String, val thinking: String) : AnthropicContent
 
     /**
      * Represents an image content type within the AnthropicContent hierarchy.
@@ -141,7 +172,7 @@ public sealed class AnthropicContent {
      */
     @Serializable
     @SerialName("image")
-    public data class Image(val source: ImageSource) : AnthropicContent()
+    public data class Image(val source: ImageSource) : AnthropicContent
 
     /**
      * Represents a document that originates from a specified source.
@@ -151,7 +182,7 @@ public sealed class AnthropicContent {
      */
     @Serializable
     @SerialName("document")
-    public data class Document(val source: DocumentSource) : AnthropicContent()
+    public data class Document(val source: DocumentSource) : AnthropicContent
 
     /**
      * Represents the usage of a tool in a structured format.
@@ -172,7 +203,7 @@ public sealed class AnthropicContent {
         val id: String,
         val name: String,
         val input: JsonObject
-    ) : AnthropicContent()
+    ) : AnthropicContent
 
     /**
      * Represents the result of a tool invocation within the Anthropic content system.
@@ -185,7 +216,7 @@ public sealed class AnthropicContent {
     public data class ToolResult(
         val toolUseId: String,
         val content: String
-    ) : AnthropicContent()
+    ) : AnthropicContent
 }
 
 /**
@@ -414,48 +445,11 @@ public data class AnthropicResponse(
     val id: String,
     val type: String,
     val role: String,
-    val content: List<AnthropicResponseContent>,
+    val content: List<AnthropicContent>,
     val model: String,
     val stopReason: String? = null,
     val usage: AnthropicUsage? = null
 )
-
-/**
- * Represents the content of a response from Anthropic's API. This is a sealed class that encapsulates
- * different possible response types.
- *
- * Note: This API is marked as internal and should not be used directly. It may change or be removed without notice.
- */
-@InternalLLMClientApi
-@Serializable
-public sealed class AnthropicResponseContent {
-    /**
-     * Represents the textual content in a response from the Anthropic language model.
-     *
-     * This class is a specific type of [AnthropicResponseContent], providing a structured
-     * way to handle text-based responses.
-     *
-     * @property text The content of the textual response.
-     */
-    @Serializable
-    @SerialName("text")
-    public data class Text(val text: String) : AnthropicResponseContent()
-
-    /**
-     * Represents the usage of a tool in a response from an Anthropic system.
-     *
-     * @property id The unique identifier of the tool being used.
-     * @property name The name of the tool being used.
-     * @property input The input parameters provided to the tool, represented as a JSON object.
-     */
-    @Serializable
-    @SerialName("tool_use")
-    public data class ToolUse(
-        val id: String,
-        val name: String,
-        val input: JsonObject
-    ) : AnthropicResponseContent()
-}
 
 /**
  * Represents the usage statistics of the Anthropic LLM API.
@@ -517,7 +511,7 @@ public data class AnthropicStreamDelta(
     val text: String? = null,
     val partialJson: String? = null,
     val stopReason: String? = null,
-    val toolUse: AnthropicResponseContent.ToolUse? = null
+    val toolUse: AnthropicContent.ToolUse? = null
 )
 
 /**

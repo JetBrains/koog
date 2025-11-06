@@ -327,6 +327,22 @@ public open class GoogleLLMClient(
                     )
                 }
 
+                is Message.Reasoning -> {
+                    flushCalls()
+                    contents.add(
+                        GoogleContent(
+                            role = "assistant",
+                            parts = listOf(
+                                GooglePart.Text(
+                                    text = message.content,
+                                    thoughtSignature = message.encrypted,
+                                    thought = true,
+                                )
+                            )
+                        )
+                    )
+                }
+
                 is Message.Tool.Result -> {
                     flushCalls()
                     contents.add(
@@ -587,22 +603,51 @@ public open class GoogleLLMClient(
     @OptIn(ExperimentalUuidApi::class)
     private fun processGoogleCandidate(candidate: GoogleCandidate, metaInfo: ResponseMetaInfo): List<Message.Response> {
         val parts = candidate.content?.parts.orEmpty()
-        val responses = parts.map { part ->
-            when (part) {
-                is GooglePart.Text -> Message.Assistant(
-                    content = part.text,
-                    finishReason = candidate.finishReason,
-                    metaInfo = metaInfo
-                )
+        val responses = mutableListOf<Message.Response>()
+        with(responses) {
+            parts.forEach { part ->
+                if (part.thoughtSignature != null && part.thought == false) {
+                    add(
+                        Message.Reasoning(
+                            encrypted = part.thoughtSignature,
+                            content = "",
+                            metaInfo = metaInfo
+                        )
+                    )
+                }
 
-                is GooglePart.FunctionCall -> Message.Tool.Call(
-                    id = Uuid.random().toString(),
-                    tool = part.functionCall.name,
-                    content = part.functionCall.args.toString(),
-                    metaInfo = metaInfo
-                )
+                when (part) {
+                    is GooglePart.Text -> {
+                        if (part.thought ?: false) {
+                            add(
+                                Message.Reasoning(
+                                    encrypted = part.thoughtSignature,
+                                    content = part.text,
+                                    metaInfo = metaInfo
+                                )
+                            )
+                        } else {
+                            add(
+                                Message.Assistant(
+                                    content = part.text,
+                                    finishReason = candidate.finishReason,
+                                    metaInfo = metaInfo
+                                )
+                            )
+                        }
+                    }
 
-                else -> error("Not supported part type: $part")
+                    is GooglePart.FunctionCall -> add(
+                        Message.Tool.Call(
+                            id = Uuid.random().toString(),
+                            tool = part.functionCall.name,
+                            content = part.functionCall.args.toString(),
+                            metaInfo = metaInfo
+                        )
+                    )
+
+                    else -> error("Not supported part type: $part")
+                }
             }
         }
 

@@ -9,6 +9,7 @@ import ai.koog.prompt.message.ResponseMetaInfo
 public fun Message.Response.toStreamFrame(): StreamFrame =
     when (this) {
         is Message.Assistant -> StreamFrame.Append(content)
+        is Message.Reasoning -> StreamFrame.Append(content)
         is Message.Tool.Call -> StreamFrame.ToolCall(id, tool, content)
     }
 

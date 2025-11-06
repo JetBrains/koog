@@ -41,6 +41,8 @@ internal object BedrockAI21JambaSerialization {
                     JambaMessage(role = "assistant", content = msg.content)
                 )
 
+                is Message.Reasoning -> throw NotImplementedError("Reasoning is not supported by Jamba")
+
                 is Message.Tool.Call -> {
                     // Find or create assistant message with tool calls
                     val lastMessage = messages.lastOrNull()

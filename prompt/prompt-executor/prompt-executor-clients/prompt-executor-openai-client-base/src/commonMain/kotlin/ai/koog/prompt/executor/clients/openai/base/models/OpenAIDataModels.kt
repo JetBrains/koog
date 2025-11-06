@@ -129,6 +129,7 @@ public sealed interface OpenAIMessage {
     @SerialName("assistant")
     public class Assistant(
         override val content: Content? = null,
+        public val reasoningContent: String? = null,
         public val audio: OpenAIAudio? = null,
         public val name: String? = null,
         public val refusal: String? = null,
