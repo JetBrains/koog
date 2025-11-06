@@ -147,7 +147,6 @@ public data class SafeToolFromCallable<TResult>(
      * @param args The arguments to be passed to the tool during its execution.
      * @return A result object containing the outcome of the tool call, including success or failure information.
      */
-    @Suppress("UNCHECKED_CAST")
     public suspend fun execute(vararg args: Any?): Result<TResult> {
         return environment.executeTool(
             Message.Tool.Call(
@@ -156,7 +155,7 @@ public data class SafeToolFromCallable<TResult>(
                 content = tool.encodeArgsToString(encodeArgs(*args)),
                 metaInfo = ResponseMetaInfo.create(clock = clock)
             )
-        ).toSafeResultFromCallable()
+        ).toSafeResultFromCallable(tool)
     }
 
     /**
@@ -188,11 +187,11 @@ public data class SafeToolFromCallable<TResult>(
  * @return A `SafeToolFromCallable.Result` object, either a `Success` with the extracted result
  *         and content or a `Failure` with an appropriate message.
  */
-private fun <TResult> ReceivedToolResult.toSafeResultFromCallable(): SafeToolFromCallable.Result<TResult> =
+private fun <TResult> ReceivedToolResult.toSafeResultFromCallable(tool: Tool<ToolFromCallable.VarArgs, TResult>): SafeToolFromCallable.Result<TResult> =
     when (result) {
         null -> SafeToolFromCallable.Result.Failure(message = content)
         else -> SafeToolFromCallable.Result.Success(
-            result = result as TResult,
+            result = tool.decodeResult(result),
             content = content
         )
     }

@@ -198,7 +198,7 @@ internal suspend inline fun <reified Output, reified OutputTransformed> AIAgentF
 
                 toolResults.firstOrNull { it.tool == finishTool.descriptor.name }
                     ?.let { finishResult ->
-                        return finishResult.toSafeResult<OutputTransformed>().asSuccessful().result
+                        return finishResult.toSafeResult(finishTool).asSuccessful().result
                     }
             }
 
@@ -238,7 +238,7 @@ internal suspend inline fun <reified Output, reified OutputTransformed> AIAgentF
                 response = sendToolResult(toolResult)
 
                 if (toolResult.tool == finishTool.descriptor.name) {
-                    return toolResult.toSafeResult<OutputTransformed>().asSuccessful().result
+                    return toolResult.toSafeResult(finishTool).asSuccessful().result
                 }
             }
 

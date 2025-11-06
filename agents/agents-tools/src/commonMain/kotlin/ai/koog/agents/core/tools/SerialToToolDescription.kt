@@ -5,7 +5,6 @@ import ai.koog.agents.core.tools.annotations.LLMDescription
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PolymorphicKind
 import kotlinx.serialization.descriptors.PrimitiveKind
-import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.SerialKind
 import kotlinx.serialization.descriptors.StructureKind
@@ -13,6 +12,7 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonEncoder
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
 
@@ -154,45 +154,57 @@ public fun SerialDescriptor.asToolDescriptor(
 }
 
 /**
- * Provides a custom serializer for tools.
- * Converts the current serializer into a specialized tool descriptor serializer if the underlying descriptor has a primitive kind.
+ * Provides a custom serializer for tools, wrapping and unwrapping values that do not serialize into [JsonObject] into a
+ * custom [JsonObject] with `value` key. This wrapping/unwrapping is needed because for LLM APIs tool arguments must always be [JsonObject].
  */
 @InternalAgentToolsApi
 public fun <T> KSerializer<T>.asToolDescriptorSerializer(): KSerializer<T> {
-    val kind = descriptor.kind
+    val origSerializer = this
 
-    return if (kind is PrimitiveKind) {
-        object : KSerializer<T> {
-            override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("Primitive", kind)
+    return object : KSerializer<T> {
+        override val descriptor: SerialDescriptor = origSerializer.descriptor
 
-            private val valueKey = "value"
+        private val valueKey = "__wrapped_value__"
 
-            override fun serialize(encoder: Encoder, value: T) {
-                val jsonEncoder = encoder as? JsonEncoder
-                    ?: throw IllegalStateException("Should be json encoder")
+        override fun serialize(encoder: Encoder, value: T) {
+            if (encoder !is JsonEncoder) throw IllegalStateException("Should be json encoder")
 
-                jsonEncoder.encodeJsonElement(
+            val origSerialized = encoder.json.encodeToJsonElement(origSerializer, value)
+
+            if (origSerialized is JsonObject) {
+                require(valueKey !in origSerialized) {
+                    "Serialized objects can't contain key '$valueKey', since this is a special key reserved to wrap primitive arguments in JSON objects"
+                }
+
+                encoder.encodeJsonElement(origSerialized)
+            } else {
+                encoder.encodeJsonElement(
                     buildJsonObject {
-                        put(
-                            valueKey,
-                            jsonEncoder.json.encodeToJsonElement(this@asToolDescriptorSerializer, value)
-                        )
+                        put(valueKey, origSerialized)
                     }
                 )
             }
+        }
 
-            override fun deserialize(decoder: Decoder): T {
-                val jsonDecoder = decoder as? JsonDecoder
-                    ?: throw IllegalStateException("Should be json decoder")
+        override fun deserialize(decoder: Decoder): T {
+            if (decoder !is JsonDecoder) throw IllegalStateException("Should be json decoder")
 
-                return jsonDecoder.json.decodeFromJsonElement(
-                    this@asToolDescriptorSerializer,
-                    jsonDecoder.decodeJsonElement().jsonObject.getValue(valueKey)
-                )
+            val deserialized = decoder
+                .decodeJsonElement()
+                .let {
+                    require(it is JsonObject) {
+                        "All serialized tool arguments must be represented as JSON objects, and primitives wrapped into a JSON object with key '$valueKey'"
+                    }
+
+                    it.jsonObject
+                }
+
+            return if (deserialized.keys == setOf(valueKey)) {
+                decoder.json.decodeFromJsonElement(origSerializer, deserialized.getValue(valueKey))
+            } else {
+                decoder.json.decodeFromJsonElement(origSerializer, deserialized)
             }
         }
-    } else {
-        this
     }
 }
 

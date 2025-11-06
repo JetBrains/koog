@@ -6,7 +6,6 @@ import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.annotation.ExperimentalAgentsApi
 import ai.koog.agents.core.annotation.InternalAgentsApi
-import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.feature.AIAgentFunctionalFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.debugger.writer.DebuggerFeatureMessageRemoteWriter
@@ -42,7 +41,6 @@ import ai.koog.agents.core.utils.SerializationUtils
 import ai.koog.prompt.llm.toModelInfo
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonPrimitive
 import kotlin.reflect.KType
 import kotlin.time.Duration
 import kotlin.time.DurationUnit
@@ -439,20 +437,12 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
 
         /**
          * Retrieves the JSON representation of the given data based on its type.
-         *
-         * Note: See [KG-485](https://youtrack.jetbrains.com/issue/KG-485)
-         *       Workaround for processing non-serializable [ReceivedToolResult] type in the node input/output.
          */
         private fun getNodeData(data: Any?, dataType: KType): JsonElement? {
             data ?: return null
 
             @OptIn(InternalAgentsApi::class)
-            return SerializationUtils.encodeDataToJsonElementOrDefault(data, dataType) {
-                when (data) {
-                    is ReceivedToolResult -> SerializationUtils.parseDataToJsonElementOrDefault(data.content)
-                    else -> JsonPrimitive(data.toString())
-                }
-            }
+            return SerializationUtils.encodeDataToJsonElementOrDefault(data, dataType)
         }
 
         //endregion Private Methods

@@ -15,6 +15,7 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
+import kotlin.jvm.JvmInline
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -31,18 +32,36 @@ class ToolParameterTypesTest {
 
         // Test decoding and encoding for primitive types
         assertEquals(
-            expected = buildJsonObject { put("value", args) },
+            expected = buildJsonObject { put("__wrapped_value__", args) },
             actual = encodedArgs,
-            message = "Should properly wrap primitive arg type in 'value' object"
         )
         assertEquals(
             expected = args,
             actual = PrimitiveTypesTool.decodeArgs(encodedArgs),
-            message = "Should properly unwrap primitive arg type from 'value' object"
         )
 
         val result = PrimitiveTypesTool.execute(args)
         val encodedResult = PrimitiveTypesTool.encodeResultToString(result)
+        assertEquals("\"$result\"", encodedResult)
+    }
+
+    @Test
+    fun testValueClassParameter() = runTest {
+        val args = ValueClassTool.Args("Hello")
+        val encodedArgs = ValueClassTool.encodeArgs(args)
+
+        // Test decoding and encoding for value classes types
+        assertEquals(
+            expected = buildJsonObject { put("__wrapped_value__", args.value) },
+            actual = encodedArgs,
+        )
+        assertEquals(
+            expected = args,
+            actual = ValueClassTool.decodeArgs(encodedArgs),
+        )
+
+        val result = ValueClassTool.execute(args)
+        val encodedResult = ValueClassTool.encodeResultToString(result)
         assertEquals("\"$result\"", encodedResult)
     }
 
@@ -456,6 +475,21 @@ class ToolParameterTypesTest {
 
         override suspend fun execute(args: String): String =
             "input: $args"
+    }
+
+    private object ValueClassTool : Tool<ValueClassTool.Args, String>() {
+        override val argsSerializer = Args.serializer()
+        override val resultSerializer = String.serializer()
+
+        @Serializable
+        @JvmInline
+        value class Args(val value: String)
+
+        override val name = "value_class_tool"
+        override val description: String = "Tool with value class parameter"
+
+        override suspend fun execute(args: Args): String =
+            "input: ${args.value}"
     }
 
     private object NestedListsTool : Tool<NestedListsTool.Args, NestedListsTool.Result>() {

@@ -43,7 +43,6 @@ import ai.koog.prompt.llm.toModelInfo
 import ai.koog.prompt.message.Message
 import ai.koog.utils.io.use
 import kotlinx.coroutines.test.runTest
-import kotlinx.serialization.json.JsonPrimitive
 import kotlin.reflect.typeOf
 import kotlin.test.AfterTest
 import kotlin.test.Test
@@ -201,10 +200,10 @@ class TraceFeatureMessageLogWriterTest {
                             ),
                             dataType = typeOf<Message.Tool.Call>()
                         )}, " +
-                    "output: ${JsonPrimitive(dummyTool.result)}" +
+                    "output: {\"id\":\"0\",\"tool\":\"${dummyTool.name}\",\"content\":\"${dummyTool.result}\",\"result\":${dummyTool.encodeResult(dummyTool.result)}}" +
                     ")",
                 "[INFO] Received feature message [event]: ${NodeExecutionStartingEvent::class.simpleName} (run id: $runId, node: test-node-llm-send-tool-result, " +
-                    "input: ${JsonPrimitive(dummyTool.result)}" +
+                    "input: {\"id\":\"0\",\"tool\":\"${dummyTool.name}\",\"content\":\"${dummyTool.result}\",\"result\":${dummyTool.encodeResult(dummyTool.result)}}" +
                     ")",
                 "[INFO] Received feature message [event]: ${LLMCallStartingEvent::class.simpleName} (run id: $runId, prompt: ${
                     expectedPrompt.copy(
@@ -215,7 +214,7 @@ class TraceFeatureMessageLogWriterTest {
                                 "0",
                                 dummyTool.name,
                                 dummyTool.result,
-                                dummyTool.result
+                                dummyTool.encodeResult(dummyTool.result)
                             ).toMessage(clock = testClock)
                         )
                     ).traceString
@@ -229,13 +228,13 @@ class TraceFeatureMessageLogWriterTest {
                                 "0",
                                 dummyTool.name,
                                 dummyTool.result,
-                                dummyTool.result
+                                dummyTool.encodeResult(dummyTool.result)
                             ).toMessage(clock = testClock)
                         )
                     ).traceString
                 }, model: ${testModel.toModelInfo().modelIdentifierName}, responses: [{${expectedResponse.traceString}}])",
                 "[INFO] Received feature message [event]: ${NodeExecutionCompletedEvent::class.simpleName} (run id: $runId, node: test-node-llm-send-tool-result, " +
-                    "input: ${JsonPrimitive(dummyTool.result)}, " +
+                    "input: {\"id\":\"0\",\"tool\":\"${dummyTool.name}\",\"content\":\"${dummyTool.result}\",\"result\":${dummyTool.encodeResult(dummyTool.result)}}, " +
                     "output: ${
                         @OptIn(InternalAgentsApi::class)
                         SerializationUtils.encodeDataToJsonElementOrNull(
@@ -487,7 +486,7 @@ class TraceFeatureMessageLogWriterTest {
                                 "0",
                                 dummyTool.name,
                                 dummyTool.result,
-                                dummyTool.result
+                                dummyTool.encodeResult(dummyTool.result)
                             ).toMessage(clock = testClock)
                         )
                     ).traceString
@@ -501,7 +500,7 @@ class TraceFeatureMessageLogWriterTest {
                                 "0",
                                 dummyTool.name,
                                 dummyTool.result,
-                                dummyTool.result
+                                dummyTool.encodeResult(dummyTool.result)
                             ).toMessage(clock = testClock)
                         )
                     ).traceString

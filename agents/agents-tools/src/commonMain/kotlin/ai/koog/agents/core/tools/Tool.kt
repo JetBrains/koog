@@ -5,6 +5,7 @@ import ai.koog.agents.core.tools.serialization.ToolJson
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.StringFormat
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 
@@ -26,6 +27,12 @@ public abstract class Tool<TArgs, TResult> {
     @OptIn(InternalAgentToolsApi::class)
     private val actualArgsSerializer by lazy {
         argsSerializer.asToolDescriptorSerializer()
+    }
+
+    // FIXME just a quickfix, more proper and thorough update is required for Tool
+    @OptIn(InternalAgentToolsApi::class)
+    private val actualResultSerializer by lazy {
+        resultSerializer.asToolDescriptorSerializer()
     }
 
     /**
@@ -115,12 +122,45 @@ public abstract class Tool<TArgs, TResult> {
     public fun decodeArgs(rawArgs: JsonObject): TArgs = ToolJson.decodeFromJsonElement(actualArgsSerializer, rawArgs)
 
     /**
+     * Decodes the provided raw JSON element into an instance of the specified result type.
+     *
+     * @param rawResult The raw JSON element that contains the encoded result.
+     * @return The decoded result of type TResult.
+     */
+    public fun decodeResult(rawResult: JsonElement): TResult =
+        ToolJson.decodeFromJsonElement(actualResultSerializer, rawResult)
+
+    /**
      * Encodes the given arguments into a JSON representation.
      *
      * @param args The arguments to be encoded.
      * @return A JsonObject representing the encoded arguments.
      */
     public fun encodeArgs(args: TArgs): JsonObject = ToolJson.encodeToJsonElement(actualArgsSerializer, args).jsonObject
+
+    /**
+     * Encodes the given result into a JSON representation using the configured result serializer.
+     *
+     * @param result The result object of type TResult to be encoded.
+     * @return A JsonObject representing the encoded result.
+     */
+    public fun encodeResult(result: TResult): JsonElement =
+        ToolJson.encodeToJsonElement(actualResultSerializer, result).jsonObject
+
+    /**
+     * Encodes the given result object into a JSON representation without type safety checks.
+     * This method casts the provided result to the expected `TResult` type and leverages the `encodeResult` method
+     * to produce the JSON output.
+     *
+     * @param result The result object of type `Any?` to be encoded. It is internally cast to `TResult`,
+     *               which may lead to runtime exceptions if the cast is invalid.
+     * @return A JsonObject representing the encoded result.
+     */
+    @InternalAgentToolsApi
+    public fun encodeResultUnsafe(result: Any?): JsonElement {
+        @Suppress("UNCHECKED_CAST")
+        return encodeResult(result as TResult)
+    }
 
     /**
      * Encodes the provided arguments into a JSON string representation using the configured serializer.

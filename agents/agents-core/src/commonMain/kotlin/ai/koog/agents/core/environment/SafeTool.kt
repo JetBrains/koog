@@ -140,7 +140,7 @@ public data class SafeTool<TArgs, TResult>(
                 content = tool.encodeArgs(args).toString(),
                 metaInfo = ResponseMetaInfo.create(clock)
             )
-        ).toSafeResult()
+        ).toSafeResult(tool)
     }
 
     /**
@@ -176,7 +176,7 @@ public data class SafeTool<TArgs, TResult>(
                 content = tool.encodeArgs(args as TArgs).toString(),
                 metaInfo = ResponseMetaInfo.create(clock)
             )
-        ).toSafeResult()
+        ).toSafeResult(tool)
     }
 }
 
@@ -190,7 +190,11 @@ public data class SafeTool<TArgs, TResult>(
  * @return A [SafeTool.Result] which will either be a [SafeTool.Result.Failure] or [SafeTool.Result.Success]
  * based on the presence and validity of the `result` in the [ReceivedToolResult].
  */
-public fun <TResult> ReceivedToolResult.toSafeResult(): SafeTool.Result<TResult> = when (result) {
-    null -> SafeTool.Result.Failure(message = content)
-    else -> SafeTool.Result.Success(result = result as TResult, content = content)
+public fun <TResult> ReceivedToolResult.toSafeResult(tool: Tool<*, TResult>): SafeTool.Result<TResult> = when (result) {
+    null -> {
+        SafeTool.Result.Failure(message = content)
+    }
+    else -> {
+        SafeTool.Result.Success(result = tool.decodeResult(this.result), content = content)
+    }
 }

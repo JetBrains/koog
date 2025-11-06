@@ -48,7 +48,7 @@ class AIAgentLLMWriteSessionTest {
                     id = toolCall.id,
                     tool = toolCall.tool,
                     content = tool.encodeResultToStringUnsafe(result),
-                    result = result
+                    result = tool.encodeResultUnsafe(result)
                 )
             }
         }

@@ -382,6 +382,8 @@ public inline fun <reified Input : Any> AIAgentSubgraphBuilderBase<*, *>.subgrap
  * @param finishTool A descriptor for the tool that determines the condition to finalize the subgraph's operation.
  * @param defineTask A suspending lambda that defines the main task of the subgraph, producing a task description based on the input.
  */
+@Suppress("UNCHECKED_CAST")
+@OptIn(InternalAgentToolsApi::class)
 @Deprecated(
     message = "Use setupSubgraphWithTask API that receive a runMode parameter instead.",
     replaceWith = ReplaceWith(
@@ -453,7 +455,7 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
             tools = storage.get(originalToolsKey)!!
         }
 
-        toolResult.toSafeResult<OutputTransformed>().asSuccessful().result
+        toolResult.toSafeResult(finishTool).asSuccessful().result
     }
 
     // Helper node to overcome problems of the current api and repeat less code when writing routing conditions
@@ -574,6 +576,7 @@ internal suspend inline fun <reified Output, reified OutputTransformed> AIAgentC
     val args = finishTool.decodeArgs(toolCall.contentJson)
     val toolResult = finishTool.execute(args = args)
 
+    val encodedResult = finishTool.encodeResult(toolResult)
     // Append a final tool call result to the prompt for further LLM calls
     // to see it (otherwise they would fail)
     llm.writeSession {
@@ -588,6 +591,6 @@ internal suspend inline fun <reified Output, reified OutputTransformed> AIAgentC
         id = toolCall.id,
         tool = finishTool.name,
         content = toolCall.content,
-        result = toolResult
+        result = encodedResult
     )
 }

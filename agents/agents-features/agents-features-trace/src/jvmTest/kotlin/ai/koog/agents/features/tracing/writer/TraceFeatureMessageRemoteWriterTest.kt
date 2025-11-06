@@ -199,7 +199,7 @@ class TraceFeatureMessageRemoteWriterTest {
             messages = expectedPrompt.messages + listOf(
                 userMessage(content = userPrompt),
                 toolCallMessage(dummyTool.name, content = """{"dummy":"test"}"""),
-                receivedToolResult("0", dummyTool.name, dummyTool.result, dummyTool.result).toMessage(clock = testClock)
+                receivedToolResult("0", dummyTool.name, dummyTool.result, dummyTool.encodeResult(dummyTool.result)).toMessage(clock = testClock)
             )
         )
 
@@ -439,14 +439,27 @@ class TraceFeatureMessageRemoteWriterTest {
                             dataType = typeOf<Message.Tool.Call>()
                         ),
                         timestamp = testClock.now().toEpochMilliseconds(),
-                        // TODO: KG-485. Update to include serialized [ReceivedToolResult] when it became a serializable type.
-                        output = JsonPrimitive(dummyTool.result)
+                        // Tool result is wrapped into an object with id, tool, content, and result fields
+                        output = kotlinx.serialization.json.JsonObject(
+                            mapOf(
+                                "id" to JsonPrimitive("0"),
+                                "tool" to JsonPrimitive(dummyTool.name),
+                                "content" to JsonPrimitive(dummyTool.result),
+                                "result" to dummyTool.encodeResult(dummyTool.result)
+                            )
+                        )
                     ),
                     NodeExecutionStartingEvent(
                         runId = runId,
                         nodeName = "test-node-llm-send-tool-result",
-                        // TODO: KG-485. Update to include serialized [ReceivedToolResult] when it became a serializable type.
-                        input = JsonPrimitive(dummyTool.result),
+                        input = kotlinx.serialization.json.JsonObject(
+                            mapOf(
+                                "id" to JsonPrimitive("0"),
+                                "tool" to JsonPrimitive(dummyTool.name),
+                                "content" to JsonPrimitive(dummyTool.result),
+                                "result" to dummyTool.encodeResult(dummyTool.result)
+                            )
+                        ),
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     LLMCallStartingEvent(
@@ -468,8 +481,14 @@ class TraceFeatureMessageRemoteWriterTest {
                     NodeExecutionCompletedEvent(
                         runId = runId,
                         nodeName = "test-node-llm-send-tool-result",
-                        // TODO: KG-485. Update to include serialized [ReceivedToolResult] when it became a serializable type.
-                        input = JsonPrimitive(dummyTool.result),
+                        input = kotlinx.serialization.json.JsonObject(
+                            mapOf(
+                                "id" to JsonPrimitive("0"),
+                                "tool" to JsonPrimitive(dummyTool.name),
+                                "content" to JsonPrimitive(dummyTool.result),
+                                "result" to dummyTool.encodeResult(dummyTool.result)
+                            )
+                        ),
                         output = @OptIn(InternalAgentsApi::class)
                         SerializationUtils.encodeDataToJsonElementOrNull(
                             data = assistantMessage(mockResponse),
@@ -663,7 +682,7 @@ class TraceFeatureMessageRemoteWriterTest {
             messages = expectedPrompt.messages + listOf(
                 userMessage(content = userPrompt),
                 toolCallMessage(dummyTool.name, content = """{"dummy":"test"}"""),
-                receivedToolResult("0", dummyTool.name, dummyTool.result, dummyTool.result).toMessage(clock = testClock)
+                receivedToolResult("0", dummyTool.name, dummyTool.result, dummyTool.encodeResult(dummyTool.result)).toMessage(clock = testClock)
             )
         )
 

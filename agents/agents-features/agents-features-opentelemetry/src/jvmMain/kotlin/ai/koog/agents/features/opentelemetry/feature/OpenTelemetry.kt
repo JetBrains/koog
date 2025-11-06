@@ -4,7 +4,6 @@ import ai.koog.agents.core.agent.context.element.getAgentRunInfoElement
 import ai.koog.agents.core.agent.context.element.getNodeInfoElement
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.annotation.InternalAgentsApi
-import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.utils.SerializationUtils
@@ -560,12 +559,7 @@ public class OpenTelemetry {
             data ?: return null
 
             @OptIn(InternalAgentsApi::class)
-            return SerializationUtils.encodeDataToStringOrDefault(data, dataType) {
-                when (data) {
-                    is ReceivedToolResult -> data.content
-                    else -> data.toString()
-                }
-            }
+            return SerializationUtils.encodeDataToStringOrDefault(data, dataType)
         }
 
         //endregion Private Methods

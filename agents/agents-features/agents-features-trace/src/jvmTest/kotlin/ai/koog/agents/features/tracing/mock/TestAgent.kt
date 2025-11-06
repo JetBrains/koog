@@ -16,6 +16,7 @@ import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import kotlinx.serialization.json.JsonElement
 
 internal val testClock: Clock = object : Clock {
     override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z")
@@ -72,7 +73,7 @@ fun toolCallMessage(toolName: String, content: String): Message.Tool.Call =
         metaInfo = ResponseMetaInfo.create(testClock)
     )
 
-fun receivedToolResult(toolCallId: String?, toolName: String, content: String, result: String): ReceivedToolResult =
+fun receivedToolResult(toolCallId: String?, toolName: String, content: String, result: JsonElement): ReceivedToolResult =
     ReceivedToolResult(
         id = toolCallId,
         tool = toolName,
