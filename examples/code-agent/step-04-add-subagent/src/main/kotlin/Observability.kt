@@ -34,6 +34,7 @@ fun GraphAIAgent.FeatureContext.setupObservability(agentName: String) {
                     CustomAttribute("agent.name", agentName),
                 )
             )
+            println("Observability: Langfuse ENABLED — host=$host, session=$sessionId, agent=$agentName")
         } else {
             println("Observability: Langfuse disabled — missing env var(s): ${missing.joinToString(", ")}.")
         }
