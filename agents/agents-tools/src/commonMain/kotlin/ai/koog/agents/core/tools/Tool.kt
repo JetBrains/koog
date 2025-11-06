@@ -144,7 +144,7 @@ public abstract class Tool<TArgs, TResult> {
      * @param result The result object of type TResult to be encoded.
      * @return A JsonObject representing the encoded result.
      */
-    public fun encodeResult(result: TResult): JsonObject =
+    public fun encodeResult(result: TResult): JsonElement =
         ToolJson.encodeToJsonElement(actualResultSerializer, result).jsonObject
 
     /**
@@ -157,7 +157,7 @@ public abstract class Tool<TArgs, TResult> {
      * @return A JsonObject representing the encoded result.
      */
     @InternalAgentToolsApi
-    public fun encodeResultUnsafe(result: Any?): JsonObject {
+    public fun encodeResultUnsafe(result: Any?): JsonElement {
         @Suppress("UNCHECKED_CAST")
         return encodeResult(result as TResult)
     }

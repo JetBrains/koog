@@ -17,7 +17,7 @@ import io.github.oshai.kotlinlogging.KLogger
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.supervisorScope
-import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonElement
 
 internal class GenericAgentEnvironment(
     private val agentId: String,
@@ -77,7 +77,7 @@ internal class GenericAgentEnvironment(
         toolName: String,
         agentId: String,
         message: String,
-        result: JsonObject?
+        result: JsonElement?
     ): EnvironmentToolResultToAgentContent = AIAgentEnvironmentToolResultToAgentContent(
         toolCallId = toolCallId,
         toolName = toolName,
