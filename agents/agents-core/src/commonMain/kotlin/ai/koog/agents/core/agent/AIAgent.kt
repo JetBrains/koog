@@ -262,8 +262,8 @@ public interface AIAgent<Input, Output> : Closeable {
          * @param strategy The strategy that defines the agent's workflow, defaulting to the [singleRunStrategy].
          * @param toolRegistry The set of tools available for the agent, defaulting to an empty registry.
          * @param id Unique identifier for the agent. Random UUID will be generated if set to null.
-         * @param systemPrompt The system-level prompt used as context for the agent, defaulting to an empty string.
-         * @param temperature The randomness or creativity of the model's responses, with valid values ranging typically from 0.0 to 1.0. Defaults to 1.0.
+         * @param systemPrompt Optional system prompt for the agent.
+         * @param temperature Optional model temperature, with valid values ranging typically from 0.0 to 1.0.
          * @param numberOfChoices The number of response choices to be generated, defaulting to 1.
          * @param maxIterations The maximum number of iterations the agent is allowed to perform, defaulting to 50.
          * @param installFeatures A function to configure additional features into the agent during initialization. Defaults to an empty configuration.
@@ -276,8 +276,8 @@ public interface AIAgent<Input, Output> : Closeable {
             strategy: AIAgentGraphStrategy<String, String> = singleRunStrategy(),
             toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
             id: String? = null,
-            systemPrompt: String = "",
-            temperature: Double = 1.0,
+            systemPrompt: String? = null,
+            temperature: Double? = null,
             numberOfChoices: Int = 1,
             maxIterations: Int = 50,
             installFeatures: FeatureContext.() -> Unit = {}
@@ -293,7 +293,7 @@ public interface AIAgent<Input, Output> : Closeable {
                         numberOfChoices = numberOfChoices
                     )
                 ) {
-                    system(systemPrompt)
+                    systemPrompt?.let { system(it) }
                 },
                 model = llmModel,
                 maxAgentIterations = maxIterations,
@@ -313,8 +313,8 @@ public interface AIAgent<Input, Output> : Closeable {
          * @param toolRegistry An optional [ToolRegistry] specifying the tools available to the agent for execution. Defaults to `[ToolRegistry.EMPTY]`.
          * @param id Unique identifier for the agent. Random UUID will be generated if set to null.
          * @param clock A `Clock` instance used for time-related operations. Defaults to `Clock.System`.
-         * @param systemPrompt A string representing the system-level prompt for the agent. Defaults to an empty string.
-         * @param temperature A double value controlling the randomness of the model's output. Defaults to `1.0`.
+         * @param systemPrompt Optional system prompt for the agent.
+         * @param temperature Optional model temperature, with valid values ranging typically from 0.0 to 1.0.
          * @param numberOfChoices The number of choices the model should generate per invocation. Defaults to `1`.
          * @param maxIterations The maximum number of iterations the agent can perform. Defaults to `50`.
          * @param installFeatures An extension function on `FeatureContext` to install custom features for the agent. Defaults to an empty lambda.
@@ -328,8 +328,8 @@ public interface AIAgent<Input, Output> : Closeable {
             toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
             id: String? = null,
             clock: Clock = Clock.System,
-            systemPrompt: String = "",
-            temperature: Double = 1.0,
+            systemPrompt: String? = null,
+            temperature: Double? = null,
             numberOfChoices: Int = 1,
             maxIterations: Int = 50,
             noinline installFeatures: FeatureContext.() -> Unit = {},
@@ -348,7 +348,7 @@ public interface AIAgent<Input, Output> : Closeable {
                             numberOfChoices = numberOfChoices
                         )
                     ) {
-                        system(systemPrompt)
+                        systemPrompt?.let { system(it) }
                     },
                     model = llmModel,
                     maxAgentIterations = maxIterations,
@@ -370,8 +370,8 @@ public interface AIAgent<Input, Output> : Closeable {
          * @param toolRegistry Registry containing tools available to the agent for use during execution. Default is an empty registry.
          * @param strategy The strategy to be executed by the agent. Default is a single-run strategy.
          * @param id Unique identifier for the agent. Random UUID will be generated if set to null.
-         * @param systemPrompt The system prompt that sets the initial context or instructions for the AI agent.
-         * @param temperature The temperature setting for the language model, which adjusts the diversity of output. Default is 1.0.
+         * @param systemPrompt Optional system prompt for the agent.
+         * @param temperature Optional model temperature, with valid values ranging typically from 0.0 to 1.0.
          * @param numberOfChoices The number of response choices to generate when querying the language model. Default is 1.
          * @param maxIterations The maximum number of iterations the agent is allowed to perform during execution. Default is 50.
          * @param installFeatures A lambda to configure and install features in the agent's context.
@@ -383,8 +383,8 @@ public interface AIAgent<Input, Output> : Closeable {
             toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
             strategy: AIAgentFunctionalStrategy<Input, Output>,
             id: String? = null,
-            systemPrompt: String = "",
-            temperature: Double = 1.0,
+            systemPrompt: String? = null,
+            temperature: Double? = null,
             numberOfChoices: Int = 1,
             maxIterations: Int = 50,
             installFeatures: FunctionalAIAgent.FeatureContext.() -> Unit = {},
@@ -398,7 +398,7 @@ public interface AIAgent<Input, Output> : Closeable {
                         numberOfChoices = numberOfChoices
                     )
                 ) {
-                    system(systemPrompt)
+                    systemPrompt?.let { system(it) }
                 },
                 model = llmModel,
                 maxAgentIterations = maxIterations,
