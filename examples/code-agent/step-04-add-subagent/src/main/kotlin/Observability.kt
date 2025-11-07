@@ -13,35 +13,15 @@ import ai.koog.agents.features.opentelemetry.integration.langfuse.addLangfuseExp
 fun GraphAIAgent.FeatureContext.setupObservability(agentName: String) {
     install(OpenTelemetry) {
         setVerbose(true) // Enable verbose mode to send full strings instead of HIDDEN placeholders
-
-        val publicKey = System.getenv("LANGFUSE_PUBLIC_KEY")
-        val secretKey = System.getenv("LANGFUSE_SECRET_KEY")
-        val host = System.getenv("LANGFUSE_HOST")
-        val sessionId = System.getenv("LANGFUSE_SESSION_ID")
-        val missing = buildList {
-            if (publicKey.isNullOrBlank()) add("LANGFUSE_PUBLIC_KEY")
-            if (secretKey.isNullOrBlank()) add("LANGFUSE_SECRET_KEY")
-            if (host.isNullOrBlank()) add("LANGFUSE_HOST")
-            if (sessionId.isNullOrBlank()) add("LANGFUSE_SESSION_ID")
-        }
-        if (missing.isEmpty()) {
-            addLangfuseExporter(
-                langfuseUrl = host!!,
-                langfusePublicKey = publicKey!!,
-                langfuseSecretKey = secretKey!!,
-                traceAttributes = listOf(
-                    CustomAttribute("langfuse.session.id", sessionId!!),
-                    CustomAttribute("agent.name", agentName),
-                )
+        addLangfuseExporter(
+            traceAttributes = listOf(
+                CustomAttribute("langfuse.session.id", "eval-run-1"),
             )
-            println("Observability: Langfuse ENABLED — host=$host, session=$sessionId, agent=$agentName")
-        } else {
-            println("Observability: Langfuse disabled — missing env var(s): ${missing.joinToString(", ")}.")
-        }
+        )
     }
     handleEvents {
         onToolCallStarting { ctx ->
-            println("Tool '${ctx.tool.name}' called with args: ${ctx.toolArgs.toString().take(100)}")
+            println("[$agentName] Tool '${ctx.tool.name}' called with args: ${ctx.toolArgs.toString().take(100)}")
         }
     }
 }
