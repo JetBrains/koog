@@ -1,13 +1,13 @@
 package ai.koog.integration.tests.utils
 
-import ai.koog.integration.tests.utils.TestUtils.readAwsAccessKeyIdFromEnv
-import ai.koog.integration.tests.utils.TestUtils.readAwsSecretAccessKeyFromEnv
-import ai.koog.integration.tests.utils.TestUtils.readAwsSessionTokenFromEnv
-import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
-import ai.koog.integration.tests.utils.TestUtils.readTestGoogleAIKeyFromEnv
-import ai.koog.integration.tests.utils.TestUtils.readTestMistralAiKeyFromEnv
-import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
-import ai.koog.integration.tests.utils.TestUtils.readTestOpenRouterKeyFromEnv
+import ai.koog.integration.tests.utils.APIKeys.readAwsAccessKeyIdFromEnv
+import ai.koog.integration.tests.utils.APIKeys.readAwsSecretAccessKeyFromEnv
+import ai.koog.integration.tests.utils.APIKeys.readAwsSessionTokenFromEnv
+import ai.koog.integration.tests.utils.APIKeys.readTestAnthropicKeyFromEnv
+import ai.koog.integration.tests.utils.APIKeys.readTestGoogleAIKeyFromEnv
+import ai.koog.integration.tests.utils.APIKeys.readTestMistralAiKeyFromEnv
+import ai.koog.integration.tests.utils.APIKeys.readTestOpenAIKeyFromEnv
+import ai.koog.integration.tests.utils.APIKeys.readTestOpenRouterKeyFromEnv
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.bedrock.BedrockClientSettings

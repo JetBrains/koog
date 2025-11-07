@@ -24,11 +24,11 @@ import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider
 import ai.koog.agents.snapshot.providers.file.JVMFilePersistenceStorageProvider
 import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.RetryUtils.withRetry
-import ai.koog.integration.tests.utils.TestUtils.CalculateSumTool
-import ai.koog.integration.tests.utils.TestUtils.CalculatorToolNoArgs
-import ai.koog.integration.tests.utils.TestUtils.DelayTool
-import ai.koog.integration.tests.utils.TestUtils.GetTransactionsTool
-import ai.koog.integration.tests.utils.TestUtils.SimpleCalculatorTool
+import ai.koog.integration.tests.utils.tools.CalculateSumTool
+import ai.koog.integration.tests.utils.tools.CalculatorToolNoArgs
+import ai.koog.integration.tests.utils.tools.DelayTool
+import ai.koog.integration.tests.utils.tools.GetTransactionsTool
+import ai.koog.integration.tests.utils.tools.SimpleCalculatorTool
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.llm.LLMCapability

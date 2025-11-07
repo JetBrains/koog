@@ -1,4 +1,4 @@
-package ai.koog.integration.tests.tools
+package ai.koog.integration.tests.utils.tools
 
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.annotations.LLMDescription

@@ -99,7 +99,7 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
     @ParameterizedTest
     @MethodSource("modelParams")
     fun ollama_testToolsWithRequiredParams(model: LLModel) {
-        super.integration_testToolsWithRequiredParams(model)
+        super.integration_testToolWithRequiredParams(model)
     }
 
     @ParameterizedTest
@@ -107,43 +107,37 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
     fun ollama_testToolsWithRequiredOptionalParams(
         model: LLModel
     ) {
-        super.integration_testToolsWithRequiredOptionalParams(model)
+        super.integration_testToolWithNotRequiredOptionalParams(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
     fun ollama_testToolsWithOptionalParams(model: LLModel) {
-        super.integration_testToolsWithOptionalParams(model)
+        super.integration_testToolWithOptionalParams(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
     fun ollama_testToolsWithNoParams(model: LLModel) {
-        super.integration_testToolsWithNoParams(model)
+        super.integration_testToolWithNoParams(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
     fun ollama_testToolsWithListEnumParams(model: LLModel) {
-        super.integration_testToolsWithListEnumParams(model)
+        super.integration_testToolWithListEnumParams(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
     fun ollama_testToolsWithNestedListParams(model: LLModel) {
-        super.integration_testToolsWithNestedListParams(model)
-    }
-
-    @ParameterizedTest
-    @MethodSource("modelParams")
-    fun ollama_testRawStringStreaming(model: LLModel) {
-        integration_testRawStringStreaming(model)
+        super.integration_testToolWithNestedListParams(model)
     }
 
     @ParameterizedTest
     @MethodSource("modelParams")
     fun ollama_testStructuredDataStreaming(model: LLModel) {
-        integration_testStructuredDataStreaming(model)
+        integration_testMarkdownStructuredDataStreaming(model)
     }
 
     @ParameterizedTest

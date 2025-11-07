@@ -103,38 +103,38 @@ class SingleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
 
     @ParameterizedTest
     @MethodSource("allCompletionModels")
-    override fun integration_testToolsWithRequiredParams(model: LLModel) {
-        super.integration_testToolsWithRequiredParams(model)
+    override fun integration_testToolWithRequiredParams(model: LLModel) {
+        super.integration_testToolWithRequiredParams(model)
     }
 
     @ParameterizedTest
     @MethodSource("allCompletionModels")
-    override fun integration_testToolsWithRequiredOptionalParams(model: LLModel) {
-        super.integration_testToolsWithRequiredOptionalParams(model)
+    override fun integration_testToolWithNotRequiredOptionalParams(model: LLModel) {
+        super.integration_testToolWithNotRequiredOptionalParams(model)
     }
 
     @ParameterizedTest
     @MethodSource("allCompletionModels")
-    override fun integration_testToolsWithOptionalParams(model: LLModel) {
-        super.integration_testToolsWithOptionalParams(model)
+    override fun integration_testToolWithOptionalParams(model: LLModel) {
+        super.integration_testToolWithOptionalParams(model)
     }
 
     @ParameterizedTest
     @MethodSource("allCompletionModels")
-    override fun integration_testToolsWithNoParams(model: LLModel) {
-        super.integration_testToolsWithNoParams(model)
+    override fun integration_testToolWithNoParams(model: LLModel) {
+        super.integration_testToolWithNoParams(model)
     }
 
     @ParameterizedTest
     @MethodSource("allCompletionModels")
-    override fun integration_testToolsWithListEnumParams(model: LLModel) {
-        super.integration_testToolsWithListEnumParams(model)
+    override fun integration_testToolWithListEnumParams(model: LLModel) {
+        super.integration_testToolWithListEnumParams(model)
     }
 
     @ParameterizedTest
     @MethodSource("allCompletionModels")
-    override fun integration_testToolsWithNestedListParams(model: LLModel) {
-        super.integration_testToolsWithNestedListParams(model)
+    override fun integration_testToolWithNestedListParams(model: LLModel) {
+        super.integration_testToolWithNestedListParams(model)
     }
 
     @ParameterizedTest
@@ -151,14 +151,8 @@ class SingleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
 
     @ParameterizedTest
     @MethodSource("allCompletionModels")
-    override fun integration_testRawStringStreaming(model: LLModel) {
-        super.integration_testRawStringStreaming(model)
-    }
-
-    @ParameterizedTest
-    @MethodSource("allCompletionModels")
-    override fun integration_testStructuredDataStreaming(model: LLModel) {
-        super.integration_testStructuredDataStreaming(model)
+    override fun integration_testMarkdownStructuredDataStreaming(model: LLModel) {
+        super.integration_testMarkdownStructuredDataStreaming(model)
     }
 
     @ParameterizedTest
