@@ -28,7 +28,8 @@ class RegexSearchToolTest {
         srcMainKotlin.resolve("File2.kt").writeText("class User(val name: String, val age: Int)")
 
         // java files
-        srcMainJava.resolve("File1.java").writeText("public class File1 { public static void main(String[] args) { System.out.println(\"Hello, Java!\"); } }")
+        srcMainJava.resolve("File1.java")
+            .writeText("public class File1 { public static void main(String[] args) { System.out.println(\"Hello, Java!\"); } }")
         srcMainJava.resolve("File2.java").writeText("public class User { private String name; private int age; }")
 
         // test files
@@ -46,7 +47,7 @@ class RegexSearchToolTest {
             |Line 4 starts with a number: 100 and continues.
             |Line 5 is also there.
             |Line 6 is the last line.
-            |""".trimMargin()
+            """.trimMargin()
         )
 
         return fs to tempDir
@@ -58,7 +59,8 @@ class RegexSearchToolTest {
 
     private fun List<String>.containsAllSuffixes(vararg suffixes: String): Boolean = suffixes.all { containsSuffix(it) }
 
-    private fun List<String>.containsNoneOfSuffixes(vararg suffixes: String): Boolean = suffixes.none { containsSuffix(it) }
+    private fun List<String>.containsNoneOfSuffixes(vararg suffixes: String): Boolean =
+        suffixes.none { containsSuffix(it) }
 
     @Test
     fun testRegexSearchBasic() = runBlocking {
@@ -132,11 +134,13 @@ class RegexSearchToolTest {
         )
 
         val paths = result.entries.map { it.path }
-        assertTrue(paths.containsAllSuffixes(
-            "/src/main/kotlin/File2.kt",
-            "/src/main/java/File1.java",
-            "/src/main/java/File2.java"
-        ))
+        assertTrue(
+            paths.containsAllSuffixes(
+                "/src/main/kotlin/File2.kt",
+                "/src/main/java/File1.java",
+                "/src/main/java/File2.java"
+            )
+        )
     }
 
     @Test
@@ -155,14 +159,18 @@ class RegexSearchToolTest {
         )
 
         val paths = result.entries.map { it.path }
-        assertTrue(paths.containsAllSuffixes(
-            "/src/main/kotlin/File1.kt",
-            "/src/main/kotlin/File2.kt"
-        ))
-        assertTrue(paths.containsNoneOfSuffixes(
-            "/src/main/java/File1.java",
-            "/src/main/java/File2.java"
-        ))
+        assertTrue(
+            paths.containsAllSuffixes(
+                "/src/main/kotlin/File1.kt",
+                "/src/main/kotlin/File2.kt"
+            )
+        )
+        assertTrue(
+            paths.containsNoneOfSuffixes(
+                "/src/main/java/File1.java",
+                "/src/main/java/File2.java"
+            )
+        )
     }
 
     @Test
@@ -181,10 +189,12 @@ class RegexSearchToolTest {
         )
 
         val paths = result.entries.map { it.path }
-        assertTrue(paths.containsAllSuffixes(
-            "/src/test/kotlin/Test1.kt",
-            "/src/test/kotlin/TestUtils.kt"
-        ))
+        assertTrue(
+            paths.containsAllSuffixes(
+                "/src/test/kotlin/Test1.kt",
+                "/src/test/kotlin/TestUtils.kt"
+            )
+        )
     }
 
     @Test

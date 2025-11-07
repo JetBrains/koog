@@ -8,8 +8,8 @@ import ai.koog.prompt.text.text
 import ai.koog.rag.base.files.DocumentProvider
 import ai.koog.rag.base.files.FileMetadata
 import ai.koog.rag.base.files.FileSystemProvider
-import ai.koog.rag.base.files.readText
 import ai.koog.rag.base.files.extendRangeByLines
+import ai.koog.rag.base.files.readText
 import ai.koog.rag.base.files.toPosition
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.drop
