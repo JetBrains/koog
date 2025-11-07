@@ -46,7 +46,6 @@ import aws.smithy.kotlin.runtime.http.auth.BearerTokenProvider
 import aws.smithy.kotlin.runtime.identity.IdentityProvider
 import aws.smithy.kotlin.runtime.net.url.Url
 import aws.smithy.kotlin.runtime.retries.StandardRetryStrategy
-import aws.smithy.kotlin.runtime.util.type
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -197,10 +196,26 @@ public class BedrockLLMClient(
                 error("Received null or empty body from Bedrock model ${model.id}")
             }
             return@withContext when (modelFamily) {
-                is BedrockModelFamilies.AI21Jamba -> BedrockAI21JambaSerialization.parseJambaResponse(responseBodyString, clock)
-                is BedrockModelFamilies.AmazonNova -> BedrockAmazonNovaSerialization.parseNovaResponse(responseBodyString, clock)
-                is BedrockModelFamilies.AnthropicClaude -> BedrockAnthropicClaudeSerialization.parseAnthropicResponse(responseBodyString, clock)
-                is BedrockModelFamilies.Meta -> BedrockMetaLlamaSerialization.parseLlamaResponse(responseBodyString, clock)
+                is BedrockModelFamilies.AI21Jamba -> BedrockAI21JambaSerialization.parseJambaResponse(
+                    responseBodyString,
+                    clock
+                )
+
+                is BedrockModelFamilies.AmazonNova -> BedrockAmazonNovaSerialization.parseNovaResponse(
+                    responseBodyString,
+                    clock
+                )
+
+                is BedrockModelFamilies.AnthropicClaude -> BedrockAnthropicClaudeSerialization.parseAnthropicResponse(
+                    responseBodyString,
+                    clock
+                )
+
+                is BedrockModelFamilies.Meta -> BedrockMetaLlamaSerialization.parseLlamaResponse(
+                    responseBodyString,
+                    clock
+                )
+
                 is BedrockModelFamilies.TitanEmbedding, is BedrockModelFamilies.Cohere -> error("Model family ${modelFamily.display} does not support chat completions; use embed() API instead.")
             }
         }
@@ -250,9 +265,18 @@ public class BedrockLLMClient(
             try {
                 if (chunkJsonString.isBlank()) return@map emptyList()
                 when (modelFamily) {
-                    is BedrockModelFamilies.AI21Jamba -> BedrockAI21JambaSerialization.parseJambaStreamChunk(chunkJsonString)
-                    is BedrockModelFamilies.AmazonNova -> BedrockAmazonNovaSerialization.parseNovaStreamChunk(chunkJsonString)
-                    is BedrockModelFamilies.AnthropicClaude -> BedrockAnthropicClaudeSerialization.parseAnthropicStreamChunk(chunkJsonString)
+                    is BedrockModelFamilies.AI21Jamba -> BedrockAI21JambaSerialization.parseJambaStreamChunk(
+                        chunkJsonString
+                    )
+
+                    is BedrockModelFamilies.AmazonNova -> BedrockAmazonNovaSerialization.parseNovaStreamChunk(
+                        chunkJsonString
+                    )
+
+                    is BedrockModelFamilies.AnthropicClaude -> BedrockAnthropicClaudeSerialization.parseAnthropicStreamChunk(
+                        chunkJsonString
+                    )
+
                     is BedrockModelFamilies.Meta -> BedrockMetaLlamaSerialization.parseLlamaStreamChunk(chunkJsonString)
                     is BedrockModelFamilies.TitanEmbedding, is BedrockModelFamilies.Cohere -> error("Embedding models do not support streaming chat completions. Use embed() instead.")
                 }
@@ -286,46 +310,59 @@ public class BedrockLLMClient(
                 is BedrockModelFamilies.TitanEmbedding -> {
                     when (model.id) {
                         "amazon.titan-embed-text-v1" -> {
-                            val titanResponse = BedrockAmazonTitanEmbeddingSerialization.parseG1Response(responseBodyString)
+                            val titanResponse =
+                                BedrockAmazonTitanEmbeddingSerialization.parseG1Response(responseBodyString)
                             titanResponse.embedding
                         }
+
                         "amazon.titan-embed-text-v2:0" -> {
-                            val titanV2Response = BedrockAmazonTitanEmbeddingSerialization.parseV2Response(responseBodyString)
+                            val titanV2Response =
+                                BedrockAmazonTitanEmbeddingSerialization.parseV2Response(responseBodyString)
                             BedrockAmazonTitanEmbeddingSerialization.extractV2Embedding(titanV2Response)
                         }
+
                         else -> error("Unknown Amazon Titan embedding model ID: ${model.id}")
                     }
                 }
+
                 is BedrockModelFamilies.Cohere -> {
                     val cohereResponse = BedrockCohereSerialization.parseResponse(responseBodyString)
                     BedrockCohereSerialization.extractEmbeddings(cohereResponse).first()
                 }
+
                 else -> error("Model family: ${modelFamily.display} does not support embeddings; use execute() or executeStreaming() for completion models.")
             }
         }
     }
 
     private fun createRequestBody(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): String {
-        model.requireCapability(LLMCapability.Completion, "This function must only be used with completion-capable models.")
+        model.requireCapability(
+            LLMCapability.Completion,
+            "This function must only be used with completion-capable models."
+        )
         return when (getBedrockModelFamily(model)) {
             is BedrockModelFamilies.AI21Jamba -> json.encodeToString(
                 JambaRequest.serializer(),
                 BedrockAI21JambaSerialization.createJambaRequest(prompt, model, tools)
             )
+
             is BedrockModelFamilies.AmazonNova -> json.encodeToString(
                 NovaRequest.serializer(),
                 BedrockAmazonNovaSerialization.createNovaRequest(prompt, model, tools)
             )
+
             is BedrockModelFamilies.AnthropicClaude -> {
                 json.encodeToString(
                     BedrockAnthropicInvokeModel.serializer(),
                     BedrockAnthropicClaudeSerialization.createAnthropicRequest(prompt, tools)
                 )
             }
+
             is BedrockModelFamilies.Meta -> json.encodeToString(
                 LlamaRequest.serializer(),
                 BedrockMetaLlamaSerialization.createLlamaRequest(prompt, model)
             )
+
             is BedrockModelFamilies.TitanEmbedding,
             is BedrockModelFamilies.Cohere -> error(
                 "createRequestBody() should not be used with embedding models. Use createEmbeddingRequestBody() instead for Bedrock embedding models."
@@ -346,9 +383,11 @@ public class BedrockLLMClient(
                     else -> error("Unknown Amazon Titan embedding model ID: ${model.id}")
                 }
             }
+
             is BedrockModelFamilies.Cohere -> {
                 BedrockCohereSerialization.createV3TextRequest(listOf(text))
             }
+
             else -> error(
                 "Model family: ${modelFamily.display} does not support embeddings; use execute() or executeStreaming() for completion models."
             )
@@ -474,6 +513,7 @@ public class BedrockLLMClient(
                         is ContentPart.Text -> {
                             add(GuardrailContentBlock.Text(GuardrailTextBlock { text = part.text }))
                         }
+
                         is ContentPart.Image -> {
                             GuardrailContentBlock.Image(
                                 GuardrailImageBlock {
@@ -495,6 +535,7 @@ public class BedrockLLMClient(
                                 }
                             )
                         }
+
                         else -> throw IllegalArgumentException("Unsupported attachment type: $this")
                     }
                 }

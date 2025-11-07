@@ -58,6 +58,7 @@ exclude:
       - build
       - buildSrc
       - docs
+      - convention-plugin-ai/build/generated-sources
   - name: JvmCoverageInspection
     paths:
       - .devcontainer

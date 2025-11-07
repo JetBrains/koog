@@ -2,177 +2,365 @@ package ai.koog.prompt.executor.clients.deepseek.models
 
 import ai.koog.prompt.executor.clients.openai.base.models.Content
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIMessage
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIResponseFormat
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIStreamOptions
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAITool
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolChoice
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolFunction
+import ai.koog.test.utils.runWithBothJsonConfigurations
+import io.kotest.assertions.json.shouldEqualJson
+import io.kotest.assertions.withClue
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.addJsonObject
-import kotlinx.serialization.json.booleanOrNull
-import kotlinx.serialization.json.buildJsonArray
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.contentOrNull
-import kotlinx.serialization.json.doubleOrNull
-import kotlinx.serialization.json.intOrNull
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
-import kotlinx.serialization.json.put
-import org.junit.jupiter.api.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
+import kotlin.test.Test
 
 class DeepSeekSerializationTest {
 
-    private val json = Json {
-        ignoreUnknownKeys = false
-        explicitNulls = false
-    }
-
     @Test
-    fun `test serialization without additionalProperties`() {
-        val request = DeepSeekChatCompletionRequest(
-            model = "deepseek-chat",
-            messages = listOf(OpenAIMessage.User(content = Content.Text("Hello"))),
-            temperature = 0.7,
-            maxTokens = 1000,
-            stream = false
-        )
-
-        val jsonElement = json.encodeToJsonElement(DeepSeekChatCompletionRequestSerializer, request)
-        val jsonObject = jsonElement.jsonObject
-
-        assertEquals("deepseek-chat", jsonObject["model"]?.jsonPrimitive?.contentOrNull)
-        assertEquals(0.7, jsonObject["temperature"]?.jsonPrimitive?.doubleOrNull)
-        assertEquals(1000, jsonObject["maxTokens"]?.jsonPrimitive?.intOrNull)
-        assertEquals(false, jsonObject["stream"]?.jsonPrimitive?.booleanOrNull)
-        assertNull(jsonObject["customProperty"])
-    }
-
-    @Test
-    fun `test serialization with additionalProperties`() {
-        val additionalProperties = mapOf<String, JsonElement>(
-            "customProperty" to JsonPrimitive("customValue"),
-            "customNumber" to JsonPrimitive(42),
-            "customBoolean" to JsonPrimitive(true)
-        )
-
-        val request = DeepSeekChatCompletionRequest(
-            model = "deepseek-chat",
-            messages = listOf(OpenAIMessage.User(content = Content.Text("Hello"))),
-            temperature = 0.7,
-            additionalProperties = additionalProperties
-        )
-
-        val jsonElement = json.encodeToJsonElement(DeepSeekChatCompletionRequestSerializer, request)
-        val jsonObject = jsonElement.jsonObject
-
-        // Standard properties should be present
-        assertEquals("deepseek-chat", jsonObject["model"]?.jsonPrimitive?.contentOrNull)
-        assertEquals(0.7, jsonObject["temperature"]?.jsonPrimitive?.doubleOrNull)
-
-        // Additional properties should be flattened to root level
-        assertEquals("customValue", jsonObject["customProperty"]?.jsonPrimitive?.contentOrNull)
-        assertEquals(42, jsonObject["customNumber"]?.jsonPrimitive?.intOrNull)
-        assertEquals(true, jsonObject["customBoolean"]?.jsonPrimitive?.booleanOrNull)
-
-        // additionalProperties field itself should not be present in serialized JSON
-        assertNull(jsonObject["additionalProperties"])
-    }
-
-    @Test
-    fun `test deserialization without additional properties`() {
-        val jsonInput = buildJsonObject {
-            put("model", JsonPrimitive("deepseek-chat"))
-            put(
-                "messages",
-                buildJsonArray {
-                    addJsonObject {
-                        put("role", "user")
-                        put("content", "Hello")
-                    }
-                }
+    fun `test basic serialization without optional fields`() =
+        runWithBothJsonConfigurations("basic serialization without optional fields") { json ->
+            val request = DeepSeekChatCompletionRequest(
+                model = "deepseek-chat",
+                messages = listOf(OpenAIMessage.User(content = Content.Text("Hello"))),
+                temperature = 0.7,
+                maxTokens = 1000,
+                stream = false
             )
-            put("temperature", JsonPrimitive(0.7))
-            put("maxTokens", JsonPrimitive(1000))
-            put("stream", JsonPrimitive(false))
+
+            val jsonString = json.encodeToString(DeepSeekChatCompletionRequest.serializer(), request)
+
+            jsonString shouldEqualJson
+                // language=json
+                """
+            {
+                "model": "deepseek-chat",
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": "Hello"
+                    }
+                ],
+                "temperature": 0.7,
+                "maxTokens": 1000,
+                "stream": false
+            }
+                """.trimIndent()
         }
 
-        val request = json.decodeFromJsonElement(DeepSeekChatCompletionRequestSerializer, jsonInput)
-
-        assertEquals("deepseek-chat", request.model)
-        assertEquals(0.7, request.temperature)
-        assertEquals(1000, request.maxTokens)
-        assertEquals(false, request.stream)
-        assertNull(request.additionalProperties)
-    }
-
     @Test
-    fun `test deserialization with additional properties`() {
-        val jsonInput = buildJsonObject {
-            put("model", JsonPrimitive("deepseek-chat"))
-            put(
-                "messages",
-                buildJsonArray {
-                    addJsonObject {
-                        put("role", "user")
-                        put("content", "Hello")
-                    }
-                }
+    fun `test serialization with DeepSeek-specific fields`() =
+        runWithBothJsonConfigurations("test serialization with DeepSeek-specific fields") { json ->
+            val request = DeepSeekChatCompletionRequest(
+                model = "deepseek-chat",
+                messages = listOf(OpenAIMessage.User(content = Content.Text("Hello"))),
+                temperature = 0.8,
+                frequencyPenalty = 0.5,
+                presencePenalty = 0.3,
+                logprobs = true,
+                topLogprobs = 5,
+                topP = 0.9,
+                stop = listOf("END", "STOP")
             )
-            put("temperature", JsonPrimitive(0.7))
-            put("customProperty", JsonPrimitive("customValue"))
-            put("customNumber", JsonPrimitive(42))
-            put("customBoolean", JsonPrimitive(true))
+
+            val jsonString = json.encodeToString(DeepSeekChatCompletionRequest.serializer(), request)
+
+            jsonString shouldEqualJson
+                // language=json
+                """
+            {
+                "model": "deepseek-chat",
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": "Hello"
+                    }
+                ],
+                "temperature": 0.8,
+                "frequencyPenalty": 0.5,
+                "presencePenalty": 0.3,
+                "logprobs": true,
+                "topLogprobs": 5,
+                "topP": 0.9,
+                "stop": ["END", "STOP"]
+            }
+                """.trimIndent()
         }
 
-        val request = json.decodeFromJsonElement(DeepSeekChatCompletionRequestSerializer, jsonInput)
+    @Test
+    fun `test deserialization serialization with DeepSeek-specific fields`() =
+        runWithBothJsonConfigurations("test deserialization with DeepSeek-specific fields") { json ->
+            val jsonInput =
+                // language=json
+                """
+            {
+                "model": "deepseek-reasoner",
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": "Test message"
+                    }
+                ],
+                "temperature": 0.5,
+                "frequencyPenalty": 0.2,
+                "presencePenalty": 0.1,
+                "logprobs": true,
+                "topLogprobs": 3,
+                "topP": 0.95,
+                "stop": ["STOP", "END"],
+                "stream": true,
+                "maxTokens": 2048
+            }
+                """.trimIndent()
 
-        assertEquals("deepseek-chat", request.model)
-        assertEquals(0.7, request.temperature)
-
-        assertNotNull(request.additionalProperties)
-        val additionalProps = request.additionalProperties
-        assertEquals(3, additionalProps.size)
-        assertEquals("customValue", additionalProps["customProperty"]?.jsonPrimitive?.contentOrNull)
-        assertEquals(42, additionalProps["customNumber"]?.jsonPrimitive?.intOrNull)
-        assertEquals(true, additionalProps["customBoolean"]?.jsonPrimitive?.booleanOrNull)
-    }
+            val request = json.decodeFromString(DeepSeekChatCompletionRequest.serializer(), jsonInput)
+            val serialized = json.encodeToString(DeepSeekChatCompletionRequest.serializer(), request)
+            serialized shouldEqualJson jsonInput
+        }
 
     @Test
-    fun `test round trip serialization with additionalProperties`() {
-        val originalAdditionalProperties = mapOf<String, JsonElement>(
-            "customProperty" to JsonPrimitive("customValue"),
-            "customNumber" to JsonPrimitive(42)
-        )
+    fun `test serialization with additionalProperties`() =
+        runWithBothJsonConfigurations("serialization with additionalProperties") { json ->
+            val request = DeepSeekChatCompletionRequest(
+                model = "deepseek-chat",
+                messages = listOf(OpenAIMessage.User(content = Content.Text("Hello"))),
+                temperature = 0.7,
+                additionalProperties = mapOf(
+                    "customString" to JsonPrimitive("value"),
+                    "customNumber" to JsonPrimitive(100),
+                    "customBoolean" to JsonPrimitive(true)
+                )
+            )
 
-        val originalRequest = DeepSeekChatCompletionRequest(
-            model = "deepseek-chat",
-            messages = listOf(OpenAIMessage.User(content = Content.Text("Hello"))),
-            temperature = 0.7,
-            additionalProperties = originalAdditionalProperties
-        )
+            val jsonString = json.encodeToString(DeepSeekChatCompletionRequestSerializer, request)
 
-        // Serialize to JSON string
-        val jsonString = json.encodeToString(DeepSeekChatCompletionRequestSerializer, originalRequest)
+            jsonString shouldEqualJson
+                // language=json
+                """
+            {
+                "model": "deepseek-chat",
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": "Hello"
+                    }
+                ],
+                "temperature": 0.7,
+                "customString": "value",
+                "customNumber": 100,
+                "customBoolean": true
+            }
+                """.trimIndent()
+        }
 
-        // Deserialize back to object
-        val deserializedRequest = json.decodeFromString(DeepSeekChatCompletionRequestSerializer, jsonString)
+    @Test
+    fun `test deserialization with additionalProperties`() =
+        runWithBothJsonConfigurations("deserialization with additionalProperties") { json ->
+            val jsonInput =
+                """
+            {
+                "model": "deepseek-chat",
+                "messages": [ { "role": "user", "content": "Hello" } ],
+                "temperature": 0.7,
+                "customString": "value",
+                "customNumber": 100,
+                "customBoolean": true
+            }
+                """.trimIndent()
 
-        // Verify standard properties
-        assertEquals(originalRequest.model, deserializedRequest.model)
-        assertEquals(originalRequest.temperature, deserializedRequest.temperature)
-        assertEquals(originalRequest.messages.size, deserializedRequest.messages.size)
+            val request = json.decodeFromString(DeepSeekChatCompletionRequestSerializer, jsonInput)
+            val props = request.additionalProperties
+            withClue("additionalProperties should be in a deserialized JSON") {
+                props shouldNotBe null
+            }
+            props?.get("customString").toString() shouldBe "\"value\""
+            props?.get("customNumber").toString() shouldBe "100"
+            props?.get("customBoolean").toString() shouldBe "true"
+        }
 
-        // Verify additional properties were preserved
-        assertNotNull(deserializedRequest.additionalProperties)
-        val deserializedAdditionalProps = deserializedRequest.additionalProperties
-        assertEquals(originalAdditionalProperties.size, deserializedAdditionalProps.size)
-        assertEquals(
-            originalAdditionalProperties["customProperty"]?.jsonPrimitive?.contentOrNull,
-            deserializedAdditionalProps["customProperty"]?.jsonPrimitive?.contentOrNull
-        )
-        assertEquals(
-            originalAdditionalProperties["customNumber"]?.jsonPrimitive?.intOrNull,
-            deserializedAdditionalProps["customNumber"]?.jsonPrimitive?.intOrNull
-        )
-    }
+    @Test
+    fun `test serialization of extended parameters`() =
+        runWithBothJsonConfigurations("test serialization of extended parameters") { json ->
+            val tool = OpenAITool(
+                OpenAIToolFunction(
+                    name = "weather",
+                    description = "Get weather",
+                    parameters = JsonObject(
+                        mapOf(
+                            "type" to JsonPrimitive("object"),
+                            "properties" to JsonObject(emptyMap())
+                        )
+                    ),
+                    strict = true
+                )
+            )
+
+            val request = DeepSeekChatCompletionRequest(
+                model = "deepseek-chat",
+                messages = listOf(OpenAIMessage.User(content = Content.Text("Hello"))),
+                temperature = 0.4,
+                maxTokens = 1024,
+                stream = true,
+                tools = listOf(tool),
+                toolChoice = OpenAIToolChoice.function("weather"),
+                responseFormat = OpenAIResponseFormat.JsonObject(),
+                streamOptions = OpenAIStreamOptions(includeUsage = true),
+                logprobs = true,
+                topLogprobs = 10,
+                topP = 0.8,
+                frequencyPenalty = 0.1,
+                presencePenalty = 0.2,
+                stop = listOf("END")
+            )
+
+            val jsonString = json.encodeToString(DeepSeekChatCompletionRequest.serializer(), request)
+
+            jsonString shouldEqualJson
+                // language=json
+                """
+            {
+                "model": "deepseek-chat",
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": "Hello"
+                    }
+                ],
+                "temperature": 0.4,
+                "maxTokens": 1024,
+                "stream": true,
+                "tools": [
+                    {
+                        "type": "function",
+                        "function": {
+                            "name": "weather",
+                            "description": "Get weather",
+                            "parameters": {
+                                "type": "object",
+                                "properties": {}
+                            },
+                            "strict": true
+                        }
+                    }
+                ],
+                "toolChoice": {
+                    "type": "function",
+                    "function": {
+                        "name": "weather"
+                    }
+                },
+                "responseFormat": {
+                    "type": "json_object"
+                },
+                "streamOptions": {
+                    "includeUsage": true
+                },
+                "logprobs": true,
+                "topLogprobs": 10,
+                "topP": 0.8,
+                "frequencyPenalty": 0.1,
+                "presencePenalty": 0.2,
+                "stop": ["END"]
+            }
+                """.trimIndent()
+        }
+
+    @Test
+    fun `test deserialization of extended parameters`() =
+        runWithBothJsonConfigurations("deserialization of extended parameters") { json ->
+            val jsonInput =
+                // language=json
+                """
+            {
+                "model": "deepseek-chat",
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": "Hello"
+                    }
+                ],
+                "temperature": 0.4,
+                "maxTokens": 1024,
+                "stream": true,
+                "tools": [
+                    {
+                        "type": "function",
+                        "function": {
+                            "name": "weather",
+                            "description": "Get weather",
+                            "parameters": {
+                                "type": "object",
+                                "properties": {}
+                            },
+                            "strict": true
+                        }
+                    }
+                ],
+                "toolChoice": {
+                    "type": "function",
+                    "function": {
+                        "name": "weather"
+                    }
+                },
+                "responseFormat": {
+                    "type": "json_object"
+                },
+                "streamOptions": {
+                    "includeUsage": true
+                },
+                "logprobs": true,
+                "topLogprobs": 10,
+                "topP": 0.8,
+                "frequencyPenalty": 0.1,
+                "presencePenalty": 0.2,
+                "stop": ["END"]
+            }
+                """.trimIndent()
+
+            val request = json.decodeFromString(DeepSeekChatCompletionRequest.serializer(), jsonInput)
+
+            request.model shouldBe "deepseek-chat"
+            request.temperature shouldBe 0.4
+            request.maxTokens shouldBe 1024
+            request.stream shouldBe true
+            request.logprobs shouldBe true
+            request.topLogprobs shouldBe 10
+            request.topP shouldBe 0.8
+            request.frequencyPenalty shouldBe 0.1
+            request.presencePenalty shouldBe 0.2
+            request.stop shouldBe listOf("END")
+
+            // Verify tools
+            request.tools?.size shouldBe 1
+            val tool = request.tools!![0]
+            tool.function.name shouldBe "weather"
+            tool.function.description shouldBe "Get weather"
+            tool.function.strict shouldBe true
+
+            // Verify toolChoice
+            request.toolChoice?.let { toolChoice ->
+                when (toolChoice) {
+                    is OpenAIToolChoice.Function -> {
+                        toolChoice.function.name shouldBe "weather"
+                    }
+
+                    else -> kotlin.test.fail("Expected OpenAIToolChoice.Function")
+                }
+            }
+
+            // Verify responseFormat
+            request.responseFormat?.let { format ->
+                when (format) {
+                    is OpenAIResponseFormat.JsonObject -> {
+                        // Expected type
+                    }
+
+                    else -> kotlin.test.fail("Expected OpenAIResponseFormat.JsonObject")
+                }
+            }
+
+            // Verify streamOptions
+            request.streamOptions?.includeUsage shouldBe true
+        }
 }

@@ -2,8 +2,12 @@ package ai.koog.prompt.executor.clients.google
 
 import ai.koog.prompt.executor.clients.google.models.GoogleGenerationConfig
 import ai.koog.prompt.executor.clients.google.models.GoogleRequest
+import ai.koog.prompt.executor.clients.google.models.GoogleThinkingConfig
+import ai.koog.test.utils.runWithBothJsonConfigurations
 import ai.koog.test.utils.verifyDeserialization
-import kotlinx.serialization.json.Json
+import io.kotest.assertions.json.shouldEqualJson
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
@@ -13,79 +17,74 @@ import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import org.junit.jupiter.api.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
+import kotlin.test.Test
 
 class GoogleSerializationTest {
 
-    private val json = Json {
-        ignoreUnknownKeys = false
-        explicitNulls = false
-    }
+    @Test
+    fun `test serialization without additionalProperties`() =
+        runWithBothJsonConfigurations("serialization without additionalProperties") { json ->
+            val request = GoogleGenerationConfig(
+                responseMimeType = "application/json",
+                maxOutputTokens = 1000,
+                temperature = 0.7,
+                candidateCount = 1,
+                topP = 0.9,
+                topK = 40
+            )
+
+            val jsonElement = json.encodeToJsonElement(request)
+            val jsonObject = jsonElement.jsonObject
+
+            jsonObject["responseMimeType"]?.jsonPrimitive?.contentOrNull shouldBe "application/json"
+            jsonObject["maxOutputTokens"]?.jsonPrimitive?.intOrNull shouldBe 1000
+            jsonObject["temperature"]?.jsonPrimitive?.doubleOrNull shouldBe 0.7
+            jsonObject["candidateCount"]?.jsonPrimitive?.intOrNull shouldBe 1
+            jsonObject["topP"]?.jsonPrimitive?.doubleOrNull shouldBe 0.9
+            jsonObject["topK"]?.jsonPrimitive?.intOrNull shouldBe 40
+            jsonObject["additionalProperties"] shouldBe null
+        }
 
     @Test
-    fun `test serialization without additionalProperties`() {
-        val request = GoogleGenerationConfig(
-            responseMimeType = "application/json",
-            maxOutputTokens = 1000,
-            temperature = 0.7,
-            candidateCount = 1,
-            topP = 0.9,
-            topK = 40
-        )
+    fun `test serialization with additionalProperties`() =
+        runWithBothJsonConfigurations("test serialization with additionalProperties") { json ->
+            val additionalProperties = mapOf<String, JsonElement>(
+                "customProperty" to JsonPrimitive("customValue"),
+                "customNumber" to JsonPrimitive(42),
+                "customBoolean" to JsonPrimitive(true)
+            )
 
-        val jsonElement = json.encodeToJsonElement(request)
-        val jsonObject = jsonElement.jsonObject
+            val generationConfig = GoogleGenerationConfig(
+                responseMimeType = "application/json",
+                maxOutputTokens = 1000,
+                temperature = 0.7,
+                additionalProperties = additionalProperties
+            )
+            val request = GoogleRequest(contents = emptyList(), generationConfig = generationConfig)
 
-        assertEquals("application/json", jsonObject["responseMimeType"]?.jsonPrimitive?.contentOrNull)
-        assertEquals(1000, jsonObject["maxOutputTokens"]?.jsonPrimitive?.intOrNull)
-        assertEquals(0.7, jsonObject["temperature"]?.jsonPrimitive?.doubleOrNull)
-        assertEquals(1, jsonObject["candidateCount"]?.jsonPrimitive?.intOrNull)
-        assertEquals(0.9, jsonObject["topP"]?.jsonPrimitive?.doubleOrNull)
-        assertEquals(40, jsonObject["topK"]?.jsonPrimitive?.intOrNull)
-        assertNull(jsonObject["customProperty"])
-    }
+            val jsonElement = json.encodeToJsonElement(request)
+            val jsonObject = jsonElement.jsonObject["generationConfig"]!!.jsonObject
 
-    @Test
-    fun `test serialization with additionalProperties`() {
-        val additionalProperties = mapOf<String, JsonElement>(
-            "customProperty" to JsonPrimitive("customValue"),
-            "customNumber" to JsonPrimitive(42),
-            "customBoolean" to JsonPrimitive(true)
-        )
+            // Standard properties should be present
+            jsonObject["responseMimeType"]?.jsonPrimitive?.contentOrNull
+            jsonObject["maxOutputTokens"]?.jsonPrimitive?.intOrNull
+            jsonObject["temperature"]?.jsonPrimitive?.doubleOrNull
 
-        val generationConfig = GoogleGenerationConfig(
-            responseMimeType = "application/json",
-            maxOutputTokens = 1000,
-            temperature = 0.7,
-            additionalProperties = additionalProperties
-        )
-        val request = GoogleRequest(contents = emptyList(), generationConfig = generationConfig)
+            // Additional properties should be flattened to root level
+            jsonObject["customProperty"]?.jsonPrimitive?.contentOrNull shouldBe "customValue"
+            jsonObject["customNumber"]?.jsonPrimitive?.intOrNull shouldBe 42
+            jsonObject["customBoolean"]?.jsonPrimitive?.booleanOrNull shouldBe true
 
-        val jsonElement = json.encodeToJsonElement(request)
-        val jsonObject = jsonElement.jsonObject["generationConfig"]!!.jsonObject
-
-        // Standard properties should be present
-        assertEquals("application/json", jsonObject["responseMimeType"]?.jsonPrimitive?.contentOrNull)
-        assertEquals(1000, jsonObject["maxOutputTokens"]?.jsonPrimitive?.intOrNull)
-        assertEquals(0.7, jsonObject["temperature"]?.jsonPrimitive?.doubleOrNull)
-
-        // Additional properties should be flattened to root level
-        assertEquals("customValue", jsonObject["customProperty"]?.jsonPrimitive?.contentOrNull)
-        assertEquals(42, jsonObject["customNumber"]?.jsonPrimitive?.intOrNull)
-        assertEquals(true, jsonObject["customBoolean"]?.jsonPrimitive?.booleanOrNull)
-
-        // additionalProperties field itself should not be present in serialized JSON
-        assertNull(jsonObject["additionalProperties"])
-    }
+            // additionalProperties field itself should not be present in serialized JSON
+            jsonObject["additionalProperties"] shouldBe null
+        }
 
     @Test
-    fun `test deserialization without additional properties`() {
-        val jsonString =
-            // language=json
-            """
+    fun `test deserialization without additional properties`() =
+        runWithBothJsonConfigurations("test deserialization without additionalProperties") { json ->
+            val jsonString =
+                // language=json
+                """
             {
                 "responseMimeType": "application/json",
                 "maxOutputTokens": 1000,
@@ -94,27 +93,28 @@ class GoogleSerializationTest {
                 "topP": 0.9,
                 "topK": 40
             }
-            """.trimIndent()
+                """.trimIndent()
 
-        val request: GoogleGenerationConfig = verifyDeserialization(
-            payload = jsonString,
-            json = json
-        )
+            val request: GoogleGenerationConfig = verifyDeserialization(
+                payload = jsonString,
+                json = json
+            )
 
-        assertEquals("application/json", request.responseMimeType)
-        assertEquals(1000, request.maxOutputTokens)
-        assertEquals(0.7, request.temperature)
-        assertEquals(1, request.candidateCount)
-        assertEquals(0.9, request.topP)
-        assertEquals(40, request.topK)
-        assertNull(request.additionalProperties)
-    }
+            request.responseMimeType shouldBe "application/json"
+            request.maxOutputTokens shouldBe 1000
+            request.temperature shouldBe 0.7
+            request.candidateCount shouldBe 1
+            request.topP shouldBe 0.9
+            request.topK shouldBe 40
+            request.additionalProperties shouldBe null
+        }
 
     @Test
-    fun `test deserialization with additional properties`() {
-        val jsonString =
-            // language=json
-            """ {
+    fun `test deserialization with additional properties`() =
+        runWithBothJsonConfigurations("test deserialization with additionalProperties") { json ->
+            val jsonString =
+                // language=json
+                """ {
                 "contents": [
                    {
                      "role": "user",
@@ -133,62 +133,80 @@ class GoogleSerializationTest {
                     "customBoolean": true
                 }
             }
-            """.trimIndent()
+                """.trimIndent()
 
-        val request: GoogleRequest = verifyDeserialization(
-            payload = jsonString,
-            json = json
-        )
-        val generationConfig = request.generationConfig!!
+            val request: GoogleRequest = verifyDeserialization(
+                payload = jsonString,
+                json = json
+            )
+            val generationConfig = request.generationConfig!!
 
-        assertEquals("application/json", generationConfig.responseMimeType)
-        assertEquals(1000, generationConfig.maxOutputTokens)
-        assertEquals(0.7, generationConfig.temperature)
+            generationConfig.responseMimeType shouldBe "application/json"
+            generationConfig.maxOutputTokens shouldBe 1000
+            generationConfig.temperature shouldBe 0.7
 
-        assertNotNull(generationConfig.additionalProperties)
-        val additionalProps = generationConfig.additionalProperties
-        assertEquals(3, additionalProps.size)
-        assertEquals("customValue", additionalProps["customProperty"]?.jsonPrimitive?.contentOrNull)
-        assertEquals(42, additionalProps["customNumber"]?.jsonPrimitive?.intOrNull)
-        assertEquals(true, additionalProps["customBoolean"]?.jsonPrimitive?.booleanOrNull)
-    }
+            val additionalProps = generationConfig.additionalProperties
+            additionalProps shouldNotBe null
+            additionalProps!!.size shouldBe 3
+            additionalProps["customProperty"]?.jsonPrimitive?.contentOrNull shouldBe "customValue"
+            additionalProps["customNumber"]?.jsonPrimitive?.intOrNull shouldBe 42
+            additionalProps["customBoolean"]?.jsonPrimitive?.booleanOrNull shouldBe true
+        }
 
     @Test
-    fun `test round trip serialization with additionalProperties`() {
-        val originalAdditionalProperties = mapOf<String, JsonElement>(
-            "customProperty" to JsonPrimitive("customValue"),
-            "customNumber" to JsonPrimitive(42)
-        )
+    fun `test thinkingConfig serialization`() =
+        runWithBothJsonConfigurations("thinkingConfig serialization") { json ->
+            val request = GoogleGenerationConfig(
+                responseMimeType = "application/json",
+                maxOutputTokens = 256,
+                temperature = 0.2,
+                thinkingConfig = GoogleThinkingConfig(
+                    includeThoughts = true,
+                    thinkingBudget = 1000
+                )
+            )
 
-        val originalRequest = GoogleGenerationConfig(
-            responseMimeType = "application/json",
-            maxOutputTokens = 1000,
-            temperature = 0.7,
-            additionalProperties = originalAdditionalProperties
-        )
+            val jsonString = json.encodeToString(GoogleGenerationConfig.serializer(), request)
 
-        // Serialize to JSON string
-        val jsonString = json.encodeToString(originalRequest)
+            jsonString shouldEqualJson
+                // language=json
+                """
+            {
+                "responseMimeType": "application/json",
+                "maxOutputTokens": 256,
+                "temperature": 0.2,
+                "thinkingConfig": {
+                    "includeThoughts": true,
+                    "thinkingBudget": 1000
+                }
+            }
+                """.trimIndent()
+        }
 
-        // Deserialize back to object
-        val deserializedRequest = json.decodeFromString<GoogleGenerationConfig>(jsonString)
+    @Test
+    fun `test thinkingConfig deserialization`() =
+        runWithBothJsonConfigurations("thinkingConfig deserialization") { json ->
+            val payload =
+                // language=json
+                """
+            {
+              "responseMimeType": "application/json",
+              "maxOutputTokens": 256,
+              "temperature": 0.2,
+              "thinkingConfig": {"includeThoughts": true, "thinkingBudget": 1000}
+            }
+                """.trimIndent()
 
-        // Verify standard properties
-        assertEquals(originalRequest.responseMimeType, deserializedRequest.responseMimeType)
-        assertEquals(originalRequest.maxOutputTokens, deserializedRequest.maxOutputTokens)
-        assertEquals(originalRequest.temperature, deserializedRequest.temperature)
+            val decoded: GoogleGenerationConfig = verifyDeserialization(
+                payload = payload,
+                json = json
+            )
 
-        // Verify additional properties were preserved
-        assertNotNull(deserializedRequest.additionalProperties)
-        val deserializedAdditionalProps = deserializedRequest.additionalProperties
-        assertEquals(originalAdditionalProperties.size, deserializedAdditionalProps.size)
-        assertEquals(
-            originalAdditionalProperties["customProperty"]?.jsonPrimitive?.contentOrNull,
-            deserializedAdditionalProps["customProperty"]?.jsonPrimitive?.contentOrNull
-        )
-        assertEquals(
-            originalAdditionalProperties["customNumber"]?.jsonPrimitive?.intOrNull,
-            deserializedAdditionalProps["customNumber"]?.jsonPrimitive?.intOrNull
-        )
-    }
+            decoded.responseMimeType shouldBe "application/json"
+            decoded.maxOutputTokens shouldBe 256
+            decoded.temperature shouldBe 0.2
+            decoded.thinkingConfig shouldNotBe null
+            decoded.thinkingConfig?.includeThoughts shouldBe true
+            decoded.thinkingConfig?.thinkingBudget shouldBe 1000
+        }
 }
