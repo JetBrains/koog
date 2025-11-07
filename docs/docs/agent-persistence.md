@@ -1,6 +1,6 @@
-# Agent Persistence
+# Agent Persistency
 
-Agent Persistence is a feature that provides checkpoint functionality for AI agents in the Koog framework.
+Agent Persistency is a feature that provides checkpoint functionality for AI agents in the Koog framework.
 It lets you save and restore the state of an agent at specific points during execution, enabling capabilities such as:
 
 - Resuming agent execution from a specific point
@@ -22,7 +22,7 @@ Checkpoints are identified by unique IDs and are associated with a specific agen
 
 ## Prerequisites
 
-The Agent Persistence feature requires that all nodes in your agent's strategy have unique names.
+The Agent Persistency feature requires that all nodes in your agent's strategy have unique names.
 This is enforced when the feature is installed:
 
 <!--- INCLUDE
@@ -44,12 +44,12 @@ Make sure to set unique names for nodes in your graph.
 
 ## Installation
 
-To use the Agent Persistence feature, add it to your agent's configuration:
+To use the Agent Persistency feature, add it to your agent's configuration:
 
 <!--- INCLUDE
 import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.snapshot.feature.Persistence
-import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider
+import ai.koog.agents.snapshot.feature.Persistency
+import ai.koog.agents.snapshot.providers.InMemoryPersistencyStorageProvider
 import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
 import ai.koog.prompt.llm.OllamaModels
 
@@ -61,11 +61,11 @@ val agent = AIAgent(
     promptExecutor = executor,
     llmModel = OllamaModels.Meta.LLAMA_3_2,
 ) {
-    install(Persistence) {
+    install(Persistency) {
         // Use in-memory storage for snapshots
-        storage = InMemoryPersistenceStorageProvider()
-        // Enable automatic persistence
-        enableAutomaticPersistence = true
+        storage = InMemoryPersistencyStorageProvider()
+        // Enable automatic persistency
+        enableAutomaticPersistency = true
     }
 }
 ```
@@ -74,7 +74,7 @@ val agent = AIAgent(
 
 ## Configuration options
 
-The Agent Persistence feature has two main configuration options:
+The Agent Persistency feature has two main configuration options:
 
 - **Storage provider**: the provider used to save and retrieve checkpoints.
 - **Continuous persistence**: automatic creation of checkpoints after each node is run.
@@ -85,8 +85,8 @@ Set the storage provider that will be used to save and retrieve checkpoints:
 
 <!--- INCLUDE
 import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.snapshot.feature.Persistence
-import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider
+import ai.koog.agents.snapshot.feature.Persistency
+import ai.koog.agents.snapshot.providers.InMemoryPersistencyStorageProvider
 import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
 import ai.koog.prompt.llm.OllamaModels
 
@@ -100,8 +100,8 @@ val agent = AIAgent(
 -->
 
 ```kotlin
-install(Persistence) {
-    storage = InMemoryPersistenceStorageProvider()
+install(Persistency) {
+    storage = InMemoryPersistencyStorageProvider()
 }
 ```
 
@@ -110,11 +110,11 @@ install(Persistence) {
 
 The framework includes the following built-in providers:
 
-- `InMemoryPersistenceStorageProvider`: stores checkpoints in memory (lost when the application restarts).
-- `FilePersistenceStorageProvider`: persists checkpoints to the file system.
-- `NoPersistenceStorageProvider`: a no-op implementation that does not store checkpoints. This is the default provider.
+- `InMemoryPersistencyStorageProvider`: stores checkpoints in memory (lost when the application restarts).
+- `FilePersistencyStorageProvider`: persists checkpoints to the file system.
+- `NoPersistencyStorageProvider`: a no-op implementation that does not store checkpoints. This is the default provider.
 
-You can also implement custom storage providers by implementing the `PersistenceStorageProvider` interface.
+You can also implement custom storage providers by implementing the `PersistencyStorageProvider` interface.
 For more information, see [Custom storage providers](#custom-storage-providers).
 
 ### Continuous persistence
@@ -124,7 +124,7 @@ To activate continuous persistence, use the code below:
 
 <!--- INCLUDE
 import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.snapshot.feature.Persistence
+import ai.koog.agents.snapshot.feature.Persistency
 import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider
 import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
 import ai.koog.prompt.llm.OllamaModels
@@ -139,8 +139,8 @@ val agent = AIAgent(
 -->
 
 ```kotlin
-install(Persistence) {
-    enableAutomaticPersistence = true
+install(Persistency) {
+    enableAutomaticPersistency = true
 }
 ```
 
@@ -167,13 +167,12 @@ val inputType = typeOf<String>()
 ```kotlin
 suspend fun example(context: AIAgentContext) {
     // Create a checkpoint with the current state
-    val checkpoint = context.persistence().createCheckpoint(
+    val checkpoint = context.persistency().createCheckpoint(
         agentContext = context,
         nodeId = "current-node-id",
         lastInput = inputData,
         lastInputType = inputType,
-        checkpointId = context.runId,
-        version = 0L
+        checkpointId = context.runId
     )
 
     // The checkpoint ID can be stored for later use
@@ -189,16 +188,16 @@ To restore the state of an agent from a specific checkpoint, follow the code sam
 
 <!--- INCLUDE
 import ai.koog.agents.core.agent.context.AIAgentContext
-import ai.koog.agents.snapshot.feature.persistence
+import ai.koog.agents.snapshot.feature.persistency
 -->
 
 ```kotlin
 suspend fun example(context: AIAgentContext, checkpointId: String) {
     // Roll back to a specific checkpoint
-    context.persistence().rollbackToCheckpoint(checkpointId, context)
+    context.persistency().rollbackToCheckpoint(checkpointId, context)
 
     // Or roll back to the latest checkpoint
-    context.persistence().rollbackToLatestCheckpoint(context)
+    context.persistency().rollbackToLatestCheckpoint(context)
 }
 ```
 
@@ -223,12 +222,12 @@ And now you would like to roll back to a checkpoint. Restoring the agent's state
 be sufficient to achieve the exact state of the world before the checkpoint. You should also restore the side-effects produced by your tool calls. In our example,
 this would mean removing `Maria` and `Daniel` from the database.
 
-With Koog Persistence you can achieve that by providing a `RollbackToolRegistry` to `Persistence` feature config:
+With Koog Persistency you can achieve that by providing a `RollbackToolRegistry` to `Persistency` feature config:
 
 <!--- INCLUDE
 import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.snapshot.feature.Persistence
-import ai.koog.agents.snapshot.providers.InMemoryPersistenceStorageProvider
+import ai.koog.agents.snapshot.feature.Persistency
+import ai.koog.agents.snapshot.providers.InMemoryPersistencyStorageProvider
 import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
 import ai.koog.prompt.llm.OllamaModels
 import ai.koog.agents.snapshot.feature.RollbackToolRegistry
@@ -248,8 +247,8 @@ val agent = AIAgent(
 -->
 
 ```kotlin
-install(Persistence) {
-    enableAutomaticPersistence = true
+install(Persistency) {
+    enableAutomaticPersistency = true
     rollbackToolRegistry = RollbackToolRegistry {
         // For every `createUser` tool call there will be a `removeUser` invocation in the reverse order 
         // when rolling back to the desired execution point.
@@ -264,31 +263,30 @@ install(Persistence) {
 
 ### Using extension functions
 
-The Agent Persistence feature provides convenient extension functions for working with checkpoints:
+The Agent Persistency feature provides convenient extension functions for working with checkpoints:
 
 <!--- INCLUDE
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.example.exampleAgentPersistence05.inputData
 import ai.koog.agents.example.exampleAgentPersistence05.inputType
-import ai.koog.agents.snapshot.feature.persistence
-import ai.koog.agents.snapshot.feature.withPersistence
+import ai.koog.agents.snapshot.feature.persistency
+import ai.koog.agents.snapshot.feature.withPersistency
 -->
 
 ```kotlin
 suspend fun example(context: AIAgentContext) {
     // Access the checkpoint feature
-    val checkpointFeature = context.persistence()
+    val checkpointFeature = context.persistency()
 
     // Or perform an action with the checkpoint feature
-    context.withPersistence { ctx ->
+    context.withPersistency { ctx ->
         // 'this' is the checkpoint feature
         createCheckpoint(
             agentContext = ctx,
             nodeId = "current-node-id",
             lastInput = inputData,
             lastInputType = inputType,
-            checkpointId = ctx.runId,
-            version = 0L
+            checkpointId = ctx.runId
         )
     }
 }
@@ -299,11 +297,11 @@ suspend fun example(context: AIAgentContext) {
 
 ### Custom storage providers
 
-You can implement custom storage providers by implementing the `PersistenceStorageProvider` interface:
+You can implement custom storage providers by implementing the `PersistencyStorageProvider` interface:
 
 <!--- INCLUDE
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
-import ai.koog.agents.snapshot.providers.PersistenceStorageProvider
+import ai.koog.agents.snapshot.providers.PersistencyStorageProvider
 
 /*
 // KNIT: Ignore example
@@ -312,7 +310,7 @@ import ai.koog.agents.snapshot.providers.PersistenceStorageProvider
 */
 -->
 ```kotlin
-class MyCustomStorageProvider<MyFilterType> : PersistenceStorageProvider<MyFilterType> {
+class MyCustomStorageProvider<MyFilterType> : PersistencyStorageProvider<MyFilterType> {
     override suspend fun getCheckpoints(agentId: String, filter: MyFilterType?): List<AgentCheckpointData> {
         TODO("Not yet implemented")
     }
@@ -330,18 +328,18 @@ class MyCustomStorageProvider<MyFilterType> : PersistenceStorageProvider<MyFilte
 
 <!--- KNIT example-agent-persistence-09.kt -->
 
-To use your custom provider in the feature configuration, set it as the storage when configuring the Agent Persistence
+To use your custom provider in the feature configuration, set it as the storage when configuring the Agent Persistency
 feature in your agent.
 
 <!--- INCLUDE
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.snapshot.feature.AgentCheckpointData
-import ai.koog.agents.snapshot.feature.Persistence
-import ai.koog.agents.snapshot.providers.PersistenceStorageProvider
+import ai.koog.agents.snapshot.feature.Persistency
+import ai.koog.agents.snapshot.providers.PersistencyStorageProvider
 import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
 import ai.koog.prompt.llm.OllamaModels
 
-class MyCustomStorageProvider<MyFilterType> : PersistenceStorageProvider<MyFilterType> {
+class MyCustomStorageProvider<MyFilterType> : PersistencyStorageProvider<MyFilterType> {
     override suspend fun getCheckpoints(agentId: String, filter: MyFilterType?): List<AgentCheckpointData> {
         TODO("Not yet implemented")
     }
@@ -365,7 +363,7 @@ val agent = AIAgent(
 -->
 
 ```kotlin
-install(Persistence) {
+install(Persistency) {
     storage = MyCustomStorageProvider<Any>()
 }
 ```
@@ -378,7 +376,7 @@ For advanced control, you can directly set the execution point of an agent:
 
 <!--- INCLUDE
 import ai.koog.agents.core.agent.context.AIAgentContext
-import ai.koog.agents.snapshot.feature.persistence
+import ai.koog.agents.snapshot.feature.persistency
 import ai.koog.prompt.message.Message.User
 import kotlinx.serialization.json.JsonPrimitive
 
@@ -388,7 +386,7 @@ val customMessageHistory = emptyList<User>()
 
 ```kotlin
 fun example(context: AIAgentContext) {
-    context.persistence().setExecutionPoint(
+    context.persistency().setExecutionPoint(
         agentContext = context,
         nodeId = "target-node-id",
         messageHistory = customMessageHistory,
