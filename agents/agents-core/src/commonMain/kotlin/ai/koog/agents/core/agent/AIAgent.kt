@@ -263,7 +263,7 @@ public interface AIAgent<Input, Output> : Closeable {
          * @param toolRegistry The set of tools available for the agent, defaulting to an empty registry.
          * @param id Unique identifier for the agent. Random UUID will be generated if set to null.
          * @param systemPrompt Optional system prompt for the agent.
-         * @param temperature Optional model temperature, with valid values ranging typically from 0.0 to 1.0. Defaults to 0.0.
+         * @param temperature Optional model temperature, with valid values ranging typically from 0.0 to 1.0.
          * @param numberOfChoices The number of response choices to be generated, defaulting to 1.
          * @param maxIterations The maximum number of iterations the agent is allowed to perform, defaulting to 50.
          * @param installFeatures A function to configure additional features into the agent during initialization. Defaults to an empty configuration.
@@ -277,7 +277,7 @@ public interface AIAgent<Input, Output> : Closeable {
             toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
             id: String? = null,
             systemPrompt: String? = null,
-            temperature: Double? = 0.0,
+            temperature: Double? = null,
             numberOfChoices: Int = 1,
             maxIterations: Int = 50,
             installFeatures: FeatureContext.() -> Unit = {}
@@ -314,7 +314,7 @@ public interface AIAgent<Input, Output> : Closeable {
          * @param id Unique identifier for the agent. Random UUID will be generated if set to null.
          * @param clock A `Clock` instance used for time-related operations. Defaults to `Clock.System`.
          * @param systemPrompt Optional system prompt for the agent.
-         * @param temperature Optional model temperature, with valid values ranging typically from 0.0 to 1.0. Defaults to 0.0.
+         * @param temperature Optional model temperature, with valid values ranging typically from 0.0 to 1.0.
          * @param numberOfChoices The number of choices the model should generate per invocation. Defaults to `1`.
          * @param maxIterations The maximum number of iterations the agent can perform. Defaults to `50`.
          * @param installFeatures An extension function on `FeatureContext` to install custom features for the agent. Defaults to an empty lambda.
@@ -329,7 +329,7 @@ public interface AIAgent<Input, Output> : Closeable {
             id: String? = null,
             clock: Clock = Clock.System,
             systemPrompt: String? = null,
-            temperature: Double? = 0.0,
+            temperature: Double? = null,
             numberOfChoices: Int = 1,
             maxIterations: Int = 50,
             noinline installFeatures: FeatureContext.() -> Unit = {},
@@ -371,7 +371,7 @@ public interface AIAgent<Input, Output> : Closeable {
          * @param strategy The strategy to be executed by the agent. Default is a single-run strategy.
          * @param id Unique identifier for the agent. Random UUID will be generated if set to null.
          * @param systemPrompt Optional system prompt for the agent.
-         * @param temperature Optional model temperature, with valid values ranging typically from 0.0 to 1.0. Defaults to 0.0.
+         * @param temperature Optional model temperature, with valid values ranging typically from 0.0 to 1.0.
          * @param numberOfChoices The number of response choices to generate when querying the language model. Default is 1.
          * @param maxIterations The maximum number of iterations the agent is allowed to perform during execution. Default is 50.
          * @param installFeatures A lambda to configure and install features in the agent's context.
@@ -384,7 +384,7 @@ public interface AIAgent<Input, Output> : Closeable {
             strategy: AIAgentFunctionalStrategy<Input, Output>,
             id: String? = null,
             systemPrompt: String? = null,
-            temperature: Double? = 0.0,
+            temperature: Double? = null,
             numberOfChoices: Int = 1,
             maxIterations: Int = 50,
             installFeatures: FunctionalAIAgent.FeatureContext.() -> Unit = {},
