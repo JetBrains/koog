@@ -50,7 +50,7 @@ class SerialToToolDescriptionTest {
     @Test
     fun primitive_mappings_are_wrapped_as_value_parameter() {
         fun assertValueParam(descriptor: ToolDescriptor, expectedType: ToolParameterType) {
-            assertEquals("value", descriptor.requiredParameters.single().name)
+            assertEquals(toolWrapperValueKey, descriptor.requiredParameters.single().name)
             assertEquals(0, descriptor.optionalParameters.size)
             assertEquals(expectedType, descriptor.requiredParameters.single().type)
         }
