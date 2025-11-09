@@ -20,6 +20,11 @@ private fun SerialDescriptor.description(): String =
     annotations.filterIsInstance<LLMDescription>().firstOrNull()?.description ?: ""
 
 /**
+ * Special key used to wrap primitive arguments in JSON objects, to support tools with "primitive" args/results.
+ */
+private const val valueKey = "__wrapped_value__"
+
+/**
  * Converts a [SerialDescriptor] into a [ToolDescriptor] with metadata about a tool,
  * including its name, description, and parameters.
  *
@@ -164,8 +169,6 @@ public fun <T> KSerializer<T>.asToolDescriptorSerializer(): KSerializer<T> {
     return object : KSerializer<T> {
         override val descriptor: SerialDescriptor = origSerializer.descriptor
 
-        private val valueKey = "__wrapped_value__"
-
         override fun serialize(encoder: Encoder, value: T) {
             if (encoder !is JsonEncoder) throw IllegalStateException("Should be json encoder")
 
@@ -251,7 +254,7 @@ private fun ToolParameterType.asValueTool(name: String, description: String, val
     ToolDescriptor(
         name = name,
         description = description,
-        requiredParameters = listOf(ToolParameterDescriptor(name = "value", description = valueDescription ?: "", this))
+        requiredParameters = listOf(ToolParameterDescriptor(name = valueKey, description = valueDescription ?: "", this))
     )
 
 private fun SerialDescriptor.parameterDescriptors(required: MutableList<String>): List<ToolParameterDescriptor> =

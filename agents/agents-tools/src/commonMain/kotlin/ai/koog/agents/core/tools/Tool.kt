@@ -145,7 +145,7 @@ public abstract class Tool<TArgs, TResult> {
      * @return A JsonObject representing the encoded result.
      */
     public fun encodeResult(result: TResult): JsonElement =
-        ToolJson.encodeToJsonElement(actualResultSerializer, result).jsonObject
+        ToolJson.encodeToJsonElement(actualResultSerializer, result)
 
     /**
      * Encodes the given result object into a JSON representation without type safety checks.
