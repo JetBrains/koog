@@ -36,6 +36,7 @@ The main server class implementing the complete A2A protocol. It serves as the c
 - **Handles** all protocol operations: message sending, task querying, cancellation, push notifications
 
 The `A2AServer` accepts two required parameters:
+
 * `AgentExecutor` which defines business logic implementation of the agent
 * `AgentCard` which defines agent capabilities and metadata
 
@@ -71,6 +72,7 @@ The `RequestContext` provides rich information about the current request,
 including the `contextId` and `taskId` of the current session, the `message` sent, and the `params` of the request.
 
 The `SessionEventProcessor` communicates with clients:
+
 - **`sendMessage(message)`**: Send immediate responses (chat-style interactions)
 - **`sendTaskEvent(event)`**: Send task-related updates (long-running operations)
 
