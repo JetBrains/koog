@@ -30,7 +30,7 @@ public class StructureFixingParser(
 ) {
 
     init {
-        require(retries > 0) { "Retries must be greater than 0" }
+        require(retries >= 0) { "Retries must be no less than 0" }
     }
 
     /**
@@ -43,23 +43,27 @@ public class StructureFixingParser(
      * @throws SerializationException If parsing fails both initially and after attempting to fix the content.
      */
     public suspend fun <T> parse(executor: PromptExecutor, structure: StructuredData<T, *>, content: String): T {
-        var currentContent = content
-        var currentException: SerializationException? = null
+        try {
+            return structure.parse(content)
+        } catch (initialException: SerializationException) {
+            var currentContent = content
+            var currentException: SerializationException = initialException
+            var attempt = 0
 
-        repeat(retries) { attempt ->
-            try {
-                logger.debug { "$attempt/$retries: Try to parse LLM response content: <$content>" }
+            while (++attempt <= retries) {
+                logger.debug { "$attempt/$retries: Try to fix LLM structured response:\n$currentContent" }
+                currentContent = executeFixStructure(executor, currentContent, structure, currentException)
 
-                return structure.parse(currentContent)
-            } catch (exception: SerializationException) {
-                logger.warn(exception) { "Failed to parse structure from content: <$content>" }
-
-                currentException = exception
-                currentContent = executeFixStructure(executor, content, structure, exception)
+                try {
+                    return structure.parse(currentContent)
+                } catch (e: SerializationException) {
+                    logger.warn(e) { "Failed to parse structure from content:\n$currentContent" }
+                    currentException = e
+                }
             }
-        }
 
-        throw LLMStructuredParsingError("Unable to parse structure after $retries retries", currentException)
+            throw LLMStructuredParsingError("Unable to parse structure after $retries retries", currentException)
+        }
     }
 
     private suspend fun <T> executeFixStructure(
