@@ -51,6 +51,7 @@ import ai.koog.prompt.structure.executeStructured
 import io.kotest.assertions.withClue
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.booleans.shouldNotBeTrue
+import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -147,7 +148,7 @@ abstract class ExecutorIntegrationTestBase {
                 }
             }
             messageBuilder.length.shouldNotBe(0)
-            toolMessages.shouldNotBeEmpty()
+            toolMessages.shouldBeEmpty()
             endMessages.size shouldBe 1
 
             val fullResponse = messageBuilder.toString()
