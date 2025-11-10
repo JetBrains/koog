@@ -56,8 +56,8 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.params.provider.Arguments
 import java.nio.file.Path
-import java.nio.file.Paths
 import java.util.stream.Stream
+import kotlin.io.path.toPath
 
 open class AIAgentTestBase {
     companion object {
@@ -65,15 +65,15 @@ open class AIAgentTestBase {
         lateinit var testResourcesDir: Path
 
         @JvmStatic
-        fun getLatestModels(): Stream<LLModel> = Stream.of(
+        fun getLatestModels() = listOf(
             AnthropicModels.Sonnet_4_5,
             OpenAIModels.Chat.GPT5,
-        )
+        ).stream()
 
         @JvmStatic
         @BeforeAll
         fun setup() {
-            testResourcesDir = Paths.get(AIAgentTestBase::class.java.getResource("/media")!!.toURI())
+            testResourcesDir = AIAgentTestBase::class.java.getResource("/media")!!.toURI().toPath()
             testResourcesDir.shouldExist()
         }
 
