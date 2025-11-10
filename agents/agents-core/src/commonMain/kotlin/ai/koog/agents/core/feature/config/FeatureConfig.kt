@@ -52,7 +52,7 @@ public abstract class FeatureConfig {
      * }
      * ```
      */
-    public fun setEventFilter(filter: (AgentLifecycleEventContext) -> Boolean) {
+    public open fun setEventFilter(filter: (AgentLifecycleEventContext) -> Boolean) {
         _eventFilter = filter
     }
 }

@@ -1,6 +1,7 @@
 package ai.koog.agents.features.opentelemetry.feature
 
 import ai.koog.agents.core.feature.config.FeatureConfig
+import ai.koog.agents.core.feature.handler.AgentLifecycleEventContext
 import ai.koog.agents.features.opentelemetry.attribute.addAttributes
 import ai.koog.agents.features.opentelemetry.integration.SpanAdapter
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -70,6 +71,12 @@ public class OpenTelemetryConfig : FeatureConfig() {
     private var _verbose: Boolean = false
 
     private var _spanAdapter: SpanAdapter? = null
+
+    override fun setEventFilter(filter: (AgentLifecycleEventContext) -> Boolean) {
+        // Do not allow events filtering for the OpenTelemetry feature
+        // Open Telemetry relay on the hierarchy. Filtering events can break the feature logic.
+        throw UnsupportedOperationException("Events filtering is not allowed for the OpenTelemetry feature.")
+    }
 
     /**
      * Indicates whether verbose telemetry data is enabled.
