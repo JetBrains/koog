@@ -14,6 +14,9 @@ import ai.koog.agents.core.feature.model.events.LLMStreamingFailedEvent
 import ai.koog.agents.core.feature.model.events.LLMStreamingFrameReceivedEvent
 import ai.koog.agents.core.feature.model.events.LLMStreamingStartingEvent
 import ai.koog.agents.core.feature.model.events.NodeExecutionFailedEvent
+import ai.koog.agents.core.feature.model.events.SubgraphExecutionCompletedEvent
+import ai.koog.agents.core.feature.model.events.SubgraphExecutionFailedEvent
+import ai.koog.agents.core.feature.model.events.SubgraphExecutionStartingEvent
 import ai.koog.agents.core.feature.model.events.ToolCallCompletedEvent
 import ai.koog.agents.core.feature.model.events.ToolCallStartingEvent
 import ai.koog.agents.core.tools.ToolRegistry
@@ -536,6 +539,156 @@ class TraceFeatureMessageTestWriterTest {
                 assertEquals(expectedEvents.size, actualEvents.size)
                 assertContentEquals(expectedEvents, actualEvents)
             }
+        }
+    }
+
+    @Test
+    fun `test subgraph execution events success`() = runBlocking {
+        val strategyName = "test-strategy"
+        val subgraphName = "test-subgraph"
+        val subgraphNodeName = "test-subgraph-node"
+        val subgraphOutput = "test-subgraph-output"
+        val inputRequest = "Test input"
+
+        val strategy = strategy<String, String>(strategyName) {
+            val subgraph by subgraph<String, String>(subgraphName) {
+                val subgraphNode by node<String, String>(subgraphNodeName) { subgraphOutput }
+                nodeStart then subgraphNode then nodeFinish
+            }
+            nodeStart then subgraph then nodeFinish
+        }
+
+        TestFeatureMessageWriter().use { writer ->
+            val agentOutput = createAgent(
+                strategy = strategy,
+            ) {
+                install(Tracing) {
+                    addMessageProcessor(writer)
+                }
+            }.use { agent ->
+                agent.run(inputRequest)
+            }
+
+            val actualEvents = writer.messages.filter { event ->
+                event is SubgraphExecutionStartingEvent ||
+                    event is SubgraphExecutionCompletedEvent ||
+                    event is SubgraphExecutionFailedEvent
+            }
+
+            val runIdFromEvents = (actualEvents.first() as SubgraphExecutionStartingEvent).runId
+
+            val expectedInput = @OptIn(InternalAgentsApi::class)
+            SerializationUtils.encodeDataToJsonElementOrNull(
+                data = inputRequest,
+                dataType = typeOf<String>()
+            )
+
+            val expectedOutput = @OptIn(InternalAgentsApi::class)
+            SerializationUtils.encodeDataToJsonElementOrNull(
+                data = agentOutput,
+                dataType = typeOf<String>()
+            )
+
+            val expectedEvents = listOf(
+                SubgraphExecutionStartingEvent(
+                    runId = runIdFromEvents,
+                    subgraphName = subgraphName,
+                    input = expectedInput,
+                    timestamp = testClock.now().toEpochMilliseconds()
+                ),
+                SubgraphExecutionCompletedEvent(
+                    runId = runIdFromEvents,
+                    subgraphName = subgraphName,
+                    input = expectedInput,
+                    output = expectedOutput,
+                    timestamp = testClock.now().toEpochMilliseconds()
+                ),
+            )
+
+            assertEquals(expectedEvents.size, actualEvents.size)
+            assertContentEquals(expectedEvents, actualEvents)
+        }
+    }
+
+    @Test
+    fun `test subgraph execution events failure`() = runBlocking {
+        val strategyName = "test-strategy"
+        val subgraphName = "test-subgraph"
+        val subgraphErrorNodeName = "test-subgraph-error-node"
+        val subgraphNodeErrorMessage = "Test subgraph error"
+        val inputRequest = "Test input"
+
+        val strategy = strategy<String, String>(strategyName) {
+            val subgraph by subgraph<String, String>(subgraphName) {
+                val nodeWithError by node<String, String>(subgraphErrorNodeName) {
+                    throw IllegalStateException(subgraphNodeErrorMessage)
+                }
+                nodeStart then nodeWithError then nodeFinish
+            }
+            nodeStart then subgraph then nodeFinish
+        }
+
+        TestFeatureMessageWriter().use { writer ->
+            var expectedStackTrace = ""
+            var expectedCause = ""
+
+            val agentThrowable = createAgent(
+                strategy = strategy,
+            ) {
+                install(Tracing) {
+                    addMessageProcessor(writer)
+                }
+            }.use { agent ->
+                assertFails {
+                    try {
+                        agent.run(inputRequest)
+                    } catch (t: Throwable) {
+                        expectedStackTrace = t.stackTraceToString()
+                        expectedCause = t.cause?.stackTraceToString() ?: ""
+                        throw t
+                    }
+                }
+            }
+
+            // Ensure the error message is as expected
+            assertEquals(subgraphNodeErrorMessage, agentThrowable.message)
+
+            val actualEvents = writer.messages.filter { event ->
+                event is SubgraphExecutionStartingEvent ||
+                    event is SubgraphExecutionCompletedEvent ||
+                    event is SubgraphExecutionFailedEvent
+            }
+
+            val runIdFromEvents = (actualEvents.first() as SubgraphExecutionStartingEvent).runId
+
+            val expectedInput = @OptIn(InternalAgentsApi::class)
+            SerializationUtils.encodeDataToJsonElementOrNull(
+                data = inputRequest,
+                dataType = typeOf<String>()
+            )
+
+            val expectedEvents = listOf(
+                SubgraphExecutionStartingEvent(
+                    runId = runIdFromEvents,
+                    subgraphName = subgraphName,
+                    input = expectedInput,
+                    timestamp = testClock.now().toEpochMilliseconds()
+                ),
+                SubgraphExecutionFailedEvent(
+                    runId = runIdFromEvents,
+                    subgraphName = subgraphName,
+                    input = expectedInput,
+                    error = AIAgentError(
+                        message = subgraphNodeErrorMessage,
+                        stackTrace = expectedStackTrace,
+                        cause = expectedCause,
+                    ),
+                    timestamp = testClock.now().toEpochMilliseconds()
+                )
+            )
+
+            assertEquals(expectedEvents.size, actualEvents.size)
+            assertContentEquals(expectedEvents, actualEvents)
         }
     }
 }
