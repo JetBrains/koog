@@ -44,6 +44,7 @@ import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.ToolChoice
 import ai.koog.prompt.streaming.StreamFrame
@@ -362,7 +363,7 @@ abstract class ExecutorIntegrationTestBase {
 
             withRetry {
                 try {
-                    with(getExecutor(model).execute(prompt, model).single()) {
+                    with(getExecutor(model).execute(prompt, model).toSingleMessage()) {
                         when (scenario) {
                             MarkdownTestScenario.MALFORMED_SYNTAX,
                             MarkdownTestScenario.MATH_NOTATION,
@@ -920,5 +921,15 @@ abstract class ExecutorIntegrationTestBase {
         withClue("Models list should not be empty") {
             getLLMClientForProvider(provider).models().shouldNotBeEmpty()
         }
+    }
+
+    private fun List<Message>.toSingleMessage(): Message.Assistant {
+        if (this.isEmpty()) {
+            return Message.Assistant(parts = emptyList(), metaInfo = ResponseMetaInfo.Empty)
+        }
+
+        val allParts = this.flatMap { it.parts }
+
+        return Message.Assistant(parts = allParts, metaInfo = ResponseMetaInfo.Empty)
     }
 }
