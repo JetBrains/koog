@@ -40,7 +40,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.io.File
-import java.util.Base64
 import java.util.stream.Stream
 import kotlin.test.fail
 import kotlin.time.Duration.Companion.minutes
@@ -240,8 +239,7 @@ class AIAgentMultipleLLMIntegrationTest : AIAgentTestBase() {
         val imageFile = File(testResourcesDir.toFile(), "test.png")
         imageFile.exists().shouldBeTrue()
 
-        val imageBytes = imageFile.readBytes()
-        val base64Image = Base64.getEncoder().encodeToString(imageBytes)
+        val base64Image = imageFile.readBytes().encodeBase64()
 
         withRetry {
             val agent = createTestMultiLLMAgent(
