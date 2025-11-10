@@ -98,17 +98,17 @@ class AIAgentMultipleLLMIntegrationTest : AIAgentTestBase() {
         }
 
         with(messages) {
-            any { it.llmClient == "AnthropicLLMClient" }
+            any { it.llmClient is AnthropicLLMClient }
                 .shouldBeTrue()
 
-            any { it.llmClient == "OpenAILLMClient" }
+            any { it.llmClient is OpenAILLMClient }
                 .shouldBeTrue()
 
-            filter { it.llmClient == "AnthropicLLMClient" }
+            filter { it.llmClient is AnthropicLLMClient }
                 .all { it.model.provider == LLMProvider.Anthropic }
                 .shouldBeTrue()
 
-            filter { it.llmClient == "OpenAILLMClient" }
+            filter { it.llmClient is OpenAILLMClient }
                 .all { it.model.provider == LLMProvider.OpenAI }.shouldBeTrue()
         }
     }

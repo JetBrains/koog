@@ -181,7 +181,7 @@ open class AIAgentTestBase {
         override fun llmProvider(): LLMProvider = underlyingClient.llmProvider()
         sealed interface Event {
             data class Message(
-                val llmClient: String,
+                val llmClient: LLMClient,
                 val method: String,
                 val prompt: Prompt,
                 val tools: List<String>,
@@ -199,7 +199,7 @@ open class AIAgentTestBase {
             CoroutineScope(currentCoroutineContext()).launch {
                 eventsChannel.send(
                     Event.Message(
-                        llmClient = underlyingClient::class.simpleName ?: "null",
+                        llmClient = underlyingClient,
                         method = "execute",
                         prompt = prompt,
                         tools = tools.map { it.name },
@@ -218,7 +218,7 @@ open class AIAgentTestBase {
             coroutineScope {
                 eventsChannel.send(
                     Event.Message(
-                        llmClient = underlyingClient::class.simpleName ?: "null",
+                        llmClient = underlyingClient,
                         method = "execute",
                         prompt = prompt,
                         tools = emptyList(),
