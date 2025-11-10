@@ -9,10 +9,6 @@ import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.llm.OllamaModels
 import kotlinx.coroutines.test.runTest
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.jsonPrimitive
-import kotlinx.serialization.json.put
 import kotlin.reflect.typeOf
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -55,9 +51,7 @@ class AIAgentToolTest {
             inputDescription = "Test request description"
         )
 
-        val argsJson = buildJsonObject {
-            put("value", "Test input")
-        }
+        val argsJson = tool.encodeArgs("Test input")
     }
 
     @OptIn(InternalAgentToolsApi::class)
@@ -72,7 +66,6 @@ class AIAgentToolTest {
         assertEquals("testAgent", tool.descriptor.name)
         assertEquals("Test agent description", tool.descriptor.description)
         assertEquals(1, tool.descriptor.requiredParameters.size)
-        assertEquals("value", tool.descriptor.requiredParameters[0].name)
         assertEquals("Test request description", tool.descriptor.requiredParameters[0].description)
         assertEquals(ToolParameterType.String, tool.descriptor.requiredParameters[0].type)
     }
@@ -95,7 +88,7 @@ class AIAgentToolTest {
         val result = tool.execute(args)
 
         assertTrue(result.successful)
-        assertEquals(RESPONSE, result.result?.jsonPrimitive?.content)
+        assertEquals(RESPONSE, result.result)
         assertNotNull(result.result)
         assertEquals(null, result.errorMessage)
     }
@@ -141,7 +134,7 @@ class AIAgentToolTest {
         assertEquals(
             AIAgentTool.AgentToolResult(
                 successful = true,
-                result = JsonPrimitive("This is the agent's response")
+                result = "This is the agent's response",
             ),
             result
         )

@@ -82,7 +82,7 @@ class LLMDescriptionUsageTest {
         assertEquals("Color enum description", desc.description)
         // Required single "value" parameter of Enum type
         val param = desc.requiredParameters.single()
-        assertEquals("value", param.name)
+        assertEquals(toolWrapperValueKey, param.name)
         assertIs<ToolParameterType.Enum>(param.type)
     }
 

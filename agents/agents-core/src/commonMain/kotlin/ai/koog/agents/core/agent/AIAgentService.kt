@@ -15,7 +15,6 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.datetime.Clock
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
 import kotlin.reflect.KType
 import kotlin.reflect.typeOf
@@ -550,7 +549,6 @@ public operator fun AIAgentService.Companion.invoke(
  *  * Does not have any effect for non-primitive [Input] type with @LLMDescription annotations.
  * @param inputSerializer Serializer to deserialize tool arguments to agent input.
  * @param outputSerializer Serializer to serialize agent output to a tool result.
- * @param json Optional [Json] instance to customize de/serialization behavior.
  * @return A special tool that wraps the agent functionality.
  * @param parentAgentId Optional ID of the parent AI agent. Tool agent IDs will be generated as "parentAgentId.<number of tool call>"
  * @param clock The clock instance used to manage time-related operations. Defaults to `Clock.System`.
@@ -563,16 +561,14 @@ public inline fun <reified Input, reified Output> AIAgentService<Input, Output, 
     inputDescription: String? = null,
     inputSerializer: KSerializer<Input> = serializer(),
     outputSerializer: KSerializer<Output> = serializer(),
-    json: Json = Json.Default,
     parentAgentId: String? = null,
     clock: Clock = Clock.System
-): Tool<AIAgentTool.AgentToolArgs, AIAgentTool.AgentToolResult> = AIAgentTool(
+): Tool<Input, AIAgentTool.AgentToolResult<Output>> = AIAgentTool(
     agentService = this,
     agentName = agentName,
     agentDescription = agentDescription,
     inputDescription = inputDescription,
     inputSerializer = inputSerializer,
     outputSerializer = outputSerializer,
-    json = json,
     parentAgentId = parentAgentId
 )

@@ -20,6 +20,11 @@ private fun SerialDescriptor.description(): String =
     annotations.filterIsInstance<LLMDescription>().firstOrNull()?.description ?: ""
 
 /**
+ * Special key used to wrap primitive arguments in JSON objects, to support tools with "primitive" args/results.
+ */
+internal const val toolWrapperValueKey = "__wrapped_value__"
+
+/**
  * Converts a [SerialDescriptor] into a [ToolDescriptor] with metadata about a tool,
  * including its name, description, and parameters.
  *
@@ -164,23 +169,21 @@ public fun <T> KSerializer<T>.asToolDescriptorSerializer(): KSerializer<T> {
     return object : KSerializer<T> {
         override val descriptor: SerialDescriptor = origSerializer.descriptor
 
-        private val valueKey = "__wrapped_value__"
-
         override fun serialize(encoder: Encoder, value: T) {
             if (encoder !is JsonEncoder) throw IllegalStateException("Should be json encoder")
 
             val origSerialized = encoder.json.encodeToJsonElement(origSerializer, value)
 
             if (origSerialized is JsonObject) {
-                require(valueKey !in origSerialized) {
-                    "Serialized objects can't contain key '$valueKey', since this is a special key reserved to wrap primitive arguments in JSON objects"
+                require(toolWrapperValueKey !in origSerialized) {
+                    "Serialized objects can't contain key '$toolWrapperValueKey', since this is a special key reserved to wrap primitive arguments in JSON objects"
                 }
 
                 encoder.encodeJsonElement(origSerialized)
             } else {
                 encoder.encodeJsonElement(
                     buildJsonObject {
-                        put(valueKey, origSerialized)
+                        put(toolWrapperValueKey, origSerialized)
                     }
                 )
             }
@@ -193,14 +196,14 @@ public fun <T> KSerializer<T>.asToolDescriptorSerializer(): KSerializer<T> {
                 .decodeJsonElement()
                 .let {
                     require(it is JsonObject) {
-                        "All serialized tool arguments must be represented as JSON objects, and primitives wrapped into a JSON object with key '$valueKey'"
+                        "All serialized tool arguments must be represented as JSON objects, and primitives wrapped into a JSON object with key '$toolWrapperValueKey'"
                     }
 
                     it.jsonObject
                 }
 
-            return if (deserialized.keys == setOf(valueKey)) {
-                decoder.json.decodeFromJsonElement(origSerializer, deserialized.getValue(valueKey))
+            return if (deserialized.keys == setOf(toolWrapperValueKey)) {
+                decoder.json.decodeFromJsonElement(origSerializer, deserialized.getValue(toolWrapperValueKey))
             } else {
                 decoder.json.decodeFromJsonElement(origSerializer, deserialized)
             }
@@ -251,7 +254,13 @@ private fun ToolParameterType.asValueTool(name: String, description: String, val
     ToolDescriptor(
         name = name,
         description = description,
-        requiredParameters = listOf(ToolParameterDescriptor(name = "value", description = valueDescription ?: "", this))
+        requiredParameters = listOf(
+            ToolParameterDescriptor(
+                name = toolWrapperValueKey,
+                description = valueDescription ?: "",
+                this
+            )
+        )
     )
 
 private fun SerialDescriptor.parameterDescriptors(required: MutableList<String>): List<ToolParameterDescriptor> =
