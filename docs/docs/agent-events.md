@@ -19,6 +19,7 @@ classified into several categories, depending on the entity they relate to:
 - [Agent events](#agent-events)
 - [Strategy events](#strategy-events)
 - [Node events](#node-events)
+- [Subgraph events](#subgraph-events)
 - [LLM call events](#llm-call-events)
 - [LLM streaming events](#llm-streaming-events)
 - [Tool execution events](#tool-execution-events)
@@ -136,6 +137,40 @@ Represents an error that occurred during a node run. Includes the following fiel
 | `input`    | JsonElement  | No       | null    | The input data provided to the node.                                                                            |
 | `error`    | AIAgentError | Yes      |         | The specific error that occurred during the node run. For more information, see [AIAgentError](#aiagenterror). |
 
+### Subgraph events
+
+#### SubgraphExecutionStartingEvent
+
+Represents the start of a subgraph run. Includes the following fields:
+
+| Name            | Data type   | Required | Default | Description                                         |
+|-----------------|-------------|----------|---------|-----------------------------------------------------|
+| `runId`         | String      | Yes      |         | The unique identifier of the strategy run.          |
+| `subgraphName`  | String      | Yes      |         | The name of the subgraph whose run started.         |
+| `input`         | JsonElement | No       | null    | The input value for the subgraph.                   |
+
+#### SubgraphExecutionCompletedEvent
+
+Represents the end of a subgraph run. Includes the following fields:
+
+| Name            | Data type   | Required | Default | Description                                         |
+|-----------------|-------------|----------|---------|-----------------------------------------------------|
+| `runId`         | String      | Yes      |         | The unique identifier of the strategy run.          |
+| `subgraphName`  | String      | Yes      |         | The name of the subgraph whose run ended.           |
+| `input`         | JsonElement | No       | null    | The input value for the subgraph.                   |
+| `output`        | JsonElement | No       | null    | The output value produced by the subgraph.          |
+
+#### SubgraphExecutionFailedEvent
+
+Represents an error that occurred during a subgraph run. Includes the following fields:
+
+| Name            | Data type    | Required | Default | Description                                                                                                     |
+|-----------------|--------------|----------|---------|-----------------------------------------------------------------------------------------------------------------|
+| `runId`         | String       | Yes      |         | The unique identifier of the strategy run.                                                                      |
+| `subgraphName`  | String       | Yes      |         | The name of the subgraph where the error occurred.                                                              |
+| `input`         | JsonElement  | No       | null    | The input data provided to the subgraph.                                                                        |
+| `error`         | AIAgentError | Yes      |         | The specific error that occurred during the subgraph run. For more information, see [AIAgentError](#aiagenterror). |
+
 ### LLM call events
 
 #### LLMCallStartingEvent
@@ -147,7 +182,7 @@ Represents the start of an LLM call. Includes the following fields:
 | `runId`  | String       | Yes      |         | The unique identifier of the LLM run.                                              |
 | `callId` | String       | Yes      |         | The unique identifier of the LLM Call, correlating the related events.             |
 | `prompt` | Prompt       | Yes      |         | The prompt that is sent to the model. For more information, see [Prompt](#prompt). |
-| `model`  | String       | Yes      |         | The model identifier in the format `llm_provider:model_id`.                        |
+| `model`  | ModelInfo    | Yes      |         | The model information. See [ModelInfo](#modelinfo).                    |
 | `tools`  | List<String> | Yes      |         | The list of tools that the model can call.                                         |
 
 <a id="prompt"></a>
@@ -160,6 +195,17 @@ optional parameters for language model settings. Includes the following fields:
 | `id`       | String              | Yes      |             | The unique identifier for the prompt.                        |
 | `params`   | LLMParams           | No       | LLMParams() | The settings that control the way the LLM generates content. |
 
+<a id="modelinfo"></a>
+The `ModelInfo` class represents information about a language model, including its provider, model identifier, and characteristics. Includes the following fields:
+
+| Name              | Data type | Required | Default | Description                                                              |
+|-------------------|-----------|----------|---------|--------------------------------------------------------------------------|
+| `provider`        | String    | Yes      |         | The provider identifier (e.g., "openai", "google", "anthropic").         |
+| `model`           | String    | Yes      |         | The model identifier (e.g., "gpt-4", "claude-3").                        |
+| `displayName`     | String    | No       | null    | Optional human-readable display name for the model.                      |
+| `contextLength`   | Long      | No       | null    | Maximum number of tokens the model can process.                          |
+| `maxOutputTokens` | Long      | No       | null    | Maximum number of tokens the model can generate.                         |
+
 #### LLMCallCompletedEvent
 
 Represents the end of an LLM call. Includes the following fields:
@@ -169,7 +215,7 @@ Represents the end of an LLM call. Includes the following fields:
 | `runId`              | String                 | Yes      |         | The unique identifier of the LLM run.                                  |
 | `callId`             | String                 | Yes      |         | The unique identifier of the LLM Call, correlating the related events. |
 | `prompt`             | Prompt                 | Yes      |         | The prompt used in the call.                                           |
-| `model`              | String                 | Yes      |         | The model identifier in the format `llm_provider:model_id`.            |
+| `model`              | ModelInfo              | Yes      |         | The model information. See [ModelInfo](#modelinfo).                    |
 | `responses`          | List<Message.Response> | Yes      |         | One or more responses returned by the model.                           |
 | `moderationResponse` | ModerationResult       | No       | null    | The moderation response, if any.                                       |
 
@@ -184,7 +230,7 @@ Represents the start of an LLM streaming call. Includes the following fields:
 | `runId`  | String       | Yes      |         | The unique identifier of the LLM run.                                  |
 | `callId` | String       | Yes      |         | The unique identifier of the LLM Call, correlating the related events. |
 | `prompt` | Prompt       | Yes      |         | The prompt that is sent to the model.                                  |
-| `model`  | String       | Yes      |         | The model identifier in the format `llm_provider:model_id`.            |
+| `model`  | ModelInfo    | Yes      |         | The model information. See [ModelInfo](#modelinfo).                    |
 | `tools`  | List<String> | Yes      |         | The list of tools that the model can call.                             |
 
 #### LLMStreamingFrameReceivedEvent
@@ -216,7 +262,7 @@ Represents the end of an LLM streaming call. Includes the following fields:
 | `runId`  | String       | Yes      |         | The unique identifier of the LLM run.                                   |
 | `callId` | String       | Yes      |         | The unique identifier of the LLM Call, correlating the related events.  |
 | `prompt` | Prompt       | Yes      |         | The prompt that is sent to the model.                                   |
-| `model`  | String       | Yes      |         | The model identifier in the format `llm_provider:model_id`.             |
+| `model`  | ModelInfo    | Yes      |         | The model information. See [ModelInfo](#modelinfo).                     |
 | `tools`  | List<String> | Yes      |         | The list of tools that the model can call.                              |
 
 ### Tool execution events
