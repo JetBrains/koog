@@ -4,6 +4,7 @@ import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.context.DetachedPromptExecutorAPI
 import ai.koog.agents.core.agent.context.element.NodeInfoContextElement
+import ai.koog.agents.core.agent.context.element.getNodeInfoElement
 import ai.koog.agents.core.agent.context.getAgentContextData
 import ai.koog.agents.core.agent.context.store
 import ai.koog.agents.core.agent.exception.AIAgentMaxNumberOfIterationsReachedException
@@ -26,6 +27,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlin.reflect.KType
 import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 /**
  * [AIAgentSubgraph] represents a structured subgraph within an AI agent workflow. It serves as a logical
@@ -155,7 +157,7 @@ public open class AIAgentSubgraph<TInput, TOutput>(
      */
     @OptIn(InternalAgentsApi::class, DetachedPromptExecutorAPI::class, ExperimentalUuidApi::class)
     override suspend fun execute(context: AIAgentGraphContextBase, input: TInput): TOutput? =
-        withContext(NodeInfoContextElement(name, input, inputType)) {
+        withContext(NodeInfoContextElement(Uuid.random().toString(), getNodeInfoElement()?.id, name, input, inputType)) {
             val newTools = selectTools(context)
 
             // Copy inner context with new tools, model and LLM params.

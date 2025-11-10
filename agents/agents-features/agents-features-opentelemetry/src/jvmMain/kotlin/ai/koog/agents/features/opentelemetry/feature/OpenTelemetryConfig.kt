@@ -20,7 +20,7 @@ import io.opentelemetry.sdk.trace.export.SpanExporter
 import io.opentelemetry.sdk.trace.samplers.Sampler
 import java.time.Instant
 import java.time.format.DateTimeFormatter
-import java.util.*
+import java.util.Properties
 
 /**
  * Configuration class for OpenTelemetry integration.

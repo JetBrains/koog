@@ -14,20 +14,21 @@ internal class InferenceSpan(
     val provider: LLMProvider,
     val runId: String,
     val model: LLModel,
-    val promptId: String,
+    val content: String,
     val temperature: Double,
     val maxTokens: Int? = null
 ) : GenAIAgentSpan(parent) {
 
     companion object {
-        fun createId(agentId: String, runId: String, nodeName: String, promptId: String): String =
-            createIdFromParent(parentId = NodeExecuteSpan.createId(agentId, runId, nodeName), promptId = promptId)
+        fun createId(agentId: String, runId: String, nodeName: String, nodeId: String, content: String): String =
+            createIdFromParent(parentId = NodeExecuteSpan.createId(agentId, runId, nodeName, nodeId), content = content)
 
-        private fun createIdFromParent(parentId: String, promptId: String): String =
-            "$parentId.llm.$promptId"
+        // TODO: Replace sha256base64() with unique event id for the LLM Call event
+        private fun createIdFromParent(parentId: String, content: String): String =
+            "$parentId.llm.${content.sha256base64()}"
     }
 
-    override val spanId: String = createIdFromParent(parentId = parent.spanId, promptId = promptId)
+    override val spanId: String = createIdFromParent(parentId = parent.spanId, content = content)
 
     override val kind: SpanKind = SpanKind.CLIENT
 

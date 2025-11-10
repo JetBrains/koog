@@ -155,7 +155,7 @@ class LangfuseSpanAdapterTest {
         val invokeSpan = InvokeAgentSpan(createAgentSpan, provider, runId = "run-id", agentId = "agent-id")
 
         val firstNodeInput = "planner input"
-        val firstNode = NodeExecuteSpan(invokeSpan, runId = "run-id", nodeName = "planner", nodeInput = firstNodeInput)
+        val firstNode = NodeExecuteSpan(invokeSpan, runId = "run-id", nodeName = "planner", nodeInput = firstNodeInput, nodeId = "planner-node-id")
         adapter.onBeforeSpanStarted(firstNode)
 
         val firstStep = assertIs<Int>(firstNode.attributes.requireValue("langfuse.observation.metadata.langgraph_step"))
@@ -163,7 +163,7 @@ class LangfuseSpanAdapterTest {
         assertEquals("planner", firstNode.attributes.requireValue("langfuse.observation.metadata.langgraph_node"))
 
         val secondNodeInput = "executor input"
-        val secondNode = NodeExecuteSpan(invokeSpan, runId = "run-id", nodeName = "executor", nodeInput = secondNodeInput)
+        val secondNode = NodeExecuteSpan(invokeSpan, runId = "run-id", nodeName = "executor", nodeInput = secondNodeInput, nodeId = "executor-node-id")
         adapter.onBeforeSpanStarted(secondNode)
 
         val secondStep = assertIs<Int>(secondNode.attributes.requireValue("langfuse.observation.metadata.langgraph_step"))
@@ -178,13 +178,14 @@ private fun createInferenceSpan(
     runId: String = "run-id",
     nodeName: String = "node-name",
     nodeInput: String = "node-input",
+    nodeId: String = "node-id",
     promptId: String = "prompt-id",
     temperature: Double = 0.4,
 ): InferenceSpan {
     val model = createTestModel(provider)
     val createAgentSpan = CreateAgentSpan(model, agentId)
     val invokeSpan = InvokeAgentSpan(createAgentSpan, provider, runId, agentId)
-    val nodeSpan = NodeExecuteSpan(invokeSpan, runId, nodeName, nodeInput)
+    val nodeSpan = NodeExecuteSpan(invokeSpan, runId, nodeName, nodeInput, nodeId)
     return InferenceSpan(nodeSpan, provider, runId, model, promptId, temperature)
 }
 

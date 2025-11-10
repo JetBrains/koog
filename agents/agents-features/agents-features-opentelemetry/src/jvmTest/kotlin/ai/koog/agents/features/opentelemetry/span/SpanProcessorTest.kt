@@ -1,6 +1,6 @@
 package ai.koog.agents.features.opentelemetry.span
 
-import ai.koog.agents.features.opentelemetry.OpenTelemetryTestAPI.assertMapsEqual
+import ai.koog.agents.features.opentelemetry.OpenTelemetrySpanAsserts.assertMapsEqual
 import ai.koog.agents.features.opentelemetry.event.EventBodyFields
 import ai.koog.agents.features.opentelemetry.mock.MockAttribute
 import ai.koog.agents.features.opentelemetry.mock.MockGenAIAgentEvent
