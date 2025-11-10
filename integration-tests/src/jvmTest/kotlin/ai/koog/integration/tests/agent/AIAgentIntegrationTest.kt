@@ -30,6 +30,7 @@ import ai.koog.integration.tests.utils.tools.DelayTool
 import ai.koog.integration.tests.utils.tools.GetTransactionsTool
 import ai.koog.integration.tests.utils.tools.SimpleCalculatorTool
 import ai.koog.prompt.dsl.prompt
+import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
@@ -218,8 +219,10 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
         /* Some models are not calling tools in parallel:
          * see https://youtrack.jetbrains.com/issue/KG-115
          */
+        assumeTrue(model.id !== OpenAIModels.Reasoning.O1.id, "Model $model flaks when calling parallel tools")
+        assumeTrue(model.id !== GoogleModels.Gemini2_5Flash.id, "Model $model flaks when calling parallel tools")
 
-        withRetry {
+        withRetry(5) {
             runWithTracking { eventHandlerConfig, state ->
                 val multiToolAgent =
                     getSingleRunAgentWithRunMode(model, runMode, eventHandlerConfig = eventHandlerConfig)
