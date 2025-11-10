@@ -63,9 +63,6 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
@@ -86,7 +83,7 @@ import kotlin.reflect.safeCast
  * through a flexible interception system. Features can be installed with custom configurations
  * and can hook into different stages of the agent's execution lifecycle.
  *
- * @param clock Clock instance for time-related operations
+ * @property clock Clock instance for time-related operations
  */
 public abstract class AIAgentPipeline(public val clock: Clock) {
 
@@ -110,8 +107,6 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
         public val featureImpl: Any,
         public val featureConfig: FeatureConfig
     )
-
-    private val featurePrepareDispatcher = Dispatchers.Default.limitedParallelism(5)
 
     /**
      * Map of registered features and their configurations.
@@ -161,17 +156,12 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
      * Prepares features by initializing their respective message processors.
      */
     internal suspend fun prepareFeatures() {
-        withContext(featurePrepareDispatcher) {
-            installFeaturesFromSystemConfig()
-
-            registeredFeatures.values.map { it.featureConfig }.forEach { featureConfig ->
-                featureConfig.messageProcessors.forEach { processor ->
-                    launch {
-                        logger.debug { "Start preparing processor: ${processor::class.simpleName}" }
-                        processor.initialize()
-                        logger.debug { "Finished preparing processor: ${processor::class.simpleName}" }
-                    }
-                }
+        installFeaturesFromSystemConfig()
+        registeredFeatures.values.map { it.featureConfig }.forEach { featureConfig ->
+            featureConfig.messageProcessors.forEach { processor ->
+                logger.debug { "Start preparing processor: ${processor::class.simpleName}" }
+                processor.initialize()
+                logger.debug { "Finished preparing processor: ${processor::class.simpleName}" }
             }
         }
     }

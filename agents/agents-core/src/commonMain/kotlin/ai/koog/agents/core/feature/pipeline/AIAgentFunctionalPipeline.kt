@@ -11,7 +11,7 @@ import kotlinx.datetime.Clock
  * workflows or data processing tasks that do not require graph-based
  * data structures.
  *
- * @param clock The clock used for time-based operations within the pipeline
+ * @property clock The clock used for time-based operations within the pipeline
  */
 public class AIAgentFunctionalPipeline(clock: Clock = Clock.System) : AIAgentPipeline(clock) {
 
