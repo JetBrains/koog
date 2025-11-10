@@ -2,12 +2,13 @@ package ai.koog.integration.tests.utils
 
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.message.Message
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.collections.shouldNotBeEmpty
+import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 object TestUtils {
     fun singlePropertyObjectSchema(provider: LLMProvider, propName: String, type: String) = buildJsonObject {
@@ -31,10 +32,10 @@ object TestUtils {
     }
 
     fun assertResponseContainsToolCall(response: List<Message>, toolName: String) {
-        assertTrue(response.isNotEmpty(), "Response should not be empty")
-        assertTrue(response.any { it is Message.Tool.Call }, "Response should contain a tool call")
+        response.shouldNotBeEmpty()
+        response.any { it is Message.Tool.Call }.shouldBeTrue()
         val toolCall = response.first { it is Message.Tool.Call } as Message.Tool.Call
-        assertEquals(toolName, toolCall.tool, "Tool name should be $toolName")
+        toolName shouldBe toolCall.tool
     }
 
     fun isValidJson(str: String): Boolean = try {

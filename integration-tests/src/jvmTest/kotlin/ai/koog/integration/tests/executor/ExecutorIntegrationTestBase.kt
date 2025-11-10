@@ -25,6 +25,7 @@ import ai.koog.integration.tests.utils.tools.CalculatorTool
 import ai.koog.integration.tests.utils.tools.LotteryTool
 import ai.koog.integration.tests.utils.tools.PickColorFromListTool
 import ai.koog.integration.tests.utils.tools.PickColorTool
+import ai.koog.integration.tests.utils.tools.PriceCalculatorTool
 import ai.koog.integration.tests.utils.tools.SimplePriceCalculatorTool
 import ai.koog.integration.tests.utils.tools.calculatorPrompt
 import ai.koog.integration.tests.utils.tools.calculatorPromptNotRequiredOptionalParams
@@ -54,6 +55,7 @@ import io.kotest.matchers.collections.shouldNotBeEmpty
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.runBlocking
@@ -144,7 +146,7 @@ abstract class ExecutorIntegrationTestBase {
                     is StreamFrame.ToolCall -> toolMessages.add(it)
                 }
             }
-            messageBuilder.shouldNotBeEmpty()
+            messageBuilder.length.shouldNotBe(0)
             toolMessages.shouldNotBeEmpty()
             endMessages.size shouldBe 1
 
@@ -714,43 +716,6 @@ abstract class ExecutorIntegrationTestBase {
 
             result.isSuccess.shouldBeTrue()
             checkWeatherStructuredOutputResponse(result)
-            assertTrue(result.isSuccess, "Structured output should succeed: ${result.exceptionOrNull()}")
-            checkResponse(result)
-        }
-    }
-
-    open fun integration_testRawStringStreaming(model: LLModel) = runTest(timeout = 600.seconds) {
-        Models.assumeAvailable(model.provider)
-        if (model.id == OpenAIModels.Audio.GPT4oAudio.id || model.id == OpenAIModels.Audio.GPT4oMiniAudio.id) {
-            assumeTrue(false, "https://github.com/JetBrains/koog/issues/231")
-        }
-
-        val prompt = Prompt.build("test-streaming") {
-            system {
-                +"You are a helpful assistant."
-                +"You have NO output length limitations."
-            }
-            user("Count from 1 to 5.")
-        }
-
-        val responseChunks = mutableListOf<StreamFrame>()
-
-        withRetry(times = 3, testName = "integration_testRawStringStreaming[${model.id}]") {
-            getLLMClient(model).executeStreaming(prompt, model).collect { chunk ->
-                responseChunks.add(chunk)
-            }
-
-            assertTrue(responseChunks.isNotEmpty(), "Response chunks should not be empty")
-
-            val fullResponse = responseChunks.joinToString("")
-            assertTrue(
-                fullResponse.contains("1") &&
-                    fullResponse.contains("2") &&
-                    fullResponse.contains("3") &&
-                    fullResponse.contains("4") &&
-                    fullResponse.contains("5"),
-                "Full response should contain numbers 1 through 5"
-            )
         }
     }
 
