@@ -1,8 +1,6 @@
 package ai.koog.integration.tests.executor
 
 import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.agents.core.tools.ToolParameterDescriptor
-import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.integration.tests.utils.MediaTestScenarios.AudioTestScenario
 import ai.koog.integration.tests.utils.MediaTestScenarios.ImageTestScenario
 import ai.koog.integration.tests.utils.MediaTestScenarios.MarkdownTestScenario
@@ -12,16 +10,26 @@ import ai.koog.integration.tests.utils.MediaTestUtils.checkExecutorMediaResponse
 import ai.koog.integration.tests.utils.MediaTestUtils.checkResponseBasic
 import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.RetryUtils.withRetry
-import ai.koog.integration.tests.utils.TestUtils.CalculatorOperation
-import ai.koog.integration.tests.utils.TestUtils.Colors
-import ai.koog.integration.tests.utils.TestUtils.Country
-import ai.koog.integration.tests.utils.TestUtils.StructuredTest
-import ai.koog.integration.tests.utils.TestUtils.StructuredTest.checkResponse
-import ai.koog.integration.tests.utils.TestUtils.StructuredTest.getConfigFixingParserNative
-import ai.koog.integration.tests.utils.TestUtils.StructuredTest.getConfigNoFixingParserNative
-import ai.koog.integration.tests.utils.TestUtils.markdownCountryDefinition
-import ai.koog.integration.tests.utils.TestUtils.parseMarkdownStreamToCountries
+import ai.koog.integration.tests.utils.TestUtils.assertResponseContainsToolCall
 import ai.koog.integration.tests.utils.getLLMClientForProvider
+import ai.koog.integration.tests.utils.structuredOutput.Country
+import ai.koog.integration.tests.utils.structuredOutput.checkWeatherStructuredOutputResponse
+import ai.koog.integration.tests.utils.structuredOutput.countryStructuredOutputPrompt
+import ai.koog.integration.tests.utils.structuredOutput.getConfigFixingParserManual
+import ai.koog.integration.tests.utils.structuredOutput.getConfigFixingParserNative
+import ai.koog.integration.tests.utils.structuredOutput.getConfigNoFixingParserManual
+import ai.koog.integration.tests.utils.structuredOutput.getConfigNoFixingParserNative
+import ai.koog.integration.tests.utils.structuredOutput.parseMarkdownStreamToCountries
+import ai.koog.integration.tests.utils.structuredOutput.weatherStructuredOutputPrompt
+import ai.koog.integration.tests.utils.tools.CalculatorTool
+import ai.koog.integration.tests.utils.tools.LotteryTool
+import ai.koog.integration.tests.utils.tools.PickColorFromListTool
+import ai.koog.integration.tests.utils.tools.PickColorTool
+import ai.koog.integration.tests.utils.tools.PriceCalculatorTool
+import ai.koog.integration.tests.utils.tools.SimplePriceCalculatorTool
+import ai.koog.integration.tests.utils.tools.calculatorPrompt
+import ai.koog.integration.tests.utils.tools.calculatorPromptNotRequiredOptionalParams
+import ai.koog.integration.tests.utils.tools.calculatorToolDescriptorOptionalParams
 import ai.koog.prompt.dsl.ModerationCategory
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
@@ -39,10 +47,8 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.ToolChoice
 import ai.koog.prompt.streaming.StreamFrame
-import ai.koog.prompt.streaming.filterTextOnly
 import ai.koog.prompt.structure.executeStructured
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
@@ -87,37 +93,6 @@ abstract class ExecutorIntegrationTestBase {
 
     open fun getLLMClient(model: LLModel): LLMClient = getLLMClientForProvider(model.provider)
 
-    fun createCalculatorTool(): ToolDescriptor {
-        return ToolDescriptor(
-            name = "calculator",
-            description = "A simple calculator that can add, subtract, multiply, and divide two numbers.",
-            requiredParameters = listOf(
-                ToolParameterDescriptor(
-                    name = "operation",
-                    description = "The operation to perform.",
-                    type = ToolParameterType.Enum(CalculatorOperation.entries.map { it.name }.toTypedArray())
-                ),
-                ToolParameterDescriptor(
-                    name = "a",
-                    description = "The first argument (number)",
-                    type = ToolParameterType.Integer
-                ),
-                ToolParameterDescriptor(
-                    name = "b",
-                    description = "The second argument (number)",
-                    type = ToolParameterType.Integer
-                )
-            )
-        )
-    }
-
-    fun createCalculatorPrompt() = Prompt.build("test-tools") {
-        system(
-            "You are a helpful assistant with access to a calculator tool. When asked to perform calculations, use the calculator tool instead of calculating the answer yourself."
-        )
-        user("What is 123 + 456?")
-    }
-
     open fun integration_testExecute(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
         val executor = getExecutor(model)
@@ -128,19 +103,19 @@ abstract class ExecutorIntegrationTestBase {
         }
 
         withRetry(times = 3, testName = "integration_testExecute[${model.id}]") {
-            val response = executor.execute(prompt, model, emptyList())
+            val response = executor.execute(prompt, model)
             assertNotNull(response, "Response should not be null")
             assertTrue(response.isNotEmpty(), "Response should not be empty")
-            assertTrue(response.first() is Message.Assistant, "Response should be an Assistant message")
+            assertTrue(response.any { it is Message.Assistant }, "Response should be an Assistant message")
 
-            val message = response.first() as Message.Assistant
+            val assistantMessage = response.first { it is Message.Assistant }
             assertTrue(
-                message.content.contains("Paris", ignoreCase = true),
+                assistantMessage.content.contains("Paris", ignoreCase = true),
                 "Response should contain 'Paris'"
             )
-            assertNotNull(message.metaInfo.inputTokensCount, "Input tokens count should not be null")
-            assertNotNull(message.metaInfo.outputTokensCount, "Output tokens count should not be null")
-            assertNotNull(message.metaInfo.totalTokensCount, "Total tokens count should not be null")
+            assertNotNull(assistantMessage.metaInfo.inputTokensCount, "Input tokens count should not be null")
+            assertNotNull(assistantMessage.metaInfo.outputTokensCount, "Output tokens count should not be null")
+            assertNotNull(assistantMessage.metaInfo.totalTokensCount, "Total tokens count should not be null")
         }
     }
 
@@ -158,13 +133,21 @@ abstract class ExecutorIntegrationTestBase {
         }
 
         withRetry(times = 3, testName = "integration_testExecuteStreaming[${model.id}]") {
-            val responseChunks = executor.executeStreaming(prompt, model)
-                .filterTextOnly()
-                .toList()
-            assertNotNull(responseChunks, "Response chunks should not be null")
-            assertTrue(responseChunks.isNotEmpty(), "Response chunks should not be empty")
+            val messageBuilder = StringBuilder()
+            val endMessages = mutableListOf<StreamFrame.End>()
+            val toolMessages = mutableListOf<StreamFrame.ToolCall>()
+            executor.executeStreaming(prompt, model).collect {
+                when (it) {
+                    is StreamFrame.Append -> messageBuilder.append(it.text)
+                    is StreamFrame.End -> endMessages.add(it)
+                    is StreamFrame.ToolCall -> toolMessages.add(it)
+                }
+            }
+            assertTrue(messageBuilder.isNotEmpty(), "Response message should not be empty")
+            assertTrue(toolMessages.isEmpty(), "Response should not contain any tools be empty")
+            assertEquals(endMessages.size, 1, "Response should contain single end message")
 
-            val fullResponse = responseChunks.joinToString("")
+            val fullResponse = messageBuilder.toString()
             assertTrue(
                 fullResponse.contains("1") &&
                     fullResponse.contains("2") &&
@@ -176,271 +159,126 @@ abstract class ExecutorIntegrationTestBase {
         }
     }
 
-    open fun integration_testToolsWithRequiredParams(model: LLModel) = runTest(timeout = 300.seconds) {
+    open fun integration_testToolWithRequiredParams(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
-
-        val calculatorTool = ToolDescriptor(
-            name = "calculator",
-            description = "A simple calculator that can add, subtract, multiply, and divide two numbers.",
-            requiredParameters = listOf(
-                ToolParameterDescriptor(
-                    name = "operation",
-                    description = "The operation to perform.",
-                    type = ToolParameterType.Enum(CalculatorOperation.entries.map { it.name }.toTypedArray())
-                ),
-                ToolParameterDescriptor(
-                    name = "a",
-                    description = "The first argument (number)",
-                    type = ToolParameterType.Integer
-                ),
-                ToolParameterDescriptor(
-                    name = "b",
-                    description = "The second argument (number)",
-                    type = ToolParameterType.Integer
-                )
-            )
-        )
-
-        val prompt = Prompt.build("test-tools") {
-            system("You are a helpful assistant with access to a calculator tool.")
-            user("What is 123 + 456?")
-        }
-
-        withRetry(times = 3, testName = "integration_testToolsWithRequiredParams[${model.id}]") {
-            val executor = getExecutor(model)
-            val response = executor.execute(prompt, model, listOf(calculatorTool))
-            assertTrue(response.isNotEmpty(), "Response should not be empty")
-        }
-    }
-
-    open fun integration_testToolsWithRequiredOptionalParams(model: LLModel) =
-        runTest(timeout = 300.seconds) {
-            Models.assumeAvailable(model.provider)
-            assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
-
-            val calculatorTool = ToolDescriptor(
-                name = "calculator",
-                description = "A simple calculator that can add, subtract, multiply, and divide two numbers.",
-                requiredParameters = listOf(
-                    ToolParameterDescriptor(
-                        name = "operation",
-                        description = "The operation to perform.",
-                        type = ToolParameterType.Enum(
-                            CalculatorOperation.entries.map { it.name }
-                                .toTypedArray()
-                        )
-                    ),
-                    ToolParameterDescriptor(
-                        name = "a",
-                        description = "The first argument (number)",
-                        type = ToolParameterType.Float
-                    ),
-                    ToolParameterDescriptor(
-                        name = "b",
-                        description = "The second argument (number)",
-                        type = ToolParameterType.Float
-                    )
-                ),
-                optionalParameters = listOf(
-                    ToolParameterDescriptor(
-                        name = "comment",
-                        description = "Comment to the result (string)",
-                        type = ToolParameterType.String
-                    )
-                )
-            )
-
-            val prompt = Prompt.build("test-tools") {
-                system {
-                    +"You are a helpful assistant with access to a calculator tool."
-                    +"Don't use optional params if possible."
-                    +"JUST CALL TOOLS. NO QUESTIONS ASKED."
-                }
-                user("What is 123 + 456?")
-            }
-
-            val executor = getExecutor(model)
-
-            withRetry(times = 3, testName = "integration_testToolsWithRequiredOptionalParams[${model.id}]") {
-                val response = executor.execute(prompt, model, listOf(calculatorTool))
-                assertTrue(response.isNotEmpty(), "Response should not be empty")
-            }
-        }
-
-    open fun integration_testToolsWithOptionalParams(model: LLModel) = runTest(timeout = 300.seconds) {
-        Models.assumeAvailable(model.provider)
-        assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
-
-        val calculatorTool = ToolDescriptor(
-            name = "calculator",
-            description = "A simple calculator that can add, subtract, multiply, and divide two numbers.",
-            optionalParameters = listOf(
-                ToolParameterDescriptor(
-                    name = "operation",
-                    description = "The operation to perform.",
-                    type = ToolParameterType.Enum(CalculatorOperation.entries.map { it.name }.toTypedArray())
-                ),
-                ToolParameterDescriptor(
-                    name = "a",
-                    description = "The first argument (number)",
-                    type = ToolParameterType.Integer
-                ),
-                ToolParameterDescriptor(
-                    name = "b",
-                    description = "The second argument (number)",
-                    type = ToolParameterType.Integer
-                ),
-                ToolParameterDescriptor(
-                    name = "comment",
-                    description = "Comment to the result (string)",
-                    type = ToolParameterType.String
-                )
-            )
-        )
-
-        val prompt = Prompt.build("test-tools") {
-            system("You are a helpful assistant with access to a calculator tool.")
-            user("What is 123 + 456?")
-        }
-
-        val executor = getExecutor(model)
-        withRetry(times = 3, testName = "integration_testToolsWithOptionalParams[${model.id}]") {
-            val response = executor.execute(prompt, model, listOf(calculatorTool))
-            assertTrue(response.isNotEmpty(), "Response should not be empty")
-        }
-    }
-
-    open fun integration_testToolsWithNoParams(model: LLModel) = runTest(timeout = 300.seconds) {
-        Models.assumeAvailable(model.provider)
-        assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
-
-        val calculatorTool = ToolDescriptor(
-            name = "calculator",
-            description = "A simple calculator that can add, subtract, multiply, and divide two numbers.",
-        )
-
-        val calculatorToolBetter = ToolDescriptor(
-            name = "calculatorBetter",
-            description = "A better calculator that can add, subtract, multiply, and divide two numbers.",
-            requiredParameters = emptyList(),
-            optionalParameters = emptyList()
-        )
-
-        val prompt = Prompt.build("test-tools") {
-            system {
-                +"You are a helpful assistant with access to calculator tools."
-                +"Use the best one."
-            }
-            user("What is 123 + 456?")
-        }
-
         val executor = getExecutor(model)
 
-        withRetry(times = 3, testName = "integration_testToolsWithNoParams[${model.id}]") {
-            val response =
-                executor.execute(prompt, model, listOf(calculatorTool, calculatorToolBetter))
+        withRetry(times = 3, testName = "integration_testToolWithRequiredParams[${model.id}]") {
+            val response = executor.execute(calculatorPrompt, model, listOf(CalculatorTool.descriptor))
             assertTrue(response.isNotEmpty(), "Response should not be empty")
+            assertResponseContainsToolCall(response, CalculatorTool.name)
         }
     }
 
-    open fun integration_testToolsWithListEnumParams(model: LLModel) = runTest(timeout = 300.seconds) {
+    open fun integration_testToolWithNotRequiredOptionalParams(model: LLModel) = runTest(timeout = 300.seconds) {
+        Models.assumeAvailable(model.provider)
+        assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
+        val executor = getExecutor(model)
+
+        withRetry(times = 3, testName = "integration_testToolWithNotRequiredOptionalParams[${model.id}]") {
+            val response = executor.execute(
+                calculatorPromptNotRequiredOptionalParams,
+                model,
+                listOf(calculatorToolDescriptorOptionalParams)
+            )
+            assertTrue(response.isNotEmpty(), "Response should not be empty")
+            assertResponseContainsToolCall(response, CalculatorTool.name)
+        }
+    }
+
+    open fun integration_testToolWithOptionalParams(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
-        val colorPickerTool = ToolDescriptor(
-            name = "colorPicker",
-            description = "A tool that can randomly pick a color from a list of colors.",
-            requiredParameters = listOf(
-                ToolParameterDescriptor(
-                    name = "color",
-                    description = "The color to be picked.",
-                    type = ToolParameterType.List(
-                        ToolParameterType.Enum(
-                            Colors.entries.map { it.name }
-                                .toTypedArray()
-                        )
-                    )
-                )
-            )
-        )
+        val executor = getExecutor(model)
+        withRetry(times = 3, testName = "integration_testToolWithOptionalParams[${model.id}]") {
+            val response = executor.execute(calculatorPrompt, model, listOf(calculatorToolDescriptorOptionalParams))
+            assertTrue(response.isNotEmpty(), "Response should not be empty")
+            assertResponseContainsToolCall(response, CalculatorTool.name)
+        }
+    }
+
+    open fun integration_testToolWithNoParams(model: LLModel) = runTest(timeout = 300.seconds) {
+        Models.assumeAvailable(model.provider)
+        assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
         val prompt = Prompt.build("test-tools") {
             system {
                 +"You are a helpful assistant with access to a color picker tool. "
-                +"ALWAYS CALL TOOL FIRST."
+                +"ALWAYS CALL TOOL!!!"
             }
-            user("Pick me a color!")
+            user("Picker random color for me!")
         }
 
         val executor = getExecutor(model)
 
-        withRetry(times = 3, testName = "integration_testToolsWithListEnumParams[${model.id}]") {
-            val response = executor.execute(prompt, model, listOf(colorPickerTool))
+        withRetry(times = 3, testName = "integration_testToolWithNoParams[${model.id}]") {
+            val response = executor.execute(prompt, model, listOf(PickColorTool.descriptor))
             assertTrue(response.isNotEmpty(), "Response should not be empty")
+            assertResponseContainsToolCall(response, PickColorTool.name)
         }
     }
 
-    open fun integration_testToolsWithNestedListParams(model: LLModel) = runTest(timeout = 300.seconds) {
+    open fun integration_testToolWithListEnumParams(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
-        val lotteryPickerTool = ToolDescriptor(
-            name = "lotteryPicker",
-            description = "A tool that can randomly you some lottery winners and losers",
-            requiredParameters = listOf(
-                ToolParameterDescriptor(
-                    name = "Numbers",
-                    description = "A list of the numbers for lottery winners and losers from 1 to 100",
-                    type = ToolParameterType.List(ToolParameterType.List(ToolParameterType.Integer))
-                )
-            )
-        )
-
         val prompt = Prompt.build("test-tools") {
             system {
-                +"You are a helpful assistant."
-                +"JUST CALL TOOLS. NO QUESTIONS ASKED."
+                +"You are a helpful assistant with access to a color picker tool. "
+                +"ALWAYS CALL TOOL!!!"
             }
-            user("Pick me lottery winners and losers! 5 of each")
+            user("Pick me a color from red, green, orange!")
         }
 
         val executor = getExecutor(model)
 
-        withRetry(times = 3, testName = "integration_testToolsWithNestedListParams[${model.id}]") {
-            val response = executor.execute(prompt, model, listOf(lotteryPickerTool))
+        withRetry(times = 3, testName = "integration_testToolWithListEnumParams[${model.id}]") {
+            val response = executor.execute(prompt, model, listOf(PickColorFromListTool.descriptor))
             assertTrue(response.isNotEmpty(), "Response should not be empty")
+            assertResponseContainsToolCall(response, PickColorFromListTool.name)
+        }
+    }
+
+    open fun integration_testToolWithNestedListParams(model: LLModel) = runTest(timeout = 300.seconds) {
+        Models.assumeAvailable(model.provider)
+        assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
+
+        val prompt = Prompt.build("test-tools") {
+            system {
+                +"You are a helpful assistant with lottery tool. You MUST always call tools!!!"
+            }
+            user("Select winners from lottery tickets [10, 42, 43, 51, 22] and [34, 12, 4, 53, 99]")
+        }
+
+        val executor = getExecutor(model)
+
+        withRetry(times = 3, testName = "integration_testToolWithNestedListParams[${model.id}]") {
+            val response = executor.execute(prompt, model, listOf(LotteryTool.descriptor))
+            assertTrue(response.isNotEmpty(), "Response should not be empty")
+            assertResponseContainsToolCall(response, LotteryTool.name)
         }
     }
 
     open fun integration_testToolsWithNullParams(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
+        assumeTrue(model.provider != LLMProvider.Anthropic, "Anthropic does not support anyOf")
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
-
-        val nullGiverTool = ToolDescriptor(
-            name = "nullGiver",
-            description = "A tool that returns a null value",
-            requiredParameters = listOf(
-                ToolParameterDescriptor(
-                    name = "Null",
-                    description = "A null",
-                    type = ToolParameterType.Null
-                )
-            )
-        )
+        assumeTrue(model.provider != LLMProvider.MistralAI, "MistralAI returns json array which we are failing to parse. Remove after KG-535 fix")
 
         val prompt = Prompt.build("test-tools") {
             system {
-                +"You are a helpful assistant."
+                +"You are a helpful assistant with tokens price calculator tool."
                 +"JUST CALL TOOLS. NO QUESTIONS ASKED."
             }
-            user("Hi. Call a tool.")
+            user("Calculate price of 10 tokens if I pay 0.003 euro. Discount is not provided to set null.")
         }
 
         val executor = getExecutor(model)
 
         withRetry(times = 3, testName = "integration_testToolsWithNullParams[${model.id}]") {
-            val response = executor.execute(prompt, model, listOf(nullGiverTool))
+            val response = executor.execute(prompt, model, listOf(SimplePriceCalculatorTool.descriptor))
             assertTrue(response.isNotEmpty(), "Response should not be empty")
             assertTrue(
                 response.first { it is Message.Tool.Call }.content.contains("null"),
@@ -454,70 +292,30 @@ abstract class ExecutorIntegrationTestBase {
         assumeTrue(model.provider != LLMProvider.Anthropic, "Anthropic does not support anyOf")
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
-        val anyOfTool = ToolDescriptor(
-            name = "stringNumberGiver",
-            description = "A tool that returns a string or number value",
-            requiredParameters = listOf(
-                ToolParameterDescriptor(
-                    name = "anyOfParam",
-                    description = "String or number parameter",
-                    type = ToolParameterType.AnyOf(
-                        types = arrayOf(
-                            ToolParameterDescriptor(
-                                name = "String",
-                                description = "String option",
-                                type = ToolParameterType.String
-                            ),
-                            ToolParameterDescriptor(
-                                name = "Number",
-                                description = "Number option",
-                                type = ToolParameterType.Float
-                            )
-                        )
-                    )
-                )
-            )
-        )
-
         val prompt = Prompt.build("test-tools", LLMParams(toolChoice = ToolChoice.Required)) {
             system {
-                +"You are a helpful assistant."
+                +"You are a helpful assistant with tokens price calculator tool."
                 +"JUST CALL TOOLS. NO QUESTIONS ASKED."
             }
-            user("Hi. Give me a word and a number.")
+            user("Calculate price of 10 tokens if I pay 0.003 euro for token with 10% discount.")
         }
 
         val executor = getExecutor(model)
 
         withRetry(testName = "integration_testToolsWithAnyOfParams[${model.id}]") {
-            val response = executor.execute(prompt, model, listOf(anyOfTool))
+            val response = executor.execute(prompt, model, listOf(PriceCalculatorTool.descriptor))
             assertTrue(response.isNotEmpty(), "Response should not be empty")
-            assertTrue(response.any { it is Message.Tool.Call }, "Response should contain a tool call")
+            assertResponseContainsToolCall(response, PriceCalculatorTool.name)
         }
     }
 
-    open fun integration_testStructuredDataStreaming(model: LLModel) = runTest(timeout = 300.seconds) {
+    open fun integration_testMarkdownStructuredDataStreaming(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model != OpenAIModels.CostOptimized.GPT4_1Nano, "Model $model is too small for structured streaming")
 
-        val countries = mutableListOf<Country>()
-        val countryDefinition = markdownCountryDefinition()
-
-        val prompt = Prompt.build("test-structured-streaming") {
-            system("You are a helpful assistant.")
-            user(
-                """
-                Please provide information about 3 European countries in this format:
-
-                $countryDefinition
-
-                Make sure to follow this exact format with the # for country names and * for details.
-                """.trimIndent()
-            )
-        }
-
         withRetry(times = 3, testName = "integration_testStructuredDataStreaming[${model.id}]") {
-            val markdownStream = getLLMClient(model).executeStreaming(prompt, model)
+            val markdownStream = getLLMClient(model).executeStreaming(countryStructuredOutputPrompt, model)
+            val countries = mutableListOf<Country>()
 
             parseMarkdownStreamToCountries(markdownStream).collect { country ->
                 countries.add(country)
@@ -537,34 +335,24 @@ abstract class ExecutorIntegrationTestBase {
 
             val file = MediaTestUtils.createMarkdownFileForScenario(scenario, testResourcesDir)
 
-            val prompt =
-                if (model.capabilities.contains(LLMCapability.Document) && model.provider != LLMProvider.OpenAI) {
-                    prompt("markdown-test-${scenario.name.lowercase()}") {
-                        system("You are a helpful assistant that can analyze markdown files.")
+            val prompt = prompt("markdown-test-${scenario.name.lowercase()}") {
+                system("You are a helpful assistant that can analyze markdown files.")
 
-                        user {
-                            markdown {
-                                +"I'm sending you a markdown file with different markdown elements. "
-                                +"Please list all the markdown elements used in it and describe its structure clearly."
-                            }
+                user {
+                    markdown {
+                        +"I'm sending you a markdown file with different markdown elements. "
+                        +"Please list all the markdown elements used in it and describe its structure clearly."
+                    }
 
-                            textFile(KtPath(file.pathString), "text/plain")
+                    if (model.capabilities.contains(LLMCapability.Document) && model.provider != LLMProvider.OpenAI) {
+                        textFile(KtPath(file.pathString), "text/plain")
+                    } else {
+                        markdown {
+                            +file.readText()
                         }
                     }
-                } else {
-                    prompt("markdown-test-${scenario.name.lowercase()}") {
-                        system("You are a helpful assistant that can analyze markdown files.")
-
-                        user(
-                            markdown {
-                                +"I'm sending you a markdown file with different markdown elements. "
-                                +"Please list all the markdown elements used in it and describe its structure clearly."
-                                newline()
-                                +file.readText()
-                            }
-                        )
-                    }
                 }
+            }
 
             withRetry {
                 try {
@@ -906,13 +694,13 @@ abstract class ExecutorIntegrationTestBase {
 
         withRetry {
             val result = executor.executeStructured(
-                prompt = StructuredTest.prompt,
+                prompt = weatherStructuredOutputPrompt,
                 model = model,
                 config = getConfigNoFixingParserNative(model)
             )
 
             assertTrue(result.isSuccess, "Structured output should succeed: ${result.exceptionOrNull()}")
-            checkResponse(result)
+            checkWeatherStructuredOutputResponse(result)
         }
     }
 
@@ -926,13 +714,13 @@ abstract class ExecutorIntegrationTestBase {
 
         withRetry {
             val result = executor.executeStructured(
-                prompt = StructuredTest.prompt,
+                prompt = weatherStructuredOutputPrompt,
                 model = model,
                 config = getConfigFixingParserNative(model)
             )
 
             assertTrue(result.isSuccess, "Structured output should succeed: ${result.exceptionOrNull()}")
-            checkResponse(result)
+            checkWeatherStructuredOutputResponse(result)
         }
     }
 
@@ -952,13 +740,13 @@ abstract class ExecutorIntegrationTestBase {
 
         withRetry {
             val result = executor.executeStructured(
-                prompt = StructuredTest.prompt,
+                prompt = weatherStructuredOutputPrompt,
                 model = model,
-                config = StructuredTest.getConfigNoFixingParserManual(model)
+                config = getConfigNoFixingParserManual(model)
             )
 
             assertTrue(result.isSuccess, "Structured output should succeed: ${result.exceptionOrNull()}")
-            checkResponse(result)
+            checkWeatherStructuredOutputResponse(result)
         }
     }
 
@@ -971,48 +759,13 @@ abstract class ExecutorIntegrationTestBase {
 
         withRetry(6) {
             val result = executor.executeStructured(
-                prompt = StructuredTest.prompt,
+                prompt = weatherStructuredOutputPrompt,
                 model = model,
-                config = StructuredTest.getConfigFixingParserManual(model)
+                config = getConfigFixingParserManual(model)
             )
 
             assertTrue(result.isSuccess, "Structured output should succeed: ${result.exceptionOrNull()}")
-            checkResponse(result)
-        }
-    }
-
-    open fun integration_testRawStringStreaming(model: LLModel) = runTest(timeout = 600.seconds) {
-        Models.assumeAvailable(model.provider)
-        if (model.id == OpenAIModels.Audio.GPT4oAudio.id || model.id == OpenAIModels.Audio.GPT4oMiniAudio.id) {
-            assumeTrue(false, "https://github.com/JetBrains/koog/issues/231")
-        }
-
-        val prompt = Prompt.build("test-streaming") {
-            system {
-                +"You are a helpful assistant."
-                +"You have NO output length limitations."
-            }
-            user("Count from 1 to 5.")
-        }
-
-        val responseChunks = mutableListOf<StreamFrame>()
-
-        withRetry(times = 3, testName = "integration_testRawStringStreaming[${model.id}]") {
-            getLLMClient(model).executeStreaming(prompt, model).collect { chunk ->
-                responseChunks.add(chunk)
-            }
-
-            assertTrue(responseChunks.isNotEmpty(), "Response chunks should not be empty")
-
-            val fullResponse = responseChunks.joinToString("")
-            assertTrue(
-                fullResponse.contains("1") &&
-                    fullResponse.contains("2") &&
-                    fullResponse.contains("3") &&
-                    fullResponse.contains("4") &&
-                    fullResponse.contains("5"),
-                "Full response should contain numbers 1 through 5"
-            )
+            checkWeatherStructuredOutputResponse(result)
         }
     }
 
@@ -1020,10 +773,9 @@ abstract class ExecutorIntegrationTestBase {
         Models.assumeAvailable(model.provider)
         assumeTrue(LLMCapability.ToolChoice in model.capabilities, "Model $model does not support tool choice")
 
-        val calculatorTool = createCalculatorTool()
-        val prompt = createCalculatorPrompt()
+        val prompt = calculatorPrompt
 
-        /** tool choice auto is default and thus is tested by [integration_testToolsWithRequiredParams] */
+        /** tool choice auto is default and thus is tested by [integration_testToolWithRequiredParams] */
 
         withRetry(times = 3, testName = "integration_testToolChoiceRequired[${model.id}]") {
             val response = getLLMClient(model).execute(
@@ -1033,11 +785,11 @@ abstract class ExecutorIntegrationTestBase {
                     )
                 ),
                 model,
-                listOf(calculatorTool)
+                listOf(CalculatorTool.descriptor)
             )
 
             assertTrue(response.isNotEmpty(), "Response should not be empty")
-            assertTrue(response.first() is Message.Tool.Call)
+            assertResponseContainsToolCall(response, CalculatorTool.descriptor.name)
         }
     }
 
@@ -1046,29 +798,26 @@ abstract class ExecutorIntegrationTestBase {
 
         assumeTrue(model.provider != LLMProvider.Bedrock, "Bedrock API doesn't support 'none' tool choice.")
         assumeTrue(LLMCapability.ToolChoice in model.capabilities, "Model $model does not support tool choice")
+        assumeTrue(model.provider != LLMProvider.MistralAI, "MistralAI returns json array which we are failing to parse. Remove after KG-535 fix")
 
-        val calculatorTool = createCalculatorTool()
-        val prompt = createCalculatorPrompt()
+        val prompt = Prompt.build("test-calculator-tool") {
+            system("You are a helpful assistant.")
+            user("What is 2 + 2?")
+        }
 
         withRetry(times = 3, testName = "integration_testToolChoiceNone[${model.id}]") {
             val response = getLLMClient(model).execute(
-                Prompt.build("test-tools") {
-                    system {
-                        +"You are a helpful assistant. "
-                        +"Do not use calculator tool, it's broken!"
-                    }
-                    user("What is 123 + 456?")
-                }.withParams(
+                prompt.withParams(
                     prompt.params.copy(
                         toolChoice = ToolChoice.None
                     )
                 ),
                 model,
-                listOf(calculatorTool)
+                listOf(CalculatorTool.descriptor)
             )
 
             assertTrue(response.isNotEmpty(), "Response should not be empty")
-            assertTrue(response.first() is Message.Assistant)
+            assertTrue(response.none { it is Message.Tool.Call }, "Response should not contain tool calls")
         }
     }
 
@@ -1077,13 +826,12 @@ abstract class ExecutorIntegrationTestBase {
 
         assumeTrue(model.capabilities.contains(LLMCapability.ToolChoice), "Model $model does not support tool choice")
 
-        val calculatorTool = createCalculatorTool()
-        val prompt = createCalculatorPrompt()
-
         val nothingTool = ToolDescriptor(
             name = "nothing",
             description = "A tool that does nothing",
         )
+
+        val prompt = calculatorPrompt
 
         withRetry(times = 3, testName = "integration_testToolChoiceNamed[${model.id}]") {
             val response = getLLMClient(model).execute(
@@ -1093,17 +841,11 @@ abstract class ExecutorIntegrationTestBase {
                     )
                 ),
                 model,
-                listOf(calculatorTool, nothingTool)
+                listOf(CalculatorTool.descriptor, nothingTool)
             )
 
-            assertNotNull(response, "Response should not be null")
             assertTrue(response.isNotEmpty(), "Response should not be empty")
-            assertTrue(
-                response.first() is Message.Tool.Call,
-                "First message should be a tool call, but was ${response.first().role}"
-            )
-            val toolCall = response.first() as Message.Tool.Call
-            assertEquals("nothing", toolCall.tool, "Tool name should be 'nothing'")
+            assertResponseContainsToolCall(response, nothingTool.name)
         }
     }
 

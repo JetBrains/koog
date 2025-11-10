@@ -1,5 +1,8 @@
 package ai.koog.integration.tests.capabilities
 
+import ai.koog.integration.tests.utils.APIKeys.readTestAnthropicKeyFromEnv
+import ai.koog.integration.tests.utils.APIKeys.readTestGoogleAIKeyFromEnv
+import ai.koog.integration.tests.utils.APIKeys.readTestOpenAIKeyFromEnv
 import ai.koog.integration.tests.utils.MediaTestScenarios
 import ai.koog.integration.tests.utils.MediaTestUtils.createAudioFileForScenario
 import ai.koog.integration.tests.utils.MediaTestUtils.createTextFileForScenario
@@ -7,13 +10,10 @@ import ai.koog.integration.tests.utils.MediaTestUtils.createVideoFileForScenario
 import ai.koog.integration.tests.utils.MediaTestUtils.getImageFileForScenario
 import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.RetryUtils.withRetry
-import ai.koog.integration.tests.utils.TestUtils.SimpleCalculatorTool
 import ai.koog.integration.tests.utils.TestUtils.assertExceptionMessageContains
 import ai.koog.integration.tests.utils.TestUtils.isValidJson
-import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
-import ai.koog.integration.tests.utils.TestUtils.readTestGoogleAIKeyFromEnv
-import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
 import ai.koog.integration.tests.utils.TestUtils.singlePropertyObjectSchema
+import ai.koog.integration.tests.utils.tools.SimpleCalculatorTool
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient

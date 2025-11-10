@@ -6,14 +6,14 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
 import ai.koog.integration.tests.agent.AIAgentTestBase.ReportingLLMClient.Event
+import ai.koog.integration.tests.utils.APIKeys.readTestAnthropicKeyFromEnv
+import ai.koog.integration.tests.utils.APIKeys.readTestOpenAIKeyFromEnv
 import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.RetryUtils.withRetry
-import ai.koog.integration.tests.utils.TestUtils.CalculatorTool
-import ai.koog.integration.tests.utils.TestUtils.MockFileSystem
-import ai.koog.integration.tests.utils.TestUtils.OperationResult
-import ai.koog.integration.tests.utils.TestUtils.readTestAnthropicKeyFromEnv
-import ai.koog.integration.tests.utils.TestUtils.readTestOpenAIKeyFromEnv
 import ai.koog.integration.tests.utils.annotations.Retry
+import ai.koog.integration.tests.utils.tools.CalculatorTool
+import ai.koog.integration.tests.utils.tools.files.MockFileSystem
+import ai.koog.integration.tests.utils.tools.files.OperationResult
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
@@ -235,7 +235,7 @@ class AIAgentMultipleLLMIntegrationTest : AIAgentTestBase() {
             val agent = AIAgent(
                 promptExecutor = simpleAnthropicExecutor(anthropicApiKey),
                 llmModel = llmModel,
-                systemPrompt = "You are a calculator with access to the calculator tools. Please call tools!!!",
+                systemPrompt = "You are a calculator with access to the calculator tools. You MUST call tools!!!",
                 toolRegistry = ToolRegistry {
                     tool(CalculatorTool)
                 },
