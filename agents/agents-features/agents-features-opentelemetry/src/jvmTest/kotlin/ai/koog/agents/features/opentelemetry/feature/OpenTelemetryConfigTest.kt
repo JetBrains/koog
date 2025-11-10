@@ -20,6 +20,7 @@ import kotlinx.coroutines.test.runTest
 import java.util.Properties
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFails
 import kotlin.test.assertTrue
 
 /**
@@ -84,6 +85,32 @@ class OpenTelemetryConfigTest : OpenTelemetryTestBase() {
         assertEquals(expectedServiceName, actualServiceName)
         assertEquals(expectedServiceVersion, actualServiceVersion)
         assertEquals(expectedIsVerbose, actualIsVerbose)
+    }
+
+    @Test
+    fun `test filter is not allowed for open telemetry feature`() = runTest {
+        val strategy = strategy<String, String>("test-strategy") {
+            nodeStart then nodeFinish
+        }
+
+        val throwable = assertFails {
+            createAgent(strategy = strategy) {
+                install(OpenTelemetry) {
+                    // Try to filter out all events. OpenTelemetryConfig should ignore this filter
+                    setEventFilter { false }
+                }
+            }
+        }
+
+        assertTrue(
+            throwable is UnsupportedOperationException,
+            "Unexpected exception type. Expected <${UnsupportedOperationException::class.simpleName}>, but got: <${throwable::class.simpleName}>"
+        )
+
+        assertEquals(
+            "Events filtering is not allowed for the OpenTelemetry feature.",
+            throwable.message
+        )
     }
 
     @Test
