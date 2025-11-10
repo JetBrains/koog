@@ -219,9 +219,9 @@ open class AIAgentTestBase {
                 eventsChannel.send(
                     Event.Message(
                         llmClient = underlyingClient,
-                        method = "execute",
+                        method = "executeStreaming",
                         prompt = prompt,
-                        tools = emptyList(),
+                        tools = tools.map { it.name },
                         model = model
                     )
                 )
