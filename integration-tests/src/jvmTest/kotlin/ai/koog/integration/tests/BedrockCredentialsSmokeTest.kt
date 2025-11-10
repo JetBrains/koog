@@ -22,8 +22,7 @@ class BedrockCredentialsSmokeTest {
         val region = System.getenv("AWS_REGION") ?: "us-west-2"
 
         BedrockClient { this.region = region }.use { bedrock ->
-            val resp = bedrock.listFoundationModels { }
-            (resp.modelSummaries?.shouldNotBeEmpty())
+            bedrock.listFoundationModels { }.modelSummaries?.shouldNotBeEmpty()
         }
     }
 
@@ -36,8 +35,7 @@ class BedrockCredentialsSmokeTest {
         BedrockClient {
             this.region = region
         }.use { bedrock ->
-            val resp = bedrock.listFoundationModels { }
-            (resp.modelSummaries?.shouldNotBeEmpty())
+            bedrock.listFoundationModels { }.modelSummaries?.shouldNotBeEmpty()
         }
     }
 }

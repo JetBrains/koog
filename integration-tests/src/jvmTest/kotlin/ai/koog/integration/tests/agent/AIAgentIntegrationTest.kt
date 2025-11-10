@@ -38,6 +38,7 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.ToolChoice
 import io.kotest.assertions.withClue
+import io.kotest.inspectors.shouldForAny
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContain
@@ -46,9 +47,12 @@ import io.kotest.matchers.comparables.shouldBeLessThan
 import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.ints.shouldBeGreaterThanOrEqual
 import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.should
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.contain
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotBeBlank
+import io.kotest.matchers.string.shouldNotBeEmpty
 import io.kotest.matchers.string.shouldNotContain
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
@@ -200,15 +204,13 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
             actualToolCalls shouldContain SimpleCalculatorTool.name
         }
         result.shouldNotBeBlank()
-        promptMessages.shouldNotBeNull()
-
-        val systemMessages = promptMessages.filterIsInstance<Message.System>()
-        withClue("System messages should be preserved after compression with $strategyName") {
-            systemMessages.shouldNotBeEmpty()
-        }
-        val preservedSystemMessage = systemMessages.first().content
-        withClue("System message content should not be empty after compression with $strategyName") {
-            preservedSystemMessage.shouldNotBeBlank()
+        promptMessages shouldNotBeNull {
+            withClue("System messages should be preserved after compression with $strategyName") {
+                filterIsInstance<Message.System>().shouldNotBeEmpty()
+            }
+            withClue("System message content should not be empty after compression with $strategyName") {
+                first().content.shouldNotBeBlank()
+            }
         }
     }
 
@@ -228,33 +230,35 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                     getSingleRunAgentWithRunMode(model, runMode, eventHandlerConfig = eventHandlerConfig)
                 multiToolAgent.run(twoToolsPrompt)
 
-                withClue("There should be at least 2 tool calls in a Multiple tool calls scenario") {
-                    state.parallelToolCalls.size shouldBeGreaterThanOrEqual 2
-                }
-
-                withClue("There should be no single tool calls in a Multiple tool calls scenario") {
-                    state.singleToolCalls.shouldBeEmpty()
-                }
-
-                val firstCall = state.parallelToolCalls.first()
-                val secondCall = state.parallelToolCalls.last()
-
-                if (runMode == ToolCalls.PARALLEL) {
-                    withClue("At least one of the metadata should be equal for parallel tool calls") {
-                        (
-                            firstCall.metaInfo.timestamp == secondCall.metaInfo.timestamp ||
-                                firstCall.metaInfo.totalTokensCount == secondCall.metaInfo.totalTokensCount ||
-                                firstCall.metaInfo.inputTokensCount == secondCall.metaInfo.inputTokensCount ||
-                                firstCall.metaInfo.outputTokensCount == secondCall.metaInfo.outputTokensCount
-                            ).shouldBeTrue()
+                with(state) {
+                    withClue("There should be at least 2 tool calls in a Multiple tool calls scenario") {
+                        parallelToolCalls.size shouldBeGreaterThanOrEqual 2
                     }
-                }
 
-                withClue("First tool call should be ${SimpleCalculatorTool.name}") {
-                    firstCall.tool shouldBe SimpleCalculatorTool.name
-                }
-                withClue("Second tool call should be ${DelayTool.name}") {
-                    secondCall.tool shouldBe DelayTool.name
+                    withClue("There should be no single tool calls in a Multiple tool calls scenario") {
+                        singleToolCalls.shouldBeEmpty()
+                    }
+
+                    val firstCall = parallelToolCalls.first()
+                    val secondCall = state.parallelToolCalls.last()
+
+                    if (runMode == ToolCalls.PARALLEL) {
+                        withClue("At least one of the metadata should be equal for parallel tool calls") {
+                            (
+                                firstCall.metaInfo.timestamp == secondCall.metaInfo.timestamp ||
+                                    firstCall.metaInfo.totalTokensCount == secondCall.metaInfo.totalTokensCount ||
+                                    firstCall.metaInfo.inputTokensCount == secondCall.metaInfo.inputTokensCount ||
+                                    firstCall.metaInfo.outputTokensCount == secondCall.metaInfo.outputTokensCount
+                                ).shouldBeTrue()
+                        }
+                    }
+
+                    withClue("First tool call should be ${SimpleCalculatorTool.name}") {
+                        firstCall.tool shouldBe SimpleCalculatorTool.name
+                    }
+                    withClue("Second tool call should be ${DelayTool.name}") {
+                        secondCall.tool shouldBe DelayTool.name
+                    }
                 }
             }
         }
@@ -334,10 +338,11 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                 )
 
                 agent.run("How much is 3 times 5?")
-                withClue("No tools were called for model $model") { state.actualToolCalls.shouldNotBeEmpty() }
-
-                withClue("The ${SimpleCalculatorTool.name} tool was not called for model $model") {
-                    state.actualToolCalls shouldContain SimpleCalculatorTool.name
+                with(state) {
+                    withClue("No tools were called for model $model") { actualToolCalls.shouldNotBeEmpty() }
+                    withClue("The ${SimpleCalculatorTool.name} tool was not called for model $model") {
+                        actualToolCalls shouldContain SimpleCalculatorTool.name
+                    }
                 }
             }
         }
@@ -377,17 +382,18 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
                 agent.run(promptWithImage)
 
-                state.errors.shouldBeEmpty()
-                state.results.shouldNotBeEmpty()
-
-                val result = state.results.first() as String
-                result.shouldNotBeBlank()
-                result.length shouldBeGreaterThan 20
-
-                val resultLowerCase = result.lowercase()
-                resultLowerCase.shouldNotContain("error processing")
-                resultLowerCase.shouldNotContain("unable to process")
-                resultLowerCase.shouldNotContain("cannot process")
+                with(state) {
+                    errors.shouldBeEmpty()
+                    results.shouldNotBeEmpty()
+                    results.first() as String shouldNotBeNull {
+                        shouldNotBeBlank()
+                        length shouldBeGreaterThan 20
+                        lowercase()
+                            .shouldNotContain("error processing")
+                            .shouldNotContain("unable to process")
+                            .shouldNotContain("cannot process")
+                    }
+                }
             }
         }
     }
@@ -424,12 +430,12 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                     installFeatures = { install(EventHandler.Feature, eventHandlerConfig) },
                 )
 
-                val result = agent.run("What is 123 + 456?")
+                agent.run("What is 123 + 456?") shouldNotBeNull {
+                    shouldNotBeBlank()
+                    shouldContain("579")
+                }
 
-                result.shouldNotBeBlank()
                 state.actualToolCalls.shouldBeEmpty()
-
-                result shouldContain "579"
             }
         }
     }
@@ -467,14 +473,16 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                     eventHandlerConfig = eventHandlerConfig,
                 )
                 sequentialAgent.run(twoToolsPrompt)
-                withClue("There should be no parallel tool calls in a Sequential single run scenario") {
-                    state.parallelToolCalls.shouldBeEmpty()
-                }
-                withClue("There should be more or equal than 2 single tool calls in a Sequential single run scenario") {
-                    state.singleToolCalls.size shouldBeGreaterThanOrEqual 2
-                }
-                withClue("First tool call should be ${SimpleCalculatorTool.name}") {
-                    state.singleToolCalls.first().tool shouldBe SimpleCalculatorTool.name
+                with(state) {
+                    withClue("There should be no parallel tool calls in a Sequential single run scenario") {
+                        parallelToolCalls.shouldBeEmpty()
+                    }
+                    withClue("There should be more or equal than 2 single tool calls in a Sequential single run scenario") {
+                        singleToolCalls.size shouldBeGreaterThanOrEqual 2
+                    }
+                    withClue("First tool call should be ${SimpleCalculatorTool.name}") {
+                        singleToolCalls.first().tool shouldBe SimpleCalculatorTool.name
+                    }
                 }
             }
         }
@@ -508,38 +516,39 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
                 agent.run("How much did I spend last month?")
 
-                state.errors.shouldBeEmpty()
-                state.results.shouldNotBeEmpty()
-                withClue("The ${GetTransactionsTool.descriptor.name} tool should be called") {
-                    state.actualToolCalls shouldContain GetTransactionsTool.descriptor.name
-                }
-                withClue("The ${CalculateSumTool.descriptor.name} tool should be called") {
-                    state.actualToolCalls shouldContain CalculateSumTool.descriptor.name
-                }
-
-                val getTransactionsIndex = state.actualToolCalls.indexOf(GetTransactionsTool.descriptor.name)
-                val calculateSumIndex = state.actualToolCalls.indexOf(CalculateSumTool.descriptor.name)
-                withClue("The ${GetTransactionsTool.descriptor.name} tool should be called before the ${CalculateSumTool.descriptor.name} tool") {
-                    getTransactionsIndex shouldBeLessThan calculateSumIndex
-                }
-
-                withClue("Should have at least one reasoning call for the ReAct strategy.") {
-                    state.reasoningCallsCount shouldBeGreaterThan 0
-                }
-
-                // Count how many times the reasoning step would trigger based on the interval
-                var expectedReasoningCalls = 1 // Start with 1 for the initial reasoning
-                for (i in state.toolExecutionCounter.indices) {
-                    if (i % interval == 0) {
-                        expectedReasoningCalls++
+                with(state) {
+                    errors.shouldBeEmpty()
+                    results.shouldNotBeEmpty()
+                    withClue("The ${GetTransactionsTool.descriptor.name} tool should be called") {
+                        actualToolCalls shouldContain GetTransactionsTool.descriptor.name
                     }
-                }
+                    withClue("The ${CalculateSumTool.descriptor.name} tool should be called") {
+                        actualToolCalls shouldContain CalculateSumTool.descriptor.name
+                    }
+                    withClue("The ${GetTransactionsTool.descriptor.name} tool should be called before the ${CalculateSumTool.descriptor.name} tool") {
+                        actualToolCalls.indexOf(GetTransactionsTool.descriptor.name) shouldBeLessThan actualToolCalls.indexOf(
+                            CalculateSumTool.descriptor.name
+                        )
+                    }
 
-                withClue(
-                    "With reasoningInterval=$interval and ${state.toolExecutionCounter.size} tool calls, " +
-                        "expected $expectedReasoningCalls reasoning calls but got ${state.reasoningCallsCount}"
-                ) {
-                    state.reasoningCallsCount shouldBe expectedReasoningCalls
+                    withClue("Should have at least one reasoning call for the ReAct strategy.") {
+                        reasoningCallsCount shouldBeGreaterThan 0
+                    }
+
+                    // Count how many times the reasoning step would trigger based on the interval
+                    var expectedReasoningCalls = 1 // Start with 1 for the initial reasoning
+                    for (i in toolExecutionCounter.indices) {
+                        if (i % interval == 0) {
+                            expectedReasoningCalls++
+                        }
+                    }
+
+                    withClue(
+                        "With reasoningInterval=$interval and ${toolExecutionCounter.size} tool calls, " +
+                            "expected $expectedReasoningCalls reasoning calls but got $reasoningCallsCount"
+                    ) {
+                        reasoningCallsCount shouldBe expectedReasoningCalls
+                    }
                 }
             }
         }
@@ -606,9 +615,10 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
         agent.run("Start the test")
 
-        val checkpoints = checkpointStorageProvider.getCheckpoints(agent.id)
-        checkpoints.shouldNotBeEmpty()
-        checkpoints.first().nodeId shouldBe save
+        with(checkpointStorageProvider.getCheckpoints(agent.id)) {
+            shouldNotBeEmpty()
+            first().nodeId shouldBe save
+        }
 
         val restoredAgent = AIAgent(
             promptExecutor = getExecutor(model),
@@ -629,10 +639,8 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
             }
         )
 
-        val restoredResult = restoredAgent.run("Continue the test")
-
         // Verify that the agent continued from the checkpoint
-        restoredResult shouldContain sayBye
+        restoredAgent.run("Continue the test") shouldContain sayBye
     }
 
     @ParameterizedTest
@@ -730,21 +738,18 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
             }
         )
 
-        val result = agent.run("Start the test")
-
-        val executionLogStr = executionLog.toString()
-        executionLogStr shouldContain sayHelloLog.trim()
-        executionLogStr shouldContain saySaveLog.trim()
-        executionLogStr shouldContain sayByeLog.trim()
-        executionLogStr shouldContain rollbackPerformingLog.trim()
-
-        val savesCount = saySaveLog.trim().toRegex().findAll(executionLogStr).count()
-        val byesCount = sayByeLog.trim().toRegex().findAll(executionLogStr).count()
-        savesCount shouldBe 2
-        byesCount shouldBe 2
-
         withClue("Final result should contain output from the second execution of $rollback") {
-            result shouldContain alreadyRolledBackMessage
+            agent.run("Start the test") shouldContain alreadyRolledBackMessage
+        }
+
+        with(executionLog.toString()) {
+            shouldNotBeEmpty()
+            shouldContain(sayHelloLog.trim())
+            shouldContain(saySaveLog.trim())
+            shouldContain(sayByeLog.trim())
+            shouldContain(rollbackPerformingLog.trim())
+            saySaveLog.trim().toRegex().findAll(this).count() shouldBe 2
+            sayByeLog.trim().toRegex().findAll(this).count() shouldBe 2
         }
     }
 
@@ -808,13 +813,14 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
         agent.run(testInput)
 
-        val checkpoints = checkpointStorageProvider.getCheckpoints(agent.id)
-        checkpoints.size shouldBeGreaterThanOrEqual 3
-
-        val nodeIds = checkpoints.map { it.nodeId }.toSet()
-        nodeIds shouldContain hello
-        nodeIds shouldContain world
-        nodeIds shouldContain bye
+        with(checkpointStorageProvider.getCheckpoints(agent.id)) {
+            size shouldBeGreaterThanOrEqual 3
+            map { it.nodeId }.toSet() shouldNotBeNull {
+                shouldContain(hello)
+                shouldContain(world)
+                shouldContain(bye)
+            }
+        }
     }
 
     @ParameterizedTest
@@ -884,12 +890,13 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
         agent.run(testInput)
 
-        val checkpoints = fileStorageProvider.getCheckpoints(agent.id).filter { it.nodeId != "tombstone" }
-        withClue(noCheckpointsError) {
-            checkpoints.isNotEmpty() shouldBe true
-        }
-        withClue(incorrectNodeIdError) {
-            checkpoints.first().nodeId shouldBe bye
+        with(fileStorageProvider.getCheckpoints(agent.id).filter { it.nodeId != "tombstone" }) {
+            withClue(noCheckpointsError) {
+                isNotEmpty() shouldBe true
+            }
+            withClue(incorrectNodeIdError) {
+                first().nodeId shouldBe bye
+            }
         }
     }
 
@@ -940,22 +947,21 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
                 agent.run("What is 12 + 34?")
 
-                state.actualToolCalls shouldBe listOf(SimpleCalculatorTool.descriptor.name)
-                withClue("${SimpleCalculatorTool.descriptor.name} tool should be called for model $model with persistence") {
-                    state.errors.shouldBeEmpty()
-                }
-
-                val nonTombstoneCheckpoints =
-                    storageProvider.getCheckpoints(agent.id).filter { it.nodeId != "tombstone" }
-                nonTombstoneCheckpoints.shouldNotBeEmpty()
-
-                val toolCallPresentInHistory = nonTombstoneCheckpoints.any { cp ->
-                    cp.messageHistory.any { msg ->
-                        msg is Message.Tool.Call && msg.tool == SimpleCalculatorTool.name
+                with(state) {
+                    actualToolCalls shouldBe listOf(SimpleCalculatorTool.descriptor.name)
+                    withClue("${SimpleCalculatorTool.descriptor.name} tool should be called for model $model with persistence") {
+                        errors.shouldBeEmpty()
                     }
                 }
+
                 withClue("Checkpoint message history should contain a tool call to '${SimpleCalculatorTool.name}'") {
-                    toolCallPresentInHistory.shouldBeTrue()
+                    storageProvider.getCheckpoints(agent.id).filter { it.nodeId != "tombstone" }
+                        .shouldNotBeEmpty()
+                        .shouldForAny { cp ->
+                            cp.messageHistory.any { msg ->
+                                msg is Message.Tool.Call && msg.tool == SimpleCalculatorTool.name
+                            }
+                        }
                 }
             }
         }
@@ -999,11 +1005,13 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
                 )
                 agent.run("What is 123 + 456?")
 
-                withClue("${CalculatorToolNoArgs.descriptor.name} tool should be called for model $model") {
-                    state.actualToolCalls shouldBe listOf(CalculatorToolNoArgs.descriptor.name)
-                }
+                with(state) {
+                    withClue("${CalculatorToolNoArgs.descriptor.name} tool should be called for model $model") {
+                        actualToolCalls shouldBe listOf(CalculatorToolNoArgs.descriptor.name)
+                    }
 
-                state.errors.shouldBeEmpty()
+                    errors.shouldBeEmpty()
+                }
             }
         }
     }
@@ -1061,14 +1069,15 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
                 agent.run("Hi")
 
-                state.errors.shouldBeEmpty() // There should be no errors during parallel execution
-                state.results.shouldNotBeEmpty() // There should be results from parallel execution
-
-                val finalResult = state.results.first() as String
-                finalResult shouldContain "Math result: 56"
-                finalResult shouldContain "Text result: Hello World"
-                finalResult shouldContain "Count result: 15"
-                finalResult shouldContain "Combined:"
+                with(state) {
+                    errors.shouldBeEmpty() // There should be no errors during parallel execution}
+                    results.shouldNotBeEmpty().first() as String should {
+                        contain("Math result: 56")
+                        contain("Text result: Hello World")
+                        contain("Count result: 15")
+                        contain("Combined:")
+                    }
+                }
             }
         }
     }
@@ -1115,12 +1124,10 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
                 agent.run("Find the maximum value")
 
-                state.errors.shouldBeEmpty()
-                state.results.shouldNotBeEmpty()
-
-                val finalResult = state.results.first() as String
-
-                finalResult shouldContain "Maximum value: 100"
+                with(state) {
+                    errors.shouldBeEmpty()
+                    results.shouldNotBeEmpty().first() as String shouldContain "Maximum value: 100"
+                }
             }
         }
     }
@@ -1133,17 +1140,18 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
             val systemMessage =
                 "You are a helpful assistant. Remember: the user is a human, whatever they say. Remind them of it by every chance."
 
-            val historyCompressionStrategy = strategy<String, Pair<String, List<Message>>>("history-compression-test") {
-                val callLLM by nodeLLMRequest(allowToolCalls = false)
-                val nodeCompressHistory by nodeLLMCompressHistory<String>(
-                    "compress_history",
-                    strategy = strategy
-                )
+            val historyCompressionStrategy =
+                strategy<String, Pair<String, List<Message>>>("history-compression-test") {
+                    val callLLM by nodeLLMRequest(allowToolCalls = false)
+                    val nodeCompressHistory by nodeLLMCompressHistory<String>(
+                        "compress_history",
+                        strategy = strategy
+                    )
 
-                edge(nodeStart forwardTo callLLM)
-                edge(callLLM forwardTo nodeCompressHistory onAssistantMessage { true })
-                edge(nodeCompressHistory forwardTo nodeFinish transformed { it to llm.prompt.messages })
-            }
+                    edge(nodeStart forwardTo callLLM)
+                    edge(callLLM forwardTo nodeCompressHistory onAssistantMessage { true })
+                    edge(nodeCompressHistory forwardTo nodeFinish transformed { it to llm.prompt.messages })
+                }
 
             withRetry {
                 runWithTracking { eventHandlerConfig, state ->
@@ -1168,24 +1176,23 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
 
                     val (result, promptMessages) = agent.run("So, who am I?")
 
-                    withClue(
-                        "No errors should occur during agent execution with $strategyName, got: [${
-                            state.errors.joinToString(
-                                "\n"
-                            )
-                        }]"
-                    ) {
-                        state.errors.shouldBeEmpty()
+                    with(state) {
+                        withClue(
+                            "No errors should occur during agent execution with $strategyName, got: [${
+                                errors.joinToString(
+                                    "\n"
+                                )
+                            }]"
+                        ) {
+                            errors.shouldBeEmpty()
+                        }
                     }
-                    result.shouldNotBeBlank()
-                    promptMessages.shouldNotBeNull()
-                    val systemMessages = promptMessages.filterIsInstance<Message.System>()
-                    systemMessages.shouldNotBeEmpty()
 
-                    val preservedSystemMessage = systemMessages.first().content
-                    preservedSystemMessage.shouldNotBeBlank()
-                    preservedSystemMessage shouldBe systemMessage
-                    result shouldContain "human"
+                    result.shouldNotBeBlank() shouldContain "human"
+                    promptMessages shouldNotBeNull {
+                        filterIsInstance<Message.System>().shouldNotBeEmpty()
+                        first().content.shouldNotBeBlank() shouldBe systemMessage
+                    }
                 }
             }
         }

@@ -8,8 +8,8 @@ import ai.koog.prompt.executor.clients.google.models.GoogleFunctionCallingMode
 import ai.koog.prompt.executor.clients.google.models.GoogleThinkingConfig
 import ai.koog.prompt.params.LLMParams
 import io.kotest.matchers.collections.shouldContain
-import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonArray
@@ -76,9 +76,9 @@ class GoogleLLMClientTest {
             tools = listOf(tool)
         )
 
-        request.tools.shouldNotBeNull()
         val tools = request.tools
-        tools.size shouldBe 1
+        tools shouldNotBe null
+        tools!!.size shouldBe 1
         val functionDeclarations = tools.first().functionDeclarations!!
         val functionDeclaration = functionDeclarations.first()
         functionDeclaration.name shouldBe "test_tool"
@@ -130,9 +130,9 @@ class GoogleLLMClientTest {
             tools = listOf(tool)
         )
 
-        request.tools.shouldNotBeNull()
         val tools = request.tools
-        tools.size shouldBe 1
+        tools shouldNotBe null
+        tools!!.size shouldBe 1
         val functionDeclarations = tools.first().functionDeclarations!!
         val functionDeclaration = functionDeclarations.first()
         functionDeclaration.name shouldBe "test_tool"
@@ -144,8 +144,8 @@ class GoogleLLMClientTest {
         valueParam["description"]?.jsonPrimitive?.content shouldBe "A value that can be string or number"
 
         val anyOf = valueParam["anyOf"]?.jsonArray
-        anyOf.shouldNotBeNull()
-        anyOf.size shouldBe 2
+        anyOf shouldNotBe null
+        anyOf!!.size shouldBe 2
 
         // Verify the first option (String)
         val stringOption = anyOf[0].jsonObject
@@ -190,16 +190,16 @@ class GoogleLLMClientTest {
             tools = listOf(tool)
         )
 
-        request.tools.shouldNotBeNull()
         val tools = request.tools
-        val functionDeclarations = tools.first().functionDeclarations!!
+        tools shouldNotBe null
+        val functionDeclarations = tools!!.first().functionDeclarations!!
         val parameters = functionDeclarations.first().parameters!!
         val properties = parameters["properties"]?.jsonObject!!
         val complexValue = properties["complexValue"]?.jsonObject!!
 
         val anyOf = complexValue["anyOf"]?.jsonArray
-        anyOf.shouldNotBeNull()
-        anyOf.size shouldBe 3
+        anyOf shouldNotBe null
+        anyOf!!.size shouldBe 3
 
         // Verify the types
         val types = anyOf.map { it.jsonObject["type"]?.jsonPrimitive?.content }
@@ -240,8 +240,8 @@ class GoogleLLMClientTest {
         gen.topK shouldBe 10
         gen.thinkingConfig?.includeThoughts shouldBe true
         gen.thinkingConfig?.thinkingBudget shouldBe 99
-        gen.additionalProperties.shouldNotBeNull()
-        gen.additionalProperties["custom"]?.jsonPrimitive?.content shouldBe "v"
+        gen.additionalProperties shouldNotBe null
+        gen.additionalProperties!!["custom"]?.jsonPrimitive?.content shouldBe "v"
     }
 
     @Test
@@ -262,7 +262,7 @@ class GoogleLLMClientTest {
 
         val gen = request.generationConfig!!
         gen.responseMimeType shouldBe "application/json"
-        gen.responseSchema.shouldNotBeNull()
+        gen.responseSchema shouldNotBe null
         gen.responseJsonSchema shouldBe null
     }
 
@@ -284,7 +284,7 @@ class GoogleLLMClientTest {
 
         val gen = request.generationConfig!!
         gen.responseMimeType shouldBe "application/json"
-        gen.responseJsonSchema.shouldNotBeNull()
+        gen.responseJsonSchema shouldNotBe null
         gen.responseSchema shouldBe null
     }
 
@@ -321,8 +321,8 @@ class GoogleLLMClientTest {
             tools = emptyList()
         )
         val fc = req.toolConfig?.functionCallingConfig
-        fc.shouldNotBeNull()
-        fc.mode shouldBe GoogleFunctionCallingMode.ANY
+        fc shouldNotBe null
+        fc!!.mode shouldBe GoogleFunctionCallingMode.ANY
         fc.allowedFunctionNames shouldBe listOf("weather")
     }
 }

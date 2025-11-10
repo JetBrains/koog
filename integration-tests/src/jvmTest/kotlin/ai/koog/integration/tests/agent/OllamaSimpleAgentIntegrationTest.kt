@@ -64,7 +64,7 @@ class OllamaSimpleAgentIntegrationTest : AIAgentTestBase() {
             }
         """.trimIndent()
 
-        val agent = AIAgent(
+        AIAgent(
             promptExecutor = ollamaSimpleExecutor,
             systemPrompt = bookwormPrompt,
             llmModel = ollamaModel,
@@ -72,11 +72,8 @@ class OllamaSimpleAgentIntegrationTest : AIAgentTestBase() {
             toolRegistry = toolRegistry,
             maxIterations = 10,
             installFeatures = { install(EventHandler.Feature, eventHandlerConfig) }
-        )
+        ).run("Give me top 10 books of the all time.")
 
-        agent.run("Give me top 10 books of the all time.")
-
-        actualToolCalls.shouldNotBeEmpty()
-        actualToolCalls.shouldContain(SayToUser.name)
+        actualToolCalls.shouldNotBeEmpty().shouldContain(SayToUser.name)
     }
 }

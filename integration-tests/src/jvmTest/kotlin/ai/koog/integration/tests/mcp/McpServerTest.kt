@@ -11,7 +11,6 @@ import ai.koog.integration.tests.utils.RetryUtils
 import ai.koog.integration.tests.utils.getLLMClientForProvider
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
-import io.github.oshai.kotlinlogging.KotlinLogging
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldNotBe
@@ -27,8 +26,6 @@ import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 class McpServerTest {
-
-    private val logger = KotlinLogging.logger {}
 
     @Test
     fun integration_testMcpServerWithSSETransport() = runTest(timeout = 1.minutes) {
@@ -57,7 +54,7 @@ class McpServerTest {
             toolRegistry.tools.map { it.descriptor }.shouldContainExactly(randomNumberTool.descriptor)
 
             val model = OpenAIModels.Chat.GPT4o
-            val result = withContext(Dispatchers.Default.limitedParallelism(1)) {
+            withContext(Dispatchers.Default.limitedParallelism(1)) {
                 withTimeout(40.seconds) {
                     AIAgent(
                         promptExecutor = SingleLLMPromptExecutor(getLLMClientForProvider(model.provider)),
@@ -65,11 +62,7 @@ class McpServerTest {
                         toolRegistry = toolRegistry,
                     ).run("Provide random number using ${randomNumberTool.name}")
                 }
-            }
-
-            logger.info { "Result: $result" }
-
-            result.replace("[\\s,_]+".toRegex(), "").shouldContain(randomNumberTool.last.toString())
+            }.replace("[\\s,_]+".toRegex(), "").shouldContain(randomNumberTool.last.toString())
         } finally {
             server.close()
 

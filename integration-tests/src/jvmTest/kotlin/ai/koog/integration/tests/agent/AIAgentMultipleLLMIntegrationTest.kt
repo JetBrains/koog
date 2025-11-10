@@ -23,9 +23,9 @@ import ai.koog.prompt.executor.llms.all.simpleAnthropicExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.markdown.markdown
+import io.kotest.inspectors.shouldForAny
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.ints.shouldBeGreaterThan
-import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
@@ -81,14 +81,12 @@ class AIAgentMultipleLLMIntegrationTest : AIAgentTestBase() {
             initialExecutor = reportingExecutor,
         )
 
-        val result = agent.run(
+        agent.run(
             "Generate me a simple kotlin method. Write a test"
-        )
+        ) shouldNotBe null
         eventsChannel.close()
 
-        result.shouldNotBe(null) //
-
-        (fs.fileCount() > 0).shouldBe(true) // Agent must have created at least one file
+        fs.fileCount() shouldBeGreaterThan 0
 
         val messages = mutableListOf<Event.Message>()
         for (msg in eventsChannel) {
@@ -99,20 +97,20 @@ class AIAgentMultipleLLMIntegrationTest : AIAgentTestBase() {
             }
         }
 
-        messages.any { it.llmClient == "AnthropicLLMClient" }
-            .shouldBeTrue()
+        with(messages) {
+            any { it.llmClient == "AnthropicLLMClient" }
+                .shouldBeTrue()
 
-        messages.any { it.llmClient == "OpenAILLMClient" }
-            .shouldBeTrue()
+            any { it.llmClient == "OpenAILLMClient" }
+                .shouldBeTrue()
 
-        messages
-            .filter { it.llmClient == "AnthropicLLMClient" }
-            .all { it.model.provider == LLMProvider.Anthropic }
-            .shouldBeTrue()
+            filter { it.llmClient == "AnthropicLLMClient" }
+                .all { it.model.provider == LLMProvider.Anthropic }
+                .shouldBeTrue()
 
-        messages
-            .filter { it.llmClient == "OpenAILLMClient" }
-            .all { it.model.provider == LLMProvider.OpenAI }.shouldBeTrue()
+            filter { it.llmClient == "OpenAILLMClient" }
+                .all { it.model.provider == LLMProvider.OpenAI }.shouldBeTrue()
+        }
     }
 
     @ParameterizedTest
@@ -153,17 +151,15 @@ class AIAgentMultipleLLMIntegrationTest : AIAgentTestBase() {
 
             val agent = createTestAgentWithToolsInSubgraph(fs, eventHandlerConfig, model, false)
 
-            val result = agent.run(
+            agent.run(
                 "Create a simple file called 'test.txt' with content 'Hello from subgraph tools!' and then read it back to verify it was created correctly."
-            )
-
-            result.shouldNotBeBlank()
+            ).shouldNotBeBlank()
 
             fs.fileCount() shouldBeGreaterThan 0
 
             when (val readResult = fs.read("test.txt")) {
                 is OperationResult.Success -> {
-                    readResult.result.shouldContain("Hello from subgraph tools!")
+                    readResult.result shouldContain ("Hello from subgraph tools!")
                 }
 
                 is OperationResult.Failure -> {
@@ -171,7 +167,7 @@ class AIAgentMultipleLLMIntegrationTest : AIAgentTestBase() {
                 }
             }
 
-            calledTools.any { it == "create_file" }.shouldBeTrue()
+            calledTools.shouldForAny { it == "create_file" }
         }
 
     @Test
@@ -189,17 +185,14 @@ class AIAgentMultipleLLMIntegrationTest : AIAgentTestBase() {
         )
 
         try {
-            val result = agent.run(
+            agent.run(
                 "Generate me a project in Ktor that has a GET endpoint that returns the capital of France. Write a test"
-            )
-            result.shouldBeNull()
+            ) shouldBe null
         } catch (e: AIAgentException) {
             errorMessage = e.message
         } finally {
-            errorMessage.shouldBe(
-                "AI Agent has run into a problem: Agent couldn't finish in given number of steps ($steps). " +
-                    "Please, consider increasing `maxAgentIterations` value in agent's configuration"
-            )
+            errorMessage shouldBe "AI Agent has run into a problem: Agent couldn't finish in given number of steps ($steps). " +
+                "Please, consider increasing `maxAgentIterations` value in agent's configuration"
         }
     }
 
@@ -208,7 +201,8 @@ class AIAgentMultipleLLMIntegrationTest : AIAgentTestBase() {
         runTest(timeout = 10.minutes) {
             val llmModel = AnthropicModels.Sonnet_4_5
             Models.assumeAvailable(llmModel.provider)
-            val agent = AIAgent(
+
+            AIAgent(
                 promptExecutor = simpleAnthropicExecutor(anthropicApiKey),
                 llmModel = llmModel,
                 systemPrompt = "You are a calculator with access to the calculator tools. You MUST call tools!!!",
@@ -231,12 +225,7 @@ class AIAgentMultipleLLMIntegrationTest : AIAgentTestBase() {
                         }
                     }
                 }
-            )
-
-            val result = agent.run("calculate 10 plus 15, and then subtract 8")
-            println("result = $result")
-            result.shouldNotBeNull()
-            result.shouldContain("17")
+            ).run("calculate 10 plus 15, and then subtract 8") shouldNotBeNull { shouldContain("17") }
         }
     }
 
@@ -259,23 +248,24 @@ class AIAgentMultipleLLMIntegrationTest : AIAgentTestBase() {
                 maxAgentIterations = 20,
             )
 
-            val result = agent.run(
-                """
+            with(
+                agent.run(
+                    """
             I'm sending you an image encoded in base64 format.
 
             data:image/png,$base64Image
 
             Please analyze this image and identify the image format if possible.
             """
-            )
-
-            result.shouldNotBeBlank()
-            result.length shouldBeGreaterThan 20
-
-            val resultLowerCase = result.lowercase()
-            resultLowerCase.shouldNotContain("error processing")
-            resultLowerCase.shouldNotContain("unable to process")
-            resultLowerCase.shouldNotContain("cannot process")
+                )
+            ) {
+                shouldNotBeBlank()
+                length shouldBeGreaterThan 20
+                lowercase()
+                    .shouldNotContain("error processing")
+                    .shouldNotContain("unable to process")
+                    .shouldNotContain("cannot process")
+            }
         }
     }
 
@@ -319,14 +309,14 @@ class AIAgentMultipleLLMIntegrationTest : AIAgentTestBase() {
                 prompt = prompt,
             )
 
-            val result = agent.run("Hi! Please analyse my image.")
-            result.shouldNotBeBlank()
-            result.length shouldBeGreaterThan 20
-
-            val resultLowerCase = result.lowercase()
-            resultLowerCase.shouldNotContain("error processing")
-            resultLowerCase.shouldNotContain("unable to process")
-            resultLowerCase.shouldNotContain("cannot process")
+            with(agent.run("Hi! Please analyse my image.")) {
+                shouldNotBeBlank()
+                length shouldBeGreaterThan 20
+                lowercase()
+                    .shouldNotContain("error processing")
+                    .shouldNotContain("unable to process")
+                    .shouldNotContain("cannot process")
+            }
         }
     }
 }

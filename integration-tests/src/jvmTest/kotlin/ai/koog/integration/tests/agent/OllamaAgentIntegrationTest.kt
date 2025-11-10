@@ -168,13 +168,9 @@ class OllamaAgentIntegrationTest : AIAgentTestBase() {
     @Retry
     @Test
     fun ollama_testAgentClearContext() = runTest(timeout = 600.seconds) {
-        val strategy = createTestStrategy()
-        val toolRegistry = createToolRegistry()
-        val agent = createAgent(executor, strategy, toolRegistry)
-
-        val result = agent.run("What is the capital of France?")
-
-        result.shouldNotBeBlank()
-        result.shouldContain("Paris")
+        createAgent(executor, createTestStrategy(), createToolRegistry())
+            .run("What is the capital of France?")
+            .shouldNotBeBlank()
+            .shouldContain("Paris")
     }
 }

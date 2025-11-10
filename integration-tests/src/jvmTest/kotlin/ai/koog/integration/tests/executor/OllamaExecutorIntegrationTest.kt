@@ -24,6 +24,7 @@ import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.booleans.shouldNotBeTrue
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldNotBeBlank
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assumptions.assumeTrue
@@ -243,29 +244,28 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
         val modelCards = client.getModels()
 
         val modelCard = modelCards.findByNameOrNull(model.id)
-        modelCard.shouldNotBeNull()
+        modelCard shouldNotBe null
     }
 
     @Test
     fun `ollama_test get model`() = runTest(timeout = 600.seconds) {
-        val modelCard = client.getModelOrNull(model.id)
-        modelCard.shouldNotBeNull()
-
-        modelCard.name shouldBe model.id
-        modelCard.family shouldBe "llama"
-        modelCard.families shouldBe listOf("llama")
-        modelCard.size shouldBe 2019393189
-        modelCard.parameterCount shouldBe 3212749888
-        modelCard.contextLength shouldBe 131072
-        modelCard.embeddingLength shouldBe 3072
-        modelCard.quantizationLevel shouldBe "Q4_K_M"
-        modelCard.capabilities shouldBe listOf(
-            Completion,
-            Tools,
-            Temperature,
-            Schema.JSON.Basic,
-            Schema.JSON.Standard
-        )
+        client.getModelOrNull(model.id) shouldNotBeNull {
+            name shouldBe model.id
+            family shouldBe "llama"
+            families shouldBe listOf("llama")
+            size shouldBe 2019393189
+            parameterCount shouldBe 3212749888
+            contextLength shouldBe 131072
+            embeddingLength shouldBe 3072
+            quantizationLevel shouldBe "Q4_K_M"
+            capabilities shouldBe listOf(
+                Completion,
+                Tools,
+                Temperature,
+                Schema.JSON.Basic,
+                Schema.JSON.Standard
+            )
+        }
     }
 
     // Ollama-specific image processing test

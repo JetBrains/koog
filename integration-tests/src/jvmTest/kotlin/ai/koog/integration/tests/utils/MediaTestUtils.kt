@@ -1,7 +1,7 @@
 package ai.koog.integration.tests.utils
 
 import ai.koog.prompt.message.Message
-import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.comparables.shouldBeGreaterThan
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.string.shouldNotBeBlank
 import io.kotest.matchers.string.shouldNotContain
@@ -590,16 +590,16 @@ object MediaTestUtils {
     }
 
     fun checkExecutorMediaResponse(response: Message.Response) {
-        checkResponseBasic(response)
-        val responseLowerCase = response.content.lowercase()
-        responseLowerCase shouldNotContain "error processing"
-        responseLowerCase shouldNotContain "unable to process"
-        responseLowerCase shouldNotContain "cannot process"
+        with(response) {
+            checkResponseBasic(this)
+            content.lowercase() shouldNotContain "error processing" shouldNotContain "unable to process" shouldNotContain "cannot process"
+        }
     }
 
     fun checkResponseBasic(response: Message.Response) {
-        response.shouldNotBeNull()
-        response.content.shouldNotBeBlank()
-        (response.content.length > 20).shouldBeTrue()
+        response shouldNotBeNull {
+            content.shouldNotBeBlank()
+            content.length shouldBeGreaterThan 20
+        }
     }
 }
