@@ -339,7 +339,7 @@ open class AIAgentTestBase {
         }
 
         val tools = ToolRegistry {
-            buildSubgraphTools(fs).forEach { tool(it) }
+            tools(buildSubgraphTools(fs))
         }
 
         return AIAgent(
@@ -384,7 +384,7 @@ open class AIAgentTestBase {
             ToolRegistry {}
         } else {
             ToolRegistry {
-                subgraphTools.forEach { tool(it) }
+                tools(buildSubgraphTools(fs))
             }
         }
 
