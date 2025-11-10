@@ -10,6 +10,7 @@ import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreamingAndSendResults
 import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
 import ai.koog.agents.core.dsl.extension.onAssistantMessage
 import ai.koog.agents.core.dsl.extension.onToolCall
+import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionEventContext
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.eventHandler.eventString
 import ai.koog.agents.testing.tools.DummyTool
@@ -22,35 +23,35 @@ import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.utils.io.use
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
+import kotlin.test.assertFails
 
 class EventHandlerTest {
 
     @Test
-    fun `test event handler for agent without nodes and tools`() = runBlocking {
+    fun `test event handler for agent without nodes and tools`() = runTest {
         val eventsCollector = TestEventsCollector()
         val strategyName = "tracing-test-strategy"
         val agentResult = "Done"
+        val agentInput = "Hello, world!!!"
 
         val strategy = strategy<String, String>(strategyName) {
             edge(nodeStart forwardTo nodeFinish transformed { agentResult })
         }
 
-        val agent = createAgent(
+        createAgent(
             strategy = strategy,
             installFeatures = {
                 install(EventHandler, eventsCollector.eventHandlerFeatureConfig)
             }
-        )
-
-        val agentInput = "Hello, world!!!"
-        agent.run(agentInput)
-        agent.close()
+        ).use { agent ->
+            agent.run(agentInput)
+        }
 
         val runId = eventsCollector.runId
 
@@ -71,7 +72,7 @@ class EventHandlerTest {
     }
 
     @Test
-    fun `test event handler single node without tools`() = runBlocking {
+    fun `test event handler single node without tools`() = runTest {
         val eventsCollector = TestEventsCollector()
         val agentId = "test-agent-id"
 
@@ -146,7 +147,7 @@ class EventHandlerTest {
     }
 
     @Test
-    fun `test event handler single node with tools`() = runBlocking {
+    fun `test event handler single node with tools`() = runTest {
         val eventsCollector = TestEventsCollector()
 
         val promptId = "Test prompt Id"
@@ -194,7 +195,7 @@ class EventHandlerTest {
             assistantPrompt = assistantPrompt,
             temperature = temperature,
             toolRegistry = toolRegistry,
-            promptExecutor = mockExecutor,
+            executor = mockExecutor,
             model = model,
         ) {
             install(EventHandler, eventsCollector.eventHandlerFeatureConfig)
@@ -261,7 +262,7 @@ class EventHandlerTest {
     }
 
     @Test
-    fun `test event handler several nodes`() = runBlocking {
+    fun `test event handler several nodes`() = runTest {
         val eventsCollector = TestEventsCollector()
 
         val promptId = "Test prompt Id"
@@ -358,7 +359,7 @@ class EventHandlerTest {
     }
 
     @Test
-    fun `test event handler for agent with node execution error`() = runBlocking {
+    fun `test event handler for agent with node execution error`() = runTest {
         val eventsCollector = TestEventsCollector()
 
         val agentId = "test-agent-id"
@@ -397,7 +398,7 @@ class EventHandlerTest {
             "OnNodeExecutionStarting (run id: $runId, node: __start__, input: $agentInput)",
             "OnNodeExecutionCompleted (run id: $runId, node: __start__, input: $agentInput, output: $agentInput)",
             "OnNodeExecutionStarting (run id: $runId, node: $errorNodeName, input: $agentInput)",
-            "OnNodeExecutionFailed (run id: $runId, node: $errorNodeName, error: $testErrorMessage)",
+            "OnNodeExecutionFailed (run id: $runId, node: $errorNodeName, input: $agentInput, error: $testErrorMessage)",
             "OnAgentExecutionFailed (agent id: $agentId, run id: $runId, error: $testErrorMessage)",
             "OnAgentClosing (agent id: $agentId)",
         )
@@ -407,7 +408,7 @@ class EventHandlerTest {
     }
 
     @Test
-    fun `test event handler with multiple handlers`() = runBlocking {
+    fun `test event handler with multiple handlers`() = runTest {
         val collectedEvents = mutableListOf<String>()
         val strategyName = "tracing-test-strategy"
         val agentResult = "Done"
@@ -460,7 +461,7 @@ class EventHandlerTest {
 
     @Disabled
     @Test
-    fun testEventHandlerWithErrors() = runBlocking {
+    fun testEventHandlerWithErrors() = runTest {
         val eventsCollector = TestEventsCollector()
         val strategyName = "tracing-test-strategy"
 
@@ -486,7 +487,7 @@ class EventHandlerTest {
     }
 
     @Test
-    fun `test llm streaming events success`() = runBlocking {
+    fun `test llm streaming events success`() = runTest {
         val eventsCollector = TestEventsCollector()
 
         val model = OpenAIModels.Chat.GPT4o
@@ -514,7 +515,7 @@ class EventHandlerTest {
         createAgent(
             agentId = "test-agent-id",
             strategy = strategy,
-            promptExecutor = executor,
+            executor = executor,
             promptId = promptId,
             systemPrompt = systemPrompt,
             userPrompt = userPrompt,
@@ -549,7 +550,7 @@ class EventHandlerTest {
     }
 
     @Test
-    fun `test llm streaming events failure`() = runBlocking {
+    fun `test llm streaming events failure`() = runTest {
         val eventsCollector = TestEventsCollector()
 
         val promptId = "Test prompt Id"
@@ -599,7 +600,7 @@ class EventHandlerTest {
 
         createAgent(
             strategy = strategy,
-            promptExecutor = testStreamingExecutor,
+            executor = testStreamingExecutor,
             promptId = promptId,
             systemPrompt = systemPrompt,
             userPrompt = userPrompt,
@@ -634,6 +635,100 @@ class EventHandlerTest {
         assertContentEquals(expectedEvents, actualEvents)
     }
 
-    fun AIAgentSubgraphBuilderBase<*, *>.nodeException(name: String? = null): AIAgentNodeDelegate<String, Message.Response> =
+    @Test
+    fun `test subgraph execution events success`() = runTest {
+        val eventsCollector = TestEventsCollector()
+
+        val strategyName = "test-strategy"
+        val subgraphName = "test-subgraph"
+        val subgraphNodeName = "test-subgraph-node"
+        val subgraphOutput = "test-subgraph-output"
+        val inputRequest = "Test input"
+
+        val strategy = strategy<String, String>(strategyName) {
+            val subgraph by subgraph<String, String>(subgraphName) {
+                val subgraphNode by node<String, String>(subgraphNodeName) { subgraphOutput }
+                nodeStart then subgraphNode then nodeFinish
+            }
+            nodeStart then subgraph then nodeFinish
+        }
+
+        createAgent(
+            strategy = strategy,
+            installFeatures = {
+                install(EventHandler) eventHandlerConfig@{
+                    setEventFilter { context ->
+                        context is SubgraphExecutionEventContext
+                    }
+                    eventsCollector.eventHandlerFeatureConfig.invoke(this@eventHandlerConfig)
+                }
+            }
+        ).use { agent ->
+            agent.run(inputRequest)
+        }
+
+        val runId = eventsCollector.runId
+
+        val expectedEvents = listOf(
+            "OnSubgraphExecutionStarting (run id: $runId, subgraph: $subgraphName, input: $inputRequest)",
+            "OnSubgraphExecutionCompleted (run id: $runId, subgraph: $subgraphName, input: $inputRequest, output: $subgraphOutput)",
+        )
+
+        assertEquals(expectedEvents.size, eventsCollector.collectedEvents.size)
+        assertContentEquals(expectedEvents, eventsCollector.collectedEvents)
+    }
+
+    @Test
+    fun `test subgraph execution events failure`() = runTest {
+        val eventsCollector = TestEventsCollector()
+
+        val strategyName = "test-strategy"
+        val subgraphName = "test-subgraph"
+        val subgraphErrorNodeName = "test-subgraph-error-node"
+        val subgraphNodeErrorMessage = "Test subgraph error"
+        val inputRequest = "Test input"
+
+        val strategy = strategy<String, String>(strategyName) {
+            val subgraph by subgraph<String, String>(subgraphName) {
+                val nodeWithError by node<String, String>(subgraphErrorNodeName) {
+                    throw IllegalStateException(subgraphNodeErrorMessage)
+                }
+                nodeStart then nodeWithError then nodeFinish
+            }
+            nodeStart then subgraph then nodeFinish
+        }
+
+        val agentThrowable = createAgent(
+            strategy = strategy,
+            installFeatures = {
+                install(EventHandler) eventHandlerConfig@{
+                    setEventFilter { context ->
+                        context is SubgraphExecutionEventContext
+                    }
+                    eventsCollector.eventHandlerFeatureConfig.invoke(this@eventHandlerConfig)
+                }
+            }
+        ).use { agent ->
+            assertFails { agent.run(inputRequest) }
+        }
+
+        assertEquals(subgraphNodeErrorMessage, agentThrowable.message)
+
+        // Check captured events
+        val runId = eventsCollector.runId
+        val expectedEvents = listOf(
+            "OnSubgraphExecutionStarting (run id: $runId, subgraph: $subgraphName, input: $inputRequest)",
+            "OnSubgraphExecutionFailed (run id: $runId, subgraph: $subgraphName, input: $inputRequest, error: $subgraphNodeErrorMessage)",
+        )
+
+        assertEquals(expectedEvents.size, eventsCollector.collectedEvents.size)
+        assertContentEquals(expectedEvents, eventsCollector.collectedEvents)
+    }
+
+    //region Private Methods
+
+    private fun AIAgentSubgraphBuilderBase<*, *>.nodeException(name: String? = null): AIAgentNodeDelegate<String, Message.Response> =
         node(name) { throw IllegalStateException("Test exception") }
+
+    //endregion Private Methods
 }

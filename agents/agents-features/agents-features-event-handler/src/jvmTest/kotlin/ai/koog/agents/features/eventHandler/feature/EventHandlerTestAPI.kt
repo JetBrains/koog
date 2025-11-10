@@ -22,7 +22,7 @@ val testClock: Clock = object : Clock {
 fun createAgent(
     strategy: AIAgentGraphStrategy<String, String>,
     agentId: String = "test-agent-id",
-    promptExecutor: PromptExecutor? = null,
+    executor: PromptExecutor? = null,
     promptId: String? = null,
     systemPrompt: String? = null,
     userPrompt: String? = null,
@@ -48,7 +48,7 @@ fun createAgent(
 
     return AIAgent(
         id = agentId,
-        promptExecutor = promptExecutor ?: TestLLMExecutor(testClock),
+        promptExecutor = executor ?: TestLLMExecutor(testClock),
         strategy = strategy,
         agentConfig = agentConfig,
         toolRegistry = toolRegistry ?: ToolRegistry { },
