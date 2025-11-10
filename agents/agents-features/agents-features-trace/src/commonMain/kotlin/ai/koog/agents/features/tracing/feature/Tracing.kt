@@ -169,7 +169,7 @@ public class Tracing {
 
                 @OptIn(InternalAgentsApi::class)
                 val event = GraphStrategyStartingEvent(
-                    runId = eventContext.runId,
+                    runId = eventContext.context.runId,
                     strategyName = eventContext.strategy.name,
                     graph = strategy.startNodeToGraph(),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
@@ -179,7 +179,7 @@ public class Tracing {
 
             pipeline.interceptStrategyCompleted(this) intercept@{ eventContext ->
                 val event = StrategyCompletedEvent(
-                    runId = eventContext.runId,
+                    runId = eventContext.context.runId,
                     strategyName = eventContext.strategy.name,
                     result = eventContext.result?.toString(),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
@@ -297,7 +297,7 @@ public class Tracing {
                     runId = eventContext.runId,
                     callId = eventContext.callId,
                     prompt = eventContext.prompt,
-                    model = eventContext.model.toModelInfo().modelIdentifierName,
+                    model = eventContext.model.toModelInfo(),
                     tools = eventContext.tools.map { it.name },
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
@@ -309,7 +309,7 @@ public class Tracing {
                     runId = eventContext.runId,
                     callId = eventContext.callId,
                     prompt = eventContext.prompt,
-                    model = eventContext.model.toModelInfo().modelIdentifierName,
+                    model = eventContext.model.toModelInfo(),
                     tools = eventContext.tools.map { it.name },
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )

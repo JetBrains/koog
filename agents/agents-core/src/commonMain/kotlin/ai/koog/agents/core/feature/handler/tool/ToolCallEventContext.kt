@@ -12,6 +12,8 @@ public interface ToolCallEventContext : AgentLifecycleEventContext
 /**
  * Represents the context for handling a tool call event.
  *
+ * @property runId The unique identifier for this tool call session.
+ * @property toolCallId The unique identifier for this tool call.
  * @property tool The tool instance that is being executed. It encapsulates the logic and metadata for the operation.
  * @property toolArgs The arguments provided for the tool execution, adhering to the tool's expected input structure.
  */
@@ -27,9 +29,11 @@ public data class ToolCallStartingContext(
 /**
  * Represents the context for handling validation errors that occur during the execution of a tool.
  *
- * @param tool The tool instance associated with the validation error.
- * @param toolArgs The arguments passed to the tool when the error occurred.
- * @param error The error message describing the validation issue.
+ * @property runId The unique identifier for this tool call session.
+ * @property toolCallId The unique identifier for this tool call.
+ * @property tool The tool instance associated with the validation error.
+ * @property toolArgs The arguments passed to the tool when the error occurred.
+ * @property error The error message describing the validation issue.
  */
 public data class ToolValidationFailedContext(
     val runId: String,
@@ -44,9 +48,11 @@ public data class ToolValidationFailedContext(
 /**
  * Represents the context provided to handle a failure during the execution of a tool.
  *
- * @param tool The tool that was being executed when the failure occurred.
- * @param toolArgs The arguments that were passed to the tool during execution.
- * @param throwable The exception or error that caused the failure.
+ * @property runId The unique identifier for this tool call session.
+ * @property toolCallId The unique identifier for this tool call.
+ * @property tool The tool that was being executed when the failure occurred.
+ * @property toolArgs The arguments that were passed to the tool during execution.
+ * @property throwable The exception or error that caused the failure.
  */
 public data class ToolCallFailedContext(
     val runId: String,
@@ -61,9 +67,11 @@ public data class ToolCallFailedContext(
 /**
  * Represents the context used when handling the result of a tool call.
  *
- * @param tool The tool being executed, which defines the operation to be performed.
- * @param toolArgs The arguments required by the tool for execution.
- * @param result An optional result produced by the tool after execution can be null if not applicable.
+ * @property runId The unique identifier for this tool call session.
+ * @property toolCallId The unique identifier for this tool call.
+ * @property tool The tool being executed, which defines the operation to be performed.
+ * @property toolArgs The arguments required by the tool for execution.
+ * @property result An optional result produced by the tool after execution can be null if not applicable.
  */
 public data class ToolCallCompletedContext(
     val runId: String,

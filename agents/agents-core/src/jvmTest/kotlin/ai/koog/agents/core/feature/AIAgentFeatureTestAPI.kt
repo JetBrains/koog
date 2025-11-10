@@ -265,7 +265,7 @@ internal object AIAgentFeatureTestAPI {
             ),
             params = LLMParams()
         ),
-        model = mockLLModel.toModelInfo().modelIdentifierName,
+        model = mockLLModel.toModelInfo(),
         tools = listOf("test-tool"),
         timestamp = testClock.now().toEpochMilliseconds()
     )
@@ -301,7 +301,7 @@ internal object AIAgentFeatureTestAPI {
             ),
             params = LLMParams()
         ),
-        model = mockLLModel.toModelInfo().modelIdentifierName,
+        model = mockLLModel.toModelInfo(),
         tools = listOf("test-tool"),
         timestamp = testClock.now().toEpochMilliseconds()
     )

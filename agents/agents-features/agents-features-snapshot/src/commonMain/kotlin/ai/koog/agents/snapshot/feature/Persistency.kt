@@ -151,9 +151,9 @@ public class Persistence(
 
             pipeline.interceptStrategyCompleted(this) { ctx ->
                 if (config.enableAutomaticPersistence && config.rollbackStrategy == RollbackStrategy.Default) {
-                    val parent = persistence.getLatestCheckpoint(ctx.agentId)
+                    val parent = persistence.getLatestCheckpoint(ctx.context.agentId)
                     persistence.createTombstoneCheckpoint(
-                        ctx.agentId,
+                        ctx.context.agentId,
                         persistence.clock.now(),
                         parent?.version?.plus(1) ?: 0L
                     )

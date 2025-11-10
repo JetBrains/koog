@@ -1,6 +1,5 @@
 package ai.koog.agents.core.feature.handler.node
 
-import ai.koog.agents.core.agent.context.AIAgentGraphContext
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventContext
@@ -51,19 +50,13 @@ public data class NodeExecutionCompletedContext(
 }
 
 /**
- * Represents the context for handling errors during the execution of an AI agent node.
+ * Represents the context for handling errors during the execution of a node.
  *
- * This context is typically used to capture information about the execution state and the
- * error that occurred during the lifecycle of an AI agent node in a strategy graph. It provides
- * details such as the identifier of the current run, the node where the error occurred, the
- * execution context, and the specific error itself.
- *
- * @property node The AI agent node where the error occurred. This is an instance of [AIAgentNodeBase].
- * @property context The execution context, encapsulated by [AIAgentGraphContext], which provides
- * runtime information and utilities for executing the node.
- * @property input The input data provided to the node.
+ * @property node The node where the error occurred.
+ * @property context The stage context in which the node experienced the error.
+ * @property input The input data for the node execution.
  * @property inputType [KType] representing the type of the [input].
- * @property throwable The exception or error encountered during the node execution.
+ * @property throwable The exception or error that occurred during node execution.
  */
 public data class NodeExecutionFailedContext(
     val node: AIAgentNodeBase<*, *>,
