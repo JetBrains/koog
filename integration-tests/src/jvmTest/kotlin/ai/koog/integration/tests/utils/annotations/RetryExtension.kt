@@ -16,6 +16,7 @@ class RetryExtension : InvocationInterceptor {
         private const val ANTHROPIC_502_ERROR = "Error from Anthropic API: 502 Bad Gateway"
         private const val OPENAI_500_ERROR = "Error from OpenAI API: 500 Internal Server Error"
         private const val OPENAI_503_ERROR = "Error from OpenAI API: 503 Service Unavailable"
+        private const val MISTRAL_503_ERROR = "Error from MistralAILLMClient API: 503 Service Unavailable"
     }
 
     private fun isThirdPartyError(e: Throwable): Boolean {
@@ -27,7 +28,8 @@ class RetryExtension : InvocationInterceptor {
                 GOOGLE_503_ERROR,
                 ANTHROPIC_502_ERROR,
                 OPENAI_500_ERROR,
-                OPENAI_503_ERROR
+                OPENAI_503_ERROR,
+                MISTRAL_503_ERROR,
             )
         return e.message?.let { message -> message in errorMessages } == true
     }
@@ -47,8 +49,7 @@ class RetryExtension : InvocationInterceptor {
         var lastException: Throwable? = null
         var attempt = 0
 
-        while
-            (attempt < retry.times) {
+        while (attempt < retry.times) {
             attempt++
             try {
                 println("[DEBUG_LOG] Test '${extensionContext.displayName}' - attempt $attempt of ${retry.times}")
