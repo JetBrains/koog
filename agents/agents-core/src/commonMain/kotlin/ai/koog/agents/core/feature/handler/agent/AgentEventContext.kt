@@ -22,6 +22,8 @@ public interface AgentEventContext : AgentLifecycleEventContext
  * Represents the context available during the start of an AI agent.
  *
  * @property agent The AI agent associated with this context.
+ * @property runId The identifier for the session in which the agent is being executed.
+ * @property context The context associated with the agent's execution.
  */
 public data class AgentStartingContext(
     public val agent: AIAgent<*, *>,

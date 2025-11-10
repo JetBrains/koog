@@ -45,16 +45,16 @@ class TestEventsCollector {
         }
 
         onStrategyStarting { eventContext ->
-            updateRunId(eventContext.runId)
+            updateRunId(eventContext.context.runId)
             _collectedEvents.add(
                 "OnStrategyStarting (run id: ${eventContext.runId}, strategy: ${eventContext.strategy.name})"
             )
         }
 
         onStrategyCompleted { eventContext ->
-            updateRunId(eventContext.runId)
+            updateRunId(eventContext.context.runId)
             _collectedEvents.add(
-                "OnStrategyCompleted (run id: ${eventContext.runId}, strategy: ${eventContext.strategy.name}, result: ${eventContext.result})"
+                "OnStrategyCompleted (run id: ${eventContext.context.runId}, strategy: ${eventContext.strategy.name}, result: ${eventContext.result})"
             )
         }
 

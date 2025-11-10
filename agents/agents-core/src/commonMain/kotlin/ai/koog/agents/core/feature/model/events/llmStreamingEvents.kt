@@ -1,6 +1,7 @@
 package ai.koog.agents.core.feature.model.events
 
 import ai.koog.agents.core.feature.model.AIAgentError
+import ai.koog.agents.utils.ModelInfo
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.streaming.StreamFrame
 import kotlinx.datetime.Clock
@@ -23,10 +24,28 @@ public data class LLMStreamingStartingEvent(
     val runId: String,
     val callId: String,
     val prompt: Prompt,
-    val model: String,
+    val model: ModelInfo,
     val tools: List<String>,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
-) : DefinedFeatureEvent()
+) : DefinedFeatureEvent() {
+
+    /**
+     * @deprecated Use constructor with model parameter of type [ModelInfo]:
+     *             LLMStreamingStartingEvent(runId, callId, prompt, model, tools, timestamp)
+     */
+    @Deprecated(
+        message = "Please use constructor with model parameter of type [ModelInfo]: LLMStreamingStartingEvent(runId, callId, prompt, model, tools, timestamp)",
+        replaceWith = ReplaceWith("LLMStreamingStartingEvent(runId, callId, prompt, model, tools, timestamp)")
+    )
+    public constructor(
+        runId: String,
+        callId: String,
+        prompt: Prompt,
+        model: String,
+        tools: List<String>,
+        timestamp: Long = Clock.System.now().toEpochMilliseconds()
+    ) : this(runId, callId, prompt, ModelInfo.fromString(model), tools, timestamp)
+}
 
 /**
  * Event representing the receipt of a streaming frame from a Language Learning Model (LLM).
@@ -82,7 +101,25 @@ public data class LLMStreamingCompletedEvent(
     val runId: String,
     val callId: String,
     val prompt: Prompt,
-    val model: String,
+    val model: ModelInfo,
     val tools: List<String>,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
-) : DefinedFeatureEvent()
+) : DefinedFeatureEvent() {
+
+    /**
+     * @deprecated Use constructor with model parameter of type [ModelInfo]:
+     *             LLMStreamingCompletedEvent(runId, callId, prompt, model, tools, timestamp)
+     */
+    @Deprecated(
+        message = "Please use constructor with model parameter of type [ModelInfo]: LLMStreamingCompletedEvent(runId, callId, prompt, model, tools, timestamp)",
+        replaceWith = ReplaceWith("LLMStreamingCompletedEvent(runId, callId, prompt, model, tools, timestamp)")
+    )
+    public constructor(
+        runId: String,
+        callId: String,
+        prompt: Prompt,
+        model: String,
+        tools: List<String>,
+        timestamp: Long = Clock.System.now().toEpochMilliseconds()
+    ) : this(runId, callId, prompt, ModelInfo.fromString(model), tools, timestamp)
+}

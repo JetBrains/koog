@@ -222,13 +222,8 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
         agent: AIAgent<*, *>,
         context: AIAgentContext
     ) {
+        val eventContext = AgentStartingContext(agent, runId, context)
         agentEventHandlers.values.forEach { handler ->
-            val eventContext =
-                AgentStartingContext(
-                    agent = agent,
-                    runId = runId,
-                    context = context
-                )
             handler.handleAgentStarting(eventContext)
         }
     }
@@ -245,8 +240,7 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
         runId: String,
         result: Any?
     ) {
-        val eventContext =
-            AgentCompletedContext(agentId = agentId, runId = runId, result = result)
+        val eventContext = AgentCompletedContext(agentId = agentId, runId = runId, result = result)
         agentEventHandlers.values.forEach { handler -> handler.agentCompletedHandler.handle(eventContext) }
     }
 
@@ -294,8 +288,8 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
         agent: GraphAIAgent<*, *>,
         baseEnvironment: AIAgentEnvironment
     ): AIAgentEnvironment {
+        val eventContext = AgentEnvironmentTransformingContext(strategy = strategy, agent = agent)
         return agentEventHandlers.values.fold(baseEnvironment) { environment, handler ->
-            val eventContext = AgentEnvironmentTransformingContext(strategy = strategy, agent = agent)
             handler.transformEnvironment(eventContext, environment)
         }
     }
@@ -312,14 +306,8 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
      */
     @OptIn(InternalAgentsApi::class)
     public suspend fun onStrategyStarting(strategy: AIAgentStrategy<*, *, *>, context: AIAgentContext) {
-        strategyEventHandlers.values.forEach { handler ->
-            val eventContext = StrategyStartingContext(
-                runId = context.runId,
-                strategy = strategy,
-                context = context
-            )
-            handler.handleStrategyStarting(eventContext)
-        }
+        val eventContext = StrategyStartingContext(strategy, context)
+        strategyEventHandlers.values.forEach { handler -> handler.handleStrategyStarting(eventContext) }
     }
 
     /**
@@ -336,16 +324,8 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
         result: Any?,
         resultType: KType,
     ) {
-        strategyEventHandlers.values.forEach { handler ->
-            val eventContext = StrategyCompletedContext(
-                runId = context.runId,
-                strategy = strategy,
-                result = result,
-                resultType = resultType,
-                agentId = context.agentId
-            )
-            handler.handleStrategyCompleted(eventContext)
-        }
+        val eventContext = StrategyCompletedContext(strategy, context, result, resultType,)
+        strategyEventHandlers.values.forEach { handler -> handler.handleStrategyCompleted(eventContext) }
     }
 
     //endregion Trigger Strategy Handlers
@@ -355,6 +335,7 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
     /**
      * Notifies all registered LLM handlers before a language model call is made.
      *
+     * @param runId The unique identifier for the current run.
      * @param callId The unique identifier for the LLM call
      * @param prompt The prompt that will be sent to the language model
      * @param tools The list of tool descriptors available for the LLM call
@@ -396,6 +377,7 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
      * Notifies all registered tool handlers when a tool is called.
      *
      * @param runId The unique identifier for the current run.
+     * @param toolCallId The unique identifier for the current tool call.
      * @param tool The tool that is being called
      * @param toolArgs The arguments provided to the tool
      */
@@ -419,8 +401,7 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
         toolArgs: Any?,
         error: String
     ) {
-        val eventContext =
-            ToolValidationFailedContext(runId, toolCallId, tool, toolArgs, error)
+        val eventContext = ToolValidationFailedContext(runId, toolCallId, tool, toolArgs, error)
         toolCallEventHandlers.values.forEach { handler -> handler.toolValidationErrorHandler.handle(eventContext) }
     }
 
@@ -428,6 +409,7 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
      * Notifies all registered tool handlers when a tool call fails with an exception.
      *
      * @param runId The unique identifier for the current run.
+     * @param toolCallId The unique identifier for the current tool call.
      * @param tool The tool that failed
      * @param toolArgs The arguments provided to the tool
      * @param throwable The exception that caused the failure
@@ -447,6 +429,7 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
      * Notifies all registered tool handlers about the result of a tool call.
      *
      * @param runId The unique identifier for the current run.
+     * @param toolCallId The unique identifier for the current tool call.
      * @param tool The tool that was called
      * @param toolArgs The arguments that were provided to the tool
      * @param result The result produced by the tool, or null if no result was produced
@@ -501,11 +484,7 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
      */
     public suspend fun onLLMStreamingFrameReceived(runId: String, callId: String, streamFrame: StreamFrame) {
         val eventContext = LLMStreamingFrameReceivedContext(runId, callId, streamFrame)
-        llmStreamingEventHandlers.values.forEach { handler ->
-            handler.llmStreamingFrameReceivedHandler.handle(
-                eventContext
-            )
-        }
+        llmStreamingEventHandlers.values.forEach { handler -> handler.llmStreamingFrameReceivedHandler.handle(eventContext) }
     }
 
     /**

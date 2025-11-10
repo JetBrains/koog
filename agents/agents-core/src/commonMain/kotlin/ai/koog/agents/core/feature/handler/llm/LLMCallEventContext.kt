@@ -16,9 +16,10 @@ public interface LLMCallEventContext : AgentLifecycleEventContext
 /**
  * Represents the context for handling a before LLM call event.
  *
+ * @property runId The unique identifier for this LLM call session.
  * @property prompt The prompt that will be sent to the language model.
- * @property tools The list of tool descriptors available for the LLM call.
  * @property model The language model instance being used.
+ * @property tools The list of tool descriptors available for the LLM call.
  */
 public data class LLMCallStartingContext(
     val runId: String,
@@ -33,10 +34,12 @@ public data class LLMCallStartingContext(
 /**
  * Represents the context for handling an after LLM call event.
  *
+ * @property runId The unique identifier for this LLM call session.
  * @property prompt The prompt that was sent to the language model.
- * @property tools The list of tool descriptors that were available for the LLM call.
  * @property model The language model instance that was used.
+ * @property tools The list of tool descriptors that were available for the LLM call.
  * @property responses The response messages received from the language model.
+ * @property moderationResponse The moderation response, if any, received from the language model.
  */
 public data class LLMCallCompletedContext(
     val runId: String,

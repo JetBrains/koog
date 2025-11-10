@@ -393,7 +393,7 @@ class TraceFeatureMessageTestWriterTest {
                         runId = writer.runId,
                         callId = callIds[0],
                         prompt = expectedPrompt,
-                        model = model.toModelInfo().modelIdentifierName,
+                        model = model.toModelInfo(),
                         tools = toolRegistry.tools.map { it.name },
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),
@@ -407,7 +407,7 @@ class TraceFeatureMessageTestWriterTest {
                         runId = writer.runId,
                         callId = callIds[0],
                         prompt = expectedPrompt,
-                        model = model.toModelInfo().modelIdentifierName,
+                        model = model.toModelInfo(),
                         tools = toolRegistry.tools.map { it.name },
                         timestamp = testClock.now().toEpochMilliseconds()
                     )
@@ -516,7 +516,7 @@ class TraceFeatureMessageTestWriterTest {
                         runId = writer.runId,
                         callId = callIds[0],
                         prompt = expectedPrompt,
-                        model = model.toModelInfo().modelIdentifierName,
+                        model = model.toModelInfo(),
                         tools = toolRegistry.tools.map { it.name },
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),
@@ -530,7 +530,7 @@ class TraceFeatureMessageTestWriterTest {
                         runId = writer.runId,
                         callId = callIds[0],
                         prompt = expectedPrompt,
-                        model = model.toModelInfo().modelIdentifierName,
+                        model = model.toModelInfo(),
                         tools = toolRegistry.tools.map { it.name },
                         timestamp = testClock.now().toEpochMilliseconds()
                     )
