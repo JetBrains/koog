@@ -73,6 +73,25 @@ Key points:
 - You can change the filter at runtime by calling setEventFilter again; the new predicate is applied to subsequent events.
 - This event-level filter composes with per-processor setMessageFilter. Both must allow the item for it to be processed and emitted.
 
+### Disabling event filtering for a feature
+
+Some features rely on receiving the complete sequence of agent lifecycle events to function correctly. For such features, the `setEventFilter` method can be overridden in the feature's configuration class to prevent event filtering.
+
+To disable event filtering for a custom feature:
+
+```kotlin
+class MyFeatureConfig : FeatureConfig() {
+    override fun setEventFilter(filter: (AgentLifecycleEventContext) -> Boolean) {
+        // Log a warning and ignore the filter
+        logger.warn { "Events filtering is not allowed for MyFeature." }
+        // Always allow all events
+        super.setEventFilter { true }
+    }
+}
+```
+
+This pattern is used by features like OpenTelemetry and Debugger, which depend on the execution flow and event hierarchy to produce correct spans and debugging information.
+
 Example: allow only LLM call start/end events for a feature
 ```kotlin
 install(TraceFeature) {
@@ -459,6 +478,27 @@ Features can intercept various points in the agent execution pipeline:
     ```kotlin
     pipeline.interceptLLMCallCompleted(interceptContext) { eventContext ->
         logger.info("Received ${eventContext.responses.size} responses (tools used: ${eventContext.tools.size})")
+    }
+    ```
+
+11. **Subgraph Execution Starting**: Execute code before a subgraph runs
+    ```kotlin
+    pipeline.interceptSubgraphExecutionStarting(interceptContext) { eventContext ->
+        logger.info("Subgraph ${eventContext.subgraph.name} is about to execute with input: ${eventContext.input}")
+    }
+    ```
+
+12. **Subgraph Execution Completed**: Execute code after a subgraph completes
+    ```kotlin
+    pipeline.interceptSubgraphExecutionCompleted(interceptContext) { eventContext ->
+        logger.info("Subgraph ${eventContext.subgraph.name} executed with input: ${eventContext.input} and produced output: ${eventContext.output}")
+    }
+    ```
+
+13. **Subgraph Execution Failed**: Handle errors when a subgraph execution fails
+    ```kotlin
+    pipeline.interceptSubgraphExecutionFailed(interceptContext) { eventContext ->
+        logger.error("Subgraph ${eventContext.subgraph.name} execution failed with error: ${eventContext.throwable}")
     }
     ```
 
