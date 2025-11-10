@@ -12,6 +12,9 @@ import ai.koog.agents.core.feature.handler.node.NodeExecutionStartingContext
 import ai.koog.agents.core.feature.handler.streaming.LLMStreamingCompletedContext
 import ai.koog.agents.core.feature.handler.streaming.LLMStreamingFrameReceivedContext
 import ai.koog.agents.core.feature.handler.streaming.LLMStreamingStartingContext
+import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionCompletedContext
+import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionFailedContext
+import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionStartingContext
 import ai.koog.agents.core.feature.handler.tool.ToolCallCompletedContext
 import ai.koog.agents.core.feature.handler.tool.ToolCallFailedContext
 import ai.koog.agents.core.feature.handler.tool.ToolCallStartingContext
@@ -99,6 +102,18 @@ public class EventHandler {
 
             pipeline.interceptNodeExecutionFailed(this) intercept@{ eventContext: NodeExecutionFailedContext ->
                 config.invokeOnNodeExecutionFailed(eventContext)
+            }
+
+            pipeline.interceptSubgraphExecutionStarting(this) intercept@{ eventContext: SubgraphExecutionStartingContext ->
+                config.invokeOnSubgraphExecutionStarting(eventContext)
+            }
+
+            pipeline.interceptSubgraphExecutionCompleted(this) intercept@{ eventContext: SubgraphExecutionCompletedContext ->
+                config.invokeOnSubgraphExecutionCompleted(eventContext)
+            }
+
+            pipeline.interceptSubgraphExecutionFailed(this) intercept@{ eventContext: SubgraphExecutionFailedContext ->
+                config.invokeOnSubgraphExecutionFailed(eventContext)
             }
         }
 

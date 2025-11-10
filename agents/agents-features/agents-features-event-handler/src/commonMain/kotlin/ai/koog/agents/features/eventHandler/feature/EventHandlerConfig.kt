@@ -31,6 +31,9 @@ import ai.koog.agents.core.feature.handler.streaming.LLMStreamingCompletedContex
 import ai.koog.agents.core.feature.handler.streaming.LLMStreamingFailedContext
 import ai.koog.agents.core.feature.handler.streaming.LLMStreamingFrameReceivedContext
 import ai.koog.agents.core.feature.handler.streaming.LLMStreamingStartingContext
+import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionCompletedContext
+import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionFailedContext
+import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionStartingContext
 import ai.koog.agents.core.feature.handler.tool.ToolCallCompletedContext
 import ai.koog.agents.core.feature.handler.tool.ToolCallFailedContext
 import ai.koog.agents.core.feature.handler.tool.ToolCallStartingContext
@@ -90,6 +93,16 @@ public class EventHandlerConfig : FeatureConfig() {
     private var _onNodeExecutionFailed: suspend (eventHandler: NodeExecutionFailedContext) -> Unit = { _ -> }
 
     //endregion Private Node Handlers
+
+    //region Private Subgraph Handlers
+
+    private var _onSubgraphExecutionStarting: suspend (eventHandler: SubgraphExecutionStartingContext) -> Unit = { _ -> }
+
+    private var _onSubgraphExecutionCompleted: suspend (eventHandler: SubgraphExecutionCompletedContext) -> Unit = { _ -> }
+
+    private var _onSubgraphExecutionFailed: suspend (eventHandler: SubgraphExecutionFailedContext) -> Unit = { _ -> }
+
+    //endregion Private Subgraph Handlers
 
     //region Private LLM Call Handlers
 
@@ -234,6 +247,43 @@ public class EventHandlerConfig : FeatureConfig() {
     }
 
     //endregion Node Handlers
+
+    //region Subgraph Handlers
+
+    /**
+     * Append handler called before a subgraph in the agent's execution graph is processed.
+     */
+    public fun onSubgraphExecutionStarting(handler: suspend (eventContext: SubgraphExecutionStartingContext) -> Unit) {
+        val originalHandler = this._onSubgraphExecutionStarting
+        this._onSubgraphExecutionStarting = { eventContext ->
+            originalHandler(eventContext)
+            handler.invoke(eventContext)
+        }
+    }
+
+    /**
+     * Append handler called after a subgraph in the agent's execution graph has been processed.
+     */
+    public fun onSubgraphExecutionCompleted(handler: suspend (eventContext: SubgraphExecutionCompletedContext) -> Unit) {
+        val originalHandler = this._onSubgraphExecutionCompleted
+        this._onSubgraphExecutionCompleted = { eventContext ->
+            originalHandler(eventContext)
+            handler.invoke(eventContext)
+        }
+    }
+
+    /**
+     * Append handler called when an error occurs during the execution of a subgraph.
+     */
+    public fun onSubgraphExecutionFailed(handler: suspend (eventContext: SubgraphExecutionFailedContext) -> Unit) {
+        val originalHandler = this._onSubgraphExecutionFailed
+        this._onSubgraphExecutionFailed = { eventContext ->
+            originalHandler(eventContext)
+            handler.invoke(eventContext)
+        }
+    }
+
+    //endregion Subgraph Handlers
 
     //region LLM Call Handlers
 
@@ -658,6 +708,31 @@ public class EventHandlerConfig : FeatureConfig() {
     }
 
     //endregion Invoke Node Handlers
+
+    //region Invoke Subgraph Handlers
+
+    /**
+     * Invoke handlers for before a subgraph in the agent's execution graph is processed event.
+     */
+    internal suspend fun invokeOnSubgraphExecutionStarting(eventContext: SubgraphExecutionStartingContext) {
+        _onSubgraphExecutionStarting.invoke(eventContext)
+    }
+
+    /**
+     * Invoke handlers for after a subgraph in the agent's execution graph has been processed event.
+     */
+    internal suspend fun invokeOnSubgraphExecutionCompleted(eventContext: SubgraphExecutionCompletedContext) {
+        _onSubgraphExecutionCompleted.invoke(eventContext)
+    }
+
+    /**
+     * Invokes the error handling logic for a subgraph execution error event.
+     */
+    internal suspend fun invokeOnSubgraphExecutionFailed(interceptContext: SubgraphExecutionFailedContext) {
+        _onSubgraphExecutionFailed.invoke(interceptContext)
+    }
+
+    //endregion Invoke Subgraph Handlers
 
     //region Invoke LLM Call Handlers
 

@@ -83,7 +83,7 @@ private suspend fun mockStreaming(
     val eventsCollector = TestEventsCollector()
     val agent: AIAgent<String, String> = createAgent(
         strategy = strategy,
-        promptExecutor = getMockExecutor(clock = testClock) { buildLlmMock() }
+        executor = getMockExecutor(clock = testClock) { buildLlmMock() }
     ) {
         install(EventHandler, eventsCollector.eventHandlerFeatureConfig)
     }
