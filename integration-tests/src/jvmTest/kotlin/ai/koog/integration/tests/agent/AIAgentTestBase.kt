@@ -247,6 +247,13 @@ open class AIAgentTestBase {
         eventsChannel: Channel<ReportingLLMClient.Event>
     ) = ReportingLLMClient(eventsChannel, this)
 
+    protected fun buildSubgraphTools(fs: MockFileSystem) = listOf(
+        CreateFile(fs),
+        ReadFile(fs),
+        ListFiles(fs),
+        DeleteFile(fs),
+    )
+
     @OptIn(DelicateCoroutinesApi::class)
     protected fun createTestMultiLLMAgent(
         fs: MockFileSystem,
@@ -332,10 +339,7 @@ open class AIAgentTestBase {
         }
 
         val tools = ToolRegistry {
-            tool(CreateFile(fs))
-            tool(DeleteFile(fs))
-            tool(ReadFile(fs))
-            tool(ListFiles(fs))
+            buildSubgraphTools(fs).forEach { tool(it) }
         }
 
         return AIAgent(
@@ -362,12 +366,7 @@ open class AIAgentTestBase {
             LLMProvider.Anthropic to anthropicClient
         )
 
-        val subgraphTools = listOf(
-            CreateFile(fs),
-            ReadFile(fs),
-            ListFiles(fs),
-            DeleteFile(fs),
-        )
+        val subgraphTools = buildSubgraphTools(fs)
 
         val strategy = strategy<String, String>("test-subgraph-only-tools") {
             val fileOperationsSubgraph by subgraphWithTask<String, String>(
