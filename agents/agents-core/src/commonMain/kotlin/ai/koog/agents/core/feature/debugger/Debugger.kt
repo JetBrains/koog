@@ -24,6 +24,9 @@ import ai.koog.agents.core.feature.model.events.NodeExecutionCompletedEvent
 import ai.koog.agents.core.feature.model.events.NodeExecutionFailedEvent
 import ai.koog.agents.core.feature.model.events.NodeExecutionStartingEvent
 import ai.koog.agents.core.feature.model.events.StrategyCompletedEvent
+import ai.koog.agents.core.feature.model.events.SubgraphExecutionCompletedEvent
+import ai.koog.agents.core.feature.model.events.SubgraphExecutionFailedEvent
+import ai.koog.agents.core.feature.model.events.SubgraphExecutionStartingEvent
 import ai.koog.agents.core.feature.model.events.ToolCallCompletedEvent
 import ai.koog.agents.core.feature.model.events.ToolCallFailedEvent
 import ai.koog.agents.core.feature.model.events.ToolCallStartingEvent
@@ -376,7 +379,7 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
                 val event = NodeExecutionStartingEvent(
                     runId = eventContext.context.runId,
                     nodeName = eventContext.node.name,
-                    input = getNodeData(eventContext.input, eventContext.inputType),
+                    input = nodeDataToJsonElement(eventContext.input, eventContext.inputType),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 writer.onMessage(event)
@@ -387,8 +390,8 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
                 val event = NodeExecutionCompletedEvent(
                     runId = eventContext.context.runId,
                     nodeName = eventContext.node.name,
-                    input = getNodeData(eventContext.input, eventContext.inputType),
-                    output = getNodeData(eventContext.output, eventContext.outputType),
+                    input = nodeDataToJsonElement(eventContext.input, eventContext.inputType),
+                    output = nodeDataToJsonElement(eventContext.output, eventContext.outputType),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 writer.onMessage(event)
@@ -398,7 +401,7 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
                 val event = NodeExecutionFailedEvent(
                     runId = eventContext.context.runId,
                     nodeName = eventContext.node.name,
-                    input = getNodeData(eventContext.input, eventContext.inputType),
+                    input = nodeDataToJsonElement(eventContext.input, eventContext.inputType),
                     error = eventContext.throwable.toAgentError(),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
@@ -406,6 +409,42 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
             }
 
             //endregion Intercept Node Events
+
+            //region Intercept Subgraph Events
+
+            pipeline.interceptSubgraphExecutionStarting(this) intercept@{ eventContext ->
+                val event = SubgraphExecutionStartingEvent(
+                    runId = eventContext.context.runId,
+                    subgraphName = eventContext.subgraph.name,
+                    input = nodeDataToJsonElement(eventContext.input, eventContext.inputType),
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
+                )
+                writer.onMessage(event)
+            }
+
+            pipeline.interceptSubgraphExecutionCompleted(this) intercept@{ eventContext ->
+                val event = SubgraphExecutionCompletedEvent(
+                    runId = eventContext.context.runId,
+                    subgraphName = eventContext.subgraph.name,
+                    input = nodeDataToJsonElement(eventContext.input, eventContext.inputType),
+                    output = nodeDataToJsonElement(eventContext.output, eventContext.outputType),
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
+                )
+                writer.onMessage(event)
+            }
+
+            pipeline.interceptSubgraphExecutionFailed(this) intercept@{ eventContext ->
+                val event = SubgraphExecutionFailedEvent(
+                    runId = eventContext.context.runId,
+                    subgraphName = eventContext.subgraph.name,
+                    input = nodeDataToJsonElement(eventContext.input, eventContext.inputType),
+                    error = eventContext.throwable.toAgentError(),
+                    timestamp = pipeline.clock.now().toEpochMilliseconds()
+                )
+                writer.onMessage(event)
+            }
+
+            //endregion Intercept Subgraph Events
         }
 
         private fun installFunctionalPipeline(
@@ -438,7 +477,7 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
         /**
          * Retrieves the JSON representation of the given data based on its type.
          */
-        private fun getNodeData(data: Any?, dataType: KType): JsonElement? {
+        private fun nodeDataToJsonElement(data: Any?, dataType: KType): JsonElement? {
             data ?: return null
 
             @OptIn(InternalAgentsApi::class)

@@ -37,7 +37,6 @@ kotlin {
 
         commonTest {
             dependencies {
-                implementation(project(":agents:agents-features:agents-features-event-handler"))
                 implementation(project(":agents:agents-test"))
                 implementation(project(":test-utils"))
             }
