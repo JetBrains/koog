@@ -1,8 +1,9 @@
 package ai.koog.agents.core.feature.pipeline
 
-import ai.koog.agents.core.agent.context.AIAgentContext
+import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.entity.AIAgentNodeBase
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
+import ai.koog.agents.core.agent.entity.AIAgentSubgraph
 import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.handler.node.NodeExecutionCompletedContext
@@ -12,6 +13,13 @@ import ai.koog.agents.core.feature.handler.node.NodeExecutionFailedContext
 import ai.koog.agents.core.feature.handler.node.NodeExecutionFailedHandler
 import ai.koog.agents.core.feature.handler.node.NodeExecutionStartingContext
 import ai.koog.agents.core.feature.handler.node.NodeExecutionStartingHandler
+import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionCompletedContext
+import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionCompletedHandler
+import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionEventHandler
+import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionFailedContext
+import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionFailedHandler
+import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionStartingContext
+import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionStartingHandler
 import kotlinx.datetime.Clock
 import kotlin.reflect.KType
 
@@ -24,10 +32,14 @@ import kotlin.reflect.KType
 public class AIAgentGraphPipeline(clock: Clock = Clock.System) : AIAgentPipeline(clock) {
 
     /**
-     * Map of node execution handlers registered for different features.
-     * Keys are feature storage keys, values are node execution handlers.
+     * Map of node execution handlers registered for features.
      */
     private val executeNodeHandlers: MutableMap<AIAgentStorageKey<*>, NodeExecutionEventHandler> = mutableMapOf()
+
+    /**
+     * Map of subgraph execution handlers registered for features.
+     */
+    private val executeSubgraphHandlers: MutableMap<AIAgentStorageKey<*>, SubgraphExecutionEventHandler> = mutableMapOf()
 
     /**
      * Installs a feature into the pipeline with the provided configuration.
@@ -65,7 +77,7 @@ public class AIAgentGraphPipeline(clock: Clock = Clock.System) : AIAgentPipeline
      */
     public suspend fun onNodeExecutionStarting(
         node: AIAgentNodeBase<*, *>,
-        context: AIAgentContext,
+        context: AIAgentGraphContextBase,
         input: Any?,
         inputType: KType
     ) {
@@ -85,13 +97,13 @@ public class AIAgentGraphPipeline(clock: Clock = Clock.System) : AIAgentPipeline
      */
     public suspend fun onNodeExecutionCompleted(
         node: AIAgentNodeBase<*, *>,
-        context: AIAgentContext,
+        context: AIAgentGraphContextBase,
         input: Any?,
-        output: Any?,
         inputType: KType,
+        output: Any?,
         outputType: KType,
     ) {
-        val eventContext = NodeExecutionCompletedContext(node, context, input, output, inputType, outputType)
+        val eventContext = NodeExecutionCompletedContext(node, context, input, inputType, output, outputType)
         executeNodeHandlers.values.forEach { handler -> handler.nodeExecutionCompletedHandler.handle(eventContext) }
     }
 
@@ -106,7 +118,7 @@ public class AIAgentGraphPipeline(clock: Clock = Clock.System) : AIAgentPipeline
      */
     public suspend fun onNodeExecutionFailed(
         node: AIAgentNodeBase<*, *>,
-        context: AIAgentContext,
+        context: AIAgentGraphContextBase,
         input: Any?,
         inputType: KType,
         throwable: Throwable
@@ -116,6 +128,70 @@ public class AIAgentGraphPipeline(clock: Clock = Clock.System) : AIAgentPipeline
     }
 
     //endregion Trigger Node Handlers
+
+    //region Trigger Subgraph Handlers
+
+    /**
+     * Notifies all registered subgraph handlers before a subgraph is executed.
+     *
+     * @param subgraph The subgraph that is about to be executed.
+     * @param context The agent context in which the subgraph is being executed.
+     * @param input The input data for the subgraph execution.
+     * @param inputType The type of the input data provided to the subgraph.
+     */
+    public suspend fun onSubgraphExecutionStarting(
+        subgraph: AIAgentSubgraph<*, *>,
+        context: AIAgentGraphContextBase,
+        input: Any?,
+        inputType: KType
+    ) {
+        val eventContext = SubgraphExecutionStartingContext(subgraph, context, input, inputType)
+        executeSubgraphHandlers.values.forEach { handler -> handler.subgraphExecutionStartingHandler.handle(eventContext) }
+    }
+
+    /**
+     * Notifies all registered subgraph handlers after a subgraph has been executed.
+     *
+     * @param subgraph The subgraph that was executed.
+     * @param context The agent context in which the subgraph was executed.
+     * @param input The input data provided to the subgraph.
+     * @param inputType The type of the input data provided to the subgraph.
+     * @param output The output data produced by the subgraph execution.
+     * @param outputType The type of the output data produced by the subgraph execution.
+     */
+    public suspend fun onSubgraphExecutionCompleted(
+        subgraph: AIAgentSubgraph<*, *>,
+        context: AIAgentGraphContextBase,
+        input: Any?,
+        inputType: KType,
+        output: Any?,
+        outputType: KType,
+    ) {
+        val eventContext = SubgraphExecutionCompletedContext(subgraph, context, input, output, inputType, outputType)
+        executeSubgraphHandlers.values.forEach { handler -> handler.subgraphExecutionCompletedHandler.handle(eventContext) }
+    }
+
+    /**
+     * Notifies all registered subgraph handlers when a subgraph execution fails.
+     *
+     * @param subgraph The subgraph for which the execution failed.
+     * @param context The agent context in which the subgraph execution occurred.
+     * @param input The input data that was provided to the subgraph when it failed.
+     * @param inputType The type of the input data provided to the subgraph.
+     * @param throwable The exception or error that caused the subgraph execution to fail.
+     */
+    public suspend fun onSubgraphExecutionFailed(
+        subgraph: AIAgentSubgraph<*, *>,
+        context: AIAgentGraphContextBase,
+        input: Any?,
+        inputType: KType,
+        throwable: Throwable
+    ) {
+        val eventContext = SubgraphExecutionFailedContext(subgraph, context, input, inputType, throwable)
+        executeSubgraphHandlers.values.forEach { handler -> handler.subgraphExecutionFailedHandler.handle(eventContext) }
+    }
+
+    //endregion Trigger Subgraph Handlers
 
     //region Interceptors
 
@@ -187,6 +263,79 @@ public class AIAgentGraphPipeline(clock: Clock = Clock.System) : AIAgentPipeline
         val handler = executeNodeHandlers.getOrPut(feature.key) { NodeExecutionEventHandler() }
 
         handler.nodeExecutionFailedHandler = NodeExecutionFailedHandler(
+            function = createConditionalHandler(feature, handle)
+        )
+    }
+
+    /**
+     * Intercepts the execution of a subgraph when it starts.
+     *
+     * @param feature The graph feature associated with the AI agent for which the subgraph execution is intercepted.
+     * @param handle A suspendable lambda that handles the subgraph execution starting event context.
+     *
+     * Example:
+     * ```
+     * pipeline.interceptSubgraphExecutionStarting(feature) { eventContext ->
+     *     logger.info("Subgraph ${eventContext.subgraph.name} is about to execute with input: ${eventContext.input}")
+     * }
+     * ```
+     */
+    public fun interceptSubgraphExecutionStarting(
+        feature: AIAgentGraphFeature<*, *>,
+        handle: suspend (eventContext: SubgraphExecutionStartingContext) -> Unit
+    ) {
+        val handler = executeSubgraphHandlers.getOrPut(feature.key) { SubgraphExecutionEventHandler() }
+
+        handler.subgraphExecutionStartingHandler = SubgraphExecutionStartingHandler(
+            function = createConditionalHandler(feature, handle)
+        )
+    }
+
+    /**
+     * Intercepts the completion of a subgraph execution and allows handling of the event.
+     *
+     * @param feature The AI agent graph feature that specifies the feature to intercept.
+     * @param handle A suspendable function that handles the subgraph execution completion event,
+     * taking the event context as a parameter.
+     *
+     * Example:
+     * ```
+     * pipeline.interceptSubgraphExecutionCompleted(feature) { eventContext ->
+     *     logger.info("Subgraph ${eventContext.subgraph.name} executed with input: ${eventContext.input} and produced output: ${eventContext.output}")
+     * }
+     * ```
+     */
+    public fun interceptSubgraphExecutionCompleted(
+        feature: AIAgentGraphFeature<*, *>,
+        handle: suspend (eventContext: SubgraphExecutionCompletedContext) -> Unit
+    ) {
+        val handler = executeSubgraphHandlers.getOrPut(feature.key) { SubgraphExecutionEventHandler() }
+
+        handler.subgraphExecutionCompletedHandler = SubgraphExecutionCompletedHandler(
+            function = createConditionalHandler(feature, handle)
+        )
+    }
+
+    /**
+     * Intercepts and handles subgraph execution failures for a given feature.
+     *
+     * @param feature The feature associated with this handler.
+     * @param handle A suspend function that processes the subgraph execution failure event.
+     *
+     * Example:
+     * ```
+     * pipeline.interceptSubgraphExecutionFailed(feature) { eventContext ->
+     *     logger.error("Subgraph ${eventContext.subgraph.name} execution failed with error: ${eventContext.throwable}")
+     * }
+     * ```
+     */
+    public fun interceptSubgraphExecutionFailed(
+        feature: AIAgentGraphFeature<*, *>,
+        handle: suspend (eventContext: SubgraphExecutionFailedContext) -> Unit
+    ) {
+        val handler = executeSubgraphHandlers.getOrPut(feature.key) { SubgraphExecutionEventHandler() }
+
+        handler.subgraphExecutionFailedHandler = SubgraphExecutionFailedHandler(
             function = createConditionalHandler(feature, handle)
         )
     }

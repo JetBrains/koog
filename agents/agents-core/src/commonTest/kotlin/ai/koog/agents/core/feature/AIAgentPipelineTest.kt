@@ -23,11 +23,13 @@ import ai.koog.utils.io.use
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.js.JsName
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
+import kotlin.test.assertFailsWith
 
 class AIAgentPipelineTest {
 
@@ -117,7 +119,187 @@ class AIAgentPipelineTest {
         assertContentEquals(expectedEvents, actualEvents)
     }
 
-    @Test @JsName("testPipelineInterceptorsForLLmCallEvents")
+    @Test
+    @JsName("testPipelineInterceptorsDoNotCaptureNodeFailedEventOnCancellation")
+    fun `test pipeline interceptors do not capture node failed event on cancellation`() = runTest {
+        val interceptedEvents = mutableListOf<String>()
+        val agentInput = "Test input"
+        val nodeWithErrorName = "test-node-with-error"
+        val testErrorMessage = "Test cancellation error"
+
+        val strategy = strategy<String, String>("test-node-with-error-cancellation") {
+            val nodeWithError by node<String, String>(nodeWithErrorName) {
+                throw CancellationException(testErrorMessage)
+            }
+            nodeStart then nodeWithError then nodeFinish
+        }
+
+        val throwable = assertFailsWith<CancellationException> {
+            createAgent(strategy = strategy) {
+                install(TestFeature) {
+                    events = interceptedEvents
+                }
+            }.use { agent ->
+                agent.run(agentInput)
+            }
+        }
+
+        assertEquals(testErrorMessage, throwable.message)
+
+        val actualEvents = interceptedEvents.filter { it.startsWith("Node: ") }
+
+        val expectedEvents = listOf(
+            "Node: start node (name: __start__, input: $agentInput)",
+            "Node: finish node (name: __start__, input: $agentInput, output: $agentInput)",
+            "Node: start node (name: $nodeWithErrorName, input: $agentInput)",
+        )
+
+        assertEquals(
+            expectedEvents.size,
+            actualEvents.size,
+            "Mismatch between expected and actual intercepted events. " +
+                "Expected:\n${expectedEvents.joinToString("\n") { " - $it" }}\n" +
+                ", but received:\n${actualEvents.joinToString("\n") { " - $it" }}"
+        )
+
+        assertContentEquals(expectedEvents, actualEvents)
+    }
+
+    @Test
+    @JsName("testPipelineInterceptorsForSubgraphEvents")
+    fun `test pipeline interceptors for subgraph events`() = runTest {
+        val interceptedEvents = mutableListOf<String>()
+
+        val agentInput = "Test agent input"
+        val subgraphOutput = "Test subgraph output"
+
+        val subgraphName = "test-subgraph"
+        val strategy = strategy<String, String>("test-interceptors-strategy") {
+            val subgraph by subgraph<String, String>(subgraphName) {
+                edge(nodeStart forwardTo nodeFinish transformed { subgraphOutput })
+            }
+            nodeStart then subgraph then nodeFinish
+        }
+
+        createAgent(strategy = strategy) {
+            install(TestFeature) { events = interceptedEvents }
+        }.use { agent ->
+            agent.run(agentInput)
+        }
+
+        val actualEvents = interceptedEvents.filter { it.startsWith("Subgraph: ") }
+        val expectedEvents = listOf(
+            "Subgraph: start subgraph (name: $subgraphName, input: $agentInput)",
+            "Subgraph: finish subgraph (name: $subgraphName, input: $agentInput, output: $subgraphOutput)",
+        )
+
+        assertEquals(
+            expectedEvents.size,
+            actualEvents.size,
+            "Mismatch between expected and actual intercepted events. " +
+                "Expected:\n${expectedEvents.joinToString("\n") { " - $it" }}\n" +
+                ", but received:\n${actualEvents.joinToString("\n") { " - $it" }}"
+        )
+
+        assertContentEquals(expectedEvents, actualEvents)
+    }
+
+    @Test
+    @JsName("testPipelineInterceptorsForSubgraphExecutionErrorEvents")
+    fun `test pipeline interceptors for subgraph execution errors events`() = runTest {
+        val interceptedEvents = mutableListOf<String>()
+
+        val agentInput = "Test agent input"
+        val subgraphName = "subgraph-with-error"
+        val nodeWithErrorName = "subgraph-node-with-error"
+        val testErrorMessage = "Test error"
+
+        val strategy = strategy<String, String>("test-interceptors-strategy") {
+            val subgraphWithError by subgraph<String, String>(subgraphName) {
+                val nodeWithError by node<String, String>(nodeWithErrorName) {
+                    throw IllegalStateException(testErrorMessage)
+                }
+                nodeStart then nodeWithError then nodeFinish
+            }
+            nodeStart then subgraphWithError then nodeFinish
+        }
+
+        val throwable =
+            createAgent(strategy = strategy) {
+                install(TestFeature) { events = interceptedEvents }
+            }.use { agent ->
+                assertFailsWith<IllegalStateException> {
+                    agent.run(agentInput)
+                }
+            }
+
+        assertEquals(testErrorMessage, throwable.message)
+
+        val actualEvents = interceptedEvents.filter { it.startsWith("Subgraph: ") }
+        val expectedEvents = listOf(
+            "Subgraph: start subgraph (name: $subgraphName, input: $agentInput)",
+            "Subgraph: execution error (name: $subgraphName, error: $testErrorMessage)",
+        )
+
+        assertEquals(
+            expectedEvents.size,
+            actualEvents.size,
+            "Miss intercepted events. Expected ${expectedEvents.size}, but received: ${actualEvents.size}"
+        )
+        assertContentEquals(expectedEvents, actualEvents)
+    }
+
+    @Test
+    @JsName("testPipelineInterceptorsDoNotCaptureSubgraphFailedEventOnCancellation")
+    fun `test pipeline interceptors do not capture subgraph failed event on cancellation`() = runTest {
+        val interceptedEvents = mutableListOf<String>()
+        val agentInput = "Test input"
+        val subgraphWithErrorName = "test-subgraph-with-error"
+        val nodeWithErrorName = "subgraph-node-with-error"
+        val testErrorMessage = "Test cancellation error"
+
+        val strategy = strategy<String, String>("test-subgraph-with-error-cancellation") {
+            val subgraphWithError by subgraph<String, String>(subgraphWithErrorName) {
+                val nodeWithError by node<String, String>(nodeWithErrorName) {
+                    throw CancellationException(testErrorMessage)
+                }
+                nodeStart then nodeWithError then nodeFinish
+            }
+            nodeStart then subgraphWithError then nodeFinish
+        }
+
+        val throwable =
+            createAgent(strategy = strategy) {
+                install(TestFeature) {
+                    events = interceptedEvents
+                }
+            }.use { agent ->
+                assertFailsWith<CancellationException> {
+                    agent.run(agentInput)
+                }
+            }
+
+        assertEquals(testErrorMessage, throwable.message)
+
+        val actualEvents = interceptedEvents.filter { it.startsWith("Subgraph: ") }
+
+        val expectedEvents = listOf(
+            "Subgraph: start subgraph (name: $subgraphWithErrorName, input: $agentInput)",
+        )
+
+        assertEquals(
+            expectedEvents.size,
+            actualEvents.size,
+            "Mismatch between expected and actual intercepted events. " +
+                "Expected:\n${expectedEvents.joinToString("\n") { " - $it" }}\n" +
+                ", but received:\n${actualEvents.joinToString("\n") { " - $it" }}"
+        )
+
+        assertContentEquals(expectedEvents, actualEvents)
+    }
+
+    @Test
+    @JsName("testPipelineInterceptorsForLLmCallEvents")
     fun `test pipeline interceptors for llm call events`() = runTest {
         val interceptedEvents = mutableListOf<String>()
 

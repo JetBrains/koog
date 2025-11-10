@@ -8,30 +8,17 @@ import kotlinx.serialization.Serializable
 /**
  * Represents an event triggered at the start of an AI agent strategy execution.
  *
- * This event captures information about the strategy being initiated, allowing
- * for tracking and analyzing the lifecycle of AI agent strategies. It provides
- * details specific to the strategy itself, such as the name, while inheriting
- * shared properties from the [DefinedFeatureEvent] superclass.
- *
  * @property strategyName The name of the strategy being started.
  */
 public abstract class StrategyStartingEvent : DefinedFeatureEvent() {
 
     /**
-     * A unique identifier associated with a specific run or execution instance of
-     * an AI agent strategy. This identifier is used across various related events
-     * to track and correlate the lifecycle of a single execution instance, enabling
-     * monitoring, debugging, and analysis of the strategy execution flow.
+     * A unique identifier associated with a specific run.
      */
     public abstract val runId: String
 
     /**
      * The name of the AI agent strategy being initiated.
-     *
-     * This property specifies the identifier or title of the strategy that is
-     * starting execution. It is used to provide descriptive context about the
-     * strategy being launched, enabling effective monitoring, debugging, and
-     * analysis of AI agent execution processes.
      */
     public abstract val strategyName: String
 }
@@ -39,14 +26,6 @@ public abstract class StrategyStartingEvent : DefinedFeatureEvent() {
 /**
  * Represents an event triggered at the start of an AI agent strategy execution that involves
  * the use of a graph-based operational model.
- *
- * This event extends the functionality of the `AIAgentStrategyStartEvent` class, providing additional
- * details specific to graph-based strategies. It captures the graph structure used by the strategy,
- * enabling effective representation and understanding of the execution flow and dependency relationships
- * between various processing nodes within the graph.
- *
- * The `AIAgentGraphStrategyStartEvent` is particularly useful for monitoring, debugging, and analyzing AI
- * agents that employ graph-like structures for their workflows.
  *
  * @property runId A unique identifier representing the specific run or instance of the strategy execution.
  * @property strategyName The name of the graph-based strategy being executed.
@@ -64,12 +43,6 @@ public data class GraphStrategyStartingEvent(
 
 /**
  * Represents an event triggered at the start of executing a functional strategy by an AI agent.
- *
- * This event provides specific information about the initiation of a functional strategy,
- * including the unique identifier of the run and the strategy name. It is intended to
- * support monitoring, debugging, and tracking of functional strategy execution within
- * the lifecycle of an AI agent's processes. This class extends [StrategyStartingEvent],
- * inheriting shared properties and behavior for strategy execution events.
  *
  * @property runId A unique identifier representing the specific run or instance of the strategy execution;
  * @property strategyName The name of the functional-based strategy being executed;
@@ -109,10 +82,6 @@ public data class StrategyCompletedEvent(
  * The edges define directed relationships between nodes, indicating the flow of
  * data and execution order within the graph.
  *
- * This class is designed to model and manage the execution structure of an AI agent's
- * workflow, where each node represents a distinct computational or processing step,
- * and edges define dependencies between these steps.
- *
  * @property nodes A list of nodes in the graph where each node represents a specific
  *                 processing unit with defined input and output types;
  * @property edges A list of directed edges that define the relationships and data
@@ -127,10 +96,6 @@ public data class StrategyEventGraph(
 /**
  * Represents a node within an AI agent's processing graph.
  *
- * Each node in the graph is associated with an identifier, a name, an expected input type,
- * and an expected output type. These nodes are components that process or transform data
- * within an AI agent system, contributing to the overall workflow of the agent.
- *
  * @property id The unique identifier of the node within the graph;
  * @property name The descriptive name of the node.
  */
@@ -142,10 +107,6 @@ public data class StrategyEventGraphNode(
 
 /**
  * Represents a directed edge in the AI agent graph.
- *
- * This class models the relationship or connection between two nodes in the graph structure
- * by specifying the source and target node identifiers. It is used to construct and represent
- * the flow or dependencies between various components or processes of an AI agent.
  *
  * @property sourceNode The unique identifier of the source node in the graph;
  * @property targetNode The unique identifier of the target node in the graph.

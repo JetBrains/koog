@@ -100,14 +100,6 @@ public data class NodeExecutionCompletedEvent(
  * Represents an event that signifies the occurrence of an error during the execution of a specific node
  * within an AI agent's process.
  *
- * This event captures information about the failed execution, including the identifier of the run,
- * the name of the node where the error occurred, and the details of the error itself. It provides
- * contextual information necessary for debugging, tracing, or analyzing issues encountered during
- * the AI agent's execution.
- *
- * This event extends the `DefinedFeatureEvent` class, inheriting common event properties such as
- * timestamps and message types.
- *
  * @property runId A unique identifier associated with the specific run of the AI agent;
  * @property nodeName The name of the node where the error occurred;
  * @property input The input data provided to the node;
