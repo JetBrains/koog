@@ -1,6 +1,5 @@
 package ai.koog.agents.features.opentelemetry.span
 
-import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.features.opentelemetry.attribute.SpanAttributes
 import io.opentelemetry.api.trace.SpanKind
 
@@ -9,20 +8,27 @@ import io.opentelemetry.api.trace.SpanKind
  */
 internal class ExecuteToolSpan(
     parent: NodeExecuteSpan,
-    val tool: Tool<*, *>,
-    val toolArgs: Any?,
+    val toolName: String,
+    val toolDescription: String,
+    val toolArgs: String?,
     val toolCallId: String?,
 ) : GenAIAgentSpan(parent) {
 
     companion object {
-        fun createId(agentId: String, runId: String, nodeName: String, toolName: String): String =
-            createIdFromParent(parentId = NodeExecuteSpan.createId(agentId, runId, nodeName), toolName = toolName)
+        fun createId(agentId: String, runId: String, nodeName: String, nodeId: String, toolName: String, toolArgs: String): String =
+            createIdFromParent(
+                parentId = NodeExecuteSpan.createId(agentId, runId, nodeName, nodeId),
+                toolName = toolName,
+                toolArgs = toolArgs
+            )
 
-        private fun createIdFromParent(parentId: String, toolName: String): String =
-            "$parentId.tool.$toolName"
+        private fun createIdFromParent(parentId: String, toolName: String, toolArgs: String?): String =
+            // TODO: Replace sha256base64() with unique event id for the Tool Call event
+            "$parentId.tool.$toolName.args.${toolArgs?.sha256base64()}"
     }
 
-    override val spanId: String = createIdFromParent(parent.spanId, tool.name)
+    override val spanId: String =
+        createIdFromParent(parentId = parent.spanId, toolName = toolName, toolArgs = toolArgs)
 
     override val kind: SpanKind = SpanKind.INTERNAL
 
@@ -37,11 +43,14 @@ internal class ExecuteToolSpan(
      * - gen_ai.tool.name (recommended)
      */
     init {
+        // gen_ai.operation.name
+        addAttribute(SpanAttributes.Operation.Name(SpanAttributes.Operation.OperationNameType.EXECUTE_TOOL))
+
         // gen_ai.tool.description
-        addAttribute(SpanAttributes.Tool.Description(description = tool.descriptor.description))
+        addAttribute(SpanAttributes.Tool.Description(description = toolDescription))
 
         // gen_ai.tool.name
-        addAttribute(SpanAttributes.Tool.Name(name = tool.name))
+        addAttribute(SpanAttributes.Tool.Name(name = toolName))
 
         // gen_ai.tool.call.id
         toolCallId?.let { id ->
@@ -49,9 +58,8 @@ internal class ExecuteToolSpan(
         }
 
         // Tool arguments custom attribute
-        @Suppress("UNCHECKED_CAST")
-        (tool as? Tool<Any?, Any?>)?.let { tool ->
-            addAttribute(SpanAttributes.Tool.InputValue(tool.encodeArgsToString(toolArgs)))
+        toolArgs?.let { toolArgs ->
+            addAttribute(SpanAttributes.Tool.InputValue(toolArgs))
         }
     }
 }
