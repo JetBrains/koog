@@ -12,6 +12,7 @@ import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.RetryUtils.withRetry
 import ai.koog.integration.tests.utils.annotations.Retry
 import ai.koog.integration.tests.utils.tools.CalculatorTool
+import ai.koog.integration.tests.utils.tools.files.CreateFile
 import ai.koog.integration.tests.utils.tools.files.MockFileSystem
 import ai.koog.integration.tests.utils.tools.files.OperationResult
 import ai.koog.prompt.dsl.prompt
@@ -166,8 +167,9 @@ class AIAgentMultipleLLMIntegrationTest : AIAgentTestBase() {
                     fail("Failed to read file: ${readResult.error}")
                 }
             }
+            val expectedToolName = CreateFile(fs).name
 
-            calledTools.shouldForAny { it == "create_file" }
+            calledTools.shouldForAny { it == expectedToolName }
         }
 
     @Test
