@@ -153,6 +153,31 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
     protected val llmStreamingEventHandlers: MutableMap<AIAgentStorageKey<*>, LLMStreamingEventHandler> = mutableMapOf()
 
     /**
+     * Retrieves a feature implementation from the current pipeline using the specified [feature], if it is registered.
+     *
+     * @param TFeature A feature implementation type.
+     * @param feature A feature to fetch.
+     * @param featureClass The [KClass] of the feature to be retrieved.
+     * @return The feature associated with the provided key, or null if no matching feature is found.
+     * @throws IllegalArgumentException if the specified [featureClass] does not correspond to a registered feature.
+     */
+    public fun <TFeature : Any> feature(
+        featureClass: KClass<TFeature>,
+        feature: AIAgentFeature<*, TFeature>
+    ): TFeature? {
+        val featureImpl = registeredFeatures[feature.key]?.featureImpl ?: return null
+
+        return featureClass.safeCast(featureImpl)
+            ?: throw IllegalArgumentException(
+                "Feature ${feature.key} is found, but it is not of the expected type.\n" +
+                    "Expected type: ${featureClass.simpleName}\n" +
+                    "Actual type: ${featureImpl::class.simpleName}"
+            )
+    }
+
+    //region Internal Handlers
+
+    /**
      * Prepares features by initializing their respective message processors.
      */
     internal suspend fun prepareFeatures() {
@@ -180,28 +205,7 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
         }
     }
 
-    /**
-     * Retrieves a feature implementation from the current pipeline using the specified [feature], if it is registered.
-     *
-     * @param TFeature A feature implementation type.
-     * @param feature A feature to fetch.
-     * @param featureClass The [KClass] of the feature to be retrieved.
-     * @return The feature associated with the provided key, or null if no matching feature is found.
-     * @throws IllegalArgumentException if the specified [featureClass] does not correspond to a registered feature.
-     */
-    public fun <TFeature : Any> feature(
-        featureClass: KClass<TFeature>,
-        feature: AIAgentFeature<*, TFeature>
-    ): TFeature? {
-        val featureImpl = registeredFeatures[feature.key]?.featureImpl ?: return null
-
-        return featureClass.safeCast(featureImpl)
-            ?: throw IllegalArgumentException(
-                "Feature ${feature.key} is found, but it is not of the expected type.\n" +
-                    "Expected type: ${featureClass.simpleName}\n" +
-                    "Actual type: ${featureImpl::class.simpleName}"
-            )
-    }
+    //endregion Internal Handlers
 
     //region Trigger Agent Handlers
 

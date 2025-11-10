@@ -157,6 +157,7 @@ internal inline fun <reified Output> identityTool(): Tool<Output, Output> = obje
  * @param Input The input type for the task to be defined in the subgraph.
  * @param Output The output type for the subgraph's finalized result.
  * @param toolSelectionStrategy The strategy used to select tools for the subgraph operations.
+ * @param name An optional name for the subgraph. Defaults to null if not provided.
  * @param llmModel Optional language model to be used within the subgraph. Defaults to null.
  * @param llmParams Optional parameters for configuring the language model behavior. Defaults to null.
  * @param runMode The mode in which tools are executed. Defaults to sequential execution.
@@ -167,12 +168,14 @@ internal inline fun <reified Output> identityTool(): Tool<Output, Output> = obje
 @AIAgentBuilderDslMarker
 public inline fun <reified Input, reified Output> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
     toolSelectionStrategy: ToolSelectionStrategy,
+    name: String? = null,
     llmModel: LLModel? = null,
     llmParams: LLMParams? = null,
     runMode: ToolCalls = ToolCalls.SEQUENTIAL,
     assistantResponseRepeatMax: Int? = null,
     noinline defineTask: suspend AIAgentGraphContextBase.(input: Input) -> String
 ): AIAgentSubgraphDelegate<Input, Output> = subgraph(
+    name = name,
     toolSelectionStrategy = toolSelectionStrategy,
     llmModel = llmModel,
     llmParams = llmParams,
@@ -192,6 +195,7 @@ public inline fun <reified Input, reified Output> AIAgentSubgraphBuilderBase<*, 
  * input and execute the defined task, eventually producing a result through the provided finish tool.
  *
  * @param tools The list of tools that are available for use within the subgraph.
+ * @param name An optional name for the subgraph. Defaults to null if not provided.
  * @param llmModel An optional language model to be used in the subgraph. If not specified, a default model may be used.
  * @param llmParams Optional parameters to customize the behavior of the language model in the subgraph.
  * @param runMode The mode in which tools are executed. Defaults to sequential execution.
@@ -201,6 +205,7 @@ public inline fun <reified Input, reified Output> AIAgentSubgraphBuilderBase<*, 
 @AIAgentBuilderDslMarker
 public inline fun <reified Input, reified Output> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
     tools: List<Tool<*, *>>,
+    name: String? = null,
     llmModel: LLModel? = null,
     llmParams: LLMParams? = null,
     runMode: ToolCalls = ToolCalls.SEQUENTIAL,
@@ -208,6 +213,7 @@ public inline fun <reified Input, reified Output> AIAgentSubgraphBuilderBase<*, 
     noinline defineTask: suspend AIAgentGraphContextBase.(input: Input) -> String
 ): AIAgentSubgraphDelegate<Input, Output> = subgraphWithTask(
     toolSelectionStrategy = ToolSelectionStrategy.Tools(tools.map { it.descriptor }),
+    name = name,
     llmModel = llmModel,
     llmParams = llmParams,
     runMode = runMode,
@@ -223,6 +229,7 @@ public inline fun <reified Input, reified Output> AIAgentSubgraphBuilderBase<*, 
  * @param OutputTransformed The transformed output type after finishing the task.
  * @param toolSelectionStrategy The strategy to be used for selecting tools within the subgraph.
  * @param finishTool The tool responsible for finalizing the task and producing the transformed output.
+ * @param name An optional name for the subgraph. Defaults to null if not provided.
  * @param llmModel The optional language model to be used in the subgraph for processing requests.
  * @param llmParams The optional parameters to customize the behavior of the language model.
  * @param runMode The mode in which tools are executed. Defaults to sequential execution.
@@ -235,12 +242,14 @@ public inline fun <reified Input, reified Output> AIAgentSubgraphBuilderBase<*, 
 public inline fun <reified Input, reified Output, reified OutputTransformed> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
     toolSelectionStrategy: ToolSelectionStrategy,
     finishTool: Tool<Output, OutputTransformed>,
+    name: String? = null,
     llmModel: LLModel? = null,
     llmParams: LLMParams? = null,
     runMode: ToolCalls = ToolCalls.SEQUENTIAL,
     assistantResponseRepeatMax: Int? = null,
     noinline defineTask: suspend AIAgentGraphContextBase.(input: Input) -> String
 ): AIAgentSubgraphDelegate<Input, OutputTransformed> = subgraph(
+    name = name,
     toolSelectionStrategy = toolSelectionStrategy,
     llmModel = llmModel,
     llmParams = llmParams,
@@ -261,6 +270,7 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
  * @param OutputTransformed The transformed type of the output after applying the finish tool.
  * @param tools A list of tools to be used within the subgraph.
  * @param finishTool The tool responsible for transforming the output of the subgraph.
+ * @param name An optional name for the subgraph. Defaults to null if not provided.
  * @param llmModel The language model to be used within the subgraph. Defaults to null if not provided.
  * @param llmParams Optional parameters to customize the behavior of the language model. Defaults to null if not provided.
  * @param runMode The mode in which tools are executed. Defaults to sequential execution.
@@ -273,12 +283,14 @@ public inline fun <reified Input, reified Output, reified OutputTransformed> AIA
 public inline fun <reified Input, reified Output, reified OutputTransformed> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
     tools: List<Tool<*, *>>,
     finishTool: Tool<Output, OutputTransformed>,
+    name: String? = null,
     llmModel: LLModel? = null,
     llmParams: LLMParams? = null,
     runMode: ToolCalls = ToolCalls.SEQUENTIAL,
     assistantResponseRepeatMax: Int? = null,
     noinline defineTask: suspend AIAgentGraphContextBase.(input: Input) -> String
 ): AIAgentSubgraphDelegate<Input, OutputTransformed> = subgraph(
+    name = name,
     toolSelectionStrategy = ToolSelectionStrategy.Tools(tools.map { it.descriptor }),
     llmModel = llmModel,
     llmParams = llmParams,

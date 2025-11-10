@@ -3,6 +3,7 @@ package ai.koog.agents.core.agent.entity
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.context.DetachedPromptExecutorAPI
+import ai.koog.agents.core.agent.context.element.NodeInfoContextElement
 import ai.koog.agents.core.agent.context.getAgentContextData
 import ai.koog.agents.core.agent.context.store
 import ai.koog.agents.core.agent.exception.AIAgentMaxNumberOfIterationsReachedException
@@ -20,8 +21,11 @@ import ai.koog.prompt.structure.StructuredOutputConfig
 import ai.koog.prompt.structure.json.JsonStructuredData
 import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlin.reflect.KType
+import kotlin.uuid.ExperimentalUuidApi
 
 /**
  * [AIAgentSubgraph] represents a structured subgraph within an AI agent workflow. It serves as a logical
@@ -60,7 +64,7 @@ public open class AIAgentSubgraph<TInput, TOutput>(
 
         /**
          * A constant string used as a prefix to identify the starting node in an AI agent's execution graph.
-         * This prefix is utilized to ensure unique identification and separation of the start node
+         * This prefix is used to ensure unique identification and separation of the start node
          * within the graph structure or during execution-related operations.
          */
         public const val START_NODE_PREFIX: String = "__start__"
@@ -149,38 +153,57 @@ public open class AIAgentSubgraph<TInput, TOutput>(
      * @param input The input object representing the data to be processed by the AI agent.
      * @return The output of the AI agent execution, generated after processing the input.
      */
-    @OptIn(InternalAgentsApi::class, DetachedPromptExecutorAPI::class)
-    override suspend fun execute(context: AIAgentGraphContextBase, input: TInput): TOutput? {
-        val newTools = selectTools(context)
+    @OptIn(InternalAgentsApi::class, DetachedPromptExecutorAPI::class, ExperimentalUuidApi::class)
+    override suspend fun execute(context: AIAgentGraphContextBase, input: TInput): TOutput? =
+        withContext(NodeInfoContextElement(name, input, inputType)) {
+            val newTools = selectTools(context)
 
-        // Copy inner context with new tools, model and LLM params.
-        val innerContext = with(context) {
-            copy(
-                llm = llm.copy(
-                    tools = newTools,
-                    model = llmModel ?: llm.model,
-                    prompt = llm.prompt.copy(params = llmParams ?: llm.prompt.params)
+            // Copy inner context with new tools, model and LLM params.
+            val innerContext = with(context) {
+                copy(
+                    llm = llm.copy(
+                        tools = newTools,
+                        model = llmModel ?: llm.model,
+                        prompt = llm.prompt.copy(params = llmParams ?: llm.prompt.params)
+                    )
                 )
-            )
+            }
+
+            runIfNonRootContext(context) {
+                pipeline.onSubgraphExecutionStarting(this@AIAgentSubgraph, innerContext, input, inputType)
+            }
+
+            // Execute the subgraph with an inner context and get the result and updated prompt.
+            val result = try {
+                executeWithInnerContext(innerContext, input)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                logger.error(e) { "Exception during executing subgraph '$name': ${e.message}" }
+                runIfNonRootContext(context) {
+                    pipeline.onSubgraphExecutionFailed(this@AIAgentSubgraph, context, input, inputType, e)
+                }
+                throw e
+            }
+
+            // Restore original LLM params on the new prompt.
+            val newPrompt = innerContext.llm.readSession {
+                prompt.copy(params = context.llm.prompt.params)
+            }
+            context.llm.writeSession { prompt = newPrompt }
+
+            val innerForcedData = innerContext.getAgentContextData()
+
+            if (innerForcedData != null) {
+                context.store(innerForcedData)
+            }
+
+            runIfNonRootContext(context) {
+                pipeline.onSubgraphExecutionCompleted(this@AIAgentSubgraph, innerContext, input, inputType, result, outputType)
+            }
+
+            result
         }
-
-        // Execute the subgraph with an inner context and get the result and updated prompt.
-        val result = executeWithInnerContext(innerContext, input)
-
-        // Restore original LLM params on the new prompt.
-        val newPrompt = innerContext.llm.readSession {
-            prompt.copy(params = context.llm.prompt.params)
-        }
-        context.llm.writeSession { prompt = newPrompt }
-
-        val innerForcedData = innerContext.getAgentContextData()
-
-        if (innerForcedData != null) {
-            context.store(innerForcedData)
-        }
-
-        return result
-    }
 
     @OptIn(InternalAgentsApi::class)
     private suspend fun executeWithInnerContext(context: AIAgentGraphContextBase, initialInput: TInput): TOutput? {
@@ -219,7 +242,7 @@ public open class AIAgentSubgraph<TInput, TOutput>(
             val nodeOutput: Any? = currentNode.executeUnsafe(context, currentInput)
             logger.debug { formatLog(context, "Completed node '${currentNode.name}'") }
 
-            // forced context data means that we've requested interruption due to jump to other node / rolling back to checkpoint
+            // forced context data means that we've requested interruption due to jump to another node / rolling back to checkpoint
             if (context.getAgentContextData() != null) {
                 return null
             }
@@ -253,6 +276,17 @@ public open class AIAgentSubgraph<TInput, TOutput>(
         return result
     }
 
+    /**
+     * Executes the specified action within a non-root context of the agent's graph structure.
+     * This method ensures that the action is only executed if the provided context has a parent context,
+     * effectively skipping execution for root contexts.
+     */
+    @OptIn(InternalAgentsApi::class)
+    private suspend fun runIfNonRootContext(context: AIAgentGraphContextBase, action: suspend AIAgentGraphContextBase.() -> Unit) {
+        if (context.parentContext == null) return
+        action(context)
+    }
+
     private fun formatLog(context: AIAgentContext, message: String): String =
         "$message [$name, ${context.strategyName}, ${context.runId}]"
 }
@@ -279,7 +313,7 @@ public sealed interface ToolSelectionStrategy {
      * Represents a specific subset of tools used within a subgraph configuration where no tools are selected.
      *
      * This object, when used, implies that the subgraph should operate without any tools available. It can be
-     * utilized in scenarios where tool functionality is not required or should be explicitly restricted.
+     * used in scenarios where tool functionality is not required or should be explicitly restricted.
      *
      * Part of the sealed interface `SubgraphToolSubset` which defines various tool subset configurations
      * for subgraph behaviors.
@@ -294,7 +328,7 @@ public sealed interface ToolSelectionStrategy {
      * This ensures that unnecessary tools are excluded, optimizing the toolset for the specific use case.
      *
      * @property subtaskDescription A description of the subtask for which the relevant tools should be selected.
-     * @property fixingParser Optional [StructureFixingParser] to attempt fixes when malformed structured response with tool list is received.
+     * @property fixingParser Optional [StructureFixingParser] to attempt fixes when malformed structured response with a tool list is received.
      */
     public data class AutoSelectForTask(
         val subtaskDescription: String,
@@ -302,7 +336,7 @@ public sealed interface ToolSelectionStrategy {
     ) : ToolSelectionStrategy
 
     /**
-     * Represents a subset of tools to be utilized within a subgraph or task.
+     * Represents a subset of tools to be used within a subgraph or task.
      *
      * The Tools class allows for specifying a custom selection of tools that are relevant
      * to a specific operation or task. It forms a part of the `SubgraphToolSubset` interface

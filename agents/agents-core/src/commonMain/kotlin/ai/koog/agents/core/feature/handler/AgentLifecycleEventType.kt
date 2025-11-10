@@ -70,6 +70,25 @@ public sealed interface AgentLifecycleEventType {
 
     //endregion Node
 
+    //region Subgraph
+
+    /**
+     * Represents an event triggered before a subgraph is executed.
+     */
+    public object SubgraphExecutionStarting : AgentLifecycleEventType
+
+    /**
+     * Represents an event triggered after a subgraph has been executed.
+     */
+    public object SubgraphExecutionCompleted : AgentLifecycleEventType
+
+    /**
+     * Represents an event triggered when an error occurs during subgraph execution.
+     */
+    public object SubgraphExecutionFailed : AgentLifecycleEventType
+
+    //endregion Subgraph
+
     //region LLM
 
     /**

@@ -29,11 +29,13 @@ class TestFeature(val events: MutableList<String>, val runIds: MutableList<Strin
 
             pipeline.interceptAgentStarting(this) { eventContext ->
                 testFeature.runIds += eventContext.runId
-                testFeature.events += "Agent: before agent started (id: ${eventContext.agent.id}, run id: ${eventContext.runId})"
+                testFeature.events +=
+                    "Agent: before agent started (id: ${eventContext.agent.id}, run id: ${eventContext.runId})"
             }
 
             pipeline.interceptStrategyStarting(this) { eventContext ->
-                testFeature.events += "Agent: strategy started (strategy name: ${eventContext.strategy.name})"
+                testFeature.events +=
+                    "Agent: strategy started (strategy name: ${eventContext.strategy.name})"
             }
 
             pipeline.interceptLLMCallStarting(this) { event ->
@@ -51,7 +53,8 @@ class TestFeature(val events: MutableList<String>, val runIds: MutableList<Strin
             }
 
             pipeline.interceptNodeExecutionStarting(this) { event ->
-                testFeature.events += "Node: start node (name: ${event.node.name}, input: ${event.input})"
+                testFeature.events +=
+                    "Node: start node (name: ${event.node.name}, input: ${event.input})"
             }
 
             pipeline.interceptNodeExecutionCompleted(this) { event ->
@@ -60,11 +63,28 @@ class TestFeature(val events: MutableList<String>, val runIds: MutableList<Strin
             }
 
             pipeline.interceptNodeExecutionFailed(this) { event ->
-                testFeature.events += "Node: execution error (name: ${event.node.name}, error: ${event.throwable.message})"
+                testFeature.events +=
+                    "Node: execution error (name: ${event.node.name}, error: ${event.throwable.message})"
+            }
+
+            pipeline.interceptSubgraphExecutionStarting(this) { event ->
+                testFeature.events +=
+                    "Subgraph: start subgraph (name: ${event.subgraph.name}, input: ${event.input})"
+            }
+
+            pipeline.interceptSubgraphExecutionCompleted(this) { event ->
+                testFeature.events +=
+                    "Subgraph: finish subgraph (name: ${event.subgraph.name}, input: ${event.input}, output: ${event.output})"
+            }
+
+            pipeline.interceptSubgraphExecutionFailed(this) { event ->
+                testFeature.events +=
+                    "Subgraph: execution error (name: ${event.subgraph.name}, error: ${event.throwable.message})"
             }
 
             pipeline.interceptToolCallStarting(this) { event ->
-                testFeature.events += "Tool: call tool (tool: ${event.tool.name}, args: ${event.toolArgs})"
+                testFeature.events +=
+                    "Tool: call tool (tool: ${event.tool.name}, args: ${event.toolArgs})"
             }
 
             pipeline.interceptToolCallCompleted(this) { event ->

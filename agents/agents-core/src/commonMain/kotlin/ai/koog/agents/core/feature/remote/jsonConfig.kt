@@ -22,6 +22,9 @@ import ai.koog.agents.core.feature.model.events.NodeExecutionFailedEvent
 import ai.koog.agents.core.feature.model.events.NodeExecutionStartingEvent
 import ai.koog.agents.core.feature.model.events.StrategyCompletedEvent
 import ai.koog.agents.core.feature.model.events.StrategyStartingEvent
+import ai.koog.agents.core.feature.model.events.SubgraphExecutionCompletedEvent
+import ai.koog.agents.core.feature.model.events.SubgraphExecutionFailedEvent
+import ai.koog.agents.core.feature.model.events.SubgraphExecutionStartingEvent
 import ai.koog.agents.core.feature.model.events.ToolCallCompletedEvent
 import ai.koog.agents.core.feature.model.events.ToolCallFailedEvent
 import ai.koog.agents.core.feature.model.events.ToolCallStartingEvent
@@ -105,6 +108,9 @@ public val defaultFeatureMessageSerializersModule: SerializersModule
             subclass(NodeExecutionStartingEvent::class, NodeExecutionStartingEvent.serializer())
             subclass(NodeExecutionCompletedEvent::class, NodeExecutionCompletedEvent.serializer())
             subclass(NodeExecutionFailedEvent::class, NodeExecutionFailedEvent.serializer())
+            subclass(SubgraphExecutionStartingEvent::class, SubgraphExecutionStartingEvent.serializer())
+            subclass(SubgraphExecutionCompletedEvent::class, SubgraphExecutionCompletedEvent.serializer())
+            subclass(SubgraphExecutionFailedEvent::class, SubgraphExecutionFailedEvent.serializer())
             subclass(ToolCallStartingEvent::class, ToolCallStartingEvent.serializer())
             subclass(ToolValidationFailedEvent::class, ToolValidationFailedEvent.serializer())
             subclass(ToolCallFailedEvent::class, ToolCallFailedEvent.serializer())
@@ -129,6 +135,9 @@ public val defaultFeatureMessageSerializersModule: SerializersModule
             subclass(NodeExecutionStartingEvent::class, NodeExecutionStartingEvent.serializer())
             subclass(NodeExecutionCompletedEvent::class, NodeExecutionCompletedEvent.serializer())
             subclass(NodeExecutionFailedEvent::class, NodeExecutionFailedEvent.serializer())
+            subclass(SubgraphExecutionStartingEvent::class, SubgraphExecutionStartingEvent.serializer())
+            subclass(SubgraphExecutionCompletedEvent::class, SubgraphExecutionCompletedEvent.serializer())
+            subclass(SubgraphExecutionFailedEvent::class, SubgraphExecutionFailedEvent.serializer())
             subclass(ToolCallStartingEvent::class, ToolCallStartingEvent.serializer())
             subclass(ToolValidationFailedEvent::class, ToolValidationFailedEvent.serializer())
             subclass(ToolCallFailedEvent::class, ToolCallFailedEvent.serializer())
@@ -152,6 +161,9 @@ public val defaultFeatureMessageSerializersModule: SerializersModule
             subclass(NodeExecutionStartingEvent::class, NodeExecutionStartingEvent.serializer())
             subclass(NodeExecutionCompletedEvent::class, NodeExecutionCompletedEvent.serializer())
             subclass(NodeExecutionFailedEvent::class, NodeExecutionFailedEvent.serializer())
+            subclass(SubgraphExecutionStartingEvent::class, SubgraphExecutionStartingEvent.serializer())
+            subclass(SubgraphExecutionCompletedEvent::class, SubgraphExecutionCompletedEvent.serializer())
+            subclass(SubgraphExecutionFailedEvent::class, SubgraphExecutionFailedEvent.serializer())
             subclass(ToolCallStartingEvent::class, ToolCallStartingEvent.serializer())
             subclass(ToolValidationFailedEvent::class, ToolValidationFailedEvent.serializer())
             subclass(ToolCallFailedEvent::class, ToolCallFailedEvent.serializer())
