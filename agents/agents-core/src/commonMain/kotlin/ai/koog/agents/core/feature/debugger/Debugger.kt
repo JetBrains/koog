@@ -39,7 +39,6 @@ import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
 import ai.koog.agents.core.feature.remote.server.config.DefaultServerConnectionConfig
 import ai.koog.agents.core.system.getEnvironmentVariableOrNull
 import ai.koog.agents.core.system.getVMOptionOrNull
-import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.utils.SerializationUtils
 import ai.koog.prompt.llm.toModelInfo
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -306,28 +305,22 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
             //region Intercept Tool Call Events
 
             pipeline.interceptToolCallStarting(this) intercept@{ eventContext ->
-                @Suppress("UNCHECKED_CAST")
-                val tool = eventContext.tool as Tool<Any?, Any?>
-
                 val event = ToolCallStartingEvent(
                     runId = eventContext.runId,
                     toolCallId = eventContext.toolCallId,
                     toolName = eventContext.tool.name,
-                    toolArgs = tool.encodeArgs(eventContext.toolArgs),
+                    toolArgs = eventContext.tool.encodeArgsUnsafe(eventContext.toolArgs),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 writer.onMessage(event)
             }
 
             pipeline.interceptToolValidationFailed(this) intercept@{ eventContext ->
-                @Suppress("UNCHECKED_CAST")
-                val tool = eventContext.tool as Tool<Any?, Any?>
-
                 val event = ToolValidationFailedEvent(
                     runId = eventContext.runId,
                     toolCallId = eventContext.toolCallId,
                     toolName = eventContext.tool.name,
-                    toolArgs = tool.encodeArgs(eventContext.toolArgs),
+                    toolArgs = eventContext.tool.encodeArgsUnsafe(eventContext.toolArgs),
                     error = eventContext.error,
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
@@ -335,14 +328,11 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
             }
 
             pipeline.interceptToolCallFailed(this) intercept@{ eventContext ->
-                @Suppress("UNCHECKED_CAST")
-                val tool = eventContext.tool as Tool<Any?, Any?>
-
                 val event = ToolCallFailedEvent(
                     runId = eventContext.runId,
                     toolCallId = eventContext.toolCallId,
-                    toolName = tool.name,
-                    toolArgs = tool.encodeArgs(eventContext.toolArgs),
+                    toolName = eventContext.tool.name,
+                    toolArgs = eventContext.tool.encodeArgsUnsafe(eventContext.toolArgs),
                     error = eventContext.throwable.toAgentError(),
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
@@ -350,15 +340,12 @@ public class Debugger(public val port: Int, public val awaitInitialConnectionTim
             }
 
             pipeline.interceptToolCallCompleted(this) intercept@{ eventContext ->
-                @Suppress("UNCHECKED_CAST")
-                val tool = eventContext.tool as Tool<Any?, Any?>
-
                 val event = ToolCallCompletedEvent(
                     runId = eventContext.runId,
                     toolCallId = eventContext.toolCallId,
                     toolName = eventContext.tool.name,
-                    toolArgs = tool.encodeArgs(eventContext.toolArgs),
-                    result = eventContext.result?.let { result -> tool.encodeResultToString(result) },
+                    toolArgs = eventContext.tool.encodeArgsUnsafe(eventContext.toolArgs),
+                    result = eventContext.result?.let { result -> eventContext.tool.encodeResultToStringUnsafe(result) },
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 writer.onMessage(event)

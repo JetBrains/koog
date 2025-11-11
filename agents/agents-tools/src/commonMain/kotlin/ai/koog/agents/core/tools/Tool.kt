@@ -139,6 +139,23 @@ public abstract class Tool<TArgs, TResult> {
     public fun encodeArgs(args: TArgs): JsonObject = ToolJson.encodeToJsonElement(actualArgsSerializer, args).jsonObject
 
     /**
+     * Encodes the given arguments into a JSON representation without type safety checks.
+     *
+     * This method attempts to cast the arguments to the expected type and uses the configured serializer
+     * for the actual encoding. Use caution when calling this method, as bypassing type safety may lead
+     * to runtime exceptions if the cast is invalid.
+     *
+     * @param args The input arguments to be encoded. These are provided as a generic `Any?` type and are
+     *             internally cast to the expected type.
+     * @return A JsonObject representing the encoded arguments.
+     * @throws ClassCastException If the provided arguments cannot be cast to the expected type.
+     */
+    public fun encodeArgsUnsafe(args: Any?): JsonObject {
+        @Suppress("UNCHECKED_CAST")
+        return ToolJson.encodeToJsonElement(actualArgsSerializer, args as TArgs).jsonObject
+    }
+
+    /**
      * Encodes the given result into a JSON representation using the configured result serializer.
      *
      * @param result The result object of type TResult to be encoded.
@@ -169,6 +186,22 @@ public abstract class Tool<TArgs, TResult> {
      * @return the JSON string representation of the provided arguments
      */
     public fun encodeArgsToString(args: TArgs): String = ToolJson.encodeToString(actualArgsSerializer, args)
+
+    /**
+     * Encodes the provided arguments into a JSON string representation without type safety checks.
+     *
+     * This method casts the provided `args` to the expected `TArgs` type and invokes the type-safe
+     * `encodeArgsToString` method to perform the encoding. Use caution when calling this method,
+     * as it bypasses type safety and may result in a runtime exception if the cast fails.
+     *
+     * @param args The arguments to be encoded into a JSON string, provided as a generic `Any?` type.
+     * @return A JSON string representation of the provided arguments.
+     * @throws ClassCastException If the provided arguments cannot be cast to the expected type `TArgs`.
+     */
+    public fun encodeArgsToStringUnsafe(args: Any?): String {
+        @Suppress("UNCHECKED_CAST")
+        return encodeArgsToString(args as TArgs)
+    }
 
     /**
      * Encodes the given result of type TResult to its string representation for the LLM.s
