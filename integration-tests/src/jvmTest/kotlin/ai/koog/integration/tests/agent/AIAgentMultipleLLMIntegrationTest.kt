@@ -12,6 +12,7 @@ import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.RetryUtils.withRetry
 import ai.koog.integration.tests.utils.annotations.Retry
 import ai.koog.integration.tests.utils.tools.CalculatorTool
+import ai.koog.integration.tests.utils.tools.files.CreateFile
 import ai.koog.integration.tests.utils.tools.files.MockFileSystem
 import ai.koog.integration.tests.utils.tools.files.OperationResult
 import ai.koog.prompt.dsl.prompt
@@ -32,6 +33,7 @@ import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.string.shouldNotBeBlank
 import io.kotest.matchers.string.shouldNotContain
+import io.ktor.util.encodeBase64
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Disabled
@@ -39,7 +41,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import java.io.File
-import java.util.Base64
 import java.util.stream.Stream
 import kotlin.test.fail
 import kotlin.time.Duration.Companion.minutes
@@ -98,17 +99,17 @@ class AIAgentMultipleLLMIntegrationTest : AIAgentTestBase() {
         }
 
         with(messages) {
-            any { it.llmClient == "AnthropicLLMClient" }
+            any { it.llmClient is AnthropicLLMClient }
                 .shouldBeTrue()
 
-            any { it.llmClient == "OpenAILLMClient" }
+            any { it.llmClient is OpenAILLMClient }
                 .shouldBeTrue()
 
-            filter { it.llmClient == "AnthropicLLMClient" }
+            filter { it.llmClient is AnthropicLLMClient }
                 .all { it.model.provider == LLMProvider.Anthropic }
                 .shouldBeTrue()
 
-            filter { it.llmClient == "OpenAILLMClient" }
+            filter { it.llmClient is OpenAILLMClient }
                 .all { it.model.provider == LLMProvider.OpenAI }.shouldBeTrue()
         }
     }
@@ -166,8 +167,9 @@ class AIAgentMultipleLLMIntegrationTest : AIAgentTestBase() {
                     fail("Failed to read file: ${readResult.error}")
                 }
             }
+            val expectedToolName = CreateFile(fs).name
 
-            calledTools.shouldForAny { it == "create_file" }
+            calledTools.shouldForAny { it == expectedToolName }
         }
 
     @Test
@@ -238,8 +240,7 @@ class AIAgentMultipleLLMIntegrationTest : AIAgentTestBase() {
         val imageFile = File(testResourcesDir.toFile(), "test.png")
         imageFile.exists().shouldBeTrue()
 
-        val imageBytes = imageFile.readBytes()
-        val base64Image = Base64.getEncoder().encodeToString(imageBytes)
+        val base64Image = imageFile.readBytes().encodeBase64()
 
         withRetry {
             val agent = createTestMultiLLMAgent(

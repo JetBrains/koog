@@ -56,8 +56,8 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.params.provider.Arguments
 import java.nio.file.Path
-import java.nio.file.Paths
 import java.util.stream.Stream
+import kotlin.io.path.toPath
 
 open class AIAgentTestBase {
     companion object {
@@ -65,15 +65,15 @@ open class AIAgentTestBase {
         lateinit var testResourcesDir: Path
 
         @JvmStatic
-        fun getLatestModels(): Stream<LLModel> = Stream.of(
+        fun getLatestModels() = listOf(
             AnthropicModels.Sonnet_4_5,
             OpenAIModels.Chat.GPT5,
-        )
+        ).stream()
 
         @JvmStatic
         @BeforeAll
         fun setup() {
-            testResourcesDir = Paths.get(AIAgentTestBase::class.java.getResource("/media")!!.toURI())
+            testResourcesDir = AIAgentTestBase::class.java.getResource("/media")!!.toURI().toPath()
             testResourcesDir.shouldExist()
         }
 
@@ -181,7 +181,7 @@ open class AIAgentTestBase {
         override fun llmProvider(): LLMProvider = underlyingClient.llmProvider()
         sealed interface Event {
             data class Message(
-                val llmClient: String,
+                val llmClient: LLMClient,
                 val method: String,
                 val prompt: Prompt,
                 val tools: List<String>,
@@ -199,7 +199,7 @@ open class AIAgentTestBase {
             CoroutineScope(currentCoroutineContext()).launch {
                 eventsChannel.send(
                     Event.Message(
-                        llmClient = underlyingClient::class.simpleName ?: "null",
+                        llmClient = underlyingClient,
                         method = "execute",
                         prompt = prompt,
                         tools = tools.map { it.name },
@@ -218,10 +218,10 @@ open class AIAgentTestBase {
             coroutineScope {
                 eventsChannel.send(
                     Event.Message(
-                        llmClient = underlyingClient::class.simpleName ?: "null",
-                        method = "execute",
+                        llmClient = underlyingClient,
+                        method = "executeStreaming",
                         prompt = prompt,
-                        tools = emptyList(),
+                        tools = tools.map { it.name },
                         model = model
                     )
                 )
@@ -246,6 +246,13 @@ open class AIAgentTestBase {
     protected fun LLMClient.reportingTo(
         eventsChannel: Channel<ReportingLLMClient.Event>
     ) = ReportingLLMClient(eventsChannel, this)
+
+    protected fun buildSubgraphTools(fs: MockFileSystem) = listOf(
+        CreateFile(fs),
+        ReadFile(fs),
+        ListFiles(fs),
+        DeleteFile(fs),
+    )
 
     @OptIn(DelicateCoroutinesApi::class)
     protected fun createTestMultiLLMAgent(
@@ -332,10 +339,7 @@ open class AIAgentTestBase {
         }
 
         val tools = ToolRegistry {
-            tool(CreateFile(fs))
-            tool(DeleteFile(fs))
-            tool(ReadFile(fs))
-            tool(ListFiles(fs))
+            tools(buildSubgraphTools(fs))
         }
 
         return AIAgent(
@@ -362,12 +366,7 @@ open class AIAgentTestBase {
             LLMProvider.Anthropic to anthropicClient
         )
 
-        val subgraphTools = listOf(
-            CreateFile(fs),
-            ReadFile(fs),
-            ListFiles(fs),
-            DeleteFile(fs),
-        )
+        val subgraphTools = buildSubgraphTools(fs)
 
         val strategy = strategy<String, String>("test-subgraph-only-tools") {
             val fileOperationsSubgraph by subgraphWithTask<String, String>(
@@ -385,7 +384,7 @@ open class AIAgentTestBase {
             ToolRegistry {}
         } else {
             ToolRegistry {
-                subgraphTools.forEach { tool(it) }
+                tools(buildSubgraphTools(fs))
             }
         }
 
