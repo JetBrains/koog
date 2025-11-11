@@ -29,10 +29,11 @@ val agent = AIAgent(
 
     strategy = singleRunStrategy(),
     maxIterations = 100
-) {
+)
+{
     handleEvents {
-        onToolCallStarting { ctx ->
-            println("Tool called: ${ctx.tool.name}")
+        onToolCallStarting { ctx -> println("Tool '${ctx.tool.name}' called with args:" +
+                " ${ctx.toolArgs.toString().take(100)}")
         }
     }
 }
