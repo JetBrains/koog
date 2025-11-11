@@ -496,7 +496,7 @@ public class KoogAgentsConfig(private val scope: CoroutineScope) {
          *
          * By default, it is set to [OpenAIClientSettings.moderationsPath].
          */
-        public val moderationsPath: String? = null
+        public var moderationsPath: String? = null
 
         /**
          * Represents the HTTP client used for making network requests to the OpenAI API.
