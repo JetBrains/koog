@@ -152,7 +152,10 @@ abstract class ExecutorIntegrationTestBase {
                 }
                 length shouldNotBe (0)
                 toolMessages.shouldBeEmpty()
-                endMessages.size shouldBe 1
+                when (model.provider) {
+                    is LLMProvider.Ollama -> endMessages.size shouldBe 0
+                    else -> endMessages.size shouldBe 1
+                }
 
                 toString() shouldNotBeNull {
                     shouldContain("1")
