@@ -739,8 +739,7 @@ class SubgraphWithTaskTest {
     private fun FeatureContext.installEventHandlerCaptureEvents(actualEvents: MutableList<String>) {
         install(EventHandler) {
             onToolCallStarting {
-                @Suppress("UNCHECKED_CAST")
-                actualEvents += toolCallString(it.tool.name, (it.tool as Tool<Any?, Any?>).encodeArgsToString(it.toolArgs))
+                actualEvents += toolCallString(it.tool.name, it.tool.encodeArgsToStringUnsafe(it.toolArgs))
             }
 
             onLLMCallStarting {
