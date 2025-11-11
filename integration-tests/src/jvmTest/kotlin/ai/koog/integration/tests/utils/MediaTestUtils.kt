@@ -1,11 +1,12 @@
 package ai.koog.integration.tests.utils
 
 import ai.koog.prompt.message.Message
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertNotNull
+import io.kotest.matchers.comparables.shouldBeGreaterThan
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.string.shouldNotBeBlank
+import io.kotest.matchers.string.shouldNotContain
 import java.nio.file.Files
 import java.nio.file.Path
-import kotlin.test.assertTrue
 
 object MediaTestUtils {
     fun getImageFileForScenario(scenario: MediaTestScenarios.ImageTestScenario, testResourcesDir: Path): Path {
@@ -589,19 +590,16 @@ object MediaTestUtils {
     }
 
     fun checkExecutorMediaResponse(response: Message.Response) {
-        checkResponseBasic(response)
-        val responseLowerCase = response.content.lowercase()
-        assertFalse(responseLowerCase.contains("error processing"), "Result should not contain error messages")
-        assertFalse(
-            responseLowerCase.contains("unable to process"),
-            "Result should not indicate inability to process"
-        )
-        assertFalse(responseLowerCase.contains("cannot process"), "Result should not indicate inability to process")
+        with(response) {
+            checkResponseBasic(this)
+            content.lowercase() shouldNotContain "error processing" shouldNotContain "unable to process" shouldNotContain "cannot process"
+        }
     }
 
     fun checkResponseBasic(response: Message.Response) {
-        assertNotNull(response, "Response should not be null")
-        assertTrue(response.content.isNotBlank(), "Result should not be empty or blank")
-        assertTrue(response.content.length > 20, "Result should contain more than 20 characters")
+        response shouldNotBeNull {
+            content.shouldNotBeBlank()
+            content.length shouldBeGreaterThan 20
+        }
     }
 }

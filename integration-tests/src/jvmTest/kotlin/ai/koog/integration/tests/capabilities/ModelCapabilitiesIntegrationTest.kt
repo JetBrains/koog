@@ -31,6 +31,14 @@ import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.ToolChoice
+import io.kotest.inspectors.shouldForAny
+import io.kotest.matchers.booleans.shouldBeFalse
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.collections.shouldNotBeEmpty
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotBeBlank
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
@@ -46,11 +54,7 @@ import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.io.path.pathString
 import kotlin.io.path.readBytes
-import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.io.files.Path as KtPath
 
@@ -146,9 +150,9 @@ class ModelCapabilitiesIntegrationTest {
                         user("Compute 2 + 3.")
                     }
                     withRetry {
-                        val responses = executor.execute(prompt, model, listOf(tools))
-                        assertTrue(responses.isNotEmpty())
-                        assertTrue(responses.any { it is Message.Tool.Call })
+                        executor.execute(prompt, model, listOf(tools))
+                            .shouldNotBeEmpty()
+                            .shouldForAny { it is Message.Tool.Call }
                     }
                 }
 
@@ -221,9 +225,9 @@ class ModelCapabilitiesIntegrationTest {
                         user("This is a harmless request about the weather.")
                     }
                     withRetry {
-                        val result = executor.moderate(prompt, model)
-                        assertNotNull(result)
-                        assertFalse(result.isHarmful)
+                        executor.moderate(prompt, model) shouldNotBeNull {
+                            this.isHarmful.shouldBeFalse()
+                        }
                     }
                 }
 
@@ -236,13 +240,13 @@ class ModelCapabilitiesIntegrationTest {
                         user("Provide multiple distinct options for a team name.")
                     }
                     withRetry {
-                        val choices = executor.executeMultipleChoices(prompt, model, emptyList())
-                        assertEquals(2, choices.size, "Expected at least 2 choices, got ${'$'}{choices.size}")
-                        choices.forEach { choice ->
-                            assertTrue(choice.isNotEmpty(), "Each choice should contain at least one response")
-                            val assistant = choice.firstOrNull { it is Message.Assistant }
-                            assertNotNull(assistant, "Each choice should contain an assistant message")
-                            assertTrue(assistant.content.isNotBlank(), "Assistant content should not be blank")
+                        with(executor.executeMultipleChoices(prompt, model, emptyList())) {
+                            size shouldBe 2
+                            forEach { choice ->
+                                choice
+                                    .shouldNotBeEmpty()
+                                    .shouldForAny { it is Message.Assistant && it.content.isNotBlank() }
+                            }
                         }
                     }
                 }
@@ -271,8 +275,7 @@ class ModelCapabilitiesIntegrationTest {
                 LLMCapability.Embed -> {
                     withRetry {
                         val vector = openAIClient.embed("Provide an embedding for this sentence.", model)
-                        assertTrue(vector.isNotEmpty(), "Embedding vector should not be empty")
-                        assertTrue(vector.any { it != 0.0 }, "Embedding vector should contain non-zero values")
+                        vector.shouldNotBeEmpty().shouldForAny { it != 0.0 }
                     }
                 }
 
@@ -286,11 +289,14 @@ class ModelCapabilitiesIntegrationTest {
                         user("Return an integer x field with any small integer.")
                     }
                     withRetry {
-                        val responses = executor.execute(prompt, model)
-                        val text = responses.filterIsInstance<Message.Assistant>().joinToString("\n") { it.content }
-                        assertTrue(text.isNotBlank())
-                        assertTrue(isValidJson(text), "Response should be valid JSON")
-                        assertTrue(text.contains("\"x\""), "Response should contain key \"x\"")
+                        with(
+                            executor.execute(prompt, model).filterIsInstance<Message.Assistant>()
+                                .joinToString("\n") { it.content }
+                        ) {
+                            shouldNotBeBlank()
+                            isValidJson(this).shouldBeTrue()
+                            shouldContain("\"x\"")
+                        }
                     }
                 }
 
@@ -304,11 +310,14 @@ class ModelCapabilitiesIntegrationTest {
                         user("Return a string y field.")
                     }
                     withRetry {
-                        val responses = executor.execute(prompt, model)
-                        val text = responses.filterIsInstance<Message.Assistant>().joinToString("\n") { it.content }
-                        assertTrue(text.isNotBlank())
-                        assertTrue(isValidJson(text), "Response should be valid JSON")
-                        assertTrue(text.contains("\"y\""), "Response should contain key \"y\"")
+                        with(
+                            executor.execute(prompt, model).filterIsInstance<Message.Assistant>()
+                                .joinToString("\n") { it.content }
+                        ) {
+                            shouldNotBeBlank()
+                            shouldContain("\"y\"")
+                            isValidJson(this).shouldBeTrue()
+                        }
                     }
                 }
 
@@ -363,9 +372,8 @@ class ModelCapabilitiesIntegrationTest {
                         user("Say hello in one short sentence.")
                     }
                     withRetry {
-                        val ex = assertFails(prompt, model)
                         assertExceptionMessageContains(
-                            ex,
+                            assertFails(prompt, model),
                             "$EXPECTED_ERROR chat completions",
                             "not a chat completion"
                         )
@@ -379,11 +387,10 @@ class ModelCapabilitiesIntegrationTest {
                         user("Compute 2 + 3.")
                     }
                     withRetry {
-                        val ex = assertFailsWith<Exception> {
-                            executor.execute(prompt, model, listOf(tools))
-                        }
                         assertExceptionMessageContains(
-                            ex,
+                            assertFailsWith<Exception> {
+                                executor.execute(prompt, model, listOf(tools))
+                            },
                             "$EXPECTED_ERROR tools"
                         )
                     }
@@ -409,9 +416,8 @@ class ModelCapabilitiesIntegrationTest {
                         }
                     }
                     withRetry {
-                        val ex = assertFails(prompt, model)
                         assertExceptionMessageContains(
-                            ex,
+                            assertFails(prompt, model),
                             "$EXPECTED_ERROR image",
                             "Unsupported attachment type"
                         )
@@ -437,9 +443,8 @@ class ModelCapabilitiesIntegrationTest {
                         }
                     }
                     withRetry {
-                        val ex = assertFails(prompt, model)
                         assertExceptionMessageContains(
-                            ex,
+                            assertFails(prompt, model),
                             "$EXPECTED_ERROR audio",
                             "Unsupported attachment type"
                         )
@@ -459,9 +464,8 @@ class ModelCapabilitiesIntegrationTest {
                         }
                     }
                     withRetry {
-                        val ex = assertFails(prompt, model)
                         assertExceptionMessageContains(
-                            ex,
+                            assertFails(prompt, model),
                             "$EXPECTED_ERROR files",
                             "Unsupported attachment type",
                             "$EXPECTED_ERROR document"
@@ -474,11 +478,10 @@ class ModelCapabilitiesIntegrationTest {
                         user("This is a harmless request about the weather.")
                     }
                     withRetry {
-                        val ex = assertFailsWith<Exception> {
-                            executor.moderate(prompt, model)
-                        }
                         assertExceptionMessageContains(
-                            ex,
+                            assertFailsWith<Exception> {
+                                executor.moderate(prompt, model)
+                            },
                             "$EXPECTED_ERROR moderation",
                             "Moderation is not supported by"
                         )
@@ -494,11 +497,10 @@ class ModelCapabilitiesIntegrationTest {
                         user("Provide multiple distinct options for a team name.")
                     }
                     withRetry {
-                        val ex = assertFailsWith<Throwable> {
-                            executor.executeMultipleChoices(prompt, model, emptyList())
-                        }
                         assertExceptionMessageContains(
-                            ex,
+                            assertFailsWith<Throwable> {
+                                executor.executeMultipleChoices(prompt, model, emptyList())
+                            },
                             "$EXPECTED_ERROR multiple choices",
                             "$EXPECTED_ERROR ${LLMCapability.MultipleChoices.id}",
                             "Not implemented for this client"
@@ -523,9 +525,8 @@ class ModelCapabilitiesIntegrationTest {
                         }
                     }
                     withRetry {
-                        val ex = assertFails(prompt, model)
                         assertExceptionMessageContains(
-                            ex,
+                            assertFails(prompt, model),
                             "$EXPECTED_ERROR video",
                             "Unsupported attachment type"
                         )
@@ -534,11 +535,10 @@ class ModelCapabilitiesIntegrationTest {
 
                 LLMCapability.Embed -> {
                     withRetry {
-                        val ex = assertFailsWith<Exception> {
-                            openAIClient.embed("Provide an embedding for this sentence.", model)
-                        }
                         assertExceptionMessageContains(
-                            ex,
+                            assertFailsWith<Exception> {
+                                openAIClient.embed("Provide an embedding for this sentence.", model)
+                            },
                             EXPECTED_ERROR,
                             "embedding",
                             "does not have the Embed capability",
@@ -557,9 +557,8 @@ class ModelCapabilitiesIntegrationTest {
                         user("Return an integer x field with any small integer.")
                     }
                     withRetry {
-                        val ex = assertFails(prompt, model)
                         assertExceptionMessageContains(
-                            ex,
+                            assertFails(prompt, model),
                             "$EXPECTED_ERROR structured output schema",
                             EXPECTED_ERROR,
                             "structured output",
@@ -578,9 +577,8 @@ class ModelCapabilitiesIntegrationTest {
                         user("Return a string y field.")
                     }
                     withRetry {
-                        val ex = assertFails(prompt, model)
                         assertExceptionMessageContains(
-                            ex,
+                            assertFails(prompt, model),
                             "$EXPECTED_ERROR structured output schema",
                             EXPECTED_ERROR,
                             "structured output",
@@ -596,9 +594,8 @@ class ModelCapabilitiesIntegrationTest {
                         user("Say hello in one short sentence.")
                     }
                     withRetry {
-                        val ex = assertFails(prompt, model)
                         assertExceptionMessageContains(
-                            ex,
+                            assertFails(prompt, model),
                             "$EXPECTED_ERROR ${LLMCapability.OpenAIEndpoint.Completions.id}",
                         )
                     }
@@ -611,9 +608,8 @@ class ModelCapabilitiesIntegrationTest {
                         user("Say hello in one short sentence.")
                     }
                     withRetry {
-                        val ex = assertFails(prompt, model)
                         assertExceptionMessageContains(
-                            ex,
+                            assertFails(prompt, model),
                             "$EXPECTED_ERROR ${LLMCapability.OpenAIEndpoint.Responses.id}",
                         )
                     }
@@ -630,8 +626,10 @@ class ModelCapabilitiesIntegrationTest {
     }
 
     private suspend fun checkAssistantResponse(prompt: Prompt, model: LLModel) {
-        val responses = executor.execute(prompt, model)
-        val text = responses.filterIsInstance<Message.Assistant>().joinToString("\n") { it.content }
-        assertTrue(text.isNotBlank())
+        executor
+            .execute(prompt, model)
+            .filterIsInstance<Message.Assistant>()
+            .joinToString("\n") { it.content }
+            .shouldNotBeBlank()
     }
 }

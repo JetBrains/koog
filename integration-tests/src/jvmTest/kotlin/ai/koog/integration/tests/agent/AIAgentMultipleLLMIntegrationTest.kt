@@ -23,22 +23,24 @@ import ai.koog.prompt.executor.llms.all.simpleAnthropicExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.markdown.markdown
+import io.kotest.inspectors.shouldForAny
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.ints.shouldBeGreaterThan
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotBeBlank
+import io.kotest.matchers.string.shouldNotContain
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import java.io.File
 import java.util.Base64
 import java.util.stream.Stream
-import kotlin.test.assertContains
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
 import kotlin.test.fail
 import kotlin.time.Duration.Companion.minutes
 
@@ -46,9 +48,6 @@ class AIAgentMultipleLLMIntegrationTest : AIAgentTestBase() {
     companion object {
         @JvmStatic
         fun getLatestModels(): Stream<LLModel> = AIAgentTestBase.getLatestModels()
-
-        @JvmStatic
-        fun modelsWithVisionCapability(): Stream<Arguments> = AIAgentTestBase.modelsWithVisionCapability()
     }
 
     private val openAIApiKey: String get() = readTestOpenAIKeyFromEnv()
@@ -82,17 +81,12 @@ class AIAgentMultipleLLMIntegrationTest : AIAgentTestBase() {
             initialExecutor = reportingExecutor,
         )
 
-        val result = agent.run(
+        agent.run(
             "Generate me a simple kotlin method. Write a test"
-        )
+        ) shouldNotBe null
         eventsChannel.close()
 
-        assertNotNull(result)
-
-        assertTrue(
-            fs.fileCount() > 0,
-            "Agent must have created at least one file"
-        )
+        fs.fileCount() shouldBeGreaterThan 0
 
         val messages = mutableListOf<Event.Message>()
         for (msg in eventsChannel) {
@@ -103,29 +97,20 @@ class AIAgentMultipleLLMIntegrationTest : AIAgentTestBase() {
             }
         }
 
-        assertTrue(
-            messages.any { it.llmClient == "AnthropicLLMClient" },
-            "At least one message must be delegated to Anthropic client"
-        )
+        with(messages) {
+            any { it.llmClient == "AnthropicLLMClient" }
+                .shouldBeTrue()
 
-        assertTrue(
-            messages.any { it.llmClient == "OpenAILLMClient" },
-            "At least one message must be delegated to OpenAI client"
-        )
+            any { it.llmClient == "OpenAILLMClient" }
+                .shouldBeTrue()
 
-        assertTrue(
-            messages
-                .filter { it.llmClient == "AnthropicLLMClient" }
-                .all { it.model.provider == LLMProvider.Anthropic },
-            "All prompts with Anthropic model must be delegated to Anthropic client"
-        )
+            filter { it.llmClient == "AnthropicLLMClient" }
+                .all { it.model.provider == LLMProvider.Anthropic }
+                .shouldBeTrue()
 
-        assertTrue(
-            messages
-                .filter { it.llmClient == "OpenAILLMClient" }
-                .all { it.model.provider == LLMProvider.OpenAI },
-            "All prompts with OpenAI model must be delegated to OpenAI client"
-        )
+            filter { it.llmClient == "OpenAILLMClient" }
+                .all { it.model.provider == LLMProvider.OpenAI }.shouldBeTrue()
+        }
     }
 
     @ParameterizedTest
@@ -145,7 +130,7 @@ class AIAgentMultipleLLMIntegrationTest : AIAgentTestBase() {
                 )
                 fail("Expected AIAgentException but got result: $result")
             } catch (e: IllegalArgumentException) {
-                assertContains(e.message ?: "", "Tool \"create_file\" is not defined")
+                (e.message ?: "").shouldContain("Tool \"create_file\" is not defined")
             }
         }
 
@@ -166,24 +151,15 @@ class AIAgentMultipleLLMIntegrationTest : AIAgentTestBase() {
 
             val agent = createTestAgentWithToolsInSubgraph(fs, eventHandlerConfig, model, false)
 
-            val result = agent.run(
+            agent.run(
                 "Create a simple file called 'test.txt' with content 'Hello from subgraph tools!' and then read it back to verify it was created correctly."
-            )
+            ).shouldNotBeBlank()
 
-            assertNotNull(result)
-            assertTrue(result.isNotEmpty(), "Agent result should not be empty")
-
-            assertTrue(
-                fs.fileCount() > 0,
-                "Agent must have created at least one file using subgraph tools"
-            )
+            fs.fileCount() shouldBeGreaterThan 0
 
             when (val readResult = fs.read("test.txt")) {
                 is OperationResult.Success -> {
-                    assertTrue(
-                        readResult.result.contains("Hello from subgraph tools!"),
-                        "File should contain the expected content"
-                    )
+                    readResult.result shouldContain ("Hello from subgraph tools!")
                 }
 
                 is OperationResult.Failure -> {
@@ -191,10 +167,7 @@ class AIAgentMultipleLLMIntegrationTest : AIAgentTestBase() {
                 }
             }
 
-            assertTrue(
-                calledTools.any { it == "create_file" },
-                "At least one LLM call must have tools available"
-            )
+            calledTools.shouldForAny { it == "create_file" }
         }
 
     @Test
@@ -212,18 +185,14 @@ class AIAgentMultipleLLMIntegrationTest : AIAgentTestBase() {
         )
 
         try {
-            val result = agent.run(
+            agent.run(
                 "Generate me a project in Ktor that has a GET endpoint that returns the capital of France. Write a test"
-            )
-            assertNull(result)
+            ) shouldBe null
         } catch (e: AIAgentException) {
             errorMessage = e.message
         } finally {
-            assertEquals(
-                "AI Agent has run into a problem: Agent couldn't finish in given number of steps ($steps). " +
-                    "Please, consider increasing `maxAgentIterations` value in agent's configuration",
-                errorMessage
-            )
+            errorMessage shouldBe "AI Agent has run into a problem: Agent couldn't finish in given number of steps ($steps). " +
+                "Please, consider increasing `maxAgentIterations` value in agent's configuration"
         }
     }
 
@@ -232,7 +201,8 @@ class AIAgentMultipleLLMIntegrationTest : AIAgentTestBase() {
         runTest(timeout = 10.minutes) {
             val llmModel = AnthropicModels.Sonnet_4_5
             Models.assumeAvailable(llmModel.provider)
-            val agent = AIAgent(
+
+            AIAgent(
                 promptExecutor = simpleAnthropicExecutor(anthropicApiKey),
                 llmModel = llmModel,
                 systemPrompt = "You are a calculator with access to the calculator tools. You MUST call tools!!!",
@@ -255,12 +225,7 @@ class AIAgentMultipleLLMIntegrationTest : AIAgentTestBase() {
                         }
                     }
                 }
-            )
-
-            val result = agent.run("calculate 10 plus 15, and then subtract 8")
-            println("result = $result")
-            assertNotNull(result)
-            assertContains(result, "17")
+            ).run("calculate 10 plus 15, and then subtract 8") shouldNotBeNull { shouldContain("17") }
         }
     }
 
@@ -271,7 +236,7 @@ class AIAgentMultipleLLMIntegrationTest : AIAgentTestBase() {
         val fs = MockFileSystem()
 
         val imageFile = File(testResourcesDir.toFile(), "test.png")
-        assertTrue(imageFile.exists(), "Image test file should exist")
+        imageFile.exists().shouldBeTrue()
 
         val imageBytes = imageFile.readBytes()
         val base64Image = Base64.getEncoder().encodeToString(imageBytes)
@@ -283,33 +248,24 @@ class AIAgentMultipleLLMIntegrationTest : AIAgentTestBase() {
                 maxAgentIterations = 20,
             )
 
-            val result = agent.run(
-                """
+            with(
+                agent.run(
+                    """
             I'm sending you an image encoded in base64 format.
 
             data:image/png,$base64Image
 
             Please analyze this image and identify the image format if possible.
             """
-            )
-
-            assertNotNull(result, "Result should not be null")
-            assertTrue(result.isNotBlank(), "Result should not be empty or blank")
-            assertTrue(result.length > 20, "Result should contain more than 20 characters")
-
-            val resultLowerCase = result.lowercase()
-            assertFalse(
-                resultLowerCase.contains("error processing"),
-                "Result should not contain error messages"
-            )
-            assertFalse(
-                resultLowerCase.contains("unable to process"),
-                "Result should not indicate inability to process"
-            )
-            assertFalse(
-                resultLowerCase.contains("cannot process"),
-                "Result should not indicate inability to process"
-            )
+                )
+            ) {
+                shouldNotBeBlank()
+                length shouldBeGreaterThan 20
+                lowercase()
+                    .shouldNotContain("error processing")
+                    .shouldNotContain("unable to process")
+                    .shouldNotContain("cannot process")
+            }
         }
     }
 
@@ -330,7 +286,7 @@ class AIAgentMultipleLLMIntegrationTest : AIAgentTestBase() {
         }
 
         val imageFile = File(testResourcesDir.toFile(), "test.png")
-        assertTrue(imageFile.exists(), "Image test file should exist")
+        imageFile.exists().shouldBeTrue()
 
         val prompt = prompt("example-prompt") {
             system("You are a professional helpful assistant.")
@@ -353,21 +309,14 @@ class AIAgentMultipleLLMIntegrationTest : AIAgentTestBase() {
                 prompt = prompt,
             )
 
-            val result = agent.run("Hi! Please analyse my image.")
-            assertNotNull(result, "Result should not be null")
-            assertTrue(result.isNotBlank(), "Result should not be empty or blank")
-            assertTrue(result.length > 20, "Result should contain more than 20 characters")
-
-            val resultLowerCase = result.lowercase()
-            assertFalse(resultLowerCase.contains("error processing"), "Result should not contain error messages")
-            assertFalse(
-                resultLowerCase.contains("unable to process"),
-                "Result should not indicate inability to process"
-            )
-            assertFalse(
-                resultLowerCase.contains("cannot process"),
-                "Result should not indicate inability to process"
-            )
+            with(agent.run("Hi! Please analyse my image.")) {
+                shouldNotBeBlank()
+                length shouldBeGreaterThan 20
+                lowercase()
+                    .shouldNotContain("error processing")
+                    .shouldNotContain("unable to process")
+                    .shouldNotContain("cannot process")
+            }
         }
     }
 }

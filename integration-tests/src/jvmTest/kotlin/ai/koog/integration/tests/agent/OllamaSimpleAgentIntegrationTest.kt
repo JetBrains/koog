@@ -10,11 +10,12 @@ import ai.koog.integration.tests.OllamaTestFixture
 import ai.koog.integration.tests.OllamaTestFixtureExtension
 import ai.koog.integration.tests.utils.annotations.Retry
 import ai.koog.integration.tests.utils.annotations.RetryExtension
+import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.collections.shouldNotBeEmpty
 import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import kotlin.test.AfterTest
-import kotlin.test.Test
-import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
 @ExtendWith(OllamaTestFixtureExtension::class)
@@ -35,7 +36,7 @@ class OllamaSimpleAgentIntegrationTest : AIAgentTestBase() {
 
     val actualToolCalls = mutableListOf<String>()
 
-    @AfterTest
+    @AfterEach
     fun teardown() {
         actualToolCalls.clear()
     }
@@ -63,7 +64,7 @@ class OllamaSimpleAgentIntegrationTest : AIAgentTestBase() {
             }
         """.trimIndent()
 
-        val agent = AIAgent(
+        AIAgent(
             promptExecutor = ollamaSimpleExecutor,
             systemPrompt = bookwormPrompt,
             llmModel = ollamaModel,
@@ -71,14 +72,8 @@ class OllamaSimpleAgentIntegrationTest : AIAgentTestBase() {
             toolRegistry = toolRegistry,
             maxIterations = 10,
             installFeatures = { install(EventHandler.Feature, eventHandlerConfig) }
-        )
+        ).run("Give me top 10 books of the all time.")
 
-        agent.run("Give me top 10 books of the all time.")
-
-        assertTrue(actualToolCalls.isNotEmpty(), "No tools were called for model")
-        assertTrue(
-            actualToolCalls.contains(SayToUser.name),
-            "The ${SayToUser.name} tool was not called for model"
-        )
+        actualToolCalls.shouldNotBeEmpty().shouldContain(SayToUser.name)
     }
 }

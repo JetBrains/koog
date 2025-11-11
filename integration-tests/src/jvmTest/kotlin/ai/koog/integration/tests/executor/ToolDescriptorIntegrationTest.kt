@@ -16,6 +16,8 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.ToolChoice
+import io.kotest.inspectors.shouldForAny
+import io.kotest.matchers.collections.shouldNotBeEmpty
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.serializer
@@ -24,7 +26,6 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
-import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
 class ToolDescriptorIntegrationTest {
@@ -327,22 +328,19 @@ class ToolDescriptorIntegrationTest {
 
         val client = getLLMClientForProvider(model.provider)
 
-        val testTool = tool as TestTool<*, *>
-        val prompt = prompt(testTool.toolName.value, params = LLMParams(toolChoice = ToolChoice.Required)) {
-            system("You are a helpful assistant with access to tools. ALWAYS use the available tool.")
-            user(testTool.toolName.testUserMessage)
-        }
-
-        withRetry {
-            val response = client.execute(prompt, model, listOf(tool.descriptor))
-            assertTrue(response.isNotEmpty(), "Response should not be empty for tool ${tool.name} with model $model")
-            val hasToolCall = response.any { message ->
-                message is Message.Tool.Call && message.tool == tool.name
+        with(tool as TestTool<*, *>) {
+            withRetry {
+                client.execute(
+                    prompt(toolName.value, params = LLMParams(toolChoice = ToolChoice.Required)) {
+                        system("You are a helpful assistant with access to tools. ALWAYS use the available tool.")
+                        user(toolName.testUserMessage)
+                    },
+                    model,
+                    listOf(descriptor)
+                )
+                    .shouldNotBeEmpty()
+                    .shouldForAny { it is Message.Tool.Call && it.tool == name }
             }
-            assertTrue(
-                hasToolCall,
-                "Response should contain a Tool.Call message for tool '${tool.name}' with model $model."
-            )
         }
     }
 }

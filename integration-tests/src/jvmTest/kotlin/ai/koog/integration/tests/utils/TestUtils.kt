@@ -2,12 +2,14 @@ package ai.koog.integration.tests.utils
 
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.message.Message
+import io.kotest.inspectors.shouldForAny
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.collections.shouldNotBeEmpty
+import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 object TestUtils {
     fun singlePropertyObjectSchema(provider: LLMProvider, propName: String, type: String) = buildJsonObject {
@@ -27,15 +29,15 @@ object TestUtils {
 
     fun assertExceptionMessageContains(ex: Throwable, vararg substrings: String) {
         val msg = ex.message ?: ""
-        val matches = substrings.any { needle -> msg.contains(needle, ignoreCase = true) }
-        assertTrue(matches, "Exception message doesn't contain expected error: ${ex.message}")
+        substrings.any { needle -> msg.contains(needle, ignoreCase = true) }.shouldBeTrue()
     }
 
     fun assertResponseContainsToolCall(response: List<Message>, toolName: String) {
-        assertTrue(response.isNotEmpty(), "Response should not be empty")
-        assertTrue(response.any { it is Message.Tool.Call }, "Response should contain a tool call")
-        val toolCall = response.first { it is Message.Tool.Call } as Message.Tool.Call
-        assertEquals(toolName, toolCall.tool, "Tool name should be $toolName")
+        with(response) {
+            shouldNotBeEmpty()
+            shouldForAny { it is Message.Tool.Call }
+            toolName shouldBe (first { it is Message.Tool.Call } as Message.Tool.Call).tool
+        }
     }
 
     fun isValidJson(str: String): Boolean = try {

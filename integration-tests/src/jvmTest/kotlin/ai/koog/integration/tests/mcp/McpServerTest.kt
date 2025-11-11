@@ -11,29 +11,26 @@ import ai.koog.integration.tests.utils.RetryUtils
 import ai.koog.integration.tests.utils.getLLMClientForProvider
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
-import io.github.oshai.kotlinlogging.KotlinLogging
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.types.shouldNotBeTypeOf
 import io.ktor.server.netty.Netty
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
-import kotlin.test.Test
-import kotlin.test.assertContains
-import kotlin.test.assertEquals
-import kotlin.test.assertIsNot
-import kotlin.test.assertNotEquals
-import kotlin.test.assertTrue
+import org.junit.jupiter.api.Test
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
 class McpServerTest {
 
-    private val logger = KotlinLogging.logger {}
-
     @Test
     fun integration_testMcpServerWithSSETransport() = runTest(timeout = 1.minutes) {
         val randomNumberTool = RandomNumberTool()
-        assertIsNot<McpTool>(randomNumberTool)
+        randomNumberTool.shouldNotBeTypeOf<McpTool>()
 
         val (server, connectors) = startSseMcpServer(
             factory = Netty,
@@ -43,7 +40,7 @@ class McpServerTest {
         )
 
         val port = connectors.firstOrNull()?.port ?: 0
-        assertNotEquals(0, port, "Port should not be 0")
+        port shouldNotBe 0
 
         try {
             val toolRegistry = withContext(Dispatchers.Default.limitedParallelism(1)) {
@@ -54,13 +51,10 @@ class McpServerTest {
                 }
             }
 
-            assertEquals(
-                listOf(randomNumberTool.descriptor),
-                toolRegistry.tools.map { it.descriptor },
-            )
+            toolRegistry.tools.map { it.descriptor }.shouldContainExactly(randomNumberTool.descriptor)
 
             val model = OpenAIModels.Chat.GPT4o
-            val result = withContext(Dispatchers.Default.limitedParallelism(1)) {
+            withContext(Dispatchers.Default.limitedParallelism(1)) {
                 withTimeout(40.seconds) {
                     AIAgent(
                         promptExecutor = SingleLLMPromptExecutor(getLLMClientForProvider(model.provider)),
@@ -68,20 +62,13 @@ class McpServerTest {
                         toolRegistry = toolRegistry,
                     ).run("Provide random number using ${randomNumberTool.name}")
                 }
-            }
-
-            logger.info { "Result: $result" }
-
-            assertContains(
-                result.replace("[\\s,_]+".toRegex(), ""),
-                randomNumberTool.last.toString(),
-            )
+            }.replace("[\\s,_]+".toRegex(), "").shouldContain(randomNumberTool.last.toString())
         } finally {
             server.close()
 
             withContext(Dispatchers.Default.limitedParallelism(1)) {
                 RetryUtils.withRetry {
-                    assertTrue(isPortAvailable(port), "Port $port should be available")
+                    isPortAvailable(port).shouldBeTrue()
                 }
             }
         }

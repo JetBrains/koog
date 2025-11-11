@@ -41,6 +41,7 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
+import io.kotest.matchers.paths.shouldExist
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.cancel
@@ -73,6 +74,7 @@ open class AIAgentTestBase {
         @BeforeAll
         fun setup() {
             testResourcesDir = Paths.get(AIAgentTestBase::class.java.getResource("/media")!!.toURI())
+            testResourcesDir.shouldExist()
         }
 
         @JvmStatic
@@ -110,58 +112,58 @@ open class AIAgentTestBase {
             state: State,
         ) -> Unit,
     ) {
-        val state = State()
-
-        val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
-            onAgentCompleted { eventContext ->
-                state.results.add(eventContext.result)
-            }
-
-            onAgentExecutionFailed { eventContext ->
-                state.errors.add(eventContext.throwable)
-            }
-
-            onLLMCallStarting { eventContext ->
-                if (eventContext.tools.isEmpty() &&
-                    eventContext.prompt.params.toolChoice == null
-                ) {
-                    state.reasoningCallsCount++
+        with(State()) {
+            val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
+                onAgentCompleted { eventContext ->
+                    results.add(eventContext.result)
                 }
-            }
 
-            onNodeExecutionStarting { eventContext ->
-                val input = eventContext.input
+                onAgentExecutionFailed { eventContext ->
+                    errors.add(eventContext.throwable)
+                }
 
-                if (input is List<*>) {
-                    input.filterIsInstance<Message.Tool.Call>().forEach { call ->
-                        state.parallelToolCalls.add(
+                onLLMCallStarting { eventContext ->
+                    if (eventContext.tools.isEmpty() &&
+                        eventContext.prompt.params.toolChoice == null
+                    ) {
+                        reasoningCallsCount++
+                    }
+                }
+
+                onNodeExecutionStarting { eventContext ->
+                    val input = eventContext.input
+
+                    if (input is List<*>) {
+                        input.filterIsInstance<Message.Tool.Call>().forEach { call ->
+                            parallelToolCalls.add(
+                                ToolCallInfo(
+                                    id = call.id,
+                                    tool = call.tool,
+                                    content = call.content,
+                                    metaInfo = call.metaInfo,
+                                )
+                            )
+                        }
+                    } else if (input is Message.Tool.Call) {
+                        singleToolCalls.add(
                             ToolCallInfo(
-                                id = call.id,
-                                tool = call.tool,
-                                content = call.content,
-                                metaInfo = call.metaInfo,
+                                id = input.id,
+                                tool = input.tool,
+                                content = input.content,
+                                metaInfo = input.metaInfo,
                             )
                         )
                     }
-                } else if (input is Message.Tool.Call) {
-                    state.singleToolCalls.add(
-                        ToolCallInfo(
-                            id = input.id,
-                            tool = input.tool,
-                            content = input.content,
-                            metaInfo = input.metaInfo,
-                        )
-                    )
+                }
+
+                onToolCallStarting { eventContext ->
+                    actualToolCalls.add(eventContext.tool.name)
+                    toolExecutionCounter.add(eventContext.tool.name)
                 }
             }
 
-            onToolCallStarting { eventContext ->
-                state.actualToolCalls.add(eventContext.tool.name)
-                state.toolExecutionCounter.add(eventContext.tool.name)
-            }
+            action(eventHandlerConfig, this)
         }
-
-        action(eventHandlerConfig, state)
     }
 
     data class ToolCallInfo(

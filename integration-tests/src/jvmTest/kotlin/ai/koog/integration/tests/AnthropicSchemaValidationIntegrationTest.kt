@@ -8,12 +8,13 @@ import ai.koog.integration.tests.utils.annotations.Retry
 import ai.koog.integration.tests.utils.tools.ComplexNestedTool
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels
 import ai.koog.prompt.executor.llms.all.simpleAnthropicExecutor
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.string.shouldContain
+import io.kotest.matchers.string.shouldNotBeBlank
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 
 /**
  * Integration test for verifying the fix for the Anthropic API JSON schema validation error
@@ -75,8 +76,7 @@ class AnthropicSchemaValidationIntegrationTest {
         assumeTrue(apiKeyAvailable, "Anthropic API key is not available")
 
         runBlocking {
-            // Create an agent with the Anthropic API and the complex nested tool
-            val agent = AIAgent(
+            AIAgent(
                 promptExecutor = simpleAnthropicExecutor(anthropicApiKey!!),
                 llmModel = AnthropicModels.Sonnet_3_7,
                 systemPrompt = "You are a helpful assistant that can process user profiles. Please use the complex_nested_tool to process the user profile I provide.",
@@ -97,10 +97,7 @@ class AnthropicSchemaValidationIntegrationTest {
                         }
                     }
                 }
-            )
-
-            // Run the agent with a request to process a user profile
-            val result = agent.run(
+            ).run(
                 """
                 Please process this user profile:
                 
@@ -110,18 +107,14 @@ class AnthropicSchemaValidationIntegrationTest {
                 1. HOME: 123 Main St, Springfield, IL 62701
                 2. WORK: 456 Business Ave, Springfield, IL 62701
                 """.trimIndent()
-            )
-
-            // Verify the result
-            println("\nResult: $result")
-            assertNotNull(result, "Result should not be null")
-            assertTrue(result.isNotBlank(), "Result should not be empty or blank")
-
-            // Check that the result contains expected information
-            assertTrue(result.lowercase().contains("john doe"), "Result should contain the user's name")
-            assertTrue(result.lowercase().contains("john.doe@example.com"), "Result should contain the user's email")
-            assertTrue(result.lowercase().contains("main st"), "Result should contain the home address street")
-            assertTrue(result.lowercase().contains("business ave"), "Result should contain the work address street")
+            ) shouldNotBeNull {
+                shouldNotBeBlank()
+                lowercase()
+                    .shouldContain("john doe")
+                    .shouldContain("john.doe@example.com")
+                    .shouldContain("main st")
+                    .shouldContain("business ave")
+            }
         }
     }
 }

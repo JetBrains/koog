@@ -48,12 +48,24 @@ import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.ToolChoice
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.structure.executeStructured
+import io.kotest.assertions.withClue
+import io.kotest.inspectors.shouldForAll
+import io.kotest.inspectors.shouldForAny
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.booleans.shouldNotBeTrue
+import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.collections.shouldNotBeEmpty
+import io.kotest.matchers.collections.shouldNotContainAnyOf
+import io.kotest.matchers.ints.shouldBeGreaterThan
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assumptions.assumeFalse
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
@@ -64,8 +76,6 @@ import kotlin.io.path.pathString
 import kotlin.io.path.readBytes
 import kotlin.io.path.readText
 import kotlin.io.path.writeBytes
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.io.files.Path as KtPath
@@ -95,7 +105,6 @@ abstract class ExecutorIntegrationTestBase {
 
     open fun integration_testExecute(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
-        val executor = getExecutor(model)
 
         val prompt = Prompt.build("test-prompt") {
             system("You are a helpful assistant.")
@@ -103,19 +112,17 @@ abstract class ExecutorIntegrationTestBase {
         }
 
         withRetry(times = 3, testName = "integration_testExecute[${model.id}]") {
-            val response = executor.execute(prompt, model)
-            assertNotNull(response, "Response should not be null")
-            assertTrue(response.isNotEmpty(), "Response should not be empty")
-            assertTrue(response.any { it is Message.Assistant }, "Response should be an Assistant message")
-
-            val assistantMessage = response.first { it is Message.Assistant }
-            assertTrue(
-                assistantMessage.content.contains("Paris", ignoreCase = true),
-                "Response should contain 'Paris'"
-            )
-            assertNotNull(assistantMessage.metaInfo.inputTokensCount, "Input tokens count should not be null")
-            assertNotNull(assistantMessage.metaInfo.outputTokensCount, "Output tokens count should not be null")
-            assertNotNull(assistantMessage.metaInfo.totalTokensCount, "Total tokens count should not be null")
+            getExecutor(model).execute(prompt, model) shouldNotBeNull {
+                shouldNotBeEmpty()
+                with(shouldForAny { it is Message.Assistant }.first()) {
+                    content.lowercase().shouldContain("paris")
+                    with(metaInfo) {
+                        inputTokensCount.shouldNotBeNull()
+                        outputTokensCount.shouldNotBeNull()
+                        totalTokensCount.shouldNotBeNull()
+                    }
+                }
+            }
         }
     }
 
@@ -133,57 +140,58 @@ abstract class ExecutorIntegrationTestBase {
         }
 
         withRetry(times = 3, testName = "integration_testExecuteStreaming[${model.id}]") {
-            val messageBuilder = StringBuilder()
-            val endMessages = mutableListOf<StreamFrame.End>()
-            val toolMessages = mutableListOf<StreamFrame.ToolCall>()
-            executor.executeStreaming(prompt, model).collect {
-                when (it) {
-                    is StreamFrame.Append -> messageBuilder.append(it.text)
-                    is StreamFrame.End -> endMessages.add(it)
-                    is StreamFrame.ToolCall -> toolMessages.add(it)
+            with(StringBuilder()) {
+                val endMessages = mutableListOf<StreamFrame.End>()
+                val toolMessages = mutableListOf<StreamFrame.ToolCall>()
+                executor.executeStreaming(prompt, model).collect {
+                    when (it) {
+                        is StreamFrame.Append -> append(it.text)
+                        is StreamFrame.End -> endMessages.add(it)
+                        is StreamFrame.ToolCall -> toolMessages.add(it)
+                    }
+                }
+                length shouldNotBe (0)
+                toolMessages.shouldBeEmpty()
+                endMessages.size shouldBe 1
+
+                toString() shouldNotBeNull {
+                    shouldContain("1")
+                    shouldContain("2")
+                    shouldContain("3")
+                    shouldContain("4")
+                    shouldContain("5")
                 }
             }
-            assertTrue(messageBuilder.isNotEmpty(), "Response message should not be empty")
-            assertTrue(toolMessages.isEmpty(), "Response should not contain any tools be empty")
-            assertEquals(endMessages.size, 1, "Response should contain single end message")
-
-            val fullResponse = messageBuilder.toString()
-            assertTrue(
-                fullResponse.contains("1") &&
-                    fullResponse.contains("2") &&
-                    fullResponse.contains("3") &&
-                    fullResponse.contains("4") &&
-                    fullResponse.contains("5"),
-                "Full response should contain numbers 1 through 5"
-            )
         }
     }
 
     open fun integration_testToolWithRequiredParams(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
-        val executor = getExecutor(model)
 
         withRetry(times = 3, testName = "integration_testToolWithRequiredParams[${model.id}]") {
-            val response = executor.execute(calculatorPrompt, model, listOf(CalculatorTool.descriptor))
-            assertTrue(response.isNotEmpty(), "Response should not be empty")
-            assertResponseContainsToolCall(response, CalculatorTool.name)
+            with(getExecutor(model).execute(calculatorPrompt, model, listOf(CalculatorTool.descriptor))) {
+                shouldNotBeEmpty()
+                assertResponseContainsToolCall(this, CalculatorTool.name)
+            }
         }
     }
 
     open fun integration_testToolWithNotRequiredOptionalParams(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
-        val executor = getExecutor(model)
 
         withRetry(times = 3, testName = "integration_testToolWithNotRequiredOptionalParams[${model.id}]") {
-            val response = executor.execute(
-                calculatorPromptNotRequiredOptionalParams,
-                model,
-                listOf(calculatorToolDescriptorOptionalParams)
-            )
-            assertTrue(response.isNotEmpty(), "Response should not be empty")
-            assertResponseContainsToolCall(response, CalculatorTool.name)
+            with(
+                getExecutor(model).execute(
+                    calculatorPromptNotRequiredOptionalParams,
+                    model,
+                    listOf(calculatorToolDescriptorOptionalParams)
+                )
+            ) {
+                shouldNotBeEmpty()
+                assertResponseContainsToolCall(this, CalculatorTool.name)
+            }
         }
     }
 
@@ -191,11 +199,11 @@ abstract class ExecutorIntegrationTestBase {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
-        val executor = getExecutor(model)
         withRetry(times = 3, testName = "integration_testToolWithOptionalParams[${model.id}]") {
-            val response = executor.execute(calculatorPrompt, model, listOf(calculatorToolDescriptorOptionalParams))
-            assertTrue(response.isNotEmpty(), "Response should not be empty")
-            assertResponseContainsToolCall(response, CalculatorTool.name)
+            with(getExecutor(model).execute(calculatorPrompt, model, listOf(calculatorToolDescriptorOptionalParams))) {
+                shouldNotBeEmpty()
+                assertResponseContainsToolCall(this, CalculatorTool.name)
+            }
         }
     }
 
@@ -211,12 +219,11 @@ abstract class ExecutorIntegrationTestBase {
             user("Picker random color for me!")
         }
 
-        val executor = getExecutor(model)
-
         withRetry(times = 3, testName = "integration_testToolWithNoParams[${model.id}]") {
-            val response = executor.execute(prompt, model, listOf(PickColorTool.descriptor))
-            assertTrue(response.isNotEmpty(), "Response should not be empty")
-            assertResponseContainsToolCall(response, PickColorTool.name)
+            with(getExecutor(model).execute(prompt, model, listOf(PickColorTool.descriptor))) {
+                shouldNotBeEmpty()
+                assertResponseContainsToolCall(this, PickColorTool.name)
+            }
         }
     }
 
@@ -232,12 +239,11 @@ abstract class ExecutorIntegrationTestBase {
             user("Pick me a color from red, green, orange!")
         }
 
-        val executor = getExecutor(model)
-
         withRetry(times = 3, testName = "integration_testToolWithListEnumParams[${model.id}]") {
-            val response = executor.execute(prompt, model, listOf(PickColorFromListTool.descriptor))
-            assertTrue(response.isNotEmpty(), "Response should not be empty")
-            assertResponseContainsToolCall(response, PickColorFromListTool.name)
+            with(getExecutor(model).execute(prompt, model, listOf(PickColorFromListTool.descriptor))) {
+                shouldNotBeEmpty()
+                assertResponseContainsToolCall(this, PickColorFromListTool.name)
+            }
         }
     }
 
@@ -252,12 +258,11 @@ abstract class ExecutorIntegrationTestBase {
             user("Select winners from lottery tickets [10, 42, 43, 51, 22] and [34, 12, 4, 53, 99]")
         }
 
-        val executor = getExecutor(model)
-
         withRetry(times = 3, testName = "integration_testToolWithNestedListParams[${model.id}]") {
-            val response = executor.execute(prompt, model, listOf(LotteryTool.descriptor))
-            assertTrue(response.isNotEmpty(), "Response should not be empty")
-            assertResponseContainsToolCall(response, LotteryTool.name)
+            with(getExecutor(model).execute(prompt, model, listOf(LotteryTool.descriptor))) {
+                shouldNotBeEmpty()
+                assertResponseContainsToolCall(this, LotteryTool.name)
+            }
         }
     }
 
@@ -265,7 +270,10 @@ abstract class ExecutorIntegrationTestBase {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.provider != LLMProvider.Anthropic, "Anthropic does not support anyOf")
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
-        assumeTrue(model.provider != LLMProvider.MistralAI, "MistralAI returns json array which we are failing to parse. Remove after KG-535 fix")
+        assumeTrue(
+            model.provider != LLMProvider.MistralAI,
+            "MistralAI returns json array which we are failing to parse. Remove after KG-535 fix"
+        )
 
         val prompt = Prompt.build("test-tools") {
             system {
@@ -275,15 +283,11 @@ abstract class ExecutorIntegrationTestBase {
             user("Calculate price of 10 tokens if I pay 0.003 euro. Discount is not provided to set null.")
         }
 
-        val executor = getExecutor(model)
-
         withRetry(times = 3, testName = "integration_testToolsWithNullParams[${model.id}]") {
-            val response = executor.execute(prompt, model, listOf(SimplePriceCalculatorTool.descriptor))
-            assertTrue(response.isNotEmpty(), "Response should not be empty")
-            assertTrue(
-                response.first { it is Message.Tool.Call }.content.contains("null"),
-                "Tool call response should contain null"
-            )
+            with(getExecutor(model).execute(prompt, model, listOf(SimplePriceCalculatorTool.descriptor))) {
+                shouldNotBeEmpty()
+                first { it is Message.Tool.Call }.content.shouldContain("null")
+            }
         }
     }
 
@@ -300,12 +304,12 @@ abstract class ExecutorIntegrationTestBase {
             user("Calculate price of 10 tokens if I pay 0.003 euro for token with 10% discount.")
         }
 
-        val executor = getExecutor(model)
-
         withRetry(testName = "integration_testToolsWithAnyOfParams[${model.id}]") {
-            val response = executor.execute(prompt, model, listOf(PriceCalculatorTool.descriptor))
-            assertTrue(response.isNotEmpty(), "Response should not be empty")
-            assertResponseContainsToolCall(response, PriceCalculatorTool.name)
+            with(getExecutor(model).execute(prompt, model, listOf(PriceCalculatorTool.descriptor))) {
+                shouldNotBeEmpty()
+                shouldForAny { it is Message.Tool.Call }
+                assertResponseContainsToolCall(this, PriceCalculatorTool.name)
+            }
         }
     }
 
@@ -315,13 +319,13 @@ abstract class ExecutorIntegrationTestBase {
 
         withRetry(times = 3, testName = "integration_testStructuredDataStreaming[${model.id}]") {
             val markdownStream = getLLMClient(model).executeStreaming(countryStructuredOutputPrompt, model)
-            val countries = mutableListOf<Country>()
+            with(mutableListOf<Country>()) {
+                parseMarkdownStreamToCountries(markdownStream).collect { country ->
+                    add(country)
+                }
 
-            parseMarkdownStreamToCountries(markdownStream).collect { country ->
-                countries.add(country)
+                shouldNotBeEmpty()
             }
-
-            assertTrue(countries.isNotEmpty(), "Countries list should not be empty")
         }
     }
 
@@ -331,7 +335,6 @@ abstract class ExecutorIntegrationTestBase {
     ) =
         runTest(timeout = 10.minutes) {
             Models.assumeAvailable(model.provider)
-            val executor = getExecutor(model)
 
             val file = MediaTestUtils.createMarkdownFileForScenario(scenario, testResourcesDir)
 
@@ -356,17 +359,18 @@ abstract class ExecutorIntegrationTestBase {
 
             withRetry {
                 try {
-                    val response = executor.execute(prompt, model).single()
-                    when (scenario) {
-                        MarkdownTestScenario.MALFORMED_SYNTAX,
-                        MarkdownTestScenario.MATH_NOTATION,
-                        MarkdownTestScenario.BROKEN_LINKS,
-                        MarkdownTestScenario.IRREGULAR_TABLES -> {
-                            checkResponseBasic(response)
-                        }
+                    with(getExecutor(model).execute(prompt, model).single()) {
+                        when (scenario) {
+                            MarkdownTestScenario.MALFORMED_SYNTAX,
+                            MarkdownTestScenario.MATH_NOTATION,
+                            MarkdownTestScenario.BROKEN_LINKS,
+                            MarkdownTestScenario.IRREGULAR_TABLES -> {
+                                checkResponseBasic(this)
+                            }
 
-                        else -> {
-                            checkExecutorMediaResponse(response)
+                            else -> {
+                                checkExecutorMediaResponse(this)
+                            }
                         }
                     }
                 } catch (e: Exception) {
@@ -390,9 +394,10 @@ abstract class ExecutorIntegrationTestBase {
     open fun integration_testImageProcessing(scenario: ImageTestScenario, model: LLModel) =
         runTest(timeout = 300.seconds) {
             Models.assumeAvailable(model.provider)
-            assumeTrue(model.capabilities.contains(LLMCapability.Vision.Image), "Model must support vision capability")
-
-            val executor = getExecutor(model)
+            assumeTrue(
+                model.capabilities.contains(LLMCapability.Vision.Image),
+                "Model must support vision capability"
+            )
 
             val imageFile = MediaTestUtils.getImageFileForScenario(scenario, testResourcesDir)
 
@@ -424,44 +429,21 @@ abstract class ExecutorIntegrationTestBase {
 
             withRetry {
                 try {
-                    val response = executor.execute(prompt, model).single()
-                    checkExecutorMediaResponse(response)
+                    checkExecutorMediaResponse(getExecutor(model).execute(prompt, model).single())
                 } catch (e: Exception) {
                     // For some edge cases, exceptions are expected
                     when (scenario) {
                         ImageTestScenario.LARGE_IMAGE_ANTHROPIC, ImageTestScenario.LARGE_IMAGE -> {
-                            assertEquals(
-                                e.message?.contains("400 Bad Request"),
-                                true,
-                                "Expected exception for a large image [400 Bad Request] was not found, got [${e.message}] instead"
-                            )
-                            assertEquals(
-                                e.message?.contains("image exceeds"),
-                                true,
-                                "Expected exception for a large image [image exceeds] was not found, got [${e.message}] instead"
-                            )
+                            (e.message?.shouldContain("400 Bad Request"))
+                            (e.message?.shouldContain("image exceeds"))
                         }
 
                         ImageTestScenario.CORRUPTED_IMAGE, ImageTestScenario.EMPTY_IMAGE -> {
-                            assertEquals(
-                                e.message?.contains("400 Bad Request"),
-                                true,
-                                "Expected exception for a corrupted image [400 Bad Request] was not found, got [${e.message}] instead"
-                            )
+                            (e.message?.shouldContain("400 Bad Request"))
                             if (model.provider == LLMProvider.Anthropic) {
-                                assertEquals(
-                                    e.message?.contains("Could not process image"),
-                                    true,
-                                    "Expected exception for a corrupted image [Could not process image] was not found, got [${e.message}] instead"
-                                )
+                                (e.message?.shouldContain("Could not process image"))
                             } else if (model.provider == LLMProvider.OpenAI) {
-                                assertEquals(
-                                    e.message?.contains(
-                                        "You uploaded an unsupported image. Please make sure your image is valid."
-                                    ),
-                                    true,
-                                    "Expected exception for a corrupted image [You uploaded an unsupported image. Please make sure your image is valid..] was not found, got [${e.message}] instead"
-                                )
+                                (e.message?.shouldContain("You uploaded an unsupported image. Please make sure your image is valid."))
                             }
                         }
 
@@ -476,8 +458,6 @@ abstract class ExecutorIntegrationTestBase {
     open fun integration_testTextProcessingBasic(scenario: TextTestScenario, model: LLModel) =
         runTest(timeout = 300.seconds) {
             Models.assumeAvailable(model.provider)
-
-            val executor = getExecutor(model)
 
             val file = MediaTestUtils.createTextFileForScenario(scenario, testResourcesDir)
 
@@ -510,39 +490,20 @@ abstract class ExecutorIntegrationTestBase {
 
             withRetry {
                 try {
-                    val response = executor.execute(prompt, model).single()
-                    checkExecutorMediaResponse(response)
+                    checkExecutorMediaResponse(getExecutor(model).execute(prompt, model).single())
                 } catch (e: Exception) {
                     when (scenario) {
                         TextTestScenario.EMPTY_TEXT -> {
                             if (model.provider == LLMProvider.Google) {
-                                assertEquals(
-                                    e.message?.contains("400 Bad Request"),
-                                    true,
-                                    "Expected exception for empty text [400 Bad Request] was not found, got [${e.message}] instead"
-                                )
-                                assertEquals(
-                                    e.message?.contains(
-                                        "Unable to submit request because it has an empty inlineData parameter. Add a value to the parameter and try again."
-                                    ),
-                                    true,
-                                    "Expected exception for empty text [Unable to submit request because it has an empty inlineData parameter. Add a value to the parameter and try again] was not found, got [${e.message}] instead"
-                                )
+                                (e.message?.shouldContain("400 Bad Request"))
+                                (e.message?.shouldContain("Unable to submit request because it has an empty inlineData parameter. Add a value to the parameter and try again."))
                             }
                         }
 
                         TextTestScenario.LONG_TEXT_5_MB -> {
                             if (model.provider == LLMProvider.Anthropic) {
-                                assertEquals(
-                                    e.message?.contains("400 Bad Request"),
-                                    true,
-                                    "Expected exception for long text [400 Bad Request] was not found, got [${e.message}] instead"
-                                )
-                                assertEquals(
-                                    e.message?.contains("prompt is too long"),
-                                    true,
-                                    "Expected exception for long text [prompt is too long:] was not found, got [${e.message}] instead"
-                                )
+                                (e.message?.shouldContain("400 Bad Request"))
+                                (e.message?.shouldContain("prompt is too long"))
                             } else if (model.provider == LLMProvider.Google) {
                                 throw e
                             }
@@ -564,8 +525,6 @@ abstract class ExecutorIntegrationTestBase {
                 "Model must support audio capability"
             )
 
-            val executor = getExecutor(model)
-
             val audioFile = MediaTestUtils.createAudioFileForScenario(scenario, testResourcesDir)
 
             val prompt = prompt("audio-test-${scenario.name.lowercase()}") {
@@ -579,27 +538,14 @@ abstract class ExecutorIntegrationTestBase {
 
             withRetry(times = 3, testName = "integration_testAudioProcessingBasic[${model.id}]") {
                 try {
-                    val response = executor.execute(prompt, model).single()
-                    checkExecutorMediaResponse(response)
+                    checkExecutorMediaResponse(getExecutor(model).execute(prompt, model).single())
                 } catch (e: Exception) {
                     if (scenario == AudioTestScenario.CORRUPTED_AUDIO) {
-                        assertEquals(
-                            e.message?.contains("400 Bad Request"),
-                            true,
-                            "Expected exception for empty text [400 Bad Request] was not found, got [${e.message}] instead"
-                        )
+                        (e.message?.shouldContain("400 Bad Request"))
                         if (model.provider == LLMProvider.OpenAI) {
-                            assertEquals(
-                                e.message?.contains("This model does not support the format you provided."),
-                                true,
-                                "Expected exception for corrupted audio [This model does not support the format you provided.]"
-                            )
+                            (e.message?.shouldContain("This model does not support the format you provided."))
                         } else if (model.provider == LLMProvider.Google) {
-                            assertEquals(
-                                e.message?.contains("Request contains an invalid argument."),
-                                true,
-                                "Expected exception for corrupted audio [Request contains an invalid argument.]"
-                            )
+                            (e.message?.shouldContain("Request contains an invalid argument."))
                         }
                     } else {
                         throw e
@@ -610,7 +556,6 @@ abstract class ExecutorIntegrationTestBase {
 
     open fun integration_testBase64EncodedAttachment(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
-        val executor = getExecutor(model)
 
         assumeTrue(
             model.capabilities.contains(LLMCapability.Vision.Image),
@@ -636,20 +581,16 @@ abstract class ExecutorIntegrationTestBase {
         }
 
         withRetry {
-            val response = executor.execute(prompt, model).single()
-            checkExecutorMediaResponse(response)
-
-            assertTrue(
-                response.content.contains("image", ignoreCase = true),
-                "Response should mention the image"
-            )
+            with(getExecutor(model).execute(prompt, model).single()) {
+                checkExecutorMediaResponse(this)
+                content.shouldContain("image")
+            }
         }
     }
 
     open fun integration_testUrlBasedAttachment(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.provider !== LLMProvider.Google, "Google models do not support URL attachments")
-        val executor = getExecutor(model)
 
         assumeTrue(
             model.capabilities.contains(LLMCapability.Vision.Image),
@@ -672,15 +613,13 @@ abstract class ExecutorIntegrationTestBase {
         }
 
         withRetry {
-            val response = executor.execute(prompt, model).single()
-            checkExecutorMediaResponse(response)
-
-            assertTrue(
-                response.content.contains("image", ignoreCase = true) ||
-                    response.content.contains("python", ignoreCase = true) ||
-                    response.content.contains("logo", ignoreCase = true),
-                "Response should mention the image content"
-            )
+            with(getExecutor(model).execute(prompt, model).single()) {
+                checkExecutorMediaResponse(this)
+                content.lowercase()
+                    .shouldContain("image")
+                    .shouldContain("python")
+                    .shouldContain("logo")
+            }
         }
     }
 
@@ -690,17 +629,17 @@ abstract class ExecutorIntegrationTestBase {
             "Model does not support Standard JSON Schema"
         )
 
-        val executor = getExecutor(model)
-
         withRetry {
-            val result = executor.executeStructured(
-                prompt = weatherStructuredOutputPrompt,
-                model = model,
-                config = getConfigNoFixingParserNative(model)
-            )
-
-            assertTrue(result.isSuccess, "Structured output should succeed: ${result.exceptionOrNull()}")
-            checkWeatherStructuredOutputResponse(result)
+            with(
+                getExecutor(model).executeStructured(
+                    prompt = weatherStructuredOutputPrompt,
+                    model = model,
+                    config = getConfigNoFixingParserNative(model)
+                )
+            ) {
+                isSuccess.shouldBeTrue()
+                checkWeatherStructuredOutputResponse(this)
+            }
         }
     }
 
@@ -710,17 +649,17 @@ abstract class ExecutorIntegrationTestBase {
             "Model does not support Standard JSON Schema"
         )
 
-        val executor = getExecutor(model)
-
         withRetry {
-            val result = executor.executeStructured(
-                prompt = weatherStructuredOutputPrompt,
-                model = model,
-                config = getConfigFixingParserNative(model)
-            )
-
-            assertTrue(result.isSuccess, "Structured output should succeed: ${result.exceptionOrNull()}")
-            checkWeatherStructuredOutputResponse(result)
+            with(
+                getExecutor(model).executeStructured(
+                    prompt = weatherStructuredOutputPrompt,
+                    model = model,
+                    config = getConfigFixingParserNative(model)
+                )
+            ) {
+                isSuccess.shouldBeTrue()
+                checkWeatherStructuredOutputResponse(this)
+            }
         }
     }
 
@@ -736,17 +675,17 @@ abstract class ExecutorIntegrationTestBase {
             )
         }
 
-        val executor = getExecutor(model)
-
         withRetry {
-            val result = executor.executeStructured(
-                prompt = weatherStructuredOutputPrompt,
-                model = model,
-                config = getConfigNoFixingParserManual(model)
-            )
-
-            assertTrue(result.isSuccess, "Structured output should succeed: ${result.exceptionOrNull()}")
-            checkWeatherStructuredOutputResponse(result)
+            with(
+                getExecutor(model).executeStructured(
+                    prompt = weatherStructuredOutputPrompt,
+                    model = model,
+                    config = getConfigNoFixingParserManual(model)
+                )
+            ) {
+                isSuccess.shouldBeTrue()
+                checkWeatherStructuredOutputResponse(this)
+            }
         }
     }
 
@@ -755,17 +694,18 @@ abstract class ExecutorIntegrationTestBase {
             (model.id.contains("flash-lite")),
             "Gemini Flash Lite models fail to return manually requested structured output"
         )
-        val executor = getExecutor(model)
 
         withRetry(6) {
-            val result = executor.executeStructured(
-                prompt = weatherStructuredOutputPrompt,
-                model = model,
-                config = getConfigFixingParserManual(model)
-            )
-
-            assertTrue(result.isSuccess, "Structured output should succeed: ${result.exceptionOrNull()}")
-            checkWeatherStructuredOutputResponse(result)
+            with(
+                getExecutor(model).executeStructured(
+                    prompt = weatherStructuredOutputPrompt,
+                    model = model,
+                    config = getConfigFixingParserManual(model)
+                )
+            ) {
+                isSuccess.shouldBeTrue()
+                checkWeatherStructuredOutputResponse(this)
+            }
         }
     }
 
@@ -778,18 +718,20 @@ abstract class ExecutorIntegrationTestBase {
         /** tool choice auto is default and thus is tested by [integration_testToolWithRequiredParams] */
 
         withRetry(times = 3, testName = "integration_testToolChoiceRequired[${model.id}]") {
-            val response = getLLMClient(model).execute(
-                prompt.withParams(
-                    prompt.params.copy(
-                        toolChoice = ToolChoice.Required
-                    )
-                ),
-                model,
-                listOf(CalculatorTool.descriptor)
-            )
-
-            assertTrue(response.isNotEmpty(), "Response should not be empty")
-            assertResponseContainsToolCall(response, CalculatorTool.descriptor.name)
+            with(
+                getLLMClient(model).execute(
+                    prompt.withParams(
+                        prompt.params.copy(
+                            toolChoice = ToolChoice.Required
+                        )
+                    ),
+                    model,
+                    listOf(CalculatorTool.descriptor)
+                )
+            ) {
+                shouldNotBeEmpty()
+                assertResponseContainsToolCall(this, CalculatorTool.descriptor.name)
+            }
         }
     }
 
@@ -798,7 +740,10 @@ abstract class ExecutorIntegrationTestBase {
 
         assumeTrue(model.provider != LLMProvider.Bedrock, "Bedrock API doesn't support 'none' tool choice.")
         assumeTrue(LLMCapability.ToolChoice in model.capabilities, "Model $model does not support tool choice")
-        assumeTrue(model.provider != LLMProvider.MistralAI, "MistralAI returns json array which we are failing to parse. Remove after KG-535 fix")
+        assumeTrue(
+            model.provider != LLMProvider.MistralAI,
+            "MistralAI returns json array which we are failing to parse. Remove after KG-535 fix"
+        )
 
         val prompt = Prompt.build("test-calculator-tool") {
             system("You are a helpful assistant.")
@@ -806,25 +751,30 @@ abstract class ExecutorIntegrationTestBase {
         }
 
         withRetry(times = 3, testName = "integration_testToolChoiceNone[${model.id}]") {
-            val response = getLLMClient(model).execute(
-                prompt.withParams(
-                    prompt.params.copy(
-                        toolChoice = ToolChoice.None
-                    )
-                ),
-                model,
-                listOf(CalculatorTool.descriptor)
-            )
-
-            assertTrue(response.isNotEmpty(), "Response should not be empty")
-            assertTrue(response.none { it is Message.Tool.Call }, "Response should not contain tool calls")
+            with(
+                getLLMClient(model).execute(
+                    prompt.withParams(
+                        prompt.params.copy(
+                            toolChoice = ToolChoice.None
+                        )
+                    ),
+                    model,
+                    listOf(CalculatorTool.descriptor)
+                )
+            ) {
+                shouldNotBeEmpty()
+                shouldNotContainAnyOf(Message.Tool.Call)
+            }
         }
     }
 
     open fun integration_testToolChoiceNamed(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
 
-        assumeTrue(model.capabilities.contains(LLMCapability.ToolChoice), "Model $model does not support tool choice")
+        assumeTrue(
+            model.capabilities.contains(LLMCapability.ToolChoice),
+            "Model $model does not support tool choice"
+        )
 
         val nothingTool = ToolDescriptor(
             name = "nothing",
@@ -834,18 +784,20 @@ abstract class ExecutorIntegrationTestBase {
         val prompt = calculatorPrompt
 
         withRetry(times = 3, testName = "integration_testToolChoiceNamed[${model.id}]") {
-            val response = getLLMClient(model).execute(
-                prompt.withParams(
-                    prompt.params.copy(
-                        toolChoice = ToolChoice.Named(nothingTool.name)
-                    )
-                ),
-                model,
-                listOf(CalculatorTool.descriptor, nothingTool)
-            )
-
-            assertTrue(response.isNotEmpty(), "Response should not be empty")
-            assertResponseContainsToolCall(response, nothingTool.name)
+            with(
+                getLLMClient(model).execute(
+                    prompt.withParams(
+                        prompt.params.copy(
+                            toolChoice = ToolChoice.Named(nothingTool.name)
+                        )
+                    ),
+                    model,
+                    listOf(CalculatorTool.descriptor, nothingTool)
+                )
+            ) {
+                shouldNotBeEmpty()
+                assertResponseContainsToolCall(this, nothingTool.name)
+            }
         }
     }
 
@@ -855,12 +807,12 @@ abstract class ExecutorIntegrationTestBase {
             return@runTest
         }
         val testText = "integration test embedding"
-        val embedding = client.embed(testText, model)
-        assertNotNull(embedding, "Embedding should not be null")
-        assertTrue(embedding.isNotEmpty(), "Embedding should not be empty for model ${model.id}")
-        assertTrue(embedding.size > 100, "Embedding should have a reasonable number of dimensions")
-        embedding.forEach { value ->
-            assertTrue(value.isFinite(), "Embedding values should be finite")
+        client.embed(testText, model) shouldNotBeNull {
+            shouldNotBeEmpty()
+            size shouldBeGreaterThan 100
+            shouldForAll {
+                it.isFinite()
+            }
         }
     }
 
@@ -873,32 +825,37 @@ abstract class ExecutorIntegrationTestBase {
             system("You can handle multiple system messages.")
             user("Respond with a short message.")
         }
-        val response = getLLMClient(model).execute(prompt, model).single()
-        assertEquals(Message.Role.Assistant, response.role, "First message should be an assistant message")
+        getLLMClient(model).execute(prompt, model).single().role shouldBe Message.Role.Assistant
     }
 
     open fun integration_testSingleMessageModeration(model: LLModel) = runTest(timeout = 300.seconds) {
-        assumeTrue(model.capabilities.contains(LLMCapability.Moderation), "Model $model does not support moderation")
+        assumeTrue(
+            model.capabilities.contains(LLMCapability.Moderation),
+            "Model $model does not support moderation"
+        )
         val client = getLLMClient(model)
 
         val prompt = prompt("test-harmful-content") {
             user(String(Base64.getDecoder().decode("SG93IGNhbiBJIGhhcm0gc29tZW9uZT8="))) // For testing purposes
         }
 
-        val result = client.moderate(prompt = prompt, model = model)
-
-        assertTrue(result.isHarmful, "Harmful content should be detected!")
-        assert(
-            result.violatesOneOf(
-                ModerationCategory.Illicit,
-                ModerationCategory.IllicitViolent,
-                ModerationCategory.Violence
-            )
-        ) { "Violence or crime must be detected!" }
+        withClue("Violence or crime must be detected!") {
+            with(client.moderate(prompt = prompt, model = model)) {
+                isHarmful.shouldBeTrue()
+                violatesOneOf(
+                    ModerationCategory.Illicit,
+                    ModerationCategory.IllicitViolent,
+                    ModerationCategory.Violence
+                ).shouldBeTrue()
+            }
+        }
     }
 
     open fun integration_testMultipleMessagesModeration(model: LLModel) = runTest(timeout = 300.seconds) {
-        assumeTrue(model.capabilities.contains(LLMCapability.Moderation), "Model $model does not support moderation")
+        assumeTrue(
+            model.capabilities.contains(LLMCapability.Moderation),
+            "Model $model does not support moderation"
+        )
         val client = getLLMClient(model)
 
         // Not harmful (without the answer)
@@ -938,25 +895,28 @@ abstract class ExecutorIntegrationTestBase {
             ) // for testing only
         }
 
-        assert(
-            !client.moderate(prompt = questionOnly, model = model).isHarmful
-        ) { "Question only should not be detected as harmful!" }
+        withClue("Question only should not be detected as harmful!") {
+            client.moderate(
+                prompt = questionOnly,
+                model = model
+            ).isHarmful.shouldNotBeTrue()
+        }
 
-        assert(
-            !client.moderate(prompt = answerOnly, model = model).isHarmful
-        ) { "Answer alone should not be detected as harmful!" }
+        withClue("Answer only should not be detected as harmful!") {
+            client.moderate(prompt = answerOnly, model = model).isHarmful.shouldNotBeTrue()
+        }
 
-        val multiMessageReply = client.moderate(
-            prompt = promptWithMultipleMessages,
-            model = model
-        )
-
-        assert(multiMessageReply.isHarmful) { "Question together with answer must be detected as harmful!" }
+        withClue("Question + answer should be detected as harmful!") {
+            client.moderate(
+                prompt = promptWithMultipleMessages,
+                model = model
+            ).isHarmful.shouldBeTrue()
+        }
     }
 
     open fun integration_testGetModels(provider: LLMProvider): Unit = runBlocking {
-        val client = getLLMClientForProvider(provider)
-        val models = client.models()
-        assertTrue(models.isNotEmpty(), "Models list should not be empty")
+        withClue("Models list should not be empty") {
+            getLLMClientForProvider(provider).models().shouldNotBeEmpty()
+        }
     }
 }

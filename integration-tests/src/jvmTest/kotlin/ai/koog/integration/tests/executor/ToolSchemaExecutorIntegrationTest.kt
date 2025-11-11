@@ -16,6 +16,10 @@ import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.ToolChoice
+import io.kotest.matchers.collections.shouldNotBeEmpty
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -24,10 +28,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.MethodSource
 import java.util.stream.Stream
-import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
 class ToolSchemaExecutorIntegrationTest {
@@ -135,8 +136,6 @@ class ToolSchemaExecutorIntegrationTest {
         Models.assumeAvailable(model.provider)
         assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
 
-        val client = getLLMClientForProvider(model.provider)
-
         val fileTools = FileTools()
 
         val toolsFromCallable = fileTools.asTools()
@@ -151,14 +150,13 @@ class ToolSchemaExecutorIntegrationTest {
         }
 
         withRetry {
-            val response = client.execute(prompt, model, listOf(writeFileTool))
-            val responseText = response.joinToString("\n") { it.content }
-            val fileOperation = Json.decodeFromString<FileOperation>(responseText)
-
-            assertNotNull(response)
-            assertTrue(response.isNotEmpty())
-            assertEquals("hello.txt", fileOperation.filePath)
-            assertEquals("Hello, World!", fileOperation.content)
+            getLLMClientForProvider(model.provider).execute(prompt, model, listOf(writeFileTool)) shouldNotBeNull {
+                shouldNotBeEmpty()
+                with(Json.decodeFromString<FileOperation>(joinToString("\n") { it.content })) {
+                    filePath shouldBe "hello.txt"
+                    content shouldBe "Hello, World!"
+                }
+            }
         }
     }
 
@@ -166,20 +164,21 @@ class ToolSchemaExecutorIntegrationTest {
     @MethodSource("invalidToolDescriptors")
     fun integration_testInvalidToolDescriptorShouldFail(invalidToolDescriptor: ToolDescriptor, message: String) =
         runTest(timeout = 300.seconds) {
-            val prompt = prompt("test-invalid-tool", params = LLMParams(toolChoice = ToolChoice.Required)) {
-                system("You are a helpful assistant with access to tools.")
-                user("Hi.")
-            }
             val model = OpenAIModels.Chat.GPT4o
-            val client = getLLMClientForProvider(model.provider)
 
-            val exception = assertFailsWith<Exception> {
-                client.execute(prompt, model, listOf(invalidToolDescriptor))
+            assertFailsWith<Exception> {
+                getLLMClientForProvider(model.provider).execute(
+                    prompt("test-invalid-tool", params = LLMParams(toolChoice = ToolChoice.Required)) {
+                        system("You are a helpful assistant with access to tools.")
+                        user("Hi.")
+                    },
+                    model,
+                    listOf(invalidToolDescriptor)
+                )
+            }.message.shouldNotBeNull {
+                shouldContain(
+                    message
+                )
             }
-
-            assumeTrue(
-                exception.message?.contains(message) == true,
-                "Expected exception message to contain '$message', but got '${exception.message}'"
-            )
         }
 }

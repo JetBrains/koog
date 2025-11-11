@@ -19,9 +19,17 @@ import ai.koog.prompt.llm.LLMCapability.Tools
 import ai.koog.prompt.llm.LLMCapability.Vision
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.markdown.markdown
+import io.kotest.assertions.withClue
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.booleans.shouldNotBeTrue
+import io.kotest.matchers.nulls.shouldNotBeNull
+import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
+import io.kotest.matchers.string.shouldNotBeBlank
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
@@ -31,10 +39,6 @@ import java.nio.file.Paths
 import java.util.Base64
 import java.util.stream.Stream
 import kotlin.io.path.pathString
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.io.files.Path as KtPath
 
@@ -171,7 +175,7 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
 
         val result = executor.moderate(prompt = prompt, model = moderationModel)
 
-        assertTrue(result.isHarmful, "Harmful content should be detected!")
+        result.isHarmful.shouldBeTrue()
         assert(
             result.violatesOneOf(
                 ModerationCategory.Illicit,
@@ -209,27 +213,29 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
             assistant(unsafeAnswer)
         }
 
-        assert(
-            !executor.moderate(prompt = questionOnly, model = moderationModel).isHarmful
-        ) { "Question only should not be detected as harmful!" }
+        withClue("Question only should not be detected as harmful!") {
+            executor.moderate(prompt = questionOnly, model = moderationModel).isHarmful.shouldNotBeTrue()
+        }
 
-        assert(
-            executor.moderate(prompt = answerOnly, model = moderationModel).isHarmful
-        ) { "Answer alone should be detected as harmful!" }
+        withClue("Answer alone should be detected as harmful!") {
+            executor.moderate(prompt = answerOnly, model = moderationModel).isHarmful.shouldBeTrue()
+        }
 
         val multiMessageReply = executor.moderate(
             prompt = promptWithMultipleMessages,
             model = moderationModel,
         )
 
-        assert(multiMessageReply.isHarmful) { "Question together with answer must be detected as harmful!" }
+        withClue("Question together with answer must be detected as harmful!") {
+            multiMessageReply.isHarmful.shouldBeTrue()
+        }
 
-        assert(
+        withClue("Hate must be detected!") {
             multiMessageReply.violatesOneOf(
                 ModerationCategory.Hate,
                 ModerationCategory.HateThreatening,
-            )
-        ) { "Hate must be detected!" }
+            ).shouldBeTrue()
+        }
     }
 
     // Ollama-specific client tests
@@ -238,26 +244,28 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
         val modelCards = client.getModels()
 
         val modelCard = modelCards.findByNameOrNull(model.id)
-        assertNotNull(modelCard)
+        modelCard shouldNotBe null
     }
 
     @Test
     fun `ollama_test get model`() = runTest(timeout = 600.seconds) {
-        val modelCard = client.getModelOrNull(model.id)
-        assertNotNull(modelCard)
-
-        assertEquals(model.id, modelCard.name)
-        assertEquals("llama", modelCard.family)
-        assertEquals(listOf("llama"), modelCard.families)
-        assertEquals(2019393189, modelCard.size)
-        assertEquals(3212749888, modelCard.parameterCount)
-        assertEquals(131072, modelCard.contextLength)
-        assertEquals(3072, modelCard.embeddingLength)
-        assertEquals("Q4_K_M", modelCard.quantizationLevel)
-        assertEquals(
-            listOf(Completion, Tools, Temperature, Schema.JSON.Basic, Schema.JSON.Standard),
-            modelCard.capabilities
-        )
+        client.getModelOrNull(model.id) shouldNotBeNull {
+            name shouldBe model.id
+            family shouldBe "llama"
+            families shouldBe listOf("llama")
+            size shouldBe 2019393189
+            parameterCount shouldBe 3212749888
+            contextLength shouldBe 131072
+            embeddingLength shouldBe 3072
+            quantizationLevel shouldBe "Q4_K_M"
+            capabilities shouldBe listOf(
+                Completion,
+                Tools,
+                Temperature,
+                Schema.JSON.Basic,
+                Schema.JSON.Standard
+            )
+        }
     }
 
     // Ollama-specific image processing test
@@ -289,25 +297,21 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
                 ImageTestScenario.BASIC_PNG, ImageTestScenario.BASIC_JPG,
                 ImageTestScenario.SMALL_IMAGE, ImageTestScenario.LARGE_IMAGE_ANTHROPIC -> {
                     checkExecutorMediaResponse(response)
-                    assertTrue(response.content.isNotEmpty(), "Response should not be empty")
+                    response.content.shouldNotBeBlank()
                 }
 
                 ImageTestScenario.CORRUPTED_IMAGE, ImageTestScenario.EMPTY_IMAGE -> {
-                    assertTrue(response.content.isNotEmpty(), "Response should not be empty")
+                    response.content.shouldNotBeBlank()
                 }
 
                 ImageTestScenario.LARGE_IMAGE -> {
-                    assertTrue(response.content.isNotEmpty(), "Response should not be empty")
+                    response.content.shouldNotBeBlank()
                 }
             }
         } catch (e: Exception) {
             when (scenario) {
                 ImageTestScenario.CORRUPTED_IMAGE, ImageTestScenario.EMPTY_IMAGE -> {
-                    assertEquals(
-                        true,
-                        e.message?.contains(ollamaException),
-                        "Expected exception for a corrupted image was not found, got [${e.message}] instead"
-                    )
+                    (e.message?.contains(ollamaException) == true).shouldBeTrue()
                 }
 
                 else -> {
