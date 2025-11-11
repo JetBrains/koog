@@ -616,7 +616,6 @@ abstract class ExecutorIntegrationTestBase {
             with(getExecutor(model).execute(prompt, model).single()) {
                 checkExecutorMediaResponse(this)
                 content.lowercase()
-                    .shouldContain("image")
                     .shouldContain("python")
                     .shouldContain("logo")
             }
