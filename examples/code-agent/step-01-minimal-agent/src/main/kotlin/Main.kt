@@ -15,13 +15,11 @@ import kotlinx.coroutines.runBlocking
 val agent = AIAgent(
     promptExecutor = simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")),
     llmModel = OpenAIModels.Chat.GPT5,
-
     toolRegistry = ToolRegistry {
         tool(ListDirectoryTool(JVMFileSystemProvider.ReadOnly))
         tool(ReadFileTool(JVMFileSystemProvider.ReadOnly))
         tool(EditFileTool(JVMFileSystemProvider.ReadWrite))
     },
-
     systemPrompt = """
         You are a highly skilled programmer tasked with updating the provided codebase according to the given task.
         Your goal is to deliver production-ready code changes that integrate seamlessly with the existing codebase and solve given task.
@@ -29,10 +27,11 @@ val agent = AIAgent(
 
     strategy = singleRunStrategy(),
     maxIterations = 100
-) {
+)
+{
     handleEvents {
-        onToolCallStarting { ctx ->
-            println("Tool called: ${ctx.tool.name}")
+        onToolCallStarting { ctx -> println("Tool '${ctx.tool.name}' called with args:" +
+                " ${ctx.toolArgs.toString().take(100)}")
         }
     }
 }
