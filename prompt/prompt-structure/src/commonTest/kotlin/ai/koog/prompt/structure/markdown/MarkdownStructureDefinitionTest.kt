@@ -5,12 +5,12 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-class MarkdownStructuredDataDefinitionTest {
+class MarkdownStructureDefinitionTest {
 
     @Test
     fun testDefinitionWithSchemaOnly() {
         // Create a MarkdownStructuredDataDefinition with schema only
-        val definition = MarkdownStructuredDataDefinition(
+        val definition = MarkdownStructureDefinition(
             id = "test_format",
             schema = {
                 +"# Header"
@@ -37,7 +37,7 @@ class MarkdownStructuredDataDefinitionTest {
     @Test
     fun testDefinitionWithSchemaAndExamples() {
         // Create a MarkdownStructuredDataDefinition with schema and examples
-        val definition = MarkdownStructuredDataDefinition(
+        val definition = MarkdownStructureDefinition(
             id = "test_format",
             schema = {
                 +"# Header"
@@ -70,7 +70,7 @@ class MarkdownStructuredDataDefinitionTest {
     @Test
     fun testDefinitionStructure() {
         // Create a MarkdownStructuredDataDefinition with schema and examples
-        val definition = MarkdownStructuredDataDefinition(
+        val definition = MarkdownStructureDefinition(
             id = "test_format",
             schema = {
                 +"# Schema Header"

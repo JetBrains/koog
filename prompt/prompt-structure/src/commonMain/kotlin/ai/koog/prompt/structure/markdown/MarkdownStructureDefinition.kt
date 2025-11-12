@@ -1,7 +1,7 @@
 package ai.koog.prompt.structure.markdown
 
 import ai.koog.prompt.markdown.markdown
-import ai.koog.prompt.structure.StructuredDataDefinition
+import ai.koog.prompt.structure.StructureDefinition
 import ai.koog.prompt.text.TextContentBuilder
 import ai.koog.prompt.text.TextContentBuilderBase
 
@@ -17,28 +17,28 @@ import ai.koog.prompt.text.TextContentBuilderBase
  * structured data, applied to a [TextContentBuilder].
  * @property definitionPrompt Prompt with definition, explaining the structure to the LLM.
  */
-public class MarkdownStructuredDataDefinition(
+public class MarkdownStructureDefinition(
     public val id: String,
     public val schema: TextContentBuilder.() -> Unit,
     public val examples: (TextContentBuilder.() -> Unit)? = null,
     private val definitionPrompt: (
         builder: TextContentBuilderBase<*>,
-        structureDefinition: MarkdownStructuredDataDefinition
+        structureDefinition: MarkdownStructureDefinition
     ) -> TextContentBuilderBase<*> = ::defaultDefinitionPrompt,
-) : StructuredDataDefinition {
+) : StructureDefinition {
 
     override fun definition(builder: TextContentBuilderBase<*>): TextContentBuilderBase<*> = definitionPrompt(builder, this)
 
     /**
-     * Companion object for [MarkdownStructuredDataDefinition] class, providing utility methods.
+     * Companion object for [MarkdownStructureDefinition] class, providing utility methods.
      */
     public companion object {
         /**
-         * Default prompt explaining the structure definition of [MarkdownStructuredDataDefinition] to the LLM.
+         * Default prompt explaining the structure definition of [MarkdownStructureDefinition] to the LLM.
          */
         public fun defaultDefinitionPrompt(
             builder: TextContentBuilderBase<*>,
-            structureDefinition: MarkdownStructuredDataDefinition
+            structureDefinition: MarkdownStructureDefinition
         ): TextContentBuilderBase<*> = builder.apply {
             with(structureDefinition) {
                 +"DEFINITION OF $id"

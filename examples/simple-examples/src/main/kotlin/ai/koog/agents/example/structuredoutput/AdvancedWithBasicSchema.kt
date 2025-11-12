@@ -21,9 +21,9 @@ import ai.koog.prompt.executor.clients.openai.base.structure.OpenAIBasicJsonSche
 import ai.koog.prompt.executor.llms.MultiLLMPromptExecutor
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.structure.StructureFixingParser
-import ai.koog.prompt.structure.StructuredOutput
-import ai.koog.prompt.structure.StructuredOutputConfig
-import ai.koog.prompt.structure.json.JsonStructuredData
+import ai.koog.prompt.structure.StructuredRequest
+import ai.koog.prompt.structure.StructuredRequestConfig
+import ai.koog.prompt.structure.json.JsonStructure
 import ai.koog.prompt.structure.json.generator.BasicJsonSchemaGenerator
 import ai.koog.prompt.text.text
 import kotlinx.serialization.SerialName
@@ -168,7 +168,7 @@ suspend fun main() {
  But to use native structured output support in different LLM providers you might need to use custom JSON schema generators
  that would produce the schema these providers expect.
      */
-    val genericWeatherStructure = JsonStructuredData.createJsonStructure<SimpleWeatherForecast>(
+    val genericWeatherStructure = JsonStructure.create<SimpleWeatherForecast>(
         // Some models might not work well with json schema, so you may try simple, but it has more limitations (no polymorphism!)
         schemaGenerator = BasicJsonSchemaGenerator,
         examples = exampleForecasts,
@@ -179,12 +179,12 @@ suspend fun main() {
  structured output.
      */
 
-    val openAiWeatherStructure = JsonStructuredData.createJsonStructure<SimpleWeatherForecast>(
+    val openAiWeatherStructure = JsonStructure.create<SimpleWeatherForecast>(
         schemaGenerator = OpenAIBasicJsonSchemaGenerator,
         examples = exampleForecasts,
     )
 
-    val googleWeatherStructure = JsonStructuredData.createJsonStructure<SimpleWeatherForecast>(
+    val googleWeatherStructure = JsonStructure.create<SimpleWeatherForecast>(
         schemaGenerator = GoogleBasicJsonSchemaGenerator,
         examples = exampleForecasts,
     )
@@ -201,28 +201,28 @@ suspend fun main() {
 
             @Suppress("DuplicatedCode")
             val getStructuredForecast by nodeLLMRequestStructured(
-                config = StructuredOutputConfig(
+                config = StructuredRequestConfig(
                     byProvider = mapOf(
                         // Native modes leveraging native structured output support in models, with custom definitions for LLM providers that might have different format.
-                        LLMProvider.OpenAI to StructuredOutput.Native(openAiWeatherStructure),
-                        LLMProvider.Google to StructuredOutput.Native(googleWeatherStructure),
+                        LLMProvider.OpenAI to StructuredRequest.Native(openAiWeatherStructure),
+                        LLMProvider.Google to StructuredRequest.Native(googleWeatherStructure),
                         // Anthropic does not support native structured output yet.
-                        LLMProvider.Anthropic to StructuredOutput.Manual(genericWeatherStructure),
+                        LLMProvider.Anthropic to StructuredRequest.Manual(genericWeatherStructure),
                     ),
 
                     // Fallback manual structured output mode, via explicit prompting with additional message, not native model support
-                    default = StructuredOutput.Manual(genericWeatherStructure),
+                    default = StructuredRequest.Manual(genericWeatherStructure),
 
                     // Helper parser to attempt a fix if a malformed output is produced.
                     fixingParser = StructureFixingParser(
-                        fixingModel = AnthropicModels.Haiku_3_5,
+                        model = AnthropicModels.Haiku_3_5,
                         retries = 2,
                     ),
                 )
             )
 
             nodeStart then prepareRequest then getStructuredForecast
-            edge(getStructuredForecast forwardTo nodeFinish transformed { it.getOrThrow().structure })
+            edge(getStructuredForecast forwardTo nodeFinish transformed { it.getOrThrow().data })
         }
 
     val agentConfig = AIAgentConfig(

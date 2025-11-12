@@ -40,7 +40,6 @@ This is the most general approach: react to each frame kind.
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.prompt.streaming.StreamFrame
-import ai.koog.prompt.structure.markdown.MarkdownStructuredDataDefinition
 
 val strategy = strategy<String, String>("strategy_name") {
     val node by node<Unit, Unit> {
@@ -77,7 +76,7 @@ Here is a raw string stream with the Markdown definition of the output structure
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.prompt.structure.markdown.MarkdownStructuredDataDefinition
+import ai.koog.prompt.structure.markdown.MarkdownStructureDefinition
 
 val strategy = strategy<String, String>("strategy_name") {
     val node by node<Unit, Unit> {
@@ -87,8 +86,8 @@ val strategy = strategy<String, String>("strategy_name") {
 }
 -->
 ```kotlin
-fun markdownBookDefinition(): MarkdownStructuredDataDefinition {
-    return MarkdownStructuredDataDefinition("name", schema = { /*...*/ })
+fun markdownBookDefinition(): MarkdownStructureDefinition {
+    return MarkdownStructureDefinition("name", schema = { /*...*/ })
 }
 
 val mdDefinition = markdownBookDefinition()
@@ -144,6 +143,7 @@ import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.features.eventHandler.feature.handleEvents
 import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.structure.markdown.MarkdownStructureDefinition
 
 fun GraphAIAgent.FeatureContext.installStreamingApi() {
 -->
@@ -188,7 +188,7 @@ it is often more convenient to work with [structured data](structured-output.md)
 
 The structured data approach includes the following key components:
 
-1. **MarkdownStructuredDataDefinition**: a class to help you define the schema and examples for structured data in
+1. **MarkdownStructureDefinition**: a class to help you define the schema and examples for structured data in
    Markdown format.
 2. **markdownStreamingParser**: a function to create a parser that processes a stream of Markdown chunks and emits
    events.
@@ -215,15 +215,15 @@ data class Book(
 #### 2. Define the Markdown structure
 
 Create a definition that specifies how your data should be structured in Markdown with the
-`MarkdownStructuredDataDefinition` class:
+`MarkdownStructureDefinition` class:
 
 <!--- INCLUDE
 import ai.koog.prompt.markdown.markdown
-import ai.koog.prompt.structure.markdown.MarkdownStructuredDataDefinition
+import ai.koog.prompt.structure.markdown.MarkdownStructureDefinition
 -->
 ```kotlin
-fun markdownBookDefinition(): MarkdownStructuredDataDefinition {
-    return MarkdownStructuredDataDefinition("bookList", schema = {
+fun markdownBookDefinition(): MarkdownStructureDefinition {
+    return MarkdownStructureDefinition("bookList", schema = {
         markdown {
             header(1, "title")
             bulleted {
@@ -477,7 +477,7 @@ val runner = AIAgent(
 
 1. **Define clear structures**: create clear and unambiguous markdown structures for your data.
 
-2. **Provide good examples**: include comprehensive examples in your `MarkdownStructuredDataDefinition` to guide the LLM.
+2. **Provide good examples**: include comprehensive examples in your `MarkdownStructureDefinition` to guide the LLM.
 
 3. **Handle incomplete data**: always check for null or empty values when parsing data from the stream.
 

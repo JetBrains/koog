@@ -47,7 +47,7 @@ suspend fun main() {
                     )
                 ),
                 fixingParser = StructureFixingParser(
-                    fixingModel = OpenAIModels.CostOptimized.GPT4oMini,
+                    model = OpenAIModels.CostOptimized.GPT4oMini,
                     retries = 2,
                 )
             )
@@ -59,7 +59,7 @@ suspend fun main() {
             edge(
                 requestClassification forwardTo nodeFinish
                     onCondition { it.isSuccess }
-                    transformed { it.getOrThrow().structure }
+                    transformed { it.getOrThrow().data }
             )
             edge(
                 requestClassification forwardTo callLLM

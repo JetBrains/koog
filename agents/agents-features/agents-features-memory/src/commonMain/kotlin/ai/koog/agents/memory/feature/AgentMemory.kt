@@ -30,9 +30,9 @@ import ai.koog.agents.memory.providers.NoMemory
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
-import ai.koog.prompt.structure.StructuredOutput
-import ai.koog.prompt.structure.StructuredOutputConfig
-import ai.koog.prompt.structure.json.JsonStructuredData
+import ai.koog.prompt.structure.StructuredRequest
+import ai.koog.prompt.structure.StructuredRequestConfig
+import ai.koog.prompt.structure.json.JsonStructure
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
@@ -511,21 +511,21 @@ public suspend fun AIAgentLLMWriteSession.retrieveFactsFromHistory(
     val facts = when (concept.factType) {
         FactType.SINGLE -> {
             val response = requestLLMStructured(
-                config = StructuredOutputConfig(default = StructuredOutput.Manual(JsonStructuredData.createJsonStructure<FactStructure>()))
+                config = StructuredRequestConfig(default = StructuredRequest.Manual(JsonStructure.create<FactStructure>()))
             )
 
             SingleFact(
                 concept = concept,
-                value = response.getOrNull()?.structure?.fact ?: "No facts extracted",
+                value = response.getOrNull()?.data?.fact ?: "No facts extracted",
                 timestamp = timestamp
             )
         }
 
         FactType.MULTIPLE -> {
             val response = requestLLMStructured(
-                config = StructuredOutputConfig(default = StructuredOutput.Manual(JsonStructuredData.createJsonStructure<FactListStructure>()))
+                config = StructuredRequestConfig(default = StructuredRequest.Manual(JsonStructure.create<FactListStructure>()))
             )
-            val factsList = response.getOrNull()?.structure?.facts ?: emptyList()
+            val factsList = response.getOrNull()?.data?.facts ?: emptyList()
             MultipleFacts(concept = concept, values = factsList.map { it.fact }, timestamp = timestamp)
         }
     }

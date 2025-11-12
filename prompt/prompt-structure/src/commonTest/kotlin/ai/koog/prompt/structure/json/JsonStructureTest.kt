@@ -3,8 +3,8 @@ package ai.koog.prompt.structure.json
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.params.LLMParams
-import ai.koog.prompt.structure.StructuredOutput
-import ai.koog.prompt.structure.StructuredOutputConfig
+import ai.koog.prompt.structure.StructuredRequest
+import ai.koog.prompt.structure.StructuredRequestConfig
 import ai.koog.prompt.structure.json.generator.BasicJsonSchemaGenerator
 import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
 import ai.koog.prompt.text.text
@@ -18,7 +18,7 @@ import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-class JsonStructuredDataTest {
+class JsonStructureTest {
 
     val weatherInfoName = "WeatherInfo"
 
@@ -57,7 +57,7 @@ class JsonStructuredDataTest {
 
     @Test
     fun testInlineJsonStructureCreation() {
-        val structure = JsonStructuredData.createJsonStructure<WeatherInfo>()
+        val structure = JsonStructure.create<WeatherInfo>()
         assertEquals(weatherInfoName, structure.id)
         assertEquals(serializer<WeatherInfo>(), structure.serializer)
         assertNotNull(structure.schema)
@@ -65,7 +65,7 @@ class JsonStructuredDataTest {
 
     @Test
     fun testCreateJsonStructureWithStandardGenerator() {
-        val structure = JsonStructuredData.createJsonStructure<WeatherInfo>(
+        val structure = JsonStructure.create<WeatherInfo>(
             schemaGenerator = StandardJsonSchemaGenerator.Default
         )
 
@@ -77,7 +77,7 @@ class JsonStructuredDataTest {
 
     @Test
     fun testCreateJsonStructureWithBasicGenerator() {
-        val structure = JsonStructuredData.createJsonStructure<WeatherInfo>(
+        val structure = JsonStructure.create<WeatherInfo>(
             schemaGenerator = BasicJsonSchemaGenerator.Default
         )
 
@@ -94,7 +94,7 @@ class JsonStructuredDataTest {
             "WeatherInfo.temperature" to "Temperature in Celsius (custom)"
         )
 
-        val structure = JsonStructuredData.createJsonStructure<WeatherInfo>(
+        val structure = JsonStructure.create<WeatherInfo>(
             schemaGenerator = StandardJsonSchemaGenerator.Default,
             descriptionOverrides = descriptionOverrides
         )
@@ -111,7 +111,7 @@ class JsonStructuredDataTest {
             WeatherInfo("Paris", 22, "Sunny", 65)
         )
 
-        val structure = JsonStructuredData.createJsonStructure<WeatherInfo>(
+        val structure = JsonStructure.create<WeatherInfo>(
             examples = examples
         )
 
@@ -122,7 +122,7 @@ class JsonStructuredDataTest {
 
     @Test
     fun testJsonStructureParsing() {
-        val structure = JsonStructuredData.createJsonStructure<WeatherInfo>()
+        val structure = JsonStructure.create<WeatherInfo>()
         val jsonString = """{"city": "Tokyo", "temperature": 25, "description": "Clear", "humidity": 60}"""
 
         val parsed = structure.parse(jsonString)
@@ -135,7 +135,7 @@ class JsonStructuredDataTest {
 
     @Test
     fun testJsonStructureSerialization() {
-        val structure = JsonStructuredData.createJsonStructure<WeatherInfo>()
+        val structure = JsonStructure.create<WeatherInfo>()
         val data = WeatherInfo("Berlin", 20, "Cloudy", 70)
 
         val serialized = structure.pretty(data)
@@ -148,7 +148,7 @@ class JsonStructuredDataTest {
 
     @Test
     fun testComplexJsonStructure() {
-        val structure = JsonStructuredData.createJsonStructure<ComplexData>(
+        val structure = JsonStructure.create<ComplexData>(
             schemaGenerator = StandardJsonSchemaGenerator.Default
         )
 
@@ -173,7 +173,7 @@ class JsonStructuredDataTest {
 
     @Test
     fun testJsonStructureWithNullableFieldsParseNullable() {
-        val structure = JsonStructuredData.createJsonStructure<WeatherInfo>()
+        val structure = JsonStructure.create<WeatherInfo>()
 
         val jsonWithNull = """{"city": "Amsterdam", "temperature": 15, "description": "Overcast"}"""
         val parsedWithNull = structure.parse(jsonWithNull)
@@ -182,7 +182,7 @@ class JsonStructuredDataTest {
 
     @Test
     fun testJsonStructureWithAllFieldsParseNullable() {
-        val structure = JsonStructuredData.createJsonStructure<WeatherInfo>()
+        val structure = JsonStructure.create<WeatherInfo>()
         val jsonWithHumidity = """{"city": "Amsterdam", "temperature": 15, "description": "Overcast", "humidity": 75}"""
         val parsedWithHumidity = structure.parse(jsonWithHumidity)
         assertEquals(75, parsedWithHumidity.humidity)
@@ -190,7 +190,7 @@ class JsonStructuredDataTest {
 
     @Test
     fun testJsonStructureDefinitionContent() {
-        val structure = JsonStructuredData.createJsonStructure<WeatherInfo>(
+        val structure = JsonStructure.create<WeatherInfo>(
             examples = listOf(WeatherInfo("Example", 20, "Example weather", 50))
         )
 
@@ -207,22 +207,22 @@ class JsonStructuredDataTest {
 
     @Test
     fun testStructuredOutputModes() {
-        val structure = JsonStructuredData.createJsonStructure<WeatherInfo>()
+        val structure = JsonStructure.create<WeatherInfo>()
 
-        val nativeMode = StructuredOutput.Native(structure)
+        val nativeMode = StructuredRequest.Native(structure)
         assertEquals(structure, nativeMode.structure)
 
-        val manualMode = StructuredOutput.Manual(structure)
+        val manualMode = StructuredRequest.Manual(structure)
         assertEquals(structure, manualMode.structure)
     }
 
     @Test
     fun testStructuredOutputConfig() {
-        val structure = JsonStructuredData.createJsonStructure<WeatherInfo>()
-        val nativeOutput = StructuredOutput.Native(structure)
-        val manualOutput = StructuredOutput.Manual(structure)
+        val structure = JsonStructure.create<WeatherInfo>()
+        val nativeOutput = StructuredRequest.Native(structure)
+        val manualOutput = StructuredRequest.Manual(structure)
 
-        val config = StructuredOutputConfig(
+        val config = StructuredRequestConfig(
             default = manualOutput,
             byProvider = mapOf(
                 LLMProvider.OpenAI to nativeOutput
@@ -235,7 +235,7 @@ class JsonStructuredDataTest {
 
     @Test
     fun testJsonWithMarkdownBlockParsing() {
-        val structure = JsonStructuredData.createJsonStructure<WeatherInfo>()
+        val structure = JsonStructure.create<WeatherInfo>()
         val jsonString =
             """```
             {
@@ -257,7 +257,7 @@ class JsonStructuredDataTest {
 
     @Test
     fun testJsonWithMarkdownLanguageBlockParsing() {
-        val structure = JsonStructuredData.createJsonStructure<WeatherInfo>()
+        val structure = JsonStructure.create<WeatherInfo>()
         val jsonString =
             """```json
             {
@@ -279,7 +279,7 @@ class JsonStructuredDataTest {
 
     @Test
     fun testJsonWithSingleLineMarkdownParsing() {
-        val structure = JsonStructuredData.createJsonStructure<WeatherInfo>()
+        val structure = JsonStructure.create<WeatherInfo>()
         val jsonString = """`{"city": "Dublin","temperature": 12,"description": "Rainy","humidity": 90}`""".trimMargin()
 
         val parsed = structure.parse(jsonString)

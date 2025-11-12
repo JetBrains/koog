@@ -14,11 +14,11 @@ import ai.koog.prompt.params.LLMParams
  * @property schema The schema that defines the structure and validation rules for the data.
  * @property examples A collection of example instances of the structured data type.
  */
-public abstract class StructuredData<TStruct, TSchema : LLMParams.Schema>(
+public abstract class Structure<TStruct, TSchema : LLMParams.Schema>(
     public val id: String,
     public val schema: TSchema,
     public val examples: List<TStruct>,
-) : StructuredDataDefinition {
+) : StructureDefinition {
     /**
      * Parses the given text into a structured data representation.
      *

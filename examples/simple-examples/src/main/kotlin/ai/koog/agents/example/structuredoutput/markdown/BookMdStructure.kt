@@ -2,7 +2,7 @@ package ai.koog.agents.example.structuredoutput.markdown
 
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.prompt.markdown.markdown
-import ai.koog.prompt.structure.markdown.MarkdownStructuredDataDefinition
+import ai.koog.prompt.structure.markdown.MarkdownStructureDefinition
 import ai.koog.prompt.structure.markdown.markdownStreamingParser
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -74,8 +74,8 @@ fun parseMarkdownStreamToBooks(markdownStream: Flow<String>): Flow<Book> {
     }
 }
 
-fun markdownBookDefinition(): MarkdownStructuredDataDefinition {
-    return MarkdownStructuredDataDefinition("bookList", schema = {
+fun markdownBookDefinition(): MarkdownStructureDefinition {
+    return MarkdownStructureDefinition("bookList", schema = {
         markdown {
             header(1, "bookName")
             bulleted {

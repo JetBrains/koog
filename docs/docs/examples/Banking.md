@@ -543,7 +543,7 @@ val strategy = strategy<String, String>("banking assistant") {
                 )
             ),
             fixingParser = StructureFixingParser(
-                fixingModel = OpenAIModels.CostOptimized.GPT4oMini,
+                model = OpenAIModels.CostOptimized.GPT4oMini,
                 retries = 2,
             )
         )
@@ -557,7 +557,7 @@ val strategy = strategy<String, String>("banking assistant") {
         edge(
             requestClassification forwardTo nodeFinish
                 onCondition { it.isSuccess }
-                transformed { it.getOrThrow().structure }
+                transformed { it.getOrThrow().data }
         )
 
         edge(

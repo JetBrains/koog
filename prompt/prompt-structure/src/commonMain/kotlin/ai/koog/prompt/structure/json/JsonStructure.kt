@@ -2,7 +2,7 @@ package ai.koog.prompt.structure.json
 
 import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.params.LLMParams
-import ai.koog.prompt.structure.StructuredData
+import ai.koog.prompt.structure.Structure
 import ai.koog.prompt.structure.json.generator.JsonSchemaGenerator
 import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
 import ai.koog.prompt.structure.structure
@@ -22,9 +22,9 @@ import kotlinx.serialization.serializer
  * @property serializer The serializer used to convert the data to and from JSON.
  * @property json [kotlinx.serialization.json.Json] instance to perform de/serialization.
  * @property definitionPrompt Prompt with definition, explaining the structure to the LLM.
- * Default is [JsonStructuredData.defaultDefinitionPrompt]
+ * Default is [JsonStructure.defaultDefinitionPrompt]
 */
-public class JsonStructuredData<TStruct>(
+public class JsonStructure<TStruct>(
     id: String,
     schema: LLMParams.Schema.JSON,
     examples: List<TStruct>,
@@ -32,9 +32,9 @@ public class JsonStructuredData<TStruct>(
     public val json: Json,
     private val definitionPrompt: (
         builder: TextContentBuilderBase<*>,
-        structuredData: JsonStructuredData<TStruct>
+        structuredData: JsonStructure<TStruct>
     ) -> TextContentBuilderBase<*> = ::defaultDefinitionPrompt
-) : StructuredData<TStruct, LLMParams.Schema.JSON>(id, schema, examples) {
+) : Structure<TStruct, LLMParams.Schema.JSON>(id, schema, examples) {
 
     override fun parse(text: String): TStruct = json.decodeFromString(serializer, text.trim().stripMarkdown())
 
@@ -54,12 +54,12 @@ public class JsonStructuredData<TStruct>(
     }
 
     /**
-     * Companion object for the [JsonStructuredData] class, providing utility methods to facilitate the
+     * Companion object for the [JsonStructure] class, providing utility methods to facilitate the
      * creation of JSON structures with associated schema generation.
      */
     public companion object {
         /**
-         * Default [Json] instance for [JsonStructuredData.json]
+         * Default [Json] instance for [JsonStructure.json]
          */
         public val defaultJson: Json = Json {
             prettyPrint = true
@@ -71,11 +71,11 @@ public class JsonStructuredData<TStruct>(
         }
 
         /**
-         * Default prompt explaining the structure of [JsonStructuredData] to the LLM.
+         * Default prompt explaining the structure of [JsonStructure] to the LLM.
          */
         public fun <TStruct> defaultDefinitionPrompt(
             builder: TextContentBuilderBase<*>,
-            structuredData: JsonStructuredData<TStruct>
+            structuredData: JsonStructure<TStruct>
         ): TextContentBuilderBase<*> = builder.apply {
             with(structuredData) {
                 markdown {
@@ -155,7 +155,7 @@ public class JsonStructuredData<TStruct>(
          *     val forecast: List<WeatherDatapoint>,
          * )
          *
-         * val weatherStructure = JsonStructuredData.createJsonStructure<WeatherForecast>(
+         * val weatherStructure = JsonStructure.create<WeatherForecast>(
          *     id = "WeatherForecast",
          *     serializer = WeatherForecast.serializer(),
          *     // some models don't work well with full json schema, so you may try simple, but it has more limitations (e.g. limited polymorphism)
@@ -183,9 +183,9 @@ public class JsonStructuredData<TStruct>(
          * @param excludedProperties Optional set of property names to exclude from the schema generation.
          * @param examples List of example data items that conform to the structure, used for demonstrating valid formats.
          * @param definitionPrompt Prompt with definition, explaining the structure to the LLM when the manual mode for
-         * structured output is used. Default is [JsonStructuredData.defaultDefinitionPrompt]
+         * structured output is used. Default is [JsonStructure.defaultDefinitionPrompt]
          */
-        public fun <TStruct> createJsonStructure(
+        public fun <TStruct> create(
             id: String,
             serializer: KSerializer<TStruct>,
             json: Json = defaultJson,
@@ -195,10 +195,10 @@ public class JsonStructuredData<TStruct>(
             examples: List<TStruct> = emptyList(),
             definitionPrompt: (
                 builder: TextContentBuilderBase<*>,
-                structuredData: JsonStructuredData<TStruct>
+                structuredData: JsonStructure<TStruct>
             ) -> TextContentBuilderBase<*> = ::defaultDefinitionPrompt
-        ): JsonStructuredData<TStruct> {
-            return JsonStructuredData(
+        ): JsonStructure<TStruct> {
+            return JsonStructure(
                 id = id,
                 schema = schemaGenerator.generate(json, id, serializer, descriptionOverrides, excludedProperties),
                 examples = examples,
@@ -224,9 +224,9 @@ public class JsonStructuredData<TStruct>(
          * @param excludedProperties Optional set of property names to exclude from the schema generation.
          * @param examples List of example data items that conform to the structure, used for demonstrating valid formats.
          * @param definitionPrompt Prompt with definition, explaining the structure to the LLM when the manual mode for
-         * structured output is used. Default is [JsonStructuredData.defaultDefinitionPrompt]
+         * structured output is used. Default is [JsonStructure.defaultDefinitionPrompt]
          */
-        public inline fun <reified TStruct> createJsonStructure(
+        public inline fun <reified TStruct> create(
             json: Json = defaultJson,
             schemaGenerator: JsonSchemaGenerator = StandardJsonSchemaGenerator.Default,
             descriptionOverrides: Map<String, String> = emptyMap(),
@@ -234,12 +234,12 @@ public class JsonStructuredData<TStruct>(
             examples: List<TStruct> = emptyList(),
             noinline definitionPrompt: (
                 builder: TextContentBuilderBase<*>,
-                structuredData: JsonStructuredData<TStruct>
+                structuredData: JsonStructure<TStruct>
             ) -> TextContentBuilderBase<*> = ::defaultDefinitionPrompt
-        ): JsonStructuredData<TStruct> {
+        ): JsonStructure<TStruct> {
             val serializer = serializer<TStruct>()
 
-            return createJsonStructure(
+            return create(
                 id = serializer.descriptor.serialName.substringAfterLast("."),
                 serializer = serializer,
                 json = json,

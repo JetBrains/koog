@@ -19,7 +19,7 @@ import ai.koog.agents.core.dsl.extension.onToolCall
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.environment.result
 import ai.koog.prompt.message.Message
-import ai.koog.prompt.structure.StructuredOutputConfig
+import ai.koog.prompt.structure.StructuredRequestConfig
 
 // FIXME improve this strategy to use Message.Assistant to chat, it works better than tools
 
@@ -183,7 +183,7 @@ public fun reActStrategy(
  * @param config The configuration for structured output processing, specifying schema, providers, and optional error handling mechanisms.
  */
 public inline fun <reified Output> structuredOutputWithToolsStrategy(
-    config: StructuredOutputConfig<Output>,
+    config: StructuredRequestConfig<Output>,
     parallelTools: Boolean = false
 ): AIAgentGraphStrategy<String, Output> = structuredOutputWithToolsStrategy(
     config,
@@ -203,7 +203,7 @@ public inline fun <reified Output> structuredOutputWithToolsStrategy(
  *                that serves as the input for further processing in the structured output pipeline.
  */
 public inline fun <reified Input, reified Output> structuredOutputWithToolsStrategy(
-    config: StructuredOutputConfig<Output>,
+    config: StructuredRequestConfig<Output>,
     parallelTools: Boolean = false,
     noinline transform: suspend AIAgentGraphContextBase.(input: Input) -> String
 ): AIAgentGraphStrategy<Input, Output> = strategy<Input, Output>("structured_output_with_tools_strategy") {
@@ -214,7 +214,7 @@ public inline fun <reified Input, reified Output> structuredOutputWithToolsStrat
     val sendToolResult by nodeLLMSendMultipleToolResults()
     val transformToStructuredOutput by node<Message.Assistant, Output> { response ->
         llm.writeSession {
-            parseResponseToStructuredResponse(response, config).structure
+            parseResponseToStructuredResponse(response, config).data
         }
     }
 

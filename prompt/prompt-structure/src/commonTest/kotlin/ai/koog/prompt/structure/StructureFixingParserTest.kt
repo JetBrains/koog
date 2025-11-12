@@ -2,7 +2,7 @@ package ai.koog.prompt.structure
 
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.structure.json.JsonStructuredData
+import ai.koog.prompt.structure.json.JsonStructure
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -19,12 +19,12 @@ class StructureFixingParserTest {
 
     private val testData = TestData("test", 42)
     private val testDataJson = Json.encodeToString(testData)
-    private val testStructure = JsonStructuredData.createJsonStructure<TestData>()
+    private val testStructure = JsonStructure.create<TestData>()
 
     @Test
     fun testParseValidContentWithoutFixing() = runTest {
         val parser = StructureFixingParser(
-            fixingModel = OpenAIModels.CostOptimized.GPT4oMini,
+            model = OpenAIModels.CostOptimized.GPT4oMini,
             retries = 2,
         )
         val mockExecutor = getMockExecutor {}
@@ -36,7 +36,7 @@ class StructureFixingParserTest {
     @Test
     fun testFixInvalidContentInMultipleSteps() = runTest {
         val parser = StructureFixingParser(
-            fixingModel = OpenAIModels.CostOptimized.GPT4oMini,
+            model = OpenAIModels.CostOptimized.GPT4oMini,
             retries = 2,
         )
 
@@ -59,7 +59,7 @@ class StructureFixingParserTest {
     @Test
     fun testFailToParseWhenFixingRetriesExceeded() = runTest {
         val parser = StructureFixingParser(
-            fixingModel = OpenAIModels.CostOptimized.GPT4oMini,
+            model = OpenAIModels.CostOptimized.GPT4oMini,
             retries = 2,
         )
 
