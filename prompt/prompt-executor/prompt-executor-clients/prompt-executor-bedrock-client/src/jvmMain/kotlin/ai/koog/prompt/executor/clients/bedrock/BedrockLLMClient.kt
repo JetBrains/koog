@@ -551,14 +551,16 @@ public class BedrockLLMClient(
                                         "png", "PNG" -> GuardrailImageFormat.Png
                                         else -> GuardrailImageFormat.SdkUnknown(part.format)
                                     }
-
-                                    when (val imageContent = part.content) {
-                                        is AttachmentContent.Binary.Base64 -> source = Bytes(imageContent.asBytes())
-                                        is AttachmentContent.Binary.Bytes -> source = Bytes(imageContent.data)
+                                    source = when (val imageContent = part.content) {
+                                        is AttachmentContent.Binary.Base64 -> Bytes(imageContent.asBytes())
+                                        is AttachmentContent.Binary.Bytes -> Bytes(imageContent.data)
                                         is AttachmentContent.PlainText ->
-                                            source = Bytes(imageContent.text.encodeToByteArray())
+                                            Bytes(imageContent.text.encodeToByteArray())
                                         else -> {
-                                            logger.warn { "Unknown image content type: ${imageContent::class.simpleName}" }
+                                            throw IllegalArgumentException(
+                                                "Unsupported image content type: ${imageContent::class.simpleName}. " +
+                                                    "Bedrock Guardrails only supports Binary.Base64, Binary.Bytes, or PlainText content."
+                                            )
                                         }
                                     }
                                 }
@@ -570,11 +572,8 @@ public class BedrockLLMClient(
                         }
                     }
 
-                    // Only add non-null blocks
-                    contentBlock.let {
-                        add(it)
-                        logger.debug { "Added content block ${this.size} to list" }
-                    }
+                    add(contentBlock)
+                    logger.debug { "Added content block ${this.size} to list" }
                 }
             }
         }

@@ -832,12 +832,10 @@ abstract class ExecutorIntegrationTestBase {
 
     open fun integration_testSingleMessageModeration(model: LLModel) = runTest(timeout = 300.seconds) {
         // For Bedrock, moderation is done via guardrails at the client level, not model capabilities
-        if (model.provider != LLMProvider.Bedrock) {
-            assumeTrue(
-                model.capabilities.contains(LLMCapability.Moderation),
-                "Model $model does not support moderation"
-            )
-        }
+        assumeTrue(
+            model.provider == LLMProvider.Bedrock || model.capabilities.contains(LLMCapability.Moderation),
+            "Model $model does not support moderation"
+        )
         val client = getLLMClient(model)
 
         val prompt = prompt("test-harmful-content") {
@@ -858,12 +856,10 @@ abstract class ExecutorIntegrationTestBase {
 
     open fun integration_testMultipleMessagesModeration(model: LLModel) = runTest(timeout = 300.seconds) {
         // For Bedrock, moderation is done via guardrails at the client level, not model capabilities
-        if (model.provider != LLMProvider.Bedrock) {
-            assumeTrue(
-                model.capabilities.contains(LLMCapability.Moderation),
-                "Model $model does not support moderation"
-            )
-        }
+        assumeTrue(
+            model.provider == LLMProvider.Bedrock || model.capabilities.contains(LLMCapability.Moderation),
+            "Model $model does not support moderation"
+        )
         val client = getLLMClient(model)
 
         // Not harmful (without the answer)

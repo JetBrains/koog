@@ -246,47 +246,32 @@ class BedrockLLMClientTest {
                 }
             }
 
-            override val config: BedrockRuntimeClient.Config get() = TODO("Not yet implemented")
-            override suspend fun converse(input: ConverseRequest): ConverseResponse {
-                TODO("Not yet implemented")
-            }
+            override val config: BedrockRuntimeClient.Config
+                get() = throw UnsupportedOperationException("config not implemented in mock client")
 
-            override suspend fun <T> converseStream(
-                input: ConverseStreamRequest,
-                block: suspend (ConverseStreamResponse) -> T
-            ): T {
-                TODO("Not yet implemented")
-            }
+            override suspend fun converse(input: ConverseRequest): ConverseResponse =
+                throw UnsupportedOperationException("converse not implemented in mock client")
 
-            override suspend fun getAsyncInvoke(input: GetAsyncInvokeRequest): GetAsyncInvokeResponse {
-                TODO("Not yet implemented")
-            }
+            override suspend fun <T> converseStream(input: ConverseStreamRequest, block: suspend (ConverseStreamResponse) -> T): T =
+                throw UnsupportedOperationException("converseStream not implemented in mock client")
 
-            override suspend fun invokeModel(input: InvokeModelRequest): InvokeModelResponse {
-                TODO("Not yet implemented")
-            }
+            override suspend fun getAsyncInvoke(input: GetAsyncInvokeRequest): GetAsyncInvokeResponse =
+                throw UnsupportedOperationException("getAsyncInvoke not implemented in mock client")
 
-            override suspend fun <T> invokeModelWithBidirectionalStream(
-                input: InvokeModelWithBidirectionalStreamRequest,
-                block: suspend (InvokeModelWithBidirectionalStreamResponse) -> T
-            ): T {
-                TODO("Not yet implemented")
-            }
+            override suspend fun invokeModel(input: InvokeModelRequest): InvokeModelResponse =
+                throw UnsupportedOperationException("invokeModel not implemented in mock client")
 
-            override suspend fun <T> invokeModelWithResponseStream(
-                input: InvokeModelWithResponseStreamRequest,
-                block: suspend (InvokeModelWithResponseStreamResponse) -> T
-            ): T {
-                TODO("Not yet implemented")
-            }
+            override suspend fun <T> invokeModelWithBidirectionalStream(input: InvokeModelWithBidirectionalStreamRequest, block: suspend (InvokeModelWithBidirectionalStreamResponse) -> T): T =
+                throw UnsupportedOperationException("invokeModelWithBidirectionalStream not implemented in mock client")
 
-            override suspend fun listAsyncInvokes(input: ListAsyncInvokesRequest): ListAsyncInvokesResponse {
-                TODO("Not yet implemented")
-            }
+            override suspend fun <T> invokeModelWithResponseStream(input: InvokeModelWithResponseStreamRequest, block: suspend (InvokeModelWithResponseStreamResponse) -> T): T =
+                throw UnsupportedOperationException("invokeModelWithResponseStream not implemented in mock client")
 
-            override suspend fun startAsyncInvoke(input: StartAsyncInvokeRequest): StartAsyncInvokeResponse {
-                TODO("Not yet implemented")
-            }
+            override suspend fun listAsyncInvokes(input: ListAsyncInvokesRequest): ListAsyncInvokesResponse =
+                throw UnsupportedOperationException("listAsyncInvokes not implemented in mock client")
+
+            override suspend fun startAsyncInvoke(input: StartAsyncInvokeRequest): StartAsyncInvokeResponse =
+                throw UnsupportedOperationException("startAsyncInvoke not implemented in mock client")
 
             override fun close() {
                 print("closing")
@@ -447,15 +432,34 @@ class BedrockLLMClientTest {
                     outputs = emptyList()
                 }
             }
-            override val config: BedrockRuntimeClient.Config get() = TODO("Not used in test")
-            override suspend fun converse(input: ConverseRequest): ConverseResponse = TODO("Not used in test")
-            override suspend fun <T> converseStream(input: ConverseStreamRequest, block: suspend (ConverseStreamResponse) -> T): T = TODO("Not used in test")
-            override suspend fun getAsyncInvoke(input: GetAsyncInvokeRequest): GetAsyncInvokeResponse = TODO("Not used in test")
-            override suspend fun invokeModel(input: InvokeModelRequest): InvokeModelResponse = TODO("Not used in test")
-            override suspend fun <T> invokeModelWithBidirectionalStream(input: InvokeModelWithBidirectionalStreamRequest, block: suspend (InvokeModelWithBidirectionalStreamResponse) -> T): T = TODO("Not used in test")
-            override suspend fun <T> invokeModelWithResponseStream(input: InvokeModelWithResponseStreamRequest, block: suspend (InvokeModelWithResponseStreamResponse) -> T): T = TODO("Not used in test")
-            override suspend fun listAsyncInvokes(input: ListAsyncInvokesRequest): ListAsyncInvokesResponse = TODO("Not used in test")
-            override suspend fun startAsyncInvoke(input: StartAsyncInvokeRequest): StartAsyncInvokeResponse = TODO("Not used in test")
+
+            override val config: BedrockRuntimeClient.Config
+                get() = throw UnsupportedOperationException("config not implemented in mock client")
+
+            override suspend fun converse(input: ConverseRequest): ConverseResponse =
+                throw UnsupportedOperationException("converse not implemented in mock client")
+
+            override suspend fun <T> converseStream(input: ConverseStreamRequest, block: suspend (ConverseStreamResponse) -> T): T =
+                throw UnsupportedOperationException("converseStream not implemented in mock client")
+
+            override suspend fun getAsyncInvoke(input: GetAsyncInvokeRequest): GetAsyncInvokeResponse =
+                throw UnsupportedOperationException("getAsyncInvoke not implemented in mock client")
+
+            override suspend fun invokeModel(input: InvokeModelRequest): InvokeModelResponse =
+                throw UnsupportedOperationException("invokeModel not implemented in mock client")
+
+            override suspend fun <T> invokeModelWithBidirectionalStream(input: InvokeModelWithBidirectionalStreamRequest, block: suspend (InvokeModelWithBidirectionalStreamResponse) -> T): T =
+                throw UnsupportedOperationException("invokeModelWithBidirectionalStream not implemented in mock client")
+
+            override suspend fun <T> invokeModelWithResponseStream(input: InvokeModelWithResponseStreamRequest, block: suspend (InvokeModelWithResponseStreamResponse) -> T): T =
+                throw UnsupportedOperationException("invokeModelWithResponseStream not implemented in mock client")
+
+            override suspend fun listAsyncInvokes(input: ListAsyncInvokesRequest): ListAsyncInvokesResponse =
+                throw UnsupportedOperationException("listAsyncInvokes not implemented in mock client")
+
+            override suspend fun startAsyncInvoke(input: StartAsyncInvokeRequest): StartAsyncInvokeResponse =
+                throw UnsupportedOperationException("startAsyncInvoke not implemented in mock client")
+
             override fun close() {
                 print("closing")
             }
