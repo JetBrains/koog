@@ -1,8 +1,8 @@
 package ai.koog.integration.tests.capabilities
 
-import ai.koog.integration.tests.utils.APIKeys.readTestAnthropicKeyFromEnv
-import ai.koog.integration.tests.utils.APIKeys.readTestGoogleAIKeyFromEnv
-import ai.koog.integration.tests.utils.APIKeys.readTestOpenAIKeyFromEnv
+import ai.koog.integration.tests.utils.TestCredentials.readTestAnthropicKeyFromEnv
+import ai.koog.integration.tests.utils.TestCredentials.readTestGoogleAIKeyFromEnv
+import ai.koog.integration.tests.utils.TestCredentials.readTestOpenAIKeyFromEnv
 import ai.koog.integration.tests.utils.MediaTestScenarios
 import ai.koog.integration.tests.utils.MediaTestUtils.createAudioFileForScenario
 import ai.koog.integration.tests.utils.MediaTestUtils.createTextFileForScenario

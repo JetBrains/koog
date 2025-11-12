@@ -99,8 +99,7 @@ public enum class BedrockInferencePrefixes(public val prefix: String) {
 }
 
 /**
- * Bedrock models
- * Models available through the AWS Bedrock API
+ * Bedrock models available through the AWS Bedrock API
  */
 public object BedrockModels : LLModelDefinitions {
     // Basic capabilities for text-only models

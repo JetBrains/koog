@@ -1,16 +1,19 @@
 package ai.koog.integration.tests.utils
 
-import ai.koog.integration.tests.utils.APIKeys.readAwsAccessKeyIdFromEnv
-import ai.koog.integration.tests.utils.APIKeys.readAwsSecretAccessKeyFromEnv
-import ai.koog.integration.tests.utils.APIKeys.readAwsSessionTokenFromEnv
-import ai.koog.integration.tests.utils.APIKeys.readTestAnthropicKeyFromEnv
-import ai.koog.integration.tests.utils.APIKeys.readTestGoogleAIKeyFromEnv
-import ai.koog.integration.tests.utils.APIKeys.readTestMistralAiKeyFromEnv
-import ai.koog.integration.tests.utils.APIKeys.readTestOpenAIKeyFromEnv
-import ai.koog.integration.tests.utils.APIKeys.readTestOpenRouterKeyFromEnv
+import ai.koog.integration.tests.utils.TestCredentials.readAwsAccessKeyIdFromEnv
+import ai.koog.integration.tests.utils.TestCredentials.readAwsBedrockGuardrailIdFromEnv
+import ai.koog.integration.tests.utils.TestCredentials.readAwsBedrockGuardrailVersionFromEnv
+import ai.koog.integration.tests.utils.TestCredentials.readAwsSecretAccessKeyFromEnv
+import ai.koog.integration.tests.utils.TestCredentials.readAwsSessionTokenFromEnv
+import ai.koog.integration.tests.utils.TestCredentials.readTestAnthropicKeyFromEnv
+import ai.koog.integration.tests.utils.TestCredentials.readTestGoogleAIKeyFromEnv
+import ai.koog.integration.tests.utils.TestCredentials.readTestMistralAiKeyFromEnv
+import ai.koog.integration.tests.utils.TestCredentials.readTestOpenAIKeyFromEnv
+import ai.koog.integration.tests.utils.TestCredentials.readTestOpenRouterKeyFromEnv
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.bedrock.BedrockClientSettings
+import ai.koog.prompt.executor.clients.bedrock.BedrockGuardrailsSettings
 import ai.koog.prompt.executor.clients.bedrock.BedrockLLMClient
 import ai.koog.prompt.executor.clients.google.GoogleLLMClient
 import ai.koog.prompt.executor.clients.mistralai.MistralAILLMClient
@@ -42,7 +45,12 @@ fun getLLMClientForProvider(provider: LLMProvider): LLMClient {
                 this.secretAccessKey = readAwsSecretAccessKeyFromEnv()
                 readAwsSessionTokenFromEnv()?.let { this.sessionToken = it }
             },
-            settings = BedrockClientSettings()
+            settings = BedrockClientSettings(
+                moderationGuardrailsSettings = BedrockGuardrailsSettings(
+                    guardrailIdentifier = readAwsBedrockGuardrailIdFromEnv(),
+                    guardrailVersion = readAwsBedrockGuardrailVersionFromEnv()
+                )
+            )
         )
 
         LLMProvider.Google -> GoogleLLMClient(

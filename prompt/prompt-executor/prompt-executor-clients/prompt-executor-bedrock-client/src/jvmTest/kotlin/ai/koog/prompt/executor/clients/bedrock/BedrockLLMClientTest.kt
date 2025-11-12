@@ -39,6 +39,8 @@ import aws.sdk.kotlin.services.bedrockruntime.model.StartAsyncInvokeResponse
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFails
@@ -202,6 +204,9 @@ class BedrockLLMClientTest {
         }
     }
 
+
+
+    @Execution(ExecutionMode.SAME_THREAD)
     @Test
     fun `can create BedrockLLMClient with moderation guardrails settings`() = runTest {
         val guardrailsSettings = BedrockGuardrailsSettings(
@@ -286,7 +291,7 @@ class BedrockLLMClientTest {
             }
 
             override fun close() {
-                TODO("Not yet implemented")
+                print("closing")
             }
         }
 
@@ -295,18 +300,22 @@ class BedrockLLMClientTest {
             moderationGuardrailsSettings = guardrailsSettings
         )
 
-        val prompt = Prompt.build("test") {
-            user("This is a test prompt")
-        }
-        val model = BedrockModels.AnthropicClaude3Sonnet
+        try {
+            val prompt = Prompt.build("test") {
+                user("This is a test prompt")
+            }
+            val model = BedrockModels.AnthropicClaude3Sonnet
 
-        val moderationResult = client.moderate(prompt, model)
-        assertEquals(true, moderationResult.isHarmful)
-        assertEquals(true, moderationResult.violatesCategory(ModerationCategory.Hate))
-        assertEquals(true, moderationResult.violatesCategory(ModerationCategory.Sexual))
-        assertEquals(true, moderationResult.violatesCategory(ModerationCategory.Misconduct))
-        assertEquals(false, moderationResult.violatesCategory(ModerationCategory.Illicit))
-        assertEquals(null, moderationResult.categories[ModerationCategory.Illicit])
+            val moderationResult = client.moderate(prompt, model)
+            assertEquals(true, moderationResult.isHarmful)
+            assertEquals(true, moderationResult.violatesCategory(ModerationCategory.Hate))
+            assertEquals(true, moderationResult.violatesCategory(ModerationCategory.Sexual))
+            assertEquals(true, moderationResult.violatesCategory(ModerationCategory.Misconduct))
+            assertEquals(false, moderationResult.violatesCategory(ModerationCategory.Illicit))
+            assertEquals(null, moderationResult.categories[ModerationCategory.Illicit])
+        } finally {
+            client.close()
+        }
     }
 
     @Test
@@ -329,6 +338,129 @@ class BedrockLLMClientTest {
         // Verify that moderate method throws an exception because moderationGuardrailsSettings wasn't provided
         assertFailsWith<IllegalArgumentException> {
             client.moderate(prompt, model)
+        }
+    }
+
+    @Execution(ExecutionMode.SAME_THREAD)
+    @Test
+    fun `moderate calls guardrails once for Request-only prompts`() = runTest {
+        val guardrailsSettings = BedrockGuardrailsSettings(
+            guardrailIdentifier = "test-guardrail",
+            guardrailVersion = "1.0"
+        )
+
+        var applyGuardrailCallCount = 0
+
+        val mockClient = createCountingMockClient { applyGuardrailCallCount++ }
+
+        val client = BedrockLLMClient(
+            mockClient,
+            moderationGuardrailsSettings = guardrailsSettings
+        )
+
+        try {
+            // Prompt with only User (Request) message
+            val prompt = Prompt.build("test") {
+                user("hi")
+            }
+            val model = BedrockModels.AnthropicClaude3Sonnet
+
+            client.moderate(prompt, model)
+
+            assertEquals(1, applyGuardrailCallCount, "Should call applyGuardrail exactly once for Request-only prompts")
+        } finally {
+            client.close()
+        }
+    }
+
+    @Execution(ExecutionMode.SAME_THREAD)
+    @Test
+    fun `moderate calls guardrails twice for prompts with both Request and Response`() = runTest {
+        val guardrailsSettings = BedrockGuardrailsSettings(
+            guardrailIdentifier = "test-guardrail",
+            guardrailVersion = "1.0"
+        )
+
+        var applyGuardrailCallCount = 0
+
+        val mockClient = createCountingMockClient { applyGuardrailCallCount++ }
+
+        val client = BedrockLLMClient(
+            mockClient,
+            moderationGuardrailsSettings = guardrailsSettings
+        )
+
+        try {
+            // Prompt with both User (Request) and Assistant (Response) messages
+            val prompt = Prompt.build("test") {
+                user("What is 2+2?")
+                assistant("2+2 equals 4")
+            }
+            val model = BedrockModels.AnthropicClaude3Sonnet
+
+            client.moderate(prompt, model)
+
+            assertEquals(2, applyGuardrailCallCount, "Should call applyGuardrail exactly twice for prompts with both Request and Response")
+        } finally {
+            client.close()
+        }
+    }
+
+    @Execution(ExecutionMode.SAME_THREAD)
+    @Test
+    fun `moderate calls guardrails once for Response-only prompts`() = runTest {
+        val guardrailsSettings = BedrockGuardrailsSettings(
+            guardrailIdentifier = "test-guardrail",
+            guardrailVersion = "1.0"
+        )
+
+        var applyGuardrailCallCount = 0
+
+        val mockClient = createCountingMockClient { applyGuardrailCallCount++ }
+
+        val client = BedrockLLMClient(
+            mockClient,
+            moderationGuardrailsSettings = guardrailsSettings
+        )
+
+        try {
+            // Prompt with only Assistant (Response) message
+            val prompt = Prompt.build("test") {
+                assistant("Hello, how can I help?")
+            }
+            val model = BedrockModels.AnthropicClaude3Sonnet
+
+            client.moderate(prompt, model)
+
+            assertEquals(1, applyGuardrailCallCount, "Should call applyGuardrail exactly once for Response-only prompts")
+        } finally {
+            client.close()
+        }
+    }
+
+    // Helper function to create a counting mock client
+    private fun createCountingMockClient(onApplyGuardrail: () -> Unit): BedrockRuntimeClient {
+        return object : BedrockRuntimeClient {
+            override suspend fun applyGuardrail(input: ApplyGuardrailRequest): ApplyGuardrailResponse {
+                onApplyGuardrail()
+                return ApplyGuardrailResponse {
+                    action = GuardrailAction.None
+                    assessments = emptyList()
+                    outputs = emptyList()
+                }
+            }
+            override val config: BedrockRuntimeClient.Config get() = TODO("Not used in test")
+            override suspend fun converse(input: ConverseRequest): ConverseResponse = TODO("Not used in test")
+            override suspend fun <T> converseStream(input: ConverseStreamRequest, block: suspend (ConverseStreamResponse) -> T): T = TODO("Not used in test")
+            override suspend fun getAsyncInvoke(input: GetAsyncInvokeRequest): GetAsyncInvokeResponse = TODO("Not used in test")
+            override suspend fun invokeModel(input: InvokeModelRequest): InvokeModelResponse = TODO("Not used in test")
+            override suspend fun <T> invokeModelWithBidirectionalStream(input: InvokeModelWithBidirectionalStreamRequest, block: suspend (InvokeModelWithBidirectionalStreamResponse) -> T): T = TODO("Not used in test")
+            override suspend fun <T> invokeModelWithResponseStream(input: InvokeModelWithResponseStreamRequest, block: suspend (InvokeModelWithResponseStreamResponse) -> T): T = TODO("Not used in test")
+            override suspend fun listAsyncInvokes(input: ListAsyncInvokesRequest): ListAsyncInvokesResponse = TODO("Not used in test")
+            override suspend fun startAsyncInvoke(input: StartAsyncInvokeRequest): StartAsyncInvokeResponse = TODO("Not used in test")
+            override fun close() {
+                print("closing")
+            }
         }
     }
 
