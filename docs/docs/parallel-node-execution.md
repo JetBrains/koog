@@ -151,7 +151,7 @@ Selects a result based on an index returned by a selection function:
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.structure.json.JsonStructuredData
+import ai.koog.prompt.structure.json.JsonStructure
 
 typealias Input = String
 typealias Output = String
@@ -181,7 +181,7 @@ val nodeBestJoke by parallel<String, String>(
             user("Here are three jokes: ${jokes.joinToString("\n\n")}")
          }
          val response = requestLLMStructured<JokeRating>()
-         response.getOrNull()!!.structure.bestJokeIndex
+         response.getOrNull()!!.data.bestJokeIndex
       }
    }
 }
@@ -299,7 +299,7 @@ val strategy = strategy("best-joke") {
             }
 
             val response = requestLLMStructured<JokeRating>()
-            val bestJoke = response.getOrNull()!!.structure
+            val bestJoke = response.getOrNull()!!.data
             bestJoke.bestJokeIndex
          }
       }

@@ -9,9 +9,9 @@ import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.structure.StructuredOutput
-import ai.koog.prompt.structure.StructuredOutputConfig
-import ai.koog.prompt.structure.json.JsonStructuredData
+import ai.koog.prompt.structure.StructuredRequest
+import ai.koog.prompt.structure.StructuredRequestConfig
+import ai.koog.prompt.structure.json.JsonStructure
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
@@ -113,9 +113,9 @@ class StructuredOutputWithToolsIntegrationTest {
 
     @Test
     fun testStructuredOutputWithToolsIntegration() = runTest {
-        val structure = JsonStructuredData.createJsonStructure<WeatherResponse>()
-        val config = StructuredOutputConfig(
-            default = StructuredOutput.Manual(structure)
+        val structure = JsonStructure.create<WeatherResponse>()
+        val config = StructuredRequestConfig(
+            default = StructuredRequest.Manual(structure)
         )
 
         val strategy = structuredOutputWithToolsStrategy<WeatherRequest, WeatherResponse>(
@@ -189,9 +189,9 @@ class StructuredOutputWithToolsIntegrationTest {
 
     @Test
     fun testStructuredOutputWithToolsParallelExecution() = runTest {
-        val structure = JsonStructuredData.createJsonStructure<WeatherResponse>()
-        val config = StructuredOutputConfig(
-            default = StructuredOutput.Manual(structure)
+        val structure = JsonStructure.create<WeatherResponse>()
+        val config = StructuredRequestConfig(
+            default = StructuredRequest.Manual(structure)
         )
 
         val strategy = structuredOutputWithToolsStrategy<WeatherRequest, WeatherResponse>(
@@ -261,9 +261,9 @@ class StructuredOutputWithToolsIntegrationTest {
 
     @Test
     fun testStructuredOutputWithNoTools() = runTest {
-        val structure = JsonStructuredData.createJsonStructure<WeatherResponse>()
-        val config = StructuredOutputConfig(
-            default = StructuredOutput.Manual(structure)
+        val structure = JsonStructure.create<WeatherResponse>()
+        val config = StructuredRequestConfig(
+            default = StructuredRequest.Manual(structure)
         )
 
         val strategy = structuredOutputWithToolsStrategy<WeatherRequest, WeatherResponse>(

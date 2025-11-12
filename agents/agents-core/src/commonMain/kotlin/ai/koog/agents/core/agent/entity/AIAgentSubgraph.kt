@@ -17,9 +17,9 @@ import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.structure.StructureFixingParser
-import ai.koog.prompt.structure.StructuredOutput
-import ai.koog.prompt.structure.StructuredOutputConfig
-import ai.koog.prompt.structure.json.JsonStructuredData
+import ai.koog.prompt.structure.StructuredRequest
+import ai.koog.prompt.structure.StructuredRequestConfig
+import ai.koog.prompt.structure.json.JsonStructure
 import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CancellationException
@@ -130,9 +130,9 @@ public open class AIAgentSubgraph<TInput, TOutput>(
             }
 
             val selectedTools = this.requestLLMStructured(
-                config = StructuredOutputConfig(
-                    default = StructuredOutput.Manual(
-                        JsonStructuredData.createJsonStructure<SelectedTools>(
+                config = StructuredRequestConfig(
+                    default = StructuredRequest.Manual(
+                        JsonStructure.create<SelectedTools>(
                             schemaGenerator = StandardJsonSchemaGenerator,
                             examples = listOf(SelectedTools(listOf()), SelectedTools(tools.map { it.name }.take(3))),
                         ),
@@ -143,7 +143,7 @@ public open class AIAgentSubgraph<TInput, TOutput>(
 
             prompt = initialPrompt
 
-            tools.filter { it.name in selectedTools.structure.tools.toSet() }
+            tools.filter { it.name in selectedTools.data.tools.toSet() }
         }
     }
 

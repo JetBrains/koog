@@ -12,9 +12,9 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.llm.OllamaModels
-import ai.koog.prompt.structure.StructuredOutput
-import ai.koog.prompt.structure.StructuredOutputConfig
-import ai.koog.prompt.structure.json.JsonStructuredData
+import ai.koog.prompt.structure.StructuredRequest
+import ai.koog.prompt.structure.StructuredRequestConfig
+import ai.koog.prompt.structure.json.JsonStructure
 import ai.koog.utils.io.use
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
@@ -154,9 +154,9 @@ class AIAgentNodesTest {
         )
 
         // Test Manual mode
-        val manualStructure = JsonStructuredData.createJsonStructure<TestOutput>()
-        val manualConfig = StructuredOutputConfig(
-            default = StructuredOutput.Manual(manualStructure)
+        val manualStructure = JsonStructure.create<TestOutput>()
+        val manualConfig = StructuredRequestConfig(
+            default = StructuredRequest.Manual(manualStructure)
         )
 
         var capturedPrompt: Prompt? = null
@@ -201,9 +201,9 @@ class AIAgentNodesTest {
         )
 
         // Test Native mode
-        val nativeStructure = JsonStructuredData.createJsonStructure<TestOutput>()
-        val nativeConfig = StructuredOutputConfig(
-            default = StructuredOutput.Native(nativeStructure)
+        val nativeStructure = JsonStructure.create<TestOutput>()
+        val nativeConfig = StructuredRequestConfig(
+            default = StructuredRequest.Native(nativeStructure)
         )
 
         val nativeStrategy = strategy<String, String>("test-native") {

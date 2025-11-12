@@ -164,6 +164,6 @@ private suspend fun AIAgentContext.findTheBestJoke(
     }
 
     val response = requestLLMStructured<JokeWinner>()
-    val bestJoke = response.getOrNull()!!.structure
+    val bestJoke = response.getOrNull()!!.data
     bestJoke.index
 }

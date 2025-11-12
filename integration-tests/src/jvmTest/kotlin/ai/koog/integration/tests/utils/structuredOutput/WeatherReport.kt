@@ -5,11 +5,11 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.structure.RegisteredStandardJsonSchemaGenerators
 import ai.koog.prompt.structure.StructureFixingParser
-import ai.koog.prompt.structure.StructuredOutput
-import ai.koog.prompt.structure.StructuredOutputConfig
+import ai.koog.prompt.structure.StructuredRequest
+import ai.koog.prompt.structure.StructuredRequestConfig
 import ai.koog.prompt.structure.StructuredResponse
 import ai.koog.prompt.structure.annotations.InternalStructuredOutputApi
-import ai.koog.prompt.structure.json.JsonStructuredData
+import ai.koog.prompt.structure.json.JsonStructure
 import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -33,7 +33,7 @@ data class WeatherReport(
 )
 
 @OptIn(InternalStructuredOutputApi::class)
-fun getStructure(model: LLModel) = JsonStructuredData.createJsonStructure<WeatherReport>(
+fun getStructure(model: LLModel) = JsonStructure.create<WeatherReport>(
     json = Json,
     schemaGenerator = RegisteredStandardJsonSchemaGenerators[model.provider] ?: StandardJsonSchemaGenerator,
     descriptionOverrides = mapOf(
@@ -46,23 +46,23 @@ fun getStructure(model: LLModel) = JsonStructuredData.createJsonStructure<Weathe
 )
 
 fun getConfigNoFixingParserNative(model: LLModel) =
-    StructuredOutputConfig(default = StructuredOutput.Native(getStructure(model)))
+    StructuredRequestConfig(default = StructuredRequest.Native(getStructure(model)))
 
-fun getConfigFixingParserNative(model: LLModel) = StructuredOutputConfig(
-    default = StructuredOutput.Native(getStructure(model)),
+fun getConfigFixingParserNative(model: LLModel) = StructuredRequestConfig(
+    default = StructuredRequest.Native(getStructure(model)),
     fixingParser = StructureFixingParser(
-        fixingModel = model,
+        model = model,
         retries = 3
     )
 )
 
 fun getConfigNoFixingParserManual(model: LLModel) =
-    StructuredOutputConfig(default = StructuredOutput.Manual(getStructure(model)))
+    StructuredRequestConfig(default = StructuredRequest.Manual(getStructure(model)))
 
-fun getConfigFixingParserManual(model: LLModel) = StructuredOutputConfig(
-    default = StructuredOutput.Manual(getStructure(model)),
+fun getConfigFixingParserManual(model: LLModel) = StructuredRequestConfig(
+    default = StructuredRequest.Manual(getStructure(model)),
     fixingParser = StructureFixingParser(
-        fixingModel = model,
+        model = model,
         retries = 3
     )
 )
@@ -79,7 +79,7 @@ val weatherStructuredOutputPrompt = Prompt.build("test-structured-json") {
 
 // Asserts weather report fields are valid
 fun checkWeatherStructuredOutputResponse(result: Result<StructuredResponse<WeatherReport>>) {
-    val response = result.getOrThrow().structure
+    val response = result.getOrThrow().data
     assertNotNull(response)
 
     assertEquals("London", response.city, "City should be London, got: ${response.city}")

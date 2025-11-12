@@ -9,7 +9,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.structure.annotations.InternalStructuredOutputApi
-import ai.koog.prompt.structure.json.JsonStructuredData
+import ai.koog.prompt.structure.json.JsonStructure
 import ai.koog.prompt.structure.json.generator.BasicJsonSchemaGenerator
 import ai.koog.prompt.structure.json.generator.JsonSchemaGenerator
 import ai.koog.prompt.structure.json.generator.StandardJsonSchemaGenerator
@@ -18,35 +18,40 @@ import kotlinx.serialization.serializer
 import kotlin.reflect.KType
 
 /**
- * Represents a container for structured data parsed from response message.
+ * Represents a container for structured data parsed from a response message.
  *
  * This class is designed to encapsulate both the parsed structured output and the original raw
  * text as returned from a processing step, such as a language model execution.
  *
  * @param T The type of the structured data contained within this response.
- * @property structure The parsed structured data corresponding to the specific schema.
+ * @property data The parsed structured data corresponding to the specific schema.
+ * @property structure The structure used for the response.
  * @property message The original assistant message from which the structure was parsed.
  */
-public data class StructuredResponse<T>(val structure: T, val message: Message.Assistant)
+public data class StructuredResponse<T>(
+    val data: T,
+    val structure: Structure<T, *>,
+    val message: Message.Assistant
+)
 
 /**
  * Configures structured output behavior.
  * Defines which structures in which modes should be used for each provider when requesting a structured output.
  *
- * @property default Fallback [StructuredOutput] to be used when there's no suitable structure found in [byProvider]
+ * @property default Fallback [StructuredRequest] to be used when there's no suitable structure found in [byProvider]
  * for a requested [LLMProvider]. Defaults to `null`, meaning structured output would fail with error in such a case.
  *
- * @property byProvider A map matching [LLMProvider] to compatible [StructuredOutput] definitions. Each provider may
- * require different schema formats. E.g. for [JsonStructuredData] this means you have to use the appropriate
- * [JsonSchemaGenerator] implementation for each provider for [StructuredOutput.Native], or fallback to [StructuredOutput.Manual]
+ * @property byProvider A map matching [LLMProvider] to compatible [StructuredRequest] definitions. Each provider may
+ * require different schema formats. E.g. for [JsonStructure] this means you have to use the appropriate
+ * [JsonSchemaGenerator] implementation for each provider for [StructuredRequest.Native], or fallback to [StructuredRequest.Manual]
  *
  * @property fixingParser Optional parser that handles malformed responses by using an auxiliary LLM to
  * intelligently fix parsing errors. When specified, parsing errors trigger additional
  * LLM calls with error context to attempt correction of the structure format.
  */
-public data class StructuredOutputConfig<T>(
-    public val default: StructuredOutput<T>? = null,
-    public val byProvider: Map<LLMProvider, StructuredOutput<T>> = emptyMap(),
+public data class StructuredRequestConfig<T>(
+    public val default: StructuredRequest<T>? = null,
+    public val byProvider: Map<LLMProvider, StructuredRequest<T>> = emptyMap(),
     public val fixingParser: StructureFixingParser? = null
 ) {
     /**
@@ -58,9 +63,9 @@ public data class StructuredOutputConfig<T>(
      * @return A new prompt reflecting the updated structured output configuration.
      */
     public fun updatePrompt(model: LLModel, prompt: Prompt): Prompt {
-        return when (val mode = structuredOutput(model)) {
+        return when (val mode = structuredRequest(model)) {
             // Don't set schema parameter in prompt and coerce the model manually with user message to provide a structured response.
-            is StructuredOutput.Manual -> {
+            is StructuredRequest.Manual -> {
                 prompt(prompt) {
                     user(
                         markdown {
@@ -71,7 +76,7 @@ public data class StructuredOutputConfig<T>(
             }
 
             // Rely on built-in model capabilities to provide structured response.
-            is StructuredOutput.Native -> {
+            is StructuredRequest.Native -> {
                 prompt.withUpdatedParams { schema = mode.structure.schema }
             }
         }
@@ -86,8 +91,8 @@ public data class StructuredOutputConfig<T>(
      * @param model The large language model (LLM) instance used to identify the structured data configuration.
      * @return The structured data configuration represented as a `StructuredData` instance.
      */
-    public fun structure(model: LLModel): StructuredData<T, *> {
-        return structuredOutput(model).structure
+    public fun structure(model: LLModel): Structure<T, *> {
+        return structuredRequest(model).structure
     }
 
     /**
@@ -101,7 +106,7 @@ public data class StructuredOutputConfig<T>(
      * @return An instance of `StructuredOutput` that represents the structured output configuration for the model.
      * @throws IllegalArgumentException if no configuration is found for the provider and no default configuration is set.
      */
-    private fun structuredOutput(model: LLModel): StructuredOutput<T> {
+    private fun structuredRequest(model: LLModel): StructuredRequest<T> {
         return byProvider[model.provider]
             ?: default
             ?: throw IllegalArgumentException("No structure found for provider ${model.provider}")
@@ -111,37 +116,37 @@ public data class StructuredOutputConfig<T>(
 /**
  * Defines how structured outputs should be generated.
  *
- * Can be [StructuredOutput.Manual] or [StructuredOutput.Native]
+ * Can be [StructuredRequest.Manual] or [StructuredRequest.Native]
  *
  * @param T The type of structured data.
  */
-public sealed interface StructuredOutput<T> {
+public sealed interface StructuredRequest<T> {
     /**
      * The definition of a structure.
      */
-    public val structure: StructuredData<T, *>
+    public val structure: Structure<T, *>
 
     /**
      * Instructs the model to produce structured output through explicit prompting.
      *
-     * Uses an additional user message containing [StructuredData.definition] to guide
+     * Uses an additional user message containing [Structure.definition] to guide
      * the model in generating correctly formatted responses.
      *
      * @property structure The structure definition to be used in output generation.
      */
-    public data class Manual<T>(override val structure: StructuredData<T, *>) : StructuredOutput<T>
+    public data class Manual<T>(override val structure: Structure<T, *>) : StructuredRequest<T>
 
     /**
      * Leverages a model's built-in structured output capabilities.
      *
-     * Uses [StructuredData.schema] to define the expected response format through the model's
+     * Uses [Structure.schema] to define the expected response format through the model's
      * native structured output functionality.
      *
-     * Note: [StructuredData.examples] are not used with this mode, only the schema is sent via parameters.
+     * Note: [Structure.examples] are not used with this mode, only the schema is sent via parameters.
      *
      * @property structure The structure definition to be used in output generation.
      */
-    public data class Native<T>(override val structure: StructuredData<T, *>) : StructuredOutput<T>
+    public data class Native<T>(override val structure: Structure<T, *>) : StructuredRequest<T>
 }
 
 /**
@@ -162,7 +167,7 @@ public sealed interface StructuredOutput<T> {
 public suspend fun <T> PromptExecutor.executeStructured(
     prompt: Prompt,
     model: LLModel,
-    config: StructuredOutputConfig<T>,
+    config: StructuredRequestConfig<T>,
 ): Result<StructuredResponse<T>> {
     val updatedPrompt = config.updatePrompt(model, prompt)
     val response = this.execute(prompt = updatedPrompt, model = model).single()
@@ -178,7 +183,7 @@ public suspend fun <T> PromptExecutor.executeStructured(
  * Registered mapping of providers to their respective known simple JSON schema format generators.
  * The registration is supposed to be done by the LLM clients when they are loaded, to communicate their custom formats.
  *
- * Used to attempt to get a proper generator implicitly in the simple version of [executeStructured] (that does not accept [StructuredOutput] explicitly)
+ * Used to attempt to get a proper generator implicitly in the simple version of [executeStructured] (that does not accept [StructuredRequest] explicitly)
  * to attempt to generate an appropriate schema for the passed [KType].
  */
 @InternalStructuredOutputApi
@@ -188,7 +193,7 @@ public val RegisteredBasicJsonSchemaGenerators: MutableMap<LLMProvider, BasicJso
  * Registered mapping of providers to their respective known full JSON schema format generators.
  * The registration is supposed to be done by the LLM clients on their initialization, to communicate their custom formats.
  *
- * Used to attempt to get a proper generator implicitly in the simple version of [executeStructured] (that does not accept [StructuredOutput] explicitly)
+ * Used to attempt to get a proper generator implicitly in the simple version of [executeStructured] (that does not accept [StructuredRequest] explicitly)
  * to attempt to generate an appropriate schema for the passed [KType].
  */
 @InternalStructuredOutputApi
@@ -226,25 +231,25 @@ public suspend fun <T> PromptExecutor.executeStructured(
     @Suppress("UNCHECKED_CAST")
     val id = serializer.descriptor.serialName.substringAfterLast(".")
 
-    val structuredOutput = when {
-        LLMCapability.Schema.JSON.Standard in model.capabilities -> StructuredOutput.Native(
-            JsonStructuredData.createJsonStructure(
+    val structuredRequest = when {
+        LLMCapability.Schema.JSON.Standard in model.capabilities -> StructuredRequest.Native(
+            JsonStructure.create(
                 id = id,
                 serializer = serializer,
                 schemaGenerator = RegisteredStandardJsonSchemaGenerators[model.provider] ?: StandardJsonSchemaGenerator
             )
         )
 
-        LLMCapability.Schema.JSON.Basic in model.capabilities -> StructuredOutput.Native(
-            JsonStructuredData.createJsonStructure(
+        LLMCapability.Schema.JSON.Basic in model.capabilities -> StructuredRequest.Native(
+            JsonStructure.create(
                 id = id,
                 serializer = serializer,
                 schemaGenerator = RegisteredBasicJsonSchemaGenerators[model.provider] ?: BasicJsonSchemaGenerator
             )
         )
 
-        else -> StructuredOutput.Manual(
-            JsonStructuredData.createJsonStructure(
+        else -> StructuredRequest.Manual(
+            JsonStructure.create(
                 id = id,
                 serializer = serializer,
                 schemaGenerator = StandardJsonSchemaGenerator,
@@ -256,8 +261,8 @@ public suspend fun <T> PromptExecutor.executeStructured(
     return executeStructured(
         prompt = prompt,
         model = model,
-        config = StructuredOutputConfig(
-            default = structuredOutput,
+        config = StructuredRequestConfig(
+            default = structuredRequest,
             fixingParser = fixingParser,
         )
     )
@@ -312,7 +317,7 @@ public suspend inline fun <reified T> PromptExecutor.executeStructured(
  */
 public suspend fun <T> PromptExecutor.parseResponseToStructuredResponse(
     response: Message.Assistant,
-    config: StructuredOutputConfig<T>,
+    config: StructuredRequestConfig<T>,
     model: LLModel
 ): StructuredResponse<T> {
     // Use fixingParser if provided, otherwise parse directly
@@ -322,7 +327,8 @@ public suspend fun <T> PromptExecutor.parseResponseToStructuredResponse(
         ?: structure.parse(response.content)
 
     return StructuredResponse(
-        structure = structureResponse,
+        data = structureResponse,
+        structure = structure,
         message = response
     )
 }

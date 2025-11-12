@@ -194,13 +194,13 @@ suspend fun main() {
          parser to attempt to fix malformed output.
              */
             fixingParser = StructureFixingParser(
-                fixingModel = OpenAIModels.CostOptimized.GPT4oMini,
+                model = OpenAIModels.CostOptimized.GPT4oMini,
                 retries = 2
             )
         )
 
         nodeStart then prepareRequest then getStructuredForecast
-        edge(getStructuredForecast forwardTo nodeFinish transformed { it.getOrThrow().structure })
+        edge(getStructuredForecast forwardTo nodeFinish transformed { it.getOrThrow().data })
     }
 
     val agentConfig = AIAgentConfig(

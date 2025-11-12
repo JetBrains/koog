@@ -17,9 +17,9 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.toMessageResponses
+import ai.koog.prompt.structure.StructureDefinition
 import ai.koog.prompt.structure.StructureFixingParser
-import ai.koog.prompt.structure.StructuredDataDefinition
-import ai.koog.prompt.structure.StructuredOutputConfig
+import ai.koog.prompt.structure.StructuredRequestConfig
 import ai.koog.prompt.structure.StructuredResponse
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.toList
@@ -198,7 +198,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMModerateMessage(
 @AIAgentBuilderDslMarker
 public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStructured(
     name: String? = null,
-    config: StructuredOutputConfig<T>,
+    config: StructuredRequestConfig<T>,
 ): AIAgentNodeDelegate<String, Result<StructuredResponse<T>>> =
     node(name) { message ->
         llm.writeSession {
@@ -254,7 +254,7 @@ public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStr
 @AIAgentBuilderDslMarker
 public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStreaming(
     name: String? = null,
-    structureDefinition: StructuredDataDefinition? = null,
+    structureDefinition: StructureDefinition? = null,
     transformStreamData: suspend (Flow<StreamFrame>) -> Flow<T>
 ): AIAgentNodeDelegate<String, Flow<T>> =
     node(name) { message ->
@@ -278,7 +278,7 @@ public fun <T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStreaming(
 @AIAgentBuilderDslMarker
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStreaming(
     name: String? = null,
-    structureDefinition: StructuredDataDefinition? = null,
+    structureDefinition: StructureDefinition? = null,
 ): AIAgentNodeDelegate<String, Flow<StreamFrame>> = nodeLLMRequestStreaming(name, structureDefinition) { it }
 
 /**
@@ -357,7 +357,7 @@ public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMCompressHi
 @AIAgentBuilderDslMarker
 public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequestStreamingAndSendResults(
     name: String? = null,
-    structureDefinition: StructuredDataDefinition? = null
+    structureDefinition: StructureDefinition? = null
 ): AIAgentNodeDelegate<T, List<Message.Response>> = node(name) { input ->
     llm.writeSession {
         requestLLMStreaming(structureDefinition)
@@ -536,7 +536,7 @@ public inline fun <reified ToolArg, reified TResult> AIAgentSubgraphBuilderBase<
 @AIAgentBuilderDslMarker
 public inline fun <reified TInput, T> AIAgentSubgraphBuilderBase<*, *>.nodeSetStructuredOutput(
     name: String? = null,
-    config: StructuredOutputConfig<T>
+    config: StructuredRequestConfig<T>
 ): AIAgentNodeDelegate<TInput, TInput> =
     node(name) { message ->
         llm.writeSession {

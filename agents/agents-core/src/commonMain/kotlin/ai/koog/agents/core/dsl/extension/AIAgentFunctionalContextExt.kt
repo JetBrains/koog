@@ -11,8 +11,8 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolResult
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.structure.StructureDefinition
 import ai.koog.prompt.structure.StructureFixingParser
-import ai.koog.prompt.structure.StructuredDataDefinition
 import ai.koog.prompt.structure.StructuredResponse
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.serializer
@@ -142,9 +142,8 @@ public suspend fun AIAgentFunctionalContext.latestTokenUsage(): Int {
  * The message becomes part of the current prompt, and the LLM's response is processed to extract structured data.
  *
  * @param message The content of the message to be sent to the LLM.
- * @param structure Definition of expected output format and parsing logic.
- * @param retries Number of retry attempts for failed generations.
- * @param fixingModel LLM used for error correction.
+ * @param examples Examples of the structured output.
+ * @param fixingParser Optional parser to fix generated structured data.
  * @return Result containing the structured response if successful, or an error if parsing failed.
  */
 public suspend inline fun <reified T> AIAgentFunctionalContext.requestLLMStructured(
@@ -175,7 +174,7 @@ public suspend inline fun <reified T> AIAgentFunctionalContext.requestLLMStructu
  */
 public suspend fun AIAgentFunctionalContext.requestLLMStreaming(
     message: String,
-    structureDefinition: StructuredDataDefinition? = null
+    structureDefinition: StructureDefinition? = null
 ): Flow<StreamFrame> {
     return llm.writeSession {
         appendPrompt {

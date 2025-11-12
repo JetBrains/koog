@@ -1,9 +1,9 @@
 package ai.koog.agents.ext.agent
 
 import ai.koog.agents.core.tools.annotations.LLMDescription
-import ai.koog.prompt.structure.StructuredOutput
-import ai.koog.prompt.structure.StructuredOutputConfig
-import ai.koog.prompt.structure.json.JsonStructuredData
+import ai.koog.prompt.structure.StructuredRequest
+import ai.koog.prompt.structure.StructuredRequestConfig
+import ai.koog.prompt.structure.json.JsonStructure
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
 import kotlin.test.Test
@@ -58,9 +58,9 @@ class AIAgentStrategiesTest {
             val field: String
         )
 
-        val structure = JsonStructuredData.createJsonStructure<TestOutput>()
-        val config = StructuredOutputConfig(
-            default = StructuredOutput.Manual(structure)
+        val structure = JsonStructure.create<TestOutput>()
+        val config = StructuredRequestConfig(
+            default = StructuredRequest.Manual(structure)
         )
 
         val strategy = structuredOutputWithToolsStrategy<String, TestOutput>(config) { input ->
@@ -80,9 +80,9 @@ class AIAgentStrategiesTest {
             val success: Boolean
         )
 
-        val structure = JsonStructuredData.createJsonStructure<TestResult>()
-        val config = StructuredOutputConfig(
-            default = StructuredOutput.Manual(structure)
+        val structure = JsonStructure.create<TestResult>()
+        val config = StructuredRequestConfig(
+            default = StructuredRequest.Manual(structure)
         )
 
         val strategyWithParallel = structuredOutputWithToolsStrategy<String, TestResult>(
@@ -136,9 +136,9 @@ class AIAgentStrategiesTest {
             val requestType: String
         )
 
-        val structure = JsonStructuredData.createJsonStructure<ComplexOutput>()
-        val config = StructuredOutputConfig(
-            default = StructuredOutput.Manual(structure)
+        val structure = JsonStructure.create<ComplexOutput>()
+        val config = StructuredRequestConfig(
+            default = StructuredRequest.Manual(structure)
         )
 
         val strategy = structuredOutputWithToolsStrategy<ComplexInput, ComplexOutput>(config) { input ->
@@ -157,12 +157,12 @@ class AIAgentStrategiesTest {
             val value: String
         )
 
-        val manualStructure = JsonStructuredData.createJsonStructure<SimpleOutput>()
-        val nativeStructure = JsonStructuredData.createJsonStructure<SimpleOutput>()
+        val manualStructure = JsonStructure.create<SimpleOutput>()
+        val nativeStructure = JsonStructure.create<SimpleOutput>()
 
         // Test with manual mode
-        val manualConfig = StructuredOutputConfig(
-            default = StructuredOutput.Manual(manualStructure)
+        val manualConfig = StructuredRequestConfig(
+            default = StructuredRequest.Manual(manualStructure)
         )
 
         val manualStrategy = structuredOutputWithToolsStrategy<String, SimpleOutput>(manualConfig) { input ->
@@ -172,8 +172,8 @@ class AIAgentStrategiesTest {
         assertNotNull(manualStrategy)
 
         // Test with native mode
-        val nativeConfig = StructuredOutputConfig(
-            default = StructuredOutput.Native(nativeStructure)
+        val nativeConfig = StructuredRequestConfig(
+            default = StructuredRequest.Native(nativeStructure)
         )
 
         val nativeStrategy = structuredOutputWithToolsStrategy<String, SimpleOutput>(nativeConfig) { input ->
@@ -183,10 +183,10 @@ class AIAgentStrategiesTest {
         assertNotNull(nativeStrategy)
 
         // Test with both modes in config
-        val mixedConfig = StructuredOutputConfig(
-            default = StructuredOutput.Manual(manualStructure),
+        val mixedConfig = StructuredRequestConfig(
+            default = StructuredRequest.Manual(manualStructure),
             byProvider = mapOf(
-                ai.koog.prompt.llm.LLMProvider.OpenAI to StructuredOutput.Native(nativeStructure)
+                ai.koog.prompt.llm.LLMProvider.OpenAI to StructuredRequest.Native(nativeStructure)
             )
         )
 

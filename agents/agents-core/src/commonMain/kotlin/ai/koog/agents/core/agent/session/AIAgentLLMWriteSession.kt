@@ -15,9 +15,9 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
+import ai.koog.prompt.structure.StructureDefinition
 import ai.koog.prompt.structure.StructureFixingParser
-import ai.koog.prompt.structure.StructuredDataDefinition
-import ai.koog.prompt.structure.StructuredOutputConfig
+import ai.koog.prompt.structure.StructuredRequestConfig
 import ai.koog.prompt.structure.StructuredResponse
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapMerge
@@ -441,11 +441,9 @@ public class AIAgentLLMWriteSession internal constructor(
      * Sends a request to LLM and gets a structured response.
      *
      * @param config A configuration defining structures and behavior.
-     *
-     * @see [executeStructured]
      */
     override suspend fun <T> requestLLMStructured(
-        config: StructuredOutputConfig<T>,
+        config: StructuredRequestConfig<T>,
     ): Result<StructuredResponse<T>> {
         return super.requestLLMStructured(config).also {
             it.onSuccess { response ->
@@ -491,7 +489,7 @@ public class AIAgentLLMWriteSession internal constructor(
      * in constructing the prompt for the language model request.
      * @return a flow of `StreamingFrame` objects that streams the responses from the language model.
      */
-    public fun requestLLMStreaming(definition: StructuredDataDefinition? = null): Flow<StreamFrame> {
+    public fun requestLLMStreaming(definition: StructureDefinition? = null): Flow<StreamFrame> {
         if (definition != null) {
             val prompt = prompt(prompt, clock) {
                 user {

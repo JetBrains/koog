@@ -10,7 +10,7 @@ import ai.koog.prompt.text.TextContentBuilderBase
  * which facilitates the creation and management of text content. Implementations of this interface
  * can define how structured content should be constructed, supporting a fluent API for content generation.
  */
-public interface StructuredDataDefinition {
+public interface StructureDefinition {
     /**
      * Defines the structure of textual content using the provided [TextContentBuilder].
      *
