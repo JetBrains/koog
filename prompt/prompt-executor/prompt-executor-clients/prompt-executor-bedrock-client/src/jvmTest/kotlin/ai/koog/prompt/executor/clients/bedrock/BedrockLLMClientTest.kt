@@ -204,8 +204,6 @@ class BedrockLLMClientTest {
         }
     }
 
-
-
     @Execution(ExecutionMode.SAME_THREAD)
     @Test
     fun `can create BedrockLLMClient with moderation guardrails settings`() = runTest {
