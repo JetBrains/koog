@@ -150,4 +150,23 @@ public object GoogleModels : LLModelDefinitions {
         contextLength = 1_048_576,
         maxOutputTokens = 65_536,
     )
+
+    /**
+     * Models for generating text embeddings.
+     */
+    public object Embeddings {
+        /**
+         * Gemini embedding model for generating embeddings for words, phrases, and sentences.
+         *
+         * Input token limit: 2048
+         *
+         * @see <a href="https://ai.google.dev/gemini-api/docs/embeddings#model-versions">
+         */
+        public val GeminiEmbedding001: LLModel = LLModel(
+            provider = LLMProvider.Google,
+            id = "gemini-embedding-001",
+            capabilities = listOf(LLMCapability.Embed),
+            contextLength = 2048,
+        )
+    }
 }
