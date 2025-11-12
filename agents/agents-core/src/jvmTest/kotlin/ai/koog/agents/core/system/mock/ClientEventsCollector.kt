@@ -1,6 +1,7 @@
 package ai.koog.agents.core.system.mock
 
 import ai.koog.agents.core.feature.message.FeatureMessage
+import ai.koog.agents.core.feature.model.events.AgentClosingEvent
 import ai.koog.agents.core.feature.model.events.AgentStartingEvent
 import ai.koog.agents.core.feature.model.events.DefinedFeatureEvent
 import ai.koog.agents.core.feature.remote.client.FeatureMessageRemoteClient
@@ -12,8 +13,7 @@ import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.launch
 
 internal class ClientEventsCollector(
-    private val client: FeatureMessageRemoteClient,
-    private val expectedEventsCount: Int,
+    private val client: FeatureMessageRemoteClient
 ) {
 
     companion object {
@@ -38,9 +38,9 @@ internal class ClientEventsCollector(
                 }
 
                 _collectedEvents.add(event as DefinedFeatureEvent)
-                logger.info { "[${_collectedEvents.size}/$expectedEventsCount] Received event: $event" }
+                logger.info { "[${_collectedEvents.size}] Received event: $event" }
 
-                if (_collectedEvents.size >= expectedEventsCount) {
+                if (event is AgentClosingEvent) {
                     cancel()
                 }
             }

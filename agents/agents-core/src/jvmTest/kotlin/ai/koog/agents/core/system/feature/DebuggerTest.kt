@@ -11,6 +11,8 @@ import ai.koog.agents.core.dsl.extension.onAssistantMessage
 import ai.koog.agents.core.dsl.extension.onToolCall
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.feature.debugger.Debugger
+import ai.koog.agents.core.feature.message.FeatureMessage
+import ai.koog.agents.core.feature.model.events.AgentClosingEvent
 import ai.koog.agents.core.feature.model.events.AgentCompletedEvent
 import ai.koog.agents.core.feature.model.events.AgentStartingEvent
 import ai.koog.agents.core.feature.model.events.GraphStrategyStartingEvent
@@ -51,7 +53,6 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.utils.io.use
 import io.ktor.http.URLProtocol
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
@@ -126,7 +127,8 @@ class DebuggerTest {
         val port = findAvailablePort()
         val clientConfig = DefaultClientConnectionConfig(host = HOST, port = port, protocol = URLProtocol.HTTP)
 
-        val isClientFinished = CompletableDeferred<Boolean>()
+        var expectedClientEvents = emptyList<FeatureMessage>()
+        var actualClientEvents = emptyList<FeatureMessage>()
 
         // Server
         val serverJob = launch {
@@ -178,7 +180,6 @@ class DebuggerTest {
                 }
             }.use { agent ->
                 agent.run(userPrompt)
-                isClientFinished.await()
             }
         }
 
@@ -190,8 +191,7 @@ class DebuggerTest {
                 scope = this
             ).use { client ->
 
-                val clientEventsCollector =
-                    ClientEventsCollector(client = client, expectedEventsCount = 20)
+                val clientEventsCollector = ClientEventsCollector(client = client)
 
                 val collectEventsJob =
                     clientEventsCollector.startCollectEvents(coroutineScope = this@launch)
@@ -215,7 +215,9 @@ class DebuggerTest {
                     "Expected 2 LLMCallStartingEvent, got ${callIds.size}"
                 )
 
-                val expectedEvents = listOf(
+                actualClientEvents = clientEventsCollector.collectedEvents
+
+                expectedClientEvents = listOf(
                     AgentStartingEvent(
                         agentId = agentId,
                         runId = clientEventsCollector.runId,
@@ -427,16 +429,11 @@ class DebuggerTest {
                         result = mockResponse,
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),
+                    AgentClosingEvent(
+                        agentId = agentId,
+                        timestamp = testClock.now().toEpochMilliseconds()
+                    ),
                 )
-
-                assertEquals(
-                    expectedEvents.size,
-                    clientEventsCollector.collectedEvents.size,
-                    "expectedEventsCount variable in the test need to be updated"
-                )
-                assertContentEquals(expectedEvents, clientEventsCollector.collectedEvents)
-
-                isClientFinished.complete(true)
             }
         }
 
@@ -445,5 +442,12 @@ class DebuggerTest {
         }
 
         assertNotNull(isFinishedOrNull, "Client or server did not finish in time")
+
+        assertEquals(
+            expectedClientEvents.size,
+            actualClientEvents.size,
+            "expectedEventsCount variable in the test need to be updated"
+        )
+        assertContentEquals(expectedClientEvents, actualClientEvents)
     }
 }

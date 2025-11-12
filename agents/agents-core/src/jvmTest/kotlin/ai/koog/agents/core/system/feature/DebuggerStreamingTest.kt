@@ -40,7 +40,6 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.utils.io.use
 import io.ktor.http.URLProtocol
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
@@ -99,8 +98,6 @@ class DebuggerStreamingTest {
         val port = findAvailablePort()
         val clientConfig = DefaultClientConnectionConfig(host = HOST, port = port, protocol = URLProtocol.HTTP)
 
-        val isClientFinished = CompletableDeferred<Boolean>()
-
         var expectedClientEvents = emptyList<FeatureMessage>()
         var actualClientEvents = emptyList<FeatureMessage>()
 
@@ -143,7 +140,6 @@ class DebuggerStreamingTest {
                 }
             }.use { agent ->
                 agent.run(userPrompt)
-                isClientFinished.await()
             }
         }
 
@@ -155,8 +151,7 @@ class DebuggerStreamingTest {
                 scope = this
             ).use { client ->
 
-                val clientEventsCollector =
-                    ClientEventsCollector(client = client, expectedEventsCount = 13)
+                val clientEventsCollector = ClientEventsCollector(client = client)
 
                 val collectEventsJob =
                     clientEventsCollector.startCollectEvents(coroutineScope = this@launch)
@@ -203,8 +198,6 @@ class DebuggerStreamingTest {
                         event is LLMStreamingFailedEvent ||
                         event is LLMStreamingCompletedEvent
                 }
-
-                isClientFinished.complete(true)
             }
         }
 
@@ -292,8 +285,6 @@ class DebuggerStreamingTest {
         val port = findAvailablePort()
         val clientConfig = DefaultClientConnectionConfig(host = HOST, port = port, protocol = URLProtocol.HTTP)
 
-        val isClientFinished = CompletableDeferred<Boolean>()
-
         var expectedClientEvents = emptyList<FeatureMessage>()
         var actualClientEvents = emptyList<FeatureMessage>()
 
@@ -335,11 +326,9 @@ class DebuggerStreamingTest {
                     }
                 }
             }.use { agent ->
-                val throwable = assertFailsWith<IllegalStateException> {
+                assertFailsWith<IllegalStateException> {
                     agent.run(userPrompt)
                 }
-                isClientFinished.await()
-                throwable
             }
 
             assertEquals(testStreamingErrorMessage, throwable.message)
@@ -353,8 +342,7 @@ class DebuggerStreamingTest {
                 scope = this
             ).use { client ->
 
-                val clientEventsCollector =
-                    ClientEventsCollector(client = client, expectedEventsCount = 9)
+                val clientEventsCollector = ClientEventsCollector(client = client)
 
                 val collectEventsJob =
                     clientEventsCollector.startCollectEvents(coroutineScope = this@launch)
@@ -401,8 +389,6 @@ class DebuggerStreamingTest {
                         event is LLMStreamingFailedEvent ||
                         event is LLMStreamingCompletedEvent
                 }
-
-                isClientFinished.complete(true)
             }
         }
 

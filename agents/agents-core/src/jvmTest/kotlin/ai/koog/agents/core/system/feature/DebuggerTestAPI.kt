@@ -5,6 +5,8 @@ import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.core.feature.debugger.Debugger
+import ai.koog.agents.core.feature.message.FeatureMessage
+import ai.koog.agents.core.feature.model.events.AgentClosingEvent
 import ai.koog.agents.core.feature.model.events.AgentCompletedEvent
 import ai.koog.agents.core.feature.model.events.AgentStartingEvent
 import ai.koog.agents.core.feature.model.events.GraphStrategyStartingEvent
@@ -28,7 +30,6 @@ import io.ktor.client.HttpClient
 import io.ktor.client.plugins.HttpRequestRetry
 import io.ktor.http.URLProtocol
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.joinAll
@@ -96,7 +97,8 @@ internal object DebuggerTestAPI {
             protocol = URLProtocol.HTTP
         )
 
-        val isClientFinished = CompletableDeferred<Boolean>()
+        var expectedClientEvents = emptyList<FeatureMessage>()
+        var actualClientEvents = emptyList<FeatureMessage>()
 
         // Server
         // The server will read the env variable or VM option to get a port value.
@@ -117,7 +119,6 @@ internal object DebuggerTestAPI {
                 }
             }.use { agent ->
                 agent.run(userPrompt)
-                isClientFinished.await()
             }
         }
 
@@ -129,7 +130,7 @@ internal object DebuggerTestAPI {
                 scope = this
             ).use { client ->
 
-                val clientEventsCollector = ClientEventsCollector(client = client, expectedEventsCount = 8)
+                val clientEventsCollector = ClientEventsCollector(client = client)
                 val collectEventsJob = clientEventsCollector.startCollectEvents(coroutineScope = this@launch)
 
                 client.connect()
@@ -138,8 +139,10 @@ internal object DebuggerTestAPI {
                 val startGraphNode = StrategyEventGraphNode(id = "__start__", name = "__start__")
                 val finishGraphNode = StrategyEventGraphNode(id = "__finish__", name = "__finish__")
 
+                actualClientEvents = clientEventsCollector.collectedEvents
+
                 // Correct run id will be set after the 'collect events job' is finished.
-                val expectedEvents = listOf(
+                expectedClientEvents = listOf(
                     AgentStartingEvent(
                         agentId = agentId,
                         runId = clientEventsCollector.runId,
@@ -221,16 +224,11 @@ internal object DebuggerTestAPI {
                         result = userPrompt,
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),
+                    AgentClosingEvent(
+                        agentId = agentId,
+                        timestamp = testClock.now().toEpochMilliseconds()
+                    ),
                 )
-
-                assertEquals(
-                    expectedEvents.size,
-                    clientEventsCollector.collectedEvents.size,
-                    "expectedEventsCount variable in the test need to be updated"
-                )
-                assertContentEquals(expectedEvents, clientEventsCollector.collectedEvents)
-
-                isClientFinished.complete(true)
             }
         }
 
@@ -239,6 +237,14 @@ internal object DebuggerTestAPI {
         }
 
         assertNotNull(isFinishedOrNull, "Client or server did not finish in time")
+
+        assertEquals(
+            expectedClientEvents.size,
+            actualClientEvents.size,
+            "expectedEventsCount variable in the test need to be updated"
+        )
+
+        assertContentEquals(expectedClientEvents, actualClientEvents)
     }
 
     internal suspend fun runAgentConnectionWaitConfigThroughSystemVariablesTest(timeout: Duration) = withContext(Dispatchers.Default) {

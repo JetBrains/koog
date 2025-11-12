@@ -27,7 +27,6 @@ import ai.koog.agents.testing.network.NetUtil.findAvailablePort
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.utils.io.use
 import io.ktor.http.URLProtocol
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
@@ -63,8 +62,6 @@ class DebuggerSubgraphTest {
         // Test Data
         val port = findAvailablePort()
         val clientConfig = DefaultClientConnectionConfig(host = HOST, port = port, protocol = URLProtocol.HTTP)
-
-        val isClientFinished = CompletableDeferred<Boolean>()
 
         val subgraphName = "test-subgraph"
         val subgraphNodeOutput = "$userPrompt (subgraph)"
@@ -106,7 +103,6 @@ class DebuggerSubgraphTest {
                 }
             }.use { agent ->
                 agent.run(userPrompt)
-                isClientFinished.await()
             }
         }
 
@@ -118,8 +114,7 @@ class DebuggerSubgraphTest {
                 scope = this
             ).use { client ->
 
-                val clientEventsCollector =
-                    ClientEventsCollector(client = client, expectedEventsCount = 14)
+                val clientEventsCollector = ClientEventsCollector(client = client)
 
                 val collectEventsJob =
                     clientEventsCollector.startCollectEvents(coroutineScope = this@launch)
@@ -155,8 +150,6 @@ class DebuggerSubgraphTest {
                         event is SubgraphExecutionCompletedEvent ||
                         event is SubgraphExecutionFailedEvent
                 }
-
-                isClientFinished.complete(true)
             }
         }
 
@@ -190,8 +183,6 @@ class DebuggerSubgraphTest {
         // Test Data
         val port = findAvailablePort()
         val clientConfig = DefaultClientConnectionConfig(host = HOST, port = port, protocol = URLProtocol.HTTP)
-
-        val isClientFinished = CompletableDeferred<Boolean>()
 
         val subgraphName = "test-subgraph"
         val nodeSubgraphErrorName = "node-subgraph-error"
@@ -236,11 +227,9 @@ class DebuggerSubgraphTest {
                     }
                 }
             }.use { agent ->
-                val throwable = assertFailsWith<IllegalStateException> {
+                assertFailsWith<IllegalStateException> {
                     agent.run(userPrompt)
                 }
-                isClientFinished.await()
-                throwable
             }
             assertEquals(nodeSubgraphErrorMessage, throwable.message)
         }
@@ -253,8 +242,7 @@ class DebuggerSubgraphTest {
                 scope = this
             ).use { client ->
 
-                val clientEventsCollector =
-                    ClientEventsCollector(client = client, expectedEventsCount = 11)
+                val clientEventsCollector = ClientEventsCollector(client = client)
 
                 val collectEventsJob =
                     clientEventsCollector.startCollectEvents(coroutineScope = this@launch)
@@ -297,8 +285,6 @@ class DebuggerSubgraphTest {
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),
                 )
-
-                isClientFinished.complete(true)
             }
         }
 
