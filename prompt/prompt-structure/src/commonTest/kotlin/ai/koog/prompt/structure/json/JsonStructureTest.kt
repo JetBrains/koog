@@ -18,7 +18,7 @@ import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-class JsonStructuredDataTest {
+class JsonStructureTest {
 
     val weatherInfoName = "WeatherInfo"
 

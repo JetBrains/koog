@@ -5,7 +5,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-class MarkdownStructuredDataDefinitionTest {
+class MarkdownStructureDefinitionTest {
 
     @Test
     fun testDefinitionWithSchemaOnly() {
