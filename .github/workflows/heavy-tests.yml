@@ -115,6 +115,8 @@ jobs:
         env:
           JAVA_OPTS: "-Xms8g -Xmx8g -Dfile.encoding=UTF-8 -Djava.awt.headless=true -Dkotlin.daemon.jvm.options=-Xmx6g"
           ANTHROPIC_API_TEST_KEY: ${{ secrets.ANTHROPIC_API_TEST_KEY }}
+          AWS_BEDROCK_GUARDRAIL_ID: ${{ secrets.AWS_BEDROCK_GUARDRAIL_ID }}
+          AWS_BEDROCK_GUARDRAIL_VERSION: ${{ secrets.AWS_BEDROCK_GUARDRAIL_VERSION }}
           DEEPSEEK_API_TEST_KEY: ${{ secrets.DEEPSEEK_API_TEST_KEY }}
           GEMINI_API_TEST_KEY: ${{ secrets.GEMINI_API_TEST_KEY }}
           MISTRAL_AI_API_TEST_KEY: ${{ secrets.MISTRAL_AI_API_TEST_KEY }}
