@@ -81,6 +81,11 @@ class ModelIdentifierParsingTest {
         assertNotNull(o1)
         assertEquals(LLMProvider.OpenAI, o1.provider)
         assertEquals(OpenAIModels.Reasoning.O1, o1)
+
+        val gpt5pro = getModelFromIdentifier("openai.reasoning.gpt5pro")
+        assertNotNull(gpt5pro)
+        assertEquals(LLMProvider.OpenAI, gpt5pro.provider)
+        assertEquals(OpenAIModels.Reasoning.GPT5Pro, gpt5pro)
     }
 
     @Test
