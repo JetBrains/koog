@@ -2,7 +2,7 @@ package ai.koog.agents.example.chess.choice
 
 import ai.koog.agents.ext.llm.choice.ChoiceSelectionStrategy
 import ai.koog.prompt.dsl.Prompt
-import ai.koog.prompt.executor.model.LLMChoice
+import ai.koog.prompt.message.LLMChoice
 
 /**
  * `AskUserChoiceStrategy` allows users to interactively select a choice from a list of options

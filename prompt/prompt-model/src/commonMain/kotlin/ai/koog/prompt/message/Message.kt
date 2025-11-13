@@ -8,6 +8,8 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlin.jvm.JvmOverloads
 
+public typealias LLMChoice = List<Message.Response>
+
 /**
  * Represents a message exchanged in a chat with LLM. Messages can be categorized
  * by their type and role, denoting the purpose and source of the message.

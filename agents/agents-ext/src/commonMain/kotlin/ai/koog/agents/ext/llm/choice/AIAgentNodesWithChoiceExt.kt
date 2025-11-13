@@ -5,7 +5,7 @@ import ai.koog.agents.core.dsl.builder.AIAgentNodeDelegate
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.environment.result
-import ai.koog.prompt.executor.model.LLMChoice
+import ai.koog.prompt.message.LLMChoice
 
 /**
  * A node that sends multiple tool execution results to the LLM and gets multiple LLM choices.
