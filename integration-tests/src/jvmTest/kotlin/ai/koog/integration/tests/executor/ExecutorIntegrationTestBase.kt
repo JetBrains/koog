@@ -923,13 +923,6 @@ abstract class ExecutorIntegrationTestBase {
         }
     }
 
-    private fun List<Message>.toSingleMessage(): Message.Assistant {
-        if (this.isEmpty()) {
-            return Message.Assistant(parts = emptyList(), metaInfo = ResponseMetaInfo.Empty)
-        }
-
-        val allParts = this.flatMap { it.parts }
-
-        return Message.Assistant(parts = allParts, metaInfo = ResponseMetaInfo.Empty)
-    }
+    private fun List<Message>.toSingleMessage(): Message.Assistant =
+        Message.Assistant(parts = flatMap { it.parts }, metaInfo = ResponseMetaInfo.Empty)
 }
