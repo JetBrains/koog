@@ -6,10 +6,10 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
 import ai.koog.integration.tests.agent.AIAgentTestBase.ReportingLLMClient.Event
-import ai.koog.integration.tests.utils.APIKeys.readTestAnthropicKeyFromEnv
-import ai.koog.integration.tests.utils.APIKeys.readTestOpenAIKeyFromEnv
 import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.RetryUtils.withRetry
+import ai.koog.integration.tests.utils.TestCredentials.readTestAnthropicKeyFromEnv
+import ai.koog.integration.tests.utils.TestCredentials.readTestOpenAIKeyFromEnv
 import ai.koog.integration.tests.utils.annotations.Retry
 import ai.koog.integration.tests.utils.tools.CalculatorTool
 import ai.koog.integration.tests.utils.tools.files.CreateFile

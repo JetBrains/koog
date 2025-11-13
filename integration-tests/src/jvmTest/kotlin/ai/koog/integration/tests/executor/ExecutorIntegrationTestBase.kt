@@ -831,8 +831,9 @@ abstract class ExecutorIntegrationTestBase {
     }
 
     open fun integration_testSingleMessageModeration(model: LLModel) = runTest(timeout = 300.seconds) {
+        // For Bedrock, moderation is done via guardrails at the client level, not model capabilities
         assumeTrue(
-            model.capabilities.contains(LLMCapability.Moderation),
+            model.provider == LLMProvider.Bedrock || model.capabilities.contains(LLMCapability.Moderation),
             "Model $model does not support moderation"
         )
         val client = getLLMClient(model)
@@ -854,8 +855,9 @@ abstract class ExecutorIntegrationTestBase {
     }
 
     open fun integration_testMultipleMessagesModeration(model: LLModel) = runTest(timeout = 300.seconds) {
+        // For Bedrock, moderation is done via guardrails at the client level, not model capabilities
         assumeTrue(
-            model.capabilities.contains(LLMCapability.Moderation),
+            model.provider == LLMProvider.Bedrock || model.capabilities.contains(LLMCapability.Moderation),
             "Model $model does not support moderation"
         )
         val client = getLLMClient(model)

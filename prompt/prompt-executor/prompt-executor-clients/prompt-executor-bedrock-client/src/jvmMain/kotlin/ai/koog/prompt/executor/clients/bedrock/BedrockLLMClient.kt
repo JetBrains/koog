@@ -400,19 +400,31 @@ public class BedrockLLMClient(
     }
 
     /**
-     * Moderates the provided prompt using specified moderation guardrails settings.
-     * The method evaluates both input and output of the prompt against guardrails
-     * and determines if either is harmful, returning a corresponding result.
+     * Moderates the provided prompt using AWS Bedrock Guardrails.
      *
-     * Requires [moderationGuardrailsSettings] to be set for this [BedrockLLMClient]
+     * Unlike other LLM operations, moderation in Bedrock uses the Guardrails API which is
+     * **model-independent**. The guardrails are configured at the client level via
+     * [moderationGuardrailsSettings] and evaluate content based on those guardrail rules,
+     * not based on any specific model's capabilities.
      *
-     * Note: [model] parameter is unused here
+     * This means:
+     * - The [model] parameter is **not used** in this implementation
+     * - Any Bedrock model can be passed, but it won't affect the moderation result
+     * - The moderation behavior is determined entirely by the guardrail configuration
      *
-     * @param prompt the input text/content to be evaluated.
-     * @param model the language learning model to be used for evaluation.
-     * @return a [ModerationResult] indicating whether the content is harmful and
-     * a map of categorized moderation results.
-     * @throws IllegalArgumentException if moderation guardrails settings are not provided.
+     * The method evaluates both input (user messages) and output (assistant responses)
+     * against the configured guardrails and determines if either is harmful.
+     *
+     * Requires [moderationGuardrailsSettings] to be configured when creating this [BedrockLLMClient].
+     *
+     * @param prompt The prompt containing messages to be evaluated for harmful content.
+     * @param model The language model (unused in Bedrock - moderation is model-independent).
+     * @return A [ModerationResult] indicating whether the content is harmful and
+     *         a map of categorized moderation results based on the guardrail filters.
+     * @throws IllegalArgumentException if moderation guardrails settings are not provided
+     *         or if the prompt is empty.
+     *
+     * @see [AWS Bedrock Guardrails Documentation](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-use-independent-api.html)
      */
     override suspend fun moderate(
         prompt: Prompt,
@@ -425,29 +437,38 @@ public class BedrockLLMClient(
                     "See https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-use-independent-api.html for more information."
             )
         }
-
         require(prompt.messages.isNotEmpty()) {
             "Can't moderate an empty prompt"
         }
 
-        val inputGuardrailResponse = requestGuardrails<Message.Request>(
-            moderationGuardrailsSettings,
-            prompt,
-            GuardrailContentSource.Input
-        )
+        val requestMessages = prompt.messages.filterIsInstance<Message.Request>()
+        val responseMessages = prompt.messages.filterIsInstance<Message.Response>()
+        logger.debug { "Moderating prompt with ${requestMessages.size} request messages and ${responseMessages.size} response messages" }
 
-        val outputGuardrailResponse = requestGuardrails<Message.Response>(
-            moderationGuardrailsSettings,
-            prompt,
-            GuardrailContentSource.Output
-        )
+        val inputGuardrailResponse = if (requestMessages.isNotEmpty()) {
+            requestGuardrails<Message.Request>(
+                moderationGuardrailsSettings,
+                prompt,
+                GuardrailContentSource.Input
+            )
+        } else {
+            null
+        }
+        val outputGuardrailResponse = if (responseMessages.isNotEmpty()) {
+            requestGuardrails<Message.Response>(
+                moderationGuardrailsSettings,
+                prompt,
+                GuardrailContentSource.Output
+            )
+        } else {
+            null
+        }
 
-        val inputIsHarmful = inputGuardrailResponse.action is GuardrailAction.GuardrailIntervened
-        val outputIsHarmful = inputGuardrailResponse.action is GuardrailAction.GuardrailIntervened
-
+        val inputIsHarmful = inputGuardrailResponse?.action is GuardrailAction.GuardrailIntervened
+        val outputIsHarmful = outputGuardrailResponse?.action is GuardrailAction.GuardrailIntervened
         val categories = buildMap {
-            fillCategoriesMap(inputGuardrailResponse)
-            fillCategoriesMap(outputGuardrailResponse)
+            inputGuardrailResponse?.let { fillCategoriesMap(it) }
+            outputGuardrailResponse?.let { fillCategoriesMap(it) }
         }
 
         return ModerationResult(inputIsHarmful || outputIsHarmful, categories)
@@ -500,21 +521,29 @@ public class BedrockLLMClient(
         moderationGuardrailsSettings: BedrockGuardrailsSettings,
         prompt: Prompt,
         sourceType: GuardrailContentSource
-    ): ApplyGuardrailResponse = bedrockClient.applyGuardrail {
-        guardrailIdentifier = moderationGuardrailsSettings.guardrailIdentifier
-        guardrailVersion = moderationGuardrailsSettings.guardrailVersion
+    ): ApplyGuardrailResponse {
+        // Filter messages by type
+        val filteredMessages = prompt.messages.filterIsInstance<MessageType>()
 
-        source = sourceType
+        logger.debug {
+            "Requesting guardrails for ${filteredMessages.size} messages of type ${MessageType::class.simpleName} with source $sourceType"
+        }
 
-        content = buildList {
-            prompt.messages.filterIsInstance<MessageType>().forEach { message ->
-                message.parts.forEach { part ->
-                    when (part) {
+        val contentBlocks = buildList {
+            filteredMessages.forEachIndexed { messageIndex, message ->
+                logger.debug { "Processing message $messageIndex with ${message.parts.size} parts" }
+
+                message.parts.forEachIndexed { partIndex, part ->
+                    logger.debug { "Processing part $partIndex of type ${part::class.simpleName}" }
+
+                    val contentBlock = when (part) {
                         is ContentPart.Text -> {
-                            add(GuardrailContentBlock.Text(GuardrailTextBlock { text = part.text }))
+                            logger.debug { "Creating text block with ${part.text.length} characters" }
+                            GuardrailContentBlock.Text(GuardrailTextBlock { text = part.text })
                         }
 
                         is ContentPart.Image -> {
+                            logger.debug { "Creating image block with format ${part.format}" }
                             GuardrailContentBlock.Image(
                                 GuardrailImageBlock {
                                     format = when (part.format) {
@@ -522,24 +551,45 @@ public class BedrockLLMClient(
                                         "png", "PNG" -> GuardrailImageFormat.Png
                                         else -> GuardrailImageFormat.SdkUnknown(part.format)
                                     }
-
-                                    when (val imageContent = part.content) {
-                                        is AttachmentContent.Binary.Base64 -> source = Bytes(imageContent.asBytes())
-                                        is AttachmentContent.Binary.Bytes -> source = Bytes(imageContent.data)
+                                    source = when (val imageContent = part.content) {
+                                        is AttachmentContent.Binary.Base64 -> Bytes(imageContent.asBytes())
+                                        is AttachmentContent.Binary.Bytes -> Bytes(imageContent.data)
                                         is AttachmentContent.PlainText ->
-                                            source =
-                                                Bytes(imageContent.text.encodeToByteArray())
-
-                                        else -> {}
+                                            Bytes(imageContent.text.encodeToByteArray())
+                                        else -> {
+                                            throw IllegalArgumentException(
+                                                "Unsupported image content type: ${imageContent::class.simpleName}. " +
+                                                    "Bedrock Guardrails only supports Binary.Base64, Binary.Bytes, or PlainText content."
+                                            )
+                                        }
                                     }
                                 }
                             )
                         }
 
-                        else -> throw IllegalArgumentException("Unsupported attachment type: $this")
+                        else -> {
+                            throw IllegalArgumentException("Unsupported attachment type: ${part::class.simpleName}")
+                        }
                     }
+
+                    add(contentBlock)
+                    logger.debug { "Added content block ${this.size} to list" }
                 }
             }
+        }
+
+        logger.debug { "Built ${contentBlocks.size} content blocks for guardrails request" }
+
+        // Validate we have content
+        require(contentBlocks.isNotEmpty()) {
+            "Cannot send guardrails request with empty content. Filtered ${filteredMessages.size} messages but produced no valid content blocks."
+        }
+
+        return bedrockClient.applyGuardrail {
+            guardrailIdentifier = moderationGuardrailsSettings.guardrailIdentifier
+            guardrailVersion = moderationGuardrailsSettings.guardrailVersion
+            source = sourceType
+            content = contentBlocks
         }
     }
 

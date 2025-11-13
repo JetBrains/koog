@@ -16,9 +16,9 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.agent.subgraphWithTask
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
-import ai.koog.integration.tests.utils.APIKeys.readTestAnthropicKeyFromEnv
-import ai.koog.integration.tests.utils.APIKeys.readTestOpenAIKeyFromEnv
 import ai.koog.integration.tests.utils.Models
+import ai.koog.integration.tests.utils.TestCredentials.readTestAnthropicKeyFromEnv
+import ai.koog.integration.tests.utils.TestCredentials.readTestOpenAIKeyFromEnv
 import ai.koog.integration.tests.utils.getLLMClientForProvider
 import ai.koog.integration.tests.utils.tools.files.CreateFile
 import ai.koog.integration.tests.utils.tools.files.DeleteFile

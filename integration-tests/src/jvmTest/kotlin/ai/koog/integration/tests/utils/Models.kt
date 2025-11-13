@@ -68,11 +68,22 @@ object Models {
         )
     }
 
+    /**
+     * Returns models that support content moderation capabilities.
+     *
+     * Note: For Bedrock, the model returned here is not actually used by the moderation API.
+     * AWS Bedrock Guardrails are model-independent and configured at the client level.
+     * However, we need to provide a Bedrock model here so that the integration tests can
+     * instantiate a [ai.koog.prompt.executor.clients.bedrock.BedrockLLMClient] with the appropriate provider and guardrail settings.
+     * The actual moderation behavior is determined by the guardrail configuration
+     * in [getLLMClientForProvider], not by the model's capabilities.
+     */
     @JvmStatic
     fun moderationModels(): Stream<LLModel> {
         return Stream.of(
             OpenAIModels.Moderation.Omni,
             MistralAIModels.Moderation.MistralModeration,
+            BedrockModels.AnthropicClaude4_5Haiku
         )
     }
 
