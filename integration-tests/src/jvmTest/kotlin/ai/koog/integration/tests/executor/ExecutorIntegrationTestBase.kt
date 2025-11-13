@@ -44,6 +44,7 @@ import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.ToolChoice
 import ai.koog.prompt.streaming.StreamFrame
@@ -362,12 +363,13 @@ abstract class ExecutorIntegrationTestBase {
 
             withRetry {
                 try {
-                    with(getExecutor(model).execute(prompt, model).single()) {
+                    with(
+                        getExecutor(model).execute(prompt, model)
+                            .filterIsInstance<Message.Assistant>()
+                            .toSingleMessage()
+                    ) {
                         when (scenario) {
-                            MarkdownTestScenario.MALFORMED_SYNTAX,
-                            MarkdownTestScenario.MATH_NOTATION,
-                            MarkdownTestScenario.BROKEN_LINKS,
-                            MarkdownTestScenario.IRREGULAR_TABLES -> {
+                            MarkdownTestScenario.MALFORMED_SYNTAX, MarkdownTestScenario.MATH_NOTATION, MarkdownTestScenario.BROKEN_LINKS, MarkdownTestScenario.IRREGULAR_TABLES -> {
                                 checkResponseBasic(this)
                             }
 
@@ -923,4 +925,7 @@ abstract class ExecutorIntegrationTestBase {
             getLLMClientForProvider(provider).models().shouldNotBeEmpty()
         }
     }
+
+    private fun List<Message.Assistant>.toSingleMessage(): Message.Assistant =
+        Message.Assistant(parts = flatMap { it.parts }, metaInfo = ResponseMetaInfo.Empty)
 }
