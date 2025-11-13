@@ -363,12 +363,13 @@ abstract class ExecutorIntegrationTestBase {
 
             withRetry {
                 try {
-                    with(getExecutor(model).execute(prompt, model).toSingleMessage()) {
+                    with(
+                        getExecutor(model).execute(prompt, model)
+                            .filterIsInstance<Message.Assistant>()
+                            .toSingleMessage()
+                    ) {
                         when (scenario) {
-                            MarkdownTestScenario.MALFORMED_SYNTAX,
-                            MarkdownTestScenario.MATH_NOTATION,
-                            MarkdownTestScenario.BROKEN_LINKS,
-                            MarkdownTestScenario.IRREGULAR_TABLES -> {
+                            MarkdownTestScenario.MALFORMED_SYNTAX, MarkdownTestScenario.MATH_NOTATION, MarkdownTestScenario.BROKEN_LINKS, MarkdownTestScenario.IRREGULAR_TABLES -> {
                                 checkResponseBasic(this)
                             }
 
@@ -923,6 +924,6 @@ abstract class ExecutorIntegrationTestBase {
         }
     }
 
-    private fun List<Message>.toSingleMessage(): Message.Assistant =
+    private fun List<Message.Assistant>.toSingleMessage(): Message.Assistant =
         Message.Assistant(parts = flatMap { it.parts }, metaInfo = ResponseMetaInfo.Empty)
 }
