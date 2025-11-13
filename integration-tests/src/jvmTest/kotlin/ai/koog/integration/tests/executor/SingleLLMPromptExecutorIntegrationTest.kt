@@ -83,6 +83,11 @@ class SingleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
                 LLMProvider.OpenRouter
             ).map { provider -> Arguments.of(provider) }
         }
+
+        @JvmStatic
+        fun reasoningCapableModels(): Stream<Arguments> {
+            return Models.reasoningCapableModels().map { model -> Arguments.of(model) }
+        }
     }
 
     override fun getExecutor(model: LLModel): PromptExecutor {
@@ -281,5 +286,17 @@ class SingleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
     @MethodSource("providersWithModelsRequestSupport")
     override fun integration_testGetModels(provider: LLMProvider) {
         super.integration_testGetModels(provider)
+    }
+
+    @ParameterizedTest
+    @MethodSource("reasoningCapableModels")
+    override fun integration_testReasoningCapability(model: LLModel) {
+        super.integration_testReasoningCapability(model)
+    }
+
+    @ParameterizedTest
+    @MethodSource("reasoningCapableModels")
+    override fun integration_testReasoningWithEncryption(model: LLModel) {
+        super.integration_testReasoningWithEncryption(model)
     }
 }

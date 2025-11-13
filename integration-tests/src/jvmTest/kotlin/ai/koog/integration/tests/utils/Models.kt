@@ -100,6 +100,15 @@ object Models {
     }
 
     @JvmStatic
+    fun reasoningCapableModels(): Stream<LLModel> {
+        return Stream.of(
+            OpenAIModels.Chat.GPT5,
+            AnthropicModels.Haiku_4_5,
+            GoogleModels.Gemini2_5Pro,
+        )
+    }
+
+    @JvmStatic
     fun modelsWithVisionCapability(): Stream<Arguments> {
         return Stream.concat(
             openAIModels()

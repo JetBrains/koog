@@ -49,6 +49,11 @@ class MultipleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
         }
 
         @JvmStatic
+        fun reasoningCapableModels(): Stream<Arguments> {
+            return Models.reasoningCapableModels().map { model -> Arguments.of(model) }
+        }
+
+        @JvmStatic
         fun allCompletionModels(): Stream<Arguments> {
             return Models.allCompletionModels().map { model -> Arguments.of(model) }
         }
@@ -238,5 +243,17 @@ class MultipleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
     @MethodSource("moderationModels")
     override fun integration_testMultipleMessagesModeration(model: LLModel) {
         super.integration_testMultipleMessagesModeration(model)
+    }
+
+    @ParameterizedTest
+    @MethodSource("reasoningCapableModels")
+    override fun integration_testReasoningCapability(model: LLModel) {
+        super.integration_testReasoningCapability(model)
+    }
+
+    @ParameterizedTest
+    @MethodSource("reasoningCapableModels")
+    override fun integration_testReasoningWithEncryption(model: LLModel) {
+        super.integration_testReasoningWithEncryption(model)
     }
 }

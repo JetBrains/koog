@@ -5,7 +5,10 @@ import ai.koog.prompt.message.Message
 import io.kotest.inspectors.shouldForAny
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldNotBeEmpty
+import io.kotest.matchers.comparables.shouldBeGreaterThan
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldNotBeEmpty
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
@@ -45,5 +48,33 @@ object TestUtils {
         true
     } catch (_: Exception) {
         false
+    }
+
+    fun assertResponseContainsReasoning(response: List<Message>) {
+        with(response) {
+            shouldNotBeEmpty()
+            shouldForAny { it is Message.Reasoning }
+            with(first { it is Message.Reasoning } as Message.Reasoning) {
+                content.shouldNotBeEmpty()
+                with(metaInfo) {
+                    inputTokensCount.shouldNotBeNull { shouldBeGreaterThan(0) }
+                    outputTokensCount.shouldNotBeNull { shouldBeGreaterThan(0) }
+                    totalTokensCount.shouldNotBeNull { shouldBeGreaterThan(0) }
+                }
+            }
+        }
+    }
+
+    fun assertResponseContainsReasoningWithEncryption(response: List<Message>) {
+        with(response) {
+            shouldNotBeEmpty()
+            shouldForAny { it is Message.Reasoning }
+            with(first { it is Message.Reasoning } as Message.Reasoning) {
+                content.shouldNotBeEmpty()
+                encrypted
+                    .shouldNotBeNull()
+                    .shouldNotBeEmpty()
+            }
+        }
     }
 }

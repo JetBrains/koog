@@ -426,6 +426,7 @@ public open class AnthropicLLMClient(
             stream = stream,
             system = systemMessages,
             temperature = anthropicParams.temperature,
+            thinking = anthropicParams.thinking,
             toolChoice = toolChoice,
             tools = tools, // Always provide a list for tools
             topK = anthropicParams.topK,
@@ -506,7 +507,11 @@ public open class AnthropicLLMClient(
                 }
 
                 is AnthropicContent.Thinking -> {
-                    Message.Reasoning(encrypted = content.signature, content = content.thinking, metaInfo = metaInfo)
+                    Message.Reasoning(
+                        encrypted = content.signature,
+                        content = content.thinking,
+                        metaInfo = metaInfo
+                    )
                 }
 
                 is AnthropicContent.ToolUse -> {
