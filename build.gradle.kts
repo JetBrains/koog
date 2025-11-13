@@ -14,11 +14,10 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Base64
 
-group = "ai.koog"
 version = run {
     // our version follows the semver specification
 
-    val main = "0.5.2"
+    val main = project.version
 
     val feat = run {
         val releaseBuild = !System.getenv("BRANCH_KOOG_IS_RELEASING_FROM").isNullOrBlank()
@@ -206,6 +205,12 @@ tasks {
 }
 
 dependencies {
+    dokka(project(":a2a:a2a-client"))
+    dokka(project(":a2a:a2a-core"))
+    dokka(project(":a2a:a2a-server"))
+    dokka(project(":a2a:a2a-transport:a2a-transport-client-jsonrpc-http"))
+    dokka(project(":a2a:a2a-transport:a2a-transport-core-jsonrpc"))
+    dokka(project(":a2a:a2a-transport:a2a-transport-server-jsonrpc-http"))
     dokka(project(":agents:agents-core"))
     dokka(project(":agents:agents-ext"))
     dokka(project(":agents:agents-features:agents-features-event-handler"))
@@ -229,6 +234,7 @@ dependencies {
     dokka(project(":prompt:prompt-executor:prompt-executor-clients"))
     dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-anthropic-client"))
     dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-bedrock-client"))
+    dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-dashscope-client"))
     dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-deepseek-client"))
     dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-google-client"))
     dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-mistralai-client"))
@@ -236,7 +242,6 @@ dependencies {
     dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))
     dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client-base"))
     dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openrouter-client"))
-    dokka(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-dashscope-client"))
     dokka(project(":prompt:prompt-executor:prompt-executor-llms"))
     dokka(project(":prompt:prompt-executor:prompt-executor-llms-all"))
     dokka(project(":prompt:prompt-executor:prompt-executor-model"))

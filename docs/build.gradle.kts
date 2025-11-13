@@ -14,10 +14,16 @@ kotlin {
 }
 
 dependencies {
+    implementation(project(":a2a:a2a-client"))
+    implementation(project(":a2a:a2a-core"))
+    implementation(project(":a2a:a2a-server"))
+    implementation(project(":a2a:a2a-transport:a2a-transport-client-jsonrpc-http"))
+    implementation(project(":a2a:a2a-transport:a2a-transport-core-jsonrpc"))
+    implementation(project(":a2a:a2a-transport:a2a-transport-server-jsonrpc-http"))
     implementation(project(":agents:agents-test"))
     implementation(project(":koog-agents"))
-    implementation(libs.opentelemetry.exporter.otlp)
     implementation(libs.opentelemetry.exporter.logging)
+    implementation(libs.opentelemetry.exporter.otlp)
 }
 
 dokka {
