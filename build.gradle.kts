@@ -14,11 +14,10 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Base64
 
-group = "ai.koog"
 version = run {
     // our version follows the semver specification
 
-    val main = "0.5.2"
+    val baseVersion = (project.property("version") as String).removeSuffix("-SNAPSHOT")
 
     val feat = run {
         val releaseBuild = !System.getenv("BRANCH_KOOG_IS_RELEASING_FROM").isNullOrBlank()
@@ -73,7 +72,7 @@ version = run {
         }
     }
 
-    "$main$feat"
+    "$baseVersion$feat"
 }
 
 fun isCustomReleaseBranch(branchName: String): Boolean = branchName.matches(Regex("""^\d+\.\d+\.\d+$"""))
