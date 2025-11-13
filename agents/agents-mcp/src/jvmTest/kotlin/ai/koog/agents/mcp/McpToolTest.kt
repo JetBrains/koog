@@ -143,4 +143,17 @@ class McpToolTest {
 
         assertEquals(expected, randomMcpTool().encodeResult(result))
     }
+
+    @Test
+    fun `test decode result`() {
+        val expected = McpTool.Result(
+            promptMessageContents = listOf(TextContent("Hello world"))
+        )
+
+        val json = buildJsonObject {
+            put("promptMessageContents", "Hello world")
+        }
+
+        assertEquals(expected.textForLLM(), randomMcpTool().decodeResult(json).textForLLM())
+    }
 }

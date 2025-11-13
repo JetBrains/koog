@@ -6,6 +6,10 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonDecoder
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
 import kotlin.jvm.JvmInline
 
 /**
@@ -182,7 +186,38 @@ public interface ToolResult {
          * @return The deserialized object of type T.
          */
         override fun deserialize(decoder: Decoder): T {
-            return valueSerializer.deserialize(decoder)
+            // Read the structure and extract the string value from the first element
+            val composite = decoder.beginStructure(descriptor)
+            val textValue = composite.decodeStringElement(descriptor, 0)
+            composite.endStructure(descriptor)
+
+            // Now reconstruct the object from the text by creating a JSON structure
+            // where the first field contains the text value wrapped appropriately
+            if (decoder is JsonDecoder) {
+                val json = decoder.json
+                val firstFieldName = descriptor.getElementName(0)
+
+                // Create a JSON structure with the text value wrapped in an array with TextContent structure
+                // This assumes the first field is a List and each element has a "text" field
+                val jsonObject = buildJsonObject {
+                    put(
+                        firstFieldName,
+                        buildJsonArray {
+                            add(
+                                buildJsonObject {
+                                    put("type", JsonPrimitive("text"))
+                                    put("text", JsonPrimitive(textValue))
+                                }
+                            )
+                        }
+                    )
+                }
+                return json.decodeFromJsonElement(valueSerializer, jsonObject)
+            } else {
+                // For non-JSON decoders, we can't easily reconstruct the structure
+                // so we fall back to the value serializer
+                return valueSerializer.deserialize(decoder)
+            }
         }
     }
 
