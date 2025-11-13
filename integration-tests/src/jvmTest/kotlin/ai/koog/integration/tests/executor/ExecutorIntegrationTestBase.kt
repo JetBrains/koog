@@ -10,6 +10,8 @@ import ai.koog.integration.tests.utils.MediaTestUtils.checkExecutorMediaResponse
 import ai.koog.integration.tests.utils.MediaTestUtils.checkResponseBasic
 import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.RetryUtils.withRetry
+import ai.koog.integration.tests.utils.TestUtils.assertResponseContainsReasoning
+import ai.koog.integration.tests.utils.TestUtils.assertResponseContainsReasoningWithEncryption
 import ai.koog.integration.tests.utils.TestUtils.assertResponseContainsToolCall
 import ai.koog.integration.tests.utils.getLLMClientForProvider
 import ai.koog.integration.tests.utils.structuredOutput.Country
@@ -35,7 +37,16 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
+import ai.koog.prompt.executor.clients.anthropic.AnthropicParams
+import ai.koog.prompt.executor.clients.anthropic.models.AnthropicThinking
+import ai.koog.prompt.executor.clients.google.GoogleParams
+import ai.koog.prompt.executor.clients.google.models.GoogleThinkingConfig
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.clients.openai.OpenAIResponsesParams
+import ai.koog.prompt.executor.clients.openai.base.models.ReasoningEffort
+import ai.koog.prompt.executor.clients.openai.models.OpenAIInclude
+import ai.koog.prompt.executor.clients.openai.models.ReasoningConfig
+import ai.koog.prompt.executor.clients.openai.models.ReasoningSummary
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
@@ -103,6 +114,33 @@ abstract class ExecutorIntegrationTestBase {
     abstract fun getExecutor(model: LLModel): PromptExecutor
 
     open fun getLLMClient(model: LLModel): LLMClient = getLLMClientForProvider(model.provider)
+
+    private fun createReasoningParams(model: LLModel): LLMParams {
+        return when (model.provider) {
+            is LLMProvider.Anthropic -> AnthropicParams(
+                thinking = AnthropicThinking.Enabled(budgetTokens = 1024)
+            )
+
+            is LLMProvider.OpenAI -> OpenAIResponsesParams(
+                reasoning = ReasoningConfig(
+                    effort = ReasoningEffort.MEDIUM,
+                    summary = ReasoningSummary.DETAILED
+                ),
+                include = listOf(OpenAIInclude.REASONING_ENCRYPTED_CONTENT),
+                maxTokens = 256
+            )
+
+            is LLMProvider.Google -> GoogleParams(
+                thinkingConfig = GoogleThinkingConfig(
+                    includeThoughts = true,
+                    thinkingBudget = 256
+                ),
+                maxTokens = 256
+            )
+
+            else -> LLMParams(maxTokens = 256)
+        }
+    }
 
     open fun integration_testExecute(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
@@ -928,4 +966,50 @@ abstract class ExecutorIntegrationTestBase {
 
     private fun List<Message.Assistant>.toSingleMessage(): Message.Assistant =
         Message.Assistant(parts = flatMap { it.parts }, metaInfo = ResponseMetaInfo.Empty)
+
+    open fun integration_testReasoningCapability(model: LLModel) = runTest(timeout = 300.seconds) {
+        Models.assumeAvailable(model.provider)
+
+        val params = createReasoningParams(model)
+        val prompt = Prompt.build("reasoning-test", params = params) {
+            system("You are a helpful assistant.")
+            user("Think about this step by step: What is 15 * 23 + 8?")
+        }
+
+        withRetry(times = 3, testName = "integration_testReasoningCapability[${model.id}]") {
+            getLLMClient(model).execute(prompt, model) shouldNotBeNull {
+                shouldNotBeEmpty()
+                withClue("No reasoning messages found") { shouldForAny { it is Message.Reasoning } }
+                assertResponseContainsReasoning(this)
+            }
+        }
+    }
+
+    open fun integration_testReasoningWithEncryption(model: LLModel) = runTest(timeout = 300.seconds) {
+        with(model.provider) {
+            Models.assumeAvailable(this)
+            assumeTrue(
+                this != LLMProvider.Bedrock,
+                "Bedrock API doesn't support thinking budget parameters required for reasoning encryption"
+            )
+            assumeTrue(
+                this != LLMProvider.Google,
+                "Google API doesn't consistently return encrypted thoughtSignature values"
+            )
+        }
+
+        val params = createReasoningParams(model)
+        val prompt = Prompt.build("reasoning-encryption-test", params = params) {
+            system("You are a helpful assistant. Think carefully about the problem.")
+            user("Solve this problem step by step: A train travels at 60 mph for 2 hours, then 80 mph for 1.5 hours. What is the total distance?")
+        }
+
+        withRetry(times = 3, testName = "integration_testReasoningWithEncryption[${model.id}]") {
+            getLLMClient(model).execute(prompt, model) shouldNotBeNull {
+                shouldNotBeEmpty()
+                withClue("No reasoning messages found") { shouldForAny { it is Message.Reasoning } }
+                assertResponseContainsReasoningWithEncryption(this)
+            }
+        }
+    }
 }
