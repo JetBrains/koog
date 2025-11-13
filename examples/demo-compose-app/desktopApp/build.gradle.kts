@@ -13,6 +13,10 @@ dependencies {
     implementation(compose.ui)
 }
 
+kotlin {
+    jvmToolchain(libs.versions.javaVersion.get().toInt())
+}
+
 compose.desktop {
     application {
         mainClass = "MainKt"

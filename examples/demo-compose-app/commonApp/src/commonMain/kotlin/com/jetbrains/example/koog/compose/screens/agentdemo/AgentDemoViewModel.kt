@@ -3,7 +3,6 @@ package com.jetbrains.example.koog.compose.screens.agentdemo
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jetbrains.example.koog.compose.agents.common.AgentProvider
-import com.jetbrains.example.koog.compose.settings.AppSettings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -37,10 +36,7 @@ data class AgentDemoUiState(
     val currentUserResponse: String? = null,
 )
 
-class AgentDemoViewModel(
-    private val agentProvider: AgentProvider,
-    private val appSettings: AppSettings,
-) : ViewModel() {
+class AgentDemoViewModel(private val agentProvider: AgentProvider) : ViewModel() {
     // UI state
     private val _uiState = MutableStateFlow(
         AgentDemoUiState(
@@ -95,7 +91,6 @@ class AgentDemoViewModel(
             try {
                 // Create and run the agent using the factory
                 val agent = agentProvider.provideAgent(
-                    appSettings = appSettings,
                     onToolCallEvent = { message ->
                         // Add tool call messages to the chat
                         viewModelScope.launch {

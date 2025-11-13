@@ -14,35 +14,34 @@ import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.eventHandler.feature.handleEvents
 import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+import ai.koog.prompt.executor.clients.LLMClient
+import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
+import ai.koog.prompt.llm.LLModel
 import com.jetbrains.example.koog.compose.agents.common.AgentProvider
 import com.jetbrains.example.koog.compose.agents.common.ExitTool
-import com.jetbrains.example.koog.compose.settings.AppSettings
+import kotlin.time.ExperimentalTime
 
 /**
  * Factory for creating weather forecast agents
  */
-internal class WeatherAgentProvider : AgentProvider {
+@OptIn(ExperimentalTime::class)
+internal class WeatherAgentProvider(private val provideLLMClient: suspend () -> Pair<LLMClient, LLModel>) : AgentProvider {
     override val title: String = "Weather Forecast"
     override val description: String = "Hi, I'm a weather agent. I can provide weather forecasts for any location."
 
     override suspend fun provideAgent(
-        appSettings: AppSettings,
         onToolCallEvent: suspend (String) -> Unit,
         onErrorEvent: suspend (String) -> Unit,
         onAssistantMessage: suspend (String) -> String,
     ): AIAgent<String, String> {
-        val openAiApiKey = appSettings.getCurrentSettings().openAiToken
-        require(openAiApiKey.isNotEmpty()) { "OpenAI api key is not configured." }
-
-        val executor = simpleOpenAIExecutor(openAiApiKey)
+        val (llmClient, model) = provideLLMClient.invoke()
+        val executor = SingleLLMPromptExecutor(llmClient)
 
         // Create tool registry with weather tools
         val toolRegistry = ToolRegistry {
-            tool(WeatherTools.CurrentDatetimeTool)
-            tool(WeatherTools.AddDatetimeTool)
-            tool(WeatherTools.WeatherForecastTool)
+            tool(WeatherTools.CurrentDatetimeTool())
+            tool(WeatherTools.AddDatetimeTool())
+            tool(WeatherTools.WeatherForecastTool())
 
             tool(ExitTool)
         }
@@ -120,7 +119,7 @@ internal class WeatherAgentProvider : AgentProvider {
                     """.trimIndent()
                 )
             },
-            model = OpenAIModels.Chat.GPT4o,
+            model = model,
             maxAgentIterations = 50
         )
 

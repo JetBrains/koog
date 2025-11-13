@@ -14,36 +14,33 @@ import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.eventHandler.feature.handleEvents
 import ai.koog.prompt.dsl.prompt
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+import ai.koog.prompt.executor.clients.LLMClient
+import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
+import ai.koog.prompt.llm.LLModel
 import com.jetbrains.example.koog.compose.agents.common.AgentProvider
 import com.jetbrains.example.koog.compose.agents.common.ExitTool
-import com.jetbrains.example.koog.compose.settings.AppSettings
 
 /**
  * Factory for creating calculator agents
  */
-internal class CalculatorAgentProvider : AgentProvider {
+internal class CalculatorAgentProvider(private val provideLLMClient: suspend () -> Pair<LLMClient, LLModel>) : AgentProvider {
     override val title: String = "Calculator"
     override val description: String = "Hi, I'm a calculator agent, I can do math"
 
     override suspend fun provideAgent(
-        appSettings: AppSettings,
         onToolCallEvent: suspend (String) -> Unit,
         onErrorEvent: suspend (String) -> Unit,
         onAssistantMessage: suspend (String) -> String,
     ): AIAgent<String, String> {
-        val openAiToken = appSettings.getCurrentSettings().openAiToken
-        require(openAiToken.isNotEmpty()) { "OpenAI token is not configured." }
-
-        val executor = simpleOpenAIExecutor(openAiToken)
+        val (llmClient, model) = provideLLMClient.invoke()
+        val executor = SingleLLMPromptExecutor(llmClient = llmClient)
 
         // Create tool registry with calculator tools
         val toolRegistry = ToolRegistry {
-            tool(CalculatorTools.PlusTool)
-            tool(CalculatorTools.MinusTool)
-            tool(CalculatorTools.DivideTool)
-            tool(CalculatorTools.MultiplyTool)
+            tool(CalculatorTool.PlusTool)
+            tool(CalculatorTool.MinusTool)
+            tool(CalculatorTool.DivideTool)
+            tool(CalculatorTool.MultiplyTool)
 
             tool(ExitTool)
         }
@@ -114,7 +111,7 @@ internal class CalculatorAgentProvider : AgentProvider {
                     """.trimIndent()
                 )
             },
-            model = OpenAIModels.Chat.GPT4o,
+            model = model,
             maxAgentIterations = 50
         )
 
