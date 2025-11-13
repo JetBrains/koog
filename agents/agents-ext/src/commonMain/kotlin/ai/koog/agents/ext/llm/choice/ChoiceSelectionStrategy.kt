@@ -1,7 +1,7 @@
 package ai.koog.agents.ext.llm.choice
 
 import ai.koog.prompt.dsl.Prompt
-import ai.koog.prompt.executor.model.LLMChoice
+import ai.koog.prompt.message.LLMChoice
 
 /**
  * Represents a strategy for selecting a choice from a list of available options
