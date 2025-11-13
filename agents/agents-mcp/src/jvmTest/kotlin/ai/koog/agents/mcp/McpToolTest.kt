@@ -4,7 +4,9 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
+import io.modelcontextprotocol.kotlin.sdk.Implementation
 import io.modelcontextprotocol.kotlin.sdk.TextContent
+import io.modelcontextprotocol.kotlin.sdk.client.Client
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
@@ -31,6 +33,19 @@ class McpToolTest {
     fun tearDown() {
         testServer.stop()
     }
+
+    private fun randomMcpTool(): McpTool = McpTool(
+        mcpClient = Client(
+            clientInfo = Implementation(
+                name = "Test",
+                version = "1.0"
+            )
+        ),
+        descriptor = ToolDescriptor(
+            name = "test-tool",
+            description = "A test tool"
+        ),
+    )
 
     @OptIn(InternalAgentToolsApi::class)
     @Test
@@ -114,5 +129,18 @@ class McpToolTest {
     fun `test McpTool with empty result`() {
         val result = McpTool.Result(promptMessageContents = listOf(TextContent("")))
         assertEquals("", result.textForLLM())
+    }
+
+    @Test
+    fun `test encode result`() {
+        val result = McpTool.Result(
+            promptMessageContents = listOf(TextContent("Hello world"))
+        )
+
+        val expected = buildJsonObject {
+            put("promptMessageContents", "Hello world")
+        }
+
+        assertEquals(expected, randomMcpTool().encodeResult(result))
     }
 }

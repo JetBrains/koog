@@ -169,7 +169,10 @@ public interface ToolResult {
          * @param value The object of type `T` to be serialized.
          */
         override fun serialize(encoder: Encoder, value: T) {
-            encoder.encodeString(value.textForLLM())
+            with(encoder.beginStructure(descriptor)) {
+                encodeStringElement(descriptor, 0, value.textForLLM())
+                endStructure(descriptor)
+            }
         }
 
         /**
