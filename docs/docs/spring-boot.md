@@ -19,11 +19,13 @@ ready-to-use beans for dependency injection. It supports all major LLM providers
 
 ### 1. Add Dependency
 
-Add the Spring Boot starter to your `build.gradle.kts`:
+Add the Koog Spring Boot starter and [Ktor Client Engine](https://ktor.io/docs/client-engines.html#jvm) 
+to your `build.gradle.kts` or `pom.xml`:
 
 ```kotlin
 dependencies {
     implementation("ai.koog:koog-spring-boot-starter:$koogVersion")
+    implementation("io.ktor:ktor-client-okhttp-jvm:$ktorVersion")
 }
 ```
 
