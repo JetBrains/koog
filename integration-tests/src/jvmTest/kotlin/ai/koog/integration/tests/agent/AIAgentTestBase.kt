@@ -67,7 +67,7 @@ open class AIAgentTestBase {
         @JvmStatic
         fun getLatestModels() = listOf(
             AnthropicModels.Sonnet_4_5,
-            OpenAIModels.Chat.GPT5,
+            OpenAIModels.Chat.GPT5_1,
         ).stream()
 
         @JvmStatic
@@ -304,7 +304,7 @@ open class AIAgentTestBase {
             val openaiSubgraph by subgraph("openai") {
                 val definePromptOpenAI by node<Unit, Unit> {
                     llm.writeSession {
-                        model = OpenAIModels.Chat.GPT5
+                        model = OpenAIModels.Chat.GPT5_1
                         rewritePrompt {
                             prompt("test") {
                                 system(
@@ -345,7 +345,7 @@ open class AIAgentTestBase {
         return AIAgent(
             promptExecutor = executor,
             strategy = strategy,
-            agentConfig = AIAgentConfig(prompt, OpenAIModels.Chat.GPT5, maxAgentIterations),
+            agentConfig = AIAgentConfig(prompt, OpenAIModels.Chat.GPT5_1, maxAgentIterations),
             toolRegistry = tools,
         ) {
             install(EventHandler, eventHandlerConfig)
