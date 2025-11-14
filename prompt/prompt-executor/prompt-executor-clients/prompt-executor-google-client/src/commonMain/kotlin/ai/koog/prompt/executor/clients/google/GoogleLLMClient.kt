@@ -601,7 +601,7 @@ public open class GoogleLLMClient(
      * @return A list of response messages
      */
     @OptIn(ExperimentalUuidApi::class)
-    private fun processGoogleCandidate(candidate: GoogleCandidate, metaInfo: ResponseMetaInfo): List<Message.Response> {
+    internal fun processGoogleCandidate(candidate: GoogleCandidate, metaInfo: ResponseMetaInfo): List<Message.Response> {
         val parts = candidate.content?.parts.orEmpty()
         val responses = mutableListOf<Message.Response>()
         with(responses) {
@@ -645,6 +645,29 @@ public open class GoogleLLMClient(
                             metaInfo = metaInfo
                         )
                     )
+
+                    is GooglePart.InlineData -> {
+                        val inlineData = part.inlineData
+                        val contentPart = when (val mimeType = inlineData.mimeType) {
+                            "image/png", "image/jpeg", "image/webp" -> ContentPart.Image(
+                                content = AttachmentContent.Binary.Bytes(inlineData.data),
+                                format = mimeType.substringAfter("image/"),
+                                mimeType = mimeType,
+                            )
+                            else -> ContentPart.File(
+                                content = AttachmentContent.Binary.Bytes(inlineData.data),
+                                mimeType = mimeType,
+                                format = mimeType.substringAfterLast('.'),
+                            )
+                        }
+                        add(
+                            Message.Assistant(
+                                parts = listOf(contentPart),
+                                finishReason = candidate.finishReason,
+                                metaInfo = metaInfo
+                            )
+                        )
+                    }
 
                     else -> error("Not supported part type: $part")
                 }
