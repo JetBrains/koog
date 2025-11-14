@@ -918,4 +918,15 @@ class PromptBuilderTest {
         assertEquals(1, prompt.messages[1].parts.size, "Should have only text part")
         assertEquals(expectedText, prompt.messages[1].parts[0], "Should have same text")
     }
+
+    @Test
+    fun testUserMessageWithTrailingNewline() {
+        val prompt = Prompt.build("test") {
+            user {
+                +"Text\n"
+            }
+        }
+
+        assertEquals(1, prompt.messages[0].parts.size, "Prompt should have one message with one part")
+    }
 }

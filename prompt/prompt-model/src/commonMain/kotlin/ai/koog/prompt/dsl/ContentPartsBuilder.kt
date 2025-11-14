@@ -70,7 +70,7 @@ public class ContentPartsBuilder : TextContentBuilderBase<List<ContentPart>>() {
      * Flushes the text builder and adds its content as a text part if there is any.
      */
     private fun flushTextBuilder() {
-        if (caret.offset != 0) {
+        if (textBuilder.isNotEmpty()) {
             parts.add(ContentPart.Text(textBuilder.toString()))
             textBuilder.clear()
         }
