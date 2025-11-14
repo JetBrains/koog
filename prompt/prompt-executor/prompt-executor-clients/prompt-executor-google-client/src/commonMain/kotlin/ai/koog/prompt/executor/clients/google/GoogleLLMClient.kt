@@ -652,6 +652,7 @@ public open class GoogleLLMClient(
                             "image/png", "image/jpeg", "image/webp" -> ContentPart.Image(
                                 content = AttachmentContent.Binary.Bytes(inlineData.data),
                                 format = mimeType.substringAfter("image/"),
+                                mimeType = mimeType,
                             )
                             else -> ContentPart.File(
                                 content = AttachmentContent.Binary.Bytes(inlineData.data),
