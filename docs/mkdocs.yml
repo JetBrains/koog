@@ -13,6 +13,7 @@ nav:
           - Functional agents: functional-agents.md
           - Complex workflow agents: complex-workflow-agents.md
       - Prompts: prompt-api.md
+      - LLM parameters: llm-parameters.md
       - Tools:
           - Overview: tools-overview.md
           - Built-in tools: built-in-tools.md
@@ -124,6 +125,8 @@ plugins:
           - complex-workflow-agents.md: This page explains how you can create agents that handle complex workflows by defining custom strategies, tools, configurations, and custom input and output types.
         Prompts:
           - prompt-api.md: This page includes detailed instructions about the use of Prompt API, which provides a comprehensive toolkit for interacting with Large Language Models in production applications.
+        LLM Parameters:
+          - llm-parameters.md: This page provides details about LLM Parameters, which allow you to control and customize the behavior of language models by adjusting parameters like temperature, token limits, schemas, and tool choices.
         Tools:
           - tools-overview.md: This page provides a broad overview of the implementation of tools in Koog.
           - built-in-tools.md: This page provides details about built-in tools that handle common scenarios of agent-user interaction.
@@ -170,8 +173,11 @@ plugins:
           - agent-event-handlers.md: This page provides details about event handlers that let you monitor and respond to specific events during the agent workflow.
           - tracing.md: This page includes details about the Tracing feature, which provides comprehensive tracing capabilities for AI agents. The page includes configuration and initialization details, examples and quickstart, details about error handling and FAQ and troubleshooting.
           - agent-memory.md: This page provides details about the AgentMemory feature which lets AI agents store, retrieve, and use information across conversations. The page includes configuration and initialization details, examples and quickstart, best practices, error handling and FAQ and troubleshooting.
-          - agent-persistence.md:
-              This page describes Agent Persistence, which is a feature that lets you save and restore the state of an agent at specific points during execution. The page includes key concepts, prerequisites, installation instructions, configuration, and basic and advanced usage guides.
+          - agent-persistence.md: This page describes Agent Persistence, which is a feature that lets you save and restore the state of an agent at specific points during execution. The page includes key concepts, prerequisites, installation instructions, configuration, and basic and advanced usage guides.
+        OpenTelemetry:
+          - opentelemetry-support.md: This page provides details about the support for OpenTelemetry with the Koog agentic framework for tracing and monitoring AI agents. The page includes details about installation and configuration, span types and attributes, and common exporters.
+          - opentelemetry-langfuse-exporter.md: This page provides information about Koog's built-in support for exporting agent traces to Langfuse, a platform for observability and analytics of AI applications. The page provides details about LangFuse integration configuration and an example of its use.
+          - opentelemetry-weave-exporter.md: This page provides details about W&B Weave integration in Koog to capture prompts, completions, system context, and execution traces and visualize them directly in a W&B workspace. The page provides details about W&B Weave integration setup, configuration and an example of its use.
         Testing:
           - testing.md: This guide provides a detailed overview of the Testing feature that provides a comprehensive framework for testing AI agent pipelines, subgraphs, and tool interactions in Koog. The page includes configuration and initialization details, basic and advanced examples and an FAQ and troubleshooting section.
         Why Koog:
