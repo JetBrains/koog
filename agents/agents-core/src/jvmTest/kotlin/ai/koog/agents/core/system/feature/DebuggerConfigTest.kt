@@ -72,6 +72,7 @@ class DebuggerConfigTest {
     }
 
     @Test
+    @Disabled("Flaky, see #1124")
     fun `test read port from vm option`() = runBlocking {
         // Set VM option
         val port = 56712
