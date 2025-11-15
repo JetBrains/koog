@@ -80,6 +80,15 @@ class TestMcpServer(private val port: Int) {
             )
         }
 
+        // A completely empty tool that accepts nothing and returns nothing
+        server.addTool(
+            name = "empty",
+            description = "An empty tool",
+            inputSchema = Tool.Input()
+        ) {
+            CallToolResult(content = emptyList())
+        }
+
         return server
     }
 

@@ -3,11 +3,14 @@ package ai.koog.agents.core.tools.serialization
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
+import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
-internal val ToolJson = Json {
+@InternalAgentToolsApi
+@Suppress("MissingKDocForPublicAPI")
+public val ToolJson: Json = Json {
     ignoreUnknownKeys = true
     encodeDefaults = true
     explicitNulls = false
@@ -47,6 +50,7 @@ internal data class ToolArrayItemTypeModel(
  *
  * @param toolDescriptors List of [ToolDescriptor]
  */
+@OptIn(InternalAgentToolsApi::class)
 public fun serializeToolDescriptorsToJsonString(toolDescriptors: List<ToolDescriptor>): String {
     val toolModels = toolDescriptors.map {
         ToolModel(
