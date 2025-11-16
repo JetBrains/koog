@@ -58,15 +58,23 @@ fun ComposeApp() = AppTheme {
 
             composable<NavRoute.AgentDemoRoute.CalculatorScreen> {
                 AgentDemoScreen(
-                    onNavigateBack = { navController.popBackStack() },
-                    viewModel = koin.get { parametersOf("calculator") }
+                    viewModel = koin.get {
+                        parametersOf(
+                            "calculator",
+                            { navController.popBackStack() },
+                        )
+                    },
                 )
             }
 
             composable<NavRoute.AgentDemoRoute.WeatherScreen> {
                 AgentDemoScreen(
-                    onNavigateBack = { navController.popBackStack() },
-                    viewModel = koin.get { parametersOf("weather") }
+                    viewModel = koin.get {
+                        parametersOf(
+                            "weather",
+                            { navController.popBackStack() },
+                        )
+                    },
                 )
             }
         }

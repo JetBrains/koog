@@ -39,9 +39,12 @@ fun KoinApp() = KoinMultiplatformApplication(
                 factory { SettingsViewModel(appSettings = get()) }
                 factory { StartViewModel() }
                 factory { params ->
-                    val agentProviderName: String = params.get()
+                    val agentProviderName: String = params[0]
                     val agentProvider: AgentProvider = koin.get(named(agentProviderName))
-                    AgentDemoViewModel(agentProvider = agentProvider)
+                    AgentDemoViewModel(
+                        agentProvider = agentProvider,
+                        onNavigateBack = params[1],
+                    )
                 }
             }
         )
