@@ -5,7 +5,7 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.datetime.Instant.Companion.fromEpochMilliseconds
 import kotlin.test.Test
 import kotlin.test.assertEquals

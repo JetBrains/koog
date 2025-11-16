@@ -13,7 +13,7 @@ import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.toStreamFrame
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 /**
  * A CodePromptExecutor that caches responses from a nested executor.

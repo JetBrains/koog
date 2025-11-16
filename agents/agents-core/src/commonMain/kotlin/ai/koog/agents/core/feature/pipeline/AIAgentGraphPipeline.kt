@@ -20,7 +20,7 @@ import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionFailedConte
 import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionFailedHandler
 import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionStartingContext
 import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionStartingHandler
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlin.reflect.KType
 
 /**

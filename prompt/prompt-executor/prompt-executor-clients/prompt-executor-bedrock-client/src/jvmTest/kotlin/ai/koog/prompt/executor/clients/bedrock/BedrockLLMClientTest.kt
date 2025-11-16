@@ -39,7 +39,7 @@ import aws.sdk.kotlin.services.bedrockruntime.model.StartAsyncInvokeRequest
 import aws.sdk.kotlin.services.bedrockruntime.model.StartAsyncInvokeResponse
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import kotlin.test.Test

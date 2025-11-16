@@ -41,7 +41,7 @@ import ai.koog.prompt.tokenizer.SimpleRegexBasedTokenizer
 import ai.koog.utils.io.use
 import io.opentelemetry.sdk.trace.export.SpanExporter
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json

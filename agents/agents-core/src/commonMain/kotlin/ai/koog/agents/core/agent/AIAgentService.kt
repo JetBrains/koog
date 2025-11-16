@@ -14,7 +14,7 @@ import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.processor.ResponseProcessor
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.serializer
 import kotlin.reflect.KType

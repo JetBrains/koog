@@ -21,7 +21,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.json.Json
 import kotlin.reflect.typeOf

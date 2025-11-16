@@ -4,7 +4,7 @@ import ai.koog.agents.core.tools.ToolResult
 import ai.koog.prompt.dsl.PromptBuilder
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 

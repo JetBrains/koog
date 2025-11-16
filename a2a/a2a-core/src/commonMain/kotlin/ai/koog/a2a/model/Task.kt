@@ -1,6 +1,6 @@
 package ai.koog.a2a.model
 
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.SerialName

@@ -5,7 +5,7 @@ package ai.koog.agents.core.environment
 import ai.koog.agents.core.tools.Tool
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.ResponseMetaInfo
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 /**
  * A wrapper class designed to safely execute a tool within a given AI agent environment.

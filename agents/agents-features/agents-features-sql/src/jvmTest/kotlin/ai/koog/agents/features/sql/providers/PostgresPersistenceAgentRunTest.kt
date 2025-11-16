@@ -22,7 +22,7 @@ import ai.koog.test.utils.DockerAvailableCondition
 import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.json.JsonPrimitive
 import org.jetbrains.exposed.sql.Database

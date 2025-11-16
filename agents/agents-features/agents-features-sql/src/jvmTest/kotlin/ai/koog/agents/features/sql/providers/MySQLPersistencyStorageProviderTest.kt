@@ -7,7 +7,7 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.test.utils.DockerAvailableCondition
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.serialization.json.JsonPrimitive
 import org.jetbrains.exposed.sql.Database
 import org.junit.jupiter.api.AfterAll

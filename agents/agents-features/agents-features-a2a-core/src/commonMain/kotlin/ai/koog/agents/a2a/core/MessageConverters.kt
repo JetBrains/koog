@@ -12,7 +12,7 @@ import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.serialization.json.JsonObject
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid

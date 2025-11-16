@@ -10,7 +10,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.serialization.json.JsonPrimitive
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance

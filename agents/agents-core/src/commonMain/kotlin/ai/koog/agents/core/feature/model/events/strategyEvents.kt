@@ -2,7 +2,7 @@ package ai.koog.agents.core.feature.model.events
 
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.annotation.InternalAgentsApi
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.serialization.Serializable
 
 /**

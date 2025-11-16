@@ -63,7 +63,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.safeCast

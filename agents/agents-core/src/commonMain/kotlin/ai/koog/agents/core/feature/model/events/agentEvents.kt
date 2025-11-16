@@ -1,7 +1,7 @@
 package ai.koog.agents.core.feature.model.events
 
 import ai.koog.agents.core.feature.model.AIAgentError
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.serialization.Serializable
 
 /**

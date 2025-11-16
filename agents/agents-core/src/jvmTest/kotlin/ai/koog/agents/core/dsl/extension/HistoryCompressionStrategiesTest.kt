@@ -13,7 +13,7 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import kotlinx.coroutines.test.runTest
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 import kotlinx.datetime.Instant
 import kotlinx.serialization.json.Json
 import org.junit.jupiter.params.ParameterizedTest

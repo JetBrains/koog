@@ -37,7 +37,7 @@ import ai.koog.prompt.streaming.StreamFrameFlowBuilder
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import kotlinx.coroutines.CancellationException
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 /**
  * Represents the settings for configuring a Mistral AI client.
