@@ -1,7 +1,7 @@
 [versions]
 agp = "8.12.3"
 annotations = "26.0.2-1"
-assertj = "3.27.4"
+assertj = "3.27.6"
 awaitility = "4.3.0"
 aws-sdk-kotlin = "1.5.16"
 dokka = "2.1.0"
