@@ -198,7 +198,6 @@ public open class StandardJsonSchemaGenerator : GenericJsonSchemaGenerator() {
     }
 
     override fun processPolymorphic(context: GenerationContext): JsonObject {
-
         // Check for the special case of JsonElement. Its descriptor doesn't follow the
         // standard polymorphic pattern and must be handled separately.
         if (context.descriptor.serialName == JSON_ELEMENT_SERIAL_NAME) {
@@ -236,9 +235,9 @@ public open class StandardJsonSchemaGenerator : GenericJsonSchemaGenerator() {
 
                                     schema[JsonSchemaConsts.Keys.REQUIRED] = JsonArray(
                                         (
-                                                schema.getValue(JsonSchemaConsts.Keys.REQUIRED).jsonArray.toList() +
-                                                        JsonPrimitive(classDiscriminator)
-                                                ).distinct()
+                                            schema.getValue(JsonSchemaConsts.Keys.REQUIRED).jsonArray.toList() +
+                                                JsonPrimitive(classDiscriminator)
+                                            ).distinct()
                                     )
                                 }
 
