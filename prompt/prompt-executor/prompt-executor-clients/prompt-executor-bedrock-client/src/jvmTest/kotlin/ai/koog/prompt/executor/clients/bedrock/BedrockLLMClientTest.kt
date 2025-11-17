@@ -78,21 +78,39 @@ class BedrockLLMClientTest {
     fun `can create BedrockModel with custom inference prefix`() {
         val originalModel = BedrockModels.AnthropicClaude4Sonnet
 
+        val globalModel = originalModel.withInferenceProfile(BedrockInferencePrefixes.GLOBAL.prefix)
         val euModel = originalModel.withInferenceProfile(BedrockInferencePrefixes.EU.prefix)
         val apModel = originalModel.withInferenceProfile(BedrockInferencePrefixes.AP.prefix)
 
         assertTrue(originalModel.id.startsWith(BedrockInferencePrefixes.US.prefix))
         assertTrue(originalModel.id.contains("us.anthropic"))
 
+        assertTrue(globalModel.id.startsWith(BedrockInferencePrefixes.GLOBAL.prefix))
+        assertFalse(globalModel.id.contains("us.anthropic"))
+
         assertTrue(euModel.id.startsWith(BedrockInferencePrefixes.EU.prefix))
         assertFalse(euModel.id.contains("us.anthropic"))
+
         assertTrue(apModel.id.startsWith(BedrockInferencePrefixes.AP.prefix))
         assertFalse(apModel.id.contains("us.anthropic"))
 
+        // Verify global model properties
+        assertEquals(originalModel.provider, globalModel.provider)
+        assertEquals(originalModel.capabilities, globalModel.capabilities)
+        assertEquals(originalModel.contextLength, globalModel.contextLength)
+        assertEquals(originalModel.maxOutputTokens, globalModel.maxOutputTokens)
+
+        // Verify EU model properties
         assertEquals(originalModel.provider, euModel.provider)
         assertEquals(originalModel.capabilities, euModel.capabilities)
         assertEquals(originalModel.contextLength, euModel.contextLength)
         assertEquals(originalModel.maxOutputTokens, euModel.maxOutputTokens)
+
+        // Verify AP model properties
+        assertEquals(originalModel.provider, apModel.provider)
+        assertEquals(originalModel.capabilities, apModel.capabilities)
+        assertEquals(originalModel.contextLength, apModel.contextLength)
+        assertEquals(originalModel.maxOutputTokens, apModel.maxOutputTokens)
     }
 
     @Test

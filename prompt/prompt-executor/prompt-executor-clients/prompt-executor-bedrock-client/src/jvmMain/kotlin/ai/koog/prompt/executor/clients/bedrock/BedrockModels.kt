@@ -85,6 +85,7 @@ public enum class BedrockRegions(public val regionCode: String) {
  */
 @Serializable
 public enum class BedrockInferencePrefixes(public val prefix: String) {
+    GLOBAL("global"),
     US("us"),
     CA("ca"),
     MX("mx"),
