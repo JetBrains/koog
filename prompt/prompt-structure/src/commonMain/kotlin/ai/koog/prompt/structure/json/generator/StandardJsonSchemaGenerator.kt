@@ -2,6 +2,7 @@ package ai.koog.prompt.structure.json.generator
 
 import ai.koog.prompt.params.LLMParams
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.builtins.nullable
 import kotlinx.serialization.descriptors.PolymorphicKind
 import kotlinx.serialization.descriptors.StructureKind
 import kotlinx.serialization.json.ClassDiscriminatorMode
@@ -200,7 +201,7 @@ public open class StandardJsonSchemaGenerator : GenericJsonSchemaGenerator() {
     override fun processPolymorphic(context: GenerationContext): JsonObject {
         // Check for the special case of JsonElement. Its descriptor doesn't follow the
         // standard polymorphic pattern and must be handled separately.
-        if (context.descriptor.serialName == JSON_ELEMENT_SERIAL_NAME) {
+        if (context.descriptor.serialName in JSON_ELEMENT_SERIAL_NAMES) {
             return processJsonElement(context)
         }
 
@@ -295,4 +296,10 @@ public open class StandardJsonSchemaGenerator : GenericJsonSchemaGenerator() {
     }
 }
 
-private val JSON_ELEMENT_SERIAL_NAME = serializer<JsonElement>().descriptor.serialName
+private val JSON_ELEMENT_SERIAL_NAMES: Set<String> by lazy {
+    val elementSerializer = serializer<JsonElement>()
+    setOf(
+        elementSerializer.descriptor.serialName,
+        elementSerializer.nullable.descriptor.serialName
+    )
+}
