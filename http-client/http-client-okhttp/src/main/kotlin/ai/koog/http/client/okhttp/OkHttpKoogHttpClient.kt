@@ -1,6 +1,7 @@
 package ai.koog.http.client.okhttp
 
 import ai.koog.http.client.KoogHttpClient
+import ai.koog.http.client.KoogHttpClientException
 import ai.koog.utils.io.SuitableForIO
 import io.github.oshai.kotlinlogging.KLogger
 import kotlinx.coroutines.Dispatchers
@@ -53,11 +54,12 @@ public class OkHttpKoogHttpClient internal constructor(
                 return json.decodeFromString(serializer, responseBody) as R
             }
         }
-        val errorBody = response.body.string()
-        val errorMessage = "Error from $clientName API: ${response.code}\nBody:\n$errorBody"
-
-        logger.error { errorMessage }
-        error(errorMessage)
+        throw KoogHttpClientException(
+            clientName = clientName,
+            statusCode = response.code,
+            errorBody = response.body.string(),
+            message = "Error from $clientName API: ${response.code}",
+        )
     }
 
     override suspend fun <R : Any> get(
@@ -127,8 +129,12 @@ public class OkHttpKoogHttpClient internal constructor(
                             ?.let { trySend(it) }
                     }
                 } catch (e: Exception) {
-                    logger.error(e) { "Error processing SSE event from $clientName: ${e.message}" }
-                    close(e)
+                    val exception = KoogHttpClientException(
+                        clientName = clientName,
+                        message = "Error processing SSE event: ${e.message}"
+                    )
+                    logger.error(e) { exception.message }
+                    close(exception)
                 }
             }
 
@@ -146,7 +152,15 @@ public class OkHttpKoogHttpClient internal constructor(
                 }
 
                 logger.error(t) { errorMessage }
-                close(t)
+                close(
+                    KoogHttpClientException(
+                        clientName = clientName,
+                        statusCode = response?.code,
+                        errorBody = response?.body?.string(),
+                        message = t?.message ?: errorMessage,
+                        cause = t
+                    )
+                )
             }
         }
 
