@@ -213,6 +213,7 @@ private val OPENAI_MODELS_MAP = mapOf(
         "gpt5mini" to OpenAIModels.Chat.GPT5Mini,
         "gpt5nano" to OpenAIModels.Chat.GPT5Nano,
         "gpt5codex" to OpenAIModels.Chat.GPT5Codex,
+        "gpt5_1" to OpenAIModels.Chat.GPT5_1,
     ),
     "reasoning" to mapOf(
         "o4mini" to OpenAIModels.Reasoning.O4Mini,
