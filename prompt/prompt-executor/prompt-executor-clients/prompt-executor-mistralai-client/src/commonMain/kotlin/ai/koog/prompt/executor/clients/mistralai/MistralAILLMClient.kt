@@ -257,8 +257,8 @@ public open class MistralAILLMClient(
                 requestBodyType = MistralAIModerationRequest::class,
                 responseType = MistralAIModerationResponse::class
             )
-        } catch(e: CancellationException) {
-           throw e
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             throw LLMClientException(
                 clientName = clientName,
