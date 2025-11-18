@@ -340,7 +340,7 @@ class ExecuteShellCommandToolJvmTest {
         val partialExpected = """
         Command: echo beforeSleep && sleep 10 && echo afterSleep
         beforeSleep
-    """.trimIndent()
+        """.trimIndent()
 
         val output = result.textForLLM()
         assertTrue(output.contains(partialExpected), "Partial output not found. Actual: $output")
