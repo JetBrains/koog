@@ -34,6 +34,7 @@ object Models {
     @JvmStatic
     fun googleModels(): Stream<LLModel> {
         return Stream.of(
+            GoogleModels.Gemini3_Pro_Preview,
             GoogleModels.Gemini2_5Pro,
             GoogleModels.Gemini2_5Flash,
         )
@@ -105,6 +106,7 @@ object Models {
             OpenAIModels.Chat.GPT5_1,
             AnthropicModels.Haiku_4_5,
             GoogleModels.Gemini2_5Pro,
+            GoogleModels.Gemini3_Pro_Preview,
         )
     }
 
