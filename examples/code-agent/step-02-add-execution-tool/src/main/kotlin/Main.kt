@@ -14,10 +14,12 @@ import ai.koog.agents.features.eventHandler.feature.handleEvents
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.koog.rag.base.files.JVMFileSystemProvider
-import kotlinx.coroutines.runBlocking
+
+
+val executor = simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY"))
 
 val agent = AIAgent(
-    promptExecutor = simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")),
+    promptExecutor = executor,
     strategy = singleRunStrategy(),
     systemPrompt = """
         You are a highly skilled programmer tasked with updating the provided codebase according to the given task.
@@ -53,15 +55,16 @@ fun createExecuteShellCommandToolFromEnv(): ExecuteShellCommandTool {
     }
 }
 
-fun main(args: Array<String>) = runBlocking {
+suspend fun main(args: Array<String>) {
     if (args.size < 2) {
         println("Error: Please provide the project absolute path and a task as arguments")
         println("Usage: <absolute_path> <task>")
-        return@runBlocking
+        return
     }
 
     val (path, task) = args
     val input = "Project absolute path: $path\n\n## Task\n$task"
     val result = agent.run(input)
     println(result)
+    executor.close()
 }
