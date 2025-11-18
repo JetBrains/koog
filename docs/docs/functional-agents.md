@@ -117,9 +117,9 @@ val mathAgent = AIAgent<String, String>(
         // The first LLM call to produce an initial draft based on the user input
         val draft = requestLLM("Draft: $input").asAssistantMessage().content
         // The second LLM call to improve the draft by prompting the LLM again with the draft content
-        val improved = requestLLM("Improve and clarify: $draft").asAssistantMessage().content
+        val improved = requestLLM("Improve and clarify.").asAssistantMessage().content
         // The final LLM call to format the improved text and return the final formatted result
-        requestLLM("Format the result as bold: $improved").asAssistantMessage().content
+        requestLLM("Format the result as bold.").asAssistantMessage().content
     }
 )
 

@@ -8,7 +8,6 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.jetbrains.example.koog.compose.agents.common.AgentProvider
 import com.jetbrains.example.koog.compose.screens.agentdemo.AgentDemoScreen
 import com.jetbrains.example.koog.compose.screens.settings.SettingsScreen
 import com.jetbrains.example.koog.compose.screens.start.StartScreen
@@ -16,7 +15,6 @@ import com.jetbrains.example.koog.compose.theme.AppTheme
 import kotlinx.serialization.Serializable
 import org.koin.compose.getKoin
 import org.koin.core.parameter.parametersOf
-import org.koin.core.qualifier.named
 
 /**
  * Main navigation graph for the app
@@ -59,22 +57,16 @@ fun ComposeApp() = AppTheme {
             }
 
             composable<NavRoute.AgentDemoRoute.CalculatorScreen> {
-                val agentProvider: AgentProvider = koin.get(named("calculator"))
                 AgentDemoScreen(
-                    onNavigateBack = {
-                        navController.popBackStack()
-                    },
-                    viewModel = koin.get { parametersOf(agentProvider) }
+                    onNavigateBack = { navController.popBackStack() },
+                    viewModel = koin.get { parametersOf("calculator") }
                 )
             }
 
             composable<NavRoute.AgentDemoRoute.WeatherScreen> {
-                val agentProvider: AgentProvider = koin.get(named("weather"))
                 AgentDemoScreen(
-                    onNavigateBack = {
-                        navController.popBackStack()
-                    },
-                    viewModel = koin.get { parametersOf(agentProvider) }
+                    onNavigateBack = { navController.popBackStack() },
+                    viewModel = koin.get { parametersOf("weather") }
                 )
             }
         }

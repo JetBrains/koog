@@ -44,7 +44,7 @@ kotlin {
 
         jvmTest {
             dependencies {
-                implementation("org.jetbrains.lincheck:lincheck:3.1")
+                implementation("org.jetbrains.lincheck:lincheck:3.3.2")
                 implementation(libs.ktor.client.cio)
             }
         }

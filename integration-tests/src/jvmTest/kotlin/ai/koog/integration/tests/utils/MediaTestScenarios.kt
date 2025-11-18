@@ -62,8 +62,8 @@ object MediaTestScenarios {
 
     val models = listOf(
         AnthropicModels.Sonnet_4_5,
-        GoogleModels.Gemini2_5Flash, // see KG-256
-        OpenAIModels.Chat.GPT5,
+        GoogleModels.Gemini2_5Pro,
+        OpenAIModels.Chat.GPT5_1,
     )
 
     @JvmStatic

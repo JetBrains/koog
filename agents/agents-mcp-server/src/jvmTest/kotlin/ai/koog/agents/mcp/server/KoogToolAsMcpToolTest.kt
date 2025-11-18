@@ -9,6 +9,7 @@ import ai.koog.agents.testing.network.NetUtil.isPortAvailable
 import ai.koog.agents.testing.tools.RandomNumberTool
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.server.cio.CIO
+import io.modelcontextprotocol.kotlin.sdk.EmptyJsonObject
 import io.modelcontextprotocol.kotlin.sdk.TextContent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -33,7 +34,7 @@ class KoogToolAsMcpToolTest {
     @OptIn(InternalAgentToolsApi::class)
     @Test
     fun testKoogToolAsMcpTool() = testMcpTool(RandomNumberTool()) { mcpTool, origin ->
-        val args = McpTool.Args(buildJsonObject { put("seed", "42") })
+        val args = buildJsonObject { put("seed", "42") }
 
         val result = withContext(Dispatchers.Default.limitedParallelism(1)) {
             withTimeout(20.seconds) {
@@ -43,14 +44,14 @@ class KoogToolAsMcpToolTest {
 
         logger.info { "Result: ${mcpTool.encodeResultToString(result)}" }
 
-        val content = result.promptMessageContents.first() as TextContent
+        val content = result?.content?.first() as TextContent
         assertEquals("${origin.last}", content.text)
     }
 
     @OptIn(InternalAgentToolsApi::class)
     @Test
     fun testKoogToolAsMcpToolWithoutOptionalArguments() = testMcpTool(RandomNumberTool()) { mcpTool, origin ->
-        val args = McpTool.Args(buildJsonObject { })
+        val args = EmptyJsonObject
 
         val result = withContext(Dispatchers.Default.limitedParallelism(1)) {
             withTimeout(20.seconds) {
@@ -60,7 +61,7 @@ class KoogToolAsMcpToolTest {
 
         logger.info { "Result: ${mcpTool.encodeResultToString(result)}" }
 
-        val content = result.promptMessageContents.first() as TextContent
+        val content = result?.content?.first() as TextContent
         assertEquals("${origin.last}", content.text)
     }
 
@@ -68,7 +69,7 @@ class KoogToolAsMcpToolTest {
     @Test
     fun testKoogToolAsMcpToolWithInvalidArguments() = testMcpTool(RandomNumberTool()) { mcpTool, origin ->
         assertFailsWith<IllegalStateException> {
-            val args = McpTool.Args(buildJsonObject { put("seed", "forty-two") })
+            val args = buildJsonObject { put("seed", "forty-two") }
 
             withContext(Dispatchers.Default.limitedParallelism(1)) {
                 withTimeout(20.seconds) {
@@ -80,7 +81,7 @@ class KoogToolAsMcpToolTest {
         run {
             // check that the server is still working
 
-            val args = McpTool.Args(buildJsonObject { put("seed", "42") })
+            val args = buildJsonObject { put("seed", "42") }
 
             val result = withContext(Dispatchers.Default.limitedParallelism(1)) {
                 withTimeout(20.seconds) {
@@ -90,7 +91,7 @@ class KoogToolAsMcpToolTest {
 
             logger.info { "Result: ${mcpTool.encodeResultToString(result)}" }
 
-            val content = result.promptMessageContents.first() as TextContent
+            val content = result?.content?.first() as TextContent
             assertEquals("${origin.last}", content.text)
         }
     }
@@ -104,7 +105,7 @@ class KoogToolAsMcpToolTest {
             tool.throwing = true
 
             assertFailsWith<IllegalStateException> {
-                val args = McpTool.Args(buildJsonObject { })
+                val args = EmptyJsonObject
 
                 withContext(Dispatchers.Default.limitedParallelism(1)) {
                     withTimeout(20.seconds) {
@@ -121,7 +122,7 @@ class KoogToolAsMcpToolTest {
                 // check that the server is still working
                 tool.throwing = false
 
-                val args = McpTool.Args(buildJsonObject { })
+                val args = EmptyJsonObject
 
                 val result = withContext(Dispatchers.Default.limitedParallelism(1)) {
                     withTimeout(20.seconds) {
@@ -131,7 +132,7 @@ class KoogToolAsMcpToolTest {
 
                 logger.info { "Result: ${mcpTool.encodeResultToString(result)}" }
 
-                val content = result.promptMessageContents.first() as TextContent
+                val content = result?.content?.first() as TextContent
                 assertEquals("${origin.last?.getOrNull()}", content.text)
             }
         }

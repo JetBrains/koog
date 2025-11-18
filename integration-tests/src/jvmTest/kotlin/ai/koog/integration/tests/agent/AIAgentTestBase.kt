@@ -16,9 +16,9 @@ import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.agent.subgraphWithTask
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
-import ai.koog.integration.tests.utils.APIKeys.readTestAnthropicKeyFromEnv
-import ai.koog.integration.tests.utils.APIKeys.readTestOpenAIKeyFromEnv
 import ai.koog.integration.tests.utils.Models
+import ai.koog.integration.tests.utils.TestCredentials.readTestAnthropicKeyFromEnv
+import ai.koog.integration.tests.utils.TestCredentials.readTestOpenAIKeyFromEnv
 import ai.koog.integration.tests.utils.getLLMClientForProvider
 import ai.koog.integration.tests.utils.tools.files.CreateFile
 import ai.koog.integration.tests.utils.tools.files.DeleteFile
@@ -67,7 +67,7 @@ open class AIAgentTestBase {
         @JvmStatic
         fun getLatestModels() = listOf(
             AnthropicModels.Sonnet_4_5,
-            OpenAIModels.Chat.GPT5,
+            OpenAIModels.Chat.GPT5_1,
         ).stream()
 
         @JvmStatic
@@ -304,7 +304,7 @@ open class AIAgentTestBase {
             val openaiSubgraph by subgraph("openai") {
                 val definePromptOpenAI by node<Unit, Unit> {
                     llm.writeSession {
-                        model = OpenAIModels.Chat.GPT5
+                        model = OpenAIModels.Chat.GPT5_1
                         rewritePrompt {
                             prompt("test") {
                                 system(
@@ -345,7 +345,7 @@ open class AIAgentTestBase {
         return AIAgent(
             promptExecutor = executor,
             strategy = strategy,
-            agentConfig = AIAgentConfig(prompt, OpenAIModels.Chat.GPT5, maxAgentIterations),
+            agentConfig = AIAgentConfig(prompt, OpenAIModels.Chat.GPT5_1, maxAgentIterations),
             toolRegistry = tools,
         ) {
             install(EventHandler, eventHandlerConfig)

@@ -22,12 +22,11 @@ import kotlin.time.ExperimentalTime
  * Tools for the weather agent
  */
 @OptIn(ExperimentalTime::class)
-object WeatherTools {
-    private val openMeteoClient = OpenMeteoClient()
-
-    private val clock = Clock.System
-
-    private val UTC_ZONE = TimeZone.UTC
+sealed interface WeatherTools {
+    companion object {
+        private val CLOCK = Clock.System
+        private val UTC_ZONE = TimeZone.UTC
+    }
 
     /**
      * Granularity options for weather forecasts
@@ -44,7 +43,10 @@ object WeatherTools {
     /**
      * Tool for getting the current date and time
      */
-    object CurrentDatetimeTool : Tool<CurrentDatetimeTool.Args, CurrentDatetimeTool.Result>() {
+    class CurrentDatetimeTool(
+        val defaultTimeZone: TimeZone = UTC_ZONE,
+        val clock: Clock = CLOCK,
+    ) : Tool<CurrentDatetimeTool.Args, CurrentDatetimeTool.Result>() {
         @Serializable
         data class Args(
             @property:LLMDescription("The timezone to get the current date and time in (e.g., 'UTC', 'America/New_York', 'Europe/London'). Defaults to UTC.")
@@ -73,7 +75,7 @@ object WeatherTools {
             val zoneId = try {
                 TimeZone.of(args.timezone)
             } catch (_: Exception) {
-                UTC_ZONE
+                defaultTimeZone
             }
 
             val now = clock.now()
@@ -97,7 +99,10 @@ object WeatherTools {
     /**
      * Tool for adding a duration to a date
      */
-    object AddDatetimeTool : Tool<AddDatetimeTool.Args, AddDatetimeTool.Result>() {
+    class AddDatetimeTool(
+        val defaultTimeZone: TimeZone = UTC_ZONE,
+        val clock: Clock = CLOCK,
+    ) : Tool<AddDatetimeTool.Args, AddDatetimeTool.Result>() {
         @Serializable
         data class Args(
             @property:LLMDescription("The date to add to in ISO format (e.g., '2023-05-20')")
@@ -161,15 +166,15 @@ object WeatherTools {
                     LocalDate.parse(args.date)
                 } catch (_: Exception) {
                     // Use current date if parsing fails
-                    clock.now().toLocalDateTime(UTC_ZONE).date
+                    clock.now().toLocalDateTime(defaultTimeZone).date
                 }
             } else {
-                clock.now().toLocalDateTime(UTC_ZONE).date
+                clock.now().toLocalDateTime(defaultTimeZone).date
             }
 
             // Convert to LocalDateTime to handle hours and minutes
             val baseDateTime = LocalDateTime(baseDate.year, baseDate.month, baseDate.day, 0, 0)
-            val baseInstant = baseDateTime.toInstant(UTC_ZONE)
+            val baseInstant = baseDateTime.toInstant(defaultTimeZone)
 
             val period = DateTimePeriod(
                 days = args.days,
@@ -177,8 +182,8 @@ object WeatherTools {
                 minutes = args.minutes
             )
 
-            val newInstant = baseInstant.plus(period, UTC_ZONE)
-            val resultDate = newInstant.toLocalDateTime(UTC_ZONE).date.toString()
+            val newInstant = baseInstant.plus(period, defaultTimeZone)
+            val resultDate = newInstant.toLocalDateTime(defaultTimeZone).date.toString()
 
             return Result(
                 date = resultDate,
@@ -193,7 +198,10 @@ object WeatherTools {
     /**
      * Tool for getting a weather forecast
      */
-    object WeatherForecastTool : Tool<WeatherForecastTool.Args, WeatherForecastTool.Result>() {
+    class WeatherForecastTool(
+        private val openMeteoClient: OpenMeteoClient = OpenMeteoClient(),
+        val defaultTimeZone: TimeZone = UTC_ZONE
+    ) : Tool<WeatherForecastTool.Args, WeatherForecastTool.Result>() {
         @Serializable
         data class Args(
             @property:LLMDescription("The location to get the weather forecast for (e.g., 'New York', 'London', 'Paris')")
@@ -277,7 +285,7 @@ object WeatherTools {
             val daily = forecast.daily ?: return "No daily forecast data available"
 
             val startDate = date.ifBlank {
-                Clock.System.now().toLocalDateTime(UTC_ZONE).date.toString()
+                Clock.System.now().toLocalDateTime(defaultTimeZone).date.toString()
             }
 
             val startIndex = daily.time.indexOfFirst { it >= startDate }.coerceAtLeast(0)
@@ -306,7 +314,7 @@ object WeatherTools {
             val hourly = forecast.hourly ?: return "No hourly forecast data available"
 
             val startDate = date.ifBlank {
-                Clock.System.now().toLocalDateTime(UTC_ZONE).date.toString()
+                Clock.System.now().toLocalDateTime(defaultTimeZone).date.toString()
             }
 
             // Find the starting index for the requested date

@@ -13,30 +13,35 @@ import ai.koog.prompt.llm.LLModel
  *
  * Note: All models with vision (image) capabilities also support sending PDF files.
  *
- * | Name                             | Speed     | Price              | Input                        | Output             |
- * |----------------------------------|-----------|--------------------|------------------------------|--------------------|
- * | [Reasoning.O4Mini]               | Medium    | $1.1-$4.4          | Text, Image, Tools, Document | Text, Tools        |
- * | [Reasoning.O3Mini]               | Medium    | $1.1-$4.4          | Text, Tools                  | Text, Tools        |
- * | [Reasoning.O3]                   | Slowest   | $10-$40            | Text, Image, Tools, Document | Text, Tools        |
- * | [Reasoning.O1]                   | Slowest   | $15-$60            | Text, Image, Tools, Document | Text, Tools        |
- * | [Chat.GPT4o]                     | Medium    | $2.5-$10           | Text, Image, Tools, Document | Text, Tools        |
- * | [Chat.GPT4_1]                    | Medium    | $2-$8              | Text, Image, Tools, Document | Text, Tools        |
- * | [Chat.GPT5]                      | Medium    | $1.25-$10          | Text, Image, Tools, Document | Text, Tools        |
- * | [Chat.GPT5Mini]                  | Fast      | $0.25-$2           | Text, Image, Tools, Document | Text, Tools        |
- * | [Chat.GPT5Nano]                  | Very fast | $0.05-$0.4         | Text, Image, Tools, Document | Text, Tools        |
- * | [Chat.GPT5Codex]                 | Medium    | $1.25-$10          | Text, Image, Tools, Document | Text, Tools        |
- * | [Audio.GptAudio]                 | Fast      | $2.5-$10           | Text, Audio, Tools           | Text, Audio, Tools |
- * | [Audio.GPT4oMiniAudio]           | Fast      | $0.15-$0.6/$10-$20 | Text, Audio, Tools           | Text, Audio, Tools |
- * | [Audio.GPT4oAudio]               | Medium    | $2.5-$10/$40-$80   | Text, Audio, Tools           | Text, Audio, Tools |
- * | [CostOptimized.O4Mini]           | Medium    | $1.1-$4.4          | Text, Image, Tools, Document | Text, Tools        |
- * | [CostOptimized.GPT4_1Nano]       | Very fast | $0.1-$0.4          | Text, Image, Tools, Document | Text, Tools        |
- * | [CostOptimized.GPT4_1Mini]       | Fast      | $0.4-$1.6          | Text, Image, Tools, Document | Text, Tools        |
- * | [CostOptimized.GPT4oMini]        | Fast      | $0.15-$0.6         | Text, Image, Tools           | Text, Tools        |
- * | [CostOptimized.O3Mini]           | Medium    | $1.1-$4.4          | Text, Tools                  | Text, Tools        |
- * | [Embeddings.TextEmbedding3Small] | Medium    | $0.02              | Text                         | Text               |
- * | [Embeddings.TextEmbedding3Large] | Slow      | $0.13              | Text                         | Text               |
- * | [Embeddings.TextEmbeddingAda002] | Slow      | $0.1               | Text                         | Text               |
- * | [Moderation.Omni]                | Medium    | $4.40              | Text                         | Moderation Result  |
+ * @see <a href="https://platform.openai.com/docs/models">Models list</a>
+ *
+ *
+ * | Name                             | Speed     | Price              | Input                        | Output                       |
+ * |----------------------------------|-----------|--------------------|------------------------------|------------------------------|
+ * | [Reasoning.O4Mini]               | Medium    | $1.1-$4.4          | Text, Image, Tools, Document | Text, Tools                  |
+ * | [Reasoning.O3Mini]               | Medium    | $1.1-$4.4          | Text, Tools                  | Text, Tools                  |
+ * | [Reasoning.O3]                   | Slowest   | $10-$40            | Text, Image, Tools, Document | Text, Tools                  |
+ * | [Reasoning.O1]                   | Slowest   | $15-$60            | Text, Image, Tools, Document | Text, Tools                  |
+ * | [Reasoning.GPT5Pro]              | Slowest   | $15-$120           | Text, Image, Tools, Document | Text, Tools                  |
+ * | [Chat.GPT4o]                     | Medium    | $2.5-$10           | Text, Image, Tools, Document | Text, Tools                  |
+ * | [Chat.GPT4_1]                    | Medium    | $2-$8              | Text, Image, Tools, Document | Text, Tools                  |
+ * | [Chat.GPT5]                      | Medium    | $1.25-$10          | Text, Image, Tools, Document | Text, Tools                  |
+ * | [Chat.GPT5Mini]                  | Fast      | $0.25-$2           | Text, Image, Tools, Document | Text, Tools                  |
+ * | [Chat.GPT5Nano]                  | Very fast | $0.05-$0.4         | Text, Image, Tools, Document | Text, Tools                  |
+ * | [Chat.GPT5Codex]                 | Medium    | $1.25-$10          | Text, Image, Tools, Document | Text, Tools                  |
+ * | [Chat.GPT5_1]                    | Fast      | $1.25-$10          | Text, Image, Tools, Document | Text, Image, Tools, Document |
+ * | [Audio.GptAudio]                 | Fast      | $2.5-$10           | Text, Audio, Tools           | Text, Audio, Tools           |
+ * | [Audio.GPT4oMiniAudio]           | Fast      | $0.15-$0.6/$10-$20 | Text, Audio, Tools           | Text, Audio, Tools           |
+ * | [Audio.GPT4oAudio]               | Medium    | $2.5-$10/$40-$80   | Text, Audio, Tools           | Text, Audio, Tools           |
+ * | [CostOptimized.O4Mini]           | Medium    | $1.1-$4.4          | Text, Image, Tools, Document | Text, Tools                  |
+ * | [CostOptimized.GPT4_1Nano]       | Very fast | $0.1-$0.4          | Text, Image, Tools, Document | Text, Tools                  |
+ * | [CostOptimized.GPT4_1Mini]       | Fast      | $0.4-$1.6          | Text, Image, Tools, Document | Text, Tools                  |
+ * | [CostOptimized.GPT4oMini]        | Fast      | $0.15-$0.6         | Text, Image, Tools           | Text, Tools                  |
+ * | [CostOptimized.O3Mini]           | Medium    | $1.1-$4.4          | Text, Tools                  | Text, Tools                  |
+ * | [Embeddings.TextEmbedding3Small] | Medium    | $0.02              | Text                         | Text                         |
+ * | [Embeddings.TextEmbedding3Large] | Slow      | $0.13              | Text                         | Text                         |
+ * | [Embeddings.TextEmbeddingAda002] | Slow      | $0.1               | Text                         | Text                         |
+ * | [Moderation.Omni]                | Medium    | $4.40              | Text                         | Moderation Result            |
  *
  */
 public object OpenAIModels : LLModelDefinitions {
@@ -83,7 +88,7 @@ public object OpenAIModels : LLModelDefinitions {
          * Reasoning token support
          *
          *
-         * @see <a href="https://platform.openai.com/docs/models/o4-mini">
+         * @see <a href="https://platform.openai.com/docs/models/o4-mini">Model page</a>
          */
         public val O4Mini: LLModel = LLModel(
             provider = LLMProvider.OpenAI,
@@ -116,7 +121,7 @@ public object OpenAIModels : LLModelDefinitions {
          * Oct 01, 2023 knowledge cutoff
          * Reasoning token support
          *
-         * @see <a href="https://platform.openai.com/docs/models/o3-mini">
+         * @see <a href="https://platform.openai.com/docs/models/o3-mini">Model page</a>
          */
         public val O3Mini: LLModel = LLModel(
             provider = LLMProvider.OpenAI,
@@ -147,7 +152,7 @@ public object OpenAIModels : LLModelDefinitions {
          * Jun 01, 2024 knowledge cutoff
          * Reasoning token support
          *
-         * @see <a href="https://platform.openai.com/docs/models/o3">
+         * @see <a href="https://platform.openai.com/docs/models/o3">Model page</a>
          */
         public val O3: LLModel = LLModel(
             provider = LLMProvider.OpenAI,
@@ -179,7 +184,7 @@ public object OpenAIModels : LLModelDefinitions {
          * Oct 01, 2023 knowledge cutoff
          * Reasoning token support
          *
-         * @see <a href="https://platform.openai.com/docs/models/o1">
+         * @see <a href="https://platform.openai.com/docs/models/o1">Model page</a>
          */
         public val O1: LLModel = LLModel(
             provider = LLMProvider.OpenAI,
@@ -200,6 +205,37 @@ public object OpenAIModels : LLModelDefinitions {
             contextLength = 200_000,
             maxOutputTokens = 100_000,
         )
+
+        /**
+         * GPT-5 pro uses more compute to think harder and provide consistently better answers.
+         * GPT-5 pro is available in the Responses API only to enable support for multi-turn model interactions
+         * before responding to API requests, and other advanced API features in the future.
+         * As the most advanced reasoning model, GPT-5 pro defaults to (and only supports) reasoning.effort: high.
+         * GPT-5 pro does not support code interpreter.
+         *
+         * 400,000 context window
+         * 272,000 max output tokens
+         * Sep 30, 2024 knowledge cutoff
+         * Reasoning token support
+         *
+         * @see <a href="https://platform.openai.com/docs/models/gpt-5-pro">Model page</a>
+         */
+        public val GPT5Pro: LLModel = LLModel(
+            provider = LLMProvider.OpenAI,
+            id = "gpt-5-pro",
+            capabilities = listOf(
+                LLMCapability.Tools,
+                LLMCapability.ToolChoice,
+                LLMCapability.Speculation,
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Schema.JSON.Standard,
+                LLMCapability.Vision.Image,
+                LLMCapability.MultipleChoices,
+                LLMCapability.OpenAIEndpoint.Responses,
+            ),
+            contextLength = 400_000,
+            maxOutputTokens = 272_000,
+        )
     }
 
     /**
@@ -219,7 +255,7 @@ public object OpenAIModels : LLModelDefinitions {
          * Oct 01, 2023 knowledge cutoff
          *
          *
-         * @see <a href="https://platform.openai.com/docs/models/gpt-4o">
+         * @see <a href="https://platform.openai.com/docs/models/gpt-4o">Model page</a>
          */
         public val GPT4o: LLModel = LLModel(
             provider = LLMProvider.OpenAI,
@@ -250,7 +286,7 @@ public object OpenAIModels : LLModelDefinitions {
          * 32,768 max output tokens
          * Jun 01, 2024 knowledge cutoff
          *
-         * @see <a href="https://platform.openai.com/docs/models/gpt-4.1">
+         * @see <a href="https://platform.openai.com/docs/models/gpt-4.1">Model page</a>
          */
         public val GPT4_1: LLModel = LLModel(
             provider = LLMProvider.OpenAI,
@@ -281,7 +317,7 @@ public object OpenAIModels : LLModelDefinitions {
          * Sep 30, 2024 knowledge cutoff
          * Reasoning token support
          *
-         * @see <a href="https://platform.openai.com/docs/models/gpt-5">
+         * @see <a href="https://platform.openai.com/docs/models/gpt-5">Model page</a>
          */
         public val GPT5: LLModel = LLModel(
             provider = LLMProvider.OpenAI,
@@ -312,7 +348,7 @@ public object OpenAIModels : LLModelDefinitions {
          * May 31, 2024 knowledge cutoff
          * Reasoning token support
          *
-         * @see <a href="https://platform.openai.com/docs/models/gpt-5-mini">
+         * @see <a href="https://platform.openai.com/docs/models/gpt-5-mini">Model page</a>
          */
         public val GPT5Mini: LLModel = LLModel(
             provider = LLMProvider.OpenAI,
@@ -344,7 +380,7 @@ public object OpenAIModels : LLModelDefinitions {
          * May 31, 2024 knowledge cutoff
          * Reasoning token support
          *
-         * @see <a href="https://platform.openai.com/docs/models/gpt-5-nano">
+         * @see <a href="https://platform.openai.com/docs/models/gpt-5-nano">Model page</a>
          */
         public val GPT5Nano: LLModel = LLModel(
             provider = LLMProvider.OpenAI,
@@ -375,7 +411,7 @@ public object OpenAIModels : LLModelDefinitions {
          * 128,000 max output tokens
          * Reasoning token support
          *
-         * @see <a href="https://platform.openai.com/docs/models/gpt-5-codex"\>
+         * @see <a href="https://platform.openai.com/docs/models/gpt-5-codex"\>Model page</a>
          */
         public val GPT5Codex: LLModel = LLModel(
             provider = LLMProvider.OpenAI,
@@ -388,6 +424,38 @@ public object OpenAIModels : LLModelDefinitions {
                 LLMCapability.Speculation,
                 LLMCapability.Tools,
                 LLMCapability.ToolChoice,
+                LLMCapability.OpenAIEndpoint.Responses,
+            ),
+            contextLength = 400_000,
+            maxOutputTokens = 128_000,
+        )
+
+        /**
+         * GPT-5.1 is a flagship model for coding and agentic tasks with configurable reasoning and non-reasoning effort.
+         *
+         * 400,000 context window
+         * 128,000 max output tokens
+         * Sep 30, 2024 knowledge cutoff
+         * Reasoning token support
+         * Reasoning token support
+         *
+         * @see <a href="https://platform.openai.com/docs/models/gpt-5.1"\>Model page</a>
+         */
+        public val GPT5_1: LLModel = LLModel(
+            provider = LLMProvider.OpenAI,
+            id = "gpt-5.1",
+            capabilities = listOf(
+                LLMCapability.Completion,
+                LLMCapability.Temperature,
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Schema.JSON.Standard,
+                LLMCapability.Speculation,
+                LLMCapability.Tools,
+                LLMCapability.ToolChoice,
+                LLMCapability.Vision.Image,
+                LLMCapability.Document,
+                LLMCapability.MultipleChoices,
+                LLMCapability.OpenAIEndpoint.Completions,
                 LLMCapability.OpenAIEndpoint.Responses,
             ),
             contextLength = 400_000,
@@ -409,7 +477,7 @@ public object OpenAIModels : LLModelDefinitions {
          * 16,384 max output tokens
          * Oct 01, 2023 knowledge cutoff
          *
-         * @see <a href="https://platform.openai.com/docs/models/gpt-audio">
+         * @see <a href="https://platform.openai.com/docs/models/gpt-audio">Model page</a>
          */
         public val GptAudio: LLModel = LLModel(
             provider = LLMProvider.OpenAI,
@@ -435,7 +503,7 @@ public object OpenAIModels : LLModelDefinitions {
          * 16,384 max output tokens
          * Oct 01, 2023 knowledge cutoff
          *
-         * @see <a href="https://platform.openai.com/docs/models/gpt-4o-mini-audio-preview">
+         * @see <a href="https://platform.openai.com/docs/models/gpt-4o-mini-audio-preview">Model page</a>
          */
         public val GPT4oMiniAudio: LLModel = LLModel(
             provider = LLMProvider.OpenAI,
@@ -459,7 +527,7 @@ public object OpenAIModels : LLModelDefinitions {
          * 16,384 max output tokens
          * Oct 01, 2023 knowledge cutoff
          *
-         * @see <a href="https://platform.openai.com/docs/models/gpt-4o-audio-preview">
+         * @see <a href="https://platform.openai.com/docs/models/gpt-4o-audio-preview">Model page</a>
          */
         public val GPT4oAudio: LLModel = LLModel(
             provider = LLMProvider.OpenAI,
@@ -492,7 +560,7 @@ public object OpenAIModels : LLModelDefinitions {
          * 32,768 max output tokens
          * Jun 01, 2024 knowledge cutoff
          *
-         * @see <a href="https://platform.openai.com/docs/models/gpt-4.1-nano">
+         * @see <a href="https://platform.openai.com/docs/models/gpt-4.1-nano">Model page</a>
          */
         public val GPT4_1Nano: LLModel = LLModel(
             provider = LLMProvider.OpenAI,
@@ -524,7 +592,7 @@ public object OpenAIModels : LLModelDefinitions {
          * Jun 01, 2024 knowledge cutoff
          *
          *
-         * @see <a href="https://platform.openai.com/docs/models/gpt-4.1-mini">
+         * @see <a href="https://platform.openai.com/docs/models/gpt-4.1-mini">Model page</a>
          */
         public val GPT4_1Mini: LLModel = LLModel(
             provider = LLMProvider.OpenAI,
@@ -555,7 +623,7 @@ public object OpenAIModels : LLModelDefinitions {
          * 16,384 max output tokens
          * Oct 01, 2023 knowledge cutoff
          *
-         * @see <a href="https://platform.openai.com/docs/models/gpt-4o-mini">
+         * @see <a href="https://platform.openai.com/docs/models/gpt-4o-mini">Model page</a>
          */
         public val GPT4oMini: LLModel = LLModel(
             provider = LLMProvider.OpenAI,
@@ -609,7 +677,7 @@ public object OpenAIModels : LLModelDefinitions {
          * Embeddings are useful for search, clustering, recommendations,
          * anomaly detection, and classification tasks.
          *
-         * @see <a href="https://platform.openai.com/docs/models/text-embedding-3-small">
+         * @see <a href="https://platform.openai.com/docs/models/text-embedding-3-small">Model page</a>
          */
         public val TextEmbedding3Small: LLModel = LLModel(
             provider = LLMProvider.OpenAI,
@@ -637,7 +705,7 @@ public object OpenAIModels : LLModelDefinitions {
          * clustering, recommendations, anomaly detection, and classification tasks.
          *
          *
-         * @see <a href="https://platform.openai.com/docs/models/text-embedding-3-large">
+         * @see <a href="https://platform.openai.com/docs/models/text-embedding-3-large">Model page</a>
          */
         public val TextEmbedding3Large: LLModel = LLModel(
             provider = LLMProvider.OpenAI,
@@ -663,7 +731,7 @@ public object OpenAIModels : LLModelDefinitions {
          * between two pieces of text. Embeddings are useful for search, clustering, recommendations,
          * anomaly detection, and classification tasks.
          *
-         * @see <a href="https://platform.openai.com/docs/models/text-embedding-ada-002">
+         * @see <a href="https://platform.openai.com/docs/models/text-embedding-ada-002">Model page</a>
          */
         public val TextEmbeddingAda002: LLModel = LLModel(
             provider = LLMProvider.OpenAI,

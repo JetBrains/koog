@@ -23,7 +23,7 @@ jobs:
       fail-fast: false
       matrix:
         gradle-tasks: [
-          "lint :androidApp:assembleDebug :androidApp:assembleRelease",
+          "ktlintCheck lint :androidApp:assembleDebug :androidApp:assembleRelease",
           ":desktopApp:jar",
           ":webApp:composeCompatibilityBrowserDistribution"
         ]

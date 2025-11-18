@@ -54,6 +54,12 @@ class ModelIdentifierParsingTest {
         assertNotNull(gpt5codex)
         assertEquals(LLMProvider.OpenAI, gpt5codex.provider)
         assertEquals(OpenAIModels.Chat.GPT5Codex, gpt5codex)
+
+        // Test GPT-5.1
+        val gpt5_1 = getModelFromIdentifier("openai.chat.gpt5_1")
+        assertNotNull(gpt5_1)
+        assertEquals(LLMProvider.OpenAI, gpt5_1.provider)
+        assertEquals(OpenAIModels.Chat.GPT5_1, gpt5_1)
     }
 
     @Test
@@ -81,6 +87,11 @@ class ModelIdentifierParsingTest {
         assertNotNull(o1)
         assertEquals(LLMProvider.OpenAI, o1.provider)
         assertEquals(OpenAIModels.Reasoning.O1, o1)
+
+        val gpt5pro = getModelFromIdentifier("openai.reasoning.gpt5pro")
+        assertNotNull(gpt5pro)
+        assertEquals(LLMProvider.OpenAI, gpt5pro.provider)
+        assertEquals(OpenAIModels.Reasoning.GPT5Pro, gpt5pro)
     }
 
     @Test

@@ -2,19 +2,19 @@
 agp = "8.12.3"
 androidx-activityCompose = "1.11.0"
 androidx-datastore = "1.1.7"
-compose-hot-reload = "1.0.0-rc02"
-compose-multiplatform = "1.9.1"
-javaVersion = "VERSION_17"
-jdkVersion = "17"
-jetbrains-lifecycle = "2.9.5"
+compose-hot-reload = "1.0.0-rc03"
+compose-multiplatform = "1.9.3"
+javaVersion = "17"
+jetbrains-lifecycle = "2.9.6"
 jetbrains-navigation = "2.9.1"
 koin-bom = "4.1.1"
-koog = "0.5.1"
+koog = "0.5.2"
 kotlin = "2.2.21"
 kotlinx-coroutines = "1.10.2"
 kotlinx-datetime = "0.7.1-0.6.x-compat"
 kotlinx-serialization = "1.9.0"
-ktor = "3.3.1"
+ktlint = "14.0.1"
+ktor = "3.3.2"
 
 [libraries]
 androidx-activityCompose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activityCompose" }
@@ -47,3 +47,4 @@ kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+ktlint = { id = "org.jlleitschuh.gradle.ktlint", version.ref = "ktlint" }

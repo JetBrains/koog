@@ -4,10 +4,19 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.executor.clients.google.models.GoogleCandidate
+import ai.koog.prompt.executor.clients.google.models.GoogleContent
+import ai.koog.prompt.executor.clients.google.models.GoogleData
 import ai.koog.prompt.executor.clients.google.models.GoogleFunctionCallingMode
+import ai.koog.prompt.executor.clients.google.models.GooglePart
 import ai.koog.prompt.executor.clients.google.models.GoogleThinkingConfig
+import ai.koog.prompt.message.AttachmentContent
+import ai.koog.prompt.message.ContentPart
+import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import kotlinx.serialization.json.JsonObject
@@ -324,5 +333,55 @@ class GoogleLLMClientTest {
         fc shouldNotBe null
         fc!!.mode shouldBe GoogleFunctionCallingMode.ANY
         fc.allowedFunctionNames shouldBe listOf("weather")
+    }
+
+    @Test
+    fun `processGoogleCandidate should handle InlineData image part`() {
+        val client = GoogleLLMClient(apiKey = "apiKey")
+        val imageData = "png-bytes".encodeToByteArray()
+        val candidate = GoogleCandidate(
+            content = GoogleContent(
+                role = "model",
+                parts = listOf(
+                    GooglePart.InlineData(
+                        inlineData = GoogleData.Blob("image/png", imageData)
+                    )
+                )
+            )
+        )
+
+        val responses = client.processGoogleCandidate(candidate, ResponseMetaInfo.Empty)
+
+        responses shouldHaveSize 1
+        val assistantMessage = responses.single() as Message.Assistant
+        assistantMessage.parts shouldHaveSize 1
+        val imagePart = assistantMessage.parts.single() as ContentPart.Image
+        imagePart.format shouldBe "png"
+        (imagePart.content as AttachmentContent.Binary.Bytes).asBytes() shouldBe imageData
+    }
+
+    @Test
+    fun `processGoogleCandidate should handle InlineData generic file part`() {
+        val client = GoogleLLMClient(apiKey = "apiKey")
+        val fileData = "pdf-bytes".encodeToByteArray()
+        val candidate = GoogleCandidate(
+            content = GoogleContent(
+                role = "model",
+                parts = listOf(
+                    GooglePart.InlineData(
+                        inlineData = GoogleData.Blob("application/pdf", fileData)
+                    )
+                )
+            )
+        )
+
+        val responses = client.processGoogleCandidate(candidate, ResponseMetaInfo.Empty)
+
+        responses shouldHaveSize 1
+        val assistantMessage = responses.single() as Message.Assistant
+        assistantMessage.parts shouldHaveSize 1
+        val filePart = assistantMessage.parts.single() as ContentPart.File
+        filePart.mimeType shouldBe "application/pdf"
+        (filePart.content as AttachmentContent.Binary.Bytes).asBytes() shouldBe fileData
     }
 }

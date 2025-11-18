@@ -3,7 +3,7 @@ package ai.koog.integration.tests
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.eventHandler.feature.EventHandler
-import ai.koog.integration.tests.utils.APIKeys.readTestAnthropicKeyFromEnv
+import ai.koog.integration.tests.utils.TestCredentials.readTestAnthropicKeyFromEnv
 import ai.koog.integration.tests.utils.annotations.Retry
 import ai.koog.integration.tests.utils.tools.ComplexNestedTool
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels

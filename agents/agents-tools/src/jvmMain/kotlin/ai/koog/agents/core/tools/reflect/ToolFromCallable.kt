@@ -3,6 +3,7 @@ package ai.koog.agents.core.tools.reflect
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
+import ai.koog.agents.core.tools.serialization.ToolJson
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerializationException
@@ -38,7 +39,7 @@ public class ToolFromCallable(
     private val callable: KCallable<*>,
     private val thisRef: Any? = null,
     override val descriptor: ToolDescriptor,
-    private val json: Json = Json,
+    override val json: Json = ToolJson,
     override val resultSerializer: KSerializer<Any?>,
 ) : Tool<ToolFromCallable.VarArgs, Any?>() {
 
@@ -58,8 +59,7 @@ public class ToolFromCallable(
          */
         public fun asNamedValues(): List<Pair<String, Any?>> = args.mapNotNull { (parameter, value) ->
             parameter.name?.let {
-                it to
-                    value
+                it to value
             }
         }
     }

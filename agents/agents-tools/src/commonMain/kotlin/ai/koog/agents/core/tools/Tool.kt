@@ -4,7 +4,7 @@ import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.core.tools.serialization.ToolJson
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.StringFormat
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
@@ -46,10 +46,10 @@ public abstract class Tool<TArgs, TResult> {
     public abstract val resultSerializer: KSerializer<TResult>
 
     /**
-     * The [StringFormat] used to encode and decode the arguments and results of the tool.
-     * This property is used to serialize and deserialize the tool arguments and results.
+     * The [Json] used to encode and decode the arguments and results of the tool.
      */
-    protected open val format: StringFormat = ToolJson
+    @OptIn(InternalAgentToolsApi::class)
+    protected open val json: Json = ToolJson
 
     /**
      * The name of the tool.
@@ -119,7 +119,7 @@ public abstract class Tool<TArgs, TResult> {
      * @param rawArgs the raw JSON object that contains the encoded arguments
      * @return the decoded arguments of type TArgs
      */
-    public fun decodeArgs(rawArgs: JsonObject): TArgs = ToolJson.decodeFromJsonElement(actualArgsSerializer, rawArgs)
+    public fun decodeArgs(rawArgs: JsonObject): TArgs = json.decodeFromJsonElement(actualArgsSerializer, rawArgs)
 
     /**
      * Decodes the provided raw JSON element into an instance of the specified result type.
@@ -128,7 +128,7 @@ public abstract class Tool<TArgs, TResult> {
      * @return The decoded result of type TResult.
      */
     public fun decodeResult(rawResult: JsonElement): TResult =
-        ToolJson.decodeFromJsonElement(actualResultSerializer, rawResult)
+        json.decodeFromJsonElement(actualResultSerializer, rawResult)
 
     /**
      * Encodes the given arguments into a JSON representation.
@@ -136,7 +136,7 @@ public abstract class Tool<TArgs, TResult> {
      * @param args The arguments to be encoded.
      * @return A JsonObject representing the encoded arguments.
      */
-    public fun encodeArgs(args: TArgs): JsonObject = ToolJson.encodeToJsonElement(actualArgsSerializer, args).jsonObject
+    public fun encodeArgs(args: TArgs): JsonObject = json.encodeToJsonElement(actualArgsSerializer, args).jsonObject
 
     /**
      * Encodes the given arguments into a JSON representation without type safety checks.
@@ -152,7 +152,7 @@ public abstract class Tool<TArgs, TResult> {
      */
     public fun encodeArgsUnsafe(args: Any?): JsonObject {
         @Suppress("UNCHECKED_CAST")
-        return ToolJson.encodeToJsonElement(actualArgsSerializer, args as TArgs).jsonObject
+        return json.encodeToJsonElement(actualArgsSerializer, args as TArgs).jsonObject
     }
 
     /**
@@ -162,7 +162,7 @@ public abstract class Tool<TArgs, TResult> {
      * @return A JsonObject representing the encoded result.
      */
     public fun encodeResult(result: TResult): JsonElement =
-        ToolJson.encodeToJsonElement(actualResultSerializer, result)
+        json.encodeToJsonElement(actualResultSerializer, result)
 
     /**
      * Encodes the given result object into a JSON representation without type safety checks.
@@ -185,7 +185,7 @@ public abstract class Tool<TArgs, TResult> {
      * @param args the arguments to be encoded into a JSON string
      * @return the JSON string representation of the provided arguments
      */
-    public fun encodeArgsToString(args: TArgs): String = ToolJson.encodeToString(actualArgsSerializer, args)
+    public fun encodeArgsToString(args: TArgs): String = json.encodeToString(actualArgsSerializer, args)
 
     /**
      * Encodes the provided arguments into a JSON string representation without type safety checks.
@@ -209,7 +209,7 @@ public abstract class Tool<TArgs, TResult> {
      * @param result The result object of type TResult to be encoded into a string.
      * @return The string representation of the given result.
      */
-    public open fun encodeResultToString(result: TResult): String = format.encodeToString(resultSerializer, result)
+    public open fun encodeResultToString(result: TResult): String = json.encodeToString(resultSerializer, result)
 
     /**
      * Encodes the provided result object into a JSON string representation without type safety checks.

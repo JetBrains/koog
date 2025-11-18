@@ -10,6 +10,8 @@ import ai.koog.integration.tests.utils.MediaTestUtils.checkExecutorMediaResponse
 import ai.koog.integration.tests.utils.MediaTestUtils.checkResponseBasic
 import ai.koog.integration.tests.utils.Models
 import ai.koog.integration.tests.utils.RetryUtils.withRetry
+import ai.koog.integration.tests.utils.TestUtils.assertResponseContainsReasoning
+import ai.koog.integration.tests.utils.TestUtils.assertResponseContainsReasoningWithEncryption
 import ai.koog.integration.tests.utils.TestUtils.assertResponseContainsToolCall
 import ai.koog.integration.tests.utils.getLLMClientForProvider
 import ai.koog.integration.tests.utils.structuredOutput.Country
@@ -35,7 +37,16 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
+import ai.koog.prompt.executor.clients.anthropic.AnthropicParams
+import ai.koog.prompt.executor.clients.anthropic.models.AnthropicThinking
+import ai.koog.prompt.executor.clients.google.GoogleParams
+import ai.koog.prompt.executor.clients.google.models.GoogleThinkingConfig
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.clients.openai.OpenAIResponsesParams
+import ai.koog.prompt.executor.clients.openai.base.models.ReasoningEffort
+import ai.koog.prompt.executor.clients.openai.models.OpenAIInclude
+import ai.koog.prompt.executor.clients.openai.models.ReasoningConfig
+import ai.koog.prompt.executor.clients.openai.models.ReasoningSummary
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
@@ -44,6 +55,7 @@ import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.ToolChoice
 import ai.koog.prompt.streaming.StreamFrame
@@ -102,6 +114,33 @@ abstract class ExecutorIntegrationTestBase {
     abstract fun getExecutor(model: LLModel): PromptExecutor
 
     open fun getLLMClient(model: LLModel): LLMClient = getLLMClientForProvider(model.provider)
+
+    private fun createReasoningParams(model: LLModel): LLMParams {
+        return when (model.provider) {
+            is LLMProvider.Anthropic -> AnthropicParams(
+                thinking = AnthropicThinking.Enabled(budgetTokens = 1024)
+            )
+
+            is LLMProvider.OpenAI -> OpenAIResponsesParams(
+                reasoning = ReasoningConfig(
+                    effort = ReasoningEffort.MEDIUM,
+                    summary = ReasoningSummary.DETAILED
+                ),
+                include = listOf(OpenAIInclude.REASONING_ENCRYPTED_CONTENT),
+                maxTokens = 256
+            )
+
+            is LLMProvider.Google -> GoogleParams(
+                thinkingConfig = GoogleThinkingConfig(
+                    includeThoughts = true,
+                    thinkingBudget = 256
+                ),
+                maxTokens = 256
+            )
+
+            else -> LLMParams(maxTokens = 256)
+        }
+    }
 
     open fun integration_testExecute(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
@@ -362,12 +401,13 @@ abstract class ExecutorIntegrationTestBase {
 
             withRetry {
                 try {
-                    with(getExecutor(model).execute(prompt, model).single()) {
+                    with(
+                        getExecutor(model).execute(prompt, model)
+                            .filterIsInstance<Message.Assistant>()
+                            .toSingleMessage()
+                    ) {
                         when (scenario) {
-                            MarkdownTestScenario.MALFORMED_SYNTAX,
-                            MarkdownTestScenario.MATH_NOTATION,
-                            MarkdownTestScenario.BROKEN_LINKS,
-                            MarkdownTestScenario.IRREGULAR_TABLES -> {
+                            MarkdownTestScenario.MALFORMED_SYNTAX, MarkdownTestScenario.MATH_NOTATION, MarkdownTestScenario.BROKEN_LINKS, MarkdownTestScenario.IRREGULAR_TABLES -> {
                                 checkResponseBasic(this)
                             }
 
@@ -831,8 +871,9 @@ abstract class ExecutorIntegrationTestBase {
     }
 
     open fun integration_testSingleMessageModeration(model: LLModel) = runTest(timeout = 300.seconds) {
+        // For Bedrock, moderation is done via guardrails at the client level, not model capabilities
         assumeTrue(
-            model.capabilities.contains(LLMCapability.Moderation),
+            model.provider == LLMProvider.Bedrock || model.capabilities.contains(LLMCapability.Moderation),
             "Model $model does not support moderation"
         )
         val client = getLLMClient(model)
@@ -854,8 +895,9 @@ abstract class ExecutorIntegrationTestBase {
     }
 
     open fun integration_testMultipleMessagesModeration(model: LLModel) = runTest(timeout = 300.seconds) {
+        // For Bedrock, moderation is done via guardrails at the client level, not model capabilities
         assumeTrue(
-            model.capabilities.contains(LLMCapability.Moderation),
+            model.provider == LLMProvider.Bedrock || model.capabilities.contains(LLMCapability.Moderation),
             "Model $model does not support moderation"
         )
         val client = getLLMClient(model)
@@ -919,6 +961,55 @@ abstract class ExecutorIntegrationTestBase {
     open fun integration_testGetModels(provider: LLMProvider): Unit = runBlocking {
         withClue("Models list should not be empty") {
             getLLMClientForProvider(provider).models().shouldNotBeEmpty()
+        }
+    }
+
+    private fun List<Message.Assistant>.toSingleMessage(): Message.Assistant =
+        Message.Assistant(parts = flatMap { it.parts }, metaInfo = ResponseMetaInfo.Empty)
+
+    open fun integration_testReasoningCapability(model: LLModel) = runTest(timeout = 300.seconds) {
+        Models.assumeAvailable(model.provider)
+
+        val params = createReasoningParams(model)
+        val prompt = Prompt.build("reasoning-test", params = params) {
+            system("You are a helpful assistant.")
+            user("Think about this step by step: What is 15 * 23 + 8?")
+        }
+
+        withRetry(times = 3, testName = "integration_testReasoningCapability[${model.id}]") {
+            getLLMClient(model).execute(prompt, model) shouldNotBeNull {
+                shouldNotBeEmpty()
+                withClue("No reasoning messages found") { shouldForAny { it is Message.Reasoning } }
+                assertResponseContainsReasoning(this)
+            }
+        }
+    }
+
+    open fun integration_testReasoningWithEncryption(model: LLModel) = runTest(timeout = 300.seconds) {
+        with(model.provider) {
+            Models.assumeAvailable(this)
+            assumeTrue(
+                this != LLMProvider.Bedrock,
+                "Bedrock API doesn't support thinking budget parameters required for reasoning encryption"
+            )
+            assumeTrue(
+                this != LLMProvider.Google,
+                "Google API doesn't consistently return encrypted thoughtSignature values"
+            )
+        }
+
+        val params = createReasoningParams(model)
+        val prompt = Prompt.build("reasoning-encryption-test", params = params) {
+            system("You are a helpful assistant. Think carefully about the problem.")
+            user("Solve this problem step by step: A train travels at 60 mph for 2 hours, then 80 mph for 1.5 hours. What is the total distance?")
+        }
+
+        withRetry(times = 3, testName = "integration_testReasoningWithEncryption[${model.id}]") {
+            getLLMClient(model).execute(prompt, model) shouldNotBeNull {
+                shouldNotBeEmpty()
+                withClue("No reasoning messages found") { shouldForAny { it is Message.Reasoning } }
+                assertResponseContainsReasoningWithEncryption(this)
+            }
         }
     }
 }

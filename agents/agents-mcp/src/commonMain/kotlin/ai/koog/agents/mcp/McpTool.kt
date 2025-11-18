@@ -2,22 +2,14 @@ package ai.koog.agents.mcp
 
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.agents.core.tools.ToolResult
-import ai.koog.agents.core.tools.ToolResultUtils
-import io.github.oshai.kotlinlogging.KotlinLogging
-import io.modelcontextprotocol.kotlin.sdk.PromptMessageContent
-import io.modelcontextprotocol.kotlin.sdk.TextContent
+import io.modelcontextprotocol.kotlin.sdk.CallToolResultBase
 import io.modelcontextprotocol.kotlin.sdk.client.Client
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.descriptors.buildClassSerialDescriptor
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonDecoder
-import kotlinx.serialization.json.JsonEncoder
+import kotlinx.serialization.builtins.nullable
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonObject
 
 /**
  * A Tool implementation that calls an MCP (Model Context Protocol) tool.
@@ -31,107 +23,12 @@ import kotlinx.serialization.json.JsonObject
 public class McpTool(
     private val mcpClient: Client,
     override val descriptor: ToolDescriptor,
-) : Tool<McpTool.Args, McpTool.Result>() {
-
-    private companion object {
-        private val logger = KotlinLogging.logger { }
-    }
-
+) : Tool<JsonObject, CallToolResultBase?>() {
     override val name: String = descriptor.name
     override val description: String = descriptor.description
 
-    /**
-     * Arguments for an MCP tool call.
-     *
-     * This class wraps a JsonObject containing the arguments to be passed to an MCP tool.
-     * It's serialized using a custom serializer to handle different encoding formats.
-     *
-     * @property arguments The JsonObject containing the arguments for the MCP tool.
-     */
-    @Serializable(with = ArgsSerializer::class)
-    public data class Args(val arguments: JsonObject)
-
-    /**
-     * Custom serializer for the Args class.
-     *
-     * This serializer handles the conversion between Args and various serialization formats.
-     * It specifically handles JsonEncoder differently from other encoders to maintain
-     * compatibility with the MCP SDK.
-     */
-    public class ArgsSerializer : KSerializer<Args> {
-        override val descriptor: SerialDescriptor =
-            buildClassSerialDescriptor("ai.koog.agents.mcp.McpTool.Args") {
-                element("arguments", JsonObject.serializer().descriptor)
-            }
-
-        override fun serialize(encoder: Encoder, value: Args) {
-            when (encoder) {
-                is JsonEncoder -> {
-                    // Encode the arguments directly as a JsonObject
-                    encoder.encodeJsonElement(value.arguments)
-                }
-
-                else -> {
-                    // For other encoders, convert to a JSON string first
-                    val jsonString = Json.encodeToString(JsonObject.serializer(), value.arguments)
-                    encoder.encodeString(jsonString)
-                }
-            }
-        }
-
-        override fun deserialize(decoder: Decoder): Args {
-            return when (decoder) {
-                is JsonDecoder -> {
-                    // Decode directly from JsonElement
-                    val jsonElement = decoder.decodeJsonElement()
-                    Args(jsonElement as JsonObject)
-                }
-
-                else -> {
-                    // For other decoders, parse from a JSON string
-                    val jsonString = decoder.decodeString()
-                    val jsonObject = Json.decodeFromString(JsonObject.serializer(), jsonString)
-                    Args(jsonObject)
-                }
-            }
-        }
-    }
-
-    /**
-     * Result of an MCP tool call.
-     *
-     * This class wraps a list of PromptMessageContent objects returned by an MCP tool.
-     * It implements the ToolResult interface to make it compatible with the agent framework.
-     *
-     * @property promptMessageContents The list of content items returned by the MCP tool.
-     */
-    @Serializable
-    public class Result(public val promptMessageContents: List<PromptMessageContent>) : ToolResult.TextSerializable() {
-        /**
-         * Converts the result to a string representation.
-         *
-         * This method provides a formatted string representation of the result content.
-         * If the content is empty, it returns a message indicating no content.
-         *
-         * @return A string representation of the result.
-         */
-        override fun textForLLM(): String {
-            if (promptMessageContents.isEmpty()) {
-                return "[No content]"
-            }
-
-            // Format each content item and join them with newlines
-            return promptMessageContents.joinToString("\n") { content ->
-                when (content) {
-                    is TextContent -> content.text ?: ""
-                    else -> content.toString()
-                }
-            }
-        }
-    }
-
-    override val argsSerializer: KSerializer<Args> = ArgsSerializer()
-    override val resultSerializer: KSerializer<Result> = ToolResultUtils.toTextSerializer()
+    override val argsSerializer: KSerializer<JsonObject> = JsonObject.serializer()
+    override val resultSerializer: KSerializer<CallToolResultBase?> = CallToolResultBase.serializer().nullable
 
     /**
      * Executes the MCP tool with the given arguments.
@@ -142,11 +39,27 @@ public class McpTool(
      * @param args The arguments for the MCP tool call.
      * @return The result of the MCP tool call.
      */
-    override suspend fun execute(args: Args): McpTool.Result {
-        val result = mcpClient.callTool(
+    override suspend fun execute(args: JsonObject): CallToolResultBase? {
+        return mcpClient.callTool(
             name = descriptor.name,
-            arguments = args.arguments
+            arguments = args
         )
-        return Result(result?.content ?: emptyList())
+    }
+
+    /**
+     * Postprocess result string representation for LLMs a bit, removing unnecessary meta fields.
+     */
+    override fun encodeResultToString(result: CallToolResultBase?): String {
+        val preparedResultJson: JsonElement = result
+            ?.let {
+                JsonObject(
+                    json.encodeToJsonElement(resultSerializer, it).jsonObject
+                        // LLM doesn't need "meta" fields, leave only actual data
+                        .filter { (key, _) -> key !in listOf("type", "_meta") }
+                )
+            }
+            ?: JsonNull
+
+        return json.encodeToString(preparedResultJson)
     }
 }

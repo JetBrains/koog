@@ -1,7 +1,6 @@
 package com.jetbrains.example.koog.compose.agents.common
 
 import ai.koog.agents.core.agent.AIAgent
-import com.jetbrains.example.koog.compose.settings.AppSettings
 
 /**
  * Interface for agent factory
@@ -18,7 +17,6 @@ interface AgentProvider {
     val description: String
 
     suspend fun provideAgent(
-        appSettings: AppSettings,
         onToolCallEvent: suspend (String) -> Unit,
         onErrorEvent: suspend (String) -> Unit,
         onAssistantMessage: suspend (String) -> String
