@@ -326,7 +326,7 @@ public class OpenAIStreamToolCall(
 @Serializable
 public class OpenAIFunction(
     public val name: String,
-    public val arguments: String
+    public val arguments: String = ""
 )
 
 /**
@@ -464,19 +464,19 @@ public class OpenAIStaticContent(public val content: Content) {
  * Exact effects are model-dependent.
  * If not set, the model/provider default applies.
  *
- * Serialized as `"minimal" | "low" | "medium" | "high"`.
+ * Serialized as `"none" | "minimal" | "low" | "medium" | "high"`.
  *
- * See [reasoning_effort](https://platform.openai.com/docs/api-reference/chat/create#chat-create-reasoning_effort)
+ * See [reasoning_effort](https://platform.openai.com/docs/api-reference/responses/create#responses_create-reasoning-effort)
  */
 @Serializable
 public enum class ReasoningEffort {
     /**
-     * Strongly limits internal reasoning to minimize latency and cost.
-     * Best for simple, well-specified tasks where extra deliberation is unnecessary.
-     * Serialized as `"minimal"`.
+     * Disables reasoning.
+     * Is not supported by models before gpt-5.1!
+     * Serialized as `"none"`.
      */
-    @SerialName("minimal")
-    MINIMAL,
+    @SerialName("none")
+    NONE,
 
     /**
      * Allows a small amount of reasoning while prioritizing speed and efficiency.

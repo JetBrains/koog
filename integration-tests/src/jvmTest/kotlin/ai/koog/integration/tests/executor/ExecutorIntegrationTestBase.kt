@@ -876,6 +876,12 @@ abstract class ExecutorIntegrationTestBase {
             model.provider == LLMProvider.Bedrock || model.capabilities.contains(LLMCapability.Moderation),
             "Model $model does not support moderation"
         )
+
+        // KG-560 Bedrock models have guardrail configuration issues
+        assumeTrue(
+            model.id != "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+            "Bedrock Claude Haiku model has guardrail configuration issues"
+        )
         val client = getLLMClient(model)
 
         val prompt = prompt("test-harmful-content") {
@@ -899,6 +905,12 @@ abstract class ExecutorIntegrationTestBase {
         assumeTrue(
             model.provider == LLMProvider.Bedrock || model.capabilities.contains(LLMCapability.Moderation),
             "Model $model does not support moderation"
+        )
+
+        // KG-560 Bedrock models have guardrail configuration issues
+        assumeTrue(
+            model.id != "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+            "Bedrock Claude Haiku model has guardrail configuration issues"
         )
         val client = getLLMClient(model)
 

@@ -25,6 +25,9 @@ object RetryUtils {
     private const val OPEN_ROUTER_PARTS_ERROR =
         "Field 'id' is required for type with serial name 'ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolCall', but it was missing at path:"
 
+    // External image URL download failures are third-party service issues
+    private const val OPENAI_IMAGE_DOWNLOAD_ERROR = "Error while downloading"
+
     private fun isThirdPartyError(e: Throwable): Boolean {
         val errorMessages = listOf(
             GOOGLE_429_ERROR,
@@ -37,6 +40,7 @@ object RetryUtils {
             OPENAI_500_ERROR,
             OPENAI_503_ERROR,
             OPENAI_LLM_CLIENT_500_ERROR,
+            OPENAI_IMAGE_DOWNLOAD_ERROR,
         )
 
         val message = e.message
