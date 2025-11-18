@@ -927,6 +927,6 @@ class PromptBuilderTest {
             }
         }
 
-        assertEquals(1, prompt.messages[0].parts.size, "Prompt should have one message with one part")
+        prompt.messages[0].parts shouldBeEqual listOf(ContentPart.Text("Text\n"))
     }
 }
