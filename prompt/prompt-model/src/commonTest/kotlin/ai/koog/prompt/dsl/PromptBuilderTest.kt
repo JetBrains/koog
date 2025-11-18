@@ -5,6 +5,7 @@ import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.text.text
+import io.kotest.matchers.equals.shouldBeEqual
 import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
