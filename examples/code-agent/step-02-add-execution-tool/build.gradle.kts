@@ -20,3 +20,7 @@ tasks.shadowJar {
     archiveBaseName.set("code-agent")
     mergeServiceFiles()
 }
+
+tasks.named<JavaExec>("run") {
+    standardInput = System.`in`
+}
