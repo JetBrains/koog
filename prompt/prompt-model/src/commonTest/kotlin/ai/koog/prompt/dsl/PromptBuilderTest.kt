@@ -5,6 +5,7 @@ import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.text.text
+import io.kotest.matchers.equals.shouldBeEqual
 import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -917,5 +918,16 @@ class PromptBuilderTest {
         assertIs<Message.User>(prompt.messages[1], "Message should be a User message")
         assertEquals(1, prompt.messages[1].parts.size, "Should have only text part")
         assertEquals(expectedText, prompt.messages[1].parts[0], "Should have same text")
+    }
+
+    @Test
+    fun testUserMessageWithTrailingNewline() {
+        val prompt = Prompt.build("test") {
+            user {
+                +"Text\n"
+            }
+        }
+
+        prompt.messages[0].parts shouldBeEqual listOf(ContentPart.Text("Text\n"))
     }
 }
