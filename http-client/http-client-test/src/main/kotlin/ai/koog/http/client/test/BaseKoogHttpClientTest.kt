@@ -1,6 +1,7 @@
 package ai.koog.http.client.test
 
 import ai.koog.http.client.KoogHttpClient
+import ai.koog.http.client.KoogHttpClientException
 import ai.koog.http.client.get
 import ai.koog.http.client.post
 import io.ktor.http.ContentType
@@ -139,7 +140,7 @@ abstract class BaseKoogHttpClientTest {
                 request = "PAYLOAD",
             )
             fail("Expected an exception for non-success status")
-        } catch (e: IllegalStateException) {
+        } catch (e: KoogHttpClientException) {
             assertNotNull(e.message) {
                 assertContains(it, "Error from TestClient API")
                 assertContains(it, "400")

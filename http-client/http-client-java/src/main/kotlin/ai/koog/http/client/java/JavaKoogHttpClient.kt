@@ -148,7 +148,7 @@ public class JavaKoogHttpClient internal constructor(
                             .let(processStreamingChunk)
                             ?.let { trySend(it) }
                     }
-                } catch(e: CancellationException) {
+                } catch (e: CancellationException) {
                     throw e
                 } catch (e: Exception) {
                     close(
@@ -163,7 +163,7 @@ public class JavaKoogHttpClient internal constructor(
 
             logger.debug { "SSE connection closed for $clientName" }
             close()
-        } catch(e: CancellationException) {
+        } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
             close(

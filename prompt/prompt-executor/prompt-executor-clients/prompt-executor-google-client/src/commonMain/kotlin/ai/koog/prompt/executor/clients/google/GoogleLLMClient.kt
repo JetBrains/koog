@@ -7,6 +7,7 @@ import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
+import ai.koog.prompt.executor.clients.LLMClientException
 import ai.koog.prompt.executor.clients.google.models.GoogleCandidate
 import ai.koog.prompt.executor.clients.google.models.GoogleContent
 import ai.koog.prompt.executor.clients.google.models.GoogleData
@@ -61,6 +62,7 @@ import io.ktor.http.contentType
 import io.ktor.http.headers
 import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
+import io.ktor.utils.io.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
@@ -222,14 +224,25 @@ public open class GoogleLLMClient(
                         }
                 }
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: SSEClientException) {
-            e.response?.let { response ->
-                logger.error { "Error from GoogleAI API: ${response.status}: ${e.message}" }
-                error("Error from GoogleAI API: ${response.status}: ${e.message}")
-            }
+            val exception = LLMClientException(
+                clientName = clientName,
+                statusCode = e.response?.status?.value,
+                message = e.message,
+                cause = e
+            )
+            logger.error { exception.message }
+            throw exception
         } catch (e: Exception) {
-            logger.error { "Exception during streaming: $e" }
-            error(e.message ?: "Unknown error during streaming")
+            val exception = LLMClientException(
+                clientName = clientName,
+                message = e.message,
+                cause = e
+            )
+            logger.error { exception.message }
+            throw exception
         }
     }
 
@@ -271,9 +284,13 @@ public open class GoogleLLMClient(
             if (response.status.isSuccess()) {
                 response.body<GoogleResponse>()
             } else {
-                val errorBody = response.bodyAsText()
-                logger.error { "Error from GoogleAI API: ${response.status}: $errorBody" }
-                error("Error from GoogleAI API: ${response.status}: $errorBody")
+                val exception = LLMClientException(
+                    clientName = clientName,
+                    statusCode = response.status.value,
+                    errorBody = response.bodyAsText()
+                )
+                logger.error { exception.message }
+                throw exception
             }
         }
 
@@ -669,7 +686,7 @@ public open class GoogleLLMClient(
                         )
                     }
 
-                    else -> error("Not supported part type: $part")
+                    else -> throw LLMClientException(clientName, "Not supported part type: $part")
                 }
             }
         }
@@ -699,7 +716,7 @@ public open class GoogleLLMClient(
     private fun processGoogleResponse(response: GoogleResponse): List<List<Message.Response>> {
         if (response.candidates.isEmpty()) {
             logger.error { "Empty candidates in Gemini response" }
-            error("Empty candidates in Gemini response")
+            throw LLMClientException(clientName, "Empty candidates in Gemini response")
         }
 
         // Extract token count from the response

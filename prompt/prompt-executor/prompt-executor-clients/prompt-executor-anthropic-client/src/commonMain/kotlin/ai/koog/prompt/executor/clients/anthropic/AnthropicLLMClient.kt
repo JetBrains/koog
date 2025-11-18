@@ -6,6 +6,7 @@ import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
+import ai.koog.prompt.executor.clients.LLMClientException
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicContent
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicMessage
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicMessageRequest
@@ -54,7 +55,6 @@ import io.ktor.serialization.kotlinx.json.json
 import io.ktor.sse.ServerSentEvent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
@@ -164,9 +164,13 @@ public open class AnthropicLLMClient(
                 val anthropicResponse = response.body<AnthropicResponse>()
                 processAnthropicResponse(anthropicResponse)
             } else {
-                val errorBody = response.bodyAsText()
-                logger.error { "Error from Anthropic API: ${response.status}: $errorBody" }
-                error("Error from Anthropic API: ${response.status}: $errorBody")
+                val exception = LLMClientException(
+                    clientName = clientName,
+                    statusCode = response.status.value,
+                    errorBody = response.bodyAsText(),
+                )
+                logger.error { exception.message }
+                throw exception
             }
         }
     }
@@ -231,7 +235,8 @@ public open class AnthropicLLMClient(
 
                                         is AnthropicContent.ToolUse -> {
                                             upsertToolCall(
-                                                index = response.index ?: error("Tool index is missing"),
+                                                index = response.index
+                                                    ?: throw LLMClientException("Tool index is missing"),
                                                 id = contentBlock.id,
                                                 name = contentBlock.name,
                                             )
@@ -248,13 +253,18 @@ public open class AnthropicLLMClient(
                                         when (delta.type) {
                                             "input_json_delta" -> {
                                                 upsertToolCall(
-                                                    index = response.index ?: error("Tool index is missing"),
-                                                    args = delta.partialJson ?: error("Tool args are missing")
+                                                    index = response.index
+                                                        ?: throw LLMClientException("Tool index is missing"),
+                                                    args = delta.partialJson
+                                                        ?: throw LLMClientException("Tool args are missing")
                                                 )
                                             }
 
                                             "text_delta" -> {
-                                                emitAppend(delta.text ?: error("Text delta is missing"))
+                                                emitAppend(
+                                                    delta.text
+                                                        ?: throw LLMClientException("Text delta is missing")
+                                                )
                                             }
                                         }
                                     }
@@ -276,22 +286,29 @@ public open class AnthropicLLMClient(
                             }
 
                             "error" -> {
-                                error("Anthropic error: ${decodeResponse(event)?.error}")
+                                throw LLMClientException("Anthropic error: ${decodeResponse(event)?.error}")
                             }
                         }
                     }
                 }
             }
         } catch (e: SSEClientException) {
-            e.response?.let { response ->
-                logger.error { "Error from Anthropic API: ${response.status}: ${e.message}" }
-                error("Error from Anthropic API: ${response.status}: ${e.message}")
-            }
+            val exception = LLMClientException(
+                clientName = clientName,
+                statusCode = e.response?.status?.value,
+                message = e.message,
+                cause = e
+            )
+            logger.error { exception.message }
+            throw exception
         } catch (e: Exception) {
             logger.error { "Exception during streaming: $e" }
-            error(e.message ?: "Unknown error during streaming")
+            throw LLMClientException(
+                clientName = clientName,
+                message = e.message,
+                cause = e
+            )
         }
-        return emptyFlow()
     }
 
     @OptIn(ExperimentalUuidApi::class)
@@ -330,7 +347,7 @@ public open class AnthropicLLMClient(
                             content = listOf(
                                 AnthropicContent.Thinking(
                                     signature = message.encrypted
-                                        ?: error("Encrypted signature is required for reasoning messages but was null"),
+                                        ?: throw IllegalArgumentException("Encrypted signature is required for reasoning messages but was null"),
                                     thinking = message.content
                                 )
                             )
@@ -451,7 +468,8 @@ public open class AnthropicLLMClient(
                         val imageSource: ImageSource = when (val content = part.content) {
                             is AttachmentContent.URL -> ImageSource.Url(content.url)
                             is AttachmentContent.Binary -> ImageSource.Base64(content.asBase64(), part.mimeType)
-                            else -> throw IllegalArgumentException(
+                            else -> throw LLMClientException(
+                                clientName,
                                 "Unsupported image attachment content: ${content::class}"
                             )
                         }
@@ -480,7 +498,10 @@ public open class AnthropicLLMClient(
                         add(AnthropicContent.Document(documentSource))
                     }
 
-                    else -> throw IllegalArgumentException("Unsupported attachment type: $part")
+                    else -> throw LLMClientException(
+                        clientName,
+                        "Unsupported attachment type: $part"
+                    )
                 }
             }
         }
@@ -523,7 +544,10 @@ public open class AnthropicLLMClient(
                     )
                 }
 
-                else -> throw IllegalArgumentException("Unhandled AnthropicContent type. Content: $content")
+                else -> throw LLMClientException(
+                    clientName,
+                    "Unhandled AnthropicContent type. Content: $content"
+                )
             }
         }
 
@@ -607,7 +631,10 @@ public open class AnthropicLLMClient(
                 JsonObject(objectMap)
             }
 
-            is ToolParameterType.AnyOf -> throw IllegalArgumentException("AnyOf type is not supported")
+            is ToolParameterType.AnyOf -> throw LLMClientException(
+                clientName,
+                "AnyOf type is not supported"
+            )
         }
     }
 
