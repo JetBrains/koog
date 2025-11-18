@@ -339,9 +339,9 @@ class ExecuteShellCommandToolJvmTest {
         """.trimIndent()
 
         val output = result.textForLLM()
-        assertTrue(output.contains(partialExpected))
-        assertTrue(output.contains("Command timed out after 1 seconds"))
-        assertNull(result.exitCode)
+        assertTrue(output.contains(partialExpected), "Partial output not found. Actual: $output")
+        assertTrue(output.contains("Command timed out after 1 seconds"), "Timeout message not found. Actual: $output")
+        assertNull(result.exitCode, "Exit code should be null for timed out command")
         assertTrue(executionTimeMs < 3000, "Should timeout at 1s, but took ${executionTimeMs}ms")
     }
 
@@ -365,9 +365,9 @@ class ExecuteShellCommandToolJvmTest {
         """.trimIndent()
 
         val output = result.textForLLM()
-        assertTrue(output.contains(partialExpected))
-        assertTrue(output.contains("Command timed out after 1 seconds"))
-        assertNull(result.exitCode)
+        assertTrue(output.contains(partialExpected), "Partial output not found. Actual: $output")
+        assertTrue(output.contains("Command timed out after 1 seconds"), "Timeout message not found. Actual: $output")
+        assertNull(result.exitCode, "Exit code should be null for timed out command")
         assertTrue(executionTimeMs < 4000, "Should timeout at 1s, but took ${executionTimeMs}ms")
     }
 
