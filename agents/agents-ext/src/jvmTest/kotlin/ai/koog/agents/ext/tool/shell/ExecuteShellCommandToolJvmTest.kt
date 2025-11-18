@@ -17,6 +17,7 @@ import kotlin.io.path.createFile
 import kotlin.io.path.writeText
 import kotlin.system.measureTimeMillis
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.test.fail
@@ -329,18 +330,28 @@ class ExecuteShellCommandToolJvmTest {
         val result: ExecuteShellCommandTool.Result
         val executionTimeMs = measureTimeMillis {
             result = withTimeout(4000L) {
-                executeShellCommand("for i in {1..10}; do echo \$i; sleep 1; done", timeoutSeconds = 1)
+                executeShellCommand(
+                    "echo beforeSleep && sleep 10 && echo afterSleep",
+                    timeoutSeconds = 1
+                )
             }
         }
 
         val partialExpected = """
-            Command: for i in {1..10}; do echo ${'$'}i; sleep 1; done
-            1
-        """.trimIndent()
+        Command: echo beforeSleep && sleep 10 && echo afterSleep
+        beforeSleep
+    """.trimIndent()
 
         val output = result.textForLLM()
         assertTrue(output.contains(partialExpected), "Partial output not found. Actual: $output")
         assertTrue(output.contains("Command timed out after 1 seconds"), "Timeout message not found. Actual: $output")
+
+        // We have to remove the command because it DOES contain afterSleep
+        assertFalse(
+            output.replace(partialExpected, "").contains("afterSleep"),
+            "afterSleep should not appear since command timed out"
+        )
+
         assertNull(result.exitCode, "Exit code should be null for timed out command")
         assertTrue(executionTimeMs < 3000, "Should timeout at 1s, but took ${executionTimeMs}ms")
     }
@@ -352,21 +363,29 @@ class ExecuteShellCommandToolJvmTest {
         val executionTimeMs = measureTimeMillis {
             result = withTimeout(5000L) {
                 executeShellCommand(
-                    """cmd /c "echo 1 & echo 2 & echo 3 & timeout 10"""",
+                    """
+                    powershell -Command "'beforeSleep'; Start-Sleep -Seconds 10; 'afterSleep'"
+                    """.trimIndent(),
                     timeoutSeconds = 1
                 )
             }
         }
 
         val partialExpected = """
-            Command: cmd /c "echo 1 & echo 2 & echo 3 & timeout 10"
-            1
-
+        Command: powershell -Command "'beforeSleep'; Start-Sleep -Seconds 10; 'afterSleep'"
+        beforeSleep
         """.trimIndent()
 
         val output = result.textForLLM()
         assertTrue(output.contains(partialExpected), "Partial output not found. Actual: $output")
         assertTrue(output.contains("Command timed out after 1 seconds"), "Timeout message not found. Actual: $output")
+
+        // We have to remove the command because it DOES contain afterSleep
+        assertFalse(
+            output.replace(partialExpected, "").contains("afterSleep"),
+            "afterSleep should not appear since command timed out"
+        )
+
         assertNull(result.exitCode, "Exit code should be null for timed out command")
         assertTrue(executionTimeMs < 4000, "Should timeout at 1s, but took ${executionTimeMs}ms")
     }
