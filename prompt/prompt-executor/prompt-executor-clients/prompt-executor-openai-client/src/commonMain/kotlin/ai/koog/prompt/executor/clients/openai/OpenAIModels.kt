@@ -15,21 +15,21 @@ import ai.koog.prompt.llm.LLModel
  *
  * @see <a href="https://platform.openai.com/docs/models">Models list</a>
  *
- *
  * | Name                             | Speed     | Price              | Input                        | Output                       |
  * |----------------------------------|-----------|--------------------|------------------------------|------------------------------|
  * | [Reasoning.O4Mini]               | Medium    | $1.1-$4.4          | Text, Image, Tools, Document | Text, Tools                  |
  * | [Reasoning.O3Mini]               | Medium    | $1.1-$4.4          | Text, Tools                  | Text, Tools                  |
  * | [Reasoning.O3]                   | Slowest   | $10-$40            | Text, Image, Tools, Document | Text, Tools                  |
  * | [Reasoning.O1]                   | Slowest   | $15-$60            | Text, Image, Tools, Document | Text, Tools                  |
+ * | [Reasoning.GPT5Codex]            | Medium    | $1.25-$10          | Text, Image, Tools, Document | Text, Tools                  |
  * | [Reasoning.GPT5Pro]              | Slowest   | $15-$120           | Text, Image, Tools, Document | Text, Tools                  |
+ * | [Reasoning.GPT5_1]               | Fast      | $1.25-$10          | Text, Image, Tools, Document | Text, Image, Tools, Document |
+ * | [Reasoning.GPT5_1Codex]          | Medium    | $1.25-$10          | Text, Image, Tools, Document | Text, Image, Tools, Document |
  * | [Chat.GPT4o]                     | Medium    | $2.5-$10           | Text, Image, Tools, Document | Text, Tools                  |
  * | [Chat.GPT4_1]                    | Medium    | $2-$8              | Text, Image, Tools, Document | Text, Tools                  |
  * | [Chat.GPT5]                      | Medium    | $1.25-$10          | Text, Image, Tools, Document | Text, Tools                  |
  * | [Chat.GPT5Mini]                  | Fast      | $0.25-$2           | Text, Image, Tools, Document | Text, Tools                  |
  * | [Chat.GPT5Nano]                  | Very fast | $0.05-$0.4         | Text, Image, Tools, Document | Text, Tools                  |
- * | [Chat.GPT5Codex]                 | Medium    | $1.25-$10          | Text, Image, Tools, Document | Text, Tools                  |
- * | [Chat.GPT5_1]                    | Fast      | $1.25-$10          | Text, Image, Tools, Document | Text, Image, Tools, Document |
  * | [Audio.GptAudio]                 | Fast      | $2.5-$10           | Text, Audio, Tools           | Text, Audio, Tools           |
  * | [Audio.GPT4oMiniAudio]           | Fast      | $0.15-$0.6/$10-$20 | Text, Audio, Tools           | Text, Audio, Tools           |
  * | [Audio.GPT4oAudio]               | Medium    | $2.5-$10/$40-$80   | Text, Audio, Tools           | Text, Audio, Tools           |
@@ -42,7 +42,6 @@ import ai.koog.prompt.llm.LLModel
  * | [Embeddings.TextEmbedding3Large] | Slow      | $0.13              | Text                         | Text                         |
  * | [Embeddings.TextEmbeddingAda002] | Slow      | $0.1               | Text                         | Text                         |
  * | [Moderation.Omni]                | Medium    | $4.40              | Text                         | Moderation Result            |
- *
  */
 public object OpenAIModels : LLModelDefinitions {
     // TODO: support thinking tokens
@@ -207,6 +206,33 @@ public object OpenAIModels : LLModelDefinitions {
         )
 
         /**
+         * GPT-5-Codex is a version of GPT-5 optimized for agentic coding tasks in agents.
+         * It's available in the **Responses API** only, and the underlying model snapshot will be regularly updated.
+         *
+         * 400,000 context window
+         * 128,000 max output tokens
+         * Reasoning token support
+         *
+         * @see <a href="https://platform.openai.com/docs/models/gpt-5-codex"\>Model page</a>
+         */
+        public val GPT5Codex: LLModel = LLModel(
+            provider = LLMProvider.OpenAI,
+            id = "gpt-5-codex",
+            capabilities = listOf(
+                LLMCapability.Completion,
+                LLMCapability.Temperature,
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Schema.JSON.Standard,
+                LLMCapability.Speculation,
+                LLMCapability.Tools,
+                LLMCapability.ToolChoice,
+                LLMCapability.OpenAIEndpoint.Responses,
+            ),
+            contextLength = 400_000,
+            maxOutputTokens = 128_000,
+        )
+
+        /**
          * GPT-5 pro uses more compute to think harder and provide consistently better answers.
          * GPT-5 pro is available in the Responses API only to enable support for multi-turn model interactions
          * before responding to API requests, and other advanced API features in the future.
@@ -235,6 +261,67 @@ public object OpenAIModels : LLModelDefinitions {
             ),
             contextLength = 400_000,
             maxOutputTokens = 272_000,
+        )
+
+        /**
+         * GPT-5.1 is a flagship model for coding and agentic tasks with configurable reasoning and non-reasoning effort.
+         *
+         * 400,000 context window
+         * 128,000 max output tokens
+         * Sep 30, 2024 knowledge cutoff
+         * Reasoning token support
+         *
+         * @see <a href="https://platform.openai.com/docs/models/gpt-5.1"\>Model page</a>
+         */
+        public val GPT5_1: LLModel = LLModel(
+            provider = LLMProvider.OpenAI,
+            id = "gpt-5.1",
+            capabilities = listOf(
+                LLMCapability.Completion,
+                LLMCapability.Temperature,
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Schema.JSON.Standard,
+                LLMCapability.Speculation,
+                LLMCapability.Tools,
+                LLMCapability.ToolChoice,
+                LLMCapability.Vision.Image,
+                LLMCapability.Document,
+                LLMCapability.MultipleChoices,
+                LLMCapability.OpenAIEndpoint.Completions,
+                LLMCapability.OpenAIEndpoint.Responses,
+            ),
+            contextLength = 400_000,
+            maxOutputTokens = 128_000,
+        )
+
+        /**
+         * GPT-5.1-Codex is a version of GPT-5 optimized for agentic coding tasks in Codex or similar environments.
+         * It's available in the **Responses API** only, and the underlying model snapshot will be regularly updated.
+         *
+         * 400,000 context window
+         * 128,000 max output tokens
+         * Sep 30, 2024 knowledge cutoff
+         * Reasoning token support
+         *
+         * @see <a href="https://platform.openai.com/docs/models/gpt-5.1-codex"\>Model page</a>
+         */
+        public val GPT5_1Codex: LLModel = LLModel(
+            provider = LLMProvider.OpenAI,
+            id = "gpt-5.1-codex",
+            capabilities = listOf(
+                LLMCapability.Temperature,
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Schema.JSON.Standard,
+                LLMCapability.Speculation,
+                LLMCapability.Tools,
+                LLMCapability.ToolChoice,
+                LLMCapability.Vision.Image,
+                LLMCapability.Document,
+                LLMCapability.MultipleChoices,
+                LLMCapability.OpenAIEndpoint.Responses,
+            ),
+            contextLength = 400_000,
+            maxOutputTokens = 128_000,
         )
     }
 
@@ -395,65 +482,6 @@ public object OpenAIModels : LLModelDefinitions {
                 LLMCapability.Vision.Image,
                 LLMCapability.Document,
                 LLMCapability.Completion,
-                LLMCapability.MultipleChoices,
-                LLMCapability.OpenAIEndpoint.Completions,
-                LLMCapability.OpenAIEndpoint.Responses,
-            ),
-            contextLength = 400_000,
-            maxOutputTokens = 128_000,
-        )
-
-        /**
-         * GPT-5-Codex is a version of GPT-5 optimized for agentic coding tasks in agents.
-         * It's available in the **Responses API** only, and the underlying model snapshot will be regularly updated.
-         *
-         * 400,000 context window
-         * 128,000 max output tokens
-         * Reasoning token support
-         *
-         * @see <a href="https://platform.openai.com/docs/models/gpt-5-codex"\>Model page</a>
-         */
-        public val GPT5Codex: LLModel = LLModel(
-            provider = LLMProvider.OpenAI,
-            id = "gpt-5-codex",
-            capabilities = listOf(
-                LLMCapability.Completion,
-                LLMCapability.Temperature,
-                LLMCapability.Schema.JSON.Basic,
-                LLMCapability.Schema.JSON.Standard,
-                LLMCapability.Speculation,
-                LLMCapability.Tools,
-                LLMCapability.ToolChoice,
-                LLMCapability.OpenAIEndpoint.Responses,
-            ),
-            contextLength = 400_000,
-            maxOutputTokens = 128_000,
-        )
-
-        /**
-         * GPT-5.1 is a flagship model for coding and agentic tasks with configurable reasoning and non-reasoning effort.
-         *
-         * 400,000 context window
-         * 128,000 max output tokens
-         * Sep 30, 2024 knowledge cutoff
-         * Reasoning token support
-         * Reasoning token support
-         *
-         * @see <a href="https://platform.openai.com/docs/models/gpt-5.1"\>Model page</a>
-         */
-        public val GPT5_1: LLModel = LLModel(
-            provider = LLMProvider.OpenAI,
-            id = "gpt-5.1",
-            capabilities = listOf(
-                LLMCapability.Completion,
-                LLMCapability.Temperature,
-                LLMCapability.Schema.JSON.Basic,
-                LLMCapability.Schema.JSON.Standard,
-                LLMCapability.Speculation,
-                LLMCapability.Tools,
-                LLMCapability.ToolChoice,
-                LLMCapability.Vision.Image,
-                LLMCapability.Document,
                 LLMCapability.MultipleChoices,
                 LLMCapability.OpenAIEndpoint.Completions,
                 LLMCapability.OpenAIEndpoint.Responses,
