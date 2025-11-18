@@ -17,7 +17,6 @@ import ai.koog.rag.base.files.JVMFileSystemProvider
 
 
 val executor = simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY"))
-
 val agent = AIAgent(
     promptExecutor = executor,
     llmModel = OpenAIModels.Chat.GPT5Codex,
@@ -64,7 +63,10 @@ suspend fun main(args: Array<String>) {
 
     val (path, task) = args
     val input = "Project absolute path: $path\n\n## Task\n$task"
-    val result = agent.run(input)
-    println(result)
-    executor.close()
+    try {
+        val result = agent.run(input)
+        println(result)
+    } finally {
+        executor.close()
+    }
 }
