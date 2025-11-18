@@ -19,6 +19,7 @@ nav:
           - Built-in tools: built-in-tools.md
           - Annotation-based tools: annotation-based-tools.md
           - Class-based tools: class-based-tools.md
+          - Custom tools schema: tools/tool-descriptor-schemer.md
       - Events: agent-events.md
       - Strategies:
           - Pre-defined nodes and components: nodes-and-components.md

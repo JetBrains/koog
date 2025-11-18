@@ -272,10 +272,10 @@ class SerialToToolDescriptionTest {
     fun verify_optional_description_applies() {
         val tripPlanDescriptor = serializer<TripPlan>().descriptor.asToolDescriptor(
             toolName = "provideTripPlan",
-            toolDescription = "Custom tool ,call me!"
+            toolDescription = "Custom tool, call me!"
         )
 
-        assertEquals("Custom tool ,call me!", tripPlanDescriptor.description)
-        assertEquals(expectedTripPlanToolDescriptor.copy(description = "Custom tool ,call me!"), tripPlanDescriptor)
+        assertEquals("Custom tool, call me!", tripPlanDescriptor.description)
+        assertEquals(expectedTripPlanToolDescriptor.copy(description = "Custom tool, call me!"), tripPlanDescriptor)
     }
 }
