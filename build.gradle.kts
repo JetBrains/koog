@@ -17,7 +17,7 @@ import java.util.Base64
 version = run {
     // our version follows the semver specification
 
-    val baseVersion = (project.property("version") as String).removeSuffix("-SNAPSHOT")
+    val baseVersion = project.property("version") as String
 
     val feat = run {
         val releaseBuild = !System.getenv("BRANCH_KOOG_IS_RELEASING_FROM").isNullOrBlank()
