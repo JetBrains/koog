@@ -20,7 +20,13 @@ val executor = simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY"))
 
 val agent = AIAgent(
     promptExecutor = executor,
-    strategy = singleRunStrategy(),
+    llmModel = OpenAIModels.Chat.GPT5Codex,
+    toolRegistry = ToolRegistry {
+        tool(ListDirectoryTool(JVMFileSystemProvider.ReadOnly))
+        tool(ReadFileTool(JVMFileSystemProvider.ReadOnly))
+        tool(EditFileTool(JVMFileSystemProvider.ReadWrite))
+        tool(createExecuteShellCommandToolFromEnv())
+    },
     systemPrompt = """
         You are a highly skilled programmer tasked with updating the provided codebase according to the given task.
         Your goal is to deliver production-ready code changes that integrate seamlessly with the existing codebase and solve given task.
@@ -31,13 +37,7 @@ val agent = AIAgent(
         Verify your changes don't break existing functionality through regression testing, but prefer running targeted tests over full test suites.
         Note: the codebase may be fully configured or freshly cloned with no dependencies installed - handle any necessary setup steps.
         """.trimIndent(),
-    llmModel = OpenAIModels.Chat.GPT5Codex,
-    toolRegistry = ToolRegistry {
-        tool(ListDirectoryTool(JVMFileSystemProvider.ReadOnly))
-        tool(ReadFileTool(JVMFileSystemProvider.ReadOnly))
-        tool(EditFileTool(JVMFileSystemProvider.ReadWrite))
-        tool(createExecuteShellCommandToolFromEnv())
-    },
+    strategy = singleRunStrategy(),
     maxIterations = 400
 ) {
     handleEvents {
