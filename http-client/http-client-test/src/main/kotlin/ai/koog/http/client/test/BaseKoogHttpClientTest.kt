@@ -9,9 +9,7 @@ import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
-import kotlin.test.assertContains
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 import kotlin.test.fail
 
 /**
@@ -141,10 +139,8 @@ abstract class BaseKoogHttpClientTest {
             )
             fail("Expected an exception for non-success status")
         } catch (e: KoogHttpClientException) {
-            assertNotNull(e.message) {
-                assertContains(it, "Error from client: TestClient")
-                assertContains(it, "400")
-            }
+            assertEquals(e.clientName, "TestClient")
+            assertEquals(e.statusCode, 400)
         } finally {
             mockServer.stop()
         }
