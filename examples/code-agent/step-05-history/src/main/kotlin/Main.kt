@@ -1,9 +1,9 @@
 package ai.koog.agents.example.codeagent.step05
 
 import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.agent.HistoryCompressionConfig
-import ai.koog.agents.core.agent.singleRunStrategyWithHistoryCompression
 import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.ext.agent.HistoryCompressionConfig
+import ai.koog.agents.ext.agent.singleRunStrategyWithHistoryCompression
 
 import ai.koog.agents.ext.tool.file.EditFileTool
 import ai.koog.agents.ext.tool.file.ListDirectoryTool

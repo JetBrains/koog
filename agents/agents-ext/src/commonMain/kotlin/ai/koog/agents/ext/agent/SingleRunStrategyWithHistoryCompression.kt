@@ -1,5 +1,6 @@
-package ai.koog.agents.core.agent
+package ai.koog.agents.ext.agent
 
+import ai.koog.agents.core.agent.ToolCalls
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
@@ -35,7 +36,7 @@ public data class HistoryCompressionConfig(
 /**
  * Creates a single-run agent strategy with automatic conversation history compression.
  *
- * Works like [singleRunStrategy] but adds a compression step after each tool execution:
+ * Works like [ai.koog.agents.core.agent.singleRunStrategy] but adds a compression step after each tool execution:
  * if the conversation history becomes too large (based on [HistoryCompressionConfig.isHistoryTooBig]),
  * it compresses the message list to essential facts before continuing.
  *

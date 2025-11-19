@@ -1,13 +1,32 @@
-package ai.koog.agents.core.agent
+package ai.koog.agents.ext.agent
 
+import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.core.agent.ToolCalls
 import ai.koog.agents.core.dsl.extension.HistoryCompressionStrategy
+import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.llm.OllamaModels
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.Serializable
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+
+private object CreateTool : SimpleTool<CreateTool.Args>() {
+    @Serializable
+    data class Args(
+        @property:LLMDescription("Name of the entity to create") val name: String
+    )
+
+    override val argsSerializer = Args.serializer()
+
+    override val name: String = "create"
+    override val description: String = "Create something"
+
+    override suspend fun doExecute(args: Args): String = "created"
+}
 
 class SingleRunStrategyWithHistoryCompressionTests {
 
