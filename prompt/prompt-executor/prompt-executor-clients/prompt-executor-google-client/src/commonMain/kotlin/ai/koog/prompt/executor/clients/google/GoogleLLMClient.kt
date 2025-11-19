@@ -321,7 +321,7 @@ public open class GoogleLLMClient(
                     flushCalls()
                     contents.add(
                         GoogleContent(
-                            role = "assistant",
+                            role = "model",
                             parts = listOf(
                                 GooglePart.Text(
                                     text = message.content,
