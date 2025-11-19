@@ -58,7 +58,6 @@ public class OkHttpKoogHttpClient internal constructor(
             clientName = clientName,
             statusCode = response.code,
             errorBody = response.body.string(),
-            message = "Error from $clientName API: ${response.code}",
         )
     }
 
@@ -144,23 +143,15 @@ public class OkHttpKoogHttpClient internal constructor(
             }
 
             override fun onFailure(eventSource: EventSource, t: Throwable?, response: Response?) {
-                val errorMessage = if (response != null) {
-                    val body = response.body.string()
-                    "Error from $clientName API: ${response.code}: ${t?.message}\nBody:\n$body"
-                } else {
-                    "Exception during streaming from $clientName: ${t?.message ?: "Unknown error"}"
-                }
-
-                logger.error(t) { errorMessage }
-                close(
-                    KoogHttpClientException(
-                        clientName = clientName,
-                        statusCode = response?.code,
-                        errorBody = response?.body?.string(),
-                        message = t?.message ?: errorMessage,
-                        cause = t
-                    )
+                val exception = KoogHttpClientException(
+                    clientName = clientName,
+                    statusCode = response?.code,
+                    errorBody = response?.body?.string(),
+                    message = t?.message,
+                    cause = t
                 )
+                logger.error(t) { exception.message }
+                close(exception)
             }
         }
 

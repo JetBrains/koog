@@ -58,7 +58,6 @@ public class JavaKoogHttpClient internal constructor(
             clientName = clientName,
             statusCode = response.statusCode(),
             errorBody = response.body(),
-            message = "Error from $clientName API: ${response.statusCode()}",
         )
     }
 
@@ -154,7 +153,7 @@ public class JavaKoogHttpClient internal constructor(
                     close(
                         KoogHttpClientException(
                             clientName = clientName,
-                            message = "Error processing SSE event from $clientName: ${e.message}",
+                            message = "Error processing SSE event: ${e.message}",
                             cause = e
                         )
                     )
@@ -169,7 +168,7 @@ public class JavaKoogHttpClient internal constructor(
             close(
                 KoogHttpClientException(
                     clientName = clientName,
-                    message = "Exception during streaming from $clientName",
+                    message = "Exception during streaming: ${e.message}",
                     cause = e
                 )
             )

@@ -198,7 +198,8 @@ public class BedrockLLMClient(
                 val responseBodyString = response.body.decodeToString()
                 logger.debug { "Bedrock InvokeModel Response: $responseBodyString" }
                 if (responseBodyString.isBlank()) {
-                    val exception = LLMClientException("Received null or empty body from Bedrock model ${model.id}")
+                    val exception =
+                        LLMClientException(clientName, "Received null or empty body from Bedrock model ${model.id}")
                     logger.error { exception.message }
                     throw exception
                 }

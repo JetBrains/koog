@@ -236,7 +236,7 @@ public open class AnthropicLLMClient(
                                         is AnthropicContent.ToolUse -> {
                                             upsertToolCall(
                                                 index = response.index
-                                                    ?: throw LLMClientException("Tool index is missing"),
+                                                    ?: throw LLMClientException(clientName, "Tool index is missing"),
                                                 id = contentBlock.id,
                                                 name = contentBlock.name,
                                             )
@@ -254,16 +254,19 @@ public open class AnthropicLLMClient(
                                             "input_json_delta" -> {
                                                 upsertToolCall(
                                                     index = response.index
-                                                        ?: throw LLMClientException("Tool index is missing"),
+                                                        ?: throw LLMClientException(
+                                                            clientName,
+                                                            "Tool index is missing"
+                                                        ),
                                                     args = delta.partialJson
-                                                        ?: throw LLMClientException("Tool args are missing")
+                                                        ?: throw LLMClientException(clientName, "Tool args are missing")
                                                 )
                                             }
 
                                             "text_delta" -> {
                                                 emitAppend(
                                                     delta.text
-                                                        ?: throw LLMClientException("Text delta is missing")
+                                                        ?: throw LLMClientException(clientName, "Text delta is missing")
                                                 )
                                             }
                                         }
@@ -286,7 +289,7 @@ public open class AnthropicLLMClient(
                             }
 
                             "error" -> {
-                                throw LLMClientException("Anthropic error: ${decodeResponse(event)?.error}")
+                                throw LLMClientException(clientName, "Anthropic error: ${decodeResponse(event)?.error}")
                             }
                         }
                     }

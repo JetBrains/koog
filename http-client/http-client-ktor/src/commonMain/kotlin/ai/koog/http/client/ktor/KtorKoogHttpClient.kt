@@ -156,7 +156,7 @@ public class KtorKoogHttpClient internal constructor(
         } catch (e: Exception) {
             throw KoogHttpClientException(
                 clientName = clientName,
-                message = "Exception during streaming from $clientName",
+                message = "Exception during streaming: ${e.message}",
                 cause = e,
             )
         }
