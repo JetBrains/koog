@@ -27,6 +27,7 @@ public interface KoogHttpClient {
     public suspend fun <R : Any> get(
         path: String,
         responseType: KClass<R>,
+        parameters: Map<String, String>? = emptyMap(),
     ): R
 
     /**
@@ -45,7 +46,8 @@ public interface KoogHttpClient {
         path: String,
         request: T,
         requestBodyType: KClass<T>,
-        responseType: KClass<R>
+        responseType: KClass<R>,
+        parameters: Map<String, String>? = emptyMap(),
     ): R
 
     /**
@@ -72,7 +74,8 @@ public interface KoogHttpClient {
         requestBodyType: KClass<T>,
         dataFilter: (String?) -> Boolean = { true },
         decodeStreamingResponse: (String) -> R,
-        processStreamingChunk: (R) -> O?
+        processStreamingChunk: (R) -> O?,
+        parameters: Map<String, String>? = emptyMap(),
     ): Flow<O>
 
     /**
@@ -93,8 +96,9 @@ public interface KoogHttpClient {
  */
 public suspend inline fun <reified T : Any, reified R : Any> KoogHttpClient.post(
     path: String,
-    request: T
-): R = post(path, request, T::class, R::class)
+    request: T,
+    parameters: Map<String, String>? = emptyMap(),
+): R = post(path, request, T::class, R::class, parameters)
 
 /**
  * Sends an HTTP GET request to the specified `path` with the provided parameters.
@@ -105,7 +109,8 @@ public suspend inline fun <reified T : Any, reified R : Any> KoogHttpClient.post
  */
 public suspend inline fun <reified R : Any> KoogHttpClient.get(
     path: String,
-): R = get(path, R::class)
+    parameters: Map<String, String>? = emptyMap(),
+): R = get(path, R::class, parameters)
 
 /**
  * Initiates a Server-Sent Events (SSE) streaming operation over an HTTP POST request.
@@ -129,5 +134,6 @@ public inline fun <reified T : Any, reified R : Any, O : Any> KoogHttpClient.sse
     request: T,
     noinline dataFilter: (String?) -> Boolean = { true },
     noinline decodeStreamingResponse: (String) -> R,
-    noinline processStreamingChunk: (R) -> O?
-): Flow<O> = sse(path, request, T::class, dataFilter, decodeStreamingResponse, processStreamingChunk)
+    noinline processStreamingChunk: (R) -> O?,
+    parameters: Map<String, String>? = emptyMap(),
+): Flow<O> = sse(path, request, T::class, dataFilter, decodeStreamingResponse, processStreamingChunk, parameters)
