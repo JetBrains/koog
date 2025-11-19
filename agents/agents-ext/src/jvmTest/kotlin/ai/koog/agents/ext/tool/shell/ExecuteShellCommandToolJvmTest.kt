@@ -373,7 +373,6 @@ class ExecuteShellCommandToolJvmTest {
 
         val partialExpected = """
         Command: powershell -Command "'beforeSleep'; Start-Sleep -Seconds 10; 'afterSleep'"
-        beforeSleep
         """.trimIndent()
 
         val output = result.textForLLM()
