@@ -15,7 +15,7 @@ import io.github.oshai.kotlinlogging.KLogger
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
-import kotlin.time.Clock
+import kotlinx.datetime.Clock
 
 /**
  * A utility class for matching strings to associated responses based on different matching strategies.

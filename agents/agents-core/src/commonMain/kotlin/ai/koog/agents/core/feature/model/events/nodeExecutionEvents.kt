@@ -3,7 +3,7 @@ package ai.koog.agents.core.feature.model.events
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.feature.model.AIAgentError
 import ai.koog.agents.core.utils.SerializationUtils
-import kotlin.time.Clock
+import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 

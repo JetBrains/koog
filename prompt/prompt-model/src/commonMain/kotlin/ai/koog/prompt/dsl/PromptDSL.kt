@@ -1,7 +1,7 @@
 package ai.koog.prompt.dsl
 
 import ai.koog.prompt.params.LLMParams
-import kotlin.time.Clock
+import kotlinx.datetime.Clock
 
 /**
  * Marker annotation for the Prompt DSL.

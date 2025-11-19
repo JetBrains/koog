@@ -2,7 +2,7 @@ package ai.koog.agents.core.feature.writer
 
 import ai.koog.agents.core.feature.message.FeatureEvent
 import ai.koog.agents.core.feature.message.FeatureMessage
-import kotlin.time.Clock
+import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
 
 @Serializable

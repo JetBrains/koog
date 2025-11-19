@@ -4,7 +4,7 @@ import ai.koog.agents.utils.ModelInfo
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.message.Message
-import kotlin.time.Clock
+import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
 
 /**

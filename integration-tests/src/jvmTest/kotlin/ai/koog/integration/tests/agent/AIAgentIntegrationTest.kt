@@ -55,7 +55,7 @@ import io.kotest.matchers.string.shouldNotBeBlank
 import io.kotest.matchers.string.shouldNotBeEmpty
 import io.kotest.matchers.string.shouldNotContain
 import kotlinx.coroutines.test.runTest
-import kotlin.time.Clock
+import kotlinx.datetime.Clock
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Disabled

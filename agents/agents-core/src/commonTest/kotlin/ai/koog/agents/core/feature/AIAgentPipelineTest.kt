@@ -21,7 +21,7 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.OllamaModels
 import ai.koog.utils.io.use
 import kotlinx.coroutines.test.runTest
-import kotlin.time.Clock
+import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.js.JsName

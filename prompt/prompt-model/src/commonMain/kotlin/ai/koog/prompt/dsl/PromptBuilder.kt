@@ -6,7 +6,7 @@ import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.text.TextContentBuilder
-import kotlin.time.Clock
+import kotlinx.datetime.Clock
 
 /**
  * A builder class for creating prompts using a DSL approach.

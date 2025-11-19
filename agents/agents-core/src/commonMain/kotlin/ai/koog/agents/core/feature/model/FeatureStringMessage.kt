@@ -1,7 +1,7 @@
 package ai.koog.agents.core.feature.model
 
 import ai.koog.agents.core.feature.message.FeatureMessage
-import kotlin.time.Clock
+import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
 
 /**

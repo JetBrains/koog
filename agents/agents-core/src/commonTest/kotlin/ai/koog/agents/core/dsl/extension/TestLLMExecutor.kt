@@ -11,7 +11,7 @@ import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.toStreamFrame
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
-import kotlin.time.Clock
+import kotlinx.datetime.Clock
 
 class TestLLMExecutor : PromptExecutor {
     companion object {

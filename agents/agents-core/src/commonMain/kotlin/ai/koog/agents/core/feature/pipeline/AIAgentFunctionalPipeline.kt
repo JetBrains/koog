@@ -2,7 +2,7 @@ package ai.koog.agents.core.feature.pipeline
 
 import ai.koog.agents.core.feature.AIAgentFunctionalFeature
 import ai.koog.agents.core.feature.config.FeatureConfig
-import kotlin.time.Clock
+import kotlinx.datetime.Clock
 
 /**
  * Represents a specific implementation of an AI agent pipeline

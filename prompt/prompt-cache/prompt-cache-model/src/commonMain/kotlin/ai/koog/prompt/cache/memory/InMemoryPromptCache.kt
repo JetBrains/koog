@@ -2,7 +2,7 @@ package ai.koog.prompt.cache.memory
 
 import ai.koog.prompt.cache.model.PromptCache
 import ai.koog.prompt.message.Message
-import kotlin.time.Clock
+import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 
 /**

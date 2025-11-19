@@ -15,7 +15,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.processor.ResponseProcessor
 import ai.koog.utils.io.Closeable
-import kotlin.time.Clock
+import kotlinx.datetime.Clock
 import kotlin.reflect.typeOf
 import kotlin.uuid.ExperimentalUuidApi
 

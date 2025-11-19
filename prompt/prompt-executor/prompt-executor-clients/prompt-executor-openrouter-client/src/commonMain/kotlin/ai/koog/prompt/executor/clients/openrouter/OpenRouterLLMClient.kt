@@ -25,7 +25,7 @@ import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrameFlowBuilder
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
-import kotlin.time.Clock
+import kotlinx.datetime.Clock
 
 /**
  * Configuration settings for connecting to the OpenRouter API.

@@ -4,7 +4,7 @@ import ai.koog.agents.core.feature.model.AIAgentError
 import ai.koog.agents.utils.ModelInfo
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.streaming.StreamFrame
-import kotlin.time.Clock
+import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
 
 /**
