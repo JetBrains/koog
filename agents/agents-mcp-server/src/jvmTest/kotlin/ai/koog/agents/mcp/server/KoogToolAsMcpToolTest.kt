@@ -77,9 +77,10 @@ class KoogToolAsMcpToolTest {
             }
 
             assertTrue(errorResult?.isError ?: false)
+        }
 
-            // check that the server is still working
-
+        // check that the server is still working
+        run {
             val args = buildJsonObject { put("seed", "42") }
 
             val result = withContext(Dispatchers.Default.limitedParallelism(1)) {
@@ -101,21 +102,23 @@ class KoogToolAsMcpToolTest {
         val tool = ThrowingExceptionTool()
 
         testMcpTool(tool) { mcpTool, origin ->
-            tool.throwing = true
+            run {
+                tool.throwing = true
 
-            val args = EmptyJsonObject
+                val args = EmptyJsonObject
 
-            val errorResult = withContext(Dispatchers.Default.limitedParallelism(1)) {
-                withTimeout(20.seconds) {
-                    mcpTool.execute(args)
+                val errorResult = withContext(Dispatchers.Default.limitedParallelism(1)) {
+                    withTimeout(20.seconds) {
+                        mcpTool.execute(args)
+                    }
                 }
+
+                assertTrue(errorResult?.isError ?: false)
+
+                val last = origin.last
+                assertNotNull(last)
+                assertTrue(last.isFailure)
             }
-
-            assertTrue(errorResult?.isError ?: false)
-
-            val last = origin.last
-            assertNotNull(last)
-            assertTrue(last.isFailure)
 
             run {
                 // check that the server is still working
