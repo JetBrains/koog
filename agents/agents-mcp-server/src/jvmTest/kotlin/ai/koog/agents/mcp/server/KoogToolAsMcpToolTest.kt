@@ -20,7 +20,6 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 import kotlin.test.assertIsNot
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
@@ -68,17 +67,17 @@ class KoogToolAsMcpToolTest {
     @OptIn(InternalAgentToolsApi::class)
     @Test
     fun testKoogToolAsMcpToolWithInvalidArguments() = testMcpTool(RandomNumberTool()) { mcpTool, origin ->
-        assertFailsWith<IllegalStateException> {
-            val args = buildJsonObject { put("seed", "forty-two") }
+        run {
+            val errorArgs = buildJsonObject { put("seed", "forty-two") }
 
-            withContext(Dispatchers.Default.limitedParallelism(1)) {
+            val errorResult = withContext(Dispatchers.Default.limitedParallelism(1)) {
                 withTimeout(20.seconds) {
-                    mcpTool.execute(args)
+                    mcpTool.execute(errorArgs)
                 }
             }
-        }
 
-        run {
+            assertTrue(errorResult?.isError ?: false)
+
             // check that the server is still working
 
             val args = buildJsonObject { put("seed", "42") }
@@ -104,19 +103,19 @@ class KoogToolAsMcpToolTest {
         testMcpTool(tool) { mcpTool, origin ->
             tool.throwing = true
 
-            assertFailsWith<IllegalStateException> {
-                val args = EmptyJsonObject
+            val args = EmptyJsonObject
 
-                withContext(Dispatchers.Default.limitedParallelism(1)) {
-                    withTimeout(20.seconds) {
-                        mcpTool.execute(args)
-                    }
+            val errorResult = withContext(Dispatchers.Default.limitedParallelism(1)) {
+                withTimeout(20.seconds) {
+                    mcpTool.execute(args)
                 }
-
-                val last = origin.last
-                assertNotNull(last)
-                assertTrue(last.isFailure)
             }
+
+            assertTrue(errorResult?.isError ?: false)
+
+            val last = origin.last
+            assertNotNull(last)
+            assertTrue(last.isFailure)
 
             run {
                 // check that the server is still working
