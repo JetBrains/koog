@@ -15,10 +15,10 @@ import ai.koog.agents.ext.tool.shell.ShellCommandConfirmation
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.koog.rag.base.files.JVMFileSystemProvider
-import kotlinx.coroutines.runBlocking
 
+val executor = simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY"))
 val agent = AIAgent(
-    promptExecutor = simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")),
+    promptExecutor = executor,
     llmModel = OpenAIModels.Chat.GPT5Codex,
     toolRegistry = ToolRegistry {
         tool(ListDirectoryTool(JVMFileSystemProvider.ReadOnly))
@@ -56,15 +56,17 @@ fun createExecuteShellCommandToolFromEnv(): ExecuteShellCommandTool {
     }
 }
 
-fun main(args: Array<String>) = runBlocking {
+suspend fun main(args: Array<String>) {
     if (args.size < 2) {
         println("Error: Please provide the project absolute path and a task as arguments")
         println("Usage: <absolute_path> <task>")
-        return@runBlocking
+        return
     }
 
     val (path, task) = args
     val input = "Project absolute path: $path\n\n## Task\n$task"
-    val result = agent.run(input)
-    println(result)
+    executor.use { _ ->
+        val result = agent.run(input)
+        println(result)
+    }
 }
