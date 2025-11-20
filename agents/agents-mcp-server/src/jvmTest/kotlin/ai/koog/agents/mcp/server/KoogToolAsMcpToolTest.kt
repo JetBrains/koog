@@ -158,7 +158,7 @@ class KoogToolAsMcpToolTest {
             val toolRegistry = withContext(Dispatchers.Default.limitedParallelism(1)) {
                 withTimeout(20.seconds) {
                     McpToolRegistryProvider.fromTransport(
-                        transport = McpToolRegistryProvider.defaultSseTransport("http://localhost:$port/sse")
+                        transport = McpToolRegistryProvider.defaultSseTransport("http://localhost:$port")
                     )
                 }
             }
