@@ -13,6 +13,9 @@ kotlin {
         commonMain {
             dependencies {
                 api(libs.mcp.server)
+                implementation(libs.ktor.server.core)
+                implementation(libs.ktor.server.sse)
+
                 api(project(":agents:agents-tools"))
             }
         }
