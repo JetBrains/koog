@@ -86,10 +86,10 @@ public class KtorKoogHttpClient internal constructor(
     override suspend fun <R : Any> get(
         path: String,
         responseType: KClass<R>,
-        parameters: Map<String, String>?
+        parameters: Map<String, String>
     ): R = withContext(Dispatchers.SuitableForIO) {
         val response = ktorClient.get(path) {
-            parameters?.forEach { (key, value) ->
+            parameters.forEach { (key, value) ->
                 parameter(key, value)
             }
         }
@@ -101,7 +101,7 @@ public class KtorKoogHttpClient internal constructor(
         request: T,
         requestBodyType: KClass<T>,
         responseType: KClass<R>,
-        parameters: Map<String, String>?
+        parameters: Map<String, String>
     ): R = withContext(Dispatchers.SuitableForIO) {
         val response = ktorClient.post(path) {
             if (requestBodyType == String::class) {
@@ -110,7 +110,7 @@ public class KtorKoogHttpClient internal constructor(
             } else {
                 setBody(request, TypeInfo(requestBodyType))
             }
-            parameters?.forEach { (key, value) ->
+            parameters.forEach { (key, value) ->
                 parameter(key, value)
             }
         }
@@ -125,7 +125,7 @@ public class KtorKoogHttpClient internal constructor(
         dataFilter: (String?) -> Boolean,
         decodeStreamingResponse: (String) -> R,
         processStreamingChunk: (R) -> O?,
-        parameters: Map<String, String>?,
+        parameters: Map<String, String>,
     ): Flow<O> = flow {
         @Suppress("TooGenericExceptionCaught")
         try {
@@ -145,7 +145,7 @@ public class KtorKoogHttpClient internal constructor(
                         setBody(request, TypeInfo(requestBodyType))
                     }
 
-                    parameters?.forEach { (key, value) ->
+                    parameters.forEach { (key, value) ->
                         parameter(key, value)
                     }
                 }

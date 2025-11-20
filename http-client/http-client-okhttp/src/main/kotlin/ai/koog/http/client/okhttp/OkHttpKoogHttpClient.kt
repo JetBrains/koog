@@ -81,7 +81,7 @@ public class OkHttpKoogHttpClient internal constructor(
     override suspend fun <R : Any> get(
         path: String,
         responseType: KClass<R>,
-        parameters: Map<String, String>?
+        parameters: Map<String, String>
     ): R = withContext(Dispatchers.SuitableForIO) {
         val httpRequest = Request.Builder()
             .url(buildUrl(path, parameters))
@@ -99,7 +99,7 @@ public class OkHttpKoogHttpClient internal constructor(
         request: T,
         requestBodyType: KClass<T>,
         responseType: KClass<R>,
-        parameters: Map<String, String>?
+        parameters: Map<String, String>
     ): R = withContext(Dispatchers.SuitableForIO) {
         val requestBody = prepareRequestBody(request, requestBodyType)
 
@@ -122,7 +122,7 @@ public class OkHttpKoogHttpClient internal constructor(
         dataFilter: (String?) -> Boolean,
         decodeStreamingResponse: (String) -> R,
         processStreamingChunk: (R) -> O?,
-        parameters: Map<String, String>?
+        parameters: Map<String, String>
     ): Flow<O> = callbackFlow {
         val requestBody = prepareRequestBody(request, requestBodyType)
 
