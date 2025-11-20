@@ -58,4 +58,14 @@ class KtorKoogHttpClientTest : BaseKoogHttpClientTest() {
     @Test
     override fun `test filter SSE events`() =
         super.`test filter SSE events`()
+
+    @Test
+    override fun `test return success string response on get with parameters`() {
+        super.`test return success string response on get with parameters`()
+    }
+
+    @Test
+    override fun `test return success string response on post with parameters`() {
+        super.`test return success string response on post with parameters`()
+    }
 }

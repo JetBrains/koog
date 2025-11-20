@@ -212,4 +212,65 @@ abstract class BaseKoogHttpClientTest {
 
         mockServer.stop()
     }
+
+    @Suppress("FunctionName")
+    open fun `test return success string response on get with parameters`(): Unit = runTest {
+        val responseBody = "RESPONSE_OK_WITH_PARAMS"
+        val expectedParameters = mapOf("param1" to "value1", "param2" to "value2")
+
+        val mockServer = MockWebServer()
+        mockServer.start(
+            getEndpoints = listOf(
+                MockWebServer.GetEndpointConfig(
+                    path = "/echo",
+                    responseBody = responseBody,
+                    statusCode = HttpStatusCode.OK,
+                    contentType = ContentType.Text.Plain,
+                    expectedParameters = expectedParameters
+                )
+            )
+        )
+
+        val client = createClient()
+
+        val result: String = client.get(
+            path = mockServer.url("/echo"),
+            parameters = expectedParameters
+        )
+
+        assertEquals(responseBody, result)
+
+        mockServer.stop()
+    }
+
+    @Suppress("FunctionName")
+    open fun `test return success string response on post with parameters`(): Unit = runTest {
+        val responseBody = "RESPONSE_OK_WITH_PARAMS"
+        val expectedParameters = mapOf("filter" to "active", "sort" to "desc")
+
+        val mockServer = MockWebServer()
+        mockServer.start(
+            postEndpoints = listOf(
+                MockWebServer.PostEndpointConfig(
+                    path = "/echo",
+                    responseBody = responseBody,
+                    statusCode = HttpStatusCode.OK,
+                    contentType = ContentType.Text.Plain,
+                    expectedParameters = expectedParameters
+                )
+            )
+        )
+
+        val client = createClient()
+
+        val result: String = client.post(
+            path = mockServer.url("/echo"),
+            request = "PAYLOAD",
+            parameters = expectedParameters
+        )
+
+        assertEquals(responseBody, result)
+
+        mockServer.stop()
+    }
 }
