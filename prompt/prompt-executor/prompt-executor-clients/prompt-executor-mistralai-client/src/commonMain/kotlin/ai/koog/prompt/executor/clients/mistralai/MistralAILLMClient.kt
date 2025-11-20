@@ -35,7 +35,7 @@ import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrameFlowBuilder
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
-import io.ktor.utils.io.CancellationException
+import kotlinx.coroutines.CancellationException
 import kotlinx.datetime.Clock
 
 /**
@@ -203,7 +203,7 @@ public open class MistralAILLMClient(
 
         return mistralAIResponse.data.firstOrNull()?.embedding ?: run {
             val exception = LLMClientException(clientName, "Empty data in MistralAI embedding response")
-            logger.error { exception.message }
+            logger.error(exception) { exception.message }
             throw exception
         }
     }
@@ -269,7 +269,7 @@ public open class MistralAILLMClient(
 
         val result = response.results.firstOrNull() ?: run {
             val exception = LLMClientException(clientName, "Empty results in MistralAI moderation response")
-            logger.error { exception.message }
+            logger.error(exception) { exception.message }
             throw exception
         }
 

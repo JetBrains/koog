@@ -49,7 +49,7 @@ import io.ktor.client.request.header
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
-import io.ktor.utils.io.CancellationException
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
@@ -524,7 +524,7 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
 
             else -> {
                 val exception = LLMClientException(clientName, "Unexpected response: no tool calls and no content")
-                logger.error { exception.message }
+                logger.error(exception) { exception.message }
                 throw exception
             }
         }

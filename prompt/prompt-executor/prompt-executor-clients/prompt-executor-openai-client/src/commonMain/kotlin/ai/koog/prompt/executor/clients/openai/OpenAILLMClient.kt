@@ -52,7 +52,7 @@ import ai.koog.prompt.streaming.StreamFrameFlowBuilder
 import ai.koog.utils.io.SuitableForIO
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
-import io.ktor.utils.io.CancellationException
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterNotNull
@@ -389,8 +389,9 @@ public open class OpenAILLMClient(
             )
         }
         if (openAIResponse.data.isEmpty()) {
-            logger.error { "Empty data in OpenAI embedding response" }
-            throw LLMClientException(clientName, "Empty data in OpenAI embedding response")
+            val exception = LLMClientException(clientName, "Empty data in OpenAI embedding response")
+            logger.error(exception) { exception.message }
+            throw exception
         }
         return openAIResponse.data.first().embedding
     }
@@ -466,8 +467,9 @@ public open class OpenAILLMClient(
         }
 
         if (openAIResponse.results.isEmpty()) {
-            logger.error { "Empty results in OpenAI moderation response" }
-            throw LLMClientException(clientName, "Empty results in OpenAI moderation response")
+            val exception = LLMClientException(clientName, "Empty results in OpenAI moderation response")
+            logger.error(exception) { exception.message }
+            throw exception
         }
         val result = openAIResponse.results.first()
 

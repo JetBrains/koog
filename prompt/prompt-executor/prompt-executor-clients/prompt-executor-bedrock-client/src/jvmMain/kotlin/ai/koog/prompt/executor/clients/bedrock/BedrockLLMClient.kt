@@ -200,7 +200,7 @@ public class BedrockLLMClient(
                 if (responseBodyString.isBlank()) {
                     val exception =
                         LLMClientException(clientName, "Received null or empty body from Bedrock model ${model.id}")
-                    logger.error { exception.message }
+                    logger.error(exception) { exception.message }
                     throw exception
                 }
                 return@withContext when (modelFamily) {
@@ -285,7 +285,7 @@ public class BedrockLLMClient(
                     message = "Error in Bedrock streaming for model ${model.id}",
                     cause = e
                 )
-                logger.error { exception.message }
+                logger.error(exception) { exception.message }
                 close(exception)
             }
         }.map { chunkJsonString ->

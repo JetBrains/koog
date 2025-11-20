@@ -62,7 +62,7 @@ import io.ktor.http.contentType
 import io.ktor.http.headers
 import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
-import io.ktor.utils.io.CancellationException
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
@@ -233,7 +233,7 @@ public open class GoogleLLMClient(
                 message = e.message,
                 cause = e
             )
-            logger.error { exception.message }
+            logger.error(exception) { exception.message }
             throw exception
         } catch (e: Exception) {
             val exception = LLMClientException(
@@ -241,7 +241,7 @@ public open class GoogleLLMClient(
                 message = e.message,
                 cause = e
             )
-            logger.error { exception.message }
+            logger.error(exception) { exception.message }
             throw exception
         }
     }
@@ -289,7 +289,7 @@ public open class GoogleLLMClient(
                     statusCode = response.status.value,
                     errorBody = response.bodyAsText()
                 )
-                logger.error { exception.message }
+                logger.error(exception) { exception.message }
                 throw exception
             }
         }

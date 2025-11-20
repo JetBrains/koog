@@ -4,6 +4,7 @@ import ai.koog.http.client.KoogHttpClient
 import ai.koog.http.client.KoogHttpClientException
 import ai.koog.utils.io.SuitableForIO
 import io.github.oshai.kotlinlogging.KLogger
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -16,7 +17,6 @@ import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
-import kotlin.coroutines.cancellation.CancellationException
 import kotlin.reflect.KClass
 
 /**

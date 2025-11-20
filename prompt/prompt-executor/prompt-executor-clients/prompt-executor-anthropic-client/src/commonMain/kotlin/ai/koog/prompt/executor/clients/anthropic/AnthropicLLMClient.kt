@@ -169,7 +169,7 @@ public open class AnthropicLLMClient(
                     statusCode = response.status.value,
                     errorBody = response.bodyAsText(),
                 )
-                logger.error { exception.message }
+                logger.error(exception) { exception.message }
                 throw exception
             }
         }
@@ -302,10 +302,10 @@ public open class AnthropicLLMClient(
                 message = e.message,
                 cause = e
             )
-            logger.error { exception.message }
+            logger.error(exception) { exception.message }
             throw exception
         } catch (e: Exception) {
-            logger.error { "Exception during streaming: $e" }
+            logger.error(e) { "Exception during streaming: $e" }
             throw LLMClientException(
                 clientName = clientName,
                 message = e.message,

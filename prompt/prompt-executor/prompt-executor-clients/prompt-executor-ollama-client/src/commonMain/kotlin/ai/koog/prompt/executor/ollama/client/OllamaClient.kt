@@ -48,8 +48,8 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
-import io.ktor.utils.io.CancellationException
 import io.ktor.utils.io.readUTF8Line
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
@@ -188,7 +188,7 @@ public class OllamaClient(
                 statusCode = response.status.value,
                 errorBody = response.bodyAsText(),
             )
-            logger.error { exception.message }
+            logger.error(exception) { exception.message }
             throw exception
         }
     }
@@ -462,7 +462,7 @@ public class OllamaClient(
         } catch (e: Exception) {
             val exception = LLMClientException(
                 clientName = clientName,
-                message = "Failed to pull model from Ollama: ${e.message}",
+                message = "Failed to pull model: ${e.message}",
                 cause = e
             )
             logger.error(e) { exception.message }
