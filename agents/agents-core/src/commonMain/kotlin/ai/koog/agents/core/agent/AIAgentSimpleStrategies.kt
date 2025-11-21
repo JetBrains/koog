@@ -52,13 +52,13 @@ private fun singleRunWithParallelAbility(parallelTools: Boolean) = strategy("sin
 
     edge(nodeExecuteTool forwardTo nodeSendToolResult)
 
+    edge(nodeSendToolResult forwardTo nodeExecuteTool onMultipleToolCalls { true })
+
     edge(
         nodeSendToolResult forwardTo nodeFinish
             onMultipleAssistantMessages { true }
             transformed { it.joinToString("\n") { message -> message.content } }
     )
-
-    edge(nodeSendToolResult forwardTo nodeExecuteTool onMultipleToolCalls { true })
 }
 
 private fun singleRunModeStrategy() = strategy("single_run") {
