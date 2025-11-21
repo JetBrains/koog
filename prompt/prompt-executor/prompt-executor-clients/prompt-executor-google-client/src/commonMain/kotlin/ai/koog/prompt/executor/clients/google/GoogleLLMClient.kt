@@ -107,15 +107,15 @@ public open class GoogleLLMClient(
         }
     }
 
-    protected open val clientName: String = this::class.simpleName ?: "UnknownClient"
-
     private val json = Json {
         ignoreUnknownKeys = true
         isLenient = true
         encodeDefaults = true
         explicitNulls = false
     }
-    protected val httpClient: KoogHttpClient = KoogHttpClient.fromKtorClient(
+
+    protected open val clientName: String = this::class.simpleName ?: "UnknownClient"
+    private val httpClient: KoogHttpClient = KoogHttpClient.fromKtorClient(
         clientName = clientName,
         logger = logger,
         baseClient = baseClient
@@ -126,9 +126,11 @@ public open class GoogleLLMClient(
             contentType(ContentType.Application.Json)
         }
         install(SSE)
-        install(ContentNegotiation) { json(json) }
+        install(ContentNegotiation) {
+            json(json)
+        }
         install(HttpTimeout) {
-            requestTimeoutMillis = settings.timeoutConfig.requestTimeoutMillis // Increase timeout to 60 seconds
+            requestTimeoutMillis = settings.timeoutConfig.requestTimeoutMillis
             connectTimeoutMillis = settings.timeoutConfig.connectTimeoutMillis
             socketTimeoutMillis = settings.timeoutConfig.socketTimeoutMillis
         }
@@ -165,6 +167,7 @@ public open class GoogleLLMClient(
         }
 
         val request = createGoogleRequest(prompt, model, emptyList())
+
         httpClient.sse(
             path = "${settings.defaultPath}/${model.id}:${settings.streamGenerateContentMethod}",
             request = request,
