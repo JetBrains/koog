@@ -53,7 +53,7 @@ public object SerializationUtils {
     public fun encodeDataToStringOrNull(data: Any?, dataType: KType, json: Json? = null): String? =
         try {
             encodeDataToString(data, dataType, json)
-        } catch (e: SerializationException) {
+        } catch (e: IllegalArgumentException) {
             logger.debug { "Failed to serialize data to string: ${e.message}" }
             null
         }
