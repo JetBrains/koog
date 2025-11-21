@@ -8,14 +8,14 @@ import ai.koog.prompt.executor.clients.openai.base.models.OpenAIWebSearchOptions
 import ai.koog.prompt.executor.clients.openai.base.models.ReasoningEffort
 import ai.koog.prompt.executor.clients.openai.base.models.ServiceTier
 import ai.koog.prompt.params.LLMParams
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.equality.shouldBeEqualToComparingFields
+import io.kotest.matchers.shouldBe
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
-import kotlin.test.assertEquals
 
 class OpenAIChatParamsTest {
 
@@ -29,7 +29,9 @@ class OpenAIChatParamsTest {
     @ValueSource(doubles = [-0.1, 1.1])
     fun `OpenAIChatParams invalid topP`(value: Double) {
         val expected = if (value < 0) "TopP must be positive" else "TopP must be <= 1"
-        assertThrows<IllegalArgumentException>(expected) { OpenAIChatParams(topP = value) }
+        shouldThrow<IllegalArgumentException> {
+            OpenAIChatParams(topP = value)
+        }.message shouldBe expected
     }
 
     @Test
@@ -41,7 +43,7 @@ class OpenAIChatParamsTest {
 
     @Test
     fun `OpenAIChatParams topLogprobs requires logprobs=true`() {
-        assertThrows<IllegalArgumentException> {
+        shouldThrow<IllegalArgumentException> {
             OpenAIChatParams(
                 logprobs = false,
                 topLogprobs = 1
@@ -52,12 +54,12 @@ class OpenAIChatParamsTest {
     @ParameterizedTest
     @ValueSource(ints = [-1, 21])
     fun `OpenAIChatParams invalid topLogprobs values when logprobs=true`(value: Int) {
-        assertThrows<IllegalArgumentException>("Chat: `topLogprobs` must be in [0, 20]") {
+        shouldThrow<IllegalArgumentException> {
             OpenAIChatParams(
                 logprobs = true,
                 topLogprobs = value
             )
-        }
+        }.message shouldBe "`topLogprobs` must be in [0, 20], but was $value"
     }
 
     @Test
@@ -73,36 +75,37 @@ class OpenAIChatParamsTest {
 
         val chat = base.toOpenAIChatParams()
 
-        assertEquals(base.temperature, chat.temperature)
-        assertEquals(base.maxTokens, chat.maxTokens)
-        assertEquals(base.numberOfChoices, chat.numberOfChoices)
-        assertEquals(base.speculation, chat.speculation)
-        assertEquals(base.user, chat.user)
-        assertEquals(base.additionalProperties, chat.additionalProperties)
+        chat.temperature shouldBe base.temperature
+        chat.maxTokens shouldBe base.maxTokens
+        chat.numberOfChoices shouldBe base.numberOfChoices
+        chat.speculation shouldBe base.speculation
+        chat.user shouldBe base.user
+        chat.additionalProperties shouldBe base.additionalProperties
     }
 
     @Test
     fun `temperature and topP are mutually exclusive in Chat`() {
-        assertThrows<IllegalArgumentException>("Chat: temperature and topP are mutually exclusive") {
+        shouldThrow<IllegalArgumentException> {
             OpenAIChatParams(
                 temperature = 0.5,
                 topP = 0.5
             )
-        }
+        }.message shouldBe "temperature and topP are mutually exclusive"
     }
 
     @Test
     fun `non-blank identifiers validated`() {
-        assertThrows<IllegalArgumentException>("Chat: promptCacheKey must be non-blank") {
+        shouldThrow<IllegalArgumentException> {
             OpenAIChatParams(
                 promptCacheKey = " "
             )
-        }
-        assertThrows<IllegalArgumentException>("Chat: safetyIdentifier must be non-blank") {
+        }.message shouldBe "promptCacheKey must be non-blank"
+
+        shouldThrow<IllegalArgumentException> {
             OpenAIChatParams(
                 safetyIdentifier = ""
             )
-        }
+        }.message shouldBe "safetyIdentifier must be non-blank"
 
         OpenAIChatParams(promptCacheKey = "key", safetyIdentifier = "sid")
     }

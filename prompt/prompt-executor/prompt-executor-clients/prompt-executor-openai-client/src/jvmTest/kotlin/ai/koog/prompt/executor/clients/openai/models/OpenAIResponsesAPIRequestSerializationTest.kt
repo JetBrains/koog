@@ -4,8 +4,8 @@ import ai.koog.prompt.executor.clients.openai.base.models.ReasoningEffort
 import ai.koog.prompt.executor.clients.openai.base.models.ServiceTier
 import ai.koog.test.utils.runWithBothJsonConfigurations
 import io.kotest.assertions.json.shouldEqualJson
+import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNotBe
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
@@ -20,17 +20,16 @@ class OpenAIResponsesAPIRequestSerializationTest {
     @Test
     fun `test serialization without additionalProperties`() =
         runWithBothJsonConfigurations("serialization without additionalProperties") { json ->
-            val request = OpenAIResponsesAPIRequest(
-                model = "gpt-4o",
-                instructions = "Please help with this task",
-                temperature = 0.7,
-                maxOutputTokens = 1000,
-                stream = false
-            )
-
-            val jsonString = json.encodeToString(OpenAIResponsesAPIRequestSerializer, request)
-
-            jsonString shouldEqualJson
+            json.encodeToString(
+                OpenAIResponsesAPIRequestSerializer,
+                OpenAIResponsesAPIRequest(
+                    model = "gpt-4o",
+                    instructions = "Please help with this task",
+                    temperature = 0.7,
+                    maxOutputTokens = 1000,
+                    stream = false
+                )
+            ) shouldEqualJson
                 // language=json
                 """
             {
@@ -52,16 +51,15 @@ class OpenAIResponsesAPIRequestSerializationTest {
                 "customBoolean" to JsonPrimitive(true)
             )
 
-            val request = OpenAIResponsesAPIRequest(
-                model = "gpt-4o",
-                instructions = "Please help with this task",
-                temperature = 0.7,
-                additionalProperties = additionalProperties
-            )
-
-            val jsonString = json.encodeToString(OpenAIResponsesAPIRequestSerializer, request)
-
-            jsonString shouldEqualJson
+            json.encodeToString(
+                OpenAIResponsesAPIRequestSerializer,
+                OpenAIResponsesAPIRequest(
+                    model = "gpt-4o",
+                    instructions = "Please help with this task",
+                    temperature = 0.7,
+                    additionalProperties = additionalProperties
+                )
+            ) shouldEqualJson
                 // language=json
                 """
             {
@@ -86,14 +84,14 @@ class OpenAIResponsesAPIRequestSerializationTest {
                 put("stream", JsonPrimitive(false))
             }
 
-            val request = json.decodeFromJsonElement(OpenAIResponsesAPIRequestSerializer, jsonInput)
-
-            request.model shouldBe "gpt-4o"
-            request.instructions shouldBe "Please help with this task"
-            request.temperature shouldBe 0.7
-            request.maxOutputTokens shouldBe 1000
-            request.stream shouldBe false
-            request.additionalProperties shouldBe null
+            json.decodeFromJsonElement(OpenAIResponsesAPIRequestSerializer, jsonInput).shouldNotBeNull {
+                model shouldBe "gpt-4o"
+                instructions shouldBe "Please help with this task"
+                temperature shouldBe 0.7
+                maxOutputTokens shouldBe 1000
+                stream shouldBe false
+                additionalProperties shouldBe null
+            }
         }
 
     @Test
@@ -108,48 +106,46 @@ class OpenAIResponsesAPIRequestSerializationTest {
                 put("customBoolean", JsonPrimitive(true))
             }
 
-            val request = json.decodeFromJsonElement(OpenAIResponsesAPIRequestSerializer, jsonInput)
-
-            request.model shouldBe "gpt-4o"
-            request.instructions shouldBe "Please help with this task"
-            request.temperature shouldBe 0.7
-
-            request.additionalProperties shouldNotBe null
-            val additionalProps = request.additionalProperties!!
-            additionalProps.size shouldBe 3
-            additionalProps["customProperty"]?.jsonPrimitive?.contentOrNull shouldBe "customValue"
-            additionalProps["customNumber"]?.jsonPrimitive?.intOrNull shouldBe 42
-            additionalProps["customBoolean"]?.jsonPrimitive?.booleanOrNull shouldBe true
+            json.decodeFromJsonElement(OpenAIResponsesAPIRequestSerializer, jsonInput).shouldNotBeNull {
+                model shouldBe "gpt-4o"
+                instructions shouldBe "Please help with this task"
+                temperature shouldBe 0.7
+                additionalProperties.shouldNotBeNull {
+                    size shouldBe 3
+                    this["customProperty"]?.jsonPrimitive?.contentOrNull shouldBe "customValue"
+                    this["customNumber"]?.jsonPrimitive?.intOrNull shouldBe 42
+                    this["customBoolean"]?.jsonPrimitive?.booleanOrNull shouldBe true
+                }
+            }
         }
 
     @Test
     fun `test full serialization of OpenAIResponsesAPIRequest fields`() =
         runWithBothJsonConfigurations("test full serialization of OpenAIResponsesAPIRequest fields") { json ->
-            val request = OpenAIResponsesAPIRequest(
-                model = "gpt-4o",
-                instructions = "sys-msg",
-                temperature = 0.5,
-                maxOutputTokens = 321,
-                stream = false,
-                background = true,
-                include = listOf(OpenAIInclude.OUTPUT_TEXT_LOGPROBS, OpenAIInclude.REASONING_ENCRYPTED_CONTENT),
-                maxToolCalls = 7,
-                parallelToolCalls = true,
-                reasoning = ReasoningConfig(effort = ReasoningEffort.HIGH, summary = ReasoningSummary.CONCISE),
-                truncation = Truncation.AUTO,
-                promptCacheKey = "pck",
-                safetyIdentifier = "sid",
-                serviceTier = ServiceTier.FLEX,
-                store = true,
-                topLogprobs = 5,
-                topP = 0.9,
-                user = "user-123",
-                additionalProperties = mapOf("extra" to JsonPrimitive("value"))
-            )
-
-            val jsonString = json.encodeToString(OpenAIResponsesAPIRequestSerializer, request)
-
-            jsonString shouldEqualJson
+            json.encodeToString(
+                OpenAIResponsesAPIRequestSerializer,
+                OpenAIResponsesAPIRequest(
+                    model = "gpt-4o",
+                    instructions = "sys-msg",
+                    temperature = 0.5,
+                    maxOutputTokens = 321,
+                    stream = false,
+                    background = true,
+                    include = listOf(OpenAIInclude.OUTPUT_TEXT_LOGPROBS, OpenAIInclude.REASONING_ENCRYPTED_CONTENT),
+                    maxToolCalls = 7,
+                    parallelToolCalls = true,
+                    reasoning = ReasoningConfig(effort = ReasoningEffort.HIGH, summary = ReasoningSummary.CONCISE),
+                    truncation = Truncation.AUTO,
+                    promptCacheKey = "pck",
+                    safetyIdentifier = "sid",
+                    serviceTier = ServiceTier.FLEX,
+                    store = true,
+                    topLogprobs = 5,
+                    topP = 0.9,
+                    user = "user-123",
+                    additionalProperties = mapOf("extra" to JsonPrimitive("value"))
+                )
+            ) shouldEqualJson
                 // language=json
                 """
             {
@@ -218,35 +214,35 @@ class OpenAIResponsesAPIRequestSerializationTest {
                 put("customNumber", JsonPrimitive(42))
             }
 
-            val decoded = json.decodeFromJsonElement(OpenAIResponsesAPIRequestSerializer, input)
-
-            decoded.model shouldBe "gpt-4o"
-            decoded.instructions shouldBe "sys-msg"
-            decoded.temperature shouldBe 0.5
-            decoded.maxOutputTokens shouldBe 321
-            decoded.stream shouldBe false
-            decoded.background shouldBe true
-            decoded.include shouldBe listOf(
-                OpenAIInclude.OUTPUT_TEXT_LOGPROBS,
-                OpenAIInclude.REASONING_ENCRYPTED_CONTENT
-            )
-            decoded.maxToolCalls shouldBe 7
-            decoded.parallelToolCalls shouldBe true
-            decoded.truncation shouldBe Truncation.AUTO
-            decoded.promptCacheKey shouldBe "pck"
-            decoded.safetyIdentifier shouldBe "sid"
-            decoded.serviceTier shouldBe ServiceTier.FLEX
-            decoded.store shouldBe true
-            decoded.topLogprobs shouldBe 5
-            decoded.topP shouldBe 0.9
-            decoded.user shouldBe "user-123"
-
-            decoded.reasoning shouldNotBe null
-            decoded.reasoning?.effort shouldBe ReasoningEffort.HIGH
-            decoded.reasoning?.summary shouldBe ReasoningSummary.CONCISE
-
-            decoded.additionalProperties shouldNotBe null
-            decoded.additionalProperties?.get("extra")?.jsonPrimitive?.content shouldBe "value"
-            decoded.additionalProperties?.get("customNumber")?.jsonPrimitive?.intOrNull shouldBe 42
+            json.decodeFromJsonElement(OpenAIResponsesAPIRequestSerializer, input).shouldNotBeNull {
+                model shouldBe "gpt-4o"
+                instructions shouldBe "sys-msg"
+                temperature shouldBe 0.5
+                maxOutputTokens shouldBe 321
+                stream shouldBe false
+                background shouldBe true
+                include shouldBe listOf(
+                    OpenAIInclude.OUTPUT_TEXT_LOGPROBS,
+                    OpenAIInclude.REASONING_ENCRYPTED_CONTENT
+                )
+                maxToolCalls shouldBe 7
+                parallelToolCalls shouldBe true
+                truncation shouldBe Truncation.AUTO
+                promptCacheKey shouldBe "pck"
+                safetyIdentifier shouldBe "sid"
+                serviceTier shouldBe ServiceTier.FLEX
+                store shouldBe true
+                topLogprobs shouldBe 5
+                topP shouldBe 0.9
+                user shouldBe "user-123"
+                reasoning.shouldNotBeNull {
+                    effort shouldBe ReasoningEffort.HIGH
+                    summary shouldBe ReasoningSummary.CONCISE
+                }
+                additionalProperties.shouldNotBeNull {
+                    this["extra"]?.jsonPrimitive?.contentOrNull shouldBe "value"
+                    this["customNumber"]?.jsonPrimitive?.intOrNull shouldBe 42
+                }
+            }
         }
 }
