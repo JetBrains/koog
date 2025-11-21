@@ -10,7 +10,7 @@ import kotlinx.serialization.modules.SerializersModule
 import kotlin.reflect.typeOf
 import kotlin.test.Test
 
-class SerializationUtilsTest {
+class SerializationUtilsTestJvm {
 
     @Test
     fun `encodeDataToStringOrNull should return null when serialization fails`() {
