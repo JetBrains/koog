@@ -162,7 +162,7 @@ public infix fun <IncomingOutput, OutgoingInput> AIAgentEdgeBuilderIntermediate<
     return onIsInstance(List::class)
         .transformed { it.filterIsInstance<Message.Tool.Call>() }
         // skipping this edge in case we have list of only assistant messages
-        .onCondition { it.any() }
+        .onCondition { it.isNotEmpty() }
         .onCondition { toolCalls -> block(toolCalls) }
 }
 
@@ -178,6 +178,7 @@ public infix fun <IncomingOutput, IntermediateOutput, OutgoingInput> AIAgentEdge
 ): AIAgentEdgeBuilderIntermediate<IncomingOutput, List<ReceivedToolResult>, OutgoingInput> {
     return onIsInstance(List::class)
         .transformed { it.filterIsInstance<ReceivedToolResult>() }
+        .onCondition { it.isNotEmpty() }
         .onCondition { toolResults -> block(toolResults) }
 }
 
@@ -206,6 +207,7 @@ public infix fun <IncomingOutput, OutgoingInput> AIAgentEdgeBuilderIntermediate<
 ): AIAgentEdgeBuilderIntermediate<IncomingOutput, List<Message.Assistant>, OutgoingInput> {
     return onIsInstance(List::class)
         .transformed { it.filterIsInstance<Message.Assistant>() }
+        .onCondition { it.isNotEmpty() }
         .onCondition { toolResults -> block(toolResults) }
 }
 
