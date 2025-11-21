@@ -297,11 +297,35 @@ public open class GoogleLLMClient(
         val systemMessageParts = mutableListOf<GooglePart.Text>()
         val contents = mutableListOf<GoogleContent>()
         val pendingCalls = mutableListOf<GooglePart.FunctionCall>()
+        val pendingResults = mutableListOf<GooglePart.FunctionResponse>()
+        var lastThoughtSignature: String? = null
 
         fun flushCalls() {
             if (pendingCalls.isNotEmpty()) {
+                require(pendingCalls.size == pendingResults.size) {
+                    "${pendingCalls.size} tool calls should be followed by ${pendingCalls.size} tool results," +
+                        " but ${pendingResults.size} are present." +
+                        "Message order: " + prompt.messages.map { it::class.simpleName }
+                }
+                //  If the model generates parallel function calls in a response, the thought_signature is attached
+                //  only to the first functionCall part.
+                //  Subsequent functionCall parts in the same response will not contain a signature.
+                // See https://ai.google.dev/gemini-api/docs/thought-signatures#function-calling
+                pendingCalls[0] = pendingCalls[0].copy(thoughtSignature = lastThoughtSignature)
+                // Mark thought signature as consumed
+                lastThoughtSignature = null
                 contents += GoogleContent(role = "model", parts = pendingCalls.toList())
+                contents += GoogleContent(role = "user", parts = pendingResults.toList())
                 pendingCalls.clear()
+                pendingResults.clear()
+            }
+        }
+
+        fun verifyReasoningLocation() {
+            require(lastThoughtSignature == null) {
+                "The order of messages is incorrect, " +
+                    "reasoning messages should appear before assistant and tool call messages. Current order: " +
+                    prompt.messages.map { it::class.simpleName }
             }
         }
 
@@ -313,6 +337,7 @@ public open class GoogleLLMClient(
 
                 is Message.User -> {
                     flushCalls()
+                    verifyReasoningLocation()
                     // User messages become 'user' role content
                     contents.add(message.toGoogleContent(model))
                 }
@@ -322,41 +347,49 @@ public open class GoogleLLMClient(
                     contents.add(
                         GoogleContent(
                             role = "model",
-                            parts = listOf(GooglePart.Text(message.content))
+                            parts = listOf(
+                                GooglePart.Text(
+                                    message.content,
+                                    // If the thought signature was not consumed by a tool call,
+                                    // it should be placed on the "model" message
+                                    // https://ai.google.dev/gemini-api/docs/thought-signatures#textin-context_reasoning_no_validation
+                                    thoughtSignature = lastThoughtSignature
+                                )
+                            ),
                         )
                     )
+                    lastThoughtSignature = null
                 }
 
                 is Message.Reasoning -> {
                     flushCalls()
-                    contents.add(
-                        GoogleContent(
-                            role = "assistant",
-                            parts = listOf(
-                                GooglePart.Text(
-                                    text = message.content,
-                                    thoughtSignature = message.encrypted,
-                                    thought = true,
-                                )
-                            )
-                        )
-                    )
-                }
-
-                is Message.Tool.Result -> {
-                    flushCalls()
-                    contents.add(
-                        GoogleContent(
-                            role = "user",
-                            parts = listOf(
-                                GooglePart.FunctionResponse(
-                                    functionResponse = GoogleData.FunctionResponse(
-                                        id = message.id,
-                                        name = message.tool,
-                                        response = buildJsonObject { put("result", message.content) }
+                    verifyReasoningLocation()
+                    lastThoughtSignature = message.encrypted
+                    if (message.content != "") {
+                        contents.add(
+                            GoogleContent(
+                                role = "assistant",
+                                parts = listOf(
+                                    GooglePart.Text(
+                                        text = message.content,
+                                        // Thought signatures belong in the functionalCall part or model part, not the reasoning message.
+                                        // See https://ai.google.dev/gemini-api/docs/thought-signatures#how_it_works
+                                        thoughtSignature = null,
+                                        thought = true,
                                     )
                                 )
                             )
+                        )
+                    }
+                }
+
+                is Message.Tool.Result -> {
+                    // Tool results should be grouped into one response, each in its own GooglePart.
+                    pendingResults += GooglePart.FunctionResponse(
+                        functionResponse = GoogleData.FunctionResponse(
+                            id = message.id,
+                            name = message.tool,
+                            response = buildJsonObject { put("result", message.content) }
                         )
                     )
                 }
@@ -601,27 +634,54 @@ public open class GoogleLLMClient(
      * @return A list of response messages
      */
     @OptIn(ExperimentalUuidApi::class)
-    internal fun processGoogleCandidate(candidate: GoogleCandidate, metaInfo: ResponseMetaInfo): List<Message.Response> {
+
+    internal fun processGoogleCandidate(
+        candidate: GoogleCandidate,
+        metaInfo: ResponseMetaInfo
+    ): List<Message.Response> {
         val parts = candidate.content?.parts.orEmpty()
         val responses = mutableListOf<Message.Response>()
         with(responses) {
-            parts.forEach { part ->
-                if (part.thoughtSignature != null && part.thought == false) {
-                    add(
-                        Message.Reasoning(
-                            encrypted = part.thoughtSignature,
-                            content = "",
-                            metaInfo = metaInfo
-                        )
-                    )
-                }
+            val thoughtSignature = parts.find { it.thoughtSignature != null }?.thoughtSignature
 
+            // The Gemini API may provide thought signatures even when no reasoning is requested, and it is required
+            // to keep that information in subsequent steps
+            // See https://ai.google.dev/gemini-api/docs/thought-signatures#faqs
+            // There are basically three options:
+            // A) No reasoning is present and no thought signature is provided. In this case we have no Reasoning message.
+            // B) No reasoning is present but a thought signature is provided. This is the case below, and we have a single
+            // Reasoning message with content = "" and the thought signature included.
+            // C) Reasoning is present. In this case we have a Reasoning message with the thought summary (content field),
+            // and the thought signature is provided in the encrypted field.
+            //
+            // The "encrypted" field was originally designed for the OpenAI API for statelessly providing GPT models
+            // with the reasoning tokens, but Google (in Gemini 2.5 somewhat, but mainly in Gemini 3 Pro) later used
+            // encrypted reasoning tokens as part of the context as the norm (calling it a "thought signature"),
+            // so considering it is essentially the same thing it fits into the same field.
+            //
+            // It's also worth pointing out that the Gemini API will provide at most one thought signature per
+            // response ("per step"), even when multiple tool calls are requested ("parallel tool calls")
+            // so the logic here of putting exactly one Reasoning message holds.
+            if (parts.none { it.thought == true }) {
+                add(
+                    Message.Reasoning(
+                        encrypted = thoughtSignature,
+                        content = "",
+                        metaInfo = metaInfo
+                    )
+                )
+            }
+
+            parts.forEach { part ->
                 when (part) {
                     is GooglePart.Text -> {
                         if (part.thought ?: false) {
+                            // Case C, reasoning summary + thought signature
                             add(
                                 Message.Reasoning(
-                                    encrypted = part.thoughtSignature,
+                                    // Google does not provide thought signature (the encrypted CoT) in thought = true parts, but
+                                    // just as part of the tool call or assistant message
+                                    encrypted = thoughtSignature,
                                     content = part.text,
                                     metaInfo = metaInfo
                                 )
@@ -654,6 +714,7 @@ public open class GoogleLLMClient(
                                 format = mimeType.substringAfter("image/"),
                                 mimeType = mimeType,
                             )
+
                             else -> ContentPart.File(
                                 content = AttachmentContent.Binary.Bytes(inlineData.data),
                                 mimeType = mimeType,
@@ -675,8 +736,6 @@ public open class GoogleLLMClient(
         }
 
         return when {
-            // Fix the situation when the model decides to both call tools and talk
-            responses.any { it is Message.Tool.Call } -> responses.filterIsInstance<Message.Tool.Call>()
             // If no messages where returned, return an empty message and check finishReason
             responses.isEmpty() -> listOf(
                 Message.Assistant(
