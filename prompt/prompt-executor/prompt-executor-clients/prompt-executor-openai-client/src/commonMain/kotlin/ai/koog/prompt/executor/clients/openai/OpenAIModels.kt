@@ -17,27 +17,25 @@ import ai.koog.prompt.llm.LLModel
  *
  * | Name                             | Speed     | Price              | Input                        | Output                       |
  * |----------------------------------|-----------|--------------------|------------------------------|------------------------------|
- * | [Reasoning.O4Mini]               | Medium    | $1.1-$4.4          | Text, Image, Tools, Document | Text, Tools                  |
- * | [Reasoning.O3Mini]               | Medium    | $1.1-$4.4          | Text, Tools                  | Text, Tools                  |
- * | [Reasoning.O3]                   | Slowest   | $10-$40            | Text, Image, Tools, Document | Text, Tools                  |
- * | [Reasoning.O1]                   | Slowest   | $15-$60            | Text, Image, Tools, Document | Text, Tools                  |
- * | [Reasoning.GPT5Codex]            | Medium    | $1.25-$10          | Text, Image, Tools, Document | Text, Tools                  |
- * | [Reasoning.GPT5Pro]              | Slowest   | $15-$120           | Text, Image, Tools, Document | Text, Tools                  |
- * | [Reasoning.GPT5_1]               | Fast      | $1.25-$10          | Text, Image, Tools, Document | Text, Image, Tools, Document |
- * | [Reasoning.GPT5_1Codex]          | Medium    | $1.25-$10          | Text, Image, Tools, Document | Text, Image, Tools, Document |
  * | [Chat.GPT4o]                     | Medium    | $2.5-$10           | Text, Image, Tools, Document | Text, Tools                  |
+ * | [Chat.GPT4oMini]                 | Fast      | $0.15-$0.6         | Text, Image, Tools           | Text, Tools                  |
  * | [Chat.GPT4_1]                    | Medium    | $2-$8              | Text, Image, Tools, Document | Text, Tools                  |
+ * | [Chat.GPT4_1Nano]                | Very fast | $0.1-$0.4          | Text, Image, Tools, Document | Text, Tools                  |
+ * | [Chat.GPT4_1Mini]                | Fast      | $0.4-$1.6          | Text, Image, Tools, Document | Text, Tools                  |
+ * | [Chat.O1]                        | Slowest   | $15-$60            | Text, Image, Tools, Document | Text, Tools                  |
+ * | [Chat.O3]                        | Slowest   | $10-$40            | Text, Image, Tools, Document | Text, Tools                  |
+ * | [Chat.O3Mini]                    | Medium    | $1.1-$4.4          | Text, Tools                  | Text, Tools                  |
+ * | [Chat.O4Mini]                    | Medium    | $1.1-$4.4          | Text, Image, Tools, Document | Text, Tools                  |
  * | [Chat.GPT5]                      | Medium    | $1.25-$10          | Text, Image, Tools, Document | Text, Tools                  |
  * | [Chat.GPT5Mini]                  | Fast      | $0.25-$2           | Text, Image, Tools, Document | Text, Tools                  |
  * | [Chat.GPT5Nano]                  | Very fast | $0.05-$0.4         | Text, Image, Tools, Document | Text, Tools                  |
+ * | [Chat.GPT5Codex]                 | Medium    | $1.25-$10          | Text, Image, Tools, Document | Text, Tools                  |
+ * | [Chat.GPT5Pro]                   | Slowest   | $15-$120           | Text, Image, Tools, Document | Text, Tools                  |
+ * | [Chat.GPT5_1]                    | Fast      | $1.25-$10          | Text, Image, Tools, Document | Text, Image, Tools, Document |
+ * | [Chat.GPT5_1Codex]               | Medium    | $1.25-$10          | Text, Image, Tools, Document | Text, Image, Tools, Document |
  * | [Audio.GptAudio]                 | Fast      | $2.5-$10           | Text, Audio, Tools           | Text, Audio, Tools           |
  * | [Audio.GPT4oMiniAudio]           | Fast      | $0.15-$0.6/$10-$20 | Text, Audio, Tools           | Text, Audio, Tools           |
  * | [Audio.GPT4oAudio]               | Medium    | $2.5-$10/$40-$80   | Text, Audio, Tools           | Text, Audio, Tools           |
- * | [CostOptimized.O4Mini]           | Medium    | $1.1-$4.4          | Text, Image, Tools, Document | Text, Tools                  |
- * | [CostOptimized.GPT4_1Nano]       | Very fast | $0.1-$0.4          | Text, Image, Tools, Document | Text, Tools                  |
- * | [CostOptimized.GPT4_1Mini]       | Fast      | $0.4-$1.6          | Text, Image, Tools, Document | Text, Tools                  |
- * | [CostOptimized.GPT4oMini]        | Fast      | $0.15-$0.6         | Text, Image, Tools           | Text, Tools                  |
- * | [CostOptimized.O3Mini]           | Medium    | $1.1-$4.4          | Text, Tools                  | Text, Tools                  |
  * | [Embeddings.TextEmbedding3Small] | Medium    | $0.02              | Text                         | Text                         |
  * | [Embeddings.TextEmbedding3Large] | Slow      | $0.13              | Text                         | Text                         |
  * | [Embeddings.TextEmbeddingAda002] | Slow      | $0.1               | Text                         | Text                         |
@@ -71,28 +69,60 @@ public object OpenAIModels : LLModelDefinitions {
     }
 
     /**
-     * Object containing a set of pre-configured reasoning models with various capabilities and constraints.
-     * These models are designed for tasks ranging from general reasoning to domain-specific applications,
-     * supporting key features like multi-step problem solving, structured outputs, and context-based responses.
+     * Object that provides pre-configured instances of advanced GPT models for different use cases.
+     * These instances represent versatile and high-performance large language models capable of handling various tasks like
+     * text completion, image input processing, structured outputs, and interfacing with tools.
      */
-    public object Reasoning {
+    public object Chat {
         /**
-         * o4-mini is a smaller, more affordable version of o4 that maintains high quality while being
-         * more cost-effective. It's optimized for fast, effective reasoning with exceptionally efficient
-         * performance in coding and visual tasks.
+         * GGPT-4o (“o” for “omni”) is a versatile, high-intelligence flagship model.
+         * It accepts both text and image inputs, and produces text outputs (including Structured Outputs).
+         * It is the best model for most tasks, and is currently the most capable model
+         * outside of the o-series models.
          *
-         * 200,000 context window
-         * 100,000 max output tokens
-         * Jun 01, 2024 knowledge cutoff
-         * Reasoning token support
+         * 128,000 context window
+         * 16,384 max output tokens
+         * Oct 01, 2023 knowledge cutoff
          *
          *
-         * @see <a href="https://platform.openai.com/docs/models/o4-mini">Model page</a>
+         * @see <a href="https://platform.openai.com/docs/models/gpt-4o">Model page</a>
          */
-        public val O4Mini: LLModel = LLModel(
+        public val GPT4o: LLModel = LLModel(
             provider = LLMProvider.OpenAI,
-            id = "o4-mini",
+            id = "gpt-4o",
             capabilities = listOf(
+                LLMCapability.Temperature,
+                LLMCapability.ToolChoice,
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Schema.JSON.Standard,
+                LLMCapability.Speculation,
+                LLMCapability.Tools,
+                LLMCapability.Vision.Image,
+                LLMCapability.Document,
+                LLMCapability.Completion,
+                LLMCapability.MultipleChoices,
+                LLMCapability.OpenAIEndpoint.Completions,
+                LLMCapability.OpenAIEndpoint.Responses,
+            ),
+            contextLength = 128_000,
+            maxOutputTokens = 16_384,
+        )
+
+        /**
+         * GPT-4o mini is a smaller, more affordable version of GPT-4o that maintains high quality while being
+         * more cost-effective. It's designed for tasks that don't require the full capabilities of GPT-4o.
+         *
+         * 128K context window.
+         * 16,384 max output tokens
+         * Oct 01, 2023 knowledge cutoff
+         *
+         * @see <a href="https://platform.openai.com/docs/models/gpt-4o-mini">Model page</a>
+         */
+        public val GPT4oMini: LLModel = LLModel(
+            provider = LLMProvider.OpenAI,
+            id = "gpt-4o-mini",
+            capabilities = listOf(
+                LLMCapability.Temperature,
                 LLMCapability.Schema.JSON.Basic,
                 LLMCapability.Schema.JSON.Standard,
                 LLMCapability.Speculation,
@@ -105,32 +135,127 @@ public object OpenAIModels : LLModelDefinitions {
                 LLMCapability.OpenAIEndpoint.Completions,
                 LLMCapability.OpenAIEndpoint.Responses,
             ),
-            contextLength = 200_000,
-            maxOutputTokens = 100_000,
+            contextLength = 128_000,
+            maxOutputTokens = 16_384,
         )
 
         /**
-         * o3-mini is a smaller, more affordable version of o3. It's a small reasoning model,
-         * providing high intelligence at the same cost and latency targets of o1-mini.
-         * o3-mini supports key developer features, like Structured Outputs, function calling,
-         * and Batch API.
+         * GPT-4.1 is a model for complex tasks.
+         * It is well suited for problem solving across domains.
+         *
+         * 1,047,576 context window
+         * 32,768 max output tokens
+         * Jun 01, 2024 knowledge cutoff
+         *
+         * @see <a href="https://platform.openai.com/docs/models/gpt-4.1">Model page</a>
+         */
+        public val GPT4_1: LLModel = LLModel(
+            provider = LLMProvider.OpenAI,
+            id = "gpt-4.1",
+            capabilities = listOf(
+                LLMCapability.Temperature,
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Schema.JSON.Standard,
+                LLMCapability.Speculation,
+                LLMCapability.Tools,
+                LLMCapability.ToolChoice,
+                LLMCapability.Vision.Image,
+                LLMCapability.Document,
+                LLMCapability.Completion,
+                LLMCapability.MultipleChoices,
+                LLMCapability.OpenAIEndpoint.Completions,
+                LLMCapability.OpenAIEndpoint.Responses,
+            ),
+            contextLength = 1_047_576,
+            maxOutputTokens = 32_768,
+        )
+
+        /**
+         * GPT-4.1-nano is the smallest and most affordable model in the GPT-4.1 family.
+         * It's designed for tasks that require basic capabilities at the lowest possible cost.
+         *
+         * 1,047,576 context window
+         * 32,768 max output tokens
+         * Jun 01, 2024 knowledge cutoff
+         *
+         * @see <a href="https://platform.openai.com/docs/models/gpt-4.1-nano">Model page</a>
+         */
+        public val GPT4_1Nano: LLModel = LLModel(
+            provider = LLMProvider.OpenAI,
+            id = "gpt-4.1-nano",
+            capabilities = listOf(
+                LLMCapability.Temperature,
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Schema.JSON.Standard,
+                LLMCapability.Speculation,
+                LLMCapability.Tools,
+                LLMCapability.ToolChoice,
+                LLMCapability.Vision.Image,
+                LLMCapability.Document,
+                LLMCapability.Completion,
+                LLMCapability.MultipleChoices,
+                LLMCapability.OpenAIEndpoint.Completions,
+                LLMCapability.OpenAIEndpoint.Responses,
+            ),
+            contextLength = 1_047_576,
+            maxOutputTokens = 32_768,
+        )
+
+        /**
+         * GPT-4.1 mini provides a balance between intelligence, speed,
+         * and cost that makes it an attractive model for many use cases.
+         *
+         * 1,047,576 context window
+         * 32,768 max output tokens
+         * Jun 01, 2024 knowledge cutoff
+         *
+         *
+         * @see <a href="https://platform.openai.com/docs/models/gpt-4.1-mini">Model page</a>
+         */
+        public val GPT4_1Mini: LLModel = LLModel(
+            provider = LLMProvider.OpenAI,
+            id = "gpt-4.1-mini",
+            capabilities = listOf(
+                LLMCapability.Temperature,
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Schema.JSON.Standard,
+                LLMCapability.Speculation,
+                LLMCapability.Tools,
+                LLMCapability.ToolChoice,
+                LLMCapability.Vision.Image,
+                LLMCapability.Document,
+                LLMCapability.Completion,
+                LLMCapability.MultipleChoices,
+                LLMCapability.OpenAIEndpoint.Completions,
+                LLMCapability.OpenAIEndpoint.Responses,
+            ),
+            contextLength = 1_047_576,
+            maxOutputTokens = 32_768,
+        )
+
+        /**
+         * The o1 series of models are trained with reinforcement learning to perform
+         * complex reasoning. o1 models think before they answer,
+         * producing a long internal chain of thought before responding to the user.
          *
          * 200,000 context window
          * 100,000 max output tokens
          * Oct 01, 2023 knowledge cutoff
          * Reasoning token support
          *
-         * @see <a href="https://platform.openai.com/docs/models/o3-mini">Model page</a>
+         * @see <a href="https://platform.openai.com/docs/models/o1">Model page</a>
          */
-        public val O3Mini: LLModel = LLModel(
+        public val O1: LLModel = LLModel(
             provider = LLMProvider.OpenAI,
-            id = "o3-mini",
+            id = "o1",
             capabilities = listOf(
                 LLMCapability.Tools,
                 LLMCapability.ToolChoice,
                 LLMCapability.Speculation,
                 LLMCapability.Schema.JSON.Basic,
                 LLMCapability.Schema.JSON.Standard,
+                LLMCapability.Vision.Image,
+                LLMCapability.Document,
                 LLMCapability.Completion,
                 LLMCapability.MultipleChoices,
                 LLMCapability.OpenAIEndpoint.Completions,
@@ -174,26 +299,58 @@ public object OpenAIModels : LLModelDefinitions {
         )
 
         /**
-         * The o1 series of models are trained with reinforcement learning to perform
-         * complex reasoning. o1 models think before they answer,
-         * producing a long internal chain of thought before responding to the user.
+         * o3-mini is a smaller, more affordable version of o3. It's a small reasoning model,
+         * providing high intelligence at the same cost and latency targets of o1-mini.
+         * o3-mini supports key developer features, like Structured Outputs, function calling,
+         * and Batch API.
          *
          * 200,000 context window
          * 100,000 max output tokens
          * Oct 01, 2023 knowledge cutoff
          * Reasoning token support
          *
-         * @see <a href="https://platform.openai.com/docs/models/o1">Model page</a>
+         * @see <a href="https://platform.openai.com/docs/models/o3-mini">Model page</a>
          */
-        public val O1: LLModel = LLModel(
+        public val O3Mini: LLModel = LLModel(
             provider = LLMProvider.OpenAI,
-            id = "o1",
+            id = "o3-mini",
             capabilities = listOf(
                 LLMCapability.Tools,
                 LLMCapability.ToolChoice,
                 LLMCapability.Speculation,
                 LLMCapability.Schema.JSON.Basic,
                 LLMCapability.Schema.JSON.Standard,
+                LLMCapability.Completion,
+                LLMCapability.MultipleChoices,
+                LLMCapability.OpenAIEndpoint.Completions,
+                LLMCapability.OpenAIEndpoint.Responses,
+            ),
+            contextLength = 200_000,
+            maxOutputTokens = 100_000,
+        )
+
+        /**
+         * o4-mini is a smaller, more affordable version of o4 that maintains high quality while being
+         * more cost-effective. It's optimized for fast, effective reasoning with exceptionally efficient
+         * performance in coding and visual tasks.
+         *
+         * 200,000 context window
+         * 100,000 max output tokens
+         * Jun 01, 2024 knowledge cutoff
+         * Reasoning token support
+         *
+         *
+         * @see <a href="https://platform.openai.com/docs/models/o4-mini">Model page</a>
+         */
+        public val O4Mini: LLModel = LLModel(
+            provider = LLMProvider.OpenAI,
+            id = "o4-mini",
+            capabilities = listOf(
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Schema.JSON.Standard,
+                LLMCapability.Speculation,
+                LLMCapability.Tools,
+                LLMCapability.ToolChoice,
                 LLMCapability.Vision.Image,
                 LLMCapability.Document,
                 LLMCapability.Completion,
@@ -203,6 +360,100 @@ public object OpenAIModels : LLModelDefinitions {
             ),
             contextLength = 200_000,
             maxOutputTokens = 100_000,
+        )
+
+        /**
+         * GPT-5 is a flagship model for coding, reasoning, and agentic tasks across domains.
+         *
+         * 400,000 context window
+         * 128,000 max output tokens
+         * Sep 30, 2024 knowledge cutoff
+         * Reasoning token support
+         *
+         * @see <a href="https://platform.openai.com/docs/models/gpt-5">Model page</a>
+         */
+        public val GPT5: LLModel = LLModel(
+            provider = LLMProvider.OpenAI,
+            id = "gpt-5",
+            capabilities = listOf(
+                LLMCapability.Temperature,
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Schema.JSON.Standard,
+                LLMCapability.Speculation,
+                LLMCapability.Tools,
+                LLMCapability.ToolChoice,
+                LLMCapability.Vision.Image,
+                LLMCapability.Document,
+                LLMCapability.Completion,
+                LLMCapability.MultipleChoices,
+                LLMCapability.OpenAIEndpoint.Completions,
+                LLMCapability.OpenAIEndpoint.Responses,
+            ),
+            contextLength = 400_000,
+            maxOutputTokens = 128_000,
+        )
+
+        /**
+         * GPT-5 mini is a faster, cost-efficient version of GPT-5 for well-defined tasks.
+         *
+         * 400,000 context window
+         * 128,000 max output tokens
+         * May 31, 2024 knowledge cutoff
+         * Reasoning token support
+         *
+         * @see <a href="https://platform.openai.com/docs/models/gpt-5-mini">Model page</a>
+         */
+        public val GPT5Mini: LLModel = LLModel(
+            provider = LLMProvider.OpenAI,
+            id = "gpt-5-mini",
+            capabilities = listOf(
+                LLMCapability.Temperature,
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Schema.JSON.Standard,
+                LLMCapability.Speculation,
+                LLMCapability.Tools,
+                LLMCapability.ToolChoice,
+                LLMCapability.Vision.Image,
+                LLMCapability.Document,
+                LLMCapability.Completion,
+                LLMCapability.MultipleChoices,
+                LLMCapability.OpenAIEndpoint.Completions,
+                LLMCapability.OpenAIEndpoint.Responses,
+            ),
+            contextLength = 400_000,
+            maxOutputTokens = 128_000,
+        )
+
+        /**
+         * GPT-5 nano is the fastest, most cost-efficient version of GPT-5.
+         * Great for summarization and classification tasks.
+         *
+         * 400,000 context window
+         * 128,000 max output tokens
+         * May 31, 2024 knowledge cutoff
+         * Reasoning token support
+         *
+         * @see <a href="https://platform.openai.com/docs/models/gpt-5-nano">Model page</a>
+         */
+        public val GPT5Nano: LLModel = LLModel(
+            provider = LLMProvider.OpenAI,
+            id = "gpt-5-nano",
+            capabilities = listOf(
+                LLMCapability.Temperature,
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Schema.JSON.Standard,
+                LLMCapability.Speculation,
+                LLMCapability.Tools,
+                LLMCapability.ToolChoice,
+                LLMCapability.Vision.Image,
+                LLMCapability.Document,
+                LLMCapability.Completion,
+                LLMCapability.MultipleChoices,
+                LLMCapability.OpenAIEndpoint.Completions,
+                LLMCapability.OpenAIEndpoint.Responses,
+            ),
+            contextLength = 400_000,
+            maxOutputTokens = 128_000,
         )
 
         /**
@@ -326,172 +577,6 @@ public object OpenAIModels : LLModelDefinitions {
     }
 
     /**
-     * Object that provides pre-configured instances of advanced GPT models for different use cases.
-     * These instances represent versatile and high-performance large language models capable of handling various tasks like
-     * text completion, image input processing, structured outputs, and interfacing with tools.
-     */
-    public object Chat {
-        /**
-         * GGPT-4o (“o” for “omni”) is a versatile, high-intelligence flagship model.
-         * It accepts both text and image inputs, and produces text outputs (including Structured Outputs).
-         * It is the best model for most tasks, and is currently the most capable model
-         * outside of the o-series models.
-         *
-         * 128,000 context window
-         * 16,384 max output tokens
-         * Oct 01, 2023 knowledge cutoff
-         *
-         *
-         * @see <a href="https://platform.openai.com/docs/models/gpt-4o">Model page</a>
-         */
-        public val GPT4o: LLModel = LLModel(
-            provider = LLMProvider.OpenAI,
-            id = "gpt-4o",
-            capabilities = listOf(
-                LLMCapability.Temperature,
-                LLMCapability.ToolChoice,
-                LLMCapability.Schema.JSON.Basic,
-                LLMCapability.Schema.JSON.Standard,
-                LLMCapability.Speculation,
-                LLMCapability.Tools,
-                LLMCapability.Vision.Image,
-                LLMCapability.Document,
-                LLMCapability.Completion,
-                LLMCapability.MultipleChoices,
-                LLMCapability.OpenAIEndpoint.Completions,
-                LLMCapability.OpenAIEndpoint.Responses,
-            ),
-            contextLength = 128_000,
-            maxOutputTokens = 16_384,
-        )
-
-        /**
-         * GPT-4.1 is a model for complex tasks.
-         * It is well suited for problem solving across domains.
-         *
-         * 1,047,576 context window
-         * 32,768 max output tokens
-         * Jun 01, 2024 knowledge cutoff
-         *
-         * @see <a href="https://platform.openai.com/docs/models/gpt-4.1">Model page</a>
-         */
-        public val GPT4_1: LLModel = LLModel(
-            provider = LLMProvider.OpenAI,
-            id = "gpt-4.1",
-            capabilities = listOf(
-                LLMCapability.Temperature,
-                LLMCapability.Schema.JSON.Basic,
-                LLMCapability.Schema.JSON.Standard,
-                LLMCapability.Speculation,
-                LLMCapability.Tools,
-                LLMCapability.ToolChoice,
-                LLMCapability.Vision.Image,
-                LLMCapability.Document,
-                LLMCapability.Completion,
-                LLMCapability.MultipleChoices,
-                LLMCapability.OpenAIEndpoint.Completions,
-                LLMCapability.OpenAIEndpoint.Responses,
-            ),
-            contextLength = 1_047_576,
-            maxOutputTokens = 32_768,
-        )
-
-        /**
-         * GPT-5 is a flagship model for coding, reasoning, and agentic tasks across domains.
-         *
-         * 400,000 context window
-         * 128,000 max output tokens
-         * Sep 30, 2024 knowledge cutoff
-         * Reasoning token support
-         *
-         * @see <a href="https://platform.openai.com/docs/models/gpt-5">Model page</a>
-         */
-        public val GPT5: LLModel = LLModel(
-            provider = LLMProvider.OpenAI,
-            id = "gpt-5",
-            capabilities = listOf(
-                LLMCapability.Temperature,
-                LLMCapability.Schema.JSON.Basic,
-                LLMCapability.Schema.JSON.Standard,
-                LLMCapability.Speculation,
-                LLMCapability.Tools,
-                LLMCapability.ToolChoice,
-                LLMCapability.Vision.Image,
-                LLMCapability.Document,
-                LLMCapability.Completion,
-                LLMCapability.MultipleChoices,
-                LLMCapability.OpenAIEndpoint.Completions,
-                LLMCapability.OpenAIEndpoint.Responses,
-            ),
-            contextLength = 400_000,
-            maxOutputTokens = 128_000,
-        )
-
-        /**
-         * GPT-5 mini is a faster, cost-efficient version of GPT-5 for well-defined tasks.
-         *
-         * 400,000 context window
-         * 128,000 max output tokens
-         * May 31, 2024 knowledge cutoff
-         * Reasoning token support
-         *
-         * @see <a href="https://platform.openai.com/docs/models/gpt-5-mini">Model page</a>
-         */
-        public val GPT5Mini: LLModel = LLModel(
-            provider = LLMProvider.OpenAI,
-            id = "gpt-5-mini",
-            capabilities = listOf(
-                LLMCapability.Temperature,
-                LLMCapability.Schema.JSON.Basic,
-                LLMCapability.Schema.JSON.Standard,
-                LLMCapability.Speculation,
-                LLMCapability.Tools,
-                LLMCapability.ToolChoice,
-                LLMCapability.Vision.Image,
-                LLMCapability.Document,
-                LLMCapability.Completion,
-                LLMCapability.MultipleChoices,
-                LLMCapability.OpenAIEndpoint.Completions,
-                LLMCapability.OpenAIEndpoint.Responses,
-            ),
-            contextLength = 400_000,
-            maxOutputTokens = 128_000,
-        )
-
-        /**
-         * GPT-5 nano is the fastest, most cost-efficient version of GPT-5.
-         * Great for summarization and classification tasks.
-         *
-         * 400,000 context window
-         * 128,000 max output tokens
-         * May 31, 2024 knowledge cutoff
-         * Reasoning token support
-         *
-         * @see <a href="https://platform.openai.com/docs/models/gpt-5-nano">Model page</a>
-         */
-        public val GPT5Nano: LLModel = LLModel(
-            provider = LLMProvider.OpenAI,
-            id = "gpt-5-nano",
-            capabilities = listOf(
-                LLMCapability.Temperature,
-                LLMCapability.Schema.JSON.Basic,
-                LLMCapability.Schema.JSON.Standard,
-                LLMCapability.Speculation,
-                LLMCapability.Tools,
-                LLMCapability.ToolChoice,
-                LLMCapability.Vision.Image,
-                LLMCapability.Document,
-                LLMCapability.Completion,
-                LLMCapability.MultipleChoices,
-                LLMCapability.OpenAIEndpoint.Completions,
-                LLMCapability.OpenAIEndpoint.Responses,
-            ),
-            contextLength = 400_000,
-            maxOutputTokens = 128_000,
-        )
-    }
-
-    /**
      * The `Audio` object provides access to preconfigured audio-enabled Large Language Models (LLMs).
      * These models support both audio input and output functionalities, making them suitable
      * for various audio-centric applications.
@@ -571,118 +656,6 @@ public object OpenAIModels : LLModelDefinitions {
             contextLength = 128_000,
             maxOutputTokens = 16_384,
         )
-    }
-
-    /**
-     * The `CostOptimized` object provides a collection of cost-efficient language models
-     * optimized for specific use cases. These models aim to balance quality, performance,
-     * and affordability, catering to various tasks like reasoning, speculation, and tools integration.
-     */
-    public object CostOptimized {
-
-        /**
-         * GPT-4.1-nano is the smallest and most affordable model in the GPT-4.1 family.
-         * It's designed for tasks that require basic capabilities at the lowest possible cost.
-         *
-         * 1,047,576 context window
-         * 32,768 max output tokens
-         * Jun 01, 2024 knowledge cutoff
-         *
-         * @see <a href="https://platform.openai.com/docs/models/gpt-4.1-nano">Model page</a>
-         */
-        public val GPT4_1Nano: LLModel = LLModel(
-            provider = LLMProvider.OpenAI,
-            id = "gpt-4.1-nano",
-            capabilities = listOf(
-                LLMCapability.Temperature,
-                LLMCapability.Schema.JSON.Basic,
-                LLMCapability.Schema.JSON.Standard,
-                LLMCapability.Speculation,
-                LLMCapability.Tools,
-                LLMCapability.ToolChoice,
-                LLMCapability.Vision.Image,
-                LLMCapability.Document,
-                LLMCapability.Completion,
-                LLMCapability.MultipleChoices,
-                LLMCapability.OpenAIEndpoint.Completions,
-                LLMCapability.OpenAIEndpoint.Responses,
-            ),
-            contextLength = 1_047_576,
-            maxOutputTokens = 32_768,
-        )
-
-        /**
-         * GPT-4.1 mini provides a balance between intelligence, speed,
-         * and cost that makes it an attractive model for many use cases.
-         *
-         * 1,047,576 context window
-         * 32,768 max output tokens
-         * Jun 01, 2024 knowledge cutoff
-         *
-         *
-         * @see <a href="https://platform.openai.com/docs/models/gpt-4.1-mini">Model page</a>
-         */
-        public val GPT4_1Mini: LLModel = LLModel(
-            provider = LLMProvider.OpenAI,
-            id = "gpt-4.1-mini",
-            capabilities = listOf(
-                LLMCapability.Temperature,
-                LLMCapability.Schema.JSON.Basic,
-                LLMCapability.Schema.JSON.Standard,
-                LLMCapability.Speculation,
-                LLMCapability.Tools,
-                LLMCapability.ToolChoice,
-                LLMCapability.Vision.Image,
-                LLMCapability.Document,
-                LLMCapability.Completion,
-                LLMCapability.MultipleChoices,
-                LLMCapability.OpenAIEndpoint.Completions,
-                LLMCapability.OpenAIEndpoint.Responses,
-            ),
-            contextLength = 1_047_576,
-            maxOutputTokens = 32_768,
-        )
-
-        /**
-         * GPT-4o mini is a smaller, more affordable version of GPT-4o that maintains high quality while being
-         * more cost-effective. It's designed for tasks that don't require the full capabilities of GPT-4o.
-         *
-         * 128K context window.
-         * 16,384 max output tokens
-         * Oct 01, 2023 knowledge cutoff
-         *
-         * @see <a href="https://platform.openai.com/docs/models/gpt-4o-mini">Model page</a>
-         */
-        public val GPT4oMini: LLModel = LLModel(
-            provider = LLMProvider.OpenAI,
-            id = "gpt-4o-mini",
-            capabilities = listOf(
-                LLMCapability.Temperature,
-                LLMCapability.Schema.JSON.Basic,
-                LLMCapability.Schema.JSON.Standard,
-                LLMCapability.Speculation,
-                LLMCapability.Tools,
-                LLMCapability.ToolChoice,
-                LLMCapability.Vision.Image,
-                LLMCapability.Document,
-                LLMCapability.Completion,
-                LLMCapability.MultipleChoices,
-                LLMCapability.OpenAIEndpoint.Completions,
-                LLMCapability.OpenAIEndpoint.Responses,
-            ),
-            contextLength = 128_000,
-            maxOutputTokens = 16_384,
-        )
-
-        /**
-         * See [Reasoning.O4Mini]
-         */
-        public val O4Mini: LLModel get() = Reasoning.O4Mini
-
-        /**
-         * See [Reasoning.O3Mini]
-         */
-        public val O3Mini: LLModel get() = Reasoning.O3Mini
     }
 
     /**

@@ -105,7 +105,7 @@ class TokenCountTest {
 
         AIAgent(
             systemPrompt = systemPrompt,
-            llmModel = OpenAIModels.CostOptimized.GPT4oMini,
+            llmModel = OpenAIModels.Chat.GPT4oMini,
             temperature = 0.0,
             maxIterations = 3,
             promptExecutor = testExecutor,
@@ -138,7 +138,7 @@ class TokenCountTest {
 
         AIAgent(
             systemPrompt = systemPrompt,
-            llmModel = OpenAIModels.CostOptimized.GPT4oMini,
+            llmModel = OpenAIModels.Chat.GPT4oMini,
             temperature = 0.0,
             toolRegistry = toolRegistry,
             maxIterations = 5,
@@ -174,7 +174,7 @@ class TokenCountTest {
 
         AIAgent(
             systemPrompt = systemPrompt,
-            llmModel = OpenAIModels.CostOptimized.GPT4oMini,
+            llmModel = OpenAIModels.Chat.GPT4oMini,
             temperature = 0.0,
             toolRegistry = toolRegistry,
             maxIterations = 5,
@@ -216,7 +216,7 @@ class TokenCountTest {
 
         AIAgent(
             systemPrompt = systemPrompt,
-            llmModel = OpenAIModels.CostOptimized.GPT4oMini,
+            llmModel = OpenAIModels.Chat.GPT4oMini,
             temperature = 0.0,
             toolRegistry = toolRegistry,
             maxIterations = 5,

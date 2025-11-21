@@ -270,7 +270,7 @@ class MemoryNodesTest {
 
     @Test
     fun testNodeSaveToMemoryWithCustomModel() = runTest {
-        val customModel = OpenAIModels.CostOptimized.O3Mini
+        val customModel = OpenAIModels.Chat.O3Mini
         val originalModel = OllamaModels.Meta.LLAMA_3_2
 
         val concept = Concept(

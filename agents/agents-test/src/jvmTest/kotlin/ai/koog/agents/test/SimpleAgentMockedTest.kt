@@ -157,7 +157,7 @@ class SimpleAgentMockedTest {
     fun ` test AIAgent doesn't call tools by default`() = runBlocking {
         val agent = AIAgent(
             systemPrompt = systemPrompt,
-            llmModel = OpenAIModels.CostOptimized.GPT4oMini,
+            llmModel = OpenAIModels.Chat.GPT4oMini,
             temperature = 1.0,
             maxIterations = 10,
             promptExecutor = testExecutor,
@@ -183,7 +183,7 @@ class SimpleAgentMockedTest {
 
         val agent = AIAgent(
             systemPrompt = systemPrompt,
-            llmModel = OpenAIModels.CostOptimized.GPT4oMini,
+            llmModel = OpenAIModels.Chat.GPT4oMini,
             temperature = 1.0,
             toolRegistry = toolRegistry,
             maxIterations = 10,
@@ -207,7 +207,7 @@ class SimpleAgentMockedTest {
     fun `test simpleSingleRunAgent handles non-registered tools`(toolRegistry: ToolRegistry) = runBlocking {
         val agent = AIAgent(
             systemPrompt = systemPrompt,
-            llmModel = OpenAIModels.CostOptimized.GPT4oMini,
+            llmModel = OpenAIModels.Chat.GPT4oMini,
             temperature = 1.0,
             toolRegistry = toolRegistry,
             maxIterations = 10,
@@ -248,7 +248,7 @@ class SimpleAgentMockedTest {
 
         val agent = AIAgent(
             systemPrompt = systemPrompt,
-            llmModel = OpenAIModels.CostOptimized.GPT4oMini,
+            llmModel = OpenAIModels.Chat.GPT4oMini,
             temperature = 1.0,
             toolRegistry = toolRegistry,
             maxIterations = 10,
@@ -278,7 +278,7 @@ class SimpleAgentMockedTest {
 
         val successAgent = AIAgent(
             systemPrompt = systemPrompt,
-            llmModel = OpenAIModels.CostOptimized.GPT4oMini,
+            llmModel = OpenAIModels.Chat.GPT4oMini,
             temperature = 1.0,
             toolRegistry = toolRegistry,
             maxIterations = 10,
@@ -306,7 +306,7 @@ class SimpleAgentMockedTest {
 
         val agent = AIAgent(
             systemPrompt = systemPrompt,
-            llmModel = OpenAIModels.CostOptimized.GPT4oMini,
+            llmModel = OpenAIModels.Chat.GPT4oMini,
             temperature = 1.0,
             toolRegistry = toolRegistry,
             maxIterations = 2,
