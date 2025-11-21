@@ -445,7 +445,7 @@ class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
     }
 
     @Test
-    fun `test inference span contains tokes data`() = runTest {
+    fun `test inference span contains tokens data`() = runTest {
         val userInput = USER_PROMPT_PARIS
         val mockLLMResponse = MOCK_LLM_RESPONSE_PARIS
         val model = defaultModel
@@ -492,7 +492,10 @@ class OpenTelemetryInferenceSpanTest : OpenTelemetryTestBase() {
                         "gen_ai.operation.name" to "chat",
                         "gen_ai.request.temperature" to temperature,
                         "gen_ai.response.finish_reasons" to listOf(FinishReasonType.Stop.id),
-                        "gen_ai.usage.output_tokens" to tokenizer.countTokens(text = mockLLMResponse).toLong()
+                        "gen_ai.usage.input_tokens" to tokenizer.countTokens(text = userInput).toLong(),
+                        "gen_ai.usage.output_tokens" to tokenizer.countTokens(text = mockLLMResponse).toLong(),
+                        "gen_ai.usage.total_tokens" to tokenizer.countTokens(text = userInput)
+                            .toLong() + tokenizer.countTokens(text = mockLLMResponse).toLong(),
                     ),
                     "events" to mapOf(
                         "gen_ai.system.message" to mapOf(
