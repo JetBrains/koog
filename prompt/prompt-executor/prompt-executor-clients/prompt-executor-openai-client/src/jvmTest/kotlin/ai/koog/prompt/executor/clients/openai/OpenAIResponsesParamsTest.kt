@@ -7,6 +7,7 @@ import ai.koog.prompt.executor.clients.openai.models.ReasoningConfig
 import ai.koog.prompt.executor.clients.openai.models.ReasoningSummary
 import ai.koog.prompt.executor.clients.openai.models.Truncation
 import ai.koog.prompt.params.LLMParams
+import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.equality.shouldBeEqualToComparingFields
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -75,12 +76,14 @@ class OpenAIResponsesParamsTest {
         )
 
         base.toOpenAIResponsesParams().shouldNotBeNull {
-            temperature shouldBe base.temperature
-            maxTokens shouldBe base.maxTokens
-            numberOfChoices shouldBe base.numberOfChoices
-            speculation shouldBe base.speculation
-            user shouldBe base.user
-            additionalProperties shouldBe base.additionalProperties
+            assertSoftly {
+                temperature shouldBe base.temperature
+                maxTokens shouldBe base.maxTokens
+                numberOfChoices shouldBe base.numberOfChoices
+                speculation shouldBe base.speculation
+                user shouldBe base.user
+                additionalProperties shouldBe base.additionalProperties
+            }
         }
     }
 
