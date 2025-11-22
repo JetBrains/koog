@@ -206,6 +206,8 @@ public infix fun <IncomingOutput, OutgoingInput> AIAgentEdgeBuilderIntermediate<
 ): AIAgentEdgeBuilderIntermediate<IncomingOutput, List<Message.Assistant>, OutgoingInput> {
     return onIsInstance(List::class)
         .transformed { it.filterIsInstance<Message.Assistant>() }
+        // skipping this edge in case we have list of only assistant messages
+        .onCondition { it.any() }
         .onCondition { toolResults -> block(toolResults) }
 }
 
