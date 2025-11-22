@@ -29,12 +29,6 @@ public abstract class Tool<TArgs, TResult> {
         argsSerializer.asToolDescriptorSerializer()
     }
 
-    // FIXME just a quickfix, more proper and thorough update is required for Tool
-    @OptIn(InternalAgentToolsApi::class)
-    private val actualResultSerializer by lazy {
-        resultSerializer.asToolDescriptorSerializer()
-    }
-
     /**
      * Serializer responsible for encoding the result of the tool execution.
      * This abstract property is used to define the specific [KSerializer] corresponding to the type of arguments
@@ -128,7 +122,7 @@ public abstract class Tool<TArgs, TResult> {
      * @return The decoded result of type TResult.
      */
     public fun decodeResult(rawResult: JsonElement): TResult =
-        json.decodeFromJsonElement(actualResultSerializer, rawResult)
+        json.decodeFromJsonElement(resultSerializer, rawResult)
 
     /**
      * Encodes the given arguments into a JSON representation.
@@ -162,7 +156,7 @@ public abstract class Tool<TArgs, TResult> {
      * @return A JsonObject representing the encoded result.
      */
     public fun encodeResult(result: TResult): JsonElement =
-        json.encodeToJsonElement(actualResultSerializer, result)
+        json.encodeToJsonElement(resultSerializer, result)
 
     /**
      * Encodes the given result object into a JSON representation without type safety checks.
