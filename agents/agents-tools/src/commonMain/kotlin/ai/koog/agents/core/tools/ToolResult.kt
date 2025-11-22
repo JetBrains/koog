@@ -2,6 +2,8 @@ package ai.koog.agents.core.tools
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
@@ -158,7 +160,11 @@ public interface ToolResult {
          * This descriptor corresponds to the valueSerializer's descriptor, defining the
          * structure of the serialized data and associated information like kind and elements.
          */
-        override val descriptor: SerialDescriptor = valueSerializer.descriptor
+        override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor(
+            valueSerializer.descriptor.serialName,
+            PrimitiveKind.STRING
+        )
+//        override val descriptor: SerialDescriptor = valueSerializer.descriptor
 
         /**
          * Serializes an object of type `T` into its textual representation.
