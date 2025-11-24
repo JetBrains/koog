@@ -686,7 +686,8 @@ public open class GoogleLLMClient(
      */
     private fun processGoogleResponse(response: GoogleResponse): List<List<Message.Response>> {
         if (response.candidates.isEmpty()) {
-            throw LLMClientException(clientName, "Empty candidates in Gemini response")
+            logger.error { "Empty candidates in Google API response" }
+            throw LLMClientException(clientName, "Empty candidates in Google API response")
         }
 
         // Extract token count from the response
