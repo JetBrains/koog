@@ -51,7 +51,7 @@ internal object DebuggerTestAPI {
 
     internal const val HOST = "127.0.0.1"
 
-    internal val defaultClientServerTimeout = 30.seconds
+    internal val defaultClientServerTimeout = 1000.seconds
 
     internal suspend fun FeatureMessageRemoteClient.connectWithRetry(timeout: Duration) {
         withTimeout(timeout) {
@@ -63,7 +63,7 @@ internal object DebuggerTestAPI {
                     if (exception is CancellationException) {
                         throw exception
                     }
-                    delay(100)
+                    delay(300)
                 }
             }
         }

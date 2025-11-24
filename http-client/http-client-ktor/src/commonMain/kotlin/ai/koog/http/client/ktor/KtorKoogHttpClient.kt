@@ -12,7 +12,7 @@ import io.ktor.client.plugins.sse.SSEClientException
 import io.ktor.client.plugins.sse.sse
 import io.ktor.client.request.accept
 import io.ktor.client.request.get
-import io.ktor.client.request.headers
+import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
@@ -20,14 +20,15 @@ import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
+import io.ktor.http.headers
 import io.ktor.http.isSuccess
 import io.ktor.util.reflect.TypeInfo
+import io.ktor.utils.io.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 import org.jetbrains.annotations.ApiStatus.Experimental
-import kotlin.coroutines.cancellation.CancellationException
 import kotlin.jvm.JvmOverloads
 import kotlin.reflect.KClass
 
@@ -85,8 +86,13 @@ public class KtorKoogHttpClient internal constructor(
     override suspend fun <R : Any> get(
         path: String,
         responseType: KClass<R>,
+        parameters: Map<String, String>
     ): R = withContext(Dispatchers.SuitableForIO) {
-        val response = ktorClient.get(path)
+        val response = ktorClient.get(path) {
+            parameters.forEach { (key, value) ->
+                parameter(key, value)
+            }
+        }
         processResponse(response, responseType)
     }
 
@@ -94,7 +100,8 @@ public class KtorKoogHttpClient internal constructor(
         path: String,
         request: T,
         requestBodyType: KClass<T>,
-        responseType: KClass<R>
+        responseType: KClass<R>,
+        parameters: Map<String, String>
     ): R = withContext(Dispatchers.SuitableForIO) {
         val response = ktorClient.post(path) {
             if (requestBodyType == String::class) {
@@ -102,6 +109,9 @@ public class KtorKoogHttpClient internal constructor(
                 setBody(request as String)
             } else {
                 setBody(request, TypeInfo(requestBodyType))
+            }
+            parameters.forEach { (key, value) ->
+                parameter(key, value)
             }
         }
 
@@ -114,7 +124,8 @@ public class KtorKoogHttpClient internal constructor(
         requestBodyType: KClass<T>,
         dataFilter: (String?) -> Boolean,
         decodeStreamingResponse: (String) -> R,
-        processStreamingChunk: (R) -> O?
+        processStreamingChunk: (R) -> O?,
+        parameters: Map<String, String>,
     ): Flow<O> = flow {
         @Suppress("TooGenericExceptionCaught")
         try {
@@ -122,6 +133,9 @@ public class KtorKoogHttpClient internal constructor(
                 urlString = path,
                 request = {
                     method = HttpMethod.Post
+                    parameters.forEach { (key, value) ->
+                        parameter(key, value)
+                    }
                     accept(ContentType.Text.EventStream)
                     headers {
                         append(HttpHeaders.CacheControl, "no-cache")
@@ -182,5 +196,5 @@ public fun KoogHttpClient.Companion.fromKtorClient(
     clientName: String,
     logger: KLogger,
     baseClient: HttpClient = HttpClient(),
-    configurer: HttpClientConfig<out HttpClientEngineConfig>.() -> Unit
+    configurer: HttpClientConfig<out HttpClientEngineConfig>.() -> Unit = {}
 ): KoogHttpClient = KtorKoogHttpClient(clientName, logger, baseClient, configurer)

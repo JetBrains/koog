@@ -3,7 +3,8 @@ package ai.koog.prompt.executor.clients.google
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
-import ai.koog.http.client.KoogHttpClientException
+import ai.koog.http.client.KoogHttpClient
+import ai.koog.http.client.ktor.fromKtorClient
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
@@ -41,32 +42,17 @@ import ai.koog.prompt.streaming.streamFrameFlow
 import ai.koog.prompt.structure.RegisteredBasicJsonSchemaGenerators
 import ai.koog.prompt.structure.RegisteredStandardJsonSchemaGenerators
 import ai.koog.prompt.structure.annotations.InternalStructuredOutputApi
-import ai.koog.utils.io.SuitableForIO
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.sse.SSE
-import io.ktor.client.plugins.sse.SSEClientException
-import io.ktor.client.plugins.sse.sse
-import io.ktor.client.request.accept
-import io.ktor.client.request.parameter
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
-import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
-import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpMethod
 import io.ktor.http.contentType
-import io.ktor.http.headers
-import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.Dispatchers
+import io.ktor.utils.io.CancellationException
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -89,6 +75,9 @@ import kotlin.uuid.Uuid
 public class GoogleClientSettings(
     public val baseUrl: String = "https://generativelanguage.googleapis.com",
     public val timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig(),
+    public val defaultPath: String = "v1beta/models",
+    public val generateContentMethod: String = "generateContent",
+    public val streamGenerateContentMethod: String = "streamGenerateContent",
 )
 
 /**
@@ -105,17 +94,13 @@ public class GoogleClientSettings(
 public open class GoogleLLMClient(
     private val apiKey: String,
     private val settings: GoogleClientSettings = GoogleClientSettings(),
-    baseClient: HttpClient = HttpClient(),
+    private val baseClient: HttpClient = HttpClient(),
     private val clock: Clock = Clock.System
 ) : LLMClient {
 
     @OptIn(InternalStructuredOutputApi::class)
     private companion object {
         private val logger = KotlinLogging.logger { }
-
-        private const val DEFAULT_PATH = "v1beta/models"
-        private const val DEFAULT_METHOD_GENERATE_CONTENT = "generateContent"
-        private const val DEFAULT_METHOD_STREAM_GENERATE_CONTENT = "streamGenerateContent"
 
         init {
             // On class load register custom Google JSON schema generators for structured output.
@@ -131,7 +116,11 @@ public open class GoogleLLMClient(
         explicitNulls = false
     }
 
-    private val httpClient = baseClient.config {
+    private val httpClient: KoogHttpClient = KoogHttpClient.fromKtorClient(
+        clientName = clientName,
+        logger = logger,
+        baseClient = baseClient
+    ) {
         defaultRequest {
             url(settings.baseUrl)
             url.parameters.append("key", apiKey)
@@ -182,74 +171,46 @@ public open class GoogleLLMClient(
 
         try {
             httpClient.sse(
-                urlString = "$DEFAULT_PATH/${model.id}:$DEFAULT_METHOD_STREAM_GENERATE_CONTENT",
-                request = {
-                    method = HttpMethod.Post
-                    parameter("alt", "sse")
-                    accept(ContentType.Text.EventStream)
-                    headers {
-                        append(HttpHeaders.CacheControl, "no-cache")
-                        append(HttpHeaders.Connection, "keep-alive")
-                    }
-                    setBody(request)
+                path = "${settings.defaultPath}/${model.id}:${settings.streamGenerateContentMethod}",
+                request = request,
+                requestBodyType = GoogleRequest::class,
+                dataFilter = { it != "[DONE]" },
+                decodeStreamingResponse = { json.decodeFromString<GoogleResponse>(it) },
+                parameters = mapOf("alt" to "sse"),
+                processStreamingChunk = { it }
+            ).collect { response ->
+                val meta = response.usageMetadata?.let {
+                    ResponseMetaInfo.create(
+                        clock = clock,
+                        totalTokensCount = it.totalTokenCount,
+                        inputTokensCount = it.promptTokenCount,
+                        outputTokensCount = it.candidatesTokenCount,
+                    )
                 }
-            ) {
-                incoming.collect { event ->
-                    event
-                        .takeIf { it.data != "[DONE]" }
-                        ?.data?.trim()?.let { json.decodeFromString<GoogleResponse>(it) }
-                        ?.let { response ->
-                            val meta = response.usageMetadata?.let {
-                                ResponseMetaInfo.create(
-                                    clock = clock,
-                                    totalTokensCount = it.totalTokenCount,
-                                    inputTokensCount = it.promptTokenCount,
-                                    outputTokensCount = it.candidatesTokenCount,
-                                )
-                            }
-                            response.candidates.firstOrNull()?.let { candidate ->
-                                candidate.content?.parts?.forEach { part ->
-                                    when (part) {
-                                        is GooglePart.FunctionCall -> emitToolCall(
-                                            id = part.functionCall.id,
-                                            name = part.functionCall.name,
-                                            content = part.functionCall.args?.toString() ?: "{}"
-                                        )
+                response.candidates.firstOrNull()?.let { candidate ->
+                    candidate.content?.parts?.forEach { part ->
+                        when (part) {
+                            is GooglePart.FunctionCall -> emitToolCall(
+                                id = part.functionCall.id,
+                                name = part.functionCall.name,
+                                content = part.functionCall.args?.toString() ?: "{}"
+                            )
 
-                                        is GooglePart.Text -> emitAppend(part.text)
-                                        else -> Unit
-                                    }
-                                }
-                                candidate.finishReason?.let { emitEnd(it, meta) }
-                            }
+                            is GooglePart.Text -> emitAppend(part.text)
+                            else -> Unit
                         }
+                    }
+                    candidate.finishReason?.let { emitEnd(it, meta) }
                 }
             }
         } catch (e: CancellationException) {
             throw e
-        } catch (e: SSEClientException) {
-            // TODO: after the update to the KoogHttpClient, delegate this logic to the http client
-
-            val httpClientException = KoogHttpClientException(
-                statusCode = e.response?.status?.value,
-                message = e.message,
-                cause = e
-            )
-            val exception = LLMClientException(
-                clientName = clientName,
-                message = httpClientException.message,
-                cause = httpClientException
-            )
-            logger.error(exception) { exception.message }
-            throw exception
         } catch (e: Exception) {
-            val exception = LLMClientException(
+            throw LLMClientException(
                 clientName = clientName,
                 message = e.message,
                 cause = e
             )
-            logger.error(exception) { exception.message }
-            throw exception
         }
     }
 
@@ -283,36 +244,30 @@ public open class GoogleLLMClient(
     private suspend fun getGoogleResponse(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): GoogleResponse {
         val request = createGoogleRequest(prompt, model, tools)
 
-        val response = withContext(Dispatchers.SuitableForIO) {
-            val response = httpClient.post("$DEFAULT_PATH/${model.id}:$DEFAULT_METHOD_GENERATE_CONTENT") {
-                setBody(request)
+        try {
+            httpClient.post(
+                path = "${settings.defaultPath}/${model.id}:${settings.generateContentMethod}",
+                request = request,
+                requestBodyType = GoogleRequest::class,
+                responseType = GoogleResponse::class,
+            )
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            throw LLMClientException(
+                clientName = clientName,
+                message = e.message,
+                cause = e
+            )
+        }.let { response ->
+
+            // https://discuss.ai.google.dev/t/gemini-2-5-pro-with-empty-response-text/81175/219
+            if (response.candidates.isNotEmpty() && response.candidates.all { it.content?.parts?.isEmpty() == true }) {
+                logger.warn { "Content `parts` field is missing in the response from GoogleAI API: $response" }
             }
 
-            if (response.status.isSuccess()) {
-                response.body<GoogleResponse>()
-            } else {
-                // TODO: after the update to the KoogHttpClient, delegate this logic to the http client
-
-                val httpClientException = KoogHttpClientException(
-                    statusCode = response.status.value,
-                    errorBody = response.bodyAsText(),
-                )
-                val exception = LLMClientException(
-                    clientName = clientName,
-                    message = httpClientException.message,
-                    cause = httpClientException
-                )
-                logger.error(exception) { exception.message }
-                throw exception
-            }
+            return response
         }
-
-        // https://discuss.ai.google.dev/t/gemini-2-5-pro-with-empty-response-text/81175/219
-        if (response.candidates.isNotEmpty() && response.candidates.all { it.content?.parts?.isEmpty() == true }) {
-            logger.warn { "Content `parts` field is missing in the response from GoogleAI API: $response" }
-        }
-
-        return response
     }
 
     /**
@@ -631,7 +586,10 @@ public open class GoogleLLMClient(
      * @return A list of response messages
      */
     @OptIn(ExperimentalUuidApi::class)
-    internal fun processGoogleCandidate(candidate: GoogleCandidate, metaInfo: ResponseMetaInfo): List<Message.Response> {
+    internal fun processGoogleCandidate(
+        candidate: GoogleCandidate,
+        metaInfo: ResponseMetaInfo
+    ): List<Message.Response> {
         val parts = candidate.content?.parts.orEmpty()
         val responses = mutableListOf<Message.Response>()
         with(responses) {
@@ -684,6 +642,7 @@ public open class GoogleLLMClient(
                                 format = mimeType.substringAfter("image/"),
                                 mimeType = mimeType,
                             )
+
                             else -> ContentPart.File(
                                 content = AttachmentContent.Binary.Bytes(inlineData.data),
                                 mimeType = mimeType,
@@ -728,8 +687,8 @@ public open class GoogleLLMClient(
      */
     private fun processGoogleResponse(response: GoogleResponse): List<List<Message.Response>> {
         if (response.candidates.isEmpty()) {
-            logger.error { "Empty candidates in Gemini response" }
-            throw LLMClientException(clientName, "Empty candidates in Gemini response")
+            logger.error { "Empty candidates in Google API response" }
+            throw LLMClientException(clientName, "Empty candidates in Google API response")
         }
 
         // Extract token count from the response
@@ -764,6 +723,6 @@ public open class GoogleLLMClient(
     }
 
     override fun close() {
-        httpClient.close()
+        baseClient.close()
     }
 }

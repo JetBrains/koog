@@ -11,6 +11,8 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
+import okhttp3.HttpUrl
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -61,12 +63,28 @@ public class OkHttpKoogHttpClient internal constructor(
         )
     }
 
+    /**
+     * Builds a complete URL with the specified base path and optional query parameters.
+     *
+     * @param path The base path to which the URL will be built. It must be a valid URL string.
+     * @param parameters A map containing query parameter key-value pairs to be appended to the URL.
+     * @return An [HttpUrl] object representing the constructed URL with any specified query parameters.
+     */
+    private fun buildUrl(path: String, parameters: Map<String, String>?): HttpUrl {
+        return path.toHttpUrl().newBuilder().apply {
+            parameters?.forEach { (key, value) ->
+                addQueryParameter(key, value)
+            }
+        }.build()
+    }
+
     override suspend fun <R : Any> get(
         path: String,
-        responseType: KClass<R>
+        responseType: KClass<R>,
+        parameters: Map<String, String>
     ): R = withContext(Dispatchers.SuitableForIO) {
         val httpRequest = Request.Builder()
-            .url(path)
+            .url(buildUrl(path, parameters))
             .get()
             .build()
 
@@ -80,12 +98,13 @@ public class OkHttpKoogHttpClient internal constructor(
         path: String,
         request: T,
         requestBodyType: KClass<T>,
-        responseType: KClass<R>
+        responseType: KClass<R>,
+        parameters: Map<String, String>
     ): R = withContext(Dispatchers.SuitableForIO) {
         val requestBody = prepareRequestBody(request, requestBodyType)
 
         val httpRequest = Request.Builder()
-            .url(path)
+            .url(buildUrl(path, parameters))
             .post(requestBody)
             .build()
 
@@ -102,12 +121,13 @@ public class OkHttpKoogHttpClient internal constructor(
         requestBodyType: KClass<T>,
         dataFilter: (String?) -> Boolean,
         decodeStreamingResponse: (String) -> R,
-        processStreamingChunk: (R) -> O?
+        processStreamingChunk: (R) -> O?,
+        parameters: Map<String, String>
     ): Flow<O> = callbackFlow {
         val requestBody = prepareRequestBody(request, requestBodyType)
 
         val httpRequest = Request.Builder()
-            .url(path)
+            .url(buildUrl(path, parameters))
             .post(requestBody)
             .header("Accept", "text/event-stream")
             .header("Cache-Control", "no-cache")

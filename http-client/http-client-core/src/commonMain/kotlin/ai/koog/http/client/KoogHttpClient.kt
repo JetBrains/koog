@@ -20,6 +20,7 @@ public interface KoogHttpClient {
      *
      * @param path The endpoint path to which the HTTP POST request is sent.
      * @param responseType The Kotlin class reference representing the expected type of the response.
+     * @param parameters Optional query parameters to include in the request.
      *
      * @return The response payload, deserialized into the specified type.
      * @throws Exception if the request fails or the response cannot be deserialized.
@@ -27,6 +28,7 @@ public interface KoogHttpClient {
     public suspend fun <R : Any> get(
         path: String,
         responseType: KClass<R>,
+        parameters: Map<String, String> = emptyMap(),
     ): R
 
     /**
@@ -38,6 +40,7 @@ public interface KoogHttpClient {
      * @param request The request payload to be sent in the POST request.
      * @param requestBodyType The Kotlin class reference representing the type of the request body.
      * @param responseType The Kotlin class reference representing the expected type of the response.
+     * @param parameters Optional query parameters to include in the request.
      * @return The response payload, deserialized into the specified type.
      * @throws Exception if the request fails or the response cannot be deserialized.
      */
@@ -45,7 +48,8 @@ public interface KoogHttpClient {
         path: String,
         request: T,
         requestBodyType: KClass<T>,
-        responseType: KClass<R>
+        responseType: KClass<R>,
+        parameters: Map<String, String> = emptyMap(),
     ): R
 
     /**
@@ -63,6 +67,7 @@ public interface KoogHttpClient {
      * @param decodeStreamingResponse A lambda function used to decode the raw streaming response data
      * into the target type. It takes a raw string and converts it into an object of type `R`.
      * @param processStreamingChunk A lambda function that processes the decoded streaming chunk and returns
+     * @param parameters Optional query parameters to include in the request.
      * a string result. If the returned value is `null`, the chunk will not be emitted to the resulting flow.
      * @return A [Flow] emitting processed strings derived from the streamed chunks of data.
      */
@@ -72,7 +77,8 @@ public interface KoogHttpClient {
         requestBodyType: KClass<T>,
         dataFilter: (String?) -> Boolean = { true },
         decodeStreamingResponse: (String) -> R,
-        processStreamingChunk: (R) -> O?
+        processStreamingChunk: (R) -> O?,
+        parameters: Map<String, String> = emptyMap(),
     ): Flow<O>
 
     /**
@@ -88,24 +94,28 @@ public interface KoogHttpClient {
  *
  * @param path The endpoint path to which the HTTP POST request is sent.
  * @param request The request payload to be sent in the POST request.
+ * @param parameters Optional query parameters to include in the request.
  * @return The response payload, deserialized into the specified type.
  * @throws Exception if the request fails or the response cannot be deserialized.
  */
 public suspend inline fun <reified T : Any, reified R : Any> KoogHttpClient.post(
     path: String,
-    request: T
-): R = post(path, request, T::class, R::class)
+    request: T,
+    parameters: Map<String, String> = emptyMap(),
+): R = post(path, request, T::class, R::class, parameters)
 
 /**
  * Sends an HTTP GET request to the specified `path` with the provided parameters.
  *
  * @param path The endpoint path to which the HTTP GET request is sent.
+ * @param parameters Optional query parameters to include in the request.
  * @return The response payload, deserialized into the specified type.
  * @throws Exception if the request fails or the response cannot be deserialized.
  */
 public suspend inline fun <reified R : Any> KoogHttpClient.get(
     path: String,
-): R = get(path, R::class)
+    parameters: Map<String, String> = emptyMap(),
+): R = get(path, R::class, parameters)
 
 /**
  * Initiates a Server-Sent Events (SSE) streaming operation over an HTTP POST request.
@@ -121,6 +131,7 @@ public suspend inline fun <reified R : Any> KoogHttpClient.get(
  * @param decodeStreamingResponse A lambda function used to decode the raw streaming response data
  * into the target type. It takes a raw string and converts it into an object of type `R`.
  * @param processStreamingChunk A lambda function that processes the decoded streaming chunk and returns
+ * @param parameters Optional query parameters to include in the request.
  * a string result. If the returned value is `null`, the chunk will not be emitted to the resulting flow.
  * @return A [Flow] emitting processed strings derived from the streamed chunks of data.
  */
@@ -129,5 +140,6 @@ public inline fun <reified T : Any, reified R : Any, O : Any> KoogHttpClient.sse
     request: T,
     noinline dataFilter: (String?) -> Boolean = { true },
     noinline decodeStreamingResponse: (String) -> R,
-    noinline processStreamingChunk: (R) -> O?
-): Flow<O> = sse(path, request, T::class, dataFilter, decodeStreamingResponse, processStreamingChunk)
+    noinline processStreamingChunk: (R) -> O?,
+    parameters: Map<String, String> = emptyMap(),
+): Flow<O> = sse(path, request, T::class, dataFilter, decodeStreamingResponse, processStreamingChunk, parameters)

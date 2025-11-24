@@ -9,6 +9,8 @@ import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import kotlin.test.assertEquals
 import kotlin.test.fail
 
@@ -25,6 +27,18 @@ abstract class BaseKoogHttpClientTest {
     @Serializable
     data class TestResponse(val response: String)
 
+    private lateinit var mockServer: MockWebServer
+
+    @BeforeEach
+    fun setUp() {
+        mockServer = MockWebServer()
+    }
+
+    @AfterEach
+    fun tearDown() {
+        mockServer.stop()
+    }
+
     /**
      * Creates a client instance to be tested.
      * This method will be called for each test case.
@@ -35,7 +49,6 @@ abstract class BaseKoogHttpClientTest {
     open fun `test return success string response on post`(): Unit = runTest {
         val responseBody = "RESPONSE_OK"
 
-        val mockServer = MockWebServer()
         mockServer.start(
             postEndpoints = listOf(
                 MockWebServer.PostEndpointConfig(
@@ -55,15 +68,12 @@ abstract class BaseKoogHttpClientTest {
         )
 
         assertEquals(responseBody, result)
-
-        mockServer.stop()
     }
 
     @Suppress("FunctionName")
     open fun `test return success string response on get`(): Unit = runTest {
         val responseBody = "RESPONSE_OK"
 
-        val mockServer = MockWebServer()
         mockServer.start(
             getEndpoints = listOf(
                 MockWebServer.GetEndpointConfig(
@@ -82,15 +92,12 @@ abstract class BaseKoogHttpClientTest {
         )
 
         assertEquals(responseBody, result)
-
-        mockServer.stop()
     }
 
     @Suppress("FunctionName")
     open fun `test post JSON request and get JSON response`(): Unit = runTest {
         val responseBody = """{"response":"Okay"}"""
 
-        val mockServer = MockWebServer()
         mockServer.start(
             postEndpoints = listOf(
                 MockWebServer.PostEndpointConfig(
@@ -112,13 +119,10 @@ abstract class BaseKoogHttpClientTest {
         )
 
         assertEquals("Okay", result.response)
-
-        mockServer.stop()
     }
 
     @Suppress("FunctionName")
     open fun `test handle on non-success status`(): Unit = runTest {
-        val mockServer = MockWebServer()
         mockServer.start(
             postEndpoints = listOf(
                 MockWebServer.PostEndpointConfig(
@@ -141,8 +145,6 @@ abstract class BaseKoogHttpClientTest {
         } catch (e: KoogHttpClientException) {
             assertEquals(e.clientName, "TestClient")
             assertEquals(e.statusCode, 400)
-        } finally {
-            mockServer.stop()
         }
     }
 
@@ -150,7 +152,6 @@ abstract class BaseKoogHttpClientTest {
     open fun `test get SSE flow and collect events`(): Unit = runTest {
         val events = listOf("event1", "event2", "event3")
 
-        val mockServer = MockWebServer()
         mockServer.start(
             sseEndpoints = listOf(
                 MockWebServer.SSEEndpointConfig(
@@ -175,15 +176,12 @@ abstract class BaseKoogHttpClientTest {
 
         assertEquals(events.size, collected.size)
         assertEquals(events, collected)
-
-        mockServer.stop()
     }
 
     @Suppress("FunctionName")
     open fun `test filter SSE events`(): Unit = runTest {
         val events = listOf("event1", "[DONE]", "event2", "[DONE]", "event3")
 
-        val mockServer = MockWebServer()
         mockServer.start(
             sseEndpoints = listOf(
                 MockWebServer.SSEEndpointConfig(
@@ -209,7 +207,60 @@ abstract class BaseKoogHttpClientTest {
         // Only non-[DONE] events should be collected
         assertEquals(3, collected.size)
         assertEquals(listOf("event1", "event2", "event3"), collected)
+    }
 
-        mockServer.stop()
+    @Suppress("FunctionName")
+    open fun `test return success string response on get with parameters`(): Unit = runTest {
+        val responseBody = "RESPONSE_OK_WITH_PARAMS"
+        val expectedParameters = mapOf("param1" to "value1", "param2" to "value2")
+
+        mockServer.start(
+            getEndpoints = listOf(
+                MockWebServer.GetEndpointConfig(
+                    path = "/echo",
+                    responseBody = responseBody,
+                    statusCode = HttpStatusCode.OK,
+                    contentType = ContentType.Text.Plain,
+                    expectedParameters = expectedParameters
+                )
+            )
+        )
+
+        val client = createClient()
+
+        val result: String = client.get(
+            path = mockServer.url("/echo"),
+            parameters = expectedParameters
+        )
+
+        assertEquals(responseBody, result)
+    }
+
+    @Suppress("FunctionName")
+    open fun `test return success string response on post with parameters`(): Unit = runTest {
+        val responseBody = "RESPONSE_OK_WITH_PARAMS"
+        val expectedParameters = mapOf("filter" to "active", "sort" to "desc")
+
+        mockServer.start(
+            postEndpoints = listOf(
+                MockWebServer.PostEndpointConfig(
+                    path = "/echo",
+                    responseBody = responseBody,
+                    statusCode = HttpStatusCode.OK,
+                    contentType = ContentType.Text.Plain,
+                    expectedParameters = expectedParameters
+                )
+            )
+        )
+
+        val client = createClient()
+
+        val result: String = client.post(
+            path = mockServer.url("/echo"),
+            request = "PAYLOAD",
+            parameters = expectedParameters
+        )
+
+        assertEquals(responseBody, result)
     }
 }

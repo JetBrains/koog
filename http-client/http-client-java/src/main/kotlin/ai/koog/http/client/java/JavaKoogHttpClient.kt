@@ -14,6 +14,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.serializer
 import org.jetbrains.annotations.ApiStatus.Experimental
 import java.net.URI
+import java.net.URLEncoder
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
@@ -61,12 +62,33 @@ public class JavaKoogHttpClient internal constructor(
         )
     }
 
+    /**
+     * Appends query parameters to the given URL path.
+     *
+     * @param path The base URL path to which the query parameters will be added.
+     * @param parameters A map of query parameters to be added to the URL. The keys and values will be URL-encoded.
+     * @return The URL path with the appended query parameters, or the original `path` if `parameters` is null or empty.
+     */
+    private fun buildUri(path: String, parameters: Map<String, String>?): URI {
+        val fullPath = if (!parameters.isNullOrEmpty()) {
+            val query = parameters.entries.joinToString("&") { (key, value) ->
+                "${URLEncoder.encode(key, "UTF-8")}=${URLEncoder.encode(value, "UTF-8")}"
+            }
+            "$path?$query"
+        } else {
+            path
+        }
+
+        return URI.create(fullPath)
+    }
+
     override suspend fun <R : Any> get(
         path: String,
-        responseType: KClass<R>
+        responseType: KClass<R>,
+        parameters: Map<String, String>
     ): R = withContext(Dispatchers.SuitableForIO) {
         val httpRequest = HttpRequest.newBuilder()
-            .uri(URI.create(path))
+            .uri(buildUri(path, parameters))
             .GET()
             .build()
 
@@ -79,12 +101,13 @@ public class JavaKoogHttpClient internal constructor(
         path: String,
         request: T,
         requestBodyType: KClass<T>,
-        responseType: KClass<R>
+        responseType: KClass<R>,
+        parameters: Map<String, String>
     ): R = withContext(Dispatchers.SuitableForIO) {
         val requestBody = prepareRequestBody(request, requestBodyType)
 
         val httpRequest = HttpRequest.newBuilder()
-            .uri(URI.create(path))
+            .uri(buildUri(path, parameters))
             .POST(HttpRequest.BodyPublishers.ofString(requestBody.body))
             .header("Content-Type", requestBody.contentType)
             .build()
@@ -100,12 +123,13 @@ public class JavaKoogHttpClient internal constructor(
         requestBodyType: KClass<T>,
         dataFilter: (String?) -> Boolean,
         decodeStreamingResponse: (String) -> R,
-        processStreamingChunk: (R) -> O?
+        processStreamingChunk: (R) -> O?,
+        parameters: Map<String, String>
     ): Flow<O> = callbackFlow {
         val requestBody = prepareRequestBody(request, requestBodyType)
 
         val httpRequest = HttpRequest.newBuilder()
-            .uri(URI.create(path))
+            .uri(buildUri(path, parameters))
             .POST(HttpRequest.BodyPublishers.ofString(requestBody.body))
             .header("Content-Type", requestBody.contentType)
             .header("Accept", "text/event-stream")
