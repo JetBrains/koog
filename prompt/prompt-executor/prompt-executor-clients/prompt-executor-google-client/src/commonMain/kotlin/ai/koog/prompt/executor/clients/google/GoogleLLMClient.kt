@@ -9,6 +9,7 @@ import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
+import ai.koog.prompt.executor.clients.LLMClientException
 import ai.koog.prompt.executor.clients.google.models.GoogleCandidate
 import ai.koog.prompt.executor.clients.google.models.GoogleContent
 import ai.koog.prompt.executor.clients.google.models.GoogleData
@@ -50,6 +51,7 @@ import io.ktor.client.plugins.sse.SSE
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
+import io.ktor.utils.io.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
@@ -114,7 +116,6 @@ public open class GoogleLLMClient(
         explicitNulls = false
     }
 
-    protected open val clientName: String = this::class.simpleName ?: "UnknownClient"
     private val httpClient: KoogHttpClient = KoogHttpClient.fromKtorClient(
         clientName = clientName,
         logger = logger,
@@ -168,38 +169,48 @@ public open class GoogleLLMClient(
 
         val request = createGoogleRequest(prompt, model, emptyList())
 
-        httpClient.sse(
-            path = "${settings.defaultPath}/${model.id}:${settings.streamGenerateContentMethod}",
-            request = request,
-            requestBodyType = GoogleRequest::class,
-            dataFilter = { it != "[DONE]" },
-            decodeStreamingResponse = { json.decodeFromString<GoogleResponse>(it) },
-            parameters = mapOf("alt" to "sse"),
-            processStreamingChunk = { it }
-        ).collect { response ->
-            val meta = response.usageMetadata?.let {
-                ResponseMetaInfo.create(
-                    clock = clock,
-                    totalTokensCount = it.totalTokenCount,
-                    inputTokensCount = it.promptTokenCount,
-                    outputTokensCount = it.candidatesTokenCount,
-                )
-            }
-            response.candidates.firstOrNull()?.let { candidate ->
-                candidate.content?.parts?.forEach { part ->
-                    when (part) {
-                        is GooglePart.FunctionCall -> emitToolCall(
-                            id = part.functionCall.id,
-                            name = part.functionCall.name,
-                            content = part.functionCall.args?.toString() ?: "{}"
-                        )
-
-                        is GooglePart.Text -> emitAppend(part.text)
-                        else -> Unit
-                    }
+        try {
+            httpClient.sse(
+                path = "${settings.defaultPath}/${model.id}:${settings.streamGenerateContentMethod}",
+                request = request,
+                requestBodyType = GoogleRequest::class,
+                dataFilter = { it != "[DONE]" },
+                decodeStreamingResponse = { json.decodeFromString<GoogleResponse>(it) },
+                parameters = mapOf("alt" to "sse"),
+                processStreamingChunk = { it }
+            ).collect { response ->
+                val meta = response.usageMetadata?.let {
+                    ResponseMetaInfo.create(
+                        clock = clock,
+                        totalTokensCount = it.totalTokenCount,
+                        inputTokensCount = it.promptTokenCount,
+                        outputTokensCount = it.candidatesTokenCount,
+                    )
                 }
-                candidate.finishReason?.let { emitEnd(it, meta) }
+                response.candidates.firstOrNull()?.let { candidate ->
+                    candidate.content?.parts?.forEach { part ->
+                        when (part) {
+                            is GooglePart.FunctionCall -> emitToolCall(
+                                id = part.functionCall.id,
+                                name = part.functionCall.name,
+                                content = part.functionCall.args?.toString() ?: "{}"
+                            )
+
+                            is GooglePart.Text -> emitAppend(part.text)
+                            else -> Unit
+                        }
+                    }
+                    candidate.finishReason?.let { emitEnd(it, meta) }
+                }
             }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            throw LLMClientException(
+                clientName = clientName,
+                message = e.message,
+                cause = e
+            )
         }
     }
 
@@ -233,18 +244,29 @@ public open class GoogleLLMClient(
     private suspend fun getGoogleResponse(prompt: Prompt, model: LLModel, tools: List<ToolDescriptor>): GoogleResponse {
         val request = createGoogleRequest(prompt, model, tools)
 
-        val response = httpClient.post(
-            path = "${settings.defaultPath}/${model.id}:${settings.generateContentMethod}",
-            request = request,
-            requestBodyType = GoogleRequest::class,
-            responseType = GoogleResponse::class,
-        )
+        try {
+            httpClient.post(
+                path = "${settings.defaultPath}/${model.id}:${settings.generateContentMethod}",
+                request = request,
+                requestBodyType = GoogleRequest::class,
+                responseType = GoogleResponse::class,
+            )
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            throw LLMClientException(
+                clientName = clientName,
+                message = e.message,
+                cause = e
+            )
+        }.let { response ->
 
-        if (response.candidates.isNotEmpty() && response.candidates.all { it.content?.parts?.isEmpty() == true }) {
-            logger.warn { "Content `parts` field is missing in the response from GoogleAI API: $response" }
+            if (response.candidates.isNotEmpty() && response.candidates.all { it.content?.parts?.isEmpty() == true }) {
+                logger.warn { "Content `parts` field is missing in the response from GoogleAI API: $response" }
+            }
+
+            return response
         }
-
-        return response
     }
 
     /**
