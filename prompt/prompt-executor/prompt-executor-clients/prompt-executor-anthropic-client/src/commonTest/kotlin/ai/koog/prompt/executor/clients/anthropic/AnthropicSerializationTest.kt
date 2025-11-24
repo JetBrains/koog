@@ -355,7 +355,7 @@ class AnthropicSerializationTest {
             t0.name shouldBe "calc"
             t0.description shouldBe "Simple calc"
             t0.inputSchema.required shouldBe listOf("a")
-            t0.inputSchema.type shouldBe "object"
+            t0.inputSchema.schemaType shouldBe "object"
 
             // mcp servers
             deserialized.mcpServers?.size shouldBe 1

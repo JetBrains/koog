@@ -220,7 +220,7 @@ internal object BedrockAnthropicClaudeSerialization {
     internal fun parseAnthropicStreamChunk(chunkJsonString: String, clock: Clock = Clock.System): List<StreamFrame> {
         val streamResponse = json.decodeFromString<AnthropicStreamResponse>(chunkJsonString)
 
-        return when (streamResponse.type) {
+        return when (streamResponse.eventType) {
             "content_block_delta" -> {
                 streamResponse.delta?.let {
                     buildList {
