@@ -20,7 +20,7 @@ import ai.koog.prompt.executor.clients.mistralai.models.MistralAIModerationResul
 import ai.koog.prompt.executor.clients.mistralai.models.MistralModelsResponse
 import ai.koog.prompt.executor.clients.openai.base.AbstractOpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.base.OpenAIBaseSettings
-import ai.koog.prompt.executor.clients.openai.base.OpenAICompatibleToolDescriptorSchemer
+import ai.koog.prompt.executor.clients.openai.base.OpenAICompatibleToolDescriptorSchemaGenerator
 import ai.koog.prompt.executor.clients.openai.base.models.Content
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIContentPart
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIMessage
@@ -68,7 +68,7 @@ public open class MistralAILLMClient(
     private val settings: MistralAIClientSettings = MistralAIClientSettings(),
     baseClient: HttpClient = HttpClient(),
     clock: Clock = Clock.System,
-    toolsConverter: OpenAICompatibleToolDescriptorSchemer = OpenAICompatibleToolDescriptorSchemer()
+    toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator()
 ) : AbstractOpenAILLMClient<MistralAIChatCompletionResponse, MistralAIChatCompletionStreamResponse>(
     apiKey = apiKey,
     settings = settings,

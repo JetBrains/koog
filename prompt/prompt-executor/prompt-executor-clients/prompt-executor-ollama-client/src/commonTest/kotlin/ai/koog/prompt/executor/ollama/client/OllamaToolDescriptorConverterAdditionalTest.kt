@@ -3,7 +3,7 @@ package ai.koog.prompt.executor.ollama.client
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
-import ai.koog.prompt.executor.ollama.tools.json.OllamaToolDescriptorSchemer
+import ai.koog.prompt.executor.ollama.tools.json.OllamaToolDescriptorSchemaGenerator
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -27,7 +27,7 @@ class OllamaToolDescriptorConverterAdditionalTest {
             )
         )
 
-        val actual = json.encodeToString(OllamaToolDescriptorSchemer().scheme(descriptor))
+        val actual = json.encodeToString(OllamaToolDescriptorSchemaGenerator().generate(descriptor))
 
         val expected = """
         {
@@ -77,7 +77,7 @@ class OllamaToolDescriptorConverterAdditionalTest {
             )
         )
 
-        val actual = json.encodeToString(OllamaToolDescriptorSchemer().scheme(descriptor))
+        val actual = json.encodeToString(OllamaToolDescriptorSchemaGenerator().generate(descriptor))
 
         val expected = """
         {
@@ -119,7 +119,7 @@ class OllamaToolDescriptorConverterAdditionalTest {
             )
         )
 
-        val actual = json.encodeToString(OllamaToolDescriptorSchemer().scheme(descriptor))
+        val actual = json.encodeToString(OllamaToolDescriptorSchemaGenerator().generate(descriptor))
 
         val expected = """
         {

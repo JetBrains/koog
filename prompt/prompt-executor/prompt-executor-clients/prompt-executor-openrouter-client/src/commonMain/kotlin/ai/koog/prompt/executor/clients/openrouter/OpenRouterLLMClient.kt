@@ -6,7 +6,7 @@ import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.openai.base.AbstractOpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.base.OpenAIBaseSettings
-import ai.koog.prompt.executor.clients.openai.base.OpenAICompatibleToolDescriptorSchemer
+import ai.koog.prompt.executor.clients.openai.base.OpenAICompatibleToolDescriptorSchemaGenerator
 import ai.koog.prompt.executor.clients.openai.base.models.Content
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIMessage
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIStaticContent
@@ -54,7 +54,7 @@ public class OpenRouterLLMClient(
     private val settings: OpenRouterClientSettings = OpenRouterClientSettings(),
     baseClient: HttpClient = HttpClient(),
     clock: Clock = Clock.System,
-    toolsConverter: OpenAICompatibleToolDescriptorSchemer = OpenAICompatibleToolDescriptorSchemer()
+    toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator()
 ) : AbstractOpenAILLMClient<OpenRouterChatCompletionResponse, OpenRouterChatCompletionStreamResponse>(
     apiKey = apiKey,
     settings = settings,

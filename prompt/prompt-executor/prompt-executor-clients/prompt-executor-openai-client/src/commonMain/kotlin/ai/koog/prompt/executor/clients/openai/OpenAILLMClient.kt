@@ -11,7 +11,7 @@ import ai.koog.prompt.executor.clients.LLMClientException
 import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import ai.koog.prompt.executor.clients.openai.base.AbstractOpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.base.OpenAIBaseSettings
-import ai.koog.prompt.executor.clients.openai.base.OpenAICompatibleToolDescriptorSchemer
+import ai.koog.prompt.executor.clients.openai.base.OpenAICompatibleToolDescriptorSchemaGenerator
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIAudioConfig
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIAudioFormat
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIAudioVoice
@@ -99,7 +99,7 @@ public open class OpenAILLMClient(
     private val settings: OpenAIClientSettings = OpenAIClientSettings(),
     baseClient: HttpClient = HttpClient(),
     clock: Clock = Clock.System,
-    private val toolsConverter: OpenAICompatibleToolDescriptorSchemer = OpenAICompatibleToolDescriptorSchemer(),
+    private val toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator(),
 ) : AbstractOpenAILLMClient<OpenAIChatCompletionResponse, OpenAIChatCompletionStreamResponse>(
     apiKey,
     settings,
@@ -606,7 +606,7 @@ public open class OpenAILLMClient(
         val llmTools = tools.takeIf { it.isNotEmpty() }?.map {
             Function(
                 name = it.name,
-                parameters = toolsConverter.scheme(it),
+                parameters = toolsConverter.generate(it),
                 description = it.description
             )
         }

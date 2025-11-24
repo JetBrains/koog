@@ -85,7 +85,7 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
     private val baseClient: HttpClient = HttpClient(),
     protected val clock: Clock = Clock.System,
     protected val logger: KLogger,
-    private val toolsConverter: OpenAICompatibleToolDescriptorSchemer,
+    private val toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator,
 ) : LLMClient {
 
     protected companion object {
@@ -380,7 +380,7 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
         function = OpenAIToolFunction(
             name = name,
             description = description,
-            parameters = toolsConverter.scheme(this)
+            parameters = toolsConverter.generate(this)
         )
     )
 

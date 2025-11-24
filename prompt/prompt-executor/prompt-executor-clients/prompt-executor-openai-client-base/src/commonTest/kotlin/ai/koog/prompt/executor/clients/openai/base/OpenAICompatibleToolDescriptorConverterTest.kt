@@ -26,7 +26,7 @@ class OpenAICompatibleToolDescriptorConverterTest {
             )
         )
 
-        val actual = json.encodeToString(OpenAICompatibleToolDescriptorSchemer().scheme(descriptor))
+        val actual = json.encodeToString(OpenAICompatibleToolDescriptorSchemaGenerator().generate(descriptor))
 
         val expected = """
         {
@@ -74,7 +74,7 @@ class OpenAICompatibleToolDescriptorConverterTest {
             )
         )
 
-        val actual = json.encodeToString(OpenAICompatibleToolDescriptorSchemer().scheme(descriptor))
+        val actual = json.encodeToString(OpenAICompatibleToolDescriptorSchemaGenerator().generate(descriptor))
 
         val expected = """
         {
@@ -114,7 +114,7 @@ class OpenAICompatibleToolDescriptorConverterTest {
             )
         )
 
-        val actual = json.encodeToString(OpenAICompatibleToolDescriptorSchemer().scheme(descriptor))
+        val actual = json.encodeToString(OpenAICompatibleToolDescriptorSchemaGenerator().generate(descriptor))
 
         val expected = """
         {
@@ -156,7 +156,7 @@ class OpenAICompatibleToolDescriptorConverterTest {
             )
         )
 
-        val actual = json.encodeToString(OpenAICompatibleToolDescriptorSchemer().scheme(descriptor))
+        val actual = json.encodeToString(OpenAICompatibleToolDescriptorSchemaGenerator().generate(descriptor))
 
         // Note: OpenAI converter does not emit "required" inside nested object; it preserves order: type, additionalProperties, properties
         val expected = """
@@ -207,7 +207,7 @@ class OpenAICompatibleToolDescriptorConverterTest {
             )
         )
 
-        val actual = json.encodeToString(OpenAICompatibleToolDescriptorSchemer().scheme(descriptor))
+        val actual = json.encodeToString(OpenAICompatibleToolDescriptorSchemaGenerator().generate(descriptor))
 
         val expected = """
         {

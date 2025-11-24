@@ -3,7 +3,7 @@ package ai.koog.prompt.executor.clients.openai.base
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
-import ai.koog.agents.core.tools.serialization.ToolDescriptorSchemer
+import ai.koog.agents.core.tools.serialization.ToolDescriptorSchemaGenerator
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonObjectBuilder
 import kotlinx.serialization.json.add
@@ -13,10 +13,10 @@ import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
 
 /**
- * Implementation of the [ToolDescriptorSchemer] for OpenAI tools.
+ * Implementation of the [ToolDescriptorSchemaGenerator] for OpenAI tools.
  */
-public class OpenAICompatibleToolDescriptorSchemer : ToolDescriptorSchemer {
-    override fun scheme(toolDescriptor: ToolDescriptor): JsonObject {
+public class OpenAICompatibleToolDescriptorSchemaGenerator : ToolDescriptorSchemaGenerator {
+    override fun generate(toolDescriptor: ToolDescriptor): JsonObject {
         toolDescriptor.apply {
             return buildJsonObject {
                 put("type", "object")

@@ -2,7 +2,7 @@ package ai.koog.prompt.executor.ollama.tools.json
 
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
-import ai.koog.agents.core.tools.serialization.ToolDescriptorSchemer
+import ai.koog.agents.core.tools.serialization.ToolDescriptorSchemaGenerator
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -13,8 +13,8 @@ import kotlinx.serialization.json.putJsonArray
 /**
  * Converts a list of ToolDescriptor objects into a JSON schema representation for Ollama.
  */
-public class OllamaToolDescriptorSchemer : ToolDescriptorSchemer {
-    override fun scheme(toolDescriptor: ToolDescriptor): JsonObject {
+public class OllamaToolDescriptorSchemaGenerator : ToolDescriptorSchemaGenerator {
+    override fun generate(toolDescriptor: ToolDescriptor): JsonObject {
         // Build the properties object by converting each parameter to its JSON schema.
         val properties: JsonObject = buildJsonObject {
             (toolDescriptor.requiredParameters + toolDescriptor.optionalParameters)

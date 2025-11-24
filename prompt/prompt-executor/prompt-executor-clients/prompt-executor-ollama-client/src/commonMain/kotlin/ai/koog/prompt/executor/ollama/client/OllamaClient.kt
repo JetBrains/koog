@@ -1,7 +1,7 @@
 package ai.koog.prompt.executor.ollama.client
 
 import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.agents.core.tools.serialization.ToolDescriptorSchemer
+import ai.koog.agents.core.tools.serialization.ToolDescriptorSchemaGenerator
 import ai.koog.http.client.KoogHttpClientException
 import ai.koog.prompt.dsl.ModerationCategory
 import ai.koog.prompt.dsl.ModerationCategoryResult
@@ -27,7 +27,7 @@ import ai.koog.prompt.executor.ollama.client.dto.extractOllamaJsonFormat
 import ai.koog.prompt.executor.ollama.client.dto.getToolCalls
 import ai.koog.prompt.executor.ollama.client.dto.toOllamaChatMessages
 import ai.koog.prompt.executor.ollama.client.dto.toOllamaModelCard
-import ai.koog.prompt.executor.ollama.tools.json.OllamaToolDescriptorSchemer
+import ai.koog.prompt.executor.ollama.tools.json.OllamaToolDescriptorSchemaGenerator
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -78,7 +78,7 @@ public class OllamaClient(
     timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig(),
     private val clock: Clock = Clock.System,
     private val contextWindowStrategy: ContextWindowStrategy = ContextWindowStrategy.Companion.None,
-    private val toolDescriptorConverter: ToolDescriptorSchemer = OllamaToolDescriptorSchemer()
+    private val toolDescriptorConverter: ToolDescriptorSchemaGenerator = OllamaToolDescriptorSchemaGenerator()
 ) : LLMClient, LLMEmbeddingProvider {
 
     private companion object {
@@ -175,7 +175,7 @@ public class OllamaClient(
                     function = Definition(
                         name = it.name,
                         description = it.description,
-                        parameters = toolDescriptorConverter.scheme(it)
+                        parameters = toolDescriptorConverter.generate(it)
                     )
                 )
             }

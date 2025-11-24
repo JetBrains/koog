@@ -11,7 +11,7 @@ import ai.koog.prompt.executor.clients.deepseek.models.DeepSeekChatCompletionStr
 import ai.koog.prompt.executor.clients.deepseek.models.DeepSeekModelsResponse
 import ai.koog.prompt.executor.clients.openai.base.AbstractOpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.base.OpenAIBaseSettings
-import ai.koog.prompt.executor.clients.openai.base.OpenAICompatibleToolDescriptorSchemer
+import ai.koog.prompt.executor.clients.openai.base.OpenAICompatibleToolDescriptorSchemaGenerator
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIMessage
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAITool
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolChoice
@@ -52,7 +52,7 @@ public class DeepSeekLLMClient(
     private val settings: DeepSeekClientSettings = DeepSeekClientSettings(),
     baseClient: HttpClient = HttpClient(),
     clock: Clock = Clock.System,
-    toolsConverter: OpenAICompatibleToolDescriptorSchemer = OpenAICompatibleToolDescriptorSchemer()
+    toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator()
 ) : AbstractOpenAILLMClient<DeepSeekChatCompletionResponse, DeepSeekChatCompletionStreamResponse>(
     apiKey = apiKey,
     settings = settings,

@@ -14,8 +14,8 @@ Key points:
 
 ```kotlin
 // Interface
-public interface ToolDescriptorSchemer {
-    public fun scheme(toolDescriptor: ToolDescriptor): JsonObject
+interface ToolDescriptorSchemaGenerator {
+  fun generate(toolDescriptor: ToolDescriptor): JsonObject
 }
 ```
 
@@ -38,8 +38,8 @@ import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
 -->
 ```kotlin
-class MinimalSchemer : ToolDescriptorSchemer {
-    override fun scheme(toolDescriptor: ToolDescriptor): JsonObject = buildJsonObject {
+class MinimalSchemer : ToolDescriptorSchemaGenerator {
+    override fun generate(toolDescriptor: ToolDescriptor): JsonObject = buildJsonObject {
         put("type", "object")
         putJsonObject("properties") {
             (toolDescriptor.requiredParameters + toolDescriptor.optionalParameters).forEach { p ->
@@ -77,8 +77,8 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 
-class MinimalSchemer : ToolDescriptorSchemer {
-    override fun scheme(toolDescriptor: ToolDescriptor): JsonObject = buildJsonObject {
+class MinimalSchemer : ToolDescriptorSchemaGenerator {
+    override fun generate(toolDescriptor: ToolDescriptor): JsonObject = buildJsonObject {
         put("type", "object")
         putJsonObject("properties") {
             (toolDescriptor.requiredParameters + toolDescriptor.optionalParameters).forEach { p ->
@@ -132,6 +132,20 @@ If you need direct access to the produced schema (for debugging or for a custom 
 import kotlinx.serialization.json.Json
 import ai.koog.prompt.executor.clients.openai.base.OpenAICompatibleToolDescriptorSchemer
 -->
+
+fun getUserTool(): ToolDescriptor {
+    return ToolDescriptor(
+        name = "get_user",
+        description = "Returns user profile by id",
+        requiredParameters = listOf(
+            ToolParameterDescriptor(
+                name = "id",
+                description = "User id",
+                type = ToolParameterType.String
+            )
+        )
+    )
+}
 ```kotlin
 val json = Json { prettyPrint = true }
 val schema = OpenAICompatibleToolDescriptorSchemer().scheme(getUserTool)
