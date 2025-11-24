@@ -13,6 +13,7 @@ kotlin {
         commonMain {
             dependencies {
                 api(project(":agents:agents-tools"))
+                api(project(":http-client:http-client-core"))
                 api(project(":prompt:prompt-llm"))
                 api(project(":prompt:prompt-model"))
                 api(project(":prompt:prompt-tokenizer"))

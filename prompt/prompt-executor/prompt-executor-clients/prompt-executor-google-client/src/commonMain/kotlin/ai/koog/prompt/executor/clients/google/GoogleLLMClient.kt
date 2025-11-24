@@ -3,10 +3,12 @@ package ai.koog.prompt.executor.clients.google
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
+import ai.koog.http.client.KoogHttpClientException
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
+import ai.koog.prompt.executor.clients.LLMClientException
 import ai.koog.prompt.executor.clients.google.models.GoogleCandidate
 import ai.koog.prompt.executor.clients.google.models.GoogleContent
 import ai.koog.prompt.executor.clients.google.models.GoogleData
@@ -61,6 +63,7 @@ import io.ktor.http.contentType
 import io.ktor.http.headers
 import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
@@ -222,14 +225,31 @@ public open class GoogleLLMClient(
                         }
                 }
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: SSEClientException) {
-            e.response?.let { response ->
-                logger.error { "Error from GoogleAI API: ${response.status}: ${e.message}" }
-                error("Error from GoogleAI API: ${response.status}: ${e.message}")
-            }
+            // TODO: after the update to the KoogHttpClient, delegate this logic to the http client
+
+            val httpClientException = KoogHttpClientException(
+                statusCode = e.response?.status?.value,
+                message = e.message,
+                cause = e
+            )
+            val exception = LLMClientException(
+                clientName = clientName,
+                message = httpClientException.message,
+                cause = httpClientException
+            )
+            logger.error(exception) { exception.message }
+            throw exception
         } catch (e: Exception) {
-            logger.error { "Exception during streaming: $e" }
-            error(e.message ?: "Unknown error during streaming")
+            val exception = LLMClientException(
+                clientName = clientName,
+                message = e.message,
+                cause = e
+            )
+            logger.error(exception) { exception.message }
+            throw exception
         }
     }
 
@@ -271,9 +291,19 @@ public open class GoogleLLMClient(
             if (response.status.isSuccess()) {
                 response.body<GoogleResponse>()
             } else {
-                val errorBody = response.bodyAsText()
-                logger.error { "Error from GoogleAI API: ${response.status}: $errorBody" }
-                error("Error from GoogleAI API: ${response.status}: $errorBody")
+                // TODO: after the update to the KoogHttpClient, delegate this logic to the http client
+
+                val httpClientException = KoogHttpClientException(
+                    statusCode = response.status.value,
+                    errorBody = response.bodyAsText(),
+                )
+                val exception = LLMClientException(
+                    clientName = clientName,
+                    message = httpClientException.message,
+                    cause = httpClientException
+                )
+                logger.error(exception) { exception.message }
+                throw exception
             }
         }
 
@@ -669,7 +699,7 @@ public open class GoogleLLMClient(
                         )
                     }
 
-                    else -> error("Not supported part type: $part")
+                    else -> throw LLMClientException(clientName, "Not supported part type: $part")
                 }
             }
         }
@@ -699,7 +729,7 @@ public open class GoogleLLMClient(
     private fun processGoogleResponse(response: GoogleResponse): List<List<Message.Response>> {
         if (response.candidates.isEmpty()) {
             logger.error { "Empty candidates in Gemini response" }
-            error("Empty candidates in Gemini response")
+            throw LLMClientException(clientName, "Empty candidates in Gemini response")
         }
 
         // Extract token count from the response

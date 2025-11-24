@@ -1,19 +1,20 @@
 package ai.koog.prompt.executor.ollama.client
 
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.http.client.KoogHttpClientException
 import ai.koog.prompt.dsl.ModerationCategory
 import ai.koog.prompt.dsl.ModerationCategoryResult
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
+import ai.koog.prompt.executor.clients.LLMClientException
 import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import ai.koog.prompt.executor.ollama.client.dto.EmbeddingRequestDTO
 import ai.koog.prompt.executor.ollama.client.dto.EmbeddingResponseDTO
 import ai.koog.prompt.executor.ollama.client.dto.OllamaChatRequestDTO
 import ai.koog.prompt.executor.ollama.client.dto.OllamaChatRequestDTOSerializer
 import ai.koog.prompt.executor.ollama.client.dto.OllamaChatResponseDTO
-import ai.koog.prompt.executor.ollama.client.dto.OllamaErrorResponseDTO
 import ai.koog.prompt.executor.ollama.client.dto.OllamaModelsListResponseDTO
 import ai.koog.prompt.executor.ollama.client.dto.OllamaPullModelRequestDTO
 import ai.koog.prompt.executor.ollama.client.dto.OllamaPullModelResponseDTO
@@ -43,11 +44,13 @@ import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsChannel
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.utils.io.readUTF8Line
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
@@ -181,9 +184,19 @@ public class OllamaClient(
         if (response.status.isSuccess()) {
             return parseResponse(response.body<OllamaChatResponseDTO>())
         } else {
-            val errorResponse = response.body<OllamaErrorResponseDTO>()
-            logger.error { "Ollama error: ${errorResponse.error}" }
-            throw RuntimeException("Ollama API error: ${errorResponse.error}")
+            // TODO: after the update to the KoogHttpClient, delegate this logic to the http client
+
+            val httpClientException = KoogHttpClientException(
+                statusCode = response.status.value,
+                errorBody = response.bodyAsText(),
+            )
+            val exception = LLMClientException(
+                clientName = clientName,
+                message = httpClientException.message,
+                cause = httpClientException,
+            )
+            logger.error(exception) { exception.message }
+            throw exception
         }
     }
 
@@ -299,13 +312,13 @@ public class OllamaClient(
      * @param text The text to embed.
      * @param model The model to use for embedding. Must have the Embed capability.
      * @return A vector representation of the text.
-     * @throws IllegalArgumentException if the model does not have the Embed capability.
+     * @throws LLMClientException if the model does not have the Embed capability.
      */
     override suspend fun embed(text: String, model: LLModel): List<Double> {
         require(model.provider == LLMProvider.Ollama) { "Model not supported by Ollama" }
 
         if (!model.capabilities.contains(LLMCapability.Embed)) {
-            throw IllegalArgumentException("Model ${model.id} does not have the Embed capability")
+            throw LLMClientException(clientName, "Model ${model.id} does not have the Embed capability")
         }
 
         val response = client.post(DEFAULT_EMBEDDINGS_PATH) {
@@ -330,8 +343,13 @@ public class OllamaClient(
             logger.info { "Loaded ${modelCards.size} Ollama model cards" }
             modelCards
         } catch (e: Exception) {
-            logger.error(e) { "Failed to fetch model cards from Ollama" }
-            throw e
+            val exception = LLMClientException(
+                clientName = clientName,
+                message = "Failed to fetch model cards from Ollama: ${e.message}",
+                cause = e
+            )
+            logger.error(exception) { exception.message }
+            throw exception
         }
     }
 
@@ -353,7 +371,7 @@ public class OllamaClient(
 
     public override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
         if (!model.capabilities.contains(LLMCapability.Moderation)) {
-            throw IllegalArgumentException("Model ${model.id} does not support moderation")
+            throw LLMClientException(clientName, "Model ${model.id} does not support moderation")
         }
 
         require(prompt.messages.isNotEmpty()) {
@@ -382,7 +400,7 @@ public class OllamaClient(
         return when (result) {
             "safe" -> false
             "unsafe" -> true
-            else -> throw IllegalStateException("Unknown moderation result: $result")
+            else -> throw LLMClientException(clientName, "Unknown moderation result: $result")
         }
     }
 
@@ -414,9 +432,16 @@ public class OllamaClient(
 
             logger.info { "Loaded Ollama model card for $name" }
             modelCard
-        } catch (e: Exception) {
-            logger.error(e) { "Failed to fetch model card from Ollama" }
+        } catch (e: CancellationException) {
             throw e
+        } catch (e: Exception) {
+            val exception = LLMClientException(
+                clientName = clientName,
+                message = "Failed to fetch model card from Ollama: ${e.message}",
+                cause = e
+            )
+            logger.error(exception) { exception.message }
+            throw exception
         }
     }
 
@@ -436,12 +461,19 @@ public class OllamaClient(
                 setBody(OllamaPullModelRequestDTO(name = name, stream = false))
             }.body<OllamaPullModelResponseDTO>()
 
-            if ("success" !in response.status) error("Failed to pull model: '$name'")
+            if ("success" !in response.status) throw LLMClientException(clientName, "Failed to pull model: '$name'")
 
             logger.info { "Pulled model '$name'" }
-        } catch (e: Exception) {
-            logger.error(e) { "Failed to pull model '$name'" }
+        } catch (e: CancellationException) {
             throw e
+        } catch (e: Exception) {
+            val exception = LLMClientException(
+                clientName = clientName,
+                message = "Failed to pull model: ${e.message}",
+                cause = e
+            )
+            logger.error(exception) { exception.message }
+            throw exception
         }
     }
 

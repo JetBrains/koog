@@ -7,6 +7,7 @@ import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
+import ai.koog.prompt.executor.clients.LLMClientException
 import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import ai.koog.prompt.executor.clients.openai.base.AbstractOpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.base.OpenAIBaseSettings
@@ -51,6 +52,7 @@ import ai.koog.prompt.streaming.StreamFrameFlowBuilder
 import ai.koog.utils.io.SuitableForIO
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterNotNull
@@ -301,43 +303,51 @@ public open class OpenAILLMClient(
             stream = true
         )
 
-        return httpClient.sse(
-            path = settings.responsesAPIPath,
-            request = request,
-            requestBodyType = String::class,
-            decodeStreamingResponse = { json.decodeFromString<OpenAIStreamEvent>(it) },
-            processStreamingChunk = {
-                // TODO: handle tool calls, not sure if this is supported by the OpenAI Streaming API yet
-                when (it) {
-                    is OpenAIStreamEvent.ResponseOutputItemDone -> {
-                        when (val item = it.item) {
-                            is Item.FunctionToolCall -> StreamFrame.ToolCall(item.id, item.name, item.arguments)
-                            else -> null
-                        }
-                    }
-
-                    is OpenAIStreamEvent.ResponseCompleted -> {
-                        StreamFrame.End(
-                            finishReason = null,
-                            metaInfo = it.response.usage.let { usage ->
-                                ResponseMetaInfo.create(
-                                    clock = clock,
-                                    totalTokensCount = usage?.totalTokens,
-                                    inputTokensCount = usage?.inputTokens,
-                                    outputTokensCount = usage?.outputTokens
-                                )
+        return try {
+            httpClient.sse(
+                path = settings.responsesAPIPath,
+                request = request,
+                requestBodyType = String::class,
+                decodeStreamingResponse = { json.decodeFromString<OpenAIStreamEvent>(it) },
+                processStreamingChunk = {
+                    // TODO: handle tool calls, not sure if this is supported by the OpenAI Streaming API yet
+                    when (it) {
+                        is OpenAIStreamEvent.ResponseOutputItemDone -> {
+                            when (val item = it.item) {
+                                is Item.FunctionToolCall -> StreamFrame.ToolCall(item.id, item.name, item.arguments)
+                                else -> null
                             }
-                        )
-                    }
+                        }
 
-                    is OpenAIStreamEvent.ResponseOutputTextDelta -> {
-                        StreamFrame.Append(it.delta)
-                    }
+                        is OpenAIStreamEvent.ResponseCompleted -> {
+                            StreamFrame.End(
+                                finishReason = null,
+                                metaInfo = it.response.usage.let { usage ->
+                                    ResponseMetaInfo.create(
+                                        clock = clock,
+                                        totalTokensCount = usage?.totalTokens,
+                                        inputTokensCount = usage?.inputTokens,
+                                        outputTokensCount = usage?.outputTokens
+                                    )
+                                }
+                            )
+                        }
 
-                    else -> null
+                        is OpenAIStreamEvent.ResponseOutputTextDelta -> {
+                            StreamFrame.Append(it.delta)
+                        }
+
+                        else -> null
+                    }
                 }
-            }
-        ).filterNotNull()
+            ).filterNotNull()
+        } catch (e: Exception) {
+            throw LLMClientException(
+                clientName = clientName,
+                message = e.message,
+                cause = e
+            )
+        }
     }
 
     override suspend fun executeMultipleChoices(
@@ -364,15 +374,24 @@ public open class OpenAILLMClient(
             input = text
         )
 
-        val openAIResponse = httpClient.post(
-            path = settings.embeddingsPath,
-            request = request,
-            requestBodyType = OpenAIEmbeddingRequest::class,
-            responseType = OpenAIEmbeddingResponse::class
-        )
+        val openAIResponse = try {
+            httpClient.post(
+                path = settings.embeddingsPath,
+                request = request,
+                requestBodyType = OpenAIEmbeddingRequest::class,
+                responseType = OpenAIEmbeddingResponse::class
+            )
+        } catch (e: Exception) {
+            throw LLMClientException(
+                clientName = clientName,
+                message = e.message,
+                cause = e
+            )
+        }
         if (openAIResponse.data.isEmpty()) {
-            logger.error { "Empty data in OpenAI embedding response" }
-            error("Empty data in OpenAI embedding response")
+            val exception = LLMClientException(clientName, "Empty data in OpenAI embedding response")
+            logger.error(exception) { exception.message }
+            throw exception
         }
         return openAIResponse.data.first().embedding
     }
@@ -429,17 +448,28 @@ public open class OpenAILLMClient(
         )
 
         val openAIResponse = withContext(Dispatchers.SuitableForIO) {
-            httpClient.post(
-                path = settings.moderationsPath,
-                request = request,
-                requestBodyType = OpenAIModerationRequest::class,
-                responseType = OpenAIModerationResponse::class
-            )
+            try {
+                httpClient.post(
+                    path = settings.moderationsPath,
+                    request = request,
+                    requestBodyType = OpenAIModerationRequest::class,
+                    responseType = OpenAIModerationResponse::class
+                )
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                throw LLMClientException(
+                    clientName = clientName,
+                    message = e.message,
+                    cause = e
+                )
+            }
         }
 
         if (openAIResponse.results.isEmpty()) {
-            logger.error { "Empty results in OpenAI moderation response" }
-            error("Empty results in OpenAI moderation response")
+            val exception = LLMClientException(clientName, "Empty results in OpenAI moderation response")
+            logger.error(exception) { exception.message }
+            throw exception
         }
         val result = openAIResponse.results.first()
 
@@ -450,10 +480,20 @@ public open class OpenAILLMClient(
     override suspend fun models(): List<String> {
         logger.debug { "Fetching available models from OpenAI" }
 
-        val openAIResponse = httpClient.get(
-            path = settings.modelsPath,
-            responseType = OpenAIModelsResponse::class
-        )
+        val openAIResponse = try {
+            httpClient.get(
+                path = settings.modelsPath,
+                responseType = OpenAIModelsResponse::class
+            )
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            throw LLMClientException(
+                clientName = clientName,
+                message = e.message,
+                cause = e
+            )
+        }
 
         return openAIResponse.data.map { it.id }
     }
@@ -693,7 +733,7 @@ public open class OpenAILLMClient(
                         add(InputContent.File(fileData = fileData, fileUrl = fileUrl, filename = part.fileName))
                     }
 
-                    else -> throw IllegalArgumentException("Unsupported attachment type: $part, for model: $model with Responses API")
+                    else -> throw LLMClientException(clientName, "Unsupported attachment type: $part, for model: $model with Responses API")
                 }
             }
         }
@@ -732,7 +772,7 @@ public open class OpenAILLMClient(
                         metaInfo = metaInfo
                     )
 
-                    else -> error("Unexpected response from $clientName: no tool calls and no content")
+                    else -> throw LLMClientException(clientName, "Unexpected response from $clientName: no tool calls and no content")
                 }
             }
     }
@@ -764,7 +804,7 @@ public open class OpenAILLMClient(
 
         model.supports(LLMCapability.OpenAIEndpoint.Completions) -> params.toOpenAIChatParams()
         model.supports(LLMCapability.OpenAIEndpoint.Responses) -> params.toOpenAIResponsesParams()
-        else -> error("Cannot determine proper LLM params for OpenAI model: ${model.id}")
+        else -> throw LLMClientException(clientName, "Cannot determine proper LLM params for OpenAI model: ${model.id}")
     }
 
     private inline fun <T> selectExecutionStrategy(

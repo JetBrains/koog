@@ -4,11 +4,13 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.prompt.dsl.Prompt
+import ai.koog.prompt.executor.clients.LLMClientException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlin.test.Test
+import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
@@ -90,7 +92,7 @@ class AnthropicToolSerializationTest {
             )
         )
 
-        val exception = assertFailsWith<IllegalArgumentException> {
+        val exception = assertFailsWith<LLMClientException> {
             client.createAnthropicRequest(
                 prompt = Prompt(
                     messages = emptyList(),
@@ -102,7 +104,10 @@ class AnthropicToolSerializationTest {
             )
         }
 
-        assertEquals("AnyOf type is not supported", exception.message)
+        val message = exception.message
+
+        assertNotNull(message)
+        assertContains(message, "AnyOf type is not supported")
     }
 
     @Test

@@ -1,6 +1,7 @@
 package ai.koog.http.client.test
 
 import ai.koog.http.client.KoogHttpClient
+import ai.koog.http.client.KoogHttpClientException
 import ai.koog.http.client.get
 import ai.koog.http.client.post
 import io.ktor.http.ContentType
@@ -8,9 +9,7 @@ import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.Serializable
-import kotlin.test.assertContains
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
 import kotlin.test.fail
 
 /**
@@ -139,11 +138,9 @@ abstract class BaseKoogHttpClientTest {
                 request = "PAYLOAD",
             )
             fail("Expected an exception for non-success status")
-        } catch (e: IllegalStateException) {
-            assertNotNull(e.message) {
-                assertContains(it, "Error from TestClient API")
-                assertContains(it, "400")
-            }
+        } catch (e: KoogHttpClientException) {
+            assertEquals(e.clientName, "TestClient")
+            assertEquals(e.statusCode, 400)
         } finally {
             mockServer.stop()
         }

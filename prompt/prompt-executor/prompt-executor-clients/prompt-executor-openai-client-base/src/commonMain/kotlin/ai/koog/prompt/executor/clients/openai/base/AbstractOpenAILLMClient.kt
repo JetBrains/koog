@@ -9,6 +9,7 @@ import ai.koog.http.client.post
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
+import ai.koog.prompt.executor.clients.LLMClientException
 import ai.koog.prompt.executor.clients.openai.base.models.JsonSchemaObject
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIBaseLLMResponse
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIBaseLLMStreamResponse
@@ -48,6 +49,7 @@ import io.ktor.client.request.header
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
@@ -106,8 +108,6 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
             RegisteredStandardJsonSchemaGenerators[llmProvider] = OpenAIStandardJsonSchemaGenerator
         }
     }
-
-    protected open val clientName: String = this::class.simpleName ?: "UnknownClient"
 
     private val chatCompletionsPath: String = settings.chatCompletionsPath
 
@@ -200,15 +200,25 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
         )
 
         return buildStreamFrameFlow {
-            httpClient.sse(
-                path = chatCompletionsPath,
-                request = request,
-                requestBodyType = String::class,
-                dataFilter = { it != "[DONE]" },
-                decodeStreamingResponse = ::decodeStreamingResponse,
-                processStreamingChunk = { it }
-            ).collect {
-                processStreamingChunk(it)
+            try {
+                httpClient.sse(
+                    path = chatCompletionsPath,
+                    request = request,
+                    requestBodyType = String::class,
+                    dataFilter = { it != "[DONE]" },
+                    decodeStreamingResponse = ::decodeStreamingResponse,
+                    processStreamingChunk = { it }
+                ).collect {
+                    processStreamingChunk(it)
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                throw LLMClientException(
+                    clientName = clientName,
+                    message = e.message,
+                    cause = e
+                )
             }
         }
     }
@@ -246,10 +256,20 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
             stream = false
         )
 
-        return httpClient.post<String, String>(
-            path = chatCompletionsPath,
-            request = request
-        ).let(::decodeResponse)
+        return try {
+            httpClient.post<String, String>(
+                path = chatCompletionsPath,
+                request = request
+            )
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            throw LLMClientException(
+                clientName = clientName,
+                message = e.message,
+                cause = e
+            )
+        }.let(::decodeResponse)
     }
 
     @OptIn(ExperimentalUuidApi::class)
@@ -328,7 +348,7 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
             val imageUrl = when (val attachmentContent = content) {
                 is AttachmentContent.URL -> attachmentContent.url
                 is AttachmentContent.Binary -> "data:$mimeType;base64,${attachmentContent.asBase64()}"
-                else -> throw IllegalArgumentException("Unsupported image attachment content: ${attachmentContent::class}")
+                else -> throw LLMClientException(clientName, "Unsupported image attachment content: ${attachmentContent::class}")
             }
             OpenAIContentPart.Image(OpenAIContentPart.ImageUrl(imageUrl))
         }
@@ -337,7 +357,7 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
             model.requireCapability(LLMCapability.Audio)
             val inputAudio = when (val attachmentContent = content) {
                 is AttachmentContent.Binary -> OpenAIContentPart.InputAudio(attachmentContent.asBase64(), format)
-                else -> throw IllegalArgumentException("Unsupported audio attachment content: ${attachmentContent::class}")
+                else -> throw LLMClientException(clientName, "Unsupported audio attachment content: ${attachmentContent::class}")
             }
             OpenAIContentPart.Audio(inputAudio)
         }
@@ -357,11 +377,11 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
                     OpenAIContentPart.Text(attachmentContent.text)
                 }
 
-                else -> throw IllegalArgumentException("Unsupported file attachment content: ${attachmentContent::class}")
+                else -> throw LLMClientException(clientName, "Unsupported file attachment content: ${attachmentContent::class}")
             }
         }
 
-        else -> throw IllegalArgumentException("Unsupported attachment type: $this")
+        else -> throw LLMClientException(clientName, "Unsupported attachment type: $this")
     }
 
     protected fun ToolDescriptor.toOpenAIChatTool(): OpenAITool = OpenAITool(
@@ -503,8 +523,9 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
             )
 
             else -> {
-                logger.error { "Unexpected response from $clientName: no tool calls and no content" }
-                error("Unexpected response from $clientName: no tool calls and no content")
+                val exception = LLMClientException(clientName, "Unexpected response: no tool calls and no content")
+                logger.error(exception) { exception.message }
+                throw exception
             }
         }
     }

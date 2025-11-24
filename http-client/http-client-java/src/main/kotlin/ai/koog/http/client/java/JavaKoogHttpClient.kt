@@ -1,8 +1,10 @@
 package ai.koog.http.client.java
 
 import ai.koog.http.client.KoogHttpClient
+import ai.koog.http.client.KoogHttpClientException
 import ai.koog.utils.io.SuitableForIO
 import io.github.oshai.kotlinlogging.KLogger
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -52,11 +54,11 @@ public class JavaKoogHttpClient internal constructor(
                 return json.decodeFromString(serializer, responseBody) as R
             }
         }
-        val errorBody = response.body()
-        val errorMessage = "Error from $clientName API: ${response.statusCode()}\nBody:\n$errorBody"
-
-        logger.error { errorMessage }
-        error(errorMessage)
+        throw KoogHttpClientException(
+            clientName = clientName,
+            statusCode = response.statusCode(),
+            errorBody = response.body(),
+        )
     }
 
     override suspend fun <R : Any> get(
@@ -115,9 +117,12 @@ public class JavaKoogHttpClient internal constructor(
             val response = httpClient.send(httpRequest, HttpResponse.BodyHandlers.ofLines())
 
             if (response.statusCode() !in 200..299) {
-                val errorMessage = "Error from $clientName API: ${response.statusCode()}"
-                logger.error { errorMessage }
-                close(IllegalStateException(errorMessage))
+                close(
+                    KoogHttpClientException(
+                        clientName = clientName,
+                        statusCode = response.statusCode(),
+                    )
+                )
                 return@callbackFlow
             }
 
@@ -142,17 +147,31 @@ public class JavaKoogHttpClient internal constructor(
                             .let(processStreamingChunk)
                             ?.let { trySend(it) }
                     }
+                } catch (e: CancellationException) {
+                    throw e
                 } catch (e: Exception) {
-                    logger.error(e) { "Error processing SSE event from $clientName: ${e.message}" }
-                    close(e)
+                    close(
+                        KoogHttpClientException(
+                            clientName = clientName,
+                            message = "Error processing SSE event: ${e.message}",
+                            cause = e
+                        )
+                    )
                 }
             }
 
             logger.debug { "SSE connection closed for $clientName" }
             close()
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
-            logger.error(e) { "Exception during streaming from $clientName" }
-            close(e)
+            close(
+                KoogHttpClientException(
+                    clientName = clientName,
+                    message = "Exception during streaming: ${e.message}",
+                    cause = e
+                )
+            )
         }
 
         awaitClose {

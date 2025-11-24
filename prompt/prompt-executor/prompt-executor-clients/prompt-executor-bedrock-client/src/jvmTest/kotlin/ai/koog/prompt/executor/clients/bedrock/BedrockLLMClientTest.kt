@@ -6,6 +6,7 @@ import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.prompt.dsl.ModerationCategory
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
+import ai.koog.prompt.executor.clients.LLMClientException
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -337,7 +338,7 @@ class BedrockLLMClientTest {
         val model = BedrockModels.AnthropicClaude3Sonnet
 
         // Verify that moderate method throws an exception because moderationGuardrailsSettings wasn't provided
-        assertFailsWith<IllegalArgumentException> {
+        assertFailsWith<LLMClientException> {
             client.moderate(prompt, model)
         }
     }
@@ -523,7 +524,7 @@ class BedrockLLMClientTest {
     }
 
     @Test
-    fun `execute throws IllegalArgumentException for model without Completion capability`() = runTest {
+    fun `execute throws LLMClientException for model without Completion capability`() = runTest {
         val client = BedrockLLMClient(
             identityProvider = StaticCredentialsProvider {
                 accessKeyId = "test-key"
@@ -541,7 +542,7 @@ class BedrockLLMClientTest {
         val prompt = Prompt.build("test") {
             user("Some input")
         }
-        assertFailsWith<IllegalArgumentException> {
+        assertFailsWith<LLMClientException> {
             client.execute(prompt, noCompletionModel, emptyList())
         }
     }
@@ -585,7 +586,7 @@ class BedrockLLMClientTest {
     }
 
     @Test
-    fun `executeStreaming throws IllegalArgumentException for model without Completion capability`() = runTest {
+    fun `executeStreaming throws LLMClientException for model without Completion capability`() = runTest {
         val client = BedrockLLMClient(
             identityProvider = StaticCredentialsProvider {
                 accessKeyId = "test-key"
@@ -603,7 +604,7 @@ class BedrockLLMClientTest {
         val prompt = Prompt.build("test") {
             user("Some input")
         }
-        assertFailsWith<IllegalArgumentException> {
+        assertFailsWith<LLMClientException> {
             client.executeStreaming(prompt, noCompletionModel, emptyList()).toList()
         }
     }

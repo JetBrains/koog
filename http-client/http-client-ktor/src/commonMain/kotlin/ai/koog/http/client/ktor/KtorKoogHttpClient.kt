@@ -1,6 +1,7 @@
 package ai.koog.http.client.ktor
 
 import ai.koog.http.client.KoogHttpClient
+import ai.koog.http.client.KoogHttpClientException
 import ai.koog.utils.io.SuitableForIO
 import io.github.oshai.kotlinlogging.KLogger
 import io.ktor.client.HttpClient
@@ -16,7 +17,6 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
 import io.ktor.client.statement.bodyAsText
-import io.ktor.client.statement.readRawBytes
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
@@ -75,11 +75,11 @@ public class KtorKoogHttpClient internal constructor(
                 return response.body(TypeInfo(responseType))
             }
         }
-        val errorBody = response.bodyAsText()
-        val errorMessage = "Error from $clientName API: ${response.status}\nBody:\n$errorBody"
-
-        logger.error { errorMessage }
-        error(errorMessage)
+        throw KoogHttpClientException(
+            clientName = clientName,
+            statusCode = response.status.value,
+            errorBody = response.bodyAsText(),
+        )
     }
 
     override suspend fun <R : Any> get(
@@ -145,18 +145,20 @@ public class KtorKoogHttpClient internal constructor(
                 }
             }
         } catch (e: SSEClientException) {
-            e.response?.let { response ->
-                val body = response.readRawBytes().decodeToString()
-                val errorMessage = "Error from $clientName API: ${response.status}: ${e.message}\nBody:\n$body"
-
-                logger.error(e) { errorMessage }
-                error(errorMessage)
-            }
+            throw KoogHttpClientException(
+                clientName = clientName,
+                statusCode = e.response?.status?.value,
+                errorBody = e.response?.bodyAsText(),
+                cause = e
+            )
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            logger.error(e) { "Exception during streaming from $clientName" }
-            throw e
+            throw KoogHttpClientException(
+                clientName = clientName,
+                message = "Exception during streaming: ${e.message}",
+                cause = e,
+            )
         }
     }
 }

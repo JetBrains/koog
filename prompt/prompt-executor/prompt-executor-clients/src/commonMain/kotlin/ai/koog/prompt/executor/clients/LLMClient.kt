@@ -84,6 +84,12 @@ public interface LLMClient : AutoCloseable {
      * @return The LLMProvider instance used for executing prompts and managing LLM operations.
      */
     public fun llmProvider(): LLMProvider
+
+    /**
+     * The name of the client.
+     */
+    public val clientName: String
+        get() = this::class.simpleName ?: "UnknownClient"
 }
 
 /**
