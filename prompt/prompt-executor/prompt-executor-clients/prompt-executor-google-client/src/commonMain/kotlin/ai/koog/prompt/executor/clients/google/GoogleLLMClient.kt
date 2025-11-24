@@ -3,6 +3,7 @@ package ai.koog.prompt.executor.clients.google
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
+import ai.koog.http.client.KoogHttpClientException
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
@@ -227,11 +228,17 @@ public open class GoogleLLMClient(
         } catch (e: CancellationException) {
             throw e
         } catch (e: SSEClientException) {
-            val exception = LLMClientException(
-                clientName = clientName,
+            // TODO: after the update to the KoogHttpClient, delegate this logic to the http client
+
+            val httpClientException = KoogHttpClientException(
                 statusCode = e.response?.status?.value,
                 message = e.message,
                 cause = e
+            )
+            val exception = LLMClientException(
+                clientName = clientName,
+                message = httpClientException.message,
+                cause = httpClientException
             )
             logger.error(exception) { exception.message }
             throw exception
@@ -284,10 +291,16 @@ public open class GoogleLLMClient(
             if (response.status.isSuccess()) {
                 response.body<GoogleResponse>()
             } else {
+                // TODO: after the update to the KoogHttpClient, delegate this logic to the http client
+
+                val httpClientException = KoogHttpClientException(
+                    statusCode = response.status.value,
+                    errorBody = response.bodyAsText(),
+                )
                 val exception = LLMClientException(
                     clientName = clientName,
-                    statusCode = response.status.value,
-                    errorBody = response.bodyAsText()
+                    message = httpClientException.message,
+                    cause = httpClientException
                 )
                 logger.error(exception) { exception.message }
                 throw exception

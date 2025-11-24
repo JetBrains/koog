@@ -132,7 +132,7 @@ public class OkHttpKoogHttpClient internal constructor(
                         clientName = clientName,
                         message = "Error processing SSE event: ${e.message}"
                     )
-                    logger.error(e) { exception.message }
+                    logger.error(exception) { exception.message }
                     close(exception)
                 }
             }
@@ -150,7 +150,7 @@ public class OkHttpKoogHttpClient internal constructor(
                     message = t?.message,
                     cause = t
                 )
-                logger.error(t) { exception.message }
+                logger.error(exception) { exception.message }
                 close(exception)
             }
         }

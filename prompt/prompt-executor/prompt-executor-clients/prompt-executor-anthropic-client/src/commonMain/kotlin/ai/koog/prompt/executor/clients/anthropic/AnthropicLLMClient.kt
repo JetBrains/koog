@@ -2,6 +2,7 @@ package ai.koog.prompt.executor.clients.anthropic
 
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
+import ai.koog.http.client.KoogHttpClientException
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
@@ -164,10 +165,16 @@ public open class AnthropicLLMClient(
                 val anthropicResponse = response.body<AnthropicResponse>()
                 processAnthropicResponse(anthropicResponse)
             } else {
-                val exception = LLMClientException(
-                    clientName = clientName,
+                // TODO: after the update to the KoogHttpClient, delegate this logic to the http client
+
+                val httpClientException = KoogHttpClientException(
                     statusCode = response.status.value,
                     errorBody = response.bodyAsText(),
+                )
+                val exception = LLMClientException(
+                    clientName = clientName,
+                    message = httpClientException.message,
+                    cause = httpClientException
                 )
                 logger.error(exception) { exception.message }
                 throw exception
@@ -296,21 +303,28 @@ public open class AnthropicLLMClient(
                 }
             }
         } catch (e: SSEClientException) {
-            val exception = LLMClientException(
-                clientName = clientName,
+            // TODO: after the update to the KoogHttpClient, delegate this logic to the http client
+
+            val httpClientException = KoogHttpClientException(
                 statusCode = e.response?.status?.value,
                 message = e.message,
                 cause = e
             )
+            val exception = LLMClientException(
+                clientName = clientName,
+                message = httpClientException.message,
+                cause = httpClientException
+            )
             logger.error(exception) { exception.message }
             throw exception
         } catch (e: Exception) {
-            logger.error(e) { "Exception during streaming: $e" }
-            throw LLMClientException(
+            val exception = LLMClientException(
                 clientName = clientName,
-                message = e.message,
+                message = "Exception during streaming: ${e.message}",
                 cause = e
             )
+            logger.error(exception) { exception.message }
+            throw exception
         }
     }
 

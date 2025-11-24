@@ -1,6 +1,7 @@
 package ai.koog.prompt.executor.ollama.client
 
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.http.client.KoogHttpClientException
 import ai.koog.prompt.dsl.ModerationCategory
 import ai.koog.prompt.dsl.ModerationCategoryResult
 import ai.koog.prompt.dsl.ModerationResult
@@ -183,10 +184,16 @@ public class OllamaClient(
         if (response.status.isSuccess()) {
             return parseResponse(response.body<OllamaChatResponseDTO>())
         } else {
-            val exception = LLMClientException(
-                clientName = clientName,
+            // TODO: after the update to the KoogHttpClient, delegate this logic to the http client
+
+            val httpClientException = KoogHttpClientException(
                 statusCode = response.status.value,
                 errorBody = response.bodyAsText(),
+            )
+            val exception = LLMClientException(
+                clientName = clientName,
+                message = httpClientException.message,
+                cause = httpClientException,
             )
             logger.error(exception) { exception.message }
             throw exception
@@ -341,7 +348,7 @@ public class OllamaClient(
                 message = "Failed to fetch model cards from Ollama: ${e.message}",
                 cause = e
             )
-            logger.error(e) { exception.message }
+            logger.error(exception) { exception.message }
             throw exception
         }
     }
@@ -433,7 +440,7 @@ public class OllamaClient(
                 message = "Failed to fetch model card from Ollama: ${e.message}",
                 cause = e
             )
-            logger.error(e) { exception.message }
+            logger.error(exception) { exception.message }
             throw exception
         }
     }
@@ -465,7 +472,7 @@ public class OllamaClient(
                 message = "Failed to pull model: ${e.message}",
                 cause = e
             )
-            logger.error(e) { exception.message }
+            logger.error(exception) { exception.message }
             throw exception
         }
     }

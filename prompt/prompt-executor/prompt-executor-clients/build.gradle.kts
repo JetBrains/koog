@@ -13,7 +13,6 @@ kotlin {
             dependencies {
                 api(project(":prompt:prompt-model"))
                 api(project(":agents:agents-tools"))
-                api(project(":http-client:http-client-core"))
                 api(project(":prompt:prompt-executor:prompt-executor-model"))
                 api(libs.kotlinx.coroutines.core)
             }
