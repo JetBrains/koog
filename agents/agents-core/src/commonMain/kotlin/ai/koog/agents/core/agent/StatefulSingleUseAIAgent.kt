@@ -18,7 +18,7 @@ import kotlin.uuid.Uuid
 /**
  * Abstract base class representing a single-use AI agent with state.
  *
- * This AI agent is designed to execute a specific long-running strategy only once, and provides API to monitor and manage it's state.
+ * This AI agent is designed to execute a specific long-running strategy only once and provides an API to monitor and manage its state.
  *
  * It maintains internal states including its running status, whether it was started, its result (if available), and
  * the root context associated with its execution. The class enforces safe state transitions and provides
@@ -86,72 +86,71 @@ public abstract class StatefulSingleUseAIAgent<Input, Output, TContext : AIAgent
         }
 
         val runId = Uuid.random().toString()
-
-        pipeline.prepareFeatures()
+        val context = prepareContext(agentInput, runId)
 
         return withContext(
             AgentRunInfoContextElement(
-                agentId = this@StatefulSingleUseAIAgent.id,
+                agentId = id,
                 runId = runId,
                 agentConfig = agentConfig,
                 strategyName = strategy.name
             )
         ) {
-            val context = prepareContext(agentInput, runId)
-
-            agentStateMutex.withLock {
-                state = State.Running(context)
-            }
-
-            logger.debug {
-                formatLog(
-                    agentId = this@StatefulSingleUseAIAgent.id,
-                    runId = runId,
-                    message = "Starting agent execution"
-                )
-            }
-
-            pipeline.onAgentStarting<Input, Output>(
-                runId = runId,
-                agent = this@StatefulSingleUseAIAgent,
-                context = context
-            )
-
-            val result = try {
-                strategy.execute(context = context, input = agentInput)
-            } catch (e: Throwable) {
-                logger.error(e) { "Execution exception reported by server!" }
-                pipeline.onAgentExecutionFailed(
-                    agentId = this@StatefulSingleUseAIAgent.id,
-                    runId = runId,
-                    throwable = e
-                )
-                agentStateMutex.withLock { state = State.Failed(e) }
-                throw e
-            }
-
-            logger.debug {
-                formatLog(
-                    agentId = this@StatefulSingleUseAIAgent.id,
-                    runId = runId,
-                    message = "Finished agent execution"
-                )
-            }
-            pipeline.onAgentCompleted(
-                agentId = this@StatefulSingleUseAIAgent.id,
-                runId = runId,
-                result = result
-            )
-
-            agentStateMutex.withLock {
-                state = if (result != null) {
-                    State.Finished(result)
-                } else {
-                    State.Failed(Exception("result is null"))
+            pipeline.withPreparedPipeline {
+                agentStateMutex.withLock {
+                    state = State.Running(context)
                 }
-            }
 
-            return@withContext result ?: error("result is null")
+                logger.debug {
+                    formatLog(
+                        agentId = id,
+                        runId = runId,
+                        message = "Starting agent execution"
+                    )
+                }
+
+                pipeline.onAgentStarting<Input, Output>(
+                    runId = runId,
+                    agent = this@StatefulSingleUseAIAgent,
+                    context = context
+                )
+
+                val result = try {
+                    strategy.execute(context = context, input = agentInput)
+                } catch (e: Throwable) {
+                    logger.error(e) { "Execution exception reported by server!" }
+                    pipeline.onAgentExecutionFailed(
+                        agentId = id,
+                        runId = runId,
+                        throwable = e
+                    )
+                    agentStateMutex.withLock { state = State.Failed(e) }
+                    throw e
+                }
+
+                logger.debug {
+                    formatLog(
+                        agentId = id,
+                        runId = runId,
+                        message = "Finished agent execution"
+                    )
+                }
+                pipeline.onAgentCompleted(
+                    agentId = id,
+                    runId = runId,
+                    result = result
+                )
+
+                agentStateMutex.withLock {
+                    state = if (result != null) {
+                        State.Finished(result)
+                    } else {
+                        State.Failed(Exception("result is null"))
+                    }
+                }
+
+                result ?: error("result is null")
+            }
         }
     }
 
@@ -159,14 +158,13 @@ public abstract class StatefulSingleUseAIAgent<Input, Output, TContext : AIAgent
      * Closes the AI Agent and performs necessary cleanup operations.
      *
      * This method is a suspending function that ensures that the AI Agent's resources are released
-     * when it is no longer needed. It notifies the pipeline of the agent's closure and ensures
+     * when it is no longer required. It notifies the pipeline of the agent's closure and ensures
      * that any associated features or stream providers are properly closed.
      *
      * Overrides the `close` method to implement agent-specific shutdown logic.
      */
     final override suspend fun close() {
-        pipeline.onAgentClosing(agentId = this@StatefulSingleUseAIAgent.id)
-        pipeline.closeFeaturesStreamProviders()
+        // TODO: Delete Closeable interface from [AIAgent] declaration.
     }
 
     /**
@@ -202,6 +200,22 @@ public abstract class StatefulSingleUseAIAgent<Input, Output, TContext : AIAgent
      */
     protected fun formatLog(agentId: String, runId: String, message: String): String =
         "[agent id: $agentId, run id: $runId] $message"
+
+    /**
+     * Executes the provided block within a prepared pipeline context.
+     * Ensures that the necessary feature resources are initialized before the block is invoked
+     * and properly cleaned up after finishing the block.
+     *
+     * @return The result of the block's execution.
+     */
+    private suspend fun <T> AIAgentPipeline.withPreparedPipeline(block: suspend () -> T): T =
+        try {
+            prepareAllFeatures()
+            block.invoke()
+        } finally {
+            onAgentClosing(agentId = id)
+            closeAllFeaturesMessageProcessors()
+        }
 }
 
 /**

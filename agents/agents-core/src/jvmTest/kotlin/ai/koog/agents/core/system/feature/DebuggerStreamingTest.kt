@@ -15,7 +15,6 @@ import ai.koog.agents.core.feature.remote.client.FeatureMessageRemoteClient
 import ai.koog.agents.core.feature.remote.client.config.DefaultClientConnectionConfig
 import ai.koog.agents.core.feature.writer.FeatureMessageRemoteWriter
 import ai.koog.agents.core.system.feature.DebuggerTestAPI.HOST
-import ai.koog.agents.core.system.feature.DebuggerTestAPI.connectWithRetry
 import ai.koog.agents.core.system.feature.DebuggerTestAPI.defaultClientServerTimeout
 import ai.koog.agents.core.system.feature.DebuggerTestAPI.mockLLModel
 import ai.koog.agents.core.system.feature.DebuggerTestAPI.testBaseClient
@@ -156,7 +155,7 @@ class DebuggerStreamingTest {
                 val collectEventsJob =
                     clientEventsCollector.startCollectEvents(coroutineScope = this@launch)
 
-                client.connectWithRetry(defaultClientServerTimeout)
+                client.connect()
                 collectEventsJob.join()
 
                 val callIds = clientEventsCollector.collectedEvents.filterIsInstance<LLMStreamingStartingEvent>().map { it.callId }
@@ -347,7 +346,7 @@ class DebuggerStreamingTest {
                 val collectEventsJob =
                     clientEventsCollector.startCollectEvents(coroutineScope = this@launch)
 
-                client.connectWithRetry(defaultClientServerTimeout)
+                client.connect()
                 collectEventsJob.join()
 
                 val callIds = clientEventsCollector.collectedEvents.filterIsInstance<LLMStreamingStartingEvent>().map { it.callId }

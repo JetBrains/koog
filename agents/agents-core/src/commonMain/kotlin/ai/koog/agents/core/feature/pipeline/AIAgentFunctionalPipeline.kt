@@ -33,6 +33,6 @@ public class AIAgentFunctionalPipeline(clock: Clock = Clock.System) : AIAgentPip
             pipeline = this,
         )
 
-        registeredFeatures[feature.key] = RegisteredFeature(featureImpl, featureConfig)
+        super.install(feature.key, featureConfig, featureImpl)
     }
 }

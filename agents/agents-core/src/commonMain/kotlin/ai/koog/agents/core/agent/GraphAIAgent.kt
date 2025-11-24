@@ -16,7 +16,6 @@ import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.prompt.executor.model.PromptExecutor
-import ai.koog.utils.io.Closeable
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.datetime.Clock
 import kotlin.reflect.KType
@@ -59,7 +58,7 @@ public open class GraphAIAgent<Input, Output>(
 ) : StatefulSingleUseAIAgent<Input, Output, AIAgentGraphContextBase>(
     logger = logger,
     id = id,
-), Closeable {
+) {
 
     private companion object {
         private val logger = KotlinLogging.logger {}
