@@ -176,7 +176,7 @@ class MockWebServer {
      */
     fun url(path: String = ""): String {
         require(port > 0) { "Server is not started" }
-        return "http://localhost:$port$path"
+        return "http://127.0.0.1:$port$path"
     }
 
     /**

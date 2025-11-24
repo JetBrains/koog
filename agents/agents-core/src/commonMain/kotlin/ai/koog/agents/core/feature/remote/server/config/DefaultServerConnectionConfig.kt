@@ -71,8 +71,8 @@ public class DefaultServerConnectionConfig(
          *
          * This value is used in `DefaultServerConnectionConfig` to define the timeout period
          * within which a client connection needs to be established after the server starts.
-         * By default, it is set to 30 seconds.
+         * By default, it is set to 300 seconds.
          */
-        public val defaultAwaitInitialConnectionTimeout: Duration = 30.seconds
+        public val defaultAwaitInitialConnectionTimeout: Duration = 300.seconds
     }
 }
