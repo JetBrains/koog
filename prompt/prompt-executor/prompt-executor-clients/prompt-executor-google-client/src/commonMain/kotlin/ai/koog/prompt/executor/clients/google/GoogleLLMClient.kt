@@ -657,7 +657,7 @@ public open class GoogleLLMClient(
                         )
                     }
 
-                    else -> error("Not supported part type: $part")
+                    else -> throw LLMClientException(clientName, "Not supported part type: $part")
                 }
             }
         }
@@ -686,8 +686,7 @@ public open class GoogleLLMClient(
      */
     private fun processGoogleResponse(response: GoogleResponse): List<List<Message.Response>> {
         if (response.candidates.isEmpty()) {
-            logger.error { "Empty candidates in Gemini response" }
-            error("Empty candidates in Gemini response")
+            throw LLMClientException(clientName, "Empty candidates in Gemini response")
         }
 
         // Extract token count from the response
