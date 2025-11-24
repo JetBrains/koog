@@ -499,8 +499,6 @@ abstract class ExecutorIntegrationTestBase {
                             throw e
                         }
                     }
-                } catch (e: Exception) {
-                    throw e
                 }
             }
         }
@@ -565,8 +563,6 @@ abstract class ExecutorIntegrationTestBase {
                             throw e
                         }
                     }
-                } catch (e: Exception) {
-                    throw e
                 }
             }
         }
@@ -606,8 +602,6 @@ abstract class ExecutorIntegrationTestBase {
                     } else {
                         throw e
                     }
-                } catch (e: Exception) {
-                    throw e
                 }
             }
         }
