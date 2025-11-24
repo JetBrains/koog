@@ -3,54 +3,33 @@ package ai.koog.agents.core.feature
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.entity.createStorageKey
 import ai.koog.agents.core.feature.config.FeatureConfig
+import ai.koog.agents.core.feature.pipeline.AIAgentFunctionalPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
+import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
 import ai.koog.prompt.message.Message
 
 class TestFeature(val events: MutableList<String>, val runIds: MutableList<String>) {
 
-    class Config : FeatureConfig() {
-        var events: MutableList<String>? = null
-        var runIds: MutableList<String>? = null
+    class TestConfig : FeatureConfig() {
+        var events: MutableList<String> = mutableListOf()
+        var runIds: MutableList<String> = mutableListOf()
     }
 
-    companion object Feature : AIAgentGraphFeature<Config, TestFeature> {
+    companion object Feature : AIAgentGraphFeature<TestConfig, TestFeature>, AIAgentFunctionalFeature<TestConfig, TestFeature> {
         override val key: AIAgentStorageKey<TestFeature> = createStorageKey("test-feature")
 
-        override fun createInitialConfig(): Config = Config()
+        override fun createInitialConfig(): TestConfig = TestConfig()
 
         override fun install(
-            config: Config,
+            config: TestConfig,
             pipeline: AIAgentGraphPipeline,
         ): TestFeature {
             val testFeature = TestFeature(
-                events = config.events ?: mutableListOf(),
-                runIds = config.runIds ?: mutableListOf()
+                events = config.events,
+                runIds = config.runIds
             )
 
-            pipeline.interceptAgentStarting(this) { eventContext ->
-                testFeature.runIds += eventContext.runId
-                testFeature.events +=
-                    "Agent: before agent started (id: ${eventContext.agent.id}, run id: ${eventContext.runId})"
-            }
-
-            pipeline.interceptStrategyStarting(this) { eventContext ->
-                testFeature.events +=
-                    "Agent: strategy started (strategy name: ${eventContext.strategy.name})"
-            }
-
-            pipeline.interceptLLMCallStarting(this) { event ->
-                testFeature.events +=
-                    "LLM: start LLM call (prompt: ${event.prompt.messages.firstOrNull {
-                        it.role == Message.Role.User
-                    }?.content}, tools: [${event.tools.joinToString { it.name }}])"
-            }
-
-            pipeline.interceptLLMCallCompleted(this) { event ->
-                testFeature.events +=
-                    "LLM: finish LLM call (responses: [${event.responses.joinToString(", ") {
-                        "${it.role.name}: ${it.content}"
-                    }}])"
-            }
+            installCommon(pipeline, config)
 
             pipeline.interceptNodeExecutionStarting(this) { event ->
                 testFeature.events +=
@@ -82,17 +61,64 @@ class TestFeature(val events: MutableList<String>, val runIds: MutableList<Strin
                     "Subgraph: execution error (name: ${event.subgraph.name}, error: ${event.throwable.message})"
             }
 
+            return testFeature
+        }
+
+        override fun install(
+            config: TestConfig,
+            pipeline: AIAgentFunctionalPipeline
+        ): TestFeature {
+            val testFeature = TestFeature(
+                events = config.events,
+                runIds = config.runIds
+            )
+
+            installCommon(pipeline, config)
+            return testFeature
+        }
+
+        //region Private Methods
+
+        private fun installCommon(
+            pipeline: AIAgentPipeline,
+            config: TestConfig,
+        ) {
+            pipeline.interceptAgentStarting(this) { eventContext ->
+                config.runIds += eventContext.runId
+                config.events +=
+                    "Agent: before agent started (id: ${eventContext.agent.id}, run id: ${eventContext.runId})"
+            }
+
+            pipeline.interceptStrategyStarting(this) { eventContext ->
+                config.events +=
+                    "Agent: strategy started (strategy name: ${eventContext.strategy.name})"
+            }
+
+            pipeline.interceptLLMCallStarting(this) { event ->
+                config.events +=
+                    "LLM: start LLM call (prompt: ${event.prompt.messages.firstOrNull {
+                        it.role == Message.Role.User
+                    }?.content}, tools: [${event.tools.joinToString { it.name }}])"
+            }
+
+            pipeline.interceptLLMCallCompleted(this) { event ->
+                config.events +=
+                    "LLM: finish LLM call (responses: [${event.responses.joinToString(", ") {
+                        "${it.role.name}: ${it.content}"
+                    }}])"
+            }
+
             pipeline.interceptToolCallStarting(this) { event ->
-                testFeature.events +=
+                config.events +=
                     "Tool: call tool (tool: ${event.tool.name}, args: ${event.toolArgs})"
             }
 
             pipeline.interceptToolCallCompleted(this) { event ->
-                testFeature.events +=
+                config.events +=
                     "Tool: finish tool call with result (tool: ${event.tool.name}, result: ${event.result?.let(event.tool::encodeResultToStringUnsafe) ?: "null"})"
             }
-
-            return testFeature
         }
+
+        //endregion Private Methods
     }
 }

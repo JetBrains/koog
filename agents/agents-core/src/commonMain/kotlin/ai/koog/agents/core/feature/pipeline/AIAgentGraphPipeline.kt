@@ -48,12 +48,12 @@ public class AIAgentGraphPipeline(clock: Clock = Clock.System) : AIAgentPipeline
      * The feature's message processors are initialized during installation.
      *
      * @param TConfig The type of the feature configuration
-     * @param TFeature The type of the feature being installed
+     * @param TFeatureImpl The type of the feature being installed
      * @param feature The feature implementation to be installed
      * @param configure A lambda to customize the feature configuration
      */
-    public fun <TConfig : FeatureConfig, TFeature : Any> install(
-        feature: AIAgentGraphFeature<TConfig, TFeature>,
+    public fun <TConfig : FeatureConfig, TFeatureImpl : Any> install(
+        feature: AIAgentGraphFeature<TConfig, TFeatureImpl>,
         configure: TConfig.() -> Unit,
     ) {
         val featureConfig = feature.createInitialConfig().apply { configure() }
@@ -62,7 +62,7 @@ public class AIAgentGraphPipeline(clock: Clock = Clock.System) : AIAgentPipeline
             pipeline = this,
         )
 
-        registeredFeatures[feature.key] = RegisteredFeature(featureImpl, featureConfig)
+        super.install(feature.key, featureConfig, featureImpl)
     }
 
     //region Trigger Node Handlers

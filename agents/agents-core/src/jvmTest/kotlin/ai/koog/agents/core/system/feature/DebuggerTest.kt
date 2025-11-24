@@ -30,7 +30,6 @@ import ai.koog.agents.core.feature.remote.client.FeatureMessageRemoteClient
 import ai.koog.agents.core.feature.remote.client.config.DefaultClientConnectionConfig
 import ai.koog.agents.core.feature.writer.FeatureMessageRemoteWriter
 import ai.koog.agents.core.system.feature.DebuggerTestAPI.HOST
-import ai.koog.agents.core.system.feature.DebuggerTestAPI.connectWithRetry
 import ai.koog.agents.core.system.feature.DebuggerTestAPI.defaultClientServerTimeout
 import ai.koog.agents.core.system.feature.DebuggerTestAPI.mockLLModel
 import ai.koog.agents.core.system.feature.DebuggerTestAPI.testBaseClient
@@ -190,13 +189,12 @@ class DebuggerTest {
                 baseClient = testBaseClient,
                 scope = this
             ).use { client ->
-
                 val clientEventsCollector = ClientEventsCollector(client = client)
 
                 val collectEventsJob =
                     clientEventsCollector.startCollectEvents(coroutineScope = this@launch)
 
-                client.connectWithRetry(defaultClientServerTimeout)
+                client.connect()
                 collectEventsJob.join()
 
                 // Correct run id will be set after the 'collect events job' is finished.

@@ -98,6 +98,7 @@ class OpenTelemetrySpanTest : OpenTelemetryTestBase() {
             val model = defaultModel
 
             val expectedSpans = listOf(
+                // First run
                 mapOf(
                     "agent.$agentId" to mapOf(
                         "attributes" to mapOf(
@@ -109,8 +110,6 @@ class OpenTelemetrySpanTest : OpenTelemetryTestBase() {
                         "events" to emptyMap()
                     )
                 ),
-
-                // First run
                 mapOf(
                     "run.${mockExporter.runIds[1]}" to mapOf(
                         "attributes" to mapOf(
@@ -158,6 +157,17 @@ class OpenTelemetrySpanTest : OpenTelemetryTestBase() {
                 ),
 
                 // Second run
+                mapOf(
+                    "agent.$agentId" to mapOf(
+                        "attributes" to mapOf(
+                            "gen_ai.operation.name" to OperationNameType.CREATE_AGENT.id,
+                            "gen_ai.system" to model.provider.id,
+                            "gen_ai.agent.id" to agentId,
+                            "gen_ai.request.model" to model.id
+                        ),
+                        "events" to emptyMap()
+                    )
+                ),
                 mapOf(
                     "run.${mockExporter.runIds[0]}" to mapOf(
                         "attributes" to mapOf(

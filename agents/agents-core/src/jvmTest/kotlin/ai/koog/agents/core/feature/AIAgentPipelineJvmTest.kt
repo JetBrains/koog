@@ -86,7 +86,7 @@ class AIAgentPipelineJvmTest {
 
         // Run prepare features logic
         AIAgentGraphPipeline().use { pipeline ->
-            pipeline.prepareFeatures()
+            pipeline.prepareAllFeatures()
 
             // Check Debugger feature parameters
             val actualFeature = pipeline.feature(Debugger::class, Debugger)
@@ -110,7 +110,7 @@ class AIAgentPipelineJvmTest {
 
         // Run prepare features logic
         AIAgentGraphPipeline().use { pipeline ->
-            pipeline.prepareFeatures()
+            pipeline.prepareAllFeatures()
 
             // Check Debugger feature parameters
             val actualFeature = pipeline.feature(Debugger::class, Debugger)
@@ -173,7 +173,7 @@ class AIAgentPipelineJvmTest {
         )
 
         AIAgentGraphPipeline().use { pipeline ->
-            pipeline.prepareFeatures()
+            pipeline.prepareAllFeatures()
 
             val debuggerFeature = pipeline.feature(Debugger::class, Debugger)
             assertNull(debuggerFeature, "Debugger feature is not null")
@@ -194,7 +194,7 @@ class AIAgentPipelineJvmTest {
 
         // Run prepare features logic
         AIAgentGraphPipeline().use { pipeline ->
-            pipeline.prepareFeatures()
+            pipeline.prepareAllFeatures()
 
             // Check Debugger feature is installed
             val actualFeature = pipeline.feature(Debugger::class, Debugger)
@@ -216,7 +216,7 @@ class AIAgentPipelineJvmTest {
 
         // Run prepare features logic
         AIAgentGraphPipeline().use { pipeline ->
-            pipeline.prepareFeatures()
+            pipeline.prepareAllFeatures()
 
             // Check Debugger feature is installed
             val actualFeature = pipeline.feature(Debugger::class, Debugger)
@@ -300,6 +300,6 @@ private suspend inline fun AIAgentPipeline.use(block: suspend (AIAgentPipeline) 
     try {
         block(this)
     } finally {
-        closeFeaturesStreamProviders()
+        closeAllFeaturesMessageProcessors()
     }
 }
