@@ -256,7 +256,7 @@ public open class AnthropicLLMClient(
                             }
                         }
 
-                        AnthropicStreamEventType.MESSAGE_STOP.value -> {
+                        AnthropicStreamEventType.CONTENT_BLOCK_STOP.value -> {
                             tryEmitPendingToolCall()
                         }
 
@@ -266,6 +266,10 @@ public open class AnthropicLLMClient(
                                 finishReason = response.delta?.stopReason,
                                 metaInfo = getMetaInfo()
                             )
+                        }
+
+                        AnthropicStreamEventType.MESSAGE_STOP.value -> {
+                            logger.debug { "Received stop message event from Anthropic" }
                         }
 
                         AnthropicStreamEventType.ERROR.value -> {

@@ -535,8 +535,9 @@ public data class AnthropicStreamDelta(
 public enum class AnthropicStreamEventType(public val value: String) {
     CONTENT_BLOCK_START("content_block_start"),
     CONTENT_BLOCK_DELTA("content_block_delta"),
-    MESSAGE_DELTA("message_delta"),
+    CONTENT_BLOCK_STOP("content_block_stop"),
     MESSAGE_START("message_start"),
+    MESSAGE_DELTA("message_delta"),
     MESSAGE_STOP("message_stop"),
     ERROR("error"),
     PING("ping"),
