@@ -36,6 +36,7 @@ import ai.koog.prompt.dsl.ModerationCategory
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.LLMClient
+import ai.koog.prompt.executor.clients.LLMClientException
 import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import ai.koog.prompt.executor.clients.anthropic.AnthropicParams
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicThinking
@@ -473,20 +474,24 @@ abstract class ExecutorIntegrationTestBase {
             withRetry {
                 try {
                     checkExecutorMediaResponse(getExecutor(model).execute(prompt, model).single())
-                } catch (e: Exception) {
+                } catch (e: LLMClientException) {
                     // For some edge cases, exceptions are expected
                     when (scenario) {
                         ImageTestScenario.LARGE_IMAGE_ANTHROPIC, ImageTestScenario.LARGE_IMAGE -> {
-                            (e.message?.shouldContain("400 Bad Request"))
-                            (e.message?.shouldContain("image exceeds"))
+                            val message = e.message.shouldNotBeNull()
+
+                            message.shouldContain("Status code: 400")
+                            message.shouldContain("image exceeds")
                         }
 
                         ImageTestScenario.CORRUPTED_IMAGE, ImageTestScenario.EMPTY_IMAGE -> {
-                            (e.message?.shouldContain("400 Bad Request"))
+                            val message = e.message.shouldNotBeNull()
+
+                            message.shouldContain("Status code: 400")
                             if (model.provider == LLMProvider.Anthropic) {
-                                (e.message?.shouldContain("Could not process image"))
+                                message.shouldContain("Could not process image")
                             } else if (model.provider == LLMProvider.OpenAI) {
-                                (e.message?.shouldContain("You uploaded an unsupported image. Please make sure your image is valid."))
+                                message.shouldContain("You uploaded an unsupported image. Please make sure your image is valid.")
                             }
                         }
 
@@ -534,19 +539,21 @@ abstract class ExecutorIntegrationTestBase {
             withRetry {
                 try {
                     checkExecutorMediaResponse(getExecutor(model).execute(prompt, model).single())
-                } catch (e: Exception) {
+                } catch (e: LLMClientException) {
                     when (scenario) {
                         TextTestScenario.EMPTY_TEXT -> {
                             if (model.provider == LLMProvider.Google) {
-                                (e.message?.shouldContain("400 Bad Request"))
-                                (e.message?.shouldContain("Unable to submit request because it has an empty inlineData parameter. Add a value to the parameter and try again."))
+                                val message = e.message.shouldNotBeNull()
+                                message.shouldContain("Status code: 400")
+                                message.shouldContain("Unable to submit request because it has an empty inlineData parameter. Add a value to the parameter and try again.")
                             }
                         }
 
                         TextTestScenario.LONG_TEXT_5_MB -> {
                             if (model.provider == LLMProvider.Anthropic) {
-                                (e.message?.shouldContain("400 Bad Request"))
-                                (e.message?.shouldContain("prompt is too long"))
+                                val message = e.message.shouldNotBeNull()
+                                message.shouldContain("Status code: 400")
+                                message.shouldContain("prompt is too long")
                             } else if (model.provider == LLMProvider.Google) {
                                 throw e
                             }
@@ -582,13 +589,15 @@ abstract class ExecutorIntegrationTestBase {
             withRetry(times = 3, testName = "integration_testAudioProcessingBasic[${model.id}]") {
                 try {
                     checkExecutorMediaResponse(getExecutor(model).execute(prompt, model).single())
-                } catch (e: Exception) {
+                } catch (e: LLMClientException) {
                     if (scenario == AudioTestScenario.CORRUPTED_AUDIO) {
-                        (e.message?.shouldContain("400 Bad Request"))
+                        val message = e.message.shouldNotBeNull()
+
+                        message.shouldContain("Status code: 400")
                         if (model.provider == LLMProvider.OpenAI) {
-                            (e.message?.shouldContain("This model does not support the format you provided."))
+                            message.shouldContain("This model does not support the format you provided.")
                         } else if (model.provider == LLMProvider.Google) {
-                            (e.message?.shouldContain("Request contains an invalid argument."))
+                            message.shouldContain("Request contains an invalid argument.")
                         }
                     } else {
                         throw e
