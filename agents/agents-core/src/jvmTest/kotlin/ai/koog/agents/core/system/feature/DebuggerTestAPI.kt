@@ -63,7 +63,7 @@ internal object DebuggerTestAPI {
                     if (exception is CancellationException) {
                         throw exception
                     }
-                    delay(1000)
+                    delay(300)
                 }
             }
         }
