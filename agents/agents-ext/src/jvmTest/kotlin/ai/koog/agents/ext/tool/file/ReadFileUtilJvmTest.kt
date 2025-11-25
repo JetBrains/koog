@@ -134,6 +134,25 @@ class ReadFileUtilJvmTest {
     }
 
     @Test
+    fun `clamps endLine when exceeds file length and invokes callback`() = runTest {
+        val file = createTestFile(content = "line1\nline2")
+        val metadata = assertNotNull(fs.metadata(file))
+
+        var invokedWithRequestedEndLine = 0
+        var invokedWithFileLineCount = 0
+
+        val entry = buildTextFileEntry(fs, file, metadata, 0, 50) { requestedEndLine, fileLineCount ->
+            invokedWithRequestedEndLine = requestedEndLine
+            invokedWithFileLineCount = fileLineCount
+        }
+
+        assertIs<FileSystemEntry.File.Content.Text>(entry.content)
+        assertEquals("line1\nline2", entry.content.text)
+        assertEquals(50, invokedWithRequestedEndLine)
+        assertEquals(2, invokedWithFileLineCount)
+    }
+
+    @Test
     fun `throws when startLine exceeds line count`() = runTest {
         val file = createTestFile(content = "line1\nline2")
         val metadata = assertNotNull(fs.metadata(file))
@@ -144,22 +163,12 @@ class ReadFileUtilJvmTest {
     }
 
     @Test
-    fun `throws when startLine is beyond single line file`() = runTest {
+    fun `throws when startLine equals or exceeds file line count`() = runTest {
         val file = createTestFile(content = "single")
         val metadata = assertNotNull(fs.metadata(file))
 
         assertThrows<IllegalArgumentException> {
             buildTextFileEntry(fs, file, metadata, 1, 2)
-        }
-    }
-
-    @Test
-    fun `throws when endLine exceeds line`() = runTest {
-        val file = createTestFile(content = "line1\nline2")
-        val metadata = assertNotNull(fs.metadata(file))
-
-        assertThrows<IllegalArgumentException> {
-            buildTextFileEntry(fs, file, metadata, 0, 50)
         }
     }
 
