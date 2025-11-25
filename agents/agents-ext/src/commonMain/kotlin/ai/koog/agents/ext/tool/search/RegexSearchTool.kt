@@ -11,6 +11,7 @@ import ai.koog.rag.base.files.FileSystemProvider
 import ai.koog.rag.base.files.extendRangeByLines
 import ai.koog.rag.base.files.readText
 import ai.koog.rag.base.files.toPosition
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.emitAll
@@ -18,6 +19,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
+import kotlinx.io.IOException
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -38,6 +40,15 @@ public class RegexSearchTool<Path>(
         +"The tool will solely return search results and does not modify any files."
     }
 
+    /**
+     * Parameters for a regex content search.
+     *
+     * @property path Absolute start directory or file path.
+     * @property regex Regex pattern to match in text files.
+     * @property limit Max matching files to return (default: 25).
+     * @property skip Matching files to skip (default: 0).
+     * @property caseSensitive If true, case-sensitive match; otherwise ignore case.
+     */
     @Serializable
     public data class Args(
         @param:LLMDescription("Absolute starting directory or file path.")
@@ -53,6 +64,12 @@ public class RegexSearchTool<Path>(
         val caseSensitive: Boolean = false,
     )
 
+    /**
+     * Search output.
+     *
+     * @property entries Files with at least one match; each contains excerpt snippets around matches.
+     * @property original The regex used for the search.
+     */
     @Serializable
     public data class Result(val entries: List<FileSystemEntry.File>, val original: String)
 
@@ -84,11 +101,10 @@ public class RegexSearchTool<Path>(
             .drop(skip)
             .take(limit)
             .mapNotNull { match ->
-                val content = fs.readText(match.file)
                 val snippets = match.ranges.map { range ->
-                    val extended = extendRangeByLines(content, range, linesAroundSnippet, linesAroundSnippet)
+                    val extended = extendRangeByLines(match.content, range, linesAroundSnippet, linesAroundSnippet)
                     FileSystemEntry.File.Content.Excerpt.Snippet(
-                        text = extended.substring(content),
+                        text = extended.substring(match.content),
                         range = extended
                     )
                 }
@@ -110,7 +126,11 @@ public class RegexSearchTool<Path>(
     /**
      * A match of one file and the ranges within it that matched a regex.
      */
-    private data class ContentMatch<Path>(val file: Path, val ranges: List<DocumentProvider.DocumentRange>)
+    private data class ContentMatch<Path>(
+        val file: Path,
+        val content: String,
+        val ranges: List<DocumentProvider.DocumentRange>
+    )
 
     /**
      * Recursively searches starting at [start] for text files whose contents match [regex].
@@ -127,23 +147,23 @@ public class RegexSearchTool<Path>(
                     if (fs.getFileContentType(start) != FileMetadata.FileContentType.Text) return@flow
                     val content = fs.readText(start)
                     val ranges = regex.findAll(content).map { mr ->
-                        val s = mr.range.first
-                        val e = mr.range.last + 1 // exclusive
-                        DocumentProvider.DocumentRange(s.toPosition(content), e.toPosition(content))
+                        val start = mr.range.first
+                        val end = mr.range.last + 1 // exclusive
+                        DocumentProvider.DocumentRange(start.toPosition(content), end.toPosition(content))
                     }.toList()
-                    if (ranges.isNotEmpty()) emit(ContentMatch(start, ranges))
-                } catch (e: kotlinx.coroutines.CancellationException) {
+                    if (ranges.isNotEmpty()) emit(ContentMatch(start, content, ranges))
+                } catch (e: CancellationException) {
                     throw e
-                } catch (_: Throwable) {
+                } catch (_: IOException) {
                     // ignore unreadable files
                 }
             }
             FileMetadata.FileType.Directory -> {
                 val children = try {
                     fs.list(start)
-                } catch (e: kotlinx.coroutines.CancellationException) {
+                } catch (e: CancellationException) {
                     throw e
-                } catch (_: Throwable) {
+                } catch (_: IOException) {
                     emptyList()
                 }
                 for (child in children) emitAll(searchByRegex(fs, child, regex))
