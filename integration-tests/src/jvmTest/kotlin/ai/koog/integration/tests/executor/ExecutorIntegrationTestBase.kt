@@ -538,7 +538,8 @@ abstract class ExecutorIntegrationTestBase {
 
             withRetry {
                 try {
-                    checkExecutorMediaResponse(getExecutor(model).execute(prompt, model).single())
+                    val response = getExecutor(model).execute(prompt, model).single()
+                    checkExecutorMediaResponse(response)
                 } catch (e: LLMClientException) {
                     when (scenario) {
                         TextTestScenario.EMPTY_TEXT -> {

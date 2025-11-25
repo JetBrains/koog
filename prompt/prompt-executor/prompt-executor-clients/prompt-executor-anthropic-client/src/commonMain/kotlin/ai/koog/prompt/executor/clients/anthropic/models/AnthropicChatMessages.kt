@@ -117,13 +117,15 @@ public sealed interface AnthropicMessage {
  * that can be utilized in anthropic system communication.
  *
  * @property text The content of the message.
- * @property type The type of message, defaulted to "text".
+ * @property messageType The type of message, defaulted to "text".
  */
 @InternalLLMClientApi
 @Serializable
 public data class SystemAnthropicMessage(
     val text: String,
-    @EncodeDefault(ALWAYS) val type: String = "text"
+    @EncodeDefault(ALWAYS)
+    @SerialName("type")
+    val messageType: String = "text"
 )
 
 /**
@@ -307,7 +309,7 @@ public sealed interface DocumentSource {
  * @property url The URL endpoint of the MCP server.
  * @property authorizationToken Optional authorization token for authentication with the MCP server.
  * @property toolConfiguration Optional configuration for tool usage on the MCP server.
- * @property type The type of server definition, always set to "url".
+ * @property urlType The type of server definition, always set to "url".
  */
 @Serializable
 public class AnthropicMCPServerURLDefinition(
@@ -322,7 +324,8 @@ public class AnthropicMCPServerURLDefinition(
     /**
      * The type of mcp server definition, which is always set to "url".
      */
-    public val type: String = "url"
+    @SerialName("type")
+    public val urlType: String = "url"
 }
 
 /**
@@ -421,7 +424,8 @@ public data class AnthropicToolSchema(
     /**
      * The type of the schema. Always returns "object" for Anthropic tool schemas.
      */
-    val type: String = "object"
+    @SerialName("type")
+    val schemaType: String = "object"
 }
 
 /**
@@ -432,7 +436,7 @@ public data class AnthropicToolSchema(
  * metadata such as stop reason and usage statistics.
  *
  * @property id A unique identifier for the response.
- * @property type The type of the response.
+ * @property responseType The type of the response.
  * @property role Indicates the role of the entity generating the response, such as "assistant" or "system".
  * @property content A list of content units within the response, which can represent text or tool usage instructions.
  * @property model The name or identifier of the model utilized to generate this response.
@@ -443,7 +447,8 @@ public data class AnthropicToolSchema(
 @Serializable
 public data class AnthropicResponse(
     val id: String,
-    val type: String,
+    @SerialName("type")
+    val responseType: String,
     val role: String,
     val content: List<AnthropicContent>,
     val model: String,
@@ -471,8 +476,10 @@ public data class AnthropicUsage(
  *
  * This data class encapsulates the structure of a streamed response,
  * including its type, any delta updates to the content, and the complete message data when applicable.
+ * For more information: https://platform.claude.com/docs/en/build-with-claude/streaming
  *
- * @property type The type of the response (e.g., "content_block_start", "content_block_delta", "message_delta").
+ * @property eventType The type of the response (e.g., "content_block_start", "content_block_delta", "message_delta").
+ * Delta type is string because of https://docs.claude.com/en/docs/build-with-claude/streaming#other-events
  * @property index The index of the content block in streaming responses. Present in content block events.
  * @property contentBlock The content block data for "content_block_start" events, containing tool use information.
  * @property delta An optional incremental update to the message content, represented as [AnthropicStreamDelta].
@@ -483,7 +490,8 @@ public data class AnthropicUsage(
 @InternalLLMClientApi
 @Serializable
 public data class AnthropicStreamResponse(
-    val type: String,
+    @SerialName("type")
+    val eventType: String,
     val index: Int? = null,
     val contentBlock: AnthropicContent? = null,
     val delta: AnthropicStreamDelta? = null,
@@ -497,8 +505,10 @@ public data class AnthropicStreamResponse(
  *
  * This class encapsulates information regarding the type of update, optional textual content,
  * and optional tool usage data.
+ * For more information: https://platform.claude.com/docs/en/build-with-claude/streaming
  *
- * @property type The type of the update provided by Anthropic.
+ * @property deltaType The type of the update provided by Anthropic.
+ * Delta type is string because of https://docs.claude.com/en/docs/build-with-claude/streaming#other-events
  * @property text Optional text content associated with the delta update.
  * @property partialJson Optional partial JSON content for tool use streaming.
  * @property stopReason Optional reason why the generation process was stopped, if applicable.
@@ -507,12 +517,44 @@ public data class AnthropicStreamResponse(
 @InternalLLMClientApi
 @Serializable
 public data class AnthropicStreamDelta(
-    val type: String? = null,
+    @SerialName("type")
+    val deltaType: String? = null,
     val text: String? = null,
     val partialJson: String? = null,
     val stopReason: String? = null,
+    val thinking: String? = null,
     val toolUse: AnthropicContent.ToolUse? = null
 )
+
+/**
+ * Represents the different types of stream events that can occur in the Anthropic streaming protocol.
+ * The events are serialized to specific names for compatibility during serialization and deserialization.
+ *
+ * For more information: https://platform.claude.com/docs/en/build-with-claude/streaming
+ */
+public enum class AnthropicStreamEventType(public val value: String) {
+    CONTENT_BLOCK_START("content_block_start"),
+    CONTENT_BLOCK_DELTA("content_block_delta"),
+    CONTENT_BLOCK_STOP("content_block_stop"),
+    MESSAGE_START("message_start"),
+    MESSAGE_DELTA("message_delta"),
+    MESSAGE_STOP("message_stop"),
+    ERROR("error"),
+    PING("ping"),
+}
+
+/**
+ * Represents the different types of delta updates that can be streamed in the Anthropic system.
+ *
+ * This enum is used to identify the specific nature of the incremental change
+ * being transmitted during a streaming operation.
+ *
+ * For more information: https://platform.claude.com/docs/en/build-with-claude/streaming
+ */
+public enum class AnthropicStreamDeltaContentType(public val value: String) {
+    TEXT_DELTA("text_delta"),
+    INPUT_JSON_DELTA("input_json_delta"),
+}
 
 /**
  * Represents an error that occurred during Anthropic streaming response processing.
@@ -520,14 +562,15 @@ public data class AnthropicStreamDelta(
  * This data class encapsulates error information received from the Anthropic API
  * during streaming operations, providing details about the type and nature of the error.
  *
- * @property type The type or category of the error that occurred.
+ * @property errorType The type or category of the error that occurred.
  * @property message An optional descriptive message providing additional details about the error.
  * Defaults to null if no message is provided.
  */
 @InternalLLMClientApi
 @Serializable
 public data class AnthropicStreamError(
-    val type: String,
+    @SerialName("type")
+    val errorType: String,
     val message: String? = null,
 )
 

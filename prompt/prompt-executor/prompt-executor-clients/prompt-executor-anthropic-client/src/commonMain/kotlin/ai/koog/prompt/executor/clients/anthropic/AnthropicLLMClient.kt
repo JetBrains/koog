@@ -2,7 +2,8 @@ package ai.koog.prompt.executor.clients.anthropic
 
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
-import ai.koog.http.client.KoogHttpClientException
+import ai.koog.http.client.KoogHttpClient
+import ai.koog.http.client.ktor.fromKtorClient
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
@@ -13,6 +14,8 @@ import ai.koog.prompt.executor.clients.anthropic.models.AnthropicMessage
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicMessageRequest
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicMessageRequestSerializer
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicResponse
+import ai.koog.prompt.executor.clients.anthropic.models.AnthropicStreamDeltaContentType
+import ai.koog.prompt.executor.clients.anthropic.models.AnthropicStreamEventType
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicStreamResponse
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicTool
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicToolChoice
@@ -31,32 +34,18 @@ import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.streaming.buildStreamFrameFlow
-import ai.koog.utils.io.SuitableForIO
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.plugins.sse.SSE
-import io.ktor.client.plugins.sse.SSEClientException
-import io.ktor.client.plugins.sse.sse
-import io.ktor.client.request.accept
 import io.ktor.client.request.header
-import io.ktor.client.request.headers
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
-import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
-import io.ktor.http.HttpHeaders
-import io.ktor.http.HttpMethod
 import io.ktor.http.contentType
-import io.ktor.http.isSuccess
 import io.ktor.serialization.kotlinx.json.json
-import io.ktor.sse.ServerSentEvent
-import kotlinx.coroutines.Dispatchers
+import io.ktor.utils.io.CancellationException
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -80,6 +69,7 @@ public class AnthropicClientSettings(
     public val modelVersionsMap: Map<LLModel, String> = DEFAULT_ANTHROPIC_MODEL_VERSIONS_MAP,
     public val baseUrl: String = "https://api.anthropic.com",
     public val apiVersion: String = "2023-06-01",
+    public val messagesPath: String = "v1/messages",
     public val timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig()
 )
 
@@ -99,14 +89,12 @@ public class AnthropicClientSettings(
 public open class AnthropicLLMClient(
     private val apiKey: String,
     private val settings: AnthropicClientSettings = AnthropicClientSettings(),
-    baseClient: HttpClient = HttpClient(),
+    private val baseClient: HttpClient = HttpClient(),
     private val clock: Clock = Clock.System
 ) : LLMClient {
 
     private companion object {
         private val logger = KotlinLogging.logger { }
-
-        private const val DEFAULT_MESSAGE_PATH = "v1/messages"
     }
 
     private val json = Json {
@@ -117,7 +105,12 @@ public open class AnthropicLLMClient(
         namingStrategy = JsonNamingStrategy.SnakeCase
     }
 
-    private val httpClient = baseClient.config {
+    // Configures HTTP client with timeouts, headers, and JSON handling
+    protected val httpClient: KoogHttpClient = KoogHttpClient.fromKtorClient(
+        clientName = clientName,
+        logger = logger,
+        baseClient = baseClient
+    ) {
         defaultRequest {
             url(settings.baseUrl)
             contentType(ContentType.Application.Json)
@@ -156,30 +149,22 @@ public open class AnthropicLLMClient(
 
         val request = createAnthropicRequest(prompt, tools, model, false)
 
-        return withContext(Dispatchers.SuitableForIO) {
-            val response = httpClient.post(DEFAULT_MESSAGE_PATH) {
-                setBody(request)
-            }
-
-            if (response.status.isSuccess()) {
-                val anthropicResponse = response.body<AnthropicResponse>()
-                processAnthropicResponse(anthropicResponse)
-            } else {
-                // TODO: after the update to the KoogHttpClient, delegate this logic to the http client
-
-                val httpClientException = KoogHttpClientException(
-                    statusCode = response.status.value,
-                    errorBody = response.bodyAsText(),
-                )
-                val exception = LLMClientException(
-                    clientName = clientName,
-                    message = httpClientException.message,
-                    cause = httpClientException
-                )
-                logger.error(exception) { exception.message }
-                throw exception
-            }
-        }
+        return try {
+            httpClient.post(
+                path = settings.messagesPath,
+                request = request,
+                requestBodyType = String::class,
+                responseType = AnthropicResponse::class,
+            )
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            throw LLMClientException(
+                clientName = clientName,
+                message = e.message,
+                cause = e
+            )
+        }.let(::processAnthropicResponse)
     }
 
     override fun executeStreaming(
@@ -193,138 +178,119 @@ public open class AnthropicLLMClient(
         }
 
         val request = createAnthropicRequest(prompt, tools, model, true)
+        return buildStreamFrameFlow {
+            var inputTokens: Int? = null
+            var outputTokens: Int? = null
 
-        try {
-            return buildStreamFrameFlow {
+            fun updateUsage(usage: AnthropicUsage) {
+                inputTokens = usage.inputTokens ?: inputTokens
+                outputTokens = usage.outputTokens ?: outputTokens
+            }
+
+            fun getMetaInfo(): ResponseMetaInfo = ResponseMetaInfo.create(
+                clock = clock,
+                totalTokensCount = inputTokens?.plus(outputTokens ?: 0) ?: outputTokens,
+                inputTokensCount = inputTokens,
+                outputTokensCount = outputTokens,
+            )
+
+            try {
                 httpClient.sse(
-                    urlString = DEFAULT_MESSAGE_PATH,
-                    request = {
-                        method = HttpMethod.Post
-                        accept(ContentType.Text.EventStream)
-                        headers {
-                            append(HttpHeaders.CacheControl, "no-cache")
-                            append(HttpHeaders.Connection, "keep-alive")
+                    path = settings.messagesPath,
+                    request = request,
+                    requestBodyType = String::class,
+                    decodeStreamingResponse = { json.decodeFromString<AnthropicStreamResponse>(it) },
+                    processStreamingChunk = { it }
+                ).collect { response ->
+                    when (response.eventType) {
+                        AnthropicStreamEventType.MESSAGE_START.value -> {
+                            response.message?.usage?.let(::updateUsage)
                         }
-                        setBody(request)
-                    }
-                ) {
-                    var inputTokens: Int? = null
-                    var outputTokens: Int? = null
 
-                    fun decodeResponse(event: ServerSentEvent): AnthropicStreamResponse? =
-                        event.data?.trim()?.let { json.decodeFromString<AnthropicStreamResponse>(it) }
-
-                    fun updateUsage(usage: AnthropicUsage) {
-                        inputTokens = usage.inputTokens ?: inputTokens
-                        outputTokens = usage.outputTokens ?: outputTokens
-                    }
-
-                    fun getMetaInfo(): ResponseMetaInfo = ResponseMetaInfo.create(
-                        clock = clock,
-                        totalTokensCount = inputTokens?.plus(outputTokens ?: 0) ?: outputTokens,
-                        inputTokensCount = inputTokens,
-                        outputTokensCount = outputTokens,
-                    )
-
-                    incoming.collect { event ->
-
-                        when (event.event) {
-                            "message_start" -> {
-                                decodeResponse(event)?.message?.usage?.let(::updateUsage)
-                            }
-
-                            "content_block_start" -> {
-                                decodeResponse(event)?.let { response ->
-                                    when (val contentBlock = response.contentBlock) {
-                                        is AnthropicContent.Text -> {
-                                            emitAppend(contentBlock.text)
-                                        }
-
-                                        is AnthropicContent.ToolUse -> {
-                                            upsertToolCall(
-                                                index = response.index
-                                                    ?: throw LLMClientException(clientName, "Tool index is missing"),
-                                                id = contentBlock.id,
-                                                name = contentBlock.name,
-                                            )
-                                        }
-
-                                        else -> Unit
-                                    }
+                        AnthropicStreamEventType.CONTENT_BLOCK_START.value -> {
+                            when (val contentBlock = response.contentBlock) {
+                                is AnthropicContent.Text -> {
+                                    emitAppend(contentBlock.text)
                                 }
-                            }
 
-                            "content_block_delta" -> {
-                                decodeResponse(event)?.let { response ->
-                                    response.delta?.let { delta ->
-                                        when (delta.type) {
-                                            "input_json_delta" -> {
-                                                upsertToolCall(
-                                                    index = response.index
-                                                        ?: throw LLMClientException(
-                                                            clientName,
-                                                            "Tool index is missing"
-                                                        ),
-                                                    args = delta.partialJson
-                                                        ?: throw LLMClientException(clientName, "Tool args are missing")
-                                                )
-                                            }
-
-                                            "text_delta" -> {
-                                                emitAppend(
-                                                    delta.text
-                                                        ?: throw LLMClientException(clientName, "Text delta is missing")
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-
-                            "content_block_stop" -> {
-                                tryEmitPendingToolCall()
-                            }
-
-                            "message_delta" -> {
-                                decodeResponse(event)?.let { response ->
-                                    response.usage?.let(::updateUsage)
-                                    emitEnd(
-                                        finishReason = response.delta?.stopReason,
-                                        metaInfo = getMetaInfo()
+                                is AnthropicContent.ToolUse -> {
+                                    upsertToolCall(
+                                        index = response.index
+                                            ?: throw LLMClientException(clientName, "Tool index is missing"),
+                                        id = contentBlock.id,
+                                        name = contentBlock.name,
                                     )
                                 }
-                            }
 
-                            "error" -> {
-                                throw LLMClientException(clientName, "Anthropic error: ${decodeResponse(event)?.error}")
+                                else -> {
+                                    contentBlock?.let { logger.warn { "Unknown Anthropic stream content block type: ${it::class}" } }
+                                        ?: logger.warn { "Anthropic stream content block is missing" }
+                                }
                             }
+                        }
+
+                        AnthropicStreamEventType.CONTENT_BLOCK_DELTA.value -> {
+                            response.delta?.let { delta ->
+                                // Handles deltas for tool calls and text
+
+                                when (delta.deltaType) {
+                                    AnthropicStreamDeltaContentType.INPUT_JSON_DELTA.value -> {
+                                        upsertToolCall(
+                                            index = response.index
+                                                ?: throw LLMClientException(clientName, "Tool index is missing"),
+                                            args = delta.partialJson
+                                                ?: throw LLMClientException(clientName, "Tool args are missing")
+                                        )
+                                    }
+
+                                    AnthropicStreamDeltaContentType.TEXT_DELTA.value -> {
+                                        emitAppend(
+                                            delta.text
+                                                ?: throw LLMClientException(clientName, "Text delta is missing")
+                                        )
+                                    }
+
+                                    else -> {
+                                        logger.warn { "Unknown Anthropic stream delta type: ${delta.deltaType}" }
+                                    }
+                                }
+                            }
+                        }
+
+                        AnthropicStreamEventType.CONTENT_BLOCK_STOP.value -> {
+                            tryEmitPendingToolCall()
+                        }
+
+                        AnthropicStreamEventType.MESSAGE_DELTA.value -> {
+                            response.usage?.let(::updateUsage)
+                            emitEnd(
+                                finishReason = response.delta?.stopReason,
+                                metaInfo = getMetaInfo()
+                            )
+                        }
+
+                        AnthropicStreamEventType.MESSAGE_STOP.value -> {
+                            logger.debug { "Received stop message event from Anthropic" }
+                        }
+
+                        AnthropicStreamEventType.ERROR.value -> {
+                            throw LLMClientException(clientName, "Anthropic error: ${response.error}")
+                        }
+
+                        AnthropicStreamEventType.PING.value -> {
+                            logger.debug { "Received ping from Anthropic" }
                         }
                     }
                 }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                throw LLMClientException(
+                    clientName = clientName,
+                    message = e.message,
+                    cause = e
+                )
             }
-        } catch (e: SSEClientException) {
-            // TODO: after the update to the KoogHttpClient, delegate this logic to the http client
-
-            val httpClientException = KoogHttpClientException(
-                statusCode = e.response?.status?.value,
-                message = e.message,
-                cause = e
-            )
-            val exception = LLMClientException(
-                clientName = clientName,
-                message = httpClientException.message,
-                cause = httpClientException
-            )
-            logger.error(exception) { exception.message }
-            throw exception
-        } catch (e: Exception) {
-            val exception = LLMClientException(
-                clientName = clientName,
-                message = "Exception during streaming: ${e.message}",
-                cause = e
-            )
-            logger.error(exception) { exception.message }
-            throw exception
         }
     }
 
@@ -423,7 +389,14 @@ public open class AnthropicLLMClient(
             )
         }
 
-        return serializeAnthropicMessageRequest(messages, systemMessage, model, anthropicTools, prompt.params, stream)
+        return serializeAnthropicMessageRequest(
+            messages,
+            systemMessage,
+            model,
+            anthropicTools,
+            prompt.params,
+            stream
+        )
     }
 
     private fun serializeAnthropicMessageRequest(
@@ -541,7 +514,11 @@ public open class AnthropicLLMClient(
         val responses = response.content.map { content ->
             when (content) {
                 is AnthropicContent.Text -> {
-                    Message.Assistant(content = content.text, finishReason = response.stopReason, metaInfo = metaInfo)
+                    Message.Assistant(
+                        content = content.text,
+                        finishReason = response.stopReason,
+                        metaInfo = metaInfo
+                    )
                 }
 
                 is AnthropicContent.Thinking -> {
@@ -670,6 +647,6 @@ public open class AnthropicLLMClient(
     }
 
     override fun close() {
-        httpClient.close()
+        baseClient.close()
     }
 }
