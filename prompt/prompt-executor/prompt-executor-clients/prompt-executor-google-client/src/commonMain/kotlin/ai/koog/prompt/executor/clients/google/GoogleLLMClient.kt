@@ -734,8 +734,8 @@ public open class GoogleLLMClient(
         val models = mutableListOf<String>()
 
         while ((response == null) || response.nextPageToken != null) {
-            val parameters = response?.let {
-                mapOf("pageToken" to it.nextPageToken.toString())
+            val parameters = response?.nextPageToken?.let {
+                mapOf("pageToken" to it)
             } ?: emptyMap()
             try {
                 response = httpClient.get(
