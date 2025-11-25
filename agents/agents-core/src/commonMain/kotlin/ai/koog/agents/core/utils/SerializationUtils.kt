@@ -17,6 +17,7 @@ public object SerializationUtils {
 
     private val json = Json {
         prettyPrint = true
+        allowStructuredMapKeys = true
     }
 
     private val logger = KotlinLogging.logger { }

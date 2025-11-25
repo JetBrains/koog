@@ -1,6 +1,14 @@
 package ai.koog.agents.core.utils
 
 import ai.koog.agents.core.annotation.InternalAgentsApi
+import ai.koog.agents.core.dsl.extension.ModeratedMessage
+import ai.koog.agents.core.dsl.extension.TestLLMExecutor.Companion.testClock
+import ai.koog.prompt.dsl.ModerationCategory
+import ai.koog.prompt.dsl.ModerationCategoryResult
+import ai.koog.prompt.dsl.ModerationResult
+import ai.koog.prompt.message.ContentPart
+import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.RequestMetaInfo
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -262,6 +270,46 @@ class SerializationUtilsTest {
         )
     }
 
+    @Test
+    @JsName("encodeDataToStringForModeratedMessageType")
+    fun `encodeDataToString for ModeratedMessage type`() {
+        val message = Message.User(
+            parts = listOf(
+                ContentPart.Text("Test message")
+            ),
+            metaInfo = RequestMetaInfo(timestamp = testClock.now())
+        )
+
+        val moderationResult = ModerationResult(
+            isHarmful = false,
+            categories = mapOf(
+                ModerationCategory.Harassment to ModerationCategoryResult(
+                    detected = false,
+                    confidenceScore = 0.0,
+                    appliedInputTypes = listOf(ModerationResult.InputType.TEXT)
+                ),
+                ModerationCategory.ViolenceGraphic to ModerationCategoryResult(
+                    detected = false,
+                    confidenceScore = 0.0,
+                    appliedInputTypes = listOf(ModerationResult.InputType.IMAGE)
+                ),
+            )
+        )
+
+        val moderatedMessage = ModeratedMessage(
+            message = message,
+            moderationResult = moderationResult
+        )
+
+        @OptIn(InternalAgentsApi::class)
+        val serializedString = SerializationUtils.encodeDataToString(
+            data = moderatedMessage,
+            dataType = typeOf<ModeratedMessage>()
+        )
+
+        assertNotNull(serializedString)
+    }
+
     //endregion encodeDataToString
 
     //region encodeDataToJsonElement
@@ -350,6 +398,46 @@ class SerializationUtilsTest {
             "Star projections in type arguments are not allowed, but had null",
             throwable.message
         )
+    }
+
+    @Test
+    @JsName("encodeDataToJsonElementForModeratedMessageType")
+    fun `encodeDataToJsonElement for ModeratedMessage type`() {
+        val message = Message.User(
+            parts = listOf(
+                ContentPart.Text("Test message")
+            ),
+            metaInfo = RequestMetaInfo(timestamp = testClock.now())
+        )
+
+        val moderationResult = ModerationResult(
+            isHarmful = false,
+            categories = mapOf(
+                ModerationCategory.Harassment to ModerationCategoryResult(
+                    detected = false,
+                    confidenceScore = 0.0,
+                    appliedInputTypes = listOf(ModerationResult.InputType.TEXT)
+                ),
+                ModerationCategory.ViolenceGraphic to ModerationCategoryResult(
+                    detected = false,
+                    confidenceScore = 0.0,
+                    appliedInputTypes = listOf(ModerationResult.InputType.IMAGE)
+                ),
+            )
+        )
+
+        val moderatedMessage = ModeratedMessage(
+            message = message,
+            moderationResult = moderationResult
+        )
+
+        @OptIn(InternalAgentsApi::class)
+        val serializedString = SerializationUtils.encodeDataToJsonElement(
+            data = moderatedMessage,
+            dataType = typeOf<ModeratedMessage>()
+        )
+
+        assertNotNull(serializedString)
     }
 
     //endregion encodeDataToJsonElement
