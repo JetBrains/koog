@@ -15,7 +15,7 @@ import kotlinx.serialization.json.putJsonObject
 /**
  * Implementation of the [ToolDescriptorSchemaGenerator] for OpenAI tools.
  */
-public class OpenAICompatibleToolDescriptorSchemaGenerator : ToolDescriptorSchemaGenerator {
+public open class OpenAICompatibleToolDescriptorSchemaGenerator : ToolDescriptorSchemaGenerator {
     override fun generate(toolDescriptor: ToolDescriptor): JsonObject {
         toolDescriptor.apply {
             return buildJsonObject {
