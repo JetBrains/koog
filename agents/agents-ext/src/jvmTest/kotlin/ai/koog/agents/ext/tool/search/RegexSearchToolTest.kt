@@ -216,7 +216,7 @@ class RegexSearchToolTest {
         assertTrue(entry != null, "docs/multiline.txt should be in results")
         val content = entry.content
         assertTrue(content is FileSystemEntry.File.Content.Excerpt)
-        val hasContext = content.snippets.any { snippet ->
+        val hasContext = content.snippets.all { snippet ->
             val t = snippet.text
             t.contains("Line 3 ends with a number: 42") && t.contains("Line 4 starts with a number: 100 and continues.")
         }
