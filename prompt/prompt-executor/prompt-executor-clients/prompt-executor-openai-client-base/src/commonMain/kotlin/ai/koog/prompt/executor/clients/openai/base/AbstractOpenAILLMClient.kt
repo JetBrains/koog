@@ -82,7 +82,7 @@ public abstract class OpenAIBaseSettings(
 public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse, TStreamResponse : OpenAIBaseLLMStreamResponse>(
     private val apiKey: String,
     settings: OpenAIBaseSettings,
-    private val baseClient: HttpClient = HttpClient(),
+    baseClient: HttpClient = HttpClient(),
     protected val clock: Clock = Clock.System,
     protected val logger: KLogger,
     private val toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator,
@@ -112,7 +112,6 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
     }
 
     protected val httpClient: KoogHttpClient = KoogHttpClient.fromKtorClient(
-        clientName = clientName,
         logger = logger,
         baseClient = baseClient
     ) {
@@ -340,7 +339,10 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
             val imageUrl = when (val attachmentContent = content) {
                 is AttachmentContent.URL -> attachmentContent.url
                 is AttachmentContent.Binary -> "data:$mimeType;base64,${attachmentContent.asBase64()}"
-                else -> throw LLMClientException(clientName, "Unsupported image attachment content: ${attachmentContent::class}")
+                else -> throw LLMClientException(
+                    clientName,
+                    "Unsupported image attachment content: ${attachmentContent::class}"
+                )
             }
             OpenAIContentPart.Image(OpenAIContentPart.ImageUrl(imageUrl))
         }
@@ -349,7 +351,10 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
             model.requireCapability(LLMCapability.Audio)
             val inputAudio = when (val attachmentContent = content) {
                 is AttachmentContent.Binary -> OpenAIContentPart.InputAudio(attachmentContent.asBase64(), format)
-                else -> throw LLMClientException(clientName, "Unsupported audio attachment content: ${attachmentContent::class}")
+                else -> throw LLMClientException(
+                    clientName,
+                    "Unsupported audio attachment content: ${attachmentContent::class}"
+                )
             }
             OpenAIContentPart.Audio(inputAudio)
         }
@@ -369,7 +374,10 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
                     OpenAIContentPart.Text(attachmentContent.text)
                 }
 
-                else -> throw LLMClientException(clientName, "Unsupported file attachment content: ${attachmentContent::class}")
+                else -> throw LLMClientException(
+                    clientName,
+                    "Unsupported file attachment content: ${attachmentContent::class}"
+                )
             }
         }
 
@@ -495,6 +503,6 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
     }
 
     override fun close() {
-        baseClient.close()
+        httpClient.close()
     }
 }
