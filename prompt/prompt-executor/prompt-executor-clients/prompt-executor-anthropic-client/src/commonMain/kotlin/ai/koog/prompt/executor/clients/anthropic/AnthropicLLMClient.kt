@@ -113,13 +113,14 @@ public open class AnthropicLLMClient(
     ) {
         defaultRequest {
             url(settings.baseUrl)
-            url.parameters.append("key", apiKey)
             contentType(ContentType.Application.Json)
             header("x-api-key", apiKey)
             header("anthropic-version", settings.apiVersion)
         }
         install(SSE)
-        install(ContentNegotiation) { json(json) }
+        install(ContentNegotiation) {
+            json(json)
+        }
         install(HttpTimeout) {
             requestTimeoutMillis = settings.timeoutConfig.requestTimeoutMillis // Increase timeout to 60 seconds
             connectTimeoutMillis = settings.timeoutConfig.connectTimeoutMillis
