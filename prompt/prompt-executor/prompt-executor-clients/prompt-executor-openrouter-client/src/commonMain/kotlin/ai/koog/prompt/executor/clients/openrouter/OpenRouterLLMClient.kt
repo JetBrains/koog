@@ -158,7 +158,7 @@ public class OpenRouterLLMClient(
 
     /**
      * Fetches the list of available models from the OpenRouter service.
-     * https://openrouter.ai/docs/api-reference/models/get-models
+     * https://openrouter.ai/docs/api/api-reference/models/get-models
      *
      * @return A list of model IDs available from OpenRouter.
      */

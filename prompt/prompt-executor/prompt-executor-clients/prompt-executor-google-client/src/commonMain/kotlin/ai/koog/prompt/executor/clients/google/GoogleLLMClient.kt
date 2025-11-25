@@ -17,6 +17,7 @@ import ai.koog.prompt.executor.clients.google.models.GoogleFunctionCallingConfig
 import ai.koog.prompt.executor.clients.google.models.GoogleFunctionCallingMode
 import ai.koog.prompt.executor.clients.google.models.GoogleFunctionDeclaration
 import ai.koog.prompt.executor.clients.google.models.GoogleGenerationConfig
+import ai.koog.prompt.executor.clients.google.models.GoogleModelsResponse
 import ai.koog.prompt.executor.clients.google.models.GooglePart
 import ai.koog.prompt.executor.clients.google.models.GoogleRequest
 import ai.koog.prompt.executor.clients.google.models.GoogleResponse
@@ -720,6 +721,37 @@ public open class GoogleLLMClient(
     public override suspend fun moderate(prompt: Prompt, model: LLModel): ModerationResult {
         logger.warn { "Moderation is not supported by Google API" }
         throw UnsupportedOperationException("Moderation is not supported by Google API.")
+    }
+
+    /**
+     * Retrieves a list of available language models supported by the Google LLM client.
+     * https://ai.google.dev/api/models#method:-models.list
+     *
+     * @return A list of strings, each representing a model identifier available for use.
+     */
+    public override suspend fun models(): List<String> {
+        var response: GoogleModelsResponse? = null
+        val models = mutableListOf<String>()
+
+        while ((response == null) || response.nextPageToken != null) {
+            val parameters = response?.nextPageToken?.let {
+                mapOf("pageToken" to it)
+            } ?: emptyMap()
+            try {
+                response = httpClient.get(
+                    settings.defaultPath,
+                    GoogleModelsResponse::class,
+                    parameters = parameters
+                )
+                models.addAll(response.models.map { it.name })
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                throw LLMClientException(clientName, e.message, e)
+            }
+        }
+
+        return models
     }
 
     override fun close() {

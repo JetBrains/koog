@@ -145,6 +145,12 @@ public class DeepSeekLLMClient(
         throw UnsupportedOperationException("Moderation is not supported by DeepSeek API.")
     }
 
+    /**
+     * Fetches a list of available model identifiers from the DeepSeek service.
+     * https://api-docs.deepseek.com/api/list-models
+     *
+     * @return A list of string identifiers representing the available models.
+     */
     public override suspend fun models(): List<String> {
         logger.debug { "Fetching available models from DeepSeek" }
 
