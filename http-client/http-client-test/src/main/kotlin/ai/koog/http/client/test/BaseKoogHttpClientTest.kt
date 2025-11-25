@@ -143,7 +143,7 @@ abstract class BaseKoogHttpClientTest {
             )
             fail("Expected an exception for non-success status")
         } catch (e: KoogHttpClientException) {
-            assertEquals(e.clientName, "TestClient")
+            assertEquals(e.clientName, client::class.simpleName ?: "UnknownClient")
             assertEquals(e.statusCode, 400)
         }
     }

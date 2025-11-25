@@ -14,7 +14,6 @@ class OkHttpKoogHttpClientTest : BaseKoogHttpClientTest() {
 
     override fun createClient(): KoogHttpClient {
         return KoogHttpClient.fromOkHttpClient(
-            clientName = "TestClient",
             logger = KotlinLogging.logger("TestLogger"),
             okHttpClient = OkHttpClient(),
             json = Json
