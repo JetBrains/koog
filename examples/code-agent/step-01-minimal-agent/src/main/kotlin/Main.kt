@@ -1,6 +1,7 @@
 package ai.koog.agents.examples.codeagent.step01
 
 import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.core.agent.ToolCalls
 import ai.koog.agents.core.agent.singleRunStrategy
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.tool.file.EditFileTool
@@ -25,7 +26,7 @@ val agent = AIAgent(
         Your goal is to deliver production-ready code changes that integrate seamlessly with the existing codebase and solve given task.
     """.trimIndent(),
 
-    strategy = singleRunStrategy(),
+    strategy = singleRunStrategy(ToolCalls.SEQUENTIAL),
     maxIterations = 100
 )
 {
