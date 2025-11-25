@@ -455,6 +455,50 @@ internal class GoogleUsageMetadata(
 )
 
 /**
+ * Represents the response structure for a request listing Google models.
+ *
+ * @property models A list of GoogleModel instances containing details of each model.
+ * @property nextPageToken An optional token used for retrieving the next page of results, if available.
+ */
+@Serializable
+internal class GoogleModelsResponse(
+    val models: List<GoogleModel>,
+    val nextPageToken: String? = null,
+)
+
+/**
+ * Represents a Google model with its details and configuration for text generation.
+ *
+ * @property name The unique name of the model.
+ * @property version The version of the model.
+ * @property displayName The human-readable display name of the model.
+ * @property description A brief description of the model's purpose or functionality.
+ * @property inputTokenLimit The maximum number of tokens allowed in the input.
+ * @property outputTokenLimit The maximum number of tokens allowed in the output.
+ * @property supportedGenerationMethods The list of supported generation methods for the model.
+ * @property thinking Indicates whether the model is actively generating a response.
+ * @property temperature The temperature setting influencing text generation randomness.
+ * @property maxTemperature The maximum allowable temperature value for the model.
+ * @property topP The top-p (nucleus) sampling parameter for text generation.
+ * @property topK The top-k sampling parameter for text generation.
+ */
+@Serializable
+internal class GoogleModel(
+    val name: String,
+    val version: String,
+    val displayName: String?,
+    val description: String?,
+    val inputTokenLimit: Int?,
+    val outputTokenLimit: Int?,
+    val supportedGenerationMethods: List<String>?,
+    val thinking: Boolean?,
+    val temperature: Double?,
+    val maxTemperature: Double?,
+    val topP: Double?,
+    val topK: Int?,
+)
+
+/**
  * A polymorphic JSON serializer for the `GooglePart` sealed interface.
  *
  * This serializer dynamically selects the appropriate deserialization strategy

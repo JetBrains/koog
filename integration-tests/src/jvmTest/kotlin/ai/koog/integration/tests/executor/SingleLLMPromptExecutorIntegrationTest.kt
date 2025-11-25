@@ -80,7 +80,8 @@ class SingleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
             return Stream.of(
                 LLMProvider.OpenAI,
                 LLMProvider.MistralAI,
-                LLMProvider.OpenRouter
+                LLMProvider.OpenRouter,
+                LLMProvider.Google,
             ).map { provider -> Arguments.of(provider) }
         }
 

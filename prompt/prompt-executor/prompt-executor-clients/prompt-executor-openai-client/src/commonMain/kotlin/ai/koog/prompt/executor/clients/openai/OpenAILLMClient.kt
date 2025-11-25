@@ -477,6 +477,12 @@ public open class OpenAILLMClient(
         return convertModerationResult(result)
     }
 
+    /**
+     * Retrieves the list of available models from OpenAI.
+     * https://platform.openai.com/docs/api-reference/models/list
+     *
+     * @return A list of model identifiers available from OpenAI.
+     */
     override suspend fun models(): List<String> {
         logger.debug { "Fetching available models from OpenAI" }
 
