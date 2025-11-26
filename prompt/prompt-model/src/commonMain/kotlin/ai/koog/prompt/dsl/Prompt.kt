@@ -176,6 +176,20 @@ public data class Prompt @JvmOverloads constructor(
             toolChoice = toolChoice,
             user = user
         )
+
+        /**
+         * Updates the given [LLMParams] instance with the current context's configuration.
+         *
+         * @param params The original instance of [LLMParams] to which the updates are applied.
+         * @return A new instance of [LLMParams] with updated values.
+         */
+        public fun applyToParams(params: LLMParams): LLMParams = params.copy(
+            temperature = temperature,
+            speculation = speculation,
+            schema = schema,
+            toolChoice = toolChoice,
+            user = user,
+        )
     }
 
     /**
@@ -189,5 +203,5 @@ public data class Prompt @JvmOverloads constructor(
      * @return A new `Prompt` instance with the updated parameters.
      */
     public fun withUpdatedParams(update: LLMParamsUpdateContext.() -> Unit): Prompt =
-        copy(params = LLMParamsUpdateContext(params).apply { update() }.toParams())
+        copy(params = LLMParamsUpdateContext(params).apply { update() }.applyToParams(params))
 }
