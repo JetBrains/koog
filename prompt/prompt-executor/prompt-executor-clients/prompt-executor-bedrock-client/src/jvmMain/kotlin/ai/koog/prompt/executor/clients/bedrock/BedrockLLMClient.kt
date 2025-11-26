@@ -44,6 +44,7 @@ import aws.sdk.kotlin.services.bedrockruntime.model.InvokeModelWithResponseStrea
 import aws.sdk.kotlin.services.bedrockruntime.model.ResponseStream
 import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
 import aws.smithy.kotlin.runtime.http.auth.BearerTokenProvider
+import aws.smithy.kotlin.runtime.http.engine.okhttp.OkHttpEngine
 import aws.smithy.kotlin.runtime.identity.IdentityProvider
 import aws.smithy.kotlin.runtime.net.url.Url
 import aws.smithy.kotlin.runtime.retries.StandardRetryStrategy
@@ -102,7 +103,7 @@ public class BedrockGuardrailsSettings(
  * @return A configured [LLMClient] instance for Bedrock
  */
 public class BedrockLLMClient(
-    private val bedrockClient: BedrockRuntimeClient,
+    internal val bedrockClient: BedrockRuntimeClient,
     private val moderationGuardrailsSettings: BedrockGuardrailsSettings? = null,
     private val clock: Clock = Clock.System,
 ) : LLMClient, LLMEmbeddingProvider {
@@ -127,7 +128,9 @@ public class BedrockLLMClient(
             this.region = settings.region
             when (identityProvider) {
                 is CredentialsProvider -> this.credentialsProvider = identityProvider
+
                 is BearerTokenProvider -> this.bearerTokenProvider = identityProvider
+
                 else -> throw LLMClientException(
                     clientName,
                     "identityProvider must be either CredentialsProvider or BearerTokenProvider"
@@ -142,10 +145,15 @@ public class BedrockLLMClient(
                 maxAttempts = settings.maxRetries
             }
 
-            this.httpClient = aws.smithy.kotlin.runtime.http.engine.okhttp.OkHttpEngine {
-                connectTimeout = settings.timeoutConfig.connectTimeoutMillis.milliseconds
-                socketReadTimeout = settings.timeoutConfig.socketTimeoutMillis.milliseconds
-                socketWriteTimeout = settings.timeoutConfig.socketTimeoutMillis.milliseconds
+            val timeoutConfig = settings.timeoutConfig
+
+            this.callTimeout = timeoutConfig.requestTimeoutMillis.milliseconds
+
+            this
+            this.httpClient = OkHttpEngine {
+                connectTimeout = timeoutConfig.connectTimeoutMillis.milliseconds
+                socketReadTimeout = timeoutConfig.socketTimeoutMillis.milliseconds
+                socketWriteTimeout = timeoutConfig.socketTimeoutMillis.milliseconds
             }
         },
         moderationGuardrailsSettings = settings.moderationGuardrailsSettings,
@@ -312,8 +320,12 @@ public class BedrockLLMClient(
                     )
 
                     is BedrockModelFamilies.Meta -> BedrockMetaLlamaSerialization.parseLlamaStreamChunk(chunkJsonString)
+
                     is BedrockModelFamilies.TitanEmbedding, is BedrockModelFamilies.Cohere ->
-                        throw LLMClientException(clientName, "Embedding models do not support streaming chat completions. Use embed() instead.")
+                        throw LLMClientException(
+                            clientName,
+                            "Embedding models do not support streaming chat completions. Use embed() instead."
+                        )
                 }
             } catch (e: Exception) {
                 logger.warn(e) { "Failed to parse Bedrock stream chunk: $chunkJsonString" }
@@ -356,7 +368,10 @@ public class BedrockLLMClient(
                             BedrockAmazonTitanEmbeddingSerialization.extractV2Embedding(titanV2Response)
                         }
 
-                        else -> throw LLMClientException(clientName, "Unknown Amazon Titan embedding model ID: ${model.id}")
+                        else -> throw LLMClientException(
+                            clientName,
+                            "Unknown Amazon Titan embedding model ID: ${model.id}"
+                        )
                     }
                 }
 
@@ -594,9 +609,12 @@ public class BedrockLLMClient(
                                     }
                                     source = when (val imageContent = part.content) {
                                         is AttachmentContent.Binary.Base64 -> Bytes(imageContent.asBytes())
+
                                         is AttachmentContent.Binary.Bytes -> Bytes(imageContent.data)
+
                                         is AttachmentContent.PlainText ->
                                             Bytes(imageContent.text.encodeToByteArray())
+
                                         else -> {
                                             throw LLMClientException(
                                                 clientName,
@@ -610,7 +628,10 @@ public class BedrockLLMClient(
                         }
 
                         else -> {
-                            throw LLMClientException(clientName, "Unsupported attachment type: ${part::class.simpleName}")
+                            throw LLMClientException(
+                                clientName,
+                                "Unsupported attachment type: ${part::class.simpleName}"
+                            )
                         }
                     }
 
