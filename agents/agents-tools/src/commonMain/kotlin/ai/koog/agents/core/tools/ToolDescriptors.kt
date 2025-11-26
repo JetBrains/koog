@@ -3,24 +3,6 @@ package ai.koog.agents.core.tools
 import kotlin.enums.EnumEntries
 
 /**
- * Represents a descriptor for a tool that contains information about the tool's name, description, required parameters,
- * and optional parameters.
- *
- * This class is annotated with @Serializable to support serialization/deserialization using kotlinx.serialization.
- *
- * @property name The name of the tool.
- * @property description The description of the tool.
- * @property requiredParameters A list of ToolParameterDescriptor representing the required parameters for the tool.
- * @property optionalParameters A list of ToolParameterDescriptor representing the optional parameters for the tool.
- */
-public data class ToolDescriptor(
-    val name: String,
-    val description: String,
-    val requiredParameters: List<ToolParameterDescriptor> = emptyList(),
-    val optionalParameters: List<ToolParameterDescriptor> = emptyList(),
-)
-
-/**
  * Represents a descriptor for a tool parameter.
  * A tool parameter descriptor contains information about a specific tool parameter, such as its name, description,
  * data type, and default value.

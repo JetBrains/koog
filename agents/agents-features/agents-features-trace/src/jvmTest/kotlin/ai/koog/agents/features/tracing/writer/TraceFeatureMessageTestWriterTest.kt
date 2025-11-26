@@ -19,6 +19,7 @@ import ai.koog.agents.core.feature.model.events.SubgraphExecutionFailedEvent
 import ai.koog.agents.core.feature.model.events.SubgraphExecutionStartingEvent
 import ai.koog.agents.core.feature.model.events.ToolCallCompletedEvent
 import ai.koog.agents.core.feature.model.events.ToolCallStartingEvent
+import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.utils.SerializationUtils
 import ai.koog.agents.features.tracing.feature.Tracing
@@ -443,13 +444,13 @@ class TraceFeatureMessageTestWriterTest {
             override suspend fun execute(
                 prompt: Prompt,
                 model: ai.koog.prompt.llm.LLModel,
-                tools: List<ai.koog.agents.core.tools.ToolDescriptor>
+                tools: List<ToolDescriptor>
             ): List<Message.Response> = emptyList()
 
             override fun executeStreaming(
                 prompt: Prompt,
                 model: ai.koog.prompt.llm.LLModel,
-                tools: List<ai.koog.agents.core.tools.ToolDescriptor>
+                tools: List<ToolDescriptor>
             ): Flow<StreamFrame> = flow {
                 val testException = IllegalStateException(testStreamingErrorMessage)
                 testStreamingStackTrace = testException.stackTraceToString()
