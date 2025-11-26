@@ -59,6 +59,7 @@ import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Configuration settings for connecting to the AWS Bedrock API.
@@ -139,6 +140,12 @@ public class BedrockLLMClient(
             // Configure retry policy
             this.retryStrategy = StandardRetryStrategy {
                 maxAttempts = settings.maxRetries
+            }
+
+            this.httpClient = aws.smithy.kotlin.runtime.http.engine.okhttp.OkHttpEngine {
+                connectTimeout = settings.timeoutConfig.connectTimeoutMillis.milliseconds
+                socketReadTimeout = settings.timeoutConfig.socketTimeoutMillis.milliseconds
+                socketWriteTimeout = settings.timeoutConfig.socketTimeoutMillis.milliseconds
             }
         },
         moderationGuardrailsSettings = settings.moderationGuardrailsSettings,

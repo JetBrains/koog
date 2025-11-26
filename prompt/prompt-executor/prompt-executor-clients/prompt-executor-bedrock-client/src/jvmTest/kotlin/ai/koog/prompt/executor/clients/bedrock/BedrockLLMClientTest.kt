@@ -185,6 +185,15 @@ class BedrockLLMClientTest {
         assertEquals("https://custom.endpoint.com", customSettings.endpointUrl)
         assertEquals(5, customSettings.maxRetries)
         assertEquals(true, customSettings.enableLogging)
+
+        val bedrockClientField = client::class.java.getDeclaredField("bedrockClient")
+        bedrockClientField.isAccessible = true
+        val bedrockClient = bedrockClientField.get(client) as BedrockRuntimeClient
+        val engineConfig = bedrockClient.config.httpClient.config
+
+        assertEquals(120_000, engineConfig.socketReadTimeout.inWholeMilliseconds)
+        assertEquals(10_000, engineConfig.connectTimeout.inWholeMilliseconds)
+        assertEquals(120_000, engineConfig.socketWriteTimeout.inWholeMilliseconds)
     }
 
     @Test
