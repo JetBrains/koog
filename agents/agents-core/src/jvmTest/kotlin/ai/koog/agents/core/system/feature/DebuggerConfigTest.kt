@@ -38,7 +38,7 @@ import kotlin.time.toDuration
 // Isolate the environment by @Isolated annotation for these tests and make sure they are running without the parallelism.
 @Isolated
 @Execution(ExecutionMode.SAME_THREAD)
-@Disabled
+//@Disabled
 class DebuggerConfigTest {
 
     @AfterEach
