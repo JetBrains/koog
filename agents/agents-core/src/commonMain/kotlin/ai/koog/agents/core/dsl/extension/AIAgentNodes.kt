@@ -23,6 +23,7 @@ import ai.koog.prompt.structure.StructuredRequestConfig
 import ai.koog.prompt.structure.StructuredResponse
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.toList
+import kotlinx.serialization.Serializable
 
 /**
  * A pass-through node that does nothing and returns input as output
@@ -159,6 +160,7 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequest(
  * @property message The original message being moderated.
  * @property moderationResult The result of the moderation.
  * */
+@Serializable
 public data class ModeratedMessage(val message: Message, val moderationResult: ModerationResult)
 
 /**

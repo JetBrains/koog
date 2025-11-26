@@ -1,6 +1,14 @@
 package ai.koog.agents.core.utils
 
 import ai.koog.agents.core.annotation.InternalAgentsApi
+import ai.koog.agents.core.dsl.extension.ModeratedMessage
+import ai.koog.agents.core.dsl.extension.TestLLMExecutor.Companion.testClock
+import ai.koog.prompt.dsl.ModerationCategory
+import ai.koog.prompt.dsl.ModerationCategoryResult
+import ai.koog.prompt.dsl.ModerationResult
+import ai.koog.prompt.message.ContentPart
+import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.RequestMetaInfo
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -25,6 +33,8 @@ class SerializationUtilsTest {
     private val json = Json {
         prettyPrint = true
     }
+
+    //region encodeDataToStringOrNull
 
     @Test
     @JsName("encodeDataToStringOrNullShouldSerializeValidData")
@@ -66,6 +76,40 @@ class SerializationUtilsTest {
     }
 
     @Test
+    @JsName("encodeDataToStringOrNullForTypesWithoutSerializer")
+    fun `encodeDataToStringOrNull for types without serializer`() {
+        class TestClassWithoutSerializer(val name: String)
+
+        val testObjectWithoutSerializer = TestClassWithoutSerializer("test")
+
+        @OptIn(InternalAgentsApi::class)
+        val serializedData = SerializationUtils.encodeDataToStringOrNull(
+            data = testObjectWithoutSerializer,
+            dataType = typeOf<TestClassWithoutSerializer>()
+        )
+
+        assertNull(serializedData)
+    }
+
+    @Test
+    @JsName("encodeDataToStringOrNullForTypesWithStarAndNoSerializer")
+    fun `encodeDataToStringOrNull for types with star and no serializer`() {
+        val testObjectWithStar: List<*> = listOf("test", 1)
+
+        @OptIn(InternalAgentsApi::class)
+        val serializedData = SerializationUtils.encodeDataToStringOrNull(
+            data = testObjectWithStar,
+            dataType = typeOf<List<*>>()
+        )
+
+        assertNull(serializedData)
+    }
+
+    //endregion encodeDataToStringOrNull
+
+    //region encodeDataToJsonElementOrNull
+
+    @Test
     @JsName("encodeDataToJsonElementOrNullShouldSerializeValidData")
     fun `encodeDataToJsonElementOrNull should serialize valid data`() {
         val testName = "test-name"
@@ -103,6 +147,40 @@ class SerializationUtilsTest {
 
         assertNull(actualJsonElement)
     }
+
+    @Test
+    @JsName("encodeDataToJsonElementOrNullForTypesWithoutSerializer")
+    fun `encodeDataToJsonElementOrNull for types without serializer`() {
+        class TestClassWithoutSerializer(val name: String)
+
+        val testObjectWithoutSerializer = TestClassWithoutSerializer("test")
+
+        @OptIn(InternalAgentsApi::class)
+        val serializedData = SerializationUtils.encodeDataToJsonElementOrNull(
+            data = testObjectWithoutSerializer,
+            dataType = typeOf<TestClassWithoutSerializer>()
+        )
+
+        assertNull(serializedData)
+    }
+
+    @Test
+    @JsName("encodeDataToJsonElementOrNullForTypesWithStarAndNoSerializer")
+    fun `encodeDataToJsonElementOrNull for types with star and no serializer`() {
+        val testObjectWithStar: List<*> = listOf("test", 1)
+
+        @OptIn(InternalAgentsApi::class)
+        val serializedData = SerializationUtils.encodeDataToJsonElementOrNull(
+            data = testObjectWithStar,
+            dataType = typeOf<List<*>>()
+        )
+
+        assertNull(serializedData)
+    }
+
+    //endregion encodeDataToJsonElementOrNull
+
+    //region encodeDataToString
 
     @Test
     @JsName("encodeDataToStringShouldSerializeValidData")
@@ -149,6 +227,94 @@ class SerializationUtilsTest {
     }
 
     @Test
+    @JsName("encodeDataToStringForTypesWithoutSerializer")
+    fun `encodeDataToString for types without serializer`() {
+        class TestClassWithoutSerializer(val name: String)
+
+        val testObjectWithoutSerializer = TestClassWithoutSerializer("test")
+
+        @OptIn(InternalAgentsApi::class)
+        val throwable = assertFailsWith<SerializationException> {
+            SerializationUtils.encodeDataToString(
+                data = testObjectWithoutSerializer,
+                dataType = typeOf<TestClassWithoutSerializer>()
+            )
+        }
+
+        val actualMessage = throwable.message
+        assertNotNull(actualMessage)
+        assertTrue(
+            actualMessage.startsWith(
+                "Serializer for class '${TestClassWithoutSerializer::class.simpleName}' is not found.\n" +
+                    "Please ensure that class is marked as '@Serializable' and that the serialization compiler plugin is applied."
+            )
+        )
+    }
+
+    @Test
+    @JsName("encodeDataToStringForTypesWithStarAndNoSerializer")
+    fun `encodeDataToString for types with star and no serializer`() {
+        val testObjectWithStar: List<*> = listOf("test", 1)
+
+        @OptIn(InternalAgentsApi::class)
+        val throwable = assertFailsWith<IllegalArgumentException> {
+            SerializationUtils.encodeDataToString(
+                data = testObjectWithStar,
+                dataType = typeOf<List<*>>()
+            )
+        }
+
+        assertEquals(
+            "Star projections in type arguments are not allowed, but had null",
+            throwable.message
+        )
+    }
+
+    @Test
+    @JsName("encodeDataToStringForModeratedMessageType")
+    fun `encodeDataToString for ModeratedMessage type`() {
+        val message = Message.User(
+            parts = listOf(
+                ContentPart.Text("Test message")
+            ),
+            metaInfo = RequestMetaInfo(timestamp = testClock.now())
+        )
+
+        val moderationResult = ModerationResult(
+            isHarmful = false,
+            categories = mapOf(
+                ModerationCategory.Harassment to ModerationCategoryResult(
+                    detected = false,
+                    confidenceScore = 0.0,
+                    appliedInputTypes = listOf(ModerationResult.InputType.TEXT)
+                ),
+                ModerationCategory.ViolenceGraphic to ModerationCategoryResult(
+                    detected = false,
+                    confidenceScore = 0.0,
+                    appliedInputTypes = listOf(ModerationResult.InputType.IMAGE)
+                ),
+            )
+        )
+
+        val moderatedMessage = ModeratedMessage(
+            message = message,
+            moderationResult = moderationResult
+        )
+
+        @OptIn(InternalAgentsApi::class)
+        val serializedString = SerializationUtils.encodeDataToString(
+            data = moderatedMessage,
+            dataType = typeOf<ModeratedMessage>()
+        )
+
+        assertNotNull(serializedString)
+    }
+
+    //endregion encodeDataToString
+
+    //region encodeDataToJsonElement
+
+    @Test
     @JsName("encodeDataToJsonElementShouldSerializeValidData")
     fun `encodeDataToJsonElement should serialize valid data`() {
         val testName = "test-name"
@@ -189,6 +355,94 @@ class SerializationUtilsTest {
         assertNotNull(actualMessage)
         assertTrue(actualMessage.contains("Serializer for class '${Any::class.simpleName}' is not found."))
     }
+
+    @Test
+    @JsName("encodeDataToJsonElementForTypesWithoutSerializer")
+    fun `encodeDataToJsonElement for types without serializer`() {
+        class TestClassWithoutSerializer(val name: String)
+
+        val testObjectWithoutSerializer = TestClassWithoutSerializer("test")
+
+        @OptIn(InternalAgentsApi::class)
+        val throwable = assertFailsWith<SerializationException> {
+            SerializationUtils.encodeDataToJsonElement(
+                data = testObjectWithoutSerializer,
+                dataType = typeOf<TestClassWithoutSerializer>()
+            )
+        }
+
+        val actualMessage = throwable.message
+        assertNotNull(actualMessage)
+        assertTrue(
+            actualMessage.startsWith(
+                "Serializer for class '${TestClassWithoutSerializer::class.simpleName}' is not found.\n" +
+                    "Please ensure that class is marked as '@Serializable' and that the serialization compiler plugin is applied"
+            )
+        )
+    }
+
+    @Test
+    @JsName("encodeDataToJsonElementForTypesWithStarAndNoSerializer")
+    fun `encodeDataToJsonElement for types with star and no serializer`() {
+        val testObjectWithStar: List<*> = listOf("test", 1)
+
+        @OptIn(InternalAgentsApi::class)
+        val throwable = assertFailsWith<IllegalArgumentException> {
+            SerializationUtils.encodeDataToJsonElement(
+                data = testObjectWithStar,
+                dataType = typeOf<List<*>>()
+            )
+        }
+
+        assertEquals(
+            "Star projections in type arguments are not allowed, but had null",
+            throwable.message
+        )
+    }
+
+    @Test
+    @JsName("encodeDataToJsonElementForModeratedMessageType")
+    fun `encodeDataToJsonElement for ModeratedMessage type`() {
+        val message = Message.User(
+            parts = listOf(
+                ContentPart.Text("Test message")
+            ),
+            metaInfo = RequestMetaInfo(timestamp = testClock.now())
+        )
+
+        val moderationResult = ModerationResult(
+            isHarmful = false,
+            categories = mapOf(
+                ModerationCategory.Harassment to ModerationCategoryResult(
+                    detected = false,
+                    confidenceScore = 0.0,
+                    appliedInputTypes = listOf(ModerationResult.InputType.TEXT)
+                ),
+                ModerationCategory.ViolenceGraphic to ModerationCategoryResult(
+                    detected = false,
+                    confidenceScore = 0.0,
+                    appliedInputTypes = listOf(ModerationResult.InputType.IMAGE)
+                ),
+            )
+        )
+
+        val moderatedMessage = ModeratedMessage(
+            message = message,
+            moderationResult = moderationResult
+        )
+
+        @OptIn(InternalAgentsApi::class)
+        val serializedString = SerializationUtils.encodeDataToJsonElement(
+            data = moderatedMessage,
+            dataType = typeOf<ModeratedMessage>()
+        )
+
+        assertNotNull(serializedString)
+    }
+
+    //endregion encodeDataToJsonElement
+
+    //region parseDataToJsonElementOrDefault
 
     @Test
     @JsName("parseDataToJsonElementOrDefaultShouldParseValidJsonString")
@@ -256,6 +510,23 @@ class SerializationUtilsTest {
     }
 
     @Test
+    @JsName("parseDataToJsonElementOrDefaultShouldUseProvidedDefaultForInvalidJson")
+    fun `parseDataToJsonElementOrDefault should use provided default for invalid JSON`() {
+        val invalidJson = "this is not json"
+        val defaultElement = JsonObject(mapOf("default" to JsonPrimitive("used")))
+
+        val actualJsonElement =
+            @OptIn(InternalAgentsApi::class)
+            SerializationUtils.parseDataToJsonElementOrDefault(invalidJson) { defaultElement }
+
+        assertEquals(defaultElement, actualJsonElement)
+    }
+
+    //endregion parseDataToJsonElementOrDefault
+
+    //region encodeDataToStringOrDefault
+
+    @Test
     @JsName("encodeDataToStringOrDefaultShouldSerializeValidData")
     fun `encodeDataToStringOrDefault should serialize valid data`() {
         val data = TestData("test", 42)
@@ -293,6 +564,10 @@ class SerializationUtilsTest {
 
         assertEquals(defaultValue, actualString)
     }
+
+    //endregion encodeDataToStringOrDefault
+
+    //region encodeDataToJsonElementOrDefault
 
     @Test
     @JsName("encodeDataToJsonElementOrDefaultShouldSerializeValidData")
@@ -338,16 +613,5 @@ class SerializationUtilsTest {
         assertEquals(defaultElement, actualJsonElement)
     }
 
-    @Test
-    @JsName("parseDataToJsonElementOrDefaultShouldUseProvidedDefaultForInvalidJson")
-    fun `parseDataToJsonElementOrDefault should use provided default for invalid JSON`() {
-        val invalidJson = "this is not json"
-        val defaultElement = JsonObject(mapOf("default" to JsonPrimitive("used")))
-
-        val actualJsonElement =
-            @OptIn(InternalAgentsApi::class)
-            SerializationUtils.parseDataToJsonElementOrDefault(invalidJson) { defaultElement }
-
-        assertEquals(defaultElement, actualJsonElement)
-    }
+    //endregion encodeDataToJsonElementOrDefault
 }
