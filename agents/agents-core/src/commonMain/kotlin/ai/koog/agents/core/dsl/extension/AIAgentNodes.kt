@@ -132,18 +132,13 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMSendMessageForceOneTool(
 /**
  * A node that appends a user message to the LLM prompt and gets a response with optional tool usage.
  *
- * When `skipReasoningMessage` is enabled, the node requests multiple responses and returns the first
- * non-reasoning message. Otherwise, it returns a single response that may include reasoning.
- *
  * @param name Optional node name.
  * @param allowToolCalls Controls whether LLM can use tools (default: true).
- * @param skipReasoningMessage If true, filters out reasoning messages and returns the first non-reasoning response (default: true).
  */
 @AIAgentBuilderDslMarker
 public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequest(
     name: String? = null,
     allowToolCalls: Boolean = true,
-    skipReasoningMessage: Boolean = true,
 ): AIAgentNodeDelegate<String, Message.Response> =
     node(name) { message ->
         llm.writeSession {
@@ -152,9 +147,9 @@ public fun AIAgentSubgraphBuilderBase<*, *>.nodeLLMRequest(
             }
 
             if (allowToolCalls) {
-                requestLLM(skipReasoningMessage)
+                requestLLM()
             } else {
-                requestLLMWithoutTools(skipReasoningMessage)
+                requestLLMWithoutTools()
             }
         }
     }

@@ -145,14 +145,10 @@ public sealed class AIAgentLLMSession(
      * to ensure compatibility with the underlying LLM client's behavior. It then executes the request
      * and retrieves the response from the LLM.
      *
-     * When `skipReasoningMessage` is true, filters out reasoning messages and returns the first
-     * non-reasoning response.
-     *
-     * @param skipReasoningMessage If true, skips reasoning messages and returns first non-reasoning response (default: true).
      * @return The response message from the language model after executing the request, represented
      *         as a [Message.Response] instance.
      */
-    public open suspend fun requestLLMWithoutTools(skipReasoningMessage: Boolean = true): Message.Response {
+    public open suspend fun requestLLMWithoutTools(): Message.Response {
         validateSession()
         /*
             Not all LLM providers support tool list when tool choice is set to "none", so we are rewriting all tool messages to regular messages,
@@ -162,11 +158,7 @@ public sealed class AIAgentLLMSession(
             .withUpdatedParams { toolChoice = null }
             .let { preparePrompt(it, emptyList()) }
 
-        return if (skipReasoningMessage) {
-            executeMultiple(promptWithDisabledTools, emptyList()).first { it !is Message.Reasoning }
-        } else {
-            executeSingle(promptWithDisabledTools, emptyList())
-        }
+        return executeMultiple(promptWithDisabledTools, emptyList()).first { it !is Message.Reasoning }
     }
 
     /**
@@ -228,19 +220,11 @@ public sealed class AIAgentLLMSession(
      * Sends a request to the underlying LLM and returns the first response.
      * This method ensures the session is active before executing the request.
      *
-     * When `skipReasoningMessage` is true, filters out reasoning messages and returns the first
-     * non-reasoning response.
-     *
-     * @param skipReasoningMessage If true, skips reasoning messages and returns first non-reasoning response (default: true).
      * @return The first response message from the LLM after executing the request.
      */
-    public open suspend fun requestLLM(skipReasoningMessage: Boolean = true): Message.Response {
+    public open suspend fun requestLLM(): Message.Response {
         validateSession()
-        return if (skipReasoningMessage) {
-            executeMultiple(prompt, tools).first { it !is Message.Reasoning }
-        } else {
-            executeSingle(prompt, tools)
-        }
+        return executeMultiple(prompt, tools).first { it !is Message.Reasoning }
     }
 
     /**

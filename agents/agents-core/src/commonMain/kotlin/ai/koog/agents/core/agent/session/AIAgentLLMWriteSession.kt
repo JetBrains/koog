@@ -385,19 +385,14 @@ public class AIAgentLLMWriteSession internal constructor(
      *
      * LLM might answer only with a textual assistant message.
      *
-     * When `skipReasoningMessage` is true, all responses (including reasoning) are added to the prompt,
-     * but only the first non-reasoning response is returned.
-     *
-     * @param skipReasoningMessage If true, filters out reasoning messages from the return value (default: true).
      * @return the response from the LLM after processing the request, as a [Message.Response].
      */
-    override suspend fun requestLLMWithoutTools(skipReasoningMessage: Boolean): Message.Response {
-        return if (skipReasoningMessage) {
-            requestLLMMultipleWithoutTools().first { it !is Message.Reasoning }
-        } else {
-            super.requestLLMWithoutTools(skipReasoningMessage).also { response ->
-                appendPrompt { message(response) }
+    override suspend fun requestLLMWithoutTools(): Message.Response {
+        return requestLLMMultiple().let { responses ->
+            appendPrompt {
+                responses.filterIsInstance<Message.Reasoning>().forEach { message(it) }
             }
+            responses.first { it !is Message.Reasoning }.also { response -> appendPrompt { message(response) } }
         }
     }
 
@@ -436,19 +431,14 @@ public class AIAgentLLMWriteSession internal constructor(
      * Makes an asynchronous request to a Large Language Model (LLM) and updates the current prompt
      * with the response received from the LLM.
      *
-     * When `skipReasoningMessage` is true, all responses (including reasoning) are added to the prompt,
-     * but only the first non-reasoning response is returned.
-     *
-     * @param skipReasoningMessage If true, filters out reasoning messages from the return value (default: true).
      * @return A [Message.Response] object containing the response from the LLM.
      */
-    override suspend fun requestLLM(skipReasoningMessage: Boolean): Message.Response {
-        return if (skipReasoningMessage) {
-            requestLLMMultiple().first { it !is Message.Reasoning }
-        } else {
-            super.requestLLM(skipReasoningMessage).also { response ->
-                appendPrompt { message(response) }
+    override suspend fun requestLLM(): Message.Response {
+        return requestLLMMultiple().let { responses ->
+            appendPrompt {
+                responses.filterIsInstance<Message.Reasoning>().forEach { message(it) }
             }
+            responses.first { it !is Message.Reasoning }.also { response -> appendPrompt { message(response) } }
         }
     }
 
