@@ -49,6 +49,7 @@ nav:
               - Overview: opentelemetry-support.md
               - Langfuse Exporter: opentelemetry-langfuse-exporter.md
               - Weave Exporter: opentelemetry-weave-exporter.md
+          - Custom features: custom-features.md
       - History compression: history-compression.md
       - Model Context Protocol: model-context-protocol.md
       - A2A Protocol:
