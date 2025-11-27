@@ -560,6 +560,7 @@ public object OpenAIModels : LLModelDefinitions {
             provider = LLMProvider.OpenAI,
             id = "gpt-5.1-codex",
             capabilities = listOf(
+                LLMCapability.Completion,
                 LLMCapability.Temperature,
                 LLMCapability.Schema.JSON.Basic,
                 LLMCapability.Schema.JSON.Standard,

@@ -50,10 +50,28 @@ class ModelIdentifierParsingTest {
         assertEquals(OpenAIModels.Chat.GPT5Nano, gpt5nano)
 
         // Test GPT-4o Mini
-        val gpt4oMini = getModelFromIdentifier("openai.chat.o4mini")
+        val gpt4oMini = getModelFromIdentifier("openai.chat.gpt4omini")
         assertNotNull(gpt4oMini)
         assertEquals(LLMProvider.OpenAI, gpt4oMini.provider)
         assertEquals(OpenAIModels.Chat.GPT4oMini, gpt4oMini)
+
+        // Test O4 Mini
+        val o4Mini = getModelFromIdentifier("openai.chat.o4mini")
+        assertNotNull(o4Mini)
+        assertEquals(LLMProvider.OpenAI, o4Mini.provider)
+        assertEquals(OpenAIModels.Chat.O4Mini, o4Mini)
+
+        // Test GPT-4.1 Nano
+        val gpt4_1Nano = getModelFromIdentifier("openai.chat.gpt4_1nano")
+        assertNotNull(gpt4_1Nano)
+        assertEquals(LLMProvider.OpenAI, gpt4_1Nano.provider)
+        assertEquals(OpenAIModels.Chat.GPT4_1Nano, gpt4_1Nano)
+
+        // Test GPT-4.1 Mini
+        val gpt4_1Mini = getModelFromIdentifier("openai.chat.gpt4_1mini")
+        assertNotNull(gpt4_1Mini)
+        assertEquals(LLMProvider.OpenAI, gpt4_1Mini.provider)
+        assertEquals(OpenAIModels.Chat.GPT4_1Mini, gpt4_1Mini)
 
         // Test O3 Mini
         val o3Mini = getModelFromIdentifier("openai.chat.o3mini")
@@ -96,24 +114,6 @@ class ModelIdentifierParsingTest {
         assertNotNull(gpt5_1codex)
         assertEquals(LLMProvider.OpenAI, gpt5_1codex.provider)
         assertEquals(OpenAIModels.Chat.GPT5_1Codex, gpt5_1codex)
-
-        // Test O4 Mini
-        val o4Mini = getModelFromIdentifier("openai.chat.o4mini")
-        assertNotNull(o4Mini)
-        assertEquals(LLMProvider.OpenAI, o4Mini.provider)
-        assertEquals(OpenAIModels.Chat.O4Mini, o4Mini)
-
-        // Test GPT-4.1 Nano
-        val gpt4_1Nano = getModelFromIdentifier("openai.chat.gpt4_1nano")
-        assertNotNull(gpt4_1Nano)
-        assertEquals(LLMProvider.OpenAI, gpt4_1Nano.provider)
-        assertEquals(OpenAIModels.Chat.GPT4_1Nano, gpt4_1Nano)
-
-        // Test GPT-4.1 Mini
-        val gpt4_1Mini = getModelFromIdentifier("openai.chat.gpt4_1mini")
-        assertNotNull(gpt4_1Mini)
-        assertEquals(LLMProvider.OpenAI, gpt4_1Mini.provider)
-        assertEquals(OpenAIModels.Chat.GPT4_1Mini, gpt4_1Mini)
     }
 
     @Test

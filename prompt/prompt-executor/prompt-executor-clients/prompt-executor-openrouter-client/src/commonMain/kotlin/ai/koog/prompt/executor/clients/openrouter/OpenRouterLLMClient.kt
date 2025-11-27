@@ -4,6 +4,7 @@ import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
+import ai.koog.prompt.executor.clients.LLMClientException
 import ai.koog.prompt.executor.clients.openai.base.AbstractOpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.base.OpenAIBaseSettings
 import ai.koog.prompt.executor.clients.openai.base.OpenAICompatibleToolDescriptorSchemaGenerator
@@ -126,6 +127,15 @@ public class OpenRouterLLMClient(
     }
 
     override fun processProviderChatResponse(response: OpenRouterChatCompletionResponse): List<LLMChoice> {
+        // Handle error responses
+        response.error?.let { error ->
+            throw LLMClientException(
+                clientName = clientName,
+                message = "OpenRouter API error: ${error.message}${error.type?.let { " (type: $it)" } ?: ""}${error.code?.let { " (code: $it)" } ?: ""}",
+                cause = null
+            )
+        }
+
         require(response.choices.isNotEmpty()) { "Empty choices in response" }
         return response.choices.map {
             it.message.toMessageResponses(

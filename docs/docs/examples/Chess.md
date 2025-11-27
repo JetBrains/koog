@@ -380,7 +380,7 @@ val toolRegistry = ToolRegistry { tools(listOf(Move(game))) }
 val agent = AIAgent(
     executor = baseExecutor,
     strategy = strategy,
-    llmModel = OpenAIModels.Reasoning.O3Mini,
+    llmModel = OpenAIModels.Chat.O3Mini,
     systemPrompt = """
             You are an agent who plays chess.
             You should always propose a move in response to the "Your move!" message.
@@ -398,7 +398,8 @@ val agent = AIAgent(
 Here we assemble all components into a functional chess-playing agent:
 
 **Key Configuration:**
-- **Model Choice**: Using `OpenAIModels.Reasoning.O3Mini` for high-quality chess play
+
+- **Model Choice**: Using `OpenAIModels.Chat.O3Mini` for high-quality chess play
 - **Temperature**: Set to 0.0 for deterministic, strategic moves
 - **System Prompt**: Carefully crafted instructions emphasizing legal moves and proper behavior
 - **Tool Registry**: Provides the agent access to the Move tool
@@ -615,7 +616,7 @@ val toolRegistry = ToolRegistry { tools(listOf(Move(game))) }
 val agent = AIAgent(
     executor = promptExecutor,
     strategy = strategy,
-    llmModel = OpenAIModels.Reasoning.O3Mini,
+    llmModel = OpenAIModels.Chat.O3Mini,
     systemPrompt = """
             You are an agent who plays chess.
             You should always propose a move in response to the "Your move!" message.
@@ -760,7 +761,7 @@ val toolRegistry = ToolRegistry { tools(listOf(Move(game))) }
 val agent = AIAgent(
     executor = baseExecutor,
     strategy = strategy,
-    llmModel = OpenAIModels.Reasoning.O3Mini,
+    llmModel = OpenAIModels.Chat.O3Mini,
     systemPrompt = """
             You are an agent who plays chess.
             You should always propose a move in response to the "Your move!" message.
