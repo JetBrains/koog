@@ -12,12 +12,10 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.awaitility.kotlin.await
 import org.junit.jupiter.api.Test
-import kotlin.test.Ignore
 
 class PersistenceRunsTwiceTest {
 
     @Test
-    @Ignore
     fun `agent runs to end and on second run starts from beginning again`() = runTest {
         // Arrange
         val provider = InMemoryPersistenceStorageProvider()
@@ -79,10 +77,8 @@ class PersistenceRunsTwiceTest {
     }
 
     @Test
-    @Ignore
     fun `agent fails on the first run and second run running successfully`() = runTest {
         val provider = InMemoryPersistenceStorageProvider()
-
         val testCollector = TestAgentLogsCollector()
 
         val agentService = AIAgentService(
@@ -130,7 +126,7 @@ class PersistenceRunsTwiceTest {
         val secondRunResult = runCatching { secondAgent.run("Start the test") }
 
         // Assert: second run is successful
-        assert(secondRunResult.isSuccess)
+        assert(secondRunResult.isSuccess) { "Second run should complete successfully" }
         testCollector.logs() shouldContainExactly listOf(
             "Second Step",
             "Second try successful",

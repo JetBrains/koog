@@ -132,7 +132,7 @@ class SubgraphSetExecutionPointTest {
     fun test_innerSubgraphs_teleportToOuterSubgraphForward() = runTest {
         val agent = AIAgent(
             promptExecutor = getMockExecutor { },
-            strategy = createSimpleTeleportSubgraphWithInnerSubgraph("sgNode2"),
+            strategy = simpleTeleportSubgraphWithInnerSubgraph("sgNode2"),
             agentConfig = agentConfig,
             toolRegistry = toolRegistry
         ) {
@@ -159,7 +159,7 @@ class SubgraphSetExecutionPointTest {
     fun test_innerSubgraphs_teleportToOuterSubgraphBackwards() = runTest {
         val agent = AIAgent(
             promptExecutor = getMockExecutor { },
-            strategy = createSimpleTeleportSubgraphWithInnerSubgraph("sgNode1"),
+            strategy = simpleTeleportSubgraphWithInnerSubgraph("sgNode1"),
             agentConfig = agentConfig,
             toolRegistry = toolRegistry
         ) {

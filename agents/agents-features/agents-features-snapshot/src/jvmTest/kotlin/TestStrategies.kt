@@ -314,7 +314,7 @@ internal fun loggingGraphForRunFromSecondTry(collector: TestAgentLogsCollector) 
     edge(nodeForSecondTry forwardTo nodeFinish)
 }
 
-fun createSimpleTeleportSubgraphWithInnerSubgraph(teleportToId: String) = strategy("teleport-test") {
+fun simpleTeleportSubgraphWithInnerSubgraph(teleportToId: String) = strategy("teleport-test") {
     val node1 by simpleNode(
         "Node1",
         output = "Node 1 output"
@@ -348,7 +348,7 @@ fun createSimpleTeleportSubgraphWithInnerSubgraph(teleportToId: String) = strate
 /**
  * Creates a strategy with a subgraph that contains a checkpoint node.
  */
-fun createCheckpointSubgraphStrategy(checkpointId: String) = strategy("checkpoint-subgraph-test") {
+fun checkpointSubgraphStrategy(checkpointId: String) = strategy("checkpoint-subgraph-test") {
     val node1 by simpleNode(
         "Node1",
         output = "Node 1 output"
@@ -376,7 +376,7 @@ fun createCheckpointSubgraphStrategy(checkpointId: String) = strategy("checkpoin
 /**
  * Creates a strategy with a subgraph that contains a checkpoint node and a rollback node.
  */
-fun createCheckpointSubgraphWithRollbackStrategy(checkpointId: String) = strategy("checkpoint-rollback-subgraph-test") {
+fun checkpointSubgraphWithRollbackStrategy(checkpointId: String) = strategy("checkpoint-rollback-subgraph-test") {
     val node1 by simpleNode(
         "Node1",
         output = "Node 1 output"
@@ -408,7 +408,7 @@ fun createCheckpointSubgraphWithRollbackStrategy(checkpointId: String) = strateg
 /**
  * Creates a strategy with nested subgraphs that contain checkpoint and rollback nodes.
  */
-fun createNestedSubgraphCheckpointStrategy(checkpointId: String) = strategy("nested-checkpoint-subgraph-test") {
+fun nestedSubgraphCheckpointStrategy(checkpointId: String) = strategy("nested-checkpoint-subgraph-test") {
     val node1 by simpleNode(
         "Node1",
         output = "Node 1 output"
@@ -442,7 +442,7 @@ fun createNestedSubgraphCheckpointStrategy(checkpointId: String) = strategy("nes
 /**
  * Creates a strategy with nested subgraphs that contain checkpoint and rollback nodes.
  */
-fun createNestedSubgraphCheckpointWithRollbackStrategy(
+fun nestedSubgraphCheckpointWithRollbackStrategy(
     checkpointId: String
 ) = strategy("nested-checkpoint-rollback-subgraph-test") {
     val node1 by simpleNode(
@@ -478,4 +478,23 @@ fun createNestedSubgraphCheckpointWithRollbackStrategy(
     edge(node1 forwardTo sg)
     edge(sg forwardTo node2)
     edge(node2 forwardTo nodeFinish)
+}
+
+fun strategyWithRepeatedSubgraphs() = strategy("repeated-subgraphs-test") {
+    val node1 by simpleNode(
+        "Node1",
+        output = "Node 1 output"
+    )
+
+    fun createSimpleSubgraph(name: String) = subgraph(name) {
+        val sgNode1 by simpleNode(name = "sgNode1", output = "sg1 node output")
+        val sgNode2 by simpleNode(name = "sgNode2", output = "sg2 node output")
+
+        nodeStart then sgNode1 then sgNode2 then nodeFinish
+    }
+
+    val simpleSubgraph by createSimpleSubgraph("sg1")
+    val simpleSubgraph2 by createSimpleSubgraph("sg2")
+
+    nodeStart then node1 then simpleSubgraph then simpleSubgraph2 then nodeFinish
 }

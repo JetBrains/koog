@@ -248,12 +248,11 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
         }
 
         // Validate that all nodes have unique names within the subgraph
-        val names = subgraphNodes.keys.map { it.split(":").last() }
-        val uniqueNames = names.toSet().size == names.size
+        val names = subgraphNodes.keys
 
         return SubgraphMetadata(
             nodesMap = subgraphNodes,
-            uniqueNames = uniqueNames
+            uniqueNames = names.toSet().size == names.size
         )
     }
 

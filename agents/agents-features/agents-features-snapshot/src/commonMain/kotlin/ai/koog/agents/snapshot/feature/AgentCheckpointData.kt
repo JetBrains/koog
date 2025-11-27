@@ -24,6 +24,8 @@ import kotlin.uuid.Uuid
  * @property nodeId The identifier of the node where the checkpoint was created.
  * @property lastInput Serialized input received for node with [nodeId]
  * @property properties Additional data associated with the checkpoint. This can be used to store additional information about the agent's state.
+ * @property createdAt The timestamp when the checkpoint was created.
+ * @property version The version of the checkpoint data structure
  */
 @Serializable
 public data class AgentCheckpointData(
@@ -71,7 +73,7 @@ public fun AgentCheckpointData.toAgentContextData(
 ): AgentContextData {
     return AgentContextData(
         messageHistory = messageHistory,
-        nodeId = nodeId,
+        nodePath = nodeId,
         lastInput = lastInput,
         rollbackStrategy,
         additionalRollbackAction

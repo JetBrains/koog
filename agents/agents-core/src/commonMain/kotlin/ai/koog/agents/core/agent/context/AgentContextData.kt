@@ -9,7 +9,7 @@ import kotlinx.serialization.json.JsonElement
 @InternalAgentsApi
 public class AgentContextData(
     internal val messageHistory: List<Message>,
-    internal val nodeId: String,
+    internal val nodePath: String,
     internal val lastInput: JsonElement,
     internal val rollbackStrategy: RollbackStrategy,
     internal val additionalRollbackActions: suspend (AIAgentContext) -> Unit = {}
