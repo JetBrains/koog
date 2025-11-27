@@ -388,12 +388,7 @@ public class AIAgentLLMWriteSession internal constructor(
      * @return the response from the LLM after processing the request, as a [Message.Response].
      */
     override suspend fun requestLLMWithoutTools(): Message.Response {
-        return requestLLMMultiple().let { responses ->
-            appendPrompt {
-                responses.filterIsInstance<Message.Reasoning>().forEach { message(it) }
-            }
-            responses.first { it !is Message.Reasoning }.also { response -> appendPrompt { message(response) } }
-        }
+        return super.requestLLMWithoutTools().also { response -> appendPrompt { message(response) } }
     }
 
     /**
@@ -434,12 +429,7 @@ public class AIAgentLLMWriteSession internal constructor(
      * @return A [Message.Response] object containing the response from the LLM.
      */
     override suspend fun requestLLM(): Message.Response {
-        return requestLLMMultiple().let { responses ->
-            appendPrompt {
-                responses.filterIsInstance<Message.Reasoning>().forEach { message(it) }
-            }
-            responses.first { it !is Message.Reasoning }.also { response -> appendPrompt { message(response) } }
-        }
+        return super.requestLLM().also { response -> appendPrompt { message(response) } }
     }
 
     /**
