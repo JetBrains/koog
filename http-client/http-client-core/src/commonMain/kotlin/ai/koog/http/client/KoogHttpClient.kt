@@ -18,7 +18,6 @@ public interface KoogHttpClient : AutoCloseable {
      * The name of the client.
      */
     public val clientName: String
-        get() = this::class.simpleName ?: "UnknownClient"
 
     /**
      * Sends an HTTP GET request to the specified `path` with the provided `request` payload.

@@ -18,6 +18,8 @@ import java.net.URLEncoder
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
+import java.util.concurrent.ExecutorService
+import kotlin.jvm.optionals.getOrNull
 import kotlin.reflect.KClass
 
 /**
@@ -33,6 +35,7 @@ import kotlin.reflect.KClass
  */
 @Experimental
 public class JavaKoogHttpClient internal constructor(
+    override val clientName: String,
     private val logger: KLogger,
     private val httpClient: HttpClient,
     private val json: Json
@@ -219,7 +222,8 @@ public class JavaKoogHttpClient internal constructor(
     }
 
     override fun close() {
-        logger.debug { "Closing client $clientName" }
+        logger.debug { "Closing $clientName" }
+        (httpClient.executor().getOrNull() as? ExecutorService)?.shutdown()
     }
 }
 
@@ -229,6 +233,7 @@ public class JavaKoogHttpClient internal constructor(
  * This function allows configuring the underlying Java `HttpClient` and provides enhanced logging,
  * flexibility, and customization in HTTP interactions.
  *
+ * @param clientName The name of the client instance, used for identifying or logging client operations.
  * @param logger A `KLogger` instance used for logging client events and errors.
  * @param httpClient The Java HttpClient instance to be used. Defaults to a new HttpClient instance.
  * @param json The Json instance used for serialization/deserialization. Defaults to a default Json instance.
@@ -236,7 +241,8 @@ public class JavaKoogHttpClient internal constructor(
  */
 @Experimental
 public fun KoogHttpClient.Companion.fromJavaHttpClient(
+    clientName: String = JavaKoogHttpClient::class.simpleName ?: "JavaKoogHttpClient",
     logger: KLogger,
     httpClient: HttpClient = HttpClient.newHttpClient(),
     json: Json = Json
-): KoogHttpClient = JavaKoogHttpClient(logger, httpClient, json)
+): KoogHttpClient = JavaKoogHttpClient(clientName, logger, httpClient, json)

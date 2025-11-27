@@ -38,6 +38,7 @@ import kotlin.reflect.KClass
  */
 @Experimental
 public class OkHttpKoogHttpClient internal constructor(
+    override val clientName: String,
     private val logger: KLogger,
     private val okHttpClient: OkHttpClient,
     private val json: Json
@@ -200,7 +201,7 @@ public class OkHttpKoogHttpClient internal constructor(
     }
 
     override fun close() {
-        logger.debug { "Closing client $clientName" }
+        logger.debug { "Closing $clientName" }
         okHttpClient.dispatcher.executorService.shutdown()
     }
 }
@@ -211,6 +212,7 @@ public class OkHttpKoogHttpClient internal constructor(
  * This function allows configuring the underlying OkHttp `OkHttpClient` and provides enhanced logging,
  * flexibility, and customization in HTTP interactions.
  *
+ * @param clientName The name of the client instance, used for identifying or logging client operations.
  * @param logger A `KLogger` instance used for logging client events and errors.
  * @param okHttpClient The OkHttp client instance to be used. Defaults to a new OkHttpClient instance.
  * @param json The Json instance used for serialization/deserialization. Defaults to a default Json instance.
@@ -218,7 +220,8 @@ public class OkHttpKoogHttpClient internal constructor(
  */
 @Experimental
 public fun KoogHttpClient.Companion.fromOkHttpClient(
+    clientName: String = OkHttpKoogHttpClient::class.simpleName ?: "OkHttpKoogHttpClient",
     logger: KLogger,
     okHttpClient: OkHttpClient = OkHttpClient(),
     json: Json = Json
-): KoogHttpClient = OkHttpKoogHttpClient(logger, okHttpClient, json)
+): KoogHttpClient = OkHttpKoogHttpClient(clientName, logger, okHttpClient, json)

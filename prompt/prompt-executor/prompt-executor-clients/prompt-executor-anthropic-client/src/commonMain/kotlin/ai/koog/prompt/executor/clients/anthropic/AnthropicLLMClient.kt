@@ -107,6 +107,7 @@ public open class AnthropicLLMClient(
 
     // Configures HTTP client with timeouts, headers, and JSON handling
     protected val httpClient: KoogHttpClient = KoogHttpClient.fromKtorClient(
+        clientName = clientName,
         logger = logger,
         baseClient = baseClient
     ) {

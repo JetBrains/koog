@@ -118,6 +118,7 @@ public open class GoogleLLMClient(
     }
 
     private val httpClient: KoogHttpClient = KoogHttpClient.fromKtorClient(
+        clientName = clientName,
         logger = logger,
         baseClient = baseClient
     ) {

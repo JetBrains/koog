@@ -21,6 +21,7 @@ class KtorKoogHttpClientTest : BaseKoogHttpClientTest() {
     override fun createClient(): KoogHttpClient {
         val baseClient = HttpClient(CIO) {}
         return KoogHttpClient.fromKtorClient(
+            clientName = "TestClient",
             logger = KotlinLogging.logger("TestLogger"),
             baseClient = baseClient
         ) {

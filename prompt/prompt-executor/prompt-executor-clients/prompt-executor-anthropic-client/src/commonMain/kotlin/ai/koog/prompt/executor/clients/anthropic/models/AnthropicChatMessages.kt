@@ -122,6 +122,7 @@ public sealed interface AnthropicMessage {
 @Serializable
 public data class SystemAnthropicMessage(
     val text: String,
+    @EncodeDefault
     val type: String = "text"
 )
 
@@ -321,6 +322,7 @@ public class AnthropicMCPServerURLDefinition(
     /**
      * The type of mcp server definition, which is always set to "url".
      */
+    @EncodeDefault
     public val type: String = "url"
 }
 
@@ -421,6 +423,7 @@ public data class AnthropicToolSchema(
     /**
      * The type of the schema. Always returns "object" for Anthropic tool schemas.
      */
+    @EncodeDefault
     val type: String = "object"
 }
 

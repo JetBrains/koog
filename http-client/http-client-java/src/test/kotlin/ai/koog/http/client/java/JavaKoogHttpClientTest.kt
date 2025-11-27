@@ -13,6 +13,7 @@ import kotlin.test.Test
 class JavaKoogHttpClientTest : BaseKoogHttpClientTest() {
     override fun createClient(): KoogHttpClient {
         return KoogHttpClient.fromJavaHttpClient(
+            clientName = "TestClient",
             logger = KotlinLogging.logger("TestLogger"),
             httpClient = HttpClient.newHttpClient(),
             json = Json

@@ -39,15 +39,17 @@ import kotlin.reflect.KClass
  * This client provides enhanced logging, flexible request and response handling, and supports
  * configurability for underlying Ktor HttpClient instances.
  *
- * @property logger A logging instance of type KLogger for recording client-related events and errors.
  * @constructor Creates a KtorHttpClient instance with an optional base Ktor HttpClient and configuration block.
- *
+
+ * @property clientName The name of the client, used for logging and traceability.
+ * @property logger A logging instance of type KLogger for recording client-related events and errors.
  * @param baseClient The base Ktor HttpClient instance to be used. Default is a newly created instance.
  * @param configurer A lambda function to configure the base Ktor HttpClient instance.
  * The configuration is applied using the Ktor `HttpClient.config` method.
  */
 @Experimental
 public class KtorKoogHttpClient internal constructor(
+    override val clientName: String,
     private val logger: KLogger,
     baseClient: HttpClient = HttpClient(),
     configurer: HttpClientConfig<out HttpClientEngineConfig>.() -> Unit
@@ -125,6 +127,8 @@ public class KtorKoogHttpClient internal constructor(
         processStreamingChunk: (R) -> O?,
         parameters: Map<String, String>,
     ): Flow<O> = flow {
+        logger.debug { "Opening sse connection for $clientName" }
+
         @Suppress("TooGenericExceptionCaught")
         try {
             ktorClient.sse(
@@ -175,6 +179,7 @@ public class KtorKoogHttpClient internal constructor(
     }
 
     override fun close() {
+        logger.debug { "Closing $clientName" }
         ktorClient.close()
     }
 }
@@ -185,6 +190,7 @@ public class KtorKoogHttpClient internal constructor(
  * This function allows configuring the underlying Ktor `HttpClient` through the provided configuration lambda
  * and enables enhanced logging, flexibility, and customization in HTTP interactions.
  *
+ * @param clientName The name of the client instance, used for identifying or logging client operations.
  * @param logger A `KLogger` instance used for logging client events and errors.
  * @param baseClient The base Ktor `HttpClient` instance to be used. Defaults to a new Ktor `HttpClient` instance.
  * @param configurer A lambda function to configure the base Ktor `HttpClient` instance. It is applied using
@@ -194,7 +200,8 @@ public class KtorKoogHttpClient internal constructor(
 @Experimental
 @JvmOverloads
 public fun KoogHttpClient.Companion.fromKtorClient(
+    clientName: String = KtorKoogHttpClient::class.simpleName ?: "KtorKoogHttpClient",
     logger: KLogger,
     baseClient: HttpClient = HttpClient(),
     configurer: HttpClientConfig<out HttpClientEngineConfig>.() -> Unit = {}
-): KoogHttpClient = KtorKoogHttpClient(logger, baseClient, configurer)
+): KoogHttpClient = KtorKoogHttpClient(clientName, logger, baseClient, configurer)

@@ -112,6 +112,7 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
     }
 
     protected val httpClient: KoogHttpClient = KoogHttpClient.fromKtorClient(
+        clientName = clientName,
         logger = logger,
         baseClient = baseClient
     ) {
