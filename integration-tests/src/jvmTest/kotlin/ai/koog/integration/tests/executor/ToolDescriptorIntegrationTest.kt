@@ -109,7 +109,7 @@ class ToolDescriptorIntegrationTest {
         @JvmStatic
         fun allModels(): Stream<LLModel> {
             return Stream.of(
-                OpenAIModels.CostOptimized.GPT4_1Mini,
+                OpenAIModels.Chat.GPT4_1Mini,
                 AnthropicModels.Sonnet_4_5,
                 GoogleModels.Gemini2_5Flash,
                 BedrockModels.AnthropicClaude4_5Haiku,

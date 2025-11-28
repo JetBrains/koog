@@ -17,9 +17,8 @@ object Models {
     @JvmStatic
     fun openAIModels(): Stream<LLModel> {
         return Stream.of(
-            OpenAIModels.Chat.GPT5_1,
-            OpenAIModels.Reasoning.O1,
-            OpenAIModels.CostOptimized.GPT4_1Mini,
+            OpenAIModels.Chat.GPT5_1, // reasoning
+            OpenAIModels.Chat.GPT4_1, // non-reasoning
         )
     }
 

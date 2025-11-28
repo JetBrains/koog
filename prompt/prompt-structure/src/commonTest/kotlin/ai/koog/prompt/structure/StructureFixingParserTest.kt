@@ -24,7 +24,7 @@ class StructureFixingParserTest {
     @Test
     fun testParseValidContentWithoutFixing() = runTest {
         val parser = StructureFixingParser(
-            model = OpenAIModels.CostOptimized.GPT4oMini,
+            model = OpenAIModels.Chat.GPT4oMini,
             retries = 2,
         )
         val mockExecutor = getMockExecutor {}
@@ -36,7 +36,7 @@ class StructureFixingParserTest {
     @Test
     fun testFixInvalidContentInMultipleSteps() = runTest {
         val parser = StructureFixingParser(
-            model = OpenAIModels.CostOptimized.GPT4oMini,
+            model = OpenAIModels.Chat.GPT4oMini,
             retries = 2,
         )
 
@@ -59,7 +59,7 @@ class StructureFixingParserTest {
     @Test
     fun testFailToParseWhenFixingRetriesExceeded() = runTest {
         val parser = StructureFixingParser(
-            model = OpenAIModels.CostOptimized.GPT4oMini,
+            model = OpenAIModels.Chat.GPT4oMini,
             retries = 2,
         )
 

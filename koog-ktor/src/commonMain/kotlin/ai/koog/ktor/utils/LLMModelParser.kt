@@ -212,22 +212,17 @@ private val OPENAI_MODELS_MAP = mapOf(
         "gpt5" to OpenAIModels.Chat.GPT5,
         "gpt5mini" to OpenAIModels.Chat.GPT5Mini,
         "gpt5nano" to OpenAIModels.Chat.GPT5Nano,
+        "o4mini" to OpenAIModels.Chat.O4Mini,
+        "o3mini" to OpenAIModels.Chat.O3Mini,
+        "o3" to OpenAIModels.Chat.O3,
+        "o1" to OpenAIModels.Chat.O1,
         "gpt5codex" to OpenAIModels.Chat.GPT5Codex,
         "gpt5_1" to OpenAIModels.Chat.GPT5_1,
-    ),
-    "reasoning" to mapOf(
-        "o4mini" to OpenAIModels.Reasoning.O4Mini,
-        "o3mini" to OpenAIModels.Reasoning.O3Mini,
-        "o3" to OpenAIModels.Reasoning.O3,
-        "o1" to OpenAIModels.Reasoning.O1,
-        "gpt5pro" to OpenAIModels.Reasoning.GPT5Pro
-    ),
-    "costoptimized" to mapOf(
-        "o4mini" to OpenAIModels.CostOptimized.O4Mini,
-        "gpt4_1nano" to OpenAIModels.CostOptimized.GPT4_1Nano,
-        "gpt4_1mini" to OpenAIModels.CostOptimized.GPT4_1Mini,
-        "gpt4omini" to OpenAIModels.CostOptimized.GPT4oMini,
-        "o3mini" to OpenAIModels.CostOptimized.O3Mini
+        "gpt5pro" to OpenAIModels.Chat.GPT5Pro,
+        "gpt5_1codex" to OpenAIModels.Chat.GPT5_1Codex,
+        "gpt4_1nano" to OpenAIModels.Chat.GPT4_1Nano,
+        "gpt4_1mini" to OpenAIModels.Chat.GPT4_1Mini,
+        "gpt4omini" to OpenAIModels.Chat.GPT4oMini,
     ),
     "audio" to mapOf(
         "gpt4ominiaudio" to OpenAIModels.Audio.GPT4oMiniAudio,

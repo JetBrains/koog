@@ -72,7 +72,7 @@ private fun openAiAgent(
 ) = AIAgent(
     promptExecutor = executor,
     strategy = streamingWithToolsStrategy(),
-    llmModel = OpenAIModels.CostOptimized.GPT4oMini,
+    llmModel = OpenAIModels.Chat.GPT4oMini,
     systemPrompt = "You're responsible for running a Switch and perform operations on it by request",
     temperature = 0.0,
     toolRegistry = toolRegistry,

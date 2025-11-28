@@ -28,7 +28,7 @@ suspend fun main() {
         // Create a chat agent with a system prompt and the tool registry
         val agent = AIAgent(
             promptExecutor = executor,
-            llmModel = OpenAIModels.CostOptimized.GPT4oMini,
+            llmModel = OpenAIModels.Chat.GPT4oMini,
             systemPrompt = """
                 You are a number guessing agent. Your goal is to guess a number that the user is thinking of.
 

@@ -99,7 +99,7 @@ class Logging(val logger: Logger) {
 fun installLogging(coroutineScope: CoroutineScope, logName: String = "agent-logs") {
     val agent = AIAgent(
         promptExecutor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey),
-        llmModel = OpenAIModels.CostOptimized.GPT4oMini,
+        llmModel = OpenAIModels.Chat.GPT4oMini,
         systemPrompt = "You are a code assistant. Provide concise code examples."
     ) {
         install(Logging) {

@@ -15,7 +15,7 @@ import kotlinx.coroutines.runBlocking
 
 val agent = AIAgent(
     promptExecutor = simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")),
-    llmModel = OpenAIModels.Chat.GPT5Codex,
+    llmModel = OpenAIModels.Reasoning.GPT5Codex,
     toolRegistry = ToolRegistry {
         tool(ListDirectoryTool(JVMFileSystemProvider.ReadOnly))
         tool(ReadFileTool(JVMFileSystemProvider.ReadOnly))
@@ -28,11 +28,13 @@ val agent = AIAgent(
 
     strategy = singleRunStrategy(ToolCalls.SEQUENTIAL),
     maxIterations = 100
-)
-{
+) {
     handleEvents {
-        onToolCallStarting { ctx -> println("Tool '${ctx.tool.name}' called with args:" +
-                " ${ctx.toolArgs.toString().take(100)}")
+        onToolCallStarting { ctx ->
+            println(
+                "Tool '${ctx.tool.name}' called with args:" +
+                    " ${ctx.toolArgs.toString().take(100)}"
+            )
         }
     }
 }

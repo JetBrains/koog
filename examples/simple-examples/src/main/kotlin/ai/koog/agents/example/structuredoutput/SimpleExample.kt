@@ -194,7 +194,7 @@ suspend fun main() {
          parser to attempt to fix malformed output.
              */
             fixingParser = StructureFixingParser(
-                model = OpenAIModels.CostOptimized.GPT4oMini,
+                model = OpenAIModels.Chat.GPT4oMini,
                 retries = 2
             )
         )
