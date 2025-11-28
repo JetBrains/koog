@@ -15,6 +15,7 @@ kotlinx-datetime = "0.7.1-0.6.x-compat"
 kotlinx-serialization = "1.9.0"
 ktlint = "14.0.1"
 ktor = "3.3.2"
+markdown-renderer = "0.38.1"
 
 [libraries]
 androidx-activityCompose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activityCompose" }
@@ -36,6 +37,7 @@ ktor-client-apache5 = { module = "io.ktor:ktor-client-apache5" }
 ktor-client-darwin = { module = "io.ktor:ktor-client-darwin" }
 ktor-client-js = { module = "io.ktor:ktor-client-js" }
 ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp" }
+markdown-renderer = { module = "com.mikepenz:multiplatform-markdown-renderer-m3", version.ref = "markdown-renderer" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
