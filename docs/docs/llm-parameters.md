@@ -36,13 +36,17 @@ For more information about prompt creation, see [Prompts](prompt-api.md).
 - When creating a subgraph:
 
 <!--- INCLUDE
+import ai.koog.agents.core.agent.ToolCalls
 import ai.koog.agents.core.dsl.builder.strategy
 import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.agents.ext.agent.subgraphWithTask
+import ai.koog.prompt.params.LLMParams
+
 val searchTool = SayToUser
 val calculatorTool = SayToUser
 val weatherTool = SayToUser
+
 val strategy = strategy<String, String>("strategy_name") {
 -->
 <!--- SUFFIX
@@ -52,10 +56,12 @@ val strategy = strategy<String, String>("strategy_name") {
 val processQuery by subgraphWithTask<String, String>(
     tools = listOf(searchTool, calculatorTool, weatherTool),
     llmModel = OpenAIModels.Chat.GPT4o,
-    llmparams = LLMParams(
+    llmParams = LLMParams(
         temperature = 0.7,
-        maxTokens = 500,
-    )
+        maxTokens = 500
+    ),
+    runMode = ToolCalls.SEQUENTIAL,
+    assistantResponseRepeatMax = 3,
 ) { userQuery ->
     """
     You are a helpful assistant that can answer questions about various topics.
@@ -66,12 +72,13 @@ val processQuery by subgraphWithTask<String, String>(
 ```
 <!--- KNIT example-llm-parameters-02.kt -->
 
-For more information on how to create and implement your own subgraphs, see [Custom subgraphs](custom-subgraphs.md).
+For more information about existing subgraph types in Koog, see [Predefined subgraphs](nodes-and-components.md#predefined-subgraphs). To learn how to create and implement your own subgraphs, see [Custom subgraphs](custom-subgraphs.md).
 
 - When updating a prompt in an LLM write session:
 
 <!--- INCLUDE
 import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.prompt.params.LLMParams
 val strategy = strategy<Unit, Unit>("strategy-name") {
 val node by node<Unit, Unit> {
 -->
@@ -129,81 +136,81 @@ Koog supports JSON schemas, as described in the sections below.
 
 JSON schemas let you request structured JSON data from language models. Koog supports the following two types of JSON schemas:
 
-1. **Basic JSON Schema** (`LLMParams.Schema.JSON.Basic`): Used for basic JSON processing capabilities. This format primarily focuses on nested data definitions without advanced JSON Schema functionalities.
+1) **Basic JSON Schema** (`LLMParams.Schema.JSON.Basic`): Used for basic JSON processing capabilities. This format primarily focuses on nested data definitions without advanced JSON Schema functionalities.
 
-    <!--- INCLUDE
-    import ai.koog.prompt.params.LLMParams
-    import kotlinx.serialization.json.JsonObject
-    import kotlinx.serialization.json.JsonArray
-    import kotlinx.serialization.json.JsonPrimitive
-    -->
-    ```kotlin
-    // Create parameters with a basic JSON schema
-    val jsonParams = LLMParams(
-        temperature = 0.2,
-        schema = LLMParams.Schema.JSON.Basic(
-            name = "PersonInfo",
-            schema = JsonObject(mapOf(
-                "type" to JsonPrimitive("object"),
-                "properties" to JsonObject(
-                    mapOf(
-                        "name" to JsonObject(mapOf("type" to JsonPrimitive("string"))),
-                        "age" to JsonObject(mapOf("type" to JsonPrimitive("number"))),
-                        "skills" to JsonObject(
-                            mapOf(
-                                "type" to JsonPrimitive("array"),
-                                "items" to JsonObject(mapOf("type" to JsonPrimitive("string")))
-                            )
+<!--- INCLUDE
+import ai.koog.prompt.params.LLMParams
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonPrimitive
+-->
+```kotlin
+// Create parameters with a basic JSON schema
+val jsonParams = LLMParams(
+    temperature = 0.2,
+    schema = LLMParams.Schema.JSON.Basic(
+        name = "PersonInfo",
+        schema = JsonObject(mapOf(
+            "type" to JsonPrimitive("object"),
+            "properties" to JsonObject(
+                mapOf(
+                    "name" to JsonObject(mapOf("type" to JsonPrimitive("string"))),
+                    "age" to JsonObject(mapOf("type" to JsonPrimitive("number"))),
+                    "skills" to JsonObject(
+                        mapOf(
+                            "type" to JsonPrimitive("array"),
+                            "items" to JsonObject(mapOf("type" to JsonPrimitive("string")))
                         )
                     )
-                ),
-                "additionalProperties" to JsonPrimitive(false),
-                "required" to JsonArray(listOf(JsonPrimitive("name"), JsonPrimitive("age"), JsonPrimitive("skills")))
-            ))
-        )
+                )
+            ),
+            "additionalProperties" to JsonPrimitive(false),
+            "required" to JsonArray(listOf(JsonPrimitive("name"), JsonPrimitive("age"), JsonPrimitive("skills")))
+        ))
     )
-    ```
-    <!--- KNIT example-llm-parameters-04.kt -->
+)
+```
+<!--- KNIT example-llm-parameters-04.kt -->
 
-2. **Standard JSON Schema** (`LLMParams.Schema.JSON.Standard`): Represents a standard JSON schema according to [json-schema.org](https://json-schema.org/). This format is a proper subset of the official JSON Schema specification. Note that the flavor across different LLM providers might vary, since not all of them support full JSON schemas.
+2) **Standard JSON Schema** (`LLMParams.Schema.JSON.Standard`): Represents a standard JSON schema according to [json-schema.org](https://json-schema.org/). This format is a proper subset of the official JSON Schema specification. Note that the flavor across different LLM providers might vary, since not all of them support full JSON schemas.
 
-    <!--- INCLUDE
-    import ai.koog.prompt.params.LLMParams
-    import kotlinx.serialization.json.JsonObject
-    import kotlinx.serialization.json.JsonPrimitive
-    import kotlinx.serialization.json.JsonArray
-    -->
-    ```kotlin
-    // Create parameters with a standard JSON schema
-    val standardJsonParams = LLMParams(
-        temperature = 0.2,
-        schema = LLMParams.Schema.JSON.Standard(
-            name = "ProductCatalog",
-            schema = JsonObject(mapOf(
-                "type" to JsonPrimitive("object"),
-                "properties" to JsonObject(mapOf(
-                    "products" to JsonObject(mapOf(
-                        "type" to JsonPrimitive("array"),
-                        "items" to JsonObject(mapOf(
-                            "type" to JsonPrimitive("object"),
-                            "properties" to JsonObject(mapOf(
-                                "id" to JsonObject(mapOf("type" to JsonPrimitive("string"))),
-                                "name" to JsonObject(mapOf("type" to JsonPrimitive("string"))),
-                                "price" to JsonObject(mapOf("type" to JsonPrimitive("number"))),
-                                "description" to JsonObject(mapOf("type" to JsonPrimitive("string")))
-                            )),
-                            "additionalProperties" to JsonPrimitive(false),
-                            "required" to JsonArray(listOf(JsonPrimitive("id"), JsonPrimitive("name"), JsonPrimitive("price"), JsonPrimitive("description")))
-                        ))
+<!--- INCLUDE
+import ai.koog.prompt.params.LLMParams
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.JsonArray
+-->
+```kotlin
+// Create parameters with a standard JSON schema
+val standardJsonParams = LLMParams(
+    temperature = 0.2,
+    schema = LLMParams.Schema.JSON.Standard(
+        name = "ProductCatalog",
+        schema = JsonObject(mapOf(
+            "type" to JsonPrimitive("object"),
+            "properties" to JsonObject(mapOf(
+                "products" to JsonObject(mapOf(
+                    "type" to JsonPrimitive("array"),
+                    "items" to JsonObject(mapOf(
+                        "type" to JsonPrimitive("object"),
+                        "properties" to JsonObject(mapOf(
+                            "id" to JsonObject(mapOf("type" to JsonPrimitive("string"))),
+                            "name" to JsonObject(mapOf("type" to JsonPrimitive("string"))),
+                            "price" to JsonObject(mapOf("type" to JsonPrimitive("number"))),
+                            "description" to JsonObject(mapOf("type" to JsonPrimitive("string")))
+                        )),
+                        "additionalProperties" to JsonPrimitive(false),
+                        "required" to JsonArray(listOf(JsonPrimitive("id"), JsonPrimitive("name"), JsonPrimitive("price"), JsonPrimitive("description")))
                     ))
-                )),
-                "additionalProperties" to JsonPrimitive(false),
-                "required" to JsonArray(listOf(JsonPrimitive("products")))
-            ))
-        )
+                ))
+            )),
+            "additionalProperties" to JsonPrimitive(false),
+            "required" to JsonArray(listOf(JsonPrimitive("products")))
+        ))
     )
-    ```
-    <!--- KNIT example-llm-parameters-05.kt -->
+)
+```
+<!--- KNIT example-llm-parameters-05.kt -->
 
 ## Tool choice
 
