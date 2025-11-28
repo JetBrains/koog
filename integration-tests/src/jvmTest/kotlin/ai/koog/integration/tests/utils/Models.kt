@@ -25,7 +25,7 @@ object Models {
     @JvmStatic
     fun anthropicModels(): Stream<LLModel> {
         return Stream.of(
-            AnthropicModels.Opus_4_1,
+            AnthropicModels.Opus_4_5,
             AnthropicModels.Haiku_4_5,
             AnthropicModels.Sonnet_4_5,
         )

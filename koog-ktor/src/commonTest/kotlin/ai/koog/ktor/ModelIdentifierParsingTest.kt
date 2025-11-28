@@ -182,6 +182,12 @@ class ModelIdentifierParsingTest {
         assertEquals(LLMProvider.Anthropic, opus4_1.provider)
         assertEquals(AnthropicModels.Opus_4_1, opus4_1)
 
+        // Test Opus 4.5
+        val opus4_5 = getModelFromIdentifier("anthropic.opus_4_5")
+        assertNotNull(opus4_5)
+        assertEquals(LLMProvider.Anthropic, opus4_5.provider)
+        assertEquals(AnthropicModels.Opus_4_5, opus4_5)
+
         // Test Haiku 3
         val haiku3 = getModelFromIdentifier("anthropic.haiku_3")
         assertNotNull(haiku3)
