@@ -135,7 +135,7 @@ fun main() = runBlocking {
 
     val agent = AIAgent(
         promptExecutor = simpleOpenAIExecutor(apiKey),
-        llmModel = OpenAIModels.CostOptimized.GPT4oMini,
+        llmModel = OpenAIModels.Chat.GPT4oMini,
         systemPrompt = bankingAssistantSystemPrompt + transactionAnalysisPrompt,
         temperature = 0.0,
         toolRegistry = toolRegistry

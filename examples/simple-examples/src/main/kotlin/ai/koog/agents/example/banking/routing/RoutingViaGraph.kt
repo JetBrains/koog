@@ -47,7 +47,7 @@ suspend fun main() {
                     )
                 ),
                 fixingParser = StructureFixingParser(
-                    model = OpenAIModels.CostOptimized.GPT4oMini,
+                    model = OpenAIModels.Chat.GPT4oMini,
                     retries = 2,
                 )
             )
