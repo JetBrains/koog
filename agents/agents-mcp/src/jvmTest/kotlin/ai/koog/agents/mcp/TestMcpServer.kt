@@ -3,14 +3,14 @@ package ai.koog.agents.mcp
 import ai.koog.utils.io.SuitableForIO
 import io.ktor.server.cio.CIO
 import io.ktor.server.engine.embeddedServer
-import io.modelcontextprotocol.kotlin.sdk.CallToolResult
-import io.modelcontextprotocol.kotlin.sdk.Implementation
-import io.modelcontextprotocol.kotlin.sdk.ServerCapabilities
-import io.modelcontextprotocol.kotlin.sdk.TextContent
-import io.modelcontextprotocol.kotlin.sdk.Tool
 import io.modelcontextprotocol.kotlin.sdk.server.Server
 import io.modelcontextprotocol.kotlin.sdk.server.ServerOptions
 import io.modelcontextprotocol.kotlin.sdk.server.mcp
+import io.modelcontextprotocol.kotlin.sdk.types.CallToolResult
+import io.modelcontextprotocol.kotlin.sdk.types.Implementation
+import io.modelcontextprotocol.kotlin.sdk.types.ServerCapabilities
+import io.modelcontextprotocol.kotlin.sdk.types.TextContent
+import io.modelcontextprotocol.kotlin.sdk.types.ToolSchema
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -52,7 +52,7 @@ class TestMcpServer(private val port: Int) {
         server.addTool(
             name = "greeting",
             description = "A simple greeting tool",
-            inputSchema = Tool.Input(
+            inputSchema = ToolSchema(
                 properties = buildJsonObject {
                     putJsonObject("name") {
                         put("type", "string")
@@ -73,8 +73,8 @@ class TestMcpServer(private val port: Int) {
                 required = listOf("name")
             )
         ) { request ->
-            val name = request.arguments["name"]?.jsonPrimitive?.content
-            val title = request.arguments["title"]?.jsonPrimitive?.content
+            val name = request.arguments?.get("name")?.jsonPrimitive?.content
+            val title = request.arguments?.get("title")?.jsonPrimitive?.content
             CallToolResult(
                 content = listOf(TextContent("Hello, ${if (title.isNullOrEmpty()) "" else "$title "}$name!"))
             )
@@ -84,7 +84,7 @@ class TestMcpServer(private val port: Int) {
         server.addTool(
             name = "empty",
             description = "An empty tool",
-            inputSchema = Tool.Input()
+            inputSchema = ToolSchema()
         ) {
             CallToolResult(content = emptyList())
         }
