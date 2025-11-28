@@ -1,3 +1,8 @@
+---
+search:
+  exclude: true
+---
+
 # --8<-- [start:heading]
 |Parameter|Type| Description |
 |---------|----|-------------|
