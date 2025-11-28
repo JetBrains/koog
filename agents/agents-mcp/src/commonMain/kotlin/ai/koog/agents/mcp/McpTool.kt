@@ -2,8 +2,8 @@ package ai.koog.agents.mcp
 
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
-import io.modelcontextprotocol.kotlin.sdk.CallToolResultBase
 import io.modelcontextprotocol.kotlin.sdk.client.Client
+import io.modelcontextprotocol.kotlin.sdk.types.CallToolResult
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.nullable
 import kotlinx.serialization.json.JsonElement
@@ -23,12 +23,12 @@ import kotlinx.serialization.json.jsonObject
 public class McpTool(
     private val mcpClient: Client,
     override val descriptor: ToolDescriptor,
-) : Tool<JsonObject, CallToolResultBase?>() {
+) : Tool<JsonObject, CallToolResult?>() {
     override val name: String = descriptor.name
     override val description: String = descriptor.description
 
     override val argsSerializer: KSerializer<JsonObject> = JsonObject.serializer()
-    override val resultSerializer: KSerializer<CallToolResultBase?> = CallToolResultBase.serializer().nullable
+    override val resultSerializer: KSerializer<CallToolResult?> = CallToolResult.serializer().nullable
 
     /**
      * Executes the MCP tool with the given arguments.
@@ -39,7 +39,7 @@ public class McpTool(
      * @param args The arguments for the MCP tool call.
      * @return The result of the MCP tool call.
      */
-    override suspend fun execute(args: JsonObject): CallToolResultBase? {
+    override suspend fun execute(args: JsonObject): CallToolResult {
         return mcpClient.callTool(
             name = descriptor.name,
             arguments = args
@@ -49,7 +49,7 @@ public class McpTool(
     /**
      * Postprocess result string representation for LLMs a bit, removing unnecessary meta fields.
      */
-    override fun encodeResultToString(result: CallToolResultBase?): String {
+    override fun encodeResultToString(result: CallToolResult?): String {
         val preparedResultJson: JsonElement = result
             ?.let {
                 JsonObject(

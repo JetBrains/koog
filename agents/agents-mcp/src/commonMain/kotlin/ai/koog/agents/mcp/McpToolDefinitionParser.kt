@@ -3,13 +3,14 @@ package ai.koog.agents.mcp
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
+import io.modelcontextprotocol.kotlin.sdk.types.EmptyJsonObject
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.boolean
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import io.modelcontextprotocol.kotlin.sdk.Tool as SDKTool
+import io.modelcontextprotocol.kotlin.sdk.types.Tool as SDKTool
 
 /**
  * Parsers tool definition from MCP SDK to our tool descriptor format.
@@ -42,7 +43,7 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
      */
     override fun parse(sdkTool: SDKTool): ToolDescriptor {
         // Parse all parameters from the input schema
-        val parameters = parseParameters(sdkTool.inputSchema.properties)
+        val parameters = parseParameters(sdkTool.inputSchema.properties ?: EmptyJsonObject)
 
         // Get the list of required parameters
         val requiredParameters = sdkTool.inputSchema.required ?: emptyList()
@@ -142,9 +143,13 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
         return when (typeStr.lowercase()) {
             // Primitive types
             "string" -> ToolParameterType.String
+
             "integer" -> ToolParameterType.Integer
+
             "number" -> ToolParameterType.Float
+
             "boolean" -> ToolParameterType.Boolean
+
             "enum" -> ToolParameterType.Enum(
                 element.getValue("enum").jsonArray.map { it.jsonPrimitive.content }.toTypedArray()
             )
@@ -188,6 +193,7 @@ public object DefaultMcpToolDescriptorParser : McpToolDescriptorParser {
                             element.getValue("additionalProperties").jsonObject,
                             depth + 1
                         )
+
                         else -> null
                     }
                 } else {
