@@ -10,88 +10,88 @@ In Koog, the `LLMParams` class incorporates LLM parameters and provides a consis
 
 - When creating a prompt:
 
-    <!--- INCLUDE
-    import ai.koog.prompt.prompt
-    import ai.koog.prompt.params.LLMParams
-    -->
-    ```kotlin
-    val prompt = prompt(
-        id = "dev-assistant",
-        params = LLMParams(
-            temperature = 0.7,
-            maxTokens = 500
-        )
-    ) {
-        // Add a system message to set the context
-        system("You are a helpful assistant.")
+<!--- INCLUDE
+import ai.koog.prompt.dsl.prompt
+import ai.koog.prompt.params.LLMParams
+-->
+```kotlin
+val prompt = prompt(
+    id = "dev-assistant",
+    params = LLMParams(
+        temperature = 0.7,
+        maxTokens = 500
+    )
+) {
+    // Add a system message to set the context
+    system("You are a helpful assistant.")
 
-        // Add a user message
-        user("Tell me about Kotlin")
-    }
-    ```
-    <!--- KNIT example-llm-parameters-01.kt -->
+    // Add a user message
+    user("Tell me about Kotlin")
+}
+```
+<!--- KNIT example-llm-parameters-01.kt -->
 
-    For more information about prompt creation, see [Prompts](prompt-api.md).
+For more information about prompt creation, see [Prompts](prompt-api.md).
 
 - When creating a subgraph:
 
-    <!--- INCLUDE
-    import ai.koog.agents.core.dsl.builder.strategy
-    import ai.koog.agents.ext.tool.SayToUser
-    import ai.koog.prompt.executor.clients.openai.OpenAIModels
-    import ai.koog.agents.ext.agent.subgraphWithTask
-    val searchTool = SayToUser
-    val calculatorTool = SayToUser
-    val weatherTool = SayToUser
-    val strategy = strategy<String, String>("strategy_name") {
-    -->
-    <!--- SUFFIX
-    }
-    -->
-    ```kotlin
-    val processQuery by subgraphWithTask<String, String>(
-        tools = listOf(searchTool, calculatorTool, weatherTool),
-        llmModel = OpenAIModels.Chat.GPT4o,
-        llmparams = LLMParams(
-            temperature = 0.7,
-            maxTokens = 500,
-        )
-    ) { userQuery ->
-        """
-        You are a helpful assistant that can answer questions about various topics.
-        Please help with the following query:
-        $userQuery
-        """
-    }
-    ```
-    <!--- KNIT example-llm-parameters-02.kt -->
+<!--- INCLUDE
+import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.ext.tool.SayToUser
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.agents.ext.agent.subgraphWithTask
+val searchTool = SayToUser
+val calculatorTool = SayToUser
+val weatherTool = SayToUser
+val strategy = strategy<String, String>("strategy_name") {
+-->
+<!--- SUFFIX
+}
+-->
+```kotlin
+val processQuery by subgraphWithTask<String, String>(
+    tools = listOf(searchTool, calculatorTool, weatherTool),
+    llmModel = OpenAIModels.Chat.GPT4o,
+    llmparams = LLMParams(
+        temperature = 0.7,
+        maxTokens = 500,
+    )
+) { userQuery ->
+    """
+    You are a helpful assistant that can answer questions about various topics.
+    Please help with the following query:
+    $userQuery
+    """
+}
+```
+<!--- KNIT example-llm-parameters-02.kt -->
 
-    For more information on how to create and implement your own subgraphs, see [Custom subgraphs](custom-subgraphs.md).
+For more information on how to create and implement your own subgraphs, see [Custom subgraphs](custom-subgraphs.md).
 
 - When updating a prompt in an LLM write session:
 
-    <!--- INCLUDE
-    import ai.koog.agents.core.dsl.builder.strategy
-    val strategy = strategy<Unit, Unit>("strategy-name") {
-    val node by node<Unit, Unit> {
-    -->
-    <!--- SUFFIX
-       }
-    }
-    -->
-    ```kotlin
-    llm.writeSession {
-        changeLLMParams(
-            LLMParams(
-                temperature = 0.7,
-                maxTokens = 500
-            )
+<!--- INCLUDE
+import ai.koog.agents.core.dsl.builder.strategy
+val strategy = strategy<Unit, Unit>("strategy-name") {
+val node by node<Unit, Unit> {
+-->
+<!--- SUFFIX
+   }
+}
+-->
+```kotlin
+llm.writeSession {
+    changeLLMParams(
+        LLMParams(
+            temperature = 0.7,
+            maxTokens = 500
         )
-    }
-    ```
-    <!--- KNIT example-llm-parameters-03.kt -->
+    )
+}
+```
+<!--- KNIT example-llm-parameters-03.kt -->
 
-    For more information about sessions, see [LLM sessions and manual history management](sessions.md).
+For more information about sessions, see [LLM sessions and manual history management](sessions.md).
 
 ## LLM parameter reference
 
@@ -118,7 +118,7 @@ For a list of default values for each parameter, see the corresponding LLM provi
 - [Mistral](https://docs.mistral.ai/api/#operation/chatCompletions)
 - [DeepSeek](https://api-docs.deepseek.com/api/create-chat-completion#request)
 - [OpenRouter](https://openrouter.ai/docs/api/reference/parameters)
-- Alibaba ([DashScope](https://www.alibabacloud.com/help/en/model-studio/qwen-api-reference?spm=a2c63.p38356.help-menu-2400256.d_2_1_0.f57d482eBkrliN))
+- Alibaba ([DashScope](https://www.alibabacloud.com/help/en/model-studio/qwen-api-reference))
 
 ## Schema
 
@@ -246,46 +246,127 @@ and add provider-specific functionality. The following classes include parameter
 
 Here is the complete reference of provider-specific parameters in Koog:
 
-| Parameter           | Providers                                                                                            | Type                                        | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-|---------------------|------------------------------------------------------------------------------------------------------|---------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `topP`              | OpenAI Chat, OpenAI Responses, DeepSeek, OpenRouter, Anthropic, Google, Alibaba (DashScope), Mistral | Double                                      | Also referred to as nucleus sampling. Creates a subset of next tokens by adding tokens with the highest probability values to the subset until the sum of their probabilities reaches the specified `topP` value. Takes a value greater than 0.0 and lower than or equal to 1.0.                                                                                                                                                                                                                                                                                               |
-| `logprobs`          | OpenAI Chat, OpenAI Responses, DeepSeek, OpenRouter, Alibaba (DashScope)                             | Boolean                                     | If `true`, includes log-probabilities for output tokens.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| `topLogprobs`       | OpenAI Chat, OpenAI Responses, DeepSeek, OpenRouter, Alibaba (DashScope)                             | Integer                                     | Number of top most likely tokens per position. Takes a value in the range of 0–20. Requires the `logprobs` parameter to be set to `true`.                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| `topK`              | OpenRouter, Anthropic, Google                                                                        | Integer                                     | Number of top tokens to consider when generating the output. Takes a value greater than or equal to 0 (provider-specific minimums may apply).                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| `frequencyPenalty`  | OpenAI Chat, DeepSeek, OpenRouter, Alibaba (DashScope), Mistral                                      | Double                                      | Penalizes frequent tokens to reduce repetition. Higher `frequencyPenalty` values result in larger variations of phrasing and reduced repetition. Takes a value in the range of -2.0 to 2.0.                                                                                                                                                                                                                                                                                                                                                                                    |
-| `presencePenalty`   | OpenAI Chat, DeepSeek, OpenRouter, Alibaba (DashScope), Mistral                                      | Double                                      | Prevents the model from reusing tokens that have already been included in the output. Higher values encourage the introduction of new tokens and topics. Takes a value in the range of -2.0 to 2.0.                                                                                                                                                                                                                                                                                                                                                                            |
-| `stop`              | OpenAI Chat, DeepSeek, OpenRouter, Alibaba (DashScope), Mistral                                      | List&lt;String&gt;                          | Strings that signal to the model that it should stop generating content when it encounters any of them. For example, to make the model stop generating content when it produces two newlines, specify the stop sequence as `stop = listOf("/n/n")`.                                                                                                                                                                                                                                                                                                                            |
-| `parallelToolCalls` | OpenAI Chat, OpenAI Responses, DashScope, Mistral                                                    | Boolean                                     | If `true`, multiple tool calls can run in parallel. Particularly applicable to custom nodes or LLM interactions outside of agent strategies.                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| `promptCacheKey`    | OpenAI Chat, OpenAI Responses                                                                        | String                                      | Stable cache key for prompt caching. OpenAI uses it to cache responses for similar requests.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| `safetyIdentifier`  | OpenAI Chat, OpenAI Responses                                                                        | String                                      | A stable and unique user identifier that may be used to detect users who violate OpenAI policies.                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| `serviceTier`       | OpenAI Chat, OpenAI Responses                                                                        | ServiceTier                                 | OpenAI processing tier selection that lets you prioritize performance over cost or vice versa. For more information, see the API documentation for [ServiceTier](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/prompt-executor-openai-client-base/ai.koog.prompt.executor.clients.openai.base.models/-service-tier/index.html).                                                                                                                                                                                                                           |
-| `store`             | OpenAI Chat, OpenAI Responses                                                                        | Boolean                                     | If `true`, the provider may store outputs for later retrieval.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| `audio`             | OpenAI Chat                                                                                          | OpenAIAudioConfig                           | Audio output configuration when using audio-capable models. For more information, see the API documentation for [OpenAIAudioConfig](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/prompt-executor-openai-client-base/ai.koog.prompt.executor.clients.openai.base.models/-open-a-i-audio-config/index.html).                                                                                                                                                                                                                                               |
-| `reasoningEffort`   | OpenAI Chat                                                                                          | ReasoningEffort                             | Specifies the level of reasoning effort that the model will use. For more information and available values, see the API documentation for [ReasoningEffort](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/prompt-executor-openai-client-base/ai.koog.prompt.executor.clients.openai.base.models/-reasoning-effort/index.html).                                                                                                                                                                                                                            |
-| `webSearchOptions`  | OpenAI Chat                                                                                          | OpenAIWebSearchOptions                      | Configure web search tool usage (if supported). For more information, see the API documentation for [OpenAIWebSearchOptions](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/prompt-executor-openai-client-base/ai.koog.prompt.executor.clients.openai.base.models/-open-a-i-web-search-options/index.html).                                                                                                                                                                                                                                                |
-| `background`        | OpenAI Responses                                                                                     | Boolean                                     | Run the response in the background.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| `include`           | OpenAI Responses                                                                                     | List&lt;OpenAIInclude&gt;                   | Additional data to include in the model's response, such as sources of web search tool call or search results of a file search tool call. For detailed reference information, see [OpenAIInclude](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/prompt-executor-openai-client/ai.koog.prompt.executor.clients.openai.models/-open-a-i-include/index.html) in the Koog API reference. To learn more about the `include` parameter, see [OpenAI's documentation](https://platform.openai.com/docs/api-reference/responses/create#responses-create-include). |
-| `maxToolCalls`      | OpenAI Responses                                                                                     | Integer                                     | Maximum total number of built-in tool calls allowed in this response. Takes a value equal to or greater than `0`.                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| `reasoning`         | OpenAI Responses                                                                                     | ReasoningConfig                             | Reasoning configuration for reasoning-capable models. For more information, see the API documentation for [ReasoningConfig](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/prompt-executor-openai-client/ai.koog.prompt.executor.clients.openai.models/-reasoning-config/index.html).                                                                                                                                                                                                                                                                      |
-| `truncation`        | OpenAI Responses                                                                                     | Truncation                                  | Truncation strategy when nearing the context window. For more information, see the API documentation for [Truncation](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/prompt-executor-openai-client/ai.koog.prompt.executor.clients.openai.models/-truncation/index.html).                                                                                                                                                                                                                                                                                  |
-| `thinkingConfig`    | Google                                                                                               | GoogleThinkingConfig                        | Controls whether the model should expose its chain-of-thought and how many tokens it may spend on it. For more information, see the API reference for [GoogleThinkingConfig](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/prompt-executor-google-client/ai.koog.prompt.executor.clients.google.models/-google-thinking-config/index.html).                                                                                                                                                                                                               |
-| `stopSequences`     | Anthropic                                                                                            | List&lt;String&gt;                          | Custom text sequences that cause the model to stop generating content. If matched, the value of `stop_reason` in the response is `stop_sequence`.                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| `container`         | Anthropic                                                                                            | String                                      | Container identifier for reuse across requests. Containers are used by Anthropic's code execution tool to provide a secure and containerized code execution environment. By providing the container identifier from a previous response, you can reuse containers across multiple requests, which preserves created files between requests. For more information, see [Containers](https://platform.claude.com/docs/en/agents-and-tools/tool-use/code-execution-tool#containers) in Anthropic's documentation.                                                                 |
-| `mcpServers`        | Anthropic                                                                                            | List&lt;AnthropicMCPServerURLDefinition&gt; | Definitions of MCP servers to be used in the request. Supports at most 20 servers. For more information, see the API reference for [AnthropicMCPServerURLDefinition](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/prompt-executor-anthropic-client/ai.koog.prompt.executor.clients.anthropic.models/-anthropic-m-c-p-server-u-r-l-definition/index.html).                                                                                                                                                                                                |
-| `serviceTier`       | Anthropic                                                                                            | AnthropicServiceTier                        | Determines whether to use priority capacity (if available) or standard capacity for the request. For more information, see the API reference for [AnthropicServiceTier](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/prompt-executor-anthropic-client/ai.koog.prompt.executor.clients.anthropic.models/-anthropic-service-tier/index.html) and Anthropic's [Service tiers](https://platform.claude.com/docs/en/api/service-tiers) documentation.                                                                                                         |
-| `thinking`          | Anthropic                                                                                            | AnthropicThinking                           | Configuration for activating Claude's extended thinking. When activated, responses also include thinking content blocks. For more information, see the API reference for [AnthropicThinking](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/prompt-executor-anthropic-client/ai.koog.prompt.executor.clients.anthropic.models/-anthropic-thinking/index.html).                                                                                                                                                                                             |
-| `randomSeed`        | Mistral                                                                                              | Integer                                     | The seed to use for random sampling. If set, different calls with the same parameters and the same seed value will generate deterministic results.                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| `promptMode`        | Mistral                                                                                              | String                                      | Lets you toggle between the reasoning mode and no system prompt. When set to `reasoning`, the default system prompt for reasoning models is used. For more information, see Mistral's [Reasoning](https://docs.mistral.ai/capabilities/reasoning) documentation.                                                                                                                                                                                                                                                                                                               |
-| `safePrompt`        | Mistral                                                                                              | Boolean                                     | Specifies whether to inject a safety prompt before all conversations. The safety prompt is used to enforce guardrails and protect against harmful content. For more information, see Mistral's [Moderation & Guardarailing](https://docs.mistral.ai/capabilities/guardrailing) documentation.                                                                                                                                                                                                                                                                                  |
-| `enableSearch`      | Alibaba (DashScope)                                                                                  | Boolean                                     | Specifies whether to enable web search functionality. For more information, see Alibaba's [Web search](https://www.alibabacloud.com/help/en/model-studio/web-search?spm=a2c63.p38356.0.i14) documentation.                                                                                                                                                                                                                                                                                                                                                                     |
-| `enableThinking`    | Alibaba (DashScope)                                                                                  | Boolean                                     | Specifies whether to enable thinking mode when using a hybrid thinking model. For more information, see Alibaba's documentation on [Deep thinking](https://www.alibabacloud.com/help/en/model-studio/deep-thinking?spm=a2c63.p38356.0.i11).                                                                                                                                                                                                                                                                                                                                    |
-| `repetitionPenalty` | OpenRouter                                                                                           | Double                                      | Penalizes token repetition. Next-token probabilities for tokens that already appeared in the output are divided by the value of `repetitionPenalty`, which makes them less likely to appear again if `repetitionPenalty > 1`. Takes a value greater than 0.0 and lower than or equal to 2.0.                                                                                                                                                                                                                                                                                   |
-| `minP`              | OpenRouter                                                                                           | Double                                      | Filters out tokens whose relative probability to the most likely token is below the defined `minP` value. Takes a value in the range of 0.0–0.1.                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| `topA`              | OpenRouter                                                                                           | Double                                      | Dynamically adjusts the sampling window based on model confidence. If the model is confident (there are dominant high-probability next tokens), it keeps the sampling window limited to a few top tokens. If the confidence is low (there are many tokens with similar probabilities), keeps more tokens in the sampling window. Takes a value in the range of 0.0–0.1 (inclusive). Higher value means greater dynamic adaptation.                                                                                                                                             |
-| `transforms`        | OpenRouter                                                                                           | List&lt;String&gt;                          | List of context transforms. Defines how context is transformed when it exceeds the model's token limit. The default transformation is `middle-out` which truncates from the middle of the prompt. Use empty list for no transformations. For more information, see [Message Transforms](https://openrouter.ai/docs/guides/features/message-transforms) in OpenRouter documentation.                                                                                                                                                                                            |
-| `models`            | OpenRouter                                                                                           | List&lt;String&gt;                          | List of allowed models for the request.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| `route`             | OpenRouter                                                                                           | String                                      | Request routing strategy to use.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| `provider`          | OpenRouter                                                                                           | ProviderPreferences                         | Includes a range of parameters that let you explicitly control how OpenRouter chooses which LLM provider to use. For more information, see the API documentation on [ProviderPreferences](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/prompt-executor-openrouter-client/ai.koog.prompt.executor.clients.openrouter.models/-provider-preferences/index.html).                                                                                                                                                                                            |
+=== "OpenAI Chat"
+
+    --8<--
+    llm-parameters-snippets.md:heading
+    llm-parameters-snippets.md:audio
+    llm-parameters-snippets.md:frequencyPenalty
+    llm-parameters-snippets.md:logprobs
+    llm-parameters-snippets.md:parallelToolCalls
+    llm-parameters-snippets.md:presencePenalty
+    llm-parameters-snippets.md:promptCacheKey
+    llm-parameters-snippets.md:reasoningEffort
+    llm-parameters-snippets.md:safetyIdentifier
+    llm-parameters-snippets.md:serviceTier
+    llm-parameters-snippets.md:stop
+    llm-parameters-snippets.md:store
+    llm-parameters-snippets.md:topLogprobs
+    llm-parameters-snippets.md:topP
+    llm-parameters-snippets.md:webSearchOptions
+    --8<--
+
+=== "OpenAI Responses"
+
+    --8<--
+    llm-parameters-snippets.md:heading
+    llm-parameters-snippets.md:background
+    llm-parameters-snippets.md:include
+    llm-parameters-snippets.md:logprobs
+    llm-parameters-snippets.md:maxToolCalls
+    llm-parameters-snippets.md:parallelToolCalls
+    llm-parameters-snippets.md:promptCacheKey
+    llm-parameters-snippets.md:reasoning
+    llm-parameters-snippets.md:safetyIdentifier
+    llm-parameters-snippets.md:serviceTier
+    llm-parameters-snippets.md:store
+    llm-parameters-snippets.md:topLogprobs
+    llm-parameters-snippets.md:topP
+    llm-parameters-snippets.md:truncation
+    --8<--
+
+=== "Google"
+
+    --8<--
+    llm-parameters-snippets.md:heading
+    llm-parameters-snippets.md:thinkingConfig
+    llm-parameters-snippets.md:topK
+    llm-parameters-snippets.md:topP
+    --8<--
+
+=== "Anthropic"
+
+    --8<--
+    llm-parameters-snippets.md:heading
+    llm-parameters-snippets.md:container
+    llm-parameters-snippets.md:mcpServers
+    llm-parameters-snippets.md:serviceTier
+    llm-parameters-snippets.md:stopSequences
+    llm-parameters-snippets.md:thinking
+    llm-parameters-snippets.md:topK
+    llm-parameters-snippets.md:topP
+    --8<--
+
+=== "Mistral"
+
+    --8<--
+    llm-parameters-snippets.md:heading
+    llm-parameters-snippets.md:frequencyPenalty
+    llm-parameters-snippets.md:parallelToolCalls
+    llm-parameters-snippets.md:presencePenalty
+    llm-parameters-snippets.md:promptMode
+    llm-parameters-snippets.md:randomSeed
+    llm-parameters-snippets.md:safePrompt
+    llm-parameters-snippets.md:stop
+    llm-parameters-snippets.md:topP
+    --8<--
+
+=== "DeepSeek"
+
+    --8<--
+    llm-parameters-snippets.md:heading
+    llm-parameters-snippets.md:frequencyPenalty
+    llm-parameters-snippets.md:logprobs
+    llm-parameters-snippets.md:presencePenalty
+    llm-parameters-snippets.md:stop
+    llm-parameters-snippets.md:topLogprobs
+    llm-parameters-snippets.md:topP
+    --8<--
+
+=== "OpenRouter"
+
+    --8<--
+    llm-parameters-snippets.md:heading
+    llm-parameters-snippets.md:frequencyPenalty
+    llm-parameters-snippets.md:logprobs
+    llm-parameters-snippets.md:minP
+    llm-parameters-snippets.md:models
+    llm-parameters-snippets.md:presencePenalty
+    llm-parameters-snippets.md:provider
+    llm-parameters-snippets.md:repetitionPenalty
+    llm-parameters-snippets.md:route
+    llm-parameters-snippets.md:stop
+    llm-parameters-snippets.md:topA
+    llm-parameters-snippets.md:topK
+    llm-parameters-snippets.md:topLogprobs
+    llm-parameters-snippets.md:topP
+    llm-parameters-snippets.md:transforms
+    --8<--
+
+=== "Alibaba (DashScope)"
+
+    --8<--
+    llm-parameters-snippets.md:heading
+    llm-parameters-snippets.md:enableSearch
+    llm-parameters-snippets.md:enableThinking
+    llm-parameters-snippets.md:frequencyPenalty
+    llm-parameters-snippets.md:logprobs
+    llm-parameters-snippets.md:parallelToolCalls
+    llm-parameters-snippets.md:presencePenalty
+    llm-parameters-snippets.md:stop
+    llm-parameters-snippets.md:topLogprobs
+    llm-parameters-snippets.md:topP
+    --8<--
 
 The following example shows defined OpenRouter LLM parameters using the provider-specific `OpenRouterParams` class:
 
