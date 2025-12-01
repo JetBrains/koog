@@ -49,6 +49,7 @@ kotlin {
             implementation(libs.koog.prompt.executor.llms.all)
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.datetime)
+            implementation(libs.markdown.renderer)
             implementation(libs.kotlinx.serialization.core)
             implementation(libs.kotlinx.serialization.json)
             implementation(project.dependencies.platform(libs.koin.bom))

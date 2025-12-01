@@ -51,6 +51,9 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.jetbrains.example.koog.compose.theme.AppDimension
 import com.jetbrains.example.koog.compose.theme.AppTheme
+import com.mikepenz.markdown.m3.Markdown
+import com.mikepenz.markdown.m3.markdownColor
+import com.mikepenz.markdown.m3.markdownTypography
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 @Composable
@@ -202,10 +205,10 @@ private fun AgentMessageBubble(text: String) {
                 .background(MaterialTheme.colorScheme.primaryContainer)
                 .padding(AppDimension.spacingMedium)
         ) {
-            Text(
-                text = text,
-                color = MaterialTheme.colorScheme.onPrimaryContainer,
-                style = MaterialTheme.typography.bodyLarge
+            Markdown(
+                content = text,
+                colors = markdownColor(text = MaterialTheme.colorScheme.onPrimaryContainer),
+                typography = markdownTypography(text = MaterialTheme.typography.bodyLarge)
             )
         }
     }
