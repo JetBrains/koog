@@ -2,8 +2,6 @@ package ai.koog.agents.ext.tool.file
 
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolException
-import ai.koog.agents.core.tools.ToolResult
-import ai.koog.agents.core.tools.ToolResultUtils
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.core.tools.validate
 import ai.koog.agents.core.tools.validateNotNull
@@ -51,25 +49,11 @@ public class WriteFileTool<Path>(private val fs: FileSystemProvider.ReadWrite<Pa
      * @property file the written file entry containing metadata
      */
     @Serializable
-    public data class Result(val file: FileSystemEntry.File) : ToolResult.TextSerializable() {
-        /**
-         * Converts the result to a confirmation message with file metadata.
-         *
-         * Renders the writing confirmation in the following format:
-         * - "Written" confirmation message
-         * - File path with metadata in parentheses (size, line count if available, "hidden" if the file is hidden)
-         *
-         * @return formatted text representation after writing the file
-         */
-        override fun textForLLM(): String = text {
-            +"Written"
-            entry(file)
-        }
-    }
+    public data class Result(val file: FileSystemEntry.File)
 
-    override val resultSerializer: KSerializer<Result> = ToolResultUtils.toTextSerializer()
-
+    override val resultSerializer: KSerializer<Result> = Result.serializer()
     override val argsSerializer: KSerializer<Args> = Args.serializer()
+
     override val name: String = "__write_file__"
     override val description: String = """
         Writes text content to a file at an absolute path. Creates parent directories if needed and overwrites existing content.
@@ -108,5 +92,12 @@ public class WriteFileTool<Path>(private val fs: FileSystemProvider.ReadWrite<Pa
 
         val fileEntry = buildFileSystemEntry(fs, path, metadata) as FileSystemEntry.File
         return Result(fileEntry)
+    }
+
+    override fun encodeResultToString(result: Result): String = with(result) {
+        text {
+            +"Written"
+            entry(file)
+        }
     }
 }

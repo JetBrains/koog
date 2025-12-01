@@ -1,6 +1,7 @@
 package ai.koog.agents.ext.tool.file
 
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
+import ai.koog.agents.ext.tool.file.patch.isSuccess
 import ai.koog.agents.ext.utils.InMemoryFS
 import ai.koog.rag.base.files.readText
 import ai.koog.rag.base.files.writeText
@@ -9,6 +10,7 @@ import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 @OptIn(InternalAgentToolsApi::class)
 class EditFileToolCoreTest {
@@ -53,7 +55,7 @@ class EditFileToolCoreTest {
         val result = tool.execute(args)
 
         // Then
-        val markdownReport = result.textForLLM()
+        val markdownReport = tool.encodeResultToString(result)
         assertContains(markdownReport, "Success")
         assertContains(markdownReport, "edit")
     }
@@ -277,10 +279,10 @@ class EditFileToolCoreTest {
         val result = tool.execute(args)
 
         // Then
-        val markdownReport = result.textForLLM()
+        val markdownReport = tool.encodeResultToString(result)
         assertFalse(markdownReport.contains("Successfully"), "Markdown should not indicate a successful edit")
 
-        assertEquals(false, result.applied, "Patch should not be applied when original is not found")
+        assertTrue(!result.patchApplyResult.isSuccess(), "Patch should not be applied when original is not found")
 
         assertContains(
             markdownReport,

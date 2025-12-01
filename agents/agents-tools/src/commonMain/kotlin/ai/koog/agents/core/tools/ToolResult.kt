@@ -2,9 +2,6 @@ package ai.koog.agents.core.tools
 
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
 import kotlin.jvm.JvmInline
 
@@ -141,63 +138,5 @@ public interface ToolResult {
         public fun getSerializer(): KSerializer<T>
 
         override fun toStringDefault(): String = json.encodeToString(getSerializer(), this as T)
-    }
-
-    /**
-     * A serializer that converts an object implementing the TextSerializable interface into a textual format
-     * by utilizing the `textForLLM` function defined in the interface.
-     *
-     * This serializer provides functionality to encode the object into a string format suitable for textual
-     * representation and decodes it using a provided serializer for the type.
-     *
-     * @param T The type of object being serialized/deserialized, constrained to types implementing TextSerializable.
-     * @param valueSerializer The serializer responsible for handling the underlying type operations.
-     */
-    public open class AsTextSerializer<T : TextSerializable>(
-        private val valueSerializer: KSerializer<T>
-    ) : KSerializer<T> {
-        /**
-         * The descriptor that provides metadata about the serialized form of the value.
-         * This descriptor corresponds to the valueSerializer's descriptor, defining the
-         * structure of the serialized data and associated information like kind and elements.
-         */
-        override val descriptor: SerialDescriptor = valueSerializer.descriptor
-
-        /**
-         * Serializes an object of type `T` into its textual representation.
-         *
-         * This method uses the provided encoder to encode the `textForLLM` representation of the `value`.
-         *
-         * @param encoder The encoder used to serialize the object.
-         * @param value The object of type `T` to be serialized.
-         */
-        override fun serialize(encoder: Encoder, value: T) {
-            encoder.encodeString(value.textForLLM())
-        }
-
-        /**
-         * Deserializes the provided encoded data using the specified decoder and returns the resulting object of type T.
-         *
-         * @param decoder The decoder to read the serialized data from.
-         * @return The deserialized object of type T.
-         */
-        override fun deserialize(decoder: Decoder): T {
-            return valueSerializer.deserialize(decoder)
-        }
-    }
-
-    /**
-     * Abstract class representing a text-serializable object.
-     * This class provides a contract for converting an object to a text representation
-     * that can be utilized by language learning models (LLMs) or other text-processing systems.
-     */
-    @Serializable
-    public abstract class TextSerializable {
-        /**
-         * Abstract method to retrieve a text representation for integration with language learning models.
-         *
-         * @return a string that represents the textual content to be used by language learning models.
-         */
-        public abstract fun textForLLM(): String
     }
 }

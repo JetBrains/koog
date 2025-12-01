@@ -66,7 +66,7 @@ class WriteFileToolJvmTest {
             "Written",
             "${p.toAbsolutePath().toString().norm()} (<0.1 KiB, 1 line)"
         ).joinToString("\n")
-        assertEquals(expected, result.textForLLM())
+        assertEquals(expected, tool.encodeResultToString(result))
     }
 
     @Test
@@ -84,7 +84,7 @@ class WriteFileToolJvmTest {
             "Written",
             "${p.toAbsolutePath().toString().norm()} (<0.1 KiB, 1 line)"
         ).joinToString("\n")
-        assertEquals(expected, result.textForLLM())
+        assertEquals(expected, tool.encodeResultToString(result))
         assertEquals("new content", p.readText())
     }
 
@@ -102,7 +102,7 @@ class WriteFileToolJvmTest {
             "Written",
             "${p.toAbsolutePath().toString().norm()} (<0.1 KiB, 3 lines)"
         ).joinToString("\n")
-        assertEquals(expected, result.textForLLM())
+        assertEquals(expected, tool.encodeResultToString(result))
         assertTrue(p.exists())
         assertEquals(content, p.readText())
     }

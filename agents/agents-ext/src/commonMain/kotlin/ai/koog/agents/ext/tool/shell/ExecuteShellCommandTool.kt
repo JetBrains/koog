@@ -62,29 +62,7 @@ public class ExecuteShellCommandTool(
         val command: String,
         val exitCode: Int?,
         val output: String
-    ) {
-        /**
-         * Formats this result like a terminal session.
-         *
-         * Returns a multi-line string showing:
-         * - The command that was run
-         * - Everything it printed, or "(no output)" if the command succeeded but printed nothing
-         * - The exit code (omitted if the command was denied or timed out)
-         *
-         * @return Formatted string ready for display or logging
-         */
-        public fun textForLLM(): String = buildString {
-            appendLine("Command: $command")
-            if (output.isNotEmpty()) {
-                appendLine(output)
-            } else if (exitCode != null) {
-                appendLine("(no output)")
-            }
-            exitCode?.let {
-                appendLine("Exit code: $it")
-            }
-        }.trimEnd()
-    }
+    )
 
     override val argsSerializer: KSerializer<Args> = Args.serializer()
     override val resultSerializer: KSerializer<Result> = Result.serializer()
@@ -121,5 +99,19 @@ public class ExecuteShellCommandTool(
 
         is ShellCommandConfirmation.Denied ->
             Result(args.command, null, "Command execution denied with user response: ${confirmation.userResponse}")
+    }
+
+    override fun encodeResultToString(result: Result): String = with(result) {
+        buildString {
+            appendLine("Command: $command")
+            if (output.isNotEmpty()) {
+                appendLine(output)
+            } else if (exitCode != null) {
+                appendLine("(no output)")
+            }
+            exitCode?.let {
+                appendLine("Exit code: $it")
+            }
+        }.trimEnd()
     }
 }

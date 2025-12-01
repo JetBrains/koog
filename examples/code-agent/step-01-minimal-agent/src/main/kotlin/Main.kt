@@ -15,7 +15,7 @@ import kotlinx.coroutines.runBlocking
 
 val agent = AIAgent(
     promptExecutor = simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")),
-    llmModel = OpenAIModels.Reasoning.GPT5Codex,
+    llmModel = OpenAIModels.Chat.GPT5Codex,
     toolRegistry = ToolRegistry {
         tool(ListDirectoryTool(JVMFileSystemProvider.ReadOnly))
         tool(ReadFileTool(JVMFileSystemProvider.ReadOnly))
