@@ -55,7 +55,7 @@ public class ReadFileTool<Path>(private val fs: FileSystemProvider.ReadOnly<Path
     @Serializable
     public data class Result(
         val file: FileSystemEntry.File,
-        internal val warningMessage: String? = null
+        val warningMessage: String? = null
     ) : ToolResult.TextSerializable() {
         /**
          * Converts the result to a structured text representation.
