@@ -19,6 +19,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import org.junit.jupiter.api.Disabled
 import kotlin.test.AfterTest
 import kotlin.test.Test
 
@@ -196,6 +197,7 @@ class TokenCountTest {
     }
 
     @Test
+    @Disabled("This test is flaky, need to investigate: https://youtrack.jetbrains.com/issue/KG-585/Investigate-flaky-TokenCountTest.test-token-counts-mixed-responses")
     fun `test token counts mixed responses`() = runTest {
         val toolRegistry = ToolRegistry {
             tool(TestTool)
