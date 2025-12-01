@@ -34,7 +34,6 @@ kotlin {
                     project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-anthropic-client")
                 )
                 api(libs.aws.sdk.kotlin.bedrockruntime)
-                implementation(libs.smithy.http.engine.okhttp)
             }
         }
 

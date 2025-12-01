@@ -44,7 +44,6 @@ import aws.sdk.kotlin.services.bedrockruntime.model.InvokeModelWithResponseStrea
 import aws.sdk.kotlin.services.bedrockruntime.model.ResponseStream
 import aws.smithy.kotlin.runtime.auth.awscredentials.CredentialsProvider
 import aws.smithy.kotlin.runtime.http.auth.BearerTokenProvider
-import aws.smithy.kotlin.runtime.http.engine.okhttp.OkHttpEngine
 import aws.smithy.kotlin.runtime.identity.IdentityProvider
 import aws.smithy.kotlin.runtime.net.url.Url
 import aws.smithy.kotlin.runtime.retries.StandardRetryStrategy
@@ -149,8 +148,7 @@ public class BedrockLLMClient(
 
             this.callTimeout = timeoutConfig.requestTimeoutMillis.milliseconds
 
-            this
-            this.httpClient = OkHttpEngine {
+            this.httpClient {
                 connectTimeout = timeoutConfig.connectTimeoutMillis.milliseconds
                 socketReadTimeout = timeoutConfig.socketTimeoutMillis.milliseconds
                 socketWriteTimeout = timeoutConfig.socketTimeoutMillis.milliseconds
