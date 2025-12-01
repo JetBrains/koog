@@ -53,11 +53,15 @@ public class ReadFileTool<Path>(private val fs: FileSystemProvider.ReadOnly<Path
      * @property file the file entry containing metadata and content
      */
     @Serializable
-    public data class Result(val file: FileSystemEntry.File) : ToolResult.TextSerializable() {
+    public data class Result(
+        val file: FileSystemEntry.File,
+        internal val warningMessage: String? = null
+    ) : ToolResult.TextSerializable() {
         /**
          * Converts the result to a structured text representation.
          *
          * Renders the file information in the following format:
+         * - Warning message (if present)
          * - File path with metadata in parentheses (size, line count if available, "hidden" if the file is hidden)
          * - Content section with either:
          *     - Full text for complete file reads
@@ -66,7 +70,13 @@ public class ReadFileTool<Path>(private val fs: FileSystemProvider.ReadOnly<Path
          *
          * @return formatted text representation of the file
          */
-        override fun textForLLM(): String = text { file(file) }
+        override fun textForLLM(): String = text {
+            warningMessage?.let {
+                +"Warning: $it"
+                +""
+            }
+            file(file)
+        }
     }
 
     override val argsSerializer: KSerializer<Args> = Args.serializer()
@@ -91,8 +101,11 @@ public class ReadFileTool<Path>(private val fs: FileSystemProvider.ReadOnly<Path
      * - Confirms the path points to a file
      * - Confirms the file is a text file
      *
+     * If the requested `endLine` exceeds the file's line count, it will be clamped to the available lines
+     * and a warning will be included in the result.
+     *
      * @param args arguments specifying the file path and optional line range
-     * @return [Result] containing the file with its content and metadata
+     * @return [Result] containing the file with its content, metadata, and optional warning
      * @throws [ToolException.ValidationFailure] if the file doesn't exist, is a directory, or is not a text file, or
      *          if line range parameters are invalid
      */
@@ -106,6 +119,8 @@ public class ReadFileTool<Path>(private val fs: FileSystemProvider.ReadOnly<Path
         validate(type == FileMetadata.FileContentType.Text) { "File is not a text file: ${args.path}" }
 
         return runCatching {
+            var warningMessage: String? = null
+
             Result(
                 buildTextFileEntry(
                     fs = fs,
@@ -113,7 +128,12 @@ public class ReadFileTool<Path>(private val fs: FileSystemProvider.ReadOnly<Path
                     metadata = metadata,
                     startLine = args.startLine,
                     endLine = args.endLine,
-                )
+                    onEndLineExceedsFileLength = { endLine, fileLineCount ->
+                        warningMessage = "endLine=$endLine exceeds file length ($fileLineCount lines). " +
+                            "Clamped to available lines ${args.startLine}-$fileLineCount."
+                    }
+                ),
+                warningMessage
             )
         }.onFailure { e ->
             if (e is IllegalArgumentException) {
