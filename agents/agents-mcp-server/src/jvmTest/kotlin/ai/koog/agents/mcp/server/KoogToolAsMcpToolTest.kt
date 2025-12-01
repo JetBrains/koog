@@ -9,8 +9,8 @@ import ai.koog.agents.testing.network.NetUtil.isPortAvailable
 import ai.koog.agents.testing.tools.RandomNumberTool
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.server.cio.CIO
-import io.modelcontextprotocol.kotlin.sdk.EmptyJsonObject
-import io.modelcontextprotocol.kotlin.sdk.TextContent
+import io.modelcontextprotocol.kotlin.sdk.types.EmptyJsonObject
+import io.modelcontextprotocol.kotlin.sdk.types.TextContent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.runTest

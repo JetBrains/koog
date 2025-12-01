@@ -9,6 +9,7 @@ import ai.koog.prompt.executor.clients.dashscope.models.DashscopeChatCompletionR
 import ai.koog.prompt.executor.clients.dashscope.models.DashscopeChatCompletionStreamResponse
 import ai.koog.prompt.executor.clients.openai.base.AbstractOpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.base.OpenAIBaseSettings
+import ai.koog.prompt.executor.clients.openai.base.OpenAICompatibleToolDescriptorSchemaGenerator
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIMessage
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAITool
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolChoice
@@ -49,13 +50,15 @@ public class DashscopeLLMClient(
     apiKey: String,
     private val settings: DashscopeClientSettings = DashscopeClientSettings(),
     baseClient: HttpClient = HttpClient(),
-    clock: Clock = Clock.System
+    clock: Clock = Clock.System,
+    toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator = OpenAICompatibleToolDescriptorSchemaGenerator()
 ) : AbstractOpenAILLMClient<DashscopeChatCompletionResponse, DashscopeChatCompletionStreamResponse>(
-    apiKey,
-    settings,
-    baseClient,
-    clock,
-    staticLogger
+    apiKey = apiKey,
+    settings = settings,
+    baseClient = baseClient,
+    clock = clock,
+    logger = staticLogger,
+    toolsConverter = toolsConverter
 ) {
 
     private companion object {

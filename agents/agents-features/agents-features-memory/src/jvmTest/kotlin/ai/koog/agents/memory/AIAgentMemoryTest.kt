@@ -348,7 +348,7 @@ class AIAgentMemoryTest {
 
     @Test
     fun testSaveFactsFromHistoryWithCustomModel() = runTest {
-        val customModel = OpenAIModels.CostOptimized.O3Mini
+        val customModel = OpenAIModels.Chat.O3Mini
         val originalModel = testModel
 
         val memoryProvider = mockk<AgentMemoryProvider>()

@@ -17,16 +17,15 @@ object Models {
     @JvmStatic
     fun openAIModels(): Stream<LLModel> {
         return Stream.of(
-            OpenAIModels.Chat.GPT5_1,
-            OpenAIModels.Reasoning.O1,
-            OpenAIModels.CostOptimized.GPT4_1Mini,
+            OpenAIModels.Chat.GPT5_1, // reasoning
+            OpenAIModels.Chat.GPT4_1, // non-reasoning
         )
     }
 
     @JvmStatic
     fun anthropicModels(): Stream<LLModel> {
         return Stream.of(
-            AnthropicModels.Opus_4_1,
+            AnthropicModels.Opus_4_5,
             AnthropicModels.Haiku_4_5,
             AnthropicModels.Sonnet_4_5,
         )

@@ -8,6 +8,8 @@ import ai.koog.agents.core.dsl.extension.executeMultipleTools
 import ai.koog.agents.core.dsl.extension.extractToolCalls
 import ai.koog.agents.core.dsl.extension.requestLLMMultiple
 import ai.koog.agents.core.dsl.extension.sendMultipleToolResults
+import ai.koog.agents.core.feature.TestFeature
+import ai.koog.agents.core.feature.mock.TestFeatureMessageProcessor
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolRegistry
@@ -27,6 +29,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 
 @OptIn(kotlin.uuid.ExperimentalUuidApi::class)
 class FunctionalAIAgentTest {
@@ -759,5 +762,30 @@ class FunctionalAIAgentTest {
         assertEquals("OK", result.feedback)
         assertEquals("case-A", result.input)
         assertEquals(0, actualToolCalls.size)
+    }
+
+    @Test
+    fun testFunctionalAgentFeatureProcessorsClosedAfterRun() = runTest {
+        val model = OllamaModels.Meta.LLAMA_3_2
+        val strategy = functionalStrategy<String, String> { it }
+
+        val testFeatureMessageProcessor = TestFeatureMessageProcessor()
+
+        val agent = AIAgent(
+            promptExecutor = getMockExecutor { },
+            llmModel = model,
+            strategy = strategy,
+            systemPrompt = "You are helpful"
+        ) {
+            install(TestFeature) {
+                addMessageProcessor(testFeatureMessageProcessor)
+            }
+        }
+
+        agent.run("Test input")
+        assertFalse(
+            testFeatureMessageProcessor.isOpen.value,
+            "Feature processors should be closed after run"
+        )
     }
 }

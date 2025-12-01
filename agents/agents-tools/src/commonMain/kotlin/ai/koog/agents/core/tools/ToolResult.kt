@@ -40,7 +40,10 @@ public interface ToolResult {
     /**
      * Result implementation representing a simple tool result, just a string.
      */
-    @Deprecated("Extending ToolResult.Text is no longer required (just use plain String class instead). Tool results are entirely handled by KotlinX Serialization.")
+    @Deprecated(
+        "Extending ToolResult.Text is no longer required (just use plain String class instead). " +
+            "Tool results are entirely handled by KotlinX Serialization."
+    )
     @Serializable
     @JvmInline
     public value class Text(public val text: String) : JSONSerializable<Text> {

@@ -113,7 +113,7 @@ val toolRegistry = McpToolRegistryProvider.fromTransport(
 * Using an MCP client connected to the MCP server. For example:
 <!--- INCLUDE
 import ai.koog.agents.mcp.McpToolRegistryProvider
-import io.modelcontextprotocol.kotlin.sdk.Implementation
+import io.modelcontextprotocol.kotlin.sdk.types.Implementation
 import io.modelcontextprotocol.kotlin.sdk.client.Client
 import kotlinx.coroutines.runBlocking
 

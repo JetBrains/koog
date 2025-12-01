@@ -1,8 +1,6 @@
 package ai.koog.prompt.executor.clients.openai.base
 
 import ai.koog.agents.core.tools.ToolDescriptor
-import ai.koog.agents.core.tools.ToolParameterDescriptor
-import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.http.client.KoogHttpClient
 import ai.koog.http.client.ktor.fromKtorClient
 import ai.koog.http.client.post
@@ -54,13 +52,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.Clock
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNamingStrategy
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonObjectBuilder
-import kotlinx.serialization.json.add
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
-import kotlinx.serialization.json.putJsonArray
-import kotlinx.serialization.json.putJsonObject
 import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
@@ -93,7 +84,8 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
     settings: OpenAIBaseSettings,
     private val baseClient: HttpClient = HttpClient(),
     protected val clock: Clock = Clock.System,
-    protected val logger: KLogger
+    protected val logger: KLogger,
+    private val toolsConverter: OpenAICompatibleToolDescriptorSchemaGenerator,
 ) : LLMClient {
 
     protected companion object {
@@ -388,22 +380,9 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
         function = OpenAIToolFunction(
             name = name,
             description = description,
-            parameters = paramsToJsonObject()
+            parameters = toolsConverter.generate(this)
         )
     )
-
-    protected fun ToolDescriptor.paramsToJsonObject(): JsonObject =
-        buildJsonObject {
-            put("type", "object")
-            putJsonObject("properties") {
-                (requiredParameters + optionalParameters).forEach { param ->
-                    put(param.name, param.toJsonSchema())
-                }
-            }
-            putJsonArray("required") {
-                requiredParameters.forEach { param -> add(param.name) }
-            }
-        }
 
     protected fun LLMParams.ToolChoice.toOpenAIToolChoice(): OpenAIToolChoice = when (this) {
         LLMParams.ToolChoice.Auto -> OpenAIToolChoice.Auto
@@ -412,55 +391,6 @@ public abstract class AbstractOpenAILLMClient<TResponse : OpenAIBaseLLMResponse,
         is LLMParams.ToolChoice.Named -> OpenAIToolChoice.Function(
             function = OpenAIToolChoice.FunctionName(name)
         )
-    }
-
-    protected fun ToolParameterDescriptor.toJsonSchema(): JsonObject = buildJsonObject {
-        put("description", description)
-        fillJsonSchema(type)
-    }
-
-    private fun JsonObjectBuilder.fillJsonSchema(type: ToolParameterType) {
-        when (type) {
-            ToolParameterType.Boolean -> put("type", "boolean")
-            ToolParameterType.Float -> put("type", "number")
-            ToolParameterType.Integer -> put("type", "integer")
-            ToolParameterType.String -> put("type", "string")
-            ToolParameterType.Null -> put("type", "null")
-            is ToolParameterType.Enum -> {
-                put("type", "string")
-                putJsonArray("enum") {
-                    type.entries.forEach { entry -> add(entry) }
-                }
-            }
-
-            is ToolParameterType.List -> {
-                put("type", "array")
-                putJsonObject("items") { fillJsonSchema(type.itemsType) }
-            }
-
-            is ToolParameterType.Object -> {
-                put("type", "object")
-                type.additionalProperties?.let { put("additionalProperties", it) }
-                putJsonObject("properties") {
-                    type.properties.forEach { property ->
-                        putJsonObject(property.name) {
-                            fillJsonSchema(property.type)
-                            put("description", property.description)
-                        }
-                    }
-                }
-            }
-
-            is ToolParameterType.AnyOf -> {
-                putJsonArray("anyOf") {
-                    addAll(
-                        type.types.map { parameterType ->
-                            parameterType.toJsonSchema()
-                        }
-                    )
-                }
-            }
-        }
     }
 
     @OptIn(ExperimentalEncodingApi::class)

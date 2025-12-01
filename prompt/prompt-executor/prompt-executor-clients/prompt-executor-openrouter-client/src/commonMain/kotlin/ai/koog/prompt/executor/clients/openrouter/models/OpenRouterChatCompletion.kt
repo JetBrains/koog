@@ -155,14 +155,15 @@ public class ErrorResponse(
  */
 @Serializable
 public class OpenRouterChatCompletionResponse(
-    public val choices: List<OpenRouterChoice>,
-    override val created: Long,
-    override val id: String,
-    override val model: String,
+    public val choices: List<OpenRouterChoice> = emptyList(),
+    override val created: Long = 0L,
+    override val id: String = "",
+    override val model: String = "",
     public val systemFingerprint: String? = null,
     @SerialName("object")
     public val objectType: String = "chat.completion",
     public val usage: OpenAIUsage? = null,
+    public val error: OpenRouterError? = null,
 ) : OpenAIBaseLLMResponse
 
 /**
@@ -180,6 +181,16 @@ public class OpenRouterChatCompletionStreamResponse(
     public val objectType: String = "chat.completion.chunk",
     public val usage: OpenAIUsage? = null,
 ) : OpenAIBaseLLMStreamResponse
+
+/**
+ * OpenRouter API Error Response
+ */
+@Serializable
+public class OpenRouterError(
+    public val message: String,
+    public val type: String? = null,
+    public val code: String? = null,
+)
 
 internal object OpenRouterChatCompletionRequestSerializer :
     AdditionalPropertiesFlatteningSerializer<OpenRouterChatCompletionRequest>(OpenRouterChatCompletionRequest.serializer())

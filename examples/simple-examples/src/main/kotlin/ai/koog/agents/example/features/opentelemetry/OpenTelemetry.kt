@@ -33,7 +33,7 @@ import kotlinx.coroutines.runBlocking
 fun main() = runBlocking {
     val agent = AIAgent(
         promptExecutor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey),
-        llmModel = OpenAIModels.Reasoning.O4Mini,
+        llmModel = OpenAIModels.Chat.O4Mini,
         systemPrompt = "You are a code assistant. Provide concise code examples."
     ) {
         install(OpenTelemetry) {

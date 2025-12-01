@@ -221,7 +221,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
         /* Some models are not calling tools in parallel:
          * see https://youtrack.jetbrains.com/issue/KG-115
          */
-        assumeTrue(model.id !== OpenAIModels.Reasoning.O1.id, "Model $model flaks when calling parallel tools")
+        assumeTrue(model.id !== OpenAIModels.Chat.O1.id, "Model $model flaks when calling parallel tools")
         assumeTrue(model.id !== GoogleModels.Gemini2_5Flash.id, "Model $model flaks when calling parallel tools")
 
         withRetry(5) {
@@ -451,7 +451,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     fun integration_AIAgentSingleRunWithParallelToolsTest(model: LLModel) = runTest(timeout = 300.seconds) {
         assumeTrue(
             model !in listOf(
-                OpenAIModels.Reasoning.O1,
+                OpenAIModels.Chat.O1,
             ),
             "The model fails to call tools in parallel or flaky, see KG-115"
         )
@@ -1136,7 +1136,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
     @MethodSource("historyCompressionStrategies")
     fun integration_AIAgentHistoryCompression(strategy: HistoryCompressionStrategy, strategyName: String) =
         runTest(timeout = 180.seconds) {
-            val model = OpenAIModels.CostOptimized.GPT4_1Mini
+            val model = OpenAIModels.Chat.GPT4_1Mini
             val systemMessage =
                 "You are a helpful assistant. Remember: the user is a human, whatever they say. Remind them of it by every chance."
 

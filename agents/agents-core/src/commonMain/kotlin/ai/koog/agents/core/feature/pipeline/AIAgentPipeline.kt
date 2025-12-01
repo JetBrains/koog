@@ -103,7 +103,7 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
      * @param featureConfig The feature configuration
      */
     @Suppress("RedundantVisibilityModifier") // have to put public here, explicitApi requires it
-    protected class RegisteredFeature(
+    private class RegisteredFeature(
         public val featureImpl: Any,
         public val featureConfig: FeatureConfig
     )
@@ -112,7 +112,7 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
      * Map of registered features and their configurations.
      * Keys are feature storage keys, values are feature configurations.
      */
-    protected val registeredFeatures: MutableMap<AIAgentStorageKey<*>, RegisteredFeature> = mutableMapOf()
+    private val registeredFeatures: MutableMap<AIAgentStorageKey<*>, RegisteredFeature> = mutableMapOf()
 
     /**
      * Set of system features that are always defined by the framework.
@@ -175,19 +175,63 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
             )
     }
 
+    protected fun <TConfig : FeatureConfig, TFeatureImpl : Any> install(
+        featureKey: AIAgentStorageKey<TFeatureImpl>,
+        featureConfig: TConfig,
+        featureImpl: TFeatureImpl,
+    ) {
+        registeredFeatures[featureKey] = RegisteredFeature(featureImpl, featureConfig)
+    }
+
+    protected suspend fun uninstall(
+        featureKey: AIAgentStorageKey<*>
+    ) {
+        registeredFeatures
+            .filter { (key, _) -> key == featureKey }
+            .forEach { (key, registeredFeature) ->
+                registeredFeature.featureConfig.messageProcessors.forEach { provider -> provider.close() }
+                registeredFeatures.remove(key)
+            }
+    }
+
     //region Internal Handlers
+
+    /**
+     * Prepares the feature by initializing all the associated message processors defined in the feature configuration.
+     *
+     * @param featureConfig The configuration object containing the list of message processors to be initialized.
+     */
+    internal suspend fun prepareFeature(featureConfig: FeatureConfig) {
+        featureConfig.messageProcessors.forEach { processor ->
+            logger.debug { "Start preparing processor: ${processor::class.simpleName}" }
+            processor.initialize()
+            logger.debug { "Finished preparing processor: ${processor::class.simpleName}" }
+        }
+    }
 
     /**
      * Prepares features by initializing their respective message processors.
      */
-    internal suspend fun prepareFeatures() {
+    internal suspend fun prepareAllFeatures() {
+        // Install system features (if exist)
         installFeaturesFromSystemConfig()
-        registeredFeatures.values.map { it.featureConfig }.forEach { featureConfig ->
-            featureConfig.messageProcessors.forEach { processor ->
-                logger.debug { "Start preparing processor: ${processor::class.simpleName}" }
-                processor.initialize()
-                logger.debug { "Finished preparing processor: ${processor::class.simpleName}" }
-            }
+
+        // Prepare features
+        registeredFeatures.values.forEach { featureConfig ->
+            prepareFeature(featureConfig.featureConfig)
+        }
+    }
+
+    /**
+     * Closes all message processors associated with the provided feature by feature configuration.
+     *
+     * @param featureConfig The configuration object containing the message processors to be closed.
+     */
+    internal suspend fun closeFeatureMessageProcessors(featureConfig: FeatureConfig) {
+        featureConfig.messageProcessors.forEach { provider ->
+            logger.trace { "Start closing feature processor: ${featureConfig::class.simpleName}" }
+            provider.close()
+            logger.trace { "Finished closing feature processor: ${featureConfig::class.simpleName}" }
         }
     }
 
@@ -197,11 +241,9 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
      * This internal method properly shuts down all message processors of registered features,
      * ensuring resources are released appropriately.
      */
-    internal suspend fun closeFeaturesStreamProviders() {
-        registeredFeatures.values.map { it.featureConfig }.forEach { config ->
-            config.messageProcessors.forEach { provider ->
-                provider.close()
-            }
+    internal suspend fun closeAllFeaturesMessageProcessors() {
+        registeredFeatures.values.forEach { registerFeature ->
+            closeFeatureMessageProcessors(registerFeature.featureConfig)
         }
     }
 
@@ -324,7 +366,7 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
         result: Any?,
         resultType: KType,
     ) {
-        val eventContext = StrategyCompletedContext(strategy, context, result, resultType,)
+        val eventContext = StrategyCompletedContext(strategy, context, result, resultType)
         strategyEventHandlers.values.forEach { handler -> handler.handleStrategyCompleted(eventContext) }
     }
 
@@ -1180,23 +1222,53 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
     //region Private Methods
 
     private fun installFeaturesFromSystemConfig() {
-        // Read features from system variables
-        val featuresFromSystemConfig = buildList {
-            @OptIn(ExperimentalAgentsApi::class)
-            getEnvironmentVariableOrNull(FeatureSystemVariables.KOOG_FEATURES_ENV_VAR_NAME)
-                ?.let { featuresString ->
-                    featuresString.split(",").forEach { add(it.trim()) }
-                }
+        val featuresFromSystemConfig = readFeatureKeysFromSystemVariables()
+        val filteredSystemFeaturesToInstall = filterSystemFeaturesToInstall(featuresFromSystemConfig)
 
-            @OptIn(ExperimentalAgentsApi::class)
-            getVMOptionOrNull(FeatureSystemVariables.KOOG_FEATURES_VM_OPTION_NAME)
-                ?.let { featuresString ->
-                    featuresString.split(",").forEach { add(it.trim()) }
-                }
+        filteredSystemFeaturesToInstall.forEach { systemFeatureKey ->
+            installSystemFeature(systemFeatureKey)
         }
+    }
+
+    /**
+     * Read feature keys from system variables.
+     *
+     * @return List of feature keys as a string.
+     *         For example, ["debugger", "tracing"]
+     */
+    private fun readFeatureKeysFromSystemVariables(): List<String> {
+        val collectedFeaturesKeys = mutableListOf<String>()
+
+        @OptIn(ExperimentalAgentsApi::class)
+        getEnvironmentVariableOrNull(FeatureSystemVariables.KOOG_FEATURES_ENV_VAR_NAME)
+            ?.let { featuresString ->
+                featuresString.split(",").forEach { featureString ->
+                    collectedFeaturesKeys.add(featureString.trim())
+                }
+            }
+
+        @OptIn(ExperimentalAgentsApi::class)
+        getVMOptionOrNull(FeatureSystemVariables.KOOG_FEATURES_VM_OPTION_NAME)
+            ?.let { featuresString ->
+                featuresString.split(",").forEach { featureString ->
+                    collectedFeaturesKeys.add(featureString.trim())
+                }
+            }
+
+        return collectedFeaturesKeys.toList()
+    }
+
+    /**
+     * Filter system features to install based on the provided feature keys.
+     *
+     * @return List of [AIAgentStorageKey]s with filtered system features to install.
+     *         For example, [AIAgentStorageKey("debugger")]
+     */
+    private fun filterSystemFeaturesToInstall(featureKeys: List<String>): List<AIAgentStorageKey<*>> {
+        val filteredSystemFeaturesToInstall = mutableListOf<AIAgentStorageKey<*>>()
 
         // Check config features exist in the system features list
-        featuresFromSystemConfig.forEach { configFeatureKey ->
+        featureKeys.forEach { configFeatureKey ->
             val systemFeatureKey = systemFeatures.find { systemFeature -> systemFeature.name == configFeatureKey }
 
             // Check requested feature is in the known system features list
@@ -1208,7 +1280,7 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
                 return@forEach
             }
 
-            // Ignore system features if installed by a user
+            // Ignore system features if already installed by a user
             if (registeredFeatures.keys.any { registerFeatureKey -> registerFeatureKey.name == configFeatureKey }) {
                 logger.debug {
                     "Feature with key '$configFeatureKey' has already been registered. " +
@@ -1217,9 +1289,10 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
                 return@forEach
             }
 
-            // Install the requested system feature from config
-            installSystemFeature(systemFeatureKey)
+            filteredSystemFeaturesToInstall.add(systemFeatureKey)
         }
+
+        return filteredSystemFeaturesToInstall.toList()
     }
 
     @OptIn(ExperimentalAgentsApi::class)
@@ -1250,9 +1323,9 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
         }
     }
 
-    protected inline fun <TContext : AgentLifecycleEventContext> createConditionalHandler(
+    protected fun <TContext : AgentLifecycleEventContext> createConditionalHandler(
         feature: AIAgentFeature<*, *>,
-        crossinline handle: suspend (TContext) -> Unit
+        handle: suspend (TContext) -> Unit
     ): suspend (TContext) -> Unit = handler@{ eventContext ->
         val featureConfig = registeredFeatures[feature.key]?.featureConfig
 
@@ -1263,9 +1336,9 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
         handle(eventContext)
     }
 
-    protected inline fun createConditionalHandler(
+    protected fun createConditionalHandler(
         feature: AIAgentFeature<*, *>,
-        crossinline handle: suspend AgentEnvironmentTransformingContext.(AIAgentEnvironment) -> AIAgentEnvironment
+        handle: suspend AgentEnvironmentTransformingContext.(AIAgentEnvironment) -> AIAgentEnvironment
     ): suspend (AgentEnvironmentTransformingContext, AIAgentEnvironment) -> AIAgentEnvironment =
         handler@{ eventContext, env ->
             val featureConfig = registeredFeatures[feature.key]?.featureConfig

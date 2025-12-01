@@ -1,6 +1,7 @@
 package ai.koog.prompt.executor.ollama.client
 
 import ai.koog.agents.core.tools.ToolDescriptor
+import ai.koog.agents.core.tools.serialization.ToolDescriptorSchemaGenerator
 import ai.koog.http.client.KoogHttpClientException
 import ai.koog.prompt.dsl.ModerationCategory
 import ai.koog.prompt.dsl.ModerationCategoryResult
@@ -20,11 +21,13 @@ import ai.koog.prompt.executor.ollama.client.dto.OllamaPullModelRequestDTO
 import ai.koog.prompt.executor.ollama.client.dto.OllamaPullModelResponseDTO
 import ai.koog.prompt.executor.ollama.client.dto.OllamaShowModelRequestDTO
 import ai.koog.prompt.executor.ollama.client.dto.OllamaShowModelResponseDTO
+import ai.koog.prompt.executor.ollama.client.dto.OllamaToolDTO
+import ai.koog.prompt.executor.ollama.client.dto.OllamaToolDTO.Definition
 import ai.koog.prompt.executor.ollama.client.dto.extractOllamaJsonFormat
 import ai.koog.prompt.executor.ollama.client.dto.getToolCalls
 import ai.koog.prompt.executor.ollama.client.dto.toOllamaChatMessages
 import ai.koog.prompt.executor.ollama.client.dto.toOllamaModelCard
-import ai.koog.prompt.executor.ollama.client.dto.toOllamaTool
+import ai.koog.prompt.executor.ollama.tools.json.OllamaToolDescriptorSchemaGenerator
 import ai.koog.prompt.llm.LLMCapability
 import ai.koog.prompt.llm.LLMProvider
 import ai.koog.prompt.llm.LLModel
@@ -75,6 +78,7 @@ public class OllamaClient(
     timeoutConfig: ConnectionTimeoutConfig = ConnectionTimeoutConfig(),
     private val clock: Clock = Clock.System,
     private val contextWindowStrategy: ContextWindowStrategy = ContextWindowStrategy.Companion.None,
+    private val toolDescriptorConverter: ToolDescriptorSchemaGenerator = OllamaToolDescriptorSchemaGenerator()
 ) : LLMClient, LLMEmbeddingProvider {
 
     private companion object {
@@ -164,12 +168,27 @@ public class OllamaClient(
     ): List<Message.Response> {
         require(model.provider == LLMProvider.Ollama) { "Model not supported by Ollama" }
 
+        val ollamaTools = if (tools.isNotEmpty()) {
+            tools.map {
+                OllamaToolDTO(
+                    type = "function",
+                    function = Definition(
+                        name = it.name,
+                        description = it.description,
+                        parameters = toolDescriptorConverter.generate(it)
+                    )
+                )
+            }
+        } else {
+            null
+        }
+
         val request = ollamaJson.encodeToString(
             OllamaChatRequestDTOSerializer,
             OllamaChatRequestDTO(
                 model = model.id,
                 messages = prompt.toOllamaChatMessages(model),
-                tools = if (tools.isNotEmpty()) tools.map { it.toOllamaTool() } else null,
+                tools = ollamaTools,
                 format = prompt.extractOllamaJsonFormat(),
                 options = extractOllamaOptions(prompt, model),
                 stream = false,

@@ -71,7 +71,7 @@ class AIAgentNodesTest {
 
     @Test
     fun testNodeLLMCompressHistoryWithCustomModel() = runTest {
-        val customModel = OpenAIModels.CostOptimized.O3Mini
+        val customModel = OpenAIModels.Chat.O3Mini
         val originalModel = OllamaModels.Meta.LLAMA_3_2
 
         val results = mutableListOf<Any?>()
@@ -179,7 +179,7 @@ class AIAgentNodesTest {
 
         val agentConfig = AIAgentConfig(
             prompt = prompt("test") {},
-            model = OpenAIModels.CostOptimized.GPT4oMini,
+            model = OpenAIModels.Chat.GPT4oMini,
             maxAgentIterations = 5
         )
 
@@ -223,7 +223,7 @@ class AIAgentNodesTest {
             strategy = nativeStrategy,
             agentConfig = AIAgentConfig(
                 prompt = prompt("test") {},
-                model = OpenAIModels.CostOptimized.GPT4oMini,
+                model = OpenAIModels.Chat.GPT4oMini,
                 maxAgentIterations = 5
             ),
             toolRegistry = ToolRegistry { }

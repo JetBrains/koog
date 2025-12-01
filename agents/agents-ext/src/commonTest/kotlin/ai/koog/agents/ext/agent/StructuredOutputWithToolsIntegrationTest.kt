@@ -152,7 +152,7 @@ class StructuredOutputWithToolsIntegrationTest {
                     """.trimIndent()
                 )
             },
-            model = OpenAIModels.CostOptimized.GPT4oMini,
+            model = OpenAIModels.Chat.GPT4oMini,
             maxAgentIterations = 10
         )
 
@@ -227,7 +227,7 @@ class StructuredOutputWithToolsIntegrationTest {
                     """.trimIndent()
                 )
             },
-            model = OpenAIModels.CostOptimized.GPT4oMini,
+            model = OpenAIModels.Chat.GPT4oMini,
             maxAgentIterations = 10
         )
 
@@ -291,7 +291,7 @@ class StructuredOutputWithToolsIntegrationTest {
             prompt = prompt("weather-agent-no-tools") {
                 system("Generate weather data without using tools.")
             },
-            model = OpenAIModels.CostOptimized.GPT4oMini,
+            model = OpenAIModels.Chat.GPT4oMini,
             maxAgentIterations = 10
         )
 

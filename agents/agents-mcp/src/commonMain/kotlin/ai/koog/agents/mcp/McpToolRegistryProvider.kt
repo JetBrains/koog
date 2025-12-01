@@ -4,10 +4,10 @@ import ai.koog.agents.core.tools.ToolRegistry
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.sse.SSE
-import io.modelcontextprotocol.kotlin.sdk.Implementation
 import io.modelcontextprotocol.kotlin.sdk.client.Client
 import io.modelcontextprotocol.kotlin.sdk.client.SseClientTransport
 import io.modelcontextprotocol.kotlin.sdk.shared.Transport
+import io.modelcontextprotocol.kotlin.sdk.types.Implementation
 
 /**
  * A provider for creating tool registries that connect to Model Context Protocol (MCP) servers.
@@ -60,7 +60,7 @@ public object McpToolRegistryProvider {
         mcpClient: Client,
         mcpToolParser: McpToolDescriptorParser = DefaultMcpToolDescriptorParser,
     ): ToolRegistry {
-        val sdkTools = mcpClient.listTools()?.tools.orEmpty()
+        val sdkTools = mcpClient.listTools().tools
         return ToolRegistry {
             sdkTools.forEach { sdkTool ->
                 try {

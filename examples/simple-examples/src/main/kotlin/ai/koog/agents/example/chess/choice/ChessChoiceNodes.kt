@@ -57,7 +57,7 @@ fun main(): Unit = runBlocking {
     val agent = AIAgent(
         promptExecutor = simpleOpenAIExecutor(ApiKeyService.openAIApiKey),
         strategy = strategy,
-        llmModel = OpenAIModels.Reasoning.O3Mini,
+        llmModel = OpenAIModels.Chat.O3Mini,
         systemPrompt = """
             You are an agent who plays chess.
             You should always propose a move in response to the "Your move!" message.

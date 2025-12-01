@@ -109,7 +109,7 @@ public inline fun <reified T> AIAgentSubgraphBuilderBase<*, *>.llmAsAJudge(
             ),
             // optional field -- recommented for reliability of the format
             fixingParser = StructureFixingParser(
-                model = OpenAIModels.CostOptimized.GPT4oMini,
+                model = OpenAIModels.Chat.GPT4oMini,
                 retries = 3,
             )
         ).getOrThrow().data

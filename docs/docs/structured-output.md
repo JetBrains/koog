@@ -249,7 +249,7 @@ val structuredResponse = promptExecutor.executeStructured<WeatherForecast>(
             )
         },
         // Define the main model that will execute the request
-        model = OpenAIModels.CostOptimized.GPT4oMini,
+        model = OpenAIModels.Chat.GPT4oMini,
         // Optional: provide examples to help the model understand the format
         examples = exampleForecasts,
         // Optional: provide a fixing parser for error correction
@@ -574,7 +574,7 @@ val structuredResponse = promptExecutor.executeStructured(
         system("You are a weather forecasting assistant.")
         user("What is the weather forecast for Amsterdam?")
     },
-    model = OpenAIModels.CostOptimized.GPT4oMini,
+    model = OpenAIModels.Chat.GPT4oMini,
     config = StructuredRequestConfig(
         byProvider = mapOf(
             LLMProvider.OpenAI to StructuredRequest.Native(openAiStructure),

@@ -11,6 +11,7 @@ import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
 import ai.koog.agents.core.dsl.extension.onAssistantMessage
 import ai.koog.agents.core.dsl.extension.onToolCall
 import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionEventContext
+import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.eventHandler.eventString
 import ai.koog.agents.testing.tools.DummyTool
@@ -577,13 +578,13 @@ class EventHandlerTest {
             override suspend fun execute(
                 prompt: Prompt,
                 model: ai.koog.prompt.llm.LLModel,
-                tools: List<ai.koog.agents.core.tools.ToolDescriptor>
+                tools: List<ToolDescriptor>
             ): List<Message.Response> = emptyList()
 
             override fun executeStreaming(
                 prompt: Prompt,
                 model: ai.koog.prompt.llm.LLModel,
-                tools: List<ai.koog.agents.core.tools.ToolDescriptor>
+                tools: List<ToolDescriptor>
             ): Flow<StreamFrame> = flow {
                 throw IllegalStateException(testStreamingErrorMessage)
             }
