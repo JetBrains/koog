@@ -21,7 +21,7 @@ public class AIAgentStorageKey<T : Any>(public val name: String) {
  * @param name The name of the storage key, used to uniquely identify it.
  * @return A new instance of [AIAgentStorageKey] for the specified type.
  */
-public inline fun <reified T : Any> createStorageKey(name: String): AIAgentStorageKey<T> = AIAgentStorageKey<T>(name)
+public fun <T : Any> createStorageKey(name: String): AIAgentStorageKey<T> = AIAgentStorageKey(name)
 
 /**
  * Concurrent-safe key-value storage for an agent.

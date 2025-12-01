@@ -77,7 +77,7 @@ public open class AIAgentNodeDelegate<Input, Output>(
      * @param transformation A function that transforms the original output to the new type.
      * @return A new AIAgentNodeDelegate with the transformed output type.
      */
-    public inline fun <reified T> transform(noinline transformation: suspend (Output) -> T): AIAgentNodeDelegate<Input, T> {
+    public inline fun <reified T> transform(noinline transformation: suspend AIAgentGraphContextBase.(Output) -> T): AIAgentNodeDelegate<Input, T> {
         return AIAgentNodeDelegate(
             name = name,
             inputType = inputType,
