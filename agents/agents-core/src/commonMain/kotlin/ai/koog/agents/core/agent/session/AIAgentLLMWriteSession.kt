@@ -366,6 +366,20 @@ public class AIAgentLLMWriteSession internal constructor(
     }
 
     /**
+     * Sends a request to the language model without utilizing any tools, returns multiple responses,
+     * and updates the prompt with the received messages.
+     *
+     * @return A list of response messages from the language model.
+     */
+    override suspend fun requestLLMMultipleWithoutTools(): List<Message.Response> {
+        return super.requestLLMMultipleWithoutTools().also { responses ->
+            appendPrompt {
+                responses.forEach { message(it) }
+            }
+        }
+    }
+
+    /**
      * Sends a request to the Language Model (LLM) without including any tools, processes the response,
      * and updates the prompt with the returned message.
      *
@@ -415,9 +429,7 @@ public class AIAgentLLMWriteSession internal constructor(
      * @return A [Message.Response] object containing the response from the LLM.
      */
     override suspend fun requestLLM(): Message.Response {
-        return super.requestLLM().also { response ->
-            appendPrompt { message(response) }
-        }
+        return super.requestLLM().also { response -> appendPrompt { message(response) } }
     }
 
     /**

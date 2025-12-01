@@ -10,7 +10,7 @@ import ai.koog.agents.core.utils.Option
  * to ensure its proper highlighting.
  */
 @DslMarker
-@Target(AnnotationTarget.FUNCTION)
+@Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION)
 public annotation class EdgeTransformationDslMarker
 
 /**
@@ -54,6 +54,7 @@ public class AIAgentEdgeBuilder<IncomingOutput, OutgoingInput, CompatibleOutput 
  * the originating node's output into an intermediate representation
  * or filtering the flow based on specific conditions.
  */
+@EdgeTransformationDslMarker
 public class AIAgentEdgeBuilderIntermediate<IncomingOutput, IntermediateOutput, OutgoingInput> internal constructor(
     internal val fromNode: AIAgentNodeBase<*, IncomingOutput>,
     internal val toNode: AIAgentNodeBase<OutgoingInput, *>,

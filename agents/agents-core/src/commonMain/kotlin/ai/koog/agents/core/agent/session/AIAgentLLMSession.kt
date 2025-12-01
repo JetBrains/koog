@@ -123,6 +123,21 @@ public sealed class AIAgentLLMSession(
         executeMultiple(prompt, tools).first()
 
     /**
+     * Sends a request to the language model without utilizing any tools and returns multiple responses.
+     *
+     * @return A list of response messages from the language model.
+     */
+    public open suspend fun requestLLMMultipleWithoutTools(): List<Message.Response> {
+        validateSession()
+
+        val promptWithDisabledTools = prompt
+            .withUpdatedParams { toolChoice = null }
+            .let { preparePrompt(it, emptyList()) }
+
+        return executeMultiple(promptWithDisabledTools, emptyList())
+    }
+
+    /**
      * Sends a request to the language model without utilizing any tools and returns the response.
      *
      * This method validates the session state before proceeding with the operation. If tool usage
@@ -143,7 +158,7 @@ public sealed class AIAgentLLMSession(
             .withUpdatedParams { toolChoice = null }
             .let { preparePrompt(it, emptyList()) }
 
-        return executeSingle(promptWithDisabledTools, emptyList())
+        return executeMultiple(promptWithDisabledTools, emptyList()).first { it !is Message.Reasoning }
     }
 
     /**
@@ -209,7 +224,7 @@ public sealed class AIAgentLLMSession(
      */
     public open suspend fun requestLLM(): Message.Response {
         validateSession()
-        return executeSingle(prompt, tools)
+        return executeMultiple(prompt, tools).first { it !is Message.Reasoning }
     }
 
     /**
