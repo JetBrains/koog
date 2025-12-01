@@ -2,8 +2,6 @@ package ai.koog.agents.ext.tool.file
 
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolException
-import ai.koog.agents.core.tools.ToolResult
-import ai.koog.agents.core.tools.ToolResultUtils
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.core.tools.validate
 import ai.koog.agents.core.tools.validateNotNull
@@ -53,32 +51,11 @@ public class ListDirectoryTool<Path>(private val fs: FileSystemProvider.ReadOnly
      * @property root the directory tree starting from the requested path
      */
     @Serializable
-    public data class Result(val root: FileSystemEntry.Folder) : ToolResult.TextSerializable() {
-        /**
-         * Converts the result to a structured text representation.
-         *
-         * Renders the directory tree in the following format:
-         * - Directory paths end with `/` and increase indent by 2 spaces per level
-         * - File paths with metadata in parentheses (size, line count if available, "hidden" if the file is hidden)
-         * - Filtered results show only matching entries
-         *
-         * Example:
-         * ```
-         * /project/
-         *   src/
-         *     Main.kt (1.5 KiB, 42 lines)
-         *     Utils.kt (0.8 KiB, 28 lines)
-         *   README.md (2.1 KiB, 67 lines)
-         *   .gitignore (0.1 KiB, 12 lines, hidden)
-         * ```
-         *
-         * @return formatted text representation of the directory tree
-         */
-        override fun textForLLM(): String = text { folder(root) }
-    }
+    public data class Result(val root: FileSystemEntry.Folder)
 
     override val argsSerializer: KSerializer<Args> = Args.serializer()
-    override val resultSerializer: KSerializer<Result> = ToolResultUtils.toTextSerializer()
+    override val resultSerializer: KSerializer<Result> = Result.serializer()
+
     override val name: String = "__list_directory__"
     override val description: String = """
         Lists files and subdirectories in a directory. READ-ONLY - never modifies anything.
@@ -127,5 +104,9 @@ public class ListDirectoryTool<Path>(private val fs: FileSystemProvider.ReadOnly
         }
 
         return Result(entry as FileSystemEntry.Folder)
+    }
+
+    override fun encodeResultToString(result: Result): String = with(result) {
+        text { folder(root) }
     }
 }

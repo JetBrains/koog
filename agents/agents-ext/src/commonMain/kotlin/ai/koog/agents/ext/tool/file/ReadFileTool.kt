@@ -2,8 +2,6 @@ package ai.koog.agents.ext.tool.file
 
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolException
-import ai.koog.agents.core.tools.ToolResult
-import ai.koog.agents.core.tools.ToolResultUtils
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.core.tools.validate
 import ai.koog.agents.core.tools.validateNotNull
@@ -55,32 +53,12 @@ public class ReadFileTool<Path>(private val fs: FileSystemProvider.ReadOnly<Path
     @Serializable
     public data class Result(
         val file: FileSystemEntry.File,
-        val warningMessage: String? = null
-    ) : ToolResult.TextSerializable() {
-        /**
-         * Converts the result to a structured text representation.
-         *
-         * Renders the file information in the following format:
-         * - Warning message (if present)
-         * - File path with metadata in parentheses (size, line count if available, "hidden" if the file is hidden)
-         * - Content section with either:
-         *     - Full text for complete file reads
-         *     - Excerpt with line ranges for partial reads
-         *     - No content section if content is [FileSystemEntry.File.Content.None]
-         *
-         * @return formatted text representation of the file
-         */
-        override fun textForLLM(): String = text {
-            warningMessage?.let {
-                +"Warning: $it"
-                +""
-            }
-            file(file)
-        }
-    }
+        val warningMessage: String? = null,
+    )
 
     override val argsSerializer: KSerializer<Args> = Args.serializer()
-    override val resultSerializer: KSerializer<Result> = ToolResultUtils.toTextSerializer()
+    override val resultSerializer: KSerializer<Result> = Result.serializer()
+
     override val name: String = "__read_file__"
     override val description: String = """
         Reads a text file (throws if non-text) with optional line range selection. TEXT-ONLY - never reads binary files.
@@ -142,5 +120,15 @@ public class ReadFileTool<Path>(private val fs: FileSystemProvider.ReadOnly<Path
                 )
             }
         }.getOrThrow()
+    }
+
+    override fun encodeResultToString(result: Result): String = with(result) {
+        text {
+            warningMessage?.let {
+                +"Warning: $it"
+                +""
+            }
+            file(file)
+        }
     }
 }
