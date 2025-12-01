@@ -2,13 +2,11 @@ package ai.koog.prompt.structure.json.generator
 
 import ai.koog.prompt.params.LLMParams
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.builtins.nullable
 import kotlinx.serialization.descriptors.PolymorphicKind
 import kotlinx.serialization.descriptors.StructureKind
 import kotlinx.serialization.json.ClassDiscriminatorMode
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
@@ -16,7 +14,6 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.put
-import kotlinx.serialization.serializer
 
 /**
  * Full implementation of [GenericJsonSchemaGenerator] to generate advanced generic [LLMParams.Schema.JSON.Standard].
@@ -198,85 +195,77 @@ public open class StandardJsonSchemaGenerator : GenericJsonSchemaGenerator() {
         putDescription(context.currentDescription)
     }
 
-    override fun processPolymorphic(context: GenerationContext): JsonObject {
-        // Check for the special case of JsonElement. Its descriptor doesn't follow the
-        // standard polymorphic pattern and must be handled separately.
-        if (context.descriptor.serialName in JSON_ELEMENT_SERIAL_NAMES) {
-            return processJsonElement(context)
-        }
+    override fun processPolymorphic(context: GenerationContext): JsonObject = buildJsonObject {
+        val classDiscriminatorMode = context.json.configuration.classDiscriminatorMode
+        val classDiscriminator = context.json.configuration.classDiscriminator
 
-        return buildJsonObject {
-            val classDiscriminatorMode = context.json.configuration.classDiscriminatorMode
-            val classDiscriminator = context.json.configuration.classDiscriminator
+        // Provide an array of all possible schemas for polymorphic types
+        put(
+            JsonSchemaConsts.Keys.ONE_OF,
+            buildJsonArray {
+                context.descriptor
+                    .getPolymorphicDescriptors(context.json)
+                    .forEach { polymorphicDescriptor ->
+                        processObject(context.copy(descriptor = polymorphicDescriptor))
 
-            // Provide an array of all possible schemas for polymorphic types
-            put(
-                JsonSchemaConsts.Keys.ONE_OF,
-                buildJsonArray {
-                    context.descriptor
-                        .getPolymorphicDescriptors(context.json)
-                        .forEach { polymorphicDescriptor ->
-                            processObject(context.copy(descriptor = polymorphicDescriptor))
+                        // Modify polymorphic subtypes, if already processed
+                        context.processedTypeDefs[polymorphicDescriptor]?.toMutableMap()?.let { schema ->
+                            // Add class discriminators, if enabled
+                            if (classDiscriminatorMode in listOf(
+                                    ClassDiscriminatorMode.ALL_JSON_OBJECTS,
+                                    ClassDiscriminatorMode.POLYMORPHIC
+                                )
+                            ) {
+                                val updatedProperties =
+                                    schema.getValue(JsonSchemaConsts.Keys.PROPERTIES).jsonObject.toMutableMap()
 
-                            // Modify polymorphic subtypes, if already processed
-                            context.processedTypeDefs[polymorphicDescriptor]?.toMutableMap()?.let { schema ->
-                                // Add class discriminators, if enabled
-                                if (classDiscriminatorMode in listOf(
-                                        ClassDiscriminatorMode.ALL_JSON_OBJECTS,
-                                        ClassDiscriminatorMode.POLYMORPHIC
-                                    )
-                                ) {
-                                    val updatedProperties =
-                                        schema.getValue(JsonSchemaConsts.Keys.PROPERTIES).jsonObject.toMutableMap()
+                                updatedProperties[classDiscriminator] =
+                                    processClassDiscriminator(context.copy(descriptor = polymorphicDescriptor))
 
-                                    updatedProperties[classDiscriminator] =
-                                        processClassDiscriminator(context.copy(descriptor = polymorphicDescriptor))
+                                schema[JsonSchemaConsts.Keys.PROPERTIES] = JsonObject(updatedProperties)
 
-                                    schema[JsonSchemaConsts.Keys.PROPERTIES] = JsonObject(updatedProperties)
-
-                                    schema[JsonSchemaConsts.Keys.REQUIRED] = JsonArray(
-                                        (
-                                            schema.getValue(JsonSchemaConsts.Keys.REQUIRED).jsonArray.toList() +
-                                                JsonPrimitive(classDiscriminator)
-                                            ).distinct()
-                                    )
-                                }
-
-                                context.processedTypeDefs[polymorphicDescriptor] = JsonObject(schema)
+                                schema[JsonSchemaConsts.Keys.REQUIRED] = JsonArray(
+                                    (
+                                        schema.getValue(JsonSchemaConsts.Keys.REQUIRED).jsonArray.toList() +
+                                            JsonPrimitive(classDiscriminator)
+                                        ).distinct()
+                                )
                             }
 
-                            // Add ref to subtype
-                            add(
-                                buildJsonObject {
-                                    put(
-                                        JsonSchemaConsts.Keys.REF,
-                                        "${JsonSchemaConsts.Keys.REF_PREFIX}${polymorphicDescriptor.serialName}"
-                                    )
-                                }
-                            )
+                            context.processedTypeDefs[polymorphicDescriptor] = JsonObject(schema)
                         }
 
-                    // If this object property is nullable, add additional "null" type
-                    if (context.descriptor.isNullable) {
+                        // Add ref to subtype
                         add(
                             buildJsonObject {
-                                put(JsonSchemaConsts.Keys.TYPE, JsonPrimitive(JsonSchemaConsts.Types.NULL))
+                                put(
+                                    JsonSchemaConsts.Keys.REF,
+                                    "${JsonSchemaConsts.Keys.REF_PREFIX}${polymorphicDescriptor.serialName}"
+                                )
                             }
                         )
                     }
-                }
-            )
 
-            // Add description for this property
-            putDescription(context.currentDescription)
-        }
+                // If this object property is nullable, add additional "null" type
+                if (context.descriptor.isNullable) {
+                    add(
+                        buildJsonObject {
+                            put(JsonSchemaConsts.Keys.TYPE, JsonPrimitive(JsonSchemaConsts.Types.NULL))
+                        }
+                    )
+                }
+            }
+        )
+
+        // Add description for this property
+        putDescription(context.currentDescription)
     }
 
     override fun processClassDiscriminator(context: GenerationContext): JsonObject = buildJsonObject {
         put(JsonSchemaConsts.Keys.CONST, context.descriptor.serialName)
     }
 
-    private fun processJsonElement(context: GenerationContext): JsonObject {
+    override fun processJsonElement(context: GenerationContext): JsonObject {
         return if (context.descriptor.isNullable) {
             buildJsonObject {
                 put(
@@ -290,16 +279,9 @@ public open class StandardJsonSchemaGenerator : GenericJsonSchemaGenerator() {
             }
         } else {
             buildJsonObject {
+                // Empty object represents "any type" in JSON schema
                 putDescription(context.currentDescription)
             }
         }
     }
-}
-
-private val JSON_ELEMENT_SERIAL_NAMES: Set<String> by lazy {
-    val elementSerializer = serializer<JsonElement>()
-    setOf(
-        elementSerializer.descriptor.serialName,
-        elementSerializer.nullable.descriptor.serialName
-    )
 }

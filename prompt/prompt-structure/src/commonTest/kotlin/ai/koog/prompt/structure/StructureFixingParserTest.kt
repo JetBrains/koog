@@ -89,7 +89,7 @@ class StructureFixingParserTest {
     @Test
     fun testFixInvalidJsonElementContent() = runTest {
         val parser = StructureFixingParser(
-            model = OpenAIModels.CostOptimized.GPT4oMini,
+            model = OpenAIModels.Chat.GPT4oMini,
             retries = 2,
         )
 
