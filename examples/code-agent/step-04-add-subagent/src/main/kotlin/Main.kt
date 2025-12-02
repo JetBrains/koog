@@ -27,6 +27,9 @@ val agent = AIAgent(
         After investigation, define expected behavior with test scripts, then iterate on your implementation until the tests pass.
         Verify your changes don't break existing functionality through regression testing, but prefer running targeted tests over full test suites.
         Note: the codebase may be fully configured or freshly cloned with no dependencies installed - handle any necessary setup steps.
+        
+        You also have an intelligent find micro agent at your disposition, which can help you find code components and other constructs 
+        more cheaply than you can do it yourself. Lean on it for any and all search operations. Do not use shell execution for find tasks.
     """.trimIndent(),
     llmModel = OpenAIModels.Chat.GPT5,
     toolRegistry = ToolRegistry {
