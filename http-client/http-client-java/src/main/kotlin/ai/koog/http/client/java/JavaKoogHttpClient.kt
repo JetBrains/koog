@@ -236,7 +236,7 @@ public class JavaKoogHttpClient internal constructor(
  */
 @Experimental
 public fun KoogHttpClient.Companion.fromJavaHttpClient(
-    clientName: String = JavaKoogHttpClient::class.simpleName ?: "JavaKoogHttpClient",
+    clientName: String,
     logger: KLogger,
     httpClient: HttpClient = HttpClient.newHttpClient(),
     json: Json = Json

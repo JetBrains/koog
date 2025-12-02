@@ -200,7 +200,7 @@ public class KtorKoogHttpClient internal constructor(
 @Experimental
 @JvmOverloads
 public fun KoogHttpClient.Companion.fromKtorClient(
-    clientName: String = KtorKoogHttpClient::class.simpleName ?: "KtorKoogHttpClient",
+    clientName: String,
     logger: KLogger,
     baseClient: HttpClient = HttpClient(),
     configurer: HttpClientConfig<out HttpClientEngineConfig>.() -> Unit = {}

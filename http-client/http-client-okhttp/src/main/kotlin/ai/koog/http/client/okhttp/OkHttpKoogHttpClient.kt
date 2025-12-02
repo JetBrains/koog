@@ -220,7 +220,7 @@ public class OkHttpKoogHttpClient internal constructor(
  */
 @Experimental
 public fun KoogHttpClient.Companion.fromOkHttpClient(
-    clientName: String = OkHttpKoogHttpClient::class.simpleName ?: "OkHttpKoogHttpClient",
+    clientName: String,
     logger: KLogger,
     okHttpClient: OkHttpClient = OkHttpClient(),
     json: Json = Json
