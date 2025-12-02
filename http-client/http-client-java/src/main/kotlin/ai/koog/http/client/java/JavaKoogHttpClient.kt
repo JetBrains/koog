@@ -18,8 +18,6 @@ import java.net.URLEncoder
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
-import java.util.concurrent.ExecutorService
-import kotlin.jvm.optionals.getOrNull
 import kotlin.reflect.KClass
 
 /**
@@ -221,10 +219,7 @@ public class JavaKoogHttpClient internal constructor(
         }
     }
 
-    override fun close() {
-        logger.debug { "Closing $clientName" }
-        (httpClient.executor().getOrNull() as? ExecutorService)?.shutdown()
-    }
+    override fun close() {}
 }
 
 /**
