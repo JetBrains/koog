@@ -3,7 +3,6 @@ package ai.koog.prompt.executor.clients.anthropic.models
 import ai.koog.prompt.executor.clients.InternalLLMClientApi
 import ai.koog.prompt.executor.clients.serialization.AdditionalPropertiesFlatteningSerializer
 import kotlinx.serialization.EncodeDefault
-import kotlinx.serialization.EncodeDefault.Mode.ALWAYS
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonClassDiscriminator
@@ -117,15 +116,14 @@ public sealed interface AnthropicMessage {
  * that can be utilized in anthropic system communication.
  *
  * @property text The content of the message.
- * @property messageType The type of message, defaulted to "text".
+ * @property type The type of message, defaulted to "text".
  */
 @InternalLLMClientApi
 @Serializable
 public data class SystemAnthropicMessage(
     val text: String,
-    @EncodeDefault(ALWAYS)
-    @SerialName("type")
-    val messageType: String = "text"
+    @EncodeDefault
+    val type: String = "text"
 )
 
 /**
@@ -309,7 +307,7 @@ public sealed interface DocumentSource {
  * @property url The URL endpoint of the MCP server.
  * @property authorizationToken Optional authorization token for authentication with the MCP server.
  * @property toolConfiguration Optional configuration for tool usage on the MCP server.
- * @property urlType The type of server definition, always set to "url".
+ * @property type The type of server definition, always set to "url".
  */
 @Serializable
 public class AnthropicMCPServerURLDefinition(
@@ -324,8 +322,8 @@ public class AnthropicMCPServerURLDefinition(
     /**
      * The type of mcp server definition, which is always set to "url".
      */
-    @SerialName("type")
-    public val urlType: String = "url"
+    @EncodeDefault
+    public val type: String = "url"
 }
 
 /**
@@ -414,6 +412,7 @@ public data class AnthropicTool(
  *
  * @property properties A JSON object representing the properties within this schema.
  * @property required A list of property names that are mandatory within this schema.
+ * @property type The type of the schema, always set to "object".
  */
 @InternalLLMClientApi
 @Serializable
@@ -424,8 +423,8 @@ public data class AnthropicToolSchema(
     /**
      * The type of the schema. Always returns "object" for Anthropic tool schemas.
      */
-    @SerialName("type")
-    val schemaType: String = "object"
+    @EncodeDefault
+    val type: String = "object"
 }
 
 /**
@@ -436,7 +435,7 @@ public data class AnthropicToolSchema(
  * metadata such as stop reason and usage statistics.
  *
  * @property id A unique identifier for the response.
- * @property responseType The type of the response.
+ * @property type The type of the response.
  * @property role Indicates the role of the entity generating the response, such as "assistant" or "system".
  * @property content A list of content units within the response, which can represent text or tool usage instructions.
  * @property model The name or identifier of the model utilized to generate this response.
@@ -447,8 +446,7 @@ public data class AnthropicToolSchema(
 @Serializable
 public data class AnthropicResponse(
     val id: String,
-    @SerialName("type")
-    val responseType: String,
+    val type: String,
     val role: String,
     val content: List<AnthropicContent>,
     val model: String,
@@ -478,7 +476,7 @@ public data class AnthropicUsage(
  * including its type, any delta updates to the content, and the complete message data when applicable.
  * For more information: https://platform.claude.com/docs/en/build-with-claude/streaming
  *
- * @property eventType The type of the response (e.g., "content_block_start", "content_block_delta", "message_delta").
+ * @property type The type of the response (e.g., "content_block_start", "content_block_delta", "message_delta").
  * Delta type is string because of https://docs.claude.com/en/docs/build-with-claude/streaming#other-events
  * @property index The index of the content block in streaming responses. Present in content block events.
  * @property contentBlock The content block data for "content_block_start" events, containing tool use information.
@@ -490,8 +488,7 @@ public data class AnthropicUsage(
 @InternalLLMClientApi
 @Serializable
 public data class AnthropicStreamResponse(
-    @SerialName("type")
-    val eventType: String,
+    val type: String,
     val index: Int? = null,
     val contentBlock: AnthropicContent? = null,
     val delta: AnthropicStreamDelta? = null,
@@ -507,7 +504,7 @@ public data class AnthropicStreamResponse(
  * and optional tool usage data.
  * For more information: https://platform.claude.com/docs/en/build-with-claude/streaming
  *
- * @property deltaType The type of the update provided by Anthropic.
+ * @property type The type of the update provided by Anthropic.
  * Delta type is string because of https://docs.claude.com/en/docs/build-with-claude/streaming#other-events
  * @property text Optional text content associated with the delta update.
  * @property partialJson Optional partial JSON content for tool use streaming.
@@ -517,8 +514,7 @@ public data class AnthropicStreamResponse(
 @InternalLLMClientApi
 @Serializable
 public data class AnthropicStreamDelta(
-    @SerialName("type")
-    val deltaType: String? = null,
+    val type: String? = null,
     val text: String? = null,
     val partialJson: String? = null,
     val stopReason: String? = null,
@@ -562,15 +558,14 @@ public enum class AnthropicStreamDeltaContentType(public val value: String) {
  * This data class encapsulates error information received from the Anthropic API
  * during streaming operations, providing details about the type and nature of the error.
  *
- * @property errorType The type or category of the error that occurred.
+ * @property type The type or category of the error that occurred.
  * @property message An optional descriptive message providing additional details about the error.
  * Defaults to null if no message is provided.
  */
 @InternalLLMClientApi
 @Serializable
 public data class AnthropicStreamError(
-    @SerialName("type")
-    val errorType: String,
+    val type: String,
     val message: String? = null,
 )
 

@@ -95,7 +95,7 @@ public class GoogleClientSettings(
 public open class GoogleLLMClient(
     private val apiKey: String,
     private val settings: GoogleClientSettings = GoogleClientSettings(),
-    private val baseClient: HttpClient = HttpClient(),
+    baseClient: HttpClient = HttpClient(),
     private val clock: Clock = Clock.System
 ) : LLMClient {
 
@@ -755,6 +755,6 @@ public open class GoogleLLMClient(
     }
 
     override fun close() {
-        baseClient.close()
+        httpClient.close()
     }
 }

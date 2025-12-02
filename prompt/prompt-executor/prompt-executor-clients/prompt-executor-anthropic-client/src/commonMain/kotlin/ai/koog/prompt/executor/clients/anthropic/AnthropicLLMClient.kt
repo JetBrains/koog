@@ -89,7 +89,7 @@ public class AnthropicClientSettings(
 public open class AnthropicLLMClient(
     private val apiKey: String,
     private val settings: AnthropicClientSettings = AnthropicClientSettings(),
-    private val baseClient: HttpClient = HttpClient(),
+    baseClient: HttpClient = HttpClient(),
     private val clock: Clock = Clock.System
 ) : LLMClient {
 
@@ -202,7 +202,7 @@ public open class AnthropicLLMClient(
                     decodeStreamingResponse = { json.decodeFromString<AnthropicStreamResponse>(it) },
                     processStreamingChunk = { it }
                 ).collect { response ->
-                    when (response.eventType) {
+                    when (response.type) {
                         AnthropicStreamEventType.MESSAGE_START.value -> {
                             response.message?.usage?.let(::updateUsage)
                         }
@@ -233,7 +233,7 @@ public open class AnthropicLLMClient(
                             response.delta?.let { delta ->
                                 // Handles deltas for tool calls and text
 
-                                when (delta.deltaType) {
+                                when (delta.type) {
                                     AnthropicStreamDeltaContentType.INPUT_JSON_DELTA.value -> {
                                         upsertToolCall(
                                             index = response.index
@@ -251,7 +251,7 @@ public open class AnthropicLLMClient(
                                     }
 
                                     else -> {
-                                        logger.warn { "Unknown Anthropic stream delta type: ${delta.deltaType}" }
+                                        logger.warn { "Unknown Anthropic stream delta type: ${delta.type}" }
                                     }
                                 }
                             }
@@ -647,6 +647,6 @@ public open class AnthropicLLMClient(
     }
 
     override fun close() {
-        baseClient.close()
+        httpClient.close()
     }
 }

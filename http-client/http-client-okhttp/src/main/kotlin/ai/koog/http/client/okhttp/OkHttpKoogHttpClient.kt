@@ -38,7 +38,7 @@ import kotlin.reflect.KClass
  */
 @Experimental
 public class OkHttpKoogHttpClient internal constructor(
-    private val clientName: String,
+    override val clientName: String,
     private val logger: KLogger,
     private val okHttpClient: OkHttpClient,
     private val json: Json
@@ -198,6 +198,11 @@ public class OkHttpKoogHttpClient internal constructor(
             val jsonString = json.encodeToString(serializer, request)
             jsonString.toRequestBody("application/json".toMediaType())
         }
+    }
+
+    override fun close() {
+        logger.debug { "Closing $clientName" }
+        okHttpClient.dispatcher.executorService.shutdown()
     }
 }
 

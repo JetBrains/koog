@@ -9,9 +9,15 @@ import kotlin.reflect.KClass
  * Provides methods for making HTTP POST requests and handling Server-Sent Events (SSE) streams.
  *
  * Implementations are supposed to use a particular library or framework.
+ *
+ * @property clientName The name of the client, used for logging and traceability.
  */
 @Experimental
-public interface KoogHttpClient {
+public interface KoogHttpClient : AutoCloseable {
+    /**
+     * The name of the client.
+     */
+    public val clientName: String
 
     /**
      * Sends an HTTP GET request to the specified `path` with the provided `request` payload.

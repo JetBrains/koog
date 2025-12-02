@@ -33,7 +33,7 @@ import kotlin.reflect.KClass
  */
 @Experimental
 public class JavaKoogHttpClient internal constructor(
-    private val clientName: String,
+    override val clientName: String,
     private val logger: KLogger,
     private val httpClient: HttpClient,
     private val json: Json
@@ -218,6 +218,8 @@ public class JavaKoogHttpClient internal constructor(
             RequestBody(body = json.encodeToString(serializer, request), contentType = "application/json")
         }
     }
+
+    override fun close() {}
 }
 
 /**
