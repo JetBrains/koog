@@ -1,3 +1,39 @@
+# 0.5.4
+> Published 03 December 2025
+
+## Improvements
+- LLM clients: better error reporting (#1149). Potential **breaking change**: LLM clients now throw `LLMClientException` instead of `IllegalStateException` ([KG-552](https://youtrack.jetbrains.com/issue/KG-552))
+- Add support for **OpenAI** **GPT-5.1** and **GPT-5 pro** (#1121) and (#1113) and **Anthropic** **Claude Opus 4.5** (#1199)
+- Add Bedrock support in Ktor for configuring and initializing Bedrock LLM clients. (#1141)
+- Improve Bedrock moderation implementation (#1105)
+- Add handler for `GooglePart.InlineData` in `GoogleLLMClient` (#1094) ([KG-487](https://youtrack.jetbrains.com/issue/KG-487))
+- Improvements in `ReadFileTool` (#1182) and (#1213)
+
+## Bug Fixes
+- Fix and simplify `McpTool` to properly support updated Tool serialization (#1128)
+- Fix file tools to properly use newer API to provide textual tool result representation (#1201)
+- Fix empty list condition check in `onMultipleToolResults` and `onMultipleAssistantMessages` (#1192)
+- Fix reasoning message handling in strategy (#1166)
+- Fix timeout in `JvmShellCommandExecutor` (#1005)
+
+# 0.5.3
+> Published 12 November 2025
+
+## New Features
+- Reasoning messages support (#943)
+- Add get models list request to `OpenAI`-based `LLMClient`s (#1074)
+
+## Improvements
+- Support subgraph execution events in an agent pipeline and features, including `OpenTelemetry` (#1052)
+- Make `systemPrompt` and `temperature` optional, set default temperature to null in `AIAgent` factory functions (#1078)
+- Improve compatibility with kotlinx-coroutines 1.8 in runtime by removing `featurePrepareDispatcher` from `AIAgentPipeline` (#1083)
+
+## Bug Fixes
+- Fix persistence feature by making `ReceivedToolResult` serializable (#1049)
+- Make clients properly rethrow cancellations and remove exception wrapping (#1057)
+- Fix `StructureFixingParser` to do the right number of retires (#1084)
+
+
 # 0.5.2
 > Published 29 Oct 2025
 
