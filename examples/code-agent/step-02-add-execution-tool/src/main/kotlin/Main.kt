@@ -37,7 +37,7 @@ val agent = AIAgent(
         Verify your changes don't break existing functionality through regression testing, but prefer running targeted tests over full test suites.
         Note: the codebase may be fully configured or freshly cloned with no dependencies installed - handle any necessary setup steps.
         """.trimIndent(),
-    strategy = singleRunStrategy(ToolCalls.SEQUENTIAL),
+    strategy = singleRunStrategy(),
     maxIterations = 400
 ) {
     handleEvents {
