@@ -13,6 +13,6 @@ dependencies {
     api(libs.kotlinx.coroutines.test)
     api(libs.kotlinx.serialization.json)
     api(kotlin("test"))
+    compileOnly(kotlin("test-junit5")) // must be provided by the dependent modules
     implementation(libs.kotlinx.coroutines.core)
-    implementation(kotlin("test-junit5"))
 }
