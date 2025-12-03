@@ -33,7 +33,7 @@ val findAgent = AIAgent(
         
         Ensure to utilize maximum amount of parallelization during the tool calling.
         """.trimIndent(),
-    llmModel = OpenAIModels.Chat.GPT4oMini,
+    llmModel = OpenAIModels.Chat.GPT5Codex,
     toolRegistry = ToolRegistry {
         tool(ListDirectoryTool(JVMFileSystemProvider.ReadOnly))
         tool(ReadFileTool(JVMFileSystemProvider.ReadOnly))
