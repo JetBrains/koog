@@ -10,7 +10,9 @@ import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import kotlinx.coroutines.test.runTest
 import kotlin.reflect.typeOf
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertFailsWith
 
 class GraphAIAgentTest {
 
@@ -48,5 +50,67 @@ class GraphAIAgentTest {
             testFeatureMessageProcessor.isOpen.value,
             "Feature message processors should be closed after the agent run"
         )
+    }
+
+    @Test
+    fun multipleRuns_whenEnforceSingleRunIsFalse() = runTest {
+        val model = OpenAIModels.Chat.GPT4o
+
+        val agentConfig = AIAgentConfig(
+            prompt = prompt(id = "test-chat") {},
+            model = model,
+            maxAgentIterations = 10,
+            enforceSingleRun = false
+        )
+
+        val strategy = strategy<String, String>("test-strategy") {
+            val uppercaseNode by node<String, String> { it.uppercase() }
+            nodeStart then uppercaseNode then nodeFinish
+        }
+
+        val agent = GraphAIAgent(
+            id = "test-agent",
+            inputType = typeOf<String>(),
+            outputType = typeOf<String>(),
+            promptExecutor = getMockExecutor { },
+            agentConfig = agentConfig,
+            strategy = strategy,
+        )
+
+        val result1 = agent.run("Run 1")
+        assertEquals("RUN 1", result1)
+
+        val result2 = agent.run("Run 2")
+        assertEquals("RUN 2", result2)
+    }
+
+    @Test
+    fun multipleRuns_throwsException_byDefault() = runTest {
+        val model = OpenAIModels.Chat.GPT4o
+
+        val agentConfig = AIAgentConfig(
+            prompt = prompt(id = "test-chat") {},
+            model = model,
+            maxAgentIterations = 10,
+        )
+
+        val strategy = strategy<String, String>("test-strategy") {
+            nodeStart then nodeFinish
+        }
+
+        val agent = GraphAIAgent(
+            id = "test-agent",
+            inputType = typeOf<String>(),
+            outputType = typeOf<String>(),
+            promptExecutor = getMockExecutor { },
+            agentConfig = agentConfig,
+            strategy = strategy,
+        )
+
+        agent.run("Run 1")
+
+        assertFailsWith<IllegalStateException> {
+            agent.run("Run 2")
+        }
     }
 }

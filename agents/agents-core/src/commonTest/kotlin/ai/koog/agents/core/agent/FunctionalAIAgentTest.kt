@@ -30,6 +30,7 @@ import kotlinx.serialization.builtins.serializer
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertFailsWith
 
 @OptIn(kotlin.uuid.ExperimentalUuidApi::class)
 class FunctionalAIAgentTest {
@@ -787,5 +788,57 @@ class FunctionalAIAgentTest {
             testFeatureMessageProcessor.isOpen.value,
             "Feature processors should be closed after run"
         )
+    }
+
+    @Test
+    fun multipleRuns_whenEnforceSingleRunIsFalse() = runTest {
+        val mockLLMApi = getMockExecutor {
+            mockLLMAnswer("Run 1") onRequestEquals "Run 1"
+            mockLLMAnswer("Run 2") onRequestEquals "Run 2"
+            mockLLMAnswer("I don't know how to answer that.").asDefaultResponse
+        }
+
+        val agent = AIAgent(
+            promptExecutor = mockLLMApi,
+            llmModel = OllamaModels.Meta.LLAMA_3_2,
+            strategy = functionalStrategy { input: String ->
+                llm.writeSession {
+                    appendPrompt { user(input) }
+                    requestLLM()
+                }.content
+            },
+            enforceSingleRun = false
+        )
+
+        val result1 = agent.run("Run 1")
+        assertEquals("Run 1", result1)
+
+        val result2 = agent.run("Run 2")
+        assertEquals("Run 2", result2)
+    }
+
+    @Test
+    fun multipleRuns_throwsException_byDefault() = runTest {
+        val mockLLMApi = getMockExecutor {
+            mockLLMAnswer("Run 1") onRequestEquals "Run 1"
+            mockLLMAnswer("I don't know how to answer that.").asDefaultResponse
+        }
+
+        val agent = AIAgent(
+            promptExecutor = mockLLMApi,
+            llmModel = OllamaModels.Meta.LLAMA_3_2,
+            strategy = functionalStrategy { input: String ->
+                llm.writeSession {
+                    appendPrompt { user(input) }
+                    requestLLM()
+                }.content
+            }
+        )
+
+        agent.run("Run 1")
+
+        assertFailsWith<IllegalStateException> {
+            agent.run("Run 2")
+        }
     }
 }
