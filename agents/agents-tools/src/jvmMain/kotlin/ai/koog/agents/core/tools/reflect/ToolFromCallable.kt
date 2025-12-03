@@ -38,10 +38,14 @@ private const val nonSerializableParameterPrefix = "__##nonSerializableParameter
 public class ToolFromCallable(
     private val callable: KCallable<*>,
     private val thisRef: Any? = null,
-    override val descriptor: ToolDescriptor,
+    descriptor: ToolDescriptor,
     override val json: Json = ToolJson,
-    override val resultSerializer: KSerializer<Any?>,
-) : Tool<ToolFromCallable.VarArgs, Any?>() {
+    resultSerializer: KSerializer<Any?>,
+) : Tool<ToolFromCallable.VarArgs, Any?>(
+    argsSerializer = VarArgsSerializer(callable),
+    resultSerializer = resultSerializer,
+    descriptor = descriptor,
+) {
 
     /**
      * Represents a data structure to hold arguments conforming to the Args interface.
@@ -105,12 +109,6 @@ public class ToolFromCallable(
         }
         return callable.callSuspendBy(argsMap)
     }
-
-    override val argsSerializer: KSerializer<VarArgs>
-        get() = VarArgsSerializer(callable)
-
-    override val name: String = descriptor.name
-    override val description: String = descriptor.description
 
     /**
      * A serializer for the `VarArgs` class, enabling Kotlin serialization for arguments provided dynamically
