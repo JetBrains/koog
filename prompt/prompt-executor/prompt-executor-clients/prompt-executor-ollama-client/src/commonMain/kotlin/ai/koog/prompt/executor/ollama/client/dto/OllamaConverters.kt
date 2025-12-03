@@ -76,14 +76,45 @@ private fun Message.User.toOllamaChatMessage(model: LLModel): OllamaChatMessageD
                     add(image)
                 }
 
+                is ContentPart.File -> {
+                    // Ollama doesn't support file attachments directly,
+                    // so we skip them here. They can be handled as text attachments below.
+                }
                 else -> throw IllegalArgumentException("Unsupported attachment type: $part")
             }
         }
     }
 
+    var textAttachments = ""
+
+    parts.forEach { part ->
+        when (part) {
+            is ContentPart.File -> {
+                val content = part.content
+                when (content) {
+                    is AttachmentContent.PlainText -> {
+                        textAttachments += "\n\n${content.text}"
+                    }
+
+                    is AttachmentContent.Binary -> content.asBase64()
+
+                    else -> throw IllegalArgumentException("Unsupported file attachment content: ${content::class}")
+                }
+            }
+
+            else -> { }
+        }
+    }
+
+    val contentWithAttachments = if (textAttachments.isNotEmpty()) {
+        "$content\n\n$textAttachments"
+    } else {
+        content
+    }
+
     return OllamaChatMessageDTO(
         role = "user",
-        content = content,
+        content = contentWithAttachments,
         images = images.takeIf { it.isNotEmpty() }
     )
 }
