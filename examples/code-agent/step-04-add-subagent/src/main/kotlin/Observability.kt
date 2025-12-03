@@ -15,7 +15,7 @@ fun GraphAIAgent.FeatureContext.setupObservability(agentName: String) {
         setVerbose(true) // Enable verbose mode to send full strings instead of HIDDEN placeholders
         addLangfuseExporter(
             traceAttributes = listOf(
-                CustomAttribute("langfuse.session.id", "eval-run-1"),
+                CustomAttribute("langfuse.session.id", System.getenv("LANGFUSE_SESSION_ID") ?: ""),
             )
         )
     }

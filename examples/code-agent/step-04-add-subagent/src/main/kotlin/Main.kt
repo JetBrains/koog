@@ -31,7 +31,7 @@ val agent = AIAgent(
         You also have an intelligent find micro agent at your disposition, which can help you find code components and other constructs 
         more cheaply than you can do it yourself. Lean on it for any and all search operations. Do not use shell execution for find tasks.
     """.trimIndent(),
-    llmModel = OpenAIModels.Chat.GPT5,
+    llmModel = OpenAIModels.Chat.GPT5Codex,
     toolRegistry = ToolRegistry {
         tool(ListDirectoryTool(JVMFileSystemProvider.ReadOnly))
         tool(ReadFileTool(JVMFileSystemProvider.ReadOnly))
