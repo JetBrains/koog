@@ -26,7 +26,7 @@ val agent = AIAgent(
         Your goal is to deliver production-ready code changes that integrate seamlessly with the existing codebase and solve given task.
     """.trimIndent(),
 
-    strategy = singleRunStrategy(ToolCalls.SEQUENTIAL),
+    strategy = singleRunStrategy(),
     maxIterations = 100
 ) {
     handleEvents {
