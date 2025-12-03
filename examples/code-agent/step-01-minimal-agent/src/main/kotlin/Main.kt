@@ -11,10 +11,10 @@ import ai.koog.agents.features.eventHandler.feature.handleEvents
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.koog.rag.base.files.JVMFileSystemProvider
-import kotlinx.coroutines.runBlocking
 
+val executor = simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY"))
 val agent = AIAgent(
-    promptExecutor = simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")),
+    promptExecutor = executor,
     llmModel = OpenAIModels.Chat.GPT5Codex,
     toolRegistry = ToolRegistry {
         tool(ListDirectoryTool(JVMFileSystemProvider.ReadOnly))
@@ -39,15 +39,19 @@ val agent = AIAgent(
     }
 }
 
-fun main(args: Array<String>) = runBlocking {
+suspend fun main(args: Array<String>) {
     if (args.size < 2) {
         println("Error: Please provide the project absolute path and a task as arguments")
         println("Usage: <absolute_path> <task>")
-        return@runBlocking
+        return
     }
 
     val (path, task) = args
-    val input = "Project path: $path\n\n$task"
-    val result = agent.run(input)
-    println(result)
+    val input = "Project absolute path: $path\n\n## Task\n$task"
+    try {
+        val result = agent.run(input)
+        println(result)
+    } finally {
+        executor.close()
+    }
 }
