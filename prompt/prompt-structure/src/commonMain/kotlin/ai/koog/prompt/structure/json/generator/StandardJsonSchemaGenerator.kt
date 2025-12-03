@@ -264,4 +264,24 @@ public open class StandardJsonSchemaGenerator : GenericJsonSchemaGenerator() {
     override fun processClassDiscriminator(context: GenerationContext): JsonObject = buildJsonObject {
         put(JsonSchemaConsts.Keys.CONST, context.descriptor.serialName)
     }
+
+    override fun processJsonElement(context: GenerationContext): JsonObject {
+        return if (context.descriptor.isNullable) {
+            buildJsonObject {
+                put(
+                    JsonSchemaConsts.Keys.ONE_OF,
+                    buildJsonArray {
+                        add(buildJsonObject { /* empty schema for "any type" */ })
+                        add(buildJsonObject { put(JsonSchemaConsts.Keys.TYPE, JsonSchemaConsts.Types.NULL) })
+                    }
+                )
+                putDescription(context.currentDescription)
+            }
+        } else {
+            buildJsonObject {
+                // Empty object represents "any type" in JSON schema
+                putDescription(context.currentDescription)
+            }
+        }
+    }
 }
