@@ -145,16 +145,48 @@ val agent = AIAgent(
     maxIterations = 30
 )
 ```
+
+### 7. Configure Agent Reusability
+
+By default, the agent is single-use: attempting to call `agent.run()` after the first execution (completion or failure) will throw an `IllegalStateException`.
+
+To configure the agent to be reusable (allowing it to maintain its context and state across multiple sequential interactions), use the `enforceSingleRun` parameter.
+
+`enforceSingleRun = true` (Default): The agent enforces the single-use rule and throws an error if `run()` is called after the initial execution finishes.
+
+`enforceSingleRun = false`: The agent allows sequential re-runs, and it will reuse its previously prepared context (like session history, llm context) for the next execution.
+
+<!--- INCLUDE
+import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.core.tools.ToolRegistry
+import ai.koog.agents.ext.tool.SayToUser
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
+-->
+```kotlin
+val agent = AIAgent(
+    promptExecutor = simpleOpenAIExecutor(System.getenv("YOUR_API_KEY")),
+    systemPrompt = "You are a helpful assistant. Answer user questions concisely.",
+    llmModel = OpenAIModels.Chat.GPT4o,
+    temperature = 0.7,
+    toolRegistry = ToolRegistry {
+        tool(SayToUser)
+    },
+    maxIterations = 30,
+    enforceSingleRun = false
+)
+```
+
 <!--- KNIT example-basic-05.kt -->
 
-### 7. Handle events during agent runtime
+### 8. Handle events during agent runtime
 
 Basic agents support custom event handlers.
 While having an event handler is not required for creating an agent, it might be helpful for testing, debugging, or making hooks for chained agent interactions.
 
 For more information on how to use the `EventHandler` feature for monitoring your agent interactions, see [Event Handlers](agent-event-handlers.md).
 
-### 8. Run the agent
+### 9. Run the agent
 
 To run the agent, use the `run()` function:
 
@@ -175,7 +207,7 @@ val agent = AIAgent(
     toolRegistry = ToolRegistry {
         tool(SayToUser)
     },
-    maxIterations = 100
+    maxIterations = 30
 )
 
 fun main() = runBlocking {

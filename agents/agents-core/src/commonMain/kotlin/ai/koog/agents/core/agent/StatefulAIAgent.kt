@@ -18,7 +18,7 @@ import kotlin.uuid.Uuid
 /**
  * Abstract base class representing a single-use AI agent with state.
  *
- * This AI agent is designed to execute a specific long-running strategy only once and provides an API to monitor and manage its state.
+ * This AI agent is designed to execute a specific long-running strategies and provides an API to monitor and manage its state.
  *
  * It maintains internal states including its running status, whether it was started, its result (if available), and
  * the root context associated with its execution. The class enforces safe state transitions and provides
@@ -28,12 +28,14 @@ import kotlin.uuid.Uuid
  * @param Output the type of the output produced by the agent.
  * @param TContext the type of the context used during the agent's execution, extending [AIAgentContext].
  * @property logger the logger used for logging execution details and errors.
+ * @property enforceSingleRun indicates whether the agent should be restricted to a single execution run.
  * @param id the unique identifier for the agent. Random UUID will be generated if set to null.
  */
 @OptIn(ExperimentalUuidApi::class)
-public abstract class StatefulSingleUseAIAgent<Input, Output, TContext : AIAgentContext>(
+public abstract class StatefulAIAgent<Input, Output, TContext : AIAgentContext>(
     protected val logger: KLogger,
-    id: String? = null,
+    protected val enforceSingleRun: Boolean,
+    id: String? = null
 ) : AIAgent<Input, Output> {
     /**
      * A mutex used to synchronize access to the state of the agent. Ensures that only one coroutine
@@ -47,6 +49,8 @@ public abstract class StatefulSingleUseAIAgent<Input, Output, TContext : AIAgent
     final override suspend fun getState(): State<Output> = agentStateMutex.withLock { state.copy() }
 
     final override val id: String by lazy { id ?: Uuid.random().toString() }
+
+    public lateinit var context: TContext
 
     /**
      * The execution strategy defining how the agent processes input and produces output.
@@ -77,16 +81,21 @@ public abstract class StatefulSingleUseAIAgent<Input, Output, TContext : AIAgent
      */
     final override suspend fun run(agentInput: Input): Output {
         agentStateMutex.withLock {
-            if (state !is NotStarted) {
+            if (enforceSingleRun && state !is NotStarted) {
+                throw IllegalStateException("Agent was already started and is single-use.")
+            } else if (state is State.Running || state is State.Starting) {
                 throw IllegalStateException(
-                    "Agent was already started. Please use AIAgentService.createAgentAndRun(agentInput) to run an agent multiple times."
+                    "Agent is currently running or starting. Cannot run concurrently."
                 )
             }
             state = State.Starting()
         }
 
-        val runId = Uuid.random().toString()
-        val context = prepareContext(agentInput, runId)
+        if (!::context.isInitialized) {
+            context = prepareContext(agentInput, Uuid.random().toString())
+        }
+
+        val runId = context.runId
 
         return withContext(
             AgentRunInfoContextElement(
@@ -111,7 +120,7 @@ public abstract class StatefulSingleUseAIAgent<Input, Output, TContext : AIAgent
 
                 pipeline.onAgentStarting<Input, Output>(
                     runId = runId,
-                    agent = this@StatefulSingleUseAIAgent,
+                    agent = this@StatefulAIAgent,
                     context = context
                 )
 
@@ -219,18 +228,18 @@ public abstract class StatefulSingleUseAIAgent<Input, Output, TContext : AIAgent
 }
 
 /**
- * Retrieves a feature from the [StatefulSingleUseAIAgent.pipeline] associated with this agent using the specified key.
+ * Retrieves a feature from the [StatefulAIAgent.pipeline] associated with this agent using the specified key.
  *
  * @param feature A feature to fetch.
  * @return The feature associated with the provided key, or null if no matching feature is found.
  * @throws IllegalArgumentException if the specified [feature] does not correspond to a registered feature.
  */
-public inline fun <reified TFeature : Any> StatefulSingleUseAIAgent<*, *, *>.feature(
+public inline fun <reified TFeature : Any> StatefulAIAgent<*, *, *>.feature(
     feature: AIAgentFeature<*, TFeature>
 ): TFeature? = feature(TFeature::class, feature)
 
 /**
- * Retrieves a feature from the [StatefulSingleUseAIAgent.pipeline] associated with this agent using the specified key
+ * Retrieves a feature from the [StatefulAIAgent.pipeline] associated with this agent using the specified key
  * or throws an exception if it is not available.
  *
  * @param feature A feature to fetch.
@@ -238,6 +247,6 @@ public inline fun <reified TFeature : Any> StatefulSingleUseAIAgent<*, *, *>.fea
  * @throws IllegalStateException if the [TFeature] feature does not correspond to a registered feature.
  * @throws NoSuchElementException if the feature is not found.
  */
-public inline fun <reified TFeature : Any> StatefulSingleUseAIAgent<*, *, *>.featureOrThrow(
+public inline fun <reified TFeature : Any> StatefulAIAgent<*, *, *>.featureOrThrow(
     feature: AIAgentFeature<*, TFeature>
 ): TFeature = feature(feature) ?: throw NoSuchElementException("Feature ${feature.key} is not found.")

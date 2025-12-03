@@ -40,6 +40,7 @@ public class Koog(
             agentConfig.prompt,
             model,
             agentConfig.maxAgentIterations,
+            agentConfig.enforceSingleRun,
             agentConfig.missingToolsConversionStrategy
         )
     }

@@ -1,7 +1,7 @@
 package ai.koog.agents.snapshot.feature
 
 import ai.koog.agents.core.agent.AIAgent.Companion.State.Running
-import ai.koog.agents.core.agent.StatefulSingleUseAIAgent
+import ai.koog.agents.core.agent.StatefulAIAgent
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AgentContextData
 import ai.koog.agents.core.agent.context.RollbackStrategy
@@ -390,7 +390,7 @@ public suspend fun <T> AIAgentContext.withPersistence(
  * @return The [Persistence] feature instance for this agent
  * @throws IllegalStateException if the checkpoint feature is not installed
  */
-public fun StatefulSingleUseAIAgent<*, *, *>.persistence(): Persistence = featureOrThrow(Persistence)
+public fun StatefulAIAgent<*, *, *>.persistence(): Persistence = featureOrThrow(Persistence)
 
 /**
  * Executes the provided action within the context of the agent's persistence layer if the agent is in a running state.
@@ -404,7 +404,7 @@ public fun StatefulSingleUseAIAgent<*, *, *>.persistence(): Persistence = featur
  * @throws IllegalStateException If the agent is not in a running state when this function is called.
  */
 @OptIn(InternalAgentsApi::class)
-public suspend fun <T> StatefulSingleUseAIAgent<*, *, *>.withPersistence(
+public suspend fun <T> StatefulAIAgent<*, *, *>.withPersistence(
     action: suspend Persistence.(AIAgentContext) -> T
 ): T = when (val state = getState()) {
     is Running<*> -> this.persistence().action(state.rootContext)

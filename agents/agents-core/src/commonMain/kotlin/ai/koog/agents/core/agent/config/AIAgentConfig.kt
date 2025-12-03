@@ -14,6 +14,7 @@ import ai.koog.prompt.llm.LLModel
  *
  * @param prompt The initial prompt configuration for the agent, encapsulating messages, model, and parameters.
  * @param model The model to use for the agent's prompt execution
+ * @param enforceSingleRun Indicates whether the agent should be restricted to a single execution run.
  * @param maxAgentIterations The maximum number of iterations allowed for an agent during its execution to prevent infinite loops.
  * @param missingToolsConversionStrategy Strategy used to determine how tool calls,
  *        present in the prompt but lacking definitions, are handled during agent execution.
@@ -25,6 +26,7 @@ public class AIAgentConfig(
     override val prompt: Prompt,
     override val model: LLModel,
     public val maxAgentIterations: Int,
+    public val enforceSingleRun: Boolean = true,
     public val missingToolsConversionStrategy: MissingToolsConversionStrategy =
         MissingToolsConversionStrategy.Missing(ToolCallDescriber.JSON)
 ) : AIAgentConfigBase {
@@ -48,6 +50,7 @@ public class AIAgentConfig(
          * @param llm The Large Language Model (LLM) to be used for the AI agent. Defaults to OpenAIModels.Chat.GPT4o.
          * @param id The identifier for the agent configuration. Defaults to "koog-agents".
          * @param maxAgentIterations The maximum number of iterations the agent can perform to avoid infinite loops. Defaults to 3.
+         * @param enforceSingleRun Indicates whether the agent should be restricted to a single execution run. Defaults to true.
          * @return An instance of `AIAgentConfigBase` representing the AI agent configuration with the specified parameters.
          */
         public fun withSystemPrompt(
@@ -55,13 +58,15 @@ public class AIAgentConfig(
             llm: LLModel = OpenAIModels.Chat.GPT4o,
             id: String = "koog-agents",
             maxAgentIterations: Int = 3,
+            enforceSingleRun: Boolean = true
         ): AIAgentConfig =
             AIAgentConfig(
                 prompt = prompt(id) {
                     system(prompt)
                 },
                 model = llm,
-                maxAgentIterations = maxAgentIterations
+                maxAgentIterations = maxAgentIterations,
+                enforceSingleRun = enforceSingleRun
             )
     }
 }

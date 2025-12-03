@@ -266,6 +266,7 @@ public interface AIAgent<Input, Output> : Closeable {
          * @param temperature Optional model temperature, with valid values ranging typically from 0.0 to 1.0.
          * @param numberOfChoices The number of response choices to be generated, defaulting to 1.
          * @param maxIterations The maximum number of iterations the agent is allowed to perform, defaulting to 50.
+         * @param enforceSingleRun A flag indicating whether to enforce a single run of the agent. Defaults to true.
          * @param installFeatures A function to configure additional features into the agent during initialization. Defaults to an empty configuration.
          * @return An instance of [AIAgent] configured with the provided parameters.
          */
@@ -280,6 +281,7 @@ public interface AIAgent<Input, Output> : Closeable {
             temperature: Double? = null,
             numberOfChoices: Int = 1,
             maxIterations: Int = 50,
+            enforceSingleRun: Boolean = true,
             installFeatures: FeatureContext.() -> Unit = {}
         ): AIAgent<String, String> = AIAgent(
             id = id,
@@ -297,6 +299,7 @@ public interface AIAgent<Input, Output> : Closeable {
                 },
                 model = llmModel,
                 maxAgentIterations = maxIterations,
+                enforceSingleRun = enforceSingleRun
             ),
             toolRegistry = toolRegistry,
             installFeatures = installFeatures
@@ -317,6 +320,7 @@ public interface AIAgent<Input, Output> : Closeable {
          * @param temperature Optional model temperature, with valid values ranging typically from 0.0 to 1.0.
          * @param numberOfChoices The number of choices the model should generate per invocation. Defaults to `1`.
          * @param maxIterations The maximum number of iterations the agent can perform. Defaults to `50`.
+         * @param enforceSingleRun A boolean flag indicating whether to enforce a single run of the agent. Defaults to `true`.
          * @param installFeatures An extension function on `FeatureContext` to install custom features for the agent. Defaults to an empty lambda.
          * @return A configured [AIAgent] instance that can process inputs and generate outputs using the specified strategy and model.
          */
@@ -332,6 +336,7 @@ public interface AIAgent<Input, Output> : Closeable {
             temperature: Double? = null,
             numberOfChoices: Int = 1,
             maxIterations: Int = 50,
+            enforceSingleRun: Boolean = true,
             noinline installFeatures: FeatureContext.() -> Unit = {},
         ): GraphAIAgent<Input, Output> {
             return GraphAIAgent(
@@ -352,6 +357,7 @@ public interface AIAgent<Input, Output> : Closeable {
                     },
                     model = llmModel,
                     maxAgentIterations = maxIterations,
+                    enforceSingleRun = enforceSingleRun
                 ),
                 toolRegistry = toolRegistry,
                 clock = clock,
@@ -374,6 +380,7 @@ public interface AIAgent<Input, Output> : Closeable {
          * @param temperature Optional model temperature, with valid values ranging typically from 0.0 to 1.0.
          * @param numberOfChoices The number of response choices to generate when querying the language model. Default is 1.
          * @param maxIterations The maximum number of iterations the agent is allowed to perform during execution. Default is 50.
+         * @param enforceSingleRun Flag indicating whether to enforce a single run of the agent. Default is true.
          * @param installFeatures A lambda to configure and install features in the agent's context.
          * @return An AI agent instance configured with the provided parameters and ready to execute the specified strategy.
          */
@@ -387,6 +394,7 @@ public interface AIAgent<Input, Output> : Closeable {
             temperature: Double? = null,
             numberOfChoices: Int = 1,
             maxIterations: Int = 50,
+            enforceSingleRun: Boolean = true,
             installFeatures: FunctionalAIAgent.FeatureContext.() -> Unit = {},
         ): FunctionalAIAgent<Input, Output> = FunctionalAIAgent(
             promptExecutor = promptExecutor,
@@ -402,6 +410,7 @@ public interface AIAgent<Input, Output> : Closeable {
                 },
                 model = llmModel,
                 maxAgentIterations = maxIterations,
+                enforceSingleRun = enforceSingleRun
             ),
             installFeatures = installFeatures,
             toolRegistry = toolRegistry,

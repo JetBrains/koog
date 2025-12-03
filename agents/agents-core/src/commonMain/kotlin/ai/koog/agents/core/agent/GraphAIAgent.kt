@@ -55,8 +55,9 @@ public open class GraphAIAgent<Input, Output>(
     public val clock: Clock = Clock.System,
     @property:InternalAgentsApi
     public val installFeatures: FeatureContext.() -> Unit = {}
-) : StatefulSingleUseAIAgent<Input, Output, AIAgentGraphContextBase>(
+) : StatefulAIAgent<Input, Output, AIAgentGraphContextBase>(
     logger = logger,
+    enforceSingleRun = agentConfig.enforceSingleRun,
     id = id,
 ) {
 

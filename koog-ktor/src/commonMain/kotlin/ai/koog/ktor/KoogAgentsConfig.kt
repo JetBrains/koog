@@ -360,6 +360,20 @@ public class KoogAgentsConfig(private val scope: CoroutineScope) {
         public var maxAgentIterations: Int = 50
 
         /**
+         * Indicates whether the agent is intended for single-use or can be reused for multiple interactions.
+         *
+         * When set to `true`, the agent is designed to handle a single interaction or session,
+         * after which it may be discarded or reset. This is useful for scenarios where
+         * each interaction is independent and does not require maintaining state across sessions.
+         *
+         * When set to `false`, the agent can be reused for multiple interactions,
+         * allowing it to maintain context or state between sessions.
+         *
+         * Default value is `true`.
+         */
+        public var enforceSingleRun: Boolean = true
+
+        /**
          * Defines the strategy for handling tool calls present in the prompt that do not have corresponding tool definitions
          * registered in the current context. This is used to convert missing tool information into a format suitable for
          * processing by the model.

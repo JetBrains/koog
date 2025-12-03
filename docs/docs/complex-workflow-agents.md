@@ -240,7 +240,7 @@ val agentConfig = AIAgentConfig.withSystemPrompt(
 ```
 <!--- KNIT example-complex-workflow-agents-07.kt -->
 
-For more advanced configuration, you can specify which LLM the agent will use and set the maximum number of iterations the agent can perform to respond:
+For more advanced configuration, you can specify which LLM the agent will use, set the maximum number of iterations the agent can perform to respond, and control the agent's reusability:
 <!--- INCLUDE
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.prompt.dsl.Prompt
