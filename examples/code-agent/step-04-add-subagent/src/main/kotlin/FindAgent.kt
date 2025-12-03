@@ -39,7 +39,7 @@ val findAgent = AIAgent(
         tool(ReadFileTool(JVMFileSystemProvider.ReadOnly))
         tool(RegexSearchTool(JVMFileSystemProvider.ReadOnly))
     },
-    maxIterations = 400
+    maxIterations = 100
 ) {
     setupObservability(agentName = "findAgent")
 }
@@ -66,6 +66,9 @@ fun createFindAgentTool(): Tool<*, *> {
                 - Searching outside the provided `path` directory.
                 
                 The agent analyzes your query, searches intelligently, and returns findings with file paths, line numbers, and relevant code snippets, along with explanations of why each result matches your needs.
+                
+                While this agent is much more cost efficient at executing searches than using shell commands, it does lose context in between searches.
+                So give the preference at clustering similar searches in one call rather than doing multiple calls to this tool.
             """.trimIndent(),
             inputDescription = """
                 The input contains two components: the absolute_path and the query.
