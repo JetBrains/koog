@@ -16,7 +16,7 @@ import ai.koog.agents.ext.tool.search.RegexSearchTool
 
 val findAgent = AIAgent(
     promptExecutor = simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")),
-    llmModel = OpenAIModels.Chat.GPT5Codex,
+    llmModel = OpenAIModels.Chat.GPT4_1Mini,
     toolRegistry = ToolRegistry {
         tool(ListDirectoryTool(JVMFileSystemProvider.ReadOnly))
         tool(ReadFileTool(JVMFileSystemProvider.ReadOnly))
