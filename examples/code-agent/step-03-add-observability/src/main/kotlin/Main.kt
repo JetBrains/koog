@@ -1,7 +1,6 @@
 package ai.koog.agents.examples.codeagent.step03
 
 import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.agent.ToolCalls
 import ai.koog.agents.core.agent.singleRunStrategy
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.tool.file.EditFileTool
@@ -40,7 +39,7 @@ val agent = AIAgent(
         Verify your changes don't break existing functionality through regression testing, but prefer running targeted tests over full test suites.
         Note: the codebase may be fully configured or freshly cloned with no dependencies installed - handle any necessary setup steps.
         """.trimIndent(),
-    strategy = singleRunStrategy(ToolCalls.SEQUENTIAL),
+    strategy = singleRunStrategy(),
     maxIterations = 400
 ) {
     install(OpenTelemetry) {

@@ -16,8 +16,12 @@ import ai.koog.agents.ext.tool.search.RegexSearchTool
 
 val findAgent = AIAgent(
     promptExecutor = simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")),
-    strategy = singleRunStrategy(),
-
+    llmModel = OpenAIModels.Chat.GPT5Codex,
+    toolRegistry = ToolRegistry {
+        tool(ListDirectoryTool(JVMFileSystemProvider.ReadOnly))
+        tool(ReadFileTool(JVMFileSystemProvider.ReadOnly))
+        tool(RegexSearchTool(JVMFileSystemProvider.ReadOnly))
+    },
     systemPrompt = """
         You are an AI assistant specializing in code search.
         Your task is to analyze the user's query and provide clear and specific result.
@@ -33,12 +37,7 @@ val findAgent = AIAgent(
         
         Ensure to utilize maximum amount of parallelization during the tool calling.
         """.trimIndent(),
-    llmModel = OpenAIModels.Chat.GPT5Codex,
-    toolRegistry = ToolRegistry {
-        tool(ListDirectoryTool(JVMFileSystemProvider.ReadOnly))
-        tool(ReadFileTool(JVMFileSystemProvider.ReadOnly))
-        tool(RegexSearchTool(JVMFileSystemProvider.ReadOnly))
-    },
+    strategy = singleRunStrategy(),
     maxIterations = 100
 ) {
     setupObservability(agentName = "findAgent")

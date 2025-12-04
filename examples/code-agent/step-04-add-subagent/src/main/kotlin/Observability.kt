@@ -12,7 +12,7 @@ import ai.koog.agents.features.opentelemetry.integration.langfuse.addLangfuseExp
  */
 fun GraphAIAgent.FeatureContext.setupObservability(agentName: String) {
     install(OpenTelemetry) {
-        setVerbose(true) // Enable verbose mode to send full strings instead of HIDDEN placeholders
+        setVerbose(true) // Send full strings instead of HIDDEN placeholders
         addLangfuseExporter(
             traceAttributes = listOf(
                 CustomAttribute("langfuse.session.id", System.getenv("LANGFUSE_SESSION_ID") ?: ""),

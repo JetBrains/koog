@@ -13,11 +13,18 @@ import ai.koog.agents.ext.tool.shell.ShellCommandConfirmation
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.koog.rag.base.files.JVMFileSystemProvider
-import kotlinx.coroutines.runBlocking
 
+val executor = simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY"))
 val agent = AIAgent(
-    promptExecutor = simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")),
-    strategy = singleRunStrategy(),
+    promptExecutor = executor,
+    llmModel = OpenAIModels.Chat.GPT5Codex,
+    toolRegistry = ToolRegistry {
+        tool(ListDirectoryTool(JVMFileSystemProvider.ReadOnly))
+        tool(ReadFileTool(JVMFileSystemProvider.ReadOnly))
+        tool(EditFileTool(JVMFileSystemProvider.ReadWrite))
+        tool(createExecuteShellCommandToolFromEnv())
+        tool(createFindAgentTool())
+    },
     systemPrompt = """
         You are a highly skilled programmer tasked with updating the provided codebase according to the given task.
         Your goal is to deliver production-ready code changes that integrate seamlessly with the existing codebase and solve given task.
@@ -31,14 +38,7 @@ val agent = AIAgent(
         You also have an intelligent find micro agent at your disposition, which can help you find code components and other constructs 
         more cheaply than you can do it yourself. Lean on it for any and all search operations. Do not use shell execution for find tasks.
     """.trimIndent(),
-    llmModel = OpenAIModels.Chat.GPT5Codex,
-    toolRegistry = ToolRegistry {
-        tool(ListDirectoryTool(JVMFileSystemProvider.ReadOnly))
-        tool(ReadFileTool(JVMFileSystemProvider.ReadOnly))
-        tool(EditFileTool(JVMFileSystemProvider.ReadWrite))
-        tool(createExecuteShellCommandToolFromEnv())
-        tool(createFindAgentTool())
-    },
+    strategy = singleRunStrategy(),
     maxIterations = 400
 ) {
     setupObservability(agentName = "main")
@@ -52,15 +52,19 @@ fun createExecuteShellCommandToolFromEnv(): ExecuteShellCommandTool {
     }
 }
 
-fun main(args: Array<String>) = runBlocking {
+suspend fun main(args: Array<String>) {
     if (args.size < 2) {
         println("Error: Please provide the project absolute path and a task as arguments")
         println("Usage: <absolute_path> <task>")
-        return@runBlocking
+        return
     }
 
     val (path, task) = args
     val input = "Project absolute path: $path\n\n## Task\n$task"
-    val result = agent.run(input)
-    println(result)
+    try {
+        val result = agent.run(input)
+        println(result)
+    } finally {
+        executor.close()
+    }
 }
