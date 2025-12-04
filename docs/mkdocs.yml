@@ -13,7 +13,16 @@ nav:
           - Functional agents: functional-agents.md
           - Complex workflow agents: complex-workflow-agents.md
           - Planner agents: planner-agents.md
-      - Prompts: prompt-api.md
+      - Prompts:
+          - prompts/index.md
+          - Structured prompts: prompts/structured-prompts.md
+          - Multimodal inputs: prompts/multimodal-inputs.md
+          - Running prompts:
+            - LLM clients: prompts/lm-clients.md
+            - Prompt executors: prompts/prompt-executors.md
+          - Prompt caching: prompts/prompt-caching.md
+          - Failure handling: prompts/retry-and-error-handling.md
+      - LLM parameters: llm-parameters.md
       - Tools:
           - Overview: tools-overview.md
           - Built-in tools: built-in-tools.md
@@ -86,12 +95,13 @@ markdown_extensions:
       line_spans: __span
       pygments_lang_class: true
   - pymdownx.inlinehilite
-  - pymdownx.snippets:
-      # Check whether snippets are loaded correctly
-      # check_paths: true
-      base_path: ["docs/snippets"]
+  - pymdownx.snippets
   - pymdownx.details
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - admonition
   - attr_list
   - md_in_html
@@ -129,8 +139,6 @@ plugins:
           - basic-agents.md: This guide lets you build a basic agent with minimum required configuration.
           - functional-agents.md: This guide shows you how to build a lightweight, non‑graph agent that you control with a simple loop.
           - complex-workflow-agents.md: This page explains how you can create agents that handle complex workflows by defining custom strategies, tools, configurations, and custom input and output types.
-        Prompts:
-          - prompt-api.md: This page includes detailed instructions about the use of Prompt API, which provides a comprehensive toolkit for interacting with Large Language Models in production applications.
         Tools:
           - tools-overview.md: This page provides a broad overview of the implementation of tools in Koog.
           - built-in-tools.md: This page provides details about built-in tools that handle common scenarios of agent-user interaction.

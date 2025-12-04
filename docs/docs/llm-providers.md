@@ -12,13 +12,13 @@ The following providers are currently supported:
 | [OpenRouter](https://openrouter.ai/)                                                                                                                        | One integration with an access to multiple models from multiple providers for flexibility, provider comparison, and unified API. |
 | [Amazon Bedrock](https://aws.amazon.com/bedrock/)                                                                                                           | AWS-native environment, enterprise security and compliance, multi-provider access.                                             |
 | [Mistral](https://mistral.ai/)                                                                                                                              | European data hosting, GDPR compliance.                                                                                        |
-| [Alibaba](https://www.alibabacloud.com/en?_p_lc=1) ([DashScope](https://dashscope.aliyun.com/))                                                             | Large contexts and cost-efficient Qwen models.                                                                                 |
+| [Alibaba](https://www.alibabacloud.com/en?_p_lc=1) ([DashScope](https://dashscope.aliyun.com/) OpenAI-compatible client)                                                            | Large contexts and cost-efficient Qwen models.                                                                                 |
 | [Ollama](https://ollama.com/)                                                                                                                               | Privacy, local development, offline operation, and no API costs.                                                               |
 
 The table below shows the LLM capabilities that Koog supports and which providers offer these capabilities in their models.
 The `*` symbol means that the capability is supported by specific models of the provider.
 
-| <div style="width:115px">LLM capability</div> | OpenAI                       | Anthropic              | Google                               | DeepSeek | OpenRouter       | Amazon Bedrock   | Mistral                | Alibaba (DashScope)        | Ollama (local models) |
+| <div style="width:115px">LLM capability</div> | OpenAI                       | Anthropic              | Google                               | DeepSeek | OpenRouter       | Amazon Bedrock   | Mistral                | Alibaba (DashScope OpenAI-compatible client)       | Ollama (local models) |
 |-----------------------------------------------|------------------------------|------------------------|--------------------------------------|----------|------------------|------------------|------------------------|----------------------------|-----------------------|
 | Supported input                               | Text, image, audio, document | Text, image, document* | Text, image, audio, video, document* | Text     | Differs by model | Differs by model | Text, image, document* | Text, image, audio, video* | Text, image*          |
 | Response streaming                            | ✓                            | ✓                      | ✓                                    | ✓        | ✓                | ✓                | ✓                      | ✓                          | ✓                     |
@@ -46,19 +46,19 @@ Koog lets you work with LLM providers on two levels:
 * Using an **LLM client** for direct interaction with a specific provider.
   Each client implements the `LLMClient` interface, handling authentication, 
   request formatting, and response parsing for the provider.
-  For details, see [Running prompts with LLM clients](prompt-api.md#running-prompts-with-llm-clients).
+  For details, see [Running prompts with LLM clients](prompts/prompt-api.md#running-prompts-with-llm-clients).
 
 * Using a **prompt executor** for a higher-level abstraction that wraps one or multiple LLM clients,
   manages their lifecycles, and unifies an interface across providers.
   It can optionally fall back to a single LLM client if a specific provider is unavailable.
   Prompt executors also handle failures, retries, and switching between providers.
   You can either create your own executor or use a pre-defined prompt executor for a specific provider.
-  For details, see [Running prompts with prompt executors](prompt-api.md#running-prompts-with-prompt-executors).
+  For details, see [Running prompts with prompt executors](prompts/prompt-api.md#running-prompts-with-prompt-executors).
 
 ## Next steps
 
 - [Create and run an agent](getting-started.md) with a specific LLM provider.
-- Learn more about [prompts](prompt-api.md) and [how to choose between LLM clients and prompt executors](prompt-api.md#choosing-between-llm-clients-and-prompt-executors).
+- Learn more about [prompts](prompts/prompt-api.md) and [how to choose between LLM clients and prompt executors](prompts/prompt-api.md#choosing-between-llm-clients-and-prompt-executors).
 
 
 
