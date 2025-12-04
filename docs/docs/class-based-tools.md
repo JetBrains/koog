@@ -54,8 +54,13 @@ import ai.koog.agents.core.tools.annotations.LLMDescription
 -->
 ```kotlin
 // Implement a simple calculator tool that adds two digits
-object CalculatorTool : Tool<CalculatorTool.Args, Int>() {
-    
+object CalculatorTool : Tool<CalculatorTool.Args, Int>(
+    argsSerializer = Args.serializer(),
+    resultSerializer = Int.serializer(),
+    name = "calculator",
+    description = "A simple calculator that can add two digits (0-9)."
+) {
+
     // Arguments for the calculator tool
     @Serializable
     data class Args(
@@ -69,15 +74,6 @@ object CalculatorTool : Tool<CalculatorTool.Args, Int>() {
             require(digit2 in 0..9) { "digit2 must be a single digit (0-9)" }
         }
     }
-
-    // Serializer for the Args class
-    override val argsSerializer = Args.serializer()
-    override val resultSerializer = Int.serializer()
-    
-    // Name of the tool, visible to LLM (by default will be derrived from the class name)
-    override val name = "calculator"
-    // Description of the tool, visible to LLM. Required
-    override val description = "A simple calculator that can add two digits (0-9)."
 
     // Function to add two digits
     override suspend fun execute(args: Args): Int = args.digit1 + args.digit2
@@ -117,7 +113,11 @@ import kotlinx.serialization.Serializable
 -->
 ```kotlin
 // Create a tool that casts a string expression to a double value
-object CastToDoubleTool : SimpleTool<CastToDoubleTool.Args>() {
+object CastToDoubleTool : SimpleTool<CastToDoubleTool.Args>(
+    argsSerializer = Args.serializer(),
+    name = "cast_to_double",
+    description = "casts the passed expression to double or returns 0.0 if the expression is not castable"
+) {
     // Define tool arguments
     @Serializable
     data class Args(
@@ -127,17 +127,11 @@ object CastToDoubleTool : SimpleTool<CastToDoubleTool.Args>() {
         val comment: String
     )
 
-    // Serializer for the Args class
-    override val argsSerializer = Args.serializer()
-
-    // Description of the tool, visible to LLM
-    override val description = "casts the passed expression to double or returns 0.0 if the expression is not castable"
-    
     // Function that executes the tool with the provided arguments
-    override suspend fun doExecute(args: Args): String {
+    override suspend fun execute(args: Args): String {
         return "Result: ${castToDouble(args.expression)}, " + "the comment was: ${args.comment}"
     }
-    
+
     // Function to cast a string expression to a double value
     private fun castToDouble(expression: String): Double {
         return expression.toDoubleOrNull() ?: 0.0
@@ -165,7 +159,12 @@ import ai.koog.prompt.markdown.markdown
 -->
 ```kotlin
 // A tool that edits file
-object EditFile : Tool<EditFile.Args, EditFile.Result>() {
+object EditFile : Tool<EditFile.Args, EditFile.Result>(
+    argsSerializer = Args.serializer(),
+    resultSerializer = Result.serializer(),
+    name = "edit_file",
+    description = "Edits the given file"
+) {
     // Define tool arguments
     @Serializable
     public data class Args(
@@ -205,13 +204,6 @@ object EditFile : Tool<EditFile.Args, EditFile.Result>() {
 
         override fun toString(): String = textForLLM()
     }
-
-    // Serializers for the args and Result class
-    override val argsSerializer = Args.serializer()
-    override val resultSerializer = Result.serializer()
-
-    // Description of the tool, visible to LLM
-    override val description = "Edits the given file"
 
     // Function that executes the tool with the provided arguments
     override suspend fun execute(args: Args): Result {
