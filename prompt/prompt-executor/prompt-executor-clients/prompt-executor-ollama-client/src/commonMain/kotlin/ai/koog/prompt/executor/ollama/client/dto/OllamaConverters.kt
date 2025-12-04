@@ -59,10 +59,13 @@ internal fun Prompt.toOllamaChatMessages(model: LLModel): List<OllamaChatMessage
 }
 
 private fun Message.User.toOllamaChatMessage(model: LLModel): OllamaChatMessageDTO {
+    val text = StringBuilder()
     val images = buildList {
         parts.forEach { part ->
             when (part) {
-                is ContentPart.Text -> {}
+                is ContentPart.Text -> {
+                    text.append(part.text)
+                }
                 is ContentPart.Image -> {
                     require(LLMCapability.Vision.Image in model.capabilities) {
                         "Model ${model.id} doesn't support images"
@@ -77,44 +80,27 @@ private fun Message.User.toOllamaChatMessage(model: LLModel): OllamaChatMessageD
                 }
 
                 is ContentPart.File -> {
-                    // Ollama doesn't support file attachments directly,
-                    // so we skip them here. They can be handled as text attachments below.
+                    val fileContent = when (val actualContent = part.content) {
+                        is AttachmentContent.PlainText -> {
+                            actualContent.text
+                        }
+
+                        is AttachmentContent.Binary -> actualContent.asBase64()
+
+                        else -> throw IllegalArgumentException("Unsupported file attachment content: ${content::class}")
+                    }
+
+                    text.append("\n\n$fileContent")
                 }
+
                 else -> throw IllegalArgumentException("Unsupported attachment type: $part")
             }
         }
     }
 
-    var textAttachments = ""
-
-    parts.forEach { part ->
-        when (part) {
-            is ContentPart.File -> {
-                val content = part.content
-                when (content) {
-                    is AttachmentContent.PlainText -> {
-                        textAttachments += "\n\n${content.text}"
-                    }
-
-                    is AttachmentContent.Binary -> content.asBase64()
-
-                    else -> throw IllegalArgumentException("Unsupported file attachment content: ${content::class}")
-                }
-            }
-
-            else -> { }
-        }
-    }
-
-    val contentWithAttachments = if (textAttachments.isNotEmpty()) {
-        "$content\n\n$textAttachments"
-    } else {
-        content
-    }
-
     return OllamaChatMessageDTO(
         role = "user",
-        content = contentWithAttachments,
+        content = text.toString(),
         images = images.takeIf { it.isNotEmpty() }
     )
 }
