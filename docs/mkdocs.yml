@@ -13,7 +13,6 @@ nav:
           - Functional agents: functional-agents.md
           - Complex workflow agents: complex-workflow-agents.md
       - Prompts: prompt-api.md
-      - LLM parameters: llm-parameters.md
       - Tools:
           - Overview: tools-overview.md
           - Built-in tools: built-in-tools.md
@@ -33,6 +32,7 @@ nav:
           - A2A server implementation: a2a-server.md
           - A2A client implementation: a2a-client.md
           - A2A and Koog integration: a2a-koog-integration.md
+      - LLM parameters: llm-parameters.md
       - Model capabilities: model-capabilities.md
       - Content moderation: content-moderation.md
       - Backend framework integrations:
@@ -128,8 +128,6 @@ plugins:
           - complex-workflow-agents.md: This page explains how you can create agents that handle complex workflows by defining custom strategies, tools, configurations, and custom input and output types.
         Prompts:
           - prompt-api.md: This page includes detailed instructions about the use of Prompt API, which provides a comprehensive toolkit for interacting with Large Language Models in production applications.
-        LLM Parameters:
-          - llm-parameters.md: This page provides details about LLM Parameters, which allow you to control and customize the behavior of language models by adjusting parameters like temperature, token limits, schemas, and tool choices.
         Tools:
           - tools-overview.md: This page provides a broad overview of the implementation of tools in Koog.
           - built-in-tools.md: This page provides details about built-in tools that handle common scenarios of agent-user interaction.
@@ -152,6 +150,8 @@ plugins:
           - a2a-server.md: This page provides details about the A2A server implementation in the Koog agentic framework. The A2A server is responsible for handling requests from A2A clients according to the A2A protocol specification.
           - a2a-client.md: This page provides details about the A2A client implementation in the Koog agentic framework. The A2A client is responsible for sending requests to A2A servers according to the A2A protocol specification.
           - a2a-koog-integration.md: This page provides details about the integration of A2A with Koog agents. It includes information about how to define your agent as A2A server and connect it to the Koog agent system.
+        LLM Parameters:
+          - llm-parameters.md: This page provides details about LLM Parameters, which allow you to control and customize the behavior of language models by adjusting parameters like temperature, token limits, schemas, and tool choices.
         Model capabilities:
           - model-capabilities.md: This page provides an overview of different features or parameters that the models support, referred to as model capabilities.
         Content moderation:
