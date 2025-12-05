@@ -39,19 +39,17 @@ class AIAgentLLMWriteSessionTest {
 
     private class TestEnvironment(private val toolRegistry: ToolRegistry) : AIAgentEnvironment {
         @OptIn(InternalAgentToolsApi::class)
-        override suspend fun executeTools(toolCalls: List<Message.Tool.Call>): List<ReceivedToolResult> {
-            return toolCalls.map { toolCall ->
-                val tool = toolRegistry.getTool(toolCall.tool)
-                val args = tool.decodeArgs(toolCall.contentJson)
-                val result = tool.executeUnsafe(args)
+        override suspend fun executeTool(toolCall: Message.Tool.Call): ReceivedToolResult {
+            val tool = toolRegistry.getTool(toolCall.tool)
+            val args = tool.decodeArgs(toolCall.contentJson)
+            val result = tool.executeUnsafe(args)
 
-                ReceivedToolResult(
-                    id = toolCall.id,
-                    tool = toolCall.tool,
-                    content = tool.encodeResultToStringUnsafe(result),
-                    result = tool.encodeResultUnsafe(result)
-                )
-            }
+            return ReceivedToolResult(
+                id = toolCall.id,
+                tool = toolCall.tool,
+                content = tool.encodeResultToStringUnsafe(result),
+                result = tool.encodeResultUnsafe(result)
+            )
         }
 
         override suspend fun reportProblem(exception: Throwable) {

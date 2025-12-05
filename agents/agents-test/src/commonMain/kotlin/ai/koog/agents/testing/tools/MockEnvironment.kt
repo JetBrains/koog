@@ -54,50 +54,33 @@ public class MockEnvironment(
      * 1. First checking if there are any mocked responses for the tool call
      * 2. If no mocks are found, executing the actual tool implementation
      *
-     * @param toolCalls The list of tool calls to execute
+     * @param toolCall The list of tool calls to execute
      * @return A list of [ReceivedToolResult] objects containing the results of the tool calls
      */
-    override suspend fun executeTools(toolCalls: List<Message.Tool.Call>): List<ReceivedToolResult> {
-        return toolCalls.map {
-            executeTool(it)
-        }
-    }
-
-    /**
-     * Executes a single tool call and returns its result.
-     *
-     * The execution follows this process:
-     * 1. If the prompt executor is a [MockLLMExecutor], check for matching mocked tool actions
-     * 2. If a matching mock is found, use it to generate the result
-     * 3. Otherwise, retrieve the actual tool from the registry and execute it
-     *
-     * @param functionCall The tool call to execute
-     * @return A [ReceivedToolResult] containing the result of the tool call
-     */
-    private suspend fun executeTool(functionCall: Message.Tool.Call): ReceivedToolResult {
+    override suspend fun executeTool(toolCall: Message.Tool.Call): ReceivedToolResult {
         if (promptExecutor is MockLLMExecutor) {
             promptExecutor.toolActions
-                .find { it.satisfies(functionCall) }
-                ?.invokeAndSerialize(functionCall)
+                .find { it.satisfies(toolCall) }
+                ?.invokeAndSerialize(toolCall)
                 ?.let { (result, content) ->
-                    val tool: Tool<*, *> = toolRegistry.getTool(functionCall.tool)
+                    val tool: Tool<*, *> = toolRegistry.getTool(toolCall.tool)
                     return ReceivedToolResult(
-                        id = functionCall.id,
-                        tool = functionCall.tool,
+                        id = toolCall.id,
+                        tool = toolCall.tool,
                         content = content,
                         result = tool.encodeResultUnsafe(result)
                     )
                 }
         }
 
-        val tool = toolRegistry.getTool(functionCall.tool)
+        val tool = toolRegistry.getTool(toolCall.tool)
 
-        val args = tool.decodeArgs(functionCall.contentJson)
+        val args = tool.decodeArgs(toolCall.contentJson)
         val result = tool.executeUnsafe(args)
 
         return ReceivedToolResult(
-            id = functionCall.id,
-            tool = functionCall.tool,
+            id = toolCall.id,
+            tool = toolCall.tool,
             content = tool.encodeResultToStringUnsafe(result),
             result = tool.encodeResultUnsafe(result)
         )

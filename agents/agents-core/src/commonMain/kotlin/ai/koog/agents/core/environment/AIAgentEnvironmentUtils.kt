@@ -8,14 +8,14 @@ import ai.koog.agents.core.model.message.EnvironmentToolResultMultipleToAgentMes
 import ai.koog.agents.core.model.message.EnvironmentToolResultSingleToAgentMessage
 
 internal object AIAgentEnvironmentUtils {
-    fun EnvironmentToAgentMessage.mapToToolResult(): List<ReceivedToolResult> {
+    fun EnvironmentToAgentMessage.mapToToolResult(): ReceivedToolResult {
         return when (this) {
             is EnvironmentToolResultSingleToAgentMessage -> {
-                listOf(this.content.toResult())
+                this.content.toResult()
             }
 
             is EnvironmentToolResultMultipleToAgentMessage -> {
-                this.content.map { it.toResult() }
+                this.content.toResult()
             }
 
             is EnvironmentToAgentErrorMessage -> {
