@@ -183,7 +183,7 @@ class OllamaAgentIntegrationTest : AIAgentTestBase() {
         ) {
             install(EventHandler) {
                 onToolCallStarting { eventContext ->
-                    toolCalls.add(eventContext.tool.name)
+                    toolCalls.add(eventContext.toolName)
                 }
 
                 onLLMCallStarting { eventContext ->

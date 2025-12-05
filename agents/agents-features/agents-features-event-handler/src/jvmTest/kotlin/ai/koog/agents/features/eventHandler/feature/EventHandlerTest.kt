@@ -10,6 +10,8 @@ import ai.koog.agents.core.dsl.extension.nodeLLMRequestStreamingAndSendResults
 import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
 import ai.koog.agents.core.dsl.extension.onAssistantMessage
 import ai.koog.agents.core.dsl.extension.onToolCall
+import ai.koog.agents.core.environment.ReceivedToolResult
+import ai.koog.agents.core.environment.ToolResultKind
 import ai.koog.agents.core.feature.handler.subgraph.SubgraphExecutionEventContext
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolRegistry
@@ -205,6 +207,20 @@ class EventHandlerTest {
         }
 
         val runId = eventsCollector.runId
+        val dummyToolName = dummyTool.name
+        val dummyToolDescription = dummyTool.description
+        val dummyToolArgsEncoded = dummyTool.encodeArgs(DummyTool.Args("test"))
+        val dummyToolResultEncoded = dummyTool.encodeResult(dummyTool.result)
+
+        val dummyToolReceivedToolResult = ReceivedToolResult(
+            id = null,
+            tool = dummyToolName,
+            toolArgs = dummyToolArgsEncoded,
+            toolDescription = dummyToolDescription,
+            content = dummyTool.result,
+            resultKind = ToolResultKind.Success,
+            result = dummyToolResultEncoded
+        )
 
         val expectedEvents = listOf(
             "OnAgentStarting (agent id: $agentId, run id: $runId)",
@@ -223,34 +239,36 @@ class EventHandlerTest {
                 "role: ${Message.Role.User}, message: $userPrompt, " +
                 "role: ${Message.Role.Assistant}, message: $assistantPrompt, " +
                 "role: ${Message.Role.User}, message: $userPrompt" +
-                "}], temperature: $temperature, model: ${model.eventString}, tools: [${dummyTool.name}], responses: [role: ${Message.Role.Tool}, message: {\"dummy\":\"test\"}])",
+                "}], temperature: $temperature, model: ${model.eventString}, tools: [$dummyToolName], responses: [role: ${Message.Role.Tool}, message: {\"dummy\":\"test\"}])",
             "OnNodeExecutionCompleted (run id: $runId, node: test-llm-call, input: $userPrompt, output: " +
-                "Call(id=null, tool=${dummyTool.name}, parts=[Text(text={\"dummy\":\"test\"})], metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}, metadata=null)))",
+                "Call(id=null, tool=$dummyToolName, parts=[Text(text=$dummyToolArgsEncoded)], metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}, metadata=null)))",
             "OnNodeExecutionStarting (run id: $runId, node: test-tool-call, input: " +
-                "Call(id=null, tool=${dummyTool.name}, parts=[Text(text={\"dummy\":\"test\"})], metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}, metadata=null)))",
-            "OnToolCallStarting (run id: $runId, tool: ${dummyTool.name}, args: Args(dummy=test))",
-            "OnToolCallCompleted (run id: $runId, tool: ${dummyTool.name}, args: Args(dummy=test), result: ${dummyTool.result})",
+                "Call(id=null, tool=$dummyToolName, parts=[Text(text=$dummyToolArgsEncoded)], metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}, metadata=null)))",
+            "OnToolCallStarting (run id: $runId, tool: $dummyToolName, args: $dummyToolArgsEncoded)",
+            "OnToolCallCompleted (run id: $runId, tool: $dummyToolName, args: $dummyToolArgsEncoded, result: $dummyToolResultEncoded)",
             "OnNodeExecutionCompleted (run id: $runId, node: test-tool-call, input: " +
-                "Call(id=null, tool=${dummyTool.name}, parts=[Text(text={\"dummy\":\"test\"})], metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}, metadata=null)), output: ReceivedToolResult(id=null, tool=${dummyTool.name}, content=${dummyTool.result}, result=${dummyTool.encodeResult(dummyTool.result)}))",
-            "OnNodeExecutionStarting (run id: $runId, node: test-node-llm-send-tool-result, input: ReceivedToolResult(id=null, tool=${dummyTool.name}, content=${dummyTool.result}, result=${dummyTool.encodeResult(dummyTool.result)}))",
+                "Call(id=null, tool=$dummyToolName, parts=[Text(text=$dummyToolArgsEncoded)], " +
+                "metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}, metadata=null)), output: $dummyToolReceivedToolResult)",
+            "OnNodeExecutionStarting (run id: $runId, node: test-node-llm-send-tool-result, input: $dummyToolReceivedToolResult)",
             "OnLLMCallStarting (run id: $runId, prompt: id: $promptId, messages: [{" +
                 "role: ${Message.Role.System}, message: $systemPrompt, " +
                 "role: ${Message.Role.User}, message: $userPrompt, " +
                 "role: ${Message.Role.Assistant}, message: $assistantPrompt, " +
                 "role: ${Message.Role.User}, message: $userPrompt, " +
-                "role: ${Message.Role.Tool}, message: {\"dummy\":\"test\"}, " +
+                "role: ${Message.Role.Tool}, message: $dummyToolArgsEncoded, " +
                 "role: ${Message.Role.Tool}, message: ${dummyTool.result}" +
-                "}], temperature: $temperature, tools: [${dummyTool.name}])",
+                "}], temperature: $temperature, tools: [$dummyToolName])",
             "OnLLMCallCompleted (run id: $runId, prompt: id: $promptId, messages: [{" +
                 "role: ${Message.Role.System}, message: $systemPrompt, " +
                 "role: ${Message.Role.User}, message: $userPrompt, " +
                 "role: ${Message.Role.Assistant}, message: $assistantPrompt, " +
                 "role: ${Message.Role.User}, message: $userPrompt, " +
-                "role: ${Message.Role.Tool}, message: {\"dummy\":\"test\"}, " +
+                "role: ${Message.Role.Tool}, message: $dummyToolArgsEncoded, " +
                 "role: ${Message.Role.Tool}, message: ${dummyTool.result}" +
-                "}], temperature: $temperature, model: openai:gpt-4o, tools: [${dummyTool.name}], responses: [role: ${Message.Role.Assistant}, message: Return test result])",
-            "OnNodeExecutionCompleted (run id: $runId, node: test-node-llm-send-tool-result, input: " +
-                "ReceivedToolResult(id=null, tool=${dummyTool.name}, content=${dummyTool.result}, result=${dummyTool.encodeResult(dummyTool.result)}), output: Assistant(parts=[Text(text=Return test result)], metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}, metadata=null), finishReason=null))",
+                "}], temperature: $temperature, model: openai:gpt-4o, tools: [$dummyToolName], responses: [role: ${Message.Role.Assistant}, message: Return test result])",
+            "OnNodeExecutionCompleted (run id: $runId, node: test-node-llm-send-tool-result, " +
+                "input: $dummyToolReceivedToolResult, " +
+                "output: Assistant(parts=[Text(text=$mockResponse)], metaInfo=ResponseMetaInfo(timestamp=2023-01-01T00:00:00Z, totalTokensCount=null, inputTokensCount=null, outputTokensCount=null, additionalInfo={}, metadata=null), finishReason=null))",
             "OnNodeExecutionStarting (run id: $runId, node: __finish__, input: $mockResponse)",
             "OnNodeExecutionCompleted (run id: $runId, node: __finish__, input: $mockResponse, output: $mockResponse)",
             "OnStrategyCompleted (run id: $runId, strategy: $strategyName, result: $mockResponse)",

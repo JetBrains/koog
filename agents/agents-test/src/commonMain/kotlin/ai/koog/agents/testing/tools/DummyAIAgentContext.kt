@@ -138,7 +138,8 @@ public class DummyAIAgentContext(
         storage: AIAgentStorage,
         runId: String,
         strategyName: String,
-        pipeline: AIAgentGraphPipeline
+        pipeline: AIAgentGraphPipeline,
+        parentContext: AIAgentGraphContextBase?,
     ): AIAgentGraphContextBase = DummyAIAgentContext(
         builder.copy(
             environment = environment,

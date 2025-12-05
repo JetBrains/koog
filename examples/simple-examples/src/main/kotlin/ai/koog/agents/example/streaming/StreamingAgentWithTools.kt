@@ -33,7 +33,7 @@ suspend fun main() {
         val agent = openAiAgent(toolRegistry, executor) {
             handleEvents {
                 onToolCallStarting { context ->
-                    println("\n🔧 Using ${context.tool.name} with ${context.toolArgs}... ")
+                    println("\n🔧 Using ${context.toolName} with ${context.toolArgs}... ")
                 }
                 onLLMStreamingFrameReceived { context ->
                     (context.streamFrame as? StreamFrame.Append)?.let { frame ->

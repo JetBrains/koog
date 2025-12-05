@@ -71,10 +71,10 @@ internal val ToolValidationFailedEvent.toolValidationErrorEventFormat
     get() = "${this::class.simpleName} (run id: $runId, tool: $toolName, tool args: $toolArgs, validation error: $error)"
 
 internal val ToolCallFailedEvent.toolCallFailureEventFormat
-    get() = "${this::class.simpleName} (run id: $runId, tool: $toolName, tool args: $toolArgs, error: ${error.message})"
+    get() = "${this::class.simpleName} (run id: $runId, tool: $toolName, tool args: $toolArgs, error: ${error?.message})"
 
 internal val ToolCallCompletedEvent.toolCallResultEventFormat
-    get() = "${this::class.simpleName} (run id: $runId, tool: $toolName, tool args: $toolArgs, result: $result)"
+    get() = "${this::class.simpleName} (run id: $runId, tool: $toolName, tool args: $toolArgs, description: $toolDescription, result: $result)"
 
 internal val FeatureMessage.traceMessage: String
     get() {

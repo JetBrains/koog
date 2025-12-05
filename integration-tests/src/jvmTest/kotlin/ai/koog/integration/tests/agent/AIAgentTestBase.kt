@@ -157,8 +157,8 @@ open class AIAgentTestBase {
                 }
 
                 onToolCallStarting { eventContext ->
-                    actualToolCalls.add(eventContext.tool.name)
-                    toolExecutionCounter.add(eventContext.tool.name)
+                    actualToolCalls.add(eventContext.toolName)
+                    toolExecutionCounter.add(eventContext.toolName)
                 }
             }
 

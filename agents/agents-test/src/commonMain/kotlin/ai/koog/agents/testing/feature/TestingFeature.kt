@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalUuidApi::class, InternalAgentsApi::class)
-
 package ai.koog.agents.testing.feature
 
 import ai.koog.agents.core.agent.AIAgent
@@ -16,9 +14,9 @@ import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.entity.AIAgentSubgraph
 import ai.koog.agents.core.agent.entity.FinishNode
 import ai.koog.agents.core.agent.entity.createStorageKey
-import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.environment.ReceivedToolResult
+import ai.koog.agents.core.environment.ToolResultKind
 import ai.koog.agents.core.feature.AIAgentGraphFeature
 import ai.koog.agents.core.feature.PromptExecutorProxy
 import ai.koog.agents.core.feature.config.FeatureConfig
@@ -36,7 +34,6 @@ import ai.koog.prompt.tokenizer.Tokenizer
 import kotlinx.datetime.Clock
 import org.jetbrains.annotations.TestOnly
 import kotlin.reflect.KType
-import kotlin.uuid.ExperimentalUuidApi
 
 /**
  * Represents a reference to a specific type of node within an AI agent subgraph. This sealed class
@@ -537,9 +534,9 @@ public class Testing {
             internal val tokenizer: Tokenizer?,
         ) {
 
-            private val start: NodeReference.Start<Input> = NodeReference.Start<Input>()
+            private val start: NodeReference.Start<Input> = NodeReference.Start()
 
-            private val finish: NodeReference.Finish<Output> = NodeReference.Finish<Output>()
+            private val finish: NodeReference.Finish<Output> = NodeReference.Finish()
 
             /**
              * Stores a mapping of node names to their corresponding references.
@@ -1126,33 +1123,6 @@ public class Testing {
                 throw AssertionError(message)
             }
         }
-
-        /**
-         * Compares two lists and throws an AssertionError if they are not equal, with a specified error message.
-         *
-         * @param expected The expected list of elements.
-         * @param actual The actual list of elements to compare against the expected list.
-         * @param message The message to include in the assertion error if the lists are not equal.
-         */
-        private fun assertListEquals(expected: List<*>, actual: List<*>, message: String) {
-            if (expected != actual) {
-                throw AssertionError(message)
-            }
-        }
-
-        /**
-         * Asserts that the given two values are equal. If they are not equal, it throws an AssertionError
-         * with the provided message.
-         *
-         * @param expected the expected value to compare
-         * @param actual the actual value to compare against the expected value
-         * @param message the assertion failure message to include in the exception if the values are not equal
-         */
-        private fun assertValueEquals(expected: Any?, actual: Any?, message: String) {
-            if (expected != actual) {
-                throw AssertionError(message)
-            }
-        }
     }
 }
 
@@ -1234,8 +1204,16 @@ public fun Testing.Config.SubgraphAssertionsBuilder<*, *>.assistantMessage(
  * }
  * ```
  */
-public fun <Result> toolResult(tool: Tool<*, Result>, result: Result): ReceivedToolResult =
-    ReceivedToolResult(null, tool.name, tool.encodeResultToString(result), tool.encodeResult(result))
+public fun <TArgs, TResult> toolResult(tool: Tool<TArgs, TResult>, args: TArgs, result: TResult): ReceivedToolResult =
+    ReceivedToolResult(
+        id = null,
+        tool = tool.name,
+        toolArgs = tool.encodeArgs(args),
+        toolDescription = tool.description,
+        content = tool.encodeResultToString(result),
+        resultKind = ToolResultKind.Success,
+        result = tool.encodeResult(result)
+    )
 
 /**
  * Constructs a `ReceivedToolResult` object using the provided tool and result string.
@@ -1258,8 +1236,16 @@ public fun <Result> toolResult(tool: Tool<*, Result>, result: Result): ReceivedT
  * }
  * ```
  */
-public fun toolResult(tool: SimpleTool<*>, result: String): ReceivedToolResult =
-    ReceivedToolResult(null, tool.name, result, tool.encodeResult(result))
+public fun <TArgs> toolResult(tool: SimpleTool<TArgs>, args: TArgs, result: String): ReceivedToolResult =
+    ReceivedToolResult(
+        id = null,
+        tool = tool.name,
+        toolArgs = tool.encodeArgs(args),
+        toolDescription = tool.description,
+        content = tool.encodeResultToString(result),
+        resultKind = ToolResultKind.Success,
+        result = tool.encodeResult(result)
+    )
 
 /**
  * Enables and configures the Testing feature for a Kotlin AI Agent instance.

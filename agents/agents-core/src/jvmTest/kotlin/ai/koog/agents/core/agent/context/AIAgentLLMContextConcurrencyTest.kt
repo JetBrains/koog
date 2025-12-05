@@ -6,6 +6,7 @@ import ai.koog.agents.core.agent.config.MissingToolsConversionStrategy
 import ai.koog.agents.core.agent.config.ToolCallDescriber
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.environment.ReceivedToolResult
+import ai.koog.agents.core.environment.ToolResultKind
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.ToolRegistry
@@ -161,8 +162,11 @@ class AIAgentLLMContextConcurrencyTest {
                 return ReceivedToolResult(
                     id = toolCall.id,
                     tool = toolCall.tool,
-                    content = toolCall.content,
-                    result = JsonPrimitive("Test result content")
+                    toolArgs = toolCall.contentJson,
+                    toolDescription = null,
+                    content = "",
+                    resultKind = ToolResultKind.Success,
+                    result = JsonPrimitive("")
                 )
             }
 

@@ -367,8 +367,12 @@ class AIAgentPipelineTest {
 
         val actualEvents = interceptedEvents.filter { it.startsWith("Tool: ") }
         val expectedEvents = listOf(
-            "Tool: call tool (tool: plus, args: Args(a=2.2, b=2.2))",
-            "Tool: finish tool call with result (tool: plus, result: 4.4)"
+            "Tool: call tool (tool: ${CalculatorTools.PlusTool.name}, args: ${
+                CalculatorTools.PlusTool.encodeArgs(CalculatorTools.CalculatorTool.Args(2.2F, 2.2F))
+            })",
+            "Tool: finish tool call with result (tool: ${CalculatorTools.PlusTool.name}, result: ${
+                CalculatorTools.PlusTool.encodeResult(CalculatorTools.CalculatorTool.Result(4.4F))
+            })"
         )
 
         assertEquals(

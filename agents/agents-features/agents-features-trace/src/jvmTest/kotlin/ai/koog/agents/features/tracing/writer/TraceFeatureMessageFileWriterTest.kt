@@ -8,6 +8,7 @@ import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
 import ai.koog.agents.core.dsl.extension.onAssistantMessage
 import ai.koog.agents.core.dsl.extension.onToolCall
+import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.feature.message.FeatureEvent
 import ai.koog.agents.core.feature.message.FeatureMessage
 import ai.koog.agents.core.feature.model.FeatureStringMessage
@@ -160,6 +161,24 @@ class TraceFeatureMessageFileWriterTest {
                 agent.run(userPrompt)
             }
 
+            val dummyToolArgsEncoded = dummyTool.encodeArgs(DummyTool.Args("test"))
+            val dummyToolResultEncoded = dummyTool.encodeResult(dummyTool.result)
+            val dummyToolName = dummyTool.name
+            val dummyToolDescription = dummyTool.description
+
+            val dummyReceivedToolResultEncoded = @OptIn(InternalAgentsApi::class)
+            SerializationUtils.encodeDataToJsonElementOrNull(
+                data = receivedToolResult(
+                    toolCallId = "0",
+                    toolName = dummyToolName,
+                    toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
+                    toolDescription = dummyToolDescription,
+                    content = dummyTool.result,
+                    result = dummyToolResultEncoded,
+                ),
+                dataType = typeOf<ReceivedToolResult>()
+            )
+
             val expectedMessages = listOf(
                 "${AgentStartingEvent::class.simpleName} (agent id: $agentId, run id: $runId)",
                 "${GraphStrategyStartingEvent::class.simpleName} (run id: $runId, strategy: $strategyName)",
@@ -179,22 +198,22 @@ class TraceFeatureMessageFileWriterTest {
                             content = userPrompt
                         )
                     ).traceString
-                }, model: ${testModel.toModelInfo().modelIdentifierName}, tools: [${dummyTool.name}])",
+                }, model: ${testModel.toModelInfo().modelIdentifierName}, tools: [$dummyToolName])",
                 "${LLMCallCompletedEvent::class.simpleName} (run id: $runId, prompt: ${
                     expectedPrompt.copy(
                         messages = expectedPrompt.messages + userMessage(
                             content = userPrompt
                         )
                     ).traceString
-                }, model: ${testModel.toModelInfo().modelIdentifierName}, responses: [{role: Tool, message: {\"dummy\":\"test\"}}])",
+                }, model: ${testModel.toModelInfo().modelIdentifierName}, responses: [{role: Tool, message: $dummyToolArgsEncoded}])",
                 "${NodeExecutionCompletedEvent::class.simpleName} (run id: $runId, node: test-llm-call, " +
                     "input: \"$userPrompt\", " +
                     "output: ${
                         @OptIn(InternalAgentsApi::class)
                         SerializationUtils.encodeDataToJsonElementOrNull(
                             data = toolCallMessage(
-                                toolName = dummyTool.name,
-                                content = """{"dummy":"test"}"""
+                                toolName = dummyToolName,
+                                content = dummyToolArgsEncoded.toString()
                             ),
                             dataType = typeOf<Message>()
                         )}" +
@@ -204,61 +223,63 @@ class TraceFeatureMessageFileWriterTest {
                         @OptIn(InternalAgentsApi::class)
                         SerializationUtils.encodeDataToJsonElementOrNull(
                             data = toolCallMessage(
-                                toolName = dummyTool.name,
-                                content = """{"dummy":"test"}"""
+                                toolName = dummyToolName,
+                                content = dummyToolArgsEncoded.toString()
                             ),
                             dataType = typeOf<Message.Tool.Call>()
                         )}" +
                     ")",
-                "${ToolCallStartingEvent::class.simpleName} (run id: $runId, tool: ${dummyTool.name}, tool args: {\"dummy\":\"test\"})",
-                "${ToolCallCompletedEvent::class.simpleName} (run id: $runId, tool: ${dummyTool.name}, tool args: {\"dummy\":\"test\"}, result: ${dummyTool.result})",
+                "${ToolCallStartingEvent::class.simpleName} (run id: $runId, tool: $dummyToolName, tool args: $dummyToolArgsEncoded)",
+                "${ToolCallCompletedEvent::class.simpleName} (run id: $runId, tool: $dummyToolName, tool args: $dummyToolArgsEncoded, description: $dummyToolDescription, result: $dummyToolResultEncoded)",
                 "${NodeExecutionCompletedEvent::class.simpleName} (run id: $runId, node: test-tool-call, " +
                     "input: ${
                         @OptIn(InternalAgentsApi::class)
                         SerializationUtils.encodeDataToJsonElementOrNull(
                             data = toolCallMessage(
-                                toolName = dummyTool.name,
-                                content = """{"dummy":"test"}"""
+                                toolName = dummyToolName,
+                                content = dummyToolArgsEncoded.toString()
                             ),
                             dataType = typeOf<Message.Tool.Call>()
                         )}, " +
-                    "output: {\"id\":\"0\",\"tool\":\"${dummyTool.name}\",\"content\":\"${dummyTool.result}\",\"result\":${dummyTool.encodeResult(dummyTool.result)}}" +
-                    ")",
+                    "output: $dummyReceivedToolResultEncoded)",
                 "${NodeExecutionStartingEvent::class.simpleName} (" +
                     "run id: $runId, " +
                     "node: test-node-llm-send-tool-result, " +
-                    "input: {\"id\":\"0\",\"tool\":\"${dummyTool.name}\",\"content\":\"${dummyTool.result}\",\"result\":${dummyTool.encodeResult(dummyTool.result)}}" +
-                    ")",
+                    "input: $dummyReceivedToolResultEncoded)",
                 "${LLMCallStartingEvent::class.simpleName} (run id: $runId, prompt: ${
                     expectedPrompt.copy(
                         messages = expectedPrompt.messages + listOf(
                             userMessage(content = userPrompt),
-                            toolCallMessage(dummyTool.name, content = """{"dummy":"test"}"""),
+                            toolCallMessage(dummyToolName, content = dummyToolArgsEncoded.toString()),
                             receivedToolResult(
-                                "0",
-                                dummyTool.name,
-                                dummyTool.result,
-                                dummyTool.encodeResult(dummyTool.result)
+                                toolCallId = "0",
+                                toolName = dummyToolName,
+                                toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
+                                toolDescription = dummyToolDescription,
+                                content = dummyTool.result,
+                                result = dummyToolResultEncoded,
                             ).toMessage(clock = testClock)
                         )
                     ).traceString
-                }, model: ${testModel.toModelInfo().modelIdentifierName}, tools: [${dummyTool.name}])",
+                }, model: ${testModel.toModelInfo().modelIdentifierName}, tools: [$dummyToolName])",
                 "${LLMCallCompletedEvent::class.simpleName} (run id: $runId, prompt: ${
                     expectedPrompt.copy(
                         messages = expectedPrompt.messages + listOf(
                             userMessage(content = userPrompt),
-                            toolCallMessage(dummyTool.name, content = """{"dummy":"test"}"""),
+                            toolCallMessage(dummyToolName, content = dummyToolArgsEncoded.toString()),
                             receivedToolResult(
-                                "0",
-                                dummyTool.name,
-                                dummyTool.result,
-                                dummyTool.encodeResult(dummyTool.result)
+                                toolCallId = "0",
+                                toolName = dummyToolName,
+                                toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
+                                toolDescription = dummyToolDescription,
+                                content = dummyTool.result,
+                                result = dummyToolResultEncoded,
                             ).toMessage(clock = testClock)
                         )
                     ).traceString
                 }, model: ${testModel.toModelInfo().modelIdentifierName}, responses: [{${expectedResponse.traceString}}])",
                 "${NodeExecutionCompletedEvent::class.simpleName} (run id: $runId, node: test-node-llm-send-tool-result, " +
-                    "input: {\"id\":\"0\",\"tool\":\"${dummyTool.name}\",\"content\":\"${dummyTool.result}\",\"result\":${dummyTool.encodeResult(dummyTool.result)}}, " +
+                    "input: $dummyReceivedToolResultEncoded, " +
                     "output: ${
                         @OptIn(InternalAgentsApi::class)
                         SerializationUtils.encodeDataToJsonElementOrNull(
@@ -499,6 +520,11 @@ class TraceFeatureMessageFileWriterTest {
                 agent.run(userPrompt)
             }
 
+            val dummyToolArgsEncoded = dummyTool.encodeArgs(DummyTool.Args("test"))
+            val dummyToolResultEncoded = dummyTool.encodeResult(dummyTool.result)
+            val dummyToolName = dummyTool.name
+            val dummyToolDescription = dummyTool.description
+
             val expectedMessages = listOf(
                 "${LLMCallStartingEvent::class.simpleName} (run id: $runId, prompt: ${
                     expectedPrompt.copy(
@@ -506,38 +532,42 @@ class TraceFeatureMessageFileWriterTest {
                             content = userPrompt
                         )
                     ).traceString
-                }, model: ${testModel.toModelInfo().modelIdentifierName}, tools: [${dummyTool.name}])",
+                }, model: ${testModel.toModelInfo().modelIdentifierName}, tools: [$dummyToolName])",
                 "${LLMCallCompletedEvent::class.simpleName} (run id: $runId, prompt: ${
                     expectedPrompt.copy(
                         messages = expectedPrompt.messages + userMessage(
                             content = userPrompt
                         )
                     ).traceString
-                }, model: ${testModel.toModelInfo().modelIdentifierName}, responses: [{role: Tool, message: {\"dummy\":\"test\"}}])",
+                }, model: ${testModel.toModelInfo().modelIdentifierName}, responses: [{role: ${Message.Role.Tool.name}, message: $dummyToolArgsEncoded}])",
                 "${LLMCallStartingEvent::class.simpleName} (run id: $runId, prompt: ${
                     expectedPrompt.copy(
                         messages = expectedPrompt.messages + listOf(
                             userMessage(content = userPrompt),
-                            toolCallMessage(dummyTool.name, content = """{"dummy":"test"}"""),
+                            toolCallMessage(dummyToolName, content = dummyToolArgsEncoded.toString()),
                             receivedToolResult(
-                                "0",
-                                dummyTool.name,
-                                dummyTool.result,
-                                dummyTool.encodeResult(dummyTool.result)
+                                toolCallId = "0",
+                                toolName = dummyToolName,
+                                toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
+                                toolDescription = dummyToolDescription,
+                                content = dummyTool.result,
+                                result = dummyToolResultEncoded,
                             ).toMessage(clock = testClock)
                         )
                     ).traceString
-                }, model: ${testModel.toModelInfo().modelIdentifierName}, tools: [${dummyTool.name}])",
+                }, model: ${testModel.toModelInfo().modelIdentifierName}, tools: [$dummyToolName])",
                 "${LLMCallCompletedEvent::class.simpleName} (run id: $runId, prompt: ${
                     expectedPrompt.copy(
                         messages = expectedPrompt.messages + listOf(
                             userMessage(content = userPrompt),
-                            toolCallMessage(dummyTool.name, content = """{"dummy":"test"}"""),
+                            toolCallMessage(dummyToolName, content = dummyToolArgsEncoded.toString()),
                             receivedToolResult(
-                                "0",
-                                dummyTool.name,
-                                dummyTool.result,
-                                dummyTool.encodeResult(dummyTool.result)
+                                toolCallId = "0",
+                                toolName = dummyToolName,
+                                toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
+                                toolDescription = dummyToolDescription,
+                                content = dummyTool.result,
+                                result = dummyToolResultEncoded,
                             ).toMessage(clock = testClock)
                         )
                     ).traceString

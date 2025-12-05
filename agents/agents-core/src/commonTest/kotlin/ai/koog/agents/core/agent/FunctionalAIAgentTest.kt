@@ -647,7 +647,7 @@ class FunctionalAIAgentTest {
         // Only the normal tool goes through environment, finish tool is internal
         assertEquals(1, actualToolCalls.size)
         // Verify that DummyTool has been called once with Unit args
-        assertEquals("kotlin.Unit", actualToolCalls.first())
+        assertEquals("{}", actualToolCalls.first())
     }
 
     @Test

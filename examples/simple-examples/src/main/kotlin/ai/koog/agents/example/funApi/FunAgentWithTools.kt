@@ -51,7 +51,7 @@ fun main(): Unit = runBlocking {
     ) {
         install(EventHandler) {
             onToolCallStarting { eventContext ->
-                println("Tool called: tool ${eventContext.tool.name}, args ${eventContext.toolArgs}")
+                println("Tool called: tool ${eventContext.toolName}, args ${eventContext.toolArgs}")
             }
         }
     }

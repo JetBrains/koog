@@ -343,8 +343,8 @@ public class Tracing {
                 val event = ToolCallStartingEvent(
                     runId = eventContext.runId,
                     toolCallId = eventContext.toolCallId,
-                    toolName = eventContext.tool.name,
-                    toolArgs = eventContext.tool.encodeArgsUnsafe(eventContext.toolArgs),
+                    toolName = eventContext.toolName,
+                    toolArgs = eventContext.toolArgs,
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 processMessage(config, event)
@@ -354,8 +354,10 @@ public class Tracing {
                 val event = ToolValidationFailedEvent(
                     runId = eventContext.runId,
                     toolCallId = eventContext.toolCallId,
-                    toolName = eventContext.tool.name,
-                    toolArgs = eventContext.tool.encodeArgsUnsafe(eventContext.toolArgs),
+                    toolName = eventContext.toolName,
+                    toolArgs = eventContext.toolArgs,
+                    toolDescription = eventContext.toolDescription,
+                    message = eventContext.message,
                     error = eventContext.error,
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
@@ -366,9 +368,10 @@ public class Tracing {
                 val event = ToolCallFailedEvent(
                     runId = eventContext.runId,
                     toolCallId = eventContext.toolCallId,
-                    toolName = eventContext.tool.name,
-                    toolArgs = eventContext.tool.encodeArgsUnsafe(eventContext.toolArgs),
-                    error = eventContext.throwable.toAgentError(),
+                    toolName = eventContext.toolName,
+                    toolArgs = eventContext.toolArgs,
+                    toolDescription = eventContext.toolDescription,
+                    error = eventContext.error,
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 processMessage(config, event)
@@ -378,9 +381,10 @@ public class Tracing {
                 val event = ToolCallCompletedEvent(
                     runId = eventContext.runId,
                     toolCallId = eventContext.toolCallId,
-                    toolName = eventContext.tool.name,
-                    toolArgs = eventContext.tool.encodeArgsUnsafe(eventContext.toolArgs),
-                    result = eventContext.result?.let { result -> eventContext.tool.encodeResultToStringUnsafe(result) },
+                    toolName = eventContext.toolName,
+                    toolArgs = eventContext.toolArgs,
+                    toolDescription = eventContext.toolDescription,
+                    result = eventContext.toolResult,
                     timestamp = pipeline.clock.now().toEpochMilliseconds()
                 )
                 processMessage(config, event)

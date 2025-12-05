@@ -5,6 +5,8 @@ import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.environment.ReceivedToolResult
+import ai.koog.agents.core.environment.ToolResultKind
+import ai.koog.agents.core.feature.AIAgentFeatureTestAPI.testClock
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
@@ -78,7 +80,10 @@ fun receivedToolResult(toolCallId: String?, toolName: String, content: String, r
     ReceivedToolResult(
         id = toolCallId,
         tool = toolName,
+        toolArgs = JsonObject(emptyMap()),
+        toolDescription = null,
         content = content,
+        resultKind = ToolResultKind.Success,
         result = result
     )
 
