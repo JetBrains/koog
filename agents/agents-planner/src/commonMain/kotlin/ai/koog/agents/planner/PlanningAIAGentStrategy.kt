@@ -15,21 +15,27 @@ import ai.koog.agents.core.agent.entity.AIAgentStrategy
 public abstract class PlanningAIAgentStrategy<State, Plan>(
     override val name: String,
 ) : AIAgentStrategy<State, State, AIAgentFunctionalContext> {
-    /***/
+    /**
+     * Builds a plan
+     */
     public abstract suspend fun buildPlan(
         context: AIAgentFunctionalContext,
         state: State,
         plan: Plan?
     ): Plan
 
-    /***/
+    /**
+     * Executes a step in the plan.
+     */
     public abstract suspend fun executeStep(
         context: AIAgentFunctionalContext,
         state: State,
         plan: Plan
     ): State
 
-    /***/
+    /**
+     * Checks if the plan is completed.
+     */
     public abstract suspend fun isPlanCompleted(
         context: AIAgentFunctionalContext,
         state: State,

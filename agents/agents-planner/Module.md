@@ -16,33 +16,10 @@ Key features include:
 
 - Abstract planning strategy framework
 - Simple planning implementation using LLM to create the plan
--
+- Simple planning implementation with a critic component to evaluate the plan quality
+- GOAP planner implementation, with automatic planning based on available actions and desired goals
 
 ## Core Concepts
-
-### Plan
-
-A `Plan` represents a sequence of steps to be executed by an agent to achieve a goal. It provides methods to:
-
-- Check if the plan is completed
-- Execute the next step in the plan
-
-### PlanningAgentState
-
-`PlanningAgentState` represents the current state of a planning agent, including:
-
-- The agent context with access to resources
-- The current value being processed
-- The current plan (if any)
-
-### PlanAssessment
-
-`PlanAssessment` is used to evaluate a plan's execution and determine whether to:
-
-- Continue with the current plan
-- Replan with a specific reason
-
-### PlanningAIAgentStrategy
 
 `PlanningAIAgentStrategy` is an abstract class that implements the planning loop:
 
@@ -75,7 +52,6 @@ A `Plan` represents a sequence of steps to be executed by an agent to achieve a 
 // Create a simple planner
 val planner = SimplePlanner(
     name = "TaskPlanner",
-    toolSelectionStrategy = AllToolsStrategy()
 )
 
 // Create an agent with the planner
@@ -83,7 +59,6 @@ val agent = AIAgent(
     promptExecutor = llmExecutor,
     toolRegistry = toolRegistry,
     strategy = planner,
-    eventHandler = eventHandler
 )
 
 // Run the agent with a task
