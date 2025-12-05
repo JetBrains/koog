@@ -21,6 +21,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonPrimitive
 import org.junit.jupiter.api.Timeout
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicInteger
@@ -156,8 +157,13 @@ class AIAgentLLMContextConcurrencyTest {
 
     private fun createTestEnvironment(): AIAgentEnvironment {
         return object : AIAgentEnvironment {
-            override suspend fun executeTools(toolCalls: List<Message.Tool.Call>): List<ReceivedToolResult> {
-                return emptyList()
+            override suspend fun executeTool(toolCall: Message.Tool.Call): ReceivedToolResult {
+                return ReceivedToolResult(
+                    id = toolCall.id,
+                    tool = toolCall.tool,
+                    content = toolCall.content,
+                    result = JsonPrimitive("Test result content")
+                )
             }
 
             override suspend fun reportProblem(exception: Throwable) {

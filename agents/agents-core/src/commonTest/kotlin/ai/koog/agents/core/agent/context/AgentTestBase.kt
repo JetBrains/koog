@@ -14,6 +14,7 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.llm.OllamaModels
 import ai.koog.prompt.message.Message
+import kotlinx.serialization.json.JsonPrimitive
 import kotlin.reflect.typeOf
 
 open class AgentTestBase {
@@ -23,8 +24,13 @@ open class AgentTestBase {
 
     protected fun createTestEnvironment(id: String = "test-environment"): AIAgentEnvironment {
         return object : AIAgentEnvironment {
-            override suspend fun executeTools(toolCalls: List<Message.Tool.Call>): List<ReceivedToolResult> {
-                return emptyList()
+            override suspend fun executeTool(toolCall: Message.Tool.Call): ReceivedToolResult {
+                return ReceivedToolResult(
+                    id = toolCall.id,
+                    tool = toolCall.tool,
+                    content = toolCall.content,
+                    result = JsonPrimitive("Test result content")
+                )
             }
 
             override suspend fun reportProblem(exception: Throwable) {

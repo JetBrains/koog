@@ -57,7 +57,7 @@ public data class AgentToolCallToEnvironmentContent(
 @SerialName("ACTION_MULTIPLE")
 public data class AgentToolCallsToEnvironmentMessage(
     override val runId: String,
-    val content: List<AgentToolCallToEnvironmentContent>
+    val content: AgentToolCallToEnvironmentContent
 ) : AgentToolCallToEnvironmentMessage
 
 /**

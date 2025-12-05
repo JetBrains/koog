@@ -136,7 +136,9 @@ public abstract class EnvironmentToolResultToAgentContent : EnvironmentToAgentCo
      * scope of tool-based operations in an agent's environment.
      */
     public abstract val toolName: String
+
     abstract override val agentId: String
+
     abstract override val message: String
 }
 
@@ -166,7 +168,7 @@ public data class EnvironmentToolResultSingleToAgentMessage(
 @SerialName("OBSERVATIONS_MULTIPLE")
 public data class EnvironmentToolResultMultipleToAgentMessage(
     override val runId: String,
-    val content: List<EnvironmentToolResultToAgentContent>,
+    val content: EnvironmentToolResultToAgentContent,
 ) : EnvironmentToolResultToAgentMessage
 
 /**

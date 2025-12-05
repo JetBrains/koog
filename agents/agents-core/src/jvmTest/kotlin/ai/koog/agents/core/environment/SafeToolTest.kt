@@ -80,23 +80,21 @@ class SafeToolTest {
         private val resultContent: String = "Success content",
     ) : AIAgentEnvironment {
         @OptIn(InternalAgentToolsApi::class)
-        override suspend fun executeTools(toolCalls: List<Message.Tool.Call>): List<ReceivedToolResult> {
-            return toolCalls.map { toolCall ->
-                if (shouldSucceed) {
-                    ReceivedToolResult(
-                        id = toolCall.id,
-                        tool = toolCall.tool,
-                        content = resultContent,
-                        result = json.encodeToJsonElement(serializer<String>().asToolDescriptorSerializer(), TEST_RESULT)
-                    )
-                } else {
-                    ReceivedToolResult(
-                        id = toolCall.id,
-                        tool = toolCall.tool,
-                        content = TEST_ERROR,
-                        result = null,
-                    )
-                }
+        override suspend fun executeTool(toolCall: Message.Tool.Call): ReceivedToolResult {
+            return if (shouldSucceed) {
+                ReceivedToolResult(
+                    id = toolCall.id,
+                    tool = toolCall.tool,
+                    content = resultContent,
+                    result = json.encodeToJsonElement(serializer<String>().asToolDescriptorSerializer(), TEST_RESULT)
+                )
+            } else {
+                ReceivedToolResult(
+                    id = toolCall.id,
+                    tool = toolCall.tool,
+                    content = TEST_ERROR,
+                    result = null,
+                )
             }
         }
 
@@ -194,25 +192,23 @@ class SafeToolTest {
     @Test
     fun testWithNullArgumentInDirectCallEnvironment() = runTest {
         val directCallEnvironment = object : AIAgentEnvironment {
-            override suspend fun executeTools(toolCalls: List<Message.Tool.Call>): List<ReceivedToolResult> {
-                return toolCalls.map { toolCall ->
-                    try {
-                        val result = testFunction("test", null as Int)
+            override suspend fun executeTool(toolCall: Message.Tool.Call): ReceivedToolResult {
+                return try {
+                    val result = testFunction("test", null as Int)
 
-                        ReceivedToolResult(
-                            id = toolCall.id,
-                            tool = toolCall.tool,
-                            content = "Success: $result",
-                            result = json.encodeToJsonElement(result).jsonObject
-                        )
-                    } catch (e: Exception) {
-                        ReceivedToolResult(
-                            id = toolCall.id,
-                            tool = toolCall.tool,
-                            content = "Error: ${e.message}",
-                            result = null
-                        )
-                    }
+                    ReceivedToolResult(
+                        id = toolCall.id,
+                        tool = toolCall.tool,
+                        content = "Success: $result",
+                        result = json.encodeToJsonElement(result).jsonObject
+                    )
+                } catch (e: Exception) {
+                    ReceivedToolResult(
+                        id = toolCall.id,
+                        tool = toolCall.tool,
+                        content = "Error: ${e.message}",
+                        result = null
+                    )
                 }
             }
 
@@ -280,33 +276,31 @@ class SafeToolTest {
     @Test
     fun testWithComplexArgumentsInDirectCallEnvironment() = runTest {
         val directCallEnvironment = object : AIAgentEnvironment {
-            override suspend fun executeTools(toolCalls: List<Message.Tool.Call>): List<ReceivedToolResult> {
-                return toolCalls.map { toolCall ->
-                    try {
-                        val complexData = ComplexDataClass(
-                            id = "direct-call-id",
-                            numbers = listOf(7, 8, 9),
-                            nested = SimpleDataClass(name = "direct-nested", value = 100),
-                            enumValue = TestEnum.THIRD
-                        )
+            override suspend fun executeTool(toolCall: Message.Tool.Call): ReceivedToolResult {
+                return try {
+                    val complexData = ComplexDataClass(
+                        id = "direct-call-id",
+                        numbers = listOf(7, 8, 9),
+                        nested = SimpleDataClass(name = "direct-nested", value = 100),
+                        enumValue = TestEnum.THIRD
+                    )
 
-                        val result = testFunctionWithComplexArgs("direct-test", listOf(10, 11, 12), complexData)
-                        val resultSerializer = serializer<String>().asToolDescriptorSerializer()
+                    val result = testFunctionWithComplexArgs("direct-test", listOf(10, 11, 12), complexData)
+                    val resultSerializer = serializer<String>().asToolDescriptorSerializer()
 
-                        ReceivedToolResult(
-                            id = toolCall.id,
-                            tool = toolCall.tool,
-                            content = "Success: $result",
-                            result = json.encodeToJsonElement(resultSerializer, result)
-                        )
-                    } catch (e: Exception) {
-                        ReceivedToolResult(
-                            id = toolCall.id,
-                            tool = toolCall.tool,
-                            content = "Error: ${e.message}",
-                            result = null
-                        )
-                    }
+                    ReceivedToolResult(
+                        id = toolCall.id,
+                        tool = toolCall.tool,
+                        content = "Success: $result",
+                        result = json.encodeToJsonElement(resultSerializer, result)
+                    )
+                } catch (e: Exception) {
+                    ReceivedToolResult(
+                        id = toolCall.id,
+                        tool = toolCall.tool,
+                        content = "Error: ${e.message}",
+                        result = null
+                    )
                 }
             }
 
