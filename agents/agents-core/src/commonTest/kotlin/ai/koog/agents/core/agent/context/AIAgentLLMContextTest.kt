@@ -202,6 +202,7 @@ class AIAgentLLMContextTest : AgentTestBase() {
             toolRegistry = toolRegistry,
             prompt = createTestPrompt(),
             model = OllamaModels.Meta.LLAMA_3_2,
+            responseProcessor = null,
             promptExecutor = mockExecutor,
             environment = createTestEnvironment(),
             config = createTestConfig(),

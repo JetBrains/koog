@@ -22,6 +22,7 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.processor.ResponseProcessor
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
@@ -142,7 +143,8 @@ class AIAgentLLMWriteSessionTest {
         executor: PromptExecutor,
         tools: List<Tool<*, *>> = listOf(TestTool(), CustomTool()),
         prompt: Prompt = createConversationPrompt(),
-        model: LLModel = OllamaModels.Meta.LLAMA_3_2
+        model: LLModel = OllamaModels.Meta.LLAMA_3_2,
+        responseProcessor: ResponseProcessor? = null
     ): AIAgentLLMWriteSession {
         val toolRegistry = ToolRegistry {
             tools.forEach { tool(it) }
@@ -163,6 +165,7 @@ class AIAgentLLMWriteSessionTest {
             toolRegistry = toolRegistry,
             prompt = prompt,
             model = model,
+            responseProcessor = responseProcessor,
             config = config,
             clock = testClock
         )

@@ -17,6 +17,7 @@ kotlin {
                 api(project(":utils"))
                 api(project(":prompt:prompt-executor:prompt-executor-model"))
                 api(project(":prompt:prompt-llm"))
+                api(project(":prompt:prompt-processor"))
                 api(project(":prompt:prompt-structure"))
 
                 api(project(":prompt:prompt-executor:prompt-executor-clients:prompt-executor-openai-client"))

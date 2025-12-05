@@ -11,6 +11,7 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.processor.ResponseProcessor
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.datetime.Clock
@@ -203,6 +204,7 @@ public interface AIAgentService<Input, Output, TAgent : AIAgent<Input, Output>> 
         public operator fun invoke(
             promptExecutor: PromptExecutor,
             llmModel: LLModel,
+            responseProcessor: ResponseProcessor? = null,
             strategy: AIAgentGraphStrategy<String, String> = singleRunStrategy(),
             toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
             systemPrompt: String = "",
@@ -225,6 +227,7 @@ public interface AIAgentService<Input, Output, TAgent : AIAgent<Input, Output>> 
                 },
                 model = llmModel,
                 maxAgentIterations = maxIterations,
+                responseProcessor = responseProcessor
             ),
             toolRegistry = toolRegistry,
             installFeatures = installFeatures

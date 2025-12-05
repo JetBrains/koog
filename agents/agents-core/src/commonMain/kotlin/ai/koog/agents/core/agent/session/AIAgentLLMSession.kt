@@ -11,6 +11,8 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.LLMChoice
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.processor.ResponseProcessor
+import ai.koog.prompt.processor.executeProcessed
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.structure.StructureFixingParser
 import ai.koog.prompt.structure.StructuredRequestConfig
@@ -37,6 +39,7 @@ public sealed class AIAgentLLMSession(
     tools: List<ToolDescriptor>,
     prompt: Prompt,
     model: LLModel,
+    responseProcessor: ResponseProcessor?,
     protected val config: AIAgentConfig,
 ) : AutoCloseable {
     /**
@@ -84,6 +87,18 @@ public sealed class AIAgentLLMSession(
     public open val model: LLModel by ActiveProperty(model) { isActive }
 
     /**
+     * Represents the active response processor within the session.
+     *
+     * This property is backed by a delegate that ensures it can only be accessed
+     * while the session is active, as determined by the [isActive] property.
+     *
+     * The processor defines the post-processing of messages returned from the language model.
+     *
+     * Usage of this property when the session is inactive will result in an exception.
+     */
+    public open val responseProcessor: ResponseProcessor? by ActiveProperty(responseProcessor) { isActive }
+
+    /**
      * A flag indicating whether the session is currently active.
      *
      * This variable is used to ensure that the session operations are only performed when the session is active.
@@ -116,7 +131,7 @@ public sealed class AIAgentLLMSession(
 
     protected suspend fun executeMultiple(prompt: Prompt, tools: List<ToolDescriptor>): List<Message.Response> {
         val preparedPrompt = preparePrompt(prompt, tools)
-        return executor.execute(preparedPrompt, model, tools)
+        return executor.executeProcessed(preparedPrompt, model, tools, responseProcessor)
     }
 
     protected suspend fun executeSingle(prompt: Prompt, tools: List<ToolDescriptor>): Message.Response =

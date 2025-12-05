@@ -14,6 +14,7 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.processor.ResponseProcessor
 import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.structure.StructureDefinition
 import ai.koog.prompt.structure.StructureFixingParser
@@ -44,9 +45,10 @@ public class AIAgentLLMWriteSession internal constructor(
     @PublishedApi internal val toolRegistry: ToolRegistry,
     prompt: Prompt,
     model: LLModel,
+    responseProcessor: ResponseProcessor?,
     config: AIAgentConfig,
     public val clock: Clock
-) : AIAgentLLMSession(executor, tools, prompt, model, config) {
+) : AIAgentLLMSession(executor, tools, prompt, model, responseProcessor, config) {
     /**
      * Represents the prompt object used within the session. The prompt can be accessed or
      * modified only when the session is in an active state, as determined by the `isActive` predicate.

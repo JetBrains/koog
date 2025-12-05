@@ -12,6 +12,7 @@ import ai.koog.agents.core.utils.RWLock
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.processor.ResponseProcessor
 import kotlinx.datetime.Clock
 
 /**
@@ -44,6 +45,7 @@ public annotation class DetachedPromptExecutorAPI
  * @property toolRegistry A registry that contains metadata about available tools.
  * @property prompt The current LLM prompt being used or updated in write sessions.
  * @property model The current LLM model being used or updated in write sessions.
+ * @property responseProcessor The current response processor being used or updated in write sessions.
  * @property promptExecutor The [PromptExecutor] responsible for performing operations on the current prompt.
  * @property environment The environment that manages tool execution and interaction with external dependencies.
  * @property clock The clock used for timestamps of messages
@@ -53,6 +55,7 @@ public class AIAgentLLMContext(
     public val toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
     prompt: Prompt,
     model: LLModel,
+    responseProcessor: ResponseProcessor?,
     @property:DetachedPromptExecutorAPI
     public val promptExecutor: PromptExecutor,
     private val environment: AIAgentEnvironment,
@@ -71,6 +74,13 @@ public class AIAgentLLMContext(
      */
     @DetachedPromptExecutorAPI
     public var model: LLModel = model
+        private set
+
+    /**
+     * Response processor currently associated with this context.
+     */
+    @DetachedPromptExecutorAPI
+    public var responseProcessor: ResponseProcessor? = responseProcessor
         private set
 
     /**
@@ -106,6 +116,7 @@ public class AIAgentLLMContext(
         toolRegistry: ToolRegistry = this.toolRegistry,
         prompt: Prompt = this.prompt,
         model: LLModel = this.model,
+        responseProcessor: ResponseProcessor? = this.responseProcessor,
         promptExecutor: PromptExecutor = this.promptExecutor,
         environment: AIAgentEnvironment = this.environment,
         config: AIAgentConfig = this.config,
@@ -116,6 +127,7 @@ public class AIAgentLLMContext(
             toolRegistry = toolRegistry,
             prompt = prompt,
             model = model,
+            responseProcessor = responseProcessor,
             promptExecutor = promptExecutor,
             environment = environment,
             config = config,
@@ -132,7 +144,7 @@ public class AIAgentLLMContext(
     @OptIn(ExperimentalStdlibApi::class)
     public suspend fun <T> writeSession(block: suspend AIAgentLLMWriteSession.() -> T): T = rwLock.withWriteLock {
         val session =
-            AIAgentLLMWriteSession(environment, promptExecutor, tools, toolRegistry, prompt, model, config, clock)
+            AIAgentLLMWriteSession(environment, promptExecutor, tools, toolRegistry, prompt, model, responseProcessor, config, clock)
 
         session.use {
             val result = it.block()
@@ -141,6 +153,7 @@ public class AIAgentLLMContext(
             this.prompt = it.prompt
             this.tools = it.tools
             this.model = it.model
+            this.responseProcessor = it.responseProcessor
 
             result
         }
@@ -152,7 +165,7 @@ public class AIAgentLLMContext(
      */
     @OptIn(ExperimentalStdlibApi::class)
     public suspend fun <T> readSession(block: suspend AIAgentLLMReadSession.() -> T): T = rwLock.withReadLock {
-        val session = AIAgentLLMReadSession(tools, promptExecutor, prompt, model, config)
+        val session = AIAgentLLMReadSession(tools, promptExecutor, prompt, model, responseProcessor, config)
 
         session.use { block(it) }
     }
@@ -166,11 +179,12 @@ public class AIAgentLLMContext(
         tools: List<ToolDescriptor> = this.tools,
         prompt: Prompt = this.prompt,
         model: LLModel = this.model,
+        responseProcessor: ResponseProcessor? = this.responseProcessor,
         promptExecutor: PromptExecutor = this.promptExecutor,
         environment: AIAgentEnvironment = this.environment,
         config: AIAgentConfig = this.config,
         clock: Clock = this.clock
     ): AIAgentLLMContext {
-        return AIAgentLLMContext(tools, toolRegistry, prompt, model, promptExecutor, environment, config, clock)
+        return AIAgentLLMContext(tools, toolRegistry, prompt, model, responseProcessor, promptExecutor, environment, config, clock)
     }
 }

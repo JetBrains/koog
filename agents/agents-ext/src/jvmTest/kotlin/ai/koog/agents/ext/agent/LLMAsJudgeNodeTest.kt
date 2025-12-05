@@ -65,6 +65,7 @@ class LLMAsJudgeNodeTest {
             toolRegistry = ToolRegistry {},
             prompt = initialPrompt,
             model = initialModel,
+            responseProcessor = null,
             promptExecutor = mockPromptExecutor,
             environment = mockEnv,
             config = AIAgentConfig(prompt = prompt("id") {}, model = OpenAIModels.Chat.GPT4o, maxAgentIterations = 10),
