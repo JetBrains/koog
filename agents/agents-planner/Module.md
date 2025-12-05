@@ -1,10 +1,10 @@
-# Module agents-planners
+# Module agents-planner
 
 Library for implementing planning capabilities in AI agents.
 
 ## Overview
 
-The agents-planners module provides components for creating AI agents that can plan and execute multi-step tasks. It
+The agents-planner module provides components for creating AI agents that can plan and execute multi-step tasks. It
 builds upon the core agent architecture to enable agents to:
 
 1. Create plans with multiple steps
@@ -17,16 +17,6 @@ Key features include:
 - Abstract planning strategy framework
 - Simple planning implementation using LLM to create the plan
 -
-
-## Using in your project
-
-To use the agents-planners module in your project, add the following dependency:
-
-```kotlin
-dependencies {
-    implementation("ai.koog.agents:agents-planners:$version")
-}
-```
 
 ## Core Concepts
 

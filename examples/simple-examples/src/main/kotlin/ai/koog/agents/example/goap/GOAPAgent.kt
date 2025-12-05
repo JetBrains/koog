@@ -5,7 +5,6 @@ import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.example.ApiKeyService
 import ai.koog.agents.planner.asStrategy
 import ai.koog.agents.planner.goap.GOAPPlanner
-import ai.koog.agents.planner.goap.action
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.anthropic.AnthropicLLMClient
 import ai.koog.prompt.executor.clients.anthropic.AnthropicModels

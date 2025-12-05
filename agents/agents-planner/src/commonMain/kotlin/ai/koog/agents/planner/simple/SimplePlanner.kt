@@ -1,9 +1,7 @@
 package ai.koog.agents.planner.simple
 
-import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
+import ai.koog.agents.core.agent.context.AIAgentFunctionalContext
 import ai.koog.agents.core.annotation.InternalAgentsApi
-import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
-import ai.koog.agents.core.dsl.builder.AIAgentSubgraphDelegate
 import ai.koog.agents.core.dsl.extension.replaceHistoryWithTLDR
 import ai.koog.agents.memory.feature.history.RetrieveFactsFromHistory
 import ai.koog.agents.memory.model.Concept
@@ -24,20 +22,8 @@ public open class SimplePlanner(
     name: String
 ) : PlanningAIAgentStrategy<String, SimplePlanner.SimplePlan>(name) {
 
-    override fun defineBuildPlan(builder: AIAgentSubgraphBuilderBase<*, *>):
-        AIAgentSubgraphDelegate<Pair<String, SimplePlan?>, SimplePlan> =
-        builder.singleNodeSubgraph { (state, plan) -> buildPlan(this, state, plan) }
-
-    override fun defineExecuteStep(builder: AIAgentSubgraphBuilderBase<*, *>):
-        AIAgentSubgraphDelegate<Pair<String, SimplePlan>, String> =
-        builder.singleNodeSubgraph { (state, plan) -> executeStep(this, state, plan) }
-
-    override fun defineIsPlanCompleted(builder: AIAgentSubgraphBuilderBase<*, *>):
-        AIAgentSubgraphDelegate<Pair<String, SimplePlan>, Boolean> =
-        builder.singleNodeSubgraph { (state, plan) -> completed(this, state, plan) }
-
-    protected open suspend fun buildPlan(
-        context: AIAgentGraphContextBase,
+    override suspend fun buildPlan(
+        context: AIAgentFunctionalContext,
         state: String,
         plan: SimplePlan?
     ): SimplePlan {
@@ -183,7 +169,7 @@ public open class SimplePlanner(
     }
 
     protected open suspend fun assessPlan(
-        context: AIAgentGraphContextBase,
+        context: AIAgentFunctionalContext,
         state: String,
         plan: SimplePlan?
     ): PlanAssessment<SimplePlan> {
@@ -191,8 +177,8 @@ public open class SimplePlanner(
         return if (plan == null) PlanAssessment.NoPlan() else PlanAssessment.Continue(plan)
     }
 
-    protected open suspend fun executeStep(
-        context: AIAgentGraphContextBase,
+    override suspend fun executeStep(
+        context: AIAgentFunctionalContext,
         state: String,
         plan: SimplePlan
     ): String {
@@ -216,7 +202,7 @@ public open class SimplePlanner(
         return result.content
     }
 
-    protected open fun completed(context: AIAgentGraphContextBase, state: String, plan: SimplePlan): Boolean =
+    override suspend fun isPlanCompleted(context: AIAgentFunctionalContext, state: String, plan: SimplePlan): Boolean =
         plan.steps.all { it.isCompleted }
 
     /**

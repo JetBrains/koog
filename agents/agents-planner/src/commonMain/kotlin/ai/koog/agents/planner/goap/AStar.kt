@@ -6,7 +6,6 @@ private class AStarStep<State>(
     val cost: Double
 )
 
-@PublishedApi
 internal fun <State> buildPlanForGoal(
     state: State,
     goal: Goal<State>,

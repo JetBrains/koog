@@ -1,5 +1,6 @@
 package ai.koog.agents.core.dsl.extension
 
+import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AIAgentFunctionalContext
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.environment.SafeTool
@@ -146,7 +147,7 @@ public suspend fun AIAgentFunctionalContext.latestTokenUsage(): Int {
  * @param fixingParser Optional parser to fix generated structured data.
  * @return Result containing the structured response if successful, or an error if parsing failed.
  */
-public suspend inline fun <reified T> AIAgentFunctionalContext.requestLLMStructured(
+public suspend inline fun <reified T> AIAgentContext.requestLLMStructured(
     message: String,
     examples: List<T> = emptyList(),
     fixingParser: StructureFixingParser? = null

@@ -1,6 +1,6 @@
 package ai.koog.agents.planner.simple
 
-import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
+import ai.koog.agents.core.agent.context.AIAgentFunctionalContext
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.markdown.markdown
@@ -26,7 +26,7 @@ public class SimplePlannerWithCritic(name: String) : SimplePlanner(name) {
     )
 
     override suspend fun assessPlan(
-        context: AIAgentGraphContextBase,
+        context: AIAgentFunctionalContext,
         state: String,
         plan: SimplePlan?
     ): PlanAssessment<SimplePlan> {
