@@ -12,8 +12,8 @@ Key components:
 
 - **ResponseProcessor**: An abstract base class for implementing response processors, with support for chaining multiple
   processors together.
-- **FixJsonToolCall**: A processor that fixes invalid tool call JSONs, handling incorrect keys and missing escapes.
-- **FixToolCallLLMBased**: An advanced processor that uses the LLM itself to iteratively fix incorrectly generated tool
+- **ManualToolCallFixProcessor**: A processor that fixes invalid tool call JSONs, handling incorrect keys and missing escapes.
+- **LLMBasedToolCallFixProcessor**: An advanced processor that uses the LLM itself to iteratively fix incorrectly generated tool
   calls.
 
 ### Example of usage
@@ -49,19 +49,12 @@ val chainedProcessor = processor1 + processor2
 val responses = executor.executeProcessed(prompt, model, tools, chainedProcessor)
 ```
 
-Using processor in agentic strategy
+Using processor with an agent
 
 ```kotlin
-// uses processor for all LLM requests in this strategy
-val strategy = singleRunStrategy(responsesProcessor = processor)
-```
-
-```kotlin
-val strategy = strategy("strategy-name")<I, O> {
-    // ...
-    // uses processor for LLM calls in this node
-    // you can provide a processor to many nodes which call LLM
-    val callLLM by nodeRequestLLM(responsesProcessor = processor)
-    // ...
-}
+val agent = AIAgent(
+    executor = yourExecutor,
+    model = yourModel,
+    responseProcessor = yourProcessor,
+)
 ```
