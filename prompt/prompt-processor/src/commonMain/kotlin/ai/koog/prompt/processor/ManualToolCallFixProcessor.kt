@@ -36,10 +36,12 @@ public class ManualToolCallFixProcessor(
         responses: List<Message.Response>
     ): List<Message.Response> = responses.map { response ->
         logger.info { "Updating message: $response" }
-        (response
-            as? Message.Tool.Call
-            ?: extractToolCall(response.content, response.metaInfo)
-            ?: response)
+        (
+            response
+                as? Message.Tool.Call
+                ?: extractToolCall(response.content, response.metaInfo)
+                ?: response
+            )
             .also { logger.info { "Updated message: $it" } }
     }
 }
