@@ -1,5 +1,3 @@
 package ai.koog.utils.system
 
-public actual fun systemConfigReader(): SystemConfigReader {
-    throw NotImplementedError("SystemConfigReader is not yet supported on Apple platforms")
-}
+public actual fun systemConfigReader(): SystemConfigReader = UserDefaultsSystemConfigReader.shared
