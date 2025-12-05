@@ -3,6 +3,7 @@ package ai.koog.integration.tests.executor
 import ai.koog.integration.tests.InjectOllamaTestFixture
 import ai.koog.integration.tests.OllamaTestFixture
 import ai.koog.integration.tests.OllamaTestFixtureExtension
+import ai.koog.integration.tests.utils.MediaTestScenarios
 import ai.koog.integration.tests.utils.MediaTestScenarios.ImageTestScenario
 import ai.koog.integration.tests.utils.MediaTestUtils
 import ai.koog.integration.tests.utils.MediaTestUtils.checkExecutorMediaResponse
@@ -319,5 +320,28 @@ class OllamaExecutorIntegrationTest : ExecutorIntegrationTestBase() {
                 }
             }
         }
+    }
+
+    @Test
+    fun `ollama_test txt file processing`() = runTest(timeout = 600.seconds) {
+        val textFile = MediaTestUtils.createTextFileForScenario(
+            MediaTestScenarios.TextTestScenario.BASIC_TEXT,
+            testResourcesDir
+        )
+
+        val prompt = prompt("text-file-test") {
+            system("You are a helpful assistant that can analyze text files.")
+
+            user {
+                markdown {
+                    +"I'm sending you a text file. Please read its content and summarize it."
+                }
+
+                textFile(KtPath(textFile.pathString), "text/plain")
+            }
+        }
+
+        val response = executor.execute(prompt, model).single()
+        response.content.shouldNotBeBlank()
     }
 }

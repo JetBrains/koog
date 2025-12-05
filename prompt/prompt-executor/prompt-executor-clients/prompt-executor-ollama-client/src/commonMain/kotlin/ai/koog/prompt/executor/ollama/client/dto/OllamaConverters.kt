@@ -59,10 +59,13 @@ internal fun Prompt.toOllamaChatMessages(model: LLModel): List<OllamaChatMessage
 }
 
 private fun Message.User.toOllamaChatMessage(model: LLModel): OllamaChatMessageDTO {
+    val text = StringBuilder()
     val images = buildList {
         parts.forEach { part ->
             when (part) {
-                is ContentPart.Text -> {}
+                is ContentPart.Text -> {
+                    text.append(part.text)
+                }
                 is ContentPart.Image -> {
                     require(LLMCapability.Vision.Image in model.capabilities) {
                         "Model ${model.id} doesn't support images"
@@ -76,6 +79,20 @@ private fun Message.User.toOllamaChatMessage(model: LLModel): OllamaChatMessageD
                     add(image)
                 }
 
+                is ContentPart.File -> {
+                    val fileContent = when (val actualContent = part.content) {
+                        is AttachmentContent.PlainText -> {
+                            actualContent.text
+                        }
+
+                        is AttachmentContent.Binary -> actualContent.asBase64()
+
+                        else -> throw IllegalArgumentException("Unsupported file attachment content: ${content::class}")
+                    }
+
+                    text.append("\n\n$fileContent")
+                }
+
                 else -> throw IllegalArgumentException("Unsupported attachment type: $part")
             }
         }
@@ -83,7 +100,7 @@ private fun Message.User.toOllamaChatMessage(model: LLModel): OllamaChatMessageD
 
     return OllamaChatMessageDTO(
         role = "user",
-        content = content,
+        content = text.toString(),
         images = images.takeIf { it.isNotEmpty() }
     )
 }
