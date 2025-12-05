@@ -235,7 +235,7 @@ val specificToolParams = LLMParams(
     toolChoice = LLMParams.ToolChoice.Named(name = "calculator")
 )
 ```
-<!--- KNIT example-llm-parameters-01.kt -->
+<!--- KNIT example-llm-parameters-06.kt -->
 
 ## Provider-specific parameters
 
@@ -393,7 +393,7 @@ val openRouterParams = OpenRouterParams(
     transforms = listOf("middle-out")
 )
 ```
-<!--- KNIT example-llm-parameters-02.kt -->
+<!--- KNIT example-llm-parameters-07.kt -->
 
 ## Usage examples
 
@@ -410,7 +410,7 @@ val basicParams = LLMParams(
     toolChoice = LLMParams.ToolChoice.Auto
 )
 ```
-<!--- KNIT example-llm-parameters-03.kt -->
+<!--- KNIT example-llm-parameters-08.kt -->
 
 ### Reasoning control
 
@@ -427,7 +427,7 @@ val openAIReasoningEffortParams = OpenAIChatParams(
     reasoningEffort = ReasoningEffort.MEDIUM
 )
 ```
-<!--- KNIT example-llm-parameters-04.kt -->
+<!--- KNIT example-llm-parameters-09.kt -->
 
 In addition, when using the OpenAI Responses API in a stateless mode, you keep an encrypted history of reasoning items and send it to the model in every conversation turn. The encryption is done on the OpenAI side, and you need to request encrypted reasoning tokens by setting the `include` parameter in your requests to `reasoning.encrypted_content`. 
 You can then pass the encrypted reasoning tokens back to the model in the next conversation turns.
@@ -441,7 +441,7 @@ val openAIStatelessReasoningParams = OpenAIResponsesParams(
     include = listOf(OpenAIInclude.REASONING_ENCRYPTED_CONTENT)
 )
 ```
-<!--- KNIT example-llm-parameters-05.kt -->
+<!--- KNIT example-llm-parameters-10.kt -->
 
 ### Custom parameters
 
@@ -461,7 +461,7 @@ val customParams = LLMParams(
     )
 )
 ```
-<!--- KNIT example-llm-parameters-06.kt -->
+<!--- KNIT example-llm-parameters-11.kt -->
 
 ### Setting and overriding parameters
 
@@ -486,7 +486,7 @@ val overrideParams = LLMParams(
     numberOfChoices = 3
 ).default(defaultParams)
 ```
-<!--- KNIT example-llm-parameters-07.kt -->
+<!--- KNIT example-llm-parameters-12.kt -->
 
 The values in the resulting `overrideParams` set are equivalent to the following:
 
@@ -501,4 +501,4 @@ val overrideParams = LLMParams(
     numberOfChoices = 3
 )
 ```
-<!--- KNIT example-llm-parameters-08.kt -->
+<!--- KNIT example-llm-parameters-13.kt -->

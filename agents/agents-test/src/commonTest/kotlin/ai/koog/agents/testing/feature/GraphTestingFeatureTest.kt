@@ -104,15 +104,17 @@ class GraphTestingFeatureTest {
                         askLLM withInput "Hello" outputs assistantMessage("Hello!")
                         askLLM withInput "Solve task" outputs toolCallMessage(CreateTool, CreateTool.Args("solve"))
 
+                        val createToolArgs = SolveTool.Args("solve")
                         callTool withInput toolCallMessage(
                             SolveTool,
-                            SolveTool.Args("solve")
-                        ) outputs toolResult(SolveTool, "solved")
+                            createToolArgs,
+                        ) outputs toolResult(SolveTool, createToolArgs, result = "solved")
 
+                        val solveToolArgs = CreateTool.Args("solve")
                         callTool withInput toolCallMessage(
                             CreateTool,
-                            CreateTool.Args("solve")
-                        ) outputs toolResult(CreateTool, "created")
+                            solveToolArgs,
+                        ) outputs toolResult(CreateTool, solveToolArgs, result = "created")
                     }
 
                     assertEdges {

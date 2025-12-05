@@ -53,7 +53,7 @@ import ai.koog.agents.core.feature.handler.tool.ToolValidationFailedContext
  * ```
  * handleEvents {
  *     onToolCallStarting { eventContext ->
- *         println("Tool called: ${eventContext.tool.name} with args ${eventContext.toolArgs}")
+ *         println("Tool called: ${eventContext.toolName} with args ${eventContext.toolArgs}")
  *     }
  *
  *     onAgentCompleted { eventContext ->

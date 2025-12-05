@@ -48,8 +48,8 @@ class ToneAgentTest {
         // Create an event handler
         val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
             onToolCallStarting { eventContext ->
-                println("[DEBUG_LOG] Tool called: tool ${eventContext.tool.name}, args ${eventContext.toolArgs}")
-                toolCalls.add(eventContext.tool.name)
+                println("[DEBUG_LOG] Tool called: tool ${eventContext.toolName}, args ${eventContext.toolArgs}")
+                toolCalls.add(eventContext.toolName)
             }
 
             onAgentExecutionFailed { eventContext ->

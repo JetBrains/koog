@@ -3,7 +3,6 @@ package ai.koog.agents.core.feature.pipeline
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.context.AIAgentContext
-import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
 import ai.koog.agents.core.annotation.ExperimentalAgentsApi
@@ -53,9 +52,9 @@ import ai.koog.agents.core.feature.handler.tool.ToolCallResultHandler
 import ai.koog.agents.core.feature.handler.tool.ToolCallStartingContext
 import ai.koog.agents.core.feature.handler.tool.ToolValidationErrorHandler
 import ai.koog.agents.core.feature.handler.tool.ToolValidationFailedContext
+import ai.koog.agents.core.feature.model.AIAgentError
 import ai.koog.agents.core.system.getEnvironmentVariableOrNull
 import ai.koog.agents.core.system.getVMOptionOrNull
-import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
@@ -64,6 +63,8 @@ import ai.koog.prompt.message.Message
 import ai.koog.prompt.streaming.StreamFrame
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.datetime.Clock
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
 import kotlin.reflect.safeCast
@@ -320,17 +321,15 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
      * This method allows features to modify or enhance the agent's environment before it starts execution.
      * Each registered handler can apply its own transformations to the environment in sequence.
      *
-     * @param strategy The strategy associated with the agent
      * @param agent The agent instance for which the environment is being transformed
      * @param baseEnvironment The initial environment to be transformed
      * @return The transformed environment after all handlers have been applied
      */
     public suspend fun onAgentEnvironmentTransforming(
-        strategy: AIAgentStrategy<*, *, AIAgentGraphContextBase>,
         agent: GraphAIAgent<*, *>,
         baseEnvironment: AIAgentEnvironment
     ): AIAgentEnvironment {
-        val eventContext = AgentEnvironmentTransformingContext(strategy = strategy, agent = agent)
+        val eventContext = AgentEnvironmentTransformingContext(agent)
         return agentEventHandlers.values.fold(baseEnvironment) { environment, handler ->
             handler.transformEnvironment(eventContext, environment)
         }
@@ -420,70 +419,86 @@ public abstract class AIAgentPipeline(public val clock: Clock) {
      *
      * @param runId The unique identifier for the current run.
      * @param toolCallId The unique identifier for the current tool call.
-     * @param tool The tool that is being called
+     * @param toolName The tool name that is being called
      * @param toolArgs The arguments provided to the tool
      */
-    public suspend fun onToolCallStarting(runId: String, toolCallId: String?, tool: Tool<*, *>, toolArgs: Any?) {
-        val eventContext = ToolCallStartingContext(runId, toolCallId, tool, toolArgs)
+    public suspend fun onToolCallStarting(
+        runId: String,
+        toolCallId: String?,
+        toolName: String,
+        toolArgs: JsonObject,
+    ) {
+        val eventContext = ToolCallStartingContext(runId, toolCallId, toolName, toolArgs)
         toolCallEventHandlers.values.forEach { handler -> handler.toolCallHandler.handle(eventContext) }
     }
 
     /**
      * Notifies all registered tool handlers when a validation error occurs during a tool call.
      *
-     * @param runId The unique identifier for the current run.
-     * @param tool The tool for which validation failed
-     * @param toolArgs The arguments that failed validation
-     * @param error The validation error message
+     * @param runId The unique identifier for the current run;
+     * @param toolCallId The unique identifier for the current tool call;
+     * @param toolName The name of the tool for which validation failed;
+     * @param toolArgs The arguments that failed validation;
+     * @param toolDescription The description of the tool that was called;
+     * @param message The validation error message;
+     * @param error The [AIAgentError] validation error.
      */
     public suspend fun onToolValidationFailed(
         runId: String,
         toolCallId: String?,
-        tool: Tool<*, *>,
-        toolArgs: Any?,
-        error: String
+        toolName: String,
+        toolArgs: JsonObject,
+        toolDescription: String?,
+        message: String,
+        error: AIAgentError,
     ) {
-        val eventContext = ToolValidationFailedContext(runId, toolCallId, tool, toolArgs, error)
+        val eventContext = ToolValidationFailedContext(runId, toolCallId, toolName, toolArgs, toolDescription, message, error)
         toolCallEventHandlers.values.forEach { handler -> handler.toolValidationErrorHandler.handle(eventContext) }
     }
 
     /**
      * Notifies all registered tool handlers when a tool call fails with an exception.
      *
-     * @param runId The unique identifier for the current run.
-     * @param toolCallId The unique identifier for the current tool call.
-     * @param tool The tool that failed
-     * @param toolArgs The arguments provided to the tool
-     * @param throwable The exception that caused the failure
+     * @param runId The unique identifier for the current run;
+     * @param toolCallId The unique identifier for the current tool call;
+     * @param toolName The tool name that was called;
+     * @param toolArgs The arguments provided to the tool;
+     * @param toolDescription The description of the tool that was called;
+     * @param message A message describing the failure.
+     * @param error The [AIAgentError] that caused the failure.
      */
     public suspend fun onToolCallFailed(
         runId: String,
         toolCallId: String?,
-        tool: Tool<*, *>,
-        toolArgs: Any?,
-        throwable: Throwable
+        toolName: String,
+        toolArgs: JsonObject,
+        toolDescription: String?,
+        message: String,
+        error: AIAgentError?
     ) {
-        val eventContext = ToolCallFailedContext(runId, toolCallId, tool, toolArgs, throwable)
+        val eventContext = ToolCallFailedContext(runId, toolCallId, toolName, toolArgs, toolDescription, message, error)
         toolCallEventHandlers.values.forEach { handler -> handler.toolCallFailureHandler.handle(eventContext) }
     }
 
     /**
      * Notifies all registered tool handlers about the result of a tool call.
      *
-     * @param runId The unique identifier for the current run.
-     * @param toolCallId The unique identifier for the current tool call.
-     * @param tool The tool that was called
-     * @param toolArgs The arguments that were provided to the tool
-     * @param result The result produced by the tool, or null if no result was produced
+     * @param runId The unique identifier for the current run;
+     * @param toolCallId The unique identifier for the current tool call;
+     * @param toolName The tool name that was called;
+     * @param toolArgs The arguments that were provided to the tool;
+     * @param toolDescription The description of the tool that was called;
+     * @param toolResult The result produced by the tool, or null if no result was produced.
      */
     public suspend fun onToolCallCompleted(
         runId: String,
         toolCallId: String?,
-        tool: Tool<*, *>,
-        toolArgs: Any?,
-        result: Any?
+        toolName: String,
+        toolArgs: JsonObject,
+        toolDescription: String?,
+        toolResult: JsonElement?
     ) {
-        val eventContext = ToolCallCompletedContext(runId, toolCallId, tool, toolArgs, result)
+        val eventContext = ToolCallCompletedContext(runId, toolCallId, toolName, toolArgs, toolDescription, toolResult)
         toolCallEventHandlers.values.forEach { handler -> handler.toolCallResultHandler.handle(eventContext) }
     }
 

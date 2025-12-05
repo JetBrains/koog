@@ -739,7 +739,7 @@ class SubgraphWithTaskTest {
     private fun FeatureContext.installEventHandlerCaptureEvents(actualEvents: MutableList<String>) {
         install(EventHandler) {
             onToolCallStarting {
-                actualEvents += toolCallString(it.tool.name, it.tool.encodeArgsToStringUnsafe(it.toolArgs))
+                actualEvents += toolCallString(it.toolName, it.toolArgs.toString())
             }
 
             onLLMCallStarting {

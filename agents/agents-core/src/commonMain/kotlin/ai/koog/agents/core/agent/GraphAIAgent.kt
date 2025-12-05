@@ -8,6 +8,8 @@ import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
 import ai.koog.agents.core.annotation.InternalAgentsApi
+import ai.koog.agents.core.environment.AIAgentEnvironment
+import ai.koog.agents.core.environment.ContextualAgentEnvironment
 import ai.koog.agents.core.environment.GenericAgentEnvironment
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.AIAgentGraphFeature
@@ -66,13 +68,6 @@ public open class GraphAIAgent<Input, Output>(
 
     override val pipeline: AIAgentGraphPipeline = AIAgentGraphPipeline(clock)
 
-    private val environment = GenericAgentEnvironment(
-        agentId = this.id,
-        logger = logger,
-        toolRegistry = toolRegistry,
-        pipeline = pipeline
-    )
-
     /**
      * The context for adding and configuring features in a Kotlin AI Agent instance.
      *
@@ -103,16 +98,9 @@ public open class GraphAIAgent<Input, Output>(
         val stateManager = AIAgentStateManager()
         val storage = AIAgentStorage()
 
-        // Environment (initially equal to the current agent), transformed by some features
-        //   (ex: testing feature transforms it into a MockEnvironment with mocked tools)
-        val preparedEnvironment =
-            pipeline.onAgentEnvironmentTransforming(
-                strategy = strategy,
-                agent = this,
-                baseEnvironment = environment
-            )
+        val preparedEnvironment = prepareAgentEnvironment()
 
-        return AIAgentGraphContext(
+        val context = AIAgentGraphContext(
             environment = preparedEnvironment,
             agentId = id,
             agentInput = agentInput,
@@ -139,5 +127,48 @@ public open class GraphAIAgent<Input, Output>(
             strategyName = strategy.name,
             pipeline = pipeline,
         )
+
+        // Update Environment
+        val contextualEnvironment = ContextualAgentEnvironment(
+            environment = preparedEnvironment,
+            context = context,
+        )
+
+        val updatedLLMContext = context.llm.copy(
+            environment = contextualEnvironment
+        )
+
+        // Update the environment and llm with a created context instance
+        return context.copy(
+            parentContext = context.parentContext,
+            llm = updatedLLMContext,
+            environment = contextualEnvironment
+        )
+    }
+
+    /**
+     * Prepares the environment for the AI agent by initializing a base environment
+     * and applying any registered environment transformations defined in the pipeline.
+     *
+     * Environment (initially equal to the current agent), transformed by some features
+     * (ex: testing feature transforms it into a MockEnvironment with mocked tools
+     *
+     * @return An instance of `AIAgentEnvironment` that represents the finalized environment
+     *         for the AI agent after applying all transformations.
+     */
+    private suspend fun prepareAgentEnvironment(): AIAgentEnvironment {
+        // Create a base environment implementation
+        val environment = GenericAgentEnvironment(
+            agentId = id,
+            logger = logger,
+            toolRegistry = toolRegistry,
+        )
+
+        val preparedEnvironment = pipeline.onAgentEnvironmentTransforming(
+            agent = this,
+            baseEnvironment = environment
+        )
+
+        return preparedEnvironment
     }
 }

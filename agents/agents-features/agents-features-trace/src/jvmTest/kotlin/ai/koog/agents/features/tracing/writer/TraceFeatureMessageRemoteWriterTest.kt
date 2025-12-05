@@ -8,6 +8,7 @@ import ai.koog.agents.core.dsl.extension.nodeLLMRequest
 import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
 import ai.koog.agents.core.dsl.extension.onAssistantMessage
 import ai.koog.agents.core.dsl.extension.onToolCall
+import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.feature.message.FeatureMessage
 import ai.koog.agents.core.feature.model.events.AgentClosingEvent
 import ai.koog.agents.core.feature.model.events.AgentCompletedEvent
@@ -193,11 +194,36 @@ class TraceFeatureMessageRemoteWriterTest {
             messages = expectedPrompt.messages + userMessage(content = userPrompt)
         )
 
+        val dummyToolArgsEncoded = dummyTool.encodeArgs(DummyTool.Args("test"))
+        val dummyToolResultEncoded = dummyTool.encodeResult(dummyTool.result)
+        val dummyToolName = dummyTool.name
+        val dummyToolDescription = dummyTool.description
+
+        val dummyReceivedToolResultEncoded = @OptIn(InternalAgentsApi::class)
+        SerializationUtils.encodeDataToJsonElementOrNull(
+            data = receivedToolResult(
+                toolCallId = "0",
+                toolName = dummyToolName,
+                toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
+                toolDescription = dummyToolDescription,
+                content = dummyTool.result,
+                result = dummyToolResultEncoded,
+            ),
+            dataType = typeOf<ReceivedToolResult>()
+        )
+
         val expectedLLMCallWithToolsPrompt = expectedPrompt.copy(
             messages = expectedPrompt.messages + listOf(
                 userMessage(content = userPrompt),
-                toolCallMessage(dummyTool.name, content = """{"dummy":"test"}"""),
-                receivedToolResult("0", dummyTool.name, dummyTool.result, dummyTool.encodeResult(dummyTool.result)).toMessage(clock = testClock)
+                toolCallMessage(dummyTool.name, content = dummyToolArgsEncoded.toString()),
+                receivedToolResult(
+                    toolCallId = "0",
+                    toolName = dummyTool.name,
+                    toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
+                    toolDescription = dummyTool.description,
+                    content = dummyTool.encodeResultToString(dummyTool.result),
+                    result = dummyTool.encodeResult(dummyTool.result)
+                ).toMessage(clock = testClock)
             )
         )
 
@@ -296,6 +322,24 @@ class TraceFeatureMessageRemoteWriterTest {
                     "Expected 2 LLMCallStartingEvent, got ${callIds.size}"
                 )
 
+                val dummyToolArgsEncoded = dummyTool.encodeArgs(DummyTool.Args("test"))
+                val dummyToolResultEncoded = dummyTool.encodeResult(dummyTool.result)
+                val dummyToolName = dummyTool.name
+                val dummyToolDescription = dummyTool.description
+
+                val dummyReceivedToolResultEncoded = @OptIn(InternalAgentsApi::class)
+                SerializationUtils.encodeDataToJsonElementOrNull(
+                    data = receivedToolResult(
+                        toolCallId = "0",
+                        toolName = dummyToolName,
+                        toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
+                        toolDescription = dummyToolDescription,
+                        content = dummyTool.result,
+                        result = dummyToolResultEncoded,
+                    ),
+                    dataType = typeOf<ReceivedToolResult>()
+                )
+
                 // Correct run id will be set after the 'collect events job' is finished.
                 val expectedEvents = listOf(
                     AgentStartingEvent(
@@ -382,7 +426,7 @@ class TraceFeatureMessageRemoteWriterTest {
                         callId = callIds[0],
                         prompt = expectedLLMCallPrompt,
                         model = testModel.toModelInfo(),
-                        responses = listOf(toolCallMessage(dummyTool.name, content = """{"dummy":"test"}""")),
+                        responses = listOf(toolCallMessage(dummyTool.name, content = dummyToolArgsEncoded.toString())),
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     NodeExecutionCompletedEvent(
@@ -392,7 +436,7 @@ class TraceFeatureMessageRemoteWriterTest {
                         input = JsonPrimitive(userPrompt),
                         output = @OptIn(InternalAgentsApi::class)
                         SerializationUtils.encodeDataToJsonElementOrNull(
-                            data = toolCallMessage(dummyTool.name, content = """{"dummy":"test"}"""),
+                            data = toolCallMessage(dummyTool.name, content = dummyToolArgsEncoded.toString()),
                             dataType = typeOf<Message>()
                         ),
                         timestamp = testClock.now().toEpochMilliseconds()
@@ -402,7 +446,7 @@ class TraceFeatureMessageRemoteWriterTest {
                         nodeName = "test-tool-call",
                         input = @OptIn(InternalAgentsApi::class)
                         SerializationUtils.encodeDataToJsonElementOrNull(
-                            data = toolCallMessage(dummyTool.name, content = """{"dummy":"test"}"""),
+                            data = toolCallMessage(dummyTool.name, content = dummyToolArgsEncoded.toString()),
                             dataType = typeOf<Message.Tool.Call>()
                         ),
                         timestamp = testClock.now().toEpochMilliseconds()
@@ -419,7 +463,8 @@ class TraceFeatureMessageRemoteWriterTest {
                         toolCallId = "0",
                         toolName = dummyTool.name,
                         toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
-                        result = dummyTool.result,
+                        toolDescription = dummyTool.description,
+                        result = dummyTool.encodeResult(dummyTool.result),
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     NodeExecutionCompletedEvent(
@@ -427,31 +472,17 @@ class TraceFeatureMessageRemoteWriterTest {
                         nodeName = "test-tool-call",
                         input = @OptIn(InternalAgentsApi::class)
                         SerializationUtils.encodeDataToJsonElementOrNull(
-                            data = toolCallMessage(dummyTool.name, content = """{"dummy":"test"}"""),
+                            data = toolCallMessage(dummyTool.name, content = dummyToolArgsEncoded.toString()),
                             dataType = typeOf<Message.Tool.Call>()
                         ),
                         timestamp = testClock.now().toEpochMilliseconds(),
                         // Tool result is wrapped into an object with id, tool, content, and result fields
-                        output = kotlinx.serialization.json.JsonObject(
-                            mapOf(
-                                "id" to JsonPrimitive("0"),
-                                "tool" to JsonPrimitive(dummyTool.name),
-                                "content" to JsonPrimitive(dummyTool.result),
-                                "result" to dummyTool.encodeResult(dummyTool.result)
-                            )
-                        )
+                        output = dummyReceivedToolResultEncoded
                     ),
                     NodeExecutionStartingEvent(
                         runId = runId,
                         nodeName = "test-node-llm-send-tool-result",
-                        input = kotlinx.serialization.json.JsonObject(
-                            mapOf(
-                                "id" to JsonPrimitive("0"),
-                                "tool" to JsonPrimitive(dummyTool.name),
-                                "content" to JsonPrimitive(dummyTool.result),
-                                "result" to dummyTool.encodeResult(dummyTool.result)
-                            )
-                        ),
+                        input = dummyReceivedToolResultEncoded,
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     LLMCallStartingEvent(
@@ -473,14 +504,7 @@ class TraceFeatureMessageRemoteWriterTest {
                     NodeExecutionCompletedEvent(
                         runId = runId,
                         nodeName = "test-node-llm-send-tool-result",
-                        input = kotlinx.serialization.json.JsonObject(
-                            mapOf(
-                                "id" to JsonPrimitive("0"),
-                                "tool" to JsonPrimitive(dummyTool.name),
-                                "content" to JsonPrimitive(dummyTool.result),
-                                "result" to dummyTool.encodeResult(dummyTool.result)
-                            )
-                        ),
+                        input = dummyReceivedToolResultEncoded,
                         output = @OptIn(InternalAgentsApi::class)
                         SerializationUtils.encodeDataToJsonElementOrNull(
                             data = assistantMessage(mockResponse),
@@ -695,11 +719,36 @@ class TraceFeatureMessageRemoteWriterTest {
             messages = expectedPrompt.messages + userMessage(content = userPrompt)
         )
 
+        val dummyToolArgsEncoded = dummyTool.encodeArgs(DummyTool.Args("test"))
+        val dummyToolResultEncoded = dummyTool.encodeResult(dummyTool.result)
+        val dummyToolName = dummyTool.name
+        val dummyToolDescription = dummyTool.description
+
+        val dummyReceivedToolResultEncoded = @OptIn(InternalAgentsApi::class)
+        SerializationUtils.encodeDataToJsonElementOrNull(
+            data = receivedToolResult(
+                toolCallId = "0",
+                toolName = dummyToolName,
+                toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
+                toolDescription = dummyToolDescription,
+                content = dummyTool.result,
+                result = dummyToolResultEncoded,
+            ),
+            dataType = typeOf<ReceivedToolResult>()
+        )
+
         val expectedLLMCallWithToolsPrompt = expectedPrompt.copy(
             messages = expectedPrompt.messages + listOf(
                 userMessage(content = userPrompt),
-                toolCallMessage(dummyTool.name, content = """{"dummy":"test"}"""),
-                receivedToolResult("0", dummyTool.name, dummyTool.result, dummyTool.encodeResult(dummyTool.result)).toMessage(clock = testClock)
+                toolCallMessage(dummyTool.name, content = dummyToolArgsEncoded.toString()),
+                receivedToolResult(
+                    toolCallId = "0",
+                    toolName = dummyTool.name,
+                    toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
+                    toolDescription = dummyTool.description,
+                    content = dummyTool.encodeResultToString(dummyTool.result),
+                    result = dummyTool.encodeResult(dummyTool.result)
+                ).toMessage(clock = testClock)
             )
         )
 
@@ -806,7 +855,7 @@ class TraceFeatureMessageRemoteWriterTest {
                         callId = callIds[0],
                         prompt = expectedLLMCallPrompt,
                         model = testModel.toModelInfo(),
-                        responses = listOf(toolCallMessage(dummyTool.name, content = """{"dummy":"test"}""")),
+                        responses = listOf(toolCallMessage(dummyTool.name, content = dummyToolArgsEncoded.toString())),
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     LLMCallStartingEvent(

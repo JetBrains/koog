@@ -30,7 +30,7 @@ class OllamaSimpleAgentIntegrationTest : AIAgentTestBase() {
 
     val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
         onToolCallStarting { eventContext ->
-            actualToolCalls.add(eventContext.tool.name)
+            actualToolCalls.add(eventContext.toolName)
         }
     }
 

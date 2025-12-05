@@ -8,12 +8,14 @@ import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.environment.ReceivedToolResult
+import ai.koog.agents.core.environment.ToolResultKind
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.llm.OllamaModels
 import ai.koog.prompt.message.Message
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlin.reflect.typeOf
 
@@ -22,15 +24,22 @@ open class AgentTestBase {
     protected val testRunId = "test-run"
     protected val strategyName = "test-strategy"
 
-    protected fun createTestEnvironment(id: String = "test-environment"): AIAgentEnvironment {
+    protected fun createTestEnvironment(
+        id: String = "test-environment",
+        toolResult: ReceivedToolResult = ReceivedToolResult(
+            id = "test-tool-id",
+            tool = "test-tool",
+            toolArgs = JsonObject(mapOf("result" to JsonPrimitive("test-result"))),
+            toolDescription = null,
+            content = "Test tool result",
+            resultKind = ToolResultKind.Success,
+            result = JsonObject(mapOf("result" to JsonPrimitive("test-result")))
+        )
+    ): AIAgentEnvironment {
         return object : AIAgentEnvironment {
+
             override suspend fun executeTool(toolCall: Message.Tool.Call): ReceivedToolResult {
-                return ReceivedToolResult(
-                    id = toolCall.id,
-                    tool = toolCall.tool,
-                    content = toolCall.content,
-                    result = JsonPrimitive("Test result content")
-                )
+                return toolResult
             }
 
             override suspend fun reportProblem(exception: Throwable) {
@@ -88,7 +97,7 @@ open class AgentTestBase {
         runId: String = "test-run-id",
         strategyName: String = "test-strategy",
         pipeline: AIAgentGraphPipeline = AIAgentGraphPipeline(testClock),
-        agentInput: String = "test-input"
+        agentInput: String = "test-input",
     ): AIAgentGraphContext {
         return AIAgentGraphContext(
             environment = environment,

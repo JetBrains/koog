@@ -60,6 +60,7 @@ public interface AIAgentGraphContextBase : AIAgentContext {
         runId: String = this.runId,
         strategyName: String = this.strategyName,
         pipeline: AIAgentGraphPipeline = this.pipeline,
+        parentContext: AIAgentGraphContextBase? = this,
     ): AIAgentGraphContextBase {
         val clone = AIAgentGraphContext(
             environment = environment,
@@ -73,7 +74,7 @@ public interface AIAgentGraphContextBase : AIAgentContext {
             runId = runId,
             strategyName = strategyName,
             pipeline = pipeline,
-            parentContext = this
+            parentContext = parentContext,
         )
 
         return clone
@@ -126,7 +127,7 @@ public class AIAgentGraphContext(
     override val runId: String,
     override val strategyName: String,
     override val pipeline: AIAgentGraphPipeline,
-    override val parentContext: AIAgentGraphContextBase? = null
+    override val parentContext: AIAgentGraphContextBase? = null,
 ) : AIAgentGraphContextBase {
     private val mutableAIAgentContext = MutableAIAgentContext(llm, stateManager, storage)
 
@@ -160,12 +161,16 @@ public class AIAgentGraphContext(
         }
 
         /**
-         * Replaces the current contxt with the provided context.
+         * Replaces the current context with the provided context.
          * @param llm The LLM context to replace the current context with.
          * @param stateManager The state manager to replace the current context with.
          * @param storage The storage to replace the current context with.
          */
-        suspend fun replace(llm: AIAgentLLMContext?, stateManager: AIAgentStateManager?, storage: AIAgentStorage?) {
+        suspend fun replace(
+            llm: AIAgentLLMContext?,
+            stateManager: AIAgentStateManager?,
+            storage: AIAgentStorage?,
+        ) {
             rwLock.withWriteLock {
                 llm?.let { this.llm = llm }
                 stateManager?.let { this.stateManager = stateManager }
@@ -217,7 +222,7 @@ public class AIAgentGraphContext(
         mutableAIAgentContext.replace(
             context.llm,
             context.stateManager,
-            context.storage
+            context.storage,
         )
     }
 }

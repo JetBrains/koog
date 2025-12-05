@@ -169,7 +169,7 @@ class StructuredOutputWithToolsIntegrationTest {
         ) {
             install(EventHandler) {
                 onToolCallStarting { eventContext ->
-                    toolCallEvents.add(eventContext.tool.name)
+                    toolCallEvents.add(eventContext.toolName)
                 }
                 onAgentCompleted { eventContext ->
                     eventContext.result?.let { results.add(it as WeatherResponse) }
@@ -244,7 +244,7 @@ class StructuredOutputWithToolsIntegrationTest {
         ) {
             install(EventHandler) {
                 onToolCallStarting { eventContext ->
-                    toolCallTimestamps[eventContext.tool.name] = currentTime
+                    toolCallTimestamps[eventContext.toolName] = currentTime
                 }
             }
         }

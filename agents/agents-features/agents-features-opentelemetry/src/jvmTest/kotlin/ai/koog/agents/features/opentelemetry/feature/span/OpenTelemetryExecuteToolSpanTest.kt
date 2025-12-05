@@ -43,7 +43,7 @@ class OpenTelemetryExecuteToolSpanTest : OpenTelemetryTestBase() {
                 // TODO: Replace sha256base64() with unique event id for the Tool Call event
                 "tool.${TestGetWeatherTool.name}.args.${serializedArgs.sha256base64()}" to mapOf(
                     "attributes" to mapOf(
-                        "output.value" to mockToolCallResponse.toolResult,
+                        "output.value" to TestGetWeatherTool.encodeResult(mockToolCallResponse.toolResult).toString(),
                         "input.value" to serializedArgs,
                         "gen_ai.tool.name" to TestGetWeatherTool.name,
                         "gen_ai.tool.call.id" to mockToolCallResponse.toolCallId,

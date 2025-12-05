@@ -35,7 +35,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
  * ```
  * handleEvents {
  *     onToolCallStarting { eventContext ->
- *         println("Tool called: ${eventContext.tool.name} with args ${eventContext.toolArgs}")
+ *         println("Tool called: ${eventContext.toolName} with args ${eventContext.toolArgs}")
  *     }
  *
  *     onAgentCompleted { eventContext ->
@@ -201,7 +201,7 @@ public class EventHandler {
  * handleEvents {
  *     // Log when tools are called
  *     onToolCallStarting { eventContext ->
- *         println("Tool called: ${eventContext.tool.name} with args: ${eventContext.toolArgs}")
+ *         println("Tool called: ${eventContext.toolName} with args: ${eventContext.toolArgs}")
  *     }
  *
  *     // Handle errors

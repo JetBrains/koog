@@ -199,7 +199,7 @@ suspend fun main() {
             ) {
                 handleEvents {
                     onToolCallStarting { ctx ->
-                        println("Tool called: tool ${ctx.tool.name}, args ${ctx.toolArgs}")
+                        println("Tool called: tool ${ctx.toolName}, args ${ctx.toolArgs}")
                     }
                 }
             }

@@ -92,7 +92,7 @@ class AnthropicSchemaValidationIntegrationTest {
                             println(eventContext.throwable.stackTraceToString())
                         }
                         onToolCallStarting { eventContext ->
-                            println("Calling tool: ${eventContext.tool.name}")
+                            println("Calling tool: ${eventContext.toolName}")
                             println("Arguments: ${eventContext.toolArgs.toString().take(100)}...")
                         }
                     }

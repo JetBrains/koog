@@ -10,6 +10,8 @@ import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
 import ai.koog.agents.core.dsl.extension.onAssistantMessage
 import ai.koog.agents.core.dsl.extension.onToolCall
 import ai.koog.agents.core.environment.ReceivedToolResult
+import ai.koog.agents.core.environment.ToolResultKind
+import ai.koog.agents.core.feature.AIAgentFeatureTestAPI
 import ai.koog.agents.core.feature.debugger.Debugger
 import ai.koog.agents.core.feature.message.FeatureMessage
 import ai.koog.agents.core.feature.model.events.AgentClosingEvent
@@ -345,8 +347,9 @@ class DebuggerTest {
                         toolCallId = "0",
                         toolName = dummyTool.name,
                         toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
-                        result = dummyTool.result,
-                        timestamp = testClock.now().toEpochMilliseconds()
+                        toolDescription = dummyTool.description,
+                        result = dummyTool.encodeResult(dummyTool.result),
+                        timestamp = AIAgentFeatureTestAPI.testClock.now().toEpochMilliseconds()
                     ),
                     NodeExecutionCompletedEvent(
                         runId = clientEventsCollector.runId,
@@ -356,13 +359,35 @@ class DebuggerTest {
                             data = toolCallMessage(toolName = dummyTool.name, content = """{"dummy":"$requestedDummyToolArgs"}"""),
                             dataType = typeOf<Message.Tool.Call>()
                         ),
-                        output = SerializationUtils.encodeDataToJsonElementOrNull(ReceivedToolResult("0", dummyTool.name, dummyTool.result, dummyTool.encodeResult(dummyTool.result)), typeOf<ReceivedToolResult>()),
+                        output = SerializationUtils.encodeDataToJsonElementOrNull(
+                            data = ReceivedToolResult(
+                                id = "0",
+                                tool = dummyTool.name,
+                                toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
+                                toolDescription = dummyTool.description,
+                                content = dummyTool.result,
+                                resultKind = ToolResultKind.Success,
+                                result = dummyTool.encodeResult(dummyTool.result)
+                            ),
+                            dataType = typeOf<ReceivedToolResult>()
+                        ),
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     NodeExecutionStartingEvent(
                         runId = clientEventsCollector.runId,
                         nodeName = "test-node-llm-send-tool-result",
-                        input = SerializationUtils.encodeDataToJsonElementOrNull(ReceivedToolResult("0", dummyTool.name, dummyTool.result, dummyTool.encodeResult(dummyTool.result)), typeOf<ReceivedToolResult>()),
+                        input = SerializationUtils.encodeDataToJsonElementOrNull(
+                            data = ReceivedToolResult(
+                                id = "0",
+                                tool = dummyTool.name,
+                                toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
+                                toolDescription = dummyTool.description,
+                                content = dummyTool.result,
+                                resultKind = ToolResultKind.Success,
+                                result = dummyTool.encodeResult(dummyTool.result)
+                            ),
+                            dataType = typeOf<ReceivedToolResult>()
+                        ),
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),
                     LLMCallStartingEvent(
@@ -384,7 +409,18 @@ class DebuggerTest {
                     NodeExecutionCompletedEvent(
                         runId = clientEventsCollector.runId,
                         nodeName = "test-node-llm-send-tool-result",
-                        input = SerializationUtils.encodeDataToJsonElementOrNull(ReceivedToolResult("0", dummyTool.name, dummyTool.result, dummyTool.encodeResult(dummyTool.result)), typeOf<ReceivedToolResult>()),
+                        input = SerializationUtils.encodeDataToJsonElementOrNull(
+                            data = ReceivedToolResult(
+                                id = "0",
+                                tool = dummyTool.name,
+                                toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
+                                toolDescription = dummyTool.description,
+                                content = dummyTool.result,
+                                resultKind = ToolResultKind.Success,
+                                result = dummyTool.encodeResult(dummyTool.result)
+                            ),
+                            dataType = typeOf<ReceivedToolResult>()
+                        ),
                         output = @OptIn(InternalAgentsApi::class)
                         SerializationUtils.encodeDataToJsonElementOrNull(
                             data = assistantMessage(mockResponse),

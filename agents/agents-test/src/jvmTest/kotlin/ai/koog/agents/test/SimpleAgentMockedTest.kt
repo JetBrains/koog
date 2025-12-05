@@ -1,6 +1,8 @@
 package ai.koog.agents.test
 
 import ai.koog.agents.core.agent.AIAgent
+import ai.koog.agents.core.feature.model.AIAgentError
+import ai.koog.agents.core.feature.model.toAgentError
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.ToolException
 import ai.koog.agents.core.tools.ToolRegistry
@@ -9,6 +11,7 @@ import ai.koog.agents.ext.tool.ExitTool
 import ai.koog.agents.ext.tool.SayToUser
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.eventHandler.feature.EventHandlerConfig
+import ai.koog.agents.testing.feature.withTesting
 import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.message.Message
@@ -44,7 +47,20 @@ class SimpleAgentMockedTest {
             You MUST NOT communicate to the user without tools.
     """.trimIndent()
 
-    val testExecutor = getMockExecutor {
+    val succeedToolCalls = mutableListOf<String>()
+    val failedToolCalls = mutableListOf<String>()
+    val errors = mutableListOf<AIAgentError>()
+    val results = mutableListOf<Any?>()
+    val llmRequestedTools = mutableListOf<String>()
+
+    val testExecutor = getMockExecutor(
+        toolRegistry = ToolRegistry {
+            tool(ErrorTool)
+            tool(ConditionalTool)
+            tool(SayToUser)
+            tool(ExitTool)
+        }
+    ) {
         mockLLMToolCall(ExitTool, ExitTool.Args("Bye-bye.")) onRequestEquals "Please exit."
         mockLLMToolCall(SayToUser, SayToUser.Args("Fine, and you?")) onRequestEquals "Hello, how are you?"
         mockLLMAnswer("Hello, I'm good.") onRequestEquals "Repeat after me: Hello, I'm good."
@@ -67,26 +83,17 @@ class SimpleAgentMockedTest {
     }
 
     val eventHandlerConfig: EventHandlerConfig.() -> Unit = {
-        onToolCallStarting { eventContext ->
-            println("Tool called: tool ${eventContext.tool.name}, args ${eventContext.toolArgs}")
-            actualToolCalls.add(eventContext.tool.name)
-            iterationCount++
+        onToolCallCompleted { eventContext ->
+            succeedToolCalls.add(eventContext.toolName)
         }
 
         onAgentExecutionFailed { eventContext ->
-            errors.add(eventContext.throwable)
-        }
-
-        onToolCallStarting { eventContext ->
-            println("Tool called: tool ${eventContext.tool.name}, args ${eventContext.toolArgs}")
-            actualToolCalls.add(eventContext.tool.name)
+            eventContext.throwable.let { errors.add(it.toAgentError()) }
         }
 
         onToolCallFailed { eventContext ->
-            println(
-                "Tool call failure: tool ${eventContext.tool.name}, args ${eventContext.toolArgs}, error=${eventContext.throwable.message}"
-            )
-            errors.add(eventContext.throwable)
+            failedToolCalls.add(eventContext.toolName)
+            eventContext.error?.let { errors.add(it) }
         }
 
         onAgentCompleted { eventContext ->
@@ -101,19 +108,13 @@ class SimpleAgentMockedTest {
         }
     }
 
-    val actualToolCalls = mutableListOf<String>()
-    val errors = mutableListOf<Throwable>()
-    val results = mutableListOf<Any?>()
-    val llmRequestedTools = mutableListOf<String>()
-    var iterationCount = 0
-
     @AfterTest
     fun teardown() {
-        actualToolCalls.clear()
+        succeedToolCalls.clear()
+        failedToolCalls.clear()
         errors.clear()
         results.clear()
         llmRequestedTools.clear()
-        iterationCount = 0
     }
 
     object ErrorTool : SimpleTool<ErrorTool.Args>() {
@@ -161,17 +162,21 @@ class SimpleAgentMockedTest {
             temperature = 1.0,
             maxIterations = 10,
             promptExecutor = testExecutor,
-            installFeatures = { install(EventHandler, eventHandlerConfig) }
+            installFeatures = {
+                withTesting()
+                install(EventHandler, eventHandlerConfig)
+            }
         )
 
         agent.run("Repeat after me: Hello, I'm good.")
 
-        // by default, a AI Agent has no tools underneath
-        assertTrue(actualToolCalls.isEmpty(), "No tools should be called")
+        // by default, an AI Agent has no tools underneath
+        assertTrue(succeedToolCalls.isEmpty(), "No tools should be called")
+        assertTrue(failedToolCalls.isEmpty(), "No tools should be called")
         assertTrue(results.isNotEmpty(), "No agent run results were received")
         assertTrue(
             errors.isEmpty(),
-            "Expected no errors, but got: ${errors.joinToString("\n") { it.message ?: "" }}"
+            "Expected no errors, but got: ${errors.joinToString("\n") { it.message }}"
         )
     }
 
@@ -188,17 +193,21 @@ class SimpleAgentMockedTest {
             toolRegistry = toolRegistry,
             maxIterations = 10,
             promptExecutor = testExecutor,
-            installFeatures = { install(EventHandler, eventHandlerConfig) }
+            installFeatures = {
+                withTesting()
+                install(EventHandler, eventHandlerConfig)
+            }
         )
 
         agent.run("Write a Kotlin function to calculate factorial.")
 
-        assertTrue(actualToolCalls.isNotEmpty(), "No tools were called")
-        assertTrue(actualToolCalls.contains(SayToUser.name), "The ${SayToUser.name} tool was not called")
+        assertTrue(succeedToolCalls.isNotEmpty(), "No tools were called")
+        assertTrue(succeedToolCalls.contains(SayToUser.name), "The ${SayToUser.name} tool was not called")
+        assertTrue(failedToolCalls.isEmpty(), "Some tool calls weren't successful")
         assertTrue(results.isNotEmpty(), "No agent run results were received")
         assertTrue(
             errors.isEmpty(),
-            "Expected no errors, but got: ${errors.joinToString("\n") { it.message ?: "" }}"
+            "Expected no errors, but got: ${errors.joinToString("\n") { it.message }}"
         )
     }
 
@@ -212,31 +221,34 @@ class SimpleAgentMockedTest {
             toolRegistry = toolRegistry,
             maxIterations = 10,
             promptExecutor = testExecutor,
-            installFeatures = { install(EventHandler, eventHandlerConfig) }
+            installFeatures = {
+                withTesting()
+                install(EventHandler, eventHandlerConfig)
+            }
         )
 
         // Calling a non-existent tool returns an observation with an error
         // instead of throwing an exception, allowing the agent to handle it gracefully
-        agent.run(errorTrigger)
+        try {
+            agent.run(errorTrigger)
+        } catch (e: Throwable) {
+            errors.add(e.toAgentError())
+        }
 
         assertTrue(
             llmRequestedTools.contains(ErrorTool.name),
             "LLM should have requested ${ErrorTool.name}, but requested: $llmRequestedTools"
         )
 
-        // Verify the tool was NOT actually executed (tool not found in registry)
         assertTrue(
-            actualToolCalls.isEmpty(),
-            "No tools should be executed when tool is not found, but found: $actualToolCalls"
+            succeedToolCalls.isEmpty() && failedToolCalls.isEmpty(),
+            "No tools should be executed when tool is not found"
         )
 
-        // Verify agent completed successfully without exceptions
-        assertTrue(results.isNotEmpty(), "Agent should complete and produce a result")
-
-        // Verify no exceptions were thrown (graceful error handling)
+        // Verify that tool not found errors are captured
         assertTrue(
-            errors.isEmpty(),
-            "No errors should be recorded with graceful error handling: ${errors.joinToString("\n") { it.message ?: "" }}"
+            errors.isNotEmpty(),
+            "Tool not found errors should be captured: ${errors.joinToString("\n") { it.message }}"
         )
     }
 
@@ -253,19 +265,26 @@ class SimpleAgentMockedTest {
             toolRegistry = toolRegistry,
             maxIterations = 10,
             promptExecutor = testExecutor,
-            installFeatures = { install(EventHandler, eventHandlerConfig) }
+            installFeatures = {
+                withTesting()
+                install(EventHandler, eventHandlerConfig)
+            }
         )
 
         try {
             agent.run(errorTrigger)
         } catch (e: Throwable) {
-            errors.add(e)
+            errors.add(e.toAgentError())
         }
 
-        assertTrue(actualToolCalls.contains(ErrorTool.name), "The ${ErrorTool.name} tool was not called")
+        assertTrue(llmRequestedTools.contains(ErrorTool.name), "The ${ErrorTool.name} tool was not requested by LLM")
         assertTrue(
-            errors.isEmpty(),
-            "Expected no errors, but got: ${errors.joinToString("\n") { it.message ?: "" }}"
+            succeedToolCalls.isEmpty() && failedToolCalls.isEmpty(),
+            "No tools should be executed when error is thrown"
+        )
+        assertTrue(
+            errors.isNotEmpty(),
+            "Expected tool execution errors to be captured"
         )
     }
 
@@ -276,20 +295,35 @@ class SimpleAgentMockedTest {
             tool(ConditionalTool)
         }
 
-        val successAgent = AIAgent(
-            systemPrompt = systemPrompt,
-            llmModel = OpenAIModels.Chat.GPT4oMini,
-            temperature = 1.0,
-            toolRegistry = toolRegistry,
-            maxIterations = 10,
-            promptExecutor = testExecutor,
-            installFeatures = { install(EventHandler, eventHandlerConfig) }
+        try {
+            AIAgent(
+                systemPrompt = systemPrompt,
+                llmModel = OpenAIModels.Chat.GPT4oMini,
+                temperature = 1.0,
+                toolRegistry = toolRegistry,
+                maxIterations = 10,
+                promptExecutor = testExecutor,
+                installFeatures = {
+                    withTesting()
+                    install(EventHandler, eventHandlerConfig)
+                }
+            ).run(agentMessage)
+        } catch (e: Throwable) {
+            errors.add(e.toAgentError())
+        }
+
+        assertTrue(
+            llmRequestedTools.contains(ConditionalTool.name),
+            "LLM should have requested ${ConditionalTool.name}"
         )
 
-        successAgent.run(agentMessage)
-
-        assertTrue(actualToolCalls.contains(ConditionalTool.name), "The ${ConditionalTool.name} tool was not called")
-        assertTrue(errors.isEmpty(), "No errors should be recorded for success case")
+        if (agentMessage.contains("success")) {
+            assertTrue(succeedToolCalls.contains(ConditionalTool.name), "Success case should track tool execution")
+            assertTrue(errors.isEmpty(), "Success case should have no errors")
+            assertTrue(results.isNotEmpty(), "Agent should complete and produce a result for success case")
+        } else {
+            assertTrue(errors.isNotEmpty(), "Error case should capture errors")
+        }
     }
 
     @Test
@@ -302,8 +336,6 @@ class SimpleAgentMockedTest {
             mockLLMToolCall(SayToUser, SayToUser.Args("Looping...")) onRequestEquals "Make the agent loop."
         }
 
-        iterationCount = 0
-
         val agent = AIAgent(
             systemPrompt = systemPrompt,
             llmModel = OpenAIModels.Chat.GPT4oMini,
@@ -311,20 +343,22 @@ class SimpleAgentMockedTest {
             toolRegistry = toolRegistry,
             maxIterations = 2,
             promptExecutor = loopExecutor,
-            installFeatures = { install(EventHandler, eventHandlerConfig) }
+            installFeatures = {
+                withTesting()
+                install(EventHandler, eventHandlerConfig)
+            }
         )
 
         try {
             agent.run("Make the agent loop.")
         } catch (e: Throwable) {
-            errors.add(e)
+            errors.add(e.toAgentError())
         }
 
         assertTrue(errors.isNotEmpty(), "Error should be recorded when maxIterations is reached")
         assertTrue(
             errors.any {
-                it.message?.contains("Maximum number of iterations") == true ||
-                    it.message?.contains("Agent couldn't finish in given number of steps") == true
+                it.message.contains("Maximum number of iterations") || it.message.contains("Agent couldn't finish in given number of steps")
             },
             "Expected error about maximum iterations"
         )

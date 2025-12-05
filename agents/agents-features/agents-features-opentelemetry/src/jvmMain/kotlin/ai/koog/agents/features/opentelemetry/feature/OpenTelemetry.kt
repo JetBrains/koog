@@ -500,9 +500,8 @@ public class OpenTelemetry {
 
                 val executeToolSpan = ExecuteToolSpan(
                     parent = nodeExecuteSpan,
-                    toolName = eventContext.tool.name,
-                    toolDescription = eventContext.tool.description,
-                    toolArgs = eventContext.tool.encodeArgsToStringUnsafe(eventContext.toolArgs),
+                    toolName = eventContext.toolName,
+                    toolArgs = eventContext.toolArgs.toString(),
                     toolCallId = eventContext.toolCallId,
                 )
 
@@ -522,21 +521,25 @@ public class OpenTelemetry {
                     runId = agentRunInfoElement.runId,
                     nodeId = nodeInfoElement.id,
                     nodeName = nodeInfoElement.name,
-                    toolName = eventContext.tool.name,
-                    toolArgs = eventContext.tool.encodeArgsToStringUnsafe(eventContext.toolArgs),
+                    toolName = eventContext.toolName,
+                    toolArgs = eventContext.toolArgs.toString(),
                 )
 
                 val executeToolSpan = spanProcessor.getSpanCatching<ExecuteToolSpan>(executeToolSpanId)
                     ?: return@intercept
 
-                // End the ExecuteToolSpan span
-                eventContext.result?.let { result ->
+                eventContext.toolDescription?.let { toolDescription ->
                     executeToolSpan.addAttribute(
-                        attribute = SpanAttributes.Tool.OutputValue(
-                            output = eventContext.tool.encodeResultToStringUnsafe(
-                                result
-                            )
-                        )
+                        // gen_ai.tool.description
+                        attribute = SpanAttributes.Tool.Description(description = toolDescription)
+                    )
+                }
+
+                // End the ExecuteToolSpan span
+                eventContext.toolResult?.let { result ->
+                    executeToolSpan.addAttribute(
+                        // gen_ai.tool.output.value
+                        attribute = SpanAttributes.Tool.OutputValue(result.toString())
                     )
                 }
 
@@ -556,22 +559,32 @@ public class OpenTelemetry {
                     runId = agentRunInfoElement.runId,
                     nodeId = nodeInfoElement.id,
                     nodeName = nodeInfoElement.name,
-                    toolName = eventContext.tool.name,
-                    toolArgs = eventContext.tool.encodeArgsToStringUnsafe(eventContext.toolArgs),
+                    toolName = eventContext.toolName,
+                    toolArgs = eventContext.toolArgs.toString(),
                 )
 
                 val executeToolSpan = spanProcessor.getSpanCatching<ExecuteToolSpan>(executeToolSpanId)
                     ?: return@intercept
 
+                eventContext.toolDescription?.let { toolDescription ->
+                    executeToolSpan.addAttribute(
+                        // gen_ai.tool.description
+                        attribute = SpanAttributes.Tool.Description(description = toolDescription)
+                    )
+                }
+
                 executeToolSpan.addAttribute(
-                    attribute = CommonAttributes.Error.Type(eventContext.throwable.message ?: "Unknown tool call error")
+                    attribute = CommonAttributes.Error.Type(eventContext.message)
                 )
 
                 // End the ExecuteToolSpan span
                 spanAdapter?.onBeforeSpanFinished(executeToolSpan)
                 spanProcessor.endSpan(
                     span = executeToolSpan,
-                    spanEndStatus = SpanEndStatus(code = StatusCode.ERROR, description = eventContext.throwable.message)
+                    spanEndStatus = SpanEndStatus(
+                        code = StatusCode.ERROR,
+                        description = eventContext.error?.message ?: eventContext.message
+                    )
                 )
             }
 
@@ -587,22 +600,29 @@ public class OpenTelemetry {
                     runId = agentRunInfoElement.runId,
                     nodeId = nodeInfoElement.id,
                     nodeName = nodeInfoElement.name,
-                    toolName = eventContext.tool.name,
+                    toolName = eventContext.toolName,
                     toolArgs = eventContext.toolArgs.toString(),
                 )
 
                 val executeToolSpan = spanProcessor.getSpanCatching<ExecuteToolSpan>(executeToolSpanId)
                     ?: return@intercept
 
+                eventContext.toolDescription?.let { toolDescription ->
+                    executeToolSpan.addAttribute(
+                        // gen_ai.tool.description
+                        attribute = SpanAttributes.Tool.Description(description = toolDescription)
+                    )
+                }
+
                 executeToolSpan.addAttribute(
-                    attribute = CommonAttributes.Error.Type(eventContext.error)
+                    attribute = CommonAttributes.Error.Type(eventContext.message)
                 )
 
                 // End the ExecuteToolSpan span
                 spanAdapter?.onBeforeSpanFinished(executeToolSpan)
                 spanProcessor.endSpan(
                     span = executeToolSpan,
-                    spanEndStatus = SpanEndStatus(code = StatusCode.ERROR, description = eventContext.error)
+                    spanEndStatus = SpanEndStatus(code = StatusCode.ERROR, description = eventContext.message)
                 )
             }
 

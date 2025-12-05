@@ -1,6 +1,7 @@
 package ai.koog.agents.core.environment
 
 import ai.koog.agents.core.CalculatorChatExecutor.testClock
+import ai.koog.agents.core.feature.model.toAgentError
 import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.agents.core.tools.asToolDescriptorSerializer
 import ai.koog.prompt.message.Message
@@ -85,14 +86,20 @@ class SafeToolTest {
                 ReceivedToolResult(
                     id = toolCall.id,
                     tool = toolCall.tool,
+                    toolArgs = toolCall.contentJson,
+                    toolDescription = null,
                     content = resultContent,
+                    resultKind = ToolResultKind.Success,
                     result = json.encodeToJsonElement(serializer<String>().asToolDescriptorSerializer(), TEST_RESULT)
                 )
             } else {
                 ReceivedToolResult(
                     id = toolCall.id,
                     tool = toolCall.tool,
+                    toolArgs = toolCall.contentJson,
+                    toolDescription = null,
                     content = TEST_ERROR,
+                    resultKind = ToolResultKind.Failure(Exception(TEST_ERROR).toAgentError()),
                     result = null,
                 )
             }
@@ -195,18 +202,23 @@ class SafeToolTest {
             override suspend fun executeTool(toolCall: Message.Tool.Call): ReceivedToolResult {
                 return try {
                     val result = testFunction("test", null as Int)
-
                     ReceivedToolResult(
                         id = toolCall.id,
                         tool = toolCall.tool,
+                        toolArgs = toolCall.contentJson,
+                        toolDescription = null,
                         content = "Success: $result",
+                        resultKind = ToolResultKind.Success,
                         result = json.encodeToJsonElement(result).jsonObject
                     )
                 } catch (e: Exception) {
                     ReceivedToolResult(
                         id = toolCall.id,
                         tool = toolCall.tool,
+                        toolArgs = toolCall.contentJson,
+                        toolDescription = null,
                         content = "Error: ${e.message}",
+                        resultKind = ToolResultKind.Failure(e.toAgentError()),
                         result = null
                     )
                 }
@@ -291,14 +303,20 @@ class SafeToolTest {
                     ReceivedToolResult(
                         id = toolCall.id,
                         tool = toolCall.tool,
+                        toolArgs = toolCall.contentJson,
+                        toolDescription = null,
                         content = "Success: $result",
+                        resultKind = ToolResultKind.Success,
                         result = json.encodeToJsonElement(resultSerializer, result)
                     )
                 } catch (e: Exception) {
                     ReceivedToolResult(
                         id = toolCall.id,
                         tool = toolCall.tool,
+                        toolArgs = toolCall.contentJson,
+                        toolDescription = null,
                         content = "Error: ${e.message}",
+                        resultKind = ToolResultKind.Failure(e.toAgentError()),
                         result = null
                     )
                 }

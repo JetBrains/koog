@@ -125,28 +125,28 @@ class TestEventsCollector {
         onToolCallStarting { eventContext ->
             updateRunId(eventContext.runId)
             _collectedEvents.add(
-                "OnToolCallStarting (run id: ${eventContext.runId}, tool: ${eventContext.tool.name}, args: ${eventContext.toolArgs})"
+                "OnToolCallStarting (run id: ${eventContext.runId}, tool: ${eventContext.toolName}, args: ${eventContext.toolArgs})"
             )
         }
 
         onToolValidationFailed { eventContext ->
             updateRunId(eventContext.runId)
             _collectedEvents.add(
-                "OnToolValidationFailed (run id: ${eventContext.runId}, tool: ${eventContext.tool.name}, args: ${eventContext.toolArgs}, value: ${eventContext.error})"
+                "OnToolValidationFailed (run id: ${eventContext.runId}, tool: ${eventContext.toolName}, args: ${eventContext.toolArgs}, value: ${eventContext.error})"
             )
         }
 
         onToolCallFailed { eventContext ->
             updateRunId(eventContext.runId)
             _collectedEvents.add(
-                "OnToolCallFailed (run id: ${eventContext.runId}, tool: ${eventContext.tool.name}, args: ${eventContext.toolArgs}, throwable: ${eventContext.throwable.message})"
+                "OnToolCallFailed (run id: ${eventContext.runId}, tool: ${eventContext.toolName}, args: ${eventContext.toolArgs}, throwable: ${eventContext.error?.message})"
             )
         }
 
         onToolCallCompleted { eventContext ->
             updateRunId(eventContext.runId)
             _collectedEvents.add(
-                "OnToolCallCompleted (run id: ${eventContext.runId}, tool: ${eventContext.tool.name}, args: ${eventContext.toolArgs}, result: ${eventContext.result})"
+                "OnToolCallCompleted (run id: ${eventContext.runId}, tool: ${eventContext.toolName}, args: ${eventContext.toolArgs}, result: ${eventContext.toolResult})"
             )
         }
 

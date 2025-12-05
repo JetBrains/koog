@@ -16,6 +16,7 @@ import ai.koog.agents.core.dsl.extension.nodeLLMRequestMultiple
 import ai.koog.agents.core.dsl.extension.nodeLLMSendMultipleToolResults
 import ai.koog.agents.core.dsl.extension.setToolChoiceRequired
 import ai.koog.agents.core.environment.ReceivedToolResult
+import ai.koog.agents.core.environment.ToolResultKind
 import ai.koog.agents.core.environment.executeTools
 import ai.koog.agents.core.environment.toSafeResult
 import ai.koog.agents.core.tools.Tool
@@ -634,7 +635,10 @@ internal suspend inline fun <reified Output, reified OutputTransformed> AIAgentC
     return ReceivedToolResult(
         id = toolCall.id,
         tool = finishTool.name,
+        toolArgs = toolCall.contentJson,
         content = toolCall.content,
+        resultKind = ToolResultKind.Success,
+        toolDescription = finishTool.description,
         result = encodedResult
     )
 }

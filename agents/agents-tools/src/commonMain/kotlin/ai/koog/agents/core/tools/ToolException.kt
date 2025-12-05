@@ -1,9 +1,12 @@
 package ai.koog.agents.core.tools
 
+import kotlinx.serialization.Serializable
+
 /**
  * A base sealed class representing exceptions specific to tools.
  * This class provides a structure for exceptions with a custom message.
  */
+@Serializable
 public sealed class ToolException(override val message: String) : Exception() {
     /**
      * Represents a failure that occurs during validation processes.

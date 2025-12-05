@@ -7,20 +7,27 @@ import ai.koog.prompt.message.RequestMetaInfo
 import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
 
 /**
  * Represents the result or response received from a tool operation.
  *
  * @property id An optional identifier for the tool result.
  * @property tool The name or type of the tool that generated the result.
+ * @property toolArgs The arguments provided to the tool during execution.
+ * @property toolDescription An optional description of the tool's functionality.
  * @property content The main content or message associated with the tool result.
+ * @property resultKind The kind of result produced by the tool, indicating success, failure, or validation error.
  * @property result The detailed result produced by the tool, implementing the [ToolResult] interface.
  */
 @Serializable
 public data class ReceivedToolResult(
     val id: String?,
     val tool: String,
+    val toolArgs: JsonObject,
+    val toolDescription: String?,
     val content: String,
+    val resultKind: ToolResultKind,
     val result: JsonElement?
 ) {
     /**

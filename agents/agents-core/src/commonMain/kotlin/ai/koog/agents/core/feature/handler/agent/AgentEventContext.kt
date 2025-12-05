@@ -3,8 +3,6 @@ package ai.koog.agents.core.feature.handler.agent
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.context.AIAgentContext
-import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
-import ai.koog.agents.core.agent.entity.AIAgentStrategy
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventContext
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventType
 
@@ -77,11 +75,9 @@ public data class AgentClosingContext(
 /**
  * Provides a context for executing transformations and operations within an AI agent's environment.
  *
- * @property strategy The AI agent strategy that defines the workflow and execution logic for the AI agent.
  * @property agent The AI agent being managed or operated upon in the context.
  */
 public class AgentEnvironmentTransformingContext(
-    public val strategy: AIAgentStrategy<*, *, AIAgentGraphContextBase>,
     public val agent: GraphAIAgent<*, *>,
 ) : AgentEventContext {
     override val eventType: AgentLifecycleEventType = AgentLifecycleEventType.AgentEnvironmentTransforming
