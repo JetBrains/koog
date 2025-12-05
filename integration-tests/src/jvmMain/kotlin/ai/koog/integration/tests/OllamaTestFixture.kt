@@ -41,6 +41,7 @@ class OllamaTestFixture {
     val model = OllamaModels.Meta.LLAMA_3_2
     val visionModel = OllamaModels.Granite.GRANITE_3_2_VISION
     val moderationModel = OllamaModels.Meta.LLAMA_GUARD_3
+    val modelsWithHallucinations = listOf(OllamaModels.Meta.LLAMA_3_2, OllamaModels.Groq.LLAMA_3_GROK_TOOL_USE_8B)
 
     private lateinit var ollamaContainer: GenericContainer<*>
 
@@ -67,6 +68,7 @@ class OllamaTestFixture {
                     client.getModelOrNull(model.id, pullIfMissing = true)
                     client.getModelOrNull(visionModel.id, pullIfMissing = true)
                     client.getModelOrNull(moderationModel.id, pullIfMissing = true)
+                    modelsWithHallucinations.forEach { client.getModelOrNull(it.id, pullIfMissing = true) }
                 } catch (e: Exception) {
                     logger.error(e) { "Failed to pull models: ${e.message}" }
                     cleanContainer()
