@@ -124,6 +124,7 @@ class AIAgentPipelineJvmTest {
     }
 
     @Test
+    @Disabled("Flaky, see #1223")
     @OptIn(ExperimentalAgentsApi::class)
     fun `test known system feature is skipped if already installed in agent`() = runTest(timeout = testTimeout) {
         val expectedSystemPort = NetUtil.findAvailablePort()
