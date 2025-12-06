@@ -15,6 +15,7 @@ kotlin {
                 api(project(":agents:agents-core"))
                 api(project(":agents:agents-tools"))
                 api(project(":agents:agents-utils"))
+                api(project(":prompt:prompt-processor"))
 
                 api(libs.kotlinx.serialization.json)
             }
