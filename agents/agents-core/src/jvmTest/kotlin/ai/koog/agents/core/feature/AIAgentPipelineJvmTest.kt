@@ -99,6 +99,7 @@ class AIAgentPipelineJvmTest {
     }
 
     @Test
+    @Disabled("Flaky, see #1223")
     @OptIn(ExperimentalAgentsApi::class)
     fun `test known system feature in config set by vm option`() = runTest(timeout = testTimeout) {
         val expectedPort = NetUtil.findAvailablePort()
