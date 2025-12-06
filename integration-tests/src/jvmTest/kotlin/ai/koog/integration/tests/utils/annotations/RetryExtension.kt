@@ -6,6 +6,8 @@ import org.junit.jupiter.api.extension.InvocationInterceptor
 import org.junit.jupiter.api.extension.ReflectiveInvocationContext
 import org.opentest4j.TestAbortedException
 import java.lang.reflect.Method
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
 
 class RetryExtension : InvocationInterceptor {
     companion object {
@@ -110,6 +112,32 @@ class RetryExtension : InvocationInterceptor {
         val testMethod = invocationContext.executable
         val arguments = invocationContext.arguments
 
-        testMethod.invoke(testInstance, *arguments.toTypedArray())
+        executeBeforeTestMethods(testInstance)
+
+        try {
+            testMethod.invoke(testInstance, *arguments.toTypedArray())
+        } finally {
+            executeAfterTestMethods(testInstance)
+        }
+    }
+
+    private fun <T : Annotation> executeAnnotatedMethods(testInstance: Any, annotationClass: Class<T>) {
+        // Find all methods in the test class that are annotated with the specified annotation
+        val annotatedMethods = testInstance.javaClass.methods
+            .filter { method -> method.isAnnotationPresent(annotationClass) }
+
+        // Execute each annotated method
+        annotatedMethods.forEach { method ->
+            method.isAccessible = true
+            method.invoke(testInstance)
+        }
+    }
+
+    private fun executeBeforeTestMethods(testInstance: Any) {
+        executeAnnotatedMethods(testInstance, BeforeTest::class.java)
+    }
+
+    private fun executeAfterTestMethods(testInstance: Any) {
+        executeAnnotatedMethods(testInstance, AfterTest::class.java)
     }
 }

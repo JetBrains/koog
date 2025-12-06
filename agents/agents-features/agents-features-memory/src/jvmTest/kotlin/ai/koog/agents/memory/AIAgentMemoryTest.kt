@@ -104,6 +104,7 @@ class AIAgentMemoryTest {
             tools = emptyList(),
             prompt = prompt("test") { },
             model = testModel,
+            responseProcessor = null,
             promptExecutor = promptExecutor,
             environment = MockEnvironment(toolRegistry = ToolRegistry.EMPTY, promptExecutor),
             config = AIAgentConfig(Prompt.Empty, testModel, 100),
@@ -180,6 +181,7 @@ class AIAgentMemoryTest {
             tools = emptyList(),
             prompt = prompt("test") { },
             model = testModel,
+            responseProcessor = null,
             promptExecutor = promptExecutor,
             environment = MockEnvironment(toolRegistry = ToolRegistry.EMPTY, promptExecutor),
             config = AIAgentConfig(Prompt.Empty, testModel, 100),
@@ -296,6 +298,7 @@ class AIAgentMemoryTest {
             prompt = prompt("test") { },
             model = testModel,
             promptExecutor = promptExecutor,
+            responseProcessor = null,
             environment = MockEnvironment(toolRegistry = ToolRegistry.EMPTY, promptExecutor),
             config = AIAgentConfig(Prompt.Empty, testModel, 100),
             clock = testClock
@@ -378,6 +381,7 @@ class AIAgentMemoryTest {
                 assistant("I'll remember your preference for Java in enterprise development")
             },
             model = originalModel,
+            responseProcessor = null,
             promptExecutor = promptExecutor,
             environment = MockEnvironment(toolRegistry = ToolRegistry.EMPTY, promptExecutor),
             config = AIAgentConfig(Prompt.Empty, originalModel, 100),
@@ -465,6 +469,7 @@ class AIAgentMemoryTest {
                 assistant("I'll remember your language preferences for different domains")
             },
             model = testModel,
+            responseProcessor = null,
             promptExecutor = promptExecutor,
             environment = MockEnvironment(toolRegistry = ToolRegistry.EMPTY, promptExecutor),
             config = AIAgentConfig(Prompt.Empty, testModel, 100),
@@ -543,6 +548,7 @@ class AIAgentMemoryTest {
             tools = emptyList(),
             prompt = prompt("test") { },
             model = testModel,
+            responseProcessor = null,
             promptExecutor = promptExecutor,
             environment = MockEnvironment(toolRegistry = ToolRegistry.EMPTY, promptExecutor),
             config = AIAgentConfig(Prompt.Empty, testModel, 100),

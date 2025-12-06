@@ -22,6 +22,7 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.utils.io.use
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
@@ -98,6 +99,7 @@ class AIAgentPipelineJvmTest {
     }
 
     @Test
+    @Disabled("Flaky, see #1223")
     @OptIn(ExperimentalAgentsApi::class)
     fun `test known system feature in config set by vm option`() = runTest(timeout = testTimeout) {
         val expectedPort = NetUtil.findAvailablePort()
@@ -122,6 +124,7 @@ class AIAgentPipelineJvmTest {
     }
 
     @Test
+    @Disabled("Flaky, see #1223")
     @OptIn(ExperimentalAgentsApi::class)
     fun `test known system feature is skipped if already installed in agent`() = runTest(timeout = testTimeout) {
         val expectedSystemPort = NetUtil.findAvailablePort()
@@ -204,6 +207,7 @@ class AIAgentPipelineJvmTest {
 
     @Test
     @OptIn(ExperimentalAgentsApi::class)
+    @Disabled("Flaky, see #1223")
     fun `test duplicate system features provided in config`() = runTest(timeout = testTimeout) {
         // Set System properties for test
         System.setProperty(

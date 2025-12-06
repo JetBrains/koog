@@ -16,6 +16,7 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.processor.ResponseProcessor
 import ai.koog.prompt.structure.StructureFixingParser
 import ai.koog.prompt.structure.StructuredRequest
 import ai.koog.prompt.structure.StructuredRequestConfig
@@ -42,6 +43,7 @@ import kotlin.uuid.Uuid
  * @param toolSelectionStrategy Strategy determining which tools should be available during this subgraph's execution.
  * @param llmModel Optional [LLModel] override for the subgraph execution.
  * @param llmParams Optional [LLMParams] override for the prompt for the subgraph execution.
+ * @param responseProcessor Optional [ResponseProcessor] override for the subgraph execution.
  */
 public open class AIAgentSubgraph<TInput, TOutput>(
     override val name: String,
@@ -50,6 +52,7 @@ public open class AIAgentSubgraph<TInput, TOutput>(
     private val toolSelectionStrategy: ToolSelectionStrategy,
     private val llmModel: LLModel? = null,
     private val llmParams: LLMParams? = null,
+    private val responseProcessor: ResponseProcessor? = null,
 ) : AIAgentNodeBase<TInput, TOutput>(), ExecutionPointNode {
     override val inputType: KType = start.inputType
     override val outputType: KType = finish.outputType
@@ -166,7 +169,8 @@ public open class AIAgentSubgraph<TInput, TOutput>(
                     llm = llm.copy(
                         tools = newTools,
                         model = llmModel ?: llm.model,
-                        prompt = llm.prompt.copy(params = llmParams ?: llm.prompt.params)
+                        prompt = llm.prompt.copy(params = llmParams ?: llm.prompt.params),
+                        responseProcessor = responseProcessor
                     )
                 )
             }

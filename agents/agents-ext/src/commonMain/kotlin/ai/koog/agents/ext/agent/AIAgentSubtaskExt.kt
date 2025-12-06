@@ -20,6 +20,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.processor.ResponseProcessor
 
 /**
  * Executes a subtask with validation and verification of the results.
@@ -38,6 +39,7 @@ import ai.koog.prompt.params.LLMParams
  * @param runMode The mode in which tools should be executed, either sequentially or in parallel.
  * @param assistantResponseRepeatMax An optional parameter specifying the maximum number of
  * retries for getting valid responses from the assistant.
+ * @param responseProcessor An optional processor defining the post-processing of messages returned from the LLM.
  * @param defineTask A suspend function that defines the subtask as a string
  * based on the provided input.
  * @return A [CriticResult] object containing the verification status, feedback,
@@ -51,6 +53,7 @@ public suspend inline fun <reified Input> AIAgentFunctionalContext.subtaskWithVe
     llmParams: LLMParams? = null,
     runMode: ToolCalls = ToolCalls.SEQUENTIAL,
     assistantResponseRepeatMax: Int? = null,
+    responseProcessor: ResponseProcessor? = null,
     defineTask: suspend AIAgentFunctionalContext.(input: Input) -> String
 ): CriticResult<Input> {
     val result = subtask<Input, CriticResultFromLLM>(
@@ -60,6 +63,7 @@ public suspend inline fun <reified Input> AIAgentFunctionalContext.subtaskWithVe
         llmParams,
         runMode,
         assistantResponseRepeatMax,
+        responseProcessor,
         defineTask
     )
 
@@ -82,6 +86,7 @@ public suspend inline fun <reified Input> AIAgentFunctionalContext.subtaskWithVe
  * @param llmParams The configuration parameters for the large language model, such as temperature, etc.
  * @param runMode The mode in which tools should be executed, either sequentially or in parallel.
  * @param assistantResponseRepeatMax The maximum number of times the assistant response can repeat. Useful to control redundant outputs.
+ * @param responseProcessor An optional processor defining the post-processing of messages returned from the LLM.
  * @param defineTask A suspendable lambda defining the actual task logic, which takes the provided input and produces a task description.
  * @return The result of the subtask execution, as an instance of type Output.
  */
@@ -93,11 +98,12 @@ public suspend inline fun <reified Input, reified Output> AIAgentFunctionalConte
     llmParams: LLMParams? = null,
     runMode: ToolCalls = ToolCalls.SEQUENTIAL,
     assistantResponseRepeatMax: Int? = null,
+    responseProcessor: ResponseProcessor? = null,
     defineTask: suspend AIAgentFunctionalContext.(input: Input) -> String
 ): Output {
     val finishTool = identityTool<Output>()
 
-    return subtask(input, tools, finishTool, llmModel, llmParams, runMode, assistantResponseRepeatMax, defineTask)
+    return subtask(input, tools, finishTool, llmModel, llmParams, runMode, assistantResponseRepeatMax, responseProcessor, defineTask)
 }
 
 /**
@@ -112,6 +118,7 @@ public suspend inline fun <reified Input, reified Output> AIAgentFunctionalConte
  * @param llmParams Optional parameters for configuring the behavior of the LLM during subtask execution.
  * @param runMode The mode in which tools should be executed, either sequentially or in parallel.
  * @param assistantResponseRepeatMax The maximum number of feedback attempts allowed from the language model if the subtask is not completed.
+ * @param responseProcessor An optional processor defining the post-processing of messages returned from the LLM.
  * @param defineTask A suspendable function used to define the task based on the provided input.
  * @return The transformed final result of executing the finishing tool to complete the subtask.
  */
@@ -124,6 +131,7 @@ public suspend inline fun <reified Input, reified Output, reified OutputTransfor
     llmParams: LLMParams? = null,
     runMode: ToolCalls = ToolCalls.SEQUENTIAL,
     assistantResponseRepeatMax: Int? = null,
+    responseProcessor: ResponseProcessor? = null,
     defineTask: suspend AIAgentFunctionalContext.(input: Input) -> String
 ): OutputTransformed {
     val maxAssistantResponses = assistantResponseRepeatMax ?: SubgraphWithTaskUtils.ASSISTANT_RESPONSE_REPEAT_MAX
@@ -133,6 +141,7 @@ public suspend inline fun <reified Input, reified Output, reified OutputTransfor
     val originalTools = llm.readSession { this.tools.toList() }
     val originalModel = llm.readSession { this.model }
     val originalParams = llm.readSession { this.prompt.params }
+    val originalResponseProcessor = llm.readSession { this.responseProcessor }
 
     // setup:
     llm.writeSession {
@@ -146,6 +155,10 @@ public suspend inline fun <reified Input, reified Output, reified OutputTransfor
 
         if (llmParams != null) {
             prompt = prompt.withParams(llmParams)
+        }
+
+        if (responseProcessor != null) {
+            this.responseProcessor = responseProcessor
         }
 
         setToolChoiceRequired()
@@ -173,6 +186,7 @@ public suspend inline fun <reified Input, reified Output, reified OutputTransfor
         this.tools = originalTools
         this.model = originalModel
         this.prompt = prompt.withParams(originalParams)
+        this.responseProcessor = originalResponseProcessor
     }
 
     return result

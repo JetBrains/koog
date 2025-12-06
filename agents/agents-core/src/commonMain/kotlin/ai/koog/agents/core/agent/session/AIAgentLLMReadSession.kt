@@ -5,6 +5,7 @@ import ai.koog.agents.core.tools.ToolDescriptor
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.processor.ResponseProcessor
 
 /**
  * Represents a session for interacting with a language model (LLM) in a read-only context within an AI agent setup.
@@ -16,6 +17,7 @@ import ai.koog.prompt.llm.LLModel
  * @param executor The `PromptExecutor` responsible for handling execution of prompts within this session.
  * @param prompt The `Prompt` object specifying the input messages and parameters for the session.
  * @param model The language model instance to be used for processing prompts in this session.
+ * @param responseProcessor The response processor instance to be used for post-processing responses.
  * @param config The configuration settings for the AI agent session.
  */
 public class AIAgentLLMReadSession internal constructor(
@@ -23,5 +25,6 @@ public class AIAgentLLMReadSession internal constructor(
     executor: PromptExecutor,
     prompt: Prompt,
     model: LLModel,
+    responseProcessor: ResponseProcessor?,
     config: AIAgentConfig,
-) : AIAgentLLMSession(executor, tools, prompt, model, config)
+) : AIAgentLLMSession(executor, tools, prompt, model, responseProcessor, config)

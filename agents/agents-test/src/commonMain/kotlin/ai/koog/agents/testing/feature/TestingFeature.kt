@@ -1017,6 +1017,7 @@ public class Testing {
                         tools = agent.toolRegistry.tools.map { it.descriptor },
                         prompt = agent.agentConfig.prompt,
                         model = agent.agentConfig.model,
+                        responseProcessor = agent.agentConfig.responseProcessor,
                         promptExecutor = PromptExecutorProxy(
                             agent.promptExecutor,
                             pipeline,

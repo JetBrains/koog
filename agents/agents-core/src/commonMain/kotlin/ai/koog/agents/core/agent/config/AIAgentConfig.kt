@@ -4,6 +4,7 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.llm.LLModel
+import ai.koog.prompt.processor.ResponseProcessor
 
 /**
  * Configuration class for an AI agent that specifies the prompt, execution parameters, and behavior.
@@ -20,13 +21,15 @@ import ai.koog.prompt.llm.LLModel
  *        This property provides a mechanism to convert or format missing tool calls and result messages when they occur,
  *        typically due to differences in tool sets between steps or subgraphs while the same history is reused.
  *        This ensures the prompt remains consistent and readable for the model, even with undefined tools.
+ * @param responseProcessor Optional processor for the agent's responses. If specified, will modify the responses from the llm.
  */
 public class AIAgentConfig(
     override val prompt: Prompt,
     override val model: LLModel,
     public val maxAgentIterations: Int,
     public val missingToolsConversionStrategy: MissingToolsConversionStrategy =
-        MissingToolsConversionStrategy.Missing(ToolCallDescriber.JSON)
+        MissingToolsConversionStrategy.Missing(ToolCallDescriber.JSON),
+    public val responseProcessor: ResponseProcessor? = null,
 ) : AIAgentConfigBase {
 
     init {

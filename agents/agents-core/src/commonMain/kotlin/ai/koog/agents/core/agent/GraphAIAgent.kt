@@ -124,6 +124,7 @@ public open class GraphAIAgent<Input, Output>(
                 toolRegistry = toolRegistry,
                 prompt = agentConfig.prompt,
                 model = agentConfig.model,
+                responseProcessor = agentConfig.responseProcessor,
                 promptExecutor = PromptExecutorProxy(
                     executor = promptExecutor,
                     pipeline = pipeline,

@@ -12,12 +12,11 @@ kotlin {
     sourceSets {
         commonMain {
             dependencies {
-                api(project(":agents:agents-core"))
-                api(project(":agents:agents-tools"))
-                api(project(":agents:agents-utils"))
-                api(project(":prompt:prompt-processor"))
+                api(project(":prompt:prompt-executor:prompt-executor-model"))
 
+                api(project(":prompt:prompt-markdown"))
                 api(libs.kotlinx.serialization.json)
+                implementation(libs.oshai.kotlin.logging)
             }
         }
 
@@ -26,14 +25,18 @@ kotlin {
                 implementation(kotlin("test"))
                 implementation(libs.kotlinx.coroutines.test)
                 implementation(project(":agents:agents-test"))
-                implementation(project(":test-utils"))
             }
         }
 
         jvmTest {
             dependencies {
                 implementation(kotlin("test-junit5"))
-                implementation(libs.mockk)
+            }
+        }
+
+        jsTest {
+            dependencies {
+                implementation(kotlin("test-js"))
             }
         }
     }

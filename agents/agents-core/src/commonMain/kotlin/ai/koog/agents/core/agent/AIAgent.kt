@@ -13,6 +13,7 @@ import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
+import ai.koog.prompt.processor.ResponseProcessor
 import ai.koog.utils.io.Closeable
 import kotlinx.datetime.Clock
 import kotlin.reflect.typeOf
@@ -259,6 +260,7 @@ public interface AIAgent<Input, Output> : Closeable {
          *
          * @param promptExecutor The executor responsible for processing language model prompts.
          * @param llmModel The specific large language model to be used for the agent.
+         * @param responseProcessor The processor responsible for processing the model's responses.
          * @param strategy The strategy that defines the agent's workflow, defaulting to the [singleRunStrategy].
          * @param toolRegistry The set of tools available for the agent, defaulting to an empty registry.
          * @param id Unique identifier for the agent. Random UUID will be generated if set to null.
@@ -273,6 +275,7 @@ public interface AIAgent<Input, Output> : Closeable {
         public operator fun invoke(
             promptExecutor: PromptExecutor,
             llmModel: LLModel,
+            responseProcessor: ResponseProcessor? = null,
             strategy: AIAgentGraphStrategy<String, String> = singleRunStrategy(),
             toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
             id: String? = null,
@@ -297,6 +300,7 @@ public interface AIAgent<Input, Output> : Closeable {
                 },
                 model = llmModel,
                 maxAgentIterations = maxIterations,
+                responseProcessor = responseProcessor
             ),
             toolRegistry = toolRegistry,
             installFeatures = installFeatures
@@ -310,6 +314,7 @@ public interface AIAgent<Input, Output> : Closeable {
          * @param promptExecutor An instance of [PromptExecutor] responsible for executing prompts with the language model.
          * @param llmModel The language model [LLModel] to be used by the agent.
          * @param strategy The agent strategy [AIAgentGraphStrategy] defining how the agent processes inputs and outputs.
+         * @param responseProcessor The processor responsible for processing the model's responses.
          * @param toolRegistry An optional [ToolRegistry] specifying the tools available to the agent for execution. Defaults to `[ToolRegistry.EMPTY]`.
          * @param id Unique identifier for the agent. Random UUID will be generated if set to null.
          * @param clock A `Clock` instance used for time-related operations. Defaults to `Clock.System`.
@@ -325,6 +330,7 @@ public interface AIAgent<Input, Output> : Closeable {
             promptExecutor: PromptExecutor,
             llmModel: LLModel,
             strategy: AIAgentGraphStrategy<Input, Output>,
+            responseProcessor: ResponseProcessor? = null,
             toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
             id: String? = null,
             clock: Clock = Clock.System,
@@ -352,6 +358,7 @@ public interface AIAgent<Input, Output> : Closeable {
                     },
                     model = llmModel,
                     maxAgentIterations = maxIterations,
+                    responseProcessor = responseProcessor
                 ),
                 toolRegistry = toolRegistry,
                 clock = clock,
@@ -367,6 +374,7 @@ public interface AIAgent<Input, Output> : Closeable {
          * @param Output The type of output produced by the agent.
          * @param promptExecutor The executor used to process prompts for the language model.
          * @param llmModel The language model configuration defining the underlying LLM instance and its behavior.
+         * @param responseProcessor The processor responsible for processing the model's responses.
          * @param toolRegistry Registry containing tools available to the agent for use during execution. Default is an empty registry.
          * @param strategy The strategy to be executed by the agent. Default is a single-run strategy.
          * @param id Unique identifier for the agent. Random UUID will be generated if set to null.
@@ -380,6 +388,7 @@ public interface AIAgent<Input, Output> : Closeable {
         public operator fun <Input, Output> invoke(
             promptExecutor: PromptExecutor,
             llmModel: LLModel,
+            responseProcessor: ResponseProcessor? = null,
             toolRegistry: ToolRegistry = ToolRegistry.EMPTY,
             strategy: AIAgentFunctionalStrategy<Input, Output>,
             id: String? = null,
