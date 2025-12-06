@@ -9,8 +9,8 @@ import ai.koog.prompt.dsl.ModerationResult
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
-import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import ai.koog.prompt.executor.clients.LLMClientException
+import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import ai.koog.prompt.executor.clients.google.models.GoogleCandidate
 import ai.koog.prompt.executor.clients.google.models.GoogleContent
 import ai.koog.prompt.executor.clients.google.models.GoogleData
@@ -785,7 +785,6 @@ public open class GoogleLLMClient(
             )
 
             return response.embedding.values
-
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
