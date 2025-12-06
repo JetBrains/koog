@@ -18,10 +18,10 @@ Key components:
 
 ### Example of usage
 
-Basic usage with FixJsonToolCall
+Basic usage with `ManualToolCallFixProcessor`
 
 ```kotlin
-val processor = FixJsonToolCall(toolRegistry)
+val processor = ManualToolCallFixProcessor(toolRegistry)
 
 // Execute a prompt with response processing
 val responses = executor.executeProcessed(prompt, model, tools, processor)
@@ -30,20 +30,20 @@ val responses = executor.executeProcessed(prompt, model, tools, processor)
 Customizing JSON key mappings for different LLM providers
 
 ```kotlin
-val customConfig = ToolCallJsonFixConfig(
-    idJsonKeys = ToolCallJsonFixConfig.defaultIdJsonKeys + listOf("custom_id"),
-    nameJsonKeys = ToolCallJsonFixConfig.defaultNameJsonKeys + listOf("function_name"),
-    argsJsonKeys = ToolCallJsonFixConfig.defaultArgsJsonKeys + listOf("function_args")
+val customConfig = ToolCallJsonConfig(
+    idJsonKeys = ToolCallJsonConfig.defaultIdJsonKeys + listOf("custom_id"),
+    nameJsonKeys = ToolCallJsonConfig.defaultNameJsonKeys + listOf("function_name"),
+    argsJsonKeys = ToolCallJsonConfig.defaultArgsJsonKeys + listOf("function_args")
 )
 
-val processor = FixJsonToolCall(toolRegistry, customConfig)
+val processor = ManualToolCallFixProcessor(toolRegistry, customConfig)
 ```
 
 Chaining multiple processors
 
 ```kotlin
-val processor1 = FixJsonToolCall(toolRegistry)
-val processor2 = FixToolCallLLMBased(toolRegistry)
+val processor1 = ManualToolCallFixProcessor(toolRegistry)
+val processor2 = LLMBasedToolCallFixProcessor(toolRegistry)
 
 val chainedProcessor = processor1 + processor2
 val responses = executor.executeProcessed(prompt, model, tools, chainedProcessor)
