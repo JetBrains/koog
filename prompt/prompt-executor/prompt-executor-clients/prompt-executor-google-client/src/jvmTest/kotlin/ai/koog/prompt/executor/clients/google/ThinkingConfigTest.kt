@@ -37,9 +37,7 @@ class ThinkingConfigTest {
 
             val jsonString = json.encodeToString(GoogleGenerationConfig.serializer(), request)
 
-            jsonString shouldEqualJson
-                // language=json
-                """
+            jsonString shouldEqualJson """
             {
                 "responseMimeType": "application/json",
                 "maxOutputTokens": 256,
@@ -49,7 +47,7 @@ class ThinkingConfigTest {
                     "thinkingBudget": 1000
                 }
             }
-                """.trimIndent()
+            """.trimIndent().replace("\r\n", "\n")
         }
 
     @Test fun `test thinkingConfig serialization (Gemini 3 New)`() =
@@ -65,8 +63,7 @@ class ThinkingConfigTest {
             val jsonString = json.encodeToString(GoogleGenerationConfig.serializer(), request)
 
             // Verify that thinkingLevel is serialized as "high" and thinkingBudget is absent
-            jsonString shouldEqualJson
-                """
+            jsonString shouldEqualJson """
             {
                 "responseMimeType": "application/json",
                 "thinkingConfig": {
@@ -74,7 +71,7 @@ class ThinkingConfigTest {
                     "thinkingLevel": "high"
                 }
             }
-                """.trimIndent()
+            """.trimIndent().replace("\r\n", "\n")
         }
 
     @Test fun `test thinkingConfig validation prevents mixing old and new params`() {
@@ -91,16 +88,14 @@ class ThinkingConfigTest {
     @Test
     fun `test thinkingConfig deserialization`() =
         runWithBothJsonConfigurations("thinkingConfig deserialization") { json ->
-            val payload =
-                // language=json
-                """
+            val payload = """
             {
               "responseMimeType": "application/json",
               "maxOutputTokens": 256,
               "temperature": 0.2,
               "thinkingConfig": {"includeThoughts": true, "thinkingBudget": 1000}
             }
-                """.trimIndent()
+            """.trimIndent().replace("\r\n", "\n")
 
             val decoded: GoogleGenerationConfig = verifyDeserialization(
                 payload = payload,
