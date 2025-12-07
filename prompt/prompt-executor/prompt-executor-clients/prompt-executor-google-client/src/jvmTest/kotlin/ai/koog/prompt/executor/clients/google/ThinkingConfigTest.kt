@@ -23,8 +23,7 @@ class ThinkingConfigTest {
         assertTrue("\"thinkingBudget\":0" in json)
     }
 
-    @Test
-    fun `test thinkingConfig serialization (Gemini 2 Legacy)`() =
+    @Test fun `test thinkingConfig serialization (Gemini 2 Legacy)`() =
         runWithBothJsonConfigurations("thinkingConfig serialization") { json ->
             val request = GoogleGenerationConfig(
                 responseMimeType = "application/json",
@@ -32,15 +31,15 @@ class ThinkingConfigTest {
                 temperature = 0.2,
                 thinkingConfig = GoogleThinkingConfig(
                     includeThoughts = true,
-                    thinkingBudget = 1000
+                    thinkingBudget = 1000,
                 )
             )
 
             val jsonString = json.encodeToString(GoogleGenerationConfig.serializer(), request)
 
             jsonString shouldEqualJson
-                    // language=json
-                    """
+                // language=json
+                """
             {
                 "responseMimeType": "application/json",
                 "maxOutputTokens": 256,
@@ -53,8 +52,7 @@ class ThinkingConfigTest {
                 """.trimIndent()
         }
 
-    @Test
-    fun `test thinkingConfig serialization (Gemini 3 New)`() =
+    @Test fun `test thinkingConfig serialization (Gemini 3 New)`() =
         runWithBothJsonConfigurations("thinkingConfig serialization gemini 3") { json ->
             val request = GoogleGenerationConfig(
                 responseMimeType = "application/json",
@@ -68,8 +66,7 @@ class ThinkingConfigTest {
 
             // Verify that thinkingLevel is serialized as "high" and thinkingBudget is absent
             jsonString shouldEqualJson
-                    // language=json
-                    """
+                """
             {
                 "responseMimeType": "application/json",
                 "thinkingConfig": {
@@ -80,8 +77,7 @@ class ThinkingConfigTest {
                 """.trimIndent()
         }
 
-    @Test
-    fun `test thinkingConfig validation prevents mixing old and new params`() {
+    @Test fun `test thinkingConfig validation prevents mixing old and new params`() {
         // Should throw IllegalArgumentException because init block checks mutual exclusivity
         shouldThrow<IllegalArgumentException> {
             GoogleThinkingConfig(

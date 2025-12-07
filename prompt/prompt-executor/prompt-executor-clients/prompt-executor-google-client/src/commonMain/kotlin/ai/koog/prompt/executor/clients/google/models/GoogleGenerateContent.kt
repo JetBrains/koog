@@ -342,7 +342,7 @@ public data class GoogleThinkingConfig(
     init {
         require(thinkingBudget == null || thinkingLevel == null) {
             "Cannot set both 'thinkingBudget' and 'thinkingLevel'. " +
-                    "Use 'thinkingBudget' for Gemini 2.0 models and 'thinkingLevel' for Gemini 3.0 models."
+                "Use 'thinkingBudget' for Gemini 2.0 models and 'thinkingLevel' for Gemini 3.0 models."
         }
     }
 }

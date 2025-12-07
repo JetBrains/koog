@@ -1067,9 +1067,7 @@ abstract class ExecutorIntegrationTestBase {
 
         val prompt2 = Prompt(
             id = "reasoning-multistep-2",
-            messages = prompt1.messages
-                    + response1
-                    + Message.User(ContentPart.Text("Multiply the result by 2."), metaInfo = RequestMetaInfo.Empty),
+            messages = prompt1.messages + response1 + Message.User(ContentPart.Text("Multiply the result by 2."), metaInfo = RequestMetaInfo.Empty),
             params = params
         )
 
