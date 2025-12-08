@@ -139,24 +139,6 @@ public abstract class AIAgentSubgraphBuilderBase<Input, Output> {
     }
 
     /**
-     * Creates a subgraph with a single node that executes the specified logic.
-     * @param name Optional subgraph name
-     * @param toolSelectionStrategy Strategy for tool selection
-     * @param execute Function that defines the execution logic.
-     */
-    public inline fun <reified Input, reified Output> singleNodeSubgraph(
-        name: String? = null,
-        toolSelectionStrategy: ToolSelectionStrategy = ToolSelectionStrategy.ALL,
-        llmModel: LLModel? = null,
-        llmParams: LLMParams? = null,
-        noinline execute: suspend AIAgentGraphContextBase.(Input) -> Output
-    ): AIAgentSubgraphDelegate<Input, Output> = subgraph(name, toolSelectionStrategy, llmModel, llmParams) {
-        val action by node<Input, Output> { execute(it) }
-
-        nodeStart then action then nodeFinish
-    }
-
-    /**
      * Connects the sequence of nodes with edges between them.
      * @param nextNode Node to connect to
      * @return The next node
