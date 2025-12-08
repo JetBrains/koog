@@ -34,7 +34,6 @@ object Models {
     @JvmStatic
     fun googleModels(): Stream<LLModel> {
         return Stream.of(
-            GoogleModels.Gemini3_Pro_Preview,
             GoogleModels.Gemini2_5Pro,
             GoogleModels.Gemini2_5Flash,
         )
