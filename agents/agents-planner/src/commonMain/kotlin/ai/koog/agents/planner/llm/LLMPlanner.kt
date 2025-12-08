@@ -1,4 +1,4 @@
-package ai.koog.agents.planner.simple
+package ai.koog.agents.planner.llm
 
 import ai.koog.agents.core.agent.context.AIAgentFunctionalContext
 import ai.koog.agents.core.annotation.InternalAgentsApi
@@ -6,7 +6,7 @@ import ai.koog.agents.core.dsl.extension.replaceHistoryWithTLDR
 import ai.koog.agents.memory.feature.history.RetrieveFactsFromHistory
 import ai.koog.agents.memory.model.Concept
 import ai.koog.agents.memory.model.FactType
-import ai.koog.agents.planner.PlanningAIAgentStrategy
+import ai.koog.agents.planner.AIAgentPlanningStrategy
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.message.Message
@@ -18,9 +18,9 @@ import kotlinx.serialization.Serializable
  * @property name The name of the strategy.
  */
 @OptIn(InternalAgentsApi::class)
-public open class SimplePlanner(
+public open class LLMPlanner(
     name: String
-) : PlanningAIAgentStrategy<String, SimplePlanner.SimplePlan>(name) {
+) : AIAgentPlanningStrategy<String, LLMPlanner.SimplePlan>(name) {
 
     override suspend fun buildPlan(
         context: AIAgentFunctionalContext,
@@ -213,7 +213,8 @@ public open class SimplePlanner(
      */
     @Serializable
     public data class PlanStep(
-        val description: String, val isCompleted: Boolean = false
+        val description: String,
+        val isCompleted: Boolean = false
     )
 
     /**
@@ -239,7 +240,8 @@ public open class SimplePlanner(
          * @property reason The reason for replanning.
          */
         public class Replan<Plan>(
-            public val currentPlan: Plan, public val reason: String
+            public val currentPlan: Plan,
+            public val reason: String
         ) : PlanAssessment<Plan>
 
         /**

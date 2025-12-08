@@ -1,7 +1,7 @@
 package ai.koog.agents.planner.goap
 
 import ai.koog.agents.core.agent.context.AIAgentFunctionalContext
-import ai.koog.agents.planner.PlanningAIAgentStrategy
+import ai.koog.agents.planner.AIAgentPlanningStrategy
 
 /**
  * Goal-Oriented Action Planning (GOAP) implementation for AI agents.
@@ -15,7 +15,7 @@ public open class GOAPPlanner<State> internal constructor(
     name: String,
     private val actions: List<Action<State>>,
     private val goals: List<Goal<State>>
-) : PlanningAIAgentStrategy<State, GOAPPlan<State>>(name) {
+) : AIAgentPlanningStrategy<State, GOAPPlan<State>>(name) {
 
     /**
      * Companion object containing the factory method for creating a GOAPPlanner instance.

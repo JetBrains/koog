@@ -27,7 +27,7 @@ public open class AIAgentException(problem: String, throwable: Throwable? = null
  * @param node The node in which the agent becomes stuck.
  * @param output The output produced by the node that doesn't match any edge conditions.
  */
-internal class AIAgentStuckInTheNodeException(node: AIAgentNodeBase<*, *>, output: Any?) :
+public class AIAgentStuckInTheNodeException(node: AIAgentNodeBase<*, *>, output: Any?) :
     AIAgentException(
         "When executing agent graph, stuck in node ${node.name} " +
             "because output $output doesn't match any condition on available edges."
@@ -57,5 +57,5 @@ public class AIAgentMaxNumberOfIterationsReachedException(maxNumberOfIterations:
  *
  * @param message A descriptive message explaining the reason for termination.
  */
-internal class AIAgentTerminationByClientException(message: String) :
+public class AIAgentTerminationByClientException(message: String) :
     AIAgentException("Agent was canceled by the client ($message)")

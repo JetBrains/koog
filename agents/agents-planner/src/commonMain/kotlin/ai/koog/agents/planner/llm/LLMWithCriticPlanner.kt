@@ -1,4 +1,4 @@
-package ai.koog.agents.planner.simple
+package ai.koog.agents.planner.llm
 
 import ai.koog.agents.core.agent.context.AIAgentFunctionalContext
 import ai.koog.agents.core.annotation.InternalAgentsApi
@@ -14,7 +14,7 @@ import kotlinx.serialization.Serializable
  * @property name The name of the strategy.
  */
 @OptIn(InternalAgentsApi::class)
-public class SimplePlannerWithCritic(name: String) : SimplePlanner(name) {
+public class LLMWithCriticPlanner(name: String) : LLMPlanner(name) {
 
     /**
      * Data class for structured output from the plan evaluation.

@@ -1,20 +1,23 @@
 package ai.koog.agents.planner
 
+import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AIAgentFunctionalContext
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
+import ai.koog.agents.core.agent.exception.AIAgentMaxNumberOfIterationsReachedException
+import io.github.oshai.kotlinlogging.KotlinLogging
 
 /**
  * Represents a planning strategy for an AI agent.
- * Implementations need to define the following methods:
- * - [buildPlan] Creates a subgraph that builds a plan for the agent.
- * - [executeStep] Creates a subgraph that executes a step in the plan.
- * - [isPlanCompleted] Creates a subgraph that determines whether the plan is completed.
- *
  * @param name The name of the strategy.
  */
-public abstract class PlanningAIAgentStrategy<State, Plan>(
+public abstract class AIAgentPlanningStrategy<State, Plan>(
     override val name: String,
 ) : AIAgentStrategy<State, State, AIAgentFunctionalContext> {
+    @Suppress("MissingKDocForPublicAPI")
+    public companion object {
+        private val logger = KotlinLogging.logger { }
+    }
+
     /**
      * Builds a plan
      */
@@ -42,7 +45,7 @@ public abstract class PlanningAIAgentStrategy<State, Plan>(
         plan: Plan
     ): Boolean
 
-    override suspend fun execute(
+    final override suspend fun execute(
         context: AIAgentFunctionalContext,
         input: State
     ): State? {
@@ -50,10 +53,25 @@ public abstract class PlanningAIAgentStrategy<State, Plan>(
         var plan: Plan = buildPlan(context, state, null)
 
         while (!isPlanCompleted(context, state, plan)) {
+            context.stateManager.withStateLock { state ->
+                if (++state.iterations > context.config.maxAgentIterations) {
+                    logger.error {
+                        formatLog(
+                            context,
+                            "Max iterations limit (${context.config.maxAgentIterations}) reached"
+                        )
+                    }
+                    throw AIAgentMaxNumberOfIterationsReachedException(context.config.maxAgentIterations)
+                }
+            }
+
             state = executeStep(context, state, plan)
             plan = buildPlan(context, state, plan)
         }
 
         return state
     }
+
+    private fun formatLog(context: AIAgentContext, message: String): String =
+        "$message [$name, ${context.runId}]"
 }

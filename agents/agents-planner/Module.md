@@ -62,5 +62,5 @@ val agent = AIAgent(
 )
 
 // Run the agent with a task
-val result = agent.execute("Create a marketing plan for a new product launch")
+val result = agent.run("Create a marketing plan for a new product launch")
 ```
