@@ -662,7 +662,7 @@ public object BedrockModels : LLModelDefinitions {
         LLModel(
             provider = LLMProvider.Bedrock,
             id = "meta.llama3-3-70b-instruct-v1:0",
-            capabilities = standardCapabilities,
+            capabilities = standardCapabilities + toolCapabilities,
             contextLength = 128_000,
         ),
     ).effectiveModel
