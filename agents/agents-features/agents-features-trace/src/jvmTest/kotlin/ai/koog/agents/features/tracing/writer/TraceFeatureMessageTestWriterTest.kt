@@ -115,15 +115,18 @@ class TraceFeatureMessageTestWriterTest {
 
     @Test
     fun `test nonexistent tool call`() = runBlocking {
+        val toolCallId = "0"
+        val toolName = "there is no tool with this name"
+        val rawToolArgs = "{}"
         val strategy = strategy<String, String>("tracing-tool-call-test") {
             val callTool by nodeExecuteTool("Tool call")
             edge(
                 nodeStart forwardTo callTool transformed { _ ->
                     Message.Tool.Call(
-                        id = "0",
-                        tool = "there is no tool with this name",
-                        content = "{}",
-                        metaInfo = ResponseMetaInfo(timestamp = Instant.parse("2023-01-01T00:00:00Z"))
+                        id = toolCallId,
+                        tool = toolName,
+                        content = rawToolArgs,
+                        metaInfo = ResponseMetaInfo(timestamp = testClock.now())
                     )
                 }
             )
@@ -147,7 +150,7 @@ class TraceFeatureMessageTestWriterTest {
 
         // Verify the result contains the error message about the tool not being found
         assertEquals(
-            "Tool \"there is no tool with this name\" not found. Use one of the available tools.",
+            "Tool with name '$toolName' not found in the tool registry. Use one of the available tools.",
             result
         )
     }

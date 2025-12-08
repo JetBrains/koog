@@ -68,7 +68,6 @@ public open class GraphAIAgent<Input, Output>(
 
     private val environment = GenericAgentEnvironment(
         agentId = this.id,
-        strategyId = strategy.name,
         logger = logger,
         toolRegistry = toolRegistry,
         pipeline = pipeline

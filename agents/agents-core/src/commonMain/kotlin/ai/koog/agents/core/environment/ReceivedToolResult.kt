@@ -1,7 +1,5 @@
 package ai.koog.agents.core.environment
 
-import ai.koog.agents.core.model.message.AIAgentEnvironmentToolResultToAgentContent
-import ai.koog.agents.core.model.message.EnvironmentToolResultToAgentContent
 import ai.koog.agents.core.tools.ToolResult
 import ai.koog.prompt.dsl.PromptBuilder
 import ai.koog.prompt.message.Message
@@ -38,35 +36,6 @@ public data class ReceivedToolResult(
         metaInfo = RequestMetaInfo.create(clock)
     )
 }
-
-/**
- * Converts an instance of AIAgentEnvironmentToolResultToAgentContent to a ReceivedToolResult.
- *
- * @return A ReceivedToolResult containing the tool call identifier, tool name, message content,
- *         and optional tool result extracted from the current instance.
- * @throws IllegalStateException if the instance is not of type AIAgentEnvironmentToolResultToAgentContent.
- */
-public fun EnvironmentToolResultToAgentContent.toResult(): ReceivedToolResult {
-    check(this is AIAgentEnvironmentToolResultToAgentContent) {
-        "AI agent must receive AIAgentEnvironmentToolResultToAgentContent," +
-            " but ${this::class.simpleName} was received"
-    }
-
-    return toResult()
-}
-
-/**
- * Converts an instance of `AIAgentEnvironmentToolResultToAgentContent` to a `ReceivedToolResult`.
- *
- * @return A `ReceivedToolResult` containing the tool call identifier, tool name, message content,
- *         and the result of the tool execution.
- */
-public fun AIAgentEnvironmentToolResultToAgentContent.toResult(): ReceivedToolResult = ReceivedToolResult(
-    id = toolCallId,
-    tool = toolName,
-    content = message,
-    result = toolResult
-)
 
 /**
  * Adds a tool result to the prompt.
