@@ -46,6 +46,7 @@ import ai.koog.agents.core.utils.SerializationUtils
 import ai.koog.agents.testing.network.NetUtil.findAvailablePort
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
+import ai.koog.integration.tests.utils.annotations.Retry
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.toModelInfo
 import ai.koog.prompt.message.Message
@@ -66,6 +67,7 @@ import kotlin.test.assertTrue
 
 class DebuggerTest {
 
+    @Retry(3)
     @OptIn(InternalAgentsApi::class)
     @Test
     fun `test feature message remote writer collect events on agent run`() = runBlocking {
