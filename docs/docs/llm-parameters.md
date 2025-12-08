@@ -10,88 +10,95 @@ In Koog, the `LLMParams` class incorporates LLM parameters and provides a consis
 
 - When creating a prompt:
 
-    <!--- INCLUDE
-    import ai.koog.prompt.prompt
-    import ai.koog.prompt.params.LLMParams
-    -->
-    ```kotlin
-    val prompt = prompt(
-        id = "dev-assistant",
-        params = LLMParams(
-            temperature = 0.7,
-            maxTokens = 500
-        )
-    ) {
-        // Add a system message to set the context
-        system("You are a helpful assistant.")
+<!--- INCLUDE
+import ai.koog.prompt.dsl.prompt
+import ai.koog.prompt.params.LLMParams
+-->
+```kotlin
+val prompt = prompt(
+    id = "dev-assistant",
+    params = LLMParams(
+        temperature = 0.7,
+        maxTokens = 500
+    )
+) {
+    // Add a system message to set the context
+    system("You are a helpful assistant.")
 
-        // Add a user message
-        user("Tell me about Kotlin")
-    }
-    ```
-    <!--- KNIT example-llm-parameters-01.kt -->
+    // Add a user message
+    user("Tell me about Kotlin")
+}
+```
+<!--- KNIT example-llm-parameters-01.kt -->
 
-    For more information about prompt creation, see [Prompt API](prompt-api.md).
+For more information about prompt creation, see [Prompts](prompt-api.md).
 
 - When creating a subgraph:
 
-    <!--- INCLUDE
-    import ai.koog.agents.core.dsl.builder.strategy
-    import ai.koog.agents.ext.tool.SayToUser
-    import ai.koog.prompt.executor.clients.openai.OpenAIModels
-    import ai.koog.agents.ext.agent.subgraphWithTask
-    val searchTool = SayToUser
-    val calculatorTool = SayToUser
-    val weatherTool = SayToUser
-    val strategy = strategy<String, String>("strategy_name") {
-    -->
-    <!--- SUFFIX
-    }
-    -->
-    ```kotlin
-    val processQuery by subgraphWithTask<String, String>(
-        tools = listOf(searchTool, calculatorTool, weatherTool),
-        llmModel = OpenAIModels.Chat.GPT4o,
-        llmparams = LLMParams(
-            temperature = 0.7,
-            maxTokens = 500,
-        )
-    ) { userQuery ->
-        """
-        You are a helpful assistant that can answer questions about various topics.
-        Please help with the following query:
-        $userQuery
-        """
-    }
-    ```
-    <!--- KNIT example-llm-parameters-02.kt -->
+<!--- INCLUDE
+import ai.koog.agents.core.agent.ToolCalls
+import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.agents.ext.tool.SayToUser
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.agents.ext.agent.subgraphWithTask
+import ai.koog.prompt.params.LLMParams
 
-    For more information on how to create and implement your own subgraphs, see [Custom subgraphs](custom-subgraphs.md).
+val searchTool = SayToUser
+val calculatorTool = SayToUser
+val weatherTool = SayToUser
+
+val strategy = strategy<String, String>("strategy_name") {
+-->
+<!--- SUFFIX
+}
+-->
+```kotlin
+val processQuery by subgraphWithTask<String, String>(
+    tools = listOf(searchTool, calculatorTool, weatherTool),
+    llmModel = OpenAIModels.Chat.GPT4o,
+    llmParams = LLMParams(
+        temperature = 0.7,
+        maxTokens = 500
+    ),
+    runMode = ToolCalls.SEQUENTIAL,
+    assistantResponseRepeatMax = 3,
+) { userQuery ->
+    """
+    You are a helpful assistant that can answer questions about various topics.
+    Please help with the following query:
+    $userQuery
+    """
+}
+```
+<!--- KNIT example-llm-parameters-02.kt -->
+
+For more information about existing subgraph types in Koog, see [Predefined subgraphs](nodes-and-components.md#predefined-subgraphs). To learn how to create and implement your own subgraphs, see [Custom subgraphs](custom-subgraphs.md).
 
 - When updating a prompt in an LLM write session:
 
-    <!--- INCLUDE
-    import ai.koog.agents.core.dsl.builder.strategy
-    val strategy = strategy<Unit, Unit>("strategy-name") {
-    val node by node<Unit, Unit> {
-    -->
-    <!--- SUFFIX
-       }
-    }
-    -->
-    ```kotlin
-    llm.writeSession {
-        changeLLMParams(
-            LLMParams(
-                temperature = 0.7,
-                maxTokens = 500
-            )
+<!--- INCLUDE
+import ai.koog.agents.core.dsl.builder.strategy
+import ai.koog.prompt.params.LLMParams
+val strategy = strategy<Unit, Unit>("strategy-name") {
+val node by node<Unit, Unit> {
+-->
+<!--- SUFFIX
+   }
+}
+-->
+```kotlin
+llm.writeSession {
+    changeLLMParams(
+        LLMParams(
+            temperature = 0.7,
+            maxTokens = 500
         )
-    }
-    ```
-    <!--- KNIT example-llm-parameters-03.kt -->
+    )
+}
+```
+<!--- KNIT example-llm-parameters-03.kt -->
 
-    For more information about sessions, see [LLM sessions and manual history management](sessions.md).
+For more information about sessions, see [LLM sessions and manual history management](sessions.md).
 
 ## LLM parameter reference
 
@@ -113,92 +120,97 @@ For a list of default values for each parameter, see the corresponding LLM provi
 
 - [OpenAI Chat](https://platform.openai.com/docs/api-reference/chat/create)
 - [OpenAI Responses](https://platform.openai.com/docs/api-reference/responses/create)
+- [Google](https://ai.google.dev/api/generate-content#generationconfig)
+- [Anthropic](https://platform.claude.com/docs/en/api/messages/create)
+- [Mistral](https://docs.mistral.ai/api/#operation/chatCompletions)
 - [DeepSeek](https://api-docs.deepseek.com/api/create-chat-completion#request)
-- [OpenRouter](https://openrouter.ai/docs/api-reference/parameters)
+- [OpenRouter](https://openrouter.ai/docs/api/reference/parameters)
+- Alibaba ([DashScope](https://www.alibabacloud.com/help/en/model-studio/qwen-api-reference))
 
 ## Schema
 
-The `Schema` interface defines the structure for the model's response format. Koog supports JSON schemas, as described in the sections below.
+The `Schema` interface defines the structure for the model's response format. 
+Koog supports JSON schemas, as described in the sections below.
 
 ### JSON schemas
 
 JSON schemas let you request structured JSON data from language models. Koog supports the following two types of JSON schemas:
 
-1. **Basic JSON Schema** (`LLMParams.Schema.JSON.Basic`): Used for basic JSON processing capabilities. This format primarily focuses on nested data definitions without advanced JSON Schema functionalities.
+1) **Basic JSON Schema** (`LLMParams.Schema.JSON.Basic`): Used for basic JSON processing capabilities. This format primarily focuses on nested data definitions without advanced JSON Schema functionalities.
 
-    <!--- INCLUDE
-    import ai.koog.prompt.params.LLMParams
-    import kotlinx.serialization.json.JsonObject
-    import kotlinx.serialization.json.JsonArray
-    import kotlinx.serialization.json.JsonPrimitive
-    -->
-    ```kotlin
-    // Create parameters with a basic JSON schema
-    val jsonParams = LLMParams(
-        temperature = 0.2,
-        schema = LLMParams.Schema.JSON.Basic(
-            name = "PersonInfo",
-            schema = JsonObject(mapOf(
-                "type" to JsonPrimitive("object"),
-                "properties" to JsonObject(
-                    mapOf(
-                        "name" to JsonObject(mapOf("type" to JsonPrimitive("string"))),
-                        "age" to JsonObject(mapOf("type" to JsonPrimitive("number"))),
-                        "skills" to JsonObject(
-                            mapOf(
-                                "type" to JsonPrimitive("array"),
-                                "items" to JsonObject(mapOf("type" to JsonPrimitive("string")))
-                            )
+<!--- INCLUDE
+import ai.koog.prompt.params.LLMParams
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonPrimitive
+-->
+```kotlin
+// Create parameters with a basic JSON schema
+val jsonParams = LLMParams(
+    temperature = 0.2,
+    schema = LLMParams.Schema.JSON.Basic(
+        name = "PersonInfo",
+        schema = JsonObject(mapOf(
+            "type" to JsonPrimitive("object"),
+            "properties" to JsonObject(
+                mapOf(
+                    "name" to JsonObject(mapOf("type" to JsonPrimitive("string"))),
+                    "age" to JsonObject(mapOf("type" to JsonPrimitive("number"))),
+                    "skills" to JsonObject(
+                        mapOf(
+                            "type" to JsonPrimitive("array"),
+                            "items" to JsonObject(mapOf("type" to JsonPrimitive("string")))
                         )
                     )
-                ),
-                "additionalProperties" to JsonPrimitive(false),
-                "required" to JsonArray(listOf(JsonPrimitive("name"), JsonPrimitive("age"), JsonPrimitive("skills")))
-            ))
-        )
+                )
+            ),
+            "additionalProperties" to JsonPrimitive(false),
+            "required" to JsonArray(listOf(JsonPrimitive("name"), JsonPrimitive("age"), JsonPrimitive("skills")))
+        ))
     )
-    ```
-    <!--- KNIT example-llm-parameters-04.kt -->
+)
+```
+<!--- KNIT example-llm-parameters-04.kt -->
 
-2. **Standard JSON Schema** (`LLMParams.Schema.JSON.Standard`): Represents a standard JSON schema according to [json-schema.org](https://json-schema.org/). This format is a proper subset of the official JSON Schema specification. Note that the flavor across different LLM providers might vary, since not all of them support full JSON schemas.
+2) **Standard JSON Schema** (`LLMParams.Schema.JSON.Standard`): Represents a standard JSON schema according to [json-schema.org](https://json-schema.org/). This format is a proper subset of the official JSON Schema specification. Note that the flavor across different LLM providers might vary, since not all of them support full JSON schemas.
 
-    <!--- INCLUDE
-    import ai.koog.prompt.params.LLMParams
-    import kotlinx.serialization.json.JsonObject
-    import kotlinx.serialization.json.JsonPrimitive
-    import kotlinx.serialization.json.JsonArray
-    -->
-    ```kotlin
-    // Create parameters with a standard JSON schema
-    val standardJsonParams = LLMParams(
-        temperature = 0.2,
-        schema = LLMParams.Schema.JSON.Standard(
-            name = "ProductCatalog",
-            schema = JsonObject(mapOf(
-                "type" to JsonPrimitive("object"),
-                "properties" to JsonObject(mapOf(
-                    "products" to JsonObject(mapOf(
-                        "type" to JsonPrimitive("array"),
-                        "items" to JsonObject(mapOf(
-                            "type" to JsonPrimitive("object"),
-                            "properties" to JsonObject(mapOf(
-                                "id" to JsonObject(mapOf("type" to JsonPrimitive("string"))),
-                                "name" to JsonObject(mapOf("type" to JsonPrimitive("string"))),
-                                "price" to JsonObject(mapOf("type" to JsonPrimitive("number"))),
-                                "description" to JsonObject(mapOf("type" to JsonPrimitive("string")))
-                            )),
-                            "additionalProperties" to JsonPrimitive(false),
-                            "required" to JsonArray(listOf(JsonPrimitive("id"), JsonPrimitive("name"), JsonPrimitive("price"), JsonPrimitive("description")))
-                        ))
+<!--- INCLUDE
+import ai.koog.prompt.params.LLMParams
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.JsonArray
+-->
+```kotlin
+// Create parameters with a standard JSON schema
+val standardJsonParams = LLMParams(
+    temperature = 0.2,
+    schema = LLMParams.Schema.JSON.Standard(
+        name = "ProductCatalog",
+        schema = JsonObject(mapOf(
+            "type" to JsonPrimitive("object"),
+            "properties" to JsonObject(mapOf(
+                "products" to JsonObject(mapOf(
+                    "type" to JsonPrimitive("array"),
+                    "items" to JsonObject(mapOf(
+                        "type" to JsonPrimitive("object"),
+                        "properties" to JsonObject(mapOf(
+                            "id" to JsonObject(mapOf("type" to JsonPrimitive("string"))),
+                            "name" to JsonObject(mapOf("type" to JsonPrimitive("string"))),
+                            "price" to JsonObject(mapOf("type" to JsonPrimitive("number"))),
+                            "description" to JsonObject(mapOf("type" to JsonPrimitive("string")))
+                        )),
+                        "additionalProperties" to JsonPrimitive(false),
+                        "required" to JsonArray(listOf(JsonPrimitive("id"), JsonPrimitive("name"), JsonPrimitive("price"), JsonPrimitive("description")))
                     ))
-                )),
-                "additionalProperties" to JsonPrimitive(false),
-                "required" to JsonArray(listOf(JsonPrimitive("products")))
-            ))
-        )
+                ))
+            )),
+            "additionalProperties" to JsonPrimitive(false),
+            "required" to JsonArray(listOf(JsonPrimitive("products")))
+        ))
     )
-    ```
-    <!--- KNIT example-llm-parameters-05.kt -->
+)
+```
+<!--- KNIT example-llm-parameters-05.kt -->
 
 ## Tool choice
 
@@ -230,42 +242,138 @@ val specificToolParams = LLMParams(
 Koog supports provider-specific parameters for some LLM providers. These parameters extend the base `LLMParams` class
 and add provider-specific functionality. The following classes include parameters that are specific per provider:
 
-- `DeepSeekParams`: Parameters specific to DeepSeek models.
-- `OpenRouterParams`: Parameters specific to OpenRouter models.
 - `OpenAIChatParams`: Parameters specific to the OpenAI Chat Completions API.
 - `OpenAIResponsesParams`: Parameters specific to the OpenAI Responses API.
+- `GoogleParams`: Parameters specific to Google models.
+- `AnthropicParams`: Parameters specific to Anthropic models.
+- `MistralAIParams`: Parameters specific to Mistral models.
+- `DeepSeekParams`: Parameters specific to DeepSeek models.
+- `OpenRouterParams`: Parameters specific to OpenRouter models.
+- `DashscopeParams`: Parameters specific to Alibaba models.
 
 Here is the complete reference of provider-specific parameters in Koog:
 
-| Parameter           | Providers                                           | Type                   | Description                                                                                                                                                                                                                                                                                                                                                                                                                        |
-|---------------------|-----------------------------------------------------|------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `topP`              | OpenAI Chat, OpenAI Responses, DeepSeek, OpenRouter | Double                 | Also referred to as nucleus sampling. Creates a subset of next tokens by adding tokens with the highest probability values to the subset until the sum of their probabilities reaches the specified `topP` value. Takes a value greater than 0.0 and lower than or equal to 1.0.                                                                                                                                                   |
-| `logprobs`          | OpenAI Chat, OpenAI Responses, DeepSeek, OpenRouter | Boolean                | If `true`, includes log-probabilities for output tokens.                                                                                                                                                                                                                                                                                                                                                                           |
-| `topLogprobs`       | OpenAI Chat, OpenAI Responses, DeepSeek, OpenRouter | Integer                | Number of top most likely tokens per position. Takes a value in the range of 0–20. Requires the `logprobs` parameter to be set to `true`.                                                                                                                                                                                                                                                                                          |
-| `frequencyPenalty`  | OpenAI Chat, DeepSeek, OpenRouter                   | Double                 | Penalizes frequent tokens to reduce repetition. Higher `frequencyPenalty` values result in larger variations of phrasing and reduced repetition. Takes a value in the range of -2.0 to 2.0.                                                                                                                                                                                                                                        |
-| `presencePenalty`   | OpenAI Chat, DeepSeek, OpenRouter                   | Double                 | Prevents the model from reusing tokens that have already been included in the output. Higher values encourage the introduction of new tokens and topics. Takes a value in the range of -2.0 to 2.0.                                                                                                                                                                                                                                |
-| `stop`              | OpenAI Chat, DeepSeek, OpenRouter                   | List&lt;String&gt;     | Strings that signal to the model that it should stop generating content when it encounters any of them. For example, to make the model stop generating content when it produces two newlines, specify the stop sequence as `stop = listOf("/n/n")`.                                                                                                                                                                                |
-| `parallelToolCalls` | OpenAI Chat, OpenAI Responses                       | Boolean                | If `true`, multiple tool calls can run in parallel.                                                                                                                                                                                                                                                                                                                                                                                |
-| `promptCacheKey`    | OpenAI Chat, OpenAI Responses                       | String                 | Stable cache key for prompt caching. OpenAI uses it to cache responses for similar requests.                                                                                                                                                                                                                                                                                                                                       |
-| `safetyIdentifier`  | OpenAI Chat, OpenAI Responses                       | String                 | A stable and unique user identifier that may be used to detect users who violate OpenAI policies.                                                                                                                                                                                                                                                                                                                                  |
-| `serviceTier`       | OpenAI Chat, OpenAI Responses                       | ServiceTier            | OpenAI processing tier selection that lets you prioritize performance over cost or vice versa. For more information, see the API documentation for [ServiceTier](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/prompt-executor-openai-client-base/ai.koog.prompt.executor.clients.openai.base.models/-service-tier/index.html).                                                                               |
-| `store`             | OpenAI Chat, OpenAI Responses                       | Boolean                | If `true`, the provider may store outputs for later retrieval.                                                                                                                                                                                                                                                                                                                                                                     |
-| `audio`             | OpenAI Chat                                         | OpenAIAudioConfig      | Audio output configuration when using audio-capable models. For more information, see the API documentation for [OpenAIAudioConfig](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/prompt-executor-openai-client-base/ai.koog.prompt.executor.clients.openai.base.models/-open-a-i-audio-config/index.html).                                                                                                   |
-| `reasoningEffort`   | OpenAI Chat                                         | ReasoningEffort        | Specifies the level of reasoning effort that the model will use. For more information and available values, see the API documentation for [ReasoningEffort](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/prompt-executor-openai-client-base/ai.koog.prompt.executor.clients.openai.base.models/-reasoning-effort/index.html).                                                                                |
-| `webSearchOptions`  | OpenAI Chat                                         | OpenAIWebSearchOptions | Configure web search tool usage (if supported). For more information, see the API documentation for [OpenAIWebSearchOptions](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/prompt-executor-openai-client-base/ai.koog.prompt.executor.clients.openai.base.models/-open-a-i-web-search-options/index.html).                                                                                                    |
-| `background`        | OpenAI Responses                                    | Boolean                | Run the response in the background.                                                                                                                                                                                                                                                                                                                                                                                                |
-| `include`           | OpenAI Responses                                    | List&lt;String&gt;     | Additional output sections to include. For more information, learn about the [include](https://platform.openai.com/docs/api-reference/responses/create#responses-create-include) parameter from OpenAI documentation.                                                                                                                                                                                                              |
-| `maxToolCalls`      | OpenAI Responses                                    | Int                    | Maximum total number of built-in tool calls allowed in this response. Takes a value equal to or greater than `0`.                                                                                                                                                                                                                                                                                                                  |
-| `reasoning`         | OpenAI Responses                                    | ReasoningConfig        | Reasoning configuration for reasoning-capable models. For more information, see the API documentation for [ReasoningConfig](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/prompt-executor-openai-client/ai.koog.prompt.executor.clients.openai.models/-reasoning-config/index.html) .                                                                                                                         |
-| `truncation`        | OpenAI Responses                                    | Truncation             | Truncation strategy when nearing the context window. For more information, see the API documentation for [Truncation](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/prompt-executor-openai-client/ai.koog.prompt.executor.clients.openai.models/-truncation/index.html).                                                                                                                                      |
-| `topK`              | OpenRouter                                          | Int                    | Number of top tokens to consider when generating the output. Takes a value equal to or greater than 1.                                                                                                                                                                                                                                                                                                                             |
-| `repetitionPenalty` | OpenRouter                                          | Double                 | Penalizes token repetition. Next-token probabilities for tokens that already appeared in the output are divided by the value of `repetitionPenalty`, which makes them less likely to appear again if `repetitionPenalty > 1`. Takes a value greater than 0.0 and lower than or equal to 2.0.                                                                                                                                       |
-| `minP`              | OpenRouter                                          | Double                 | Filters out tokens whose relative probability to the most likely token is below the defined `minP` value. Takes a value in the range of 0.0–0.1.                                                                                                                                                                                                                                                                                   |
-| `topA`              | OpenRouter                                          | Double                 | Dynamically adjusts the sampling window based on model confidence. If the model is confident (there are dominant high-probability next tokens), it keeps the sampling window limited to a few top tokens. If the confidence is low (there are many tokens with similar probabilities), keeps more tokens in the sampling window. Takes a value in the range of 0.0–0.1 (inclusive). Higher value means greater dynamic adaptation. |
-| `transforms`        | OpenRouter                                          | List&lt;String&gt;     | List of context transforms. Defines how context is transformed when it exceeds the model's token limit. The default transformation is `middle-out` which truncates from the middle of the prompt. Use empty list for no transformations. For more information, see [Message Transforms](https://openrouter.ai/docs/features/message-transforms) in OpenRouter documentation.                                                       |
-| `models`            | OpenRouter                                          | List&lt;String&gt;     | List of allowed models for the request.                                                                                                                                                                                                                                                                                                                                                                                            |
-| `route`             | OpenRouter                                          | String                 | Request routing identifier.                                                                                                                                                                                                                                                                                                                                                                                                        |
-| `provider`          | OpenRouter                                          | ProviderPreferences    | Model provider preferences. For more information, see the API documentation on [ProviderPreferences](https://api.koog.ai/prompt/prompt-executor/prompt-executor-clients/prompt-executor-openrouter-client/ai.koog.prompt.executor.clients.openrouter.models/-provider-preferences/index.html).                                                                                                                                     |
+=== "OpenAI Chat"
+
+    --8<--
+    llm-parameters-snippets.md:heading
+    llm-parameters-snippets.md:audio
+    llm-parameters-snippets.md:frequencyPenalty
+    llm-parameters-snippets.md:logprobs
+    llm-parameters-snippets.md:parallelToolCalls
+    llm-parameters-snippets.md:presencePenalty
+    llm-parameters-snippets.md:promptCacheKey
+    llm-parameters-snippets.md:reasoningEffort
+    llm-parameters-snippets.md:safetyIdentifier
+    llm-parameters-snippets.md:serviceTier
+    llm-parameters-snippets.md:stop
+    llm-parameters-snippets.md:store
+    llm-parameters-snippets.md:topLogprobs
+    llm-parameters-snippets.md:topP
+    llm-parameters-snippets.md:webSearchOptions
+    --8<--
+
+=== "OpenAI Responses"
+
+    --8<--
+    llm-parameters-snippets.md:heading
+    llm-parameters-snippets.md:background
+    llm-parameters-snippets.md:include
+    llm-parameters-snippets.md:logprobs
+    llm-parameters-snippets.md:maxToolCalls
+    llm-parameters-snippets.md:parallelToolCalls
+    llm-parameters-snippets.md:promptCacheKey
+    llm-parameters-snippets.md:reasoning
+    llm-parameters-snippets.md:safetyIdentifier
+    llm-parameters-snippets.md:serviceTier
+    llm-parameters-snippets.md:store
+    llm-parameters-snippets.md:topLogprobs
+    llm-parameters-snippets.md:topP
+    llm-parameters-snippets.md:truncation
+    --8<--
+
+=== "Google"
+
+    --8<--
+    llm-parameters-snippets.md:heading
+    llm-parameters-snippets.md:thinkingConfig
+    llm-parameters-snippets.md:topK
+    llm-parameters-snippets.md:topP
+    --8<--
+
+=== "Anthropic"
+
+    --8<--
+    llm-parameters-snippets.md:heading
+    llm-parameters-snippets.md:container
+    llm-parameters-snippets.md:mcpServers
+    llm-parameters-snippets.md:serviceTier
+    llm-parameters-snippets.md:stopSequences
+    llm-parameters-snippets.md:thinking
+    llm-parameters-snippets.md:topK
+    llm-parameters-snippets.md:topP
+    --8<--
+
+=== "Mistral"
+
+    --8<--
+    llm-parameters-snippets.md:heading
+    llm-parameters-snippets.md:frequencyPenalty
+    llm-parameters-snippets.md:parallelToolCalls
+    llm-parameters-snippets.md:presencePenalty
+    llm-parameters-snippets.md:promptMode
+    llm-parameters-snippets.md:randomSeed
+    llm-parameters-snippets.md:safePrompt
+    llm-parameters-snippets.md:stop
+    llm-parameters-snippets.md:topP
+    --8<--
+
+=== "DeepSeek"
+
+    --8<--
+    llm-parameters-snippets.md:heading
+    llm-parameters-snippets.md:frequencyPenalty
+    llm-parameters-snippets.md:logprobs
+    llm-parameters-snippets.md:presencePenalty
+    llm-parameters-snippets.md:stop
+    llm-parameters-snippets.md:topLogprobs
+    llm-parameters-snippets.md:topP
+    --8<--
+
+=== "OpenRouter"
+
+    --8<--
+    llm-parameters-snippets.md:heading
+    llm-parameters-snippets.md:frequencyPenalty
+    llm-parameters-snippets.md:logprobs
+    llm-parameters-snippets.md:minP
+    llm-parameters-snippets.md:models
+    llm-parameters-snippets.md:presencePenalty
+    llm-parameters-snippets.md:provider
+    llm-parameters-snippets.md:repetitionPenalty
+    llm-parameters-snippets.md:route
+    llm-parameters-snippets.md:stop
+    llm-parameters-snippets.md:topA
+    llm-parameters-snippets.md:topK
+    llm-parameters-snippets.md:topLogprobs
+    llm-parameters-snippets.md:topP
+    llm-parameters-snippets.md:transforms
+    --8<--
+
+=== "Alibaba (DashScope)"
+
+    --8<--
+    llm-parameters-snippets.md:heading
+    llm-parameters-snippets.md:enableSearch
+    llm-parameters-snippets.md:enableThinking
+    llm-parameters-snippets.md:frequencyPenalty
+    llm-parameters-snippets.md:logprobs
+    llm-parameters-snippets.md:parallelToolCalls
+    llm-parameters-snippets.md:presencePenalty
+    llm-parameters-snippets.md:stop
+    llm-parameters-snippets.md:topLogprobs
+    llm-parameters-snippets.md:topP
+    --8<--
 
 The following example shows defined OpenRouter LLM parameters using the provider-specific `OpenRouterParams` class:
 
