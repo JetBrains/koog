@@ -47,6 +47,7 @@ kotlin {
             dependencies {
                 implementation("org.jetbrains.lincheck:lincheck:3.3.2")
                 implementation(libs.ktor.client.cio)
+                implementation(project(":integration-tests"))
             }
         }
     }
