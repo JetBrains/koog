@@ -222,7 +222,7 @@ public open class AIAgentSubgraph<TInput, TOutput>(
 
     @OptIn(InternalAgentsApi::class)
     private suspend fun executeWithInnerContext(context: AIAgentGraphContextBase, initialInput: TInput): TOutput? {
-        logger.info { formatLog(context, "Executing subgraph '$name'") }
+        logger.debug { formatLog(context, "Executing subgraph '$name'") }
 
         var currentNode: AIAgentNodeBase<*, *> = start
         var currentInput: Any? = initialInput
@@ -342,7 +342,7 @@ public open class AIAgentSubgraph<TInput, TOutput>(
     }
 
     private fun formatLog(context: AIAgentContext, message: String): String =
-        "$message [$name, ${context.runId}]"
+        "$message [$name, ${context.strategyName}, ${context.runId}]"
 }
 
 /**

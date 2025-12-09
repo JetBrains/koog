@@ -8,13 +8,13 @@ import ai.koog.prompt.message.Message
 import kotlinx.serialization.Serializable
 
 /**
- * A planning strategy that uses another AIAgent with graphStrategy to build a plan
- * and uses another AIAgent to critique the plan.
- *
- * @property name The name of the strategy.
+ * A simple planning strategy that uses LLM requests to build and execute a plan.
+ * It operates on a [String] state, meaning it would accept an initial state string and then return the final state
+ * string as a result.
+ * It is limited to string-only operations and does not perform tool calling or other advanced logic.
  */
 @OptIn(InternalAgentsApi::class)
-public class LLMWithCriticPlanner(name: String) : LLMPlanner(name) {
+public class SimpleLLMWithCriticPlanner() : SimpleLLMPlanner() {
 
     /**
      * Data class for structured output from the plan evaluation.
@@ -29,8 +29,8 @@ public class LLMWithCriticPlanner(name: String) : LLMPlanner(name) {
         context: AIAgentFunctionalContext,
         state: String,
         plan: SimplePlan?
-    ): PlanAssessment<SimplePlan> {
-        if (plan == null) return PlanAssessment.NoPlan()
+    ): SimplePlanAssessment<SimplePlan> {
+        if (plan == null) return SimplePlanAssessment.NoPlan()
 
         // Use the LLM session to create a structured request for plan evaluation
         val evaluation = context.llm.writeSession {
@@ -109,9 +109,9 @@ public class LLMWithCriticPlanner(name: String) : LLMPlanner(name) {
 
         // Return the appropriate PlanAssessment based on the evaluation
         return if (evaluation.shouldContinue) {
-            PlanAssessment.Continue(plan)
+            SimplePlanAssessment.Continue(plan)
         } else {
-            PlanAssessment.Replan(plan, reason = evaluation.reason)
+            SimplePlanAssessment.Replan(plan, reason = evaluation.reason)
         }
     }
 }

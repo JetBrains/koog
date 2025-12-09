@@ -2,16 +2,17 @@ package ai.koog.agents.planner.goap
 
 import ai.koog.agents.core.agent.context.AIAgentFunctionalContext
 import kotlin.math.exp
+import kotlin.reflect.KType
 
 /**
- * DSL for defining actions.
+ * [GOAPPlanner] DSL builder.
  */
-public class GOAPPlannerBuilder<State> internal constructor(
-    internal val name: String
+public class GOAPPlannerBuilder<State>(
+    private val stateType: KType,
+    private val planType: KType,
 ) {
-    internal val actions: MutableList<Action<State>> = mutableListOf()
-
-    internal val goals: MutableList<Goal<State>> = mutableListOf()
+    private val actions: MutableList<Action<State>> = mutableListOf()
+    private val goals: MutableList<Goal<State>> = mutableListOf()
 
     /**
      * Defines an action available to the GOAP agent.
@@ -53,5 +54,26 @@ public class GOAPPlannerBuilder<State> internal constructor(
         goals.add(Goal(name, description, value, cost, condition))
     }
 
-    internal fun build() = GOAPPlanner(name, actions, goals)
+    /**
+     * Builds the [GOAPPlanner].
+     */
+    public fun build(): GOAPPlanner<State> = GOAPPlanner(actions, goals, stateType, planType)
+}
+
+/**
+ * Creates a [GOAPPlanner] using a DSL for defining actions.
+ *
+ * @param stateType [KType] of the [State].
+ * @param planType [KType] of the [GOAPPlan] with a given [State].
+ * @param init The initialization block for the builder.
+ * @return A new [GOAPPlanner] instance with the defined actions.
+ */
+public fun <State> goap(
+    stateType: KType,
+    planType: KType,
+    init: GOAPPlannerBuilder<State>.() -> Unit
+): GOAPPlanner<State> {
+    val builder = GOAPPlannerBuilder<State>(stateType, planType)
+    builder.init()
+    return builder.build()
 }

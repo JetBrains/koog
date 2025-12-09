@@ -6,33 +6,36 @@ import ai.koog.agents.core.dsl.extension.replaceHistoryWithTLDR
 import ai.koog.agents.memory.feature.history.RetrieveFactsFromHistory
 import ai.koog.agents.memory.model.Concept
 import ai.koog.agents.memory.model.FactType
-import ai.koog.agents.planner.AIAgentPlanningStrategy
+import ai.koog.agents.planner.AIAgentPlanner
 import ai.koog.prompt.dsl.prompt
 import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.message.Message
 import kotlinx.serialization.Serializable
+import kotlin.reflect.typeOf
 
 /**
- * A simple planning strategy that uses LLM requests to build a plan.
- *
- * @property name The name of the strategy.
+ * A simple planning strategy that uses LLM requests to build and execute a plan.
+ * In addition, it performs another LLM call to assess each generated plan and ask for a replanning.
+ * It operates on a [String] state, meaning it would accept an initial state string and then return the final state
+ * string as a result.
+ * It is limited to string-only operations and does not perform tool calling or other advanced logic.
  */
 @OptIn(InternalAgentsApi::class)
-public open class LLMPlanner(
-    name: String
-) : AIAgentPlanningStrategy<String, LLMPlanner.SimplePlan>(name) {
-
+public open class SimpleLLMPlanner : AIAgentPlanner<String, SimplePlan>(
+    stateType = typeOf<String>(),
+    planType = typeOf<SimplePlan>()
+) {
     override suspend fun buildPlan(
         context: AIAgentFunctionalContext,
         state: String,
         plan: SimplePlan?
     ): SimplePlan {
         val planAssessment = assessPlan(context, state, plan)
-        if (planAssessment is PlanAssessment.Continue) {
+        if (planAssessment is SimplePlanAssessment.Continue) {
             return planAssessment.currentPlan
         }
 
-        val shouldReplan = planAssessment is PlanAssessment.Replan
+        val shouldReplan = planAssessment is SimplePlanAssessment.Replan
 
         val newPlan = context.llm.writeSession {
             replaceHistoryWithTLDR(
@@ -172,9 +175,9 @@ public open class LLMPlanner(
         context: AIAgentFunctionalContext,
         state: String,
         plan: SimplePlan?
-    ): PlanAssessment<SimplePlan> {
+    ): SimplePlanAssessment<SimplePlan> {
         // Simple implementation always continues with the current plan
-        return if (plan == null) PlanAssessment.NoPlan() else PlanAssessment.Continue(plan)
+        return if (plan == null) SimplePlanAssessment.NoPlan() else SimplePlanAssessment.Continue(plan)
     }
 
     override suspend fun executeStep(
@@ -187,7 +190,7 @@ public open class LLMPlanner(
         // Execute the step using LLM
         val result = context.llm.writeSession {
             appendPrompt {
-                system("You are executing a step in a plan. The goal is: $plan.goal")
+                system("You are executing a step in a plan. The goal is: ${plan.goal}")
                 user("Execute the following step: ${currentStep.description}")
                 user("Current state: $state")
             }
@@ -204,54 +207,54 @@ public open class LLMPlanner(
 
     override suspend fun isPlanCompleted(context: AIAgentFunctionalContext, state: String, plan: SimplePlan): Boolean =
         plan.steps.all { it.isCompleted }
+}
+
+/**
+ * Represents a step in the plan.
+ *
+ * @property description The description of the step.
+ * @property isCompleted Whether the step has been completed.
+ */
+@Serializable
+public data class PlanStep(
+    val description: String,
+    val isCompleted: Boolean = false
+)
+
+/**
+ * Represents a structured plan with steps.
+ *
+ * @property goal The goal of the plan.
+ * @property steps The steps to achieve the goal.
+ */
+@Serializable
+public data class SimplePlan(
+    val goal: String,
+    val steps: MutableList<PlanStep>,
+)
+
+/**
+ * Represents an assessment of a plan's execution, indicating whether to continue with the current plan or replan.
+ */
+public sealed interface SimplePlanAssessment<Plan> {
 
     /**
-     * Represents a step in the plan.
+     * Indicates that the plan should be replanned based on the current state.
      *
-     * @property description The description of the step.
-     * @property isCompleted Whether the step has been completed.
+     * @property reason The reason for replanning.
      */
-    @Serializable
-    public data class PlanStep(
-        val description: String,
-        val isCompleted: Boolean = false
-    )
+    public class Replan<Plan>(
+        public val currentPlan: Plan,
+        public val reason: String
+    ) : SimplePlanAssessment<Plan>
 
     /**
-     * Represents a structured plan with steps.
-     *
-     * @property goal The goal of the plan.
-     * @property steps The steps to achieve the goal.
+     * Indicates that the plan should continue execution without replanning.
      */
-    @Serializable
-    public data class SimplePlan(
-        val goal: String,
-        val steps: MutableList<PlanStep>,
-    )
+    public class Continue<Plan>(public val currentPlan: Plan) : SimplePlanAssessment<Plan>
 
     /**
-     * Represents an assessment of a plan's execution, indicating whether to continue with the current plan or replan.
+     * Indicates that there is no plan to execute.
      */
-    public sealed interface PlanAssessment<Plan> {
-
-        /**
-         * Indicates that the plan should be replanned based on the current state.
-         *
-         * @property reason The reason for replanning.
-         */
-        public class Replan<Plan>(
-            public val currentPlan: Plan,
-            public val reason: String
-        ) : PlanAssessment<Plan>
-
-        /**
-         * Indicates that the plan should continue execution without replanning.
-         */
-        public class Continue<Plan>(public val currentPlan: Plan) : PlanAssessment<Plan>
-
-        /**
-         *
-         */
-        public class NoPlan<Plan> : PlanAssessment<Plan>
-    }
+    public class NoPlan<Plan> : SimplePlanAssessment<Plan>
 }
