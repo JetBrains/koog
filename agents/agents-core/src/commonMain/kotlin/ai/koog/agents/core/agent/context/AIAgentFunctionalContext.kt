@@ -4,6 +4,7 @@ import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
+import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.pipeline.AIAgentFunctionalPipeline
@@ -42,7 +43,8 @@ public class AIAgentFunctionalContext(
     override val storage: AIAgentStorage,
     override val strategyName: String,
     override val pipeline: AIAgentFunctionalPipeline,
-    override val parentContext: AIAgentContext? = null
+    override var executionInfo: AgentExecutionInfo,
+    override val parentContext: AIAgentContext?,
 ) : AIAgentContext {
 
     private val storeMap: MutableMap<AIAgentStorageKey<*>, Any> = mutableMapOf()
@@ -89,6 +91,7 @@ public class AIAgentFunctionalContext(
         storage: AIAgentStorage = this.storage,
         strategyName: String = this.strategyName,
         pipeline: AIAgentFunctionalPipeline = this.pipeline,
+        executionInfo: AgentExecutionInfo = this.executionInfo,
         parentRootContext: AIAgentContext? = this.parentContext,
     ): AIAgentFunctionalContext {
         val freshContext = AIAgentFunctionalContext(
@@ -102,7 +105,8 @@ public class AIAgentFunctionalContext(
             storage = storage,
             strategyName = strategyName,
             pipeline = pipeline,
-            parentContext = parentRootContext
+            executionInfo = executionInfo,
+            parentContext = parentRootContext,
         )
 
         // Copy over the internal store map to preserve any stored values

@@ -1,6 +1,7 @@
 package ai.koog.agents.core.dsl.builder
 
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
+import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.testing.tools.AIAgentContextMockBuilder
 import kotlinx.coroutines.test.runTest
@@ -15,6 +16,7 @@ class AIAgentParallelNodesMergeContextTest {
         return AIAgentContextMockBuilder().apply {
             runId = "test-run-id"
             strategyName = "test-strategy"
+            executionInfo = AgentExecutionInfo(null, "test")
         }.build()
     }
 

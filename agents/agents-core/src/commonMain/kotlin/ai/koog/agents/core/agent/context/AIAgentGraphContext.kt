@@ -4,6 +4,7 @@ import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
+import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
@@ -29,6 +30,7 @@ import kotlin.reflect.KType
  * and handling complex dependencies between graph nodes.
  */
 public interface AIAgentGraphContextBase : AIAgentContext {
+
     override val pipeline: AIAgentGraphPipeline
 
     /**
@@ -60,6 +62,7 @@ public interface AIAgentGraphContextBase : AIAgentContext {
         runId: String = this.runId,
         strategyName: String = this.strategyName,
         pipeline: AIAgentGraphPipeline = this.pipeline,
+        executionInfo: AgentExecutionInfo = this.executionInfo,
         parentContext: AIAgentGraphContextBase? = this,
     ): AIAgentGraphContextBase {
         val clone = AIAgentGraphContext(
@@ -74,6 +77,7 @@ public interface AIAgentGraphContextBase : AIAgentContext {
             runId = runId,
             strategyName = strategyName,
             pipeline = pipeline,
+            executionInfo = executionInfo,
             parentContext = parentContext,
         )
 
@@ -127,7 +131,8 @@ public class AIAgentGraphContext(
     override val runId: String,
     override val strategyName: String,
     override val pipeline: AIAgentGraphPipeline,
-    override val parentContext: AIAgentGraphContextBase? = null,
+    override var executionInfo: AgentExecutionInfo,
+    override val parentContext: AIAgentGraphContextBase?,
 ) : AIAgentGraphContextBase {
     private val mutableAIAgentContext = MutableAIAgentContext(llm, stateManager, storage)
 
@@ -216,6 +221,7 @@ public class AIAgentGraphContext(
         llm = this.llm.copy(),
         storage = this.storage.copy(),
         stateManager = this.stateManager.copy(),
+        executionInfo = this.executionInfo.copy(),
     )
 
     override suspend fun replace(context: AIAgentContext) {

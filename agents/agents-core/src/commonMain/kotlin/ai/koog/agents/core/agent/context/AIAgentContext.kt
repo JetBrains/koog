@@ -4,6 +4,7 @@ import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
+import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.feature.AIAgentFeature
@@ -88,7 +89,7 @@ public interface AIAgentContext {
 
     /**
      * Concurrent-safe key-value storage for an agent, used to manage and persist data within the context of
-     * a the AI agent stage execution. The `storage` property provides a thread-safe mechanism for sharing
+     *  the AI agent stage execution. The `storage` property provides a thread-safe mechanism for sharing
      * and storing data specific to the agent's operation.
      */
     public val storage: AIAgentStorage
@@ -103,6 +104,11 @@ public interface AIAgentContext {
      */
     @InternalAgentsApi
     public val parentContext: AIAgentContext?
+
+    /**
+     * Represents the observability data associated with the AI Agent context.
+     */
+    public var executionInfo: AgentExecutionInfo
 
     /**
      * Stores a feature in the agent's storage using the specified key.

@@ -7,6 +7,7 @@ import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
+import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.environment.ContextualAgentEnvironment
@@ -98,6 +99,9 @@ public open class GraphAIAgent<Input, Output>(
         val stateManager = AIAgentStateManager()
         val storage = AIAgentStorage()
 
+        val agentExecutionInfo = AgentExecutionInfo(parent = null, partName = id)
+        val runExecutionInfo = AgentExecutionInfo(parent = agentExecutionInfo, partName = runId)
+
         val preparedEnvironment = prepareAgentEnvironment()
 
         val context = AIAgentGraphContext(
@@ -126,6 +130,8 @@ public open class GraphAIAgent<Input, Output>(
             runId = runId,
             strategyName = strategy.name,
             pipeline = pipeline,
+            executionInfo = runExecutionInfo,
+            parentContext = null,
         )
 
         // Update Environment

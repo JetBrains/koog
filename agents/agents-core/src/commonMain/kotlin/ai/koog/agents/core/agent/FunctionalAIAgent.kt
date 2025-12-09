@@ -5,6 +5,7 @@ import ai.koog.agents.core.agent.context.AIAgentFunctionalContext
 import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
+import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.environment.ContextualAgentEnvironment
@@ -100,6 +101,9 @@ public class FunctionalAIAgent<Input, Output>(
             clock = clock
         )
 
+        val agentExecutionInfo = AgentExecutionInfo(parent = null, partName = id)
+        val runExecutionInfo = AgentExecutionInfo(parent = agentExecutionInfo, partName = runId)
+
         val preparedEnvironment = prepareEnvironment()
 
         // Context
@@ -113,7 +117,9 @@ public class FunctionalAIAgent<Input, Output>(
             stateManager = AIAgentStateManager(),
             storage = AIAgentStorage(),
             strategyName = strategy.name,
-            pipeline = pipeline
+            pipeline = pipeline,
+            executionInfo = runExecutionInfo,
+            parentContext = null
         )
 
         // Updated environment

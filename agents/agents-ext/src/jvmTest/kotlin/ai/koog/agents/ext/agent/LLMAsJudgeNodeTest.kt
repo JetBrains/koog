@@ -6,6 +6,7 @@ import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.agents.core.agent.context.DetachedPromptExecutorAPI
 import ai.koog.agents.core.agent.entity.FinishNode
 import ai.koog.agents.core.agent.entity.StartNode
+import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.builder.AIAgentSubgraphBuilderBase
 import ai.koog.agents.core.environment.AIAgentEnvironment
@@ -34,7 +35,9 @@ class LLMAsJudgeNodeTest {
         override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z")
     }
 
-    val CRITIC_TASK = "Find all numbers produced by LLM and check that they are not divided by 3"
+    companion object {
+        const val CRITIC_TASK = "Find all numbers produced by LLM and check that they are not divided by 3"
+    }
 
     @OptIn(InternalAgentsApi::class, DetachedPromptExecutorAPI::class)
     @Test
@@ -72,6 +75,8 @@ class LLMAsJudgeNodeTest {
             clock = testClock
         )
 
+        val executionInfo = AgentExecutionInfo(null, "test")
+
         val context = AIAgentGraphContext(
             environment = mockEnv,
             agentId = "test-agent",
@@ -84,6 +89,8 @@ class LLMAsJudgeNodeTest {
             runId = "run-1",
             strategyName = "test-strategy",
             pipeline = AIAgentGraphPipeline(),
+            executionInfo = executionInfo,
+            parentContext = null
         )
 
         val subgraphContext = object : AIAgentSubgraphBuilderBase<String, String>() {

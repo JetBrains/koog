@@ -6,6 +6,7 @@ import ai.koog.agents.core.agent.config.MissingToolsConversionStrategy
 import ai.koog.agents.core.agent.config.ToolCallDescriber
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
+import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.environment.ToolResultKind
@@ -98,6 +99,7 @@ open class AgentTestBase {
         strategyName: String = "test-strategy",
         pipeline: AIAgentGraphPipeline = AIAgentGraphPipeline(testClock),
         agentInput: String = "test-input",
+        executionInfo: AgentExecutionInfo = AgentExecutionInfo(null, testAgentId)
     ): AIAgentGraphContext {
         return AIAgentGraphContext(
             environment = environment,
@@ -111,6 +113,8 @@ open class AgentTestBase {
             runId = runId,
             strategyName = strategyName,
             pipeline = pipeline,
+            executionInfo = executionInfo,
+            parentContext = null
         )
     }
 }
