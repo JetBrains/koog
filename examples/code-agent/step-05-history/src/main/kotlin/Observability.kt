@@ -11,12 +11,11 @@ import ai.koog.agents.features.opentelemetry.integration.langfuse.addLangfuseExp
  * Logic is kept identical to the original blocks; only the agent name is parameterized.
  */
 fun GraphAIAgent.FeatureContext.setupObservability(agentName: String) {
-    val sessionId = System.getenv("LANGFUSE_SESSION_ID") ?: "default-session"
     install(OpenTelemetry) {
-        setVerbose(true)
+        setVerbose(true) // Send full strings instead of HIDDEN placeholders
         addLangfuseExporter(
             traceAttributes = listOf(
-                CustomAttribute("langfuse.session.id", sessionId),
+                CustomAttribute("langfuse.session.id", System.getenv("LANGFUSE_SESSION_ID") ?: ""),
             )
         )
     }

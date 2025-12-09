@@ -9,15 +9,19 @@ import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.ext.tool.file.ListDirectoryTool
 import ai.koog.agents.ext.tool.file.ReadFileTool
-import ai.koog.prompt.executor.clients.openai.OpenAIModels
-import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.koog.rag.base.files.JVMFileSystemProvider
 import ai.koog.agents.ext.tool.search.RegexSearchTool
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 
 val findAgent = AIAgent(
     promptExecutor = simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")),
-    strategy = singleRunStrategy(),
-
+    llmModel = OpenAIModels.Chat.GPT4_1Mini,
+    toolRegistry = ToolRegistry {
+        tool(ListDirectoryTool(JVMFileSystemProvider.ReadOnly))
+        tool(ReadFileTool(JVMFileSystemProvider.ReadOnly))
+        tool(RegexSearchTool(JVMFileSystemProvider.ReadOnly))
+    },
     systemPrompt = """
         You are an AI assistant specializing in code search.
         Your task is to analyze the user's query and provide clear and specific result.
@@ -33,13 +37,8 @@ val findAgent = AIAgent(
         
         Ensure to utilize maximum amount of parallelization during the tool calling.
         """.trimIndent(),
-    llmModel = OpenAIModels.Chat.GPT5Codex,
-    toolRegistry = ToolRegistry {
-        tool(ListDirectoryTool(JVMFileSystemProvider.ReadOnly))
-        tool(ReadFileTool(JVMFileSystemProvider.ReadOnly))
-        tool(RegexSearchTool(JVMFileSystemProvider.ReadOnly))
-    },
-    maxIterations = 400
+    strategy = singleRunStrategy(),
+    maxIterations = 100
 ) {
     setupObservability(agentName = "findAgent")
 }
@@ -66,6 +65,9 @@ fun createFindAgentTool(): Tool<*, *> {
                 - Searching outside the provided `path` directory.
                 
                 The agent analyzes your query, searches intelligently, and returns findings with file paths, line numbers, and relevant code snippets, along with explanations of why each result matches your needs.
+                
+                While this agent is much more cost efficient at executing searches than using shell commands, it does lose context in between searches.
+                So give the preference at clustering similar searches in one call rather than doing multiple calls to this tool.
             """.trimIndent(),
             inputDescription = """
                 The input contains two components: the absolute_path and the query.
