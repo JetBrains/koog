@@ -11,12 +11,12 @@ import ai.koog.agents.ext.tool.file.ListDirectoryTool
 import ai.koog.agents.ext.tool.file.ReadFileTool
 import ai.koog.rag.base.files.JVMFileSystemProvider
 import ai.koog.agents.ext.tool.search.RegexSearchTool
-import ai.koog.prompt.executor.clients.google.GoogleModels
-import ai.koog.prompt.executor.llms.all.simpleGoogleAIExecutor
+import ai.koog.prompt.executor.clients.openai.OpenAIModels
+import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 
 val findAgent = AIAgent(
-    promptExecutor = simpleGoogleAIExecutor(System.getenv("GOOGLE_API_KEY")),
-    llmModel = GoogleModels.Gemini2_5Flash,
+    promptExecutor = simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY")),
+    llmModel = OpenAIModels.Chat.GPT4_1Mini,
     toolRegistry = ToolRegistry {
         tool(ListDirectoryTool(JVMFileSystemProvider.ReadOnly))
         tool(ReadFileTool(JVMFileSystemProvider.ReadOnly))
