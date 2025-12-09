@@ -6,12 +6,15 @@ import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * Represents a planner strategy for an AI agent.
+ * @param State The type of the state.
+ * @param Plan The type of the plan.
  * @param name The name of the strategy.
+ * @param planner The instance of the planner defining the exact planner strategy.
  */
 public class AIAgentPlannerStrategy<State, Plan>(
     override val name: String,
     private val planner: AIAgentPlanner<State, Plan>,
-) : AIAgentStrategy<State, State, AIAgentFunctionalContext> { // TODO uses functional context for now, create its own
+) : AIAgentStrategy<State, State, AIAgentFunctionalContext> {
     override suspend fun execute(
         context: AIAgentFunctionalContext,
         input: State

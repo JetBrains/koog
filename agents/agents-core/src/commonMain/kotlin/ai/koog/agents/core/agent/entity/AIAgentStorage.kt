@@ -29,7 +29,7 @@ public fun <T : Any> createStorageKey(name: String): AIAgentStorageKey<T> = AIAg
  * set and retrieve data using it by calling [set] and [get].
  *
  */
-public class AIAgentStorage internal constructor() {
+public class AIAgentStorage {
     private val mutex = Mutex()
     private val storage = mutableMapOf<AIAgentStorageKey<*>, Any>()
 

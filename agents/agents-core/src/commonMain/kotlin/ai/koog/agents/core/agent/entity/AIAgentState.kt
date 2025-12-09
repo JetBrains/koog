@@ -42,7 +42,7 @@ public class AIAgentState(
  * @constructor Creates a new instance of AIAgentStateManager with the initial state,
  * defaulting to a new `AIAgentState` if not provided.
  */
-public class AIAgentStateManager internal constructor(
+public class AIAgentStateManager(
     private var state: AIAgentState = AIAgentState()
 ) {
     private val mutex = Mutex()

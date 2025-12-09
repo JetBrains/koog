@@ -8,7 +8,10 @@ import ai.koog.agents.core.tools.annotations.InternalAgentToolsApi
 import ai.koog.prompt.message.Message
 import io.github.oshai.kotlinlogging.KLogger
 
-internal class GenericAgentEnvironment(
+/**
+ * Represents base agent environment with generic abstractions.
+ */
+public class GenericAgentEnvironment(
     private val agentId: String,
     private val logger: KLogger,
     private val toolRegistry: ToolRegistry,
