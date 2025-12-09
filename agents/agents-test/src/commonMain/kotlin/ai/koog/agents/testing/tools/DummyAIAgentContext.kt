@@ -9,6 +9,7 @@ import ai.koog.agents.core.agent.context.AIAgentLLMContext
 import ai.koog.agents.core.agent.entity.AIAgentStateManager
 import ai.koog.agents.core.agent.entity.AIAgentStorage
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
+import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.dsl.builder.BaseBuilder
 import ai.koog.agents.core.environment.AIAgentEnvironment
@@ -62,6 +63,7 @@ public class DummyAIAgentContext(
     private var _storage: AIAgentStorage? = builder.storage
     private var _runId: String? = builder.runId
     private var _strategyName: String? = builder.strategyName
+    private var _executionInfo: AgentExecutionInfo? = builder.executionInfo
 
     @OptIn(InternalAgentsApi::class)
     private var _pipeline: AIAgentGraphPipeline = AIAgentGraphPipeline()
@@ -97,6 +99,12 @@ public class DummyAIAgentContext(
     override val pipeline: AIAgentGraphPipeline
         get() = _pipeline
 
+    override var executionInfo: AgentExecutionInfo
+        get() = _executionInfo ?: throw NotImplementedError("Execution info is not mocked")
+        set(value) {
+            _executionInfo = value
+        }
+
     override fun store(key: AIAgentStorageKey<*>, value: Any) {
         throw NotImplementedError("store() is not supported for mock")
     }
@@ -123,7 +131,7 @@ public class DummyAIAgentContext(
      * @param stateManager The state management associated with the AI agent, responsible for tracking execution state and history.
      * @param storage A storage mechanism for the AI agent, enabling persistence of key-value information.
      * @param runId A unique identifier for the current execution or operational instance of the AI agent.
-     * @param strategyName The name of the strategy employed during the AI agent's execution cycle.
+     * @param strategyName The name of the strategy used during the AI agent's execution cycle.
      * @param pipeline The pipeline configuration used by the AI agent to define the processing steps.
      * @return An instance of `AIAgentContextBase` with the updated parameters and copied configurations.
      */
@@ -139,6 +147,7 @@ public class DummyAIAgentContext(
         runId: String,
         strategyName: String,
         pipeline: AIAgentGraphPipeline,
+        executionInfo: AgentExecutionInfo,
         parentContext: AIAgentGraphContextBase?,
     ): AIAgentGraphContextBase = DummyAIAgentContext(
         builder.copy(
@@ -151,6 +160,7 @@ public class DummyAIAgentContext(
             storage = storage,
             runId = runId,
             strategyName = strategyName,
+            executionInfo = executionInfo
         ),
     )
 
@@ -269,6 +279,15 @@ public interface AIAgentContextMockBuilderBase : BaseBuilder<AIAgentContext> {
     public var strategyName: String?
 
     /**
+     * Represents execution-specific context information for the mock AI agent builder.
+     * This variable allows tracking and observability of the agent's execution flow.
+     *
+     * By leveraging the properties defined in [AgentExecutionInfo], this information
+     * aids in linking, tracing, and managing execution paths throughout the agent's lifecycle.
+     */
+    public var executionInfo: AgentExecutionInfo?
+
+    /**
      * Creates and returns a copy of the current instance of `AIAgentContextMockBuilderBase`.
      *
      * @return A new instance of `AIAgentContextMockBuilderBase` with the same properties as the original.
@@ -283,6 +302,7 @@ public interface AIAgentContextMockBuilderBase : BaseBuilder<AIAgentContext> {
         storage: AIAgentStorage? = this.storage,
         runId: String? = this.runId,
         strategyName: String? = this.strategyName,
+        executionInfo: AgentExecutionInfo? = this.executionInfo,
     ): AIAgentContextMockBuilderBase
 
     /**
@@ -302,7 +322,7 @@ public interface AIAgentContextMockBuilderBase : BaseBuilder<AIAgentContext> {
  * This class is intended for use in testing scenarios and extends `AIAgentContextMockBuilderBase`.
  */
 @TestOnly
-public class AIAgentContextMockBuilder() : AIAgentContextMockBuilderBase {
+public class AIAgentContextMockBuilder : AIAgentContextMockBuilderBase {
     /**
      * Represents the AI agent's environment in which the context is being executed.
      *
@@ -376,7 +396,7 @@ public class AIAgentContextMockBuilder() : AIAgentContextMockBuilderBase {
      * handling of typed keys and respective values in a thread-safe manner within the agent context.
      * The storage can be used to store, retrieve, or manage custom data uniquely identified by specific keys.
      *
-     * It can be configured or overridden during the agent context setup or through subsequent modifications
+     * It can be configured or overridden during the agent context setup or through later modifications
      * to the context builder. If not provided, the default value remains `null`.
      */
     override var storage: AIAgentStorage? = null
@@ -403,6 +423,15 @@ public class AIAgentContextMockBuilder() : AIAgentContextMockBuilderBase {
     override var strategyName: String? = "test-strategy-default"
 
     /**
+     * Represents execution-specific context information for the mock AI agent builder.
+     * This variable allows tracking and observability of the agent's execution flow.
+     *
+     * By leveraging the properties defined in [AgentExecutionInfo], this information
+     * aids in linking, tracing, and managing execution paths throughout the agent's lifecycle.
+     */
+    override var executionInfo: AgentExecutionInfo? = null
+
+    /**
      * Creates and returns a new copy of the current `AIAgentContextMockBuilder` instance.
      * The copied instance contains the same state and configuration as the original.
      *
@@ -418,6 +447,7 @@ public class AIAgentContextMockBuilder() : AIAgentContextMockBuilderBase {
         storage: AIAgentStorage?,
         runId: String?,
         strategyName: String?,
+        executionInfo: AgentExecutionInfo?,
     ): AIAgentContextMockBuilder {
         return AIAgentContextMockBuilder().also {
             it.environment = environment
@@ -429,6 +459,7 @@ public class AIAgentContextMockBuilder() : AIAgentContextMockBuilderBase {
             it.storage = storage
             it.runId = runId
             it.strategyName = strategyName
+            it.executionInfo = executionInfo
         }
     }
 

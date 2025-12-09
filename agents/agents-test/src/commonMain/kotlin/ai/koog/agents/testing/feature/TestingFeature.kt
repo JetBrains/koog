@@ -14,6 +14,7 @@ import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.agent.entity.AIAgentSubgraph
 import ai.koog.agents.core.agent.entity.FinishNode
 import ai.koog.agents.core.agent.entity.createStorageKey
+import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.environment.ToolResultKind
@@ -755,6 +756,7 @@ public class Testing {
                     storage: AIAgentStorage?,
                     runId: String?,
                     strategyName: String?,
+                    executionInfo: AgentExecutionInfo?,
                 ): NodeOutputAssertionsBuilder =
                     NodeOutputAssertionsBuilder(stageBuilder, context.copy())
 
@@ -863,6 +865,7 @@ public class Testing {
                     storage: AIAgentStorage?,
                     runId: String?,
                     strategyName: String?,
+                    executionInfo: AgentExecutionInfo?,
                 ): EdgeAssertionsBuilder = EdgeAssertionsBuilder(stageBuilder, context.copy())
 
                 /**
