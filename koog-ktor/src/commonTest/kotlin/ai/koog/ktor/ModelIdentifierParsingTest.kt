@@ -249,6 +249,11 @@ class ModelIdentifierParsingTest {
         assertNotNull(gemini25FlashLite)
         assertEquals(LLMProvider.Google, gemini25FlashLite.provider)
         assertEquals(GoogleModels.Gemini2_5FlashLite, gemini25FlashLite)
+
+        val geminiEmbedding001 = getModelFromIdentifier("google.gemini_embedding001")
+        assertNotNull(geminiEmbedding001)
+        assertEquals(LLMProvider.Google, geminiEmbedding001.provider)
+        assertEquals(GoogleModels.Embeddings.GeminiEmbedding001, geminiEmbedding001)
     }
 
     // MistralAI model identifier tests

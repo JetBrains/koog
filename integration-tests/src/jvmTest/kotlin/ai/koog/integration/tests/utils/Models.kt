@@ -64,6 +64,7 @@ object Models {
             BedrockModels.Embeddings.AmazonTitanEmbedText,
             OpenAIModels.Embeddings.TextEmbedding3Large,
             MistralAIModels.Embeddings.MistralEmbed,
+            GoogleModels.Embeddings.GeminiEmbedding001,
         )
     }
 

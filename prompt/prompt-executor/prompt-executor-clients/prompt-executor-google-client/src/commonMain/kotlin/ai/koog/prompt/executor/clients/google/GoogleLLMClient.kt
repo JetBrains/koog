@@ -10,9 +10,12 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.executor.clients.ConnectionTimeoutConfig
 import ai.koog.prompt.executor.clients.LLMClient
 import ai.koog.prompt.executor.clients.LLMClientException
+import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import ai.koog.prompt.executor.clients.google.models.GoogleCandidate
 import ai.koog.prompt.executor.clients.google.models.GoogleContent
 import ai.koog.prompt.executor.clients.google.models.GoogleData
+import ai.koog.prompt.executor.clients.google.models.GoogleEmbeddingRequest
+import ai.koog.prompt.executor.clients.google.models.GoogleEmbeddingResponse
 import ai.koog.prompt.executor.clients.google.models.GoogleFunctionCallingConfig
 import ai.koog.prompt.executor.clients.google.models.GoogleFunctionCallingMode
 import ai.koog.prompt.executor.clients.google.models.GoogleFunctionDeclaration
@@ -79,6 +82,7 @@ public class GoogleClientSettings(
     public val defaultPath: String = "v1beta/models",
     public val generateContentMethod: String = "generateContent",
     public val streamGenerateContentMethod: String = "streamGenerateContent",
+    public val embedContentMethod: String = "embedContent"
 )
 
 /**
@@ -97,7 +101,7 @@ public open class GoogleLLMClient(
     private val settings: GoogleClientSettings = GoogleClientSettings(),
     baseClient: HttpClient = HttpClient(),
     private val clock: Clock = Clock.System
-) : LLMClient {
+) : LLMClient, LLMEmbeddingProvider {
 
     @OptIn(InternalStructuredOutputApi::class)
     private companion object {
@@ -756,5 +760,39 @@ public open class GoogleLLMClient(
 
     override fun close() {
         httpClient.close()
+    }
+
+    override suspend fun embed(text: String, model: LLModel): List<Double> {
+        require(model.capabilities.contains(LLMCapability.Embed)) {
+            "Model ${model.id} does not support embedding."
+        }
+
+        logger.debug { "Embedding text with model: ${model.id}" }
+
+        val request = GoogleEmbeddingRequest(
+            model = "models/${model.id}",
+            content = GoogleContent(
+                parts = listOf(GooglePart.Text(text))
+            )
+        )
+
+        try {
+            val response = httpClient.post(
+                path = "${settings.defaultPath}/${model.id}:${settings.embedContentMethod}",
+                request = request,
+                requestBodyType = GoogleEmbeddingRequest::class,
+                responseType = GoogleEmbeddingResponse::class,
+            )
+
+            return response.embedding.values
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            throw LLMClientException(
+                clientName = clientName,
+                message = e.message,
+                cause = e
+            )
+        }
     }
 }
