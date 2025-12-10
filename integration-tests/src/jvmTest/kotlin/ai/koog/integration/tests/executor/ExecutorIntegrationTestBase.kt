@@ -40,6 +40,7 @@ import ai.koog.prompt.executor.clients.LLMClientException
 import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import ai.koog.prompt.executor.clients.anthropic.AnthropicParams
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicThinking
+import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.google.GoogleParams
 import ai.koog.prompt.executor.clients.google.models.GoogleThinkingConfig
 import ai.koog.prompt.executor.clients.google.models.GoogleThinkingLevel
@@ -134,7 +135,7 @@ abstract class ExecutorIntegrationTestBase {
             )
 
             is LLMProvider.Google -> {
-                val thinkingConfig = if (model.id.contains("gemini-3")) {
+                val thinkingConfig = if (model.id == GoogleModels.Gemini3_Pro_Preview.id) {
                     GoogleThinkingConfig(
                         includeThoughts = true,
                         thinkingLevel = GoogleThinkingLevel.LOW // with HIGH thoughts often exceed maxTokens causing test failures
