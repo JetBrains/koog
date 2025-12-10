@@ -138,6 +138,42 @@ public object OpenRouterModels : LLModelDefinitions {
     )
 
     /**
+     * Claude Haiku 4.5 is Anthropic’s fastest and most efficient model,
+     * delivering near-frontier intelligence at a fraction of the cost and latency of larger Claude models.
+     */
+    public val Claude4_5Haiku: LLModel = LLModel(
+        provider = LLMProvider.OpenRouter,
+        id = "anthropic/claude-haiku-4.5",
+        capabilities = multimodalCapabilities + additionalCapabilities,
+        contextLength = 200_000,
+        maxOutputTokens = 64_000,
+    )
+
+    /**
+     * Claude Sonnet 4.5 is Anthropic’s most advanced Sonnet model to date, optimized for real-world agents
+     * and coding workflows.
+     */
+    public val Claude4_5Sonnet: LLModel = LLModel(
+        provider = LLMProvider.OpenRouter,
+        id = "anthropic/claude-sonnet-4.5",
+        capabilities = multimodalCapabilities + additionalCapabilities,
+        contextLength = 1_000_000,
+        maxOutputTokens = 64_000,
+    )
+
+    /**
+     * Claude Opus 4.5 is Anthropic’s frontier reasoning model optimized for complex software engineering,
+     * agentic workflows, and long-horizon computer use.
+     */
+    public val Claude4_5Opus: LLModel = LLModel(
+        provider = LLMProvider.OpenRouter,
+        id = "anthropic/claude-opus-4.5",
+        capabilities = multimodalCapabilities + additionalCapabilities,
+        contextLength = 200_000,
+        maxOutputTokens = 32_000,
+    )
+
+    /**
      * Represents the GPT-4o-mini model hosted on OpenRouter.
      *
      * It leverages a standard set of capabilities for interaction.
