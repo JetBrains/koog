@@ -19,6 +19,7 @@ class RetryExtension : InvocationInterceptor {
         private const val OPENAI_500_ERROR = "Error from OpenAI API: 500 Internal Server Error"
         private const val OPENAI_503_ERROR = "Error from OpenAI API: 503 Service Unavailable"
         private const val MISTRAL_503_ERROR = "Error from MistralAILLMClient API: 503 Service Unavailable"
+        private const val OPENROUTER_API_ERROR = "unknown error in the model inference server"
     }
 
     private fun isThirdPartyError(e: Throwable): Boolean {
@@ -32,6 +33,7 @@ class RetryExtension : InvocationInterceptor {
                 OPENAI_500_ERROR,
                 OPENAI_503_ERROR,
                 MISTRAL_503_ERROR,
+                OPENROUTER_API_ERROR,
             )
         return e.message?.let { message -> message in errorMessages } == true
     }

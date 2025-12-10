@@ -429,8 +429,21 @@ public object OpenRouterModels : LLModelDefinitions {
     public val Qwen2_5: LLModel = LLModel(
         provider = LLMProvider.OpenRouter,
         id = "qwen/qwen-2.5-72b-instruct",
-        capabilities = standardCapabilities,
+        capabilities = standardCapabilities + additionalCapabilities,
         contextLength = 131_072,
         maxOutputTokens = 8_192,
+    )
+
+    /**
+     * Qwen 3 model with 8B parameters from Alibaba.
+     * Multimodal vision-language model from the Qwen3-VL series, built for high-fidelity understanding
+     * and reasoning across text, images, and video.
+     */
+    public val Qwen3VL: LLModel = LLModel(
+        provider = LLMProvider.OpenRouter,
+        id = "qwen/qwen3-vl-8b-instruct",
+        capabilities = multimodalCapabilities + additionalCapabilities,
+        contextLength = 131_072,
+        maxOutputTokens = 33_000,
     )
 }
