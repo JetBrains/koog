@@ -19,6 +19,7 @@ object Models {
         return Stream.of(
             OpenAIModels.Chat.GPT5_1, // reasoning
             OpenAIModels.Chat.GPT4_1, // non-reasoning
+            OpenAIModels.Chat.GPT5_1Codex
         )
     }
 
