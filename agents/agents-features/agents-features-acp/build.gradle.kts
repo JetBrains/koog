@@ -10,7 +10,7 @@ plugins {
 
 kotlin {
     sourceSets {
-        commonMain {
+        jvmMain {
             dependencies {
                 api(project(":agents:agents-core"))
 

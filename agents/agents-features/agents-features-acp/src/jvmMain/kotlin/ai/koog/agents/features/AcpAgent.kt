@@ -1,4 +1,4 @@
-package ai.koog.agents.features.acp
+package ai.koog.agents.features
 
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.feature.AIAgentFunctionalFeature
