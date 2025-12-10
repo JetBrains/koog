@@ -40,12 +40,14 @@ val excluded = setOf(
 
 val included = setOf(
     ":agents:agents-core",
+    ":agents:agents-features:agents-features-acp",
     ":agents:agents-features:agents-features-event-handler",
     ":agents:agents-features:agents-features-memory",
     ":agents:agents-features:agents-features-opentelemetry",
     ":agents:agents-features:agents-features-trace",
     ":agents:agents-features:agents-features-tokenizer",
     ":agents:agents-features:agents-features-snapshot",
+    ":agents:agents-acp",
     ":agents:agents-mcp",
     ":agents:agents-tools",
     ":agents:agents-utils",

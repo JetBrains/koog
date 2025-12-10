@@ -1,4 +1,5 @@
 [versions]
+acp = "0.3.0"
 agp = "8.12.3"
 annotations = "26.0.2-1"
 assertj = "3.27.6"
@@ -83,6 +84,7 @@ oshai-kotlin-logging = { module = "io.github.oshai:kotlin-logging", version.ref 
 mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 mokksy-a2a = { module = "me.kpavlov.aimocks:ai-mocks-a2a", version.ref = "mokksy" }
 dokka-gradle-plugin = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version.ref = "dokka" }
+acp = { module = "com.agentclientprotocol:acp", version.ref = "acp"}
 mcp-client = { module = "io.modelcontextprotocol:kotlin-sdk-client", version.ref = "mcp" }
 mcp-server = { module = "io.modelcontextprotocol:kotlin-sdk-server", version.ref = "mcp" }
 slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
