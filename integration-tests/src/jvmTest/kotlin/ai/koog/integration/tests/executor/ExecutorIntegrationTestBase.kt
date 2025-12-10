@@ -40,8 +40,10 @@ import ai.koog.prompt.executor.clients.LLMClientException
 import ai.koog.prompt.executor.clients.LLMEmbeddingProvider
 import ai.koog.prompt.executor.clients.anthropic.AnthropicParams
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicThinking
+import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.google.GoogleParams
 import ai.koog.prompt.executor.clients.google.models.GoogleThinkingConfig
+import ai.koog.prompt.executor.clients.google.models.GoogleThinkingLevel
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.clients.openai.OpenAIResponsesParams
 import ai.koog.prompt.executor.clients.openai.base.models.ReasoningEffort
@@ -56,6 +58,7 @@ import ai.koog.prompt.markdown.markdown
 import ai.koog.prompt.message.AttachmentContent
 import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
+import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.ToolChoice
@@ -131,13 +134,23 @@ abstract class ExecutorIntegrationTestBase {
                 maxTokens = 256
             )
 
-            is LLMProvider.Google -> GoogleParams(
-                thinkingConfig = GoogleThinkingConfig(
-                    includeThoughts = true,
-                    thinkingBudget = 256
-                ),
-                maxTokens = 256
-            )
+            is LLMProvider.Google -> {
+                val thinkingConfig = if (model.id == GoogleModels.Gemini3_Pro_Preview.id) {
+                    GoogleThinkingConfig(
+                        includeThoughts = true,
+                        thinkingLevel = GoogleThinkingLevel.LOW // with HIGH thoughts often exceed maxTokens causing test failures
+                    )
+                } else {
+                    GoogleThinkingConfig(
+                        includeThoughts = true,
+                        thinkingBudget = 256
+                    )
+                }
+                GoogleParams(
+                    thinkingConfig = thinkingConfig,
+                    maxTokens = 256
+                )
+            }
 
             else -> LLMParams(maxTokens = 256)
         }
@@ -1032,6 +1045,38 @@ abstract class ExecutorIntegrationTestBase {
                 withClue("No reasoning messages found") { shouldForAny { it is Message.Reasoning } }
                 assertResponseContainsReasoningWithEncryption(this)
             }
+        }
+    }
+
+    // This test targets models that support/require passing reasoning back (Google Gemini 3)
+    open fun integration_testReasoningMultiStep(model: LLModel) = runTest(timeout = 300.seconds) {
+        Models.assumeAvailable(model.provider)
+
+        val params = createReasoningParams(model)
+        val prompt1 = Prompt.build("reasoning-multistep-1", params = params) {
+            system("You are a helpful assistant.")
+            user("What is 5 + 5? Think step by step.")
+        }
+
+        val client = getLLMClient(model)
+
+        val response1 = withRetry(times = 3, testName = "integration_testReasoningMultiStep_Turn1[${model.id}]") {
+            client.execute(prompt1, model)
+        }
+
+        response1.shouldForAny { it is Message.Reasoning }
+
+        val prompt2 = Prompt(
+            id = "reasoning-multistep-2",
+            messages = prompt1.messages + response1 + Message.User(ContentPart.Text("Multiply the result by 2."), metaInfo = RequestMetaInfo.Empty),
+            params = params
+        )
+
+        withRetry(times = 3, testName = "integration_testReasoningMultiStep_Turn2[${model.id}]") {
+            val response2 = client.execute(prompt2, model)
+            response2.shouldNotBeEmpty()
+            val answer = response2.filterIsInstance<Message.Assistant>().first().content
+            answer.shouldContain("20")
         }
     }
 }

@@ -23,6 +23,7 @@ import ai.koog.prompt.llm.LLModel
  * | [Gemini2_5Pro]              | Slow      | $1.25-$2.50 / $10.00-$15.00² | Audio, Image, Video, Text, Tools | Text, Tools         |
  * | [Gemini2_5Flash]            | Medium    | $0.15-$1.00 / $0.60-$3.50³   | Audio, Image, Video, Text, Tools | Text, Tools         |
  * | [Gemini2_5FlashLite]        | Fast      | $0.10-$0.30 / $0.40          | Audio, Image, Video, Text, Tools | Text, Tools         |
+ * | [Gemini3_Pro_Preview]       | Slow      | $2.00-$4.00 / $12.00-$18.00  | Audio, Image, Video, Text, Tools | Text, Tools         |
  *
  * @see <a href="modelcards.withgoogle.com/model-cards">
  */
@@ -146,6 +147,23 @@ public object GoogleModels : LLModelDefinitions {
     public val Gemini2_5FlashLite: LLModel = LLModel(
         provider = LLMProvider.Google,
         id = "gemini-2.5-flash-lite",
+        capabilities = fullCapabilities,
+        contextLength = 1_048_576,
+        maxOutputTokens = 65_536,
+    )
+
+    /**
+     * Gemini 3 Pro is the first model in the new series, featuring advanced reasoning capabilities.
+     * It uses `thinking_level` instead of `thinking_budget` for reasoning control.
+     *
+     * Context window: 1 million tokens
+     * Knowledge cutoff: January 2025
+     *
+     * @see <a href="ai.google.dev/gemini-api/docs/gemini-3">
+     */
+    public val Gemini3_Pro_Preview: LLModel = LLModel(
+        provider = LLMProvider.Google,
+        id = "gemini-3-pro-preview",
         capabilities = fullCapabilities,
         contextLength = 1_048_576,
         maxOutputTokens = 65_536,

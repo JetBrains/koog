@@ -105,6 +105,7 @@ object Models {
             OpenAIModels.Chat.GPT5_1,
             AnthropicModels.Haiku_4_5,
             GoogleModels.Gemini2_5Pro,
+            GoogleModels.Gemini3_Pro_Preview,
         )
     }
 

@@ -328,15 +328,36 @@ internal class GoogleToolConfig(
  * Optional block that controls Gemini's "thinking" mode.
  *
  * @property includeThoughts When set to `true`, the model will return its intermediate reasoning.
- * @property thinkingBudget Token limit for reasoning, `0` disables it (Flash 2.5).
+ * @property thinkingBudget Token limit for reasoning (Gemini 2.0). Mutually exclusive with [thinkingLevel].
+ * @property thinkingLevel Reasoning depth level (Gemini 3.0). Mutually exclusive with [thinkingBudget].
  *
- * API reference: https://ai.google.dev/gemini-api/docs/thinking#set-budget
+ * API reference: https://ai.google.dev/gemini-api/docs/thinking
  */
 @Serializable
 public data class GoogleThinkingConfig(
     val includeThoughts: Boolean? = null,
-    val thinkingBudget: Int? = null
-)
+    val thinkingBudget: Int? = null,
+    val thinkingLevel: GoogleThinkingLevel? = null
+) {
+    init {
+        require(thinkingBudget == null || thinkingLevel == null) {
+            "Cannot set both 'thinkingBudget' and 'thinkingLevel'. " +
+                "Use 'thinkingBudget' for Gemini 2.0 models and 'thinkingLevel' for Gemini 3.0 models."
+        }
+    }
+}
+
+/**
+ * Levels of thinking depth for Gemini 3 models.
+ */
+@Serializable
+public enum class GoogleThinkingLevel {
+    @SerialName("low")
+    LOW,
+
+    @SerialName("high")
+    HIGH
+}
 
 /**
  * Configuration for tool calling

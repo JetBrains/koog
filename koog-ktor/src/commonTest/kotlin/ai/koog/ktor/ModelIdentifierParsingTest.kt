@@ -250,6 +250,11 @@ class ModelIdentifierParsingTest {
         assertEquals(LLMProvider.Google, gemini25FlashLite.provider)
         assertEquals(GoogleModels.Gemini2_5FlashLite, gemini25FlashLite)
 
+        val gemini3ProPreview = getModelFromIdentifier("google.gemini3propreview")
+        assertNotNull(gemini3ProPreview)
+        assertEquals(LLMProvider.Google, gemini3ProPreview.provider)
+        assertEquals(GoogleModels.Gemini3_Pro_Preview, gemini3ProPreview)
+
         val geminiEmbedding001 = getModelFromIdentifier("google.gemini_embedding001")
         assertNotNull(geminiEmbedding001)
         assertEquals(LLMProvider.Google, geminiEmbedding001.provider)
