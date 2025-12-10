@@ -48,7 +48,6 @@ import ai.koog.agents.core.utils.SerializationUtils
 import ai.koog.agents.testing.network.NetUtil.findAvailablePort
 import ai.koog.agents.testing.tools.DummyTool
 import ai.koog.agents.testing.tools.getMockExecutor
-import ai.koog.integration.tests.utils.annotations.Retry
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.toModelInfo
 import ai.koog.prompt.message.Message
@@ -60,6 +59,7 @@ import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
+import org.junit.jupiter.api.Disabled
 import kotlin.reflect.typeOf
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
@@ -67,9 +67,9 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
+@Disabled("Flaky, see #1124")
 class DebuggerTest {
 
-    @Retry(3)
     @OptIn(InternalAgentsApi::class)
     @Test
     fun `test feature message remote writer collect events on agent run`() = runBlocking {

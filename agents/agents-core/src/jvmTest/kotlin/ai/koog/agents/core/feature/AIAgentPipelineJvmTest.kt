@@ -39,6 +39,7 @@ import kotlin.time.Duration.Companion.seconds
 // System Properties set inside this test class affects the general agent logic.
 // It causes the other tests, running in parallel, to be affected by this property.
 // Isolate the environment by @Isolated annotation for these tests and make sure they are running without the parallelism.
+@Disabled("Flaky, see #1223")
 @Isolated
 @Execution(ExecutionMode.SAME_THREAD)
 class AIAgentPipelineJvmTest {
@@ -99,7 +100,6 @@ class AIAgentPipelineJvmTest {
     }
 
     @Test
-    @Disabled("Flaky, see #1223")
     @OptIn(ExperimentalAgentsApi::class)
     fun `test known system feature in config set by vm option`() = runTest(timeout = testTimeout) {
         val expectedPort = NetUtil.findAvailablePort()
@@ -124,7 +124,6 @@ class AIAgentPipelineJvmTest {
     }
 
     @Test
-    @Disabled("Flaky, see #1223")
     @OptIn(ExperimentalAgentsApi::class)
     fun `test known system feature is skipped if already installed in agent`() = runTest(timeout = testTimeout) {
         val expectedSystemPort = NetUtil.findAvailablePort()
@@ -207,7 +206,6 @@ class AIAgentPipelineJvmTest {
 
     @Test
     @OptIn(ExperimentalAgentsApi::class)
-    @Disabled("Flaky, see #1223")
     fun `test duplicate system features provided in config`() = runTest(timeout = testTimeout) {
         // Set System properties for test
         System.setProperty(

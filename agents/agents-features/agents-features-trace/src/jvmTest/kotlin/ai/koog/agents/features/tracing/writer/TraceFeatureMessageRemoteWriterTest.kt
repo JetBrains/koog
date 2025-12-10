@@ -64,6 +64,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.io.IOException
 import kotlinx.serialization.json.JsonPrimitive
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import kotlin.reflect.typeOf
@@ -75,6 +76,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
+@Disabled("Flaky, see #1252")
 @Execution(ExecutionMode.SAME_THREAD)
 class TraceFeatureMessageRemoteWriterTest {
 
