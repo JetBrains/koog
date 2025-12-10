@@ -285,7 +285,7 @@ public open class OpenAILLMClient(
         tools: List<ToolDescriptor>
     ): Flow<StreamFrame> = selectExecutionStrategy(prompt, model) { params ->
         when (params) {
-            is OpenAIResponsesParams -> executeResponsesStreaming(prompt, model, params)
+            is OpenAIResponsesParams -> executeResponsesStreaming(prompt, model, tools, params)
             is OpenAIChatParams -> super.executeStreaming(prompt, model, tools)
         }
     }
@@ -293,15 +293,24 @@ public open class OpenAILLMClient(
     private fun executeResponsesStreaming(
         prompt: Prompt,
         model: LLModel,
+        tools: List<ToolDescriptor>,
         params: OpenAIResponsesParams
     ): Flow<StreamFrame> {
         logger.debug { "Executing streaming prompt: $prompt with model: $model" }
+
+        val llmTools = tools.takeIf { it.isNotEmpty() }?.map {
+            Function(
+                name = it.name,
+                parameters = toolsConverter.generate(it),
+                description = it.description
+            )
+        }
 
         val messages = convertPromptToInput(prompt, model)
         val request = serializeResponsesAPIRequest(
             messages = messages,
             model = model,
-            tools = emptyList(),
+            tools = llmTools,
             toolChoice = prompt.params.toolChoice?.toOpenAIResponseToolChoice(),
             params = params,
             stream = true
@@ -314,7 +323,6 @@ public open class OpenAILLMClient(
                 requestBodyType = String::class,
                 decodeStreamingResponse = { json.decodeFromString<OpenAIStreamEvent>(it) },
                 processStreamingChunk = {
-                    // TODO: handle tool calls, not sure if this is supported by the OpenAI Streaming API yet
                     when (it) {
                         is OpenAIStreamEvent.ResponseOutputItemDone -> {
                             when (val item = it.item) {
