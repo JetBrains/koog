@@ -369,4 +369,109 @@ class AIAgentLLMWriteSessionTest {
         val response = session.requestLLM()
         assertEquals("Changed params response", response.content)
     }
+
+    @Test
+    fun testRequestLLMMultipleOnlyCallingTools() = runTest {
+        val thinkingContent = "<thinking>I need to use a tool</thinking>"
+        val testTool = TestTool()
+
+        val mockExecutor = getMockExecutor(clock = testClock) {
+            // Simulate [Assistant, ToolCall] sequence
+            mockLLMMixedResponse(
+                toolCalls = listOf(testTool to TestTool.Args("test")),
+                responses = listOf(thinkingContent)
+            ) onCondition { true }
+        }
+
+        val session = createSession(mockExecutor, listOf(testTool))
+
+        val responses = session.requestLLMMultipleOnlyCallingTools()
+
+        assertEquals(2, responses.size)
+        assertEquals(thinkingContent, (responses[0] as Message.Assistant).content)
+        assertEquals("test-tool", (responses[1] as Message.Tool.Call).tool)
+
+        // Verify that BOTH messages were appended to the prompt history in correct order
+        val lastTwoMessages = session.prompt.messages.takeLast(2)
+        assertEquals(thinkingContent, (lastTwoMessages[0] as Message.Assistant).content)
+        assertEquals("test-tool", (lastTwoMessages[1] as Message.Tool.Call).tool)
+    }
+
+    @Test
+    fun testRequestLLMOnlyCallingToolsWithThinking() = runTest {
+        val thinkingContent = "<thinking>Checking file...</thinking>"
+        val testTool = TestTool()
+
+        val mockExecutor = getMockExecutor(clock = testClock) {
+            mockLLMMixedResponse(
+                toolCalls = listOf(testTool to TestTool.Args("test")),
+                responses = listOf(thinkingContent)
+            ) onCondition { true }
+        }
+
+        val session = createSession(mockExecutor, listOf(testTool))
+
+        val response = session.requestLLMOnlyCallingTools()
+
+        // It should strictly return the ToolCall (fixing the bug), skipping the thinking message
+        assertTrue(response is Message.Tool.Call, "Expected response to be a Tool Call, not the thinking message")
+        assertEquals("test-tool", response.tool)
+
+        // It should still persist the "Thinking" message in history in correct order
+        val lastTwoMessages = session.prompt.messages.takeLast(2)
+        assertEquals(thinkingContent, (lastTwoMessages[0] as Message.Assistant).content)
+        assertEquals("test-tool", (lastTwoMessages[1] as Message.Tool.Call).tool)
+    }
+
+    @Test
+    fun testRequestLLMOnlyCallingToolsNoToolCallThrowsException() = runTest {
+        val mockExecutor = getMockExecutor(clock = testClock) {
+            // Simulate model refusing to use tools and just responding with text
+            mockLLMAnswer("I cannot use tools for this request.").asDefaultResponse
+        }
+
+        val session = createSession(mockExecutor, listOf(TestTool()))
+
+        val exception = kotlin.runCatching {
+            session.requestLLMOnlyCallingTools()
+        }.exceptionOrNull()
+
+        assertNotNull(exception, "Expected an exception when no tool call is found")
+        assertTrue(
+            exception is IllegalStateException,
+            "Expected IllegalStateException but got ${exception::class.simpleName}"
+        )
+        assertTrue(
+            exception.message?.contains("expected at least one Tool.Call") == true,
+            "Exception message should indicate missing tool call"
+        )
+    }
+
+    @Test
+    fun testRequestLLMOnlyCallingToolsWithMultipleToolCalls() = runTest {
+        val testTool = TestTool()
+
+        val mockExecutor = getMockExecutor(clock = testClock) {
+            // Simulate model returning multiple tool calls (parallel tool calling)
+            mockLLMMixedResponse(
+                toolCalls = listOf(
+                    testTool to TestTool.Args("first"),
+                    testTool to TestTool.Args("second")
+                ),
+                responses = emptyList()
+            ) onCondition { true }
+        }
+
+        val session = createSession(mockExecutor, listOf(testTool))
+
+        val response = session.requestLLMOnlyCallingTools()
+
+        // Should return the first tool call
+        assertTrue(response is Message.Tool.Call, "Expected response to be a Tool Call")
+        assertEquals("test-tool", response.tool)
+
+        // Both tool calls should be in history
+        val lastTwoMessages = session.prompt.messages.takeLast(2)
+        assertTrue(lastTwoMessages.all { it is Message.Tool.Call })
+    }
 }

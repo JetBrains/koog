@@ -349,9 +349,7 @@ public class AIAgentLLMWriteSession internal constructor(
      */
     override suspend fun requestLLMMultipleWithoutTools(): List<Message.Response> {
         return super.requestLLMMultipleWithoutTools().also { responses ->
-            appendPrompt {
-                responses.forEach { message(it) }
-            }
+            appendPrompt { messages(responses) }
         }
     }
 
@@ -368,13 +366,17 @@ public class AIAgentLLMWriteSession internal constructor(
     }
 
     /**
-     * Requests a response from the Language Learning Model (LLM) while also processing
-     * the response by updating the current prompt with the received message.
+     * Requests a response from the Language Model (LLM) enforcing tool usage (`ToolChoice.Required`),
+     * validates the session, and processes all returned messages (e.g. thinking + tool call).
      *
-     * @return The response received from the Language Learning Model (LLM).
+     * Crucially, this method appends **all** received messages to the prompt history to preserve context.
+     *
+     * @return A list of responses received from the Language Model (LLM).
      */
-    override suspend fun requestLLMOnlyCallingTools(): Message.Response {
-        return super.requestLLMOnlyCallingTools().also { response -> appendPrompt { message(response) } }
+    override suspend fun requestLLMMultipleOnlyCallingTools(): List<Message.Response> {
+        return super.requestLLMMultipleOnlyCallingTools().also { responses ->
+            appendPrompt { messages(responses) }
+        }
     }
 
     /**
@@ -419,9 +421,7 @@ public class AIAgentLLMWriteSession internal constructor(
      */
     override suspend fun requestLLMMultiple(): List<Message.Response> {
         return super.requestLLMMultiple().also { responses ->
-            appendPrompt {
-                responses.forEach { message(it) }
-            }
+            appendPrompt { messages(responses) }
         }
     }
 

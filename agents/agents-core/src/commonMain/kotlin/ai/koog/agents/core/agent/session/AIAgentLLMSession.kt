@@ -146,17 +146,43 @@ public sealed class AIAgentLLMSession(
     /**
      * Sends a request to the language model that enforces the usage of tools and retrieves the response.
      *
-     * This method updates the session's prompt configuration to mark tool usage as required before
-     * executing the request. Additionally, it ensures the session is active before proceeding.
+     * This method:
+     * 1. Validates that the session is active.
+     * 2. Updates the prompt configuration to mark tool usage as required (`ToolChoice.Required`).
+     * 3. Retrieves all generated messages (including potential Chain of Thought/Reasoning blocks).
+     * 4. Filters the result to return the first [Message.Tool.Call].
      *
-     * @return The response from the language model after executing the request with enforced tool usage.
+     * If no tool call is found (e.g., the model refused or asked a question), this method throws an exception.
+     *
+     * @return The tool call response from the language model.
      */
     public open suspend fun requestLLMOnlyCallingTools(): Message.Response {
+        validateSession()
+        // We use the multiple-response method to ensure we capture all context (e.g. thinking)
+        // even though we only return the specific tool call.
+        val responses = requestLLMMultipleOnlyCallingTools()
+        return responses.firstOrNull { it is Message.Tool.Call }
+            ?: error("requestLLMOnlyCallingTools expected at least one Tool.Call but received: ${responses.map { it::class.simpleName }}")
+    }
+
+    /**
+     * Sends a request to the language model that enforces the usage of tools and retrieves all responses.
+     *
+     * This is useful when the LLM returns multiple messages, such as a "thinking" block followed by tool calls,
+     * or multiple parallel tool calls.
+     *
+     * This method:
+     * 1. Validates that the session is active.
+     * 2. Updates the prompt configuration to mark tool usage as required (`ToolChoice.Required`).
+     *
+     * @return A list of responses from the language model.
+     */
+    public open suspend fun requestLLMMultipleOnlyCallingTools(): List<Message.Response> {
         validateSession()
         val promptWithOnlyCallingTools = prompt.withUpdatedParams {
             toolChoice = LLMParams.ToolChoice.Required
         }
-        return executeSingle(promptWithOnlyCallingTools, tools)
+        return executeMultiple(promptWithOnlyCallingTools, tools)
     }
 
     /**
