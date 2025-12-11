@@ -49,7 +49,7 @@ public fun KoogAgentsConfig.bedrock(
     }
     addLLMClient(
         LLMProvider.Bedrock,
-        BedrockLLMClient(client, moderationGuardrailsSettings, clock)
+        BedrockLLMClient(client, moderationGuardrailsSettings, null, clock)
     )
 }
 
@@ -70,6 +70,6 @@ public fun KoogAgentsConfig.bedrock(
     }
     addLLMClient(
         LLMProvider.Bedrock,
-        BedrockLLMClient(client, moderationGuardrailsSettings, clock)
+        BedrockLLMClient(client, moderationGuardrailsSettings, null, clock)
     )
 }

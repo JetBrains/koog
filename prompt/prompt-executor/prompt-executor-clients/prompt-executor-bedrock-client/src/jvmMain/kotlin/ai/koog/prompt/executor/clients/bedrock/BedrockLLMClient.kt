@@ -69,6 +69,7 @@ import kotlinx.serialization.json.Json
  * @property maxRetries Maximum number of retries for failed requests.
  * @property enableLogging Whether to enable detailed AWS SDK logging.
  * @property moderationGuardrailsSettings Optional settings of the AWS bedrock Guardrails (see [AWS documentation](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-use-independent-api.html) ) that would be used for the [LLMClient.moderate] request
+ * @property fallbackModelFamily Optional fallback model family to use for unsupported models. If not provided, unsupported models will throw an exception.
  */
 public class BedrockClientSettings(
     internal val region: String = BedrockRegions.US_WEST_2.regionCode,
@@ -76,7 +77,8 @@ public class BedrockClientSettings(
     internal val endpointUrl: String? = null,
     internal val maxRetries: Int = 3,
     internal val enableLogging: Boolean = false,
-    internal val moderationGuardrailsSettings: BedrockGuardrailsSettings? = null
+    internal val moderationGuardrailsSettings: BedrockGuardrailsSettings? = null,
+    internal val fallbackModelFamily: BedrockModelFamilies? = null
 )
 
 /**
@@ -96,13 +98,15 @@ public class BedrockGuardrailsSettings(
  * Creates a new Bedrock LLM client configured with the specified AWS credentials and settings.
  *
  * @param bedrockClient The runtime client for interacting with Bedrock, highly configurable
- * @param clock A clock used for time-based operations
  * @param moderationGuardrailsSettings Optional settings of the AWS bedrock Guardrails (see [AWS documentation](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-use-independent-api.html) ) that would be used for the [LLMClient.moderate] request
+ * @param fallbackModelFamily Optional fallback model family to use for unsupported models
+ * @param clock A clock used for time-based operations
  * @return A configured [LLMClient] instance for Bedrock
  */
 public class BedrockLLMClient(
     private val bedrockClient: BedrockRuntimeClient,
     private val moderationGuardrailsSettings: BedrockGuardrailsSettings? = null,
+    private val fallbackModelFamily: BedrockModelFamilies? = null,
     private val clock: Clock = Clock.System,
 ) : LLMClient, LLMEmbeddingProvider {
 
@@ -126,7 +130,9 @@ public class BedrockLLMClient(
             this.region = settings.region
             when (identityProvider) {
                 is CredentialsProvider -> this.credentialsProvider = identityProvider
+
                 is BearerTokenProvider -> this.bearerTokenProvider = identityProvider
+
                 else -> throw LLMClientException(
                     clientName,
                     "identityProvider must be either CredentialsProvider or BearerTokenProvider"
@@ -142,6 +148,7 @@ public class BedrockLLMClient(
             }
         },
         moderationGuardrailsSettings = settings.moderationGuardrailsSettings,
+        fallbackModelFamily = settings.fallbackModelFamily,
         clock = clock
     )
 
@@ -156,12 +163,25 @@ public class BedrockLLMClient(
         require(model.provider == LLMProvider.Bedrock) { "Model ${model.id} is not a Bedrock model" }
         return when {
             model.id.contains("anthropic.claude") -> BedrockModelFamilies.AnthropicClaude
+
             model.id.contains("amazon.nova") -> BedrockModelFamilies.AmazonNova
+
             model.id.contains("ai21.jamba") -> BedrockModelFamilies.AI21Jamba
+
             model.id.contains("meta.llama") -> BedrockModelFamilies.Meta
+
             model.id.contains("amazon.titan") -> BedrockModelFamilies.TitanEmbedding
+
             model.id.contains("cohere.embed") -> BedrockModelFamilies.Cohere
-            else -> throw LLMClientException(clientName, "Model ${model.id} is not a supported Bedrock model")
+
+            else -> {
+                if (fallbackModelFamily != null) {
+                    logger.warn { "Model ${model.id} is not a supported Bedrock model, using fallback: ${fallbackModelFamily.display}" }
+                    fallbackModelFamily
+                } else {
+                    throw LLMClientException(clientName, "Model ${model.id} is not a supported Bedrock model")
+                }
+            }
         }
     }
 
@@ -305,8 +325,12 @@ public class BedrockLLMClient(
                     )
 
                     is BedrockModelFamilies.Meta -> BedrockMetaLlamaSerialization.parseLlamaStreamChunk(chunkJsonString)
+
                     is BedrockModelFamilies.TitanEmbedding, is BedrockModelFamilies.Cohere ->
-                        throw LLMClientException(clientName, "Embedding models do not support streaming chat completions. Use embed() instead.")
+                        throw LLMClientException(
+                            clientName,
+                            "Embedding models do not support streaming chat completions. Use embed() instead."
+                        )
                 }
             } catch (e: Exception) {
                 logger.warn(e) { "Failed to parse Bedrock stream chunk: $chunkJsonString" }
@@ -349,7 +373,10 @@ public class BedrockLLMClient(
                             BedrockAmazonTitanEmbeddingSerialization.extractV2Embedding(titanV2Response)
                         }
 
-                        else -> throw LLMClientException(clientName, "Unknown Amazon Titan embedding model ID: ${model.id}")
+                        else -> throw LLMClientException(
+                            clientName,
+                            "Unknown Amazon Titan embedding model ID: ${model.id}"
+                        )
                     }
                 }
 
@@ -587,9 +614,12 @@ public class BedrockLLMClient(
                                     }
                                     source = when (val imageContent = part.content) {
                                         is AttachmentContent.Binary.Base64 -> Bytes(imageContent.asBytes())
+
                                         is AttachmentContent.Binary.Bytes -> Bytes(imageContent.data)
+
                                         is AttachmentContent.PlainText ->
                                             Bytes(imageContent.text.encodeToByteArray())
+
                                         else -> {
                                             throw LLMClientException(
                                                 clientName,
@@ -603,7 +633,10 @@ public class BedrockLLMClient(
                         }
 
                         else -> {
-                            throw LLMClientException(clientName, "Unsupported attachment type: ${part::class.simpleName}")
+                            throw LLMClientException(
+                                clientName,
+                                "Unsupported attachment type: ${part::class.simpleName}"
+                            )
                         }
                     }
 

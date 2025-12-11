@@ -608,4 +608,233 @@ class BedrockLLMClientTest {
             client.executeStreaming(prompt, noCompletionModel, emptyList()).toList()
         }
     }
+
+    @Test
+    fun `getBedrockModelFamily returns correct families for known models`() {
+        val client = BedrockLLMClient(
+            identityProvider = StaticCredentialsProvider {
+                accessKeyId = "test-key"
+                secretAccessKey = "test-secret"
+            },
+            settings = BedrockClientSettings(region = BedrockRegions.US_EAST_1.regionCode),
+            clock = Clock.System
+        )
+
+        // Test known model families
+        val anthropicModel = LLModel(
+            provider = LLMProvider.Bedrock,
+            id = "anthropic.claude-3-sonnet-20240229-v1:0",
+            capabilities = listOf(LLMCapability.Completion),
+            contextLength = 200_000
+        )
+        assertEquals(BedrockModelFamilies.AnthropicClaude, client.getBedrockModelFamily(anthropicModel))
+
+        val novaModel = LLModel(
+            provider = LLMProvider.Bedrock,
+            id = "amazon.nova-micro-v1:0",
+            capabilities = listOf(LLMCapability.Completion),
+            contextLength = 128_000
+        )
+        assertEquals(BedrockModelFamilies.AmazonNova, client.getBedrockModelFamily(novaModel))
+
+        val jambaModel = LLModel(
+            provider = LLMProvider.Bedrock,
+            id = "ai21.jamba-instruct-v1:0",
+            capabilities = listOf(LLMCapability.Completion),
+            contextLength = 256_000
+        )
+        assertEquals(BedrockModelFamilies.AI21Jamba, client.getBedrockModelFamily(jambaModel))
+
+        val llamaModel = LLModel(
+            provider = LLMProvider.Bedrock,
+            id = "meta.llama3-1-8b-instruct-v1:0",
+            capabilities = listOf(LLMCapability.Completion),
+            contextLength = 128_000
+        )
+        assertEquals(BedrockModelFamilies.Meta, client.getBedrockModelFamily(llamaModel))
+
+        val titanModel = LLModel(
+            provider = LLMProvider.Bedrock,
+            id = "amazon.titan-embed-text-v1",
+            capabilities = listOf(LLMCapability.Embed),
+            contextLength = 8_192
+        )
+        assertEquals(BedrockModelFamilies.TitanEmbedding, client.getBedrockModelFamily(titanModel))
+
+        val cohereModel = LLModel(
+            provider = LLMProvider.Bedrock,
+            id = "cohere.embed-english-v3",
+            capabilities = listOf(LLMCapability.Embed),
+            contextLength = 512
+        )
+        assertEquals(BedrockModelFamilies.Cohere, client.getBedrockModelFamily(cohereModel))
+    }
+
+    @Test
+    fun `getBedrockModelFamily throws exception for unsupported model without fallback`() {
+        val client = BedrockLLMClient(
+            identityProvider = StaticCredentialsProvider {
+                accessKeyId = "test-key"
+                secretAccessKey = "test-secret"
+            },
+            settings = BedrockClientSettings(region = BedrockRegions.US_EAST_1.regionCode),
+            clock = Clock.System
+        )
+
+        val unsupportedModel = LLModel(
+            provider = LLMProvider.Bedrock,
+            id = "unsupported.new-model-v1:0",
+            capabilities = listOf(LLMCapability.Completion),
+            contextLength = 100_000
+        )
+
+        val exception = assertFailsWith<LLMClientException> {
+            client.getBedrockModelFamily(unsupportedModel)
+        }
+
+        assertTrue(exception.message!!.contains("Model unsupported.new-model-v1:0 is not a supported Bedrock model"))
+    }
+
+    @Test
+    fun `getBedrockModelFamily uses fallback for unsupported model when fallback is configured`() {
+        val fallbackFamily = BedrockModelFamilies.AnthropicClaude
+
+        val client = BedrockLLMClient(
+            identityProvider = StaticCredentialsProvider {
+                accessKeyId = "test-key"
+                secretAccessKey = "test-secret"
+            },
+            settings = BedrockClientSettings(
+                region = BedrockRegions.US_EAST_1.regionCode,
+                fallbackModelFamily = fallbackFamily
+            ),
+            clock = Clock.System
+        )
+
+        val unsupportedModel = LLModel(
+            provider = LLMProvider.Bedrock,
+            id = "unsupported.new-model-v1:0",
+            capabilities = listOf(LLMCapability.Completion),
+            contextLength = 100_000
+        )
+
+        val result = client.getBedrockModelFamily(unsupportedModel)
+        assertEquals(fallbackFamily, result)
+    }
+
+    @Test
+    fun `getBedrockModelFamily uses different fallback families correctly`() {
+        // Test with AnthropicClaude fallback
+        val anthropicClient = BedrockLLMClient(
+            identityProvider = StaticCredentialsProvider {
+                accessKeyId = "test-key"
+                secretAccessKey = "test-secret"
+            },
+            settings = BedrockClientSettings(
+                region = BedrockRegions.US_EAST_1.regionCode,
+                fallbackModelFamily = BedrockModelFamilies.AnthropicClaude
+            ),
+            clock = Clock.System
+        )
+
+        // Test with Meta fallback
+        val metaClient = BedrockLLMClient(
+            identityProvider = StaticCredentialsProvider {
+                accessKeyId = "test-key"
+                secretAccessKey = "test-secret"
+            },
+            settings = BedrockClientSettings(
+                region = BedrockRegions.US_EAST_1.regionCode,
+                fallbackModelFamily = BedrockModelFamilies.Meta
+            ),
+            clock = Clock.System
+        )
+
+        val unsupportedModel = LLModel(
+            provider = LLMProvider.Bedrock,
+            id = "unsupported.new-model-v1:0",
+            capabilities = listOf(LLMCapability.Completion),
+            contextLength = 100_000
+        )
+
+        assertEquals(BedrockModelFamilies.AnthropicClaude, anthropicClient.getBedrockModelFamily(unsupportedModel))
+        assertEquals(BedrockModelFamilies.Meta, metaClient.getBedrockModelFamily(unsupportedModel))
+    }
+
+    @Test
+    fun `primary constructor accepts fallback parameter`() {
+        val mockClient = createCountingMockClient { }
+        val fallbackFamily = BedrockModelFamilies.AmazonNova
+
+        val client = BedrockLLMClient(
+            bedrockClient = mockClient,
+            moderationGuardrailsSettings = null,
+            fallbackModelFamily = fallbackFamily,
+            clock = Clock.System
+        )
+
+        val unsupportedModel = LLModel(
+            provider = LLMProvider.Bedrock,
+            id = "unsupported.new-model-v1:0",
+            capabilities = listOf(LLMCapability.Completion),
+            contextLength = 100_000
+        )
+
+        val result = client.getBedrockModelFamily(unsupportedModel)
+        assertEquals(fallbackFamily, result)
+
+        client.close()
+    }
+
+    @Test
+    fun `fallback model family null by default in settings`() {
+        val defaultSettings = BedrockClientSettings()
+        assertEquals(null, defaultSettings.fallbackModelFamily)
+    }
+
+    @Test
+    fun `getBedrockModelFamily requires Bedrock provider`() {
+        val client = BedrockLLMClient(
+            identityProvider = StaticCredentialsProvider {
+                accessKeyId = "test-key"
+                secretAccessKey = "test-secret"
+            },
+            settings = BedrockClientSettings(region = BedrockRegions.US_EAST_1.regionCode),
+            clock = Clock.System
+        )
+
+        val nonBedrockModel = LLModel(
+            provider = LLMProvider.Anthropic,
+            id = "claude-3-sonnet-20240229",
+            capabilities = listOf(LLMCapability.Completion),
+            contextLength = 200_000
+        )
+
+        assertFailsWith<IllegalArgumentException> {
+            client.getBedrockModelFamily(nonBedrockModel)
+        }
+    }
+
+    @Test
+    fun `BedrockClientSettings with fallback model family works correctly`() {
+        val fallbackFamily = BedrockModelFamilies.AI21Jamba
+        val settings = BedrockClientSettings(
+            region = BedrockRegions.EU_WEST_1.regionCode,
+            endpointUrl = "https://custom.endpoint.com",
+            maxRetries = 5,
+            enableLogging = true,
+            timeoutConfig = ConnectionTimeoutConfig(
+                requestTimeoutMillis = 120_000,
+                connectTimeoutMillis = 10_000,
+                socketTimeoutMillis = 120_000
+            ),
+            fallbackModelFamily = fallbackFamily
+        )
+
+        assertEquals(fallbackFamily, settings.fallbackModelFamily)
+        assertEquals(BedrockRegions.EU_WEST_1.regionCode, settings.region)
+        assertEquals("https://custom.endpoint.com", settings.endpointUrl)
+        assertEquals(5, settings.maxRetries)
+        assertEquals(true, settings.enableLogging)
+    }
 }
