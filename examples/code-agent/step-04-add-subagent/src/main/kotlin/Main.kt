@@ -1,4 +1,4 @@
-package ai.koog.agents.examples.codeagent.step03
+package ai.koog.agents.examples.codeagent.step04
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.singleRunStrategy
@@ -10,14 +10,9 @@ import ai.koog.agents.ext.tool.shell.ExecuteShellCommandTool
 import ai.koog.agents.ext.tool.shell.JvmShellCommandExecutor
 import ai.koog.agents.ext.tool.shell.PrintShellCommandConfirmationHandler
 import ai.koog.agents.ext.tool.shell.ShellCommandConfirmation
-import ai.koog.agents.features.eventHandler.feature.handleEvents
-import ai.koog.agents.features.opentelemetry.attribute.CustomAttribute
-import ai.koog.agents.features.opentelemetry.feature.OpenTelemetry
-import ai.koog.agents.features.opentelemetry.integration.langfuse.addLangfuseExporter
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.llms.all.simpleOpenAIExecutor
 import ai.koog.rag.base.files.JVMFileSystemProvider
-
 
 val executor = simpleOpenAIExecutor(System.getenv("OPENAI_API_KEY"))
 val agent = AIAgent(
@@ -28,6 +23,7 @@ val agent = AIAgent(
         tool(ReadFileTool(JVMFileSystemProvider.ReadOnly))
         tool(EditFileTool(JVMFileSystemProvider.ReadWrite))
         tool(createExecuteShellCommandToolFromEnv())
+        tool(createFindAgentTool())
     },
     systemPrompt = """
         You are a highly skilled programmer tasked with updating the provided codebase according to the given task.
@@ -38,23 +34,14 @@ val agent = AIAgent(
         After investigation, define expected behavior with test scripts, then iterate on your implementation until the tests pass.
         Verify your changes don't break existing functionality through regression testing, but prefer running targeted tests over full test suites.
         Note: the codebase may be fully configured or freshly cloned with no dependencies installed - handle any necessary setup steps.
-        """.trimIndent(),
+        
+        You also have an intelligent find micro agent at your disposition, which can help you find code components and other constructs 
+        more cheaply than you can do it yourself. Lean on it for any and all search operations. Do not use shell execution for find tasks.
+    """.trimIndent(),
     strategy = singleRunStrategy(),
     maxIterations = 400
 ) {
-    install(OpenTelemetry) {
-        setVerbose(true) // Send full strings instead of HIDDEN placeholders
-        addLangfuseExporter(
-            traceAttributes = listOf(
-                CustomAttribute("langfuse.session.id", System.getenv("LANGFUSE_SESSION_ID") ?: ""),
-            )
-        )
-    }
-    handleEvents {
-        onToolCallStarting { ctx ->
-            println("Tool '${ctx.tool.name}' called with args: ${ctx.toolArgs.toString().take(100)}")
-        }
-    }
+    setupObservability(agentName = "main")
 }
 
 fun createExecuteShellCommandToolFromEnv(): ExecuteShellCommandTool {
