@@ -63,11 +63,6 @@ private suspend fun <Path> buildNode(
             matchesFilter(fs, rootPath, childPath, filter)
     }
 
-    // At max depth with multiple children: return folder entry without children (collapsed)
-    if (depth == 1 && visibleChildren.size > 1) {
-        return buildFolderEntry(fs, currentPath, metadata, entries = null)
-    }
-
     val entries = mutableListOf<FileSystemEntry>()
     for ((childPath, childMeta) in visibleChildren) {
         when (childMeta.type) {
@@ -82,6 +77,8 @@ private suspend fun <Path> buildNode(
                 if (nextDepth > 0) {
                     buildNode(fs, rootPath, childPath, childMeta, nextDepth, filter)
                         ?.let { entries += it }
+                } else if (matchesFilter(fs, rootPath, childPath, filter)) {
+                    entries += buildFolderEntry(fs, childPath, childMeta, entries = null)
                 }
             }
         }
