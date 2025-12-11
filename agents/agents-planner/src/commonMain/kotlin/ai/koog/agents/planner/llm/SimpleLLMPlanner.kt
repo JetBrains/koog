@@ -23,7 +23,6 @@ import kotlin.reflect.typeOf
 @OptIn(InternalAgentsApi::class)
 public open class SimpleLLMPlanner : AIAgentPlanner<String, SimplePlan>(
     stateType = typeOf<String>(),
-    planType = typeOf<SimplePlan>()
 ) {
     override suspend fun buildPlan(
         context: AIAgentFunctionalContext,

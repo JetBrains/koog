@@ -7,17 +7,19 @@ import kotlin.reflect.KType
 /**
  * Goal-Oriented Action Planning (GOAP) implementation for AI agents.
  *
- * GOAP is an AI planning system that uses goals, actions with preconditions and effects,
+ * GOAP is a planning system that uses goals, actions with preconditions and effects,
  * and a search algorithm to find the optimal sequence of actions to achieve a goal.
+ *
+ * @param State The type of the state.
+ * @param actions The list of defined actions.
+ * @param goals The list of defined goals.
  */
 public open class GOAPPlanner<State> internal constructor(
     private val actions: List<Action<State>>,
     private val goals: List<Goal<State>>,
     stateType: KType,
-    planType: KType,
 ) : AIAgentPlanner<State, GOAPPlan<State>>(
     stateType = stateType,
-    planType = planType,
 ) {
     override suspend fun buildPlan(
         context: AIAgentFunctionalContext,
@@ -53,7 +55,7 @@ public open class GOAPPlanner<State> internal constructor(
     )
 
     /**
-     * Implements an A-star search algorithm to find a plan for a given goal.
+     * Implements A-star search algorithm to find a plan for a given goal.
      */
     private fun <State> buildPlanForGoal(
         state: State,

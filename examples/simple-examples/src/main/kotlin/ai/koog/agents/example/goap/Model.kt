@@ -3,6 +3,34 @@ package ai.koog.agents.example.goap
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.params.LLMParams
 import kotlinx.serialization.Serializable
+import kotlin.math.max
+
+/**
+ * The state on which grouper agent operates.
+ */
+data class State(
+    val config: GrouperConfig,
+    val bestWordings: BestWordings = BestWordings(),
+    val iteration: Int = 0,
+    val newWordings: List<String> = emptyList(),
+    val feedback: List<String> = emptyList(),
+    val learnings: List<String> = emptyList()
+) {
+    val result get() = bestWordings.show(config.numWordingsRequired)
+}
+
+class GrouperConfig(
+    val focusGroup: FocusGroup,
+    val creatives: Creatives,
+    val message: Message,
+    val minScore: Double = 0.7,
+    val numWordingsRequired: Int = 10,
+    val numWordingsToShow: Int = 20,
+    val numProposals: Int = 10,
+    val maxIterations: Int = 20,
+) {
+    val maxWordingsToStore = max(numWordingsRequired, numWordingsToShow)
+}
 
 /**
  * A logical message to be evaluated

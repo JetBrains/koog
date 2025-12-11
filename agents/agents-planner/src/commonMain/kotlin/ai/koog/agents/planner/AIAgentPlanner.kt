@@ -17,11 +17,9 @@ import kotlin.reflect.KType
  * 3. Repeat steps 1 and 2 until the plan is considered completed. Then the final [State] is returned.
  *
  * @property stateType [KType] of the [State].
- * @property planType [KType] of the [Plan].
  */
 public abstract class AIAgentPlanner<State, Plan>(
     public val stateType: KType,
-    public val planType: KType
 ) {
     private companion object {
         private val logger = KotlinLogging.logger { }

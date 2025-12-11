@@ -8,8 +8,8 @@ import ai.koog.agents.core.agent.context.AIAgentFunctionalContext
 public class Action<State>(
     public val name: String,
     public val description: String? = null,
-    public val precondition: State.() -> Boolean,
-    public val belief: State.() -> State,
+    public val precondition: (State) -> Boolean,
+    public val belief: (State) -> State,
     public val cost: (State) -> Double,
     public val execute: suspend (AIAgentFunctionalContext, State) -> State
 )
@@ -22,7 +22,7 @@ public class Goal<State>(
     public val description: String?,
     public val value: (Double) -> Double,
     public val cost: (State) -> Double,
-    public val condition: State.() -> Boolean
+    public val condition: (State) -> Boolean
 )
 
 /**

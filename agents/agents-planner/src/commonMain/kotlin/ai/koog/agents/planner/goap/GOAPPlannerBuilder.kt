@@ -9,7 +9,6 @@ import kotlin.reflect.KType
  */
 public class GOAPPlannerBuilder<State>(
     private val stateType: KType,
-    private val planType: KType,
 ) {
     private val actions: MutableList<Action<State>> = mutableListOf()
     private val goals: MutableList<Goal<State>> = mutableListOf()
@@ -27,8 +26,8 @@ public class GOAPPlannerBuilder<State>(
     public fun action(
         name: String,
         description: String? = null,
-        precondition: State.() -> Boolean,
-        belief: State.() -> State,
+        precondition: (State) -> Boolean,
+        belief: (State) -> State,
         cost: (State) -> Double = { 1.0 },
         execute: suspend (AIAgentFunctionalContext, State) -> State
     ) {
@@ -48,8 +47,8 @@ public class GOAPPlannerBuilder<State>(
         name: String,
         description: String? = null,
         value: (Double) -> Double = { cost -> exp(-cost) },
-        cost: State.() -> Double = { 1.0 },
-        condition: State.() -> Boolean,
+        cost: (State) -> Double = { 1.0 },
+        condition: (State) -> Boolean,
     ) {
         goals.add(Goal(name, description, value, cost, condition))
     }
@@ -57,23 +56,21 @@ public class GOAPPlannerBuilder<State>(
     /**
      * Builds the [GOAPPlanner].
      */
-    public fun build(): GOAPPlanner<State> = GOAPPlanner(actions, goals, stateType, planType)
+    public fun build(): GOAPPlanner<State> = GOAPPlanner(actions, goals, stateType)
 }
 
 /**
  * Creates a [GOAPPlanner] using a DSL for defining actions.
  *
  * @param stateType [KType] of the [State].
- * @param planType [KType] of the [GOAPPlan] with a given [State].
  * @param init The initialization block for the builder.
  * @return A new [GOAPPlanner] instance with the defined actions.
  */
 public fun <State> goap(
     stateType: KType,
-    planType: KType,
     init: GOAPPlannerBuilder<State>.() -> Unit
 ): GOAPPlanner<State> {
-    val builder = GOAPPlannerBuilder<State>(stateType, planType)
+    val builder = GOAPPlannerBuilder<State>(stateType)
     builder.init()
     return builder.build()
 }
