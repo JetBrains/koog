@@ -86,7 +86,7 @@ public class MockEnvironment(
                         id = toolCall.id,
                         tool = toolCall.tool,
                         toolArgs = toolCall.contentJson,
-                        toolDescription = tool.description,
+                        toolDescription = tool.descriptor.description,
                         content = content,
                         resultKind = ToolResultKind.Success,
                         result = tool.encodeResultUnsafe(result)
@@ -103,7 +103,7 @@ public class MockEnvironment(
             id = toolCall.id,
             tool = toolCall.tool,
             toolArgs = toolCall.contentJson,
-            toolDescription = tool.description,
+            toolDescription = tool.descriptor.description,
             content = tool.encodeResultToStringUnsafe(result),
             resultKind = ToolResultKind.Success,
             result = tool.encodeResultUnsafe(result)

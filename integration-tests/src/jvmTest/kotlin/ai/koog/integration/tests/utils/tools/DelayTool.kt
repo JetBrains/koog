@@ -13,13 +13,12 @@ data class DelayArgs(
     val milliseconds: Int = DELAY_MILLIS.toInt()
 )
 
-object DelayTool : SimpleTool<DelayArgs>() {
-    override val argsSerializer = DelayArgs.serializer()
-
-    override val name = "delay"
-    override val description = "A tool that introduces a delay to simulate a time-consuming operation."
-
-    override suspend fun doExecute(args: DelayArgs): String {
+object DelayTool : SimpleTool<DelayArgs>(
+    argsSerializer = DelayArgs.serializer(),
+    name = "delay",
+    description = "A tool that introduces a delay to simulate a time-consuming operation."
+) {
+    override suspend fun execute(args: DelayArgs): String {
         delay(args.milliseconds.toLong())
         return "Delayed for ${args.milliseconds} milliseconds"
     }

@@ -17,7 +17,6 @@ import io.kotest.matchers.equals.shouldBeEqual
 import io.kotest.matchers.nulls.shouldNotBeNull
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.Clock
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.api.Disabled
 import kotlin.test.AfterTest
@@ -45,18 +44,18 @@ class TokenCountTest {
         }
     }
 
-    object TestTool : SimpleTool<TestTool.Args>() {
+    object TestTool : SimpleTool<TestTool.Args>(
+        argsSerializer = Args.serializer(),
+        name = "test_tool",
+        description = "A test tool for token counting"
+    ) {
         @Serializable
         data class Args(
             @property:LLMDescription("Test message")
             val message: String
         )
 
-        override val argsSerializer: KSerializer<Args> = Args.serializer()
-        override val name: String = "test_tool"
-        override val description: String = "A test tool for token counting"
-
-        override suspend fun doExecute(args: Args): String {
+        override suspend fun execute(args: Args): String {
             return "Test tool executed with: ${args.message}"
         }
     }

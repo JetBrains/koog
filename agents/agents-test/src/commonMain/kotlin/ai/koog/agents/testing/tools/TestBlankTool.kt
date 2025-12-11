@@ -2,7 +2,6 @@ package ai.koog.agents.testing.tools
 
 import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.annotations.LLMDescription
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.serializer
 
@@ -12,7 +11,12 @@ import kotlinx.serialization.serializer
  *
  * @param name An optional name for the tool. If not provided, it defaults to "blank-tool".
  */
-public class TestBlankTool(name: String? = null) : Tool<TestBlankTool.Args, String>() {
+public class TestBlankTool(name: String? = null) : Tool<TestBlankTool.Args, String>(
+    argsSerializer = serializer<Args>(),
+    resultSerializer = serializer<String>(),
+    name = name ?: "blank-tool",
+    description = "test-finish-tool"
+) {
 
     /**
      * Represents the arguments for the `TestBlankTool`.
@@ -23,14 +27,6 @@ public class TestBlankTool(name: String? = null) : Tool<TestBlankTool.Args, Stri
     public data class Args(
         @property:LLMDescription("Blank parameter") val args: String = ""
     )
-
-    override val name: String = name ?: "blank-tool"
-
-    override val argsSerializer: KSerializer<Args> = serializer<Args>()
-
-    override val resultSerializer: KSerializer<String> = serializer<String>()
-
-    override val description: String = "test-finish-tool"
 
     override suspend fun execute(args: Args): String {
         return args.args

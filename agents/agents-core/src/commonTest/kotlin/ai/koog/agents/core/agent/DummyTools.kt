@@ -5,24 +5,23 @@ import ai.koog.agents.core.tools.annotations.LLMDescription
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer
 
-object DummyTool : SimpleTool<Unit>() {
-    override val argsSerializer = Unit.serializer()
-
-    override val description: String = "Dummy tool for testing"
-
-    override suspend fun doExecute(args: Unit): String = "Dummy result"
+object DummyTool : SimpleTool<Unit>(
+    argsSerializer = Unit.serializer(),
+    name = "dummy_tool",
+    description = "Dummy tool for testing"
+) {
+    override suspend fun execute(args: Unit): String = "Dummy result"
 }
 
-object CreateTool : SimpleTool<CreateTool.Args>() {
+object CreateTool : SimpleTool<CreateTool.Args>(
+    argsSerializer = Args.serializer(),
+    name = "create",
+    description = "Create something"
+) {
     @Serializable
     data class Args(
         @property:LLMDescription("Name of the entity to create") val name: String
     )
 
-    override val argsSerializer = Args.serializer()
-
-    override val name: String = "create"
-    override val description: String = "Create something"
-
-    override suspend fun doExecute(args: Args): String = "created"
+    override suspend fun execute(args: Args): String = "created"
 }

@@ -6,15 +6,16 @@ import ai.koog.agents.core.tools.ToolParameterDescriptor
 import ai.koog.agents.core.tools.ToolParameterType
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.core.tools.annotations.LLMDescription
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlin.jvm.JvmInline
 
 object Tools {
-    object PlusTool : Tool<PlusTool.Args, PlusTool.Result>() {
-        override val description: String = "Adds a and b"
-        override val name: String = "plus"
-
+    object PlusTool : Tool<PlusTool.Args, PlusTool.Result>(
+        argsSerializer = Args.serializer(),
+        resultSerializer = Result.serializer(),
+        name = "plus",
+        description = "Adds a and b"
+    ) {
         @Serializable
         data class Args(
             @property:LLMDescription("First number")
@@ -27,33 +28,15 @@ object Tools {
         @JvmInline
         value class Result(val result: Float)
 
-        override val argsSerializer = Args.serializer()
-        override val resultSerializer: KSerializer<Result> = Result.serializer()
-
         override suspend fun execute(args: Args): Result {
             return Result(args.a + args.b)
         }
     }
 
-    object StringTool : Tool<StringTool.Args, StringTool.Result>() {
-        @Serializable
-        data class Args(
-            @property:LLMDescription("First string")
-            val text1: String,
-            @property:LLMDescription("Second string")
-            val text2: String
-        )
-
-        @Serializable
-        @JvmInline
-        value class Result(val result: String)
-
-        override val name: String = "string_tool"
-        override val description: String = "A tool that takes string parameters"
-        override val argsSerializer = Args.serializer()
-        override val resultSerializer: KSerializer<Result> = Result.serializer()
-
-        override val descriptor = ToolDescriptor(
+    object StringTool : Tool<StringTool.Args, StringTool.Result>(
+        argsSerializer = Args.serializer(),
+        resultSerializer = Result.serializer(),
+        descriptor = ToolDescriptor(
             name = "string_tool",
             description = "A tool that takes string parameters",
             requiredParameters = listOf(
@@ -69,6 +52,18 @@ object Tools {
                 )
             )
         )
+    ) {
+        @Serializable
+        data class Args(
+            @property:LLMDescription("First string")
+            val text1: String,
+            @property:LLMDescription("Second string")
+            val text2: String
+        )
+
+        @Serializable
+        @JvmInline
+        value class Result(val result: String)
 
         override suspend fun execute(args: Args): Result {
             return Result(args.text1 + " " + args.text2)

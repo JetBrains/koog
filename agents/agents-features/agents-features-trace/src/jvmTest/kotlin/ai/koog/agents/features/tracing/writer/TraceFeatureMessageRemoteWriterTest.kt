@@ -199,7 +199,7 @@ class TraceFeatureMessageRemoteWriterTest {
         val dummyToolArgsEncoded = dummyTool.encodeArgs(DummyTool.Args("test"))
         val dummyToolResultEncoded = dummyTool.encodeResult(dummyTool.result)
         val dummyToolName = dummyTool.name
-        val dummyToolDescription = dummyTool.description
+        val dummyToolDescription = dummyTool.descriptor.description
 
         val dummyReceivedToolResultEncoded = @OptIn(InternalAgentsApi::class)
         SerializationUtils.encodeDataToJsonElementOrNull(
@@ -222,7 +222,7 @@ class TraceFeatureMessageRemoteWriterTest {
                     toolCallId = "0",
                     toolName = dummyTool.name,
                     toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
-                    toolDescription = dummyTool.description,
+                    toolDescription = dummyTool.descriptor.description,
                     content = dummyTool.encodeResultToString(dummyTool.result),
                     result = dummyTool.encodeResult(dummyTool.result)
                 ).toMessage(clock = testClock)
@@ -327,7 +327,7 @@ class TraceFeatureMessageRemoteWriterTest {
                 val dummyToolArgsEncoded = dummyTool.encodeArgs(DummyTool.Args("test"))
                 val dummyToolResultEncoded = dummyTool.encodeResult(dummyTool.result)
                 val dummyToolName = dummyTool.name
-                val dummyToolDescription = dummyTool.description
+                val dummyToolDescription = dummyTool.descriptor.description
 
                 val dummyReceivedToolResultEncoded = @OptIn(InternalAgentsApi::class)
                 SerializationUtils.encodeDataToJsonElementOrNull(
@@ -465,7 +465,7 @@ class TraceFeatureMessageRemoteWriterTest {
                         toolCallId = "0",
                         toolName = dummyTool.name,
                         toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
-                        toolDescription = dummyTool.description,
+                        toolDescription = dummyTool.descriptor.description,
                         result = dummyTool.encodeResult(dummyTool.result),
                         timestamp = testClock.now().toEpochMilliseconds()
                     ),
@@ -724,7 +724,7 @@ class TraceFeatureMessageRemoteWriterTest {
         val dummyToolArgsEncoded = dummyTool.encodeArgs(DummyTool.Args("test"))
         val dummyToolResultEncoded = dummyTool.encodeResult(dummyTool.result)
         val dummyToolName = dummyTool.name
-        val dummyToolDescription = dummyTool.description
+        val dummyToolDescription = dummyTool.descriptor.description
 
         val dummyReceivedToolResultEncoded = @OptIn(InternalAgentsApi::class)
         SerializationUtils.encodeDataToJsonElementOrNull(
@@ -747,7 +747,7 @@ class TraceFeatureMessageRemoteWriterTest {
                     toolCallId = "0",
                     toolName = dummyTool.name,
                     toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
-                    toolDescription = dummyTool.description,
+                    toolDescription = dummyTool.descriptor.description,
                     content = dummyTool.encodeResultToString(dummyTool.result),
                     result = dummyTool.encodeResult(dummyTool.result)
                 ).toMessage(clock = testClock)

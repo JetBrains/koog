@@ -16,7 +16,6 @@ import ai.koog.agents.testing.tools.getMockExecutor
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.message.Message
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -117,36 +116,34 @@ class SimpleAgentMockedTest {
         llmRequestedTools.clear()
     }
 
-    object ErrorTool : SimpleTool<ErrorTool.Args>() {
+    object ErrorTool : SimpleTool<ErrorTool.Args>(
+        argsSerializer = Args.serializer(),
+        name = "error_tool",
+        description = "A tool that always throws an exception"
+    ) {
         @Serializable
         data class Args(
             @property:LLMDescription("Message for the error")
             val message: String
         )
 
-        override val argsSerializer: KSerializer<Args> = Args.serializer()
-
-        override val name: String = "error_tool"
-        override val description: String = "A tool that always throws an exception"
-
-        override suspend fun doExecute(args: Args): String {
+        override suspend fun execute(args: Args): String {
             throw ToolException.ValidationFailure("This tool always fails")
         }
     }
 
-    object ConditionalTool : SimpleTool<ConditionalTool.Args>() {
+    object ConditionalTool : SimpleTool<ConditionalTool.Args>(
+        argsSerializer = Args.serializer(),
+        name = "conditional_tool",
+        description = "A tool that conditionally throws an exception"
+    ) {
         @Serializable
         data class Args(
             @property:LLMDescription("Condition that determines if the tool will succeed or fail")
             val condition: String
         )
 
-        override val argsSerializer: KSerializer<Args> = Args.serializer()
-
-        override val name: String = "conditional_tool"
-        override val description: String = "A tool that conditionally throws an exception"
-
-        override suspend fun doExecute(args: Args): String {
+        override suspend fun execute(args: Args): String {
             if (args.condition == "error") {
                 throw ToolException.ValidationFailure("Conditional failure triggered")
             }

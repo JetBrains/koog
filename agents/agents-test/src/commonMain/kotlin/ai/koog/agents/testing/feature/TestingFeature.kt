@@ -1209,7 +1209,7 @@ public fun <TArgs, TResult> toolResult(tool: Tool<TArgs, TResult>, args: TArgs, 
         id = null,
         tool = tool.name,
         toolArgs = tool.encodeArgs(args),
-        toolDescription = tool.description,
+        toolDescription = tool.descriptor.description,
         content = tool.encodeResultToString(result),
         resultKind = ToolResultKind.Success,
         result = tool.encodeResult(result)
@@ -1241,7 +1241,7 @@ public fun <TArgs> toolResult(tool: SimpleTool<TArgs>, args: TArgs, result: Stri
         id = null,
         tool = tool.name,
         toolArgs = tool.encodeArgs(args),
-        toolDescription = tool.description,
+        toolDescription = tool.descriptor.description,
         content = tool.encodeResultToString(result),
         resultKind = ToolResultKind.Success,
         result = tool.encodeResult(result)

@@ -164,7 +164,7 @@ class TraceFeatureMessageFileWriterTest {
             val dummyToolArgsEncoded = dummyTool.encodeArgs(DummyTool.Args("test"))
             val dummyToolResultEncoded = dummyTool.encodeResult(dummyTool.result)
             val dummyToolName = dummyTool.name
-            val dummyToolDescription = dummyTool.description
+            val dummyToolDescription = dummyTool.descriptor.description
 
             val dummyReceivedToolResultEncoded = @OptIn(InternalAgentsApi::class)
             SerializationUtils.encodeDataToJsonElementOrNull(
@@ -523,7 +523,7 @@ class TraceFeatureMessageFileWriterTest {
             val dummyToolArgsEncoded = dummyTool.encodeArgs(DummyTool.Args("test"))
             val dummyToolResultEncoded = dummyTool.encodeResult(dummyTool.result)
             val dummyToolName = dummyTool.name
-            val dummyToolDescription = dummyTool.description
+            val dummyToolDescription = dummyTool.descriptor.description
 
             val expectedMessages = listOf(
                 "${LLMCallStartingEvent::class.simpleName} (run id: $runId, prompt: ${

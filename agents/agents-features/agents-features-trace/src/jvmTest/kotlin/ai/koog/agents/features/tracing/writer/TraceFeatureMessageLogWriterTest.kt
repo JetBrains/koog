@@ -149,7 +149,7 @@ class TraceFeatureMessageLogWriterTest {
             val dummyToolArgsEncoded = dummyTool.encodeArgs(DummyTool.Args("test"))
             val dummyToolResultEncoded = dummyTool.encodeResult(dummyTool.result)
             val dummyToolName = dummyTool.name
-            val dummyToolDescription = dummyTool.description
+            val dummyToolDescription = dummyTool.descriptor.description
 
             val dummyReceivedToolResultEncoded = @OptIn(InternalAgentsApi::class)
             SerializationUtils.encodeDataToJsonElementOrNull(
@@ -233,7 +233,7 @@ class TraceFeatureMessageLogWriterTest {
                                 toolCallId = "0",
                                 toolName = dummyTool.name,
                                 toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
-                                toolDescription = dummyTool.description,
+                                toolDescription = dummyTool.descriptor.description,
                                 content = dummyTool.result,
                                 result = dummyTool.encodeResult(dummyTool.result)
                             ).toMessage(clock = testClock)
@@ -249,7 +249,7 @@ class TraceFeatureMessageLogWriterTest {
                                 toolCallId = "0",
                                 toolName = dummyTool.name,
                                 toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
-                                toolDescription = dummyTool.description,
+                                toolDescription = dummyTool.descriptor.description,
                                 content = dummyTool.result,
                                 result = dummyTool.encodeResult(dummyTool.result)
                             ).toMessage(clock = testClock)
@@ -493,7 +493,7 @@ class TraceFeatureMessageLogWriterTest {
             val dummyToolArgsEncoded = dummyTool.encodeArgs(DummyTool.Args("test"))
             val dummyToolResultEncoded = dummyTool.encodeResult(dummyTool.result)
             val dummyToolName = dummyTool.name
-            val dummyToolDescription = dummyTool.description
+            val dummyToolDescription = dummyTool.descriptor.description
 
             val expectedLogMessages = listOf(
                 "[INFO] Received feature message [event]: ${LLMCallStartingEvent::class.simpleName} (run id: $runId, prompt: ${
@@ -519,7 +519,7 @@ class TraceFeatureMessageLogWriterTest {
                                 toolCallId = "0",
                                 toolName = dummyTool.name,
                                 toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
-                                toolDescription = dummyTool.description,
+                                toolDescription = dummyTool.descriptor.description,
                                 content = dummyTool.result,
                                 result = dummyTool.encodeResult(dummyTool.result)
                             ).toMessage(clock = testClock)
@@ -535,7 +535,7 @@ class TraceFeatureMessageLogWriterTest {
                                 toolCallId = "0",
                                 toolName = dummyTool.name,
                                 toolArgs = dummyTool.encodeArgs(DummyTool.Args("test")),
-                                toolDescription = dummyTool.description,
+                                toolDescription = dummyTool.descriptor.description,
                                 content = dummyTool.result,
                                 result = dummyTool.encodeResult(dummyTool.result)
                             ).toMessage(clock = testClock)

@@ -12,7 +12,6 @@ import ai.koog.prompt.text.text
 import ai.koog.rag.base.files.FileMetadata
 import ai.koog.rag.base.files.FileSystemProvider
 import ai.koog.rag.base.files.writeText
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 
 /**
@@ -23,7 +22,20 @@ import kotlinx.serialization.Serializable
  * @property fs read/write filesystem provider for accessing and modifying files
  */
 public class WriteFileTool<Path>(private val fs: FileSystemProvider.ReadWrite<Path>) :
-    Tool<WriteFileTool.Args, WriteFileTool.Result>() {
+    Tool<WriteFileTool.Args, WriteFileTool.Result>(
+        argsSerializer = Args.serializer(),
+        resultSerializer = Result.serializer(),
+        name = "__write_file__",
+        description = """
+            Writes text content to a file at an absolute path. Creates parent directories if needed and overwrites existing content.
+
+            Use this to:
+            - Create new text files with content
+            - Replace entire content of existing files
+
+            Returns file metadata (name, extension, path, hidden, size, contentType).
+        """.trimIndent()
+    ) {
 
     /**
      * Specifies which file to write and what text content to put into it.
@@ -50,20 +62,6 @@ public class WriteFileTool<Path>(private val fs: FileSystemProvider.ReadWrite<Pa
      */
     @Serializable
     public data class Result(val file: FileSystemEntry.File)
-
-    override val resultSerializer: KSerializer<Result> = Result.serializer()
-    override val argsSerializer: KSerializer<Args> = Args.serializer()
-
-    override val name: String = "__write_file__"
-    override val description: String = """
-        Writes text content to a file at an absolute path. Creates parent directories if needed and overwrites existing content.
-        
-        Use this to:
-        - Create new text files with content
-        - Replace entire content of existing files
-        
-        Returns file metadata (name, extension, path, hidden, size, contentType).
-    """.trimIndent()
 
     /**
      * Writes text content to the filesystem at the specified absolute path.

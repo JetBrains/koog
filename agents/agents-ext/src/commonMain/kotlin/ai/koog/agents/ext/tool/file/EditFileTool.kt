@@ -15,7 +15,6 @@ import ai.koog.rag.base.files.FileSystemProvider
 import ai.koog.rag.base.files.readText
 import ai.koog.rag.base.files.writeText
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 
 /**
@@ -28,7 +27,11 @@ import kotlinx.serialization.Serializable
  */
 public class EditFileTool<Path>(
     private val fs: FileSystemProvider.ReadWrite<Path>
-) : Tool<EditFileTool.Args, EditFileTool.Result>() {
+) : Tool<EditFileTool.Args, EditFileTool.Result>(
+    argsSerializer = Args.serializer(),
+    resultSerializer = Result.serializer(),
+    descriptor = descriptor
+) {
 
     /**
      * Arguments required to perform a single edit operation on a file.
@@ -201,15 +204,6 @@ public class EditFileTool<Path>(
             )
         )
     }
-
-    override val argsSerializer: KSerializer<Args> = Args.serializer()
-    override val resultSerializer: KSerializer<Result> = Result.serializer()
-
-    override val name: String = EditFileTool.toolName
-
-    override val description: String = EditFileTool.toolDescription
-
-    override val descriptor: ToolDescriptor = EditFileTool.descriptor
 
     override suspend fun execute(args: Args): Result {
         val path = fs.fromAbsolutePathString(args.path)

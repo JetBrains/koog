@@ -12,13 +12,12 @@ data class GetTransactionsArgs(
     val endDate: String
 )
 
-object GetTransactionsTool : SimpleTool<GetTransactionsArgs>() {
-    override val argsSerializer = GetTransactionsArgs.serializer()
-
-    override val name: String = "get_transactions"
-    override val description: String = "Get all transactions between two dates"
-
-    override suspend fun doExecute(args: GetTransactionsArgs): String {
+object GetTransactionsTool : SimpleTool<GetTransactionsArgs>(
+    argsSerializer = GetTransactionsArgs.serializer(),
+    name = "get_transactions",
+    description = "Get all transactions between two dates"
+) {
+    override suspend fun execute(args: GetTransactionsArgs): String {
         // Simulate returning transactions
         return """
             [

@@ -7,17 +7,15 @@ import ai.koog.prompt.executor.model.PromptExecutor
 import ai.koog.prompt.llm.OllamaModels
 import kotlinx.serialization.Serializable
 
-internal class TestTool(private val executor: PromptExecutor) : SimpleTool<TestTool.Args>() {
-
+internal class TestTool(private val executor: PromptExecutor) : SimpleTool<TestTool.Args>(
+    argsSerializer = Args.serializer(),
+    name = "test-tool",
+    description = "Test tool"
+) {
     @Serializable
     data class Args(val dummy: String = "")
 
-    override val argsSerializer = Args.serializer()
-
-    override val name: String = "test-tool"
-    override val description: String = "Test tool"
-
-    override suspend fun doExecute(args: Args): String {
+    override suspend fun execute(args: Args): String {
         val prompt = Prompt.build("test") {
             system("You are a helpful assistant that uses tools.")
             user("Set the color to blue")
@@ -30,34 +28,30 @@ internal class TestTool(private val executor: PromptExecutor) : SimpleTool<TestT
     }
 }
 
-internal class RecursiveTool : SimpleTool<RecursiveTool.Args>() {
-
+internal class RecursiveTool : SimpleTool<RecursiveTool.Args>(
+    argsSerializer = Args.serializer(),
+    name = "recursive",
+    description = "Recursive tool for testing"
+) {
     @Serializable
     data class Args(val dummy: String = "")
 
-    override val argsSerializer = Args.serializer()
-
-    override val name: String = "recursive"
-    override val description: String = "Recursive tool for testing"
-
-    override suspend fun doExecute(args: Args): String {
-        return "Dummy tool result: ${DummyTool().doExecute(DummyTool.Args())}"
+    override suspend fun execute(args: Args): String {
+        return "Dummy tool result: ${DummyTool().execute(DummyTool.Args())}"
     }
 }
 
-internal class LLMCallTool : SimpleTool<LLMCallTool.Args>() {
-
+internal class LLMCallTool : SimpleTool<LLMCallTool.Args>(
+    argsSerializer = Args.serializer(),
+    name = "recursive",
+    description = "Recursive tool for testing"
+) {
     @Serializable
     data class Args(val dummy: String = "")
 
     val executor = MockLLMExecutor()
 
-    override val argsSerializer = Args.serializer()
-
-    override val name: String = "recursive"
-    override val description: String = "Recursive tool for testing"
-
-    override suspend fun doExecute(args: Args): String {
+    override suspend fun execute(args: Args): String {
         val prompt = Prompt.build("test") {
             system("You are a helpful assistant that uses tools.")
             user("Set the color to blue")

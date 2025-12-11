@@ -11,7 +11,6 @@ import ai.koog.agents.ext.tool.file.render.folder
 import ai.koog.prompt.text.text
 import ai.koog.rag.base.files.FileMetadata
 import ai.koog.rag.base.files.FileSystemProvider
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 
 /**
@@ -22,7 +21,21 @@ import kotlinx.serialization.Serializable
  * @property fs read-only filesystem provider for accessing directories
  */
 public class ListDirectoryTool<Path>(private val fs: FileSystemProvider.ReadOnly<Path>) :
-    Tool<ListDirectoryTool.Args, ListDirectoryTool.Result>() {
+    Tool<ListDirectoryTool.Args, ListDirectoryTool.Result>(
+        argsSerializer = Args.serializer(),
+        resultSerializer = Result.serializer(),
+        name = "__list_directory__",
+        description = """
+            Lists files and subdirectories in a directory. READ-ONLY - never modifies anything.
+
+            Use this to:
+            - See what files exist before reading or creating
+            - Understand project structure
+            - Find specific files with patterns
+
+            Returns a tree showing all contents with sizes and metadata.
+        """.trimIndent()
+    ) {
 
     /**
      * Specifies which directory to list and how to traverse its contents.
@@ -52,21 +65,6 @@ public class ListDirectoryTool<Path>(private val fs: FileSystemProvider.ReadOnly
      */
     @Serializable
     public data class Result(val root: FileSystemEntry.Folder)
-
-    override val argsSerializer: KSerializer<Args> = Args.serializer()
-    override val resultSerializer: KSerializer<Result> = Result.serializer()
-
-    override val name: String = "__list_directory__"
-    override val description: String = """
-        Lists files and subdirectories in a directory. READ-ONLY - never modifies anything.
-        
-        Use this to:
-        - See what files exist before reading or creating
-        - Understand project structure
-        - Find specific files with patterns
-        
-        Returns a tree showing all contents with sizes and metadata.
-    """.trimIndent()
 
     /**
      * Lists directory contents from the filesystem with optional depth and pattern filtering.

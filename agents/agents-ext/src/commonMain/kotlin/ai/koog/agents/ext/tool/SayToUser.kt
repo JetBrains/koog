@@ -2,13 +2,16 @@ package ai.koog.agents.ext.tool
 
 import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.annotations.LLMDescription
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 
 /**
  * The `SayToUser` allows agent to say something to the output (via `println`).
  */
-public object SayToUser : SimpleTool<SayToUser.Args>() {
+public object SayToUser : SimpleTool<SayToUser.Args>(
+    argsSerializer = Args.serializer(),
+    name = "say_to_user",
+    description = "Service tool, used by the agent to talk."
+) {
     /**
      * Represents the arguments for the [SayToUser] tool
      *
@@ -21,11 +24,7 @@ public object SayToUser : SimpleTool<SayToUser.Args>() {
         val message: String
     )
 
-    override val argsSerializer: KSerializer<Args> = Args.serializer()
-    override val name: String = "say_to_user"
-    override val description: String = "Service tool, used by the agent to talk."
-
-    override suspend fun doExecute(args: Args): String {
+    override suspend fun execute(args: Args): String {
         println("Agent says: ${args.message}")
         return "DONE"
     }

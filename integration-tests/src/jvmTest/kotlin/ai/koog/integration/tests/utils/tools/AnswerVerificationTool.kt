@@ -4,7 +4,11 @@ import ai.koog.agents.core.tools.SimpleTool
 import ai.koog.agents.core.tools.annotations.LLMDescription
 import kotlinx.serialization.Serializable
 
-object AnswerVerificationTool : SimpleTool<AnswerVerificationTool.Args>() {
+object AnswerVerificationTool : SimpleTool<AnswerVerificationTool.Args>(
+    argsSerializer = Args.serializer(),
+    name = "answer_verification_tool",
+    description = "A tool for verifying the correctness of answers with optional confidence rating"
+) {
     @Serializable
     data class Args(
         @property:LLMDescription("The answer text to verify for correctness")
@@ -13,11 +17,7 @@ object AnswerVerificationTool : SimpleTool<AnswerVerificationTool.Args>() {
         val confidence: Int? = null
     )
 
-    override val argsSerializer = Args.serializer()
-    override val name: String = "answer_verification_tool"
-    override val description: String = "A tool for verifying the correctness of answers with optional confidence rating"
-
-    override suspend fun doExecute(args: Args): String {
+    override suspend fun execute(args: Args): String {
         return "Answer verification completed for: '${args.answer}', confidence level: ${args.confidence ?: "not specified"}"
     }
 }

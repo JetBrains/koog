@@ -10,32 +10,34 @@ class FileOperationsTools {
     val readFileContentTool = ReadFileContent(this)
 
     class CreateNewFileWithText(private val fileOperationsTools: FileOperationsTools) :
-        SimpleTool<CreateNewFileWithText.Args>() {
+        SimpleTool<CreateNewFileWithText.Args>(
+            argsSerializer = Args.serializer(),
+            name = "create_new_file_with_text",
+            description = "Creates a new file at the specified path with the provided text content"
+        ) {
         @Serializable
         data class Args(
             val pathInProject: String,
             val text: String
         )
 
-        override val argsSerializer = Args.serializer()
-        override val description = "Creates a new file at the specified path with the provided text content"
-
-        override suspend fun doExecute(args: Args): String {
+        override suspend fun execute(args: Args): String {
             return fileOperationsTools.createNewFileWithText(args.pathInProject, args.text)
         }
     }
 
-    class ReadFileContent(private val fileOperationsTools: FileOperationsTools) : SimpleTool<ReadFileContent.Args>() {
+    class ReadFileContent(private val fileOperationsTools: FileOperationsTools) :
+        SimpleTool<ReadFileContent.Args>(
+            argsSerializer = Args.serializer(),
+            name = "read_file_content",
+            description = "Reads the content of a file at the specified path"
+        ) {
         @Serializable
         data class Args(
             val pathInProject: String
         )
 
-        override val argsSerializer = Args.serializer()
-
-        override val description = "Reads the content of a file at the specified path"
-
-        override suspend fun doExecute(args: Args): String {
+        override suspend fun execute(args: Args): String {
             return fileOperationsTools.readFileContent(args.pathInProject)
         }
     }

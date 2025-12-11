@@ -174,13 +174,12 @@ class AIAgentLLMContextTest : AgentTestBase() {
         val input: String
     )
 
-    private class TestTool : SimpleTool<TestToolArgs>() {
-        override val argsSerializer = TestToolArgs.serializer()
-
-        override val name: String = "test-tool"
-        override val description: String = "A test tool for testing"
-
-        override suspend fun doExecute(args: TestToolArgs): String {
+    private class TestTool : SimpleTool<TestToolArgs>(
+        argsSerializer = TestToolArgs.serializer(),
+        name = "test-tool",
+        description = "A test tool for testing"
+    ) {
+        override suspend fun execute(args: TestToolArgs): String {
             return "Processed: ${args.input}"
         }
     }

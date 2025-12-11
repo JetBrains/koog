@@ -58,14 +58,12 @@ data class ComplexNestedToolArgs(
  * This tool has parameters with complex nested structures that would trigger
  * the error in the Anthropic API before the fix.
  */
-object ComplexNestedTool : SimpleTool<ComplexNestedToolArgs>() {
-    override val argsSerializer = ComplexNestedToolArgs.serializer()
-
-    override val name = "complex_nested_tool"
-
-    override val description = "A tool that processes user profiles with complex nested structures."
-
-    override suspend fun doExecute(args: ComplexNestedToolArgs): String {
+object ComplexNestedTool : SimpleTool<ComplexNestedToolArgs>(
+    argsSerializer = ComplexNestedToolArgs.serializer(),
+    name = "complex_nested_tool",
+    description = "A tool that processes user profiles with complex nested structures."
+) {
+    override suspend fun execute(args: ComplexNestedToolArgs): String {
         // Process the user profile
         val profile = args.profile
         val addressesInfo = profile.addresses.joinToString("\n") { address ->

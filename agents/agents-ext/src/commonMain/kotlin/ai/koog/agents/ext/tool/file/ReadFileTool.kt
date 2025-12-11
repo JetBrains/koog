@@ -10,7 +10,6 @@ import ai.koog.agents.ext.tool.file.render.file
 import ai.koog.prompt.text.text
 import ai.koog.rag.base.files.FileMetadata
 import ai.koog.rag.base.files.FileSystemProvider
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 
 /**
@@ -21,7 +20,21 @@ import kotlinx.serialization.Serializable
  * @property fs read-only filesystem provider for accessing files
  */
 public class ReadFileTool<Path>(private val fs: FileSystemProvider.ReadOnly<Path>) :
-    Tool<ReadFileTool.Args, ReadFileTool.Result>() {
+    Tool<ReadFileTool.Args, ReadFileTool.Result>(
+        argsSerializer = Args.serializer(),
+        resultSerializer = Result.serializer(),
+        name = "__read_file__",
+        description = """
+            Reads a text file (throws if non-text) with optional line range selection. TEXT-ONLY - never reads binary files.
+
+            Use this to:
+            - Read entire text files or specific line ranges
+            - Get file content along with metadata
+            - Extract portions of files using 0-based line indexing
+
+            Returns file content and metadata (name, extension, path, hidden, size, contentType).
+        """.trimIndent()
+    ) {
 
     /**
      * Specifies which file to read and what portion of its content to extract.
@@ -55,21 +68,6 @@ public class ReadFileTool<Path>(private val fs: FileSystemProvider.ReadOnly<Path
         val file: FileSystemEntry.File,
         val warningMessage: String? = null,
     )
-
-    override val argsSerializer: KSerializer<Args> = Args.serializer()
-    override val resultSerializer: KSerializer<Result> = Result.serializer()
-
-    override val name: String = "__read_file__"
-    override val description: String = """
-        Reads a text file (throws if non-text) with optional line range selection. TEXT-ONLY - never reads binary files.
-        
-        Use this to:
-        - Read entire text files or specific line ranges
-        - Get file content along with metadata
-        - Extract portions of files using 0-based line indexing
-        
-        Returns file content and metadata (name, extension, path, hidden, size, contentType).
-    """.trimIndent()
 
     /**
      * Reads file content from the filesystem with optional line range filtering.
