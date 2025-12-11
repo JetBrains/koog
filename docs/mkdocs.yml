@@ -12,6 +12,7 @@ nav:
           - Basic agents: basic-agents.md
           - Functional agents: functional-agents.md
           - Complex workflow agents: complex-workflow-agents.md
+          - Planner agents: planner-agents.md
       - Prompts: prompt-api.md
       - Tools:
           - Overview: tools-overview.md

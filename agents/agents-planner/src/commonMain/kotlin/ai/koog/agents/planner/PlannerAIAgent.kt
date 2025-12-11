@@ -53,10 +53,8 @@ public class PlannerAIAgent<State, Plan>(
 
     private val environment = GenericAgentEnvironment(
         agentId = this.id,
-        strategyId = strategy.name,
         logger = logger,
         toolRegistry = toolRegistry,
-        pipeline = pipeline
     )
 
     /**
@@ -88,6 +86,7 @@ public class PlannerAIAgent<State, Plan>(
             toolRegistry = toolRegistry,
             prompt = agentConfig.prompt,
             model = agentConfig.model,
+            responseProcessor = agentConfig.responseProcessor,
             promptExecutor = PromptExecutorProxy(
                 executor = promptExecutor,
                 pipeline = pipeline,
