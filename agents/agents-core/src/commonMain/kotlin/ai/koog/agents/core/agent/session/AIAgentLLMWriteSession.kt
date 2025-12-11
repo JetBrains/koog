@@ -349,9 +349,7 @@ public class AIAgentLLMWriteSession internal constructor(
      */
     override suspend fun requestLLMMultipleWithoutTools(): List<Message.Response> {
         return super.requestLLMMultipleWithoutTools().also { responses ->
-            appendPrompt {
-                responses.forEach { message(it) }
-            }
+            appendPrompt { messages(responses) }
         }
     }
 
@@ -377,9 +375,7 @@ public class AIAgentLLMWriteSession internal constructor(
      */
     override suspend fun requestLLMMultipleOnlyCallingTools(): List<Message.Response> {
         return super.requestLLMMultipleOnlyCallingTools().also { responses ->
-            appendPrompt {
-                responses.forEach { message(it) }
-            }
+            appendPrompt { messages(responses) }
         }
     }
 
@@ -425,9 +421,7 @@ public class AIAgentLLMWriteSession internal constructor(
      */
     override suspend fun requestLLMMultiple(): List<Message.Response> {
         return super.requestLLMMultiple().also { responses ->
-            appendPrompt {
-                responses.forEach { message(it) }
-            }
+            appendPrompt { messages(responses) }
         }
     }
 

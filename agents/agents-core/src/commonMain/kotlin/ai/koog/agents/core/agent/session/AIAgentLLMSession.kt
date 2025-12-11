@@ -152,16 +152,17 @@ public sealed class AIAgentLLMSession(
      * 3. Retrieves all generated messages (including potential Chain of Thought/Reasoning blocks).
      * 4. Filters the result to return the first [Message.Tool.Call].
      *
-     * If no tool call is found (e.g., the model refused or asked a question), it falls back to the first message.
+     * If no tool call is found (e.g., the model refused or asked a question), this method throws an exception.
      *
-     * @return The tool call response (or first response) from the language model.
+     * @return The tool call response from the language model.
      */
     public open suspend fun requestLLMOnlyCallingTools(): Message.Response {
         validateSession()
         // We use the multiple-response method to ensure we capture all context (e.g. thinking)
         // even though we only return the specific tool call.
         val responses = requestLLMMultipleOnlyCallingTools()
-        return responses.firstOrNull { it is Message.Tool.Call } ?: responses.first()
+        return responses.firstOrNull { it is Message.Tool.Call }
+            ?: error("requestLLMOnlyCallingTools expected at least one Tool.Call but received: ${responses.map { it::class.simpleName }}")
     }
 
     /**

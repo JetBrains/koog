@@ -422,4 +422,57 @@ class AIAgentLLMWriteSessionTest {
         assertEquals(thinkingContent, (lastTwoMessages[0] as Message.Assistant).content)
         assertEquals("test-tool", (lastTwoMessages[1] as Message.Tool.Call).tool)
     }
+
+    @Test
+    fun testRequestLLMOnlyCallingToolsNoToolCallThrowsException() = runTest {
+        val mockExecutor = getMockExecutor(clock = testClock) {
+            // Simulate model refusing to use tools and just responding with text
+            mockLLMAnswer("I cannot use tools for this request.").asDefaultResponse
+        }
+
+        val session = createSession(mockExecutor, listOf(TestTool()))
+
+        val exception = kotlin.runCatching {
+            session.requestLLMOnlyCallingTools()
+        }.exceptionOrNull()
+
+        assertNotNull(exception, "Expected an exception when no tool call is found")
+        assertTrue(
+            exception is IllegalStateException,
+            "Expected IllegalStateException but got ${exception::class.simpleName}"
+        )
+        assertTrue(
+            exception.message?.contains("expected at least one Tool.Call") == true,
+            "Exception message should indicate missing tool call"
+        )
+    }
+
+    @Test
+    fun testRequestLLMOnlyCallingToolsWithMultipleToolCalls() = runTest {
+        val testTool = TestTool()
+
+        val mockExecutor = getMockExecutor(clock = testClock) {
+            // Simulate model returning multiple tool calls (parallel tool calling)
+            mockLLMMixedResponse(
+                toolCalls = listOf(
+                    testTool to TestTool.Args("first"),
+                    testTool to TestTool.Args("second")
+                ),
+                responses = emptyList()
+            ) onCondition { true }
+        }
+
+        val session = createSession(mockExecutor, listOf(testTool))
+
+        val response = session.requestLLMOnlyCallingTools()
+
+        // Should return the first tool call
+        assertTrue(response is Message.Tool.Call, "Expected response to be a Tool Call")
+        assertEquals("test-tool", response.tool)
+
+        // Both tool calls should be in history
+        val lastTwoMessages = session.prompt.messages.takeLast(2)
+        assertTrue(lastTwoMessages.all { it is Message.Tool.Call })
+    }
 }
+
