@@ -475,4 +475,3 @@ class AIAgentLLMWriteSessionTest {
         assertTrue(lastTwoMessages.all { it is Message.Tool.Call })
     }
 }
-
