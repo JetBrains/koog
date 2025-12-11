@@ -23,11 +23,13 @@ import ai.koog.integration.tests.utils.structuredOutput.getConfigNoFixingParserM
 import ai.koog.integration.tests.utils.structuredOutput.getConfigNoFixingParserNative
 import ai.koog.integration.tests.utils.structuredOutput.parseMarkdownStreamToCountries
 import ai.koog.integration.tests.utils.structuredOutput.weatherStructuredOutputPrompt
+import ai.koog.integration.tests.utils.tools.CalculatorOperation
 import ai.koog.integration.tests.utils.tools.CalculatorTool
 import ai.koog.integration.tests.utils.tools.LotteryTool
 import ai.koog.integration.tests.utils.tools.PickColorFromListTool
 import ai.koog.integration.tests.utils.tools.PickColorTool
 import ai.koog.integration.tests.utils.tools.PriceCalculatorTool
+import ai.koog.integration.tests.utils.tools.SimpleCalculatorTool
 import ai.koog.integration.tests.utils.tools.SimplePriceCalculatorTool
 import ai.koog.integration.tests.utils.tools.calculatorPrompt
 import ai.koog.integration.tests.utils.tools.calculatorPromptNotRequiredOptionalParams
@@ -42,16 +44,12 @@ import ai.koog.prompt.executor.clients.anthropic.AnthropicParams
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicThinking
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.google.GoogleParams
-import kotlinx.coroutines.flow.collect
 import ai.koog.prompt.executor.clients.google.models.GoogleThinkingConfig
 import ai.koog.prompt.executor.clients.google.models.GoogleThinkingLevel
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.clients.openai.OpenAIResponsesParams
 import ai.koog.prompt.executor.clients.openai.base.models.ReasoningEffort
 import ai.koog.prompt.executor.clients.openai.models.OpenAIInclude
-import ai.koog.integration.tests.utils.tools.CalculatorOperation
-import ai.koog.integration.tests.utils.tools.SimpleCalculatorTool
-import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.executor.clients.openai.models.ReasoningConfig
 import ai.koog.prompt.executor.clients.openai.models.ReasoningSummary
 import ai.koog.prompt.executor.model.PromptExecutor
@@ -66,6 +64,7 @@ import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.ToolChoice
+import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.structure.executeStructured
 import io.kotest.assertions.withClue
 import io.kotest.inspectors.shouldForAll
@@ -90,7 +89,7 @@ import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeAll
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.util.Base64
+import java.util.*
 import kotlin.io.path.pathString
 import kotlin.io.path.readBytes
 import kotlin.io.path.readText
