@@ -208,7 +208,7 @@ class EventHandlerTest {
 
         val runId = eventsCollector.runId
         val dummyToolName = dummyTool.name
-        val dummyToolDescription = dummyTool.description
+        val dummyToolDescription = dummyTool.descriptor.description
         val dummyToolArgsEncoded = dummyTool.encodeArgs(DummyTool.Args("test"))
         val dummyToolResultEncoded = dummyTool.encodeResult(dummyTool.result)
 
