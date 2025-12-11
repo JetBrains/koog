@@ -42,12 +42,16 @@ import ai.koog.prompt.executor.clients.anthropic.AnthropicParams
 import ai.koog.prompt.executor.clients.anthropic.models.AnthropicThinking
 import ai.koog.prompt.executor.clients.google.GoogleModels
 import ai.koog.prompt.executor.clients.google.GoogleParams
+import kotlinx.coroutines.flow.collect
 import ai.koog.prompt.executor.clients.google.models.GoogleThinkingConfig
 import ai.koog.prompt.executor.clients.google.models.GoogleThinkingLevel
 import ai.koog.prompt.executor.clients.openai.OpenAIModels
 import ai.koog.prompt.executor.clients.openai.OpenAIResponsesParams
 import ai.koog.prompt.executor.clients.openai.base.models.ReasoningEffort
 import ai.koog.prompt.executor.clients.openai.models.OpenAIInclude
+import ai.koog.integration.tests.utils.tools.CalculatorOperation
+import ai.koog.integration.tests.utils.tools.SimpleCalculatorTool
+import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.executor.clients.openai.models.ReasoningConfig
 import ai.koog.prompt.executor.clients.openai.models.ReasoningSummary
 import ai.koog.prompt.executor.model.PromptExecutor
@@ -62,7 +66,6 @@ import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
 import ai.koog.prompt.params.LLMParams
 import ai.koog.prompt.params.LLMParams.ToolChoice
-import ai.koog.prompt.streaming.StreamFrame
 import ai.koog.prompt.structure.executeStructured
 import io.kotest.assertions.withClue
 import io.kotest.inspectors.shouldForAll
@@ -1077,6 +1080,59 @@ abstract class ExecutorIntegrationTestBase {
             response2.shouldNotBeEmpty()
             val answer = response2.filterIsInstance<Message.Assistant>().first().content
             answer.shouldContain("20")
+        }
+    }
+
+    open fun integration_testExecuteStreamingWithTools(model: LLModel) = runTest(timeout = 300.seconds) {
+        Models.assumeAvailable(model.provider)
+        assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
+
+        val executor = getExecutor(model)
+
+        val prompt = Prompt.build("test-streaming", LLMParams(toolChoice = ToolChoice.Required)) {
+            system("You are a helpful assistant.")
+            user("Count three times five")
+        }
+
+        withRetry(times = 3, testName = "integration_testExecuteStreamingWithTools[${model.id}]") {
+            with(StringBuilder()) {
+                val endMessages = mutableListOf<StreamFrame.End>()
+                val toolMessages = mutableListOf<StreamFrame.ToolCall>()
+
+                executor.executeStreamAndCollect(
+                    prompt = prompt,
+                    model = model,
+                    tools = listOf(SimpleCalculatorTool.descriptor),
+                    appendable = this,
+                    endMessages = endMessages,
+                    toolMessages = toolMessages
+                )
+
+                toolMessages.shouldNotBeEmpty()
+                withClue("Expected calculator tool call but got: [$toolMessages]") {
+                    toolMessages.any {
+                        it.name == SimpleCalculatorTool.name &&
+                            it.content.contains(CalculatorOperation.MULTIPLY.name, ignoreCase = true)
+                    } shouldBe true
+                }
+            }
+        }
+    }
+
+    private suspend fun PromptExecutor.executeStreamAndCollect(
+        prompt: Prompt,
+        model: LLModel,
+        tools: List<ToolDescriptor>,
+        appendable: StringBuilder,
+        endMessages: MutableList<StreamFrame.End>,
+        toolMessages: MutableList<StreamFrame.ToolCall>
+    ) {
+        executeStreaming(prompt, model, tools).collect { frame ->
+            when (frame) {
+                is StreamFrame.Append -> appendable.append(frame.text)
+                is StreamFrame.ToolCall -> toolMessages.add(frame)
+                is StreamFrame.End -> endMessages.add(frame)
+            }
         }
     }
 }

@@ -17,7 +17,7 @@ kotlin {
                 implementation(libs.testcontainers)
                 implementation(libs.ktor.server.netty)
                 implementation(kotlin("test-junit5"))
-                runtimeOnly(libs.ktor.client.apache5)
+                runtimeOnly(libs.ktor.client.cio)
                 runtimeOnly(libs.slf4j.simple)
             }
         }

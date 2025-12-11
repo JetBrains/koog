@@ -161,10 +161,17 @@ public class KtorKoogHttpClient internal constructor(
                 }
             }
         } catch (e: SSEClientException) {
+            val errorBody = try {
+                e.response?.bodyAsText()
+            } catch (ignored: Exception) {
+                logger.debug(ignored) { "Unable to read SSE error response body (may already be consumed)" }
+                null
+            }
             throw KoogHttpClientException(
                 clientName = clientName,
                 statusCode = e.response?.status?.value,
-                errorBody = e.response?.bodyAsText(),
+                errorBody = errorBody,
+                message = e.message,
                 cause = e
             )
         } catch (e: CancellationException) {

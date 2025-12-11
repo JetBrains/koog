@@ -306,4 +306,10 @@ class SingleLLMPromptExecutorIntegrationTest : ExecutorIntegrationTestBase() {
     override fun integration_testReasoningMultiStep(model: LLModel) {
         super.integration_testReasoningMultiStep(model)
     }
+    
+    @ParameterizedTest
+    @MethodSource("allCompletionModels")
+    override fun integration_testExecuteStreamingWithTools(model: LLModel) {
+        super.integration_testExecuteStreamingWithTools(model)
+    }
 }
