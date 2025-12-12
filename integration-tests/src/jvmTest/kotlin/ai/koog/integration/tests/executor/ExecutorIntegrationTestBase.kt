@@ -23,11 +23,13 @@ import ai.koog.integration.tests.utils.structuredOutput.getConfigNoFixingParserM
 import ai.koog.integration.tests.utils.structuredOutput.getConfigNoFixingParserNative
 import ai.koog.integration.tests.utils.structuredOutput.parseMarkdownStreamToCountries
 import ai.koog.integration.tests.utils.structuredOutput.weatherStructuredOutputPrompt
+import ai.koog.integration.tests.utils.tools.CalculatorOperation
 import ai.koog.integration.tests.utils.tools.CalculatorTool
 import ai.koog.integration.tests.utils.tools.LotteryTool
 import ai.koog.integration.tests.utils.tools.PickColorFromListTool
 import ai.koog.integration.tests.utils.tools.PickColorTool
 import ai.koog.integration.tests.utils.tools.PriceCalculatorTool
+import ai.koog.integration.tests.utils.tools.SimpleCalculatorTool
 import ai.koog.integration.tests.utils.tools.SimplePriceCalculatorTool
 import ai.koog.integration.tests.utils.tools.calculatorPrompt
 import ai.koog.integration.tests.utils.tools.calculatorPromptNotRequiredOptionalParams
@@ -181,9 +183,6 @@ abstract class ExecutorIntegrationTestBase {
 
     open fun integration_testExecuteStreaming(model: LLModel) = runTest(timeout = 300.seconds) {
         Models.assumeAvailable(model.provider)
-        if (model.id == OpenAIModels.Audio.GPT4oAudio.id || model.id == OpenAIModels.Audio.GPT4oMiniAudio.id) {
-            assumeTrue(false, "https://github.com/JetBrains/koog/issues/231")
-        }
 
         val executor = getExecutor(model)
 
@@ -196,13 +195,15 @@ abstract class ExecutorIntegrationTestBase {
             with(StringBuilder()) {
                 val endMessages = mutableListOf<StreamFrame.End>()
                 val toolMessages = mutableListOf<StreamFrame.ToolCall>()
-                executor.executeStreaming(prompt, model).collect {
-                    when (it) {
-                        is StreamFrame.Append -> append(it.text)
-                        is StreamFrame.End -> endMessages.add(it)
-                        is StreamFrame.ToolCall -> toolMessages.add(it)
-                    }
-                }
+
+                executor.executeStreamAndCollect(
+                    prompt = prompt,
+                    model = model,
+                    appendable = this,
+                    endMessages = endMessages,
+                    toolMessages = toolMessages
+                )
+
                 length shouldNotBe (0)
                 toolMessages.shouldBeEmpty()
                 when (model.provider) {
@@ -216,6 +217,42 @@ abstract class ExecutorIntegrationTestBase {
                     shouldContain("3")
                     shouldContain("4")
                     shouldContain("5")
+                }
+            }
+        }
+    }
+
+    open fun integration_testExecuteStreamingWithTools(model: LLModel) = runTest(timeout = 300.seconds) {
+        Models.assumeAvailable(model.provider)
+        assumeTrue(model.capabilities.contains(LLMCapability.Tools), "Model $model does not support tools")
+
+        val executor = getExecutor(model)
+
+        val prompt = Prompt.build("test-streaming", LLMParams(toolChoice = ToolChoice.Required)) {
+            system("You are a helpful assistant.")
+            user("Count three times five")
+        }
+
+        withRetry(times = 3, testName = "integration_testExecuteStreamingWithTools[${model.id}]") {
+            with(StringBuilder()) {
+                val endMessages = mutableListOf<StreamFrame.End>()
+                val toolMessages = mutableListOf<StreamFrame.ToolCall>()
+
+                executor.executeStreamAndCollect(
+                    prompt = prompt,
+                    model = model,
+                    tools = listOf(SimpleCalculatorTool.descriptor),
+                    appendable = this,
+                    endMessages = endMessages,
+                    toolMessages = toolMessages
+                )
+
+                toolMessages.shouldNotBeEmpty()
+                withClue("Expected calculator tool call but got: [$toolMessages]") {
+                    toolMessages.any {
+                        it.name == SimpleCalculatorTool.name &&
+                            it.content.contains(CalculatorOperation.MULTIPLY.name, ignoreCase = true)
+                    } shouldBe true
                 }
             }
         }
@@ -780,7 +817,7 @@ abstract class ExecutorIntegrationTestBase {
 
         val prompt = calculatorPrompt
 
-        /** tool choice auto is default and thus is tested by [integration_testToolWithRequiredParams] */
+        /* tool choice auto is default and thus is tested by [integration_testToolWithRequiredParams] */
 
         withRetry(times = 3, testName = "integration_testToolChoiceRequired[${model.id}]") {
             with(
@@ -1068,7 +1105,10 @@ abstract class ExecutorIntegrationTestBase {
 
         val prompt2 = Prompt(
             id = "reasoning-multistep-2",
-            messages = prompt1.messages + response1 + Message.User(ContentPart.Text("Multiply the result by 2."), metaInfo = RequestMetaInfo.Empty),
+            messages = prompt1.messages + response1 + Message.User(
+                ContentPart.Text("Multiply the result by 2."),
+                metaInfo = RequestMetaInfo.Empty
+            ),
             params = params
         )
 
@@ -1077,6 +1117,23 @@ abstract class ExecutorIntegrationTestBase {
             response2.shouldNotBeEmpty()
             val answer = response2.filterIsInstance<Message.Assistant>().first().content
             answer.shouldContain("20")
+        }
+    }
+}
+
+private suspend fun PromptExecutor.executeStreamAndCollect(
+    prompt: Prompt,
+    model: LLModel,
+    tools: List<ToolDescriptor> = emptyList(),
+    appendable: Appendable,
+    endMessages: MutableList<StreamFrame.End>,
+    toolMessages: MutableList<StreamFrame.ToolCall>
+) {
+    this.executeStreaming(prompt, model, tools).collect { frame ->
+        when (frame) {
+            is StreamFrame.Append -> appendable.append(frame.text)
+            is StreamFrame.End -> endMessages.add(frame)
+            is StreamFrame.ToolCall -> toolMessages.add(frame)
         }
     }
 }
