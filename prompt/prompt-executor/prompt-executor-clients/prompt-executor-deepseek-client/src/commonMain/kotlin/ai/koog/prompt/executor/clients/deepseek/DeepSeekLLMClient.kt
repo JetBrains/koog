@@ -13,6 +13,7 @@ import ai.koog.prompt.executor.clients.openai.base.AbstractOpenAILLMClient
 import ai.koog.prompt.executor.clients.openai.base.OpenAIBaseSettings
 import ai.koog.prompt.executor.clients.openai.base.OpenAICompatibleToolDescriptorSchemaGenerator
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIMessage
+import ai.koog.prompt.executor.clients.openai.base.models.OpenAIResponseFormat
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAITool
 import ai.koog.prompt.executor.clients.openai.base.models.OpenAIToolChoice
 import ai.koog.prompt.llm.LLMProvider
@@ -140,6 +141,17 @@ public class DeepSeekLLMClient(
                 upsertToolCall(index, id, name, arguments)
             }
             choice.finishReason?.let { emitEnd(it, createMetaInfo(chunk.usage)) }
+        }
+    }
+
+    override fun createResponseFormat(schema: LLMParams.Schema?, model: LLModel): OpenAIResponseFormat? {
+        return schema?.let {
+            require(it.capability in model.capabilities) {
+                "Model ${model.id} does not support structured output schema ${it.name}"
+            }
+            when (it) {
+                is LLMParams.Schema.JSON -> OpenAIResponseFormat.JsonObject()
+            }
         }
     }
 
