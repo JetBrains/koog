@@ -8,43 +8,49 @@ import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
-import com.agentclientprotocol.agent.AgentInfo
 import com.agentclientprotocol.agent.AgentSession
-import com.agentclientprotocol.agent.AgentSupport
-import com.agentclientprotocol.client.ClientInfo
 import com.agentclientprotocol.common.Event
-import com.agentclientprotocol.common.SessionParameters
 import com.agentclientprotocol.model.ContentBlock
 import com.agentclientprotocol.model.SessionId
-import kotlinx.atomicfu.atomic
-import kotlinx.atomicfu.update
-import kotlinx.collections.immutable.persistentMapOf
+import com.agentclientprotocol.protocol.Protocol
+import io.github.oshai.kotlinlogging.KotlinLogging.logger
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonElement
 
-internal class AcpAIAgentSession(
+/**
+ * Represents a session for managing the lifecycle and interaction with an AI agent that uses the ACP protocol.
+ *
+ * @property sessionId Unique identifier for the session.
+ * @property acpProtocol Instance of the protocol used for communication and interaction with the ACP agent.
+ * @property acpAgentsScope Coroutine scope in which the agent's jobs run.
+ * @property agent The base AI agent used to create and execute prompts in the session.
+ */
+public class AcpAIAgentSession(
     override val sessionId: SessionId,
-    private val scope: CoroutineScope,
+    private val acpProtocol: Protocol,
+    private val acpAgentsScope: CoroutineScope,
     private val agent: GraphAIAgent<Unit, Unit>
 ) : AgentSession {
-
     private lateinit var acpAgent: GraphAIAgent<Unit, Unit>
     private lateinit var acpAgentJob: Job
     private val acpEventsFlow = MutableSharedFlow<Event>()
 
+    private val logger = logger {}
+
     override suspend fun prompt(
         content: List<ContentBlock>,
         _meta: JsonElement?
-    ): Flow<Event> {
+    ): Flow<Event> = flow {
         if (::acpAgent.isInitialized) {
             // TODO: Support appending prompts to the agent
-            throw IllegalStateException("Agent is already initialized")
+            logger.error { "Agent is already initialized, does not support appending prompts." }
+            throw IllegalStateException("Acp agent in session ${sessionId.value} is already initialized")
         }
         acpAgent = GraphAIAgent(
             inputType = agent.inputType,
@@ -59,22 +65,25 @@ internal class AcpAIAgentSession(
             toolRegistry = agent.toolRegistry,
             installFeatures = {
                 @OptIn(InternalAgentsApi::class)
-                agent.installFeatures
+                agent.installFeatures(this)
                 // Install Acp feature with flow to emit events
                 install(AcpAgent) {
-                    eventsFlow = acpEventsFlow
+                    sessionIdValue = sessionId.value
+                    eventsFlow = this@flow
+                    protocol = acpProtocol
                 }
             }
         )
 
-        acpAgentJob = scope.launch { agent.run(Unit) }
-
-        return acpEventsFlow
+        acpAgentJob = acpAgentsScope.launch {
+            logger.info { "Starting ACP agent" }
+            acpAgent.run(Unit)
+        }
     }
 
     override suspend fun cancel() {
-        // TODO: cancel the agent
-        acpAgentJob.cancel()
+        logger.info { "Canceling ACP agent" }
+        acpAgentJob.cancelAndJoin()
     }
 
     private fun concatenatePrompts(initialPrompt: Prompt, content: List<ContentBlock>): Prompt {
@@ -91,34 +100,5 @@ internal class AcpAIAgentSession(
                 )
             )
         }
-    }
-}
-
-internal class AcpAIAgentSupport(
-    private val agent: GraphAIAgent<Unit, Unit>,
-    private val agentInfo: AgentInfo
-) : AgentSupport {
-
-    private val acpScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-
-    private val acpAgentSessions = atomic(persistentMapOf<SessionId, AcpAIAgentSession>())
-
-    override suspend fun initialize(clientInfo: ClientInfo): AgentInfo {
-        return agentInfo
-    }
-
-    override suspend fun createSession(sessionParameters: SessionParameters): AgentSession {
-        val sessionId = SessionId("session")
-        return AcpAIAgentSession(sessionId, acpScope, agent).also { session ->
-            acpAgentSessions.update { it.put(session.sessionId, session) }
-        }
-    }
-
-    override suspend fun loadSession(
-        sessionId: SessionId,
-        sessionParameters: SessionParameters,
-    ): AgentSession {
-        // TODO: Add better error handling
-        return acpAgentSessions.value[sessionId] ?: error("Session not found")
     }
 }

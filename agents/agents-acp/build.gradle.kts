@@ -11,7 +11,7 @@ plugins {
 // FIXME Kotlin ACP SDK only supports JVM target for now, so we only provide JVM target for this module too. Fix later
 kotlin {
     sourceSets {
-        jvmMain {
+        commonMain {
             dependencies {
                 api(project(":agents:agents-core"))
                 api(project(":agents:agents-features:agents-features-acp"))

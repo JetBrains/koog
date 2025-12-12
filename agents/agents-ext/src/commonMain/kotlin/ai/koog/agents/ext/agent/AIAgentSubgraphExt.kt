@@ -140,8 +140,8 @@ internal inline fun <reified Output> identityTool(): Tool<Output, Output> = obje
 @OptIn(InternalAgentToolsApi::class, InternalAgentsApi::class)
 @AIAgentBuilderDslMarker
 public inline fun <reified Input, reified Output> AIAgentSubgraphBuilderBase<*, *>.subgraphWithTask(
-    toolSelectionStrategy: ToolSelectionStrategy,
     name: String? = null,
+    toolSelectionStrategy: ToolSelectionStrategy = ToolSelectionStrategy.ALL,
     llmModel: LLModel? = null,
     llmParams: LLMParams? = null,
     runMode: ToolCalls = ToolCalls.SEQUENTIAL,
