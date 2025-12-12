@@ -1254,7 +1254,7 @@ class AIAgentIntegrationTest : AIAgentTestBase() {
         strategy: HistoryCompressionStrategy,
         strategyName: String
     ) = runTest(timeout = 10.minutes) {
-        val model = OpenAIModels.Chat.GPT5_1
+        val model = OpenAIModels.Chat.GPT5_2
         val systemMessage = "You are a helpful assistant. JUST CALL THE TOOLS, NO QUESTIONS ASKED."
 
         val historyCompressionStrategy = buildHistoryCompressionWithToolsStrategy(

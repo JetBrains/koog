@@ -30,11 +30,17 @@ internal fun getModelFromIdentifier(identifier: String): LLModel? {
 
     return when (providerName) {
         "openai" -> openAI(parts, identifier)
+
         "anthropic" -> anthropic(parts, identifier)
+
         "google" -> google(parts, identifier)
+
         "mistral" -> mistral(parts, identifier)
+
         "openrouter" -> openrouter(parts, identifier)
+
         "deepseek" -> deepSeek(parts, identifier)
+
         "ollama" -> ollama(parts, identifier)
 
         else -> {
@@ -220,6 +226,8 @@ private val OPENAI_MODELS_MAP = mapOf(
         "gpt5_1" to OpenAIModels.Chat.GPT5_1,
         "gpt5pro" to OpenAIModels.Chat.GPT5Pro,
         "gpt5_1codex" to OpenAIModels.Chat.GPT5_1Codex,
+        "gpt5_2" to OpenAIModels.Chat.GPT5_2,
+        "gpt5_2pro" to OpenAIModels.Chat.GPT5_2Pro,
         "gpt4_1nano" to OpenAIModels.Chat.GPT4_1Nano,
         "gpt4_1mini" to OpenAIModels.Chat.GPT4_1Mini,
         "gpt4omini" to OpenAIModels.Chat.GPT4oMini,
@@ -289,14 +297,16 @@ private val OPENROUTER_MODELS_MAP = mapOf(
     "claude35sonnet" to OpenRouterModels.Claude3_5Sonnet,
     "claude4sonnet" to OpenRouterModels.Claude4Sonnet,
     "claude41opus" to OpenRouterModels.Claude4_1Opus,
+    "gpt35turbo" to OpenRouterModels.GPT35Turbo,
     "gpt4" to OpenRouterModels.GPT4,
+    "gpt4turbo" to OpenRouterModels.GPT4Turbo,
     "gpt4o" to OpenRouterModels.GPT4o,
+    "gptoss120b" to OpenRouterModels.GPT_OSS_120b,
     "gpt5" to OpenRouterModels.GPT5,
     "gpt5mini" to OpenRouterModels.GPT5Mini,
     "gpt5nano" to OpenRouterModels.GPT5Nano,
-    "gptoss120b" to OpenRouterModels.GPT_OSS_120b,
-    "gpt4turbo" to OpenRouterModels.GPT4Turbo,
-    "gpt35turbo" to OpenRouterModels.GPT35Turbo
+    "gpt52" to OpenRouterModels.GPT5_2,
+    "gpt52pro" to OpenRouterModels.GPT5_2Pro,
 )
 
 private val DEEPSEEK_MODELS_MAP = mapOf(

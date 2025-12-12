@@ -308,6 +308,30 @@ public object OpenRouterModels : LLModelDefinitions {
     )
 
     /**
+     * GPT-5.2 is offering stronger agentic and long context performance compared to GPT-5.1.
+     * It uses adaptive reasoning to allocate computation dynamically, responding quickly to simple queries
+     * while spending more depth on complex tasks.
+     */
+    public val GPT5_2: LLModel = LLModel(
+        provider = LLMProvider.OpenRouter,
+        id = "openai/gpt-5.2",
+        capabilities = multimodalCapabilities + additionalCapabilities,
+        contextLength = 400_000,
+    )
+
+    /**
+     * GPT-5.2 Pro is offering major improvements in agentic coding and long context performance over GPT-5 Pro.
+     * It is optimized for complex tasks that require step-by-step reasoning, instruction following,
+     * and accuracy in high-stakes use cases.
+     */
+    public val GPT5_2Pro: LLModel = LLModel(
+        provider = LLMProvider.OpenRouter,
+        id = "openai/gpt-5.2-pro",
+        capabilities = multimodalCapabilities + LLMCapability.ToolChoice,
+        contextLength = 400_000,
+    )
+
+    /**
      * Represents the Llama3 model configuration provided by OpenRouter.
      * This model is identified by the unique ID "meta/llama-3-70b" and
      * supports the standard set of language model capabilities.
