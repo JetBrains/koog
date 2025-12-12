@@ -114,6 +114,18 @@ class ModelIdentifierParsingTest {
         assertNotNull(gpt5_1codex)
         assertEquals(LLMProvider.OpenAI, gpt5_1codex.provider)
         assertEquals(OpenAIModels.Chat.GPT5_1Codex, gpt5_1codex)
+
+        // Test GPT-5.2
+        val gpt5_2 = getModelFromIdentifier("openai.chat.gpt5_2")
+        assertNotNull(gpt5_2)
+        assertEquals(LLMProvider.OpenAI, gpt5_2.provider)
+        assertEquals(OpenAIModels.Chat.GPT5_2, gpt5_2)
+
+        // Test GPT-5.2-Pro
+        val gpt5_2pro = getModelFromIdentifier("openai.chat.gpt5_2pro")
+        assertNotNull(gpt5_2pro)
+        assertEquals(LLMProvider.OpenAI, gpt5_2pro.provider)
+        assertEquals(OpenAIModels.Chat.GPT5_2Pro, gpt5_2pro)
     }
 
     @Test
@@ -318,6 +330,18 @@ class ModelIdentifierParsingTest {
         assertNotNull(gpt35Turbo)
         assertEquals(LLMProvider.OpenRouter, gpt35Turbo.provider)
         assertEquals(OpenRouterModels.GPT35Turbo, gpt35Turbo)
+
+        // Test GPT-5.2
+        val gpt5_2 = getModelFromIdentifier("openrouter.gpt52")
+        assertNotNull(gpt5_2)
+        assertEquals(LLMProvider.OpenRouter, gpt5_2.provider)
+        assertEquals(OpenRouterModels.GPT5_2, gpt5_2)
+
+        // Test GPT-5.2 Pro
+        val gpt5_2pro = getModelFromIdentifier("openrouter.gpt52pro")
+        assertNotNull(gpt5_2pro)
+        assertEquals(LLMProvider.OpenRouter, gpt5_2pro.provider)
+        assertEquals(OpenRouterModels.GPT5_2Pro, gpt5_2pro)
     }
 
     // DeepSeek model identifier tests

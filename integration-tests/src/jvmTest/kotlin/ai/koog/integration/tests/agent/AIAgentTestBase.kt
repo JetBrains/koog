@@ -345,7 +345,7 @@ open class AIAgentTestBase {
         return AIAgent(
             promptExecutor = executor,
             strategy = strategy,
-            agentConfig = AIAgentConfig(prompt, OpenAIModels.Chat.GPT5_1, maxAgentIterations),
+            agentConfig = AIAgentConfig(prompt, OpenAIModels.Chat.GPT5_2, maxAgentIterations),
             toolRegistry = tools,
         ) {
             install(EventHandler, eventHandlerConfig)

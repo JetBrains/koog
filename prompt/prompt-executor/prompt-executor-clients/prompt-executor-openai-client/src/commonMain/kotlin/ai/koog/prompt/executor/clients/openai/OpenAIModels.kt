@@ -33,6 +33,8 @@ import ai.koog.prompt.llm.LLModel
  * | [Chat.GPT5Pro]                   | Slowest   | $15-$120           | Text, Image, Tools, Document | Text, Tools                  |
  * | [Chat.GPT5_1]                    | Fast      | $1.25-$10          | Text, Image, Tools, Document | Text, Image, Tools, Document |
  * | [Chat.GPT5_1Codex]               | Medium    | $1.25-$10          | Text, Image, Tools, Document | Text, Image, Tools, Document |
+ * | [Chat.GPT5_2]                    | Fast      | $1.75-$14          | Text, Image, Tools, Document | Text, Tools                  |
+ * | [Chat.GPT5_2Pro]                 | Slowest   | $21-$168           | Text, Image, Tools, Document | Text, Tools                  |
  * | [Audio.GptAudio]                 | Fast      | $2.5-$10           | Text, Audio, Tools           | Text, Audio, Tools           |
  * | [Audio.GPT4oMiniAudio]           | Fast      | $0.15-$0.6/$10-$20 | Text, Audio, Tools           | Text, Audio, Tools           |
  * | [Audio.GPT4oAudio]               | Medium    | $2.5-$10/$40-$80   | Text, Audio, Tools           | Text, Audio, Tools           |
@@ -564,6 +566,70 @@ public object OpenAIModels : LLModelDefinitions {
                 LLMCapability.Temperature,
                 LLMCapability.Schema.JSON.Basic,
                 LLMCapability.Schema.JSON.Standard,
+                LLMCapability.Speculation,
+                LLMCapability.Tools,
+                LLMCapability.ToolChoice,
+                LLMCapability.Vision.Image,
+                LLMCapability.Document,
+                LLMCapability.MultipleChoices,
+                LLMCapability.OpenAIEndpoint.Responses,
+            ),
+            contextLength = 400_000,
+            maxOutputTokens = 128_000,
+        )
+
+        /**
+         * GPT-5.2 is OpenAI's flagship model for coding and agentic tasks across industries.
+         * Supports both reasoning and chat completions endpoints.
+         *
+         * 400,000 context window
+         * 128,000 max output tokens
+         * Aug 31, 2025 knowledge cutoff
+         * Reasoning token support
+         *
+         * @see <a href="https://platform.openai.com/docs/models/gpt-5.2"\>Model page</a>
+         */
+
+        public val GPT5_2: LLModel = LLModel(
+            provider = LLMProvider.OpenAI,
+            id = "gpt-5.2",
+            capabilities = listOf(
+                LLMCapability.Completion,
+                LLMCapability.Temperature,
+                LLMCapability.Schema.JSON.Basic,
+                LLMCapability.Schema.JSON.Standard,
+                LLMCapability.Speculation,
+                LLMCapability.Tools,
+                LLMCapability.ToolChoice,
+                LLMCapability.Vision.Image,
+                LLMCapability.Document,
+                LLMCapability.MultipleChoices,
+                LLMCapability.OpenAIEndpoint.Completions,
+                LLMCapability.OpenAIEndpoint.Responses,
+            ),
+            contextLength = 400_000,
+            maxOutputTokens = 128_000,
+        )
+
+        /**
+         * GPT-5.2 pro is available in the Responses API only to enable support for multi-turn model interactions
+         * before responding to API requests, and other advanced API features in the future.
+         * Supports reasoning.effort: medium, high, xhigh.
+         *
+         * 400,000 context window
+         * 128,000 max output tokens
+         * Aug 31, 2025 knowledge cutoff
+         * Reasoning token support
+         *
+         * @see <a href="https://platform.openai.com/docs/models/gpt-5.2-pro"\>Model page</a>
+         */
+
+        public val GPT5_2Pro: LLModel = LLModel(
+            provider = LLMProvider.OpenAI,
+            id = "gpt-5.2-pro",
+            capabilities = listOf(
+                LLMCapability.Completion,
+                LLMCapability.Temperature,
                 LLMCapability.Speculation,
                 LLMCapability.Tools,
                 LLMCapability.ToolChoice,
