@@ -23,8 +23,8 @@ include(":agents:agents-features:agents-features-snapshot")
 include(":agents:agents-features:agents-features-a2a-core")
 include(":agents:agents-features:agents-features-a2a-server")
 include(":agents:agents-features:agents-features-a2a-client")
+include("agents:agents-features:agents-features-acp")
 
-include(":agents:agents-acp")
 include(":agents:agents-mcp")
 include(":agents:agents-mcp-server")
 include(":agents:agents-test")
@@ -93,7 +93,3 @@ include(":docs")
 
 include(":test-utils")
 include(":utils")
-
-include("agents:agents-features:agents-features-acp")
-
-include("agents:agents-acp")

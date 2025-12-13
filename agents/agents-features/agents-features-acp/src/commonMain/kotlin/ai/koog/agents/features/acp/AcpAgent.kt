@@ -1,4 +1,4 @@
-package ai.koog.agents.features
+package ai.koog.agents.features.acp
 
 import ai.koog.agents.core.agent.entity.AIAgentStorageKey
 import ai.koog.agents.core.feature.AIAgentFunctionalFeature
@@ -66,7 +66,7 @@ public class AcpAgent(
     /**
      * Sends a request to the ACP protocol and receive the corresponding response.
      *
-     * @param method The method describing the request-response interaction via [AcpMethod.AcpRequestResponseMethod].
+     * @param method The method describing the request-response interaction via [com.agentclientprotocol.model.AcpMethod.AcpRequestResponseMethod].
      * @param request The request object of type [TRequest] to be sent. Defaults to `null`.
      * @return The response of type [TResponse] received from the ACP protocol.
      */

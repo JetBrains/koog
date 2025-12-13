@@ -1,6 +1,6 @@
 package ai.koog.agents.example.acp
 
-import ai.koog.agents.acp.AcpAIAgentSupport
+import ai.koog.agents.features.acp.AcpAIAgentSupport
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.dsl.builder.forwardTo

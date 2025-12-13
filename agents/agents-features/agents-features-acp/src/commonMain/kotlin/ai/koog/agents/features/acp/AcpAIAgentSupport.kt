@@ -1,4 +1,4 @@
-package ai.koog.agents.acp
+package ai.koog.agents.features.acp
 
 import ai.koog.agents.core.agent.GraphAIAgent
 import com.agentclientprotocol.agent.AgentInfo

@@ -1,9 +1,8 @@
-package ai.koog.agents.acp
+package ai.koog.agents.features.acp
 
 import ai.koog.agents.core.agent.GraphAIAgent
 import ai.koog.agents.core.agent.config.AIAgentConfig
 import ai.koog.agents.core.annotation.InternalAgentsApi
-import ai.koog.agents.features.AcpAgent
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.message.ContentPart
 import ai.koog.prompt.message.Message
