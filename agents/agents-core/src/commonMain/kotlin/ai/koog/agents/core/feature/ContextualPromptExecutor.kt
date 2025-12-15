@@ -26,7 +26,7 @@ import kotlin.uuid.Uuid
  * @property pipeline The [ai.koog.agents.core.feature.pipeline.AIAgentPipeline] associated with the executor.
  */
 @OptIn(ExperimentalUuidApi::class)
-public class PromptExecutorProxy(
+public class ContextualPromptExecutor(
     private val executor: PromptExecutor,
     private val pipeline: AIAgentPipeline,
     private val runId: String,
