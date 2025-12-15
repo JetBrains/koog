@@ -105,6 +105,8 @@ public class AcpAgent(
      *       // other features...
      *     }
      *
+     *     agent.run(/* input */)
+     *
      *   }
      * }
      * ```
