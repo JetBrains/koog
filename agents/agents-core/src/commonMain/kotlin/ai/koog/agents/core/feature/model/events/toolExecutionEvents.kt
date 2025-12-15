@@ -1,5 +1,6 @@
 package ai.koog.agents.core.feature.model.events
 
+import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.feature.model.AIAgentError
 import kotlinx.datetime.Clock
 import kotlinx.serialization.Serializable
@@ -15,6 +16,8 @@ import kotlinx.serialization.json.JsonPrimitive
  * or processing tool calls as part of a larger feature pipeline or system
  * workflow.
  *
+ * @property eventId A unique identifier for the event or a group of events;
+ * @property executionInfo Provides contextual information about the execution associated with this event.
  * @property runId A unique identifier representing the specific run or instance of the tool call;
  * @property toolCallId A unique identifier for the tool call;
  * @property toolName The unique name of the tool being called;
@@ -23,12 +26,41 @@ import kotlinx.serialization.json.JsonPrimitive
  */
 @Serializable
 public data class ToolCallStartingEvent(
+    override val eventId: String,
+    override val executionInfo: AgentExecutionInfo,
     val runId: String,
     val toolCallId: String?,
     val toolName: String,
     val toolArgs: JsonObject,
     override val timestamp: Long = Clock.System.now().toEpochMilliseconds(),
-) : DefinedFeatureEvent()
+) : DefinedFeatureEvent() {
+
+    /**
+     * @deprecated Use constructor with [executionInfo] parameter
+     */
+    @Deprecated(
+        message = "Use constructor with executionInfo parameter",
+        replaceWith = ReplaceWith("ToolCallStartingEvent(executionInfo, runId, toolCallId, toolName, toolArgs, timestamp)")
+    )
+    public constructor(
+        runId: String,
+        toolCallId: String?,
+        toolName: String,
+        toolArgs: JsonObject,
+        timestamp: Long = Clock.System.now().toEpochMilliseconds()
+    ) : this(
+        eventId = ToolCallStartingEvent::class.simpleName.toString(),
+        executionInfo = AgentExecutionInfo(
+            parent = null,
+            partName = ToolCallStartingEvent::class.simpleName.toString(),
+        ),
+        runId = runId,
+        toolCallId = toolCallId,
+        toolName = toolName,
+        toolArgs = toolArgs,
+        timestamp = timestamp
+    )
+}
 
 /**
  * Represents an event indicating that a tool encountered a validation error during its execution.
@@ -36,6 +68,8 @@ public data class ToolCallStartingEvent(
  * This event captures details regarding the tool that failed validation, the arguments
  * provided to the tool, and the specific error message explaining why the validation failed.
  *
+ * @property eventId A unique identifier for the event or a group of events;
+ * @property executionInfo Provides contextual information about the execution associated with this event.
  * @property runId A unique identifier representing the specific run or instance of the tool call;
  * @property toolCallId A unique identifier for the tool call that encountered the validation error;
  * @property toolName The name of the tool that encountered the validation error;
@@ -46,6 +80,8 @@ public data class ToolCallStartingEvent(
  */
 @Serializable
 public data class ToolValidationFailedEvent(
+    override val eventId: String,
+    override val executionInfo: AgentExecutionInfo,
     val runId: String,
     val toolCallId: String?,
     val toolName: String,
@@ -57,10 +93,10 @@ public data class ToolValidationFailedEvent(
 ) : DefinedFeatureEvent() {
 
     /**
-     * @deprecated Use a constructor with toolArgs and toolDescription parameters
+     * @deprecated Use constructor with [executionInfo] parameter
      */
     @Deprecated(
-        message = "Use a constructor with toolArgs and toolDescription parameters",
+        message = "Use constructor with executionInfo parameter",
         replaceWith = ReplaceWith("ToolValidationFailedEvent(executionInfo, runId, toolCallId, toolName, toolArgs, message, error, timestamp)")
     )
     public constructor(
@@ -71,6 +107,11 @@ public data class ToolValidationFailedEvent(
         error: String,
         timestamp: Long = Clock.System.now().toEpochMilliseconds()
     ) : this(
+        eventId = ToolValidationFailedEvent::class.simpleName.toString(),
+        executionInfo = AgentExecutionInfo(
+            parent = null,
+            partName = ToolValidationFailedEvent::class.simpleName.toString(),
+        ),
         runId = runId,
         toolCallId = toolCallId,
         toolName = toolName,
@@ -88,6 +129,8 @@ public data class ToolValidationFailedEvent(
  * successfully due to an error. It includes relevant details about the failed tool call,
  * such as the tool's name, the arguments provided, and the specific error encountered.
  *
+ * @property eventId A unique identifier for the event or a group of events;
+ * @property executionInfo Provides contextual information about the execution associated with this event.
  * @property runId A unique identifier representing the specific run or instance of the tool call;
  * @property toolCallId A unique identifier for the tool call that failed;
  * @property toolName The name of the tool that failed;
@@ -98,6 +141,8 @@ public data class ToolValidationFailedEvent(
  */
 @Serializable
 public data class ToolCallFailedEvent(
+    override val eventId: String,
+    override val executionInfo: AgentExecutionInfo,
     val runId: String,
     val toolCallId: String?,
     val toolName: String,
@@ -108,10 +153,10 @@ public data class ToolCallFailedEvent(
 ) : DefinedFeatureEvent() {
 
     /**
-     * @deprecated Use a constructor with toolArgs and toolDescription parameters,
+     * @deprecated Use constructor with [executionInfo] parameter
      */
     @Deprecated(
-        message = "Use a constructor with executionInfo parameter",
+        message = "Use constructor with executionInfo parameter",
         replaceWith = ReplaceWith("ToolCallFailedEvent(executionInfo, runId, toolCallId, toolName, toolArgs, error, timestamp)")
     )
     public constructor(
@@ -122,6 +167,11 @@ public data class ToolCallFailedEvent(
         error: AIAgentError,
         timestamp: Long = Clock.System.now().toEpochMilliseconds()
     ) : this(
+        eventId = ToolCallFailedEvent::class.simpleName.toString(),
+        executionInfo = AgentExecutionInfo(
+            parent = null,
+            partName = ToolCallFailedEvent::class.simpleName.toString(),
+        ),
         runId = runId,
         toolCallId = toolCallId,
         toolName = toolName,
@@ -139,6 +189,8 @@ public data class ToolCallFailedEvent(
  * and the resulting outcome. It is used to track and share the details of a tool's execution within
  * the system's event-handling framework.
  *
+ * @property eventId A unique identifier for the event or a group of events;
+ * @property executionInfo Provides contextual information about the execution associated with this event.
  * @property runId A unique identifier representing the specific run or instance of the tool call;
  * @property toolCallId A unique identifier for the tool call that was executed;
  * @property toolName The name of the tool that was executed;
@@ -149,6 +201,8 @@ public data class ToolCallFailedEvent(
  */
 @Serializable
 public data class ToolCallCompletedEvent(
+    override val eventId: String,
+    override val executionInfo: AgentExecutionInfo,
     val runId: String,
     val toolCallId: String?,
     val toolName: String,
@@ -159,10 +213,10 @@ public data class ToolCallCompletedEvent(
 ) : DefinedFeatureEvent() {
 
     /**
-     * @deprecated Use a constructor with toolArgs and toolDescription parameters
+     * @deprecated Use constructor with [executionInfo] parameter
      */
     @Deprecated(
-        message = "Use a constructor with toolArgs and toolDescription parameters",
+        message = "Use constructor with executionInfo parameter",
         replaceWith = ReplaceWith("ToolCallCompletedEvent(executionInfo, runId, toolCallId, toolName, toolArgs, result, timestamp)")
     )
     public constructor(
@@ -173,6 +227,11 @@ public data class ToolCallCompletedEvent(
         result: String?,
         timestamp: Long = Clock.System.now().toEpochMilliseconds()
     ) : this(
+        eventId = ToolCallCompletedEvent::class.simpleName.toString(),
+        executionInfo = AgentExecutionInfo(
+            parent = null,
+            partName = ToolCallCompletedEvent::class.simpleName.toString(),
+        ),
         runId = runId,
         toolCallId = toolCallId,
         toolName = toolName,

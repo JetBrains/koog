@@ -2,7 +2,6 @@ package ai.koog.agents.core.feature.remote
 
 import ai.koog.agents.core.feature.message.FeatureEvent
 import ai.koog.agents.core.feature.message.FeatureMessage
-import ai.koog.agents.core.feature.model.FeatureEventMessage
 import ai.koog.agents.core.feature.model.FeatureStringMessage
 import ai.koog.agents.core.feature.model.events.AgentClosingEvent
 import ai.koog.agents.core.feature.model.events.AgentCompletedEvent
@@ -97,7 +96,6 @@ public val defaultFeatureMessageSerializersModule: SerializersModule
 
         polymorphic(FeatureMessage::class) {
             subclass(FeatureStringMessage::class, FeatureStringMessage.serializer())
-            subclass(FeatureEventMessage::class, FeatureEventMessage.serializer())
             subclass(AgentStartingEvent::class, AgentStartingEvent.serializer())
             subclass(AgentCompletedEvent::class, AgentCompletedEvent.serializer())
             subclass(AgentClosingEvent::class, AgentClosingEvent.serializer())
@@ -124,7 +122,6 @@ public val defaultFeatureMessageSerializersModule: SerializersModule
         }
 
         polymorphic(FeatureEvent::class) {
-            subclass(FeatureEventMessage::class, FeatureEventMessage.serializer())
             subclass(AgentStartingEvent::class, AgentStartingEvent.serializer())
             subclass(AgentCompletedEvent::class, AgentCompletedEvent.serializer())
             subclass(AgentClosingEvent::class, AgentClosingEvent.serializer())

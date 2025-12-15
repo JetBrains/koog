@@ -162,7 +162,7 @@ public open class AIAgentSubgraph<TInput, TOutput>(
      */
     @OptIn(InternalAgentsApi::class, DetachedPromptExecutorAPI::class, ExperimentalUuidApi::class)
     override suspend fun execute(context: AIAgentGraphContextBase, input: TInput): TOutput? =
-        context.with { executionInfo ->
+        context.with { executionInfo, eventId ->
             withContext(NodeInfoContextElement(Uuid.random().toString(), getNodeInfoElement()?.id, name, input, inputType)) {
                 val newTools = selectTools(context)
 
@@ -181,7 +181,7 @@ public open class AIAgentSubgraph<TInput, TOutput>(
                 )
 
                 runIfNotStrategy(context) {
-                    pipeline.onSubgraphExecutionStarting(executionInfo, this@AIAgentSubgraph, context, input, inputType)
+                    pipeline.onSubgraphExecutionStarting(eventId, executionInfo, this@AIAgentSubgraph, context, input, inputType)
                 }
 
                 // Execute the subgraph with an inner context and get the result and updated prompt.
@@ -192,7 +192,7 @@ public open class AIAgentSubgraph<TInput, TOutput>(
                 } catch (e: Exception) {
                     logger.error(e) { "Exception during executing subgraph '$name': ${e.message}" }
                     runIfNotStrategy(context) {
-                        pipeline.onSubgraphExecutionFailed(executionInfo, this@AIAgentSubgraph, context, input, inputType, e)
+                        pipeline.onSubgraphExecutionFailed(eventId, executionInfo, this@AIAgentSubgraph, context, input, inputType, e)
                     }
                     throw e
                 }
@@ -213,7 +213,7 @@ public open class AIAgentSubgraph<TInput, TOutput>(
                 }
 
                 runIfNotStrategy(context) {
-                    pipeline.onSubgraphExecutionCompleted(executionInfo, this@AIAgentSubgraph, context, input, inputType, result, outputType)
+                    pipeline.onSubgraphExecutionCompleted(eventId, executionInfo, this@AIAgentSubgraph, context, input, inputType, result, outputType)
                 }
 
                 result
@@ -328,14 +328,14 @@ public open class AIAgentSubgraph<TInput, TOutput>(
      */
     @OptIn(InternalAgentsApi::class)
     private inline fun <T> AIAgentContext.with(
-        block: (executionInfo: AgentExecutionInfo) -> T
+        block: (executionInfo: AgentExecutionInfo, eventId: String) -> T
     ): T {
         // Check the agent execution path to recognize a strategy.
         // Ignore the strategy as it is handled separately in the [AIAgentGraphStrategy] class.
         // Strategy execution path: Agent | Run | Strategy
         val isStrategy = id == strategyName
         return if (isStrategy) {
-            block(this.executionInfo)
+            this.with(this.executionInfo, block)
         } else {
             this.with(id, block)
         }

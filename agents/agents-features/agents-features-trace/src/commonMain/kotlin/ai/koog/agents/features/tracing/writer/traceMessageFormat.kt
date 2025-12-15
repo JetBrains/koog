@@ -38,7 +38,7 @@ internal val AgentCompletedEvent.agentFinishedEventFormat
     get() = "${this::class.simpleName} (agent id: $agentId, run id: $runId, result: $result)"
 
 internal val AgentExecutionFailedEvent.agentRunErrorEventFormat
-    get() = "${this::class.simpleName} (agent id: $agentId, run id: $runId, error: ${error.message})"
+    get() = "${this::class.simpleName} (agent id: $agentId, run id: $runId, error: ${error?.message})"
 
 internal val AgentClosingEvent.agentBeforeCloseFormat
     get() = "${this::class.simpleName} (agent id: $agentId)"

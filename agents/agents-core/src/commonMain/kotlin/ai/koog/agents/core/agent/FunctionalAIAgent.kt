@@ -78,7 +78,7 @@ public class FunctionalAIAgent<Input, Output>(
         FeatureContext(this).installFeatures()
     }
 
-    override suspend fun prepareContext(agentInput: Input, runId: String): AIAgentFunctionalContext {
+    override suspend fun prepareContext(agentInput: Input, runId: String, eventId: String): AIAgentFunctionalContext {
         val environment = GenericAgentEnvironment(
             agentId = id,
             logger = logger,

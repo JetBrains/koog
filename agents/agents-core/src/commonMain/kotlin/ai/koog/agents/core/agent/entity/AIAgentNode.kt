@@ -157,10 +157,10 @@ public open class AIAgentNode<TInput, TOutput> internal constructor(
     @InternalAgentsApi
     @OptIn(ExperimentalUuidApi::class)
     override suspend fun execute(context: AIAgentGraphContextBase, input: TInput): TOutput =
-        context.with(id) { executionInfo ->
+        context.with(id) { executionInfo, eventId ->
             withContext(NodeInfoContextElement(Uuid.random().toString(), getNodeInfoElement()?.id, name, input, inputType)) {
                 logger.debug { "Start executing node (name: $name)" }
-                context.pipeline.onNodeExecutionStarting(executionInfo, this@AIAgentNode, context, input, inputType)
+                context.pipeline.onNodeExecutionStarting(eventId, executionInfo, this@AIAgentNode, context, input, inputType)
 
                 val output =
                     try {
@@ -171,11 +171,11 @@ public open class AIAgentNode<TInput, TOutput> internal constructor(
                         throw e
                     } catch (e: Exception) {
                         logger.error(e) { "Error executing node (name: $name): ${e.message}" }
-                        context.pipeline.onNodeExecutionFailed(executionInfo, this@AIAgentNode, context, input, inputType, e)
+                        context.pipeline.onNodeExecutionFailed(eventId, executionInfo, this@AIAgentNode, context, input, inputType, e)
                         throw e
                     }
 
-                context.pipeline.onNodeExecutionCompleted(executionInfo, this@AIAgentNode, context, input, inputType, output, outputType)
+                context.pipeline.onNodeExecutionCompleted(eventId, executionInfo, this@AIAgentNode, context, input, inputType, output, outputType)
                 output
             }
         }

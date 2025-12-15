@@ -95,12 +95,12 @@ public open class GraphAIAgent<Input, Output>(
         FeatureContext(this).installFeatures()
     }
 
-    override suspend fun prepareContext(agentInput: Input, runId: String): AIAgentGraphContextBase {
+    override suspend fun prepareContext(agentInput: Input, runId: String, eventId: String): AIAgentGraphContextBase {
         val stateManager = AIAgentStateManager()
         val storage = AIAgentStorage()
 
         val executionInfo = AgentExecutionInfo(parent = null, partName = id)
-        val initialEnvironment = prepareAgentEnvironment(executionInfo = executionInfo)
+        val initialEnvironment = prepareAgentEnvironment(eventId = eventId, executionInfo = executionInfo)
 
         // Initial
         val initialLLMContext = AIAgentLLMContext(
@@ -165,7 +165,7 @@ public open class GraphAIAgent<Input, Output>(
      * @return An instance of `AIAgentEnvironment` that represents the finalized environment
      *         for the AI agent after applying all transformations.
      */
-    private suspend fun prepareAgentEnvironment(executionInfo: AgentExecutionInfo): AIAgentEnvironment {
+    private suspend fun prepareAgentEnvironment(eventId: String, executionInfo: AgentExecutionInfo): AIAgentEnvironment {
         // Create a base environment implementation
         val environment = GenericAgentEnvironment(
             agentId = id,
@@ -174,9 +174,10 @@ public open class GraphAIAgent<Input, Output>(
         )
 
         val preparedEnvironment = pipeline.onAgentEnvironmentTransforming(
+            eventId = eventId,
+            executionInfo = executionInfo,
             agent = this,
             baseEnvironment = environment,
-            executionInfo = executionInfo,
         )
 
         return preparedEnvironment

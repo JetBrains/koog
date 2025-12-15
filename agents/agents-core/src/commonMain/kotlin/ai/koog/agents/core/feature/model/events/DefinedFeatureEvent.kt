@@ -1,5 +1,6 @@
 package ai.koog.agents.core.feature.model.events
 
+import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.feature.message.FeatureEvent
 import ai.koog.agents.core.feature.message.FeatureMessage
 
@@ -27,4 +28,9 @@ public sealed class DefinedFeatureEvent : FeatureEvent {
      * feature messages.
      */
     override val messageType: FeatureMessage.Type = FeatureMessage.Type.Event
+
+    /**
+     * Holds the execution path information to support observability and tracing during the lifecycle of an agent.
+     */
+    public abstract val executionInfo: AgentExecutionInfo
 }

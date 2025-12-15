@@ -11,6 +11,8 @@ import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
 import ai.koog.prompt.message.Message
 import kotlin.reflect.KClass
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 /**
  * The [AIAgentContext] interface represents the context of an AI agent in the lifecycle.
@@ -201,11 +203,16 @@ public inline fun <reified TFeature : Any> AIAgentContext.featureOrThrow(feature
  * @param block The suspend function to execute with the modified execution context.
  * @return The result of executing the provided block.
  */
-public inline fun <T> AIAgentContext.with(executionInfo: AgentExecutionInfo, block: (executionInfo: AgentExecutionInfo) -> T): T {
+public inline fun <T> AIAgentContext.with(executionInfo: AgentExecutionInfo, block: (executionInfo: AgentExecutionInfo, eventId: String) -> T): T {
     val originalExecutionInfo = this.executionInfo
+
+    // Unique id for a group of events, e.g., agent events, node events, etc.
+    @OptIn(ExperimentalUuidApi::class)
+    val eventId = Uuid.random().toString()
+
     return try {
         this.executionInfo = executionInfo
-        block(executionInfo)
+        block(executionInfo, eventId)
     } finally {
         this.executionInfo = originalExecutionInfo
     }
@@ -220,7 +227,7 @@ public inline fun <T> AIAgentContext.with(executionInfo: AgentExecutionInfo, blo
  * @param block The suspend function to execute with the modified execution context.
  * @return The result of executing the provided block.
  */
-public inline fun <T> AIAgentContext.with(partName: String, block: (executionInfo: AgentExecutionInfo) -> T): T {
+public inline fun <T> AIAgentContext.with(partName: String, block: (executionInfo: AgentExecutionInfo, eventId: String) -> T): T {
     val executionInfo = AgentExecutionInfo(parent = this.executionInfo, partName = partName)
     return with(executionInfo = executionInfo, block = block)
 }

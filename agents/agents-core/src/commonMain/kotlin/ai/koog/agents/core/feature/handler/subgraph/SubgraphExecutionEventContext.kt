@@ -22,6 +22,7 @@ public interface SubgraphExecutionEventContext : AgentLifecycleEventContext
  * @property inputType The type of the input data for the subgraph execution.
  */
 public data class SubgraphExecutionStartingContext(
+    override val eventId: String,
     override val executionInfo: AgentExecutionInfo,
     val subgraph: AIAgentSubgraph<*, *>,
     val context: AIAgentGraphContextBase,
@@ -43,6 +44,7 @@ public data class SubgraphExecutionStartingContext(
  * @property outputType The type of the output data for the subgraph execution.
  */
 public data class SubgraphExecutionCompletedContext(
+    override val eventId: String,
     override val executionInfo: AgentExecutionInfo,
     val subgraph: AIAgentSubgraph<*, *>,
     val context: AIAgentGraphContextBase,
@@ -65,6 +67,7 @@ public data class SubgraphExecutionCompletedContext(
  * @property throwable The exception that caused the subgraph execution to fail.
  */
 public data class SubgraphExecutionFailedContext(
+    override val eventId: String,
     override val executionInfo: AgentExecutionInfo,
     val subgraph: AIAgentSubgraph<*, *>,
     val context: AIAgentGraphContextBase,

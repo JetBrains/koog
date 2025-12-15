@@ -17,13 +17,7 @@ import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.message.Message
 import ai.koog.prompt.message.RequestMetaInfo
 import ai.koog.prompt.message.ResponseMetaInfo
-import kotlinx.datetime.Clock
-import kotlinx.datetime.Instant
 import kotlinx.serialization.json.JsonObject
-
-internal val testClock: Clock = object : Clock {
-    override fun now(): Instant = Instant.parse("2023-01-01T00:00:00Z")
-}
 
 /**
  * Creates a user message with optional media attachments.

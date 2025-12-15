@@ -87,7 +87,8 @@ public abstract class StatefulSingleUseAIAgent<Input, Output, TContext : AIAgent
         }
 
         val runId = Uuid.random().toString()
-        val context = prepareContext(agentInput, runId)
+        val eventId = Uuid.random().toString()
+        val context = prepareContext(agentInput, runId, eventId)
 
         return withContext(
             AgentRunInfoContextElement(
@@ -104,20 +105,20 @@ public abstract class StatefulSingleUseAIAgent<Input, Output, TContext : AIAgent
                 }
 
                 logger.debug { formatLog(id, runId, "Starting agent execution") }
-                pipeline.onAgentStarting<Input, Output>(context.executionInfo, runId, this@StatefulSingleUseAIAgent, context)
+                pipeline.onAgentStarting<Input, Output>(eventId, context.executionInfo, runId, this@StatefulSingleUseAIAgent, context)
 
                 val result = try {
                     @Suppress("UNCHECKED_CAST")
                     strategy.execute(context = context, input = agentInput)
                 } catch (e: Throwable) {
                     logger.error(e) { "Execution exception reported by server!" }
-                    pipeline.onAgentExecutionFailed(context.executionInfo, id, runId, e)
+                    pipeline.onAgentExecutionFailed(eventId, context.executionInfo, id, runId, e)
                     agentStateMutex.withLock { state = State.Failed(e) }
                     throw e
                 }
 
                 logger.debug { formatLog(id, runId, "Finished agent execution") }
-                pipeline.onAgentCompleted(context.executionInfo, id, runId, result)
+                pipeline.onAgentCompleted(eventId, context.executionInfo, id, runId, result)
 
                 agentStateMutex.withLock {
                     state = if (result != null) {
@@ -150,9 +151,10 @@ public abstract class StatefulSingleUseAIAgent<Input, Output, TContext : AIAgent
      *
      * @param agentInput the input provided to the agent for processing.
      * @param runId a unique identifier representing the current execution or operation run.
+     * @param eventId a unique identifier for agent-related events.
      * @return the initialized context specific to the agent setup for the provided input and run ID.
      */
-    public abstract suspend fun prepareContext(agentInput: Input, runId: String): TContext
+    public abstract suspend fun prepareContext(agentInput: Input, runId: String, eventId: String): TContext
 
     /**
      * Retrieves a feature from the agent's pipeline associated with this agent using the specified key.
@@ -186,16 +188,20 @@ public abstract class StatefulSingleUseAIAgent<Input, Output, TContext : AIAgent
      *
      * @return The result of the block's execution.
      */
-    private suspend fun <T> AIAgentContext.withPreparedPipeline(block: suspend () -> T): T {
+    private suspend fun <T> AIAgentContext.withPreparedPipeline(block: suspend (eventId: String) -> T): T {
         require(executionInfo.parent == null) {
             "withPreparedPipeline() should be called from a top level agent context."
         }
 
+        // Unique id for a group of agent-related events
+        val eventId = Uuid.random().toString()
+
         return try {
-            pipeline.prepareAllFeatures()
-            block.invoke()
+            pipeline.prepareFeatures()
+            block.invoke(eventId)
         } finally {
             pipeline.onAgentClosing(
+                eventId = eventId,
                 executionInfo = executionInfo.parent ?: executionInfo,
                 agentId = id
             )
