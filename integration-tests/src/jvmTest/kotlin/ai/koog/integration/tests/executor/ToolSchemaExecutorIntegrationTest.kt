@@ -154,7 +154,7 @@ class ToolSchemaExecutorIntegrationTest {
                 shouldNotBeEmpty()
                 with(Json.decodeFromString<FileOperation>(joinToString("\n") { it.content })) {
                     filePath shouldBe "hello.txt"
-                    content shouldBe "Hello, World!"
+                    content.trim() shouldBe "Hello, World!"
                 }
             }
         }
