@@ -20,7 +20,6 @@ import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.io.IOException
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -31,14 +30,16 @@ import kotlinx.serialization.Serializable
  */
 public class RegexSearchTool<Path>(
     private val fs: FileSystemProvider.ReadOnly<Path>,
-) : Tool<RegexSearchTool.Args, RegexSearchTool.Result>() {
-
-    override val name: String = "__search_contents_by_regex__"
-    override val description: String = text {
+) : Tool<RegexSearchTool.Args, RegexSearchTool.Result>(
+    argsSerializer = Args.serializer(),
+    resultSerializer = Result.serializer(),
+    name = "__search_contents_by_regex__",
+    description = text {
         +"Executes a regular expression search on folder or file contents within the specified path."
         +"The tool returns structured results with file paths, line numbers, positions, and excerpts where the text was found."
         +"The tool will solely return search results and does not modify any files."
     }
+) {
 
     /**
      * Parameters for a regex content search.
@@ -72,9 +73,6 @@ public class RegexSearchTool<Path>(
      */
     @Serializable
     public data class Result(val entries: List<FileSystemEntry.File>, val original: String)
-
-    override val argsSerializer: KSerializer<Args> = Args.serializer()
-    override val resultSerializer: KSerializer<Result> = Result.serializer()
 
     override suspend fun execute(args: Args): Result {
         val path = fs.fromAbsolutePathString(args.path)
