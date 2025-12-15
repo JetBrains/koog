@@ -22,6 +22,7 @@ public interface NodeExecutionEventContext : AgentLifecycleEventContext
  * @property inputType [KType] representing the type of the [input].
  */
 public data class NodeExecutionStartingContext(
+    override val eventId: String,
     override val executionInfo: AgentExecutionInfo,
     val node: AIAgentNodeBase<*, *>,
     val context: AIAgentGraphContextBase,
@@ -43,6 +44,7 @@ public data class NodeExecutionStartingContext(
  * @property outputType [KType] representing the type of the [output].
  */
 public data class NodeExecutionCompletedContext(
+    override val eventId: String,
     override val executionInfo: AgentExecutionInfo,
     val node: AIAgentNodeBase<*, *>,
     val context: AIAgentGraphContextBase,
@@ -65,6 +67,7 @@ public data class NodeExecutionCompletedContext(
  * @property throwable The exception or error that occurred during node execution.
  */
 public data class NodeExecutionFailedContext(
+    override val eventId: String,
     override val executionInfo: AgentExecutionInfo,
     val node: AIAgentNodeBase<*, *>,
     val context: AIAgentGraphContextBase,

@@ -22,6 +22,7 @@ public interface ToolCallEventContext : AgentLifecycleEventContext
  * @property toolArgs The arguments provided for the tool execution, adhering to the tool's expected input structure.
  */
 public data class ToolCallStartingContext(
+    override val eventId: String,
     override val executionInfo: AgentExecutionInfo,
     val runId: String,
     val toolCallId: String?,
@@ -45,6 +46,7 @@ public data class ToolCallStartingContext(
  * @property error The [AIAgentError] error describing the validation issue.
  */
 public data class ToolValidationFailedContext(
+    override val eventId: String,
     override val executionInfo: AgentExecutionInfo,
     val runId: String,
     val toolCallId: String?,
@@ -70,6 +72,7 @@ public data class ToolValidationFailedContext(
  * @property error The [AIAgentError] instance describing the tool call failure.
  */
 public data class ToolCallFailedContext(
+    override val eventId: String,
     override val executionInfo: AgentExecutionInfo,
     val runId: String,
     val toolCallId: String?,
@@ -94,6 +97,7 @@ public data class ToolCallFailedContext(
  * @property toolResult An optional result produced by the tool after execution can be null if not applicable.
  */
 public data class ToolCallCompletedContext(
+    override val eventId: String,
     override val executionInfo: AgentExecutionInfo,
     val runId: String,
     val toolCallId: String?,

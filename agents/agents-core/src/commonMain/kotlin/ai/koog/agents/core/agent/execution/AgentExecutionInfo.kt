@@ -1,5 +1,7 @@
 package ai.koog.agents.core.agent.execution
 
+import kotlinx.serialization.Serializable
+
 /**
  * Represents execution information for an agent, including a reference to a parent execution
  * and a name identifying the specific part of the execution.
@@ -9,6 +11,7 @@ package ai.koog.agents.core.agent.execution
  *           the current instance is the root.
  * @property partName A string representing the name of the current part or segment of the execution.
  */
+@Serializable
 public data class AgentExecutionInfo(
     public val parent: AgentExecutionInfo?,
     public val partName: String

@@ -1,7 +1,6 @@
 package ai.koog.agents.core.feature
 
 import ai.koog.agents.core.feature.model.AIAgentError
-import ai.koog.agents.core.feature.model.FeatureEventMessage
 import ai.koog.agents.core.feature.model.FeatureStringMessage
 import ai.koog.agents.core.feature.model.events.AgentClosingEvent
 import ai.koog.agents.core.feature.model.events.AgentCompletedEvent
@@ -30,6 +29,7 @@ import ai.koog.agents.core.feature.model.events.ToolCallFailedEvent
 import ai.koog.agents.core.feature.model.events.ToolCallStartingEvent
 import ai.koog.agents.core.feature.model.events.ToolValidationFailedEvent
 import ai.koog.agents.core.system.mock.MockLLMProvider
+import ai.koog.agents.testing.agent.agentExecutionInfo
 import ai.koog.prompt.dsl.Prompt
 import ai.koog.prompt.llm.LLModel
 import ai.koog.prompt.llm.toModelInfo
@@ -62,17 +62,17 @@ internal object AIAgentFeatureTestAPI {
         timestamp = testClock.now().toEpochMilliseconds()
     )
 
-    internal val featureEventMessage = FeatureEventMessage(
-        timestamp = testClock.now().toEpochMilliseconds()
-    )
-
     internal val agentStartingEvent = AgentStartingEvent(
+        eventId = "test-event-id",
+        executionInfo = agentExecutionInfo("test-agent-id"),
         agentId = "test-agent-id",
         runId = "test-run-id",
         timestamp = testClock.now().toEpochMilliseconds()
     )
 
     internal val agentCompletedEvent = AgentCompletedEvent(
+        eventId = "test-event-id",
+        executionInfo = agentExecutionInfo("test-agent-id"),
         agentId = "test-agent-id",
         runId = "test-run-id",
         result = "test-result",
@@ -80,11 +80,15 @@ internal object AIAgentFeatureTestAPI {
     )
 
     internal val agentClosingEvent = AgentClosingEvent(
+        eventId = "test-event-id",
+        executionInfo = agentExecutionInfo("test-agent-id"),
         agentId = "test-agent-id",
         timestamp = testClock.now().toEpochMilliseconds()
     )
 
     internal val agentExecutionFailedEvent = AgentExecutionFailedEvent(
+        eventId = "test-event-id",
+        executionInfo = agentExecutionInfo("test-agent-id"),
         agentId = "test-agent-id",
         runId = "test-run-id",
         error = AIAgentError(
@@ -98,81 +102,128 @@ internal object AIAgentFeatureTestAPI {
     internal val graphNode1 = StrategyEventGraphNode("test-node-1-id", "test-node-1-name")
     internal val graphNode2 = StrategyEventGraphNode("test-node-2-id", "test-node-2-name")
     internal val graphEdge = StrategyEventGraphEdge(graphNode1, graphNode2)
-    internal val graphStrategyStartingEvent = GraphStrategyStartingEvent(
-        runId = "test-run-id",
-        strategyName = "test-strategy-name",
-        graph = StrategyEventGraph(nodes = listOf(graphNode1, graphNode2), edges = listOf(graphEdge)),
-        timestamp = testClock.now().toEpochMilliseconds()
-    )
+    internal val graphStrategyStartingEvent = run {
+        val strategyName = "test-strategy-name"
+        GraphStrategyStartingEvent(
+            eventId = "test-event-id",
+            executionInfo = agentExecutionInfo("test-agent-id", strategyName),
+            runId = "test-run-id",
+            strategyName = strategyName,
+            graph = StrategyEventGraph(nodes = listOf(graphNode1, graphNode2), edges = listOf(graphEdge)),
+            timestamp = testClock.now().toEpochMilliseconds()
+        )
+    }
 
-    internal val functionalStrategyStartingEvent = FunctionalStrategyStartingEvent(
-        runId = "test-run-id",
-        strategyName = "test-strategy-name",
-        timestamp = testClock.now().toEpochMilliseconds()
-    )
+    internal val functionalStrategyStartingEvent = run {
+        val strategyName = "test-strategy-name"
+        FunctionalStrategyStartingEvent(
+            eventId = "test-event-id",
+            executionInfo = agentExecutionInfo("test-agent-id", strategyName),
+            runId = "test-run-id",
+            strategyName = strategyName,
+            timestamp = testClock.now().toEpochMilliseconds()
+        )
+    }
 
-    internal val strategyCompletedEvent = StrategyCompletedEvent(
-        runId = "test-run-id",
-        strategyName = "test-strategy-name",
-        result = "test-result",
-        timestamp = testClock.now().toEpochMilliseconds()
-    )
+    internal val strategyCompletedEvent = run {
+        val strategyName = "test-strategy-name"
+        StrategyCompletedEvent(
+            eventId = "test-event-id",
+            executionInfo = agentExecutionInfo("test-agent-id", strategyName),
+            runId = "test-run-id",
+            strategyName = strategyName,
+            result = "test-result",
+            timestamp = testClock.now().toEpochMilliseconds()
+        )
+    }
 
-    internal val nodeExecutionStartingEvent = NodeExecutionStartingEvent(
-        runId = "test-run-id",
-        nodeName = "test-node-name",
-        input = JsonPrimitive("test-input"),
-        timestamp = testClock.now().toEpochMilliseconds()
-    )
+    internal val nodeExecutionStartingEvent = run {
+        val nodeName = "test-node-name"
+        NodeExecutionStartingEvent(
+            eventId = "test-event-id",
+            executionInfo = agentExecutionInfo("test-agent-id", "test-strategy-name", nodeName),
+            runId = "test-run-id",
+            nodeName = nodeName,
+            input = JsonPrimitive("test-input"),
+            timestamp = testClock.now().toEpochMilliseconds()
+        )
+    }
 
-    internal val nodeExecutionCompletedEvent = NodeExecutionCompletedEvent(
-        runId = "test-run-id",
-        nodeName = "test-node-name",
-        input = JsonPrimitive("test-input"),
-        output = JsonPrimitive("test-output"),
-        timestamp = testClock.now().toEpochMilliseconds()
-    )
+    internal val nodeExecutionCompletedEvent = run {
+        val nodeName = "test-node-name"
+        NodeExecutionCompletedEvent(
+            eventId = "test-event-id",
+            executionInfo = agentExecutionInfo("test-agent-id", "test-strategy-name", nodeName),
+            runId = "test-run-id",
+            nodeName = nodeName,
+            input = JsonPrimitive("test-input"),
+            output = JsonPrimitive("test-output"),
+            timestamp = testClock.now().toEpochMilliseconds()
+        )
+    }
 
-    internal val nodeExecutionFailedEvent = NodeExecutionFailedEvent(
-        runId = "test-run-id",
-        nodeName = "test-node-name",
-        input = JsonPrimitive("test-input"),
-        error = AIAgentError(
-            message = "test-error-message",
-            stackTrace = "test-error-stacktrace",
-            cause = "test-error-cause"
-        ),
-        timestamp = testClock.now().toEpochMilliseconds()
-    )
+    internal val nodeExecutionFailedEvent = run {
+        val nodeName = "test-node-name"
+        NodeExecutionFailedEvent(
+            eventId = "test-event-id",
+            executionInfo = agentExecutionInfo("test-agent-id", "test-strategy-name", nodeName),
+            runId = "test-run-id",
+            nodeName = nodeName,
+            input = JsonPrimitive("test-input"),
+            error = AIAgentError(
+                message = "test-error-message",
+                stackTrace = "test-error-stacktrace",
+                cause = "test-error-cause"
+            ),
+            timestamp = testClock.now().toEpochMilliseconds()
+        )
+    }
 
-    internal val subgraphExecutionStartingEvent = SubgraphExecutionStartingEvent(
-        runId = "test-run-id",
-        subgraphName = "test-subgraph-name",
-        input = JsonPrimitive("test-input"),
-        timestamp = testClock.now().toEpochMilliseconds()
-    )
+    internal val subgraphExecutionStartingEvent = run {
+        val subgraphName = "test-subgraph-name"
+        SubgraphExecutionStartingEvent(
+            eventId = "test-event-id",
+            executionInfo = agentExecutionInfo("test-agent-id", "test-strategy-name", subgraphName),
+            runId = "test-run-id",
+            subgraphName = subgraphName,
+            input = JsonPrimitive("test-input"),
+            timestamp = testClock.now().toEpochMilliseconds()
+        )
+    }
 
-    internal val subgraphExecutionCompletedEvent = SubgraphExecutionCompletedEvent(
-        runId = "test-run-id",
-        subgraphName = "test-subgraph-name",
-        input = JsonPrimitive("test-input"),
-        output = JsonPrimitive("test-output"),
-        timestamp = testClock.now().toEpochMilliseconds()
-    )
+    internal val subgraphExecutionCompletedEvent = run {
+        val subgraphName = "test-subgraph-name"
+        SubgraphExecutionCompletedEvent(
+            eventId = "test-event-id",
+            executionInfo = agentExecutionInfo("test-agent-id", "test-strategy-name", subgraphName),
+            runId = "test-run-id",
+            subgraphName = subgraphName,
+            input = JsonPrimitive("test-input"),
+            output = JsonPrimitive("test-output"),
+            timestamp = testClock.now().toEpochMilliseconds()
+        )
+    }
 
-    internal val subgraphExecutionFailedEvent = SubgraphExecutionFailedEvent(
-        runId = "test-run-id",
-        subgraphName = "test-subgraph-name",
-        input = JsonPrimitive("test-input"),
-        error = AIAgentError(
-            message = "test-error-message",
-            stackTrace = "test-error-stacktrace",
-            cause = "test-error-cause"
-        ),
-        timestamp = testClock.now().toEpochMilliseconds()
-    )
+    internal val subgraphExecutionFailedEvent = run {
+        val subgraphName = "test-subgraph-name"
+        SubgraphExecutionFailedEvent(
+            eventId = "test-event-id",
+            executionInfo = agentExecutionInfo("test-agent-id", "test-strategy-name", subgraphName),
+            runId = "test-run-id",
+            subgraphName = subgraphName,
+            input = JsonPrimitive("test-input"),
+            error = AIAgentError(
+                message = "test-error-message",
+                stackTrace = "test-error-stacktrace",
+                cause = "test-error-cause"
+            ),
+            timestamp = testClock.now().toEpochMilliseconds()
+        )
+    }
 
     internal val toolCallStartingEvent = ToolCallStartingEvent(
+        eventId = "test-event-id",
+        executionInfo = agentExecutionInfo("test-agent-id", "test-strategy-name", "test-node-name"),
         runId = "test-run-id",
         toolCallId = "test-tool-call-id",
         toolName = "test-tool-name",
@@ -181,19 +232,26 @@ internal object AIAgentFeatureTestAPI {
     )
 
     internal val toolValidationFailedEvent = ToolValidationFailedEvent(
+        eventId = "test-event-id",
+        executionInfo = agentExecutionInfo("test-agent-id", "test-strategy-name", "test-node-name"),
         runId = "test-run-id",
         toolCallId = "test-tool-call-id",
         toolName = "test-tool-name",
         toolArgs = JsonObject(mapOf("test-argument-key" to JsonPrimitive("test-argument-value"))),
-        error = "test-error-message",
+        toolDescription = "test-tool-description",
+        message = "test-error-message",
+        error = AIAgentError("test-error-message", "test-error-stacktrace", "test-error-cause"),
         timestamp = testClock.now().toEpochMilliseconds()
     )
 
     internal val toolCallFailedEvent = ToolCallFailedEvent(
+        eventId = "test-event-id",
+        executionInfo = agentExecutionInfo("test-agent-id", "test-strategy-name", "test-node-name"),
         runId = "test-run-id",
         toolCallId = "test-tool-call-id",
         toolName = "test-tool-name",
         toolArgs = JsonObject(mapOf("test-argument-key" to JsonPrimitive("test-argument-value"))),
+        toolDescription = "test-tool-description",
         error = AIAgentError(
             message = "test-error-message",
             stackTrace = "test-error-stacktrace",
@@ -203,17 +261,21 @@ internal object AIAgentFeatureTestAPI {
     )
 
     internal val toolCallCompletedEvent = ToolCallCompletedEvent(
+        eventId = "test-event-id",
+        executionInfo = agentExecutionInfo("test-agent-id", "test-strategy-name", "test-node-name"),
         runId = "test-run-id",
         toolCallId = "test-tool-call-id",
         toolName = "test-tool-name",
         toolArgs = JsonObject(mapOf("test-argument-key" to JsonPrimitive("test-argument-value"))),
-        result = "test-result",
+        toolDescription = "test-tool-description",
+        result = JsonPrimitive("test-result"),
         timestamp = testClock.now().toEpochMilliseconds()
     )
 
     internal val llmCallStartingEvent = LLMCallStartingEvent(
+        eventId = "test-event-id",
+        executionInfo = agentExecutionInfo("test-agent-id", "test-strategy-name", "test-node-name"),
         runId = "test-run-id",
-        callId = "test-call-id",
         prompt = Prompt(
             id = "test-prompt-id",
             messages = listOf(
@@ -230,8 +292,9 @@ internal object AIAgentFeatureTestAPI {
     )
 
     internal val llmCallCompletedEvent = LLMCallCompletedEvent(
+        eventId = "test-event-id",
+        executionInfo = agentExecutionInfo("test-agent-id", "test-strategy-name", "test-node-name"),
         runId = "test-run-id",
-        callId = "test-call-id",
         prompt = Prompt(
             id = "test-prompt-id",
             messages = listOf(
@@ -253,8 +316,9 @@ internal object AIAgentFeatureTestAPI {
     )
 
     internal val llmStreamingStartingEvent = LLMStreamingStartingEvent(
+        eventId = "test-event-id",
+        executionInfo = agentExecutionInfo("test-agent-id", "test-strategy-name", "test-node-name"),
         runId = "test-run-id",
-        callId = "test-call-id",
         prompt = Prompt(
             id = "test-prompt-id",
             messages = listOf(
@@ -271,15 +335,39 @@ internal object AIAgentFeatureTestAPI {
     )
 
     internal val llmStreamingFrameReceivedEvent = LLMStreamingFrameReceivedEvent(
+        eventId = "test-event-id",
+        executionInfo = agentExecutionInfo("test-agent-id", "test-strategy-name", "test-node-name"),
         runId = "test-run-id",
-        callId = "test-call-id",
+        prompt = Prompt(
+            id = "test-prompt-id",
+            messages = listOf(
+                Message.System(
+                    part = ContentPart.Text("test-system-message"),
+                    metaInfo = RequestMetaInfo(timestamp = testClock.now())
+                )
+            ),
+            params = LLMParams()
+        ),
+        model = mockLLModel.toModelInfo(),
         frame = StreamFrame.Append("test-frame"),
         timestamp = testClock.now().toEpochMilliseconds(),
     )
 
     internal val llmStreamingFailedEvent = LLMStreamingFailedEvent(
+        eventId = "test-event-id",
+        executionInfo = agentExecutionInfo("test-agent-id", "test-strategy-name", "test-node-name"),
         runId = "test-run-id",
-        callId = "test-call-id",
+        prompt = Prompt(
+            id = "test-prompt-id",
+            messages = listOf(
+                Message.System(
+                    part = ContentPart.Text("test-system-message"),
+                    metaInfo = RequestMetaInfo(timestamp = testClock.now())
+                )
+            ),
+            params = LLMParams()
+        ),
+        model = mockLLModel.toModelInfo(),
         error = AIAgentError(
             message = "test-error-message",
             stackTrace = "test-error-stacktrace",
@@ -289,8 +377,9 @@ internal object AIAgentFeatureTestAPI {
     )
 
     internal val llmStreamingCompletedEvent = LLMStreamingCompletedEvent(
+        eventId = "test-event-id",
+        executionInfo = agentExecutionInfo("test-agent-id", "test-strategy-name", "test-node-name"),
         runId = "test-run-id",
-        callId = "test-call-id",
         prompt = Prompt(
             id = "test-prompt-id",
             messages = listOf(
@@ -308,7 +397,6 @@ internal object AIAgentFeatureTestAPI {
 
     internal val knownDefinedEvents = listOf(
         featureStringMessage,
-        featureEventMessage,
         agentStartingEvent,
         agentCompletedEvent,
         agentClosingEvent,

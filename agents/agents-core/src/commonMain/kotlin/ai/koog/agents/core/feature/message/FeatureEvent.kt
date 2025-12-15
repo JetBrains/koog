@@ -8,4 +8,10 @@ package ai.koog.agents.core.feature.message
  * Implementations of this interface are intended to detail specific events in the feature
  * processing workflow.
  */
-public interface FeatureEvent : FeatureMessage
+public interface FeatureEvent : FeatureMessage {
+
+    /**
+     * Represents a unique identifier for the event or a group of events.
+     */
+    public val eventId: String
+}
