@@ -19,7 +19,7 @@ import ai.koog.agents.core.environment.AIAgentEnvironment
 import ai.koog.agents.core.environment.ReceivedToolResult
 import ai.koog.agents.core.environment.ToolResultKind
 import ai.koog.agents.core.feature.AIAgentGraphFeature
-import ai.koog.agents.core.feature.PromptExecutorProxy
+import ai.koog.agents.core.feature.ContextualPromptExecutor
 import ai.koog.agents.core.feature.config.FeatureConfig
 import ai.koog.agents.core.feature.pipeline.AIAgentGraphPipeline
 import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
@@ -1018,7 +1018,7 @@ public class Testing {
                         prompt = agent.agentConfig.prompt,
                         model = agent.agentConfig.model,
                         responseProcessor = agent.agentConfig.responseProcessor,
-                        promptExecutor = PromptExecutorProxy(
+                        promptExecutor = ContextualPromptExecutor(
                             agent.promptExecutor,
                             pipeline,
                             assertion.context.runId,
