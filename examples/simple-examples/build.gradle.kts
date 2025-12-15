@@ -129,3 +129,9 @@ registerRunExampleTask("runExampleSimpleJokeAgentClient", "ai.koog.agents.exampl
 // Advanced joke generation
 registerRunExampleTask("runExampleAdvancedJokeAgentServer", "ai.koog.agents.example.a2a.advancedjoke.ServerKt")
 registerRunExampleTask("runExampleAdvancedJokeAgentClient", "ai.koog.agents.example.a2a.advancedjoke.ClientKt")
+
+
+/*
+ ACP examples
+*/
+registerRunExampleTask("runExampleAcpApp", "ai.koog.agents.example.acp.KoogAcpAppKt")

@@ -155,6 +155,6 @@ suspend fun CoroutineScope.runTerminalClient(transport: Transport) {
         println("Error: ${e.message}")
         e.printStackTrace()
     } finally {
-        logger.info { "Gemini ACP client shutting down" }
+        logger.info { "ACP client shutting down" }
     }
 }
