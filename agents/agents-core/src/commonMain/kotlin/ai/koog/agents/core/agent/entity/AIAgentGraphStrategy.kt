@@ -1,10 +1,12 @@
 package ai.koog.agents.core.agent.entity
 
+import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.AIAgentGraphContextBase
 import ai.koog.agents.core.agent.context.AgentContextData
 import ai.koog.agents.core.agent.context.RollbackStrategy
 import ai.koog.agents.core.agent.context.getAgentContextData
 import ai.koog.agents.core.agent.context.removeAgentContextData
+import ai.koog.agents.core.agent.context.with
 import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.utils.runCatchingCancellable
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -51,30 +53,31 @@ public class AIAgentGraphStrategy<TInput, TOutput>(
     public lateinit var metadata: SubgraphMetadata
 
     @OptIn(InternalAgentsApi::class)
-    override suspend fun execute(context: AIAgentGraphContextBase, input: TInput): TOutput? {
-        return runCatchingCancellable {
-            context.pipeline.onStrategyStarting(this, context)
-            restoreStateIfNeeded(context)
-
-            var result: TOutput? = super.execute(context = context, input = input)
-
-            while (result == null && context.getAgentContextData() != null) {
+    override suspend fun execute(context: AIAgentGraphContextBase, input: TInput): TOutput? =
+        context.with(partName = id) { executionInfo ->
+            runCatchingCancellable {
+                context.pipeline.onStrategyStarting(executionInfo, this, context)
                 restoreStateIfNeeded(context)
-                result = super.execute(context = context, input = input)
+
+                var result: TOutput? = super.execute(context = context, input = input)
+
+                while (result == null && context.getAgentContextData() != null) {
+                    restoreStateIfNeeded(context)
+                    result = super.execute(context = context, input = input)
+                }
+
+                logger.trace { "Finished executing strategy (name: $name) with output: $result" }
+                context.pipeline.onStrategyCompleted(executionInfo, this, context, result, outputType)
+
+                result
             }
-
-            logger.trace { "Finished executing strategy (name: $name) with output: $result" }
-
-            context.pipeline.onStrategyCompleted(this, context, result, outputType)
-            result
         }.onFailure {
             context.environment.reportProblem(it)
         }.getOrThrow()
-    }
 
     @OptIn(InternalAgentsApi::class)
     private suspend fun restoreStateIfNeeded(
-        agentContext: AIAgentGraphContextBase
+        agentContext: AIAgentContext
     ) {
         val additionalContextData: AgentContextData = agentContext.getAgentContextData() ?: return
 
@@ -86,14 +89,14 @@ public class AIAgentGraphStrategy<TInput, TOutput>(
     }
 
     @OptIn(InternalAgentsApi::class)
-    private suspend fun restoreMessageOnly(agentContext: AIAgentGraphContextBase, data: AgentContextData) {
+    private suspend fun restoreMessageOnly(agentContext: AIAgentContext, data: AgentContextData) {
         agentContext.llm.withPrompt {
             this.withMessages { (data.messageHistory) }
         }
     }
 
     @OptIn(InternalAgentsApi::class)
-    private suspend fun restoreDefault(agentContext: AIAgentGraphContextBase, data: AgentContextData) {
+    private suspend fun restoreDefault(agentContext: AIAgentContext, data: AgentContextData) {
         val nodeId = data.nodeId
 
         // Perform additional cleanup (ex: rollback tools):

@@ -1,6 +1,7 @@
 package ai.koog.agents.core.environment
 
 import ai.koog.agents.core.agent.context.AIAgentContext
+import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.prompt.message.Message
 import io.github.oshai.kotlinlogging.KotlinLogging
 
@@ -14,9 +15,16 @@ internal class ContextualAgentEnvironment(
     }
 
     override suspend fun executeTool(toolCall: Message.Tool.Call): ReceivedToolResult {
-        logger.trace { "Executing tool call (run id: ${context.runId}, tool call id: ${toolCall.id}, tool: ${toolCall.tool}, args: ${toolCall.contentJson})" }
+        logger.trace {
+            "Executing tool call (" +
+                "run id: ${context.runId}, " +
+                "tool call id: ${toolCall.id}, " +
+                "tool: ${toolCall.tool}, " +
+                "args: ${toolCall.contentJson})"
+        }
 
         context.pipeline.onToolCallStarting(
+            executionInfo = context.executionInfo,
             runId = context.runId,
             toolCallId = toolCall.id,
             toolName = toolCall.tool,
@@ -24,9 +32,17 @@ internal class ContextualAgentEnvironment(
         )
 
         val toolResult = environment.executeTool(toolCall)
-        processToolResult(toolResult)
+        processToolResult(context.executionInfo, toolResult)
 
-        logger.trace { "Tool call completed (run id: ${context.runId}, tool call id: ${toolCall.id}, tool: ${toolCall.tool}, args: ${toolCall.contentJson}) with result: $toolResult" }
+        logger.trace {
+            "Tool call completed (" +
+                "run id: ${context.runId}, " +
+                "tool call id: ${toolCall.id}, " +
+                "tool: ${toolCall.tool}, " +
+                "args: ${toolCall.contentJson}) " +
+                "with result: $toolResult"
+        }
+
         return toolResult
     }
 
@@ -37,11 +53,13 @@ internal class ContextualAgentEnvironment(
     //region Private Methods
 
     private suspend fun processToolResult(
+        executionInfo: AgentExecutionInfo,
         toolResult: ReceivedToolResult
     ) {
         when (val toolResultKind = toolResult.resultKind) {
             is ToolResultKind.Success -> {
                 context.pipeline.onToolCallCompleted(
+                    executionInfo = executionInfo,
                     runId = context.runId,
                     toolCallId = toolResult.id,
                     toolName = toolResult.tool,
@@ -53,6 +71,7 @@ internal class ContextualAgentEnvironment(
 
             is ToolResultKind.Failure -> {
                 context.pipeline.onToolCallFailed(
+                    executionInfo = executionInfo,
                     runId = context.runId,
                     toolCallId = toolResult.id,
                     toolName = toolResult.tool,
@@ -65,6 +84,7 @@ internal class ContextualAgentEnvironment(
 
             is ToolResultKind.ValidationError -> {
                 context.pipeline.onToolValidationFailed(
+                    executionInfo = executionInfo,
                     runId = context.runId,
                     toolCallId = toolResult.id,
                     toolName = toolResult.tool,

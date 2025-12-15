@@ -120,7 +120,7 @@ public interface AIAgentGraphContextBase : AIAgentContext {
  */
 @OptIn(InternalAgentsApi::class)
 public class AIAgentGraphContext(
-    override val environment: AIAgentEnvironment,
+    environment: AIAgentEnvironment,
     override val agentId: String,
     override val agentInputType: KType,
     override val agentInput: Any?,
@@ -131,10 +131,11 @@ public class AIAgentGraphContext(
     override val runId: String,
     override val strategyName: String,
     override val pipeline: AIAgentGraphPipeline,
-    override var executionInfo: AgentExecutionInfo,
+    executionInfo: AgentExecutionInfo,
     override val parentContext: AIAgentGraphContextBase?,
 ) : AIAgentGraphContextBase {
-    private val mutableAIAgentContext = MutableAIAgentContext(llm, stateManager, storage)
+
+    private val mutableAIAgentContext = MutableAIAgentContext(llm, stateManager, storage, environment, executionInfo)
 
     override val llm: AIAgentLLMContext
         get() = mutableAIAgentContext.llm
@@ -145,6 +146,15 @@ public class AIAgentGraphContext(
     override val stateManager: AIAgentStateManager
         get() = mutableAIAgentContext.stateManager
 
+    override val environment: AIAgentEnvironment
+        get() = mutableAIAgentContext.environment
+
+    override var executionInfo: AgentExecutionInfo
+        get() = mutableAIAgentContext.executionInfo
+        set(value) {
+            mutableAIAgentContext.executionInfo = value
+        }
+
     /**
      * Mutable wrapper for AI agent context properties.
      */
@@ -152,6 +162,8 @@ public class AIAgentGraphContext(
         var llm: AIAgentLLMContext,
         var stateManager: AIAgentStateManager,
         var storage: AIAgentStorage,
+        var environment: AIAgentEnvironment,
+        var executionInfo: AgentExecutionInfo
     ) {
         private val rwLock = RWLock()
 
@@ -161,12 +173,13 @@ public class AIAgentGraphContext(
          */
         suspend fun copy(): MutableAIAgentContext {
             return rwLock.withReadLock {
-                MutableAIAgentContext(llm.copy(), stateManager.copy(), storage.copy())
+                MutableAIAgentContext(llm.copy(), stateManager.copy(), storage.copy(), environment, executionInfo.copy())
             }
         }
 
         /**
          * Replaces the current context with the provided context.
+         *
          * @param llm The LLM context to replace the current context with.
          * @param stateManager The state manager to replace the current context with.
          * @param storage The storage to replace the current context with.
@@ -175,11 +188,15 @@ public class AIAgentGraphContext(
             llm: AIAgentLLMContext?,
             stateManager: AIAgentStateManager?,
             storage: AIAgentStorage?,
+            environment: AIAgentEnvironment?,
+            executionInfo: AgentExecutionInfo?,
         ) {
             rwLock.withWriteLock {
-                llm?.let { this.llm = llm }
-                stateManager?.let { this.stateManager = stateManager }
-                storage?.let { this.storage = storage }
+                llm?.let { this.llm = it }
+                stateManager?.let { this.stateManager = it }
+                storage?.let { this.storage = it }
+                environment?.let { this.environment = it }
+                executionInfo?.let { this.executionInfo = it }
             }
         }
     }
@@ -229,6 +246,8 @@ public class AIAgentGraphContext(
             context.llm,
             context.stateManager,
             context.storage,
+            context.environment,
+            context.executionInfo,
         )
     }
 }

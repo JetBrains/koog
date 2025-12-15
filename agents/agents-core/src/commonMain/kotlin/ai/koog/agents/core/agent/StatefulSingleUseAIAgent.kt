@@ -4,7 +4,9 @@ import ai.koog.agents.core.agent.AIAgent.Companion.State
 import ai.koog.agents.core.agent.AIAgent.Companion.State.NotStarted
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.context.element.AgentRunInfoContextElement
+import ai.koog.agents.core.agent.context.with
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
+import ai.koog.agents.core.annotation.InternalAgentsApi
 import ai.koog.agents.core.feature.AIAgentFeature
 import ai.koog.agents.core.feature.pipeline.AIAgentPipeline
 import io.github.oshai.kotlinlogging.KLogger
@@ -96,60 +98,39 @@ public abstract class StatefulSingleUseAIAgent<Input, Output, TContext : AIAgent
                 strategyName = strategy.name
             )
         ) {
-            pipeline.withPreparedPipeline {
-                agentStateMutex.withLock {
-                    state = State.Running(context)
-                }
-
-                logger.debug {
-                    formatLog(
-                        agentId = id,
-                        runId = runId,
-                        message = "Starting agent execution"
-                    )
-                }
-
-                pipeline.onAgentStarting<Input, Output>(
-                    runId = runId,
-                    agent = this@StatefulSingleUseAIAgent,
-                    context = context
-                )
-
-                val result = try {
-                    strategy.execute(context = context, input = agentInput)
-                } catch (e: Throwable) {
-                    logger.error(e) { "Execution exception reported by server!" }
-                    pipeline.onAgentExecutionFailed(
-                        agentId = id,
-                        runId = runId,
-                        throwable = e
-                    )
-                    agentStateMutex.withLock { state = State.Failed(e) }
-                    throw e
-                }
-
-                logger.debug {
-                    formatLog(
-                        agentId = id,
-                        runId = runId,
-                        message = "Finished agent execution"
-                    )
-                }
-                pipeline.onAgentCompleted(
-                    agentId = id,
-                    runId = runId,
-                    result = result
-                )
-
-                agentStateMutex.withLock {
-                    state = if (result != null) {
-                        State.Finished(result)
-                    } else {
-                        State.Failed(Exception("result is null"))
+            context.withPreparedPipeline {
+                context.with(partName = runId) { executionInfo ->
+                    agentStateMutex.withLock {
+                        @OptIn(InternalAgentsApi::class)
+                        state = State.Running(context.parentContext ?: context)
                     }
-                }
 
-                result ?: error("result is null")
+                    logger.debug { formatLog(id, runId, "Starting agent execution") }
+                    pipeline.onAgentStarting<Input, Output>(executionInfo, runId, this@StatefulSingleUseAIAgent, context)
+
+                    val result = try {
+                        @Suppress("UNCHECKED_CAST")
+                        strategy.execute(context = context, input = agentInput)
+                    } catch (e: Throwable) {
+                        logger.error(e) { "Execution exception reported by server!" }
+                        pipeline.onAgentExecutionFailed(executionInfo, id, runId, e)
+                        agentStateMutex.withLock { state = State.Failed(e) }
+                        throw e
+                    }
+
+                    logger.debug { formatLog(id, runId, "Finished agent execution") }
+                    pipeline.onAgentCompleted(executionInfo, id, runId, result)
+
+                    agentStateMutex.withLock {
+                        state = if (result != null) {
+                            State.Finished(result)
+                        } else {
+                            State.Failed(Exception("result is null"))
+                        }
+                    }
+
+                    result ?: error("result is null")
+                }
             }
         }
     }
@@ -208,14 +189,22 @@ public abstract class StatefulSingleUseAIAgent<Input, Output, TContext : AIAgent
      *
      * @return The result of the block's execution.
      */
-    private suspend fun <T> AIAgentPipeline.withPreparedPipeline(block: suspend () -> T): T =
-        try {
-            prepareAllFeatures()
+    private suspend fun <T> AIAgentContext.withPreparedPipeline(block: suspend () -> T): T {
+        require(executionInfo.parent == null) {
+            "withPreparedPipeline() should be called from a top level agent context."
+        }
+
+        return try {
+            pipeline.prepareAllFeatures()
             block.invoke()
         } finally {
-            onAgentClosing(agentId = id)
-            closeAllFeaturesMessageProcessors()
+            pipeline.onAgentClosing(
+                executionInfo = executionInfo.parent ?: executionInfo,
+                agentId = id
+            )
+            pipeline.closeAllFeaturesMessageProcessors()
         }
+    }
 }
 
 /**

@@ -31,7 +31,6 @@ import ai.koog.prompt.message.Message
  * during execution.
  */
 @OptIn(InternalAgentsApi::class)
-@Suppress("UNCHECKED_CAST")
 public class AIAgentFunctionalContext(
     override val environment: AIAgentEnvironment,
     override val agentId: String,
@@ -53,6 +52,7 @@ public class AIAgentFunctionalContext(
         storeMap[key] = value
     }
 
+    @Suppress("UNCHECKED_CAST")
     override fun <T> get(key: AIAgentStorageKey<*>): T? = storeMap[key] as T?
 
     override fun remove(key: AIAgentStorageKey<*>): Boolean = storeMap.remove(key) != null

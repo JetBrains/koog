@@ -18,6 +18,8 @@ class TestLLMExecutor : PromptExecutor {
         val testClock: Clock = object : Clock {
             override fun now(): kotlinx.datetime.Instant = kotlinx.datetime.Instant.parse("2023-01-01T00:00:00Z")
         }
+
+        const val DEFAULT_ASSISTANT_RESPONSE = "Default test response"
     }
 
     // Track the number of TLDR messages created
@@ -68,7 +70,7 @@ class TestLLMExecutor : PromptExecutor {
             return tldrResponse
         }
 
-        val response = Message.Assistant("Default test response", metaInfo = ResponseMetaInfo.create(testClock))
+        val response = Message.Assistant(DEFAULT_ASSISTANT_RESPONSE, metaInfo = ResponseMetaInfo.create(testClock))
         messages.add(response)
         return response
     }

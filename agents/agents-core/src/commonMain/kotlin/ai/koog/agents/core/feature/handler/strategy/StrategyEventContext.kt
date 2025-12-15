@@ -2,6 +2,7 @@ package ai.koog.agents.core.feature.handler.strategy
 
 import ai.koog.agents.core.agent.context.AIAgentContext
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
+import ai.koog.agents.core.agent.execution.AgentExecutionInfo
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventContext
 import ai.koog.agents.core.feature.handler.AgentLifecycleEventType
 import kotlin.reflect.KType
@@ -16,10 +17,12 @@ public interface StrategyEventContext : AgentLifecycleEventContext
 /**
  * Represents the context for updating AI agent strategies during execution.
  *
+ * @property executionInfo The execution information containing parentId and current execution path;
  * @property strategy The strategy being updated, encapsulating the AI agent's workflow logic.
  * @property context The context associated with the strategy's execution.
  */
 public class StrategyStartingContext(
+    override val executionInfo: AgentExecutionInfo,
     public val strategy: AIAgentStrategy<*, *, *>,
     public val context: AIAgentContext,
 ) : StrategyEventContext {
@@ -40,12 +43,14 @@ public class StrategyStartingContext(
 /**
  * Represents the context associated with the completion of an AI agent strategy execution.
  *
+ * @property executionInfo The execution information containing parentId and current execution path;
  * @property strategy The strategy being updated, encapsulating the AI agent's workflow logic.
  * @property context The context associated with the strategy's execution.
  * @property result Strategy result.
  * @property resultType [KType] representing the type of the [result]
  */
 public class StrategyCompletedContext(
+    override val executionInfo: AgentExecutionInfo,
     public val strategy: AIAgentStrategy<*, *, *>,
     public val context: AIAgentContext,
     public val result: Any?,

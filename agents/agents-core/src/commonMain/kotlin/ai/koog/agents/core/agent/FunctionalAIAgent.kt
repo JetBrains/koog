@@ -85,59 +85,60 @@ public class FunctionalAIAgent<Input, Output>(
             toolRegistry = toolRegistry,
         )
 
-        val initialAgentLLMContext = AIAgentLLMContext(
+        val initialLLMContext = AIAgentLLMContext(
             tools = toolRegistry.tools.map { it.descriptor },
             toolRegistry = toolRegistry,
             prompt = agentConfig.prompt,
             model = agentConfig.model,
             responseProcessor = agentConfig.responseProcessor,
-            promptExecutor = ContextualPromptExecutor(
-                executor = promptExecutor,
-                pipeline = pipeline,
-                runId = runId
-            ),
+            promptExecutor = promptExecutor,
             environment = environment,
             config = agentConfig,
             clock = clock
         )
 
-        val agentExecutionInfo = AgentExecutionInfo(parent = null, partName = id)
-        val runExecutionInfo = AgentExecutionInfo(parent = agentExecutionInfo, partName = runId)
-
+        val executionInfo = AgentExecutionInfo(parent = null, partName = id)
         val preparedEnvironment = prepareEnvironment()
 
         // Context
-        val agentContext = AIAgentFunctionalContext(
+        val initialAgentContext = AIAgentFunctionalContext(
             environment = preparedEnvironment,
             agentId = id,
             runId = runId,
             agentInput = agentInput,
             config = agentConfig,
-            llm = initialAgentLLMContext,
+            llm = initialLLMContext,
             stateManager = AIAgentStateManager(),
             storage = AIAgentStorage(),
             strategyName = strategy.name,
             pipeline = pipeline,
-            executionInfo = runExecutionInfo,
+            executionInfo = executionInfo,
             parentContext = null
         )
 
         // Updated environment
-        val environmentProxy = ContextualAgentEnvironment(
+        val contextualEnvironment = ContextualAgentEnvironment(
             environment = preparedEnvironment,
-            context = agentContext,
+            context = initialAgentContext,
         )
 
-        val updatedLLMContext = agentContext.llm.copy(
-            environment = environmentProxy
+        val contextualPromptExecutor = ContextualPromptExecutor(
+            executor = promptExecutor,
+            context = initialAgentContext,
         )
 
-        // Update the environment and llm with a created context instance
-        return agentContext.copy(
-            parentRootContext = agentContext.parentContext,
+        val updatedLLMContext = initialAgentContext.llm.copy(
+            environment = contextualEnvironment,
+            promptExecutor = contextualPromptExecutor,
+        )
+
+        val updatedAgentContext = initialAgentContext.copy(
             llm = updatedLLMContext,
-            environment = environmentProxy
+            environment = contextualEnvironment,
+            parentRootContext = initialAgentContext.parentContext, // Keep the original parent context
         )
+
+        return updatedAgentContext
     }
 
     //region Private Methods
