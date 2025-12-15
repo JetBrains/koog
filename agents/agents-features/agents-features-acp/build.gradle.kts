@@ -14,10 +14,16 @@ kotlin {
             dependencies {
                 api(project(":agents:agents-core"))
 
-                api(libs.acp)
                 api(libs.kotlinx.serialization.json)
                 api(libs.ktor.client.content.negotiation)
                 api(libs.ktor.serialization.kotlinx.json)
+            }
+        }
+
+        // TODO wait until ACP SDK supports KMP
+        jvmMain {
+            dependencies {
+                api(libs.acp)
             }
         }
     }
