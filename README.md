@@ -6,15 +6,19 @@
 [![Kotlin](https://img.shields.io/badge/kotlin-2.1-blue.svg?logo=kotlin)](http://kotlinlang.org)
 [![CI status](https://img.shields.io/github/checks-status/JetBrains/koog/main)](https://github.com/JetBrains/koog/actions?query=branch%3Amain)
 [![GitHub license](https://img.shields.io/github/license/JetBrains/koog)](LICENSE.txt)
-[![API Docs](https://img.shields.io/badge/documentation-blue)](https://docs.koog.ai)
-[![API](https://img.shields.io/badge/API-Docs-blue)](https://api.koog.ai/)
-[![Slack channel](https://img.shields.io/badge/chat-slack-green.svg?logo=slack)](https://kotlinlang.slack.com/messages/koog-agentic-framework/)
 
 Build status:
 
 [![Checks](https://github.com/JetBrains/koog/actions/workflows/checks.yml/badge.svg?branch=develop)](https://github.com/JetBrains/koog/actions/workflows/checks.yml?query=branch%3Adevelop)
 [![Heavy Tests](https://github.com/JetBrains/koog/actions/workflows/heavy-tests.yml/badge.svg?branch=develop)](https://github.com/JetBrains/koog/actions/workflows/heavy-tests.yml?query=branch%3Adevelop)
 [![Ollama Tests](https://github.com/JetBrains/koog/actions/workflows/ollama-tests.yml/badge.svg?branch=develop)](https://github.com/JetBrains/koog/actions/workflows/ollama-tests.yml?query=branch%3Adevelop)
+
+Useful links:
+
+* [Documentation](https://docs.koog.ai/)
+* [API reference](https://api.koog.ai/)
+* [Slack channel](https://docs.koog.ai/koog-slack-channel/)
+* [Issue tracker](https://youtrack.jetbrains.com/issues/KG)
 
 ## Overview
 
@@ -61,7 +65,7 @@ fun main() = runBlocking {
    val apiKey = System.getenv("OPENAI_API_KEY") // or Anthropic, Google, OpenRouter, etc.
 
    val agent = AIAgent(
-      executor = simpleOpenAIExecutor(apiKey), // or Anthropic, Google, OpenRouter, etc.
+      promptExecutor = simpleOpenAIExecutor(apiKey), // or Anthropic, Google, OpenRouter, etc.
       systemPrompt = "You are a helpful assistant. Answer user questions concisely.",
       llmModel = OpenAIModels.Chat.GPT4o
    )
@@ -125,10 +129,9 @@ Koog is licensed under the [Apache 2.0 License](LICENSE.txt).
 
 ## Support
 
-Please feel free to ask any questions in our official Slack
-channel ([link](https://kotlinlang.slack.com/messages/koog-agentic-framework/)) and to
+Please feel free to ask any questions in our [official Slack
+channel](https://docs.koog.ai/koog-slack-channel/) and to
 use [Koog official YouTrack project](https://youtrack.jetbrains.com/issues/KG)
 for filing feature requests and bug reports.
-
 
 
